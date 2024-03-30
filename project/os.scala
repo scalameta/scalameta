@@ -43,7 +43,7 @@ object shell {
 object secret {
   def obtain(domain: String): Option[(String, String)] = {
     val credentialsFile = sys.props(domain + ".settings.file")
-    if (credentialsFile != null) {
+    if (credentialsFile != null)
       try {
         import scala.xml._
         val settings = XML.loadFile(credentialsFile)
@@ -51,12 +51,10 @@ object secret {
           .head.text
         Some((readServerConfig("username"), readServerConfig("password")))
       } catch { case ex: Exception => None }
-    } else {
-      for {
-        username <- sys.env.get(s"${domain.toUpperCase}_USERNAME")
-        password <- sys.env.get(s"${domain.toUpperCase}_PASSWORD")
-      } yield { (username, password) }
-    }
+    else for {
+      username <- sys.env.get(s"${domain.toUpperCase}_USERNAME")
+      password <- sys.env.get(s"${domain.toUpperCase}_PASSWORD")
+    } yield (username, password)
   }
 }
 
@@ -77,13 +75,13 @@ object shutil {
     if (!file.delete) sys.error(s"failed to delete ${file.getAbsolutePath}")
   }
 
-  def copytree(src: File, dest: File): Unit = {
+  def copytree(src: File, dest: File): Unit =
     if (src.isDirectory) {
       if (!dest.mkdirs) sys.error(s"failed to create ${dest.getAbsolutePath}")
-      src.listFiles.foreach(srcsub => {
+      src.listFiles.foreach { srcsub =>
         val destsub = new File(dest.getAbsolutePath + File.separator + srcsub.getName)
         copytree(srcsub, destsub)
-      })
+      }
     } else {
       val in = new FileInputStream(src)
       try {
@@ -95,10 +93,9 @@ object shutil {
             val len = in.read(buf)
             if (len > 0) out.write(buf, 0, len) else done = true
           }
-        } finally { out.close() }
-      } finally { in.close() }
+        } finally out.close()
+      } finally in.close()
     }
-  }
 }
 
 object git {
@@ -124,5 +121,5 @@ object git {
     ncommits(to) - ncommits(from)
   }
 
-  def currentSha(): String = { shell.check_output("git rev-parse HEAD", cwd = ".").trim }
+  def currentSha(): String = shell.check_output("git rev-parse HEAD", cwd = ".").trim
 }

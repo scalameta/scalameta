@@ -51,8 +51,8 @@ class ExpectSuite extends FunSuite {
     import MetacExpect._
     val expected = loadExpected
     val expectedCompat =
-      if (ScalaVersion.atLeast212_14) { expected }
-      else {
+      if (ScalaVersion.atLeast212_14) expected
+      else
         // Predef.type etc. was fixed in 2.12.14
         expected.replace("[43:21..43:22): x => types/Test.C#x.\n", "")
           .replace("[44:21..44:22): p => types/Test.C#p.\n", "")
@@ -62,7 +62,6 @@ class ExpectSuite extends FunSuite {
           .replace("Occurrences => 57 entries", "Occurrences => 56 entries")
           .replace("Occurrences => 147 entries", "Occurrences => 146 entries")
           .replace("Occurrences => 262 entries", "Occurrences => 259 entries")
-      }
     this.assertNoDiff(loadObtained, expectedCompat)
   }
 
@@ -122,9 +121,7 @@ trait ExpectHelpers extends munit.Assertions {
         DiffUtils.diff(originalLines, revisedLines),
         3
       ).asScala
-      if (lines.lengthCompare(2) > 0) {
-        lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
-      }
+      if (lines.lengthCompare(2) > 0) lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
       lines.filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
         .filterNot(_.startsWith("@@")).mkString("\n")
     }
@@ -213,24 +210,22 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
     val symbols = for {
       sym <- metac.iterator
       javasym <- {
-        if (sym.symbol.contains("com.javacp")) {
+        if (sym.symbol.contains("com.javacp"))
           // metac references to java defined symbols in com.javacp must have a corresponding metacp entry.
           Some(metacp.getOrElse(sym.symbol, s.SymbolInformation()))
-        } else { metacp.get(sym.symbol) }
+        else metacp.get(sym.symbol)
       }
     } yield {
       val header = "=" * sym.symbol.length
       val diff = unifiedDiff("metac", "metacp", sym.toProtoString, javasym.toProtoString)
       if (diff.isEmpty) ""
-      else {
-        s"""$header
-           |${sym.symbol}
-           |$header
-           |$diff
-           |
-           |
-           |""".stripMargin
-      }
+      else s"""$header
+              |${sym.symbol}
+              |$header
+              |$diff
+              |
+              |
+              |""".stripMargin
     }
     symbols.mkString
   }
@@ -261,12 +256,12 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
 
 object ManifestMetap extends ExpectHelpers {
   def filename: String = "manifest.metap"
-  def loadObtained: String = { metap(manifestJar) }
+  def loadObtained: String = metap(manifestJar)
 }
 
 object ManifestMetacp extends ExpectHelpers {
   def filename: String = "manifest.metacp"
-  def loadObtained: String = { metap(metacp(manifestJar)) }
+  def loadObtained: String = metap(metacp(manifestJar))
 }
 
 object MetacpUndefined extends ExpectHelpers {

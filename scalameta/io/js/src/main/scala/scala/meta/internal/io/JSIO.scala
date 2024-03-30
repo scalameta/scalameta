@@ -98,7 +98,7 @@ object JSIO {
 
   def inNode[T](f: => T): T =
     if (JSIO.isNode) f
-    else { throw new IllegalStateException("This operation is not supported in this environment.") }
+    else throw new IllegalStateException("This operation is not supported in this environment.")
 
   def cwd(): String = if (isNode) process.cwd() else "/"
 

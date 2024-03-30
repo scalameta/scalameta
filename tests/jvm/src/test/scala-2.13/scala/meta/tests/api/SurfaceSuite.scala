@@ -57,10 +57,10 @@ class SurfaceSuite extends FunSuite {
   }
 
   test("statics (core)") {
-    val diagnostic = core.keys.toList.sorted.filter(!_.endsWith("LowPriority")).map(fullName => {
+    val diagnostic = core.keys.toList.sorted.filter(!_.endsWith("LowPriority")).map { fullName =>
       val suffix = if (core(fullName)) "" else " *"
       s"$fullName$suffix"
-    }).mkString(EOL)
+    }.mkString(EOL)
     // println(diagnostic)
     assertNoDiff(
       diagnostic,

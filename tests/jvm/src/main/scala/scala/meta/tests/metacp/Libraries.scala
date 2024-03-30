@@ -57,13 +57,11 @@ object Library {
       Classpath(jars)
     }
   )
-  lazy val scalaLibrary: Library = {
-    Library(
-      "scala-library",
-      () => {
-        val version = BuildInfo.scalaVersion
-        Classpath(Jars.fetch("org.scala-lang", "scala-library", version))
-      }
-    )
-  }
+  lazy val scalaLibrary: Library = Library(
+    "scala-library",
+    () => {
+      val version = BuildInfo.scalaVersion
+      Classpath(Jars.fetch("org.scala-lang", "scala-library", version))
+    }
+  )
 }

@@ -69,14 +69,14 @@ object Javacp {
 
     val isJavaLangObject = node.name == "java/lang/Object"
     val classSignature: ClassSignature =
-      if (isJavaLangObject) {
+      if (isJavaLangObject)
         // java/lang/Object has no super class so node.superName == null.
         // ClassSignature requires a non-null superName so we special-handle java/lang/Object
         // when assigning classParents below.
         ClassSignature.simple("impossible", Nil)
-      } else if (node.signature == null) {
-        ClassSignature.simple(node.superName, node.interfaces.toScala.toList)
-      } else { JavaTypeSignature.parse(node.signature, new ClassSignatureVisitor) }
+      else if (node.signature == null) ClassSignature
+        .simple(node.superName, node.interfaces.toScala.toList)
+      else JavaTypeSignature.parse(node.signature, new ClassSignatureVisitor)
 
     val (classScope: Scope, classTypeParameters) = classSignature.typeParameters match {
       case Some(tp) => addTypeParameters(tp, classSymbol, scope)
@@ -88,10 +88,10 @@ object Javacp {
       if (isJavaLangObject) Nil else classSignature.parents.map(_.toSemanticTpe(classScope))
 
     node.fields.toScala.filterNot(_.access.hasFlag(o.ACC_SYNTHETIC)).foreach { field: FieldNode =>
-      if (isOuterClassReference(field)) {
+      if (isOuterClassReference(field))
         // Drop the constructor argument that holds the reference to the outer class.
         ()
-      } else {
+      else {
         val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
         val fieldDisplayName = field.name
         val fieldSignature = JavaTypeSignature.parse(
@@ -133,7 +133,7 @@ object Javacp {
           if (overloads.lengthCompare(1) == 0) "()"
           else {
             val index = overloads.indexWhere(_.signature eq method.signature)
-            if (index == 0) "()" else s"(+${index})"
+            if (index == 0) "()" else s"(+$index)"
           }
         }
         val methodDescriptor = d.Method(method.node.name, methodDisambiguator)
@@ -189,13 +189,11 @@ object Javacp {
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramDisplayName))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
-              if (isRepeatedType) {
-                param.toSemanticTpe(methodScope) match {
-                  case s.TypeRef(s.NoType, "scala/Array#", targ :: Nil) => s.RepeatedType(targ)
-                  case tpe => sys
-                      .error(s"expected $paramDisplayName to be a scala/Array#, found $tpe")
-                }
-              } else { param.toSemanticTpe(methodScope) }
+              if (isRepeatedType) param.toSemanticTpe(methodScope) match {
+                case s.TypeRef(s.NoType, "scala/Array#", targ :: Nil) => s.RepeatedType(targ)
+                case tpe => sys.error(s"expected $paramDisplayName to be a scala/Array#, found $tpe")
+              }
+              else param.toSemanticTpe(methodScope)
             addInfo(
               paramSymbol,
               k.PARAMETER,
@@ -205,9 +203,8 @@ object Javacp {
             )
           }
 
-        val returnType = {
+        val returnType =
           if (isConstructor) s.NoType else method.signature.result.toSemanticTpe(methodScope)
-        }
 
         val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
 
@@ -232,7 +229,7 @@ object Javacp {
       decls += innerClassSymbol
       val path = ic.name + ".class"
       val classfile = classpathIndex.getClassfile(path)
-        .getOrElse { throw MissingSymbolException(ssym(ic.name)) }
+        .getOrElse(throw MissingSymbolException(ssym(ic.name)))
       val innerClassNode = classfile.toClassNode
       buf ++= sinfos(innerClassNode, classpathIndex, ic.access, classScope)
     }
@@ -255,11 +252,8 @@ object Javacp {
   // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
   // ClassNode.innerClasses includes all inner classes of a compilation unit, both nested inner classes as well
   // as enclosing outer classes. Anonymous classes are distinguished by InnerClassNode.innerName == null.
-  private def isAnonymousClass(node: ClassNode): Boolean = {
-    node.innerClasses.toScala.exists { ic: InnerClassNode =>
-      ic.name == node.name && ic.innerName == null
-    }
-  }
+  private def isAnonymousClass(node: ClassNode): Boolean = node.innerClasses.toScala
+    .exists { ic: InnerClassNode => ic.name == node.name && ic.innerName == null }
 
   private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type = sig match {
     case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
@@ -325,19 +319,16 @@ object Javacp {
 
   private case class MethodInfo(node: MethodNode, signature: MethodSignature)
 
-  private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = {
+  private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath =
     (asmName + ".class").split("/").foldLeft(base) { case (accum, filename) =>
       accum.resolve(filename)
     }
-  }
 
   private def sdisplayName(asmName: String): String = {
     var i = asmName.length - 1
-    while (i >= 0) {
-      asmName.charAt(i) match {
-        case '$' | '/' => return asmName.substring(i + 1)
-        case _ => i -= 1
-      }
+    while (i >= 0) asmName.charAt(i) match {
+      case '$' | '/' => return asmName.substring(i + 1)
+      case _ => i -= 1
     }
     asmName
   }
@@ -347,7 +338,7 @@ object Javacp {
     var slash = false
     val result = new StringBuilder
     val part = new StringBuilder
-    def put(c: Char): Unit = { part.append(c) }
+    def put(c: Char): Unit = part.append(c)
     def flush(): Unit = {
       result.append(n.encode(part.toString))
       part.clear()
@@ -361,15 +352,15 @@ object Javacp {
       } else if (c == '$') {
         flush()
         result.append('#')
-      } else { put(c) }
+      } else put(c)
       i += 1
     }
-    if (part.nonEmpty) { flush() }
+    if (part.nonEmpty) flush()
     result.append('#')
     if (slash) result.toString else Symbols.EmptyPackage + result.toString
   }
 
-  private def saccess(access: Int, symbol: String, kind: s.SymbolInformation.Kind): s.Access = {
+  private def saccess(access: Int, symbol: String, kind: s.SymbolInformation.Kind): s.Access =
     kind match {
       case k.LOCAL | k.PARAMETER | k.TYPE_PARAMETER | k.PACKAGE => s.NoAccess
       case k.INTERFACE => s.PublicAccess()
@@ -382,7 +373,6 @@ object Javacp {
           s.PrivateWithinAccess(within)
         }
     }
-  }
 
   private def sannotations(access: Int): Seq[s.Annotation] = {
     val buf = List.newBuilder[s.Annotation]
@@ -413,7 +403,7 @@ object Javacp {
       symbol: String,
       args: List[s.Type] = Nil,
       prefix: s.Type = s.NoType
-  ): s.Type = { s.TypeRef(prefix, symbol, args) }
+  ): s.Type = s.TypeRef(prefix, symbol, args)
 
   private implicit class XtensionTypeArgument(private val self: TypeArgument) extends AnyVal {
     // FIXME: https://github.com/scalameta/scalameta/issues/1563

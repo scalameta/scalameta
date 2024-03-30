@@ -16,13 +16,11 @@ case class Job[T](xs: GenSeq[T], stream: PrintStream) {
       val currStamp = System.nanoTime()
       val prevStamp = lastStamp.get()
       val silentSeconds = 1.0 * (currStamp - prevStamp) / 1000000000
-      if (silentSeconds > 3.0 && i1 != n) {
-        if (lastStamp.compareAndSet(prevStamp, currStamp)) {
-          val elapsedSeconds = 1.0 * (currStamp - startStamp) / 1000000000
-          val remainingSeconds = elapsedSeconds * (n - i1) / i1
-          val remaining = "%.2f".format(remainingSeconds) + "s"
-          stream.println(s"($i/$n) $remaining remaining")
-        }
+      if (silentSeconds > 3.0 && i1 != n) if (lastStamp.compareAndSet(prevStamp, currStamp)) {
+        val elapsedSeconds = 1.0 * (currStamp - startStamp) / 1000000000
+        val remainingSeconds = elapsedSeconds * (n - i1) / i1
+        val remaining = "%.2f".format(remainingSeconds) + "s"
+        stream.println(s"($i/$n) $remaining remaining")
       }
     }
     val elapsedSeconds = 1.0 * (System.nanoTime() - startStamp) / 1000000000

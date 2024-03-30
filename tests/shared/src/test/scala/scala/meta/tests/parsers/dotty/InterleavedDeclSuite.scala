@@ -9,7 +9,7 @@ class InterleavedDeclSuite extends BaseDottySuite {
   override protected val dialect: Dialect = Scala3Future
 
   test("def f: Unit") {
-    checkTree(templStat("def f: Unit")) { Decl.Def(Nil, tname("f"), Nil, pname("Unit")) }
+    checkTree(templStat("def f: Unit"))(Decl.Def(Nil, tname("f"), Nil, pname("Unit")))
   }
 
   test("def f(x: Int): Unit") {
@@ -49,9 +49,7 @@ class InterleavedDeclSuite extends BaseDottySuite {
     }
   }
 
-  test("def f: X") {
-    checkTree(templStat("def f: X")) { Decl.Def(Nil, tname("f"), Nil, pname("X")) }
-  }
+  test("def f: X")(checkTree(templStat("def f: X"))(Decl.Def(Nil, tname("f"), Nil, pname("X"))))
 
   test("def f[T]: T") {
     checkTree(templStat("def f[T]: T")) {

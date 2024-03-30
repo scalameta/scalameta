@@ -8,44 +8,42 @@ import scala.annotation.tailrec
 import scala.meta.internal.trees.Quasi
 
 object TreeStructure {
-  def apply[T <: Tree]: Structure[T] = {
-    Structure {
-      case _: Name.Anonymous => s(s"""Name.Anonymous()""")
-      case _: Name.This => s(s"""Name.This()""")
-      case _: Name.Placeholder => s(s"""Name.Placeholder()""")
-      case Name.Indeterminate(value) => s("Name(", DoubleQuotes(value), ")")
-      case x => s(
-          x.productPrefix,
-          "(", {
-            def default = {
-              def anyStructure(x: Any): String = x match {
-                case el: String => DoubleQuotes(el)
-                case el: Tree => el.structure
-                case None => "None"
-                case Some(el) => "Some(" + anyStructure(el) + ")"
-                case el: List[_] => iterableStructure(el, "List")
-                case el: Seq[_] => iterableStructure(el, "Seq")
-                case el => el.toString
-              }
-              def iterableStructure(xs: Iterable[_], cls: String): String =
-                if (xs.isEmpty) "Nil" else xs.map(anyStructure).mkString(s"$cls(", ", ", ")")
+  def apply[T <: Tree]: Structure[T] = Structure {
+    case _: Name.Anonymous => s(s"""Name.Anonymous()""")
+    case _: Name.This => s(s"""Name.This()""")
+    case _: Name.Placeholder => s(s"""Name.Placeholder()""")
+    case Name.Indeterminate(value) => s("Name(", DoubleQuotes(value), ")")
+    case x => s(
+        x.productPrefix,
+        "(", {
+          def default = {
+            def anyStructure(x: Any): String = x match {
+              case el: String => DoubleQuotes(el)
+              case el: Tree => el.structure
+              case None => "None"
+              case Some(el) => "Some(" + anyStructure(el) + ")"
+              case el: List[_] => iterableStructure(el, "List")
+              case el: Seq[_] => iterableStructure(el, "Seq")
+              case el => el.toString
+            }
+            def iterableStructure(xs: Iterable[_], cls: String): String =
+              if (xs.isEmpty) "Nil" else xs.map(anyStructure).mkString(s"$cls(", ", ", ")")
 
-              r(x.productIterator.map(anyStructure).toList, ", ")
-            }
-            x match {
-              case _: Quasi => default
-              case x: Lit.String => s(DoubleQuotes.orTriple(x.value))
-              case _: Lit.Unit | _: Lit.Null => s()
-              case x: Lit.Double => s(asFloat(x.format, 'd'))
-              case x: Lit.Float => s(asFloat(x.format, 'f'))
-              case x: Lit.Long => s(x.value.toString + 'L')
-              case x: Lit => s(x.value.toString)
-              case _ => default
-            }
-          },
-          ")"
-        )
-    }
+            r(x.productIterator.map(anyStructure).toList, ", ")
+          }
+          x match {
+            case _: Quasi => default
+            case x: Lit.String => s(DoubleQuotes.orTriple(x.value))
+            case _: Lit.Unit | _: Lit.Null => s()
+            case x: Lit.Double => s(asFloat(x.format, 'd'))
+            case x: Lit.Float => s(asFloat(x.format, 'f'))
+            case x: Lit.Long => s(x.value.toString + 'L')
+            case x: Lit => s(x.value.toString)
+            case _ => default
+          }
+        },
+        ")"
+      )
   }
 
   private def asFloat(value: String, suffix: Char): String = {

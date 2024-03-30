@@ -57,7 +57,7 @@ object ScalametaParserProperties {
     println(markdown)
   }
 
-  def main(args: Array[String]): Unit = { runAndPrintAnalysis() }
+  def main(args: Array[String]): Unit = runAndPrintAnalysis()
 }
 
 class ScalametaParserPropertyTest extends FunSuite {

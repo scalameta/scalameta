@@ -12,9 +12,8 @@ object ScalaVersion {
   case object Scala213 extends Version
   case class Full(ver: String) extends Version
 
-  def isLatest212Or213: Boolean = {
-    version == BuildInfo.latestScala212Version || version == BuildInfo.latestScala213Version
-  }
+  def isLatest212Or213: Boolean = version == BuildInfo.latestScala212Version ||
+    version == BuildInfo.latestScala213Version
 
   def is(major: Int, minor: Int): Boolean = BuildInfo.scalaBinaryVersion == s"$major.$minor"
 
@@ -35,13 +34,11 @@ object ScalaVersion {
 
   def atLeast212_14 = isSupported(minimal212 = 14, minimal213 = 0)
 
-  def getExpected(compat: Seq[(Version, String)], expected: String) = {
-    compat.collectFirst {
-      case (Full(`version`), expected) => expected
-      case (Scala213, expected) if is(2, 13) => expected
-      case (Scala212, expected) if is(2, 12) => expected
-      case (Scala211, expected) if is(2, 11) => expected
-    }.getOrElse(expected)
-  }
+  def getExpected(compat: Seq[(Version, String)], expected: String) = compat.collectFirst {
+    case (Full(`version`), expected) => expected
+    case (Scala213, expected) if is(2, 13) => expected
+    case (Scala212, expected) if is(2, 12) => expected
+    case (Scala211, expected) if is(2, 11) => expected
+  }.getOrElse(expected)
 
 }

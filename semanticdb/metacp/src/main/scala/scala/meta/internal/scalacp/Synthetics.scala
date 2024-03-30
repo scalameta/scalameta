@@ -13,16 +13,14 @@ object Synthetics {
       linkMode: LinkMode
   ): List[s.SymbolInformation] = {
     val getterSym = getterInfo.symbol
-    val setterSym = {
+    val setterSym =
       if (getterSym.isGlobal) {
         val setterSymbolName = s"${getterSym.desc.name}_="
         Symbols.Global(getterSym.owner, d.Method(setterSymbolName, "()"))
-      } else { getterSym + "+1" }
-    }
+      } else getterSym + "+1"
 
-    val paramSym = {
+    val paramSym =
       if (getterSym.isGlobal) Symbols.Global(setterSym, d.Parameter("x$1")) else getterSym + "+2"
-    }
     val paramSig = getterInfo.signature match {
       case s.MethodSignature(_, _, sret) => s.ValueSignature(sret)
       case _ => s.NoSignature
@@ -40,11 +38,9 @@ object Synthetics {
 
     val setterSig = {
       val unit = s.TypeRef(s.NoType, "scala/Unit#", Nil)
-      val setterParamss = {
-        linkMode match {
-          case SymlinkChildren => List(s.Scope(symlinks = List(paramInfo.symbol)))
-          case HardlinkChildren => List(s.Scope(hardlinks = List(paramInfo)))
-        }
+      val setterParamss = linkMode match {
+        case SymlinkChildren => List(s.Scope(symlinks = List(paramInfo.symbol)))
+        case HardlinkChildren => List(s.Scope(hardlinks = List(paramInfo)))
       }
       s.MethodSignature(Some(s.Scope()), setterParamss, unit)
     }

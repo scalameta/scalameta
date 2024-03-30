@@ -7,7 +7,7 @@ import org.scalameta.internal.MacroHelpers
 class Macros(val c: Context) extends MacroHelpers {
   import c.universe._
 
-  def require(requirement: Tree): Tree = { requireWithClue(requirement, q"null") }
+  def require(requirement: Tree): Tree = requireWithClue(requirement, q"null")
 
   def requireWithClue(requirement: Tree, clue: Tree): Tree = {
     val failures = c.freshName(TermName("failures"))
@@ -43,13 +43,11 @@ class Macros(val c: Context) extends MacroHelpers {
     sealed trait Simple extends Prop {
       def diagnostic: String
       def tree: Tree
-      override def emit = {
-        q"""
+      override def emit = q"""
             val $result = $tree
             if ($result) _root_.scala.collection.immutable.Nil
             else _root_.scala.collection.immutable.List($diagnostic)
           """
-      }
     }
     case class Debug() extends Prop {
       override def emit = q"_root_.scala.collection.immutable.Nil"

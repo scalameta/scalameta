@@ -40,7 +40,7 @@ class MinorDottySuite extends BaseDottySuite {
     runTestError[Stat]("def f(open a: Int): Int = 3", "error")
   }
 
-  test("open-soft-modifier") { stat("def open(open: open): open = ???").structure }
+  test("open-soft-modifier")(stat("def open(open: open): open = ???").structure)
 
   test("open-soft-modifier-case") {
     runTestAssert[Source](
@@ -91,7 +91,7 @@ class MinorDottySuite extends BaseDottySuite {
     templStat("case class A private ()")(dialects.Scala3)
   }
 
-  test("xml-literals") { term("<foo>{bar}</foo>")(dialects.Scala3) }
+  test("xml-literals")(term("<foo>{bar}</foo>")(dialects.Scala3))
 
   test("opaque-type-alias") {
     runTestAssert[Stat]("opaque type F = X")(
@@ -268,7 +268,7 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   // Super traits were removed in Scala 3
-  test("super-trait") { runTestError[Stat]("super trait Foo", "`.` expected but `trait` found") }
+  test("super-trait")(runTestError[Stat]("super trait Foo", "`.` expected but `trait` found"))
 
   test("question-type") {
     runTestAssert[Stat]("val stat: Tree[? >: Untyped]")(Decl.Val(

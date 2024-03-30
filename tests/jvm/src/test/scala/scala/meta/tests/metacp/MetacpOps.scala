@@ -14,7 +14,7 @@ object MetacpOps {
       for {
         doc <- docs.documents
         sym <- doc.symbols
-      } { allSymbols += sym.symbol }
+      } allSymbols += sym.symbol
     }
     allSymbols
   }
@@ -23,7 +23,7 @@ object MetacpOps {
   def collectAllSymbolReferences(info: s.SymbolInformation): List[String] = {
     val references = List.newBuilder[String]
     val isHardlink = mutable.Set.empty[String]
-    def visitSymbol(symbol: String): Unit = { if (!isHardlink(symbol)) { references += symbol } }
+    def visitSymbol(symbol: String): Unit = if (!isHardlink(symbol)) references += symbol
     def visitScope(scope: Option[s.Scope])(thunk: => Unit): Unit = {
       var toEnter: Seq[String] = Nil
       scope.foreach { s =>
@@ -50,12 +50,12 @@ object MetacpOps {
       case s.IntersectionType(types) => types.foreach(visitType)
       case s.UnionType(types) => types.foreach(visitType)
       case s.WithType(types) => types.foreach(visitType)
-      case s.StructuralType(tpe, declarations) => visitScope(declarations) { visitType(tpe) }
+      case s.StructuralType(tpe, declarations) => visitScope(declarations)(visitType(tpe))
       case s.AnnotatedType(annotations, tpe) =>
         annotations.foreach(annot => visitType(annot.tpe))
         visitType(tpe)
-      case s.ExistentialType(tpe, declarations) => visitScope(declarations) { visitType(tpe) }
-      case s.UniversalType(typeParameters, tpe) => visitScope(typeParameters) { visitType(tpe) }
+      case s.ExistentialType(tpe, declarations) => visitScope(declarations)(visitType(tpe))
+      case s.UniversalType(typeParameters, tpe) => visitScope(typeParameters)(visitType(tpe))
       case s.ByNameType(tpe) => visitType(tpe)
       case s.RepeatedType(tpe) => visitType(tpe)
       case s.MatchType(scrutinee, cases) =>
@@ -64,7 +64,7 @@ object MetacpOps {
           visitType(kase.key)
           visitType(kase.body)
         }
-      case x: s.LambdaType => visitScope(x.parameters) { visitType(x.returnType) }
+      case x: s.LambdaType => visitScope(x.parameters)(visitType(x.returnType))
       case s.NoType =>
     }
     def visitSignature(signature: s.Signature): Unit = signature match {
@@ -77,7 +77,7 @@ object MetacpOps {
         }
       case s.MethodSignature(typeParameters, parameterLists, returnType) =>
         parameterLists.foreach(s => visitScope(Some(s))(()))
-        visitScope(typeParameters) { visitType(returnType) }
+        visitScope(typeParameters)(visitType(returnType))
       case s.TypeSignature(typeParameters, lowerBound, upperBound) => visitScope(typeParameters) {
           visitType(lowerBound)
           visitType(upperBound)

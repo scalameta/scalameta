@@ -6,21 +6,20 @@ import scala.annotation.tailrec
 import scala.meta.cli._
 
 final class Settings private (val format: Format, val paths: List[Path]) {
-  private def this() = { this(format = Format.Compact, paths = Nil) }
+  private def this() = this(format = Format.Compact, paths = Nil)
 
-  def withFormat(format: Format): Settings = { copy(format = format) }
+  def withFormat(format: Format): Settings = copy(format = format)
 
-  def withPaths(paths: List[Path]): Settings = { copy(paths = paths) }
+  def withPaths(paths: List[Path]): Settings = copy(paths = paths)
 
-  private def copy(format: Format = format, paths: List[Path] = paths): Settings = {
+  private def copy(format: Format = format, paths: List[Path] = paths): Settings =
     new Settings(format = format, paths = paths)
-  }
 }
 
 object Settings {
   def parse(args: List[String], reporter: Reporter): Option[Settings] = {
     @tailrec
-    def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
+    def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] =
       args match {
         case "--" :: rest => loop(settings, false, args)
         case "-compact" :: rest if allowOptions =>
@@ -37,9 +36,8 @@ object Settings {
           loop(settings.copy(paths = paths1), allowOptions = true, rest)
         case Nil => Some(settings)
       }
-    }
     loop(Settings(), true, args)
   }
 
-  def apply(): Settings = { new Settings() }
+  def apply(): Settings = new Settings()
 }

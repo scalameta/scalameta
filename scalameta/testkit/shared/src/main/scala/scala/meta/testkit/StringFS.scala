@@ -39,23 +39,20 @@ object StringFS {
       root: AbsolutePath = AbsolutePath(Files.createTempDirectory("scalameta")),
       charset: Charset = StandardCharsets.UTF_8
   ): AbsolutePath = {
-    if (layout.trim.nonEmpty) {
-      layout.split("(?=\n/)").foreach { row =>
-        row.stripPrefix("\n").split("\n", 2).toList match {
-          case path :: contents :: Nil =>
-            val file = root.resolve(path.stripPrefix("/"))
-            Files.createDirectories(file.toNIO.getParent)
-            Files.write(
-              file.toNIO,
-              contents.getBytes(charset),
-              StandardOpenOption.CREATE,
-              StandardOpenOption.TRUNCATE_EXISTING
-            )
-          case els => throw new IllegalArgumentException(
-              s"Unable to split argument info path/contents! \n$els"
-            )
+    if (layout.trim.nonEmpty) layout.split("(?=\n/)").foreach { row =>
+      row.stripPrefix("\n").split("\n", 2).toList match {
+        case path :: contents :: Nil =>
+          val file = root.resolve(path.stripPrefix("/"))
+          Files.createDirectories(file.toNIO.getParent)
+          Files.write(
+            file.toNIO,
+            contents.getBytes(charset),
+            StandardOpenOption.CREATE,
+            StandardOpenOption.TRUNCATE_EXISTING
+          )
+        case els =>
+          throw new IllegalArgumentException(s"Unable to split argument info path/contents! \n$els")
 
-        }
       }
     }
     root
@@ -84,12 +81,11 @@ object StringFS {
       root: AbsolutePath,
       includePath: RelativePath => Boolean = _ => true,
       charset: Charset = StandardCharsets.UTF_8
-  ): String = {
-    FileIO.listAllFilesRecursively(root).files.filter(includePath).sortBy(_.toNIO).map { path =>
+  ): String = FileIO.listAllFilesRecursively(root).files.filter(includePath).sortBy(_.toNIO)
+    .map { path =>
       val contents = FileIO.slurp(root.resolve(path), charset)
       s"""|/$path
           |$contents""".stripMargin
     }.mkString("\n").replace(File.separatorChar, '/') // ensure original separators
-  }
 
 }

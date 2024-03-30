@@ -38,7 +38,7 @@ trait InputOps {
       case input: m.Input.VirtualFile if config.text.isOn => input.value
       case _ => ""
     }
-    def toMD5: String = {
+    def toMD5: String =
       if (config.md5.isOff) ""
       else {
         val md5 = MessageDigest.getInstance("MD5")
@@ -46,23 +46,21 @@ trait InputOps {
         md5.update(bytes)
         Hex.bytesToHex(md5.digest())
       }
-    }
     def toInput: m.Input = gSourceFileInputCache.getOrElseUpdate(
-      gsource, {
-        gsource.file match {
-          case gfile: GPlainFile =>
-            if (config.text.isOn) {
-              val path = m.AbsolutePath(gfile.file)
-              val label = config.uriRelativeToSourceRoot(path).toString
-              // NOTE: Can't use gsource.content because it's preprocessed by scalac.
-              val contents = FileIO.slurp(path, UTF_8)
-              m.Input.VirtualFile(label, contents)
-            } else { m.Input.File(gfile.file) }
-          case gfile: VirtualFile =>
-            val uri = URLEncoder.encode(gfile.path, UTF_8.name)
-            m.Input.VirtualFile(uri, gsource.content.mkString)
-          case _ => m.Input.None
-        }
+      gsource,
+      gsource.file match {
+        case gfile: GPlainFile =>
+          if (config.text.isOn) {
+            val path = m.AbsolutePath(gfile.file)
+            val label = config.uriRelativeToSourceRoot(path).toString
+            // NOTE: Can't use gsource.content because it's preprocessed by scalac.
+            val contents = FileIO.slurp(path, UTF_8)
+            m.Input.VirtualFile(label, contents)
+          } else m.Input.File(gfile.file)
+        case gfile: VirtualFile =>
+          val uri = URLEncoder.encode(gfile.path, UTF_8.name)
+          m.Input.VirtualFile(uri, gsource.content.mkString)
+        case _ => m.Input.None
       }
     )
   }

@@ -13,8 +13,8 @@ package object inputs {
       val end = if (notEof) input.lineToOffset(pos.startLine + 1) else start
       new String(input.chars, start, end - start).stripLineEnd
     }
-    def lineCaret: String = { " " * pos.startColumn + "^" }
-    def formatMessage(severity: String, message: String): String = {
+    def lineCaret: String = " " * pos.startColumn + "^"
+    def formatMessage(severity: String, message: String): String =
       // WONTFIX: https://github.com/scalameta/scalameta/issues/383
       if (pos != Position.None) {
         val input = pos.input
@@ -22,8 +22,7 @@ package object inputs {
         val line = lineContent
         val caret = lineCaret
         header + EOL + line + EOL + caret
-      } else { s"$severity: $message" }
-    }
+      } else s"$severity: $message"
   }
 
   implicit class XtensionInputSyntaxStructure(private val input: Input) extends AnyVal {

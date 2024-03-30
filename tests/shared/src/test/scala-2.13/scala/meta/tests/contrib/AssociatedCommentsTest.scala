@@ -196,13 +196,11 @@ class AssociatedCommentsTest extends FunSuite {
   )(leading: Map[Tree, Set[String]] = Map.empty, trailing: Map[Tree, Set[String]] = Map.empty): Unit = {
     val associatedComments = AssociatedComments(input.tokens)
     // check expected leading comments
-    for ((t, comments) <- leading) {
-      assertEquals(
-        associatedComments.leading(t).map(_.text),
-        comments,
-        s"actual leading comments didn't match expectation for ${t.syntax}"
-      )
-    }
+    for ((t, comments) <- leading) assertEquals(
+      associatedComments.leading(t).map(_.text),
+      comments,
+      s"actual leading comments didn't match expectation for ${t.syntax}"
+    )
     // check unexpected leading comments
     input.foreach { t =>
       if (!leading.contains(t)) assertEquals(
@@ -212,13 +210,11 @@ class AssociatedCommentsTest extends FunSuite {
       )
     }
     // check expected trailing comments
-    for ((t, comments) <- trailing) {
-      assertEquals(
-        associatedComments.trailing(t).map(_.text),
-        comments,
-        s"actual trailing comments didn't match expectation for ${t.syntax}"
-      )
-    }
+    for ((t, comments) <- trailing) assertEquals(
+      associatedComments.trailing(t).map(_.text),
+      comments,
+      s"actual trailing comments didn't match expectation for ${t.syntax}"
+    )
     // check unexpected trailing comments
     input.foreach { t =>
       if (!trailing.contains(t)) assertEquals(

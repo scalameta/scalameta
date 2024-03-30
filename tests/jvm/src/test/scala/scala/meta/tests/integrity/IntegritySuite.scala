@@ -22,9 +22,9 @@ class IntegritySuite extends FunSuite {
 
     var success = true
     val relpaths = scala.collection.mutable.Map[String, String]()
-    cp.foreach(dir => {
+    cp.foreach { dir =>
       val classfiles = deepfiles(new File(dir)).map(_.getAbsolutePath).filter(_.endsWith(".class"))
-      classfiles.foreach(abspath => {
+      classfiles.foreach { abspath =>
         var relpath = abspath.substring(dir.length)
         if (relpath.startsWith(separator)) relpath = relpath.substring(1)
         relpath = relpath.toLowerCase
@@ -32,9 +32,9 @@ class IntegritySuite extends FunSuite {
         if (relpaths.contains(relpath)) {
           success = false
           Console.err.println(s"Overlapping classfiles: ${relpaths(relpath)} and $abspath")
-        } else { relpaths(relpath) = abspath }
-      })
-    })
+        } else relpaths(relpath) = abspath
+      }
+    }
 
     if (!success) fail("Detected overlapping classfiles")
   }

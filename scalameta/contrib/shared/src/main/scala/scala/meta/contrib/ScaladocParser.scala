@@ -15,25 +15,22 @@ object ScaladocParser {
    */
   def parseScaladoc(comment: Comment): Option[List[DocToken]] = {
 
-    def parseRec(toParse: String): List[DocToken] = {
-      parsers.iterator.map { p => parse(toParse, p(_)) }.collectFirst {
-        case Parsed.Success(value, index) if index != 0 =>
-          // Parse was successful, check the remaining Scaladoc
-          val remainingScaladoc = toParse.substring(index, toParse.length).dropWhile(c => c == ' ')
+    def parseRec(toParse: String): List[DocToken] = parsers.iterator.map { p =>
+      parse(toParse, p(_))
+    }.collectFirst {
+      case Parsed.Success(value, index) if index != 0 =>
+        // Parse was successful, check the remaining Scaladoc
+        val remainingScaladoc = toParse.substring(index, toParse.length).dropWhile(c => c == ' ')
 
-          if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n")) {
-            // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
-            if (remainingScaladoc.take(2) == "\n\n") {
-              List(value, DocToken(Paragraph)) ++ parseRec(remainingScaladoc.dropWhile(_ == '\n'))
-            } else {
-              List(value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
-            }
-          } else {
-            // No more elements to parse, end recursion.
-            List(value)
-          }
-      }.getOrElse(Nil)
-    }
+        if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n"))
+          // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
+          if (remainingScaladoc.take(2) == "\n\n") List(value, DocToken(Paragraph)) ++
+            parseRec(remainingScaladoc.dropWhile(_ == '\n'))
+          else List(value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
+        else
+          // No more elements to parse, end recursion.
+          List(value)
+    }.getOrElse(Nil)
 
     comment.content.map(parseRec)
   }
@@ -79,29 +76,24 @@ object ScaladocParser {
     def inheritDocParser[$: P] = P("@inheritdoc".!).map(_ => DocToken(InheritDoc))
 
     // Parsers for all labelled docs instances
-    val labelledParsers: List[P[_] => P[DocToken]] = {
+    val labelledParsers: List[P[_] => P[DocToken]] = DocToken.tagTokenKinds.map { kind =>
+      val label = kind.label
+      if (kind.numberParameters == 1) {
+        // Single parameter doc tokens
+        def tagKindParser[$: P] = P(s"$label " ~ bodyParser.map(c => DocToken(kind, c.trim)))
+        tagKindParser(_: P[_])
+      } else {
+        require(kind.numberParameters == 2)
+        // Multiple parameter doc tokens
+        def parser[$: P] = {
+          def nameParser: P[String] = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
 
-      DocToken.tagTokenKinds.map { kind =>
-        val label = kind.label
-        if (kind.numberParameters == 1) {
-          // Single parameter doc tokens
-          def tagKindParser[$: P] = P(s"$label " ~ bodyParser.map(c => DocToken(kind, c.trim)))
-          tagKindParser(_: P[_])
-        } else {
-          require(kind.numberParameters == 2)
-          // Multiple parameter doc tokens
-          def parser[$: P] = {
-            def nameParser: P[String] = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
-
-            def nameAndBodyParsers: P[DocToken] = {
-              (nameParser ~ " ".rep.? ~ bodyParser.!).map { case (name, body) =>
-                DocToken(kind, name, body)
-              }
-            }
-            P(s"$label" ~ nameAndBodyParsers)
+          def nameAndBodyParsers: P[DocToken] = (nameParser ~ " ".rep.? ~ bodyParser.!).map {
+            case (name, body) => DocToken(kind, name, body)
           }
-          parser(_: P[_])
+          P(s"$label" ~ nameAndBodyParsers)
         }
+        parser(_: P[_])
       }
     }
 

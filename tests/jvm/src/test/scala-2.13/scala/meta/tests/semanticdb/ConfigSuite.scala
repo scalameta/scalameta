@@ -29,7 +29,7 @@ class ConfigSuite extends FunSuite {
       input: String,
       fn: s.TextDocument => Unit,
       targetroot: AbsolutePath = generateTargetroot()
-  ): Unit = {
+  ): Unit =
     // each test case takes ~1-2 seconds to run so they're modestly fast but still
     // ~100x slower than regular unit test.
     test(name.tag(Slow)) {
@@ -55,7 +55,6 @@ class ConfigSuite extends FunSuite {
       assertEquals(docs.documents.length, 1, docs.toProtoString)
       fn(docs.documents.head)
     }
-  }
 
   check(
     "symbols:local-only",
@@ -89,7 +88,7 @@ class ConfigSuite extends FunSuite {
        |object A {
        |}
        |""".stripMargin,
-    { doc => assert(doc.symbols.isEmpty) }
+    doc => assert(doc.symbols.isEmpty)
   )
 
   check(
@@ -136,7 +135,7 @@ class ConfigSuite extends FunSuite {
     """|/A.scala
        |object A
        |""".stripMargin,
-    { doc => assert(doc.md5.isEmpty) }
+    doc => assert(doc.md5.isEmpty)
   )
 
   check(
@@ -147,7 +146,7 @@ class ConfigSuite extends FunSuite {
        |   List(1).map(_ + 1)
        |}
        |""".stripMargin,
-    { doc => assert(doc.synthetics.isEmpty) }
+    doc => assert(doc.synthetics.isEmpty)
   )
 
   check(
@@ -158,7 +157,7 @@ class ConfigSuite extends FunSuite {
        |   List(1).map(_ + 1)
        |}
        |""".stripMargin,
-    { doc => assert(doc.synthetics.nonEmpty) }
+    doc => assert(doc.synthetics.nonEmpty)
   )
 
 }

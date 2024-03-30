@@ -11,9 +11,8 @@ class XmlSuite extends ParseSuite {
     test(logger.revealWhitespace(original).ignore) {}
 
   def checkToken(original: String, expected: String): Unit = {
-    def tokensStructure(tokenized: Tokens): String = {
-      tokenized.map(_.structure).mkString("", "\n", "\n")
-    }
+    def tokensStructure(tokenized: Tokens): String = tokenized.map(_.structure)
+      .mkString("", "\n", "\n")
 
     def tokenize(code: String): Tokens = {
       val convert = scala.meta.inputs.Input.stringToInput
@@ -31,7 +30,7 @@ class XmlSuite extends ParseSuite {
   /** Default catch only ParseException */
   override def checkError(stat: String)(implicit dialect: Dialect): Unit =
     test(logger.revealWhitespace(stat).take(50)) {
-      val thrown = intercept[Exception] { templStat(stat)(dialect) }
+      val thrown = intercept[Exception](templStat(stat)(dialect))
       assert(thrown.isInstanceOf[ParseException] || thrown.isInstanceOf[TokenizeException])
     }
 

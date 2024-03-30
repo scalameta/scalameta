@@ -25,10 +25,9 @@ object TreeOps {
   def collectFirst[B](tree: Tree)(pf: PartialFunction[Tree, B]): Option[B] = {
     var result = Option.empty[B]
     object traverser extends SimpleTraverser {
-      override def apply(t: Tree): Unit = {
-        if (result.isEmpty && pf.isDefinedAt(t)) { result = Some(pf(t)) }
-        else if (result.isEmpty) { super.apply(t) }
-      }
+      override def apply(t: Tree): Unit =
+        if (result.isEmpty && pf.isDefinedAt(t)) result = Some(pf(t))
+        else if (result.isEmpty) super.apply(t)
     }
     traverser(tree)
     result

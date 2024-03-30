@@ -38,7 +38,7 @@ addCommandAlias("benchQuick", benchQuick.command)
 commands += Command.command("ci-windows") { s =>
   "testsJVM/all:testOnly -- --exclude-tags=SkipWindows" :: s
 }
-commands += Command.command("mima") { s => "mimaReportBinaryIssues" :: "doc" :: s }
+commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s)
 commands += Command.command("download-scala-library") { s =>
   val out = file("target/scala-library")
   IO.unzipURL(
@@ -227,7 +227,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
         base / "semanticdb" / "semanticdb"
       )
     },
-    mergedModule { base => List(base / "scalameta" / "contrib") }
+    mergedModule(base => List(base / "scalameta" / "contrib"))
   ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading).jvmSettings(
     Compile / unmanagedSourceDirectories ++= List(
       (ThisBuild / baseDirectory).value / "semanticdb" / "metacp",
@@ -417,7 +417,7 @@ lazy val requiresMacrosSetting = Def.settings(scalacOptions += {
   "-J" + flat.hashCode
 })
 
-def isScalaBinaryVersion(version: String) = Def.setting { scalaBinaryVersion.value == version }
+def isScalaBinaryVersion(version: String) = Def.setting(scalaBinaryVersion.value == version)
 lazy val isScala211 = isScalaBinaryVersion("2.11")
 lazy val isScala213 = isScalaBinaryVersion("2.13")
 
@@ -478,7 +478,7 @@ lazy val mergeSettings = Def.settings(
       val oldStrategy = (assembly / assemblyMergeStrategy).value
       oldStrategy(x)
   },
-  mimaCurrentClassfiles := { (Compile / Keys.`package`).value }
+  mimaCurrentClassfiles := (Compile / Keys.`package`).value
 )
 
 lazy val protobufSettings = Def.settings(
@@ -499,16 +499,16 @@ lazy val protobufSettings = Def.settings(
   PB.additionalDependencies := Nil,
   libraryDependencies ++= {
     val scalapbVersion =
-      if (isScala211.value) { "0.9.8" }
-      else if (scalaVersion.value == "2.13.0" || scalaVersion.value == "2.13.1") { "0.10.11" }
-      else { scalapb.compiler.Version.scalapbVersion }
+      if (isScala211.value) "0.9.8"
+      else if (scalaVersion.value == "2.13.0" || scalaVersion.value == "2.13.1") "0.10.11"
+      else scalapb.compiler.Version.scalapbVersion
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion % "protobuf",
       "com.thesamet.scalapb" % "protoc-gen-scala" % scalapbVersion % "protobuf" artifacts
-        (if (scala.util.Properties.isWin) {
+        (if (scala.util.Properties.isWin)
            Artifact("protoc-gen-scala", PB.ProtocPlugin, "bat", "windows")
-         } else { Artifact("protoc-gen-scala", PB.ProtocPlugin, "sh", "unix") })
+         else Artifact("protoc-gen-scala", PB.ProtocPlugin, "sh", "unix"))
     )
   }
 )
@@ -550,14 +550,13 @@ lazy val publishableSettings = Def.settings(
           val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
           !isJS && !isNative
         }
-        if (isJVM) {
-          previousVersion.map { previousVersion =>
-            organization.value % moduleName.value % previousVersion cross crossVersion.value
-          }
-        } else { None }
+        if (isJVM) previousVersion.map { previousVersion =>
+          organization.value % moduleName.value % previousVersion cross crossVersion.value
+        }
+        else None
       }
       previousArtifact.toSet
-    } else { Set() }
+    } else Set()
   },
   mimaBinaryIssueFilters += Mima.languageAgnosticCompatibilityPolicy,
   mimaBinaryIssueFilters += Mima.scalaSpecificCompatibilityPolicy,
@@ -684,10 +683,9 @@ lazy val enableHardcoreMacros = macroDependencies(hardcore = true)
 
 def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
   val scalaReflect = Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided")
-  val scalaCompiler = {
+  val scalaCompiler =
     if (hardcore) Seq("org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided")
     else Nil
-  }
   scalaReflect ++ scalaCompiler
 }
 

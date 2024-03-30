@@ -18,53 +18,43 @@ final class Settings private (
     val stubBrokenSignatures: Boolean,
     val logBrokenSignatures: Boolean
 ) {
-  private def this() = {
-    this(
-      out = Settings.defaultOut,
-      classpath = Classpath(Nil),
-      dependencyClasspath = Classpath(Nil),
-      scalaLibrarySynthetics = false,
-      par = false,
-      verbose = false,
-      usejavacp = false,
-      includeJdk = false,
-      stubBrokenSignatures = false,
-      logBrokenSignatures = false
-    )
-  }
+  private def this() = this(
+    out = Settings.defaultOut,
+    classpath = Classpath(Nil),
+    dependencyClasspath = Classpath(Nil),
+    scalaLibrarySynthetics = false,
+    par = false,
+    verbose = false,
+    usejavacp = false,
+    includeJdk = false,
+    stubBrokenSignatures = false,
+    logBrokenSignatures = false
+  )
 
-  def withOut(out: AbsolutePath): Settings = { copy(out = out) }
+  def withOut(out: AbsolutePath): Settings = copy(out = out)
 
   @deprecated("Use withOut instead", "4.0.0")
-  def withCacheDir(out: AbsolutePath): Settings = { copy(out = out) }
+  def withCacheDir(out: AbsolutePath): Settings = copy(out = out)
 
-  def withClasspath(classpath: Classpath): Settings = { copy(classpath = classpath) }
+  def withClasspath(classpath: Classpath): Settings = copy(classpath = classpath)
 
-  def withDependencyClasspath(classpath: Classpath): Settings = {
-    copy(dependencyClasspath = classpath)
-  }
+  def withDependencyClasspath(classpath: Classpath): Settings = copy(dependencyClasspath = classpath)
 
-  def withScalaLibrarySynthetics(include: Boolean): Settings = {
-    copy(scalaLibrarySynthetics = include)
-  }
+  def withScalaLibrarySynthetics(include: Boolean): Settings = copy(scalaLibrarySynthetics = include)
 
-  def withPar(par: Boolean): Settings = { copy(par = par) }
+  def withPar(par: Boolean): Settings = copy(par = par)
 
-  def withVerbose(verbose: Boolean): Settings = { copy(verbose = verbose) }
+  def withVerbose(verbose: Boolean): Settings = copy(verbose = verbose)
 
-  def withUsejavacp(usejavacp: Boolean): Settings = {
-    copy(usejavacp = usejavacp, includeJdk = true)
-  }
+  def withUsejavacp(usejavacp: Boolean): Settings = copy(usejavacp = usejavacp, includeJdk = true)
 
-  def withIncludeJdk(includeJdk: Boolean): Settings = { copy(includeJdk = includeJdk) }
+  def withIncludeJdk(includeJdk: Boolean): Settings = copy(includeJdk = includeJdk)
 
-  def withStubBrokenSignatures(stubBrokenSignatures: Boolean): Settings = {
+  def withStubBrokenSignatures(stubBrokenSignatures: Boolean): Settings =
     copy(stubBrokenSignatures = stubBrokenSignatures)
-  }
 
-  def withLogBrokenSignatures(logBrokenSignatures: Boolean): Settings = {
+  def withLogBrokenSignatures(logBrokenSignatures: Boolean): Settings =
     copy(logBrokenSignatures = logBrokenSignatures)
-  }
 
   private def copy(
       out: AbsolutePath = out,
@@ -77,26 +67,24 @@ final class Settings private (
       includeJdk: Boolean = includeJdk,
       stubBrokenSignatures: Boolean = stubBrokenSignatures,
       logBrokenSignatures: Boolean = logBrokenSignatures
-  ): Settings = {
-    new Settings(
-      out = out,
-      classpath = classpath,
-      dependencyClasspath = dependencyClasspath,
-      scalaLibrarySynthetics = scalaLibrarySynthetics,
-      par = par,
-      verbose = verbose,
-      usejavacp = usejavacp,
-      includeJdk = includeJdk,
-      stubBrokenSignatures = stubBrokenSignatures,
-      logBrokenSignatures = logBrokenSignatures
-    )
-  }
+  ): Settings = new Settings(
+    out = out,
+    classpath = classpath,
+    dependencyClasspath = dependencyClasspath,
+    scalaLibrarySynthetics = scalaLibrarySynthetics,
+    par = par,
+    verbose = verbose,
+    usejavacp = usejavacp,
+    includeJdk = includeJdk,
+    stubBrokenSignatures = stubBrokenSignatures,
+    logBrokenSignatures = logBrokenSignatures
+  )
 }
 
 object Settings {
   def parse(args: List[String], reporter: Reporter): Option[Settings] = {
     @tailrec
-    def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
+    def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] =
       args match {
         case "--" :: rest => loop(settings, false, rest)
         case "--out" :: out :: rest if allowOptions =>
@@ -127,11 +115,10 @@ object Settings {
           None
         case Nil => Some(settings)
       }
-    }
     loop(Settings(), allowOptions = true, args)
   }
 
-  def defaultOut: AbsolutePath = { PathIO.workingDirectory.resolve("out") }
+  def defaultOut: AbsolutePath = PathIO.workingDirectory.resolve("out")
 
-  def apply(): Settings = { new Settings() }
+  def apply(): Settings = new Settings()
 }

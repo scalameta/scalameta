@@ -7,7 +7,7 @@ import scala.annotation.tailrec
 sealed abstract class QuoteStyle(styleStr: String) {
   private final val styleEscaped: String = {
     val sb = new java.lang.StringBuilder(2 * styleStr.length)
-    styleStr.foreach { ch => sb.append("\\").append(ch) }
+    styleStr.foreach(ch => sb.append("\\").append(ch))
     sb.toString
   }
 

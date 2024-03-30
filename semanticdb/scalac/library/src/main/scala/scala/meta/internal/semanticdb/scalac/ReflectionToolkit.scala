@@ -107,9 +107,8 @@ trait ReflectionToolkit {
   }
 
   implicit class XtensionDesugarings[T: Attachable](carrier: T) {
-    private def rememberOriginal(designation: String, original: Tree): T = {
+    private def rememberOriginal(designation: String, original: Tree): T =
       if (carrier == original) carrier else carrier.appendMetadata(designation -> original)
-    }
     def rememberConstfoldOf(original: Tree) = rememberOriginal("constantFoldingOriginal", original)
     def rememberClassOf(original: Tree) = rememberOriginal("classOfOriginal", original)
     def rememberNewArrayOf(original: Tree) = rememberOriginal("newArrayOriginal", original)

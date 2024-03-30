@@ -34,27 +34,25 @@ private[meta] case class CharArrayReader private (
       skipCR()
       potentialLineEnd()
     }
-    if (ch == '"' && !dialect.allowMultilinePrograms) {
+    if (ch == '"' && !dialect.allowMultilinePrograms)
       readerError("double quotes are not allowed in single-line quasiquotes", at = begCharOffset)
-    }
   }
 
-  final def nextCommentChar(): Unit = {
-    if (endCharOffset >= buf.length) { ch = SU }
+  final def nextCommentChar(): Unit =
+    if (endCharOffset >= buf.length) ch = SU
     else {
       ch = buf(endCharOffset)
       begCharOffset = endCharOffset
       endCharOffset += 1
       checkLineEnd()
     }
-  }
 
   /**
    * Advance one character, leaving CR;LF pairs intact. This is for use in multi-line strings, so
    * there are no "potential line ends" here.
    */
-  final def nextRawChar(): Unit = {
-    if (endCharOffset >= buf.length) { ch = SU }
+  final def nextRawChar(): Unit =
+    if (endCharOffset >= buf.length) ch = SU
     else {
       begCharOffset = endCharOffset
       val (hi, hiEnd) = readUnicodeChar(buf, endCharOffset)
@@ -74,7 +72,6 @@ private[meta] case class CharArrayReader private (
         }
       }
     }
-  }
 
   def nextNonWhitespace = {
     while (ch == ' ' || ch == '\t') nextRawChar()
@@ -91,11 +88,8 @@ private[meta] case class CharArrayReader private (
   }
 
   /** Handle line ends */
-  private def potentialLineEnd(): Unit = {
-    if (checkLineEnd() && !dialect.allowMultilinePrograms) {
-      readerError("line breaks are not allowed in single-line quasiquotes", at = begCharOffset)
-    }
-  }
+  private def potentialLineEnd(): Unit = if (checkLineEnd() && !dialect.allowMultilinePrograms)
+    readerError("line breaks are not allowed in single-line quasiquotes", at = begCharOffset)
 
   private def checkLineEnd(): Boolean = {
     val ok = ch == LF || ch == FF

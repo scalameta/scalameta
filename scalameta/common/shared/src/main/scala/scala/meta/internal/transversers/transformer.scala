@@ -95,8 +95,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
 
   def leafHandlerType(): Tree = TreeClass
 
-  def generatedMethods(): Tree = {
-    q"""
+  def generatedMethods(): Tree = q"""
       def apply(treeopt: $OptionClass[$TreeClass]): $OptionClass[$TreeClass] = treeopt match {
         case $SomeModule(tree) =>
           val tree1 = apply(tree)
@@ -181,5 +180,4 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         throw new UnsupportedOperationException(errorHeader + errorDetails)
       }
     """
-  }
 }

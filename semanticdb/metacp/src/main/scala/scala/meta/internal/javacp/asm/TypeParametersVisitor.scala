@@ -18,9 +18,8 @@ trait TypeParametersVisitor {
     lastTypeParameterVisitor = visitor
   }
 
-  override def visitClassBound(): SignatureVisitor = { lastTypeParameterVisitor.visitClassBound() }
+  override def visitClassBound(): SignatureVisitor = lastTypeParameterVisitor.visitClassBound()
 
-  override def visitInterfaceBound(): SignatureVisitor = {
+  override def visitInterfaceBound(): SignatureVisitor =
     lastTypeParameterVisitor.visitInterfaceBound()
-  }
 }

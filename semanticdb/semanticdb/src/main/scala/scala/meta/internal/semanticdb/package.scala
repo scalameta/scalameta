@@ -66,14 +66,12 @@ package object semanticdb {
   }
 
   implicit class XtensionSemanticdbScope(private val scope: Scope) extends AnyVal {
-    def symbols: List[String] = {
+    def symbols: List[String] =
       if (scope.symlinks.nonEmpty) scope.symlinks.toList else scope.hardlinks.map(_.symbol).toList
-    }
-    def infos: List[SymbolInformation] = {
-      if (scope.symlinks.nonEmpty) {
-        scope.symlinks.map(symbol => SymbolInformation(symbol = symbol)).toList
-      } else { scope.hardlinks.toList }
-    }
+    def infos: List[SymbolInformation] =
+      if (scope.symlinks.nonEmpty) scope.symlinks.map(symbol => SymbolInformation(symbol = symbol))
+        .toList
+      else scope.hardlinks.toList
   }
 
   implicit class XtensionSemanticdbScopeOpt(private val scopeOpt: Option[Scope]) extends AnyVal {
@@ -97,41 +95,37 @@ package object semanticdb {
   implicit class XtensionSemanticdbConstant(private val const: Constant) extends AnyVal {
     def nonEmpty: Boolean = const.isDefined
 
-    def value: Option[Any] = {
-      const match {
-        case NoConstant => None
-        case UnitConstant() => Some(())
-        case BooleanConstant(value) => Some(value)
-        case ByteConstant(value) => Some(value.toByte)
-        case ShortConstant(value) => Some(value.toShort)
-        case CharConstant(value) => Some(value.toChar)
-        case IntConstant(value) => Some(value)
-        case LongConstant(value) => Some(value)
-        case FloatConstant(value) => Some(value)
-        case DoubleConstant(value) => Some(value)
-        case StringConstant(value) => Some(value)
-        case NullConstant() => Some(null)
-      }
+    def value: Option[Any] = const match {
+      case NoConstant => None
+      case UnitConstant() => Some(())
+      case BooleanConstant(value) => Some(value)
+      case ByteConstant(value) => Some(value.toByte)
+      case ShortConstant(value) => Some(value.toShort)
+      case CharConstant(value) => Some(value.toChar)
+      case IntConstant(value) => Some(value)
+      case LongConstant(value) => Some(value)
+      case FloatConstant(value) => Some(value)
+      case DoubleConstant(value) => Some(value)
+      case StringConstant(value) => Some(value)
+      case NullConstant() => Some(null)
     }
   }
 
   implicit class XtensionSemanticdbConstantCompanion(private val const: Constant.type)
       extends AnyVal {
-    def apply(value: Any): Constant = {
-      value match {
-        case () => UnitConstant()
-        case value: Boolean => BooleanConstant(value)
-        case value: Byte => ByteConstant(value.toInt)
-        case value: Short => ShortConstant(value.toInt)
-        case value: Char => CharConstant(value.toInt)
-        case value: Int => IntConstant(value)
-        case value: Long => LongConstant(value)
-        case value: Float => FloatConstant(value)
-        case value: Double => DoubleConstant(value)
-        case value: String => StringConstant(value)
-        case null => NullConstant()
-        case _ => sys.error(s"unsupported value ${value.getClass} $value")
-      }
+    def apply(value: Any): Constant = value match {
+      case () => UnitConstant()
+      case value: Boolean => BooleanConstant(value)
+      case value: Byte => ByteConstant(value.toInt)
+      case value: Short => ShortConstant(value.toInt)
+      case value: Char => CharConstant(value.toInt)
+      case value: Int => IntConstant(value)
+      case value: Long => LongConstant(value)
+      case value: Float => FloatConstant(value)
+      case value: Double => DoubleConstant(value)
+      case value: String => StringConstant(value)
+      case null => NullConstant()
+      case _ => sys.error(s"unsupported value ${value.getClass} $value")
     }
   }
 

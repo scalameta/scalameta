@@ -159,6 +159,6 @@ class ScalaExprPositionParser(dialect: Dialect) {
     if (parsedSuccesfully) {
       _splicePositions += XmlTokenRange(index, nextIndex)
       ctx.freshSuccessUnit(index = nextIndex)
-    } else { ctx.freshFailure(nextIndex) }
+    } else ctx.freshFailure(nextIndex)
   }
 }

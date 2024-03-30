@@ -35,5 +35,5 @@ trait Metacp {
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
 class MetacpScalaLibrary extends Metacp {
   @Benchmark
-  def run(bs: BenchmarkState): Unit = { runImpl(bs.scalaLibrary, Classpath(Nil)) }
+  def run(bs: BenchmarkState): Unit = runImpl(bs.scalaLibrary, Classpath(Nil))
 }

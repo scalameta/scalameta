@@ -31,36 +31,34 @@ class SignatureSuite extends FunSuite {
 
   // Validates that all signatures of the classfiles in the given
   // library pass assertSignatureRoundtrip
-  def checkSignatureRoundtrip(library: Library): Unit = {
-    test(library.name.tag(Slow)) {
-      val failingSignatures = ArrayBuffer.empty[String]
-      library.classpath().visit { root =>
-        new java.nio.file.SimpleFileVisitor[Path] {
-          override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
-            if (PathIO.extension(file) == "class") {
-              val node = AbsolutePath(file).toClassNode
-              val tests = checkAllSignatures(node)
-              tests.foreach { case (signature, unsafe) =>
-                try { unsafe() }
-                catch {
-                  case NonFatal(e) =>
-                    println(signature)
-                    failingSignatures += signature
-                }
+  def checkSignatureRoundtrip(library: Library): Unit = test(library.name.tag(Slow)) {
+    val failingSignatures = ArrayBuffer.empty[String]
+    library.classpath().visit { root =>
+      new java.nio.file.SimpleFileVisitor[Path] {
+        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          if (PathIO.extension(file) == "class") {
+            val node = AbsolutePath(file).toClassNode
+            val tests = checkAllSignatures(node)
+            tests.foreach { case (signature, unsafe) =>
+              try unsafe()
+              catch {
+                case NonFatal(e) =>
+                  println(signature)
+                  failingSignatures += signature
               }
             }
-            FileVisitResult.CONTINUE
           }
+          FileVisitResult.CONTINUE
         }
       }
+    }
 
-      if (failingSignatures.nonEmpty) {
-        Files.write(
-          java.nio.file.Paths.get("signatures.txt"),
-          failingSignatures.mkString("\n").getBytes(StandardCharsets.UTF_8)
-        )
-        fail("failures! See signatures.txt")
-      }
+    if (failingSignatures.nonEmpty) {
+      Files.write(
+        java.nio.file.Paths.get("signatures.txt"),
+        failingSignatures.mkString("\n").getBytes(StandardCharsets.UTF_8)
+      )
+      fail("failures! See signatures.txt")
     }
   }
 
@@ -78,16 +76,12 @@ class SignatureSuite extends FunSuite {
 
   def checkClass(node: ClassNode): List[(String, () => Unit)] =
     if (node.signature == null) Nil
-    else {
-      List((
-        node.signature,
-        { () => assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor) }
-      ))
-    }
+    else List(
+      (node.signature, { () => assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor) })
+    )
 
-  def checkAllSignatures(node: ClassNode): List[(String, () => Unit)] = {
-    checkFields(node) ::: checkMethods(node) ::: checkClass(node)
-  }
+  def checkAllSignatures(node: ClassNode): List[(String, () => Unit)] = checkFields(node) :::
+    checkMethods(node) ::: checkClass(node)
 
   Libraries.suite.foreach(checkSignatureRoundtrip)
 

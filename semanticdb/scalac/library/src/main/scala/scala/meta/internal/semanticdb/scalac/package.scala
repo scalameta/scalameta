@@ -13,7 +13,7 @@ package object scalac {
         if (append) StandardOpenOption.APPEND else StandardOpenOption.TRUNCATE_EXISTING
       val out = SemanticdbPaths.toSemanticdb(sdocument, targetroot)
       val bytes = s.TextDocuments(sdocument :: Nil).toByteArray
-      if (!Files.exists(out.toNIO.getParent)) { Files.createDirectories(out.toNIO.getParent) }
+      if (!Files.exists(out.toNIO.getParent)) Files.createDirectories(out.toNIO.getParent)
       Files.write(out.toNIO, bytes, StandardOpenOption.CREATE, openOption)
     }
     def save(targetroot: AbsolutePath): Unit = write(targetroot, append = false)

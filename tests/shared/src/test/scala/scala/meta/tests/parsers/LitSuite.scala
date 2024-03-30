@@ -6,42 +6,42 @@ import scala.meta.dialects.Scala213
 
 class LitSuite extends ParseSuite {
 
-  test("true") { assertTree(term("true"))(bool(true)) }
+  test("true")(assertTree(term("true"))(bool(true)))
 
-  test("false") { assertTree(term("false"))(bool(false)) }
+  test("false")(assertTree(term("false"))(bool(false)))
 
-  test("42") { assertTree(term("42"))(int(42)) }
+  test("42")(assertTree(term("42"))(int(42)))
 
   test("2147483648") {
     interceptMessage[ParseException](
       """|<input>:1: error: integer number too large for Int
          |2147483648
          |^""".stripMargin.replace("\n", EOL)
-    ) { term("2147483648") }
+    )(term("2147483648"))
   }
 
-  test("2147483647") { assertTree(term("2147483647"))(int(2147483647)) }
+  test("2147483647")(assertTree(term("2147483647"))(int(2147483647)))
 
-  test("-2147483648") { assertTree(term("-2147483648"))(int(-2147483648)) }
+  test("-2147483648")(assertTree(term("-2147483648"))(int(-2147483648)))
 
   test("-2147483649") {
     interceptMessage[ParseException](
       """|<input>:1: error: integer number too small for Int
          |-2147483649
          | ^""".stripMargin.replace("\n", EOL)
-    ) { term("-2147483649") }
+    )(term("-2147483649"))
   }
 
-  test("42L") { assertTree(term("42L"))(Lit.Long(42L)) }
+  test("42L")(assertTree(term("42L"))(Lit.Long(42L)))
 
-  test("2147483648L") { assertTree(term("2147483648L"))(Lit.Long(2147483648L)) }
+  test("2147483648L")(assertTree(term("2147483648L"))(Lit.Long(2147483648L)))
 
   test("9223372036854775808L") {
     interceptMessage[ParseException](
       """|<input>:1: error: integer number too large for Long
          |9223372036854775808L
          |^""".stripMargin.replace("\n", EOL)
-    ) { term("9223372036854775808L") }
+    )(term("9223372036854775808L"))
   }
 
   test("9223372036854775807L") {
@@ -57,22 +57,22 @@ class LitSuite extends ParseSuite {
       """|<input>:1: error: integer number too small for Long
          |-9223372036854775809L
          | ^""".stripMargin.replace("\n", EOL)
-    ) { term("-9223372036854775809L") }
+    )(term("-9223372036854775809L"))
   }
 
-  test("42.42") { matchSubStructure[Stat]("42.42", { case Lit(42.42) => () }) }
+  test("42.42")(matchSubStructure[Stat]("42.42", { case Lit(42.42) => () }))
 
-  test("42.0f") { matchSubStructure[Stat]("42.42f", { case Lit(42.42f) => () }) }
+  test("42.0f")(matchSubStructure[Stat]("42.42f", { case Lit(42.42f) => () }))
 
-  test("'c'") { assertTree(term("'c'"))(Lit.Char('c')) }
+  test("'c'")(assertTree(term("'c'"))(Lit.Char('c')))
 
-  test("\"foo\"") { assertTree(term("\"foo\""))(str("foo")) }
+  test("\"foo\"")(assertTree(term("\"foo\""))(str("foo")))
 
-  test("'foo'") { assertTree(term("'foo"))(Lit.Symbol('foo)) }
+  test("'foo'")(assertTree(term("'foo"))(Lit.Symbol('foo)))
 
-  test("null") { assertTree(term("null"))(Lit.Null()) }
+  test("null")(assertTree(term("null"))(Lit.Null()))
 
-  test("()") { assertTree(term("()"))(Lit.Unit()) }
+  test("()")(assertTree(term("()"))(Lit.Unit()))
 
   test("0xCAFEBABE") {
     matchSubStructure[Stat]("0xCAFEBABE", { case Lit(-889275714) => () })
@@ -86,7 +86,7 @@ class LitSuite extends ParseSuite {
     assertEquals(minusOne.tokens.structure, "Tokens(Ident(-) [4..5), Constant.Int(1) [5..6))")
   }
 
-  test("#342") { assertTree(term("""( 50).toString"""))(Term.Select(int(50), tname("toString"))) }
+  test("#342")(assertTree(term("""( 50).toString"""))(Term.Select(int(50), tname("toString"))))
 
   test("#360") {
     val result = """ "sobaka """.parse[Stat]
@@ -126,7 +126,7 @@ class LitSuite extends ParseSuite {
   }
 
   test("simple-expression-parse-error") {
-    intercept[parsers.ParseException] { templStat("def neg: Unit = 2 + throw") }
+    intercept[parsers.ParseException](templStat("def neg: Unit = 2 + throw"))
   }
 
   test("binary literals") {
@@ -338,7 +338,7 @@ class LitSuite extends ParseSuite {
     ("1d + 2f", Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))),
     ("0b01.toString", Term.Select(lit(1), tname("toString")))
   ).foreach { case (code, tree: Tree) =>
-    test(s"expr with numeric literal ok scala213: $code") { runTestAssert[Stat](code, None)(tree) }
+    test(s"expr with numeric literal ok scala213: $code")(runTestAssert[Stat](code, None)(tree))
   }
 
   Seq(
@@ -415,7 +415,7 @@ class LitSuite extends ParseSuite {
          | ^""".stripMargin
     )
   ).foreach { case (code, error) =>
-    test(s"numeric literal fail scala213: $code") { runTestError[Stat](code, error) }
+    test(s"numeric literal fail scala213: $code")(runTestError[Stat](code, error))
   }
 
 }

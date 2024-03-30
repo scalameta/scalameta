@@ -163,14 +163,10 @@ class DataMacros(val c: Context) extends MacroHelpers {
       })
 
       // step 3: implement Object
-      if (needs(TermName("toString"), companion = false, duplicate = false)) {
-        stats1 +=
-          q"override def toString: _root_.scala.Predef.String = _root_.scala.runtime.ScalaRunTime._toString(this)"
-      }
-      if (needs(TermName("hashCode"), companion = false, duplicate = false)) {
-        stats1 +=
-          q"override def hashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
-      }
+      if (needs(TermName("toString"), companion = false, duplicate = false)) stats1 +=
+        q"override def toString: _root_.scala.Predef.String = _root_.scala.runtime.ScalaRunTime._toString(this)"
+      if (needs(TermName("hashCode"), companion = false, duplicate = false)) stats1 +=
+        q"override def hashCode: _root_.scala.Int = _root_.scala.runtime.ScalaRunTime._hashCode(this)"
       if (needs(TermName("equals"), companion = false, duplicate = false)) {
         stats1 +=
           q"override def canEqual(other: _root_.scala.Any): _root_.scala.Boolean = other.isInstanceOf[$name[..$tparamrefs]]"
@@ -266,7 +262,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
               else _root_.scala.Some($successArgs)
             }
           """
-        } else { mstats1 += q"def $unapplyName(x: $name): Boolean = true" }
+        } else mstats1 += q"def $unapplyName(x: $name): Boolean = true"
       }
 
       val cdef1 =

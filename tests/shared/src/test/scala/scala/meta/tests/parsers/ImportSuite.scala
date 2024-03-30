@@ -101,7 +101,7 @@ class ImportSuite extends ParseSuite {
   }
 
   test("import a.b.{ _, c => _ }") {
-    intercept[ParseException] { templStat("import a.b.{ _, c => _ }") }
+    intercept[ParseException](templStat("import a.b.{ _, c => _ }"))
   }
 
   test("source3-given-import") {

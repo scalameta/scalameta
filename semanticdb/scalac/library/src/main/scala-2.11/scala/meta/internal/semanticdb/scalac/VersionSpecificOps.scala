@@ -20,7 +20,7 @@ trait VersionSpecificOps {
                     name.startsWith(g.termNames.QUAL_PREFIX) => true
               case _ => false
             })
-        )) { Some(None) }
-      else { None }
+        )) Some(None)
+      else None
   }
 }

@@ -85,12 +85,11 @@ class VarargParameterSuite extends ParseSuite {
     checkError("def obj(fa: Int`*`, fb: Int) = true", "error: `identifier` expected but `,` found")
   }
 
-  private def check(definition: String, expected: scala.meta.Stat): Unit = {
+  private def check(definition: String, expected: scala.meta.Stat): Unit =
     checkTree(templStat(definition))(expected)
-  }
 
   private def checkError(definition: String, expected: String): Unit = {
-    val error = intercept[parsers.ParseException] { templStat(definition) }
+    val error = intercept[parsers.ParseException](templStat(definition))
     val obtained = error.getMessage
     assert(obtained.contains(expected), s"got: [$obtained]")
   }

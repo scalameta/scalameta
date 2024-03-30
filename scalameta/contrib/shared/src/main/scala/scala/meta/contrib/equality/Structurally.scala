@@ -13,11 +13,9 @@ class Structurally[+A <: Tree](val tree: A) extends TreeEquality[A] {
   // TODO(olafur) more efficient hashCode
   private lazy val hash: Int = tree.structure.hashCode
   override def hashCode(): Int = hash
-  override def equals(obj: scala.Any): Boolean = {
-    obj match {
-      case e2: Structurally[_] => Structurally.equal(tree, e2.tree)
-      case _ => false
-    }
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case e2: Structurally[_] => Structurally.equal(tree, e2.tree)
+    case _ => false
   }
 }
 

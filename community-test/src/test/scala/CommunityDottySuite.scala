@@ -29,7 +29,7 @@ class CommunityDottySuite extends FunSuite {
 
     locally {
       val gchangecommit =
-        s"""sh -c "cd ${folder} && git fetch --depth=1 origin ${build.commit} && git checkout ${build.commit} " """
+        s"""sh -c "cd $folder && git fetch --depth=1 origin ${build.commit} && git checkout ${build.commit} " """
       val result: Int = gchangecommit.!
 
       assert(clue(result) == 0, s"Checking out community build ${build.name} failed")
@@ -82,9 +82,7 @@ class CommunityDottySuite extends FunSuite {
     munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213, 102)
   )
 
-  for (build <- communityBuilds) {
-    test(s"community-build-${build.name}-${build.commit}") { check(build) }
-  }
+  for (build <- communityBuilds) test(s"community-build-${build.name}-${build.commit}")(check(build))
 
   def check(implicit build: CommunityBuild): Unit = {
     val folder = fetchCommunityBuild(build)
@@ -99,7 +97,7 @@ class CommunityDottySuite extends FunSuite {
     println(s"Time taken: ${stats.timeTaken}ms")
     if (stats.linesParsed < 1000) println(s"Lines parsed: ${stats.linesParsed}")
     else println(s"Lines parsed: ~${stats.linesParsed / 1000}k")
-    println(s"Parsing speed per 1k lines ===> ${timePer1KLines} ms/1klines")
+    println(s"Parsing speed per 1k lines ===> $timePer1KLines ms/1klines")
     println("--------------------------")
     stats.lastError.foreach(e => throw e)
 
@@ -122,7 +120,7 @@ class CommunityDottySuite extends FunSuite {
         try {
           import scala.collection.JavaConverters._
           ds.iterator().asScala.toList.partition(Files.isDirectory(_))
-        } finally { ds.close() }
+        } finally ds.close()
       files.iterator.flatMap { x =>
         val fileStr = x.toString
         if (fileStr.endsWith(".scala")) Some(checkAbsPath(x, fileStr)) else None
@@ -134,23 +132,21 @@ class CommunityDottySuite extends FunSuite {
   ): TestStats = {
     val fileContent = Input.File(absPath)
     implicit val dialect: Dialect =
-      if (build.dialect.allowSignificantIndentation) {
+      if (build.dialect.allowSignificantIndentation)
         if (!absPathString.contains("/scala-2")) build.dialect
         else build.dialectAlt.getOrElse(dialects.Scala213)
-      } else {
-        if (!absPathString.contains("/scala-3")) build.dialect
-        else build.dialectAlt.getOrElse(dialects.Scala3)
-      }
+      else if (!absPathString.contains("/scala-3")) build.dialect
+      else build.dialectAlt.getOrElse(dialects.Scala3)
     val lines = fileContent.chars.count(_ == '\n')
-    if (excluded(absPathString, build)) {
+    if (excluded(absPathString, build))
       try {
-        val taken = timeIt { fileContent.parse[Source].get }
+        val taken = timeIt(fileContent.parse[Source].get)
         println("File marked as error but parsed correctly " + absPathString)
         TestStats(1, 1, None, taken, lines)
       } catch { case e: Throwable => TestStats(1, 1, None, 0, 0) }
-    } else {
+    else
       try {
-        val taken = timeIt { fileContent.parse[Source].get }
+        val taken = timeIt(fileContent.parse[Source].get)
         TestStats(1, 0, None, taken, lines)
       } catch {
         case e: Throwable =>
@@ -158,24 +154,19 @@ class CommunityDottySuite extends FunSuite {
           println(s"Error: " + e.getMessage)
           TestStats(1, 1, Some(e), 0, 0)
       }
-    }
   }
 
-  def excluded(path: String, build: CommunityBuild): Boolean = {
-    build.excluded.exists(el => path.endsWith(el))
-  }
+  def excluded(path: String, build: CommunityBuild): Boolean = build.excluded
+    .exists(el => path.endsWith(el))
 
-  private def dottyBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild = {
+  private def dottyBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild =
     CommunityBuild("https://github.com/lampepfl/dotty.git", ref, "dotty", Nil, files, dialect)
-  }
 
-  private def munitBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild = {
+  private def munitBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild =
     CommunityBuild("https://github.com/scalameta/munit.git", ref, "munit", Nil, files, dialect)
-  }
 
-  private def sparkBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild = {
+  private def sparkBuild(ref: String, dialect: Dialect, files: Int): CommunityBuild =
     CommunityBuild("https://github.com/apache/spark.git", ref, "spark", Nil, files, dialect)
-  }
 
   final val ignoreParts =
     List(".git/", "tests/", "test-resources/scripting/", "test-resources/repl/", "sbt-test/", "out/")

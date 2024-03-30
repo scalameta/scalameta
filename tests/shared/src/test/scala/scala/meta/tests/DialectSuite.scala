@@ -8,7 +8,7 @@ class DialectSuite extends FunSuite {
 
   private val scala3copy = Scala3.withAllowSignificantIndentation(true)
 
-  test("scala3 == scala3") { assertEquals(Scala3, Scala3) }
+  test("scala3 == scala3")(assertEquals(Scala3, Scala3))
 
   test("scala3 isEquivalentTo scala3copy") {
     assertEquals(Scala3, scala3copy)
@@ -38,14 +38,14 @@ class DialectSuite extends FunSuite {
     assert(!Scala213.isEquivalentTo(Scala213Source3))
   }
 
-  test("scala3 toString") { assertEquals(Scala3.toString, "Scala34") }
+  test("scala3 toString")(assertEquals(Scala3.toString, "Scala34"))
 
-  test("scala3copy toString") { assertEquals(scala3copy.toString, "Scala34") }
+  test("scala3copy toString")(assertEquals(scala3copy.toString, "Scala34"))
 
   test("scala3 without indentation toString") {
     assertEquals(Scala3.withAllowSignificantIndentation(false).toString, "Dialect()")
   }
 
-  test("scala3.unquoteTerm toString") { assertEquals(Scala3.unquoteTerm(true).toString, "Scala34") }
+  test("scala3.unquoteTerm toString")(assertEquals(Scala3.unquoteTerm(true).toString, "Scala34"))
 
 }

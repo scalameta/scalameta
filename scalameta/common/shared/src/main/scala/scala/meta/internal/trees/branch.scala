@@ -57,8 +57,8 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
           case x: ValDef => x
           case x: DefDef if x.tparams.isEmpty && x.vparamss.isEmpty => x
         }.filter(_.rhs eq EmptyTree)
-        if (params.nonEmpty) { mstats1 += getUnapply(params) }
-        else { mstats1 += q"@$InlineAnnotation final def unapply(x: $name): $BooleanClass = true" }
+        if (params.nonEmpty) mstats1 += getUnapply(params)
+        else mstats1 += q"@$InlineAnnotation final def unapply(x: $name): $BooleanClass = true"
       }
 
       val cdef1 =

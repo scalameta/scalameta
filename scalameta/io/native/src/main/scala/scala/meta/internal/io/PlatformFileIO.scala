@@ -15,7 +15,7 @@ import scalapb.GeneratedMessage
 
 object PlatformFileIO {
 
-  def readAllBytes(uri: URI): Array[Byte] = {
+  def readAllBytes(uri: URI): Array[Byte] =
     // NOTE: URI.toURL isn't yet available in Scala Native,
     // so I had to steal the Scala.js implementation from js/.
     // Please find below the reference implementation from jvm/.
@@ -30,7 +30,6 @@ object PlatformFileIO {
       val filepath = Paths.get(uri)
       readAllBytes(AbsolutePath(filepath.toString))
     } else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
-  }
 
   // copy-pasted from JVM
   def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
@@ -74,9 +73,8 @@ object PlatformFileIO {
     //     }
     //   new ListFiles(root, relativeFiles.toList)
     val builder = List.newBuilder[RelativePath]
-    def loop(path: AbsolutePath): Unit = {
+    def loop(path: AbsolutePath): Unit =
       if (path.isDirectory) listFiles(path).foreach(loop) else builder += path.toRelative(root)
-    }
     loop(root)
     new ListFiles(root, builder.result())
   }

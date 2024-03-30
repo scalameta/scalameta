@@ -55,10 +55,10 @@ class DefnSuite extends ParseSuite {
     )
   }
 
-  test("var x = _ is not allowed") { intercept[parsers.ParseException] { templStat("var x = _") } }
+  test("var x = _ is not allowed")(intercept[parsers.ParseException](templStat("var x = _")))
 
   test("val x: Int = _ is not allowed") {
-    intercept[parsers.ParseException] { templStat("val x: Int = _") }
+    intercept[parsers.ParseException](templStat("val x: Int = _"))
   }
 
   test("val (x: Int) = 2") {
@@ -80,7 +80,7 @@ class DefnSuite extends ParseSuite {
   }
 
   test("def x = 2") {
-    assertTree(templStat("def x = 2")) { Defn.Def(Nil, tname("x"), Nil, Nil, None, int(2)) }
+    assertTree(templStat("def x = 2"))(Defn.Def(Nil, tname("x"), Nil, Nil, None, int(2)))
   }
 
   test("def x[A <: B] = 2") {
@@ -254,12 +254,10 @@ class DefnSuite extends ParseSuite {
   }
 
   test("inline is not allowed") {
-    intercept[parsers.ParseException] { blockStat("inline def x = 42") }
+    intercept[parsers.ParseException](blockStat("inline def x = 42"))
   }
 
-  test("infix is not allowed") {
-    intercept[parsers.ParseException] { blockStat("infix def x = 42") }
-  }
+  test("infix is not allowed")(intercept[parsers.ParseException](blockStat("infix def x = 42")))
 
   test("#3210") {
     val code = """|a3 match {

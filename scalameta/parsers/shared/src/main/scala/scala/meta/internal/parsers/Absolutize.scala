@@ -8,14 +8,12 @@ import scala.meta.tokenizers._
 
 object Absolutize {
   implicit class XtensionPositionAbsolutize(private val pos: Position) extends AnyVal {
-    def absolutize: Position = {
-      pos match {
-        case Position.Range(Input.Slice(input, absoluteStart, _), start, end) =>
-          val start1 = absoluteStart + start
-          val end1 = absoluteStart + end
-          Position.Range(input, start1, end1)
-        case other => other
-      }
+    def absolutize: Position = pos match {
+      case Position.Range(Input.Slice(input, absoluteStart, _), start, end) =>
+        val start1 = absoluteStart + start
+        val end1 = absoluteStart + end
+        Position.Range(input, start1, end1)
+      case other => other
     }
   }
 

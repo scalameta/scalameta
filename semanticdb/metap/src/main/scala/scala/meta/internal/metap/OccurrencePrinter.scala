@@ -13,15 +13,12 @@ trait OccurrencePrinter extends BasePrinter with RangePrinter {
     out.println(occ.symbol)
   }
 
-  def pprint(role: Role): Unit = {
-    role match {
-      case REFERENCE => out.print(" => ")
-      case DEFINITION => out.print(" <= ")
-      case UNKNOWN_ROLE | Role.Unrecognized(_) => out.print(" <?> ")
-    }
+  def pprint(role: Role): Unit = role match {
+    case REFERENCE => out.print(" => ")
+    case DEFINITION => out.print(" <= ")
+    case UNKNOWN_ROLE | Role.Unrecognized(_) => out.print(" <?> ")
   }
 
-  implicit def occOrder: Ordering[SymbolOccurrence] = {
-    Ordering.by(o => (o.range, o.symbol, o.role.value))
-  }
+  implicit def occOrder: Ordering[SymbolOccurrence] = Ordering
+    .by(o => (o.range, o.symbol, o.role.value))
 }

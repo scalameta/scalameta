@@ -13,23 +13,21 @@ class PrettyPrinterSuite extends FunSuite {
     def resetAllOrigins: T = tree.withOriginRecursive(Origin.None)
   }
 
-  def checkOk(code: String): Unit = {
-    test(logger.revealWhitespace(code)) {
+  def checkOk(code: String): Unit = test(logger.revealWhitespace(code)) {
 
-      val before: Stat = code.parse[Stat].get.resetAllOrigins
-      val after: Stat = before.syntax.parse[Stat].get
+    val before: Stat = code.parse[Stat].get.resetAllOrigins
+    val after: Stat = before.syntax.parse[Stat].get
 
-      StructurallyEqual(before, after) match {
-        case Left(err) => fail(
-            s"""|Not Structurally equal: ${err.toString}:
-                |before: ${before.structure}
-                |after : ${after.structure}
-                |""".stripMargin
-          )
-        case _ => Nil
-      }
-
+    StructurallyEqual(before, after) match {
+      case Left(err) => fail(
+          s"""|Not Structurally equal: ${err.toString}:
+              |before: ${before.structure}
+              |after : ${after.structure}
+              |""".stripMargin
+        )
+      case _ => Nil
     }
+
   }
 
   checkOk("val x = 1")

@@ -714,10 +714,9 @@ object Member {
     def apply(
         tparams: List[sm.Type.Param],
         paramss: List[List[sm.Term.Param]]
-    ): Option[ParamClauseGroup] = {
+    ): Option[ParamClauseGroup] =
       if (tparams.isEmpty && paramss.isEmpty) None
       else Some(ParamClauseGroup(tparamClause = tparams, paramClauses = paramss))
-    }
   }
 
   private[meta] object ParamClauseGroupCtorGiven {

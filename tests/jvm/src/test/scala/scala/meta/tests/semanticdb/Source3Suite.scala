@@ -18,15 +18,13 @@ class Source3Suite extends FunSuite {
       original: String,
       expected: String,
       compat: List[(ScalaVersion.Version, String)] = List.empty
-  ): Unit = {
-    test(logger.revealWhitespace(original)) {
-      val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
-      val document = toTextDocument(compiler, original, options)
-      val format = scala.meta.metap.Format.Detailed
-      val syntax = Print.document(format, document)
-      val expectedCompat = ScalaVersion.getExpected(compat, expected)
-      assertNoDiff(syntax, expectedCompat)
-    }
+  ): Unit = test(logger.revealWhitespace(original)) {
+    val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
+    val document = toTextDocument(compiler, original, options)
+    val format = scala.meta.metap.Format.Detailed
+    val syntax = Print.document(format, document)
+    val expectedCompat = ScalaVersion.getExpected(compat, expected)
+    assertNoDiff(syntax, expectedCompat)
   }
 
   val expected = """|interactive.scala

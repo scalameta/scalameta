@@ -36,7 +36,7 @@ object Scaladoc {
     override def syntax: String = {
       val sb = new StringBuilder
       sb.append("[[").append(ref)
-      anchor.foreach { x => sb.append(' ').append(x) }
+      anchor.foreach(x => sb.append(' ').append(x))
       sb.append("]]").append(punct)
       sb.result()
     }

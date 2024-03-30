@@ -12,7 +12,7 @@ class EndMarkerSuite extends BaseDottySuite {
   test("end-marker-keyword") {
     val markers =
       List("if", "while", "for", "match", "try", "new", "this", "given", "extension", "val")
-    for (m <- markers) { parseStat(s"end $m", dialect) }
+    for (m <- markers) parseStat(s"end $m", dialect)
   }
 
   test("end-marker-toplevel") {

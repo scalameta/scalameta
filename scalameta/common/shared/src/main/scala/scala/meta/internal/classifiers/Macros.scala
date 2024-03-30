@@ -19,9 +19,8 @@ class ClassifierMacros(val c: Context) extends MacroHelpers {
       val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" =
         mdef
 
-      def collectUnapplySig(stats: List[Tree]): Option[(Tree, Tree)] = {
-        stats.collectFirst { case q"$_ def unapply[..$tparams]($_: $t): $ret = $_" => (t, ret) }
-      }
+      def collectUnapplySig(stats: List[Tree]): Option[(Tree, Tree)] = stats
+        .collectFirst { case q"$_ def unapply[..$tparams]($_: $t): $ret = $_" => (t, ret) }
       val unapplySig = collectUnapplySig(mstats).orElse(collectUnapplySig(stats))
       val t = unapplySig match {
         case Some((t, _)) => t

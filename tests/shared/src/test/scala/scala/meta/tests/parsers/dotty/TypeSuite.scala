@@ -9,9 +9,8 @@ import munit.Location
 
 class TypeSuite extends BaseDottySuite {
 
-  private def assertTpe(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit = {
+  private def assertTpe(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit =
     assertTree(tpe(expr))(tree)
-  }
 
   test("with-type") {
     runTestAssert[Stat](
@@ -219,17 +218,17 @@ class TypeSuite extends BaseDottySuite {
     )))
   }
 
-  test("T") { assertTpe("T")(TypeName("T")) }
+  test("T")(assertTpe("T")(TypeName("T")))
 
-  test("F[T]") { assertTpe("F[T]") { Apply(TypeName("F"), ArgClause(TypeName("T") :: Nil)) } }
+  test("F[T]")(assertTpe("F[T]")(Apply(TypeName("F"), ArgClause(TypeName("T") :: Nil))))
 
-  test("F#T") { assertTpe("F#T")(Project(TypeName("F"), TypeName("T"))) }
+  test("F#T")(assertTpe("F#T")(Project(TypeName("F"), TypeName("T"))))
 
   test("A \\/ B") {
     assertTpe("A \\/ B")(ApplyInfix(TypeName("A"), TypeName("\\/"), TypeName("B")))
   }
 
-  test("A * B") { assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B"))) }
+  test("A * B")(assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B"))))
 
   test("A * B + C") {
     assertTpe("A * B + C") {
@@ -253,15 +252,15 @@ class TypeSuite extends BaseDottySuite {
     }
   }
 
-  test("f.T") { assertTpe("f.T")(Select(TermName("f"), TypeName("T"))) }
+  test("f.T")(assertTpe("f.T")(Select(TermName("f"), TypeName("T"))))
 
-  test("f.type") { assertTpe("f.type")(Singleton(TermName("f"))) }
+  test("f.type")(assertTpe("f.type")(Singleton(TermName("f"))))
 
-  test("super.T") { assertTpe("super.T")(Select(Super(Anonymous(), Anonymous()), TypeName("T"))) }
+  test("super.T")(assertTpe("super.T")(Select(Super(Anonymous(), Anonymous()), TypeName("T"))))
 
-  test("this.T") { assertTpe("this.T")(Select(Term.This(Anonymous()), TypeName("T"))) }
+  test("this.T")(assertTpe("this.T")(Select(Term.This(Anonymous()), TypeName("T"))))
 
-  test("(A, B)") { assertTpe("(A, B)")(Tuple(TypeName("A") :: TypeName("B") :: Nil)) }
+  test("(A, B)")(assertTpe("(A, B)")(Tuple(TypeName("A") :: TypeName("B") :: Nil)))
 
   test("(A, B) => C") {
     assertTpe("(A, B) => C")(Function(TypeName("A") :: TypeName("B") :: Nil, TypeName("C")))
@@ -273,7 +272,7 @@ class TypeSuite extends BaseDottySuite {
     )
   }
 
-  test("A with B") { assertTpe("A with B")(With(TypeName("A"), TypeName("B"))) }
+  test("A with B")(assertTpe("A with B")(With(TypeName("A"), TypeName("B"))))
 
   test("A & B is not a special type") {
     assertTpe("A & B")(ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")))
@@ -283,7 +282,7 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("A with B {}")(Refine(Some(With(TypeName("A"), TypeName("B"))), Nil))
   }
 
-  test("{}") { assertTpe("{}")(Refine(None, Nil)) }
+  test("{}")(assertTpe("{}")(Refine(None, Nil)))
 
   test("A { def x: A; val y: B; type C }") {
     assertTpe("A { def x: Int; val y: B; type C }") {
@@ -300,34 +299,34 @@ class TypeSuite extends BaseDottySuite {
     implicit val dialect: Dialect = dialects.Scala31
     val expected =
       Apply(TypeName("F"), Wildcard(Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil)
-    assertTpe("F[_ >: lo <: hi]") { expected }
-    assertTpe("F[? >: lo <: hi]") { expected }
+    assertTpe("F[_ >: lo <: hi]")(expected)
+    assertTpe("F[? >: lo <: hi]")(expected)
   }
 
   test("F[_ >: lo") {
     implicit val dialect: Dialect = dialects.Scala31
     val expected = Apply(TypeName("F"), Wildcard(Bounds(Some(TypeName("lo")), None)) :: Nil)
-    assertTpe("F[_ >: lo]") { expected }
-    assertTpe("F[? >: lo]") { expected }
+    assertTpe("F[_ >: lo]")(expected)
+    assertTpe("F[? >: lo]")(expected)
   }
 
   test("F[_ <: hi]") {
     implicit val dialect: Dialect = dialects.Scala31
     val expected = Apply(TypeName("F"), Wildcard(Bounds(None, Some(TypeName("hi")))) :: Nil)
-    assertTpe("F[_ <: hi]") { expected }
-    assertTpe("F[? <: hi]") { expected }
+    assertTpe("F[_ <: hi]")(expected)
+    assertTpe("F[? <: hi]")(expected)
   }
 
   test("F[?]") {
     implicit val dialect: Dialect = dialects.Scala31
     val expected = Apply(TypeName("F"), List(Wildcard(Bounds(None, None))))
-    assertTpe("F[?]") { expected }
-    assertTpe("F[_]") { expected }
+    assertTpe("F[?]")(expected)
+    assertTpe("F[_]")(expected)
   }
 
   test("F[_]") {
     implicit val dialect: Dialect = dialects.Scala3Future
-    assertTpe("F[_]") { AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))) }
+    assertTpe("F[_]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))))
     assertTpe("F[+_]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
     }
@@ -351,7 +350,7 @@ class TypeSuite extends BaseDottySuite {
   test("F[*]") {
     // will be deprecated in later versions
     implicit val dialect: Dialect = dialects.Scala31
-    assertTpe("F[*]") { AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))) }
+    assertTpe("F[*]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))))
     assertTpe("F[+*]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
     }
@@ -363,9 +362,9 @@ class TypeSuite extends BaseDottySuite {
   test("F[`*`]") {
     // will be deprecated in later versions
     implicit val dialect: Dialect = dialects.Scala31
-    runTestAssert[Type]("F[`*`]") { Apply(pname("F"), List(pname("*"))) }
-    runTestAssert[Type]("F[`+*`]") { Apply(pname("F"), List(pname("+*"))) }
-    runTestAssert[Type]("F[`-*`]") { Apply(pname("F"), List(pname("-*"))) }
+    runTestAssert[Type]("F[`*`]")(Apply(pname("F"), List(pname("*"))))
+    runTestAssert[Type]("F[`+*`]")(Apply(pname("F"), List(pname("+*"))))
+    runTestAssert[Type]("F[`-*`]")(Apply(pname("F"), List(pname("-*"))))
   }
 
   test("F[T] forSome { type T }") {
@@ -389,7 +388,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("42.type") {
-    intercept[ParseException] { tpe("42")(dialects.Scala211) }
+    intercept[ParseException](tpe("42")(dialects.Scala211))
 
     assertTpe("42")(int(42))(dialects.Scala3)
     assertTpe("-42")(int(-42))(dialects.Scala3)
@@ -402,10 +401,10 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("true")(bool(true))(dialects.Scala3)
     assertTpe("false")(bool(false))(dialects.Scala3)
 
-    val exceptionScala3 = intercept[ParseException] { tpe("() => ()")(dialects.Scala3) }
+    val exceptionScala3 = intercept[ParseException](tpe("() => ()")(dialects.Scala3))
     assertNoDiff(exceptionScala3.shortMessage, "illegal literal type (), use Unit instead")
 
-    val exceptionScala2 = intercept[ParseException] { tpe("() => ()")(dialects.Scala213) }
+    val exceptionScala2 = intercept[ParseException](tpe("() => ()")(dialects.Scala213))
     assertNoDiff(exceptionScala2.shortMessage, "illegal literal type (), use Unit instead")
 
   }
@@ -415,23 +414,23 @@ class TypeSuite extends BaseDottySuite {
       "+_ => Int",
       { case Type.Function(List(Type.Name("+_")), Type.Name("Int")) => () }
     )(parseType, dialects.Scala213Source3, implicitly[Location])
-    assertTpe("Option[- _]") { Apply(pname("Option"), ArgClause(List(pname("-_")))) }(
+    assertTpe("Option[- _]")(Apply(pname("Option"), ArgClause(List(pname("-_")))))(
       dialects.Scala213Source3
     )
   }
 
   test("[scala213] (x: Int, y)") {
-    val err = intercept[ParseException] { tpe("(x: Int, y)")(dialects.Scala213) }
+    val err = intercept[ParseException](tpe("(x: Int, y)")(dialects.Scala213))
     assertNoDiff(err.shortMessage, "can't mix function type and dependent function type syntaxes")
   }
 
   test("[scala213] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ParseException] { tpe("(x: Int, y: Int)(z: String)")(dialects.Scala213) }
+    val err = intercept[ParseException](tpe("(x: Int, y: Int)(z: String)")(dialects.Scala213))
     assertNoDiff(err.shortMessage, "dependent function types are not supported")
   }
 
   test("[scala3] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ParseException] { tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3) }
+    val err = intercept[ParseException](tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3))
     assertNoDiff(err.shortMessage, "can't have multiple parameter lists in function types")
   }
 
@@ -532,6 +531,6 @@ class TypeSuite extends BaseDottySuite {
     ))
   }
 
-  test("#3672 [scala3] ***") { runTestAssert[Type]("***")(pname("***")) }
+  test("#3672 [scala3] ***")(runTestAssert[Type]("***")(pname("***")))
 
 }

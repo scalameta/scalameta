@@ -20,8 +20,8 @@ class MD5Suite extends FunSuite {
     val fos = Files.newInputStream(file.toNIO)
     val md = MessageDigest.getInstance("MD5")
     val dis = new DigestInputStream(fos, md)
-    try { while (dis.read() != -1) () }
-    finally { fos.close() }
+    try while (dis.read() != -1) ()
+    finally fos.close()
     Hex.bytesToHex(md.digest())
   }
 

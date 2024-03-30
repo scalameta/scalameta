@@ -18,8 +18,8 @@ object PlatformFileIO {
 
   def readAllBytes(uri: URI): Array[Byte] = {
     val is = uri.toURL.openStream()
-    try { InputStreamIO.readBytes(is) }
-    finally { is.close() }
+    try InputStreamIO.readBytes(is)
+    finally is.close()
   }
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = Files.readAllBytes(path.toNIO)
@@ -65,24 +65,21 @@ object PlatformFileIO {
   ): T = {
     val fs = newJarFileSystem(path, create)
     val root = AbsolutePath(fs.getPath("/"))
-    if (create || close) {
+    if (create || close)
       try f(root)
       finally fs.close()
-    } else {
+    else
       // NOTE(olafur): We don't fs.close() because that can affect another place where `FileSystems.getFileSystems`
       // was used due to a `FileSystemAlreadyExistsException`. This leaks resources, but I see no alternative that does
       // not involve refactoring everything to java.io or global mutable state for reference counting open file systems
       // per zip file.
       f(root)
-    }
   }
 
   def newJarFileSystem(path: AbsolutePath, create: Boolean): FileSystem = {
-    if (create && !Files.exists(path.toNIO.getParent)) {
-      Files.createDirectories(path.toNIO.getParent)
-    }
+    if (create && !Files.exists(path.toNIO.getParent)) Files.createDirectories(path.toNIO.getParent)
     val map = new util.HashMap[String, String]()
-    if (create) { map.put("create", "true") }
+    if (create) map.put("create", "true")
     val uri = URI.create("jar:" + path.toNIO.toUri.toString)
     newFileSystem(uri, map)
   }

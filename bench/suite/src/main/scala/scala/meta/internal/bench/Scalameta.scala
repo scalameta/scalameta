@@ -28,9 +28,8 @@ trait Scalameta {
       sys.error("compile failed")
     }
     val outdir = Paths.get(settings.outdir.value)
-    if (!Files.exists(outdir.resolve("META-INF/semanticdb"))) {
-      sys.error(s"no .semanticdb files found in $outdir")
-    }
+    if (!Files.exists(outdir.resolve("META-INF/semanticdb"))) sys
+      .error(s"no .semanticdb files found in $outdir")
   }
   def mkSettings(bs: BenchmarkState): Settings = {
     val settings = new Settings
@@ -51,7 +50,7 @@ trait Scalameta {
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
 class ScalametaBaseline extends Scalameta {
   @Benchmark
-  def run(bs: BenchmarkState): Unit = { runImpl(bs) }
+  def run(bs: BenchmarkState): Unit = runImpl(bs)
   override def mkSettings(bs: BenchmarkState): Settings = {
     val settings = super.mkSettings(bs)
     settings.pluginOptions.value ::= s"semanticdb:text:off"

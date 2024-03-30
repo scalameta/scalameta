@@ -93,7 +93,7 @@ trait CommonNamerMacros extends MacroHelpers {
 
     params.foreach(x => addStubbedMemberWithName(x.name))
     extraStubs.foreach(x => addStubbedMemberWithName(TermName(x)))
-    copyParamss.foreach { x => qstats += q"final override def copy(..$x): $name = $stub" }
+    copyParamss.foreach(x => qstats += q"final override def copy(..$x): $name = $stub")
 
     extraAbstractDefs.foreach {
       case x: ValOrDefDefApi

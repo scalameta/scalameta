@@ -14,7 +14,7 @@ class SbtSuite extends FunSuite {
     assertEquals(tree.structure, simpleBuildStructure)
   }
 
-  test("\"...\".parse[Stat]") { intercept[ParseException] { simpleBuildSyntax.parse[Stat].get } }
+  test("\"...\".parse[Stat]")(intercept[ParseException](simpleBuildSyntax.parse[Stat].get))
 
   test("source\"...\"") {
     val tree = source"""
@@ -49,7 +49,7 @@ class SbtSuite extends FunSuite {
                                      |  )
                                      |""".stripMargin.replace("\n", EOL)
 
-  private def simpleBuildStructure = {
+  private def simpleBuildStructure =
     """
       |Source(List(
       |  Defn.Val(
@@ -120,5 +120,4 @@ class SbtSuite extends FunSuite {
       |  )
       |))
       |""".stripMargin.replaceAll("[,]\n *", ", ").replaceAll("\n *", "")
-  }
 }

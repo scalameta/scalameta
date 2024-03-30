@@ -32,11 +32,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
 
   def interfaceToApi[I, A](
       interface: c.Tree
-  )(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = { q"$interface.asInstanceOf[$A]" }
+  )(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = q"$interface.asInstanceOf[$A]"
 
-  def productPrefix[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    q"${T.tpe.typeSymbol.asLeaf.prefix}"
-  }
+  def productPrefix[T](implicit T: c.WeakTypeTag[T]): c.Tree = q"${T.tpe.typeSymbol.asLeaf.prefix}"
 
   def loadField(f: c.Tree, s: c.Tree): c.Tree = {
     val q"this.$finternalName" = f
@@ -73,9 +71,8 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
   }
 
   def storeField(f: c.Tree, v: c.Tree, s: c.Tree): c.Tree = {
-    def copySubtree(subtree: c.Tree, subtp: c.Type) = {
+    def copySubtree(subtree: c.Tree, subtp: c.Type) =
       q"$subtree.privateCopy(prototype = $subtree, parent = node, destination = $s).asInstanceOf[$subtp]"
-    }
     f.tpe.finalResultType match {
       case AnyTpe() => q"()"
       case PrimitiveTpe() => q"()"
@@ -87,17 +84,15 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
-  def initField(f: c.Tree): c.Tree = {
-    f.tpe.finalResultType match {
-      case AnyTpe() => q"$f"
-      case PrimitiveTpe() => q"$f"
-      case TreeTpe() => q"null"
-      case OptionTreeTpe(tpe) => q"null"
-      case ListTreeTpe(tpe) => q"null"
-      case OptionListTreeTpe(tpe) => q"null"
-      case ListListTreeTpe(tpe) => q"null"
-      case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
-    }
+  def initField(f: c.Tree): c.Tree = f.tpe.finalResultType match {
+    case AnyTpe() => q"$f"
+    case PrimitiveTpe() => q"$f"
+    case TreeTpe() => q"null"
+    case OptionTreeTpe(tpe) => q"null"
+    case ListTreeTpe(tpe) => q"null"
+    case OptionListTreeTpe(tpe) => q"null"
+    case ListListTreeTpe(tpe) => q"null"
+    case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
   }
 
   def children[T](implicit T: c.WeakTypeTag[T]): c.Tree = {

@@ -23,7 +23,7 @@ abstract class SemanticdbSuite extends FunSuite {
     super.test(name.tag(SkipWindows))(fn)
   }
 
-  def yMacroAnnotations: String = {
+  def yMacroAnnotations: String =
     if (isScala213) "-Ymacro-annotations"
     else {
       val paradiseJar = sys.props("sbt.paths.tests.test.options").split(" ")
@@ -31,7 +31,6 @@ abstract class SemanticdbSuite extends FunSuite {
       if (paradiseJar == null) fail("Missing scalamacros/paradise from scalacOptions")
       paradiseJar + " -Xplugin-require:macro-paradise-plugin"
     }
-  }
 
   def isScala213: Boolean = scala.util.Properties.versionNumberString.startsWith("2.13")
 
@@ -72,7 +71,7 @@ abstract class SemanticdbSuite extends FunSuite {
           |${error.pos.lineContent}
           |${error.pos.lineCaret}""".stripMargin
     }
-    if (errors.nonEmpty) { fail(diagnostics.mkString("\n")) }
+    if (errors.nonEmpty) fail(diagnostics.mkString("\n"))
   }
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
@@ -106,12 +105,12 @@ abstract class SemanticdbSuite extends FunSuite {
      * the type.
      */
     g.openPackageModule(g.definitions.ScalaPackage)
-    phases.foreach(phase => {
+    phases.foreach { phase =>
       g.phase = phase
       g.globalPhase = phase
       phase.asInstanceOf[g.GlobalPhase].apply(unit)
       assertNoReporterErrors()
-    })
+    }
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
 
@@ -128,33 +127,27 @@ abstract class SemanticdbSuite extends FunSuite {
 
   def checkSection(code: String, expected: String, section: String)(implicit
       loc: munit.Location
-  ): Unit = { checkSection(code, code, expected, section) }
+  ): Unit = checkSection(code, code, expected, section)
   def checkSection(name: TestOptions, code: String, expected: String, section: String)(implicit
       loc: munit.Location
-  ): Unit = {
-    test(name) {
-      val obtained = computeDatabaseSectionFromSnippet(code, section)
-      assertNoDiff(obtained, expected)
-    }
+  ): Unit = test(name) {
+    val obtained = computeDatabaseSectionFromSnippet(code, section)
+    assertNoDiff(obtained, expected)
   }
 
-  def occurrences(code: String, expected: String)(implicit loc: munit.Location): Unit = {
+  def occurrences(code: String, expected: String)(implicit loc: munit.Location): Unit =
     checkSection(code, expected, "Occurrences")
-  }
 
-  def diagnostics(code: String, expected: String)(implicit loc: munit.Location): Unit = {
+  def diagnostics(code: String, expected: String)(implicit loc: munit.Location): Unit =
     throw new UnsupportedOperationException(
       "SemanticdbSuite is not able to test against diagnostics. Use ExpectSuite instead."
     )
-  }
 
-  def symbols(code: String, expected: String)(implicit loc: munit.Location): Unit = {
+  def symbols(code: String, expected: String)(implicit loc: munit.Location): Unit =
     checkSection(code, expected, "Symbols")
-  }
 
-  def synthetics(code: String, expected: String)(implicit loc: munit.Location): Unit = {
+  def synthetics(code: String, expected: String)(implicit loc: munit.Location): Unit =
     checkSection(code, expected, "Synthetics")
-  }
 
   private def computeDatabaseAndOccurrencesFromMarkup(
       markup: String
@@ -187,7 +180,7 @@ abstract class SemanticdbSuite extends FunSuite {
   trait OverloadHack4; implicit object OverloadHack4 extends OverloadHack4
   trait OverloadHack5; implicit object OverloadHack5 extends OverloadHack5
 
-  def targeted(markup: String, fn: s.TextDocument => Unit)(implicit hack: OverloadHack1): Unit = {
+  def targeted(markup: String, fn: s.TextDocument => Unit)(implicit hack: OverloadHack1): Unit =
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {
@@ -195,80 +188,66 @@ abstract class SemanticdbSuite extends FunSuite {
         case _ => sys.error(s"0 chevrons expected, ${occurrences.length} chevrons found")
       }
     }
-  }
 
   def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(implicit
       hack: OverloadHack2
-  ): Unit = {
-    test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
-      occurrences match {
-        case List(name1) => fn(database, name1)
-        case _ => sys.error(s"1 chevron expected, ${occurrences.length} chevrons found")
-      }
+  ): Unit = test(markup) {
+    val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+    occurrences match {
+      case List(name1) => fn(database, name1)
+      case _ => sys.error(s"1 chevron expected, ${occurrences.length} chevrons found")
     }
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(implicit
       hack: OverloadHack3
-  ): Unit = {
-    test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
-      occurrences match {
-        case List(name1, name2) => fn(database, name1, name2)
-        case _ => sys.error(s"2 chevrons expected, ${occurrences.length} chevrons found")
-      }
+  ): Unit = test(markup) {
+    val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+    occurrences match {
+      case List(name1, name2) => fn(database, name1, name2)
+      case _ => sys.error(s"2 chevrons expected, ${occurrences.length} chevrons found")
     }
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(implicit
       hack: OverloadHack4
-  ): Unit = {
-    test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
-      occurrences match {
-        case List(name1, name2, name3) => fn(database, name1, name2, name3)
-        case _ => sys.error(s"3 chevrons expected, ${occurrences.length} chevrons found")
-      }
+  ): Unit = test(markup) {
+    val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+    occurrences match {
+      case List(name1, name2, name3) => fn(database, name1, name2, name3)
+      case _ => sys.error(s"3 chevrons expected, ${occurrences.length} chevrons found")
     }
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String, String, String) => Unit)(
       implicit hack: OverloadHack5
-  ): Unit = {
-    test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
-      occurrences match {
-        case List(name1, name2, name3, name4) => fn(database, name1, name2, name3, name4)
-        case _ => sys.error(s"4 chevrons expected, ${occurrences.length} chevrons found")
-      }
+  ): Unit = test(markup) {
+    val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+    occurrences match {
+      case List(name1, name2, name3, name4) => fn(database, name1, name2, name3, name4)
+      case _ => sys.error(s"4 chevrons expected, ${occurrences.length} chevrons found")
     }
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String, String, String, String) => Unit)(
       implicit hack: OverloadHack5
-  ): Unit = {
-    test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
-      occurrences match {
-        case List(name1, name2, name3, name4, name5) =>
-          fn(database, name1, name2, name3, name4, name5)
-        case _ => sys.error(s"5 chevrons expected, ${occurrences.length} chevrons found")
-      }
+  ): Unit = test(markup) {
+    val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+    occurrences match {
+      case List(name1, name2, name3, name4, name5) => fn(database, name1, name2, name3, name4, name5)
+      case _ => sys.error(s"5 chevrons expected, ${occurrences.length} chevrons found")
     }
   }
 
   def targeted(
       markup: String,
       fn: (s.TextDocument, String, String, String, String, String, String) => Unit
-  )(implicit hack: OverloadHack5): Unit = {
-    test(markup) {
-      val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
-      occurrences match {
-        case List(name1, name2, name3, name4, name5, name6) =>
-          fn(database, name1, name2, name3, name4, name5, name6)
-        case _ => sys.error(s"6 chevrons expected, ${occurrences.length} chevrons found")
-      }
+  )(implicit hack: OverloadHack5): Unit = test(markup) {
+    val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
+    occurrences match {
+      case List(name1, name2, name3, name4, name5, name6) =>
+        fn(database, name1, name2, name3, name4, name5, name6)
+      case _ => sys.error(s"6 chevrons expected, ${occurrences.length} chevrons found")
     }
   }
 

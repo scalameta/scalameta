@@ -11,16 +11,14 @@ object SemanticdbPaths {
   private val scalaExtension = "scala"
   private val scalaScriptExtension = "sc"
 
-  def isSemanticdb(path: RelativePath): Boolean = {
-    path.toNIO.startsWith(semanticdbPrefix.toNIO) &&
+  def isSemanticdb(path: RelativePath): Boolean = path.toNIO.startsWith(semanticdbPrefix.toNIO) &&
     PathIO.extension(path.toNIO) == semanticdbExtension
-  }
 
   def toScala(
       semanticdb: AbsolutePath,
       sourceroot: AbsolutePath,
       targetroot: AbsolutePath
-  ): AbsolutePath = { sourceroot.resolve(toScala(semanticdb.toRelative(targetroot))) }
+  ): AbsolutePath = sourceroot.resolve(toScala(semanticdb.toRelative(targetroot)))
 
   def toScala(path: RelativePath): RelativePath = {
     require(isSemanticdb(path))

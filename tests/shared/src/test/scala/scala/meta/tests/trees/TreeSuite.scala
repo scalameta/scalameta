@@ -19,6 +19,6 @@ class TreeSuite extends FunSuite {
       }
   }
 
-  test(s"Unary opMap size") { assertEquals(Unary.opMap.size, 4) }
+  test(s"Unary opMap size")(assertEquals(Unary.opMap.size, 4))
 
 }

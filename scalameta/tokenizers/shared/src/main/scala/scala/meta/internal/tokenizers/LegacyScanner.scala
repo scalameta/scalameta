@@ -84,7 +84,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * append Unicode character to "cbuf" buffer
    */
-  private def putChar(c: Int): Unit = { cbuf.appendCodePoint(c) }
+  private def putChar(c: Int): Unit = cbuf.appendCodePoint(c)
 
   /**
    * Determines whether this scanner should emit identifier deprecation warnings, e.g. when seeing
@@ -93,14 +93,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def emitIdentifierDeprecationWarnings = true
 
   /** Clear buffer and set name and token */
-  private def finishNamed(isBackquoted: Boolean = false): Unit = {
-    curr.setIdentifier(getAndResetCBuf(), dialect, check = !isBackquoted) { x =>
+  private def finishNamed(isBackquoted: Boolean = false): Unit = curr
+    .setIdentifier(getAndResetCBuf(), dialect, check = !isBackquoted) { x =>
       if (x.token == IDENTIFIER && emitIdentifierDeprecationWarnings) deprecationWarning(
         s"${x.name} is now a reserved word; usage as an identifier is deprecated",
         at = x.token
       )
     }
-  }
 
   /* much like endOffset, end is inclusive */
   private def finishComposite(token: LegacyToken, endExclusive: Offset): Unit = {
@@ -113,12 +112,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   /** Clear buffer and set string */
-  private def setStrVal(): Unit = { strVal = getAndResetCBuf() }
+  private def setStrVal(): Unit = strVal = getAndResetCBuf()
 
-  private def getAndResetCBuf(): String = {
+  private def getAndResetCBuf(): String =
     try cbuf.toString
     finally cbuf.setLength(0)
-  }
 
   /**
    * a stack of tokens which indicates whether line-ends can be statement separators also used for
@@ -194,9 +192,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     // Read a token or copy it from `next` tokenData
     if (next.token == EMPTY) {
       lastOffset = begCharOffset
-      if (lastOffset > 0 && buf(lastOffset) == '\n' && buf(lastOffset - 1) == '\r') {
-        lastOffset -= 1
-      }
+      if (lastOffset > 0 && buf(lastOffset) == '\n' && buf(lastOffset - 1) == '\r') lastOffset -= 1
 
       fetchToken()
       if (token == ERROR) popStringInterpolation()
@@ -264,14 +260,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         nextChar()
         getIdentRestCheckInterpolation()
       case '$' =>
-        if (isUnquoteNextNoDollar()) { getUnquote() }
+        if (isUnquoteNextNoDollar()) getUnquote()
         else {
           putChar(ch)
           nextChar()
           if (dialect.allowSpliceAndQuote && lookaheadReader.nextNonWhitespace == '{') {
             token = MACROSPLICE
             setStrVal()
-          } else { getIdentRestCheckInterpolation() }
+          } else getIdentRestCheckInterpolation()
         }
       case '<' => // is XMLSTART?
         def fetchLT() = {
@@ -326,10 +322,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         getNumber()
       case '`' => getBackquotedIdent()
       case '\"' =>
-        def fetchDoubleQuote(): Unit = {
+        def fetchDoubleQuote(): Unit =
           if (token == INTERPOLATIONID) {
             nextRawChar()
-            if (ch == '\"') {
+            if (ch == '\"')
               if (lookaheadReader.getc() == '\"') {
                 nextRawChar() // now eat it
                 offset += 3
@@ -342,7 +338,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
                 token = STRINGLIT
                 strVal = ""
               }
-            } else {
+            else {
               offset += 1
               getStringPart(multiLine = false)
               pushSepRegions(STRINGLIT) // indicate single line string part
@@ -358,9 +354,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
                 token = STRINGLIT
                 strVal = ""
               }
-            } else { getStringLit() }
+            } else getStringLit()
           }
-        }
         fetchDoubleQuote()
       case '\'' =>
         def fetchSingleQuote() = {
@@ -389,7 +384,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
                 nextChar()
                 token = CHARLIT
                 setStrVal()
-              } else { syntaxError("unclosed character literal", at = offset) }
+              } else syntaxError("unclosed character literal", at = offset)
             }
           }
         }
@@ -404,7 +399,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             nextChar()
           }
           token = ELLIPSIS
-        } else { token = DOT }
+        } else token = DOT
       case ';' => nextChar(); token = SEMI
       case ',' => nextChar(); token = COMMA
       case '(' => nextChar(); token = LPAREN
@@ -423,7 +418,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           nextChar()
         }
       case _ =>
-        def fetchOther() = {
+        def fetchOther() =
           if (ch == '\u21D2') { nextChar(); token = ARROW }
           else if (ch == '\u2190') { nextChar(); token = LARROW }
           else if (Character.isUnicodeIdentifierStart(ch)) {
@@ -441,7 +436,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             )
             nextChar()
           }
-        }
         fetchOther()
     }
   }
@@ -454,13 +448,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       nextChar()
       finishNamed(isBackquoted = true)
       if (name.isEmpty) syntaxError("empty quoted identifier", at = offset)
-    } else if (ch == '$') {
-      syntaxError("can't unquote into quoted identifiers", at = begCharOffset)
-    } else { syntaxError("unclosed quoted identifier", at = offset) }
+    } else if (ch == '$') syntaxError("can't unquote into quoted identifiers", at = begCharOffset)
+    else syntaxError("unclosed quoted identifier", at = offset)
   }
 
   @tailrec
-  private final def getIdentRest(): Unit = {
+  private final def getIdentRest(): Unit =
     if (ch == '_') {
       putChar(ch)
       nextChar()
@@ -470,7 +463,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       nextChar()
       getIdentRest()
     } else finishNamed()
-  }
 
   @tailrec
   private def getOperatorRest(): Unit = (ch: @switch) match {
@@ -478,7 +470,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         '|' | '\\' => putChar(ch); nextChar(); getOperatorRest()
     case '/' =>
       val peekNextChar = lookaheadReader.getc()
-      if (peekNextChar == '/' || peekNextChar == '*') { finishNamed() }
+      if (peekNextChar == '/' || peekNextChar == '*') finishNamed()
       else {
         putChar('/')
         nextChar()
@@ -490,49 +482,44 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   // True means that we need to switch into unquote reading mode.
-  private def isUnquoteNextNoDollar(): Boolean = {
-    unquoteDialect != null && {
-      val isDollar = lookaheadReader.getc() == '$'
-      if (isDollar) {
-        // Skip the first dollar and move on to whatever we've been doing:
-        // starting or continuing tokenization of an identifier,
-        // or continuing reading a string literal, or whatever.
-        nextChar()
-      }
-      !isDollar
-    }
+  private def isUnquoteNextNoDollar(): Boolean = unquoteDialect != null && {
+    val isDollar = lookaheadReader.getc() == '$'
+    if (isDollar)
+      // Skip the first dollar and move on to whatever we've been doing:
+      // starting or continuing tokenization of an identifier,
+      // or continuing reading a string literal, or whatever.
+      nextChar()
+    !isDollar
   }
   @inline
   private def isUnquoteDollar(): Boolean = ch == '$' && isUnquoteNextNoDollar()
 
 // Literals -----------------------------------------------------------------
 
-  private def getStringLit() = {
+  private def getStringLit() =
     if (getLitChars('"')) {
       setStrVal()
       nextChar()
       token = STRINGLIT
-    } else if (ch == '$') { syntaxError("can't unquote into string literals", at = begCharOffset) }
-    else { syntaxError("unclosed string literal", at = offset) }
-  }
+    } else if (ch == '$') syntaxError("can't unquote into string literals", at = begCharOffset)
+    else syntaxError("unclosed string literal", at = offset)
 
   @tailrec
-  private def getRawStringLit(): Unit = {
+  private def getRawStringLit(): Unit =
     if (ch == '\"') {
       nextRawChar()
       if (isTripleQuote()) {
         setStrVal()
         token = STRINGLIT
       } else getRawStringLit()
-    } else if (ch == SU) { incompleteInputError("unclosed multi-line string literal", at = offset) }
-    else if (isUnquoteDollar()) {
+    } else if (ch == SU) incompleteInputError("unclosed multi-line string literal", at = offset)
+    else if (isUnquoteDollar())
       syntaxError("can't unquote into string literals", at = begCharOffset)
-    } else {
+    else {
       putChar(ch)
       nextRawChar()
       getRawStringLit()
     }
-  }
 
   @scala.annotation.tailrec
   private def getStringPart(multiLine: Boolean): Unit = {
@@ -554,7 +541,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         )
       }
     }
-    if (ch == '"') {
+    if (ch == '"')
       if (multiLine) {
         nextRawChar()
         if (isTripleQuote()) {
@@ -566,7 +553,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         setStrVal()
         token = STRINGLIT
       }
-    } else if (ch == '\\' && !multiLine) {
+    else if (ch == '\\' && !multiLine) {
       putChar(ch)
       nextRawChar()
       if (ch == '"' || ch == '\\') {
@@ -574,10 +561,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         nextRawChar()
       }
       getStringPart(multiLine)
-    } else if (ch == '$' && !wasMultiChar) {
-      if (isUnquoteNextNoDollar()) {
+    } else if (ch == '$' && !wasMultiChar)
+      if (isUnquoteNextNoDollar())
         syntaxError("can't unquote into string interpolations", at = begCharOffset)
-      } else {
+      else {
         nextRawChar()
         if (ch == '$' || (ch == '"' && dialect.allowInterpolationDolarQuoteEscape)) {
           putChar(ch)
@@ -607,12 +594,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           syntaxError(s_supportedCombos, at = offset)
         }
       }
-    } else {
+    else {
       val isUnclosedLiteral = !wasMultiChar && (ch == SU || (!multiLine && (ch == CR || ch == LF)))
-      if (isUnclosedLiteral) {
+      if (isUnclosedLiteral)
         if (multiLine) incompleteInputError("unclosed multi-line string interpolation", at = offset)
         else syntaxError("unclosed string interpolation", at = offset)
-      } else {
+      else {
         putChar(ch)
         nextRawChar()
         getStringPart(multiLine)
@@ -779,10 +766,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     setStrVal()
   }
 
-  private def checkNoLetter(): Unit = {
-    if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator())
-      syntaxError("Invalid literal number, followed by identifier character", at = begCharOffset)
-  }
+  private def checkNoLetter(): Unit = if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator())
+    syntaxError("Invalid literal number, followed by identifier character", at = begCharOffset)
 
   /**
    * Read a number into strVal and set base
@@ -893,7 +878,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
               case _ => loop(balance)
             }
           }
-          try { loop(balance = 1) }
+          try loop(balance = 1)
           catch {
             case TokenizeException(pos, message) =>
               syntaxError(s"invalid unquote: $message", at = start + pos.start)

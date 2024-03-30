@@ -21,15 +21,12 @@ object ParentChecks {
     case _ => false
   }
 
-  def TermAssign(tree: Term.Assign, parent: Tree, destination: String): Boolean = {
+  def TermAssign(tree: Term.Assign, parent: Tree, destination: String): Boolean =
     !tree.rhs.is[Term.Repeated] || termArgument(parent, destination)
-  }
 
-  def TermRepeated(tree: Term.Repeated, parent: Tree, destination: String): Boolean = {
-    parent match {
-      case _: Term.Tuple => destination == "args"
-      case _ => termArgument(parent, destination)
-    }
+  def TermRepeated(tree: Term.Repeated, parent: Tree, destination: String): Boolean = parent match {
+    case _: Term.Tuple => destination == "args"
+    case _ => termArgument(parent, destination)
   }
 
   def PatVar(tree: Pat.Var, parent: Tree, destination: String): Boolean = parent match {
@@ -49,13 +46,11 @@ object ParentChecks {
     case _ => false
   }
 
-  def TypeByName(tree: Type.ByName, parent: Tree, destination: String): Boolean = {
+  def TypeByName(tree: Type.ByName, parent: Tree, destination: String): Boolean =
     typeArgument(tree, parent, destination)
-  }
 
-  def TypeRepeated(tree: Type.Repeated, parent: Tree, destination: String): Boolean = {
+  def TypeRepeated(tree: Type.Repeated, parent: Tree, destination: String): Boolean =
     typeArgument(tree, parent, destination)
-  }
 
   def PatSeqWildcard(tree: Pat.SeqWildcard, parent: Tree, destination: String): Boolean =
     parent match {
@@ -65,9 +60,8 @@ object ParentChecks {
       case _ => false
     }
 
-  def AnonymousImport(tree: Term.Anonymous, parent: Tree, destination: String): Boolean = {
-    parent.is[Importer]
-  }
+  def AnonymousImport(tree: Term.Anonymous, parent: Tree, destination: String): Boolean = parent
+    .is[Importer]
 
   def NameAnonymous(tree: Name.Anonymous, parent: Tree, destination: String): Boolean =
     parent match {
@@ -102,36 +96,28 @@ object ParentChecks {
     loop(Some(tree))
   }
 
-  def Init(tree: Init, parent: Tree, destination: String): Boolean = {
-    tree.tpe.is[Type.Singleton] ==> (parent.is[Ctor.Secondary] && destination == "init")
+  def Init(tree: Init, parent: Tree, destination: String): Boolean = tree.tpe.is[Type.Singleton] ==>
+    (parent.is[Ctor.Secondary] && destination == "init")
+
+  def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = parent.is[Template] &&
+    parent.parent.forall(_.is[Defn.Enum])
+
+  def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = parent.is[Type] ||
+    parent.is[Defn.Type] || parent.is[Type.Bounds] || parent.is[Term.ApplyType] ||
+    parent.is[Type.Param] || parent.is[Type.ArgClause]
+
+  def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = parent.is[Type] ||
+    parent.is[Defn.Type]
+
+  def TermBlock(tree: Term.Block, parent: Tree, dest: String): Boolean = tree.stats.forall {
+    case _: Decl => true
+    case _: Export => parent.is[Defn.ExtensionGroup]
+    case x => x.isBlockStat
   }
 
-  def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = {
-    parent.is[Template] && parent.parent.forall(_.is[Defn.Enum])
-  }
-
-  def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = {
-    parent.is[Type] || parent.is[Defn.Type] || parent.is[Type.Bounds] ||
-    parent.is[Term.ApplyType] || parent.is[Type.Param] || parent.is[Type.ArgClause]
-  }
-
-  def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = {
-    parent.is[Type] || parent.is[Defn.Type]
-  }
-
-  def TermBlock(tree: Term.Block, parent: Tree, dest: String): Boolean = {
-    tree.stats.forall {
-      case _: Decl => true
-      case _: Export => parent.is[Defn.ExtensionGroup]
-      case x => x.isBlockStat
-    }
-  }
-
-  private[meta] def MemberTuple(args: List[Tree]): Boolean = {
-    args match {
-      case Member.Tuple(_ :: Nil) :: Nil => false
-      case _ => true
-    }
+  private[meta] def MemberTuple(args: List[Tree]): Boolean = args match {
+    case Member.Tuple(_ :: Nil) :: Nil => false
+    case _ => true
   }
 
 }

@@ -54,7 +54,7 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
 
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 
-  override def segmentLength(p: Token => Boolean, from: Int = 0): Int = {
+  override def segmentLength(p: Token => Boolean, from: Int = 0): Int =
     if (from >= length) 0
     else {
       val lo = start + from
@@ -63,9 +63,8 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
       while (i < hi && p(tokens(i))) i += 1
       i - lo
     }
-  }
 
-  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int = {
+  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int =
     if (from >= length) 0
     else {
       val hi = end - from - 1
@@ -73,7 +72,6 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
       while (i >= start && p(tokens(i))) i -= 1
       hi - i
     }
-  }
 
   override def take(n: Int): Tokens = slice(0, n)
 

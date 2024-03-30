@@ -99,140 +99,132 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
     }
 
-    private def pprint(acc: Access): Unit = {
-      acc match {
-        case PrivateAccess() => out.print("private ")
-        case PrivateThisAccess() => out.print("private[this] ")
-        case PrivateWithinAccess(sym) =>
-          out.print("private[")
-          pprint(sym, Reference)
-          out.print("] ")
-        case ProtectedAccess() => out.print("protected ")
-        case ProtectedThisAccess() => out.print("protected[this] ")
-        case ProtectedWithinAccess(sym) =>
-          out.print("protected[")
-          pprint(sym, Reference)
-          out.print("] ")
-        case NoAccess | PublicAccess() => out.print("")
-      }
+    private def pprint(acc: Access): Unit = acc match {
+      case PrivateAccess() => out.print("private ")
+      case PrivateThisAccess() => out.print("private[this] ")
+      case PrivateWithinAccess(sym) =>
+        out.print("private[")
+        pprint(sym, Reference)
+        out.print("] ")
+      case ProtectedAccess() => out.print("protected ")
+      case ProtectedThisAccess() => out.print("protected[this] ")
+      case ProtectedWithinAccess(sym) =>
+        out.print("protected[")
+        pprint(sym, Reference)
+        out.print("] ")
+      case NoAccess | PublicAccess() => out.print("")
     }
 
-    def pprint(sig: Signature): Unit = {
-      sig match {
-        case ClassSignature(tparams, parents, self, decls) =>
-          rep("[", tparams.infos, ", ", "]")(pprintDefn)
-          rep(" extends ", parents, " with ")(pprint)
-          if (self.nonEmpty || decls.infos.nonEmpty) { out.print(" { ") }
-          if (self.nonEmpty) {
-            out.print("self: ")
-            pprint(self)
-            out.print(" => ")
+    def pprint(sig: Signature): Unit = sig match {
+      case ClassSignature(tparams, parents, self, decls) =>
+        rep("[", tparams.infos, ", ", "]")(pprintDefn)
+        rep(" extends ", parents, " with ")(pprint)
+        if (self.nonEmpty || decls.infos.nonEmpty) out.print(" { ")
+        if (self.nonEmpty) {
+          out.print("self: ")
+          pprint(self)
+          out.print(" => ")
+        }
+        if (decls.infos.nonEmpty) out.print(s"+${decls.infos.length} decls")
+        if (self.nonEmpty || decls.infos.nonEmpty) out.print(" }")
+      case MethodSignature(tparams, paramss, res) =>
+        rep("[", tparams.infos, ", ", "]")(pprintDefn)
+        rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
+        opt(": ", res)(pprint)
+      case TypeSignature(tparams, lo, hi) =>
+        rep("[", tparams.infos, ", ", "]")(pprintDefn)
+        if (lo != hi) {
+          lo match {
+            case TypeRef(NoType, "scala/Nothing#", Nil) => ()
+            case lo => opt(" >: ", lo)(pprint)
           }
-          if (decls.infos.nonEmpty) { out.print(s"+${decls.infos.length} decls") }
-          if (self.nonEmpty || decls.infos.nonEmpty) { out.print(" }") }
-        case MethodSignature(tparams, paramss, res) =>
-          rep("[", tparams.infos, ", ", "]")(pprintDefn)
-          rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
-          opt(": ", res)(pprint)
-        case TypeSignature(tparams, lo, hi) =>
-          rep("[", tparams.infos, ", ", "]")(pprintDefn)
-          if (lo != hi) {
-            lo match {
-              case TypeRef(NoType, "scala/Nothing#", Nil) => ()
-              case lo => opt(" >: ", lo)(pprint)
-            }
-            hi match {
-              case TypeRef(NoType, "scala/Any#", Nil) => ()
-              case TypeRef(NoType, "java/lang/Object#", Nil) => ()
-              case hi => opt(" <: ", hi)(pprint)
-            }
-          } else {
-            val alias = lo
-            opt(" = ", alias)(pprint)
+          hi match {
+            case TypeRef(NoType, "scala/Any#", Nil) => ()
+            case TypeRef(NoType, "java/lang/Object#", Nil) => ()
+            case hi => opt(" <: ", hi)(pprint)
           }
-        case ValueSignature(tpe) => pprint(tpe)
-        case NoSignature => out.print("<?>")
-      }
+        } else {
+          val alias = lo
+          opt(" = ", alias)(pprint)
+        }
+      case ValueSignature(tpe) => pprint(tpe)
+      case NoSignature => out.print("<?>")
     }
 
     def pprint(tpe: Type): Unit = {
-      def prefix(tpe: Type): Unit = {
-        tpe match {
-          case TypeRef(pre, sym, args) =>
-            pre match {
-              case _: SingleType | _: ThisType | _: SuperType =>
-                prefix(pre)
-                out.print(".")
-              case NoType => ()
-              case _ =>
-                prefix(pre)
-                out.print("#")
-            }
-            pprintRef(sym)
-            rep("[", args, ", ", "]")(normal)
-          case SingleType(pre, sym) =>
-            opt(pre, ".")(prefix)
-            pprintRef(sym)
-          case ThisType(sym) =>
-            opt(sym, ".")(pprintRef)
-            out.print("this")
-          case SuperType(pre, sym) =>
-            opt(pre, ".")(prefix)
-            out.print("super")
-            opt("[", sym, "]")(pprintRef)
-          case ConstantType(const) => pprint(const)
-          case IntersectionType(types) => rep(types, " & ")(normal)
-          case UnionType(types) => rep(types, " | ")(normal)
-          case WithType(types) => rep(types, " with ")(normal)
-          case StructuralType(utpe, decls) =>
-            decls.infos.foreach(notes.discover)
-            opt(utpe)(normal)
-            if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(pprintDefn)
-            else out.print(" {}")
-          case AnnotatedType(anns, utpe) =>
-            opt(utpe)(normal)
-            out.print(" ")
-            rep(anns, " ", "")(pprint)
-          case ExistentialType(utpe, decls) =>
-            decls.infos.foreach(notes.discover)
-            opt(utpe)(normal)
-            rep(" forSome { ", decls.infos, "; ", " }")(pprintDefn)
-          case UniversalType(tparams, utpe) =>
-            tparams.infos.foreach(notes.discover)
-            rep("[", tparams.infos, ", ", "] => ")(pprintDefn)
-            opt(utpe)(normal)
-          case ByNameType(utpe) =>
-            out.print("=> ")
-            opt(utpe)(normal)
-          case RepeatedType(utpe) =>
-            opt(utpe)(normal)
-            out.print("*")
-          case MatchType(scrutinee, cases) =>
-            opt(scrutinee)(normal)
-            rep(" match { ", cases, ", ", " }") { kase =>
-              opt(kase.key)(normal)
-              out.print(" => ")
-              opt(kase.body)(normal)
-            }
-          case LambdaType(parameters, returnType) =>
-            parameters.infos.foreach(notes.discover)
-            rep("[", parameters.infos, ", ", "] =>> ")(pprintDefn)
-            opt(returnType)(normal)
-          case NoType => out.print("<?>")
-        }
+      def prefix(tpe: Type): Unit = tpe match {
+        case TypeRef(pre, sym, args) =>
+          pre match {
+            case _: SingleType | _: ThisType | _: SuperType =>
+              prefix(pre)
+              out.print(".")
+            case NoType => ()
+            case _ =>
+              prefix(pre)
+              out.print("#")
+          }
+          pprintRef(sym)
+          rep("[", args, ", ", "]")(normal)
+        case SingleType(pre, sym) =>
+          opt(pre, ".")(prefix)
+          pprintRef(sym)
+        case ThisType(sym) =>
+          opt(sym, ".")(pprintRef)
+          out.print("this")
+        case SuperType(pre, sym) =>
+          opt(pre, ".")(prefix)
+          out.print("super")
+          opt("[", sym, "]")(pprintRef)
+        case ConstantType(const) => pprint(const)
+        case IntersectionType(types) => rep(types, " & ")(normal)
+        case UnionType(types) => rep(types, " | ")(normal)
+        case WithType(types) => rep(types, " with ")(normal)
+        case StructuralType(utpe, decls) =>
+          decls.infos.foreach(notes.discover)
+          opt(utpe)(normal)
+          if (decls.infos.nonEmpty) rep(" { ", decls.infos, "; ", " }")(pprintDefn)
+          else out.print(" {}")
+        case AnnotatedType(anns, utpe) =>
+          opt(utpe)(normal)
+          out.print(" ")
+          rep(anns, " ", "")(pprint)
+        case ExistentialType(utpe, decls) =>
+          decls.infos.foreach(notes.discover)
+          opt(utpe)(normal)
+          rep(" forSome { ", decls.infos, "; ", " }")(pprintDefn)
+        case UniversalType(tparams, utpe) =>
+          tparams.infos.foreach(notes.discover)
+          rep("[", tparams.infos, ", ", "] => ")(pprintDefn)
+          opt(utpe)(normal)
+        case ByNameType(utpe) =>
+          out.print("=> ")
+          opt(utpe)(normal)
+        case RepeatedType(utpe) =>
+          opt(utpe)(normal)
+          out.print("*")
+        case MatchType(scrutinee, cases) =>
+          opt(scrutinee)(normal)
+          rep(" match { ", cases, ", ", " }") { kase =>
+            opt(kase.key)(normal)
+            out.print(" => ")
+            opt(kase.body)(normal)
+          }
+        case LambdaType(parameters, returnType) =>
+          parameters.infos.foreach(notes.discover)
+          rep("[", parameters.infos, ", ", "] =>> ")(pprintDefn)
+          opt(returnType)(normal)
+        case NoType => out.print("<?>")
       }
-      def normal(tpe: Type): Unit = {
-        tpe match {
-          case _: SingleType | _: ThisType | _: SuperType =>
-            prefix(tpe)
-            out.print(".type")
-          case _ => prefix(tpe)
-        }
+      def normal(tpe: Type): Unit = tpe match {
+        case _: SingleType | _: ThisType | _: SuperType =>
+          prefix(tpe)
+          out.print(".type")
+        case _ => prefix(tpe)
       }
       normal(tpe)
     }
 
-    private def pprintRef(sym: String): Unit = { pprint(sym, Reference) }
+    private def pprintRef(sym: String): Unit = pprint(sym, Reference)
 
     private def pprintDefn(info: SymbolInformation): Unit = {
       notes.discover(info)
@@ -293,36 +285,31 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
     }
 
-    private def pprint(name: String): Unit = {
+    private def pprint(name: String): Unit =
       if (name.nonEmpty) out.print(name) else out.print("<?>")
-    }
 
-    def pprint(const: Constant): Unit = {
-      const match {
-        case NoConstant => out.print("<?>")
-        case UnitConstant() => out.print("()")
-        case BooleanConstant(true) => out.print(true)
-        case BooleanConstant(false) => out.print(false)
-        case ByteConstant(value) => out.print(value.toByte)
-        case ShortConstant(value) => out.print(value.toShort)
-        case CharConstant(value) => out.print("'" + value.toChar + "'")
-        case IntConstant(value) => out.print(value)
-        case LongConstant(value) => out.print(s"${value}L")
-        case FloatConstant(value) => out.print(s"${value}f")
-        case DoubleConstant(value) => out.print(value)
-        case StringConstant(value) => out.print("\"" + value + "\"")
-        case NullConstant() => out.print("null")
-      }
+    def pprint(const: Constant): Unit = const match {
+      case NoConstant => out.print("<?>")
+      case UnitConstant() => out.print("()")
+      case BooleanConstant(true) => out.print(true)
+      case BooleanConstant(false) => out.print(false)
+      case ByteConstant(value) => out.print(value.toByte)
+      case ShortConstant(value) => out.print(value.toShort)
+      case CharConstant(value) => out.print("'" + value.toChar + "'")
+      case IntConstant(value) => out.print(value)
+      case LongConstant(value) => out.print(s"${value}L")
+      case FloatConstant(value) => out.print(s"${value}f")
+      case DoubleConstant(value) => out.print(value)
+      case StringConstant(value) => out.print("\"" + value + "\"")
+      case NullConstant() => out.print("null")
     }
 
     private implicit class InfoOps(info: SymbolInformation) {
-      def prefixBeforeTpe: String = {
-        info.kind match {
-          case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | UNKNOWN_KIND | Kind.Unrecognized(_) =>
-            ": "
-          case METHOD | CONSTRUCTOR | MACRO | TYPE | TYPE_PARAMETER | OBJECT | PACKAGE |
-              PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE => ""
-        }
+      def prefixBeforeTpe: String = info.kind match {
+        case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | UNKNOWN_KIND | Kind.Unrecognized(_) =>
+          ": "
+        case METHOD | CONSTRUCTOR | MACRO | TYPE | TYPE_PARAMETER | OBJECT | PACKAGE |
+            PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE => ""
       }
     }
   }
@@ -331,11 +318,9 @@ trait SymbolInformationPrinter extends BasePrinter {
     private val buf = mutable.ListBuffer[SymbolInformation]()
     private val noteSymtab = mutable.Map[String, SymbolInformation]()
 
-    def discover(info: SymbolInformation): Unit = {
-      if (symtab.info(info.symbol).isEmpty && info.kind != UNKNOWN_KIND) {
+    def discover(info: SymbolInformation): Unit =
+      if (symtab.info(info.symbol).isEmpty && info.kind != UNKNOWN_KIND)
         noteSymtab(info.symbol) = info
-      }
-    }
 
     def visit(sym: String): SymbolInformation = {
       val symtabInfo = noteSymtab.get(sym).orElse(symtab.info(sym))
@@ -351,10 +336,9 @@ trait SymbolInformationPrinter extends BasePrinter {
       info
     }
 
-    def visited: List[SymbolInformation] = { buf.toList }
+    def visited: List[SymbolInformation] = buf.toList
   }
 
-  implicit def infoOrder: Ordering[SymbolInformation] = {
-    Ordering.by[SymbolInformation, String](_.symbol)(new IdentifierOrdering)
-  }
+  implicit def infoOrder: Ordering[SymbolInformation] = Ordering
+    .by[SymbolInformation, String](_.symbol)(new IdentifierOrdering)
 }

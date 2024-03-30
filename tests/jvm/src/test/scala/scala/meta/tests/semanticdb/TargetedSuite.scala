@@ -19,7 +19,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  <<bar>>(children = 4)(3)
        |}
        |""".stripMargin,
-    { (_, second) => assertEquals(second, "a/Curry.bar().") }
+    (_, second) => assertEquals(second, "a/Curry.bar().")
   )
 
   targeted(

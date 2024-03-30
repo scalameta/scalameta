@@ -16,44 +16,40 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   import ScannerTokens._
 
   @tailrec
-  final def getPrevIndex(index: Int): Int = {
+  final def getPrevIndex(index: Int): Int =
     if (index <= 0) 0
     else {
       val prev = index - 1
       if (tokens(prev).is[Trivia]) getPrevIndex(prev) else prev
     }
-  }
 
   def getPrevToken(index: Int): Token = tokens(getPrevIndex(index))
 
   @tailrec
-  final def getNextIndex(index: Int): Int = {
+  final def getNextIndex(index: Int): Int =
     if (index >= tokens.length - 1) tokens.length - 1
     else {
       val next = index + 1
       if (tokens(next).is[Trivia]) getNextIndex(next) else next
     }
-  }
 
   def getNextToken(index: Int): Token = tokens(getNextIndex(index))
 
   @tailrec
-  final def getStrictPrev(index: Int): Int = {
+  final def getStrictPrev(index: Int): Int =
     if (index <= 0) 0
     else {
       val prev = index - 1
       if (tokens(prev).isAny[HSpace, Comment]) getStrictPrev(prev) else prev
     }
-  }
 
   @tailrec
-  final def getStrictNext(index: Int): Int = {
+  final def getStrictNext(index: Int): Int =
     if (index >= tokens.length - 1) tokens.length - 1
     else {
       val next = index + 1
       if (tokens(next).isAny[HSpace, Comment]) getStrictNext(next) else next
     }
-  }
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -188,11 +184,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   def isModifier(index: Int): Boolean = tokens(index).is[ModifierKeyword] || isSoftModifier(index)
 
   object NonParamsModifier {
-    def unapply(token: Token): Boolean = {
-      token.text match {
-        case soft.KwOpen() | soft.KwOpaque() | soft.KwTransparent() | soft.KwInfix() => true
-        case _ => false
-      }
+    def unapply(token: Token): Boolean = token.text match {
+      case soft.KwOpen() | soft.KwOpaque() | soft.KwTransparent() | soft.KwInfix() => true
+      case _ => false
     }
   }
 
@@ -254,7 +248,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
    */
   private[parsers] def countIndentAndNewlineIndex(tokenPosition: Int): (Int, Int) = {
     @tailrec
-    def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) = {
+    def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) =
       if (pos < 0) (acc, pos)
       else {
         val token = tokens(pos)
@@ -267,7 +261,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ => (-1, -1)
         }
       }
-    }
 
     if (tokenPosition < 0 || tokens(tokenPosition).is[Whitespace]) (-1, -1)
     else countIndentInternal(tokenPosition - 1)
@@ -288,18 +281,15 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   private[parsers] def findOutdentPos(prevPos: Int, currPos: Int, outdent: Int): Int = {
     @tailrec
-    def iter(i: Int, pos: Int, indent: Int): Int = {
-      if (i >= currPos) { if (pos < currPos) pos else currPos - 1 }
-      else {
-        tokens(i) match {
-          case _: EOL => iter(i + 1, i, 0)
-          case _: HSpace if indent >= 0 => iter(i + 1, pos, indent + 1)
-          case _: Whitespace => iter(i + 1, pos, indent)
-          case _: Comment if indent < 0 || outdent <= indent => iter(i + 1, i + 1, -1)
-          case _ => pos
-        }
+    def iter(i: Int, pos: Int, indent: Int): Int =
+      if (i >= currPos) if (pos < currPos) pos else currPos - 1
+      else tokens(i) match {
+        case _: EOL => iter(i + 1, i, 0)
+        case _: HSpace if indent >= 0 => iter(i + 1, pos, indent + 1)
+        case _: Whitespace => iter(i + 1, pos, indent)
+        case _: Comment if indent < 0 || outdent <= indent => iter(i + 1, i + 1, -1)
+        case _ => pos
       }
-    }
 
     val iterPos = 1 + prevPos
     if (iterPos < currPos) iter(iterPos, prevPos, if (tokens(prevPos).is[EOL]) 0 else -1)
@@ -344,9 +334,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def mkIndent(pointPos: Int, regions: List[SepRegion], next: TokenRef = null): TokenRef =
       TokenRef(regions, mkIndentToken(pointPos), prevPos, currPos, pointPos, next)
 
-    def mkOutdentTo(region: SepRegionIndented, maxPointPos: Int, regions: List[SepRegion]) = {
+    def mkOutdentTo(region: SepRegionIndented, maxPointPos: Int, regions: List[SepRegion]) =
       mkOutdentAt(region.indent, maxPointPos, regions)
-    }
 
     def mkOutdentAt(outdent: Int, maxPointPos: Int, regions: List[SepRegion]) = {
       val pointPos = findOutdentPos(prevPos, maxPointPos, outdent)
@@ -373,9 +362,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       f(regions) match {
         case null => Left(regions)
         case OutdentInfo(outdent, rs, done) =>
-          if (outdent eq null) {
+          if (outdent eq null)
             if (done || (rs eq regions)) Left(rs) else mkOutdentsOpt(maxPointPos, rs)(f)
-          } else {
+          else {
             val res = mkOutdentTo(outdent, maxPointPos, rs)
             if (!done) mkOutdents(res, rs)
             Right(res)
@@ -873,7 +862,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           @tailrec
           def iter(regions: List[SepRegion]): Option[Either[List[SepRegion], TokenRef]] = {
             val res = regionsToRes(regions)
-              .orElse { if (regions ne sepRegionsOrig) None else getInfixLFIfNeeded() }
+              .orElse(if (regions ne sepRegionsOrig) None else getInfixLFIfNeeded())
             if (res.isEmpty) regions match {
               case Nil if prev.is[BOF] => Some(Left(RegionLine(nextIndent) :: Nil))
               case (r: RegionLine) :: rs if r.indent >= nextIndent => iter(rs)
@@ -936,9 +925,8 @@ object ScannerTokens {
     object InvalidArg extends LeadingInfix
   }
 
-  def apply(input: Input)(implicit dialect: Dialect): ScannerTokens = {
+  def apply(input: Input)(implicit dialect: Dialect): ScannerTokens =
     new ScannerTokens(input.tokenize.get)
-  }
 
   private[parsers] case class OutdentInfo(
       outdent: SepRegionIndented,

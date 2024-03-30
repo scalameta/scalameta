@@ -21,7 +21,7 @@ class IOSuite extends FunSuite {
     assert(!obtained.contains("."))
   }
 
-  test("FileIO.listFiles(File)") { assert(FileIO.listFiles(buildSbt).isEmpty) }
+  test("FileIO.listFiles(File)")(assert(FileIO.listFiles(buildSbt).isEmpty))
 
   test("FileIO.listAllFilesRecursively") {
     val bin = PathIO.workingDirectory.resolve("bin")

@@ -6,9 +6,8 @@ import org.scalameta.internal.ScalaCompat.EOL
 class InvariantFailedException(message: String) extends Exception(message)
 
 object InvariantFailedException {
-  def raise(invariant: String, failures: List[String], debuggees: Map[String, Any]): Nothing = {
+  def raise(invariant: String, failures: List[String], debuggees: Map[String, Any]): Nothing =
     raise(invariant, null, failures, debuggees)
-  }
   def raise(
       invariant: String,
       clue: String,

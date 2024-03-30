@@ -31,11 +31,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       assertNoDiff(TreeSyntax.reprint(treeWithSemi).toString, expectedSyntax)
 
       def getTreeWithNL() = templStat(s"{$stat\n{a}}")
-      if (needNL) {
-        scala.util.Try(getTreeWithNL()).foreach { treeWithNL =>
-          assertNotEquals(treeWithNL.structure, treeWithSemiStructure)
-        }
-      } else {
+      if (needNL) scala.util.Try(getTreeWithNL()).foreach { treeWithNL =>
+        assertNotEquals(treeWithNL.structure, treeWithSemiStructure)
+      }
+      else {
         val treeWithNL = getTreeWithNL()
         assertNoDiff(treeWithNL.reprint, expectedSyntax)
         assertNoDiff(treeWithNL.structure, treeWithSemiStructure)

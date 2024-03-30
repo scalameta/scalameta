@@ -16,10 +16,9 @@ trait SymbolOpsCompat {
     )
 
     // See comment in scala-2.13/.../SymbolOpsCompat.scala
-    def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = {
-      sym.name.startsWith("to") && g.definitions.ScalaValueClassesSet.contains(sym.owner) &&
+    def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = sym.name.startsWith("to") &&
+      g.definitions.ScalaValueClassesSet.contains(sym.owner) &&
       implicitPrimitiveConversionNames.contains(sym.name.toTermName) &&
       sym.name.toString() != mtree.value
-    }
   }
 }

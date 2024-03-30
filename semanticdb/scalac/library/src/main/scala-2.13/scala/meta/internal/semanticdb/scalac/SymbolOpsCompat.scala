@@ -20,10 +20,9 @@ trait SymbolOpsCompat {
     // has a minor bug where it doesn't detect implicit conversions when mtree.value has the name
     // of a conversion method like toInt/toLong, but it's a corner case that can be fixed separately
     // if it's a big problem.
-    def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = {
-      sym.name.startsWith("to") && g.definitions.ScalaValueClassesSet.contains(sym.owner) &&
+    def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = sym.name.startsWith("to") &&
+      g.definitions.ScalaValueClassesSet.contains(sym.owner) &&
       implicitPrimitiveConversionNames.contains(sym.name.toTermName) &&
       sym.name.toString() != mtree.value
-    }
   }
 }

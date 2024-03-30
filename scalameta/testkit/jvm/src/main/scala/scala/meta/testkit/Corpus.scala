@@ -84,22 +84,20 @@ object Corpus {
     val localDirectory = FileOps.getFile("target", name)
     if (!localDirectory.isDirectory) {
       val localTarball = FileOps.getFile(s"$name.tar.gz")
-      if (!localTarball.isFile) { downloadReposTar(corpus, destination = localTarball) }
+      if (!localTarball.isFile) downloadReposTar(corpus, destination = localTarball)
       extractReposTar(localTarball, destination = FileOps.workingDirectory)
     }
     FileOps.getFile("target", name)
   }
 
-  private def extractReposTar(tarball: File, destination: File): Unit = {
-    Phase.run(s"extract $tarball") {
+  private def extractReposTar(tarball: File, destination: File): Unit = Phase
+    .run(s"extract $tarball") {
       val archiver = ArchiverFactory.createArchiver("tar", "gz")
       archiver.extract(tarball, destination)
     }
-  }
 
-  private def downloadReposTar(corpus: Corpus, destination: File): Unit = {
-    Phase.run(s"download ${corpus.url}") { new URI(corpus.url).toURL.#>(destination).!! }
-  }
+  private def downloadReposTar(corpus: Corpus, destination: File): Unit = Phase
+    .run(s"download ${corpus.url}")(new URI(corpus.url).toURL.#>(destination).!!)
 
   /**
    * Downloads the zip file, extracts it and parses into a list of [[CorpusFile]].

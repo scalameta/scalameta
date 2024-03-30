@@ -23,7 +23,7 @@ object InteractiveSemanticdb extends VersionCompilerOps {
     val settings = new Settings
     settings.outputDirs.setSingleOutput(vd)
     settings.classpath.value = classpath
-    if (classpath.isEmpty) { settings.usejavacp.value = true }
+    if (classpath.isEmpty) settings.usejavacp.value = true
     settings.processArgumentString(("-Ypresentation-any-thread" :: scalacOptions).mkString(" "))
     val compiler = new Global(settings, new StoreReporter)
     new SemanticdbPlugin(compiler) // hijack reporter/analyzer
@@ -41,7 +41,7 @@ object InteractiveSemanticdb extends VersionCompilerOps {
       code: String,
       filename: String,
       timeout: Long
-  ): s.TextDocument = { toTextDocument(compiler, code, filename, timeout, Nil) }
+  ): s.TextDocument = toTextDocument(compiler, code, filename, timeout, Nil)
 
   /**
    * Build semanticdb document from this snippet of code.
@@ -96,10 +96,9 @@ object InteractiveSemanticdb extends VersionCompilerOps {
    * _CURSOR_ hints to the presentation compiler that this file is being edited with the cursor at
    * that offset. This hint helps completions amongst other things.
    */
-  def addCursor(code: String, offset: Int): String = {
+  def addCursor(code: String, offset: Int): String =
     new StringBuilder(code.length + "_CURSOR_".length).append(code.substring(0, offset))
       .append("_CURSOR_").append(code.substring(offset)).toString()
-  }
 
   /** Create new compilation unit from given code. */
   def addCompilationUnit(global: Global, code: String, filename: String): global.RichCompilationUnit = {

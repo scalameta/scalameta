@@ -9,13 +9,13 @@ trait Reflection extends AdtReflection {
   import u._
 
   implicit class XtensionTokenMetadataSymbol(sym: Symbol) {
-    def isToken: Boolean = { sym.hasAnnotation[TokenMetadata.tokenClass] }
+    def isToken: Boolean = sym.hasAnnotation[TokenMetadata.tokenClass]
     def isFreeform: Boolean = {
       Predef.require(sym.isToken)
       val Some(q"new $_($_, ${freeform: Boolean})") = sym.getAnnotation[TokenMetadata.tokenClass]
       freeform
     }
-    def isFixed: Boolean = { !sym.isFreeform }
+    def isFixed: Boolean = !sym.isFreeform
     def tokenName: String = {
       Predef.require(sym.isToken)
       val Some(q"new $_(${tokenName: String}, $_)") = sym.getAnnotation[TokenMetadata.tokenClass]
