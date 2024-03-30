@@ -28,10 +28,10 @@ class ScaladocParserSuite extends FunSuite {
   test("example usage") {
     assert(
       parseString(
-        """
-          | /** Example scaladoc **/
-          | case class foo(bar: String)
-        """.stripMargin
+        """|
+           | /** Example scaladoc **/
+           | case class foo(bar: String)
+           |""".stripMargin
       ).toString == "Some(List(Description(Example scaladoc)))"
     )
   }
@@ -110,12 +110,10 @@ class ScaladocParserSuite extends FunSuite {
     val codeBlock1 = "\"HELLO MARIANO\""
     val codeBlock2 = "\"HELLO SORAYA\""
     val complexCodeBlock =
-      """
-        |ggmqwogmwogmqwomgq
-        |val x = 1 // sdfdfh
-        |// zzz
-        |gmqwgoiqmgoqmwomw
-      """.stripMargin.trim
+      """|ggmqwogmwogmqwomgq
+         |val x = 1 // sdfdfh
+         |// zzz
+         |gmqwgoiqmgoqmwomw""".stripMargin
 
     val result: Option[List[DocToken]] =
       parseString(

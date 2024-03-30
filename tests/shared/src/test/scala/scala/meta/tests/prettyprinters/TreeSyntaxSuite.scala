@@ -25,7 +25,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
             |  {
             |    a
             |  }
-            |}""".stripMargin.trim.replace("\n", EOL)
+            |}""".stripMargin.replace("\n", EOL)
 
       val treeWithSemi = templStat(s"{$stat;{a}}")
       val treeWithSemiStructure = treeWithSemi.structure

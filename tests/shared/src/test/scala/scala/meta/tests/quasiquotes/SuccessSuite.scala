@@ -2652,19 +2652,17 @@ class SuccessSuite extends TreeSuiteBase {
     val stat = q"class C"
     assertEquals(
       q"$stat; $stat".syntax,
-      """
-    |{
-    |  class C
-    |  class C
-    |}""".trim.stripMargin.split('\n').mkString(EOL)
+      """|{
+         |  class C
+         |  class C
+         |}""".stripMargin.replace("\n", EOL)
     )
     assertEquals(
       q"{ $stat; $stat }".syntax,
-      """
-    |{
-    |  class C
-    |  class C
-    |}""".trim.stripMargin.split('\n').mkString(EOL)
+      """|{
+         |  class C
+         |  class C
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 
@@ -2679,13 +2677,11 @@ class SuccessSuite extends TreeSuiteBase {
     """
     assertEquals(
       objectDefn.syntax,
-      """
-      |object M {
-      |  def foo = bar
-      |  println("another stat")
-      |  def baz: Unit = {}
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|object M {
+         |  def foo = bar
+         |  println("another stat")
+         |  def baz: Unit = {}
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 
@@ -2831,13 +2827,11 @@ class SuccessSuite extends TreeSuiteBase {
     val block = q"x; ..$ys; z"
     assertEquals(
       block.syntax,
-      """
-      |{
-      |  x
-      |  y
-      |  z
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|{
+         |  x
+         |  y
+         |  z
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 

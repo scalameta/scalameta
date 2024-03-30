@@ -8,8 +8,8 @@ class ToplevelTermSuite extends TreeSuiteBase {
   test("allowToplevelTerms simple") {
 
     val sourceString = """def foo(x: Int): Int = x
-                          |foo(x)
-                          |""".trim.stripMargin
+                         |foo(x)
+                         |""".stripMargin
 
     val tree = sourceString.parse[Source].get
 
@@ -36,7 +36,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
     val sourceString = """package bar
                          |def foo(x: Int): Int = x
                          |foo(x)
-                         |""".trim.stripMargin
+                         |""".stripMargin
 
     val tree = sourceString.parse[Source].get
 
@@ -66,7 +66,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
   test("allowToplevelTerms and allowPackageStatementsWithToplevelTerms no package") {
     val sourceString = """def foo(x: Int): Int = x
                          |foo(x)
-                         |""".trim.stripMargin
+                         |""".stripMargin
 
     val tree = sourceString.parse[Source].get
 

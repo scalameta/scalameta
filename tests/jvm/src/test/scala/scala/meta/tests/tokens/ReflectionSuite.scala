@@ -19,38 +19,38 @@ class ReflectionSuite extends FunSuite {
   test("freeform tokens") {
     assertNoDiff(
       tokens.filter(_.isFreeform).map(_.prefix).sorted.mkString(EOL),
-      """
-      |Token.BOF
-      |Token.Comment
-      |Token.Constant.Char
-      |Token.Constant.Double
-      |Token.Constant.Float
-      |Token.Constant.Int
-      |Token.Constant.Long
-      |Token.Constant.String
-      |Token.Constant.Symbol
-      |Token.EOF
-      |Token.Ellipsis
-      |Token.Ident
-      |Token.Indentation.Indent
-      |Token.Indentation.Outdent
-      |Token.InfixLF
-      |Token.Interpolation.End
-      |Token.Interpolation.Id
-      |Token.Interpolation.Part
-      |Token.Interpolation.SpliceEnd
-      |Token.Interpolation.SpliceStart
-      |Token.Interpolation.Start
-      |Token.LFLF
-      |Token.LeftArrow
-      |Token.RightArrow
-      |Token.Unquote
-      |Token.Xml.End
-      |Token.Xml.Part
-      |Token.Xml.SpliceEnd
-      |Token.Xml.SpliceStart
-      |Token.Xml.Start
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|
+         |Token.BOF
+         |Token.Comment
+         |Token.Constant.Char
+         |Token.Constant.Double
+         |Token.Constant.Float
+         |Token.Constant.Int
+         |Token.Constant.Long
+         |Token.Constant.String
+         |Token.Constant.Symbol
+         |Token.EOF
+         |Token.Ellipsis
+         |Token.Ident
+         |Token.Indentation.Indent
+         |Token.Indentation.Outdent
+         |Token.InfixLF
+         |Token.Interpolation.End
+         |Token.Interpolation.Id
+         |Token.Interpolation.Part
+         |Token.Interpolation.SpliceEnd
+         |Token.Interpolation.SpliceStart
+         |Token.Interpolation.Start
+         |Token.LFLF
+         |Token.LeftArrow
+         |Token.RightArrow
+         |Token.Unquote
+         |Token.Xml.End
+         |Token.Xml.Part
+         |Token.Xml.SpliceEnd
+         |Token.Xml.SpliceStart
+         |Token.Xml.Start
+         |""".stripMargin.replace("\n", EOL)
     )
   }
 }

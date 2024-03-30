@@ -735,10 +735,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("xml literal - 1") {
-    assertTerm("""{
-      val x = <p/>
-      val y = x
-    }""") {
+    assertTerm(
+      """|{
+         |  val x = <p/>
+         |  val y = x
+         |}""".stripMargin
+    ) {
       Term.Block(
         List(
           Defn
@@ -768,10 +770,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("#312") {
-    assertTerm("""{
-      val x = yz: (Y, Z)
-      (x, x)
-    }""") {
+    assertTerm(
+      """|{
+         |  val x = yz: (Y, Z)
+         |  (x, x)
+         |}""".stripMargin
+    ) {
       Term.Block(
         List(
           Defn.Val(
@@ -803,11 +807,13 @@ class TermSuite extends ParseSuite {
   }
 
   test("#345") {
-    assertTerm("""x match {
-      case x => true
-      // sobaka
-      case y => y
-    }""") {
+    assertTerm(
+      """|x match {
+         |  case x => true
+         |  // sobaka
+         |  case y => y
+         |}""".stripMargin
+    ) {
       Term.Match(
         tname("x"),
         List(
@@ -1018,11 +1024,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("nested-braces-in-paren") {
-    val code = """(if (bar) {
-        if (foo) { doFoo() }
-        val x = 2
-      })
-    """
+    val code =
+      """|(if (bar) {
+         |  if (foo) { doFoo() }
+         |  val x = 2
+         |})
+         |""".stripMargin
 
     assertTerm(code) {
       Term.If(
@@ -1072,11 +1079,13 @@ class TermSuite extends ParseSuite {
   }
 
   test("implicit-closure") {
-    assertTerm("""|function { implicit c =>
-                  |  {
-                  |    case bar => foo
-                  |  }
-                  |}""".stripMargin) {
+    assertTerm(
+      """|function { implicit c =>
+         |  {
+         |    case bar => foo
+         |  }
+         |}""".stripMargin
+    ) {
       Term.Apply(
         tname("function"),
         Term.Block(
@@ -1091,14 +1100,16 @@ class TermSuite extends ParseSuite {
 
   test("type-partial-function") {
     val res =
-      stat("""|val dynamicStrategy = resharding(
-              |  { fakePartitionId: Int =>
-              |    {
-              |      case sendBox: SendBox.Args => 
-              |    }: PartialFunction[ThriftStructIface, Unit]
-              |  }
-              |)
-              |""".stripMargin)
+      stat(
+        """|val dynamicStrategy = resharding(
+           |  { fakePartitionId: Int =>
+           |    {
+           |      case sendBox: SendBox.Args => 
+           |    }: PartialFunction[ThriftStructIface, Unit]
+           |  }
+           |)
+           |""".stripMargin
+      )
 
     val expected = Defn.Val(
       Nil,
@@ -1139,10 +1150,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("partial-function-returning-implicit-closure") {
-    assertTerm("""|{
-                  |  case true => implicit i => "xxx"
-                  |  case false => implicit i => i.toString
-                  |}""".stripMargin) {
+    assertTerm(
+      """|{
+         |  case true => implicit i => "xxx"
+         |  case false => implicit i => i.toString
+         |}""".stripMargin
+    ) {
       Term.PartialFunction(
         List(
           Case(

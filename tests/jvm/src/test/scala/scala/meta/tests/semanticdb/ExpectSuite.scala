@@ -338,10 +338,11 @@ object SaveManifestTest {
 
     withJar(manifest) { jos =>
       jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
-      val manifest = """
-        |Manifest-Version: 1.0
-        |Class-Path: part0.jar part1.jar
-      """.trim.stripMargin + "\n\n"
+      val manifest =
+        """|
+           |Manifest-Version: 1.0
+           |Class-Path: part0.jar part1.jar
+           |""".stripMargin + "\n\n"
       jos.write(manifest.getBytes(UTF_8))
       jos.closeEntry()
     }

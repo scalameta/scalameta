@@ -24,12 +24,10 @@ class TransformerSuite extends FunSuite {
     val tree1 = transformer(tree0)
     assertEquals(
       tree1.toString,
-      """
-      |{
-      |  def foo(y: y)(y: Int) = y + y + 1
-      |  class C(y: y) { def bar(y: y) = ??? }
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|{
+         |  def foo(y: y)(y: Int) = y + y + 1
+         |  class C(y: y) { def bar(y: y) = ??? }
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 

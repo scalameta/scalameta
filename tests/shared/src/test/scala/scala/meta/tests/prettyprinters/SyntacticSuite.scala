@@ -58,61 +58,65 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("multi-line string literals") {
-    val tree = templStat("""{
-      val x = QQQ
-        x
-      QQQ
-    }""".replace("QQQ", "\"\"\""))
+    val tree = templStat(
+      """|{
+         |  val x = QQQ
+         |    x
+         |  QQQ
+         |}""".stripMargin.replace("QQQ", "\"\"\"")
+    )
 
     assertSameLines(
       tree.syntax,
-      """
-    |{
-    |  val x = QQQ
-    |        x
-    |      QQQ
-    |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+      """|{
+         |  val x = QQQ
+         |    x
+         |  QQQ
+         |}
+         |""".stripMargin.replace("QQQ", "\"\"\"")
     )
   }
 
   test("string literals with newlines and double quotes") {
-    val tree = templStat("""{
-      val x = QQQ
-        x
-      QQQ
-      val y = "\""
-    }""".replace("QQQ", "\"\"\""))
+    val tree = templStat(
+      """|{
+         |  val x = QQQ
+         |    x
+         |  QQQ
+         |  val y = "\""
+         |}""".stripMargin.replace("QQQ", "\"\"\"")
+    )
     assertTree(tree)(
       Term.Block(
         List(
-          Defn.Val(Nil, List(Pat.Var(tname("x"))), None, str("\n        x\n      ")),
+          Defn.Val(Nil, List(Pat.Var(tname("x"))), None, str("\n    x\n  ")),
           Defn.Val(Nil, List(Pat.Var(tname("y"))), None, str("\""))
         )
       )
     )
     assertSameLines(
       tree.syntax,
-      """
-    |{
-    |  val x = QQQ
-    |        x
-    |      QQQ
-    |  val y = "\""
-    |}
-    """.trim.stripMargin.replace("QQQ", "\"\"\"")
+      """|{
+         |  val x = QQQ
+         |    x
+         |  QQQ
+         |  val y = "\""
+         |}
+         |""".stripMargin.replace("QQQ", "\"\"\"")
     )
   }
 
   test("interpolations") {
-    val tree = templStat("""{
-      val x = q"123 + $x + ${foo(123)} + 456"
-      val y = QQQ
-        $x
-        $y
-        ..$z
-      QQQ
-    }""".replace("QQQ", "\"\"\""))
+    val tree = templStat(
+      """|{
+         |  val x = q"123 + $x + ${foo(123)} + 456"
+         |  val y = QQQ
+         |    $x
+         |    $y
+         |    ..$z
+         |  QQQ
+         |}""".stripMargin.replace("QQQ", "\"\"\"")
+    )
     assertTree(tree)(
       Term.Block(
         List(
@@ -130,7 +134,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             Nil,
             List(Pat.Var(tname("y"))),
             None,
-            str("\n        $x\n        $y\n        ..$z\n      ")
+            str("\n    $x\n    $y\n    ..$z\n  ")
           )
         )
       )
@@ -142,10 +146,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |    foo(123)
          |  } + 456"
          |  val y = QQQ
-         |        $x
-         |        $y
-         |        ..$z
-         |      QQQ
+         |    $x
+         |    $y
+         |    ..$z
+         |  QQQ
          |}""".stripMargin.replace("QQQ", "\"\"\"")
     )
   }
@@ -163,46 +167,46 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       "new { self: Int => val x = 2 }"
     )
     assertEquals(
-      templStat("""
-      new {
-        val x = 2
-        val y = 3
-      }
-    """).syntax,
-      """
-      |new {
-      |  val x = 2
-      |  val y = 3
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      templStat(
+        """|
+           |new {
+           |  val x = 2
+           |  val y = 3
+           |}
+           |""".stripMargin
+      ).syntax,
+      """|new {
+         |  val x = 2
+         |  val y = 3
+         |}""".stripMargin.replace("\n", EOL)
     )
     assertEquals(
-      templStat("""
-      new { self =>
-        val x = 2
-        val y = 3
-      }
-    """).syntax,
-      """
-      |new { self =>
-      |  val x = 2
-      |  val y = 3
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      templStat(
+        """|
+           |new { self =>
+           |  val x = 2
+           |  val y = 3
+           |}
+           |""".stripMargin
+      ).syntax,
+      """|new { self =>
+         |  val x = 2
+         |  val y = 3
+         |}""".stripMargin.replace("\n", EOL)
     )
     assertEquals(
-      templStat("""
-      new { self: Int =>
-        val x = 2
-        val y = 3
-      }
-    """).syntax,
-      """
-      |new { self: Int =>
-      |  val x = 2
-      |  val y = 3
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      templStat(
+        """|
+           |new { self: Int =>
+           |  val x = 2
+           |  val y = 3
+           |}
+           |""".stripMargin
+      ).syntax,
+      """|new { self: Int =>
+         |  val x = 2
+         |  val y = 3
+         |}""".stripMargin.replace("\n", EOL)
     )
     assertEquals(templStat("class B { x: B => }").syntax, "class B { x: B => }")
   }
@@ -339,11 +343,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("parentheses in patterns") {
     assertEquals(
       templStat("x match { case (xs: List[Int]) :+ x => ??? }").syntax,
-      """
-      |x match {
-      |  case (xs: List[Int]) :+ x => ???
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|x match {
+         |  case (xs: List[Int]) :+ x => ???
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 
@@ -351,11 +353,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(templStat("List(x, y) :: z").syntax, "List(x, y) :: z")
     assertEquals(
       templStat("x match { case List(x, y) :: z => ??? }").syntax,
-      """
-      |x match {
-      |  case List(x, y) :: z => ???
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|x match {
+         |  case List(x, y) :: z => ???
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 
@@ -369,27 +369,23 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("secondary ctor - block") {
     assertEquals(
       source("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").syntax,
-      """
-      |class C(x: Int) {
-      |  def this() {
-      |    this(2)
-      |    println("OBLIVION!!!")
-      |  }
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|class C(x: Int) {
+         |  def this() {
+         |    this(2)
+         |    println("OBLIVION!!!")
+         |  }
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 
   test("case semicolons") {
     assertEquals(
       templStat("x match { case y => foo1; foo2 }").syntax,
-      """
-      |x match {
-      |  case y =>
-      |    foo1
-      |    foo2
-      |}
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|x match {
+         |  case y =>
+         |    foo1
+         |    foo2
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 
@@ -743,22 +739,22 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("private/protected within something") {
     assertEquals(
-      templStat("""
-      class C {
-        private[this] val x = 1
-        private[D] val y = 2
-        protected[this] val z = 3
-        protected[D] val w = 4
-      }
-    """).syntax,
-      """
-        |class C {
-        |  private[this] val x = 1
-        |  private[D] val y = 2
-        |  protected[this] val z = 3
-        |  protected[D] val w = 4
-        |}
-    """.stripMargin.trim.split('\n').mkString(EOL)
+      templStat(
+        """|
+           |class C {
+           |  private[this] val x = 1
+           |  private[D] val y = 2
+           |  protected[this] val z = 3
+           |  protected[D] val w = 4
+           |}
+           |""".stripMargin
+      ).syntax,
+      """|class C {
+         |  private[this] val x = 1
+         |  private[D] val y = 2
+         |  protected[this] val z = 3
+         |  protected[D] val w = 4
+         |}""".stripMargin.replace("\n", EOL)
     )
   }
 
@@ -994,18 +990,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       templStat("??? match { case x => x; case List(x, y) => println(x); println(y) }")
     assertSameLines(
       case1.toString,
-      """
-      |case x =>
-      |  x
-    """.trim.stripMargin
+      """|case x =>
+         |  x
+         |""".stripMargin
     )
     assertEquals(
       case2.toString,
-      """
-      |case List(x, y) =>
-      |  println(x)
-      |  println(y)
-    """.trim.stripMargin.split('\n').mkString(EOL)
+      """|case List(x, y) =>
+         |  println(x)
+         |  println(y)""".stripMargin.replace("\n", EOL)
     )
   }
 
@@ -2048,8 +2041,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           |  {
           |    e
           |  }
-          |}
-        """.stripMargin.trim.replace("\n", EOL)
+          |}""".stripMargin.replace("\n", EOL)
     )
     assertEquals(
       blockStat("{if (a) while (b) for (c <- d) -e; {f}}").syntax,
@@ -2059,8 +2051,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           |  {
           |    f
           |  }
-          |}
-        """.stripMargin.trim.replace("\n", EOL)
+          |}""".stripMargin.replace("\n", EOL)
     )
   }
 

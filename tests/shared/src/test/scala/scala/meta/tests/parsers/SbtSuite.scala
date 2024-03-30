@@ -122,6 +122,6 @@ class SbtSuite extends FunSuite {
       |    )
       |  )
       |))
-      |""".stripMargin.trim.replaceAll("[,]\n *", ", ").replaceAll("\n *", "")
+      |""".stripMargin.replaceAll("[,]\n *", ", ").replaceAll("\n *", "")
   }
 }

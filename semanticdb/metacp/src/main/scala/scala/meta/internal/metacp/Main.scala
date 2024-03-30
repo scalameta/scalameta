@@ -126,7 +126,7 @@ class Main(settings: Settings, reporter: Reporter) {
           val manifest =
             s"""|Manifest-Version: 1.0
                 |Class-Path: $classPath
-                |""".stripMargin.trim + "\n\n"
+                |""".stripMargin + "\n\n"
           jos.write(manifest.getBytes(StandardCharsets.UTF_8))
           jos.closeEntry()
         }

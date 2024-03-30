@@ -76,14 +76,14 @@ class Source3Suite extends FunSuite {
        |[5:7..5:11): args => b/a.args.""".stripMargin
 
   check(
-    """package b
-      |import scala.concurrent.Future as F
-      |object a {
-      |  def func(args: String*) = ???
-      |  val args = List.empty[String]
-      |  func(args*) 
-      |}
-    """.stripMargin,
+    """|package b
+       |import scala.concurrent.Future as F
+       |object a {
+       |  def func(args: String*) = ???
+       |  val args = List.empty[String]
+       |  func(args*) 
+       |}
+       |""".stripMargin,
     expected,
     compat = List(
       ScalaVersion.Full("2.12.14") -> expected

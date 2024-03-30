@@ -116,13 +116,11 @@ class XmlSuite extends ParseSuite {
   )
 
   private val trickyXml =
-    """
-      |{
-      |val x = <div href={"/" + url}>Hello {name}</div>;
-      |val noSemicolon = <h1>{msg infix upper}</h1>
-      |val y = 2
-      |}
-    """.trim.stripMargin
+    """|{
+       |val x = <div href={"/" + url}>Hello {name}</div>;
+       |val noSemicolon = <h1>{msg infix upper}</h1>
+       |val y = 2
+       |}""".stripMargin
 
   checkToken(
     trickyXml,
@@ -292,11 +290,13 @@ class XmlSuite extends ParseSuite {
   checkOK("e match { case <a>{_*}</a> => }")
   checkOK("<a>{{</a>")
   checkOK("<a>}}</a>")
-  checkOK("""
-      |<a>
-      |  <b/>
-      |</a>
-    """.trim.stripMargin)
+  checkOK(
+    """|
+       |<a>
+       |  <b/>
+       |</a>
+       |""".stripMargin
+  )
   checkOK(
     """|object a {
        |  <tr>
@@ -308,14 +308,16 @@ class XmlSuite extends ParseSuite {
        |}""".stripMargin
   )
   checkOK("<a>{<b>{1}</b>}</a>")
-  checkOK("""
-      |val ips = <ips>{
-      |  for {
-      |    field <-ipsList
-      |    JString(ip) <- field.value
-      |  } yield <ip>{ ip }</ip>
-      |}</ips>
-    """.trim.stripMargin)
+  checkOK(
+    """|
+       |val ips = <ips>{
+       |  for {
+       |    field <-ipsList
+       |    JString(ip) <- field.value
+       |  } yield <ip>{ ip }</ip>
+       |}</ips>
+       |""".stripMargin
+  )
 
   // Matches bugs in scalac
   checkOK("""<a b="&#;"/>""")
