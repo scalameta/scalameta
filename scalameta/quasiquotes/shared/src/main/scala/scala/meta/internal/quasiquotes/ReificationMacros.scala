@@ -397,10 +397,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         Liftable((x: T) => Lifts.liftOrigin(x))
     }
     val valDefns = List(
-      if (sourceName eq null) q"""
+      if (sourceName eq null)
+        q"""
         val $dialectOnlyName = implicitly[$OriginModule.DialectOnly]
       """
-      else q"""
+      else
+        q"""
         val $sourceName = new $OriginModule.ParsedSource(
           _root_.scala.meta.inputs.Input.String(${input.text.replace("$$", "$")})
         )

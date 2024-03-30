@@ -1691,12 +1691,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#2708 term lassoc") {
-    checkTree(q"""{
+    checkTree(
+      q"""{
             () == ()
             (()) == (())
             () == () == ()
             (()) == (()) == (())
-          }""")(
+          }"""
+    )(
       Term.Block(
         List(
           Term.ApplyInfix(Lit.Unit(), tname("=="), Nil, Nil),
@@ -1729,12 +1731,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#2708 term rassoc") {
-    checkTree(q"""{
+    checkTree(
+      q"""{
             () :: ()
             (()) :: (())
             () :: () :: ()
             (()) :: (()) :: (())
-          }""")(
+          }"""
+    )(
       Term.Block(
         List(
           Term.ApplyInfix(Lit.Unit(), tname("::"), Nil, Nil),
@@ -1769,12 +1773,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#2708 pat lassoc") {
-    checkTree(q"""foo match {
+    checkTree(
+      q"""foo match {
             case () == () =>
             case (()) == (()) =>
             case () == () == () =>
             case (()) == (()) == (()) =>
-          }""")(
+          }"""
+    )(
       Term.Match(
         tname("foo"),
         List(
@@ -1817,12 +1823,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#2708 pat rassoc") {
-    checkTree(q"""foo match {
+    checkTree(
+      q"""foo match {
             case () :: () =>
             case (()) :: (()) =>
             case () :: () :: () =>
             case (()) :: (()) :: (()) =>
-          }""")(
+          }"""
+    )(
       Term.Match(
         tname("foo"),
         List(
