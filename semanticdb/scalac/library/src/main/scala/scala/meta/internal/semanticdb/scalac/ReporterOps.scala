@@ -4,7 +4,8 @@ import scala.collection.mutable
 import scala.tools.nsc.reporters.StoreReporter
 import scala.reflect.internal.util.{Position => gPosition}
 
-trait ReporterOps { self: ReflectionToolkit =>
+trait ReporterOps {
+  self: ReflectionToolkit =>
 
   // Hack, keep track of how many messages we have returns for each path to avoid
   // duplicate messages. The key is System.identityHashCode to keep memory usage low.
@@ -22,14 +23,9 @@ trait ReporterOps { self: ReflectionToolkit =>
           val infos = r.infos
           val toDrop = returnedMessagesByPath.getOrElse(unit, 0)
           returnedMessagesByPath.put(unit, infos.size)
-          infos.iterator
-            .drop(toDrop) // drop messages that have been reported before.
-            .collect { case RelevantMessage(pos, severity, msg) =>
-              (pos, severity, msg)
-            }
-            .toList
-        case _ =>
-          Nil
+          infos.iterator.drop(toDrop) // drop messages that have been reported before.
+            .collect { case RelevantMessage(pos, severity, msg) => (pos, severity, msg) }.toList
+        case _ => Nil
       }
     }
   }

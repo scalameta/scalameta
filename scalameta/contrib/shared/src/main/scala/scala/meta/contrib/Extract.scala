@@ -11,6 +11,7 @@ trait Extract[A, B] {
 
 object Extract {
   def apply[A, B](f: A => List[B]): Extract[A, B] = new Extract[A, B] {
-    @inline override def extract(a: A): List[B] = f(a)
+    @inline
+    override def extract(a: A): List[B] = f(a)
   }
 }

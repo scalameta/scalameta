@@ -15,17 +15,12 @@ object ModuleID {
   def scalaReflect(scalaVersion: String): ModuleID =
     ModuleID("org.scala-lang", "scala-reflect", scalaVersion)
   def fromString(string: String): List[ModuleID] = {
-    string
-      .split(";")
-      .iterator
-      .flatMap { moduleId =>
-        moduleId.split(":") match {
-          case Array(org, name, rev) =>
-            ModuleID(org, name, rev) :: Nil
-          case _ => Nil
-        }
+    string.split(";").iterator.flatMap { moduleId =>
+      moduleId.split(":") match {
+        case Array(org, name, rev) => ModuleID(org, name, rev) :: Nil
+        case _ => Nil
       }
-      .toList
+    }.toList
   }
 }
 object Jars {
@@ -46,14 +41,10 @@ object Jars {
       out: PrintStream,
       fetchSourceJars: Boolean
   ): List[AbsolutePath] = {
-    Fetch()
-      .addDependencies(modules.map(_.toCoursier).toList: _*)
+    Fetch().addDependencies(modules.map(_.toCoursier).toList: _*)
       .addClassifiers((if (fetchSourceJars) Classifier.sources :: Nil else Nil): _*)
-      .addRepositories(
-        MavenRepository("https://scala-ci.typesafe.com/artifactory/scala-integration/")
-      )
-      .run()
-      .map(AbsolutePath(_))
-      .toList
+      .addRepositories(MavenRepository(
+        "https://scala-ci.typesafe.com/artifactory/scala-integration/"
+      )).run().map(AbsolutePath(_)).toList
   }
 }

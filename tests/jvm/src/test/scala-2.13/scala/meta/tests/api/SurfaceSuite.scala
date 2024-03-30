@@ -25,7 +25,8 @@ class SurfaceSuite extends FunSuite {
   }
   private def isPublic(x: Symbol) = x.isPublic
   private def isPrivateWithin(x: Symbol) = x.privateWithin != NoSymbol
-  @inline private def filterFullNames(a: List[Adt], f: Symbol => Boolean) = a.flatMap { x =>
+  @inline
+  private def filterFullNames(a: List[Adt], f: Symbol => Boolean) = a.flatMap { x =>
     val sym = x.sym
     if (f(sym)) Some(sym.fullName) else None
   }
@@ -34,27 +35,21 @@ class SurfaceSuite extends FunSuite {
     val fullName = symbol.stripPrefix("* ")
     // We ignore the symbols from scalameta/lsp4s that are transitively brought
     // in via the bloop-frontend dependency in testsJVM.
-    fullName.startsWith("monix") ||
-    fullName.startsWith("scala.meta.lsp") ||
+    fullName.startsWith("monix") || fullName.startsWith("scala.meta.lsp") ||
     fullName.startsWith("scala.meta.jsonrpc") || {
       val name = fullName.substring(fullName.lastIndexOf('.') + 1)
-      name == AstNamerMacros.initialName ||
-      name.startsWith(AstNamerMacros.afterNamePrefix)
+      name == AstNamerMacros.initialName || name.startsWith(AstNamerMacros.afterNamePrefix)
     }
   }
   lazy val allStatics = explore.allStatics("scala.meta").filterNot(lsp4s)
-  lazy val trees = wildcardImportStatics.filter(s =>
-    s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api"))
-  )
+  lazy val trees = wildcardImportStatics
+    .filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
   private lazy val tokenRoot = symbolOf[scala.meta.tokens.Token].asRoot
   lazy val tokens = filterFullNames(tokenRoot.allLeafs, isPublic).sorted
-  lazy val core = allStatics
-    .diff(trees)
-    .diff(tokens)
+  lazy val core = allStatics.diff(trees).diff(tokens)
     .diff(filterFullNames(tokenRoot.allLeafs, isPrivateWithin))
     .diff(filterFullNames(tokenRoot.allBranches, x => isPrivateWithin(x) || isPublic(x)))
-    .map(fullName => (fullName, wildcardImportStatics.contains(fullName)))
-    .toMap
+    .map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
   lazy val extensionSurface = explore.extensionSurface("scala.meta").filterNot(lsp4s)
   lazy val coreSurface = {
     val surfaceTypes = tokens ++ trees
@@ -62,13 +57,10 @@ class SurfaceSuite extends FunSuite {
   }
 
   test("statics (core)") {
-    val diagnostic = core.keys.toList.sorted
-      .filter(!_.endsWith("LowPriority"))
-      .map(fullName => {
-        val suffix = if (core(fullName)) "" else " *"
-        s"$fullName$suffix"
-      })
-      .mkString(EOL)
+    val diagnostic = core.keys.toList.sorted.filter(!_.endsWith("LowPriority")).map(fullName => {
+      val suffix = if (core(fullName)) "" else " *"
+      s"$fullName$suffix"
+    }).mkString(EOL)
     // println(diagnostic)
     assertNoDiff(
       diagnostic,
@@ -190,8 +182,8 @@ class SurfaceSuite extends FunSuite {
   }
 
   test("prettyprinters for statics (core)") {
-    val prettyprinterTests =
-      new scala.meta.tests.prettyprinters.PublicSuite().munitTests().map(_.name)
+    val prettyprinterTests = new scala.meta.tests.prettyprinters.PublicSuite().munitTests()
+      .map(_.name)
     val nonPackageStatics = core.keys.filter(_.exists(_.isUpper))
     val untested = nonPackageStatics.filter { name =>
       !name.endsWith("LowPriority") && !prettyprinterTests.exists(_.startsWith(name))

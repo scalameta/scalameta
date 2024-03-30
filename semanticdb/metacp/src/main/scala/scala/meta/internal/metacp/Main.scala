@@ -20,19 +20,16 @@ import scala.meta.metacp._
 
 class Main(settings: Settings, reporter: Reporter) {
 
-  val classpathIndex =
-    ClasspathIndex(
-      settings.classpath ++ settings.dependencyClasspath ++ detectJavacp,
-      includeJdk = settings.includeJdk
-    )
+  val classpathIndex = ClasspathIndex(
+    settings.classpath ++ settings.dependencyClasspath ++ detectJavacp,
+    includeJdk = settings.includeJdk
+  )
   private val missingSymbols = mutable.Set.empty[String]
 
   def process(): Result = {
     if (settings.out.isFile) {
       throw new FileAlreadyExistsException(settings.out.toString, null, "--out must not be a file")
-    } else if (!settings.out.isDirectory) {
-      Files.createDirectories(settings.out.toNIO)
-    }
+    } else if (!settings.out.isDirectory) { Files.createDirectories(settings.out.toNIO) }
 
     val classpath = settings.classpath.entries
 
@@ -40,8 +37,7 @@ class Main(settings: Settings, reporter: Reporter) {
     def processEntry(entry: AbsolutePath): OutputEntry = {
       withOutputEntry(entry) { out =>
         val isSuccess = convertClasspathEntry(entry, out.root)
-        if (isSuccess) status.put(entry, Some(out.output))
-        else status.put(entry, None)
+        if (isSuccess) status.put(entry, Some(out.output)) else status.put(entry, None)
         out
       }
     }
@@ -57,9 +53,7 @@ class Main(settings: Settings, reporter: Reporter) {
             val isSuccess = processManifest(entry, manifest, out.output)
             if (!isSuccess) status.put(entry, None)
           }
-        } finally {
-          jar.close()
-        }
+        } finally { jar.close() }
       }
     }
 
@@ -69,9 +63,7 @@ class Main(settings: Settings, reporter: Reporter) {
           Scalalib.synthetics.foreach { infos => infos.save(out.root) }
           Some(out.output)
         }
-      } else {
-        None
-      }
+      } else { None }
     }
 
     if (missingSymbols.nonEmpty) {
@@ -99,11 +91,7 @@ class Main(settings: Settings, reporter: Reporter) {
     Result(orderedStatus, scalaLibrarySynthetics)
   }
 
-  private def processManifest(
-      entry: AbsolutePath,
-      manifest: Manifest,
-      out: AbsolutePath
-  ): Boolean = {
+  private def processManifest(entry: AbsolutePath, manifest: Manifest, out: AbsolutePath): Boolean = {
     var success = true
     val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
     if (classpathAttr != null) {
@@ -194,8 +182,7 @@ class Main(settings: Settings, reporter: Reporter) {
               val result = ClassfileInfos.fromClassNode(node, classpathIndex, settings, reporter)
               result.foreach { infos => infos.save(out) }
             } catch {
-              case e @ MissingSymbolException(symbol) =>
-                if (!missingSymbols(symbol)) {
+              case e @ MissingSymbolException(symbol) => if (!missingSymbols(symbol)) {
                   missingSymbols += symbol
                   reporter.err.println(s"${e.getMessage} in $in")
                   success = false
@@ -221,24 +208,17 @@ class Main(settings: Settings, reporter: Reporter) {
   private def detectJavacp: Classpath = {
     if (settings.usejavacp) {
       val scalaLibrary = this.getClass.getClassLoader match {
-        case loader: URLClassLoader =>
-          loader.getURLs
-            .collectFirst {
-              case url if url.toString.contains("scala-library") =>
-                AbsolutePath(Paths.get(url.toURI))
-            }
-            .getOrElse {
-              throw new IllegalStateException("Unable to detect scala-library via --usejavacp")
-            }
-        case unexpected =>
-          throw new IllegalStateException(
+        case loader: URLClassLoader => loader.getURLs.collectFirst {
+            case url if url.toString.contains("scala-library") => AbsolutePath(Paths.get(url.toURI))
+          }.getOrElse {
+            throw new IllegalStateException("Unable to detect scala-library via --usejavacp")
+          }
+        case unexpected => throw new IllegalStateException(
             s"Expected this.getClass.getClassLoader to be URLClassLoader. " +
               s"Obtained $unexpected"
           )
       }
       Classpath(scalaLibrary)
-    } else {
-      Classpath(Nil)
-    }
+    } else { Classpath(Nil) }
   }
 }

@@ -35,8 +35,7 @@ object RelativePath {
   def apply(path: String): RelativePath = apply(Paths.get(path))
 
   // throws Illegal argument exception if path is not relative.
-  def apply(path: nio.Path): RelativePath =
-    new RelativePath(path) {}
+  def apply(path: nio.Path): RelativePath = new RelativePath(path) {}
 
   private[meta] def toURI(path: Path, isDirectory: Boolean): URI = {
     val suffix = if (isDirectory) "/" else ""

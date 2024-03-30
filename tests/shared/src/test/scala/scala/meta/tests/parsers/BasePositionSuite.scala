@@ -46,10 +46,9 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
    * encloses the `{` token. The correct output should be
    * {{{Name.Anonymous trait A @@{ self: B =>}}}.
    */
-  def checkPositions[T <: Tree: Parse](
-      code: TestOptions,
-      expected: String
-  )(implicit loc: Location): Unit = {
+  def checkPositions[T <: Tree: Parse](code: TestOptions, expected: String)(implicit
+      loc: Location
+  ): Unit = {
     test(code) {
       implicit val D = defaultDialect
       val tree = MoreHelpers.requireNonEmptyOrigin(code.name.parse[T].get)
@@ -60,38 +59,27 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
         // the syntax "lazy" then it's trivially verified and excluded from the
         // output.
         case t if t eq tree => Nil
-        case t @ Lit(value) if t.syntax == value.toString =>
-          Nil
+        case t @ Lit(value) if t.syntax == value.toString => Nil
         case t @ Lit.Unit() if t.syntax == "()" => // This case is needed for Scala.js.
           Nil
-        case t @ Name(value) if t.syntax == value =>
-          Nil
-        case t @ Importee.Name(Name(value)) if t.syntax == value =>
-          Nil
-        case t @ Pat.Var(Name(value)) if t.syntax == value =>
-          Nil
-        case t: Mod if s"Mod.${t.syntax.capitalize}" == t.productPrefix =>
-          Nil
-        case t: Type.Param if t.syntax == t.name.value =>
-          Nil
-        case t @ Term.Param(Nil, name, Some(tpe), _) if t.syntax == s"${name}: ${tpe}" =>
-          Nil
-        case t @ Init(Type.Name(value), anon, Nil) if t.syntax == value =>
-          Nil
-        case t: Importee.Wildcard if t.syntax == "_" =>
-          Nil
-        case t: Pat.Wildcard if t.syntax == "_" =>
-          Nil
+        case t @ Name(value) if t.syntax == value => Nil
+        case t @ Importee.Name(Name(value)) if t.syntax == value => Nil
+        case t @ Pat.Var(Name(value)) if t.syntax == value => Nil
+        case t: Mod if s"Mod.${t.syntax.capitalize}" == t.productPrefix => Nil
+        case t: Type.Param if t.syntax == t.name.value => Nil
+        case t @ Term.Param(Nil, name, Some(tpe), _) if t.syntax == s"${name}: ${tpe}" => Nil
+        case t @ Init(Type.Name(value), anon, Nil) if t.syntax == value => Nil
+        case t: Importee.Wildcard if t.syntax == "_" => Nil
+        case t: Pat.Wildcard if t.syntax == "_" => Nil
         case t @ Term.ArgClause(arg :: Nil, None) if t.syntax == arg.syntax => Nil
         case t @ Pat.ArgClause(arg :: Nil) if t.syntax == arg.syntax => Nil
         case t =>
           val syntax = t.syntax
-          val out = if (syntax.isEmpty) {
-            val (leading, trailing) = t.pos.lineContent.splitAt(t.pos.startColumn)
-            s"${t.productPrefix} ${leading}@@${trailing}"
-          } else {
-            s"${t.productPrefix} ${syntax}"
-          }
+          val out =
+            if (syntax.isEmpty) {
+              val (leading, trailing) = t.pos.lineContent.splitAt(t.pos.startColumn)
+              s"${t.productPrefix} ${leading}@@${trailing}"
+            } else { s"${t.productPrefix} ${syntax}" }
           List(out)
       }
       val obtained = tokens.flatten.mkString("\n")

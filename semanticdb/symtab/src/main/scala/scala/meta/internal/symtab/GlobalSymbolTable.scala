@@ -24,8 +24,9 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
 
   override def toString: String = s"GlobalSymbolTable($classpath)"
 
-  private def enter(infos: ClassfileInfos): Unit =
-    infos.infos.foreach { info => symbolCache(info.symbol) = info }
+  private def enter(infos: ClassfileInfos): Unit = infos.infos.foreach { info =>
+    symbolCache(info.symbol) = info
+  }
 
   private def loadSymbol(symbol: String): Unit = {
     val toplevel = symbol.ownerChain.find(!_.isPackage).get
@@ -36,13 +37,10 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
       case Some(classfile) =>
         val node = classfile.toClassNode
         ClassfileInfos.fromClassNode(node, classpathIndex, settings, reporter) match {
-          case Some(infos) =>
-            enter(infos)
-          case _ =>
-            ()
+          case Some(infos) => enter(infos)
+          case _ => ()
         }
-      case _ =>
-        ()
+      case _ => ()
     }
   }
 
@@ -56,13 +54,10 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
           displayName = symbol.desc.value
         )
         Some(info)
-      } else {
-        None
-      }
+      } else { None }
     } else {
       symbolCache.get(symbol) match {
-        case Some(x) =>
-          Some(x)
+        case Some(x) => Some(x)
         case None =>
           loadSymbol(symbol)
           symbolCache.get(symbol)
@@ -71,9 +66,7 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
 }
 
 object GlobalSymbolTable {
-  def apply(classpath: Classpath): GlobalSymbolTable = {
-    new GlobalSymbolTable(classpath, false)
-  }
+  def apply(classpath: Classpath): GlobalSymbolTable = { new GlobalSymbolTable(classpath, false) }
   def apply(classpath: Classpath, includeJdk: Boolean): GlobalSymbolTable = {
     new GlobalSymbolTable(classpath, includeJdk)
   }

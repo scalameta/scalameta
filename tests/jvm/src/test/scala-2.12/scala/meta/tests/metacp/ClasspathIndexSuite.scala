@@ -10,8 +10,7 @@ import scala.meta.tests.semanticdb.ManifestMetacp
 import java.nio.file.Paths
 
 class ClasspathIndexSuite extends FunSuite {
-  def classpath(path: AbsolutePath) =
-    Classpath(path :: Library.scalaLibrary.classpath().entries)
+  def classpath(path: AbsolutePath) = Classpath(path :: Library.scalaLibrary.classpath().entries)
 
   test("manifest") {
     val jar = AbsolutePath(ManifestMetacp.path.getParent.resolve("manifest.jar"))

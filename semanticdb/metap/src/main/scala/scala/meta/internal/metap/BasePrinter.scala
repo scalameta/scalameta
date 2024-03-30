@@ -11,9 +11,7 @@ abstract class BasePrinter(
     val doc: TextDocument,
     val symtab: PrinterSymtab
 ) {
-  def out: PrintStream = {
-    reporter.out
-  }
+  def out: PrintStream = { reporter.out }
 
   def rep[T](pre: String, xs: Seq[T], sep: String, suf: String)(f: T => Unit): Unit = {
     if (xs.nonEmpty) {
@@ -46,9 +44,7 @@ abstract class BasePrinter(
     }
   }
 
-  def opt[T](pre: String, xs: Option[T])(f: T => Unit): Unit = {
-    opt(pre, xs, "")(f)
-  }
+  def opt[T](pre: String, xs: Option[T])(f: T => Unit): Unit = { opt(pre, xs, "")(f) }
 
   def opt[T](pre: String, xs: Type)(f: Type => Unit): Unit = {
     opt(pre, if (xs.nonEmpty) Some(xs) else None)(f)
@@ -58,9 +54,7 @@ abstract class BasePrinter(
     opt(pre, if (xs.nonEmpty) Some(xs) else None)(f)
   }
 
-  def opt[T](xs: Option[T], suf: String)(f: T => Unit): Unit = {
-    opt("", xs, suf)(f)
-  }
+  def opt[T](xs: Option[T], suf: String)(f: T => Unit): Unit = { opt("", xs, suf)(f) }
 
   def opt[T](xs: Type, suf: String)(f: Type => Unit): Unit = {
     opt("", if (xs.nonEmpty) Some(xs) else None, suf)(f)
@@ -78,9 +72,7 @@ abstract class BasePrinter(
     opt("", if (xs.nonEmpty) Some(xs) else None, "")(f)
   }
 
-  def opt[T](xs: Option[T])(f: T => Unit): Unit = {
-    opt("", xs, "")(f)
-  }
+  def opt[T](xs: Option[T])(f: T => Unit): Unit = { opt("", xs, "")(f) }
 
   def opt(pre: String, s: String, suf: String)(f: String => Unit): Unit = {
     if (s.nonEmpty) {
@@ -90,11 +82,7 @@ abstract class BasePrinter(
     }
   }
 
-  def opt(s: String, suf: String)(f: String => Unit): Unit = {
-    opt("", s, suf)(f)
-  }
+  def opt(s: String, suf: String)(f: String => Unit): Unit = { opt("", s, suf)(f) }
 
-  def opt(s: String)(f: String => Unit): Unit = {
-    opt("", s, "")(f)
-  }
+  def opt(s: String)(f: String => Unit): Unit = { opt("", s, "")(f) }
 }

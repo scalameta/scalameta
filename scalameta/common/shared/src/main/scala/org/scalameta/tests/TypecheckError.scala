@@ -38,17 +38,13 @@ object typecheckError {
       catch { case ex: ParseException => c.abort(c.enclosingPosition, "this code fails to parse") }
     }
     def format(ex: TypecheckException) = {
-      if (options.tpe.typeSymbol == symbolOf[Options.WithoutPositions.type]) {
-        ex.msg
-      } else if (options.tpe.typeSymbol == symbolOf[Options.WithPositions.type]) {
+      if (options.tpe.typeSymbol == symbolOf[Options.WithoutPositions.type]) { ex.msg }
+      else if (options.tpe.typeSymbol == symbolOf[Options.WithPositions.type]) {
         Position.formatMessage(ex.pos.asInstanceOf[Position], ex.msg, shortenFile = true)
-      } else {
-        c.abort(c.enclosingPosition, s"unsupported option: ${options.tpe}")
-      }
+      } else { c.abort(c.enclosingPosition, s"unsupported option: ${options.tpe}") }
     }
-    try {
-      c.typecheck(tree, silent = false); q"${""}"
-    } catch { case ex: TypecheckException => q"${format(ex)}" }
+    try { c.typecheck(tree, silent = false); q"${""}" }
+    catch { case ex: TypecheckException => q"${format(ex)}" }
   }
 
   trait Options

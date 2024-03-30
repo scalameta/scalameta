@@ -11,10 +11,7 @@ import scala.collection.SortedMap
 
 class Source3Suite extends FunSuite {
 
-  override def munitIgnore: Boolean = !ScalaVersion.isSupported(
-    minimal212 = 14,
-    minimal213 = 6
-  )
+  override def munitIgnore: Boolean = !ScalaVersion.isSupported(minimal212 = 14, minimal213 = 6)
 
   val compiler: Global = newCompiler(scalacOptions = "-Xsource:3" :: Nil)
   def check(
@@ -32,48 +29,47 @@ class Source3Suite extends FunSuite {
     }
   }
 
-  val expected =
-    """|interactive.scala
-       |-----------------
-       |
-       |Summary:
-       |Schema => SemanticDB v4
-       |Uri => interactive.scala
-       |Text => non-empty
-       |Language => Scala
-       |Symbols => 4 entries
-       |Occurrences => 16 entries
-       |
-       |Symbols:
-       |b/a. => final object a extends AnyRef { +2 decls }
-       |  AnyRef => scala/AnyRef#
-       |b/a.args. => val method args: List[String]
-       |  List => scala/collection/immutable/List#
-       |  String => scala/Predef.String#
-       |b/a.func(). => method func(args: String*): Nothing
-       |  args => b/a.func().(args)
-       |  String => scala/Predef.String#
-       |  Nothing => scala/Nothing#
-       |b/a.func().(args) => param args: String*
-       |  String => scala/Predef.String#
-       |
-       |Occurrences:
-       |[0:8..0:9): b <= b/
-       |[1:7..1:12): scala => scala/
-       |[1:13..1:23): concurrent => scala/concurrent/
-       |[1:24..1:30): Future => scala/concurrent/Future#
-       |[1:24..1:30): Future => scala/concurrent/Future.
-       |[2:7..2:8): a <= b/a.
-       |[3:6..3:10): func <= b/a.func().
-       |[3:11..3:15): args <= b/a.func().(args)
-       |[3:17..3:23): String => java/lang/String#
-       |[3:28..3:31): ??? => scala/Predef.`???`().
-       |[4:6..4:10): args <= b/a.args.
-       |[4:13..4:17): List => scala/package.List.
-       |[4:18..4:23): empty => scala/collection/immutable/List.empty().
-       |[4:24..4:30): String => scala/Predef.String#
-       |[5:2..5:6): func => b/a.func().
-       |[5:7..5:11): args => b/a.args.""".stripMargin
+  val expected = """|interactive.scala
+                    |-----------------
+                    |
+                    |Summary:
+                    |Schema => SemanticDB v4
+                    |Uri => interactive.scala
+                    |Text => non-empty
+                    |Language => Scala
+                    |Symbols => 4 entries
+                    |Occurrences => 16 entries
+                    |
+                    |Symbols:
+                    |b/a. => final object a extends AnyRef { +2 decls }
+                    |  AnyRef => scala/AnyRef#
+                    |b/a.args. => val method args: List[String]
+                    |  List => scala/collection/immutable/List#
+                    |  String => scala/Predef.String#
+                    |b/a.func(). => method func(args: String*): Nothing
+                    |  args => b/a.func().(args)
+                    |  String => scala/Predef.String#
+                    |  Nothing => scala/Nothing#
+                    |b/a.func().(args) => param args: String*
+                    |  String => scala/Predef.String#
+                    |
+                    |Occurrences:
+                    |[0:8..0:9): b <= b/
+                    |[1:7..1:12): scala => scala/
+                    |[1:13..1:23): concurrent => scala/concurrent/
+                    |[1:24..1:30): Future => scala/concurrent/Future#
+                    |[1:24..1:30): Future => scala/concurrent/Future.
+                    |[2:7..2:8): a <= b/a.
+                    |[3:6..3:10): func <= b/a.func().
+                    |[3:11..3:15): args <= b/a.func().(args)
+                    |[3:17..3:23): String => java/lang/String#
+                    |[3:28..3:31): ??? => scala/Predef.`???`().
+                    |[4:6..4:10): args <= b/a.args.
+                    |[4:13..4:17): List => scala/package.List.
+                    |[4:18..4:23): empty => scala/collection/immutable/List.empty().
+                    |[4:24..4:30): String => scala/Predef.String#
+                    |[5:2..5:6): func => b/a.func().
+                    |[5:7..5:11): args => b/a.args.""".stripMargin
 
   check(
     """|package b
@@ -86,24 +82,18 @@ class Source3Suite extends FunSuite {
        |""".stripMargin,
     expected,
     compat = List(
-      ScalaVersion.Full("2.12.14") -> expected
-        .replace("scala/package.List.", "scala/collection/immutable/List."),
-      ScalaVersion.Full("2.12.15") -> expected
-        .replace("scala/package.List.", "scala/collection/immutable/List."),
-      ScalaVersion.Full("2.12.16") -> expected
-        .replace("scala/package.List.", "scala/collection/immutable/List."),
-      ScalaVersion.Full("2.12.17") -> expected.replace(
-        "scala/package.List.",
-        "scala/collection/immutable/List."
-      ),
-      ScalaVersion.Full("2.12.18") -> expected.replace(
-        "scala/package.List.",
-        "scala/collection/immutable/List."
-      ),
-      ScalaVersion.Full("2.12.19") -> expected.replace(
-        "scala/package.List.",
-        "scala/collection/immutable/List."
-      )
+      ScalaVersion.Full("2.12.14") ->
+        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
+      ScalaVersion.Full("2.12.15") ->
+        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
+      ScalaVersion.Full("2.12.16") ->
+        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
+      ScalaVersion.Full("2.12.17") ->
+        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
+      ScalaVersion.Full("2.12.18") ->
+        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
+      ScalaVersion.Full("2.12.19") ->
+        expected.replace("scala/package.List.", "scala/collection/immutable/List.")
     )
   )
 

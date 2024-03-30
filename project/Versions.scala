@@ -8,10 +8,8 @@ object Versions {
   val LatestScala211 = Scala211Versions.head
   val LatestScala212 = Scala212Versions.head
   val LatestScala213 = Scala213Versions.head
-  val AllScalaVersions =
-    Scala213Versions ++ Scala212Versions ++ Scala211Versions
-  val LatestScalaVersions =
-    Seq(LatestScala213, LatestScala212, LatestScala211)
+  val AllScalaVersions = Scala213Versions ++ Scala212Versions ++ Scala211Versions
+  val LatestScalaVersions = Seq(LatestScala213, LatestScala212, LatestScala211)
 
   // returns versions from newest to oldest
   private def getVersions(major: Int, minor: Int, range: Range) = {

@@ -12,14 +12,11 @@ class ShowMacros(val c: Context) {
 
   private def mkResults(xs: Seq[c.Tree]): Seq[c.Tree] = {
     xs.map { x =>
-      if (x.tpe <:< typeOf[Show.Result])
-        x
+      if (x.tpe <:< typeOf[Show.Result]) x
       else {
         val printer = c.inferImplicitValue(appliedType(ShowClass, x.tpe :: Nil), silent = true)
-        if (printer.nonEmpty)
-          q"$printer($x)"
-        else
-          c.abort(x.pos, s"don't know how to print value of type ${x.tpe}")
+        if (printer.nonEmpty) q"$printer($x)"
+        else c.abort(x.pos, s"don't know how to print value of type ${x.tpe}")
       }
     }
   }

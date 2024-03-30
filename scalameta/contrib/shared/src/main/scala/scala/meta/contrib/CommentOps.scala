@@ -10,12 +10,7 @@ object CommentOps {
 
   @tailrec
   private def dropRightWhile(str: String, predicate: (Char) => Boolean): String =
-    if (str.isEmpty)
-      ""
-    else if (predicate(str.last))
-      dropRightWhile(str.init, predicate)
-    else
-      str
+    if (str.isEmpty) "" else if (predicate(str.last)) dropRightWhile(str.init, predicate) else str
 
   @inline
   def isScaladoc(c: Comment): Boolean = {
@@ -26,20 +21,13 @@ object CommentOps {
   def content(c: Comment): Option[String] = {
     val rawSyntax: String = c.syntax.trim
     if (isScaladoc(c)) {
-      val content =
-        dropRightWhile(rawSyntax, scaladocBorderSymbols)
-          .dropWhile(scaladocBorderSymbols)
+      val content = dropRightWhile(rawSyntax, scaladocBorderSymbols).dropWhile(scaladocBorderSymbols)
 
       Option(
-        content.linesIterator
-          .map(_.dropWhile(scaladocSymbols)) // Removes leading comments symbols
-          .map(_.trim)
-          .mkString("\n")
-          .trim
+        content.linesIterator.map(_.dropWhile(scaladocSymbols)) // Removes leading comments symbols
+          .map(_.trim).mkString("\n").trim
       )
-    } else {
-      Option.empty
-    }
+    } else { Option.empty }
   }
 
   @inline

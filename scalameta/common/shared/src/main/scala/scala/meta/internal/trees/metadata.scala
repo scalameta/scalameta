@@ -15,7 +15,9 @@ object Metadata {
   class replacedField(until: String, pos: Int = -1) extends StaticAnnotation
   class replacesFields(after: String, ctor: Any) extends StaticAnnotation
   class astCompanion extends StaticAnnotation
-  @getter class astField extends StaticAnnotation
-  @getter class auxiliary extends StaticAnnotation
+  @getter
+  class astField extends StaticAnnotation
+  @getter
+  class auxiliary extends StaticAnnotation
   class registry(paths: List[String]) extends StaticAnnotation
 }

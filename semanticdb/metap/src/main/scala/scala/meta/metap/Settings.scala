@@ -5,21 +5,12 @@ import java.nio.file._
 import scala.annotation.tailrec
 import scala.meta.cli._
 
-final class Settings private (
-    val format: Format,
-    val paths: List[Path]
-) {
-  private def this() = {
-    this(format = Format.Compact, paths = Nil)
-  }
+final class Settings private (val format: Format, val paths: List[Path]) {
+  private def this() = { this(format = Format.Compact, paths = Nil) }
 
-  def withFormat(format: Format): Settings = {
-    copy(format = format)
-  }
+  def withFormat(format: Format): Settings = { copy(format = format) }
 
-  def withPaths(paths: List[Path]): Settings = {
-    copy(paths = paths)
-  }
+  def withPaths(paths: List[Path]): Settings = { copy(paths = paths) }
 
   private def copy(format: Format = format, paths: List[Path] = paths): Settings = {
     new Settings(format = format, paths = paths)
@@ -31,8 +22,7 @@ object Settings {
     @tailrec
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
-        case "--" :: rest =>
-          loop(settings, false, args)
+        case "--" :: rest => loop(settings, false, args)
         case "-compact" :: rest if allowOptions =>
           loop(settings.copy(format = Format.Compact), allowOptions = true, rest)
         case ("-detailed" | "-pretty") :: rest if allowOptions =>
@@ -45,14 +35,11 @@ object Settings {
         case path :: rest =>
           val paths1 = settings.paths ++ path.split(File.pathSeparator).map(Paths.get(_))
           loop(settings.copy(paths = paths1), allowOptions = true, rest)
-        case Nil =>
-          Some(settings)
+        case Nil => Some(settings)
       }
     }
     loop(Settings(), true, args)
   }
 
-  def apply(): Settings = {
-    new Settings()
-  }
+  def apply(): Settings = { new Settings() }
 }

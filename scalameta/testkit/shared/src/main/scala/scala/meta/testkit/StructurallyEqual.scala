@@ -17,26 +17,19 @@ object StructurallyEqual {
         case (x, y) if x == null || y == null => x == null && y == null
         case (x: Some[_], y: Some[_]) => loop(x.get, y.get)
         case (x: None.type, y: None.type) => true
-        case (xs: List[_], ys: List[_]) =>
-          xs.length == ys.length &&
-          xs.zip(ys).forall { case (x, y) =>
-            loop(x, y)
-          }
+        case (xs: List[_], ys: List[_]) => xs.length == ys.length && xs.zip(ys)
+            .forall { case (x, y) => loop(x, y) }
         case (x: Tree, y: Tree) =>
-          def sameStructure =
-            x.productPrefix == y.productPrefix &&
-              loop(x.productIterator.toList, y.productIterator.toList)
+          def sameStructure = x.productPrefix == y.productPrefix &&
+            loop(x.productIterator.toList, y.productIterator.toList)
           sameStructure
         case _ => x == y
       }
-      if (!ok) throw AnyDiff(x, y)
-      else true
+      if (!ok) throw AnyDiff(x, y) else true
     }
     try {
       loop(a, b)
       Right(())
-    } catch {
-      case t: AnyDiff => Left(t)
-    }
+    } catch { case t: AnyDiff => Left(t) }
   }
 }

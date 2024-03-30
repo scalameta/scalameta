@@ -35,18 +35,16 @@ class ConfigSuite extends FunSuite {
     test(name.tag(Slow)) {
       val sourceroot = StringFS.fromString(input)
       val (metacIsSuccess, metacOut, metacErr) = CliTestUtils.withReporter { reporter =>
-        val settings = metac
-          .Settings()
-          .withScalacArgs(
-            scalacArgs ++ List(
-              "-d",
-              targetroot.toString,
-              "-P:semanticdb:sourceroot:" + sourceroot.toString,
-              "-cp",
-              Library.scalaLibrary.classpath().syntax,
-              sourceroot.resolve(A).toString
-            )
+        val settings = metac.Settings().withScalacArgs(
+          scalacArgs ++ List(
+            "-d",
+            targetroot.toString,
+            "-P:semanticdb:sourceroot:" + sourceroot.toString,
+            "-cp",
+            Library.scalaLibrary.classpath().syntax,
+            sourceroot.resolve(A).toString
           )
+        )
         Metac.process(settings, reporter)
       }
       assert(metacIsSuccess, metacErr)

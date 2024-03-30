@@ -63,26 +63,22 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     }
     val fname = q"$treeName.${f.name}"
     val rhs = f.tpe match {
-      case tpe @ TreeTpe() =>
-        treeTransformer(fname, tpe)
-      case tpe @ OptionTreeTpe(_) =>
-        optionTransformer(fname, tpe, treeTransformer)
-      case tpe @ ListTreeTpe(_) =>
-        listTransformer(fname, tpe, treeTransformer)
+      case tpe @ TreeTpe() => treeTransformer(fname, tpe)
+      case tpe @ OptionTreeTpe(_) => optionTransformer(fname, tpe, treeTransformer)
+      case tpe @ ListTreeTpe(_) => listTransformer(fname, tpe, treeTransformer)
       case tpe @ OptionListTreeTpe(_) =>
         optionTransformer(fname, tpe, listTransformer(_, _, treeTransformer))
       case tpe @ ListListTreeTpe(_) =>
         listTransformer(fname, tpe, listTransformer(_, _, treeTransformer))
-      case _ =>
-        fname
+      case _ => fname
     }
     q"val ${TermName(f.name.toString + "1")} = $rhs"
   }
 
   def leafHandler(l: Leaf, treeName: TermName): Tree = {
     val constructor = hygienicRef(l.sym.companion)
-    val relevantFields =
-      l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
+    val relevantFields = l.fields
+      .filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
     if (relevantFields.isEmpty) return q"$treeName"
     val transformedFields: List[ValDef] = relevantFields.map(transformField(treeName))
 

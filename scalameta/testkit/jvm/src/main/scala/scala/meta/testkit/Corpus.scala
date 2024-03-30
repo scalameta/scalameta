@@ -84,9 +84,7 @@ object Corpus {
     val localDirectory = FileOps.getFile("target", name)
     if (!localDirectory.isDirectory) {
       val localTarball = FileOps.getFile(s"$name.tar.gz")
-      if (!localTarball.isFile) {
-        downloadReposTar(corpus, destination = localTarball)
-      }
+      if (!localTarball.isFile) { downloadReposTar(corpus, destination = localTarball) }
       extractReposTar(localTarball, destination = FileOps.workingDirectory)
     }
     FileOps.getFile("target", name)
@@ -100,9 +98,7 @@ object Corpus {
   }
 
   private def downloadReposTar(corpus: Corpus, destination: File): Unit = {
-    Phase.run(s"download ${corpus.url}") {
-      new URI(corpus.url).toURL.#>(destination).!!
-    }
+    Phase.run(s"download ${corpus.url}") { new URI(corpus.url).toURL.#>(destination).!! }
   }
 
   /**
@@ -124,11 +120,8 @@ object Corpus {
     files.iterator.flatMap { repo =>
       val commit = FileOps.readFile(new File(repo, "COMMIT")).trim
       val url = FileOps.readFile(new File(repo, "URL")).trim
-      FileOps
-        .listFiles(repo)
-        .filter(sourceFile => sourceFile.endsWith(".scala"))
-        .filter(corpus.filter)
-        .map { sourceFile =>
+      FileOps.listFiles(repo).filter(sourceFile => sourceFile.endsWith(".scala"))
+        .filter(corpus.filter).map { sourceFile =>
           val filename = sourceFile.stripPrefix(repo.getPath)
           CorpusFile(filename.trim, url, commit)
         }

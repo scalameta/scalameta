@@ -26,12 +26,11 @@ import scala.meta.internal.prettyprinters._
 // NOTE: `start` and `end` are String.substring-style,
 // i.e. `start` is inclusive and `end` is not.
 // Therefore `end` can point to the last token plus one.
-@data class Tokens private (
-    private val tokens: Array[Token],
-    private val start: Int,
-    val length: Int
-) extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
-  @inline private def get(idx: Int): Token = tokens(start + idx)
+@data
+class Tokens private (private val tokens: Array[Token], private val start: Int, val length: Int)
+    extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
+  @inline
+  private def get(idx: Int): Token = tokens(start + idx)
   def apply(idx: Int): Token =
     if (idx >= 0 && idx < length) get(idx)
     else throw new NoSuchElementException(s"token $idx out of $length")
@@ -94,11 +93,9 @@ import scala.meta.internal.prettyprinters._
 
   override def splitAt(n: Int): (Tokens, Tokens) = (take(n), drop(n))
 
-  override def span(p: Token => Boolean): (Tokens, Tokens) =
-    splitAt(segmentLength(p))
+  override def span(p: Token => Boolean): (Tokens, Tokens) = splitAt(segmentLength(p))
 
-  def spanRight(p: Token => Boolean): (Tokens, Tokens) =
-    splitAt(length - segmentLengthRight(p))
+  def spanRight(p: Token => Boolean): (Tokens, Tokens) = splitAt(length - segmentLengthRight(p))
 }
 
 object Tokens {
@@ -112,6 +109,6 @@ object Tokens {
   implicit val listTokenToInput: Convert[List[Token], Input] =
     Convert(tokens => convertTokensToInput(Tokens(tokens.toArray)))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
-  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] =
-    TokensSyntax.apply[T](dialect)
+  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] = TokensSyntax
+    .apply[T](dialect)
 }

@@ -33,18 +33,12 @@ final class Settings private (
     )
   }
 
-  def withOut(out: AbsolutePath): Settings = {
-    copy(out = out)
-  }
+  def withOut(out: AbsolutePath): Settings = { copy(out = out) }
 
   @deprecated("Use withOut instead", "4.0.0")
-  def withCacheDir(out: AbsolutePath): Settings = {
-    copy(out = out)
-  }
+  def withCacheDir(out: AbsolutePath): Settings = { copy(out = out) }
 
-  def withClasspath(classpath: Classpath): Settings = {
-    copy(classpath = classpath)
-  }
+  def withClasspath(classpath: Classpath): Settings = { copy(classpath = classpath) }
 
   def withDependencyClasspath(classpath: Classpath): Settings = {
     copy(dependencyClasspath = classpath)
@@ -54,21 +48,15 @@ final class Settings private (
     copy(scalaLibrarySynthetics = include)
   }
 
-  def withPar(par: Boolean): Settings = {
-    copy(par = par)
-  }
+  def withPar(par: Boolean): Settings = { copy(par = par) }
 
-  def withVerbose(verbose: Boolean): Settings = {
-    copy(verbose = verbose)
-  }
+  def withVerbose(verbose: Boolean): Settings = { copy(verbose = verbose) }
 
   def withUsejavacp(usejavacp: Boolean): Settings = {
     copy(usejavacp = usejavacp, includeJdk = true)
   }
 
-  def withIncludeJdk(includeJdk: Boolean): Settings = {
-    copy(includeJdk = includeJdk)
-  }
+  def withIncludeJdk(includeJdk: Boolean): Settings = { copy(includeJdk = includeJdk) }
 
   def withStubBrokenSignatures(stubBrokenSignatures: Boolean): Settings = {
     copy(stubBrokenSignatures = stubBrokenSignatures)
@@ -110,8 +98,7 @@ object Settings {
     @tailrec
     def loop(settings: Settings, allowOptions: Boolean, args: List[String]): Option[Settings] = {
       args match {
-        case "--" :: rest =>
-          loop(settings, false, rest)
+        case "--" :: rest => loop(settings, false, rest)
         case "--out" :: out :: rest if allowOptions =>
           loop(settings.copy(out = AbsolutePath(out)), true, rest)
         case "--cache-dir" :: _ :: _ if allowOptions =>
@@ -123,10 +110,8 @@ object Settings {
           loop(settings.copy(scalaLibrarySynthetics = false), true, rest)
         case "--include-scala-library-synthetics" :: rest if allowOptions =>
           loop(settings.copy(scalaLibrarySynthetics = true), true, rest)
-        case "--par" :: rest if allowOptions =>
-          loop(settings.copy(par = true), true, rest)
-        case "--verbose" :: rest if allowOptions =>
-          loop(settings.copy(verbose = true), true, rest)
+        case "--par" :: rest if allowOptions => loop(settings.copy(par = true), true, rest)
+        case "--verbose" :: rest if allowOptions => loop(settings.copy(verbose = true), true, rest)
         case "--usejavacp" :: rest if allowOptions =>
           loop(settings.copy(usejavacp = true), true, rest)
         case "--stub-broken-signatures" :: rest if allowOptions =>
@@ -136,23 +121,17 @@ object Settings {
         case flag :: _ if allowOptions && flag.startsWith("-") =>
           reporter.err.println(s"unsupported flag $flag")
           None
-        case classpath :: Nil =>
-          Some(settings.copy(classpath = Classpath(classpath)))
+        case classpath :: Nil => Some(settings.copy(classpath = Classpath(classpath)))
         case classpath :: arg :: _ =>
           reporter.err.println(s"unsupported argument $arg")
           None
-        case Nil =>
-          Some(settings)
+        case Nil => Some(settings)
       }
     }
     loop(Settings(), allowOptions = true, args)
   }
 
-  def defaultOut: AbsolutePath = {
-    PathIO.workingDirectory.resolve("out")
-  }
+  def defaultOut: AbsolutePath = { PathIO.workingDirectory.resolve("out") }
 
-  def apply(): Settings = {
-    new Settings()
-  }
+  def apply(): Settings = { new Settings() }
 }

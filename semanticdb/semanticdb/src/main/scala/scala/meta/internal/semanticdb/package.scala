@@ -67,15 +67,12 @@ package object semanticdb {
 
   implicit class XtensionSemanticdbScope(private val scope: Scope) extends AnyVal {
     def symbols: List[String] = {
-      if (scope.symlinks.nonEmpty) scope.symlinks.toList
-      else scope.hardlinks.map(_.symbol).toList
+      if (scope.symlinks.nonEmpty) scope.symlinks.toList else scope.hardlinks.map(_.symbol).toList
     }
     def infos: List[SymbolInformation] = {
       if (scope.symlinks.nonEmpty) {
         scope.symlinks.map(symbol => SymbolInformation(symbol = symbol)).toList
-      } else {
-        scope.hardlinks.toList
-      }
+      } else { scope.hardlinks.toList }
     }
   }
 

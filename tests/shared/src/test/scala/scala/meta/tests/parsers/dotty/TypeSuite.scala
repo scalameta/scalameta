@@ -19,18 +19,13 @@ class TypeSuite extends BaseDottySuite {
          |  type T>: Null
          |""".stripMargin,
       assertLayout = Some("type A = AnyRef { type T >: Null }")
-    )(
-      Defn.Type(
-        Nil,
-        pname("A"),
-        Nil,
-        Type.Refine(
-          Some(pname("AnyRef")),
-          List(Decl.Type(Nil, pname("T"), Nil, loBound("Null")))
-        ),
-        noBounds
-      )
-    )
+    )(Defn.Type(
+      Nil,
+      pname("A"),
+      Nil,
+      Type.Refine(Some(pname("AnyRef")), List(Decl.Type(Nil, pname("T"), Nil, loBound("Null")))),
+      noBounds
+    ))
   }
 
   test("with-type2") {
@@ -39,18 +34,16 @@ class TypeSuite extends BaseDottySuite {
          |  type T>: Null
          |""".stripMargin,
       assertLayout = Some("type A = AnyRef with Product { type T >: Null }")
-    )(
-      Defn.Type(
-        Nil,
-        pname("A"),
-        Nil,
-        Type.Refine(
-          Some(Type.With(pname("AnyRef"), pname("Product"))),
-          List(Decl.Type(Nil, pname("T"), Nil, loBound("Null")))
-        ),
-        noBounds
-      )
-    )
+    )(Defn.Type(
+      Nil,
+      pname("A"),
+      Nil,
+      Type.Refine(
+        Some(Type.With(pname("AnyRef"), pname("Product"))),
+        List(Decl.Type(Nil, pname("T"), Nil, loBound("Null")))
+      ),
+      noBounds
+    ))
   }
 
   test("with-type3") {
@@ -61,40 +54,27 @@ class TypeSuite extends BaseDottySuite {
          |    type D <: Product
          |""".stripMargin,
       assertLayout = Some("type A = Product { type T >: Null { type D <: Product } }")
-    )(
-      Defn.Type(
-        Nil,
-        pname("A"),
-        Nil,
-        Type.Refine(
-          Some(pname("Product")),
-          List(
-            Decl.Type(
-              Nil,
-              pname("T"),
-              Nil,
-              Type.Bounds(
-                Some(
-                  Type.Refine(
-                    Some(pname("Null")),
-                    List(
-                      Decl.Type(
-                        Nil,
-                        pname("D"),
-                        Nil,
-                        hiBound("Product")
-                      )
-                    )
-                  )
-                ),
-                None
-              )
-            )
+    )(Defn.Type(
+      Nil,
+      pname("A"),
+      Nil,
+      Type.Refine(
+        Some(pname("Product")),
+        List(Decl.Type(
+          Nil,
+          pname("T"),
+          Nil,
+          Type.Bounds(
+            Some(
+              Type
+                .Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
+            ),
+            None
           )
-        ),
-        noBounds
-      )
-    )
+        ))
+      ),
+      noBounds
+    ))
   }
 
   test("coloneol-type3") {
@@ -103,43 +83,28 @@ class TypeSuite extends BaseDottySuite {
          |  type T>: Null:
          |    type D <: Product
          |""".stripMargin,
-      assertLayout = Some(
-        "type A = Product { type T >: Null { type D <: Product } }"
-      )
-    )(
-      Defn.Type(
-        Nil,
-        pname("A"),
-        Nil,
-        Type.Refine(
-          Some(pname("Product")),
-          List(
-            Decl.Type(
-              Nil,
-              pname("T"),
-              Nil,
-              Type.Bounds(
-                Some(
-                  Type.Refine(
-                    Some(pname("Null")),
-                    List(
-                      Decl.Type(
-                        Nil,
-                        pname("D"),
-                        Nil,
-                        hiBound("Product")
-                      )
-                    )
-                  )
-                ),
-                None
-              )
-            )
+      assertLayout = Some("type A = Product { type T >: Null { type D <: Product } }")
+    )(Defn.Type(
+      Nil,
+      pname("A"),
+      Nil,
+      Type.Refine(
+        Some(pname("Product")),
+        List(Decl.Type(
+          Nil,
+          pname("T"),
+          Nil,
+          Type.Bounds(
+            Some(
+              Type
+                .Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
+            ),
+            None
           )
-        ),
-        noBounds
-      )
-    )
+        ))
+      ),
+      noBounds
+    ))
   }
 
   test("with-type-error") {
@@ -161,9 +126,7 @@ class TypeSuite extends BaseDottySuite {
          |  type T>: Null
          |""".stripMargin,
       assertLayout = Some("type A = Product")
-    )(
-      Defn.Type(Nil, pname("A"), Nil, pname("Product"), Type.Bounds(None, None))
-    )
+    )(Defn.Type(Nil, pname("A"), Nil, pname("Product"), Type.Bounds(None, None)))
   }
 
   test("with-followed-by-brace-indent") {
@@ -175,28 +138,24 @@ class TypeSuite extends BaseDottySuite {
          |      }
          |""".stripMargin,
       assertLayout = Some("type AA = String with Int { type T >: Null { type T >: Int } }")
-    )(
-      Defn.Type(
-        Nil,
-        pname("AA"),
-        Nil,
-        Type.Refine(
-          Some(Type.With(pname("String"), pname("Int"))),
-          Decl.Type(
-            Nil,
-            pname("T"),
-            Nil,
-            loBound(
-              Type.Refine(
-                Some(pname("Null")),
-                Decl.Type(Nil, pname("T"), Nil, loBound(pname("Int"))) :: Nil
-              )
-            )
-          ) :: Nil
-        ),
-        noBounds
-      )
-    )
+    )(Defn.Type(
+      Nil,
+      pname("AA"),
+      Nil,
+      Type.Refine(
+        Some(Type.With(pname("String"), pname("Int"))),
+        Decl.Type(
+          Nil,
+          pname("T"),
+          Nil,
+          loBound(Type.Refine(
+            Some(pname("Null")),
+            Decl.Type(Nil, pname("T"), Nil, loBound(pname("Int"))) :: Nil
+          ))
+        ) :: Nil
+      ),
+      noBounds
+    ))
   }
 
   test("coloneol-followed-by-brace-indent") {
@@ -205,38 +164,25 @@ class TypeSuite extends BaseDottySuite {
          |    type T>: Null:
          |        type T>: Int
          |""".stripMargin,
-      assertLayout = Some(
-        "type AA = String with Int { type T >: Null { type T >: Int } }"
-      )
-    )(
-      Defn.Type(
-        Nil,
-        pname("AA"),
-        Nil,
-        Type.Refine(
-          Some(Type.With(pname("String"), pname("Int"))),
-          List(
-            Decl.Type(
-              Nil,
-              pname("T"),
-              Nil,
-              Type.Bounds(
-                Some(
-                  Type.Refine(
-                    Some(pname("Null")),
-                    List(
-                      Decl.Type(Nil, pname("T"), Nil, loBound("Int"))
-                    )
-                  )
-                ),
-                None
-              )
-            )
+      assertLayout = Some("type AA = String with Int { type T >: Null { type T >: Int } }")
+    )(Defn.Type(
+      Nil,
+      pname("AA"),
+      Nil,
+      Type.Refine(
+        Some(Type.With(pname("String"), pname("Int"))),
+        List(Decl.Type(
+          Nil,
+          pname("T"),
+          Nil,
+          Type.Bounds(
+            Some(Type.Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("T"), Nil, loBound("Int"))))),
+            None
           )
-        ),
-        noBounds
-      )
-    )
+        ))
+      ),
+      noBounds
+    ))
   }
 
   test("with-followed-by-brace") {
@@ -258,66 +204,42 @@ class TypeSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Term.Block(
-        List(
-          Defn.Type(
-            Nil,
-            pname("AA"),
-            Nil,
-            Type.Refine(
-              Some(Type.With(pname("String"), pname("Int"))),
-              Decl.Type(Nil, pname("T"), Nil, loBound("Null")) :: Nil
-            ),
-            noBounds
-          ),
-          Term.Block(
-            Decl.Type(Nil, pname("T"), Nil, loBound("Int")) :: Nil
-          )
-        )
-      )
-    )
+    )(Term.Block(List(
+      Defn.Type(
+        Nil,
+        pname("AA"),
+        Nil,
+        Type.Refine(
+          Some(Type.With(pname("String"), pname("Int"))),
+          Decl.Type(Nil, pname("T"), Nil, loBound("Null")) :: Nil
+        ),
+        noBounds
+      ),
+      Term.Block(Decl.Type(Nil, pname("T"), Nil, loBound("Int")) :: Nil)
+    )))
   }
 
-  test("T") {
-    assertTpe("T")(TypeName("T"))
-  }
+  test("T") { assertTpe("T")(TypeName("T")) }
 
-  test("F[T]") {
-    assertTpe("F[T]") {
-      Apply(TypeName("F"), ArgClause(TypeName("T") :: Nil))
-    }
-  }
+  test("F[T]") { assertTpe("F[T]") { Apply(TypeName("F"), ArgClause(TypeName("T") :: Nil)) } }
 
-  test("F#T") {
-    assertTpe("F#T")(Project(TypeName("F"), TypeName("T")))
-  }
+  test("F#T") { assertTpe("F#T")(Project(TypeName("F"), TypeName("T"))) }
 
   test("A \\/ B") {
     assertTpe("A \\/ B")(ApplyInfix(TypeName("A"), TypeName("\\/"), TypeName("B")))
   }
 
-  test("A * B") {
-    assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B")))
-  }
+  test("A * B") { assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B"))) }
 
   test("A * B + C") {
     assertTpe("A * B + C") {
-      Type.ApplyInfix(
-        Type.ApplyInfix(pname("A"), pname("*"), pname("B")),
-        pname("+"),
-        pname("C")
-      )
+      Type.ApplyInfix(Type.ApplyInfix(pname("A"), pname("*"), pname("B")), pname("+"), pname("C"))
     }
   }
 
   test("A + B * C") {
     assertTpe("A + B * C") {
-      Type.ApplyInfix(
-        pname("A"),
-        pname("+"),
-        Type.ApplyInfix(pname("B"), pname("*"), pname("C"))
-      )
+      Type.ApplyInfix(pname("A"), pname("+"), Type.ApplyInfix(pname("B"), pname("*"), pname("C")))
     }
   }
 
@@ -331,25 +253,15 @@ class TypeSuite extends BaseDottySuite {
     }
   }
 
-  test("f.T") {
-    assertTpe("f.T")(Select(TermName("f"), TypeName("T")))
-  }
+  test("f.T") { assertTpe("f.T")(Select(TermName("f"), TypeName("T"))) }
 
-  test("f.type") {
-    assertTpe("f.type")(Singleton(TermName("f")))
-  }
+  test("f.type") { assertTpe("f.type")(Singleton(TermName("f"))) }
 
-  test("super.T") {
-    assertTpe("super.T")(Select(Super(Anonymous(), Anonymous()), TypeName("T")))
-  }
+  test("super.T") { assertTpe("super.T")(Select(Super(Anonymous(), Anonymous()), TypeName("T"))) }
 
-  test("this.T") {
-    assertTpe("this.T")(Select(Term.This(Anonymous()), TypeName("T")))
-  }
+  test("this.T") { assertTpe("this.T")(Select(Term.This(Anonymous()), TypeName("T"))) }
 
-  test("(A, B)") {
-    assertTpe("(A, B)")(Tuple(TypeName("A") :: TypeName("B") :: Nil))
-  }
+  test("(A, B)") { assertTpe("(A, B)")(Tuple(TypeName("A") :: TypeName("B") :: Nil)) }
 
   test("(A, B) => C") {
     assertTpe("(A, B) => C")(Function(TypeName("A") :: TypeName("B") :: Nil, TypeName("C")))
@@ -357,16 +269,11 @@ class TypeSuite extends BaseDottySuite {
 
   test("T @foo") {
     assertTpe("T @foo")(
-      Annotate(
-        TypeName("T"),
-        Mod.Annot(Init(pname("foo"), anon, emptyArgClause)) :: Nil
-      )
+      Annotate(TypeName("T"), Mod.Annot(Init(pname("foo"), anon, emptyArgClause)) :: Nil)
     )
   }
 
-  test("A with B") {
-    assertTpe("A with B")(With(TypeName("A"), TypeName("B")))
-  }
+  test("A with B") { assertTpe("A with B")(With(TypeName("A"), TypeName("B"))) }
 
   test("A & B is not a special type") {
     assertTpe("A & B")(ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")))
@@ -376,9 +283,7 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("A with B {}")(Refine(Some(With(TypeName("A"), TypeName("B"))), Nil))
   }
 
-  test("{}") {
-    assertTpe("{}")(Refine(None, Nil))
-  }
+  test("{}") { assertTpe("{}")(Refine(None, Nil)) }
 
   test("A { def x: A; val y: B; type C }") {
     assertTpe("A { def x: Int; val y: B; type C }") {
@@ -394,43 +299,35 @@ class TypeSuite extends BaseDottySuite {
   test("F[_ >: lo <: hi]") {
     implicit val dialect: Dialect = dialects.Scala31
     val expected =
-      Apply(
-        TypeName("F"),
-        Wildcard(Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil
-      )
+      Apply(TypeName("F"), Wildcard(Bounds(Some(TypeName("lo")), Some(TypeName("hi")))) :: Nil)
     assertTpe("F[_ >: lo <: hi]") { expected }
     assertTpe("F[? >: lo <: hi]") { expected }
   }
 
   test("F[_ >: lo") {
     implicit val dialect: Dialect = dialects.Scala31
-    val expected =
-      Apply(TypeName("F"), Wildcard(Bounds(Some(TypeName("lo")), None)) :: Nil)
+    val expected = Apply(TypeName("F"), Wildcard(Bounds(Some(TypeName("lo")), None)) :: Nil)
     assertTpe("F[_ >: lo]") { expected }
     assertTpe("F[? >: lo]") { expected }
   }
 
   test("F[_ <: hi]") {
     implicit val dialect: Dialect = dialects.Scala31
-    val expected =
-      Apply(TypeName("F"), Wildcard(Bounds(None, Some(TypeName("hi")))) :: Nil)
+    val expected = Apply(TypeName("F"), Wildcard(Bounds(None, Some(TypeName("hi")))) :: Nil)
     assertTpe("F[_ <: hi]") { expected }
     assertTpe("F[? <: hi]") { expected }
   }
 
   test("F[?]") {
     implicit val dialect: Dialect = dialects.Scala31
-    val expected =
-      Apply(TypeName("F"), List(Wildcard(Bounds(None, None))))
+    val expected = Apply(TypeName("F"), List(Wildcard(Bounds(None, None))))
     assertTpe("F[?]") { expected }
     assertTpe("F[_]") { expected }
   }
 
   test("F[_]") {
     implicit val dialect: Dialect = dialects.Scala3Future
-    assertTpe("F[_]") {
-      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
-    }
+    assertTpe("F[_]") { AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))) }
     assertTpe("F[+_]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
     }
@@ -454,9 +351,7 @@ class TypeSuite extends BaseDottySuite {
   test("F[*]") {
     // will be deprecated in later versions
     implicit val dialect: Dialect = dialects.Scala31
-    assertTpe("F[*]") {
-      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None))))
-    }
+    assertTpe("F[*]") { AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))) }
     assertTpe("F[+*]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
     }
@@ -468,15 +363,9 @@ class TypeSuite extends BaseDottySuite {
   test("F[`*`]") {
     // will be deprecated in later versions
     implicit val dialect: Dialect = dialects.Scala31
-    runTestAssert[Type]("F[`*`]") {
-      Apply(pname("F"), List(pname("*")))
-    }
-    runTestAssert[Type]("F[`+*`]") {
-      Apply(pname("F"), List(pname("+*")))
-    }
-    runTestAssert[Type]("F[`-*`]") {
-      Apply(pname("F"), List(pname("-*")))
-    }
+    runTestAssert[Type]("F[`*`]") { Apply(pname("F"), List(pname("*"))) }
+    runTestAssert[Type]("F[`+*`]") { Apply(pname("F"), List(pname("+*"))) }
+    runTestAssert[Type]("F[`-*`]") { Apply(pname("F"), List(pname("-*"))) }
   }
 
   test("F[T] forSome { type T }") {
@@ -489,12 +378,10 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("a.T forSome { val a: A }") {
-    assertTpe("a.T forSome { val a: A }")(
-      Existential(
-        Select(TermName("a"), TypeName("T")),
-        Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil
-      )
-    )
+    assertTpe("a.T forSome { val a: A }")(Existential(
+      Select(TermName("a"), TypeName("T")),
+      Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil
+    ))
   }
 
   test("A | B is not a special type") {
@@ -502,9 +389,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("42.type") {
-    intercept[ParseException] {
-      tpe("42")(dialects.Scala211)
-    }
+    intercept[ParseException] { tpe("42")(dialects.Scala211) }
 
     assertTpe("42")(int(42))(dialects.Scala3)
     assertTpe("-42")(int(-42))(dialects.Scala3)
@@ -517,14 +402,10 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("true")(bool(true))(dialects.Scala3)
     assertTpe("false")(bool(false))(dialects.Scala3)
 
-    val exceptionScala3 = intercept[ParseException] {
-      tpe("() => ()")(dialects.Scala3)
-    }
+    val exceptionScala3 = intercept[ParseException] { tpe("() => ()")(dialects.Scala3) }
     assertNoDiff(exceptionScala3.shortMessage, "illegal literal type (), use Unit instead")
 
-    val exceptionScala2 = intercept[ParseException] {
-      tpe("() => ()")(dialects.Scala213)
-    }
+    val exceptionScala2 = intercept[ParseException] { tpe("() => ()")(dialects.Scala213) }
     assertNoDiff(exceptionScala2.shortMessage, "illegal literal type (), use Unit instead")
 
   }
@@ -534,108 +415,88 @@ class TypeSuite extends BaseDottySuite {
       "+_ => Int",
       { case Type.Function(List(Type.Name("+_")), Type.Name("Int")) => () }
     )(parseType, dialects.Scala213Source3, implicitly[Location])
-    assertTpe("Option[- _]") {
-      Apply(pname("Option"), ArgClause(List(pname("-_"))))
-    }(dialects.Scala213Source3)
+    assertTpe("Option[- _]") { Apply(pname("Option"), ArgClause(List(pname("-_")))) }(
+      dialects.Scala213Source3
+    )
   }
 
   test("[scala213] (x: Int, y)") {
-    val err = intercept[ParseException] {
-      tpe("(x: Int, y)")(dialects.Scala213)
-    }
+    val err = intercept[ParseException] { tpe("(x: Int, y)")(dialects.Scala213) }
     assertNoDiff(err.shortMessage, "can't mix function type and dependent function type syntaxes")
   }
 
   test("[scala213] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ParseException] {
-      tpe("(x: Int, y: Int)(z: String)")(dialects.Scala213)
-    }
+    val err = intercept[ParseException] { tpe("(x: Int, y: Int)(z: String)")(dialects.Scala213) }
     assertNoDiff(err.shortMessage, "dependent function types are not supported")
   }
 
   test("[scala3] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ParseException] {
-      tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3)
-    }
+    val err = intercept[ParseException] { tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3) }
     assertNoDiff(err.shortMessage, "can't have multiple parameter lists in function types")
   }
 
   test("#3162 [scala30] higher-kinded is not wildcard 1") {
     implicit val dialect: Dialect = dialects.Scala30
-    runTestAssert[Stat]("def foo[A <: C[_]] = bar.baz[_, F[_]]")(
-      Defn.Def(
+    runTestAssert[Stat]("def foo[A <: C[_]] = bar.baz[_, F[_]]")(Defn.Def(
+      Nil,
+      tname("foo"),
+      pparam(
         Nil,
-        tname("foo"),
-        pparam(
-          Nil,
-          "A",
-          hiBound(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
-        ) :: Nil,
-        Nil,
-        None,
-        Term.ApplyType(
-          Term.Select(tname("bar"), tname("baz")),
-          List(
-            Type.Wildcard(noBounds),
-            Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
-          )
+        "A",
+        hiBound(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
+      ) :: Nil,
+      Nil,
+      None,
+      Term.ApplyType(
+        Term.Select(tname("bar"), tname("baz")),
+        List(
+          Type.Wildcard(noBounds),
+          Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
         )
       )
-    )
+    ))
   }
 
   test("#3162 [scala3+] higher-kinded is not wildcard 1") {
     implicit val dialect: Dialect = dialects.Scala3.withAllowUnderscoreAsTypePlaceholder(true)
-    runTestAssert[Stat]("def foo[A <: C[_]] = bar.baz[_, F[_]]")(
-      Defn.Def(
+    runTestAssert[Stat]("def foo[A <: C[_]] = bar.baz[_, F[_]]")(Defn.Def(
+      Nil,
+      tname("foo"),
+      pparam(
         Nil,
-        tname("foo"),
-        pparam(
-          Nil,
-          "A",
-          hiBound(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
-        ) :: Nil,
-        Nil,
-        None,
-        Term.ApplyType(
-          Term.Select(tname("bar"), tname("baz")),
-          List(
-            Type.AnonymousParam(None),
-            Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
-          )
+        "A",
+        hiBound(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
+      ) :: Nil,
+      Nil,
+      None,
+      Term.ApplyType(
+        Term.Select(tname("bar"), tname("baz")),
+        List(
+          Type.AnonymousParam(None),
+          Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
         )
       )
-    )
+    ))
   }
 
   test("#3162 [scala30] higher-kinded is not wildcard 2") {
     implicit val dialect: Dialect = dialects.Scala30
-    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(
-      Term.ApplyType(
-        Term.Select(tname("gr"), tname("pure")),
-        Type.AnonymousLambda(
-          Type.Apply(
-            pname("Resource"),
-            List(pname("F"), Type.AnonymousParam(None))
-          )
-        ) :: Nil
-      )
-    )
+    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(Term.ApplyType(
+      Term.Select(tname("gr"), tname("pure")),
+      Type.AnonymousLambda(
+        Type.Apply(pname("Resource"), List(pname("F"), Type.AnonymousParam(None)))
+      ) :: Nil
+    ))
   }
 
   test("#3162 [scala3+] higher-kinded is not wildcard 2") {
     implicit val dialect: Dialect = dialects.Scala3.withAllowUnderscoreAsTypePlaceholder(true)
-    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(
-      Term.ApplyType(
-        Term.Select(tname("gr"), tname("pure")),
-        Type.AnonymousLambda(
-          Type.Apply(
-            pname("Resource"),
-            List(pname("F"), Type.AnonymousParam(None))
-          )
-        ) :: Nil
-      )
-    )
+    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(Term.ApplyType(
+      Term.Select(tname("gr"), tname("pure")),
+      Type.AnonymousLambda(
+        Type.Apply(pname("Resource"), List(pname("F"), Type.AnonymousParam(None)))
+      ) :: Nil
+    ))
   }
 
   test("star-dot") {
@@ -646,40 +507,31 @@ class TypeSuite extends BaseDottySuite {
          |  def apply(ast: *.type) = ast :: Nil
          |""".stripMargin,
       Some("given Conversion[*.type, List[*.type]] with { def apply(ast: *.type) = ast :: Nil }")
-    )(
-      Defn.Given(
-        Nil,
-        anon,
-        None,
-        tpl(
-          Init(
-            Type.Apply(
-              pname("Conversion"),
-              List(
-                Type.Singleton(tname("*")),
-                Type.Apply(pname("List"), List(Type.Singleton(tname("*"))))
-              )
-            ),
-            anon,
-            emptyArgClause
-          ) :: Nil,
-          List(
-            Defn.Def(
-              Nil,
-              tname("apply"),
-              Nil,
-              List(List(tparam("ast", Type.Singleton(tname("*"))))),
-              None,
-              Term.ApplyInfix(tname("ast"), tname("::"), Nil, List(tname("Nil")))
-            )
-          )
-        )
+    )(Defn.Given(
+      Nil,
+      anon,
+      None,
+      tpl(
+        Init(
+          Type.Apply(
+            pname("Conversion"),
+            List(Type.Singleton(tname("*")), Type.Apply(pname("List"), List(Type.Singleton(tname("*")))))
+          ),
+          anon,
+          emptyArgClause
+        ) :: Nil,
+        List(Defn.Def(
+          Nil,
+          tname("apply"),
+          Nil,
+          List(List(tparam("ast", Type.Singleton(tname("*"))))),
+          None,
+          Term.ApplyInfix(tname("ast"), tname("::"), Nil, List(tname("Nil")))
+        ))
       )
-    )
+    ))
   }
 
-  test("#3672 [scala3] ***") {
-    runTestAssert[Type]("***")(pname("***"))
-  }
+  test("#3672 [scala3] ***") { runTestAssert[Type]("***")(pname("***")) }
 
 }

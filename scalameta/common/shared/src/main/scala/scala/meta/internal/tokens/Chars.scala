@@ -29,14 +29,14 @@ object Chars {
   }
 
   /** Can character start an alphanumeric Scala identifier? */
-  @inline def isIdentifierStart(c: Int): Boolean =
-    (c == '_') || isIdentifierPart(c)
+  @inline
+  def isIdentifierStart(c: Int): Boolean = (c == '_') || isIdentifierPart(c)
 
   /** Can character form part of an alphanumeric Scala identifier? */
-  def isIdentifierPart(c: Int) =
-    (c == '$') || Character.isUnicodeIdentifierPart(c)
+  def isIdentifierPart(c: Int) = (c == '$') || Character.isUnicodeIdentifierPart(c)
 
-  @inline def isUnicodeIdentifierPart(c: Int) =
+  @inline
+  def isUnicodeIdentifierPart(c: Int) =
     // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
     (c != SU) && Character.isUnicodeIdentifierPart(c)
 
@@ -49,11 +49,11 @@ object Chars {
   /** Can character form part of a Scala operator name? */
   def isOperatorPart(c: Int): Boolean = (c: @switch) match {
     case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' | '?' | ':' | '=' | '&' |
-        '|' | '/' | '\\' =>
-      true
+        '|' | '/' | '\\' => true
     case c => isSpecial(c)
   }
-  @inline def isOperatorPart(c: Char): Boolean = isOperatorPart(c.toInt)
+  @inline
+  def isOperatorPart(c: Char): Boolean = isOperatorPart(c.toInt)
 
   /**
    * {{{
@@ -66,10 +66,10 @@ object Chars {
     import java.lang.Character._
     // The constants represent groups Mc, Me, Mn, Lm, and Nd.
 
-    isNameStart(ch) || (getType(ch).toByte match {
+    isNameStart(ch) ||
+    (getType(ch).toByte match {
       case COMBINING_SPACING_MARK | ENCLOSING_MARK | NON_SPACING_MARK | MODIFIER_LETTER |
-          DECIMAL_DIGIT_NUMBER =>
-        true
+          DECIMAL_DIGIT_NUMBER => true
       case _ => ".-:" contains ch
     })
   }
@@ -92,17 +92,10 @@ object Chars {
     }
   }
 
-  private val codepage = Map(
-    '\t' -> "\\t",
-    '\b' -> "\\b",
-    '\n' -> "\\n",
-    '\r' -> "\\r",
-    '\f' -> "\\f",
-    '\\' -> "\\\\"
-  )
+  private val codepage =
+    Map('\t' -> "\\t", '\b' -> "\\b", '\n' -> "\\n", '\r' -> "\\r", '\f' -> "\\f", '\\' -> "\\\\")
 
-  def escape(value: Char): String =
-    codepage.getOrElse(value, value.toString)
+  def escape(value: Char): String = codepage.getOrElse(value, value.toString)
 
   def escape(value: String): String = {
     val buf = new StringBuilder(value.length)

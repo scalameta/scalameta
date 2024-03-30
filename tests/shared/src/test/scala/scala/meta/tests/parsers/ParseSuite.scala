@@ -28,8 +28,8 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
 
   def stat(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseStat())
 
-  def parseRule[T <: Tree](code: String, f: ScalametaParser => T)(implicit dialect: Dialect) =
-    code.parseRule(f)
+  def parseRule[T <: Tree](code: String, f: ScalametaParser => T)(implicit dialect: Dialect) = code
+    .parseRule(f)
   def term(code: String)(implicit dialect: Dialect) = parseRule(code, _.expr())
   def pat(code: String)(implicit dialect: Dialect) = parseRule(code, _.pattern())
   def patternTyp(code: String)(implicit dialect: Dialect) = parseRule(code, _.patternTyp())
@@ -42,17 +42,16 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   def parseCase(code: String)(implicit dialect: Dialect) = code.applyRule(_.parseCase())
   def source(code: String)(implicit dialect: Dialect) = parseRule(code, _.source())
 
-  def ammonite(code: String)(implicit dialect: Dialect) =
-    code.asAmmoniteInput.parseRule(_.entryPointAmmonite())
+  def ammonite(code: String)(implicit dialect: Dialect) = code.asAmmoniteInput
+    .parseRule(_.entryPointAmmonite())
 
   def interceptParseErrors(stats: String*)(implicit loc: munit.Location) = {
     stats.foreach(interceptParseError(_))
   }
 
   def interceptParseError(stat: String)(implicit loc: munit.Location): String =
-    try {
-      intercept[parsers.ParseException] { templStat(stat) }.getMessage().replace("\r", "")
-    } catch {
+    try { intercept[parsers.ParseException] { templStat(stat) }.getMessage().replace("\r", "") }
+    catch {
       case scala.util.control.NonFatal(t) =>
         val msg = "no exception was thrown"
         val richFeedback = t.getMessage.replace(msg, s"$msg for '$stat'")
@@ -71,16 +70,16 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   )(tree: Tree)(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkTree(parseRule(code, f), syntax)(tree)
 
-  protected def checkStat(
-      code: String,
-      syntax: String = null
-  )(tree: Tree)(implicit loc: munit.Location, dialect: Dialect): Unit =
+  protected def checkStat(code: String, syntax: String = null)(
+      tree: Tree
+  )(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkParsedTree(code, _.entrypointStat(), syntax)(tree)
 
-  protected def runTestError[T <: Tree](
-      code: String,
-      expected: String
-  )(implicit parser: (String, Dialect) => T, dialect: Dialect, loc: munit.Location): Unit = {
+  protected def runTestError[T <: Tree](code: String, expected: String)(implicit
+      parser: (String, Dialect) => T,
+      dialect: Dialect,
+      loc: munit.Location
+  ): Unit = {
     val error = intercept[inputs.InputException] {
       val result = parser(code, dialect)
       throw new ParseException(
@@ -89,10 +88,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       )
     }
     val obtained = error.getMessage().replace("\r", "")
-    assert(
-      obtained.contains(expected),
-      s"Expected [$obtained] to contain [${expected}]."
-    )
+    assert(obtained.contains(expected), s"Expected [$obtained] to contain [${expected}].")
   }
 
   protected def matchSubStructure[T <: Tree](
@@ -176,19 +172,15 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     assertOriginalSyntax(tree, original)
     if (reprintedFails ne null) {
       runTestError[T](reprinted, reprintedFails)
-      if (original != reprinted)
-        checkTree(parser(original, dialect), reprinted)(tree)
-    } else
-      runTestAssert[T](original, reprinted)(tree)
+      if (original != reprinted) checkTree(parser(original, dialect), reprinted)(tree)
+    } else runTestAssert[T](original, reprinted)(tree)
   }
 
 }
 
 object MoreHelpers {
   def requireNonEmptyOrigin(tree: Tree)(implicit dialect: Dialect): tree.type = {
-    val missingOrigin = tree.collect {
-      case t if t.origin == Origin.None => t
-    }
+    val missingOrigin = tree.collect { case t if t.origin == Origin.None => t }
     Assertions.assertEquals(
       missingOrigin.map(_.structure),
       Nil,

@@ -11,28 +11,22 @@ class DerivesSuite extends BaseDottySuite {
                          |}
                          |""".stripMargin
 
-    runTestAssert[Stat](derivesEnum)(
-      Defn.Enum(
+    runTestAssert[Stat](derivesEnum)(Defn.Enum(
+      Nil,
+      pname("Tree"),
+      List(pparam("T")),
+      ctor,
+      Template(
         Nil,
-        pname("Tree"),
-        List(pparam("T")),
-        ctor,
-        Template(
-          Nil,
-          Nil,
-          slf,
-          List(
-            Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
-            Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
-          ),
-          List(
-            pname("Eq"),
-            pname("Ordering"),
-            pname("Show")
-          )
-        )
+        Nil,
+        slf,
+        List(
+          Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
+          Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
+        ),
+        List(pname("Eq"), pname("Ordering"), pname("Show"))
       )
-    )
+    ))
 
   }
 
@@ -43,28 +37,26 @@ class DerivesSuite extends BaseDottySuite {
          |  case Leaf
          |}
          |""".stripMargin
-    )(
-      Defn.Enum(
+    )(Defn.Enum(
+      Nil,
+      pname("Tree"),
+      List(pparam("T")),
+      ctor,
+      Template(
         Nil,
-        pname("Tree"),
-        List(pparam("T")),
-        ctor,
-        Template(
-          Nil,
-          List(init("Bee")),
-          slf,
-          List(
-            Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
-            Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
-          ),
-          List(
-            pname("Eq"),
-            Type.Select(Term.Select(tname("scala"), tname("derives")), pname("Ordering")),
-            pname("Show")
-          )
+        List(init("Bee")),
+        slf,
+        List(
+          Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
+          Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
+        ),
+        List(
+          pname("Eq"),
+          Type.Select(Term.Select(tname("scala"), tname("derives")), pname("Ordering")),
+          pname("Show")
         )
       )
-    )
+    ))
 
   }
 
@@ -82,26 +74,22 @@ class DerivesSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Class(
-        List(Mod.Case()),
-        pname("Node"),
+    )(Defn.Class(
+      List(Mod.Case()),
+      pname("Node"),
+      Nil,
+      ctorp(tparam("name", "String")),
+      Template(
         Nil,
-        ctorp(tparam("name", "String")),
-        Template(
-          Nil,
-          List(init("Tree")),
-          slf,
-          List(
-            Defn.Def(Nil, tname("hello"), Nil, List(List()), None, str("")),
-            Defn.Def(Nil, tname("bye"), Nil, List(List()), None, str(""))
-          ),
-          List(
-            pname("Eq")
-          )
-        )
+        List(init("Tree")),
+        slf,
+        List(
+          Defn.Def(Nil, tname("hello"), Nil, List(List()), None, str("")),
+          Defn.Def(Nil, tname("bye"), Nil, List(List()), None, str(""))
+        ),
+        List(pname("Eq"))
       )
-    )
+    ))
 
   }
 
@@ -112,28 +100,20 @@ class DerivesSuite extends BaseDottySuite {
          |      AVeryLongName2,
          |      AVeryLongName3
          |""".stripMargin,
-      assertLayout = Some(
-        "class A derives AVeryLongName1, AVeryLongName2, AVeryLongName3"
-      )
-    )(
-      Defn.Class(
+      assertLayout = Some("class A derives AVeryLongName1, AVeryLongName2, AVeryLongName3")
+    )(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      Template(
         Nil,
-        pname("A"),
         Nil,
-        ctor,
-        Template(
-          Nil,
-          Nil,
-          slf,
-          Nil,
-          List(
-            pname("AVeryLongName1"),
-            pname("AVeryLongName2"),
-            pname("AVeryLongName3")
-          )
-        )
+        slf,
+        Nil,
+        List(pname("AVeryLongName1"), pname("AVeryLongName2"), pname("AVeryLongName3"))
       )
-    )
+    ))
   }
 
   test("newline-derives-params") {
@@ -401,12 +381,11 @@ class DerivesSuite extends BaseDottySuite {
   }
 
   test("not-derives") {
-    val layout =
-      """|class A {
-         |  def derives() = ???
-         |  derives()
-         |}
-         |""".stripMargin
+    val layout = """|class A {
+                    |  def derives() = ???
+                    |  derives()
+                    |}
+                    |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("A"),
@@ -417,14 +396,7 @@ class DerivesSuite extends BaseDottySuite {
         Nil,
         slf,
         List(
-          Defn.Def(
-            Nil,
-            tname("derives"),
-            Nil,
-            List(Nil),
-            None,
-            tname("???")
-          ),
+          Defn.Def(Nil, tname("derives"), Nil, List(Nil), None, tname("???")),
           Term.Apply(tname("derives"), Nil)
         ),
         Nil

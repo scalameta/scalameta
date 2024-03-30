@@ -16,6 +16,7 @@ trait Replace[A, B] {
 
 object Replace {
   def apply[A, B](f: (A, List[B]) => A): Replace[A, B] = new Replace[A, B] {
-    @inline override def replace(a: A, bs: List[B]): A = f(a, bs)
+    @inline
+    override def replace(a: A, bs: List[B]): A = f(a, bs)
   }
 }

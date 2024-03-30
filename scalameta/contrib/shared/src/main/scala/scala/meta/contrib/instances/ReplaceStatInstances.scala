@@ -9,8 +9,7 @@ trait ReplaceStatInstances {
   // stat block is always generated, even if
   // supplied with an empty stat list
   // `new Foo` vs `new Foo {}` (We use the latter)
-  implicit val replaceTemplateStats: Replace[Template, Stat] =
-    Replace((a, bs) => a.copy(stats = bs))
+  implicit val replaceTemplateStats: Replace[Template, Stat] = Replace((a, bs) => a.copy(stats = bs))
 
   implicit val replaceClassStats: Replace[Defn.Class, Stat] =
     Replace((a, bs) => a.copy(templ = a.templ.copy(stats = bs)))

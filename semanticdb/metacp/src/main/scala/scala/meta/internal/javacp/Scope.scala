@@ -20,8 +20,7 @@ class Scope(bindings: Map[String, String]) {
   }
 
   /** Returns new scope where name resolves to symbol, shadowing previous binding of name if any */
-  def enter(name: String, symbol: String): Scope =
-    new Scope(bindings.updated(name, symbol))
+  def enter(name: String, symbol: String): Scope = new Scope(bindings.updated(name, symbol))
 }
 
 object Scope {

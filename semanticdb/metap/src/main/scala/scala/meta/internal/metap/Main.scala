@@ -10,15 +10,11 @@ class Main(settings: Settings, reporter: Reporter) {
     var success = true
     var first = true
     Locator(settings.paths) { (path, payload) =>
-      if (first) {
-        first = false
-      } else {
-        reporter.out.println("")
-      }
+      if (first) { first = false }
+      else { reporter.out.println("") }
       try {
-        if (settings.format.isProto) {
-          reporter.out.println(payload.toProtoString)
-        } else {
+        if (settings.format.isProto) { reporter.out.println(payload.toProtoString) }
+        else {
           payload.documents.foreach { document =>
             val printer = new DocumentPrinter(settings, reporter, document)
             printer.print()

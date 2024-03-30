@@ -49,10 +49,9 @@ class LiftableMacros(val c: Context) extends AdtReflection {
       unsortedAdts
     }
     if (adts.isEmpty) {
-      val message =
-        s"materialization failed for Liftable[${weakTypeOf[T]}] " +
-          s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, " +
-          s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
+      val message = s"materialization failed for Liftable[${weakTypeOf[T]}] " +
+        s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, " +
+        s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
       c.abort(c.enclosingPosition, message)
     }
     val u = q"${c.prefix}.u"
@@ -60,34 +59,41 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val mainModule = c.freshName(TermName("Module"))
     val mainMethod = TermName("liftableSub" + root.prefix.capitalize.replace(".", ""))
     val localName = c.freshName(TermName("x"))
-    val defNames =
-      adts.map(adt => c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
+    val defNames = adts
+      .map(adt => c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
     val liftAdts = adts.zip(defNames).map { case (adt, defName) =>
       val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse {
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
-        def getNamePath(parts: Iterable[String]): Tree =
-          parts.foldLeft(init) { (acc, part) => q"$u.Select($acc, $u.TermName($part))" }
+        def getNamePath(parts: Iterable[String]): Tree = parts.foldLeft(init) { (acc, part) =>
+          q"$u.Select($acc, $u.TermName($part))"
+        }
         val nameParts = adt.sym.fullName.split('.')
-        val body = if (adt.sym.isClass) {
-          val fields = adt match { case leaf: Leaf => leaf.fields(isPrivateOK); case _ => Nil }
-          val args = fields.map { f =>
-            q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
-            // NOTE: we can't really use AssignOrNamedArg here, sorry
-            // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
-            // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
-            // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
-          }
-          val latestAfterVersion = if (adt.sym.isAstClass) {
-            val moduleNames = adt.sym.companion.info.decls
-              .flatMap { x => if (x.isModule) Some(x.name.toString) else None }
-            val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse {
-              c.abort(c.enclosingPosition, s"no latest version ${adt.sym.fullName}: $moduleNames")
+        val body =
+          if (adt.sym.isClass) {
+            val fields = adt match { case leaf: Leaf => leaf.fields(isPrivateOK); case _ => Nil }
+            val args = fields.map { f =>
+              q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
+              // NOTE: we can't really use AssignOrNamedArg here, sorry
+              // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
+              // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
+              // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
             }
-            latestAfterVersion :: Nil
-          } else Nil
-          val namePath = getNamePath(nameParts ++ latestAfterVersion)
-          q"$u.Apply($namePath, $args)"
-        } else getNamePath(nameParts)
+            val latestAfterVersion =
+              if (adt.sym.isAstClass) {
+                val moduleNames = adt.sym.companion.info.decls.flatMap { x =>
+                  if (x.isModule) Some(x.name.toString) else None
+                }
+                val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse {
+                  c.abort(
+                    c.enclosingPosition,
+                    s"no latest version ${adt.sym.fullName}: $moduleNames"
+                  )
+                }
+                latestAfterVersion :: Nil
+              } else Nil
+            val namePath = getNamePath(nameParts ++ latestAfterVersion)
+            q"$u.Apply($namePath, $args)"
+          } else getNamePath(nameParts)
         q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
       }
       val body: Tree = customWrapper(adt, defName, localName, matcher.rhs).getOrElse(matcher.rhs)

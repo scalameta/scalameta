@@ -13,8 +13,7 @@ object shell {
       var done = false
       while (!done) {
         val line = reader.readLine()
-        if (line != null) builder.append(line + EOL)
-        else done = true
+        if (line != null) builder.append(line + EOL) else done = true
       }
       builder.toString
     }
@@ -48,19 +47,15 @@ object secret {
       try {
         import scala.xml._
         val settings = XML.loadFile(credentialsFile)
-        def readServerConfig(key: String) =
-          (settings \\ "settings" \\ "servers" \\ "server" \\ key).head.text
+        def readServerConfig(key: String) = (settings \\ "settings" \\ "servers" \\ "server" \\ key)
+          .head.text
         Some((readServerConfig("username"), readServerConfig("password")))
-      } catch {
-        case ex: Exception => None
-      }
+      } catch { case ex: Exception => None }
     } else {
       for {
         username <- sys.env.get(s"${domain.toUpperCase}_USERNAME")
         password <- sys.env.get(s"${domain.toUpperCase}_PASSWORD")
-      } yield {
-        (username, password)
-      }
+      } yield { (username, password) }
     }
   }
 }
@@ -68,10 +63,10 @@ object secret {
 object temp {
   def mkdir(): File = {
     val temp = File.createTempFile("temp", System.nanoTime.toString)
-    if (!temp.delete)
-      sys.error("failed to create a temporary directory: can't delete " + temp.getAbsolutePath)
-    if (!temp.mkdir)
-      sys.error("failed to create a temporary directory: can't mkdir " + temp.getAbsolutePath)
+    if (!temp.delete) sys
+      .error("failed to create a temporary directory: can't delete " + temp.getAbsolutePath)
+    if (!temp.mkdir) sys
+      .error("failed to create a temporary directory: can't mkdir " + temp.getAbsolutePath)
     temp
   }
 }
@@ -98,15 +93,10 @@ object shutil {
           var done = false
           while (!done) {
             val len = in.read(buf)
-            if (len > 0) out.write(buf, 0, len)
-            else done = true
+            if (len > 0) out.write(buf, 0, len) else done = true
           }
-        } finally {
-          out.close()
-        }
-      } finally {
-        in.close()
-      }
+        } finally { out.close() }
+      } finally { in.close() }
     }
   }
 }
@@ -129,12 +119,10 @@ object git {
   }
 
   def distance(from: String, to: String): Int = {
-    def ncommits(ref: String) =
-      shell.check_output(s"git rev-list $ref --count", cwd = ".").trim.toInt
+    def ncommits(ref: String) = shell.check_output(s"git rev-list $ref --count", cwd = ".").trim
+      .toInt
     ncommits(to) - ncommits(from)
   }
 
-  def currentSha(): String = {
-    shell.check_output("git rev-parse HEAD", cwd = ".").trim
-  }
+  def currentSha(): String = { shell.check_output("git rev-parse HEAD", cwd = ".").trim }
 }

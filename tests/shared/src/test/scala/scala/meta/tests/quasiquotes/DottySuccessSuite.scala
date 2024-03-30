@@ -16,9 +16,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     checkTree(tpes, "(x: X, y: Y)")(Type.FuncParamClause(List(tpeX, tpeY)))
     checkTree(tpe, "Z")(pname("Z"))
 
-    checkTree(t"(..${tpes.values}) => $tpe", "(x: X, y: Y) => Z")(
-      Type.Function(tpes, tpe)
-    )
+    checkTree(t"(..${tpes.values}) => $tpe", "(x: X, y: Y) => Z")(Type.Function(tpes, tpe))
   }
 
 }

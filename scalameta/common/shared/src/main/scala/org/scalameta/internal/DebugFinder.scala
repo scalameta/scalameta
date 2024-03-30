@@ -9,8 +9,8 @@ trait DebugFinder {
 
   def debuggees(tree: Tree): Map[String, Tree] = {
     object debugFinder extends Traverser {
-      private val invariantsPackageObject =
-        c.mirror.staticPackage("org.scalameta").info.member(termNames.PACKAGE).asModule
+      private val invariantsPackageObject = c.mirror.staticPackage("org.scalameta").info
+        .member(termNames.PACKAGE).asModule
       private val invariantsDebug = invariantsPackageObject.info.member(TermName("debug")).asMethod
       val debuggees = scala.collection.mutable.ListBuffer[Tree]()
       override def traverse(tree: Tree): Unit = tree match {

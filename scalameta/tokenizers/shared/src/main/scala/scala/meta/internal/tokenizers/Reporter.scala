@@ -23,12 +23,13 @@ trait Reporter {
   def syntaxError(msg: String, at: Position): Nothing = throw new TokenizeException(at, msg)
   def syntaxError(msg: String, at: Token): Nothing = syntaxError(msg, at.pos)
   def syntaxError(msg: String, at: Offset): Nothing = syntaxError(msg, at.pos)
-  def incompleteInputError(msg: String, at: Position): Nothing =
-    throw new TokenizeException(at, msg)
+  def incompleteInputError(msg: String, at: Position): Nothing = throw new TokenizeException(at, msg)
   def incompleteInputError(msg: String, at: Token): Nothing = incompleteInputError(msg, at.pos)
   def incompleteInputError(msg: String, at: Offset): Nothing = incompleteInputError(msg, at.pos)
 }
 
 object Reporter {
-  def apply(content0: Input) = new Reporter { def input = content0 }
+  def apply(content0: Input) = new Reporter {
+    def input = content0
+  }
 }

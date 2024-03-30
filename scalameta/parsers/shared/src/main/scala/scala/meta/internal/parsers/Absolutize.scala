@@ -14,8 +14,7 @@ object Absolutize {
           val start1 = absoluteStart + start
           val end1 = absoluteStart + end
           Position.Range(input, start1, end1)
-        case other =>
-          other
+        case other => other
       }
     }
   }
@@ -23,10 +22,8 @@ object Absolutize {
   implicit class XtensionExceptionAbsolutize(private val ex: Throwable) extends AnyVal {
     def absolutize: Throwable = {
       val ex1 = ex match {
-        case TokenizeException(pos, message) =>
-          TokenizeException(pos.absolutize, message)
-        case ParseException(pos, message) =>
-          ParseException(pos.absolutize, message)
+        case TokenizeException(pos, message) => TokenizeException(pos.absolutize, message)
+        case ParseException(pos, message) => ParseException(pos.absolutize, message)
         case PlatformInvocationTargetException(ex) => ex
       }
       ex1.setStackTrace(ex.getStackTrace)

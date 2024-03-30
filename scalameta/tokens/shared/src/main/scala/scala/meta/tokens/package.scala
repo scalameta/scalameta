@@ -6,10 +6,13 @@ import scala.meta.internal.tokens.Chars
 package object tokens extends tokens.Api {
 
   implicit class TokenExtensions(private val value: Token) extends AnyVal {
-    @inline def isBackquoted: Boolean = value.text.isBackquoted
-    @inline def isSymbolicInfixOperator: Boolean =
-      value.isInstanceOf[Token.Ident] && isIdentSymbolicInfixOperator
-    @inline def isIdentSymbolicInfixOperator: Boolean = value.text.isIdentSymbolicInfixOperator
+    @inline
+    def isBackquoted: Boolean = value.text.isBackquoted
+    @inline
+    def isSymbolicInfixOperator: Boolean = value.isInstanceOf[Token.Ident] &&
+      isIdentSymbolicInfixOperator
+    @inline
+    def isIdentSymbolicInfixOperator: Boolean = value.text.isIdentSymbolicInfixOperator
   }
 
   implicit class StringExtensions(private val value: String) extends AnyVal {

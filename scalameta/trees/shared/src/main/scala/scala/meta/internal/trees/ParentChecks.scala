@@ -14,8 +14,7 @@ object ParentChecks {
     case _: Term.Interpolate => destination == "args"
     case _: Term.ApplyUnary => destination == "arg"
     case _: Term.Assign => destination == "rhs"
-    case _: Term.Block =>
-      parent.parent match {
+    case _: Term.Block => parent.parent match {
         case Some(p) => termArgument(p, destination)
         case None => true
       }
@@ -79,11 +78,10 @@ object ParentChecks {
       case _ => false
     }
 
-  def NameThis(tree: Name.This, parent: Tree, destination: String): Boolean =
-    parent match {
-      case _: Ctor.Secondary | _: Self => destination == "name"
-      case _ => false
-    }
+  def NameThis(tree: Name.This, parent: Tree, destination: String): Boolean = parent match {
+    case _: Ctor.Secondary | _: Self => destination == "name"
+    case _ => false
+  }
 
   def NamePlaceholder(tree: Name.Placeholder, parent: Tree, destination: String): Boolean =
     parent match {

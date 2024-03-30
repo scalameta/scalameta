@@ -40,8 +40,7 @@ object PlatformFileIO {
     finally os.close()
   }
 
-  def readAllBytes(path: AbsolutePath): Array[Byte] =
-    Files.readAllBytes(path.toNIO)
+  def readAllBytes(path: AbsolutePath): Array[Byte] = Files.readAllBytes(path.toNIO)
 
   def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = {
     val stream = Files.newInputStream(path.toNIO)
@@ -49,17 +48,15 @@ object PlatformFileIO {
     finally stream.close()
   }
 
-  def slurp(path: AbsolutePath, charset: Charset): String =
-    scala.io.Source.fromFile(path.toFile)(scala.io.Codec(charset)).mkString
+  def slurp(path: AbsolutePath, charset: Charset): String = scala.io.Source
+    .fromFile(path.toFile)(scala.io.Codec(charset)).mkString
 
   def listFiles(path: AbsolutePath): ListFiles =
     new ListFiles(path, Option(path.toFile.list()).toList.flatten.map(RelativePath.apply))
 
-  def isFile(path: AbsolutePath): Boolean =
-    Files.isRegularFile(path.toNIO)
+  def isFile(path: AbsolutePath): Boolean = Files.isRegularFile(path.toNIO)
 
-  def isDirectory(path: AbsolutePath): Boolean =
-    Files.isDirectory(path.toNIO)
+  def isDirectory(path: AbsolutePath): Boolean = Files.isDirectory(path.toNIO)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     // NOTE: Some Java stream APIs aren't yet available in Scala Native,
@@ -78,8 +75,7 @@ object PlatformFileIO {
     //   new ListFiles(root, relativeFiles.toList)
     val builder = List.newBuilder[RelativePath]
     def loop(path: AbsolutePath): Unit = {
-      if (path.isDirectory) listFiles(path).foreach(loop)
-      else builder += path.toRelative(root)
+      if (path.isDirectory) listFiles(path).foreach(loop) else builder += path.toRelative(root)
     }
     loop(root)
     new ListFiles(root, builder.result())

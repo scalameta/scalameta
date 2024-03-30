@@ -8,21 +8,20 @@ import scala.tools.nsc.plugins.PluginComponent
 import scala.meta.internal.{semanticdb => s}
 import scala.util.control.NonFatal
 
-trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
-  implicit class XtensionURI(uri: URI) { def toFile: File = new File(uri) }
+trait SemanticdbPipeline extends SemanticdbOps {
+  self: SemanticdbPlugin =>
+  implicit class XtensionURI(uri: URI) {
+    def toFile: File = new File(uri)
+  }
   implicit class XtensionUnit(unit: g.CompilationUnit) {
     def isIgnored: Boolean = {
       val matchesExtension = {
         val fileName = unit.source.file.name
-        fileName.endsWith(".scala") ||
-        fileName.endsWith(".sc") ||
-        fileName.endsWith(".java")
+        fileName.endsWith(".scala") || fileName.endsWith(".sc") || fileName.endsWith(".java")
       }
       val matchesFilter = {
-        Option(unit.source.file)
-          .flatMap(f => Option(f.file))
-          .map(f => config.fileFilter.matches(f.getAbsolutePath))
-          .getOrElse(true)
+        Option(unit.source.file).flatMap(f => Option(f.file))
+          .map(f => config.fileFilter.matches(f.getAbsolutePath)).getOrElse(true)
       }
       !matchesExtension || !matchesFilter
     }
@@ -61,9 +60,7 @@ trait SemanticdbPipeline extends SemanticdbOps { self: SemanticdbPlugin =>
         } catch handleCrash(Some(unit))
       }
 
-      override def apply(unit: g.CompilationUnit): Unit = {
-        saveSemanticdbForCompilationUnit(unit)
-      }
+      override def apply(unit: g.CompilationUnit): Unit = { saveSemanticdbForCompilationUnit(unit) }
 
       private def synchronizeSourcesAndSemanticdbFiles(): Unit = {
         RemoveOrphanSemanticdbFiles.process(config)

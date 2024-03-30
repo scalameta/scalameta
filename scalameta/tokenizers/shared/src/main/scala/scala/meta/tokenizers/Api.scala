@@ -6,13 +6,11 @@ import scala.meta.inputs._
 
 private[meta] trait Api {
   implicit class XtensionTokenizeInputLike[T](inputLike: T) {
-    def tokenize(
-        implicit convert: Convert[T, Input],
+    def tokenize(implicit
+        convert: Convert[T, Input],
         tokenize: Tokenize,
         dialect: Dialect
-    ): Tokenized = {
-      (dialect, convert(inputLike)).tokenize
-    }
+    ): Tokenized = { (dialect, convert(inputLike)).tokenize }
   }
   implicit class XtensionTokenizersDialectApply(dialect: Dialect) {
     def apply[T](inputLike: T)(implicit convert: Convert[T, Input]): (Dialect, Input) = {

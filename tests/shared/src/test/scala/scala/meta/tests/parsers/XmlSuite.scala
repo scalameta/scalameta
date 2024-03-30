@@ -31,9 +31,7 @@ class XmlSuite extends ParseSuite {
   /** Default catch only ParseException */
   override def checkError(stat: String)(implicit dialect: Dialect): Unit =
     test(logger.revealWhitespace(stat).take(50)) {
-      val thrown = intercept[Exception] {
-        templStat(stat)(dialect)
-      }
+      val thrown = intercept[Exception] { templStat(stat)(dialect) }
       assert(thrown.isInstanceOf[ParseException] || thrown.isInstanceOf[TokenizeException])
     }
 
@@ -115,12 +113,11 @@ class XmlSuite extends ParseSuite {
        |""".stripMargin
   )
 
-  private val trickyXml =
-    """|{
-       |val x = <div href={"/" + url}>Hello {name}</div>;
-       |val noSemicolon = <h1>{msg infix upper}</h1>
-       |val y = 2
-       |}""".stripMargin
+  private val trickyXml = """|{
+                             |val x = <div href={"/" + url}>Hello {name}</div>;
+                             |val noSemicolon = <h1>{msg infix upper}</h1>
+                             |val y = 2
+                             |}""".stripMargin
 
   checkToken(
     trickyXml,

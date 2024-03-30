@@ -11,22 +11,18 @@ object Scala {
     val RootPackage: String = "_root_/"
     val EmptyPackage: String = "_empty_/"
     def Global(owner: String, desc: Descriptor): String =
-      if (owner != RootPackage) owner + desc.toString
-      else desc.toString
+      if (owner != RootPackage) owner + desc.toString else desc.toString
     def Local(suffix: String): String = {
       if (suffix.indexOf("/") == -1 && suffix.indexOf(";") == -1) "local" + suffix
       else throw new IllegalArgumentException(suffix)
     }
     def Multi(symbols: List[String]): String = {
       symbols.distinct match {
-        case List(symbol) =>
-          symbol
+        case List(symbol) => symbol
         case symbols =>
           val sb = new StringBuilder
           symbols.foreach { symbol =>
-            if (!symbol.isMulti) {
-              sb.append(';')
-            }
+            if (!symbol.isMulti) { sb.append(';') }
             sb.append(symbol)
           }
           sb.toString()
@@ -35,30 +31,24 @@ object Scala {
   }
 
   implicit class ScalaSymbolOps(private val symbol: String) extends AnyVal {
-    def isNone: Boolean =
-      symbol == Symbols.None
-    def isRootPackage: Boolean =
-      symbol == Symbols.RootPackage
-    def isEmptyPackage: Boolean =
-      symbol == Symbols.EmptyPackage
-    def isGlobal: Boolean =
-      !isNone && !isMulti && (symbol.last match {
+    def isNone: Boolean = symbol == Symbols.None
+    def isRootPackage: Boolean = symbol == Symbols.RootPackage
+    def isEmptyPackage: Boolean = symbol == Symbols.EmptyPackage
+    def isGlobal: Boolean = !isNone && !isMulti &&
+      (symbol.last match {
         case '.' | '#' | '/' | ')' | ']' => true
         case _ => false
       })
-    def isLocal: Boolean =
-      symbol.startsWith("local")
-    def isMulti: Boolean =
-      symbol.startsWith(";")
+    def isLocal: Boolean = symbol.startsWith("local")
+    def isMulti: Boolean = symbol.startsWith(";")
     def asMulti: List[String] = {
       if (!isMulti) symbol :: Nil
       else {
         val buf = List.newBuilder[String]
         @tailrec
         def loop(begin: Int, i: Int): Unit =
-          if (i >= symbol.length) {
-            buf += symbol.substring(begin, symbol.length)
-          } else {
+          if (i >= symbol.length) { buf += symbol.substring(begin, symbol.length) }
+          else {
             symbol.charAt(i) match {
               case ';' =>
                 buf += symbol.substring(begin, i)
@@ -67,24 +57,18 @@ object Scala {
                 var j = i + 1
                 while (symbol.charAt(j) != '`') j += 1
                 loop(begin, j + 1)
-              case _ =>
-                loop(begin, i + 1)
+              case _ => loop(begin, i + 1)
             }
           }
         loop(1, 1)
         buf.result()
       }
     }
-    def isTerm: Boolean =
-      !isNone && !isMulti && symbol.last == '.'
-    def isType: Boolean =
-      !isNone && !isMulti && symbol.last == '#'
-    def isPackage: Boolean =
-      !isNone && !isMulti && symbol.last == '/'
-    def isParameter: Boolean =
-      !isNone && !isMulti && symbol.last == ')'
-    def isTypeParameter: Boolean =
-      !isNone && !isMulti && symbol.last == ']'
+    def isTerm: Boolean = !isNone && !isMulti && symbol.last == '.'
+    def isType: Boolean = !isNone && !isMulti && symbol.last == '#'
+    def isPackage: Boolean = !isNone && !isMulti && symbol.last == '/'
+    def isParameter: Boolean = !isNone && !isMulti && symbol.last == ')'
+    def isTypeParameter: Boolean = !isNone && !isMulti && symbol.last == ']'
     def ownerChain: List[String] = {
       val buf = List.newBuilder[String]
       def loop(symbol: String): Unit = {
@@ -101,19 +85,13 @@ object Scala {
         if (isRootPackage) Symbols.None
         else {
           val rest = DescriptorParser(symbol)._2
-          if (rest.nonEmpty) rest
-          else Symbols.RootPackage
+          if (rest.nonEmpty) rest else Symbols.RootPackage
         }
-      } else {
-        Symbols.None
-      }
+      } else { Symbols.None }
     }
     def desc: Descriptor = {
-      if (isGlobal) {
-        DescriptorParser(symbol)._1
-      } else {
-        d.None
-      }
+      if (isGlobal) { DescriptorParser(symbol)._1 }
+      else { d.None }
     }
   }
 
@@ -150,7 +128,9 @@ object Scala {
     }
   }
   object Descriptor {
-    final case object None extends Descriptor { def value: String = "" }
+    final case object None extends Descriptor {
+      def value: String = ""
+    }
     final case class Term(value: String) extends Descriptor
     final case class Method(value: String, disambiguator: String) extends Descriptor
     final case class Type(value: String) extends Descriptor
@@ -175,14 +155,12 @@ object Scala {
     val Constructor: TermName = TermName("<init>")
 
     private[meta] def encode(value: String): String = {
-      if (value == "") {
-        "``"
-      } else {
+      if (value == "") { "``" }
+      else {
         val (start, parts) = (value.head, value.tail)
         val isStartOk = Character.isJavaIdentifierStart(start)
         val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
-        if (isStartOk && isPartsOk) value
-        else "`" + value + "`"
+        if (isStartOk && isPartsOk) value else "`" + value + "`"
       }
     }
   }
@@ -211,9 +189,7 @@ object Scala {
           i -= 1
           currChar = BOF
           currChar
-        } else {
-          fail()
-        }
+        } else { fail() }
       } else {
         i -= 1
         currChar = s(i)
@@ -250,9 +226,7 @@ object Scala {
           val disambiguator = parseDisambiguator()
           val value = parseValue()
           d.Method(value, disambiguator)
-        } else {
-          d.Term(parseValue())
-        }
+        } else { d.Term(parseValue()) }
       } else if (currChar == '#') {
         readChar()
         d.Type(parseValue())
@@ -262,18 +236,14 @@ object Scala {
       } else if (currChar == ')') {
         readChar()
         val value = parseValue()
-        if (currChar != '(') fail()
-        else readChar()
+        if (currChar != '(') fail() else readChar()
         d.Parameter(value)
       } else if (currChar == ']') {
         readChar()
         val value = parseValue()
-        if (currChar != '[') fail()
-        else readChar()
+        if (currChar != '[') fail() else readChar()
         d.TypeParameter(value)
-      } else {
-        fail()
-      }
+      } else { fail() }
     }
 
     def entryPoint(): (Descriptor, String) = {

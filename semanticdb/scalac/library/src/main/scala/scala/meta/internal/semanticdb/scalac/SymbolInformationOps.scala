@@ -9,7 +9,8 @@ import scala.meta.internal.semanticdb.Scala.{DisplayNames => dn}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 
-trait SymbolInformationOps { self: SemanticdbOps =>
+trait SymbolInformationOps {
+  self: SemanticdbOps =>
   import g._
 
   implicit class XtensionGSymbolMSymbolInformation(gsym0: g.Symbol) {
@@ -29,8 +30,7 @@ trait SymbolInformationOps { self: SemanticdbOps =>
 
     private[meta] def kind: s.SymbolInformation.Kind = {
       gsym match {
-        case _ if gsym.isSelfParameter =>
-          k.SELF_PARAMETER
+        case _ if gsym.isSelfParameter => k.SELF_PARAMETER
         case gsym: MethodSymbol =>
           if (gsym.isConstructor) k.CONSTRUCTOR
           else if (gsym.isMacro) k.MACRO
@@ -50,13 +50,9 @@ trait SymbolInformationOps { self: SemanticdbOps =>
           else if (gsym.isTrait) k.TRAIT
           else if (gsym.isClassfileAnnotation) k.INTERFACE
           else k.CLASS
-        case gsym: TypeSymbol =>
-          if (gsym.isParameter) k.TYPE_PARAMETER
-          else k.TYPE
-        case NoSymbol =>
-          k.UNKNOWN_KIND
-        case _ =>
-          sys.error(s"unsupported symbol $gsym")
+        case gsym: TypeSymbol => if (gsym.isParameter) k.TYPE_PARAMETER else k.TYPE
+        case NoSymbol => k.UNKNOWN_KIND
+        case _ => sys.error(s"unsupported symbol $gsym")
       }
     }
 
@@ -64,14 +60,13 @@ trait SymbolInformationOps { self: SemanticdbOps =>
       val kind = this.kind
       var flags = 0
       def flip(prop: s.SymbolInformation.Property): Unit = flags |= prop.value
-      def isAbstractClass =
-        gsym.isClass && gsym.isAbstract && !gsym.isTrait && !gsym.hasFlag(gf.JAVA_ENUM)
+      def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait &&
+        !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
       def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
-      if (gsym.hasFlag(gf.PACKAGE)) {
-        ()
-      } else if (gsym.hasFlag(gf.JAVA)) {
+      if (gsym.hasFlag(gf.PACKAGE)) { () }
+      else if (gsym.hasFlag(gf.JAVA)) {
         if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
         if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flip(p.FINAL)
         if (gsym.hasFlag(gf.JAVA_ENUM)) flip(p.ENUM)
@@ -86,14 +81,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
         if (gsym.hasFlag(gf.CASE) && (gsym.isClass || gsym.isModule)) flip(p.CASE)
         if (gsym.isType && gsym.hasFlag(gf.CONTRAVARIANT)) flip(p.CONTRAVARIANT)
         if (gsym.isType && gsym.hasFlag(gf.COVARIANT)) flip(p.COVARIANT)
-        if (kind.isLocal || gsym.isUsefulField) {
-          if (gsym.isMutable) flip(p.VAR)
-          else flip(p.VAL)
-        }
-        if (gsym.isGetter || gsym.isSetter) {
-          if (gsym.isStable) flip(p.VAL)
-          else flip(p.VAR)
-        }
+        if (kind.isLocal || gsym.isUsefulField) { if (gsym.isMutable) flip(p.VAR) else flip(p.VAL) }
+        if (gsym.isGetter || gsym.isSetter) { if (gsym.isStable) flip(p.VAL) else flip(p.VAR) }
         if (gsym.isParameter && gsym.owner.isPrimaryConstructor) {
           val gaccessor = gsym.owner.owner.info.decl(gsym.name)
           if (gaccessor != g.NoSymbol && !gaccessor.isStable) flip(p.VAR)
@@ -116,13 +105,11 @@ trait SymbolInformationOps { self: SemanticdbOps =>
     }
 
     private def sig(linkMode: LinkMode): s.Signature = {
-      if (gsym.hasPackageFlag) {
-        s.NoSignature
-      } else {
+      if (gsym.hasPackageFlag) { s.NoSignature }
+      else {
         val gsig = {
-          if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) {
-            gsym.info.widen
-          } else if (gsym.isAliasType) {
+          if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) { gsym.info.widen }
+          else if (gsym.isAliasType) {
             def preprocess(info: g.Type): g.Type = {
               info match {
                 case g.PolyType(tparams, tpe) => g.PolyType(tparams, preprocess(tpe))
@@ -130,11 +117,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
               }
             }
             preprocess(gsym.info)
-          } else if (gsym.isModule) {
-            gsym.moduleClass.info
-          } else {
-            gsym.info
-          }
+          } else if (gsym.isModule) { gsym.moduleClass.info }
+          else { gsym.info }
         }
         val ssig = gsig.toSemanticSig(linkMode)
         if (gsym.isConstructor) {
@@ -149,10 +133,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
               val sparamss = Nil
               val sret = ssig.tpe
               s.MethodSignature(stparams, sparamss, sret)
-            case s.Signature.Empty =>
-              s.NoSignature
-            case _ =>
-              sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+            case s.Signature.Empty => s.NoSignature
+            case _ => sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
           }
         } else if (gsym.isSelfParameter) {
           gsym.owner.self.toSemanticTpe match {
@@ -165,33 +147,25 @@ trait SymbolInformationOps { self: SemanticdbOps =>
               val parents1 = ssig.parents.flatMap {
                 case s.TypeRef(s.NoType, "scala/annotation/Annotation#", Nil) =>
                   Some(s.TypeRef(s.NoType, "java/lang/Object#", Nil))
-                case s.TypeRef(s.NoType, "scala/annotation/ClassfileAnnotation#", Nil) =>
-                  None
-                case sother =>
-                  Some(sother)
+                case s.TypeRef(s.NoType, "scala/annotation/ClassfileAnnotation#", Nil) => None
+                case sother => Some(sother)
               }
               ssig.copy(parents = parents1)
-            case _ =>
-              sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+            case _ => sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
           }
         } else if (gsym.hasFlag(gf.JAVA) && kind == k.TYPE_PARAMETER) {
           ssig match {
             case ssig: s.TypeSignature =>
               val upperBound1 = ssig.upperBound match {
-                case s.StructuralType(s.WithType(tpes), _) =>
-                  s.IntersectionType(tpes)
-                case s.TypeRef(s.NoType, "scala/Any#", Nil) =>
-                  s.TypeRef(s.NoType, "java/lang/Object#", Nil)
-                case sother =>
-                  sother
+                case s.StructuralType(s.WithType(tpes), _) => s.IntersectionType(tpes)
+                case s.TypeRef(s.NoType, "scala/Any#", Nil) => s
+                    .TypeRef(s.NoType, "java/lang/Object#", Nil)
+                case sother => sother
               }
               ssig.copy(lowerBound = s.NoType, upperBound = upperBound1)
-            case _ =>
-              sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
+            case _ => sys.error(s"unsupported signature: ${ssig.getClass} $ssig")
           }
-        } else {
-          ssig
-        }
+        } else { ssig }
       }
     }
 
@@ -204,9 +178,8 @@ trait SymbolInformationOps { self: SemanticdbOps =>
 
     private def access: s.Access = {
       kind match {
-        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE |
-            k.PACKAGE_OBJECT =>
-          s.NoAccess
+        case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE | k
+              .PACKAGE_OBJECT => s.NoAccess
         case _ =>
           if (gsym.hasFlag(gf.SYNTHETIC) && gsym.hasFlag(gf.ARTIFACT)) {
             // NOTE: some sick artifact vals produced by mkPatDef can be
@@ -221,17 +194,14 @@ trait SymbolInformationOps { self: SemanticdbOps =>
               else s.PublicAccess()
             } else {
               val ssym = gsym.privateWithin.ssym
-              if (gsym.isProtected) s.ProtectedWithinAccess(ssym)
-              else s.PrivateWithinAccess(ssym)
+              if (gsym.isProtected) s.ProtectedWithinAccess(ssym) else s.PrivateWithinAccess(ssym)
             }
           }
       }
     }
 
     def overriddenSymbols: List[String] = {
-      if (self.config.overrides.isOn)
-        gsym.allOverriddenSymbols.map(_.toSemantic)
-      else Nil
+      if (self.config.overrides.isOn) gsym.allOverriddenSymbols.map(_.toSemantic) else Nil
     }
 
     def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation = {

@@ -14,10 +14,8 @@ import scala.meta.io.AbsolutePath
 
 object InteractiveSemanticdb extends VersionCompilerOps {
 
-  def newCompiler(): Global =
-    newCompiler(thisClasspath, Nil)
-  def newCompiler(scalacOptions: List[String]): Global =
-    newCompiler(thisClasspath, scalacOptions)
+  def newCompiler(): Global = newCompiler(thisClasspath, Nil)
+  def newCompiler(scalacOptions: List[String]): Global = newCompiler(thisClasspath, scalacOptions)
 
   /** Construct new presentation compiler with given classpath and scalac flags. */
   def newCompiler(classpath: String, scalacOptions: List[String]): Global = {
@@ -25,12 +23,8 @@ object InteractiveSemanticdb extends VersionCompilerOps {
     val settings = new Settings
     settings.outputDirs.setSingleOutput(vd)
     settings.classpath.value = classpath
-    if (classpath.isEmpty) {
-      settings.usejavacp.value = true
-    }
-    settings.processArgumentString(
-      ("-Ypresentation-any-thread" :: scalacOptions).mkString(" ")
-    )
+    if (classpath.isEmpty) { settings.usejavacp.value = true }
+    settings.processArgumentString(("-Ypresentation-any-thread" :: scalacOptions).mkString(" "))
     val compiler = new Global(settings, new StoreReporter)
     new SemanticdbPlugin(compiler) // hijack reporter/analyzer
     compiler
@@ -47,9 +41,7 @@ object InteractiveSemanticdb extends VersionCompilerOps {
       code: String,
       filename: String,
       timeout: Long
-  ): s.TextDocument = {
-    toTextDocument(compiler, code, filename, timeout, Nil)
-  }
+  ): s.TextDocument = { toTextDocument(compiler, code, filename, timeout, Nil) }
 
   /**
    * Build semanticdb document from this snippet of code.
@@ -79,23 +71,19 @@ object InteractiveSemanticdb extends VersionCompilerOps {
     val unit = addCompilationUnit(compiler, code, filename)
     // reload seems to be necessary before askLoadedType.
     ask[Unit](r => compiler.askReload(unit.source :: Nil, r)).get
-    val compiledTree =
-      ask[compiler.Tree](r => compiler.askLoadedTyped(unit.source, r))
-        .get(timeout)
+    val compiledTree = ask[compiler.Tree](r => compiler.askLoadedTyped(unit.source, r)).get(timeout)
     val tree = compiledTree match {
       case Some(Left(t)) => t
       case Some(Right(ex)) => throw ex
       case None => throw new IllegalArgumentException("Presentation compiler timed out")
     }
-    lazy val semanticdbOps: SemanticdbOps {
-      val global: compiler.type
-    } = new SemanticdbOps {
+    lazy val semanticdbOps: SemanticdbOps { val global: compiler.type } = new SemanticdbOps {
       val global: compiler.type = compiler
     }
     // warnings reporting are delayed until the end
     forceWarnings(compiler)
-    semanticdbOps.config =
-      SemanticdbConfig.parse(options, _ => (), compiler.reporter, SemanticdbConfig.default)
+    semanticdbOps.config = SemanticdbConfig
+      .parse(options, _ => (), compiler.reporter, SemanticdbConfig.default)
     import semanticdbOps._
     unit.body = tree
     val document = unit.asInstanceOf[semanticdbOps.global.CompilationUnit].toTextDocument
@@ -109,19 +97,12 @@ object InteractiveSemanticdb extends VersionCompilerOps {
    * that offset. This hint helps completions amongst other things.
    */
   def addCursor(code: String, offset: Int): String = {
-    new StringBuilder(code.length + "_CURSOR_".length)
-      .append(code.substring(0, offset))
-      .append("_CURSOR_")
-      .append(code.substring(offset))
-      .toString()
+    new StringBuilder(code.length + "_CURSOR_".length).append(code.substring(0, offset))
+      .append("_CURSOR_").append(code.substring(offset)).toString()
   }
 
   /** Create new compilation unit from given code. */
-  def addCompilationUnit(
-      global: Global,
-      code: String,
-      filename: String
-  ): global.RichCompilationUnit = {
+  def addCompilationUnit(global: Global, code: String, filename: String): global.RichCompilationUnit = {
     val unit = global.newCompilationUnit(code, filename)
     val richUnit = new global.RichCompilationUnit(unit.source)
     global.unitOfFile(richUnit.source.file) = richUnit
@@ -129,10 +110,8 @@ object InteractiveSemanticdb extends VersionCompilerOps {
   }
 
   private def thisClasspath: String = this.getClass.getClassLoader match {
-    case url: URLClassLoader =>
-      url.getURLs.map(_.toURI.getPath).mkString(File.pathSeparator)
-    case els =>
-      throw new IllegalStateException(s"Expected URLClassloader, got $els")
+    case url: URLClassLoader => url.getURLs.map(_.toURI.getPath).mkString(File.pathSeparator)
+    case els => throw new IllegalStateException(s"Expected URLClassloader, got $els")
   }
 
   private def ask[A](f: Response[A] => Unit): Response[A] = {

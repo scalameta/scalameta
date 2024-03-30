@@ -12,13 +12,12 @@ class JavacpSuite extends FunSuite {
       symbol: String,
       filter: String => Boolean,
       expected: List[String]
-  ): Unit =
-    test(name) {
-      val info = infos(symbol)
-      val ClassSignature(_, _, _, Some(declarations)) = info.signature
-      val obtained = declarations.symlinks.filter(filter)
-      assertEquals(obtained, expected, info.toProtoString)
-    }
+  ): Unit = test(name) {
+    val info = infos(symbol)
+    val ClassSignature(_, _, _, Some(declarations)) = info.signature
+    val obtained = declarations.symlinks.filter(filter)
+    assertEquals(obtained, expected, info.toProtoString)
+  }
 
   checkOrder(
     "methods",
@@ -34,16 +33,8 @@ class JavacpSuite extends FunSuite {
   checkOrder(
     "fields",
     "com/javacp/Test#",
-    { s =>
-      s.desc.value == "Int" ||
-      s.desc.value == "Long" ||
-      s.desc.value == "Float"
-    },
-    List(
-      "com/javacp/Test#Int.",
-      "com/javacp/Test#Long.",
-      "com/javacp/Test#Float."
-    )
+    { s => s.desc.value == "Int" || s.desc.value == "Long" || s.desc.value == "Float" },
+    List("com/javacp/Test#Int.", "com/javacp/Test#Long.", "com/javacp/Test#Float.")
   )
 
 }

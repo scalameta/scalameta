@@ -95,8 +95,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             (parts, Mode.Pattern(isMultiline(parts.head), holes, unapplySelector))
         }
       } catch {
-        case ex: Exception =>
-          c.abort(
+        case ex: Exception => c.abort(
             c.macroApplication.pos,
             s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}"
           )
@@ -154,26 +153,24 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val standardDialectReference = instantiateStandardDialect(dialectTree.symbol)
     // allow `scala.meta.Dialect.current`
     def standardDialectSingleton = instantiateStandardDialect(dialectTree.tpe.termSymbol)
-    standardDialectReference
-      .orElse(standardDialectSingleton)
-      .getOrElse {
-        val suggestion =
-          s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
-        val message =
-          s"$dialectTree of type ${dialectTree.tpe} is not supported by quasiquotes ($suggestion)"
-        c.abort(c.enclosingPosition, message)
-      }
+    standardDialectReference.orElse(standardDialectSingleton).getOrElse {
+      val suggestion =
+        s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
+      val message =
+        s"$dialectTree of type ${dialectTree.tpe} is not supported by quasiquotes ($suggestion)"
+      c.abort(c.enclosingPosition, message)
+    }
   }
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {
     val parserModule = interpolator.owner.owner.companion
-    val parsersModuleClass =
-      Class.forName("scala.meta.quasiquotes.package$", true, this.getClass.getClassLoader)
+    val parsersModuleClass = Class
+      .forName("scala.meta.quasiquotes.package$", true, this.getClass.getClassLoader)
     val parsersModule = parsersModuleClass.getField("MODULE$").get(null)
     val parserModuleGetter = parsersModule.getClass.getDeclaredMethod(parserModule.name.toString)
     val parserModuleInstance = parserModuleGetter.invoke(parsersModule)
-    val parserMethod =
-      parserModuleInstance.getClass.getDeclaredMethods.find(_.getName == "parse").head
+    val parserMethod = parserModuleInstance.getClass.getDeclaredMethods.find(_.getName == "parse")
+      .head
     (input: Input, dialect: Dialect) => {
       try parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
       catch { case ex: java.lang.reflect.InvocationTargetException => throw ex.getTargetException }
@@ -181,36 +178,28 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   }
 
   private def parseSkeleton(parser: MetaParser, input: Input, dialect: Dialect): MetaTree = {
-    try {
-      parser(input, dialect)
-    } catch {
+    try { parser(input, dialect) }
+    catch {
       case TokenizeException(pos, message) => c.abort(pos, message)
       case ParseException(pos, message) => c.abort(pos, message)
     }
   }
 
   private implicit class XtensionRankedClazz(clazz: Class[_]) {
-    def unwrap: Class[_] = {
-      if (clazz.isArray) clazz.getComponentType.unwrap
-      else clazz
-    }
+    def unwrap: Class[_] = { if (clazz.isArray) clazz.getComponentType.unwrap else clazz }
     def wrap(rank: Int): Class[_] = {
-      if (rank == 0) clazz
-      else ScalaRunTime.arrayClass(clazz).wrap(rank - 1)
+      if (rank == 0) clazz else ScalaRunTime.arrayClass(clazz).wrap(rank - 1)
     }
     def toTpe: u.Type = {
-      if (clazz.isArray) {
-        appliedType(definitions.ListClass, clazz.getComponentType.toTpe)
-      } else {
+      if (clazz.isArray) { appliedType(definitions.ListClass, clazz.getComponentType.toTpe) }
+      else {
         @tailrec
         def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
           case part :: Nil =>
             if (clazz.getName.endsWith("$")) owner.info.decl(TermName(part))
             else owner.info.decl(TypeName(part))
-          case part :: rest =>
-            loop(owner.info.decl(TermName(part)), rest)
-          case Nil =>
-            unreachable(debug(clazz))
+          case part :: rest => loop(owner.info.decl(TermName(part)), rest)
+          case Nil => unreachable(debug(clazz))
         }
         val name = scala.reflect.NameTransformer.decode(clazz.getName)
         val result = loop(mirror.RootPackage, name.stripSuffix("$").split(Array('.', '$')).toList)
@@ -243,9 +232,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           val pt = h.arg.pos.point
           beg <= pt && pt <= end
         }
-        maybeHole.getOrElse(
-          unreachable(debug(quasi, quasi.pos.absolutize, mode.holes, mode.holes.map(_.arg.pos)))
-        )
+        maybeHole.getOrElse(unreachable(
+          debug(quasi, quasi.pos.absolutize, mode.holes, mode.holes.map(_.arg.pos))
+        ))
       }
     }
 
@@ -253,9 +242,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val sourceName = if (useParsedSource) TermName(c.freshName("parsedSource")) else null
     val dialectOnlyName = TermName(c.freshName("dialectOnly"))
     object Lifts {
-      def liftTree(tree: MetaTree): ReflectTree = {
-        Liftables.liftableSubTree(tree)
-      }
+      def liftTree(tree: MetaTree): ReflectTree = { Liftables.liftableSubTree(tree) }
       def liftOptionTree(maybeTree: Option[MetaTree]): ReflectTree = {
         maybeTree match {
           case Some(tree: Quasi) => liftQuasi(tree, optional = true)
@@ -270,23 +257,22 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             case (quasi: Quasi) +: rest if quasi.rank == 1 =>
               if (acc.isEmpty) {
                 if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
-                else
-                  loop(
-                    rest,
-                    prefix.foldRight(acc)((curr, acc) => {
-                      // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
-                      // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
-                      // Neither can we do q"${liftQuasi(quasi)}.+:(${liftTree(curr)})",
-                      // because that still wouldn't work in pattern mode.
-                      // Finally, we can't do something like q"+:(${liftQuasi(quasi)}, (${liftTree(curr)}))",
-                      // because would violate evaluation order guarantees that we must keep.
-                      val currElement = liftTree(curr)
-                      val alreadyLiftedList = acc.orElse(liftQuasi(quasi))
-                      if (isTerm) q"$currElement +: $alreadyLiftedList"
-                      else pq"$currElement +: $alreadyLiftedList"
-                    }),
-                    Nil
-                  )
+                else loop(
+                  rest,
+                  prefix.foldRight(acc)((curr, acc) => {
+                    // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
+                    // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
+                    // Neither can we do q"${liftQuasi(quasi)}.+:(${liftTree(curr)})",
+                    // because that still wouldn't work in pattern mode.
+                    // Finally, we can't do something like q"+:(${liftQuasi(quasi)}, (${liftTree(curr)}))",
+                    // because would violate evaluation order guarantees that we must keep.
+                    val currElement = liftTree(curr)
+                    val alreadyLiftedList = acc.orElse(liftQuasi(quasi))
+                    if (isTerm) q"$currElement +: $alreadyLiftedList"
+                    else pq"$currElement +: $alreadyLiftedList"
+                  }),
+                  Nil
+                )
               } else {
                 require(prefix.isEmpty && debug(trees, acc, prefix))
                 if (isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
@@ -301,28 +287,23 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
               }
             case _ =>
               // NOTE: Luckily, at least this quasiquote works fine both in term and pattern modes
-              if (acc.isEmpty) q"${definitions.ListModule}(..${prefix.map(liftTree)})"
-              else acc
+              if (acc.isEmpty) q"${definitions.ListModule}(..${prefix.map(liftTree)})" else acc
           }
         loop(trees, EmptyTree, Nil)
       }
       def liftTreess(treess: List[List[MetaTree]]): ReflectTree = {
-        val tripleDotQuasis = treess.flatten.collect {
-          case quasi: Quasi if quasi.rank == 2 => quasi
-        }
+        val tripleDotQuasis = treess.flatten
+          .collect { case quasi: Quasi if quasi.rank == 2 => quasi }
         if (tripleDotQuasis.isEmpty) {
           Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees).apply(treess)
         } else if (tripleDotQuasis.length == 1) {
           if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
-          else
-            c.abort(
-              tripleDotQuasis(0).pos,
-              "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
-                "See https://github.com/scalameta/scalameta/issues/406 for details."
-            )
-        } else {
-          c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2))
-        }
+          else c.abort(
+            tripleDotQuasis(0).pos,
+            "implementation restriction: can't mix ...$ with anything else in parameter lists." +
+              EOL + "See https://github.com/scalameta/scalameta/issues/406 for details."
+          )
+        } else { c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2)) }
       }
       def liftQuasi(quasi: Quasi, optional: Boolean = false): ReflectTree = {
         try {
@@ -360,16 +341,13 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
               case _ => c.abort(quasi.pos, "complex ellipses are not supported yet")
             }
           }
-        } finally {
-          pendingQuasis.pop()
-        }
+        } finally { pendingQuasis.pop() }
       }
       val liftOrigin: Origin => ReflectTree =
-        if (sourceName ne null)
-          _ match {
-            case Origin.Parsed(_, beg, end) => q"$OriginModule.Parsed($sourceName, $beg, $end)"
-            case x => unreachable(debug(x))
-          }
+        if (sourceName ne null) _ match {
+          case Origin.Parsed(_, beg, end) => q"$OriginModule.Parsed($sourceName, $beg, $end)"
+          case x => unreachable(debug(x))
+        }
         else {
           val dialectOnlyNameTree = q"$dialectOnlyName"
           _ => dialectOnlyNameTree
@@ -379,10 +357,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
       // but that would bloat the code significantly with duplicated instances for denotations and sigmas
       implicit val liftableSubTree: Liftable[MetaTree] =
-        if (isTerm)
-          materializeAst[MetaTree](true)
-        else
-          materializeAst[MetaTree](false)
+        if (isTerm) materializeAst[MetaTree](true) else materializeAst[MetaTree](false)
       implicit def liftableSubSeqTree[T <: MetaTree]: Liftable[Seq[T]] =
         Liftable((trees: Seq[T]) => Lifts.liftTrees(trees))
       implicit def liftableSubTrees[T <: MetaTree]: Liftable[List[T]] =
@@ -393,16 +368,13 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         Liftable((treess: List[List[T]]) => Lifts.liftTreess(treess))
       implicit def liftableOptionSubTree[T <: MetaTree]: Liftable[Option[T]] =
         Liftable((x: Option[T]) => Lifts.liftOptionTree(x))
-      implicit def liftableOrigin[T <: Origin]: Liftable[T] =
-        Liftable((x: T) => Lifts.liftOrigin(x))
+      implicit def liftableOrigin[T <: Origin]: Liftable[T] = Liftable((x: T) => Lifts.liftOrigin(x))
     }
     val valDefns = List(
-      if (sourceName eq null)
-        q"""
+      if (sourceName eq null) q"""
         val $dialectOnlyName = implicitly[$OriginModule.DialectOnly]
       """
-      else
-        q"""
+      else q"""
         val $sourceName = new $OriginModule.ParsedSource(
           _root_.scala.meta.inputs.Input.String(${input.text.replace("$$", "$")})
         )

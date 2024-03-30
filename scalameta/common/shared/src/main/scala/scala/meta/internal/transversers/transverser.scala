@@ -28,35 +28,28 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
   def leafHandlerType(): Tree
   def generatedMethods(): Tree
 
-  def impl(annottees: Tree*): Tree =
-    annottees.transformAnnottees(new ImplTransformer {
-      override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
-        val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
-          cdef
+  def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
+    override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
+      val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
+        cdef
 
-        val cdef1 = q"""
+      val cdef1 = q"""
         $mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self =>
           ..$stats
           ..${getPrimaryApply()}
           ..${generatedMethods()}
         }
       """
-        List(cdef1, mdef)
-      }
-    })
+      List(cdef1, mdef)
+    }
+  })
 
-  private def getSecondaryApply(prefix: String, leaves: List[Leaf])(
-      priority: String*
-  ): Tree = {
+  private def getSecondaryApply(prefix: String, leaves: List[Leaf])(priority: String*): Tree = {
     val treeName = TermName("_tree")
-    val cases = leaves
-      .sortBy { l =>
-        val idx = priority.indexOf(l.prefix)
-        if (idx != -1) idx else priority.length
-      }
-      .map { l =>
-        cq"$treeName: ${hygienicRef(l.sym)} => ${leafHandler(l, treeName)}"
-      }
+    val cases = leaves.sortBy { l =>
+      val idx = priority.indexOf(l.prefix)
+      if (idx != -1) idx else priority.length
+    }.map { l => cq"$treeName: ${hygienicRef(l.sym)} => ${leafHandler(l, treeName)}" }
     val methodName = TermName(s"apply$prefix")
 
     q"""

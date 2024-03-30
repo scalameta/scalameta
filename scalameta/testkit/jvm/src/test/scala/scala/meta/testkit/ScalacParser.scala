@@ -12,19 +12,13 @@ import scala.tools.nsc.Settings
  */
 object ScalacParser {
   var current: ClassLoader = Thread.currentThread().getContextClassLoader
-  val files: mutable.Buffer[File] =
-    collection.mutable.Buffer.empty[java.io.File]
+  val files: mutable.Buffer[File] = collection.mutable.Buffer.empty[java.io.File]
   val settings = new Settings()
-  files.appendAll(
-    System
-      .getProperty("sun.boot.class.path")
-      .split(":")
-      .map(new java.io.File(_))
-  )
+  files.appendAll(System.getProperty("sun.boot.class.path").split(":").map(new java.io.File(_)))
   while (current != null) {
     current match {
-      case t: java.net.URLClassLoader =>
-        files.appendAll(t.getURLs.map(u => new java.io.File(u.toURI)))
+      case t: java.net.URLClassLoader => files
+          .appendAll(t.getURLs.map(u => new java.io.File(u.toURI)))
       case _ =>
     }
     current = current.getParent
@@ -40,14 +34,11 @@ object ScalacParser {
     import global.syntaxAnalyzer.Offset
     val cu = new global.CompilationUnit(global.newSourceFile(input))
     val parser = new global.syntaxAnalyzer.UnitParser(cu, Nil) {
-      override def newScanner() =
-        new global.syntaxAnalyzer.UnitScanner(cu, Nil) {
-          override def error(off: Offset, msg: String) = { fail = true }
-          override def syntaxError(off: Offset, msg: String) = { fail = true }
-          override def incompleteInputError(off: Offset, msg: String) = {
-            fail = true
-          }
-        }
+      override def newScanner() = new global.syntaxAnalyzer.UnitScanner(cu, Nil) {
+        override def error(off: Offset, msg: String) = { fail = true }
+        override def syntaxError(off: Offset, msg: String) = { fail = true }
+        override def incompleteInputError(off: Offset, msg: String) = { fail = true }
+      }
       override def incompleteInputError(msg: String, actions: List[CodeAction]) = { fail = true }
       override def syntaxError(offset: Offset, msg: String, actions: List[CodeAction]) = {
         fail = true

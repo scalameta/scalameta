@@ -27,9 +27,7 @@ class Main(settings: Settings, reporter: Reporter) {
     val stopAfterPluginArgs = List("-Ystop-after:semanticdb-typer")
     val args = settings.scalacArgs ++ enablePluginArgs ++ enableRangeposArgs ++ stopAfterPluginArgs
     scala.Console.withOut(reporter.out) {
-      scala.Console.withErr(reporter.err) {
-        ScalacMain.process(args.toArray)
-      }
+      scala.Console.withErr(reporter.err) { ScalacMain.process(args.toArray) }
     }
     !ScalacMain.reporter.hasErrors
   }

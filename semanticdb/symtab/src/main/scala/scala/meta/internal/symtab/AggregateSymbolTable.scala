@@ -10,10 +10,8 @@ final class AggregateSymbolTable private (private val symtabs: List[SymbolTable]
   def info(symbol: String): Option[SymbolInformation] = {
     @tailrec
     def loop(ss: List[SymbolTable]): Option[SymbolInformation] = ss match {
-      case Nil =>
-        None
-      case head :: tail =>
-        head.info(symbol) match {
+      case Nil => None
+      case head :: tail => head.info(symbol) match {
           case Some(x) => Some(x)
           case None => loop(tail)
         }
@@ -26,10 +24,8 @@ object AggregateSymbolTable {
   def apply(symtabs: Iterable[SymbolTable]): SymbolTable = {
     val buf = List.newBuilder[SymbolTable]
     symtabs.foreach {
-      case agg: AggregateSymbolTable =>
-        buf ++= agg.symtabs
-      case symtab =>
-        buf += symtab
+      case agg: AggregateSymbolTable => buf ++= agg.symtabs
+      case symtab => buf += symtab
     }
     new AggregateSymbolTable(buf.result())
   }

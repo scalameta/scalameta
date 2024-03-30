@@ -252,26 +252,16 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ArgClause [A]
        |""".stripMargin
   )
-  checkPositions[Stat](
-    "- (a)"
-  )
-  checkPositions[Stat](
-    "(a): (A)"
-  )
-  checkPositions[Stat](
-    "(a) = (b)"
-  )
-  checkPositions[Stat](
-    "{ (a); (b) }"
-  )
+  checkPositions[Stat]("- (a)")
+  checkPositions[Stat]("(a): (A)")
+  checkPositions[Stat]("(a) = (b)")
+  checkPositions[Stat]("{ (a); (b) }")
   checkPositions[Stat](
     "do {d} while (p)",
     """|Term.Block {d}
        |""".stripMargin
   )
-  checkPositions[Stat](
-    "(f) _"
-  )
+  checkPositions[Stat]("(f) _")
   checkPositions[Stat](
     "for { x <- xs } (f)",
     """|Enumerator.Generator x <- xs
@@ -289,9 +279,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.Param b
        |""".stripMargin
   )
-  checkPositions[Stat](
-    "if (p) (t) else (f)"
-  )
+  checkPositions[Stat]("if (p) (t) else (f)")
   checkPositions[Stat](
     "if (p) (t)",
     """|Lit.Unit if (p) (t)@@
@@ -352,21 +340,15 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.Repeated (x): _*
        |""".stripMargin
   )
-  checkPositions[Stat](
-    "return (a)"
-  )
-  checkPositions[Stat](
-    "(a).b"
-  )
+  checkPositions[Stat]("return (a)")
+  checkPositions[Stat]("(a).b")
   checkPositions[Stat](
     "a.super[B].c",
     """|Term.Super a.super[B]
        |""".stripMargin
   )
   checkPositions[Stat]("a.this")
-  checkPositions[Stat](
-    "throw (e)"
-  )
+  checkPositions[Stat]("throw (e)")
   checkPositions[Stat](
     "try (f) catch { case x => x; case y => y } finally { }",
     """|Case case x => x;
@@ -419,9 +401,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.Tuple (1, 2)
        |""".stripMargin
   )
-  checkPositions[Stat](
-    "((a), (b))"
-  )
+  checkPositions[Stat]("((a), (b))")
   checkPositions[Stat](
     "while (p) {d}",
     """|Term.Block {d}
@@ -484,9 +464,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   // Decl
   checkPositions[Stat]("val a: Int")
   checkPositions[Stat]("var b: Long")
-  checkPositions[Stat](
-    "def f: String"
-  )
+  checkPositions[Stat]("def f: String")
   checkPositions[Stat](
     "type T",
     """|Type.ParamClause type T@@
@@ -508,9 +486,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.ArgClause ()
        |""".stripMargin
   )
-  checkPositions[Stat](
-    "def f = macro m"
-  )
+  checkPositions[Stat]("def f = macro m")
   checkPositions[Stat](
     "class A private (b: B)",
     """|Type.ParamClause class A @@private (b: B)
@@ -582,9 +558,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Self sealed trait a@@
        |""".stripMargin
   )
-  checkPositions[Stat](
-    "override def f = 1"
-  )
+  checkPositions[Stat]("override def f = 1")
   checkPositions[Stat](
     "case object B",
     """|Template case object B@@

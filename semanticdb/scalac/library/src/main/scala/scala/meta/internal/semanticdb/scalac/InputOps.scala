@@ -13,7 +13,8 @@ import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSource
 import scala.reflect.io.VirtualFile
 import scala.reflect.io.{PlainFile => GPlainFile}
 
-trait InputOps { self: SemanticdbOps =>
+trait InputOps {
+  self: SemanticdbOps =>
 
   import InputOps._
 
@@ -23,27 +24,19 @@ trait InputOps { self: SemanticdbOps =>
       case gfile: GPlainFile =>
         val gpath = gfile.file.toPath
         !gpath.isAbsolute || config.fileInSourceRoot(gpath).isDefined
-      case _: VirtualFile =>
-        true // Would anyone go to the trouble of building a VirtualFile that's outside of sourceroot?
-      case _ =>
-        false
+      case _: VirtualFile => true // Would anyone go to the trouble of building a VirtualFile that's outside of sourceroot?
+      case _ => false
     }
 
     def toUri: String = toInput match {
-      case input: m.Input.File =>
-        config.uriRelativeToSourceRoot(input.path).toString
-      case input: m.Input.VirtualFile =>
-        input.path
-      case _ =>
-        ""
+      case input: m.Input.File => config.uriRelativeToSourceRoot(input.path).toString
+      case input: m.Input.VirtualFile => input.path
+      case _ => ""
     }
     def toText: String = toInput match {
-      case _: m.Input.File =>
-        "" // slim mode, don't embed contents
-      case input: m.Input.VirtualFile if config.text.isOn =>
-        input.value
-      case _ =>
-        ""
+      case _: m.Input.File => "" // slim mode, don't embed contents
+      case input: m.Input.VirtualFile if config.text.isOn => input.value
+      case _ => ""
     }
     def toMD5: String = {
       if (config.md5.isOff) ""
@@ -54,28 +47,24 @@ trait InputOps { self: SemanticdbOps =>
         Hex.bytesToHex(md5.digest())
       }
     }
-    def toInput: m.Input =
-      gSourceFileInputCache.getOrElseUpdate(
-        gsource, {
-          gsource.file match {
-            case gfile: GPlainFile =>
-              if (config.text.isOn) {
-                val path = m.AbsolutePath(gfile.file)
-                val label = config.uriRelativeToSourceRoot(path).toString
-                // NOTE: Can't use gsource.content because it's preprocessed by scalac.
-                val contents = FileIO.slurp(path, UTF_8)
-                m.Input.VirtualFile(label, contents)
-              } else {
-                m.Input.File(gfile.file)
-              }
-            case gfile: VirtualFile =>
-              val uri = URLEncoder.encode(gfile.path, UTF_8.name)
-              m.Input.VirtualFile(uri, gsource.content.mkString)
-            case _ =>
-              m.Input.None
-          }
+    def toInput: m.Input = gSourceFileInputCache.getOrElseUpdate(
+      gsource, {
+        gsource.file match {
+          case gfile: GPlainFile =>
+            if (config.text.isOn) {
+              val path = m.AbsolutePath(gfile.file)
+              val label = config.uriRelativeToSourceRoot(path).toString
+              // NOTE: Can't use gsource.content because it's preprocessed by scalac.
+              val contents = FileIO.slurp(path, UTF_8)
+              m.Input.VirtualFile(label, contents)
+            } else { m.Input.File(gfile.file) }
+          case gfile: VirtualFile =>
+            val uri = URLEncoder.encode(gfile.path, UTF_8.name)
+            m.Input.VirtualFile(uri, gsource.content.mkString)
+          case _ => m.Input.None
         }
-      )
+      }
+    )
   }
 
   implicit class XtensionGPositionMPosition(pos: GPosition) {
@@ -112,15 +101,15 @@ private object InputOps {
       }
     }
 
-    def uriRelativeToSourceRoot(file: AbsolutePath): URI = fileInSourceRoot(file.toNIO)
-      .map { f => RelativePath.toURI(f(), isDirectory = false) }
-      .getOrElse {
-        // java.net.URI.relativize returns `fileUri` unchanged when it is not contained within our sourceroot.
-        // We could attempt to return a ".." URI, but java.net doesn't provide facilities for that. While nio's Path
-        // does contain facilities for that, such relative paths cannot then be used to produce a percent-encoded,
-        // relative URI. It doesn't seem worth fighting this battle at the moment, so:
-        sys.error(s"'$file' is not located within sourceroot '${config.sourceroot}'.")
-      }
+    def uriRelativeToSourceRoot(file: AbsolutePath): URI = fileInSourceRoot(file.toNIO).map { f =>
+      RelativePath.toURI(f(), isDirectory = false)
+    }.getOrElse {
+      // java.net.URI.relativize returns `fileUri` unchanged when it is not contained within our sourceroot.
+      // We could attempt to return a ".." URI, but java.net doesn't provide facilities for that. While nio's Path
+      // does contain facilities for that, such relative paths cannot then be used to produce a percent-encoded,
+      // relative URI. It doesn't seem worth fighting this battle at the moment, so:
+      sys.error(s"'$file' is not located within sourceroot '${config.sourceroot}'.")
+    }
 
   }
 

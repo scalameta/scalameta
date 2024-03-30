@@ -40,9 +40,8 @@ private[meta] case class CharArrayReader private (
   }
 
   final def nextCommentChar(): Unit = {
-    if (endCharOffset >= buf.length) {
-      ch = SU
-    } else {
+    if (endCharOffset >= buf.length) { ch = SU }
+    else {
       ch = buf(endCharOffset)
       begCharOffset = endCharOffset
       endCharOffset += 1
@@ -55,9 +54,8 @@ private[meta] case class CharArrayReader private (
    * there are no "potential line ends" here.
    */
   final def nextRawChar(): Unit = {
-    if (endCharOffset >= buf.length) {
-      ch = SU
-    } else {
+    if (endCharOffset >= buf.length) { ch = SU }
+    else {
       begCharOffset = endCharOffset
       val (hi, hiEnd) = readUnicodeChar(buf, endCharOffset)
       val isHiSurrogate = Character.isHighSurrogate(hi)
@@ -84,14 +82,13 @@ private[meta] case class CharArrayReader private (
   }
 
   /** replace CR;LF by LF */
-  private def skipCR() =
-    if (ch == CR && endCharOffset < buf.length && buf(endCharOffset) == '\\') {
-      val (c, nextOffset) = readUnicodeChar(buf, endCharOffset)
-      if (c == LF) {
-        ch = LF
-        endCharOffset = nextOffset
-      }
+  private def skipCR() = if (ch == CR && endCharOffset < buf.length && buf(endCharOffset) == '\\') {
+    val (c, nextOffset) = readUnicodeChar(buf, endCharOffset)
+    if (c == LF) {
+      ch = LF
+      endCharOffset = nextOffset
     }
+  }
 
   /** Handle line ends */
   private def potentialLineEnd(): Unit = {
@@ -123,8 +120,8 @@ private[meta] case class CharArrayReader private (
     else if (checkOnly) false
     else syntaxError("numeric separators are not allowed", at = begCharOffset)
 
-  @inline private[tokenizers] def isDigit(): Boolean =
-    ch >= '0' && ch <= '9'
+  @inline
+  private[tokenizers] def isDigit(): Boolean = ch >= '0' && ch <= '9'
 
 }
 
@@ -148,8 +145,7 @@ object CharArrayReader {
     do escapedOffset += 1 while (escapedOffset < buf.length && buf(escapedOffset) == 'u')
 
     // need 4 digits
-    if (escapedOffset + 3 >= buf.length)
-      return (c, firstOffset)
+    if (escapedOffset + 3 >= buf.length) return (c, firstOffset)
 
     def udigit: Int =
       try digit2int(buf(escapedOffset), 16)

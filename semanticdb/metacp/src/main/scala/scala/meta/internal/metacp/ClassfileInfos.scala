@@ -28,8 +28,8 @@ final case class ClassfileInfos(
   }
   def save(out: AbsolutePath): Unit = {
     assert(infos.nonEmpty)
-    val semanticdbAbspath =
-      out.resolve("META-INF").resolve("semanticdb").resolve(relativeUri + ".semanticdb")
+    val semanticdbAbspath = out.resolve("META-INF").resolve("semanticdb")
+      .resolve(relativeUri + ".semanticdb")
     Files.createDirectories(semanticdbAbspath.toNIO.getParent)
     FileIO.write(semanticdbAbspath, toTextDocuments)
   }
@@ -43,20 +43,15 @@ object ClassfileInfos {
       reporter: Reporter
   ): Option[ClassfileInfos] = {
     node.scalaSig match {
-      case Some(scalaSig) =>
-        Some(Scalacp.parse(scalaSig, classpathIndex, settings, reporter))
+      case Some(scalaSig) => Some(Scalacp.parse(scalaSig, classpathIndex, settings, reporter))
       case None =>
         val attrs = if (node.attrs != null) node.attrs.toScala else Nil
-        if (attrs.exists(_.`type` == "Scala")) {
-          None
-        } else {
+        if (attrs.exists(_.`type` == "Scala")) { None }
+        else {
           val innerClassNode = node.innerClasses.toScala.find(_.name == node.name)
           if (innerClassNode.isEmpty) {
-            if (node.name != "module-info") Some(Javacp.parse(node, classpathIndex))
-            else None
-          } else {
-            None
-          }
+            if (node.name != "module-info") Some(Javacp.parse(node, classpathIndex)) else None
+          } else { None }
         }
     }
   }

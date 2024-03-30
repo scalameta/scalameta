@@ -22,8 +22,7 @@ private[parsers] class LazyTokenIterator private (
   import scannerTokens._
 
   @inline
-  private def getNextTokenRef(): TokenRef =
-    nextToken(curr)
+  private def getNextTokenRef(): TokenRef = nextToken(curr)
 
   override def next(): Unit = {
     prev = curr
@@ -55,13 +54,10 @@ private[parsers] class LazyTokenIterator private (
   override def tokenPos: Int = curr.pointPos
   override def token: Token = curr.token
 
-  override def fork: TokenIterator =
-    new LazyTokenIterator(scannerTokens, prev, curr)
+  override def fork: TokenIterator = new LazyTokenIterator(scannerTokens, prev, curr)
 
-  override def peekToken: Token =
-    getNextTokenRef().token
+  override def peekToken: Token = getNextTokenRef().token
 
-  override def peekIndex: Int =
-    getNextTokenRef().pointPos
+  override def peekIndex: Int = getNextTokenRef().pointPos
 
 }

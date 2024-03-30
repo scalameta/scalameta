@@ -266,40 +266,30 @@ final class Dialect private[meta] (
   def allowMultilinePrograms: Boolean = unquoteType.isMultiline
 
   @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
-  def withAllowAndTypes(newValue: Boolean): Dialect = {
-    this
-  }
+  def withAllowAndTypes(newValue: Boolean): Dialect = { this }
   def withAllowAtForExtractorVarargs(newValue: Boolean): Dialect = {
     privateCopy(allowAtForExtractorVarargs = newValue)
   }
-  def withAllowCaseClassWithoutParameterList(
-      newValue: Boolean
-  ): Dialect = {
+  def withAllowCaseClassWithoutParameterList(newValue: Boolean): Dialect = {
     privateCopy(allowCaseClassWithoutParameterList = newValue)
   }
   def withAllowColonForExtractorVarargs(newValue: Boolean): Dialect = {
     privateCopy(allowColonForExtractorVarargs = newValue)
   }
-  def withAllowEnums(newValue: Boolean): Dialect = {
-    privateCopy(allowEnums = newValue)
-  }
+  def withAllowEnums(newValue: Boolean): Dialect = { privateCopy(allowEnums = newValue) }
   def withAllowImplicitByNameParameters(newValue: Boolean): Dialect = {
     privateCopy(allowImplicitByNameParameters = newValue)
   }
   def withAllowInlineIdents(newValue: Boolean): Dialect = {
     privateCopy(allowInlineIdents = newValue)
   }
-  def withAllowInlineMods(newValue: Boolean): Dialect = {
-    privateCopy(allowInlineMods = newValue)
-  }
+  def withAllowInlineMods(newValue: Boolean): Dialect = { privateCopy(allowInlineMods = newValue) }
   def withAllowLiteralTypes(newValue: Boolean): Dialect = {
     privateCopy(allowLiteralTypes = newValue)
   }
   def withAllowMultilinePrograms(newValue: Boolean): Dialect = ???
   @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
-  def withAllowOrTypes(newValue: Boolean): Dialect = {
-    this
-  }
+  def withAllowOrTypes(newValue: Boolean): Dialect = { this }
   def withAllowPatUnquotes(newValue: Boolean): Dialect = ???
   def withAllowSpliceUnderscores(newValue: Boolean): Dialect = {
     privateCopy(allowSpliceUnderscores = newValue)
@@ -317,34 +307,24 @@ final class Dialect private[meta] (
   def withAllowTypeLambdas(newValue: Boolean): Dialect = {
     privateCopy(allowTypeLambdas = newValue)
   }
-  def withAllowViewBounds(newValue: Boolean): Dialect = {
-    privateCopy(allowViewBounds = newValue)
-  }
+  def withAllowViewBounds(newValue: Boolean): Dialect = { privateCopy(allowViewBounds = newValue) }
   def withAllowXmlLiterals(newValue: Boolean): Dialect = {
     privateCopy(allowXmlLiterals = newValue)
   }
   @deprecated("toplevelSeparator has never been used", ">4.4.35")
-  def withToplevelSeparator(newValue: String): Dialect = {
-    this
-  }
+  def withToplevelSeparator(newValue: String): Dialect = { this }
   def withAllowNumericLiteralUnderscoreSeparators(newValue: Boolean): Dialect = {
     privateCopy(allowNumericLiteralUnderscoreSeparators = newValue)
   }
   def withAllowTryWithAnyExpr(newValue: Boolean): Dialect = {
     privateCopy(allowTryWithAnyExpr = newValue)
   }
-  def withAllowGivenUsing(newValue: Boolean): Dialect = {
-    privateCopy(allowGivenUsing = newValue)
-  }
-  def withAllowErasedDefs(newValue: Boolean): Dialect = {
-    privateCopy(allowErasedDefs = newValue)
-  }
+  def withAllowGivenUsing(newValue: Boolean): Dialect = { privateCopy(allowGivenUsing = newValue) }
+  def withAllowErasedDefs(newValue: Boolean): Dialect = { privateCopy(allowErasedDefs = newValue) }
   def withAllowExtensionMethods(newValue: Boolean): Dialect = {
     privateCopy(allowExtensionMethods = newValue)
   }
-  def withAllowOpenClass(newValue: Boolean): Dialect = {
-    privateCopy(allowOpenClass = newValue)
-  }
+  def withAllowOpenClass(newValue: Boolean): Dialect = { privateCopy(allowOpenClass = newValue) }
   def withAllowToplevelStatements(newValue: Boolean): Dialect = {
     privateCopy(allowToplevelStatements = newValue)
   }
@@ -361,9 +341,7 @@ final class Dialect private[meta] (
   def withAllowCommaSeparatedExtend(newValue: Boolean): Dialect = {
     privateCopy(allowCommaSeparatedExtend = newValue)
   }
-  def withAllowEndMarker(newValue: Boolean): Dialect = {
-    privateCopy(allowEndMarker = newValue)
-  }
+  def withAllowEndMarker(newValue: Boolean): Dialect = { privateCopy(allowEndMarker = newValue) }
   def withAllowSignificantIndentation(newValue: Boolean): Dialect = {
     privateCopy(allowSignificantIndentation = newValue)
   }
@@ -371,9 +349,7 @@ final class Dialect private[meta] (
     privateCopy(allowQuestionMarkAsTypeWildcard = newValue)
   }
   @deprecated("use allowQuestionMarkAsTypeWildcard", ">4.5.13")
-  def allowQuestionMarkPlaceholder: Boolean = {
-    allowQuestionMarkAsTypeWildcard
-  }
+  def allowQuestionMarkPlaceholder: Boolean = { allowQuestionMarkAsTypeWildcard }
   @deprecated("use withAllowQuestionMarkAsTypeWildcard", ">4.5.13")
   def withAllowQuestionMarkPlaceholder(newValue: Boolean): Dialect = {
     withAllowQuestionMarkAsTypeWildcard(newValue)
@@ -394,21 +370,15 @@ final class Dialect private[meta] (
   def withAllowUpperCasePatternVarBinding(newValue: Boolean): Dialect = {
     privateCopy(allowUpperCasePatternVarBinding = newValue)
   }
-  def withAllowDerives(newValue: Boolean): Dialect = {
-    privateCopy(allowDerives = newValue)
-  }
+  def withAllowDerives(newValue: Boolean): Dialect = { privateCopy(allowDerives = newValue) }
   def withAllowTypeInBlock(newValue: Boolean): Dialect = {
     privateCopy(allowTypeInBlock = newValue)
   }
   def withAllowPolymorphicFunctions(newValue: Boolean): Dialect = {
     privateCopy(allowPolymorphicFunctions = newValue)
   }
-  def withAllowTypeMatch(newValue: Boolean): Dialect = {
-    privateCopy(allowTypeMatch = newValue)
-  }
-  def withAllowInfixMods(newValue: Boolean): Dialect = {
-    privateCopy(allowInfixMods = newValue)
-  }
+  def withAllowTypeMatch(newValue: Boolean): Dialect = { privateCopy(allowTypeMatch = newValue) }
+  def withAllowInfixMods(newValue: Boolean): Dialect = { privateCopy(allowInfixMods = newValue) }
   def withAllowSpliceAndQuote(newValue: Boolean): Dialect = {
     privateCopy(allowSpliceAndQuote = newValue)
   }
@@ -436,9 +406,7 @@ final class Dialect private[meta] (
   def withAllowProcedureSyntax(newValue: Boolean): Dialect = {
     privateCopy(allowProcedureSyntax = newValue)
   }
-  def withAllowDoWhile(newValue: Boolean): Dialect = {
-    privateCopy(allowDoWhile = newValue)
-  }
+  def withAllowDoWhile(newValue: Boolean): Dialect = { privateCopy(allowDoWhile = newValue) }
 
   def withAllowPlusMinusUnderscoreAsIdent(newValue: Boolean): Dialect = {
     privateCopy(allowPlusMinusUnderscoreAsIdent = newValue)
@@ -455,9 +423,7 @@ final class Dialect private[meta] (
     withAllowUnderscoreAsTypePlaceholder(newValue)
   }
   @deprecated("use allowUnderscoreAsTypePlaceholder", ">4.5.13")
-  def allowPlusMinusUnderscoreAsPlaceholder: Boolean = {
-    allowUnderscoreAsTypePlaceholder
-  }
+  def allowPlusMinusUnderscoreAsPlaceholder: Boolean = { allowUnderscoreAsTypePlaceholder }
 
   def withAllowGivenImports(newValue: Boolean): Dialect = {
     privateCopy(allowGivenImports = newValue)
@@ -696,12 +662,10 @@ final class Dialect private[meta] (
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Dialect]
 
   // Smart prettyprinting that knows about standard dialects.
-  override def toString = {
-    Dialect.inverseStandards.getOrElse(unquoteParentOrThis(), "Dialect()")
-  }
+  override def toString = { Dialect.inverseStandards.getOrElse(unquoteParentOrThis(), "Dialect()") }
 
-  def isEquivalentTo(that: Dialect): Boolean =
-    unquoteParentOrThis().isEquivalentToInternal(that.unquoteParentOrThis())
+  def isEquivalentTo(that: Dialect): Boolean = unquoteParentOrThis()
+    .isEquivalentToInternal(that.unquoteParentOrThis())
 
   @inline
   private def isEquivalentToInternal(
@@ -763,71 +727,61 @@ final class Dialect private[meta] (
       allowParamClauseInterleaving: Boolean,
       allowFewerBraces: Boolean,
       allowBinaryLiterals: Boolean
-  ): Boolean = (
+  ): Boolean =
     // do not include deprecated values in this comparison
-    this.allowAtForExtractorVarargs == allowAtForExtractorVarargs
-      && this.allowCaseClassWithoutParameterList == allowCaseClassWithoutParameterList
-      && this.allowColonForExtractorVarargs == allowColonForExtractorVarargs
-      && this.allowEnums == allowEnums
-      && this.allowImplicitByNameParameters == allowImplicitByNameParameters
-      && this.allowInlineIdents == allowInlineIdents
-      && this.allowInlineMods == allowInlineMods
-      && this.allowLiteralTypes == allowLiteralTypes
-      && this.allowSpliceUnderscores == allowSpliceUnderscores
-      && this.allowToplevelTerms == allowToplevelTerms
-      && this.allowTrailingCommas == allowTrailingCommas
-      && this.allowTraitParameters == allowTraitParameters
-      && this.allowTypeLambdas == allowTypeLambdas
-      && this.allowViewBounds == allowViewBounds
-      && this.allowXmlLiterals == allowXmlLiterals
-      && this.allowNumericLiteralUnderscoreSeparators == allowNumericLiteralUnderscoreSeparators
-      && this.allowTryWithAnyExpr == allowTryWithAnyExpr
-      && this.allowGivenUsing == allowGivenUsing
-      && this.allowErasedDefs == allowErasedDefs
-      && this.allowExtensionMethods == allowExtensionMethods
-      && this.allowOpenClass == allowOpenClass
-      && this.allowToplevelStatements == allowToplevelStatements
-      && this.allowOpaqueTypes == allowOpaqueTypes
-      && this.allowExportClause == allowExportClause
-      && this.allowCommaSeparatedExtend == allowCommaSeparatedExtend
-      && this.allowEndMarker == allowEndMarker
-      && this.allowInterpolationDolarQuoteEscape == allowInterpolationDolarQuoteEscape
-      && this.allowSignificantIndentation == allowSignificantIndentation
-      && this.allowQuestionMarkAsTypeWildcard == allowQuestionMarkAsTypeWildcard
-      && this.allowTypeParamUnderscore == allowTypeParamUnderscore
-      && this.allowByNameRepeatedParameters == allowByNameRepeatedParameters
-      && this.allowLazyValAbstractValues == allowLazyValAbstractValues
-      && this.allowUpperCasePatternVarBinding == allowUpperCasePatternVarBinding
-      && this.allowDerives == allowDerives
-      && this.allowTypeInBlock == allowTypeInBlock
-      && this.allowPolymorphicFunctions == allowPolymorphicFunctions
-      && this.allowMatchAsOperator == allowMatchAsOperator
-      && this.allowTypeMatch == allowTypeMatch
-      && this.allowInfixMods == allowInfixMods
-      && this.allowSpliceAndQuote == allowSpliceAndQuote
-      && this.allowQuotedTypeVariables == allowQuotedTypeVariables
-      && this.allowSymbolLiterals == allowSymbolLiterals
-      && this.allowDependentFunctionTypes == allowDependentFunctionTypes
-      && this.allowPostfixStarVarargSplices == allowPostfixStarVarargSplices
-      && this.allowAllTypedPatterns == allowAllTypedPatterns
-      && this.allowAsForImportRename == allowAsForImportRename
-      && this.allowStarWildcardImport == allowStarWildcardImport
-      && this.allowProcedureSyntax == allowProcedureSyntax
-      && this.allowDoWhile == allowDoWhile
-      && this.allowPlusMinusUnderscoreAsIdent == allowPlusMinusUnderscoreAsIdent
-      && this.allowUnderscoreAsTypePlaceholder == allowUnderscoreAsTypePlaceholder
-      && this.allowStarAsTypePlaceholder == allowStarAsTypePlaceholder
-      && this.allowGivenImports == allowGivenImports
-      && this.useInfixTypePrecedence == useInfixTypePrecedence
-      && this.allowInfixOperatorAfterNL == allowInfixOperatorAfterNL
-      && this.allowParamClauseInterleaving == allowParamClauseInterleaving
-      && this.allowFewerBraces == allowFewerBraces
-      && this.allowBinaryLiterals == allowBinaryLiterals
-  )
+    this.allowAtForExtractorVarargs == allowAtForExtractorVarargs &&
+      this.allowCaseClassWithoutParameterList == allowCaseClassWithoutParameterList &&
+      this.allowColonForExtractorVarargs == allowColonForExtractorVarargs &&
+      this.allowEnums == allowEnums &&
+      this.allowImplicitByNameParameters == allowImplicitByNameParameters &&
+      this.allowInlineIdents == allowInlineIdents && this.allowInlineMods == allowInlineMods &&
+      this.allowLiteralTypes == allowLiteralTypes &&
+      this.allowSpliceUnderscores == allowSpliceUnderscores &&
+      this.allowToplevelTerms == allowToplevelTerms &&
+      this.allowTrailingCommas == allowTrailingCommas &&
+      this.allowTraitParameters == allowTraitParameters &&
+      this.allowTypeLambdas == allowTypeLambdas && this.allowViewBounds == allowViewBounds &&
+      this.allowXmlLiterals == allowXmlLiterals &&
+      this.allowNumericLiteralUnderscoreSeparators == allowNumericLiteralUnderscoreSeparators &&
+      this.allowTryWithAnyExpr == allowTryWithAnyExpr && this.allowGivenUsing == allowGivenUsing &&
+      this.allowErasedDefs == allowErasedDefs &&
+      this.allowExtensionMethods == allowExtensionMethods &&
+      this.allowOpenClass == allowOpenClass &&
+      this.allowToplevelStatements == allowToplevelStatements &&
+      this.allowOpaqueTypes == allowOpaqueTypes && this.allowExportClause == allowExportClause &&
+      this.allowCommaSeparatedExtend == allowCommaSeparatedExtend &&
+      this.allowEndMarker == allowEndMarker &&
+      this.allowInterpolationDolarQuoteEscape == allowInterpolationDolarQuoteEscape &&
+      this.allowSignificantIndentation == allowSignificantIndentation &&
+      this.allowQuestionMarkAsTypeWildcard == allowQuestionMarkAsTypeWildcard &&
+      this.allowTypeParamUnderscore == allowTypeParamUnderscore &&
+      this.allowByNameRepeatedParameters == allowByNameRepeatedParameters &&
+      this.allowLazyValAbstractValues == allowLazyValAbstractValues &&
+      this.allowUpperCasePatternVarBinding == allowUpperCasePatternVarBinding &&
+      this.allowDerives == allowDerives && this.allowTypeInBlock == allowTypeInBlock &&
+      this.allowPolymorphicFunctions == allowPolymorphicFunctions &&
+      this.allowMatchAsOperator == allowMatchAsOperator && this.allowTypeMatch == allowTypeMatch &&
+      this.allowInfixMods == allowInfixMods && this.allowSpliceAndQuote == allowSpliceAndQuote &&
+      this.allowQuotedTypeVariables == allowQuotedTypeVariables &&
+      this.allowSymbolLiterals == allowSymbolLiterals &&
+      this.allowDependentFunctionTypes == allowDependentFunctionTypes &&
+      this.allowPostfixStarVarargSplices == allowPostfixStarVarargSplices &&
+      this.allowAllTypedPatterns == allowAllTypedPatterns &&
+      this.allowAsForImportRename == allowAsForImportRename &&
+      this.allowStarWildcardImport == allowStarWildcardImport &&
+      this.allowProcedureSyntax == allowProcedureSyntax && this.allowDoWhile == allowDoWhile &&
+      this.allowPlusMinusUnderscoreAsIdent == allowPlusMinusUnderscoreAsIdent &&
+      this.allowUnderscoreAsTypePlaceholder == allowUnderscoreAsTypePlaceholder &&
+      this.allowStarAsTypePlaceholder == allowStarAsTypePlaceholder &&
+      this.allowGivenImports == allowGivenImports &&
+      this.useInfixTypePrecedence == useInfixTypePrecedence &&
+      this.allowInfixOperatorAfterNL == allowInfixOperatorAfterNL &&
+      this.allowParamClauseInterleaving == allowParamClauseInterleaving &&
+      this.allowFewerBraces == allowFewerBraces && this.allowBinaryLiterals == allowBinaryLiterals
 
   @inline
-  private def isEquivalentToInternal(that: Dialect): Boolean =
-    (this eq that) || isEquivalentToInternal(
+  private def isEquivalentToInternal(that: Dialect): Boolean = (this eq that) ||
+    isEquivalentToInternal(
       allowAtForExtractorVarargs = that.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = that.allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs = that.allowColonForExtractorVarargs,
@@ -937,17 +891,12 @@ final class Dialect private[meta] (
 
   private[meta] def unquote(unquoteType: UnquoteType): Dialect = {
     require(null eq unquoteParentDialect)
-    privateCopy(
-      unquoteType = unquoteType,
-      allowTypeLambdas = true
-    )
+    privateCopy(unquoteType = unquoteType, allowTypeLambdas = true)
   }
 
-  private[meta] def unquoteTerm(multiline: Boolean): Dialect =
-    unquote(UnquoteType.Term(multiline))
+  private[meta] def unquoteTerm(multiline: Boolean): Dialect = unquote(UnquoteType.Term(multiline))
 
-  private[meta] def unquotePat(multiline: Boolean): Dialect =
-    unquote(UnquoteType.Pat(multiline))
+  private[meta] def unquotePat(multiline: Boolean): Dialect = unquote(UnquoteType.Pat(multiline))
 
 }
 
@@ -1025,10 +974,10 @@ object Dialect extends InternalDialect {
     Typelevel211,
     Typelevel212
   )
-  private[meta] lazy val standards: Map[String, Dialect] =
-    standardPairs.map(x => x.source -> x.value).toMap
-  private[meta] lazy val inverseStandards: Map[Dialect, String] =
-    standardPairs.map(x => x.value -> x.source).toMap
+  private[meta] lazy val standards: Map[String, Dialect] = standardPairs
+    .map(x => x.source -> x.value).toMap
+  private[meta] lazy val inverseStandards: Map[Dialect, String] = standardPairs
+    .map(x => x.value -> x.source).toMap
 
   private[meta] sealed trait UnquoteType {
     // Are multiline programs allowed?

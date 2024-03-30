@@ -10,10 +10,7 @@ import scala.meta.dialects.Scala211
 class TokenizerSuite extends BaseTokenizerSuite {
 
   test("showCode without comments - simple") {
-    assertTokenizedAsSyntax(
-      "class C  {\t val x = 2}\n\n",
-      "class C  {\t val x = 2}\n\n"
-    )
+    assertTokenizedAsSyntax("class C  {\t val x = 2}\n\n", "class C  {\t val x = 2}\n\n")
   }
 
   test("showcode without comments - hard") {
@@ -123,9 +120,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("showCode with comments - tricky") {
-    assertTokenizedAsSyntax("x ~/**/y", "x ~/**/y")
-  }
+  test("showCode with comments - tricky") { assertTokenizedAsSyntax("x ~/**/y", "x ~/**/y") }
 
   test("showRaw without comments - easy") {
     assertTokenizedAsStructureLines(
@@ -980,8 +975,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   test("Ident.value for normal") {
     "foo".parse[Term].get.tokens match {
-      case Tokens(bof, foo: Ident, eof) =>
-        assertEquals(foo.value, "foo")
+      case Tokens(bof, foo: Ident, eof) => assertEquals(foo.value, "foo")
     }
   }
 
@@ -1264,14 +1258,12 @@ class TokenizerSuite extends BaseTokenizerSuite {
     }
   }
 
-  Seq(
-    (
-      "1_024",
-      """|<input>:1: error: numeric separators are not allowed
-         |1_024
-         | ^""".stripMargin
-    )
-  ).foreach { case (value, error) =>
+  Seq((
+    "1_024",
+    """|<input>:1: error: numeric separators are not allowed
+       |1_024
+       | ^""".stripMargin
+  )).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala212: $value") {
       interceptMessage[TokenizeException](error.replace("\n", EOL))(
         dialects.Scala212(value).tokenize.get
@@ -1280,8 +1272,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("numeric literal separator scala213: check positions") {
-    val intConstant =
-      dialects.Scala213(" 1_000_000 ").tokenize.get(2).asInstanceOf[Token.Constant.Int]
+    val intConstant = dialects.Scala213(" 1_000_000 ").tokenize.get(2)
+      .asInstanceOf[Token.Constant.Int]
     assertEquals(intConstant.pos.text, "1_000_000") // assert token position includes underscores
     assertEquals(intConstant.value, BigInt(1000000))
   }
@@ -1301,9 +1293,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
             EOF()
           ) =>
     }
-    assert(
-      """s"\\"Hello"""".tokenize.isInstanceOf[Tokenized.Error]
-    )
+    assert("""s"\\"Hello"""".tokenize.isInstanceOf[Tokenized.Error])
 
   }
 
@@ -1357,11 +1347,10 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("binary literals") {
-    val code =
-      """|val v1 = 0b00101010
-         |val v2 = 0B_0010_1010
-         |val v3 = 0b_0010_1010L
-         |""".stripMargin
+    val code = """|val v1 = 0b00101010
+                  |val v2 = 0B_0010_1010
+                  |val v3 = 0b_0010_1010L
+                  |""".stripMargin
     val res = dialects.Scala213(code).tokenize
     assertEquals(res.get.toString, code)
   }

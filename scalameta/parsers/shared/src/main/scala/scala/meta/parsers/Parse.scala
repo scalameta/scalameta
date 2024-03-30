@@ -35,10 +35,9 @@ object Parse {
         val parser = new ScalametaParser(input)(dialect)
         Parsed.Success(fn(parser))
       } catch {
-        case details @ tokenizers.TokenizeException(pos, message) =>
-          Parsed.Error(pos, message, details)
-        case details @ ParseException(pos, message) =>
-          Parsed.Error(pos, message, details)
+        case details @ tokenizers.TokenizeException(pos, message) => Parsed
+            .Error(pos, message, details)
+        case details @ ParseException(pos, message) => Parsed.Error(pos, message, details)
       }
     }
   }

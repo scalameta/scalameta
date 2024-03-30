@@ -6,15 +6,11 @@ import scala.meta.dialects.Scala211
 
 class DeclSuite extends ParseSuite {
   test("val x: Int") {
-    assertTree(templStat("val x: Int"))(
-      Decl.Val(Nil, List(Pat.Var(tname("x"))), pname("Int"))
-    )
+    assertTree(templStat("val x: Int"))(Decl.Val(Nil, List(Pat.Var(tname("x"))), pname("Int")))
   }
 
   test("var x: Int") {
-    assertTree(templStat("var x: Int"))(
-      Decl.Var(Nil, List(Pat.Var(tname("x"))), pname("Int"))
-    )
+    assertTree(templStat("var x: Int"))(Decl.Var(Nil, List(Pat.Var(tname("x"))), pname("Int")))
   }
 
   test("val x, y: Int") {
@@ -40,86 +36,42 @@ class DeclSuite extends ParseSuite {
 
   test("type T <: hi") {
     assertTree(templStat("type T <: hi")) {
-      Decl.Type(
-        Nil,
-        pname("T"),
-        Type.ParamClause(Nil),
-        hiBound("hi")
-      )
+      Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), hiBound("hi"))
     }
   }
 
   test("type T >: lo") {
     assertTree(templStat("type T >: lo")) {
-      Decl.Type(
-        Nil,
-        pname("T"),
-        Type.ParamClause(Nil),
-        loBound("lo")
-      )
+      Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), loBound("lo"))
     }
   }
 
   test("type T >: lo <: hi") {
     assertTree(templStat("type T >: lo <: hi")) {
-      Decl.Type(
-        Nil,
-        pname("T"),
-        Type.ParamClause(Nil),
-        bounds("lo", "hi")
-      )
+      Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), bounds("lo", "hi"))
     }
   }
 
   test("type F[T]") {
-    assertTree(templStat("type F[T]")) {
-      Decl.Type(
-        Nil,
-        pname("F"),
-        pparam("T") :: Nil,
-        noBounds
-      )
-    }
+    assertTree(templStat("type F[T]")) { Decl.Type(Nil, pname("F"), pparam("T") :: Nil, noBounds) }
   }
 
   test("type F[_]") {
-    assertTree(templStat("type F[_]")) {
-      Decl.Type(
-        Nil,
-        pname("F"),
-        pparam("_") :: Nil,
-        noBounds
-      )
-    }
+    assertTree(templStat("type F[_]")) { Decl.Type(Nil, pname("F"), pparam("_") :: Nil, noBounds) }
   }
 
   test("type F[A <: B]") {
     assertTree(templStat("type F[T <: B]")) {
-      Decl.Type(
-        Nil,
-        pname("F"),
-        pparam("T", hiBound("B")) :: Nil,
-        noBounds
-      )
+      Decl.Type(Nil, pname("F"), pparam("T", hiBound("B")) :: Nil, noBounds)
     }
   }
 
   test("type F[+T]") {
     assertTree(templStat("type F[+T]")) {
-      Decl.Type(
-        Nil,
-        pname("F"),
-        pparam(Mod.Covariant() :: Nil, "T") :: Nil,
-        noBounds
-      )
+      Decl.Type(Nil, pname("F"), pparam(Mod.Covariant() :: Nil, "T") :: Nil, noBounds)
     }
     assertTree(templStat("type F[-T]")) {
-      Decl.Type(
-        Nil,
-        pname("F"),
-        pparam(Mod.Contravariant() :: Nil, "T") :: Nil,
-        noBounds
-      )
+      Decl.Type(Nil, pname("F"), pparam(Mod.Contravariant() :: Nil, "T") :: Nil, noBounds)
     }
   }
 
@@ -185,13 +137,7 @@ class DeclSuite extends ParseSuite {
 
   test("def f[T]: T") {
     assertTree(templStat("def f[T]: T")) {
-      Decl.Def(
-        Nil,
-        tname("f"),
-        pparam("T") :: Nil,
-        Nil,
-        pname("T")
-      )
+      Decl.Def(Nil, tname("f"), pparam("T") :: Nil, Nil, pname("T"))
     }
   }
 }

@@ -1,10 +1,7 @@
 package scala.meta.tests.semanticdb
 
 class Issue2024Suite extends SemanticdbSuite {
-  override def munitIgnore: Boolean = !ScalaVersion.isSupported(
-    minimal212 = 14,
-    minimal213 = 5
-  )
+  override def munitIgnore: Boolean = !ScalaVersion.isSupported(minimal212 = 14, minimal213 = 5)
 
   // fixed in >=2.13.5 or >=2.12.14
   // https://github.com/scalameta/scalameta/issues/2024

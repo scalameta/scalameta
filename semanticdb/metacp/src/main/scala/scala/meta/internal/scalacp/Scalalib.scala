@@ -33,22 +33,8 @@ object Scalalib {
         List("that" -> "scala/Any#"),
         "scala/Boolean#"
       ),
-      builtinMethod(
-        "Any",
-        List(p.FINAL),
-        "==",
-        Nil,
-        List("that" -> "scala/Any#"),
-        "scala/Boolean#"
-      ),
-      builtinMethod(
-        "Any",
-        List(p.FINAL),
-        "!=",
-        Nil,
-        List("that" -> "scala/Any#"),
-        "scala/Boolean#"
-      ),
+      builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
+      builtinMethod("Any", List(p.FINAL), "!=", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
       builtinMethod("Any", List(p.ABSTRACT), "hashCode", Nil, Nil, "scala/Int#"),
       builtinMethod("Any", List(p.FINAL), "##", Nil, Nil, "scala/Int#"),
       builtinMethod("Any", List(p.ABSTRACT), "toString", Nil, Nil, "java/lang/String#"),
@@ -115,9 +101,7 @@ object Scalalib {
     builtin(k.TRAIT, Nil, "Singleton", List("scala/Any#"), Nil)
   }
 
-  private def scalaPackage: String = {
-    Symbols.Global(Symbols.RootPackage, d.Package("scala"))
-  }
+  private def scalaPackage: String = { Symbols.Global(Symbols.RootPackage, d.Package("scala")) }
 
   private def builtin(
       kind: s.SymbolInformation.Kind,
@@ -153,10 +137,7 @@ object Scalalib {
       signature = builtinSig,
       access = s.PublicAccess()
     )
-    val infos = builtin :: (
-      if (kind.isClass) ctor :: symbols
-      else symbols
-    )
+    val infos = builtin :: (if (kind.isClass) ctor :: symbols else symbols)
     val relativeUri = "scala/" + NameTransformer.encode(className) + ".class"
     val syntheticClassfile = ClassfileInfos(relativeUri, s.Language.SCALA, infos)
     syntheticClassfile

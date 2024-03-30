@@ -30,8 +30,8 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
         case AnnotatedType(anns, _) => anns
         case _ => Nil
       }
-      def hasNonEmpty(anns: List[Annotation]) =
-        anns.exists(_.tree.tpe =:= typeOf[org.scalameta.invariants.nonEmpty])
+      def hasNonEmpty(anns: List[Annotation]) = anns
+        .exists(_.tree.tpe =:= typeOf[org.scalameta.invariants.nonEmpty])
       hasNonEmpty(sym.annotations) || hasNonEmpty(tptAnns)
     }
   }
@@ -97,23 +97,18 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   def typeRef(cdef: ClassDef, requireHk: Boolean, requireWildcards: Boolean): Tree = {
     if (requireWildcards && requireHk) sys.error("invalid combination of arguments")
     val ClassDef(_, name, tparams, _) = cdef
-    if (requireHk || tparams.isEmpty) {
-      tq"$name"
-    } else {
+    if (requireHk || tparams.isEmpty) { tq"$name" }
+    else {
       if (requireWildcards) {
         val quantrefs = tparams.map(_ => c.freshName(TypeName("_")))
         val quantdefs = quantrefs.map(name => q"type $name")
         tq"$name[..$quantrefs] forSome { ..$quantdefs }"
-      } else {
-        tq"$name[..${tparams.map(_.name)}]"
-      }
+      } else { tq"$name[..${tparams.map(_.name)}]" }
     }
   }
 
   object AnyTpe {
-    def unapply(tpe: Type): Boolean = {
-      tpe =:= definitions.AnyTpe
-    }
+    def unapply(tpe: Type): Boolean = { tpe =:= definitions.AnyTpe }
   }
 
   object PrimitiveTpe {

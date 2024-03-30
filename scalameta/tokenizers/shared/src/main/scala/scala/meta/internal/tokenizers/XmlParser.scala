@@ -25,19 +25,14 @@ class XmlParser(dialect: Dialect) {
   def XmlPattern[_: P]: P0 = P(Xml.ElemPattern)
 
   private[this] object Xml {
-    def Element[_: P] = P(
-      TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag)
-    ) // FIXME tag must be balanced
+    def Element[_: P] = P(TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag)) // FIXME tag must be balanced
     def TagHeader[_: P] = P("<" ~ Name ~/ (S ~ Attribute).rep ~ S.?)
     def ETag[_: P] = P("</" ~ Name ~ S.? ~ ">")
 
     def Attribute[_: P] = P(Name ~/ Eq ~/ AttValue)
     def Eq[_: P] = P(S.? ~ "=" ~ S.?)
-    def AttValue[_: P] = P(
-      "\"" ~/ (CharQ | Reference).rep ~ "\"" |
-        "'" ~/ (CharA | Reference).rep ~ "'" |
-        ScalaExpr
-    )
+    def AttValue[_: P] =
+      P("\"" ~/ (CharQ | Reference).rep ~ "\"" | "'" ~/ (CharA | Reference).rep ~ "'" | ScalaExpr)
 
     def Content[_: P] = P((CharData | Reference | ScalaExpr | XmlContent).rep)
     def XmlContent[_: P]: P0 = P(Unparsed | CDSect | PI | Comment | Element)
@@ -75,8 +70,8 @@ class XmlParser(dialect: Dialect) {
     def CharB[_: P] = P(!("{" | "}") ~ Char1)
 
     // discard result
-    def Name[_: P]: P0 =
-      P(NameStart ~ NameChar.rep).!.filter(_.last != ':').opaque("Name").map(_ => ())
+    def Name[_: P]: P0 = P(NameStart ~ NameChar.rep).!.filter(_.last != ':').opaque("Name")
+      .map(_ => ())
     def NameStart[_: P] = P(CharPred(isNameStart))
     def NameChar[_: P] = P(CharPred(isNameChar))
 
@@ -103,10 +98,10 @@ class XmlParser(dialect: Dialect) {
       import java.lang.Character._
       // The constants represent groups Mc, Me, Mn, Lm, and Nd.
 
-      isNameStart(ch) || (getType(ch).toByte match {
+      isNameStart(ch) ||
+      (getType(ch).toByte match {
         case COMBINING_SPACING_MARK | ENCLOSING_MARK | NON_SPACING_MARK | MODIFIER_LETTER |
-            DECIMAL_DIGIT_NUMBER =>
-          true
+            DECIMAL_DIGIT_NUMBER => true
         case _ => ".-:" contains ch
       })
     }
@@ -124,8 +119,7 @@ class XmlParser(dialect: Dialect) {
 
       getType(ch).toByte match {
         case LOWERCASE_LETTER | UPPERCASE_LETTER | OTHER_LETTER | TITLECASE_LETTER |
-            LETTER_NUMBER =>
-          true
+            LETTER_NUMBER => true
         case _ => ch == '_'
       }
     }
@@ -146,8 +140,7 @@ class ScalaExprPositionParser(dialect: Dialect) {
     var curlyBraceCount = 1
     val input = ctx.input
     val index = ctx.index
-    val scanner =
-      new LegacyScanner(Input.String(input.slice(index, input.length)), dialect)
+    val scanner = new LegacyScanner(Input.String(input.slice(index, input.length)), dialect)
     scanner.reader.nextChar()
 
     @tailrec
@@ -166,8 +159,6 @@ class ScalaExprPositionParser(dialect: Dialect) {
     if (parsedSuccesfully) {
       _splicePositions += XmlTokenRange(index, nextIndex)
       ctx.freshSuccessUnit(index = nextIndex)
-    } else {
-      ctx.freshFailure(nextIndex)
-    }
+    } else { ctx.freshFailure(nextIndex) }
   }
 }

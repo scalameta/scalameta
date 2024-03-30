@@ -32,9 +32,7 @@ class IntegritySuite extends FunSuite {
         if (relpaths.contains(relpath)) {
           success = false
           Console.err.println(s"Overlapping classfiles: ${relpaths(relpath)} and $abspath")
-        } else {
-          relpaths(relpath) = abspath
-        }
+        } else { relpaths(relpath) = abspath }
       })
     })
 

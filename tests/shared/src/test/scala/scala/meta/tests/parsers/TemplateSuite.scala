@@ -7,9 +7,7 @@ import scala.meta.dialects.Scala211
 class TemplateSuite extends ParseSuite {
   test("trait T") {
     val tree = templStat("trait T")
-    assertTree(tree) {
-      Trait(Nil, pname("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate())
-    }
+    assertTree(tree) { Trait(Nil, pname("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) }
     def testTokens(t: Tree): Unit = {
       interceptMessage[NoSuchElementException]("token 0 out of 0")(t.tokens.head)
       interceptMessage[NoSuchElementException]("token -1 out of 0")(t.tokens.last)
@@ -28,13 +26,7 @@ class TemplateSuite extends ParseSuite {
 
   test("trait F[T]") {
     assertTree(templStat("trait F[T]")) {
-      Trait(
-        Nil,
-        pname("F"),
-        pparam("T") :: Nil,
-        EmptyCtor(),
-        EmptyTemplate()
-      )
+      Trait(Nil, pname("F"), pparam("T") :: Nil, EmptyCtor(), EmptyTemplate())
     }
   }
 
@@ -45,12 +37,7 @@ class TemplateSuite extends ParseSuite {
         pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
-        Template(
-          Nil,
-          Init(pname("B"), anon, emptyArgClause) :: Nil,
-          EmptySelf(),
-          Nil
-        )
+        Template(Nil, Init(pname("B"), anon, emptyArgClause) :: Nil, EmptySelf(), Nil)
       )
     }
   }
@@ -108,12 +95,7 @@ class TemplateSuite extends ParseSuite {
         pname("T"),
         Type.ParamClause(Nil),
         EmptyCtor(),
-        Template(
-          Nil,
-          Nil,
-          EmptySelf(),
-          List(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int")))
-        )
+        Template(Nil, Nil, EmptySelf(), List(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int"))))
       )
     }
   }
@@ -126,13 +108,7 @@ class TemplateSuite extends ParseSuite {
 
   test("class C[T]") {
     assertTree(templStat("class C[T]")) {
-      Class(
-        Nil,
-        pname("C"),
-        pparam("T") :: Nil,
-        EmptyCtor(),
-        EmptyTemplate()
-      )
+      Class(Nil, pname("C"), pparam("T") :: Nil, EmptyCtor(), EmptyTemplate())
     }
   }
 
@@ -143,12 +119,7 @@ class TemplateSuite extends ParseSuite {
         pname("A"),
         Type.ParamClause(Nil),
         EmptyCtor(),
-        Template(
-          Nil,
-          Init(pname("B"), anon, emptyArgClause) :: Nil,
-          EmptySelf(),
-          Nil
-        )
+        Template(Nil, Init(pname("B"), anon, emptyArgClause) :: Nil, EmptySelf(), Nil)
       )
     }
   }
@@ -213,12 +184,7 @@ class TemplateSuite extends ParseSuite {
         pname("C"),
         Type.ParamClause(Nil),
         EmptyCtor(),
-        Template(
-          Nil,
-          Nil,
-          EmptySelf(),
-          List(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int")))
-        )
+        Template(Nil, Nil, EmptySelf(), List(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int"))))
       )
     }
   }
@@ -229,11 +195,7 @@ class TemplateSuite extends ParseSuite {
         Nil,
         pname("C"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          (tparam("x", "Int") :: Nil) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, (tparam("x", "Int") :: Nil) :: Nil),
         EmptyTemplate()
       )
     }
@@ -246,11 +208,7 @@ class TemplateSuite extends ParseSuite {
         Nil,
         pname("C"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Mod.Private(anon) :: Nil,
-          anon,
-          (tparam("x", "Int") :: Nil) :: Nil
-        ),
+        Ctor.Primary(Mod.Private(anon) :: Nil, anon, (tparam("x", "Int") :: Nil) :: Nil),
         EmptyTemplate()
       )
     }
@@ -263,12 +221,7 @@ class TemplateSuite extends ParseSuite {
         Nil,
         pname("C"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          (tparam(Mod.ValParam() :: Nil, "x", "Int") :: Nil)
-            :: Nil
-        ),
+        Ctor.Primary(Nil, anon, (tparam(Mod.ValParam() :: Nil, "x", "Int") :: Nil) :: Nil),
         EmptyTemplate()
       )
     }
@@ -281,12 +234,7 @@ class TemplateSuite extends ParseSuite {
         Nil,
         pname("C"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          (tparam(Mod.VarParam() :: Nil, "x", "Int") :: Nil)
-            :: Nil
-        ),
+        Ctor.Primary(Nil, anon, (tparam(Mod.VarParam() :: Nil, "x", "Int") :: Nil) :: Nil),
         EmptyTemplate()
       )
     }
@@ -299,12 +247,7 @@ class TemplateSuite extends ParseSuite {
         Nil,
         pname("C"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          (tparam(Mod.Implicit() :: Nil, "x", "Int") :: Nil)
-            :: Nil
-        ),
+        Ctor.Primary(Nil, anon, (tparam(Mod.Implicit() :: Nil, "x", "Int") :: Nil) :: Nil),
         EmptyTemplate()
       )
     }
@@ -336,69 +279,48 @@ class TemplateSuite extends ParseSuite {
         Ctor.Primary(
           Nil,
           anon,
-          (tparam("x", "Int") :: Nil) ::
-            (tparam("y", Type.ByName(pname("Int"))) :: Nil)
-            :: Nil
+          (tparam("x", "Int") :: Nil) :: (tparam("y", Type.ByName(pname("Int"))) :: Nil) :: Nil
         ),
         EmptyTemplate()
       )
     }
   }
 
-  test("object O") {
-    assertTree(templStat("object O"))(Object(Nil, tname("O"), EmptyTemplate()))
-  }
+  test("object O") { assertTree(templStat("object O"))(Object(Nil, tname("O"), EmptyTemplate())) }
 
   test("case object O") {
-    assertTree(templStat("case object O"))(
-      Object(Mod.Case() :: Nil, tname("O"), EmptyTemplate())
-    )
+    assertTree(templStat("case object O"))(Object(Mod.Case() :: Nil, tname("O"), EmptyTemplate()))
   }
 
   test("object A extends B") {
-    assertTree(templStat("object A extends B"))(
-      Object(
-        Nil,
-        tname("A"),
-        Template(
-          Nil,
-          Init(pname("B"), anon, emptyArgClause) :: Nil,
-          EmptySelf(),
-          Nil
-        )
-      )
-    )
+    assertTree(templStat("object A extends B"))(Object(
+      Nil,
+      tname("A"),
+      Template(Nil, Init(pname("B"), anon, emptyArgClause) :: Nil, EmptySelf(), Nil)
+    ))
   }
 
   test("object A extends { val x: Int } with B") {
-    assertTree(templStat("object A extends { val x: Int = 2 } with B"))(
-      Object(
-        Nil,
-        tname("A"),
-        Template(
-          Defn.Val(Nil, List(Pat.Var(tname("x"))), Some(pname("Int")), int(2)) :: Nil,
-          Init(pname("B"), anon, emptyArgClause) :: Nil,
-          EmptySelf(),
-          Nil
-        )
+    assertTree(templStat("object A extends { val x: Int = 2 } with B"))(Object(
+      Nil,
+      tname("A"),
+      Template(
+        Defn.Val(Nil, List(Pat.Var(tname("x"))), Some(pname("Int")), int(2)) :: Nil,
+        Init(pname("B"), anon, emptyArgClause) :: Nil,
+        EmptySelf(),
+        Nil
       )
-    )
+    ))
   }
 
   test("object A extends { self: B => }") {
     assertTree(templStat("object A { self: B => }"))(
-      Object(
-        Nil,
-        tname("A"),
-        Template(Nil, Nil, self("self", "B"), Nil)
-      )
+      Object(Nil, tname("A"), Template(Nil, Nil, self("self", "B"), Nil))
     )
   }
 
   test("trait B extends A.type") {
-    val err = intercept[ParseException] {
-      templStat("trait B extends A.type")
-    }
+    val err = intercept[ParseException] { templStat("trait B extends A.type") }
     assertNoDiff(err.shortMessage, "class type required but A.type found")
   }
 
@@ -415,44 +337,36 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("blank after template 1") {
-    val code =
-      """|class DerivationSpec {
-         |  case class Foo()
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |}
-         |""".stripMargin
-    val layout =
-      """|class DerivationSpec {
-         |  case class Foo()
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|class DerivationSpec {
+                  |  case class Foo()
+                  |
+                  |  {
+                  |    deriveEncoder[Foo]
+                  |  }
+                  |
+                  |  {
+                  |    deriveEncoder[Foo]
+                  |  }
+                  |}
+                  |""".stripMargin
+    val layout = """|class DerivationSpec {
+                    |  case class Foo()
+                    |
+                    |  {
+                    |    deriveEncoder[Foo]
+                    |  }
+                    |  {
+                    |    deriveEncoder[Foo]
+                    |  }
+                    |}
+                    |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("DerivationSpec"),
       Nil,
       ctor,
       tpl(
-        Defn.Class(
-          List(Mod.Case()),
-          pname("Foo"),
-          Nil,
-          ctorp(Nil),
-          EmptyTemplate()
-        ),
+        Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(Nil), EmptyTemplate()),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
       )
@@ -461,44 +375,36 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("blank after template 2") {
-    val code =
-      """|class DerivationSpec {
-         |  case class Foo() extends Bar
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |}
-         |""".stripMargin
-    val layout =
-      """|class DerivationSpec {
-         |  case class Foo() extends Bar
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|class DerivationSpec {
+                  |  case class Foo() extends Bar
+                  |
+                  |  {
+                  |    deriveEncoder[Foo]
+                  |  }
+                  |
+                  |  {
+                  |    deriveEncoder[Foo]
+                  |  }
+                  |}
+                  |""".stripMargin
+    val layout = """|class DerivationSpec {
+                    |  case class Foo() extends Bar
+                    |
+                    |  {
+                    |    deriveEncoder[Foo]
+                    |  }
+                    |  {
+                    |    deriveEncoder[Foo]
+                    |  }
+                    |}
+                    |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("DerivationSpec"),
       Nil,
       ctor,
       tpl(
-        Defn.Class(
-          List(Mod.Case()),
-          pname("Foo"),
-          Nil,
-          ctorp(Nil),
-          tpl(List(init("Bar")), Nil)
-        ),
+        Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(Nil), tpl(List(init("Bar")), Nil)),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
       )

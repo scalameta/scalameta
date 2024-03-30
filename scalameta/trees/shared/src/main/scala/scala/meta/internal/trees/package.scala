@@ -27,12 +27,10 @@ package object trees {
     def isReference: Boolean = !isDefinition
 
     // some heuristic is needed to govern associativity and precedence of unquoted operators
-    def isLeftAssoc: Boolean =
-      name.is[Name.Quasi] || name.value.isLeftAssoc
+    def isLeftAssoc: Boolean = name.is[Name.Quasi] || name.value.isLeftAssoc
 
     // opPrecedence?
-    def precedence: Int =
-      if (name.is[Name.Quasi]) 1 else name.value.precedence
+    def precedence: Int = if (name.is[Name.Quasi]) 1 else name.value.precedence
 
     def isUnaryOp: Boolean = name.value.isUnaryOp
   }
@@ -47,27 +45,24 @@ package object trees {
 
     def isAssignmentOp = value match {
       case "!=" | "<=" | ">=" | "" => false
-      case _ =>
-        (value.last == '=' && value.head != '='
-        && Chars.isOperatorPart(value.head))
+      case _ => value.last == '=' && value.head != '=' && Chars.isOperatorPart(value.head)
     }
 
     // opPrecedence?
     def precedence: Int =
       if (isAssignmentOp) 0
       else if (isScalaLetter(value.head)) 1
-      else
-        (value.head: @switch) match {
-          case '|' => 2
-          case '^' => 3
-          case '&' => 4
-          case '=' | '!' => 5
-          case '<' | '>' => 6
-          case ':' => 7
-          case '+' | '-' => 8
-          case '*' | '/' | '%' => 9
-          case _ => 10
-        }
+      else (value.head: @switch) match {
+        case '|' => 2
+        case '^' => 3
+        case '&' => 4
+        case '=' | '!' => 5
+        case '<' | '>' => 6
+        case ':' => 7
+        case '+' | '-' => 8
+        case '*' | '/' | '%' => 9
+        case _ => 10
+      }
   }
 
   object XtensionTreesString {
@@ -76,8 +71,8 @@ package object trees {
       import JCharacter._
       Set[Byte](LOWERCASE_LETTER, UPPERCASE_LETTER, OTHER_LETTER, TITLECASE_LETTER, LETTER_NUMBER)
     }
-    private def isScalaLetter(ch: Char) =
-      letterGroups(JCharacter.getType(ch).toByte) || otherLetters(ch)
+    private def isScalaLetter(ch: Char) = letterGroups(JCharacter.getType(ch).toByte) ||
+      otherLetters(ch)
   }
 
   implicit class XtensionTreesTerm(private val tree: Term) extends AnyVal {
@@ -131,8 +126,7 @@ package object trees {
       case _ => false
     }
     def accessBoundary: Option[Ref] = mod match {
-      case m: Mod.WithWithin =>
-        m.within match {
+      case m: Mod.WithWithin => m.within match {
           case r: Name if r.value.isEmpty => None
           case r => Some(r)
         }
@@ -143,12 +137,11 @@ package object trees {
   }
 
   implicit class XtensionTreesMods(private val mods: collection.Iterable[Mod]) extends AnyVal {
-    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean =
-      mods.exists { case m => tag.runtimeClass.isAssignableFrom(m.getClass) }
-    def first[T <: Mod](implicit tag: ClassTag[T]): Option[T] =
-      mods.collectFirst {
-        case m if tag.runtimeClass.isAssignableFrom(m.getClass) => m.asInstanceOf[T]
-      }
+    def has[T <: Mod](implicit tag: ClassTag[T]): Boolean = mods.exists { case m =>
+      tag.runtimeClass.isAssignableFrom(m.getClass)
+    }
+    def first[T <: Mod](implicit tag: ClassTag[T]): Option[T] = mods
+      .collectFirst { case m if tag.runtimeClass.isAssignableFrom(m.getClass) => m.asInstanceOf[T] }
   }
 
   implicit class XtensionTreesStat(private val stat: Stat) extends AnyVal {
@@ -223,8 +216,7 @@ package object trees {
   def arrayClass(clazz: Class[_], rank: Int): Class[_] = {
     import scala.runtime.ScalaRunTime
     Predef.require(rank >= 0)
-    if (rank == 0) clazz
-    else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
+    if (rank == 0) clazz else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
   }
 
   private[meta] def checkValidParamClauses(paramClauses: Iterable[Term.ParamClause]): Boolean = {

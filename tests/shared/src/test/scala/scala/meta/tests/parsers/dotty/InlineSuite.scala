@@ -17,37 +17,31 @@ class InlineSuite extends BaseDottySuite {
     )
 
     // as ident
-    runTestAssert[Stat]("inline def inline(inline: inline): inline")(
-      Decl.Def(
-        List(Mod.Inline()),
-        tname("inline"),
-        Nil,
-        List(List(tparam("inline", "inline"))),
-        pname("inline")
-      )
-    )
+    runTestAssert[Stat]("inline def inline(inline: inline): inline")(Decl.Def(
+      List(Mod.Inline()),
+      tname("inline"),
+      Nil,
+      List(List(tparam("inline", "inline"))),
+      pname("inline")
+    ))
 
     // as modifier
-    runTestAssert[Stat]("inline def inline(inline param: inline): inline")(
-      Decl.Def(
-        List(Mod.Inline()),
-        tname("inline"),
-        Nil,
-        List(List(tparamInline("param", "inline"))),
-        pname("inline")
-      )
-    )
+    runTestAssert[Stat]("inline def inline(inline param: inline): inline")(Decl.Def(
+      List(Mod.Inline()),
+      tname("inline"),
+      Nil,
+      List(List(tparamInline("param", "inline"))),
+      pname("inline")
+    ))
 
     // as ident and modifier
-    runTestAssert[Stat]("inline def inline(inline inline: inline): inline")(
-      Decl.Def(
-        List(Mod.Inline()),
-        tname("inline"),
-        Nil,
-        List(List(tparamInline("inline", "inline"))),
-        pname("inline")
-      )
-    )
+    runTestAssert[Stat]("inline def inline(inline inline: inline): inline")(Decl.Def(
+      List(Mod.Inline()),
+      tname("inline"),
+      Nil,
+      List(List(tparamInline("inline", "inline"))),
+      pname("inline")
+    ))
 
     // as ident and modifier
     runTestAssert[Stat]("inline val inline = false")(
@@ -55,139 +49,92 @@ class InlineSuite extends BaseDottySuite {
     )
 
     // inline for class as ident
-    runTestAssert[Stat]("case class A(inline: Int)")(
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(List(tparam("inline", "Int")))
-        ),
-        EmptyTemplate()
-      )
-    )
+    runTestAssert[Stat]("case class A(inline: Int)")(Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      Nil,
+      Ctor.Primary(Nil, anon, List(List(tparam("inline", "Int")))),
+      EmptyTemplate()
+    ))
   }
 
   test("inline-def-object") {
     runTestAssert[Stat](
       "object X { inline def f(inline sc: Str)(inline args: Any*): String = ??? }"
-    )(
-      Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("X"),
+      tpl(Defn.Def(
+        List(Mod.Inline()),
+        tname("f"),
         Nil,
-        tname("X"),
-        tpl(
-          Defn.Def(
-            List(Mod.Inline()),
-            tname("f"),
-            Nil,
-            List(
-              List(tparamInline("sc", "Str")),
-              List(
-                tparam(List(Mod.Inline()), "args", Type.Repeated(pname("Any")))
-              )
-            ),
-            Some(pname("String")),
-            tname("???")
-          )
-        )
-      )
-    )
+        List(
+          List(tparamInline("sc", "Str")),
+          List(tparam(List(Mod.Inline()), "args", Type.Repeated(pname("Any"))))
+        ),
+        Some(pname("String")),
+        tname("???")
+      ))
+    ))
   }
   test("inline-mods-combination") {
-    runTestAssert[Stat](
-      "object X { inline override protected def f(): Unit = ??? }"
-    )(
+    runTestAssert[Stat]("object X { inline override protected def f(): Unit = ??? }")(Defn.Object(
+      Nil,
+      tname("X"),
+      tpl(Defn.Def(
+        List(Mod.Inline(), Mod.Override(), Mod.Protected(anon)),
+        tname("f"),
+        Nil,
+        List(List()),
+        Some(pname("Unit")),
+        tname("???")
+      ))
+    ))
+
+    runTestAssert[Stat]("object X { final override inline protected def f(): Unit = ??? }")(
       Defn.Object(
         Nil,
         tname("X"),
-        tpl(
-          Defn.Def(
-            List(Mod.Inline(), Mod.Override(), Mod.Protected(anon)),
-            tname("f"),
-            Nil,
-            List(List()),
-            Some(pname("Unit")),
-            tname("???")
-          )
-        )
-      )
-    )
-
-    runTestAssert[Stat](
-      "object X { final override inline protected def f(): Unit = ??? }"
-    )(
-      Defn.Object(
-        Nil,
-        tname("X"),
-        tpl(
-          Defn.Def(
-            List(Mod.Final(), Mod.Override(), Mod.Inline(), Mod.Protected(anon)),
-            tname("f"),
-            Nil,
-            List(List()),
-            Some(pname("Unit")),
-            tname("???")
-          )
-        )
-      )
-    )
-
-    runTestAssert[Stat](
-      "case class Y(val inline: String, inline: Int)"
-    )(
-      Defn.Class(
-        List(Mod.Case()),
-        pname("Y"),
-        Nil,
-        Ctor.Primary(
+        tpl(Defn.Def(
+          List(Mod.Final(), Mod.Override(), Mod.Inline(), Mod.Protected(anon)),
+          tname("f"),
           Nil,
-          anon,
-          List(
-            List(
-              tparam(List(Mod.ValParam()), "inline", "String"),
-              tparam("inline", "Int")
-            )
-          )
-        ),
-        EmptyTemplate()
+          List(List()),
+          Some(pname("Unit")),
+          tname("???")
+        ))
       )
     )
+
+    runTestAssert[Stat]("case class Y(val inline: String, inline: Int)")(Defn.Class(
+      List(Mod.Case()),
+      pname("Y"),
+      Nil,
+      Ctor.Primary(
+        Nil,
+        anon,
+        List(List(tparam(List(Mod.ValParam()), "inline", "String"), tparam("inline", "Int")))
+      ),
+      EmptyTemplate()
+    ))
   }
 
   test("inline-soft-ident") {
 
-    runTestAssert[Stat](
-      "inline"
-    )(
-      tname("inline")
-    )
+    runTestAssert[Stat]("inline")(tname("inline"))
 
-    runTestAssert[Stat](
-      "`inline`()"
-    )(
-      Term.Apply(tname("inline"), Nil)
-    )
+    runTestAssert[Stat]("`inline`()")(Term.Apply(tname("inline"), Nil))
 
-    runTestError[Stat](
-      "inline()",
-      "`inline` must be followed by an `if` or a `match`"
-    )
+    runTestError[Stat]("inline()", "`inline` must be followed by an `if` or a `match`")
 
     runTestError[Stat](
       "object X { inline + 3 }",
       "`inline` must be followed by an `if` or a `match`"
     )
 
-    runTestAssert[Stat](
-      "object X { `inline` + 3 }"
-    )(
-      Defn.Object(
-        Nil,
-        tname("X"),
-        tpl(Term.ApplyInfix(tname("inline"), tname("+"), Nil, List(int(3))))
-      )
+    runTestAssert[Stat]("object X { `inline` + 3 }")(
+      Defn
+        .Object(Nil, tname("X"), tpl(Term.ApplyInfix(tname("inline"), tname("+"), Nil, List(int(3)))))
     )
   }
 
@@ -198,27 +145,25 @@ class InlineSuite extends BaseDottySuite {
          |  case x: Double => x
          |}""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Def(
-        List(Mod.Inline()),
-        tname("g"),
-        Nil,
-        Nil,
-        Some(pname("Any")),
-        Term.Match(
-          tname("x"),
-          List(
-            Case(
-              Pat.Typed(Pat.Var(tname("x")), pname("String")),
-              None,
-              Term.Tuple(List(tname("x"), tname("x")))
-            ),
-            Case(Pat.Typed(Pat.Var(tname("x")), pname("Double")), None, tname("x"))
+    )(Defn.Def(
+      List(Mod.Inline()),
+      tname("g"),
+      Nil,
+      Nil,
+      Some(pname("Any")),
+      Term.Match(
+        tname("x"),
+        List(
+          Case(
+            Pat.Typed(Pat.Var(tname("x")), pname("String")),
+            None,
+            Term.Tuple(List(tname("x"), tname("x")))
           ),
-          List(Mod.Inline())
-        )
+          Case(Pat.Typed(Pat.Var(tname("x")), pname("Double")), None, tname("x"))
+        ),
+        List(Mod.Inline())
       )
-    )
+    ))
   }
 
   test("inline-match-paren") {
@@ -227,20 +172,14 @@ class InlineSuite extends BaseDottySuite {
          |  case x => x
          |}""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Def(
-        List(Mod.Inline()),
-        tname("g"),
-        Nil,
-        Nil,
-        None,
-        Term.Match(
-          tname("x"),
-          List(Case(Pat.Var(tname("x")), None, tname("x"))),
-          List(Mod.Inline())
-        )
-      )
-    )
+    )(Defn.Def(
+      List(Mod.Inline()),
+      tname("g"),
+      Nil,
+      Nil,
+      None,
+      Term.Match(tname("x"), List(Case(Pat.Var(tname("x")), None, tname("x"))), List(Mod.Inline()))
+    ))
   }
 
   test("inline-match-brace") {
@@ -249,20 +188,18 @@ class InlineSuite extends BaseDottySuite {
          |  case x => x
          |}""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Def(
-        List(Mod.Inline()),
-        tname("g"),
-        Nil,
-        Nil,
-        None,
-        Term.Match(
-          Term.Block(List(tname("x"))),
-          List(Case(Pat.Var(tname("x")), None, tname("x"))),
-          List(Mod.Inline())
-        )
+    )(Defn.Def(
+      List(Mod.Inline()),
+      tname("g"),
+      Nil,
+      Nil,
+      None,
+      Term.Match(
+        Term.Block(List(tname("x"))),
+        List(Case(Pat.Var(tname("x")), None, tname("x"))),
+        List(Mod.Inline())
       )
-    )
+    ))
   }
 
   test("inline-match-block") {
@@ -273,24 +210,16 @@ class InlineSuite extends BaseDottySuite {
          |  }
          |}""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Def(
-        List(Mod.Inline()),
-        tname("g"),
-        Nil,
-        Nil,
-        None,
-        Term.Block(
-          List(
-            Term.Match(
-              tname("x"),
-              List(Case(Pat.Var(tname("x")), None, tname("x"))),
-              List(Mod.Inline())
-            )
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      List(Mod.Inline()),
+      tname("g"),
+      Nil,
+      Nil,
+      None,
+      Term.Block(List(
+        Term.Match(tname("x"), List(Case(Pat.Var(tname("x")), None, tname("x"))), List(Mod.Inline()))
+      ))
+    ))
   }
 
   test("inline-match-block-paren") {
@@ -301,24 +230,16 @@ class InlineSuite extends BaseDottySuite {
          |  }
          |}""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Def(
-        List(Mod.Inline()),
-        tname("g"),
-        Nil,
-        Nil,
-        None,
-        Term.Block(
-          List(
-            Term.Match(
-              tname("x"),
-              List(Case(Pat.Var(tname("x")), None, tname("x"))),
-              List(Mod.Inline())
-            )
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      List(Mod.Inline()),
+      tname("g"),
+      Nil,
+      Nil,
+      None,
+      Term.Block(List(
+        Term.Match(tname("x"), List(Case(Pat.Var(tname("x")), None, tname("x"))), List(Mod.Inline()))
+      ))
+    ))
   }
 
   test("inline-match-block-brace") {
@@ -329,24 +250,18 @@ class InlineSuite extends BaseDottySuite {
          |  }
          |}""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Def(
-        List(Mod.Inline()),
-        tname("g"),
-        Nil,
-        Nil,
-        None,
-        Term.Block(
-          List(
-            Term.Match(
-              Term.Block(List(tname("x"))),
-              List(Case(Pat.Var(tname("x")), None, tname("x"))),
-              List(Mod.Inline())
-            )
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      List(Mod.Inline()),
+      tname("g"),
+      Nil,
+      Nil,
+      None,
+      Term.Block(List(Term.Match(
+        Term.Block(List(tname("x"))),
+        List(Case(Pat.Var(tname("x")), None, tname("x"))),
+        List(Mod.Inline())
+      )))
+    ))
   }
 
   test("inline-match-new") {
@@ -357,24 +272,18 @@ class InlineSuite extends BaseDottySuite {
          |  }
          |}""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Def(
-        List(Mod.Inline()),
-        tname("g"),
-        Nil,
-        Nil,
-        None,
-        Term.Block(
-          List(
-            Term.Match(
-              Term.New(Init(pname("X"), anon, emptyArgClause)),
-              List(Case(Pat.Var(tname("x")), None, tname("x"))),
-              List(Mod.Inline())
-            )
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      List(Mod.Inline()),
+      tname("g"),
+      Nil,
+      Nil,
+      None,
+      Term.Block(List(Term.Match(
+        Term.New(Init(pname("X"), anon, emptyArgClause)),
+        List(Case(Pat.Var(tname("x")), None, tname("x"))),
+        List(Mod.Inline())
+      )))
+    ))
   }
 
   test("inline-if-method") {
@@ -383,19 +292,15 @@ class InlineSuite extends BaseDottySuite {
          |    inline if cond then
          |  truep
          |""".stripMargin,
-      assertLayout = Some(
-        "def fn: Unit = inline if (cond) truep"
-      )
-    )(
-      Defn.Def(
-        Nil,
-        tname("fn"),
-        Nil,
-        Nil,
-        Some(pname("Unit")),
-        Term.If(tname("cond"), tname("truep"), Lit.Unit(), List(Mod.Inline()))
-      )
-    )
+      assertLayout = Some("def fn: Unit = inline if (cond) truep")
+    )(Defn.Def(
+      Nil,
+      tname("fn"),
+      Nil,
+      Nil,
+      Some(pname("Unit")),
+      Term.If(tname("cond"), tname("truep"), Lit.Unit(), List(Mod.Inline()))
+    ))
 
   }
 
@@ -404,19 +309,15 @@ class InlineSuite extends BaseDottySuite {
     runTestAssert[Stat](
       """|def fn: Unit = inline if cond then truep
          |""".stripMargin,
-      assertLayout = Some(
-        "def fn: Unit = inline if (cond) truep"
-      )
-    )(
-      Defn.Def(
-        Nil,
-        tname("fn"),
-        Nil,
-        Nil,
-        Some(pname("Unit")),
-        Term.If(tname("cond"), tname("truep"), Lit.Unit(), List(Mod.Inline()))
-      )
-    )
+      assertLayout = Some("def fn: Unit = inline if (cond) truep")
+    )(Defn.Def(
+      Nil,
+      tname("fn"),
+      Nil,
+      Nil,
+      Some(pname("Unit")),
+      Term.If(tname("cond"), tname("truep"), Lit.Unit(), List(Mod.Inline()))
+    ))
 
   }
 
@@ -425,37 +326,25 @@ class InlineSuite extends BaseDottySuite {
       """|transparent inline def choose(b: Boolean): A =
          |   if b then new A else new B
          |""".stripMargin,
-      assertLayout = Some(
-        "transparent inline def choose(b: Boolean): A = if (b) new A else new B"
+      assertLayout = Some("transparent inline def choose(b: Boolean): A = if (b) new A else new B")
+    )(Defn.Def(
+      List(Mod.Transparent(), Mod.Inline()),
+      tname("choose"),
+      Nil,
+      List(List(tparam("b", "Boolean"))),
+      Some(pname("A")),
+      Term.If(
+        tname("b"),
+        Term.New(Init(pname("A"), anon, emptyArgClause)),
+        Term.New(Init(pname("B"), anon, emptyArgClause)),
+        Nil
       )
-    )(
-      Defn.Def(
-        List(Mod.Transparent(), Mod.Inline()),
-        tname("choose"),
-        Nil,
-        List(List(tparam("b", "Boolean"))),
-        Some(pname("A")),
-        Term.If(
-          tname("b"),
-          Term.New(Init(pname("A"), anon, emptyArgClause)),
-          Term.New(Init(pname("B"), anon, emptyArgClause)),
-          Nil
-        )
-      )
-    )
+    ))
   }
 
   test("transparent-trait") {
-    runTestAssert[Stat](
-      "transparent trait S"
-    )(
-      Defn.Trait(
-        List(Mod.Transparent()),
-        pname("S"),
-        Nil,
-        EmptyCtor(),
-        EmptyTemplate()
-      )
+    runTestAssert[Stat]("transparent trait S")(
+      Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, EmptyCtor(), EmptyTemplate())
     )
   }
 
@@ -465,15 +354,7 @@ class InlineSuite extends BaseDottySuite {
          |
          |trait S""".stripMargin,
       assertLayout = Some("transparent trait S")
-    )(
-      Defn.Trait(
-        List(Mod.Transparent()),
-        pname("S"),
-        Nil,
-        EmptyCtor(),
-        EmptyTemplate()
-      )
-    )
+    )(Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, EmptyCtor(), EmptyTemplate()))
   }
 
   test("transparent-inline-with-constant") {
@@ -493,36 +374,26 @@ class InlineSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        List(Mod.Transparent(), Mod.Inline()),
-        tname("f"),
-        Nil,
-        Nil,
-        Some(pname("String")),
-        Term.Match(
-          int(10),
-          List(
-            Case(
-              Pat.Wildcard(),
-              None,
-              Term.Match(
-                str("foo"),
-                List(
-                  Case(
-                    Pat.Typed(Pat.Var(tname("x")), pname("String")),
-                    None,
-                    tname("x")
-                  )
-                ),
-                List(Mod.Inline())
-              )
-            )
-          ),
-          List(Mod.Inline())
-        )
+    )(Defn.Def(
+      List(Mod.Transparent(), Mod.Inline()),
+      tname("f"),
+      Nil,
+      Nil,
+      Some(pname("String")),
+      Term.Match(
+        int(10),
+        List(Case(
+          Pat.Wildcard(),
+          None,
+          Term.Match(
+            str("foo"),
+            List(Case(Pat.Typed(Pat.Var(tname("x")), pname("String")), None, tname("x"))),
+            List(Mod.Inline())
+          )
+        )),
+        List(Mod.Inline())
       )
-    )
+    ))
   }
 
   test("transparent-inline-with-this") {
@@ -540,23 +411,21 @@ class InlineSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        List(Mod.Transparent(), Mod.Inline()),
-        tname("nat"),
-        Nil,
-        Nil,
-        None,
-        Term.Match(
-          Term.This(anon),
-          List(
-            Case(tname("Zero"), None, Lit.Unit()),
-            Case(Pat.Extract(tname("Succ"), List(Pat.Var(tname("p")))), None, Lit.Unit())
-          ),
-          List(Mod.Inline())
-        )
+    )(Defn.Def(
+      List(Mod.Transparent(), Mod.Inline()),
+      tname("nat"),
+      Nil,
+      Nil,
+      None,
+      Term.Match(
+        Term.This(anon),
+        List(
+          Case(tname("Zero"), None, Lit.Unit()),
+          Case(Pat.Extract(tname("Succ"), List(Pat.Var(tname("p")))), None, Lit.Unit())
+        ),
+        List(Mod.Inline())
       )
-    )
+    ))
   }
 
   test("transparent-inline-with-this") {
@@ -571,26 +440,13 @@ class InlineSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Term.ApplyInfix(
-        str("static meta"),
-        tname("-"),
-        Nil,
-        List(
-          Term.Block(
-            List(
-              Defn.Def(
-                List(Mod.Implicit(), Mod.Inline()),
-                tname("qm"),
-                Nil,
-                Nil,
-                None,
-                tname("???")
-              )
-            )
-          )
-        )
-      )
-    )
+    )(Term.ApplyInfix(
+      str("static meta"),
+      tname("-"),
+      Nil,
+      List(Term.Block(List(
+        Defn.Def(List(Mod.Implicit(), Mod.Inline()), tname("qm"), Nil, Nil, None, tname("???"))
+      )))
+    ))
   }
 }

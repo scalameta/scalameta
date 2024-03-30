@@ -98,10 +98,8 @@ object SemanticdbConfig {
       if (x eq stripped) None else Some(stripped)
     }
     strippedOptions.foreach {
-      case SetFailures(FailureMode(failures)) =>
-        config = config.copy(failures = failures)
-      case SetProfiling(BinaryMode(mode)) =>
-        config = config.copy(profiling = mode)
+      case SetFailures(FailureMode(failures)) => config = config.copy(failures = failures)
+      case SetProfiling(BinaryMode(mode)) => config = config.copy(profiling = mode)
       case SetInclude(include) =>
         config = config.copy(fileFilter = config.fileFilter.copy(include = include.r))
       case SetExclude(exclude) =>
@@ -109,27 +107,18 @@ object SemanticdbConfig {
       case SetSourceroot(pattern) =>
         val abspath = pattern match {
           case SetTargetroot(relative) =>
-            if (config.targetroot eq SemanticdbConfig.default.targetroot)
-              reporter.error(
-                NoPosition,
-                s"${prefix}sourceroot:$pattern must follow '${prefix}targetroot:'."
-              )
+            if (config.targetroot eq SemanticdbConfig.default.targetroot) reporter
+              .error(NoPosition, s"${prefix}sourceroot:$pattern must follow '${prefix}targetroot:'.")
             config.targetroot.resolve(relative)
           case p => AbsolutePath(p)
         }
         config = config.copy(sourceroot = abspath)
-      case SetTargetroot(path) =>
-        config = config.copy(targetroot = AbsolutePath(path))
-      case SetText(BinaryMode(mode)) =>
-        config = config.copy(text = mode)
-      case SetMd5(BinaryMode(mode)) =>
-        config = config.copy(md5 = mode)
-      case SetSymbols(SymbolMode(mode)) =>
-        config = config.copy(symbols = mode)
-      case SetDiagnostics(BinaryMode(mode)) =>
-        config = config.copy(diagnostics = mode)
-      case SetSynthetics(BinaryMode(mode)) =>
-        config = config.copy(synthetics = mode)
+      case SetTargetroot(path) => config = config.copy(targetroot = AbsolutePath(path))
+      case SetText(BinaryMode(mode)) => config = config.copy(text = mode)
+      case SetMd5(BinaryMode(mode)) => config = config.copy(md5 = mode)
+      case SetSymbols(SymbolMode(mode)) => config = config.copy(symbols = mode)
+      case SetDiagnostics(BinaryMode(mode)) => config = config.copy(diagnostics = mode)
+      case SetSynthetics(BinaryMode(mode)) => config = config.copy(synthetics = mode)
       // ======== COMPATIBILITY WITH 3.X STARTS ========
       case option @ SetMode("fat") =>
         deprecated(option, "text:on")
@@ -137,16 +126,11 @@ object SemanticdbConfig {
       case option @ SetMode("slim") =>
         deprecated(option, "text:off")
         config = config.copy(text = BinaryMode.Off)
-      case option @ SetMode("disabled") =>
-        unsupported(option, "exclude:^$")
-      case option @ SetDenotations(_) =>
-        unsupported(option, "symbols")
-      case option @ SetSignatures(_) =>
-        unsupported(option)
-      case option @ SetMembers(_) =>
-        unsupported(option)
-      case option @ SetOverrides(_) =>
-        unsupported(option)
+      case option @ SetMode("disabled") => unsupported(option, "exclude:^$")
+      case option @ SetDenotations(_) => unsupported(option, "symbols")
+      case option @ SetSignatures(_) => unsupported(option)
+      case option @ SetMembers(_) => unsupported(option)
+      case option @ SetOverrides(_) => unsupported(option)
       case option @ SetProfiling("console") =>
         deprecated(option, "profiling:on")
         config = config.copy(profiling = BinaryMode.On)
@@ -162,11 +146,9 @@ object SemanticdbConfig {
       case option @ "synthetics:none" =>
         deprecated(option, "synthetics:off")
         config = config.copy(synthetics = BinaryMode.Off)
-      case option @ SetOwners(_) =>
-        unsupported(option)
+      case option @ SetOwners(_) => unsupported(option)
       // ======== COMPATIBILITY WITH 3.X ENDS ========
-      case els =>
-        errFn(s"Ignoring unknown option $els")
+      case els => errFn(s"Ignoring unknown option $els")
     }
     config
   }
@@ -216,12 +198,10 @@ object SymbolMode {
 }
 
 case class FileFilter(include: Regex, exclude: Regex) {
-  def matches(path: String): Boolean =
-    include.findFirstIn(path).isDefined &&
-      exclude.findFirstIn(path).isEmpty
+  def matches(path: String): Boolean = include.findFirstIn(path).isDefined &&
+    exclude.findFirstIn(path).isEmpty
 }
 object FileFilter {
-  def apply(include: String, exclude: String): FileFilter =
-    FileFilter(include.r, exclude.r)
+  def apply(include: String, exclude: String): FileFilter = FileFilter(include.r, exclude.r)
   val matchEverything = FileFilter(".*", "$^")
 }

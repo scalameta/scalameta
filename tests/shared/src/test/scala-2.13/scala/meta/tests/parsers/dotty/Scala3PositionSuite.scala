@@ -22,9 +22,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Bounds [_@@] =>> Unit
        |""".stripMargin
   )
-  checkPositions[Stat](
-    "inline def f = 1"
-  )
+  checkPositions[Stat]("inline def f = 1")
   checkPositions[Stat](
     "open trait a",
     """|Type.ParamClause open trait a@@

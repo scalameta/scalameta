@@ -64,8 +64,7 @@ trait LegacyTokenData {
   private def integerVal: BigInt = {
     try BigInt(strVal, base)
     catch {
-      case e: Exception =>
-        syntaxError(s"malformed integer number: ${e.getMessage}", at = offset)
+      case e: Exception => syntaxError(s"malformed integer number: ${e.getMessage}", at = offset)
     }
   }
 
@@ -101,25 +100,24 @@ trait LegacyTokenData {
   ): Unit = {
     name = ident
     token = IDENTIFIER
-    if (check)
-      kw2legacytoken.get(name).foreach {
-        case ENUM if !dialect.allowEnums =>
-        case GIVEN if !dialect.allowGivenUsing =>
-        case EXPORT if !dialect.allowExportClause =>
-        case THEN if !dialect.allowSignificantIndentation =>
-        case TYPELAMBDAARROW if !dialect.allowTypeLambdas =>
-        case CTXARROW if !dialect.allowGivenUsing =>
-        case x =>
-          token = x
-          fCheck(this)
-      }
+    if (check) kw2legacytoken.get(name).foreach {
+      case ENUM if !dialect.allowEnums =>
+      case GIVEN if !dialect.allowGivenUsing =>
+      case EXPORT if !dialect.allowExportClause =>
+      case THEN if !dialect.allowSignificantIndentation =>
+      case TYPELAMBDAARROW if !dialect.allowTypeLambdas =>
+      case CTXARROW if !dialect.allowGivenUsing =>
+      case x =>
+        token = x
+        fCheck(this)
+    }
   }
 }
 
 object LegacyTokenData {
   // add a bit more, JS doesn't handle it well
-  private val bigDecimalMaxFloat =
-    BigDecimal.binary(Float.MaxValue, new MathContext(8, RoundingMode.UP))
-  private val bigDecimalMaxDouble =
-    BigDecimal.binary(Double.MaxValue, new MathContext(32, RoundingMode.UP))
+  private val bigDecimalMaxFloat = BigDecimal
+    .binary(Float.MaxValue, new MathContext(8, RoundingMode.UP))
+  private val bigDecimalMaxDouble = BigDecimal
+    .binary(Double.MaxValue, new MathContext(32, RoundingMode.UP))
 }

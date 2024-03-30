@@ -29,12 +29,10 @@ object ScalametaParserProperties {
     syntheticTree.syntax.parse[Source] match {
       case Parsed.Success(parsedFromSyntheticTree) =>
         StructurallyEqual(syntheticTree, parsedFromSyntheticTree) match {
-          case Left(err) =>
-            List(ParserBug(err.mismatchClass, err.lineNumber, PrettyPrinterBroken))
+          case Left(err) => List(ParserBug(err.mismatchClass, err.lineNumber, PrettyPrinterBroken))
           case _ => Nil
         }
-      case _ =>
-        List(ParserBug("can't parse", 0, PrettyPrinterBroken))
+      case _ => List(ParserBug("can't parse", 0, PrettyPrinterBroken))
     }
   }
 
@@ -44,12 +42,7 @@ object ScalametaParserProperties {
     else Nil
 
   def runAnalysis(corpusSize: Int = Int.MaxValue) = {
-    val corpus =
-      Corpus
-        .files(Corpus.fastparse)
-        .take(corpusSize)
-        .toBuffer
-        .par
+    val corpus = Corpus.files(Corpus.fastparse).take(corpusSize).toBuffer.par
     SyntaxAnalysis.run[ParserBug](corpus) { file =>
       file.jFile.parse[Source] match {
         case Parsed.Success(s) => onParseSuccess(s)
@@ -64,9 +57,7 @@ object ScalametaParserProperties {
     println(markdown)
   }
 
-  def main(args: Array[String]): Unit = {
-    runAndPrintAnalysis()
-  }
+  def main(args: Array[String]): Unit = { runAndPrintAnalysis() }
 }
 
 class ScalametaParserPropertyTest extends FunSuite {

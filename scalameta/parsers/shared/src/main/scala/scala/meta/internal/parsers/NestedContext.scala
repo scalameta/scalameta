@@ -5,12 +5,11 @@ private[parsers] trait NestedContext {
   private var nested = 0
   def within[T](body: => T): T = {
     nested += 1
-    try {
-      body
-    } finally {
-      nested -= 1
-    }
+    try { body }
+    finally { nested -= 1 }
   }
-  @inline def isInside() = isDeeper(0)
-  @inline def isDeeper(level: Int) = nested > level
+  @inline
+  def isInside() = isDeeper(0)
+  @inline
+  def isDeeper(level: Int) = nested > level
 }

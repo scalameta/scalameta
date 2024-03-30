@@ -6,17 +6,11 @@ import scala.meta.dialects.Scala213
 
 class LitSuite extends ParseSuite {
 
-  test("true") {
-    assertTree(term("true"))(bool(true))
-  }
+  test("true") { assertTree(term("true"))(bool(true)) }
 
-  test("false") {
-    assertTree(term("false"))(bool(false))
-  }
+  test("false") { assertTree(term("false"))(bool(false)) }
 
-  test("42") {
-    assertTree(term("42"))(int(42))
-  }
+  test("42") { assertTree(term("42"))(int(42)) }
 
   test("2147483648") {
     interceptMessage[ParseException](
@@ -26,13 +20,9 @@ class LitSuite extends ParseSuite {
     ) { term("2147483648") }
   }
 
-  test("2147483647") {
-    assertTree(term("2147483647"))(int(2147483647))
-  }
+  test("2147483647") { assertTree(term("2147483647"))(int(2147483647)) }
 
-  test("-2147483648") {
-    assertTree(term("-2147483648"))(int(-2147483648))
-  }
+  test("-2147483648") { assertTree(term("-2147483648"))(int(-2147483648)) }
 
   test("-2147483649") {
     interceptMessage[ParseException](
@@ -42,13 +32,9 @@ class LitSuite extends ParseSuite {
     ) { term("-2147483649") }
   }
 
-  test("42L") {
-    assertTree(term("42L"))(Lit.Long(42L))
-  }
+  test("42L") { assertTree(term("42L"))(Lit.Long(42L)) }
 
-  test("2147483648L") {
-    assertTree(term("2147483648L"))(Lit.Long(2147483648L))
-  }
+  test("2147483648L") { assertTree(term("2147483648L"))(Lit.Long(2147483648L)) }
 
   test("9223372036854775808L") {
     interceptMessage[ParseException](
@@ -74,49 +60,23 @@ class LitSuite extends ParseSuite {
     ) { term("-9223372036854775809L") }
   }
 
-  test("42.42") {
-    matchSubStructure[Stat](
-      "42.42",
-      { case Lit(42.42) => () }
-    )
-  }
+  test("42.42") { matchSubStructure[Stat]("42.42", { case Lit(42.42) => () }) }
 
-  test("42.0f") {
-    matchSubStructure[Stat](
-      "42.42f",
-      { case Lit(42.42f) => () }
-    )
-  }
+  test("42.0f") { matchSubStructure[Stat]("42.42f", { case Lit(42.42f) => () }) }
 
-  test("'c'") {
-    assertTree(term("'c'"))(Lit.Char('c'))
-  }
+  test("'c'") { assertTree(term("'c'"))(Lit.Char('c')) }
 
-  test("\"foo\"") {
-    assertTree(term("\"foo\""))(str("foo"))
-  }
+  test("\"foo\"") { assertTree(term("\"foo\""))(str("foo")) }
 
-  test("'foo'") {
-    assertTree(term("'foo"))(Lit.Symbol('foo))
-  }
+  test("'foo'") { assertTree(term("'foo"))(Lit.Symbol('foo)) }
 
-  test("null") {
-    assertTree(term("null"))(Lit.Null())
-  }
+  test("null") { assertTree(term("null"))(Lit.Null()) }
 
-  test("()") {
-    assertTree(term("()"))(Lit.Unit())
-  }
+  test("()") { assertTree(term("()"))(Lit.Unit()) }
 
   test("0xCAFEBABE") {
-    matchSubStructure[Stat](
-      "0xCAFEBABE",
-      { case Lit(-889275714) => () }
-    )
-    matchSubStructure[Stat](
-      "-0xCAFEBABE",
-      { case Lit(889275714) => () }
-    )
+    matchSubStructure[Stat]("0xCAFEBABE", { case Lit(-889275714) => () })
+    matchSubStructure[Stat]("-0xCAFEBABE", { case Lit(889275714) => () })
   }
 
   test("#344") {
@@ -126,9 +86,7 @@ class LitSuite extends ParseSuite {
     assertEquals(minusOne.tokens.structure, "Tokens(Ident(-) [4..5), Constant.Int(1) [5..6))")
   }
 
-  test("#342") {
-    assertTree(term("""( 50).toString"""))(Term.Select(int(50), tname("toString")))
-  }
+  test("#342") { assertTree(term("""( 50).toString"""))(Term.Select(int(50), tname("toString"))) }
 
   test("#360") {
     val result = """ "sobaka """.parse[Stat]
@@ -136,18 +94,10 @@ class LitSuite extends ParseSuite {
   }
 
   test("#1382") {
-    matchSubStructure[Stat](
-      "\"\"\"\"\"\"\"\"",
-      { case Lit("\"\"") => () }
-    )
-    matchSubStructure[Stat](
-      "\"\"\"\"\"\"\"\"\"\"\"\"\"",
-      { case Lit("\"\"\"\"\"\"\"") => () }
-    )
+    matchSubStructure[Stat]("\"\"\"\"\"\"\"\"", { case Lit("\"\"") => () })
+    matchSubStructure[Stat]("\"\"\"\"\"\"\"\"\"\"\"\"\"", { case Lit("\"\"\"\"\"\"\"") => () })
 
-    assertTree(term("raw\"\"\"\"\"\"\"\""))(
-      Term.Interpolate(tname("raw"), List(str("\"\"")), Nil)
-    )
+    assertTree(term("raw\"\"\"\"\"\"\"\""))(Term.Interpolate(tname("raw"), List(str("\"\"")), Nil))
     assertTree(term("raw\"\"\"\"\"\"\"\"\"\"\"\"\""))(
       Term.Interpolate(tname("raw"), List(str("\"\"\"\"\"\"\"")), Nil)
     )
@@ -166,41 +116,25 @@ class LitSuite extends ParseSuite {
     source(code)
 
     val code2 = "trait Foo { def negate: - = - }"
-    checkStat(code2)(
-      Defn.Trait(
-        Nil,
-        pname("Foo"),
-        Nil,
-        EmptyCtor(),
-        tpl(Defn.Def(Nil, tname("negate"), Nil, Nil, Some(pname("-")), tname("-")))
-      )
-    )
+    checkStat(code2)(Defn.Trait(
+      Nil,
+      pname("Foo"),
+      Nil,
+      EmptyCtor(),
+      tpl(Defn.Def(Nil, tname("negate"), Nil, Nil, Some(pname("-")), tname("-")))
+    ))
   }
 
   test("simple-expression-parse-error") {
-    intercept[parsers.ParseException] {
-      templStat("def neg: Unit = 2 + throw")
-    }
+    intercept[parsers.ParseException] { templStat("def neg: Unit = 2 + throw") }
   }
 
   test("binary literals") {
-    matchSubStructureWithDialect[Stat](
-      "0b1",
-      { case Lit(1) => () },
-      dialects.Scala213
-    )
+    matchSubStructureWithDialect[Stat]("0b1", { case Lit(1) => () }, dialects.Scala213)
 
-    matchSubStructureWithDialect[Stat](
-      "0b_0010_1010",
-      { case Lit(42) => () },
-      dialects.Scala213
-    )
+    matchSubStructureWithDialect[Stat]("0b_0010_1010", { case Lit(42) => () }, dialects.Scala213)
 
-    matchSubStructureWithDialect[Stat](
-      "0B00101010L",
-      { case Lit(42) => () },
-      dialects.Scala213
-    )
+    matchSubStructureWithDialect[Stat]("0B00101010L", { case Lit(42) => () }, dialects.Scala213)
 
   }
 
@@ -307,10 +241,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: ~1.0") {
-    def error(code: String) =
-      s"""|<input>:1: error: bad unary op `~` for floating-point
-          |~$code
-          | ^""".stripMargin
+    def error(code: String) = s"""|<input>:1: error: bad unary op `~` for floating-point
+                                  |~$code
+                                  | ^""".stripMargin
     runTestError[Stat]("~1.0", error("1.0"))
     runTestError[Stat]("~1.0(0)", error("1.0(0)"))
   }
@@ -334,16 +267,14 @@ class LitSuite extends ParseSuite {
   }
 
   test("scalatest-like infix without literal") {
-    val code =
-      """|behavior of something {
-         |  a shouldBe b
-         |}
-         |""".stripMargin
-    val layout =
-      """|behavior of something {
-         |  a shouldBe b
-         |}
-         |""".stripMargin
+    val code = """|behavior of something {
+                  |  a shouldBe b
+                  |}
+                  |""".stripMargin
+    val layout = """|behavior of something {
+                    |  a shouldBe b
+                    |}
+                    |""".stripMargin
     val tree = Term.ApplyInfix(
       tname("behavior"),
       tname("of"),
@@ -357,11 +288,10 @@ class LitSuite extends ParseSuite {
   }
 
   test("scalatest-like infix with literal") {
-    val code =
-      """|behavior of "..." {
-         |  a shouldBe b
-         |}
-         |""".stripMargin
+    val code = """|behavior of "..." {
+                  |  a shouldBe b
+                  |}
+                  |""".stripMargin
     val tree = Term.ApplyInfix(
       tname("behavior"),
       tname("of"),
@@ -398,33 +328,17 @@ class LitSuite extends ParseSuite {
     ("0b_0010_1010L", 42L)
   ).foreach { case (code, expected) =>
     test(s"numeric literal ok scala213: $code") {
-      parseStat(code, Scala213) match {
-        case lit: Lit => assertEquals(lit.value, expected)
-      }
+      parseStat(code, Scala213) match { case lit: Lit => assertEquals(lit.value, expected) }
     }
   }
 
   Seq(
-    (
-      "0.f",
-      Term.Select(lit(0), tname("f"))
-    ),
-    (
-      "1.0 + 2.0f",
-      Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))
-    ),
-    (
-      "1d + 2f",
-      Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))
-    ),
-    (
-      "0b01.toString",
-      Term.Select(lit(1), tname("toString"))
-    )
+    ("0.f", Term.Select(lit(0), tname("f"))),
+    ("1.0 + 2.0f", Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))),
+    ("1d + 2f", Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))),
+    ("0b01.toString", Term.Select(lit(1), tname("toString")))
   ).foreach { case (code, tree: Tree) =>
-    test(s"expr with numeric literal ok scala213: $code") {
-      runTestAssert[Stat](code, None)(tree)
-    }
+    test(s"expr with numeric literal ok scala213: $code") { runTestAssert[Stat](code, None)(tree) }
   }
 
   Seq(
@@ -501,9 +415,7 @@ class LitSuite extends ParseSuite {
          | ^""".stripMargin
     )
   ).foreach { case (code, error) =>
-    test(s"numeric literal fail scala213: $code") {
-      runTestError[Stat](code, error)
-    }
+    test(s"numeric literal fail scala213: $code") { runTestError[Stat](code, error) }
   }
 
 }

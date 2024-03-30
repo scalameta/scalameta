@@ -18,8 +18,9 @@ class TokensSuite {
   val d5b: Seq[Token] = d5a.map(_ => newToken)
   val d5c: Seq[Token] = d.map(_.toString).flatMap(_ => List(newToken))
   val d5d: Seq[Token] = d.flatMap(_ => d)
-  val d6a: Seq[String] =
-    d.zip(List(3, 4, 5)).zipWithIndex.map { case ((x, y), _) => x.toString + y.toString }
+  val d6a: Seq[String] = d.zip(List(3, 4, 5)).zipWithIndex.map { case ((x, y), _) =>
+    x.toString + y.toString
+  }
   val d6b: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.map { case ((x, y), _) => newToken }
   val d6c: Seq[Token] = d.zip(List(3, 4, 5)).zipWithIndex.flatMap { case ((x, y), _) => d }
   val d7a: Seq[(Token, Int)] = d.zipWithIndex

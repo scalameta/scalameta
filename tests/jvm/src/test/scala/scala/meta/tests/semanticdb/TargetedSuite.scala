@@ -195,12 +195,7 @@ class TargetedSuite extends SemanticdbSuite {
       )
       assertEquals(
         overriddenSymbols("l/Max.toString()."),
-        Some(
-          List(
-            "java/lang/Object#toString().",
-            "scala/Any#toString()."
-          )
-        )
+        Some(List("java/lang/Object#toString().", "scala/Any#toString()."))
       )
 
     }

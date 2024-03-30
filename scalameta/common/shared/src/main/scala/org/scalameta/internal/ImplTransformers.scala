@@ -21,9 +21,8 @@ trait ImplTransformers {
 
     def transform(annottees: Tree*): Tree = {
       def isImplemented(body: => Any): Boolean =
-        try {
-          body; true
-        } catch { case _: NotImplementedError => false; case _: Throwable => true }
+        try { body; true }
+        catch { case _: NotImplementedError => false; case _: Throwable => true }
       val allowClasses = isImplemented(transformClass(null, null))
       val allowTraits = isImplemented(transformTrait(null, null))
       val allowModules = isImplemented(transformModule(null))
@@ -63,8 +62,7 @@ trait ImplTransformers {
         case (mdef @ ModuleDef(_, _, _)) :: rest =>
           if (!allowModules) failUexpectedAnnottees()
           transformModule(mdef) +: rest
-        case annottee :: rest =>
-          failUexpectedAnnottees()
+        case annottee :: rest => failUexpectedAnnottees()
       }
       q"{ ..$expanded; () }"
     }

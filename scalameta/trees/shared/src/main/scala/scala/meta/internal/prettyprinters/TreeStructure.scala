@@ -10,16 +10,11 @@ import scala.meta.internal.trees.Quasi
 object TreeStructure {
   def apply[T <: Tree]: Structure[T] = {
     Structure {
-      case _: Name.Anonymous =>
-        s(s"""Name.Anonymous()""")
-      case _: Name.This =>
-        s(s"""Name.This()""")
-      case _: Name.Placeholder =>
-        s(s"""Name.Placeholder()""")
-      case Name.Indeterminate(value) =>
-        s("Name(", DoubleQuotes(value), ")")
-      case x =>
-        s(
+      case _: Name.Anonymous => s(s"""Name.Anonymous()""")
+      case _: Name.This => s(s"""Name.This()""")
+      case _: Name.Placeholder => s(s"""Name.Placeholder()""")
+      case Name.Indeterminate(value) => s("Name(", DoubleQuotes(value), ")")
+      case x => s(
           x.productPrefix,
           "(", {
             def default = {
@@ -38,22 +33,14 @@ object TreeStructure {
               r(x.productIterator.map(anyStructure).toList, ", ")
             }
             x match {
-              case _: Quasi =>
-                default
-              case x: Lit.String =>
-                s(DoubleQuotes.orTriple(x.value))
-              case _: Lit.Unit | _: Lit.Null =>
-                s()
-              case x: Lit.Double =>
-                s(asFloat(x.format, 'd'))
-              case x: Lit.Float =>
-                s(asFloat(x.format, 'f'))
-              case x: Lit.Long =>
-                s(x.value.toString + 'L')
-              case x: Lit =>
-                s(x.value.toString)
-              case _ =>
-                default
+              case _: Quasi => default
+              case x: Lit.String => s(DoubleQuotes.orTriple(x.value))
+              case _: Lit.Unit | _: Lit.Null => s()
+              case x: Lit.Double => s(asFloat(x.format, 'd'))
+              case x: Lit.Float => s(asFloat(x.format, 'f'))
+              case x: Lit.Long => s(x.value.toString + 'L')
+              case x: Lit => s(x.value.toString)
+              case _ => default
             }
           },
           ")"
@@ -66,15 +53,15 @@ object TreeStructure {
     val end = value.length - 1
     val noSuffixEnd = if (Character.toLowerCase(value(end)) == suffix) end - 1 else end
     def appendNoSuffix = sb.append(value, 0, noSuffixEnd + 1)
-    @tailrec def removeZerosAndDot(idx: Int): Unit =
+    @tailrec
+    def removeZerosAndDot(idx: Int): Unit =
       if (idx < 0) appendNoSuffix
-      else
-        value(idx) match {
-          case '0' => removeZerosAndDot(idx - 1)
-          case '.' => if (idx == 0) sb.append('0') else sb.append(value, 0, idx)
-          case _ if value.lastIndexOf('.', idx - 1) < 0 => appendNoSuffix
-          case _ => sb.append(value, 0, idx + 1)
-        }
+      else value(idx) match {
+        case '0' => removeZerosAndDot(idx - 1)
+        case '.' => if (idx == 0) sb.append('0') else sb.append(value, 0, idx)
+        case _ if value.lastIndexOf('.', idx - 1) < 0 => appendNoSuffix
+        case _ => sb.append(value, 0, idx + 1)
+      }
     removeZerosAndDot(noSuffixEnd)
     sb.append(suffix)
     sb.toString

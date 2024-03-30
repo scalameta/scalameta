@@ -36,52 +36,130 @@ object TreeSyntax {
     // 3) `Pattern2 ::= varid ['@' Pattern3]` has become `Pattern2 ::= varid ['@' AnyPattern3]` due to implementational reasons
     // 4) `Type ::= ... | InfixType [ExistentialClause]` has become `Type ::= ... | AnyInfixType [ExistentialClause]` due to implementational reasons
     // 5) `FunctionArgTypes ::= InfixType | ...` has become `Type ::= AnyInfixType | ...` due to implementational reasons
-    @root trait SyntacticGroup {
+    @root
+    trait SyntacticGroup {
       def categories: List[String]
       def precedence: Double
     }
     object SyntacticGroup {
-      @branch trait Type extends SyntacticGroup { def categories = List("Type") }
+      @branch
+      trait Type extends SyntacticGroup {
+        def categories = List("Type")
+      }
       object Type {
-        @leaf object ParamTyp extends Type { def precedence = 0 }
-        @leaf object Typ extends Type { def precedence = 1 }
-        @leaf object AnyInfixTyp extends Type { def precedence = 1.5 }
-        @leaf class InfixTyp(op: String) extends Type { def precedence = 2 }
-        @leaf object RefineTyp extends Type { def precedence = 3 }
-        @leaf object WithTyp extends Type { def precedence = 3.5 }
-        @leaf object AnnotTyp extends Type { def precedence = 4 }
-        @leaf object SimpleTyp extends Type { def precedence = 6 }
+        @leaf
+        object ParamTyp extends Type {
+          def precedence = 0
+        }
+        @leaf
+        object Typ extends Type {
+          def precedence = 1
+        }
+        @leaf
+        object AnyInfixTyp extends Type {
+          def precedence = 1.5
+        }
+        @leaf
+        class InfixTyp(op: String) extends Type {
+          def precedence = 2
+        }
+        @leaf
+        object RefineTyp extends Type {
+          def precedence = 3
+        }
+        @leaf
+        object WithTyp extends Type {
+          def precedence = 3.5
+        }
+        @leaf
+        object AnnotTyp extends Type {
+          def precedence = 4
+        }
+        @leaf
+        object SimpleTyp extends Type {
+          def precedence = 6
+        }
       }
-      @branch trait Term extends SyntacticGroup { def categories = List("Term") }
+      @branch
+      trait Term extends SyntacticGroup {
+        def categories = List("Term")
+      }
       object Term {
-        @leaf object Expr extends Term { def precedence = 0 }
-        @leaf object Expr1 extends Term { def precedence = 1 }
-        @leaf object PostfixExpr extends Term { def precedence = 2 }
-        @leaf class InfixExpr(op: String) extends Term { def precedence = 3 }
-        @leaf object PrefixExpr extends Term { def precedence = 4 }
-        @leaf object SimpleExpr extends Term { def precedence = 5 }
-        @leaf object SimpleExpr1 extends Term { def precedence = 6 }
+        @leaf
+        object Expr extends Term {
+          def precedence = 0
+        }
+        @leaf
+        object Expr1 extends Term {
+          def precedence = 1
+        }
+        @leaf
+        object PostfixExpr extends Term {
+          def precedence = 2
+        }
+        @leaf
+        class InfixExpr(op: String) extends Term {
+          def precedence = 3
+        }
+        @leaf
+        object PrefixExpr extends Term {
+          def precedence = 4
+        }
+        @leaf
+        object SimpleExpr extends Term {
+          def precedence = 5
+        }
+        @leaf
+        object SimpleExpr1 extends Term {
+          def precedence = 6
+        }
       }
-      @branch trait Pat extends SyntacticGroup { def categories = List("Pat") }
+      @branch
+      trait Pat extends SyntacticGroup {
+        def categories = List("Pat")
+      }
       object Pat {
-        @leaf object Pattern extends Pat { def precedence = 0 }
-        @leaf object Pattern1 extends Pat { def precedence = 1 }
-        @leaf object Pattern2 extends Pat { def precedence = 2 }
-        @leaf object AnyPattern3 extends Pat { def precedence = 2.5 }
-        @leaf class Pattern3(op: String) extends Pat { def precedence = 3 }
-        @leaf object SimplePattern extends Pat { def precedence = 6 }
+        @leaf
+        object Pattern extends Pat {
+          def precedence = 0
+        }
+        @leaf
+        object Pattern1 extends Pat {
+          def precedence = 1
+        }
+        @leaf
+        object Pattern2 extends Pat {
+          def precedence = 2
+        }
+        @leaf
+        object AnyPattern3 extends Pat {
+          def precedence = 2.5
+        }
+        @leaf
+        class Pattern3(op: String) extends Pat {
+          def precedence = 3
+        }
+        @leaf
+        object SimplePattern extends Pat {
+          def precedence = 6
+        }
       }
-      @leaf object Literal extends Term with Pat with Type {
+      @leaf
+      object Literal extends Term with Pat with Type {
         override def categories = List("Term", "Pat", "Type"); def precedence = 6
       }
       require(
-        Literal.precedence == Term.SimpleExpr1.precedence && Literal.precedence == Pat.SimplePattern.precedence
+        Literal.precedence == Term.SimpleExpr1.precedence &&
+          Literal.precedence == Pat.SimplePattern.precedence
       )
-      @leaf object Path extends Type with Term with Pat {
+      @leaf
+      object Path extends Type with Term with Pat {
         override def categories = List("Type", "Term", "Pat"); def precedence = 6
       }
       require(
-        Path.precedence == Type.SimpleTyp.precedence && Path.precedence == Term.SimpleExpr1.precedence && Path.precedence == Pat.SimplePattern.precedence
+        Path.precedence == Type.SimpleTyp.precedence &&
+          Path.precedence == Term.SimpleExpr1.precedence &&
+          Path.precedence == Pat.SimplePattern.precedence
       )
     }
   }
@@ -96,12 +174,11 @@ object TreeSyntax {
 
       seq += "|" -> Seq(classTag[Pat.ExtractInfix])
 
-      if (dialect.allowExtensionMethods)
-        seq += "extension" -> Seq(classTag[Term.Apply], classTag[Term.ApplyUsing])
+      if (dialect.allowExtensionMethods) seq += "extension" ->
+        Seq(classTag[Term.Apply], classTag[Term.ApplyUsing])
 
-      if (dialect.allowInlineMods)
-        seq += "inline" ->
-          Seq(classTag[Term.Apply], classTag[Term.ApplyUsing], classTag[Term.ApplyInfix])
+      if (dialect.allowInlineMods) seq += "inline" ->
+        Seq(classTag[Term.Apply], classTag[Term.ApplyUsing], classTag[Term.ApplyInfix])
 
       if (dialect.allowStarWildcardImport) seq += "*" -> Seq(classTag[Importee])
       if (dialect.allowStarAsTypePlaceholder) {
@@ -132,9 +209,7 @@ object TreeSyntax {
         else {
           val (l, r) = (ol, !ol)
           val (op, ip) = (precedence(oo), precedence(io))
-          if (op < ip) r
-          else if (op > ip) l
-          else l ^ left
+          if (op < ip) r else if (op > ip) l else l ^ left
         }
       }
       def groupNeedsParens(og: SyntacticGroup, ig: SyntacticGroup): Boolean = {
@@ -154,18 +229,17 @@ object TreeSyntax {
       }
     }
 
-    def kw(keyword: String) =
-      fn(sb => {
-        val prelast = if (sb.length > 1) sb.charAt(sb.length - 2) else ' '
-        val last = if (sb.nonEmpty) sb.charAt(sb.length - 1) else ' '
-        val next = if (keyword.nonEmpty) keyword(0) else ' '
-        val danger = {
-          val opThenOp = isOperatorPart(last) && isOperatorPart(next)
-          val underscoreThenOp = isIdentifierPart(prelast) && last == '_' && isOperatorPart(next)
-          opThenOp || underscoreThenOp
-        }
-        if (danger) s(" " + keyword) else s(keyword)
-      })
+    def kw(keyword: String) = fn(sb => {
+      val prelast = if (sb.length > 1) sb.charAt(sb.length - 2) else ' '
+      val last = if (sb.nonEmpty) sb.charAt(sb.length - 1) else ' '
+      val next = if (keyword.nonEmpty) keyword(0) else ' '
+      val danger = {
+        val opThenOp = isOperatorPart(last) && isOperatorPart(next)
+        val underscoreThenOp = isIdentifierPart(prelast) && last == '_' && isOperatorPart(next)
+        opThenOp || underscoreThenOp
+      }
+      if (danger) s(" " + keyword) else s(keyword)
+    })
 
     def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
@@ -186,32 +260,26 @@ object TreeSyntax {
         // https://github.com/scala/scala/blob/2.13.x/spec/01-lexical-syntax.md#lexical-syntax
         def lexicalWhitespace(codepoint: Int): Boolean =
           Set[Int]('\u0020', '\u0009', '\u000D', '\u000A').contains(codepoint)
-        def lexicalLetter(codepoint: Int): Boolean = (
-          Set[Int]('\u0024', '\u005F').contains(codepoint)
-            || Set[Int](
-              Character.LOWERCASE_LETTER,
-              Character.UPPERCASE_LETTER,
-              Character.TITLECASE_LETTER,
-              Character.OTHER_LETTER,
-              Character.LETTER_NUMBER
-            ).contains(Character.getType(codepoint))
-        )
+        def lexicalLetter(codepoint: Int): Boolean = Set[Int]('\u0024', '\u005F')
+          .contains(codepoint) || Set[Int](
+          Character.LOWERCASE_LETTER,
+          Character.UPPERCASE_LETTER,
+          Character.TITLECASE_LETTER,
+          Character.OTHER_LETTER,
+          Character.LETTER_NUMBER
+        ).contains(Character.getType(codepoint))
         def lexicalDigit(codepoint: Int): Boolean =
           Set[Int]('0', '1', '2', '3', '4', '5', '6', '7', '8', '9').contains(codepoint)
-        def lexicalParentheses(codepoint: Int): Boolean =
-          Set[Int]('(', ')', '[', ']', '{', '}').contains(codepoint)
-        def lexicalDelimiter(codepoint: Int): Boolean =
-          Set[Int]('`', '\'', '"', '.', ';', ',').contains(codepoint)
-        def lexicalOperator(codepoint: Int): Boolean =
-          '\u0020' <= codepoint &&
-            codepoint <= '\u007E' &&
-            (!lexicalWhitespace(codepoint)
-              && !lexicalLetter(codepoint)
-              && !lexicalDigit(codepoint)
-              && !lexicalParentheses(codepoint)
-              && !lexicalDelimiter(codepoint)) ||
-            Set[Int](Character.MATH_SYMBOL, Character.OTHER_SYMBOL)
-              .contains(Character.getType(codepoint))
+        def lexicalParentheses(codepoint: Int): Boolean = Set[Int]('(', ')', '[', ']', '{', '}')
+          .contains(codepoint)
+        def lexicalDelimiter(codepoint: Int): Boolean = Set[Int]('`', '\'', '"', '.', ';', ',')
+          .contains(codepoint)
+        def lexicalOperator(codepoint: Int): Boolean = '\u0020' <= codepoint &&
+          codepoint <= '\u007E' &&
+          (!lexicalWhitespace(codepoint) && !lexicalLetter(codepoint) && !lexicalDigit(codepoint) &&
+            !lexicalParentheses(codepoint) && !lexicalDelimiter(codepoint)) ||
+          Set[Int](Character.MATH_SYMBOL, Character.OTHER_SYMBOL)
+            .contains(Character.getType(codepoint))
 
         sealed trait OperatorState
         case object Accepted extends OperatorState
@@ -228,8 +296,7 @@ object TreeSyntax {
               // Any invalid state is invalid
               case (offset, (_, Invalid), _) => (Forbidden, Invalid)
               // Must start with either a letter or an operator
-              case (offset @ 0, (Accepted, Valid), next) if lexicalLetter(next) =>
-                (Forbidden, Valid)
+              case (offset @ 0, (Accepted, Valid), next) if lexicalLetter(next) => (Forbidden, Valid)
               case (offset @ 0, (Accepted, Valid), next) if lexicalOperator(next) =>
                 (Required, Valid)
               // Non-leading underscores reset operator validity
@@ -251,9 +318,9 @@ object TreeSyntax {
           validity == Valid
         }
 
-        t.value.nonEmpty && (keywords.contains(t.value) ||
-          t.value.contains("//") || t.value.contains("/*") || t.value.contains("*/") ||
-          !validPlainid(t.value) || lexicalDigit(t.value.codePointAt(0)))
+        t.value.nonEmpty &&
+        (keywords.contains(t.value) || t.value.contains("//") || t.value.contains("/*") ||
+          t.value.contains("*/") || !validPlainid(t.value) || lexicalDigit(t.value.codePointAt(0)))
       }
       def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
         val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
@@ -286,28 +353,24 @@ object TreeSyntax {
        * https://github.com/scala-native/scala-native/issues/2187
        * instead we went with if clause to work around the issue.
        */
-      def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean =
-        escapableSoftKeywords.get(t.value).exists(_.exists(_.isInstance(parent)))
+      def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean = escapableSoftKeywords
+        .get(t.value).exists(_.exists(_.isInstance(parent)))
 
       def isAmbiguousInParent(t: Tree, parent: Tree): Boolean = {
         t match {
-          case t: Term.Name =>
-            isAmbiguousWithPatVarTerm(t, parent) || isEscapableSoftKeyword(t, parent)
-          case t: Name =>
+          case t: Term.Name => isAmbiguousWithPatVarTerm(t, parent) ||
             isEscapableSoftKeyword(t, parent)
-          case _ =>
-            false
+          case t: Name => isEscapableSoftKeyword(t, parent)
+          case _ => false
         }
       }
       cantBeWrittenWithoutBackquotes(t) || t.parent.exists(isAmbiguousInParent(t, _))
     }
     def guessIsPostfix(t: Term.Select): Boolean = false
-    def guessHasExpr(t: Term.Return): Boolean = t.expr match {
-      case Lit.Unit() => false; case _ => true
-    }
-    def guessHasElsep(t: Term.If): Boolean = t.elsep match {
-      case Lit.Unit() => false; case e => true
-    }
+    def guessHasExpr(t: Term.Return): Boolean =
+      t.expr match { case Lit.Unit() => false; case _ => true }
+    def guessHasElsep(t: Term.If): Boolean =
+      t.elsep match { case Lit.Unit() => false; case e => true }
     def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
     def guessHasBraces(t: Pkg): Boolean = {
       def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
@@ -323,8 +386,7 @@ object TreeSyntax {
       case t: Term.ApplyUnary => guessNeedsLineSep(t.arg)
       case _: Decl.Val | _: Decl.Var | _: Decl.Def | _: Defn.Type | _: Term.Ref | _: Member.Apply |
           _: Term.Ascribe | _: Term.Tuple | _: Term.New | _: Term.Interpolate | _: Term.Xml |
-          _: Lit =>
-        !dialect.allowSignificantIndentation
+          _: Lit => !dialect.allowSignificantIndentation
       case t: Term.Do => false
       case t: Tree.WithBody => guessNeedsLineSep(t.body)
       case t: Stat.WithTemplate => t.templ.self.isEmpty && t.templ.stats.isEmpty
@@ -334,8 +396,7 @@ object TreeSyntax {
       case t: Term.Return => guessNeedsLineSep(t.expr)
       case t: Term.Throw => guessNeedsLineSep(t.expr)
       case t: Term.If => guessNeedsLineSep(if (guessHasElsep(t)) t.elsep else t.thenp)
-      case t: Term.Try =>
-        t.finallyp match {
+      case t: Term.Try => t.finallyp match {
           case Some(x) => guessNeedsLineSep(x)
           case _ => t.catchp.isEmpty && guessNeedsLineSep(t.expr)
         }
@@ -350,14 +411,10 @@ object TreeSyntax {
         implicit val unquoteDialect: Dialect = dialect.unquoteParentDialect
         if (null eq unquoteDialect)
           throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
-        if (t.rank > 0) {
-          s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
-        } else {
-          val allowBraceless =
-            t.tree.is[Term.Name] ||
-              t.tree.is[Pat.Var] ||
-              t.tree.is[Term.This] ||
-              t.tree.is[Pat.Wildcard]
+        if (t.rank > 0) { s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi])) }
+        else {
+          val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var] || t.tree.is[Term.This] ||
+            t.tree.is[Pat.Wildcard]
           s("$", w("{", t.tree.syntax, "}", !allowBraceless))
         }
 
@@ -369,12 +426,9 @@ object TreeSyntax {
       case t: Name.Indeterminate => printMaybeBackquoted(t)
 
       // Term
-      case t: Term.This =>
-        m(Path, w(t.qual, "."), kw("this"))
-      case t: Term.Super =>
-        m(Path, s(w(t.thisp, "."), kw("super"), w("[", t.superp, "]")))
-      case t: Term.Name =>
-        m(Path, printMaybeBackquoted(t))
+      case t: Term.This => m(Path, w(t.qual, "."), kw("this"))
+      case t: Term.Super => m(Path, s(w(t.thisp, "."), kw("super"), w("[", t.superp, "]")))
+      case t: Term.Name => m(Path, printMaybeBackquoted(t))
       case t: Term.Select =>
         val qualExpr = t.qual match {
           case q: Term.New if q.init.argClauses.isEmpty => w("(", q, ")")
@@ -391,8 +445,7 @@ object TreeSyntax {
         val zipped = parts.zip(t.args).zip(parts.tail).map {
           case ((part, id: Name), next) if !guessIsBackquoted(id) && !needBraces(id.value, next) =>
             s(part, "$", id.value)
-          case ((part, arg), _) =>
-            s(part, "$", w("{", p(Expr, arg), "}", !arg.is[Term.Block]))
+          case ((part, arg), _) => s(part, "$", w("{", p(Expr, arg), "}", !arg.is[Term.Block]))
         }
         val quote = if (parts.exists(s => s.contains("\n") || s.contains("\""))) "\"\"\"" else "\""
         m(SimpleExpr1, s(t.prefix, quote, r(zipped), parts.last, quote))
@@ -418,12 +471,9 @@ object TreeSyntax {
                 case _: Term.AnonymousFunction | _: Lit.Unit => false
                 case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match |
                     _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr |
-                    _: Term.SplicedMacroPat | _: Term.Apply | _: Term.Placeholder =>
-                  true
-                case _ =>
-                  false
-              }) =>
-            p(InfixExpr(t.op.value), arg, right = true)
+                    _: Term.SplicedMacroPat | _: Term.Apply | _: Term.Placeholder => true
+                case _ => false
+              }) => p(InfixExpr(t.op.value), arg, right = true)
           case _ => printApplyArgs(t.argClause, "")
         }
 
@@ -442,23 +492,18 @@ object TreeSyntax {
       case t: Term.Block =>
         import Term.{Block, Function}
         def block(pre: Show.Result, x: Seq[Stat]) = {
-          val res =
-            if (pre == Show.None && x.isEmpty) s("{}")
-            else s("{", w(" ", pre), x, n("}"))
+          val res = if (pre == Show.None && x.isEmpty) s("{}") else s("{", w(" ", pre), x, n("}"))
           m(SimpleExpr, res)
         }
         t match {
           case Block(
-                Function.Initial(
-                  Term.Param(mods, name: Term.Name, tptopt, _) :: Nil,
-                  Block(stats)
-                ) :: Nil
+                Function
+                  .Initial(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil
               ) if mods.exists(_.is[Mod.Implicit]) =>
             block(s("implicit ", name, o(": ", tptopt), " =>"), stats)
           case Block(
                 Function.Initial(Term.Param(_, name: Name, None, _) :: Nil, Block(stats)) :: Nil
-              ) =>
-            block(s(name, " =>"), stats)
+              ) => block(s(name, " =>"), stats)
           case Block(Function.Initial(params, Block(stats)) :: Nil) =>
             block(s("(", r(params, ", "), ") =>"), stats)
           case _ => block(s(), t.stats)
@@ -481,18 +526,7 @@ object TreeSyntax {
           )
         )
       case t: Term.Match =>
-        m(
-          Expr1,
-          s(
-            w(t.mods, " "),
-            p(PostfixExpr, t.expr),
-            " ",
-            kw("match"),
-            " {",
-            t.cases,
-            n("}")
-          )
-        )
+        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), " ", kw("match"), " {", t.cases, n("}")))
       case t: Term.Try =>
         val showExpr = p(Expr, t.expr)
         val needParensAroundExpr = t.expr match {
@@ -507,15 +541,11 @@ object TreeSyntax {
             kw("try"),
             " ",
             if (needParensAroundExpr) s("(", i(showExpr), n(")")) else showExpr,
-            if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", t.catchp, n("}"))
-            else s(""),
-            t.finallyp
-              .map { finallyp => s(" ", kw("finally"), " ", finallyp) }
-              .getOrElse(s())
+            if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", t.catchp, n("}")) else s(""),
+            t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())
           )
         )
-      case t: Term.TryWithHandler =>
-        m(
+      case t: Term.TryWithHandler => m(
           Expr1,
           s(
             kw("try"),
@@ -525,9 +555,7 @@ object TreeSyntax {
             kw("catch"),
             " ",
             t.catchp,
-            t.finallyp
-              .map { finallyp => s(" ", kw("finally"), " ", finallyp) }
-              .getOrElse(s())
+            t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())
           )
         )
       case t: Term.FunctionTerm =>
@@ -537,35 +565,26 @@ object TreeSyntax {
         }
         val paramsSyntax = printParams(t.paramClause, needParens = false)
         m(Expr, s(paramsSyntax, " ", kw(arrow), " ", p(Expr, t.body)))
-      case t: Term.PolyFunction =>
-        m(Expr, t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body))
-      case Term.QuotedMacroExpr(Term.Block(stats)) =>
-        stats match {
+      case t: Term.PolyFunction => m(Expr, t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body))
+      case Term.QuotedMacroExpr(Term.Block(stats)) => stats match {
           case head :: Nil => s("'{ ", head, " }")
           case other => s("'{", other, n("}"))
         }
-      case t: Term.QuotedMacroExpr =>
-        m(SimpleExpr, s("'", p(Expr, t.body)))
-      case t: Term.QuotedMacroType =>
-        s("'[ ", t.tpe, " ]")
-      case Term.SplicedMacroExpr(Term.Block(stats)) =>
-        stats match {
+      case t: Term.QuotedMacroExpr => m(SimpleExpr, s("'", p(Expr, t.body)))
+      case t: Term.QuotedMacroType => s("'[ ", t.tpe, " ]")
+      case Term.SplicedMacroExpr(Term.Block(stats)) => stats match {
           case head :: Nil => s("${ ", head, " }")
           case other => s("${", other, n("}"))
         }
-      case Term.SplicedMacroPat(pat) =>
-        s("${ ", pat, " }")
-      case t: Term.SplicedMacroExpr =>
-        m(SimpleExpr, s("$", p(Expr, t.body)))
+      case Term.SplicedMacroPat(pat) => s("${ ", pat, " }")
+      case t: Term.SplicedMacroExpr => m(SimpleExpr, s("$", p(Expr, t.body)))
       case t: Pat.Macro => m(SimplePattern, s(t.body))
       case t: Type.Macro => m(SimpleTyp, s(t.body))
       case t: Term.PartialFunction => m(SimpleExpr, s("{", t.cases, n("}")))
-      case t: Term.While =>
-        m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
+      case t: Term.While => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
       case t: Term.Do =>
         m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
-      case t: Term.For =>
-        m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
+      case t: Term.For => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
       case t: Term.ForYield =>
         m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
@@ -577,15 +596,12 @@ object TreeSyntax {
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
       case t: Term.Eta => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
       case t: Term.Repeated =>
-        if (dialect.allowPostfixStarVarargSplices)
-          s(p(PostfixExpr, t.expr), kw("*"))
-        else
-          s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
+        if (dialect.allowPostfixStarVarargSplices) s(p(PostfixExpr, t.expr), kw("*"))
+        else s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
       case t: Term.Param =>
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
         printParam(t)
-      case t: Term.ParamClause =>
-        printParams(t, needParens = !t.parent.exists(_.is[Term]))
+      case t: Term.ParamClause => printParams(t, needParens = !t.parent.exists(_.is[Term]))
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -594,10 +610,8 @@ object TreeSyntax {
       case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
       case t: Type.ArgClause => r(t.values.map(arg => p(Typ, arg)), "[", ", ", "]")
-      case t: Type.Apply =>
-        m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
-      case t: Type.ApplyInfix =>
-        m(
+      case t: Type.Apply => m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
+      case t: Type.ApplyInfix => m(
           InfixTyp(t.op.value),
           s(
             p(InfixTyp(t.op.value), t.lhs, left = true),
@@ -607,23 +621,19 @@ object TreeSyntax {
             p(InfixTyp(t.op.value), t.rhs, right = true)
           )
         )
-      case t: Type.FuncParamClause =>
-        t.values match {
+      case t: Type.FuncParamClause => t.values match {
           case arg :: Nil if (arg match {
-                case _: Type.Tuple | _: Type.ByName | _: Type.FunctionParamOrArg |
-                    _: Type.Function =>
-                  false
+                case _: Type.Tuple |
+                    _: Type.ByName | _: Type.FunctionParamOrArg | _: Type.Function => false
                 case _ => true
-              }) =>
-            s(arg)
+              }) => s(arg)
           case args => s("(", r(args, ", "), ")")
         }
       case t: Type.Function => m(Typ, s(t.paramClause, " ", kw("=>"), " ", p(Typ, t.res)))
       case t: Type.ContextFunction => m(Typ, s(t.paramClause, " ", kw("?=>"), " ", p(Typ, t.res)))
       case t: Type.Tuple => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
       case t: Type.With => m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
-      case t: Type.And =>
-        m(
+      case t: Type.And => m(
           InfixTyp("&"),
           s(
             p(InfixTyp("&"), t.lhs, left = true),
@@ -633,8 +643,7 @@ object TreeSyntax {
             p(InfixTyp("&"), t.rhs, right = true)
           )
         )
-      case t: Type.Or =>
-        m(
+      case t: Type.Or => m(
           InfixTyp("|"),
           s(
             p(InfixTyp("|"), t.lhs, left = true),
@@ -644,8 +653,7 @@ object TreeSyntax {
             p(InfixTyp("|"), t.rhs, right = true)
           )
         )
-      case t: Type.Refine =>
-        m(
+      case t: Type.Refine => m(
           RefineTyp,
           t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")),
           "{",
@@ -658,10 +666,7 @@ object TreeSyntax {
       case t: Type.Lambda => m(Typ, t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe))
       case t: Type.PolyFunction => m(Typ, t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe))
       case t: Type.Match =>
-        m(
-          Type,
-          s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}"))
-        )
+        m(Type, s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}")))
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
         val useStar = dialect.allowStarAsTypePlaceholder &&
@@ -672,13 +677,12 @@ object TreeSyntax {
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
          */
-        def questionMarkUsed =
-          t.origin.tokensOpt.exists(!_.headOption.exists(_.is[Token.Underscore]))
+        def questionMarkUsed = t.origin.tokensOpt
+          .exists(!_.headOption.exists(_.is[Token.Underscore]))
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_")), t.bounds)
-      case t: Type.PatWildcard =>
-        m(SimpleTyp, kw("_"))
+      case t: Type.PatWildcard => m(SimpleTyp, kw("_"))
       case t: Type.Placeholder =>
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
@@ -687,17 +691,13 @@ object TreeSyntax {
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
-      case t: Type.Bounds =>
-        s(
+      case t: Type.Bounds => s(
           t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()),
           t.hi.map(hi => s(" ", kw("<:"), " ", p(Typ, hi))).getOrElse(s())
         )
-      case t: Type.Repeated =>
-        t.tpe match {
-          case tByName: Type.ByName =>
-            m(ParamTyp, s(kw("=>"), " ", p(Typ, tByName.tpe), kw("*")))
-          case _ =>
-            m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
+      case t: Type.Repeated => t.tpe match {
+          case tByName: Type.ByName => m(ParamTyp, s(kw("=>"), " ", p(Typ, tByName.tpe), kw("*")))
+          case _ => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
         }
       case t: Type.ByName => m(ParamTyp, s(kw("=>"), " ", p(Typ, t.tpe)))
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
@@ -720,8 +720,7 @@ object TreeSyntax {
       case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)
 
       // Pat
-      case t: Pat.Var =>
-        m(SimplePattern, printMaybeBackquoted(t.name))
+      case t: Pat.Var => m(SimplePattern, printMaybeBackquoted(t.name))
       case _: Pat.Wildcard => m(SimplePattern, kw("_"))
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
       case t: Pat.Repeated => m(SimplePattern, t.name, kw("*"))
@@ -733,8 +732,7 @@ object TreeSyntax {
             else if (dialect.allowColonForExtractorVarargs) s(kw(":"))
             else
               throw new UnsupportedOperationException(s"$dialect doesn't support extractor varargs")
-          case _ =>
-            s(" ", kw("@"))
+          case _ => s(" ", kw("@"))
         }
         m(Pattern2, s(p(SimplePattern, t.lhs), separator, " ", p(AnyPattern3, t.rhs)))
       case t: Pat.Alternative =>
@@ -742,8 +740,7 @@ object TreeSyntax {
       case t: Pat.Tuple => m(SimplePattern, s("(", r(t.args, ", "), ")"))
       case t: Pat.ArgClause => m(SimplePattern, s("(", r(t.values, ", "), ")"))
       case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
-      case t: Pat.ExtractInfix =>
-        m(
+      case t: Pat.ExtractInfix => m(
           Pattern3(t.op.value),
           s(
             p(Pattern3(t.op.value), t.lhs, left = true),
@@ -763,8 +760,7 @@ object TreeSyntax {
         val zipped = parts.zip(t.args).map {
           case (part, id: Name) if !guessIsBackquoted(id) && !needBraces(id.value) =>
             s(part, "$", id.value)
-          case (part, arg) =>
-            s(part, "$", w("{", arg, "}", !arg.is[Term.Block]))
+          case (part, arg) => s(part, "$", w("{", arg, "}", !arg.is[Term.Block]))
         }
         m(SimplePattern, s(t.prefix, "\"", r(zipped), parts.last, "\""))
       case t: Pat.Xml =>
@@ -777,21 +773,18 @@ object TreeSyntax {
         if (dialect.allowLiteralTypes)
           m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
         else throw new UnsupportedOperationException(s"$dialect doesn't support literal types")
-      case t: Pat.Typed =>
-        m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(RefineTyp, t.rhs)))
+      case t: Pat.Typed => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(RefineTyp, t.rhs)))
 
       // Lit
       case Lit.Boolean(value) => m(Literal, s(value.toString))
-      case Lit.Byte(value) =>
-        m(
+      case Lit.Byte(value) => m(
           Literal,
           s(
             "ByteLiterals.",
             if (value == 0) "Zero" else if (value > 0) "Plus" + value else "Minus" + value
           )
         )
-      case Lit.Short(value) =>
-        m(
+      case Lit.Short(value) => m(
           Literal,
           s(
             "ShortLiterals.",
@@ -823,12 +816,9 @@ object TreeSyntax {
       case Lit.Unit() => m(Literal, s("()"))
 
       // Member
-      case t: Member.ParamClauseGroup =>
-        s(t.tparamClause, t.paramClauses)
-      case t: Decl.Val =>
-        s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
-      case t: Decl.Var =>
-        s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
+      case t: Member.ParamClauseGroup => s(t.tparamClause, t.paramClauses)
+      case t: Decl.Val => s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
+      case t: Decl.Var => s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
       case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparamClause, t.bounds)
       case t: Decl.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, kw(": "), t.decltpe)
@@ -837,19 +827,8 @@ object TreeSyntax {
       case t: Defn.Val =>
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
       case t: Defn.Var =>
-        s(
-          w(t.mods, " "),
-          kw("var"),
-          " ",
-          r(t.pats, ", "),
-          t.decltpe,
-          " ",
-          kw("="),
-          " ",
-          t.body
-        )
-      case t: Defn.Type =>
-        s(
+        s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.body)
+      case t: Defn.Type => s(
           w(t.mods, " "),
           kw("type"),
           " ",
@@ -861,8 +840,7 @@ object TreeSyntax {
           " ",
           t.body
         )
-      case t: Defn.Class =>
-        r(" ")(
+      case t: Defn.Class => r(" ")(
           t.mods,
           kw("class"),
           s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
@@ -886,16 +864,13 @@ object TreeSyntax {
       case t: Defn.Given =>
         r(" ")(t.mods, kw("given"), givenName(t.name, t.paramClauseGroup), t.templ)
 
-      case t: Defn.Enum =>
-        r(" ")(t.mods, kw("enum"), s(t.name, t.tparamClause, t.ctor), t.templ)
-      case t: Defn.RepeatedEnumCase =>
-        s(w(t.mods, " "), kw("case"), " ", r(t.cases, ", "))
+      case t: Defn.Enum => r(" ")(t.mods, kw("enum"), s(t.name, t.tparamClause, t.ctor), t.templ)
+      case t: Defn.RepeatedEnumCase => s(w(t.mods, " "), kw("case"), " ", r(t.cases, ", "))
       case t: Defn.EnumCase =>
         def init() = if (t.inits.nonEmpty) s(" extends ", r(t.inits, ", ")) else s("")
         s(w(t.mods, " "), kw("case"), " ", t.name, t.tparamClause, t.ctor, init())
 
-      case t: Defn.ExtensionGroup =>
-        s(kw("extension"), " ", o(t.paramClauseGroup, " "), t.body)
+      case t: Defn.ExtensionGroup => s(kw("extension"), " ", o(t.paramClauseGroup, " "), t.body)
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)
@@ -904,38 +879,32 @@ object TreeSyntax {
       case t: Pkg =>
         if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
         else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
-      case t: Pkg.Object =>
-        r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
+      case t: Pkg.Object => r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
         val paramClauses = r(t.paramClauses.map(printParams(_)))
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), paramClauses)
       case t: Ctor.Secondary =>
         if (t.stats.isEmpty)
           s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramClauses, " = ", t.init)
-        else
-          s(
-            w(t.mods, " "),
-            kw("def"),
-            " ",
-            kw("this"),
-            t.paramClauses,
-            " {",
-            i(t.init),
-            "",
-            t.stats,
-            n("}")
-          )
+        else s(
+          w(t.mods, " "),
+          kw("def"),
+          " ",
+          kw("this"),
+          t.paramClauses,
+          " {",
+          i(t.init),
+          "",
+          t.stats,
+          n("}")
+        )
 
       // Init
       case t: Init =>
-        s(
-          if (t.tpe.is[Type.Singleton]) kw("this") else p(RefineTyp, t.tpe),
-          t.argClauses
-        )
+        s(if (t.tpe.is[Type.Singleton]) kw("this") else p(RefineTyp, t.tpe), t.argClauses)
 
       // Self
-      case t: Self =>
-        w(s(t.name, t.decltpe), " =>")
+      case t: Self => w(s(t.name, t.decltpe), " =>")
 
       // Template
       case t: Template =>
@@ -953,8 +922,8 @@ object TreeSyntax {
               case _ => ""
             }
           } else "with"
-        val noExtends = pparents.isEmpty && pearly.isEmpty ||
-          isGiven || t.parent.exists(_.is[Term.NewAnonymous])
+        val noExtends = pparents.isEmpty && pearly.isEmpty || isGiven ||
+          t.parent.exists(_.is[Term.NewAnonymous])
         val extendsKeyword = if (noExtends) "" else "extends"
         val pbody = t.stats match {
           case Nil => w("{ ", t.self, " }")
@@ -1006,28 +975,16 @@ object TreeSyntax {
       case t: Importee.Given => s(kw("given"), " ", t.tpe)
       case t: Importee.GivenAll => s(kw("given"))
       case t: Importee.Rename =>
-        if (dialect.allowAsForImportRename)
-          s(t.name, " ", kw("as"), " ", t.rename)
-        else
-          s(t.name, " ", kw("=>"), " ", t.rename)
+        if (dialect.allowAsForImportRename) s(t.name, " ", kw("as"), " ", t.rename)
+        else s(t.name, " ", kw("=>"), " ", t.rename)
       case t: Importee.Unimport =>
-        if (dialect.allowAsForImportRename)
-          s(t.name, " ", kw("as"), " ", kw("_"))
-        else
-          s(t.name, " ", kw("=>"), " ", kw("_"))
-      case _: Importee.Wildcard =>
-        if (dialect.allowStarWildcardImport)
-          kw("*")
-        else
-          kw("_")
+        if (dialect.allowAsForImportRename) s(t.name, " ", kw("as"), " ", kw("_"))
+        else s(t.name, " ", kw("=>"), " ", kw("_"))
+      case _: Importee.Wildcard => if (dialect.allowStarWildcardImport) kw("*") else kw("_")
       case t: Importer =>
-        if (t.ref.isNot[Term.Anonymous])
-          s(t.ref, ".", t.importees)
-        else
-          s(t.importees)
+        if (t.ref.isNot[Term.Anonymous]) s(t.ref, ".", t.importees) else s(t.importees)
       case t: Import => s(kw("import"), " ", r(t.importers, ", "))
-      case t: Export =>
-        s(kw("export"), " ", r(t.importers, ", "))
+      case t: Export => s(kw("export"), " ", r(t.importers, ", "))
 
       // Case
       case t: Case =>
@@ -1052,8 +1009,7 @@ object TreeSyntax {
         }
         s("case ", ppat, pcond, " ", kw("=>"), pbody)
 
-      case t: TypeCase =>
-        s("case ", t.pat, " ", kw("=>"), " ", t.body)
+      case t: TypeCase => s("case ", t.pat, " ", kw("=>"), " ", t.body)
       // Source
       case t: Source => r(t.stats, EOL)
       case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
@@ -1067,8 +1023,7 @@ object TreeSyntax {
     private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =
       args.values match {
         case Seq(b @ (_: Term.Block | _: Term.PartialFunction)) => s(beforeBrace, b)
-        case Seq(f: Term.Function) if f.paramClause.mod.isDefined =>
-          s(beforeBrace, "{ ", f, " }")
+        case Seq(f: Term.Function) if f.paramClause.mod.isDefined => s(beforeBrace, "{ ", f, " }")
         case _ => s(args)
       }
 
@@ -1078,11 +1033,9 @@ object TreeSyntax {
     private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.ParamsType]
     private def printParam(t: Term.Param, keepImplicit: Boolean = false): Show.Result = {
       val mods = if (keepImplicit) t.mods else t.mods.filterNot(isUsingOrImplicit)
-      val nameType = if (t.isNameAnonymous) {
-        o(t.decltpe)
-      } else {
-        s(t.name, t.decltpe)
-      }
+      val nameType =
+        if (t.isNameAnonymous) { o(t.decltpe) }
+        else { s(t.name, t.decltpe) }
       s(w(mods, " "), nameType, o(" = ", t.default))
     }
     implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax { r(_, " ") }
@@ -1117,16 +1070,15 @@ object TreeSyntax {
       val builder = List.newBuilder[Show.Result]
       var prevStat: Stat = null
       stats.foreach { stat =>
-        if (stat.is[Term.Block] && null != prevStat && guessNeedsLineSep(prevStat))
-          builder += System.lineSeparator
+        if (stat.is[Term.Block] && null != prevStat && guessNeedsLineSep(prevStat)) builder +=
+          System.lineSeparator
         builder += i(stat)
         prevStat = stat
       }
       builder.result()
     }
 
-    private def printMaybeBackquoted(name: Name) =
-      printBackquoted(name, guessIsBackquoted(name))
+    private def printMaybeBackquoted(name: Name) = printBackquoted(name, guessIsBackquoted(name))
     private def printBackquoted(name: Name, isBackquoted: Boolean) =
       w("`", name.value, "`", isBackquoted)
 

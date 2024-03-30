@@ -11,8 +11,8 @@ trait ExtractExtensions {
   implicit class XtensionExtractors[A](a: A) {
     def extract[B](implicit ev: Extract[A, B]): List[B] = ev.extract(a)
 
-    def hasMod(mod: Mod)(implicit ev: Extract[A, Mod]): Boolean =
-      ev.extract(a).exists(_.isEqual(mod))
+    def hasMod(mod: Mod)(implicit ev: Extract[A, Mod]): Boolean = ev.extract(a)
+      .exists(_.isEqual(mod))
   }
 }
 

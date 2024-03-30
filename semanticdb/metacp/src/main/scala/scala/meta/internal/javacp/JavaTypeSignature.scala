@@ -30,8 +30,7 @@ object JavaTypeSignature {
 
 // NOTE: We use Scala-friendly names for base types instead of the Java primitive keywords.
 abstract class BaseType(val name: String) extends JavaTypeSignature with Product {
-  override final def print(sb: StringBuilder): Unit =
-    sb.append(this.productPrefix)
+  override final def print(sb: StringBuilder): Unit = sb.append(this.productPrefix)
 }
 object BaseType {
   case object B extends BaseType("Byte")
@@ -63,10 +62,7 @@ case class ClassTypeSignature(
 }
 object ClassTypeSignature {
   def simple(name: String): ClassTypeSignature =
-    ClassTypeSignature(
-      SimpleClassTypeSignature(name, None),
-      Nil
-    )
+    ClassTypeSignature(SimpleClassTypeSignature(name, None), Nil)
 }
 
 case class TypeVariableSignature(identifier: String)
@@ -153,8 +149,7 @@ case class ClassSignature(
   def parents: List[ClassTypeSignature] = superclassSignature :: superinterfaceSignatures
   override def print(sb: StringBuilder): Unit = {
     typeParameters match {
-      case Some(tp: TypeParameters) =>
-        tp.print(sb)
+      case Some(tp: TypeParameters) => tp.print(sb)
       case _ =>
     }
     superclassSignature.print(sb)
@@ -222,8 +217,7 @@ case class MethodSignature(
 ) extends Printable {
   override def print(sb: StringBuilder): Unit = {
     typeParameters match {
-      case Some(tp: TypeParameters) =>
-        tp.print(sb)
+      case Some(tp: TypeParameters) => tp.print(sb)
       case _ =>
     }
     sb.append('(')

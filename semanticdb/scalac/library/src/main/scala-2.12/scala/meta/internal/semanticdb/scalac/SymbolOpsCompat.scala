@@ -2,7 +2,8 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.{meta => m}
 
-trait SymbolOpsCompat { self: SemanticdbOps =>
+trait SymbolOpsCompat {
+  self: SemanticdbOps =>
   implicit class XtensionGSymbolCompat(sym: g.Symbol) {
     private lazy val implicitPrimitiveConversionNames = Set(
       g.termNames.toByte,
@@ -16,8 +17,7 @@ trait SymbolOpsCompat { self: SemanticdbOps =>
 
     // See comment in scala-2.13/.../SymbolOpsCompat.scala
     def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = {
-      sym.name.startsWith("to") &&
-      g.definitions.ScalaValueClassesSet.contains(sym.owner) &&
+      sym.name.startsWith("to") && g.definitions.ScalaValueClassesSet.contains(sym.owner) &&
       implicitPrimitiveConversionNames.contains(sym.name.toTermName) &&
       sym.name.toString() != mtree.value
     }

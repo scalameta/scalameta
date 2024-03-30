@@ -27,10 +27,5 @@ class RegressionSyntaxSuite extends ParseSuite {
   check("3->213", "type T = List[?]", "type T = List[?]", dialects.Scala213)(dialects.Scala3)
   check("3->211", "type T = List[?]", "type T = List[?]", dialects.Scala213)(dialects.Scala3)
 
-  test("no-origin") {
-    assertEquals(
-      Type.AnonymousParam(None).toString(),
-      "_"
-    )
-  }
+  test("no-origin") { assertEquals(Type.AnonymousParam(None).toString(), "_") }
 }

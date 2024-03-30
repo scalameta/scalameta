@@ -19,16 +19,16 @@ trait Liftables {
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with AstReflection {
   import c.universe._
 
-  lazy val TermApplySymbol =
-    c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply")).asClass
-  lazy val DefnValSymbol =
-    c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val")).asClass
-  lazy val DefnVarSymbol =
-    c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var")).asClass
-  lazy val PatBindSymbol =
-    c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Bind")).asClass
-  lazy val PatTypedSymbol =
-    c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed")).asClass
+  lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply"))
+    .asClass
+  lazy val DefnValSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val"))
+    .asClass
+  lazy val DefnVarSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var"))
+    .asClass
+  lazy val PatBindSymbol = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Bind"))
+    .asClass
+  lazy val PatTypedSymbol = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed"))
+    .asClass
   lazy val LitSymbol = c.mirror.staticClass("scala.meta.Lit")
   lazy val TokensSymbol = c.mirror.staticClass("scala.meta.tokens.Tokens")
 
@@ -87,10 +87,8 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       """
     }
     // NOTE: we ignore tokens here for the time being
-    if (adt.tpe <:< QuasiSymbol.toType)
-      Some(q"Lifts.liftQuasi($localName)")
-    else if (adt.tpe <:< TermApplySymbol.toType)
-      Some(specialcaseTermApply)
+    if (adt.tpe <:< QuasiSymbol.toType) Some(q"Lifts.liftQuasi($localName)")
+    else if (adt.tpe <:< TermApplySymbol.toType) Some(specialcaseTermApply)
     else if (adt.tpe <:< DefnValSymbol.toType)
       Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
     else if (adt.tpe <:< DefnVarSymbol.toType)

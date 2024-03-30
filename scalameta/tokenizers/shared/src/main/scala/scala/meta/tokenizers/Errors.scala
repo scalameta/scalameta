@@ -6,7 +6,8 @@ import org.scalameta.data._
 import scala.meta.tokens._
 import scala.meta.inputs._
 
-@root trait Tokenized {
+@root
+trait Tokenized {
 
   def fold[A](fe: Tokenized.Error => A, ft: Tokens => A): A = this match {
     case x: Tokenized.Success => ft(x.tokens)
@@ -23,15 +24,18 @@ import scala.meta.inputs._
 }
 
 object Tokenized {
-  @leaf class Success(tokens: Tokens) extends Tokenized {
+  @leaf
+  class Success(tokens: Tokens) extends Tokenized {
     override def toString = tokens.toString
   }
-  @leaf class Error(pos: Position, message: String, details: Exception) extends Tokenized {
+  @leaf
+  class Error(pos: Position, message: String, details: Exception) extends Tokenized {
     override def toString = details.toString
   }
 }
 
-@data class TokenizeException(pos: Position, shortMessage: String)
+@data
+class TokenizeException(pos: Position, shortMessage: String)
     extends InputException(pos, shortMessage) {
   override def toString = getMessage
 }

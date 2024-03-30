@@ -1,10 +1,11 @@
 package scala.meta.internal.semanticdb.scalac
 
-trait VersionSpecificOps { self: SemanticdbOps =>
+trait VersionSpecificOps {
+  self: SemanticdbOps =>
 
   object OriginalTreeOf {
-    def unapply[T: Attachable](carrier: T): Option[g.Tree] =
-      carrier.attachments.get[g.analyzer.OriginalTreeAttachment].map(_.original)
+    def unapply[T: Attachable](carrier: T): Option[g.Tree] = carrier.attachments
+      .get[g.analyzer.OriginalTreeAttachment].map(_.original)
   }
 
   /**
