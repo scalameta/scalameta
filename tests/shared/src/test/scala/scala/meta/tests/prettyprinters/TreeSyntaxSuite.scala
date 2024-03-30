@@ -67,9 +67,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
   testBlockAfterClass(k => testBlockNoNL(s"$k Foo { val foo = 1 }"))
   testBlockAfterClass(k => testBlockAddNL(s"$k Foo extends Bar"))
   testBlockAfterClass(k => testBlockAddNL(s"$k Foo extends { val foo = 1 } with Bar"))
-  testBlockAfterClass(k =>
-    testBlockNoNL(s"$k Foo extends { val foo = 1 } with Bar { val bar = 2 }")
-  )
+  testBlockAfterClass(k => testBlockNoNL(s"$k Foo extends { val foo = 1 } with Bar { val bar = 2 }"))
   testBlockAddNL("this")
   testBlockAddNL("Foo")
   testBlockAddNL("Foo.bar")
