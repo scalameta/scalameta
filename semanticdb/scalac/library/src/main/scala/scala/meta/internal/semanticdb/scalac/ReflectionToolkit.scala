@@ -98,12 +98,12 @@ trait ReflectionToolkit {
       val dummyName = g.TermName("<" + key + "Carrier>")
       val dummySymbol = unit.checkedFeatures.find(_.name == dummyName)
       val cached = dummySymbol.flatMap(_.metadata.get(key).map(_.asInstanceOf[T]))
-      cached.getOrElse({
+      cached.getOrElse {
         val computed = op
         val dummySymbol = g.NoSymbol.newValue(dummyName).appendMetadata(key -> computed)
         unit.checkedFeatures += dummySymbol
         computed
-      })
+      }
     }
   }
 

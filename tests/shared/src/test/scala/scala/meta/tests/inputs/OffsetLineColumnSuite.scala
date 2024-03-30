@@ -6,7 +6,7 @@ import scala.meta._
 
 class OffsetLineColumnSuite extends FunSuite {
   private def test(s: String)(expected: String): Unit = {
-    val testName = (if (s != "") s.replace("\n", "\\n") else "empty string")
+    val testName = if (s != "") s.replace("\n", "\\n") else "empty string"
     super.test(testName) {
       val content = Input.String(s)
       val points = 0.to(content.chars.length).map(i => Position.Range(content, i, i))

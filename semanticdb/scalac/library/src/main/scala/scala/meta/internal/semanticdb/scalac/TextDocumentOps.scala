@@ -300,10 +300,10 @@ trait TextDocumentOps { self: SemanticdbOps =>
                 val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
                 if (!gsym.hasAccessBoundary) return
                 val within1 = gsym.privateWithin
-                val within2 = within1.owner.info.member({
+                val within2 = within1.owner.info.member {
                   if (within1.name.isTermName) within1.name.toTypeName
                   else within1.name.toTermName
-                })
+                }
                 success(map(mtree), wrapAlternatives("<within " + symbol + ">", within1, within2))
               }
             }

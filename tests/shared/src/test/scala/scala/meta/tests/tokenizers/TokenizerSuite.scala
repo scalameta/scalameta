@@ -1302,7 +1302,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
           ) =>
     }
     assert(
-      ("""s"\\"Hello"""").tokenize.isInstanceOf[Tokenized.Error]
+      """s"\\"Hello"""".tokenize.isInstanceOf[Tokenized.Error]
     )
 
   }

@@ -23,7 +23,7 @@ object Paths {
     val parts = uripath.split('/').toList
     val (leading, trailing) = parts.span(_ == "")
     trailing match {
-      case drive :: path if (drive.length == 2 && drive(1) == ':') =>
+      case drive :: path if drive.length == 2 && drive(1) == ':' =>
         NodeNIOPath(trailing.mkString("\\"))
       case _ => NodeNIOPath(uripath)
     }

@@ -178,9 +178,9 @@ object Javacp {
 
             nodeParamOpt match {
               case Some(nodeParam)
-                  if (isConstructor && !isEnum &&
+                  if isConstructor && !isEnum &&
                     (nodeParam.access.hasFlag(o.ACC_MANDATED) ||
-                      nodeParam.access.hasFlag(o.ACC_SYNTHETIC))) =>
+                      nodeParam.access.hasFlag(o.ACC_SYNTHETIC)) =>
                 // Remove params holding the reference to the outer class in constructors
                 None
               case Some(nodeParam) =>

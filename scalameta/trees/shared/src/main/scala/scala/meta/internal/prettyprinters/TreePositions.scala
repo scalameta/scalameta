@@ -37,9 +37,9 @@ object Positions {
     def loopTree(x: Tree): Show.Result = {
       implicit class XtensionString(s: String) {
         def colored(color: String) =
-          if (positionStyle == PositionStyle.Colorful) (color + s + RESET) else s
+          if (positionStyle == PositionStyle.Colorful) color + s + RESET else s
         def sliced(slice: => String) =
-          if (sliceStyle == SliceStyle.Show) (s + "<" + slice + ">") else s
+          if (sliceStyle == SliceStyle.Show) s + "<" + slice + ">" else s
       }
       def loopField(x: Any, color: String): Show.Result = x match {
         case el: String => s(DoubleQuotes(el).colored(color))

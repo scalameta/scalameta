@@ -181,7 +181,7 @@ class TargetedSuite extends SemanticdbSuite {
        |}
        |
        |""".stripMargin,
-    (doc) => {
+    doc => {
 
       def overriddenSymbols(sym: String) = doc.symbols.find(_.symbol == sym).map { info =>
         info.overriddenSymbols
