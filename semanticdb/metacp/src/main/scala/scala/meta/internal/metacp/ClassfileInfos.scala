@@ -1,6 +1,5 @@
 package scala.meta.internal.metacp
 
-import java.nio.file.Files
 import org.scalameta.collections._
 import scala.meta.cli._
 import scala.meta.internal.classpath.ClasspathIndex
@@ -10,6 +9,9 @@ import scala.meta.internal.scalacp.Scalacp
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.meta.metacp._
+
+import java.nio.file.Files
+
 import scala.tools.asm.tree.ClassNode
 
 final case class ClassfileInfos(

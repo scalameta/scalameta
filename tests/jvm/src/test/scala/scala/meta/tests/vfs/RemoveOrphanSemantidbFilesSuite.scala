@@ -1,14 +1,16 @@
 package scala.meta.tests.vfs
 
-import java.nio.file.Files
-import java.nio.file.Paths
-import munit.FunSuite
 import scala.meta.internal.semanticdb.scalac.FileFilter
+import scala.meta.internal.semanticdb.scalac.RemoveOrphanSemanticdbFiles
 import scala.meta.internal.semanticdb.scalac.SemanticdbConfig
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths._
-import scala.meta.internal.semanticdb.scalac.RemoveOrphanSemanticdbFiles
 import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
+
+import java.nio.file.Files
+import java.nio.file.Paths
+
+import munit.FunSuite
 
 class RemoveOrphanSemantidbFilesSuite extends FunSuite {
 

@@ -1,6 +1,7 @@
 package scala.meta.internal.tokens
 
 import org.scalameta.internal.MacroHelpers
+
 import scala.language.experimental.macros
 
 trait TokenNamerMacroHelpers extends MacroHelpers {

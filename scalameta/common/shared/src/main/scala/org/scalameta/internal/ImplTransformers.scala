@@ -5,8 +5,9 @@ import scala.reflect.macros.blackbox.Context
 
 trait ImplTransformers {
   val c: Context
+
+  import c.universe.Flag._
   import c.universe._
-  import Flag._
 
   implicit class XtensionAnnotteeTransformer(annottees: Seq[Tree]) {
     def transformAnnottees(transformer: ImplTransformer): Tree = transformer.transform(annottees: _*)

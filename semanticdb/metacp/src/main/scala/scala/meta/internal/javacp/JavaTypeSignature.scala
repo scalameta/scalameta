@@ -1,6 +1,7 @@
 package scala.meta.internal.javacp
 
 import scala.meta.internal.javacp.asm._
+
 import scala.tools.asm.signature.SignatureReader
 
 /**

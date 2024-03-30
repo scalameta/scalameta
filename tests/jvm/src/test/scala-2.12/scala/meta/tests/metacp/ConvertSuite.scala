@@ -1,11 +1,13 @@
 package scala.meta.tests.metacp
 
-import java.nio.file._
-import munit.FunSuite
-import scala.meta.tests._
 import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp._
+import scala.meta.tests._
+
+import java.nio.file._
+
+import munit.FunSuite
 
 class ConvertSuite extends FunSuite {
   val tmp = AbsolutePath(Files.createTempDirectory("metacp"))

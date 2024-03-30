@@ -2,14 +2,15 @@ package scala.meta.internal.scalacp
 
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.metacp._
-import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.Scala.{DisplayNames => dn}
 import scala.meta.internal.semanticdb.Scala.{Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.{semanticdb => s}
+
 import scala.reflect.NameTransformer
 
 object Scalalib {

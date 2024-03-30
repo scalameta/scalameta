@@ -3,9 +3,9 @@ package internal
 package trees
 
 import org.scalameta.invariants._
+import scala.meta.classifiers._
 
 import scala.annotation.tailrec
-import scala.meta.classifiers._
 
 object ParentChecks {
   @tailrec

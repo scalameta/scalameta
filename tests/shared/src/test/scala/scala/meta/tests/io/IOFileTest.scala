@@ -1,9 +1,11 @@
 package scala.meta.tests
 package io
 
-import java.io.File
-import munit.FunSuite
 import scala.meta.internal.io._
+
+import java.io.File
+
+import munit.FunSuite
 
 class IOFileTest extends FunSuite {
   val file = new File("build.sbt")

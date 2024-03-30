@@ -1,8 +1,9 @@
 package scala.meta.tests.tokenizers
 
-import java.nio.charset.StandardCharsets
-import scala.meta.internal.io.InputStreamIO
 import org.scalameta.logger
+import scala.meta.internal.io.InputStreamIO
+
+import java.nio.charset.StandardCharsets
 
 class UnicodeEscapeSuite extends BaseTokenizerSuite {
   // Read tests from external file because scalac processes string literals in source

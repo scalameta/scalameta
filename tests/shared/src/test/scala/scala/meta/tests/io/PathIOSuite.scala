@@ -1,7 +1,8 @@
 package scala.meta.tests.io
 
-import munit.FunSuite
 import scala.meta.internal.io.PathIO
+
+import munit.FunSuite
 
 class PathIOSuite extends FunSuite {
   def check(path: String, expectedDir: String, expectedName: String): Unit = test(path) {

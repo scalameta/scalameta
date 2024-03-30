@@ -2,8 +2,6 @@ package scala.meta.internal.javacp
 
 import org.scalameta.collections._
 import org.scalameta.internal.ScalaCompat._
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.classpath.MissingSymbolException
 import scala.meta.internal.javacp.asm._
@@ -15,6 +13,9 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
+
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.ListBuffer
 import scala.tools.asm.tree.ClassNode
 import scala.tools.asm.tree.FieldNode
 import scala.tools.asm.tree.InnerClassNode

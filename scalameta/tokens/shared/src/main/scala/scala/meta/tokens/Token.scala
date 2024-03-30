@@ -1,12 +1,13 @@
 package scala.meta
 package tokens
 
-import scala.math.ScalaNumber
-import scala.meta.internal.tokens._
-import scala.meta.inputs._
 import scala.meta.classifiers._
-import scala.meta.prettyprinters._
+import scala.meta.inputs._
 import scala.meta.internal.prettyprinters._
+import scala.meta.internal.tokens._
+import scala.meta.prettyprinters._
+
+import scala.math.ScalaNumber
 
 // NOTE: `start` and `end` are String.substring-style,
 // i.e. `start` is inclusive and `end` is not.

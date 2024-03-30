@@ -1,6 +1,7 @@
 package org.scalameta.collections
 
 import java.{util => ju}
+
 import scala.collection.immutable._
 import scala.collection.mutable
 

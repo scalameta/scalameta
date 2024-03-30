@@ -2,6 +2,7 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath
+
 import scala.tools.nsc.Global
 import scala.tools.nsc.plugins.Plugin
 

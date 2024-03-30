@@ -1,11 +1,12 @@
 package scala.meta.internal.parsers
 
+import scala.meta.internal.Scaladoc
+
 import java.nio.CharBuffer
 import java.util.regex.Pattern
 
-import scala.meta.internal.Scaladoc
-import fastparse._
 import fastparse.NoWhitespace._
+import fastparse._
 
 /**
  * Represents a scaladoc line.

@@ -2,12 +2,13 @@ package scala.meta
 package internal
 package trees
 
+import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
+import scala.meta.internal.trees.Metadata.Ast
+import scala.meta.internal.trees.{Reflection => AstReflection}
+
 import scala.language.experimental.macros
 import scala.language.implicitConversions
 import scala.reflect.macros.blackbox.Context
-import org.scalameta.adt.{LiftableMacros => AdtLiftableMacros}
-import scala.meta.internal.trees.{Reflection => AstReflection}
-import scala.meta.internal.trees.Metadata.Ast
 
 // Implementation of the scala.reflect.api.Universe#Liftable interface for asts.
 trait Liftables {

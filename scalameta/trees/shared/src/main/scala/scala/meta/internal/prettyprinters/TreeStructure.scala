@@ -2,12 +2,15 @@ package scala.meta
 package internal
 package prettyprinters
 
-import scala.meta.prettyprinters._
-import Show.{repeat => r, sequence => s}
-import scala.annotation.tailrec
 import scala.meta.internal.trees.Quasi
+import scala.meta.prettyprinters._
+
+import scala.annotation.tailrec
 
 object TreeStructure {
+  import Show.{repeat => r}
+  import Show.{sequence => s}
+
   def apply[T <: Tree]: Structure[T] = Structure {
     case _: Name.Anonymous => s(s"""Name.Anonymous()""")
     case _: Name.This => s(s"""Name.This()""")

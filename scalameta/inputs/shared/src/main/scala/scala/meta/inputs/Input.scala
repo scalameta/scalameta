@@ -1,10 +1,11 @@
 package scala.meta.inputs
 
-import java.nio.{file => nio}
-import java.nio.charset.Charset
 import scala.meta.common._
 import scala.meta.internal.inputs._
 import scala.meta.io._
+
+import java.nio.charset.Charset
+import java.nio.{file => nio}
 
 sealed trait Input extends Product with Serializable with InternalInput {
   def chars: Array[Char]

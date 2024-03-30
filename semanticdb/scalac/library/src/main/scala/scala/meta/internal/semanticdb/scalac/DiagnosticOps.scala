@@ -1,9 +1,10 @@
 package scala.meta.internal.semanticdb.scalac
 
 import org.scalameta.unreachable
-import scala.{meta => m}
 import scala.meta.internal.inputs._
 import scala.meta.internal.{semanticdb => s}
+
+import scala.{meta => m}
 
 trait DiagnosticOps {
   self: SemanticdbOps =>

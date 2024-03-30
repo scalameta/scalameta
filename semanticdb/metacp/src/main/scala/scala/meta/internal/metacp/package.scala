@@ -1,19 +1,21 @@
 package scala.meta.internal
 
+import org.scalameta.collections._
+import scala.meta.internal.classpath._
+import scala.meta.internal.scalacp.ScalaSigAttribute
+import scala.meta.internal.scalacp.ScalaSigNode
+import scala.meta.io.AbsolutePath
+
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util
-import scala.meta.internal.classpath._
-import scala.meta.io.AbsolutePath
-import scala.tools.asm._
-import scala.tools.asm.ClassReader._
-import scala.tools.asm.tree._
-import org.scalameta.collections._
-import scala.meta.internal.scalacp.ScalaSigAttribute
-import scala.meta.internal.scalacp.ScalaSigNode
+
 import scala.reflect.internal.pickling.ByteCodecs
+import scala.tools.asm.ClassReader._
+import scala.tools.asm._
+import scala.tools.asm.tree._
 import scala.tools.scalap.Main
 import scala.tools.scalap.scalax.rules.scalasig.ByteCode
 import scala.tools.scalap.scalax.rules.scalasig.ScalaSig

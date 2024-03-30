@@ -1,9 +1,10 @@
 package org.scalameta.data
 
-import scala.language.experimental.macros
-import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.internal.MacroHelpers
+
+import scala.language.experimental.macros
+import scala.reflect.macros.blackbox.Context
 
 // Parts of @data logic that need a typer context and can't be run in a macro annotation.
 object DataTyperMacros {

@@ -1,7 +1,7 @@
 package java.nio.file
 
-import java.net.URI
 import java.lang.Iterable
+import java.net.URI
 
 // obtained interface by experimentation on the JDK.
 trait Path extends Iterable[Path] {

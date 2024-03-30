@@ -1,11 +1,11 @@
 package scala.meta.tests
 package parsers
 
-import munit._
 import org.scalameta.internal.ScalaCompat.EOL
-
 import scala.meta._
 import scala.meta.dialects.Sbt0137
+
+import munit._
 
 class SbtSuite extends FunSuite {
   test("\"...\".parse[Source]") {

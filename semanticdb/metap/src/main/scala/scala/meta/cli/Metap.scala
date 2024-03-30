@@ -1,10 +1,11 @@
 package scala.meta.cli
 
-import java.io._
 import scala.meta.internal.cli.Args
 import scala.meta.internal.metap._
 import scala.meta.internal.semanticdb.TextDocument
 import scala.meta.metap._
+
+import java.io._
 
 object Metap {
   def main(args: Array[String]): Unit = sys.exit(process(args, Reporter()))

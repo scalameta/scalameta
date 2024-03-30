@@ -1,9 +1,10 @@
 package scala.meta.internal.semanticdb
 
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
+
+import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 
 package object scalac {
 

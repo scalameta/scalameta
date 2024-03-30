@@ -1,13 +1,14 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.{meta => m}
-import scala.reflect.internal.{Flags => gf}
 import scala.meta.internal.scalacp._
-import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.semanticdb.Scala.{DisplayNames => dn}
-import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb.{Language => l}
+import scala.meta.internal.{semanticdb => s}
+
+import scala.reflect.internal.{Flags => gf}
+import scala.{meta => m}
 
 trait SymbolInformationOps {
   self: SemanticdbOps =>

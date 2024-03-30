@@ -1,9 +1,11 @@
 package scala.meta.tests
 package dialects
 
-import scala.{meta => m}
-import munit._
 import scala.meta.Dialect
+
+import scala.{meta => m}
+
+import munit._
 
 class ReflectionSuite extends FunSuite {
   test("Dialect.standards") {

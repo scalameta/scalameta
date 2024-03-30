@@ -1,11 +1,12 @@
 package org.scalameta.adt
 
-import scala.language.experimental.macros
-import scala.language.implicitConversions
-import scala.meta.internal.trees.AstNamerMacros
-import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.Metadata.Adt
 import org.scalameta.adt.{Reflection => AdtReflection}
+import scala.meta.internal.trees.AstNamerMacros
+
+import scala.language.experimental.macros
+import scala.language.implicitConversions
+import scala.reflect.macros.blackbox.Context
 
 // Implementation of the scala.reflect.api.Universe#Liftable interface for adts.
 trait Liftables {

@@ -1,13 +1,11 @@
 package scala.meta.tests
 package quasiquotes
 
+import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants.InvariantFailedException
-
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.trees.Origin
-
-import org.scalameta.internal.ScalaCompat.EOL
 
 // FIXME: https://github.com/scalatest/scalatest/issues/1112
 // I had to remove $ characters from all test names in this file.

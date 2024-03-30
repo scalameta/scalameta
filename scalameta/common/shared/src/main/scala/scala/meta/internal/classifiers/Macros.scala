@@ -2,8 +2,9 @@ package scala.meta
 package internal
 package classifiers
 
-import scala.reflect.macros.whitebox.Context
 import org.scalameta.internal.MacroHelpers
+
+import scala.reflect.macros.whitebox.Context
 
 // NOTE: It really sucks that `@foo object Bar` can't produce `class Bar`.
 // Because of that, we have to uglify our classifier DSL.

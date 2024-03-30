@@ -1,9 +1,10 @@
 package scala.meta.tests
 package contrib
 
-import munit.FunSuite
 import scala.meta._
 import scala.meta.contrib._
+
+import munit.FunSuite
 
 class ModReplacementTest extends FunSuite {
   test("Test replace class mods with no existing mods") {

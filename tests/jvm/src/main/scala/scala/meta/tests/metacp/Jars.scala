@@ -1,10 +1,13 @@
 package scala.meta.tests.metacp
 
-import coursier._
+import scala.meta.AbsolutePath
+
 import java.io.OutputStreamWriter
 import java.io.PrintStream
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.meta.AbsolutePath
+
+import coursier._
 
 case class ModuleID(organization: String, name: String, version: String) {
   def toCoursier: Dependency =

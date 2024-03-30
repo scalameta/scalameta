@@ -1,13 +1,14 @@
 package scala.meta
 package tokens
 
-import scala.collection.immutable
 import org.scalameta.data._
 import org.scalameta.internal.ScalaCompat.IndexedSeqOptimized
 import scala.meta.common._
 import scala.meta.inputs._
-import scala.meta.prettyprinters._
 import scala.meta.internal.prettyprinters._
+import scala.meta.prettyprinters._
+
+import scala.collection.immutable
 
 // WONTFIX: https://github.com/scalameta/scalameta/issues/385
 // WONTFIX: https://github.com/scalameta/scalameta/issues/150

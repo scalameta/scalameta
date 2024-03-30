@@ -1,9 +1,10 @@
 package org.scalameta.tests
 package classifiers
 
-import munit._
-import scala.meta.internal.classifiers.classifier
 import scala.meta.classifiers._
+import scala.meta.internal.classifiers.classifier
+
+import munit._
 
 trait Unclassifiable
 class Derived extends Unclassifiable

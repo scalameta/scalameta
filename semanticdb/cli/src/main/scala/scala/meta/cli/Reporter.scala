@@ -1,7 +1,8 @@
 package scala.meta.cli
 
-import java.io._
 import scala.meta.internal.cli._
+
+import java.io._
 
 final class Reporter private (val out: PrintStream, val err: PrintStream) {
   private def this() = this(out = System.out, err = System.err)

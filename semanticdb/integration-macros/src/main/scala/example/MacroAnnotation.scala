@@ -1,8 +1,8 @@
 package example
 
-import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.annotation.compileTimeOnly
+import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 
 @compileTimeOnly("enable macro paradise to expand macro annotations")

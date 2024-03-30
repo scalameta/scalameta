@@ -1,13 +1,15 @@
 package scala.meta.tests.metacp
 
-import munit.FunSuite
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
 import scala.meta.tests.BuildInfo
 import scala.meta.tests.semanticdb.ManifestMetacp
+
 import java.nio.file.Paths
+
+import munit.FunSuite
 
 class ClasspathIndexSuite extends FunSuite {
   def classpath(path: AbsolutePath) = Classpath(path :: Library.scalaLibrary.classpath().entries)

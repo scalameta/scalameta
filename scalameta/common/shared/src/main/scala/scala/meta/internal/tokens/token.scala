@@ -2,10 +2,10 @@ package scala.meta
 package internal
 package tokens
 
-import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
-import scala.reflect.macros.whitebox.Context
 import scala.collection.mutable.ListBuffer
+import scala.language.experimental.macros
+import scala.reflect.macros.whitebox.Context
 
 // @freeform and @fixed are specialized versions of @org.scalameta.adt.leaf for scala.meta tokens.
 

@@ -1,17 +1,19 @@
 package scala.meta.tests.semanticdb
 
-import java.io.File
-import java.net.URLClassLoader
-import java.nio.file.Files
-import java.nio.file.Paths
 import scala.meta.cli._
 import scala.meta.internal.io.FileIO
 import scala.meta.io.AbsolutePath
 import scala.meta.metac._
 import scala.meta.tests.BuildInfo
-import scala.meta.tests.Slow
-import munit.FunSuite
 import scala.meta.tests.SkipWindows
+import scala.meta.tests.Slow
+
+import java.io.File
+import java.net.URLClassLoader
+import java.nio.file.Files
+import java.nio.file.Paths
+
+import munit.FunSuite
 
 class MetacScalaLibrary extends FunSuite {
   test("compile scala-library".tag(Slow).tag(SkipWindows)) {

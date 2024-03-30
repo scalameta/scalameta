@@ -1,6 +1,7 @@
 package scala.meta.internal.parsers
 
 import scala.meta.tokens.Token
+
 import scala.reflect.classTag
 
 object Keywords {

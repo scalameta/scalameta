@@ -1,15 +1,16 @@
 package scala.meta.tests
 package parsers
 
-import munit._
+import org.scalameta.logger
 import scala.meta._
 import scala.meta.internal.parsers._
 import scala.meta.trees.Origin
-import MoreHelpers._
 
-import org.scalameta.logger
+import munit._
 
 class ParseSuite extends TreeSuiteBase with CommonTrees {
+  import MoreHelpers._
+
   val EOL = org.scalameta.internal.ScalaCompat.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
 

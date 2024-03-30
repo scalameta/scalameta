@@ -2,10 +2,11 @@ package scala.meta
 package internal
 package trees
 
-import scala.language.experimental.macros
-import scala.reflect.macros.blackbox.Context
 import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.internal.MacroHelpers
+
+import scala.language.experimental.macros
+import scala.reflect.macros.blackbox.Context
 
 // Parts of @root, @branch and @ast logic that need a typer context and can't be run in a macro annotation.
 object CommonTyperMacros {

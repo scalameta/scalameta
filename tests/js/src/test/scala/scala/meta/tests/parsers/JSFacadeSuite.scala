@@ -1,10 +1,12 @@
 package scala.meta.tests
 package parsers
 
-import munit._
-import scala.scalajs.js
-import scala.collection.mutable
 import scala.meta.parsers._
+
+import scala.collection.mutable
+import scala.scalajs.js
+
+import munit._
 
 class JSFacadeSuite extends FunSuite {
 

@@ -1,8 +1,9 @@
 package scala.meta.internal.cli
 
+import org.scalameta.internal.ScalaCompat.EOL
+
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file._
-import org.scalameta.internal.ScalaCompat.EOL
 
 object Args {
   def expand(args: Array[String]): List[String] = args.toList.flatMap { arg =>

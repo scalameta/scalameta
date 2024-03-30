@@ -1,13 +1,15 @@
 package scala.meta.tests.parsers.dotty
 
 import scala.meta._
-import Term.{Super, Name => TermName}
-import Type.{Name => TypeName, _}
-import Name.Anonymous
 import scala.meta.parsers.ParseException
+
 import munit.Location
 
 class TypeSuite extends BaseDottySuite {
+  import Name.Anonymous
+  import Term.Super
+  import Term.{Name => TermName}
+  import Type.{Name => TypeName, _}
 
   private def assertTpe(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit =
     assertTree(tpe(expr))(tree)

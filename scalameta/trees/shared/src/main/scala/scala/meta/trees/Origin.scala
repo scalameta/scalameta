@@ -1,7 +1,6 @@
 package scala.meta.trees
 
 import org.scalameta.adt
-
 import scala.meta.Dialect
 import scala.meta.common._
 import scala.meta.inputs._

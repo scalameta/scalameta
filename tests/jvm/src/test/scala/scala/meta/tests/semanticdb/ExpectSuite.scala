@@ -1,26 +1,29 @@
 package scala.meta.tests
 package semanticdb
 
-import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.{semanticidx => i}
-import java.io._
-import java.nio.file._
-import java.nio.charset.StandardCharsets._
-import java.util.jar._
-import scala.collection.JavaConverters._
 import scala.meta._
 import scala.meta.cli._
-import scala.meta.tests.cli.CliTestUtils
 import scala.meta.internal.io._
+import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb._
-import scala.meta.io.Classpath
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.internal.{semanticidx => i}
 import scala.meta.io.AbsolutePath
-import munit.FunSuite
-import munit.internal.difflib.DiffUtils
+import scala.meta.io.Classpath
+import scala.meta.tests.cli.CliTestUtils
 import scala.meta.tests.metacp.Library
 import scala.meta.tests.metacp.MetacpOps
+
+import java.io._
+import java.nio.charset.StandardCharsets._
+import java.nio.file._
+import java.util.jar._
+
+import scala.collection.JavaConverters._
 import scala.util.Properties
+
+import munit.FunSuite
+import munit.internal.difflib.DiffUtils
 
 class ExpectSuite extends FunSuite {
 

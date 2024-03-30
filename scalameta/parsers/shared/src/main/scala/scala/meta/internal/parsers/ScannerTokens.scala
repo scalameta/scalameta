@@ -1,6 +1,5 @@
 package scala.meta.internal.parsers
 
-import scala.annotation.tailrec
 import scala.meta.Dialect
 import scala.meta.classifiers._
 import scala.meta.inputs.Input
@@ -10,6 +9,8 @@ import scala.meta.tokenizers._
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 import scala.meta.tokens.Tokens
+
+import scala.annotation.tailrec
 
 final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 

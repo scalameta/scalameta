@@ -2,8 +2,8 @@ package scala.meta
 package internal
 package transversers
 
-import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
+import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
 
 class transformer extends StaticAnnotation {

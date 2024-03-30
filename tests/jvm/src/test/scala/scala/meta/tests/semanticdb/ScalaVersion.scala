@@ -1,6 +1,7 @@
 package scala.meta.tests.semanticdb
 
 import scala.meta.tests.BuildInfo
+
 import scala.util.Properties
 
 object ScalaVersion {

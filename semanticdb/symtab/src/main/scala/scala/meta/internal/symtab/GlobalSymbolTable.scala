@@ -1,15 +1,16 @@
 package scala.meta.internal.symtab
 
-import scala.annotation.tailrec
-import scala.collection.concurrent.TrieMap
 import scala.meta.cli._
 import scala.meta.internal.classpath.ClasspathIndex
-import scala.meta.internal.semanticdb.SymbolInformation
-import scala.meta.io._
 import scala.meta.internal.metacp._
 import scala.meta.internal.scalacp.Scalalib
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.SymbolInformation
+import scala.meta.io._
 import scala.meta.metacp._
+
+import scala.annotation.tailrec
+import scala.collection.concurrent.TrieMap
 import scala.reflect.NameTransformer
 
 /** A lazy symbol table that returns global symbols on-the-fly from disk. */

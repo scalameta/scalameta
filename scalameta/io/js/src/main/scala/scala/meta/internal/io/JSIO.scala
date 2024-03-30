@@ -1,6 +1,7 @@
 package scala.meta.internal.io
 
 import scala.meta.io._
+
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.annotation.JSImport.Namespace

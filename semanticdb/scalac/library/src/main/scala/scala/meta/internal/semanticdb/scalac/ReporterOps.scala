@@ -1,8 +1,8 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.collection.mutable
-import scala.tools.nsc.reporters.StoreReporter
 import scala.reflect.internal.util.{Position => gPosition}
+import scala.tools.nsc.reporters.StoreReporter
 
 trait ReporterOps {
   self: ReflectionToolkit =>

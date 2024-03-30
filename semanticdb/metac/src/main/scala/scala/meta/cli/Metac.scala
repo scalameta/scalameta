@@ -1,9 +1,10 @@
 package scala.meta.cli
 
-import java.io._
 import scala.meta.internal.cli.Args
 import scala.meta.internal.metac._
 import scala.meta.metac._
+
+import java.io._
 
 object Metac {
   def main(args: Array[String]): Unit = sys.exit(process(args, Reporter()))

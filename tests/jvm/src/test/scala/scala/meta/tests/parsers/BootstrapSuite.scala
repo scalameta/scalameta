@@ -1,12 +1,13 @@
 package scala.meta.tests
 package parsers
 
+import scala.meta._
+import scala.meta.dialects.Scala211
+import scala.meta.tokens.Token._
+
 import java.io._
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import scala.meta._
-import scala.meta.tokens.Token._
-import scala.meta.dialects.Scala211
 
 class BootstrapSuite extends ParseSuite {
   var dir = new File(new File(sys.props("sbt.paths.tests.test.sources")).getAbsolutePath)

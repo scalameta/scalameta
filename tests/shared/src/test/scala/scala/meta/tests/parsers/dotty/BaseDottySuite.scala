@@ -1,7 +1,7 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta.tests.parsers._
 import scala.meta._
+import scala.meta.tests.parsers._
 
 trait BaseDottySuite extends ParseSuite {
 

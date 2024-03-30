@@ -2,6 +2,7 @@ package scala.meta.tests.testkit
 package contrib
 
 import scala.meta.testkit.Corpus
+
 import scala.util.Random
 
 object ContribSuite {

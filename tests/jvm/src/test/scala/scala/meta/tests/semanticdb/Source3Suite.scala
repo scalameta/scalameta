@@ -2,12 +2,14 @@ package scala.meta.tests
 package semanticdb
 
 import org.scalameta.logger
-import munit.FunSuite
 import scala.meta.interactive.InteractiveSemanticdb._
 import scala.meta.internal.semanticdb.Print
+
+import scala.collection.SortedMap
 import scala.tools.nsc.interactive.Global
 import scala.util.Properties
-import scala.collection.SortedMap
+
+import munit.FunSuite
 
 class Source3Suite extends FunSuite {
 

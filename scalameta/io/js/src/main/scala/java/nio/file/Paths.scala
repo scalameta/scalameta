@@ -1,9 +1,10 @@
 package java.nio.file
 
-import java.io.File
-import java.net.URI
 import scala.meta.internal.io.JSPath
 import scala.meta.internal.io.NodeNIOPath
+
+import java.io.File
+import java.net.URI
 
 object Paths {
   // NOTE: We can't use Scala-style varargs since those have a different jvm

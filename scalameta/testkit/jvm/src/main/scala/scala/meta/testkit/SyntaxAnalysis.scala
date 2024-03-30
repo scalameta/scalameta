@@ -1,11 +1,14 @@
 package scala.meta.testkit
 
+import org.scalameta.collections._
+import scala.meta._
+
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.{GenIterable, GenTraversableOnce, mutable}
-import org.scalameta.collections._
-import scala.meta._
+import scala.collection.GenIterable
+import scala.collection.GenTraversableOnce
+import scala.collection.mutable
 import scala.util.control.NonFatal
 
 object SyntaxAnalysis {

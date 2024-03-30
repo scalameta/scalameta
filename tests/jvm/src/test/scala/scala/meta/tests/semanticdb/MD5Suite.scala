@@ -1,18 +1,23 @@
 package scala.meta.tests.semanticdb
 
+import scala.meta.internal.semanticdb.Locator
+import scala.meta.internal.semanticdb.scalac.Hex
+import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
+import scala.meta.io.AbsolutePath
+import scala.meta.io.RelativePath
+import scala.meta.tests.BuildInfo
+import scala.meta.tests.Slow
+
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.security.DigestInputStream
 import java.security.MessageDigest
 
-import munit.FunSuite
-import scala.meta.tests.Slow
-
 import scala.collection.mutable
-import scala.meta.internal.semanticdb.Locator
-import scala.meta.internal.semanticdb.scalac.{Hex, SemanticdbPaths}
-import scala.meta.io.{AbsolutePath, RelativePath}
-import scala.meta.tests.BuildInfo
+
+import munit.FunSuite
 
 class MD5Suite extends FunSuite {
 

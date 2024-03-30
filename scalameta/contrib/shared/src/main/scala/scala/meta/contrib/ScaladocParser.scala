@@ -1,10 +1,10 @@
 package scala.meta.contrib
 
-import fastparse._
-import fastparse.NoWhitespace._
-
 import scala.meta.contrib.DocToken._
 import scala.meta.tokens.Token.Comment
+
+import fastparse.NoWhitespace._
+import fastparse._
 
 object ScaladocParser {
 

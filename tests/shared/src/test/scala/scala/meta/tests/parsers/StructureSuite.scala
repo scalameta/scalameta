@@ -1,10 +1,10 @@
 package scala.meta.tests.parsers
 
-import munit.Location
 import org.scalameta.logger
-
 import scala.meta._
 import scala.meta.parsers.Parse
+
+import munit.Location
 
 class StructureSuite extends ParseSuite {
 

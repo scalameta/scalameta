@@ -1,8 +1,9 @@
 package scala.meta.tests.parsers.dotty
 
-import scala.meta._, Type._
+import scala.meta._
 
 class AndOrTypesSuite extends BaseDottySuite {
+  import Type._
 
   /**
    * All examples based on dotty documentation:

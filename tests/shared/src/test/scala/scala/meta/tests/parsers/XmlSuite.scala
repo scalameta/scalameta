@@ -1,9 +1,8 @@
 package scala.meta.tests.parsers
 
+import org.scalameta.logger
 import scala.meta._
 import scala.meta.dialects.Scala211
-
-import org.scalameta.logger
 
 class XmlSuite extends ParseSuite {
 

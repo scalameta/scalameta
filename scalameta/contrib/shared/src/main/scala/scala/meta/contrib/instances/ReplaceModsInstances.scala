@@ -1,7 +1,7 @@
 package scala.meta.contrib.instances
 
-import scala.meta.contrib._
 import scala.meta._
+import scala.meta.contrib._
 
 trait ReplaceModsInstances {
   implicit val replaceClassMods: Replace[Defn.Class, Mod] = Replace((a, bs) => a.copy(mods = bs))

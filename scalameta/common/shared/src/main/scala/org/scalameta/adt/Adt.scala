@@ -1,12 +1,14 @@
 package org.scalameta.adt
 
-import scala.language.experimental.macros
-import scala.annotation.StaticAnnotation
-import scala.reflect.macros.whitebox.Context
-import scala.collection.mutable.ListBuffer
-import org.scalameta.adt.{Reflection => AdtReflection, Metadata => AdtMetadata}
+import org.scalameta.adt.{Metadata => AdtMetadata}
+import org.scalameta.adt.{Reflection => AdtReflection}
 import org.scalameta.internal.MacroHelpers
 import scala.meta.common.Optional
+
+import scala.annotation.StaticAnnotation
+import scala.collection.mutable.ListBuffer
+import scala.language.experimental.macros
+import scala.reflect.macros.whitebox.Context
 
 // The @root, @branch and @leaf macros implement the ADT pattern in a formulation that we found useful.
 //
@@ -35,8 +37,8 @@ class none extends StaticAnnotation {
 }
 
 class AdtNamerMacros(val c: Context) extends MacroHelpers {
+  import c.universe.Flag._
   import c.universe._
-  import Flag._
 
   def root(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {
@@ -192,9 +194,10 @@ object AdtTyperMacros {
 class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
-  import c.universe._
+
   import c.internal._
-  import decorators._
+  import c.internal.decorators._
+  import c.universe._
 
   private def fail(message: String): Nothing = c.abort(c.enclosingPosition, message)
 

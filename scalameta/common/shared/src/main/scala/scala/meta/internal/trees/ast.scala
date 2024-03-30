@@ -2,13 +2,14 @@ package scala.meta
 package internal
 package trees
 
-import scala.language.experimental.macros
-import scala.annotation.{StaticAnnotation, tailrec}
+import org.scalameta.internal.MacroCompat
+
+import scala.annotation.StaticAnnotation
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
+import scala.language.experimental.macros
 import scala.math.Ordered.orderingToOrdered
 import scala.reflect.macros.whitebox.Context
-
-import org.scalameta.internal.MacroCompat
 
 // @ast is a specialized version of @org.scalameta.adt.leaf for scala.meta ASTs.
 class ast extends StaticAnnotation {
@@ -17,11 +18,11 @@ class ast extends StaticAnnotation {
 
 class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   import AstNamerMacros._
+  import c.universe.Flag._
+  import c.universe._
 
   lazy val u: c.universe.type = c.universe
   lazy val mirror = c.mirror
-  import c.universe._
-  import Flag._
 
   private class Mstats(
       val primary: ListBuffer[Tree] = ListBuffer.empty[Tree],

@@ -1,11 +1,11 @@
 package scala.meta.contrib.implicits
 
-import scala.language.higherKinds
-
 import scala.meta.Tree
 import scala.meta.contrib.TreeOps
 import scala.meta.contrib.equality.Equal
 import scala.meta.contrib.equality.TreeEquality
+
+import scala.language.higherKinds
 
 trait TreeExtensions {
   implicit class XtensionTreeOps[A <: Tree](a: A) {

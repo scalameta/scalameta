@@ -1,9 +1,10 @@
 package scala.meta.tests
 package trees
 
-import munit._
 import scala.meta._
 import scala.meta.dialects.Scala211
+
+import munit._
 
 class ChildrenSuite extends FunSuite {
   test("Template.children") {

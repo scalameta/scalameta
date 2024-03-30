@@ -1,9 +1,10 @@
 package scala.meta.internal.metap
 
-import java.io._
 import scala.meta.cli._
 import scala.meta.internal.semanticdb._
 import scala.meta.metap._
+
+import java.io._
 
 abstract class BasePrinter(
     val settings: Settings,

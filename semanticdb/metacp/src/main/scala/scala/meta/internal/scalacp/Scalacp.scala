@@ -1,10 +1,11 @@
 package scala.meta.internal.scalacp
 
+import scala.meta.cli._
 import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.cli._
 import scala.meta.metacp._
+
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class Scalacp private (

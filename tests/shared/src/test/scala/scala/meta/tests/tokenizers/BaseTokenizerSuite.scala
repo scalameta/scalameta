@@ -1,10 +1,10 @@
 package scala.meta.tests.tokenizers
 
-import munit.Location
-
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.tests.TreeSuiteBase
+
+import munit.Location
 
 abstract class BaseTokenizerSuite extends TreeSuiteBase {
 

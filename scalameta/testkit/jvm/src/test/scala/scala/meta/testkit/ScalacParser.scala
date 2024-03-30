@@ -1,6 +1,7 @@
 package scala.meta.testkit
 
 import java.io.File
+
 import scala.collection.mutable
 import scala.reflect.internal.util.CodeAction
 import scala.tools.nsc.Global

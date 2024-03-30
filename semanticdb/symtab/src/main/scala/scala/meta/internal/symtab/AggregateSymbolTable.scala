@@ -1,7 +1,8 @@
 package scala.meta.internal.symtab
 
-import scala.annotation.tailrec
 import scala.meta.internal.semanticdb.SymbolInformation
+
+import scala.annotation.tailrec
 
 /** An aggregate of a list of symbol tables. */
 final class AggregateSymbolTable private (private val symtabs: List[SymbolTable])

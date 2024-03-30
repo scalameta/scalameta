@@ -6,8 +6,9 @@
 // package scala.meta.tests
 package quasiquotes
 
-import munit._
 import org.scalameta.tests._
+
+import munit._
 import typecheckError.Options.WithPositions
 
 // FIXME: https://github.com/scalatest/scalatest/issues/1112

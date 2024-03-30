@@ -2,8 +2,9 @@ package scala.meta
 package internal
 package trees
 
-import scala.collection.mutable
 import org.scalameta.internal.MacroHelpers
+
+import scala.collection.mutable
 
 object CommonNamerMacros {
 

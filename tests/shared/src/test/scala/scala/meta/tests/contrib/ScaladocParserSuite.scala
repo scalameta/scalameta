@@ -1,11 +1,11 @@
 package scala.meta.tests
 package contrib
 
-import scala.meta.contrib._
-import scala.meta.contrib.DocToken._
-import scala.meta.tokens.Token.Comment
 import scala.meta.Defn
 import scala.meta._
+import scala.meta.contrib.DocToken._
+import scala.meta.contrib._
+import scala.meta.tokens.Token.Comment
 
 import munit.FunSuite
 

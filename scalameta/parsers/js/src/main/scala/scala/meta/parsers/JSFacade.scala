@@ -2,13 +2,13 @@ package scala.meta
 package parsers
 
 import scala.scalajs.js
+
 import js.JSConverters._
 import js.annotation._
 
-import prettyprinters._
-import inputs._
-
 object JSFacade {
+  import inputs._
+  import prettyprinters._
 
   // https://stackoverflow.com/a/36573183/846273
   private[this] def mergeJSObjects(objs: js.Dynamic*): js.Dynamic = {

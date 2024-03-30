@@ -1,6 +1,7 @@
 package scala.meta.contrib.implicits
 
-import scala.meta.contrib.{CommentOps, DocToken}
+import scala.meta.contrib.CommentOps
+import scala.meta.contrib.DocToken
 import scala.meta.tokens.Token.Comment
 
 trait CommentExtensions {

@@ -2,8 +2,9 @@ package scala.meta
 package internal
 package tokens
 
-import scala.annotation.StaticAnnotation
 import org.scalameta.adt.Metadata.Adt
+
+import scala.annotation.StaticAnnotation
 
 object Metadata {
   trait Token extends Adt

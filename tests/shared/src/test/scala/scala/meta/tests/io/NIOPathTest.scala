@@ -1,13 +1,15 @@
 package scala.meta.tests
 package io
 
+import scala.meta.internal.io._
+import scala.meta.io._
+
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.meta.io._
-import scala.meta.internal.io._
+
 import munit.FunSuite
-import java.nio.file.Files
 
 class NIOPathTest extends FunSuite {
 

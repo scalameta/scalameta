@@ -1,8 +1,11 @@
 package scala.meta.tests
 
-import java.nio.file.{Path, Paths}
-import scala.annotation.tailrec
 import scala.meta.io.AbsolutePath
+
+import java.nio.file.Path
+import java.nio.file.Paths
+
+import scala.annotation.tailrec
 
 object Utils {
 

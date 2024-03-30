@@ -1,12 +1,13 @@
 package scala.meta.internal.tokenizers
 
-import scala.annotation.switch
 import scala.meta.Dialect
 import scala.meta.inputs.Input
 
-import fastparse._
-import fastparse.NoWhitespace._
+import scala.annotation.switch
 import scala.annotation.tailrec
+
+import fastparse.NoWhitespace._
+import fastparse._
 
 /**
  * Copy-pasta from this lihaoyi comment:

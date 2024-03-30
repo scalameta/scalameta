@@ -2,17 +2,17 @@ package scala.meta
 package internal
 package trees
 
-import scala.language.implicitConversions
-import scala.collection.mutable
 import org.scalameta.adt.{Reflection => AdtReflection}
 
 import scala.annotation.tailrec
+import scala.collection.mutable
+import scala.language.implicitConversions
 
 trait Reflection extends AdtReflection {
+  import u.Flag._
   import u._
-  import internal._
-  import decorators._
-  import Flag._
+  import u.internal._
+  import u.internal.decorators._
 
   def Protected: Modifiers = Modifiers(PROTECTED)
   def PrivateMeta: Modifiers = PrivateMeta(NoFlags)

@@ -1,9 +1,10 @@
 package scala.meta.tests
 package tokens
 
+import scala.meta.Token._
 import scala.meta._
 import scala.meta.dialects.Scala211
-import scala.meta.Token._
+
 import munit._
 
 // NOTE: don't run anything, just make sure that stuff compiles

@@ -1,5 +1,10 @@
 package scala.meta.internal.classpath
 
+import org.scalameta.collections._
+import scala.meta.internal.io.PathIO
+import scala.meta.io.AbsolutePath
+import scala.meta.io.Classpath
+
 import java.net.URI
 import java.nio.file.FileSystems
 import java.nio.file.FileVisitResult
@@ -8,13 +13,10 @@ import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.jar.JarFile
-import scala.collection.mutable
-import org.scalameta.collections._
-import scala.meta.io.AbsolutePath
-import scala.meta.io.Classpath
-import scala.meta.internal.io.PathIO
-import scala.util.Properties
 import java.util.zip.ZipException
+
+import scala.collection.mutable
+import scala.util.Properties
 
 /** An index to lookup class directories and classfiles by their JVM names. */
 final class ClasspathIndex private (classpath: Classpath, val dirs: collection.Map[String, Classdir]) {

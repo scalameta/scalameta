@@ -3,8 +3,8 @@ package internal
 package prettyprinters
 
 import scala.meta.internal.tokens.Chars
-import scala.meta.prettyprinters._
 import scala.meta.prettyprinters.Show.{sequence => s}
+import scala.meta.prettyprinters._
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 

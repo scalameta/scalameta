@@ -1,8 +1,5 @@
 package scala.meta.tests.semanticdb
 
-import java.nio.file.Files
-import munit.FunSuite
-import scala.meta.tests.Slow
 import scala.meta.cli.Metac
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.internal.{semanticdb => s}
@@ -10,8 +7,13 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
 import scala.meta.metac
 import scala.meta.testkit.StringFS
+import scala.meta.tests.Slow
 import scala.meta.tests.cli.CliTestUtils
 import scala.meta.tests.metacp.Library
+
+import java.nio.file.Files
+
+import munit.FunSuite
 
 class ConfigSuite extends FunSuite {
 

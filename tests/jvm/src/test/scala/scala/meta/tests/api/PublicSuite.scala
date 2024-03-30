@@ -2,8 +2,9 @@
 // package scala.meta.tests
 // package api
 
-import munit._
 import org.scalameta.tests._
+
+import munit._
 
 class PublicSuite extends FunSuite {
   test("quasiquotes without import") {

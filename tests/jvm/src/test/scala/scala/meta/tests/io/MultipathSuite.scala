@@ -1,9 +1,11 @@
 package scala.meta.tests
 package io
 
-import java.io.File
-import munit.FunSuite
 import scala.meta._
+
+import java.io.File
+
+import munit.FunSuite
 
 class MultipathSuite extends FunSuite {
   val tmp: File = File.createTempFile("src", "main")

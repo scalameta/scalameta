@@ -1,9 +1,10 @@
 package scala.meta.internal.semanticdb
 
-import scala.annotation.tailrec
 import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.Scala.{Names => n}
+
+import scala.annotation.tailrec
 
 object Scala {
   object Symbols {

@@ -1,8 +1,8 @@
 package scala.meta.tests.prettyprinters
 
+import scala.meta._
 import scala.meta.tests.parsers.ParseSuite
 
-import scala.meta._
 import munit.TestOptions
 
 class RegressionSyntaxSuite extends ParseSuite {

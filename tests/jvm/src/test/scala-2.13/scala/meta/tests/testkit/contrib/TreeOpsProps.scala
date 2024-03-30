@@ -4,6 +4,7 @@ package contrib
 import scala.meta._
 import scala.meta.contrib._
 import scala.meta.testkit.SyntaxAnalysis
+
 import munit.FunSuite
 
 class TreeOpsProps extends FunSuite {

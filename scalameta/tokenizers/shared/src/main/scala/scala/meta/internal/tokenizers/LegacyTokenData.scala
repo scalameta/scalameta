@@ -2,10 +2,10 @@ package scala.meta
 package internal
 package tokenizers
 
+import scala.meta.inputs._
+
 import java.math.MathContext
 import java.math.RoundingMode
-
-import scala.meta.inputs._
 
 trait LegacyTokenData {
 

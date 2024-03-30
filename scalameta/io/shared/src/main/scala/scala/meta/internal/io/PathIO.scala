@@ -1,8 +1,9 @@
 package scala.meta.internal.io
 
-import java.nio.file._
-import java.io.File
 import scala.meta.io._
+
+import java.io.File
+import java.nio.file._
 
 object PathIO {
 

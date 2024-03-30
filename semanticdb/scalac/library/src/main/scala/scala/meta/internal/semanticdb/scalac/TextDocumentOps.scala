@@ -1,20 +1,20 @@
 package scala.meta.internal.semanticdb.scalac
 
 import org.scalameta.internal.ScalaCompat._
-
-import scala.annotation.tailrec
-import scala.collection.mutable
+import scala.meta.Dialect
 import scala.meta.internal.inputs._
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalacp._
+import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.{semanticdb => s}
+
+import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
 import scala.reflect.io.{PlainFile => GPlainFile}
 import scala.{meta => m}
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.Dialect
 
 trait TextDocumentOps {
   self: SemanticdbOps =>

@@ -3,8 +3,8 @@ package internal
 package tokenizers
 
 import scala.meta.inputs._
-import scala.meta.tokens._
 import scala.meta.tokenizers._
+import scala.meta.tokens._
 
 trait Reporter {
   // NOTE: not making this public, e.g. by exposing Position.Offset

@@ -1,14 +1,17 @@
 package scala.meta.tests.metacp
 
-import java.nio.file._
-import munit.FunSuite
-import scala.meta.tests.Slow
-import scala.collection.JavaConverters._
 import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp.Settings
+import scala.meta.tests.Slow
 import scala.meta.tests._
 import scala.meta.tests.cli.CliTestUtils
+
+import java.nio.file._
+
+import scala.collection.JavaConverters._
+
+import munit.FunSuite
 
 class MetacpErrorSuite extends FunSuite {
 

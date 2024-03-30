@@ -1,8 +1,9 @@
 package scala.meta.internal.scalacp
 
-import scala.collection.mutable
 import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
+
+import scala.collection.mutable
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class SymbolIndex private (classpathIndex: ClasspathIndex) {

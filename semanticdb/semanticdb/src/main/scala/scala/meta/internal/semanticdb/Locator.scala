@@ -1,8 +1,9 @@
 package scala.meta.internal.semanticdb
 
+import org.scalameta.collections._
+
 import java.nio.file._
 import java.util.jar._
-import org.scalameta.collections._
 
 object Locator {
   def apply(paths: List[Path])(fn: (Path, TextDocuments) => Unit): Unit = paths

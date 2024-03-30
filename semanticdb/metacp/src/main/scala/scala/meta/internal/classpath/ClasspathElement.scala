@@ -1,5 +1,7 @@
 package scala.meta.internal.classpath
 
+import scala.meta.io.AbsolutePath
+
 import java.io.File
 import java.io.FilterInputStream
 import java.io.InputStream
@@ -7,8 +9,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+
 import scala.collection.mutable
-import scala.meta.io.AbsolutePath
 
 /** Represents a entry in a classpath that is either a package, file on disk or zip entry. */
 sealed abstract class ClasspathElement {

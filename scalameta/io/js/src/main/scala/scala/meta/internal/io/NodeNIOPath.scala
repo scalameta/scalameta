@@ -1,10 +1,11 @@
 package scala.meta.internal.io
 
+import org.scalameta.collections._
+
 import java.io.File
 import java.net.URI
 import java.nio.file.Path
 import java.util
-import org.scalameta.collections._
 
 // Rough implementation of java.nio.Path, should work similarly for the happy
 // path but has undefined behavior for error handling.

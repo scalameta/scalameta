@@ -5,9 +5,10 @@ import scala.reflect.macros.blackbox.Context
 
 trait FreeLocalFinder {
   val c: Context
-  import c.universe._
+
   import c.internal._
-  import decorators._
+  import c.internal.decorators._
+  import c.universe._
 
   def freeLocals(tree: Tree): Map[String, Tree] = {
     object freeLocalFinder extends Traverser {

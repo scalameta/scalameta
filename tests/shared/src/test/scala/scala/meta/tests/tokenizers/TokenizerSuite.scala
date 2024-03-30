@@ -2,10 +2,9 @@ package scala.meta.tests
 package tokenizers
 
 import org.scalameta.internal.ScalaCompat.EOL
-
 import scala.meta._
-import scala.meta.tokens.Token._
 import scala.meta.dialects.Scala211
+import scala.meta.tokens.Token._
 
 class TokenizerSuite extends BaseTokenizerSuite {
 

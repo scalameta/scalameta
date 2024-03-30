@@ -1,10 +1,10 @@
 package scala.meta.tests
 
-import munit._
-
 import scala.meta._
 import scala.meta.tests.parsers.CommonTrees
 import scala.meta.trees.Origin
+
+import munit._
 
 abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 

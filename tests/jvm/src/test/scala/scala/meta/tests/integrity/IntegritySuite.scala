@@ -1,9 +1,11 @@
 package scala.meta.tests
 package integrity
 
-import munit._
 import java.io.File
-import java.io.File.{separator, pathSeparator}
+import java.io.File.pathSeparator
+import java.io.File.separator
+
+import munit._
 
 class IntegritySuite extends FunSuite {
   // NOTE: Here's a real-life issue that this test suite has detected.
