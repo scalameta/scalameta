@@ -2,11 +2,13 @@ package scala.meta
 package internal
 package tokenizers
 
-import scala.annotation.{switch, tailrec}
-import scala.collection.mutable
 import scala.meta.inputs._
 import scala.meta.internal.tokens.Chars._
 import scala.meta.tokenizers.TokenizeException
+
+import scala.annotation.switch
+import scala.annotation.tailrec
+import scala.collection.mutable
 
 class LegacyScanner(input: Input, dialect: Dialect) {
 
@@ -19,7 +21,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   val prev: LegacyTokenData = new LegacyTokenData {}
   val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
 
-  import curr._, reader._, reporter._
+  import curr._
+  import reader._
+  import reporter._
   curr.input = this.input
   next.input = this.input
   prev.input = this.input

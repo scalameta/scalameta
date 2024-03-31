@@ -2,8 +2,9 @@ package org.scalameta
 package os
 
 import java.io._
-import scala.sys.process._
+
 import scala.compat.Platform.EOL
+import scala.sys.process._
 
 object shell {
   def exec(command: String, cwd: String = "."): (Int, String, String) = {

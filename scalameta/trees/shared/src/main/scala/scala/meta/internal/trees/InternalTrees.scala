@@ -5,8 +5,8 @@ package trees
 import scala.meta.inputs._
 import scala.meta.internal.prettyprinters.TreeSyntax
 import scala.meta.tokenizers._
-import scala.meta.tokens._
 import scala.meta.tokens.Token._
+import scala.meta.tokens._
 import scala.meta.trees.Error
 import scala.meta.trees.Origin
 

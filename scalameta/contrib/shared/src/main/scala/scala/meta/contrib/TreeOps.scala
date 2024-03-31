@@ -1,12 +1,12 @@
 package scala.meta
 package contrib
 
-import scala.annotation.tailrec
-import scala.language.higherKinds
-
 import scala.meta.contrib.equality.Equal
 import scala.meta.contrib.equality.TreeEquality
 import scala.meta.transversers.SimpleTraverser
+
+import scala.annotation.tailrec
+import scala.language.higherKinds
 
 object TreeOps {
 

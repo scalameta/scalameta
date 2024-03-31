@@ -1,13 +1,18 @@
-import org.scalajs.linker.interface.StandardConfig
-import java.io._
-import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
-import scala.xml.transform.{RewriteRule, RuleTransformer}
-import org.scalajs.sbtplugin.ScalaJSCrossVersion
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
-import org.scalameta.build._
 import org.scalameta.build.Versions._
+import org.scalameta.build._
+
+import java.io._
+
+import scala.xml.transform.RewriteRule
+import scala.xml.transform.RuleTransformer
+import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
+
+import org.scalajs.linker.interface.StandardConfig
+import org.scalajs.sbtplugin.ScalaJSCrossVersion
+
 import complete.DefaultParsers._
 import munit.sbtmunit.BuildInfo.munitVersion
+import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 lazy val LanguageVersions = LatestScalaVersions
 lazy val LanguageVersion = LanguageVersions.head

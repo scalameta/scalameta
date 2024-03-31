@@ -3,6 +3,7 @@ package io
 
 import scala.meta._
 import scala.meta.internal.io._
+
 import munit.FunSuite
 
 class IOSuite extends FunSuite {

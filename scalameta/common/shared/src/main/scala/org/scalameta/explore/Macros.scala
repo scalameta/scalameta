@@ -1,9 +1,10 @@
 package org.scalameta
 package explore
 
-import scala.reflect.macros.whitebox.Context
 import org.scalameta.internal.MacroHelpers
+
 import scala.collection.mutable.Set
+import scala.reflect.macros.whitebox.Context
 
 class ExploreMacros(val c: Context) extends MacroHelpers {
   import c.universe._

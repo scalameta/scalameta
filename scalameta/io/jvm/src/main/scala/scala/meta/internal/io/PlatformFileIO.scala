@@ -1,5 +1,8 @@
 package scala.meta.internal.io
 
+import scala.meta.internal.semanticdb._
+import scala.meta.io._
+
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.FileSystem
@@ -10,9 +13,8 @@ import java.nio.file.OpenOption
 import java.nio.file.Path
 import java.util
 import java.util.stream.Collectors
+
 import scalapb.GeneratedMessage
-import scala.meta.internal.semanticdb._
-import scala.meta.io._
 
 object PlatformFileIO {
 

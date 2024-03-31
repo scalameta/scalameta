@@ -1,6 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import org.scalameta.collections._
+
 import scala.reflect.ClassTag
 import scala.reflect.macros.Attachments
 import scala.tools.nsc.Global

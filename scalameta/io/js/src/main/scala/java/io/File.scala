@@ -1,8 +1,9 @@
 package java.io
 
+import scala.meta.internal.io._
+
 import java.net.URI
 import java.nio.file.Path
-import scala.meta.internal.io._
 
 // obtained implementation by experimentation on the JDK.
 class File(path: String) {

@@ -1,8 +1,8 @@
 package scala.meta.internal
 
-import scala.meta.internal.semanticdb.{Language => l}
-import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
+import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb.{Language => l}
 
 package object semanticdb {
 

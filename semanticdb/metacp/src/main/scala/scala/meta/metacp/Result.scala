@@ -1,8 +1,9 @@
 package scala.meta.metacp
 
-import scala.collection.immutable.ListMap
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
+
+import scala.collection.immutable.ListMap
 
 final class Result private (
     val status: ListMap[AbsolutePath, Option[AbsolutePath]],

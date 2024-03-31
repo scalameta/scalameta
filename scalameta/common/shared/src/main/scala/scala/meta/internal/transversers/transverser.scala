@@ -2,9 +2,10 @@ package scala.meta
 package internal
 package transversers
 
-import scala.reflect.macros.whitebox.Context
 import org.scalameta.internal.MacroHelpers
 import scala.meta.internal.trees.{Reflection => AstReflection}
+
+import scala.reflect.macros.whitebox.Context
 
 trait TransverserMacros extends MacroHelpers with AstReflection {
   lazy val u: c.universe.type = c.universe

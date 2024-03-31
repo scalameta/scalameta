@@ -2,8 +2,8 @@ package scala.meta
 package contrib
 
 import scala.meta.internal.classifiers.classifier
-import scala.meta.tokens.{Token => T}
 import scala.meta.tokens.Token._
+import scala.meta.tokens.{Token => T}
 
 // These token classes are classes extracted from the parser,
 // the parser contains more classes but many of those are parser specific.

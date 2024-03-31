@@ -1,12 +1,15 @@
 package scala.meta.internal.bench
 
+import scala.meta.internal.bench.Scalameta._
+
 import java.nio.file._
 import java.util.concurrent.TimeUnit
-import org.openjdk.jmh.annotations._
-import org.openjdk.jmh.annotations.Mode._
-import scala.meta.internal.bench.Scalameta._
+
 import scala.tools.nsc._
 import scala.tools.nsc.reporters._
+
+import org.openjdk.jmh.annotations.Mode._
+import org.openjdk.jmh.annotations._
 
 object Scalameta {
   @State(Scope.Benchmark)

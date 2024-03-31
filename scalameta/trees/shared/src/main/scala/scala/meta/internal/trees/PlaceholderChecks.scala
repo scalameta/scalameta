@@ -1,8 +1,9 @@
 package scala.meta.internal.trees
 
+import scala.meta._
+
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.meta._
 
 object PlaceholderChecks {
 

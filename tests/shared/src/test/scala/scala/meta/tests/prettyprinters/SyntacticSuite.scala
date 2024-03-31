@@ -2,7 +2,6 @@ package scala.meta.tests
 package prettyprinters
 
 import org.scalameta.invariants.InvariantFailedException
-
 import scala.meta._
 import scala.meta.prettyprinters.Show
 import scala.meta.trees.Origin

@@ -1,13 +1,14 @@
 package scala.meta.internal.semanticdb.scalac
 
+import scala.meta.internal.io.PathIO
+import scala.meta.io.AbsolutePath
+
 import java.io.IOException
 import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
-import scala.meta.internal.io.PathIO
-import scala.meta.io.AbsolutePath
 
 object RemoveOrphanSemanticdbFiles {
 

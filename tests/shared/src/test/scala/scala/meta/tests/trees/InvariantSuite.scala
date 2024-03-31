@@ -3,7 +3,6 @@ package trees
 
 import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
-
 import scala.meta._
 import scala.meta.dialects.Scala211
 

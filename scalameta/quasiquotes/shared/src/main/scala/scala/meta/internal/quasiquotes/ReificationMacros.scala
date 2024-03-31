@@ -2,32 +2,35 @@ package scala.meta
 package internal
 package quasiquotes
 
+import org.scalameta._
+import org.scalameta.adt.{Liftables => AdtLiftables}
+import org.scalameta.internal.ScalaCompat.EOL
+import org.scalameta.invariants._
+import scala.meta.dialects
+import scala.meta.inputs.{Position => MetaPosition, _}
+import scala.meta.internal.parsers.Absolutize._
+import scala.meta.internal.parsers.Messages
+import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection, _}
+import scala.meta.parsers._
+import scala.meta.tokenizers._
+import scala.meta.trees.Origin
+import scala.meta.{Tree => MetaTree}
+
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.language.implicitConversions
 import scala.reflect.macros.whitebox.Context
 import scala.runtime.ScalaRunTime
 
-import org.scalameta._
-import org.scalameta.adt.{Liftables => AdtLiftables}
-import org.scalameta.internal.ScalaCompat.EOL
-import org.scalameta.invariants._
-
-import scala.annotation.tailrec
-import scala.meta.dialects
-import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection, _}
-import scala.meta.internal.parsers.Messages
-import scala.meta.internal.parsers.Absolutize._
-import scala.meta.parsers._
-import scala.meta.tokenizers._
-import scala.meta.trees.Origin
-
 class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
-  import c.universe.{Tree => _, Symbol => _, Type => _, Position => _, _}
-  import c.universe.{Tree => ReflectTree, Symbol => ReflectSymbol, Position => ReflectPosition}
-  import scala.meta.{Tree => MetaTree, Dialect => Dialect}
-  import scala.meta.inputs.{Position => MetaPosition, _}
+
+  import c.universe.{Position => ReflectPosition}
+  import c.universe.{Position => _, Symbol => _, Tree => _, Type => _, _}
+  import c.universe.{Symbol => ReflectSymbol}
+  import c.universe.{Tree => ReflectTree}
+
   type MetaParser = (Input, Dialect) => MetaTree
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
   val XtensionParsersDialectApply = "shadow extension method conflict"

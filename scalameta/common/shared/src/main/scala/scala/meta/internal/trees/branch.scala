@@ -2,11 +2,12 @@ package scala.meta
 package internal
 package trees
 
-import scala.language.experimental.macros
-import scala.annotation.StaticAnnotation
-import scala.reflect.macros.whitebox.Context
-import scala.collection.mutable.ListBuffer
 import scala.meta.internal.trees.{Reflection => AstReflection}
+
+import scala.annotation.StaticAnnotation
+import scala.collection.mutable.ListBuffer
+import scala.language.experimental.macros
+import scala.reflect.macros.whitebox.Context
 
 // @branch is a specialized version of @org.scalameta.adt.branch for scala.meta ASTs.
 class branch extends StaticAnnotation {
@@ -14,10 +15,11 @@ class branch extends StaticAnnotation {
 }
 
 class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMacros {
+  import c.universe.Flag._
+  import c.universe._
+
   lazy val u: c.universe.type = c.universe
   lazy val mirror = c.mirror
-  import c.universe._
-  import Flag._
 
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformTrait(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {

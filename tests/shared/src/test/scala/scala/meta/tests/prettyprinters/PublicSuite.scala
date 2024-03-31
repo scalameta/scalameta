@@ -1,10 +1,11 @@
 package scala.meta.tests
 package prettyprinters
 
+import org.scalameta.internal.ScalaCompat.EOL
+import scala.meta._
+
 import java.io._
 import java.nio.charset.Charset
-import scala.meta._
-import org.scalameta.internal.ScalaCompat.EOL
 
 class PublicSuite extends TreeSuiteBase {
   test("scala.meta.Dialect.toString") {

@@ -4,15 +4,17 @@ import org.scalameta.adt.{Metadata => AdtMetadata}
 import scala.meta.internal.trees.{Metadata => AstMetadata}
 
 import scala.annotation.tailrec
-import scala.reflect.{ClassTag, classTag}
+import scala.reflect.ClassTag
 import scala.reflect.api.Universe
+import scala.reflect.classTag
 
 trait Reflection {
   val u: Universe
   val mirror: u.Mirror
+
   import u._
-  import internal._
-  import decorators._
+  import u.internal._
+  import u.internal.decorators._
 
   implicit class XtensionAnnotatedSymbol(sym: Symbol) {
     // NOTE: Can't use TypeTag here, because this method can be called at runtime as well,

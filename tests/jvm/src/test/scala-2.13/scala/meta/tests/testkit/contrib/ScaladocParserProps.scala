@@ -1,12 +1,14 @@
 package scala.meta.tests.testkit
 package contrib
 
-import munit.FunSuite
-import scala.meta.testkit._
-import scala.meta.tokens.Token.Comment
 import scala.meta._
 import scala.meta.contrib._
+import scala.meta.testkit._
+import scala.meta.tokens.Token.Comment
+
 import scala.util.Try
+
+import munit.FunSuite
 
 class ScaladocParserProps extends FunSuite {
 

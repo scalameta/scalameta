@@ -2,11 +2,11 @@ package scala.meta.testkit
 
 import java.io.File
 import java.net.URI
+import java.net.URL
+
+import org.rauschig.jarchivelib.ArchiverFactory
 
 import sys.process._
-import java.net.URL
-import java.io.File
-import org.rauschig.jarchivelib.ArchiverFactory
 
 /**
  * A collection of Scala source files to run [[SyntaxAnalysis]].

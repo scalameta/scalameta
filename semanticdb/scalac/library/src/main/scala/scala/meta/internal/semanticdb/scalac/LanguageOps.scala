@@ -1,9 +1,9 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.util.Properties
-import scala.{meta => m}
-import scala.util.control.NonFatal
 import scala.tools.nsc.settings.ScalaVersion
+import scala.util.Properties
+import scala.util.control.NonFatal
+import scala.{meta => m}
 
 trait LanguageOps {
   self: SemanticdbOps =>

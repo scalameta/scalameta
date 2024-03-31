@@ -1,10 +1,12 @@
 package scala.meta.internal.io
 
-import java.net.URI
-import java.nio.charset.Charset
-import scalapb.GeneratedMessage
 import scala.meta.internal.semanticdb._
 import scala.meta.io._
+
+import java.net.URI
+import java.nio.charset.Charset
+
+import scalapb.GeneratedMessage
 
 object FileIO {
 

@@ -1,11 +1,12 @@
 package scala.meta.internal
 
-import java.util.jar.Manifest
+import scala.meta.io.AbsolutePath
+import scala.meta.io.Classpath
+
 import java.nio.file.FileVisitor
 import java.nio.file.Files
 import java.nio.file.Path
-import scala.meta.io.AbsolutePath
-import scala.meta.io.Classpath
+import java.util.jar.Manifest
 
 package object io {
 

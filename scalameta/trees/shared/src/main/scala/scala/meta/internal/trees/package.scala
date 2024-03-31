@@ -1,12 +1,14 @@
 package scala.meta
 package internal
 
-import java.lang.{Character => JCharacter}
-import scala.reflect.ClassTag
-
-import scala.annotation.{switch, tailrec}
 import scala.meta.classifiers._
 import scala.meta.internal.tokens.Chars
+
+import java.lang.{Character => JCharacter}
+
+import scala.annotation.switch
+import scala.annotation.tailrec
+import scala.reflect.ClassTag
 
 package object trees {
 

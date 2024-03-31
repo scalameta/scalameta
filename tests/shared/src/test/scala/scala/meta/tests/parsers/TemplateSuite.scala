@@ -1,10 +1,14 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta._, Defn.{Trait, Object, Class}
+import scala.meta._
 import scala.meta.dialects.Scala211
 
 class TemplateSuite extends ParseSuite {
+  import Defn.Class
+  import Defn.Object
+  import Defn.Trait
+
   test("trait T") {
     val tree = templStat("trait T")
     assertTree(tree)(Trait(Nil, pname("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()))

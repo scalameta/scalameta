@@ -1,8 +1,9 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.scalacp._
-import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.{semanticdb => s}
+
 import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps {

@@ -1,7 +1,8 @@
 package scala.meta.internal.metap
 
-import scala.collection.mutable
 import scala.meta.internal.semanticdb._
+
+import scala.collection.mutable
 
 trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformationPrinter {
 

@@ -4,14 +4,16 @@ package tokenizers
 
 import org.scalameta._
 import org.scalameta.invariants._
-import LegacyToken._
-import scala.annotation.tailrec
 import scala.meta.inputs._
-import scala.meta.tokens._
-import scala.meta.tokenizers._
 import scala.meta.internal.tokenizers.ScalametaTokenizer.UnexpectedInputEndException
+import scala.meta.tokenizers._
+import scala.meta.tokens._
+
+import scala.annotation.tailrec
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
+  import LegacyToken._
+
   def tokenize(): Tokens = input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize())
 
   private def uncachedTokenize(): Tokens = {

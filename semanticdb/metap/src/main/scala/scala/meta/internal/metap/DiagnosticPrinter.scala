@@ -1,9 +1,10 @@
 package scala.meta.internal.metap
 
-import scala.math.Ordering
-import scala.meta.internal.semanticdb._
-import scala.meta.internal.semanticdb.Diagnostic._
 import scala.meta.internal.semanticdb.Diagnostic.Severity._
+import scala.meta.internal.semanticdb.Diagnostic._
+import scala.meta.internal.semanticdb._
+
+import scala.math.Ordering
 
 trait DiagnosticPrinter extends BasePrinter with RangePrinter {
   def pprint(diag: Diagnostic): Unit = {

@@ -2,12 +2,12 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import Term.{Name => TermName}
-import Type.{Name => TypeName, _}
-import Name.Anonymous
 import scala.meta.parsers.ParseException
 
 class TypeSuite extends ParseSuite {
+  import Name.Anonymous
+  import Term.{Name => TermName}
+  import Type.{Name => TypeName, _}
 
   private def assertTpe(expr: String)(tree: => Tree)(implicit dialect: Dialect): Unit =
     assertTree(tpe(expr))(tree)

@@ -2,9 +2,10 @@ package scala.meta
 package internal
 package trees
 
+import org.scalameta.adt.Metadata.Adt
+
 import scala.annotation.StaticAnnotation
 import scala.annotation.meta.getter
-import org.scalameta.adt.Metadata.Adt
 
 object Metadata {
   trait Ast extends Adt

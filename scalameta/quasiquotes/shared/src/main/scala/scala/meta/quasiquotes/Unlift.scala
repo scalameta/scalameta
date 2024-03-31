@@ -1,9 +1,10 @@
 package scala.meta
 package quasiquotes
 
+import scala.meta.common._
+
 import scala.annotation.implicitNotFound
 import scala.reflect.ClassTag
-import scala.meta.common._
 
 @implicitNotFound(msg = "don't know how to unlift ${I} into ${O}")
 trait Unlift[I, O] extends Convert[I, Option[O]] {

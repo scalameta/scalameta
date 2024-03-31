@@ -1,9 +1,10 @@
 package scala.meta.tests
 package contrib
 
-import munit.FunSuite
 import scala.meta._
 import scala.meta.contrib._
+
+import munit.FunSuite
 
 class SetExtensionsTest extends FunSuite {
   val typeFoo = t"Foo"

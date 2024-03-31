@@ -1,8 +1,9 @@
 package org.scalameta.invariants
 
+import org.scalameta.internal.MacroHelpers
+
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
-import org.scalameta.internal.MacroHelpers
 
 class Macros(val c: Context) extends MacroHelpers {
   import c.universe._

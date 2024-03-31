@@ -1,12 +1,13 @@
 package scala.meta.io
 
+import org.scalameta.collections._
+import scala.meta.internal.io.PathIO
+
 import java.io._
 import java.net._
 import java.nio.file.Path
-import java.nio.{file => nio}
 import java.nio.file.Paths
-import scala.meta.internal.io.PathIO
-import org.scalameta.collections._
+import java.nio.{file => nio}
 
 /** Wrapper around a relative nio.Path. */
 sealed abstract case class RelativePath(toNIO: Path) {

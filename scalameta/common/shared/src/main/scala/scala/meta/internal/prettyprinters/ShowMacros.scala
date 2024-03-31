@@ -2,8 +2,9 @@ package scala.meta
 package internal
 package prettyprinters
 
-import scala.reflect.macros.blackbox.Context
 import scala.meta.prettyprinters._
+
+import scala.reflect.macros.blackbox.Context
 
 class ShowMacros(val c: Context) {
   import c.universe._

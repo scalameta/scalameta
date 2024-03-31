@@ -2,6 +2,7 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.io.PathIO
 import scala.meta.io._
+
 import scala.reflect.internal.util.NoPosition
 import scala.tools.nsc.reporters.Reporter
 import scala.util.matching.Regex

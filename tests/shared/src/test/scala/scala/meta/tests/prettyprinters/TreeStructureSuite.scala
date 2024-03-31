@@ -1,10 +1,10 @@
 package scala.meta.tests.prettyprinters
 
-import munit.Location
 import org.scalameta.logger
-
 import scala.meta._
 import scala.meta.tests.parsers.ParseSuite
+
+import munit.Location
 
 class TreeStructureSuite extends ParseSuite {
 

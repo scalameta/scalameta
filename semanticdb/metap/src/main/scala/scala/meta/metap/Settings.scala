@@ -1,9 +1,11 @@
 package scala.meta.metap
 
+import scala.meta.cli._
+
 import java.io._
 import java.nio.file._
+
 import scala.annotation.tailrec
-import scala.meta.cli._
 
 final class Settings private (val format: Format, val paths: List[Path]) {
   private def this() = this(format = Format.Compact, paths = Nil)

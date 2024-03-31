@@ -1,11 +1,11 @@
 package scala.meta.tests.testkit
 package prettyprinters
 
+import org.scalameta.logger
 import scala.meta._
 import scala.meta.testkit.StructurallyEqual
 import scala.meta.trees.Origin
 
-import org.scalameta.logger
 import munit.FunSuite
 
 class PrettyPrinterSuite extends FunSuite {

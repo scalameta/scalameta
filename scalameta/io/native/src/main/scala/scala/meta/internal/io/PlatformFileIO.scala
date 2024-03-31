@@ -2,15 +2,15 @@ package scala.meta.internal.io
 
 import scala.meta.internal.semanticdb.TextDocument
 import scala.meta.internal.semanticdb.TextDocuments
+import scala.meta.io.AbsolutePath
+import scala.meta.io._
+
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import scala.meta.io.AbsolutePath
-import scala.meta.io.AbsolutePath
-import scala.meta.io.AbsolutePath
-import scala.meta.io._
+
 import scalapb.GeneratedMessage
 
 object PlatformFileIO {

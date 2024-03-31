@@ -1,7 +1,8 @@
 package scala.meta
 
-import scala.annotation.tailrec
 import scala.meta.internal.tokens.Chars
+
+import scala.annotation.tailrec
 
 package object tokens extends tokens.Api {
 

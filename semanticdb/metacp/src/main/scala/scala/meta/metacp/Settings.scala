@@ -1,10 +1,11 @@
 package scala.meta.metacp
 
-import scala.annotation.tailrec
 import scala.meta.cli._
 import scala.meta.internal.io.PathIO
 import scala.meta.io.AbsolutePath
 import scala.meta.io.Classpath
+
+import scala.annotation.tailrec
 
 final class Settings private (
     val out: AbsolutePath,

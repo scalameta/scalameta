@@ -1,7 +1,7 @@
 package scala.meta.contrib
 
-import fastparse._
 import fastparse.NoWhitespace._
+import fastparse._
 
 /**
  * Represents a scaladoc line.

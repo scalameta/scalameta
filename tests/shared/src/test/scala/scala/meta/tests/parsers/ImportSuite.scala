@@ -1,12 +1,19 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.{Name => _, _}, Importee._, Term.{This, Name => TermName, Select, Super}
-import scala.meta.Name.{Anonymous, Indeterminate}
+import scala.meta.Name.Anonymous
+import scala.meta.Name.Indeterminate
 import scala.meta.dialects.Scala211
 import scala.meta.parsers.ParseException
+import scala.meta.{Name => _, _}
 
 class ImportSuite extends ParseSuite {
+  import Importee._
+  import Term.Select
+  import Term.Super
+  import Term.This
+  import Term.{Name => TermName}
+
   test("import foo.bar") {
     assertTree(templStat("import foo.bar"))(Import(
       Importer(TermName("foo"), Name(Indeterminate("bar")) :: Nil) :: Nil

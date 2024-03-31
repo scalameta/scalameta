@@ -1,7 +1,7 @@
 package scala.meta.internal.metap
 
-import scala.meta.internal.semanticdb._
 import scala.meta.cli._
+import scala.meta.internal.semanticdb._
 import scala.meta.metap._
 
 class Main(settings: Settings, reporter: Reporter) {

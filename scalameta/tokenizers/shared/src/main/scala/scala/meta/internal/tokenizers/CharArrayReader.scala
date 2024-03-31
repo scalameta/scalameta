@@ -21,11 +21,10 @@ private[meta] case class CharArrayReader private (
 ) {
 
   import CharArrayReader._
+  import reporter._
 
   def this(input: Input, dialect: Dialect, reporter: Reporter) =
     this(buf = input.chars, dialect = dialect, reporter = reporter)
-
-  import reporter._
 
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {

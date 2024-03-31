@@ -1,9 +1,10 @@
 package scala.meta.tests.metacp
 
-import scala.collection.mutable
 import scala.meta.internal.semanticdb.Locator
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.Classpath
+
+import scala.collection.mutable
 
 object MetacpOps {
 

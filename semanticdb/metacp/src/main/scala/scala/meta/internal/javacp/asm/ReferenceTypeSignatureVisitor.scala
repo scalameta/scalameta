@@ -1,6 +1,7 @@
 package scala.meta.internal.javacp.asm
 
 import scala.meta.internal.javacp._
+
 import scala.tools.asm.signature.SignatureVisitor
 
 class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[ReferenceTypeSignature]] {

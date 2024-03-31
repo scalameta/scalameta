@@ -1,10 +1,12 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta._, Defn.Class
+import scala.meta._
 import scala.meta.dialects.Scala211
 
 class PackageSuite extends ParseSuite {
+  import Defn.Class
+
   test("class C") {
     assertTree(source("class C")) {
       Source(Class(Nil, pname("C"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) :: Nil)

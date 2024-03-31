@@ -1,8 +1,8 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.inputs._
+import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.{semanticdb => s}
 
 trait SyntheticOps {
   self: SemanticdbOps =>

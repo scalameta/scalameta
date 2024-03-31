@@ -1,11 +1,12 @@
 package scala.meta.internal.semanticdb
 
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import scala.meta.cli._
 import scala.meta.internal.metap.DocumentPrinter
 import scala.meta.internal.metap.PrinterSymtab
 import scala.meta.metap._
+
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 object Print {
 

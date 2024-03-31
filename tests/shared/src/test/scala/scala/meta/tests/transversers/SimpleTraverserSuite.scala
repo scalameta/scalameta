@@ -1,9 +1,9 @@
 package scala.meta.tests.transversers
 
-import munit._
-
 import scala.meta._
 import scala.meta.transversers.SimpleTraverser
+
+import munit._
 
 class SimpleTraverserSuite extends FunSuite {
 

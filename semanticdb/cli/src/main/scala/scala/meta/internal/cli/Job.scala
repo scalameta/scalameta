@@ -2,6 +2,7 @@ package scala.meta.internal.cli
 
 import java.io._
 import java.util.concurrent.atomic._
+
 import scala.collection.GenSeq
 
 case class Job[T](xs: GenSeq[T], stream: PrintStream) {

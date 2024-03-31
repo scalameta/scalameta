@@ -1,8 +1,9 @@
 package scala.meta.tests
 package inputs
 
-import munit._
 import scala.meta._
+
+import munit._
 
 class OffsetLineColumnSuite extends FunSuite {
   private def test(s: String)(expected: String): Unit = {

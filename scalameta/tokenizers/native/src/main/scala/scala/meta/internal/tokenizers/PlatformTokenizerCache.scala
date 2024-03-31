@@ -2,11 +2,12 @@ package scala.meta
 package internal
 package tokenizers
 
-import scala.collection.mutable
 import scala.meta.inputs._
 import scala.meta.tokens._
 
 import java.{util => ju}
+
+import scala.collection.mutable
 
 @deprecated("No longer used", "4.3.0")
 object PlatformTokenizerCache {

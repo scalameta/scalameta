@@ -1,8 +1,9 @@
 package scala.meta.tests.semanticdb
 
-import munit.FunSuite
 import scala.meta.internal.semanticdb.ClassSignature
 import scala.meta.internal.semanticdb.Scala._
+
+import munit.FunSuite
 
 class JavacpSuite extends FunSuite {
   private val infos = MetacMetacpDiffExpect.metacpSymbols

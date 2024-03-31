@@ -1,9 +1,10 @@
 package scala.meta.testkit
 
-import munit.FunSuite
 import scala.meta._
 import scala.meta.parsers.Parsed
+
 import CompatParCollections.Converters._
+import munit.FunSuite
 
 object ScalametaParserProperties {
 

@@ -1,7 +1,8 @@
 package org.scalameta
 
-import scala.reflect.macros.blackbox.Context
 import org.scalameta.internal.MacroHelpers
+
+import scala.reflect.macros.blackbox.Context
 
 class UnreachableMacros(val c: Context) extends MacroHelpers {
   import c.universe._

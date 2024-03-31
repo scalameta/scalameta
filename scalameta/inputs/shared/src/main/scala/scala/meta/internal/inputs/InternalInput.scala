@@ -1,11 +1,12 @@
 package scala.meta.internal
 package inputs
 
-import scala.collection.mutable
-import scala.meta.inputs._
 import scala.meta.Dialect
-import scala.meta.tokens.Tokens
+import scala.meta.inputs._
 import scala.meta.internal.tokenizers.Compat
+import scala.meta.tokens.Tokens
+
+import scala.collection.mutable
 
 trait InternalInput {
   self: Input =>

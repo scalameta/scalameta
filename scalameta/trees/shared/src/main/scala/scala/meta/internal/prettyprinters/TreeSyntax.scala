@@ -2,8 +2,10 @@ package scala.meta
 package internal
 package prettyprinters
 
-import scala.reflect.{ClassTag, classTag}
-
+import org.scalameta.adt._
+import org.scalameta.internal.ScalaCompat.EOL
+import org.scalameta.invariants._
+import org.scalameta.unreachable
 import scala.meta.classifiers._
 import scala.meta.inputs.Position
 import scala.meta.internal.tokens.Chars._
@@ -12,23 +14,19 @@ import scala.meta.prettyprinters._
 import scala.meta.tokens.Token
 import scala.meta.trees.Origin
 
-import org.scalameta.adt._
-import org.scalameta.internal.ScalaCompat.EOL
-import org.scalameta.invariants._
-import org.scalameta.unreachable
-
-import Show.{
-  function => fn,
-  indent => i,
-  meta => m,
-  newline => n,
-  opt => o,
-  repeat => r,
-  sequence => s,
-  wrap => w
-}
+import scala.reflect.ClassTag
+import scala.reflect.classTag
 
 object TreeSyntax {
+  import Show.{function => fn}
+  import Show.{indent => i}
+  import Show.{meta => m}
+  import Show.{newline => n}
+  import Show.{opt => o}
+  import Show.{repeat => r}
+  import Show.{sequence => s}
+  import Show.{wrap => w}
+
   private final object SyntaxInstances {
     // NOTE: these groups closely follow non-terminals in the grammar spec from SLS, except for:
     // 1) we don't care about tracking non-terminals (with m() and/or p()) when that doesn't affect parenthesization
@@ -166,8 +164,11 @@ object TreeSyntax {
   private final class SyntaxInstances(dialect: Dialect) {
     val keywords = tokenizers.keywords(dialect)
     import SyntaxInstances.SyntacticGroup
-    import SyntacticGroup.Type._, SyntacticGroup.Term._, SyntacticGroup.Pat._,
-      SyntacticGroup.Literal, SyntacticGroup.Path
+    import SyntaxInstances.SyntacticGroup.Literal
+    import SyntaxInstances.SyntacticGroup.Pat._
+    import SyntaxInstances.SyntacticGroup.Path
+    import SyntaxInstances.SyntacticGroup.Term._
+    import SyntaxInstances.SyntacticGroup.Type._
 
     private val escapableSoftKeywords: Map[String, Seq[Class[_]]] = {
       val seq = Seq.newBuilder[(String, Seq[ClassTag[_]])]

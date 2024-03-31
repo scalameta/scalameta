@@ -1,16 +1,19 @@
 package scala.meta.internal.io
 
+import scala.meta.internal.io._
+import scala.meta.internal.semanticdb._
+import scala.meta.io._
+
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Paths
+
 import scala.scalajs.js.JSConverters._
+
 import scalapb.GeneratedMessage
-import scala.meta.internal.semanticdb._
-import scala.meta.internal.io._
-import scala.meta.io._
 
 object PlatformFileIO {
   def newInputStream(uri: URI): InputStream = new ByteArrayInputStream(readAllBytes(uri))

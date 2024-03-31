@@ -1,12 +1,12 @@
 package scala.meta.contrib.implicits
 
-import scala.language.implicitConversions
-import scala.language.higherKinds
-
 import scala.meta.Tree
 import scala.meta.contrib.equality.Equal
-import scala.meta.contrib.equality.TreeEquality
 import scala.meta.contrib.equality.Structurally
+import scala.meta.contrib.equality.TreeEquality
+
+import scala.language.higherKinds
+import scala.language.implicitConversions
 
 trait Equality {
 

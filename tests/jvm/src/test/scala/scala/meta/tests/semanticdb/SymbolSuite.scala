@@ -1,7 +1,8 @@
 package scala.meta.tests.semanticdb
 
-import munit.FunSuite
 import scala.meta.internal.semanticdb.Scala._
+
+import munit.FunSuite
 
 class SymbolSuite extends FunSuite {
 

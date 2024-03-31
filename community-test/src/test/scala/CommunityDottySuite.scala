@@ -1,16 +1,16 @@
 package scala.meta.parser.dotty
 
 import scala.meta._
-import munit.FunSuite
 
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
-import sys.process._
 import scala.language.postfixOps
 
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.Path
+import munit.FunSuite
+import sys.process._
 
 class CommunityDottySuite extends FunSuite {
 

@@ -2,10 +2,11 @@ package scala.meta
 package internal
 package trees
 
-import scala.language.experimental.macros
-import scala.annotation.StaticAnnotation
-import scala.reflect.macros.whitebox.Context
 import org.scalameta.internal.MacroHelpers
+
+import scala.annotation.StaticAnnotation
+import scala.language.experimental.macros
+import scala.reflect.macros.whitebox.Context
 
 // Generates quasiquote definition boilerplate for a given interpolator
 // and then injects it into the annottee.

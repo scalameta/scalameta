@@ -1,16 +1,18 @@
 package scala.meta.internal.metap
 
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
-import scala.collection.mutable
-import scala.math.Ordering
 import scala.meta.cli.Reporter
-import scala.meta.internal.semanticdb._
 import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.SymbolInformation._
 import scala.meta.internal.semanticdb.SymbolInformation.Kind._
+import scala.meta.internal.semanticdb.SymbolInformation._
+import scala.meta.internal.semanticdb._
 import scala.meta.metap.Format
 import scala.meta.metap.Settings
+
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
+
+import scala.collection.mutable
+import scala.math.Ordering
 
 trait SymbolInformationPrinter extends BasePrinter {
 

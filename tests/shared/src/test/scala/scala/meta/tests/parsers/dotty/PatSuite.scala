@@ -1,11 +1,11 @@
 package scala.meta.tests.parsers.dotty
 
 import org.scalameta.invariants.InvariantFailedException
-
-import scala.meta._, Pat._
+import scala.meta._
 import scala.meta.tests.parsers.ParseSuite
 
 class PatSuite extends ParseSuite {
+  import Pat._
 
   private def assertPat(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit =
     assertTree(pat(expr))(tree)

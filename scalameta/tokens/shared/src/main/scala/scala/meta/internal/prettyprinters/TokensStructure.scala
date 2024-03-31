@@ -3,10 +3,12 @@ package internal
 package prettyprinters
 
 import scala.meta.prettyprinters._
-import Show.{sequence => s, repeat => r}
 import scala.meta.tokens._
 
 object TokensStructure {
+  import Show.{repeat => r}
+  import Show.{sequence => s}
+
   def apply[T <: Tokens]: Structure[T] = Structure { xs =>
     // val prefix = xs.productPrefix
     val prefix = "Tokens"

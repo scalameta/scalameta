@@ -1,13 +1,16 @@
 package scala.meta.tests.cli
 
-import java.io._
-import java.nio.charset.StandardCharsets._
-import java.nio.file._
-import munit.FunSuite
-import scala.collection.JavaConverters._
 import scala.meta.cli._
 import scala.meta.testkit._
 import scala.meta.tests.metacp._
+
+import java.io._
+import java.nio.charset.StandardCharsets._
+import java.nio.file._
+
+import scala.collection.JavaConverters._
+
+import munit.FunSuite
 
 class CliSuite extends FunSuite {
   object HelloWorld {

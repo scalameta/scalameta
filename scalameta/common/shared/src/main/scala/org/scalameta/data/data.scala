@@ -1,10 +1,12 @@
 package org.scalameta.data
 
-import scala.language.experimental.macros
-import scala.annotation.{StaticAnnotation, tailrec}
-import scala.reflect.macros.whitebox.Context
-import scala.collection.mutable.ListBuffer
 import org.scalameta.internal.MacroHelpers
+
+import scala.annotation.StaticAnnotation
+import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
+import scala.language.experimental.macros
+import scala.reflect.macros.whitebox.Context
 
 // Virtually the same as the `case' modifier:
 // can be used on both classes and objects with very similar effect.
@@ -28,8 +30,8 @@ class none extends StaticAnnotation {
 }
 
 class DataMacros(val c: Context) extends MacroHelpers {
+  import c.universe.Flag._
   import c.universe._
-  import Flag._
 
   def data(annottees: Tree*): Tree = annottees.transformAnnottees(new ImplTransformer {
     override def transformClass(cdef: ClassDef, mdef: ModuleDef): List[ImplDef] = {

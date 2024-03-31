@@ -1,7 +1,8 @@
 package scala.meta.internal.bench
 
-import java.nio.file._
 import org.scalameta.collections._
+
+import java.nio.file._
 
 trait FileFixtures {
   lazy val scalapDir: Path = Paths.get(s"${BuildInfo.sourceroot}/bench/corpus/scalap")

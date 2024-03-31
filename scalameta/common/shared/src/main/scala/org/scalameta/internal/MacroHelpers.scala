@@ -4,9 +4,10 @@ package internal
 import scala.annotation.tailrec
 
 trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder with ImplTransformers {
-  import c.universe._
-  import definitions._
   import scala.reflect.internal.Flags._
+
+  import c.universe._
+  import c.universe.definitions._
 
   implicit class XtensionModifiers(mods: Modifiers) {
     def transformFlags(fn: Long => Long): Modifiers = {

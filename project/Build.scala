@@ -1,13 +1,15 @@
 package org.scalameta
 package build
 
-import java.lang.ProcessBuilder._
-import java.nio.file._
-import java.nio.file.Files._
-import scala.collection.JavaConverters._
-import sbt._
 import sbt.Keys._
+import sbt._
 import sbt.plugins._
+
+import java.lang.ProcessBuilder._
+import java.nio.file.Files._
+import java.nio.file._
+
+import scala.collection.JavaConverters._
 
 object Build extends AutoPlugin {
   override def requires: Plugins = JvmPlugin

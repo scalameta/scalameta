@@ -1,9 +1,9 @@
 package org.scalameta
 package build
 
-import com.typesafe.tools.mima.core._
-
 import scala.reflect.ClassTag
+
+import com.typesafe.tools.mima.core._
 
 // More details about Mima:
 // https://github.com/typesafehub/migration-manager/wiki/sbt-plugin#basic-usage

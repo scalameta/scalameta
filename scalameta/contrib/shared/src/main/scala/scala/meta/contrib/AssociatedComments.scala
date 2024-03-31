@@ -1,10 +1,11 @@
 package scala.meta.contrib
 
+import org.scalameta.logger
 import scala.meta._
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token.Comment
+
 import scala.collection.immutable.List
-import org.scalameta.logger
 
 sealed abstract class AssociatedComments(
     leadingMap: Map[Token, List[Comment]],

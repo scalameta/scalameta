@@ -1,13 +1,14 @@
 package scala.meta.tests.symtab
 
-import munit.FunSuite
 import scala.meta.internal.symtab.AggregateSymbolTable
 import scala.meta.internal.symtab.GlobalSymbolTable
 import scala.meta.internal.symtab.LocalSymbolTable
-import scala.meta.tests.metacp.Library
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.Classpath
 import scala.meta.tests.BuildInfo
+import scala.meta.tests.metacp.Library
+
+import munit.FunSuite
 
 class SymbolTableSuite extends FunSuite {
   private val classpath = Classpath(BuildInfo.databaseClasspath) ++

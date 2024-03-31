@@ -3,8 +3,8 @@ package internal
 package parsers
 
 import scala.meta.inputs._
-import scala.meta.tokens._
 import scala.meta.parsers._
+import scala.meta.tokens._
 
 trait Reporter {
   def deprecationWarning(msg: String, at: Position): Unit = ()

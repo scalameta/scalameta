@@ -1,10 +1,11 @@
 package scala.meta.tests
 package inputs
 
-import munit._
 import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 import scala.meta.internal.inputs._
+
+import munit._
 
 class FormatMessageSuite extends FunSuite {
   private def test(s: String)(expected: String): Unit = {

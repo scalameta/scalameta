@@ -1,9 +1,10 @@
 package scala.meta.tests
 package trees
 
-import munit._
 import scala.meta._
 import scala.meta.internal.trees._
+
+import munit._
 
 class TreeSuite extends FunSuite {
   test("Name.unapply") {

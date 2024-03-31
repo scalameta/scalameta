@@ -1,10 +1,12 @@
 package scala.meta.tests
 package tokens
 
-import munit._
 import org.scalameta.internal.ScalaCompat.EOL
-import scala.reflect.runtime.{universe => ru}
+
 import scala.reflect.runtime.universe._
+import scala.reflect.runtime.{universe => ru}
+
+import munit._
 
 class ReflectionSuite extends FunSuite {
   object TokenReflection

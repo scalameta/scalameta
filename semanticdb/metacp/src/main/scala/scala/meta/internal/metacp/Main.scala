@@ -1,15 +1,5 @@
 package scala.meta.internal.metacp
 
-import java.io.BufferedOutputStream
-import java.net.URLClassLoader
-import java.nio.charset.StandardCharsets
-import java.nio.file._
-import java.nio.file.attribute.BasicFileAttributes
-import java.util.concurrent.ConcurrentHashMap
-import java.util.jar._
-import scala.collection.GenSeq
-import scala.collection.immutable
-import scala.collection.mutable
 import scala.meta.cli._
 import scala.meta.internal.classpath._
 import scala.meta.internal.cli._
@@ -17,6 +7,18 @@ import scala.meta.internal.io._
 import scala.meta.internal.scalacp._
 import scala.meta.io._
 import scala.meta.metacp._
+
+import java.io.BufferedOutputStream
+import java.net.URLClassLoader
+import java.nio.charset.StandardCharsets
+import java.nio.file._
+import java.nio.file.attribute.BasicFileAttributes
+import java.util.concurrent.ConcurrentHashMap
+import java.util.jar._
+
+import scala.collection.GenSeq
+import scala.collection.immutable
+import scala.collection.mutable
 
 class Main(settings: Settings, reporter: Reporter) {
 

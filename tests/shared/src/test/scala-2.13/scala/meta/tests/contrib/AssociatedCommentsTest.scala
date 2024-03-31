@@ -3,6 +3,7 @@ package contrib
 
 import scala.meta._
 import scala.meta.contrib._
+
 import munit.FunSuite
 
 class AssociatedCommentsTest extends FunSuite {

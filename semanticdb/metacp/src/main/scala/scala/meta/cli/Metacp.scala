@@ -1,10 +1,11 @@
 package scala.meta.cli
 
-import java.io._
 import scala.meta.internal.cli.Args
 import scala.meta.internal.metacp._
 import scala.meta.io._
 import scala.meta.metacp._
+
+import java.io._
 
 object Metacp {
   def main(args: Array[String]): Unit = sys.exit(process(args, Reporter()))
