@@ -654,11 +654,13 @@ class FewerBracesSuite extends BaseDottySuite {
          |  foo :
          |    bar
          |""".stripMargin,
-      Some("""|object a {
-              |  foo {
-              |    bar
-              |  }
-              |}""".stripMargin)
+      Some(
+        """|object a {
+           |  foo {
+           |    bar
+           |  }
+           |}""".stripMargin
+      )
     )(
       Defn.Object(
         Nil,
