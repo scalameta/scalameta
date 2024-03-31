@@ -10,12 +10,11 @@ private[meta] trait Api {
         convert: Convert[T, Input],
         parse: Parse[U],
         dialect: Dialect
-    ): Parsed[U] = { (dialect, convert(inputLike)).parse[U] }
+    ): Parsed[U] = (dialect, convert(inputLike)).parse[U]
   }
   implicit class XtensionParsersDialectInput(dialect: Dialect) {
-    def apply[T](inputLike: T)(implicit convert: Convert[T, Input]): (Dialect, Input) = {
+    def apply[T](inputLike: T)(implicit convert: Convert[T, Input]): (Dialect, Input) =
       (dialect, convert(inputLike))
-    }
   }
   implicit class XtensionParseDialectInput(dialectInput: (Dialect, Input)) {
     def parse[U](implicit parse: Parse[U]): Parsed[U] = {

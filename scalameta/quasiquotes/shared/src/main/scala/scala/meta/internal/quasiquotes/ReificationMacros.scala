@@ -77,12 +77,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
 
   private def extractQuasiquotee(): (Input, Mode) = {
     val reflectInput = c.macroApplication.pos.source
-    def isMultiline(firstPart: ReflectTree) = {
-      reflectInput.content(firstPart.pos.start - 2) == '"'
-    }
-    val (parts, mode) = {
-      try {
-        c.macroApplication match {
+    def isMultiline(firstPart: ReflectTree) = reflectInput.content(firstPart.pos.start - 2) == '"'
+    val (parts, mode) =
+      try c.macroApplication match {
           case q"$_($_.apply(..$parts)).$_.apply[..$_](..$args)($_)" =>
             require(parts.length == args.length + 1)
             val holes = mkHoles(args)
@@ -94,13 +91,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             val holes = mkHoles(args)
             (parts, Mode.Pattern(isMultiline(parts.head), holes, unapplySelector))
         }
-      } catch {
+      catch {
         case ex: Exception => c.abort(
             c.macroApplication.pos,
             s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}"
           )
       }
-    }
     val metaInput = {
       val (firstPart, lastPart @ Literal(Constant(s_lastpart: String))) = (parts.head, parts.last)
       val start = firstPart.pos.start // looks like we can trust this position to point to the character right after the opening quotes
@@ -123,10 +119,9 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     (metaInput, mode)
   }
 
-  private implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition = {
+  private implicit def metaPositionToReflectPosition(pos: MetaPosition): ReflectPosition =
     // WONTFIX: https://github.com/scalameta/scalameta/issues/383
     c.macroApplication.pos.focus.withPoint(pos.absolutize.start)
-  }
 
   private def instantiateDialect(dialectTree: ReflectTree): Dialect = {
     // NOTE: We want to have a higher-order way to abstract over differences in dialects
@@ -171,27 +166,24 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val parserModuleInstance = parserModuleGetter.invoke(parsersModule)
     val parserMethod = parserModuleInstance.getClass.getDeclaredMethods.find(_.getName == "parse")
       .head
-    (input: Input, dialect: Dialect) => {
+    (input: Input, dialect: Dialect) =>
       try parserMethod.invoke(parserModuleInstance, input, dialect).asInstanceOf[MetaTree]
       catch { case ex: java.lang.reflect.InvocationTargetException => throw ex.getTargetException }
-    }
   }
 
-  private def parseSkeleton(parser: MetaParser, input: Input, dialect: Dialect): MetaTree = {
-    try { parser(input, dialect) }
+  private def parseSkeleton(parser: MetaParser, input: Input, dialect: Dialect): MetaTree =
+    try parser(input, dialect)
     catch {
       case TokenizeException(pos, message) => c.abort(pos, message)
       case ParseException(pos, message) => c.abort(pos, message)
     }
-  }
 
   private implicit class XtensionRankedClazz(clazz: Class[_]) {
-    def unwrap: Class[_] = { if (clazz.isArray) clazz.getComponentType.unwrap else clazz }
-    def wrap(rank: Int): Class[_] = {
+    def unwrap: Class[_] = if (clazz.isArray) clazz.getComponentType.unwrap else clazz
+    def wrap(rank: Int): Class[_] =
       if (rank == 0) clazz else ScalaRunTime.arrayClass(clazz).wrap(rank - 1)
-    }
-    def toTpe: u.Type = {
-      if (clazz.isArray) { appliedType(definitions.ListClass, clazz.getComponentType.toTpe) }
+    def toTpe: u.Type =
+      if (clazz.isArray) appliedType(definitions.ListClass, clazz.getComponentType.toTpe)
       else {
         @tailrec
         def loop(owner: u.Symbol, parts: List[String]): u.Symbol = parts match {
@@ -205,14 +197,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         val result = loop(mirror.RootPackage, name.stripSuffix("$").split(Array('.', '$')).toList)
         if (result.isModule) result.asModule.info else result.asClass.toType
       }
-    }
   }
 
   private implicit class XtensionRankedTree(tree: u.Tree) {
-    def wrap(rank: Int): u.Tree = {
+    def wrap(rank: Int): u.Tree =
       if (rank == 0) tree
       else AppliedTypeTree(tq"${definitions.ListClass}", List(tree.wrap(rank - 1)))
-    }
   }
 
   private def reifySkeleton(
@@ -242,24 +232,22 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val sourceName = if (useParsedSource) TermName(c.freshName("parsedSource")) else null
     val dialectOnlyName = TermName(c.freshName("dialectOnly"))
     object Lifts {
-      def liftTree(tree: MetaTree): ReflectTree = { Liftables.liftableSubTree(tree) }
-      def liftOptionTree(maybeTree: Option[MetaTree]): ReflectTree = {
-        maybeTree match {
-          case Some(tree: Quasi) => liftQuasi(tree, optional = true)
-          case Some(otherTree) => q"_root_.scala.Some(${liftTree(otherTree)})"
-          case None => q"_root_.scala.None"
-        }
+      def liftTree(tree: MetaTree): ReflectTree = Liftables.liftableSubTree(tree)
+      def liftOptionTree(maybeTree: Option[MetaTree]): ReflectTree = maybeTree match {
+        case Some(tree: Quasi) => liftQuasi(tree, optional = true)
+        case Some(otherTree) => q"_root_.scala.Some(${liftTree(otherTree)})"
+        case None => q"_root_.scala.None"
       }
       def liftTrees(trees: Seq[MetaTree]): ReflectTree = {
         @tailrec
         def loop(trees: Seq[MetaTree], acc: ReflectTree, prefix: List[MetaTree]): ReflectTree =
           trees match {
             case (quasi: Quasi) +: rest if quasi.rank == 1 =>
-              if (acc.isEmpty) {
+              if (acc.isEmpty)
                 if (prefix.isEmpty) loop(rest, liftQuasi(quasi), Nil)
                 else loop(
                   rest,
-                  prefix.foldRight(acc)((curr, acc) => {
+                  prefix.foldRight(acc) { (curr, acc) =>
                     // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
                     // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
                     // Neither can we do q"${liftQuasi(quasi)}.+:(${liftTree(curr)})",
@@ -270,10 +258,10 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                     val alreadyLiftedList = acc.orElse(liftQuasi(quasi))
                     if (isTerm) q"$currElement +: $alreadyLiftedList"
                     else pq"$currElement +: $alreadyLiftedList"
-                  }),
+                  },
                   Nil
                 )
-              } else {
+              else {
                 require(prefix.isEmpty && debug(trees, acc, prefix))
                 if (isTerm) loop(rest, q"$acc ++ ${liftQuasi(quasi)}", Nil)
                 else c.abort(quasi.pos, Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
@@ -294,18 +282,18 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       def liftTreess(treess: List[List[MetaTree]]): ReflectTree = {
         val tripleDotQuasis = treess.flatten
           .collect { case quasi: Quasi if quasi.rank == 2 => quasi }
-        if (tripleDotQuasis.isEmpty) {
-          Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees).apply(treess)
-        } else if (tripleDotQuasis.length == 1) {
+        if (tripleDotQuasis.isEmpty) Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees)
+          .apply(treess)
+        else if (tripleDotQuasis.length == 1)
           if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
           else c.abort(
             tripleDotQuasis(0).pos,
             "implementation restriction: can't mix ...$ with anything else in parameter lists." +
               EOL + "See https://github.com/scalameta/scalameta/issues/406 for details."
           )
-        } else { c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2)) }
+        else c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2))
       }
-      def liftQuasi(quasi: Quasi, optional: Boolean = false): ReflectTree = {
+      def liftQuasi(quasi: Quasi, optional: Boolean = false): ReflectTree =
         try {
           pendingQuasis.push(quasi)
           if (quasi.rank == 0) {
@@ -335,14 +323,11 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                 pq"$name"
             }
             atPos(quasi.pos)(lifted)
-          } else {
-            quasi.tree match {
-              case quasi: Quasi if quasi.rank == 0 => liftQuasi(quasi)
-              case _ => c.abort(quasi.pos, "complex ellipses are not supported yet")
-            }
+          } else quasi.tree match {
+            case quasi: Quasi if quasi.rank == 0 => liftQuasi(quasi)
+            case _ => c.abort(quasi.pos, "complex ellipses are not supported yet")
           }
-        } finally { pendingQuasis.pop() }
-      }
+        } finally pendingQuasis.pop()
       val liftOrigin: Origin => ReflectTree =
         if (sourceName ne null) _ match {
           case Origin.Parsed(_, beg, end) => q"$OriginModule.Parsed($sourceName, $beg, $end)"
@@ -388,15 +373,13 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             ${Lifts.liftTree(meta)}
           }
         """
-        if (sys.props("quasiquote.debug") != null) {
-          println(internalResult)
-          // println(showRaw(internalResult))
-        }
+        if (sys.props("quasiquote.debug") != null) println(internalResult)
+        // println(showRaw(internalResult))
         q"$InternalUnlift[${c.macroApplication.tpe}]($internalResult)"
       case Mode.Pattern(_, holes, unapplySelector) =>
         // inspired by https://github.com/densh/joyquote/blob/master/src/main/scala/JoyQuote.scala
         val pattern = Lifts.liftTree(meta)
-        val (thenp, elsep) = {
+        val (thenp, elsep) =
           if (holes.isEmpty) (q"true", q"false")
           else {
             val reifers = new mutable.ListBuffer[ReflectTree]
@@ -416,7 +399,6 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             """
             (thenp, q"_root_.scala.None")
           }
-        }
         val matchp = pattern match {
           case Bind(_, Ident(termNames.WILDCARD)) => q"input match { case $pattern => $thenp }"
           case _ => q"input match { case $pattern => $thenp; case _ => $elsep }"
@@ -427,10 +409,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             def unapply(input: _root_.scala.meta.Tree) = $matchp
           }.unapply($unapplySelector)
         """
-        if (sys.props("quasiquote.debug") != null) {
-          println(internalResult)
-          // println(showRaw(internalResult))
-        }
+        if (sys.props("quasiquote.debug") != null) println(internalResult)
+        // println(showRaw(internalResult))
         internalResult
     }
   }

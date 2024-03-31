@@ -208,7 +208,7 @@ class PublicSuite extends TreeSuiteBase {
     // Satisfy surface suite.
   }
 
-  test("scala.meta.inputs.Input.None.toString") { assertEquals(Input.None.toString, "Input.None") }
+  test("scala.meta.inputs.Input.None.toString")(assertEquals(Input.None.toString, "Input.None"))
 
   test("scala.meta.inputs.Input.File.toString") {
     val path = RelativePath("hello.scala").toAbsolute

@@ -31,8 +31,8 @@ object SyntaxAnalysis {
     val errors = new AtomicInteger()
     def analyze(file: CorpusFile): Unit = {
       val n = counter.incrementAndGet()
-      if (n % 1000 == 0) { println(n) }
-      try { f(file).foreach(t => results.add(file -> t)) }
+      if (n % 1000 == 0) println(n)
+      try f(file).foreach(t => results.add(file -> t))
       catch {
         // TODO(olafur) investigate these scala.meta errors.
         case _: org.scalameta.UnreachableError => // scala.meta error
@@ -46,11 +46,9 @@ object SyntaxAnalysis {
           val stack = e.getStackTrace.take(10) // print small stacktrace
           stack.foreach(println)
           val i = errors.incrementAndGet()
-          if (i > 10) {
-            throw new IllegalStateException(
-              "Too many unexpected errors (printed to console), fix your analysis."
-            )
-          }
+          if (i > 10) throw new IllegalStateException(
+            "Too many unexpected errors (printed to console), fix your analysis."
+          )
       }
     }
     corpus.foreach(analyze)

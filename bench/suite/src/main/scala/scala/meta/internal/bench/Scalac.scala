@@ -39,7 +39,7 @@ trait Scalac {
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
 class ScalacBaseline extends Scalac {
   @Benchmark
-  def run(bs: BenchmarkState): Unit = { runImpl(bs) }
+  def run(bs: BenchmarkState): Unit = runImpl(bs)
 }
 
 @BenchmarkMode(Array(SampleTime)) @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -48,7 +48,7 @@ class ScalacBaseline extends Scalac {
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
 class ScalacRangepos extends Scalac {
   @Benchmark
-  def run(bs: BenchmarkState): Unit = { runImpl(bs) }
+  def run(bs: BenchmarkState): Unit = runImpl(bs)
   override def mkSettings(bs: BenchmarkState): Settings = {
     val settings = super.mkSettings(bs)
     settings.Yrangepos.value = true

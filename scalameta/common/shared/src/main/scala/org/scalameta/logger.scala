@@ -15,7 +15,7 @@ object FileLine {
 object logger {
 
   /** Same as println except includes the file+line number of call-site. */
-  def debug(x: Any)(implicit fileLine: FileLine): Unit = { println(s"$fileLine $x") }
+  def debug(x: Any)(implicit fileLine: FileLine): Unit = println(s"$fileLine $x")
 
   /** Replaces whitespace characters with non-whitespace characters */
   def revealWhitespace(s: String): String = s.map {
@@ -30,13 +30,11 @@ object logger {
    *
    * Example: logger.elem(x) // prints "MyFile:24 [x]: 42"
    */
-  def elem(values: sourcecode.Text[Any]*)(implicit fileLine: FileLine): Unit = {
-    values.foreach { t =>
-      val value = {
-        val str = s"${t.value}"
-        if (str.contains("\n")) s"\n$str" else str
-      }
-      println(s"$fileLine [${t.source}]: $value")
+  def elem(values: sourcecode.Text[Any]*)(implicit fileLine: FileLine): Unit = values.foreach { t =>
+    val value = {
+      val str = s"${t.value}"
+      if (str.contains("\n")) s"\n$str" else str
     }
+    println(s"$fileLine [${t.source}]: $value")
   }
 }

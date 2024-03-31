@@ -19,20 +19,17 @@ object Build extends AutoPlugin {
       def initCommands: List[String] = List("bench/clean", "wow " + Versions.LatestScala212)
 
       def metacpBenches: List[String]
-      def metacpCommands: List[String] = {
+      def metacpCommands: List[String] =
         if (metacpBenches.isEmpty) Nil else List("bench/jmh:run " + metacpBenches.mkString(" "))
-      }
 
       def scalacBenches: List[String]
-      def scalacCommands: List[String] = {
+      def scalacCommands: List[String] =
         if (scalacBenches.isEmpty) Nil else List("bench/jmh:run " + scalacBenches.mkString(" "))
-      }
 
       def scalametaBenches: List[String]
-      def scalametaCommands: List[String] = {
+      def scalametaCommands: List[String] =
         if (scalametaBenches.isEmpty) Nil
         else List("bench/jmh:run " + scalametaBenches.mkString(" "))
-      }
 
       final def command: String = {
         val benchCommands = metacpCommands ++ scalacCommands ++ scalametaCommands

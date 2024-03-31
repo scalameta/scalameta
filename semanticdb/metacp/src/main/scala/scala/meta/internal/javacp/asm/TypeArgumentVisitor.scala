@@ -19,5 +19,5 @@ class TypeArgumentVisitor extends TypedSignatureVisitor[TypeArgument] {
     }
     referenceTypeSignature
   }
-  override def visitTypeArgument(): Unit = { this.wildcard = Some(WildcardIndicator.Star) }
+  override def visitTypeArgument(): Unit = this.wildcard = Some(WildcardIndicator.Star)
 }

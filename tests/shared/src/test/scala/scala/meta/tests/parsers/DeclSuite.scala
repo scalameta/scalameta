@@ -53,11 +53,11 @@ class DeclSuite extends ParseSuite {
   }
 
   test("type F[T]") {
-    assertTree(templStat("type F[T]")) { Decl.Type(Nil, pname("F"), pparam("T") :: Nil, noBounds) }
+    assertTree(templStat("type F[T]"))(Decl.Type(Nil, pname("F"), pparam("T") :: Nil, noBounds))
   }
 
   test("type F[_]") {
-    assertTree(templStat("type F[_]")) { Decl.Type(Nil, pname("F"), pparam("_") :: Nil, noBounds) }
+    assertTree(templStat("type F[_]"))(Decl.Type(Nil, pname("F"), pparam("_") :: Nil, noBounds))
   }
 
   test("type F[A <: B]") {

@@ -5,34 +5,27 @@ import scala.meta.internal.semanticdb.Scala._
 
 class SymbolSuite extends FunSuite {
 
-  def checkMultiSyntax(symbols: List[String], expected: String): Unit = {
+  def checkMultiSyntax(symbols: List[String], expected: String): Unit =
     test(" syntax: " + symbols.toString()) {
       val obtained = Symbols.Multi(symbols)
       assertEquals(obtained, expected)
     }
+
+  def checkMultiRoundtrip(symbols: List[String]): Unit = test("  multi: " + symbols.toString) {
+    val symbol = Symbols.Multi(symbols)
+    val expected = symbol.asMulti
+    assertEquals(symbol.asMulti, expected)
   }
 
-  def checkMultiRoundtrip(symbols: List[String]): Unit = {
-    test("  multi: " + symbols.toString) {
-      val symbol = Symbols.Multi(symbols)
-      val expected = symbol.asMulti
-      assertEquals(symbol.asMulti, expected)
-    }
-  }
+  def checkGlobal(symbol: String): Unit = test(" global: " + symbol)(assert(symbol.isGlobal))
 
-  def checkGlobal(symbol: String): Unit = { test(" global: " + symbol) { assert(symbol.isGlobal) } }
+  def checkNotGlobal(symbol: String): Unit = test("!global: " + symbol)(assert(!symbol.isGlobal))
 
-  def checkNotGlobal(symbol: String): Unit = {
-    test("!global: " + symbol) { assert(!symbol.isGlobal) }
-  }
+  def checkLocal(symbol: String): Unit = test("  local: " + symbol)(assert(symbol.isLocal))
 
-  def checkLocal(symbol: String): Unit = { test("  local: " + symbol) { assert(symbol.isLocal) } }
+  def checkNotLocal(symbol: String): Unit = test(" !local: " + symbol)(assert(!symbol.isLocal))
 
-  def checkNotLocal(symbol: String): Unit = {
-    test(" !local: " + symbol) { assert(!symbol.isLocal) }
-  }
-
-  def check(sym: String)(f: String => Boolean): Unit = { test(sym) { assert(f(sym)) } }
+  def check(sym: String)(f: String => Boolean): Unit = test(sym)(assert(f(sym)))
 
   checkMultiSyntax(Nil, "")
   checkMultiSyntax("a." :: Nil, "a.")

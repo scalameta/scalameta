@@ -46,7 +46,7 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
 
   override def info(symbol: String): Option[SymbolInformation] =
     if (symbol.isNone) None
-    else if (symbol.isPackage) {
+    else if (symbol.isPackage)
       if (symbol.isRootPackage || symbol.isEmptyPackage || classpathIndex.isClassdir(symbol)) {
         val info = SymbolInformation(
           symbol = symbol,
@@ -54,20 +54,17 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
           displayName = symbol.desc.value
         )
         Some(info)
-      } else { None }
-    } else {
-      symbolCache.get(symbol) match {
-        case Some(x) => Some(x)
-        case None =>
-          loadSymbol(symbol)
-          symbolCache.get(symbol)
-      }
+      } else None
+    else symbolCache.get(symbol) match {
+      case Some(x) => Some(x)
+      case None =>
+        loadSymbol(symbol)
+        symbolCache.get(symbol)
     }
 }
 
 object GlobalSymbolTable {
-  def apply(classpath: Classpath): GlobalSymbolTable = { new GlobalSymbolTable(classpath, false) }
-  def apply(classpath: Classpath, includeJdk: Boolean): GlobalSymbolTable = {
+  def apply(classpath: Classpath): GlobalSymbolTable = new GlobalSymbolTable(classpath, false)
+  def apply(classpath: Classpath, includeJdk: Boolean): GlobalSymbolTable =
     new GlobalSymbolTable(classpath, includeJdk)
-  }
 }

@@ -59,10 +59,9 @@ trait Reflection {
     def asField: Field = new Field(sym)
   }
 
-  protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
+  protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] =
     if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
     else sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
-  }
 
   private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
     private def ensureModule(sym: Symbol): Symbol =
@@ -139,11 +138,10 @@ trait Reflection {
       (if (sym.isAuxiliaryField) " (auxiliary)" else "")
   }
 
-  private def isExemptParentSymbol(bsym: ClassSymbol): Boolean = {
-    bsym.isModuleClass || bsym == symbolOf[Object] || bsym == symbolOf[Any] ||
-    bsym == symbolOf[scala.Serializable] || bsym == symbolOf[java.io.Serializable] ||
-    bsym == symbolOf[scala.Product] || bsym == symbolOf[scala.Equals]
-  }
+  private def isExemptParentSymbol(bsym: ClassSymbol): Boolean = bsym.isModuleClass ||
+    bsym == symbolOf[Object] || bsym == symbolOf[Any] || bsym == symbolOf[scala.Serializable] ||
+    bsym == symbolOf[java.io.Serializable] || bsym == symbolOf[scala.Product] ||
+    bsym == symbolOf[scala.Equals]
 
   protected def checkHierarchy(tpe: Type, fail: String => Unit, checkSealed: Boolean): Unit = {
     val sym = tpe.typeSymbol.asClass

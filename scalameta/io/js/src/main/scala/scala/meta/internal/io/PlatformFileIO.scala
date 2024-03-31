@@ -19,7 +19,7 @@ object PlatformFileIO {
     if (uri.getScheme == "file") {
       val filepath = Paths.get(uri)
       readAllBytes(AbsolutePath(filepath.toString))
-    } else { throw new UnsupportedOperationException(s"Can't read $uri as InputStream") }
+    } else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = JSIO.inNode {
     val jsArray = JSFs.readFileSync(path.toString)
@@ -70,9 +70,8 @@ object PlatformFileIO {
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     val builder = List.newBuilder[RelativePath]
-    def loop(path: AbsolutePath): Unit = {
+    def loop(path: AbsolutePath): Unit =
       if (path.isDirectory) listFiles(path).foreach(loop) else builder += path.toRelative(root)
-    }
     loop(root)
     new ListFiles(root, builder.result())
   }

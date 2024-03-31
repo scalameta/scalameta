@@ -31,14 +31,12 @@ package object meta
   implicit class XtensionDialectApply(private val dialect: scala.meta.Dialect) extends AnyVal {
     def apply[T](inputLike: T)(implicit
         convert: scala.meta.common.Convert[T, scala.meta.inputs.Input]
-    ): (scala.meta.Dialect, scala.meta.inputs.Input) = { (dialect, convert(inputLike)) }
-    def apply(token: scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token) = {
+    ): (scala.meta.Dialect, scala.meta.inputs.Input) = (dialect, convert(inputLike))
+    def apply(token: scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token) =
       (dialect, token)
-    }
-    def apply(tokens: scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens) = {
+    def apply(tokens: scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens) =
       (dialect, tokens)
-    }
-    def apply(tree: scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree) = { (dialect, tree) }
+    def apply(tree: scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree) = (dialect, tree)
   }
   implicit class XtensionDialectTokenSyntax(
       private val dialectToken: (scala.meta.Dialect, scala.meta.tokens.Token)

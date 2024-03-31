@@ -23,85 +23,69 @@ class PrintSuite extends FunSuite {
       original: String,
       expected: String,
       fn: s.TextDocument => Unit
-  ): Unit = {
-    test(name) {
-      val wrapped = s"""
+  ): Unit = test(name) {
+    val wrapped = s"""
 object Wrapped {
 $original
 }
 """.stripMargin
-      val doc = InteractiveSemanticdb.toTextDocument(
-        compiler = compiler,
-        code = wrapped,
-        options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
-      )
-      fn(doc)
-    }
-  }
-
-  def checkType(symbol: String, expected: String): Unit = {
-    test("type - " + symbol) {
-      val info = symtab.info(symbol).get
-      val tpe = info.signature match {
-        case s.ValueSignature(tpe) => tpe
-        case s.MethodSignature(_, _, tpe) => tpe
-        case e => throw new MatchError(e)
-      }
-      val obtained = Print.tpe(Format.Compact, tpe, printerSymtab)
-      assertNoDiff(obtained, expected)
-    }
-  }
-
-  def checkConstant(constant: s.Constant, expected: String): Unit = {
-    test(constant.toString) {
-      val obtained = Print.constant(constant)
-      assertNoDiff(obtained, expected)
-    }
-  }
-
-  def checkSignature(symbol: String, expected: String): Unit = {
-    test("signature - " + symbol) {
-      val info = symtab.info(symbol).get
-      val obtained = Print.signature(Format.Compact, info.signature, printerSymtab)
-      assertNoDiff(obtained, expected)
-    }
-  }
-
-  def checkInfo(symbol: String, expected: String): Unit = {
-    test("info - " + symbol) {
-      val info = symtab.info(symbol).get
-      val obtained = Print.info(Format.Compact, info, printerSymtab)
-      assertNoDiff(obtained, expected)
-    }
-  }
-
-  def checkSynthetics(original: String, expected: String): Unit = {
-    checkDocument(
-      "synthetic - " + original,
-      original,
-      expected,
-      { doc =>
-        val obtained = doc.synthetics.map { synthetic =>
-          Print.synthetic(Format.Compact, doc, synthetic, printerSymtab)
-        }
-        assertNoDiff(obtained.mkString("\n"), expected)
-      }
+    val doc = InteractiveSemanticdb.toTextDocument(
+      compiler = compiler,
+      code = wrapped,
+      options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
     )
+    fn(doc)
   }
 
-  def checkTrees(original: String, expected: String): Unit = {
-    checkDocument(
-      "trees - " + original,
-      original,
-      expected,
-      { doc =>
-        val obtained = doc.synthetics.map { synthetic =>
-          Print.tree(Format.Compact, doc, synthetic.tree, printerSymtab)
-        }
-        assertNoDiff(obtained.mkString("\n"), expected)
-      }
-    )
+  def checkType(symbol: String, expected: String): Unit = test("type - " + symbol) {
+    val info = symtab.info(symbol).get
+    val tpe = info.signature match {
+      case s.ValueSignature(tpe) => tpe
+      case s.MethodSignature(_, _, tpe) => tpe
+      case e => throw new MatchError(e)
+    }
+    val obtained = Print.tpe(Format.Compact, tpe, printerSymtab)
+    assertNoDiff(obtained, expected)
   }
+
+  def checkConstant(constant: s.Constant, expected: String): Unit = test(constant.toString) {
+    val obtained = Print.constant(constant)
+    assertNoDiff(obtained, expected)
+  }
+
+  def checkSignature(symbol: String, expected: String): Unit = test("signature - " + symbol) {
+    val info = symtab.info(symbol).get
+    val obtained = Print.signature(Format.Compact, info.signature, printerSymtab)
+    assertNoDiff(obtained, expected)
+  }
+
+  def checkInfo(symbol: String, expected: String): Unit = test("info - " + symbol) {
+    val info = symtab.info(symbol).get
+    val obtained = Print.info(Format.Compact, info, printerSymtab)
+    assertNoDiff(obtained, expected)
+  }
+
+  def checkSynthetics(original: String, expected: String): Unit = checkDocument(
+    "synthetic - " + original,
+    original,
+    expected,
+    { doc =>
+      val obtained = doc.synthetics
+        .map(synthetic => Print.synthetic(Format.Compact, doc, synthetic, printerSymtab))
+      assertNoDiff(obtained.mkString("\n"), expected)
+    }
+  )
+
+  def checkTrees(original: String, expected: String): Unit = checkDocument(
+    "trees - " + original,
+    original,
+    expected,
+    { doc =>
+      val obtained = doc.synthetics
+        .map(synthetic => Print.tree(Format.Compact, doc, synthetic.tree, printerSymtab))
+      assertNoDiff(obtained.mkString("\n"), expected)
+    }
+  )
 
   checkType("java/io/ByteArrayOutputStream#buf.", "Array[Byte]")
   checkType("scala/Predef.ArrowAssoc#`->`().", "Tuple2[A, B]")

@@ -19,18 +19,17 @@ class OccurrenceSuite extends FunSuite {
 
   private def testBody(body: OccurrenceSuite.TestBody): Unit = {
     val expectedCompat =
-      if (ScalaVersion.atLeast212_14) { body.expected }
-      else {
+      if (ScalaVersion.atLeast212_14) body.expected
+      else
         // Predef.type etc. was fixed in 2.12.14
         body.expected.replace("Predef/*=>scala.Predef.*/.type", "Predef.type")
           .replace("x/*=>types.Test.C#x.*/.type", "x.type")
           .replace("p/*=>types.Test.C#p.*/.x/*=>types.P#x.*/.type", "p.x.type")
-      }
     assertNoDiff(body.obtained, expectedCompat)
   }
 
   ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212 || ScalaVersion.is213) {
-    OccurrenceSuite.testCases.foreach { t => test(t.name) { t.body.fold(fail(_), testBody) } }
+    OccurrenceSuite.testCases.foreach(t => test(t.name)(t.body.fold(fail(_), testBody)))
   }
 }
 
@@ -69,12 +68,10 @@ object OccurrenceSuite {
       )
     }
   }
-  def saveExpected(): Unit = {
-    testCases.foreach(_.body.right.foreach { body =>
-      Files.createDirectories(body.expectpath.toNIO.getParent)
-      Files.write(body.expectpath.toNIO, body.obtained.getBytes(StandardCharsets.UTF_8))
-    })
-  }
+  def saveExpected(): Unit = testCases.foreach(_.body.right.foreach { body =>
+    Files.createDirectories(body.expectpath.toNIO.getParent)
+    Files.write(body.expectpath.toNIO, body.obtained.getBytes(StandardCharsets.UTF_8))
+  })
   def printTextDocument(doc: TextDocument): String = {
     val symtab = doc.symbols.iterator.map(info => info.symbol -> info).toMap
     val sb = new StringBuilder
@@ -88,9 +85,7 @@ object OccurrenceSuite {
       if (pos.end >= offset) {
         sb.append(doc.text.substring(offset, pos.end))
         val isPrimaryConstructor = symtab.get(occ.symbol).exists(_.isPrimary)
-        if (!occ.symbol.isPackage && !isPrimaryConstructor) {
-          printSymbol(sb, occ.symbol, occ.role)
-        }
+        if (!occ.symbol.isPackage && !isPrimaryConstructor) printSymbol(sb, occ.symbol, occ.role)
         offset = pos.end
       }
     }
@@ -106,19 +101,18 @@ object OccurrenceSuite {
   }
 
   implicit val occurrenceOrdering: Ordering[SymbolOccurrence] = new Ordering[SymbolOccurrence] {
-    override def compare(x: SymbolOccurrence, y: SymbolOccurrence): Int = {
+    override def compare(x: SymbolOccurrence, y: SymbolOccurrence): Int =
       if (x.range.isEmpty) 0
       else if (y.range.isEmpty) 0
       else {
         val a = x.range.get
         val b = y.range.get
         val byLine = Integer.compare(a.startLine, b.startLine)
-        if (byLine != 0) { byLine }
+        if (byLine != 0) byLine
         else {
           val byCharacter = Integer.compare(a.startCharacter, b.startCharacter)
           byCharacter
         }
       }
-    }
   }
 }

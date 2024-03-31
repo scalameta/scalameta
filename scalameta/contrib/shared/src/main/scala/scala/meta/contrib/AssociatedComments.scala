@@ -52,7 +52,7 @@ object AssociatedComments {
       case Token.EOF() =>
         val l = leading.result()
         val t = trailing.result()
-        if (l.nonEmpty || t.nonEmpty) { trailingBuilder += lastToken -> (l ::: t) }
+        if (l.nonEmpty || t.nonEmpty) trailingBuilder += lastToken -> (l ::: t)
       case Trivia() =>
       case currentToken =>
         val t = trailing.result()
@@ -65,7 +65,7 @@ object AssociatedComments {
           leadingBuilder += currentToken -> l
           leading.clear()
         }
-        if (!currentToken.is[Token.Comma]) { lastToken = currentToken }
+        if (!currentToken.is[Token.Comma]) lastToken = currentToken
         isLeading = false
     }
     new AssociatedComments(leadingBuilder.result(), trailingBuilder.result()) {}

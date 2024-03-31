@@ -27,7 +27,7 @@ class PublicSuite extends FunSuite {
              q"hello"
            """
       ),
-      s"dialect of type scala.meta.Dialect is not supported by quasiquotes (to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${currentDialect})"
+      s"dialect of type scala.meta.Dialect is not supported by quasiquotes (to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.$currentDialect)"
     )
   }
 

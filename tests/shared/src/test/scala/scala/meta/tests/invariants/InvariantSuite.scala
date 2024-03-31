@@ -39,7 +39,7 @@ class InvariantSuite extends FunSuite {
   }
 
   test("unreachable - 1") {
-    interceptMessage[UnreachableError]("this code path should've been unreachable") { unreachable }
+    interceptMessage[UnreachableError]("this code path should've been unreachable")(unreachable)
   }
 
   test("unreachable - 2") {
@@ -57,5 +57,5 @@ class InvariantSuite extends FunSuite {
     }
   }
 
-  test("don't evaluate debug") { require(true && debug(throw new Exception)) }
+  test("don't evaluate debug")(require(true && debug(throw new Exception)))
 }

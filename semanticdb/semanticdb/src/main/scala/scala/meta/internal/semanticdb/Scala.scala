@@ -12,21 +12,18 @@ object Scala {
     val EmptyPackage: String = "_empty_/"
     def Global(owner: String, desc: Descriptor): String =
       if (owner != RootPackage) owner + desc.toString else desc.toString
-    def Local(suffix: String): String = {
+    def Local(suffix: String): String =
       if (suffix.indexOf("/") == -1 && suffix.indexOf(";") == -1) "local" + suffix
       else throw new IllegalArgumentException(suffix)
-    }
-    def Multi(symbols: List[String]): String = {
-      symbols.distinct match {
-        case List(symbol) => symbol
-        case symbols =>
-          val sb = new StringBuilder
-          symbols.foreach { symbol =>
-            if (!symbol.isMulti) { sb.append(';') }
-            sb.append(symbol)
-          }
-          sb.toString()
-      }
+    def Multi(symbols: List[String]): String = symbols.distinct match {
+      case List(symbol) => symbol
+      case symbols =>
+        val sb = new StringBuilder
+        symbols.foreach { symbol =>
+          if (!symbol.isMulti) sb.append(';')
+          sb.append(symbol)
+        }
+        sb.toString()
     }
   }
 
@@ -41,29 +38,26 @@ object Scala {
       })
     def isLocal: Boolean = symbol.startsWith("local")
     def isMulti: Boolean = symbol.startsWith(";")
-    def asMulti: List[String] = {
+    def asMulti: List[String] =
       if (!isMulti) symbol :: Nil
       else {
         val buf = List.newBuilder[String]
         @tailrec
         def loop(begin: Int, i: Int): Unit =
-          if (i >= symbol.length) { buf += symbol.substring(begin, symbol.length) }
-          else {
-            symbol.charAt(i) match {
-              case ';' =>
-                buf += symbol.substring(begin, i)
-                loop(i + 1, i + 1)
-              case '`' =>
-                var j = i + 1
-                while (symbol.charAt(j) != '`') j += 1
-                loop(begin, j + 1)
-              case _ => loop(begin, i + 1)
-            }
+          if (i >= symbol.length) buf += symbol.substring(begin, symbol.length)
+          else symbol.charAt(i) match {
+            case ';' =>
+              buf += symbol.substring(begin, i)
+              loop(i + 1, i + 1)
+            case '`' =>
+              var j = i + 1
+              while (symbol.charAt(j) != '`') j += 1
+              loop(begin, j + 1)
+            case _ => loop(begin, i + 1)
           }
         loop(1, 1)
         buf.result()
       }
-    }
     def isTerm: Boolean = !isNone && !isMulti && symbol.last == '.'
     def isType: Boolean = !isNone && !isMulti && symbol.last == '#'
     def isPackage: Boolean = !isNone && !isMulti && symbol.last == '/'
@@ -71,28 +65,22 @@ object Scala {
     def isTypeParameter: Boolean = !isNone && !isMulti && symbol.last == ']'
     def ownerChain: List[String] = {
       val buf = List.newBuilder[String]
-      def loop(symbol: String): Unit = {
-        if (!symbol.isNone) {
-          loop(symbol.owner)
-          buf += symbol
-        }
+      def loop(symbol: String): Unit = if (!symbol.isNone) {
+        loop(symbol.owner)
+        buf += symbol
       }
       loop(symbol)
       buf.result()
     }
-    def owner: String = {
-      if (isGlobal) {
+    def owner: String =
+      if (isGlobal)
         if (isRootPackage) Symbols.None
         else {
           val rest = DescriptorParser(symbol)._2
           if (rest.nonEmpty) rest else Symbols.RootPackage
         }
-      } else { Symbols.None }
-    }
-    def desc: Descriptor = {
-      if (isGlobal) { DescriptorParser(symbol)._1 }
-      else { d.None }
-    }
+      else Symbols.None
+    def desc: Descriptor = if (isGlobal) DescriptorParser(symbol)._1 else d.None
   }
 
   sealed trait Descriptor {
@@ -104,27 +92,23 @@ object Scala {
     def isParameter: Boolean = this.isInstanceOf[d.Parameter]
     def isTypeParameter: Boolean = this.isInstanceOf[d.TypeParameter]
     def value: String
-    def name: n.Name = {
-      this match {
-        case d.None => n.TermName(value)
-        case d.Term(value) => n.TermName(value)
-        case d.Method(value, disambiguator) => n.TermName(value)
-        case d.Type(value) => n.TypeName(value)
-        case d.Package(value) => n.TermName(value)
-        case d.Parameter(value) => n.TermName(value)
-        case d.TypeParameter(value) => n.TypeName(value)
-      }
+    def name: n.Name = this match {
+      case d.None => n.TermName(value)
+      case d.Term(value) => n.TermName(value)
+      case d.Method(value, disambiguator) => n.TermName(value)
+      case d.Type(value) => n.TypeName(value)
+      case d.Package(value) => n.TermName(value)
+      case d.Parameter(value) => n.TermName(value)
+      case d.TypeParameter(value) => n.TypeName(value)
     }
-    override def toString: String = {
-      this match {
-        case d.None => sys.error("unsupported descriptor")
-        case d.Term(value) => s"${n.encode(value)}."
-        case d.Method(value, disambiguator) => s"${n.encode(value)}${disambiguator}."
-        case d.Type(value) => s"${n.encode(value)}#"
-        case d.Package(value) => s"${n.encode(value)}/"
-        case d.Parameter(value) => s"(${n.encode(value)})"
-        case d.TypeParameter(value) => s"[${n.encode(value)}]"
-      }
+    override def toString: String = this match {
+      case d.None => sys.error("unsupported descriptor")
+      case d.Term(value) => s"${n.encode(value)}."
+      case d.Method(value, disambiguator) => s"${n.encode(value)}$disambiguator."
+      case d.Type(value) => s"${n.encode(value)}#"
+      case d.Package(value) => s"${n.encode(value)}/"
+      case d.Parameter(value) => s"(${n.encode(value)})"
+      case d.TypeParameter(value) => s"[${n.encode(value)}]"
     }
   }
   object Descriptor {
@@ -154,15 +138,14 @@ object Scala {
     val PackageObject: TermName = TermName("package")
     val Constructor: TermName = TermName("<init>")
 
-    private[meta] def encode(value: String): String = {
-      if (value == "") { "``" }
+    private[meta] def encode(value: String): String =
+      if (value == "") "``"
       else {
         val (start, parts) = (value.head, value.tail)
         val isStartOk = Character.isJavaIdentifierStart(start)
         val isPartsOk = parts.forall(Character.isJavaIdentifierPart)
         if (isStartOk && isPartsOk) value else "`" + value + "`"
       }
-    }
   }
 
   object DisplayNames {
@@ -183,21 +166,20 @@ object Scala {
     val BOF = '\u0000'
     val EOF = '\u001A'
     var currChar = EOF
-    def readChar(): Char = {
-      if (i <= 0) {
+    def readChar(): Char =
+      if (i <= 0)
         if (i == 0) {
           i -= 1
           currChar = BOF
           currChar
-        } else { fail() }
-      } else {
+        } else fail()
+      else {
         i -= 1
         currChar = s(i)
         currChar
       }
-    }
 
-    def parseValue(): String = {
+    def parseValue(): String =
       if (currChar == '`') {
         val end = i
         while (readChar() != '`') {}
@@ -209,7 +191,6 @@ object Scala {
         while (Character.isJavaIdentifierPart(readChar()) && currChar != BOF) {}
         s.substring(i + 1, end)
       }
-    }
 
     def parseDisambiguator(): String = {
       val end = i + 1
@@ -219,14 +200,14 @@ object Scala {
       s.substring(i + 1, end)
     }
 
-    def parseDescriptor(): Descriptor = {
+    def parseDescriptor(): Descriptor =
       if (currChar == '.') {
         readChar()
         if (currChar == ')') {
           val disambiguator = parseDisambiguator()
           val value = parseValue()
           d.Method(value, disambiguator)
-        } else { d.Term(parseValue()) }
+        } else d.Term(parseValue())
       } else if (currChar == '#') {
         readChar()
         d.Type(parseValue())
@@ -243,8 +224,7 @@ object Scala {
         val value = parseValue()
         if (currChar != '[') fail() else readChar()
         d.TypeParameter(value)
-      } else { fail() }
-    }
+      } else fail()
 
     def entryPoint(): (Descriptor, String) = {
       readChar()

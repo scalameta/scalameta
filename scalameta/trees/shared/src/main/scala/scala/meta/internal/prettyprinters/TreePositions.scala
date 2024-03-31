@@ -61,10 +61,9 @@ object Positions {
         case el: Some[_] => s("Some(".colored(color), loopField(el.get, color), ")".colored(color))
         case el => s(el.toString.colored(color))
       }
-      def pos(x: Tree): String = {
+      def pos(x: Tree): String =
         if (x.pos != Position.None) s"{${x.pos.start}..${x.pos.end}}".sliced(x.toString) else ""
-      }
-      def color(x: Tree): String = { if (x.pos != Position.None) GREEN else RED }
+      def color(x: Tree): String = if (x.pos != Position.None) GREEN else RED
       val prefix = (x.productPrefix + pos(x) + "(").colored(color(x))
       val fields =
         r(x.productIterator.toList.map(el => loopField(el, color(x))), ", ".colored(color(x)))

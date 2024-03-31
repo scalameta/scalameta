@@ -12,7 +12,7 @@ import scala.meta.tokenizers._
 import scala.meta.internal.tokenizers.ScalametaTokenizer.UnexpectedInputEndException
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
-  def tokenize(): Tokens = { input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize()) }
+  def tokenize(): Tokens = input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize())
 
   private def uncachedTokenize(): Tokens = {
     val legacyTokens: Array[LegacyTokenData] = {
@@ -175,10 +175,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     ): Int = {
       var legacyIndex = startingFrom
       def prev = legacyTokens(legacyIndex - 1)
-      def curr = {
+      def curr =
         if (legacyIndex < legacyTokens.length) legacyTokens(legacyIndex)
         else throw new UnexpectedInputEndException()
-      }
       def next = {
         val nextIndex = legacyIndex + 1
         if (nextIndex < legacyTokens.length) Some(legacyTokens(nextIndex)) else None
@@ -218,7 +217,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         def emitEnd(offset: Offset) =
           pushToken(Token.Interpolation.End(input, dialect, offset, offset + numQuotes))
         @tailrec
-        def emitContents(): Unit = {
+        def emitContents(): Unit =
           if (curr.token == STRINGPART) {
             val dollarOffset = curr.endOffset + 1
             require(input.chars(dollarOffset) == '$')
@@ -230,9 +229,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             pushTokenAndNext(
               Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset)
             )
-            if (nextChar == '{') {
+            if (nextChar == '{')
               legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
-            } else {
+            else {
               require(
                 curr.token == IDENTIFIER || curr.token == THIS ||
                   curr.token == USCORE && nextChar == '_'
@@ -250,7 +249,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
               Token.Interpolation.Part(input, dialect, curr.offset, nextOffset, curr.strVal)
             )
           }
-        }
         // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
         // i.e. STRINGLIT (if the interpolation is empty) or STRINGPART (if it's not)
         // NOTE: before emitEnd, curr is the first token that follows the concluding STRINGLIT of the interpolation
@@ -268,30 +266,26 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           pushToken(Token.Xml.SpliceStart(input, dialect, offset, offset))
         def emitSpliceEnd(offset: Offset) =
           pushToken(Token.Xml.SpliceEnd(input, dialect, offset, offset))
-        def emitPart(from: Int, to: Int) = {
-          pushTokenAndNext(
-            Token.Xml.Part(input, dialect, from, to, new String(input.chars, from, to - from))
-          )
-        }
+        def emitPart(from: Int, to: Int) = pushTokenAndNext(
+          Token.Xml.Part(input, dialect, from, to, new String(input.chars, from, to - from))
+        )
 
         @tailrec
-        def emitContents(): Unit = {
-          curr.token match {
-            case XMLLIT =>
-              emitPart(curr.offset, curr.endOffset + 1)
-              emitContents()
+        def emitContents(): Unit = curr.token match {
+          case XMLLIT =>
+            emitPart(curr.offset, curr.endOffset + 1)
+            emitContents()
 
-            case LBRACE =>
-              // We are at the start of an embedded scala expression
-              emitSpliceStart(curr.offset)
-              legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
-              emitSpliceEnd(curr.offset)
-              emitContents()
+          case LBRACE =>
+            // We are at the start of an embedded scala expression
+            emitSpliceStart(curr.offset)
+            legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
+            emitSpliceEnd(curr.offset)
+            emitContents()
 
-            case XMLLITEND =>
-              // We have reached the final xml part
-              nextToken()
-          }
+          case XMLLITEND =>
+            // We have reached the final xml part
+            nextToken()
         }
 
         // Xml.Start has been emitted. Backtrack to emit first part
@@ -320,13 +314,12 @@ object ScalametaTokenizer {
   class UnexpectedInputEndException() extends Exception
 
   def toTokenize: Tokenize = new Tokenize {
-    def apply(input: Input, dialect: Dialect): Tokenized = {
+    def apply(input: Input, dialect: Dialect): Tokenized =
       try {
         val tokenizer = new ScalametaTokenizer(input, dialect)
         Tokenized.Success(tokenizer.tokenize())
       } catch {
         case details @ TokenizeException(pos, message) => Tokenized.Error(pos, message, details)
       }
-    }
   }
 }

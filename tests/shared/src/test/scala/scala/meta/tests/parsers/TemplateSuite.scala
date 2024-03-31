@@ -7,7 +7,7 @@ import scala.meta.dialects.Scala211
 class TemplateSuite extends ParseSuite {
   test("trait T") {
     val tree = templStat("trait T")
-    assertTree(tree) { Trait(Nil, pname("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()) }
+    assertTree(tree)(Trait(Nil, pname("T"), Type.ParamClause(Nil), EmptyCtor(), EmptyTemplate()))
     def testTokens(t: Tree): Unit = {
       interceptMessage[NoSuchElementException]("token 0 out of 0")(t.tokens.head)
       interceptMessage[NoSuchElementException]("token -1 out of 0")(t.tokens.last)
@@ -286,7 +286,7 @@ class TemplateSuite extends ParseSuite {
     }
   }
 
-  test("object O") { assertTree(templStat("object O"))(Object(Nil, tname("O"), EmptyTemplate())) }
+  test("object O")(assertTree(templStat("object O"))(Object(Nil, tname("O"), EmptyTemplate())))
 
   test("case object O") {
     assertTree(templStat("case object O"))(Object(Mod.Case() :: Nil, tname("O"), EmptyTemplate()))
@@ -320,7 +320,7 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("trait B extends A.type") {
-    val err = intercept[ParseException] { templStat("trait B extends A.type") }
+    val err = intercept[ParseException](templStat("trait B extends A.type"))
     assertNoDiff(err.shortMessage, "class type required but A.type found")
   }
 

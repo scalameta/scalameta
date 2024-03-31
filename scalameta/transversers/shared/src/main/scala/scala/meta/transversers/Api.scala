@@ -6,7 +6,7 @@ private[meta] trait Api {
     def transform(fn: PartialFunction[Tree, Tree]): Tree = {
       val liftedFn = fn.lift
       object transformer extends Transformer {
-        override def apply(tree: Tree): Tree = { super.apply(liftedFn(tree).getOrElse(tree)) }
+        override def apply(tree: Tree): Tree = super.apply(liftedFn(tree).getOrElse(tree))
       }
       transformer(tree)
     }

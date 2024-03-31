@@ -11,12 +11,12 @@ trait LanguageOps {
   lazy val language: String = {
     val version = Properties.versionNumberString
     if (version.startsWith("2.10")) "Scala210"
-    else if (version.startsWith("2.11")) { "Scala211" }
-    else if (version.startsWith("2.12")) {
+    else if (version.startsWith("2.11")) "Scala211"
+    else if (version.startsWith("2.12"))
       if (scala3SyntaxSupported(version)) "Scala212Source3" else "Scala212"
-    } else if (version.startsWith("2.13")) {
+    else if (version.startsWith("2.13"))
       if (scala3SyntaxSupported(version)) "Scala213Source3" else "Scala213"
-    } else sys.error(s"unsupported Scala version $version")
+    else sys.error(s"unsupported Scala version $version")
   }
 
   private def isScala3CompatSet = {

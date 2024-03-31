@@ -498,7 +498,7 @@ class ModSuite extends ParseSuite {
     runTestError[Stat]("type A[`+`T] = B[T]", error)
   }
 
-  test("covariant in def") { interceptParseError("def foo[+T](t: T): Int") }
+  test("covariant in def")(interceptParseError("def foo[+T](t: T): Int"))
 
   test("contravariant in case class") {
     assertTree(templStat("case class A[-T](t: T)")) {
@@ -543,7 +543,7 @@ class ModSuite extends ParseSuite {
     }
   }
 
-  test("contravariant in def") { interceptParseError("def foo[-T](t: T): Int") }
+  test("contravariant in def")(interceptParseError("def foo[-T](t: T): Int"))
 
   test("val param in case class") {
     assertTree(templStat("case class A(val a: Int)")) {
@@ -615,7 +615,7 @@ class ModSuite extends ParseSuite {
     }
   }
 
-  test("val param in def") { interceptParseError("def foo(val a: Int): Int") }
+  test("val param in def")(interceptParseError("def foo(val a: Int): Int"))
 
   test("var param in case class") {
     assertTree(templStat("case class A(var a: Int)")) {
@@ -679,7 +679,7 @@ class ModSuite extends ParseSuite {
     }
   }
 
-  test("var param in def") { interceptParseError("def foo(var a: Int): Int") }
+  test("var param in def")(interceptParseError("def foo(var a: Int): Int"))
 
   test("macro") {
     matchSubStructure[Stat](
@@ -796,7 +796,7 @@ class ModSuite extends ParseSuite {
 
   }
 
-  test("Annotation after modifier") { interceptParseError("implicit @foo def foo(a: Int): Int") }
+  test("Annotation after modifier")(interceptParseError("implicit @foo def foo(a: Int): Int"))
 
   test("missing val after parameter modifier") {
     val actual = interceptParseError("class A(implicit b: B, implicit c: C)")

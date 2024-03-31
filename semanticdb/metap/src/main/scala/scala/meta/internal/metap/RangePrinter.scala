@@ -20,19 +20,16 @@ trait RangePrinter extends BasePrinter {
 
   private val inputCache = new mutable.HashMap[TextDocument, Input]
   implicit class DocumentOps(doc: TextDocument) {
-    def substring(range: Option[Range]): Option[String] = {
-      range.flatMap { range =>
-        if (doc.text.nonEmpty) {
-          val input = inputCache.getOrElseUpdate(doc, Input.String(doc.text))
-          val pos = Position
-            .Range(input, range.startLine, range.startCharacter, range.endLine, range.endCharacter)
-          Some(pos.text)
-        } else { None }
-      }
+    def substring(range: Option[Range]): Option[String] = range.flatMap { range =>
+      if (doc.text.nonEmpty) {
+        val input = inputCache.getOrElseUpdate(doc, Input.String(doc.text))
+        val pos = Position
+          .Range(input, range.startLine, range.startCharacter, range.endLine, range.endCharacter)
+        Some(pos.text)
+      } else None
     }
   }
 
-  implicit def rangeOrder: Ordering[Range] = {
-    Ordering.by(r => (r.startLine, r.startCharacter, r.endLine, r.endCharacter))
-  }
+  implicit def rangeOrder: Ordering[Range] = Ordering
+    .by(r => (r.startLine, r.startCharacter, r.endLine, r.endCharacter))
 }

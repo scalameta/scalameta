@@ -55,9 +55,8 @@ trait InternalInput {
     // NOTE: chars.length requires a really ugly special case.
     // If the file doesn't end with \n, then it's simply last_line:last_col+1.
     // But if the file does end with \n, then it's last_line+1:0.
-    if (offset == chars.length && (0 < chars.length && newLine(chars(offset - 1)))) {
+    if (offset == chars.length && (0 < chars.length && newLine(chars(offset - 1))))
       return a.length - 1
-    }
     var lo = 0
     var hi = a.length - 1
     while (hi - lo > 1) {

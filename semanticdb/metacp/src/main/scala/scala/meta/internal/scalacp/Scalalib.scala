@@ -13,16 +13,14 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.reflect.NameTransformer
 
 object Scalalib {
-  lazy val synthetics: List[ClassfileInfos] = {
-    List(
-      Scalalib.anyClass,
-      Scalalib.anyValClass,
-      Scalalib.anyRefClass,
-      Scalalib.nothingClass,
-      Scalalib.nullClass,
-      Scalalib.singletonTrait
-    )
-  }
+  lazy val synthetics: List[ClassfileInfos] = List(
+    Scalalib.anyClass,
+    Scalalib.anyValClass,
+    Scalalib.anyRefClass,
+    Scalalib.nothingClass,
+    Scalalib.nullClass,
+    Scalalib.singletonTrait
+  )
   private def anyClass: ClassfileInfos = {
     val symbols = List(
       builtinMethod(
@@ -54,9 +52,8 @@ object Scalalib {
     builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
 
-  private def anyValClass: ClassfileInfos = {
+  private def anyValClass: ClassfileInfos =
     builtin(k.CLASS, List(p.ABSTRACT), "AnyVal", List("scala/Any#"), Nil)
-  }
 
   private def anyRefClass: ClassfileInfos = {
     // FIXME: https://github.com/scalameta/scalameta/issues/1564
@@ -89,19 +86,16 @@ object Scalalib {
     builtin(k.CLASS, Nil, "AnyRef", List("scala/Any#"), symbols.flatten)
   }
 
-  private def nothingClass: ClassfileInfos = {
+  private def nothingClass: ClassfileInfos =
     builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Nothing", List("scala/Any#"), Nil)
-  }
 
-  private def nullClass: ClassfileInfos = {
+  private def nullClass: ClassfileInfos =
     builtin(k.CLASS, List(p.ABSTRACT, p.FINAL), "Null", List("scala/AnyRef#"), Nil)
-  }
 
-  private def singletonTrait: ClassfileInfos = {
+  private def singletonTrait: ClassfileInfos =
     builtin(k.TRAIT, Nil, "Singleton", List("scala/Any#"), Nil)
-  }
 
-  private def scalaPackage: String = { Symbols.Global(Symbols.RootPackage, d.Package("scala")) }
+  private def scalaPackage: String = Symbols.Global(Symbols.RootPackage, d.Package("scala"))
 
   private def builtin(
       kind: s.SymbolInformation.Kind,
@@ -110,7 +104,7 @@ object Scalalib {
       bases: List[String],
       symbols: List[s.SymbolInformation]
   ): ClassfileInfos = {
-    val parents = bases.map { base => s.TypeRef(s.NoType, base, Nil) }
+    val parents = bases.map(base => s.TypeRef(s.NoType, base, Nil))
     val symbol = Symbols.Global(scalaPackage, d.Type(className))
     val ctorSig = s.MethodSignature(Some(s.Scope(Nil)), List(s.Scope(Nil)), s.NoType)
     val ctor = s.SymbolInformation(

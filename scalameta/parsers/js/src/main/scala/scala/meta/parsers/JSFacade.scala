@@ -13,9 +13,8 @@ object JSFacade {
   // https://stackoverflow.com/a/36573183/846273
   private[this] def mergeJSObjects(objs: js.Dynamic*): js.Dynamic = {
     val result = js.Dictionary.empty[Any]
-    for (source <- objs) {
+    for (source <- objs)
       for ((key, value) <- source.asInstanceOf[js.Dictionary[Any]]) result(key) = value
-    }
     result.asInstanceOf[js.Dynamic]
   }
 
@@ -67,7 +66,7 @@ object JSFacade {
   private[this] type Settings = js.UndefOr[js.Dictionary[String]]
   private[this] val defaultSettings = js.undefined.asInstanceOf[Settings]
 
-  private[this] def extractDialect(s: Settings): Either[String, Dialect] = {
+  private[this] def extractDialect(s: Settings): Either[String, Dialect] =
     s.toOption.flatMap(_.get("dialect")) match {
       case Some(dialectStr) => Dialect.standards.get(dialectStr) match {
           case Some(dialect) => Right(dialect)
@@ -75,7 +74,6 @@ object JSFacade {
         }
       case None => Right(dialects.Scala213)
     }
-  }
 
   private[this] def parse[A <: Tree: Parse](code: String, settings: Settings): js.Dictionary[Any] =
     extractDialect(settings) match {

@@ -19,26 +19,20 @@ import scala.meta.Dialect
 trait TextDocumentOps {
   self: SemanticdbOps =>
   def validateCompilerState(): Unit = {
-    if (!g.settings.Yrangepos.value) {
-      sys.error("the compiler instance must have -Yrangepos enabled")
-    }
-    if (g.useOffsetPositions) { sys.error("the compiler instance must use range positions") }
-    if (!g.settings.plugin.value.exists(_.contains("semanticdb"))) {
-      sys.error("the compiler instance must use the semanticdb plugin")
-    }
+    if (!g.settings.Yrangepos.value) sys.error("the compiler instance must have -Yrangepos enabled")
+    if (g.useOffsetPositions) sys.error("the compiler instance must use range positions")
+    if (!g.settings.plugin.value.exists(_.contains("semanticdb"))) sys
+      .error("the compiler instance must use the semanticdb plugin")
     val analyzerClassName = g.analyzer.getClass.getName
-    if (!analyzerClassName.contains("HijackAnalyzer")) {
-      sys.error(s"the compiler instance must use a hijacked analyzer, instead of $analyzerClassName")
-    }
+    if (!analyzerClassName.contains("HijackAnalyzer")) sys
+      .error(s"the compiler instance must use a hijacked analyzer, instead of $analyzerClassName")
     if (g.currentRun.phaseNamed("typer") != NoPhase) {
-      if (g.phase.id < g.currentRun.phaseNamed("typer").id) {
-        sys.error("the compiler phase must be not earlier than typer")
-      }
-    } else { sys.error("the compiler instance does not have a typer phase") }
+      if (g.phase.id < g.currentRun.phaseNamed("typer").id) sys
+        .error("the compiler phase must be not earlier than typer")
+    } else sys.error("the compiler instance does not have a typer phase")
     if (g.currentRun.phaseNamed("patmat") != NoPhase) {
-      if (g.phase.id > g.currentRun.phaseNamed("patmat").id) {
-        sys.error("the compiler phase must be not later than patmat")
-      }
+      if (g.phase.id > g.currentRun.phaseNamed("patmat").id) sys
+        .error("the compiler phase must be not later than patmat")
     } else {
       // do nothing
     }
@@ -102,25 +96,21 @@ trait TextDocumentOps {
             }
             names.result()
           }
-          private def indexAssignRhs(values: Seq[m.Term]): Unit = {
-            values.foreach {
-              case m.Term.Assign(_, rhs) => indexArgNames(rhs)
-              case _ =>
-            }
+          private def indexAssignRhs(values: Seq[m.Term]): Unit = values.foreach {
+            case m.Term.Assign(_, rhs) => indexArgNames(rhs)
+            case _ =>
           }
-          private def indexArgNames(mapp: m.Tree): Unit = {
-            mapp match {
-              case t: m.Init =>
-                margnames(t.pos.start) = getAssignLhsNames(t.argClauses.flatMap(_.values))
-                t.argClauses.foreach(x => indexAssignRhs(x.values))
+          private def indexArgNames(mapp: m.Tree): Unit = mapp match {
+            case t: m.Init =>
+              margnames(t.pos.start) = getAssignLhsNames(t.argClauses.flatMap(_.values))
+              t.argClauses.foreach(x => indexAssignRhs(x.values))
 
-              case t: m.Term.Apply =>
-                margnames(t.fun.pos.end) = getAssignLhsNames(t.argClause.values)
-                indexAssignRhs(t.argClause.values)
+            case t: m.Term.Apply =>
+              margnames(t.fun.pos.end) = getAssignLhsNames(t.argClause.values)
+              indexAssignRhs(t.argClause.values)
 
-              case t: m.Term.Select => indexArgNames(t.qual)
-              case _ =>
-            }
+            case t: m.Term.Select => indexArgNames(t.qual)
+            case _ =>
           }
           private def indexWithin(mname: m.Name.Indeterminate): Unit = {
             todo += mname
@@ -200,11 +190,8 @@ trait TextDocumentOps {
             if (symbol == Symbols.None) return
             if (config.symbols.isLocalOnly && !symbol.isLocal) return
 
-            def saveSymbol(gs: g.Symbol): Unit = {
-              if (gs.isUsefulSymbolInformation) {
-                symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
-              }
-            }
+            def saveSymbol(gs: g.Symbol): Unit = if (gs.isUsefulSymbolInformation)
+              symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
 
             saveSymbol(gsym)
             if (gsym.isClass && !gsym.isTrait) {
@@ -255,8 +242,8 @@ trait TextDocumentOps {
             if (mtree.isDefinition) {
               binders += pos
               if (mvalpatstart.contains(pos.start)) {
-                if (gsym.name.endsWith(mtree.value)) { mpatoccurrences(pos) = symbol }
-              } else { occurrences(pos) = symbol }
+                if (gsym.name.endsWith(mtree.value)) mpatoccurrences(pos) = symbol
+              } else occurrences(pos) = symbol
             } else {
               val isDefinedWithinThisSourceFile = gsym.pos.source == unit.source
               // We don't emit occurrences for accesses on structural types
@@ -268,10 +255,10 @@ trait TextDocumentOps {
               // that would mean we reference local symbols across files.
               val selectionFromGlobalStructuralType = !isDefinedWithinThisSourceFile &&
                 gsym.owner.isRefinementClass
-              if (!selectionFromGlobalStructuralType) { occurrences(pos) = symbol }
+              if (!selectionFromGlobalStructuralType) occurrences(pos) = symbol
             }
 
-            def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = {
+            def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit =
               if (map.contains(mtree)) {
                 val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
                 if (!gsym.hasAccessBoundary) return
@@ -281,21 +268,17 @@ trait TextDocumentOps {
                 }
                 success(map(mtree), wrapAlternatives("<within " + symbol + ">", within1, within2))
               }
-            }
             tryWithin(mwithins, gsym)
             tryWithin(mwithinctors, gsym.primaryConstructor)
           }
-          private def tryNamedArg(gtree: g.Tree, gstart: Int, gpoint: Int): Unit = {
-            if (margnames.contains(gstart) || margnames.contains(gpoint)) {
-              for {
-                margnames <- margnames.get(gstart) ++ margnames.get(gpoint)
-                margname <- margnames
-                if gtree.symbol != null && (gtree.symbol.isMethod || gtree.symbol.isConstructor)
-                gparams <- gtree.symbol.paramss
-                gparam <- gparams.find(_.name.decoded == margname.value)
-              } { success(margname, gparam) }
-            }
-          }
+          private def tryNamedArg(gtree: g.Tree, gstart: Int, gpoint: Int): Unit =
+            if (margnames.contains(gstart) || margnames.contains(gpoint)) for {
+              margnames <- margnames.get(gstart) ++ margnames.get(gpoint)
+              margname <- margnames
+              if gtree.symbol != null && (gtree.symbol.isMethod || gtree.symbol.isConstructor)
+              gparams <- gtree.symbol.paramss
+              gparam <- gparams.find(_.name.decoded == margname.value)
+            } success(margname, gparam)
           private def tryFindMtree(gtree: g.Tree): Unit = {
             def tryMstart(start: Int): Boolean = {
               if (!mstarts.contains(start)) return false
@@ -354,9 +337,8 @@ trait TextDocumentOps {
             gtree match {
               case gtree: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
-                if (!gsym.isSemanticdbLocal && !gsym.isUseless) {
+                if (!gsym.isSemanticdbLocal && !gsym.isUseless)
                   symbols(gsym.toSemantic) = gsym.toSymbolInformation(SymlinkChildren)
-                }
               case gtree: g.PackageDef =>
                 // NOTE: capture PackageDef.pid instead
                 ()
@@ -388,13 +370,13 @@ trait TextDocumentOps {
               case g.Select(g.Ident(qualTerm), _) if qualTerm.startsWith(g.nme.QUAL_PREFIX) =>
                 tryMend(gend) // transformNamedApplication blockWithQualifier case
               case gtree: g.RefTree =>
-                def prohibited(name: String) = { name.contains(g.nme.DEFAULT_GETTER_STRING) }
+                def prohibited(name: String) = name.contains(g.nme.DEFAULT_GETTER_STRING)
                 if (prohibited(gtree.name.decoded)) return
                 tryMstart(gpoint)
               case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
                 val sels = gtree.selectors.flatMap { sel =>
-                  if (sel.name == g.nme.WILDCARD) { Nil }
-                  else { mstarts.get(sel.namePos).map(mname => (sel.name, mname)) }
+                  if (sel.name == g.nme.WILDCARD) Nil
+                  else mstarts.get(sel.namePos).map(mname => (sel.name, mname))
                 }
                 sels.foreach { case (gname, mname) =>
                   val import1 = gtree.expr.tpe.member(gname.toTermName)
@@ -406,9 +388,8 @@ trait TextDocumentOps {
                 }
               case gtree: g.AppliedTypeTree =>
                 if (gtree.symbol.name == g.typeNames.REPEATED_PARAM_CLASS_NAME &&
-                  mstarts.contains(gstart) && gtree.args.nonEmpty) {
+                  mstarts.contains(gstart) && gtree.args.nonEmpty)
                   success(mstarts(gstart), gtree.args.head.symbol)
-                }
               case _ =>
             }
           }
@@ -427,11 +408,10 @@ trait TextDocumentOps {
 
             @tailrec
             def isForSynthetic(gtree: g.Tree): Boolean = {
-              def isForComprehensionSyntheticName(select: g.Select): Boolean = {
-                select.pos == select.qualifier.pos &&
+              def isForComprehensionSyntheticName(select: g.Select): Boolean = select.pos ==
+                select.qualifier.pos &&
                 (select.name == g.nme.map || select.name == g.nme.withFilter ||
                   select.name == g.nme.flatMap || select.name == g.nme.foreach)
-              }
               gtree match {
                 case g.Apply(fun, List(arg: g.Function)) => isForSynthetic(fun)
                 case g.TypeApply(fun, _) => isForSynthetic(fun)
@@ -476,82 +456,78 @@ trait TextDocumentOps {
               }
             }
 
-            if (!isVisitedParent(gtree)) {
-              gtree match {
-                case gview: g.ApplyImplicitView =>
-                  val pos = gtree.pos.toMeta
-                  synthetics += s.Synthetic(
-                    range = Some(pos.toRange),
-                    tree = s.ApplyTree(
-                      function = gview.fun.toSemanticTree,
-                      arguments = List(s.OriginalTree(range = Some(pos.toRange)))
-                    )
+            if (!isVisitedParent(gtree)) gtree match {
+              case gview: g.ApplyImplicitView =>
+                val pos = gtree.pos.toMeta
+                synthetics += s.Synthetic(
+                  range = Some(pos.toRange),
+                  tree = s.ApplyTree(
+                    function = gview.fun.toSemanticTree,
+                    arguments = List(s.OriginalTree(range = Some(pos.toRange)))
                   )
-                  isVisited += gview.fun
-                case gimpl: g.ApplyToImplicitArgs => gimpl.fun match {
-                    case gview: g.ApplyImplicitView =>
-                      isVisitedParent += gview
-                      val range = gtree.pos.toMeta.toRange
-                      synthetics += s.Synthetic(
-                        range = Some(range),
-                        tree = s.ApplyTree(
-                          function = s.ApplyTree(
-                            function = gview.fun.toSemanticTree,
-                            arguments = List(s.OriginalTree(range = Some(range)))
-                          ),
-                          arguments = gimpl.args.map(_.toSemanticTree)
-                        )
+                )
+                isVisited += gview.fun
+              case gimpl: g.ApplyToImplicitArgs => gimpl.fun match {
+                  case gview: g.ApplyImplicitView =>
+                    isVisitedParent += gview
+                    val range = gtree.pos.toMeta.toRange
+                    synthetics += s.Synthetic(
+                      range = Some(range),
+                      tree = s.ApplyTree(
+                        function = s.ApplyTree(
+                          function = gview.fun.toSemanticTree,
+                          arguments = List(s.OriginalTree(range = Some(range)))
+                        ),
+                        arguments = gimpl.args.map(_.toSemanticTree)
                       )
-                    case gfun if isForSynthetic(gfun) =>
-                      val range = gimpl.pos.toMeta.toRange
-                      val synthTree = forSyntheticOrOrig(gimpl)
-                      synthetics += s.Synthetic(range = Some(range), tree = synthTree)
-                    case gfun => synthetics += s.Synthetic(
-                        range = Some(gfun.pos.toMeta.toRange),
-                        tree = s.ApplyTree(
-                          function = s.OriginalTree(range = Some(gfun.pos.toMeta.toRange)),
-                          arguments = gimpl.args.map(_.toSemanticTree)
-                        )
-                      )
-                  }
-                case g.TypeApply(fun, targs @ List(targ, _*)) =>
-                  if (targ.pos.isRange) return
-                  // for loops
-                  val fnTree = fun match {
-                    case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
-                      isVisitedParent += select
-                      isVisitedParent += fun
-                      val symbol = select.symbol.toSemantic
-                      s.SelectTree(
-                        qualifier = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
-                        id = Some(s.IdTree(symbol = symbol))
-                      )
-                    case _ => s.OriginalTree(range = Some(fun.pos.toMeta.toRange))
-                  }
-                  synthetics += s.Synthetic(
-                    range = Some(fun.pos.toMeta.toRange),
-                    tree = s.TypeApplyTree(
-                      function = fnTree,
-                      typeArguments = targs.map(_.tpe.toSemanticTpe)
                     )
-                  )
-                case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
-                  isVisitedParent += select
-                  val symbol = select.symbol.toSemantic
-                  synthetics += s.Synthetic(
-                    range = Some(qual.pos.toMeta.toRange),
-                    tree = s.SelectTree(
+                  case gfun if isForSynthetic(gfun) =>
+                    val range = gimpl.pos.toMeta.toRange
+                    val synthTree = forSyntheticOrOrig(gimpl)
+                    synthetics += s.Synthetic(range = Some(range), tree = synthTree)
+                  case gfun => synthetics += s.Synthetic(
+                      range = Some(gfun.pos.toMeta.toRange),
+                      tree = s.ApplyTree(
+                        function = s.OriginalTree(range = Some(gfun.pos.toMeta.toRange)),
+                        arguments = gimpl.args.map(_.toSemanticTree)
+                      )
+                    )
+                }
+              case g.TypeApply(fun, targs @ List(targ, _*)) =>
+                if (targ.pos.isRange) return
+                // for loops
+                val fnTree = fun match {
+                  case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
+                    isVisitedParent += select
+                    isVisitedParent += fun
+                    val symbol = select.symbol.toSemantic
+                    s.SelectTree(
                       qualifier = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
                       id = Some(s.IdTree(symbol = symbol))
                     )
+                  case _ => s.OriginalTree(range = Some(fun.pos.toMeta.toRange))
+                }
+                synthetics += s.Synthetic(
+                  range = Some(fun.pos.toMeta.toRange),
+                  tree = s
+                    .TypeApplyTree(function = fnTree, typeArguments = targs.map(_.tpe.toSemanticTpe))
+                )
+              case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
+                isVisitedParent += select
+                val symbol = select.symbol.toSemantic
+                synthetics += s.Synthetic(
+                  range = Some(qual.pos.toMeta.toRange),
+                  tree = s.SelectTree(
+                    qualifier = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
+                    id = Some(s.IdTree(symbol = symbol))
                   )
-                case gtree if isForSynthetic(gtree) =>
-                  val range = gtree.pos.toMeta.toRange
-                  val synthTree = forSyntheticOrOrig(gtree)
-                  synthetics += s.Synthetic(range = Some(range), tree = synthTree)
-                case _ =>
-                // do nothing
-              }
+                )
+              case gtree if isForSynthetic(gtree) =>
+                val range = gtree.pos.toMeta.toRange
+                val synthTree = forSyntheticOrOrig(gtree)
+                synthetics += s.Synthetic(range = Some(range), tree = synthTree)
+              case _ =>
+              // do nothing
             }
           }
 
@@ -622,9 +598,8 @@ trait TextDocumentOps {
                 }
               case _: g.Apply | _: g.TypeApply =>
                 tryFindSynthetic(gtree)
-                if (gtree.pos != null && gtree.pos.isRange) {
+                if (gtree.pos != null && gtree.pos.isRange)
                   tryNamedArg(gtree, gtree.pos.start, gtree.pos.point)
-                }
                 // fix #2040
                 gtree match {
                   case view: g.ApplyImplicitView if view.args.nonEmpty => traverse(view.args.head)
@@ -672,7 +647,7 @@ trait TextDocumentOps {
                 // for Select's against a qual$ Ident.
                 gblock.stats.foreach {
                   case g.ValDef(_, _, _, rhs) =>
-                    if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) { traverse(rhs) }
+                    if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) traverse(rhs)
                   case _ =>
                 }
                 traverse(gblock.expr)
@@ -719,15 +694,14 @@ trait TextDocumentOps {
       select.name == g.nme.withFilter || select.name == g.nme.flatMap || select.name == g.nme.map ||
       select.name == g.nme.unapplySeq || select.name == g.nme.unapply)
 
-  private def syntaxAndPos(gtree: g.Tree): String = {
+  private def syntaxAndPos(gtree: g.Tree): String =
     if (gtree == g.EmptyTree) "\u001b[1;31mEmptyTree\u001b[0m"
     else {
       val text = gtree.toString.substring(0, Math.min(45, gtree.toString.length)).replace("\n", " ")
       s"$text [${gtree.pos.start}..${gtree.pos.end})"
     }
-  }
 
-  private def syntaxAndPos(mtree: m.Tree): String = { s"${mtree.pos.syntax} $mtree" }
+  private def syntaxAndPos(mtree: m.Tree): String = s"${mtree.pos.syntax} $mtree"
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
     val normalizedAlts = {

@@ -11,7 +11,7 @@ class UnclosedTokenSuite extends ParseSuite {
       """|<input>:1: error: unclosed string interpolation
          | s"start   
          |   ^""".stripMargin.replace("\n", EOL)
-    ) { stat(""" s"start   """) }
+    )(stat(""" s"start   """))
   }
 
   test("unclosed-string-2") {
@@ -19,7 +19,7 @@ class UnclosedTokenSuite extends ParseSuite {
       """|<input>:1: error: unclosed string literal
          | x"${1 + " 
          |         ^""".stripMargin.replace("\n", EOL)
-    ) { stat(""" x"${1 + " """) }
+    )(stat(""" x"${1 + " """))
   }
 
   test("unclosed-escape") {
@@ -27,7 +27,7 @@ class UnclosedTokenSuite extends ParseSuite {
       """|<input>:1: error: unclosed string literal
          | "start \" 
          | ^""".stripMargin.replace("\n", EOL)
-    ) { stat(""" "start \" """) }
+    )(stat(""" "start \" """))
   }
 
   test("unclosed-interpolation") {
@@ -35,7 +35,7 @@ class UnclosedTokenSuite extends ParseSuite {
       """|<input>:1: error: `}` expected but `end of file` found
          | s"${1+ 
          |        ^""".stripMargin.replace("\n", EOL)
-    ) { stat(""" s"${1+ """) }
+    )(stat(""" s"${1+ """))
   }
 
 }

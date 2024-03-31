@@ -88,7 +88,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       val replacedFields = versionedParams.flatMap(_.replaced.flatMap { field =>
         field.oldDefs.map { case (oldDef, _) => field.version -> oldDef }
       })
-      val mstatsPerVersion = paramsVersions.map { ver => (ver, new Mstats()) }
+      val mstatsPerVersion = paramsVersions.map(ver => (ver, new Mstats()))
       def paramsForVersion(v: Version): List[ValDef] =
         positionVersionedParams(versionedParams.flatMap(_.getApplyDeclDefnBefore(v)._1))
 
@@ -160,10 +160,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       // by the users of the framework.
       val privateCopyArgs = params
         .map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p.name)})")
-      val privateCopyParentChecks = {
+      val privateCopyParentChecks =
         if (parentChecks.isEmpty) q""
-        else {
-          q"""
+        else q"""
             if (destination != null) {
               def checkParent(fn: ($name, $TreeClass, $StringClass) => $BooleanClass): $UnitClass = {
                 val parentCheckOk = fn(this, parent, destination)
@@ -175,8 +174,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               ..$parentChecks
             }
           """
-        }
-      }
       stats1 +=
         q"""
         private[meta] def privateCopy(
@@ -224,8 +221,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               $mname.apply(..${params.map(_.name)})
             }
           """
-        if (needCopies) {
-          if (versionedParams.isEmpty) { addCopy(fullCopyParams) }
+        if (needCopies)
+          if (versionedParams.isEmpty) addCopy(fullCopyParams)
           else {
             // add primary copy with default values
             val defaultCopyParams =
@@ -247,7 +244,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 addCopy(copyParams, getDeprecatedAnno(version))
             }
           }
-        }
       }
 
       // step 7a: override the Object and Equals methods
@@ -321,8 +317,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       internalBody += q"$CommonTyperMacrosModule.hierarchyCheck[$iname]"
       params.foreach { p =>
         val local = p.name
-        internalBody += q"$DataTyperMacrosModule.nullCheck(${local})"
-        internalBody += q"$DataTyperMacrosModule.emptyCheck(${local})"
+        internalBody += q"$DataTyperMacrosModule.nullCheck($local)"
+        internalBody += q"$DataTyperMacrosModule.emptyCheck($local)"
       }
       internalBody ++= imports
       fieldChecks.foreach { x =>
@@ -345,7 +341,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         errorChecker.traverse(fieldCheck)
         if (!hasErrors) internalBody += fieldCheck
       }
-      val paramInits = params.map { p => q"$CommonTyperMacrosModule.initParam(${p.name})" }
+      val paramInits = params.map(p => q"$CommonTyperMacrosModule.initParam(${p.name})")
       privateParams.foreach { p =>
         if (p.persist) internalBody += q"$DataTyperMacrosModule.nullCheck(${p.field.name})"
         else internalBody += asValDefn(p.field)
@@ -534,13 +530,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         case _ => false
       }
       if (needsUnapply) {
-        def getUnapply(unapplyParams: List[ValDef], annots: Tree*): Tree = {
-          if (unapplyParams.isEmpty) {
-            q"""
+        def getUnapply(unapplyParams: List[ValDef], annots: Tree*): Tree =
+          if (unapplyParams.isEmpty) q"""
                 @$InlineAnnotation @..$annots final def unapply(x: $iname): $BooleanClass =
                   x != null && x.isInstanceOf[$name]
               """
-          } else {
+          else {
             val successTargs = tq"(..${unapplyParams.map(p => p.tpt)})"
             val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
             q"""
@@ -548,7 +543,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                   if (x != null && x.isInstanceOf[$name]) $SomeModule($successArgs) else $NoneModule
               """
           }
-        }
         val latestTree = getUnapply(params)
         mstatsPerVersion match {
           case (headVer, headMstats) :: tail =>
@@ -566,9 +560,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       }
 
       // step 15: finish codegen for Quasi
-      if (isQuasi) {
-        stats1 +=
-          q"""
+      if (isQuasi) stats1 +=
+        q"""
           def become[T <: $TreeClass](implicit ev: $AstInfoClass[T]): T with $QuasiClass = {
             (this match {
               case $mname(0, tree) =>
@@ -580,18 +573,16 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }).withOrigin(this.origin): T with $QuasiClass
           }
         """
-      } else {
-        mstats1 += mkQuasi(
-          iname,
-          iparents,
-          params,
-          quasiCopyExtraParamss,
-          quasiExtraAbstractDefs.result(),
-          "name",
-          "value",
-          "tpe"
-        )
-      }
+      else mstats1 += mkQuasi(
+        iname,
+        iparents,
+        params,
+        quasiCopyExtraParamss,
+        quasiExtraAbstractDefs.result(),
+        "name",
+        "value",
+        "tpe"
+      )
 
       val latestName = mstatsPerVersion
         .foldLeft(initialName) { case (afterPrevVerName, (ver, verMstats)) =>
@@ -680,14 +671,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def declareSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
     q"$mods def ${setterName(name)}($name : $tpe): Unit"
 
-  private def defineSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree = {
-    q"""
+  private def defineSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree = q"""
       $mods def ${setterName(name)}($name : $tpe): Unit = {
         val node = this
         ${storeField(name)}
       }
     """
-  }
 
   private class VersionedParam(
       val param: ValDef,
@@ -715,23 +704,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         (decls, Some(rfield.newValDefn))
       }.getOrElse((asValDecl(param) -> -1 :: Nil, None))
     }
-    def getDefaultCopyDef(): List[(ValOrDefDef, Int)] = {
-      replaced.headOption.map(_.oldDefs).getOrElse((param, -1) :: Nil)
-    }
+    def getDefaultCopyDef(): List[(ValOrDefDef, Int)] = replaced.headOption.map(_.oldDefs)
+      .getOrElse((param, -1) :: Nil)
   }
 
   private def positionVersionedParams[A](params: List[(A, Int)]): List[A] = {
     val res = new ListBuffer[A]
     val paramIter = params.iterator.filter(_._2 < 0)
     @tailrec
-    def iter(withPositions: List[(A, Int)]): Unit = {
-      withPositions match {
-        case (v, pos) :: rest =>
-          paramIter.take(pos - res.length).foreach { case (x, _) => res += x }
-          res += v
-          iter(rest)
-        case _ => paramIter.foreach { case (x, _) => res += x }
-      }
+    def iter(withPositions: List[(A, Int)]): Unit = withPositions match {
+      case (v, pos) :: rest =>
+        paramIter.take(pos - res.length).foreach { case (x, _) => res += x }
+        res += v
+        iter(rest)
+      case _ => paramIter.foreach { case (x, _) => res += x }
     }
     iter(params.filter(_._2 >= 0).sortBy(_._2))
     res.toList

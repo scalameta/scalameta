@@ -33,16 +33,14 @@ object typecheckError {
       case Literal(Constant(s_code: String)) => s_code
       case _ => c.abort(c.enclosingPosition, "this macro only works with literal strings")
     }
-    val tree = {
+    val tree =
       try c.parse(s_code.replace("QQQ", "\"\"\""))
       catch { case ex: ParseException => c.abort(c.enclosingPosition, "this code fails to parse") }
-    }
-    def format(ex: TypecheckException) = {
-      if (options.tpe.typeSymbol == symbolOf[Options.WithoutPositions.type]) { ex.msg }
-      else if (options.tpe.typeSymbol == symbolOf[Options.WithPositions.type]) {
-        Position.formatMessage(ex.pos.asInstanceOf[Position], ex.msg, shortenFile = true)
-      } else { c.abort(c.enclosingPosition, s"unsupported option: ${options.tpe}") }
-    }
+    def format(ex: TypecheckException) =
+      if (options.tpe.typeSymbol == symbolOf[Options.WithoutPositions.type]) ex.msg
+      else if (options.tpe.typeSymbol == symbolOf[Options.WithPositions.type]) Position
+        .formatMessage(ex.pos.asInstanceOf[Position], ex.msg, shortenFile = true)
+      else c.abort(c.enclosingPosition, s"unsupported option: ${options.tpe}")
     try { c.typecheck(tree, silent = false); q"${""}" }
     catch { case ex: TypecheckException => q"${format(ex)}" }
   }

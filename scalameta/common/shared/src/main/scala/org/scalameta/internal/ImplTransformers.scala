@@ -9,9 +9,7 @@ trait ImplTransformers {
   import Flag._
 
   implicit class XtensionAnnotteeTransformer(annottees: Seq[Tree]) {
-    def transformAnnottees(transformer: ImplTransformer): Tree = {
-      transformer.transform(annottees: _*)
-    }
+    def transformAnnottees(transformer: ImplTransformer): Tree = transformer.transform(annottees: _*)
   }
 
   class ImplTransformer {
@@ -33,10 +31,9 @@ trait ImplTransformers {
         if (allowClasses) allowed :+= "classes"
         if (allowTraits) allowed :+= "traits"
         if (allowModules) allowed :+= "modules"
-        val s_allowed = {
+        val s_allowed =
           if (allowed.length > 1) allowed.dropRight(1).mkString(", ") + " and " + allowed.last
           else allowed.mkString
-        }
         val q"new $s_name(...$_).macroTransform(..$_)" = c.macroApplication
         c.abort(annottees.head.pos, s"only $s_allowed can be $s_name")
       }

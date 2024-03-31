@@ -18,23 +18,19 @@ class JavaTypeSignatureVisitor(isArray: Boolean) extends TypedSignatureVisitor[J
     // visitBaseType, which is not a reference.
     this
 
-  override def visitArrayType: SignatureVisitor = { referenceTypeSignature.visitArrayType() }
+  override def visitArrayType: SignatureVisitor = referenceTypeSignature.visitArrayType()
 
-  override def visitInnerClassType(name: String): Unit = {
-    referenceTypeSignature.visitInnerClassType(name)
-  }
+  override def visitInnerClassType(name: String): Unit = referenceTypeSignature
+    .visitInnerClassType(name)
 
-  override def visitTypeVariable(name: String): Unit = {
-    referenceTypeSignature.visitTypeVariable(name)
-  }
+  override def visitTypeVariable(name: String): Unit = referenceTypeSignature.visitTypeVariable(name)
 
-  override def visitTypeArgument(wildcard: Char): SignatureVisitor = {
-    referenceTypeSignature.visitTypeArgument(wildcard)
-  }
+  override def visitTypeArgument(wildcard: Char): SignatureVisitor = referenceTypeSignature
+    .visitTypeArgument(wildcard)
 
-  override def visitTypeArgument(): Unit = { referenceTypeSignature.visitTypeArgument() }
+  override def visitTypeArgument(): Unit = referenceTypeSignature.visitTypeArgument()
 
-  override def visitClassType(name: String): Unit = { referenceTypeSignature.visitClassType(name) }
+  override def visitClassType(name: String): Unit = referenceTypeSignature.visitClassType(name)
 
   override def visitBaseType(descriptor: Char): Unit = {
     import BaseType._

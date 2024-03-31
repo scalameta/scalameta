@@ -49,7 +49,7 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
     val cases = leaves.sortBy { l =>
       val idx = priority.indexOf(l.prefix)
       if (idx != -1) idx else priority.length
-    }.map { l => cq"$treeName: ${hygienicRef(l.sym)} => ${leafHandler(l, treeName)}" }
+    }.map(l => cq"$treeName: ${hygienicRef(l.sym)} => ${leafHandler(l, treeName)}")
     val methodName = TermName(s"apply$prefix")
 
     q"""

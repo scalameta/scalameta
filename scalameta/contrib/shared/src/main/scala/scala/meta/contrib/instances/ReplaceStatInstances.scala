@@ -31,11 +31,9 @@ trait ReplaceStatInstances {
   implicit val replaceVarStats: Replace[Defn.Var, Stat] =
     Replace((a, bs) => a.copy(rhs = Some(statsToTerm(bs))))
 
-  private def statsToTerm(bs: List[Stat]): Term = {
-    bs match {
-      case (head: Term) :: Nil => head
-      case _ => Term.Block(bs)
-    }
+  private def statsToTerm(bs: List[Stat]): Term = bs match {
+    case (head: Term) :: Nil => head
+    case _ => Term.Block(bs)
   }
 }
 

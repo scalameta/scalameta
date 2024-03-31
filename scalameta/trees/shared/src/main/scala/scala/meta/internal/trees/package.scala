@@ -233,11 +233,10 @@ package object trees {
     }
   }
 
-  private[meta] def checkValidEnumerators(enums: List[Enumerator]): Boolean = {
+  private[meta] def checkValidEnumerators(enums: List[Enumerator]): Boolean =
     enums.headOption match {
       case Some(_: Enumerator.Generator | _: Enumerator.CaseGenerator | _: Enumerator.Quasi) => true
       case _ => false
     }
-  }
 
 }

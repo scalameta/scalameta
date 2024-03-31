@@ -11,10 +11,8 @@ trait Convert[A, B] {
 }
 
 object Convert {
-  def apply[A, B](f: A => B): Convert[A, B] = {
-    new Convert[A, B] {
-      def apply(a: A): B = f(a)
-    }
+  def apply[A, B](f: A => B): Convert[A, B] = new Convert[A, B] {
+    def apply(a: A): B = f(a)
   }
 
   implicit def trivial[T, U <: T]: Convert[U, T] = Convert(x => x)

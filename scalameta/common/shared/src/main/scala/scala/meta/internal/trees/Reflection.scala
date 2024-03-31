@@ -32,11 +32,11 @@ trait Reflection extends AdtReflection {
   }
 
   // NOTE: this is supposed to map root/branch/ast classes to their direct subclasses
-  private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] = {
+  private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] =
     AllModule.initialize.annotations match {
       case List(ann) if ann.tree.tpe =:= RegistryAnnotation.toType =>
         val q"new $_($_.$_[..$_](..${astPaths: List[String]}))" = ann.tree
-        val astClasses = astPaths.map(astPath => {
+        val astClasses = astPaths.map { astPath =>
           @tailrec
           def locateModule(root: ModuleSymbol, parts: List[String]): ModuleSymbol = parts match {
             case Nil => root
@@ -44,7 +44,7 @@ trait Reflection extends AdtReflection {
           }
           val modulePath :+ className = astPath.split('.').toList
           locateModule(mirror.RootPackage, modulePath).info.member(TypeName(className)).asClass
-        })
+        }
         val entireHierarchy = {
           var result = astClasses.flatMap(_.baseClasses.map(_.asClass))
           result = result.filter(sym => sym.toType <:< TreeSymbol.toType)
@@ -55,16 +55,15 @@ trait Reflection extends AdtReflection {
         }
         val registry = mutable.Map[Symbol, List[Symbol]]()
         entireHierarchy.foreach(sym => registry(sym) = Nil)
-        entireHierarchy.foreach(sym => {
+        entireHierarchy.foreach { sym =>
           val parents = sym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
           val relevantParents = parents
             .filter(p => p.isClass && p.asClass.baseClasses.contains(TreeSymbol))
           relevantParents.foreach(parent => registry(parent) :+= sym)
-        })
+        }
         registry.toMap
       case _ => sys.error("failed to figure out meta trees")
     }
-  }
 
   implicit class XtensionAstTree(tree: Tree) {
     def detectAst: List[String] = {

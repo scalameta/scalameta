@@ -83,9 +83,8 @@ object SemanticdbConfig {
       reporter: Reporter,
       base: SemanticdbConfig
   ): SemanticdbConfig = {
-    def deprecated(option: String, instead: String): Unit = {
-      reporter.warning(NoPosition, s"$prefix$option is deprecated. Use -$prefix$instead instead.")
-    }
+    def deprecated(option: String, instead: String): Unit = reporter
+      .warning(NoPosition, s"$prefix$option is deprecated. Use -$prefix$instead instead.")
     def unsupported(option: String, instead: String = ""): Unit = {
       val buf = new StringBuilder
       buf.append(s"$prefix$option is no longer supported.")

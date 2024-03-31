@@ -30,7 +30,7 @@ object Parse {
   implicit lazy val parseAmmonite: Parse[MultiSource] = toParse(_.parseAmmonite())
 
   private def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
-    def apply(input: Input, dialect: Dialect): Parsed[T] = {
+    def apply(input: Input, dialect: Dialect): Parsed[T] =
       try {
         val parser = new ScalametaParser(input)(dialect)
         Parsed.Success(fn(parser))
@@ -39,7 +39,6 @@ object Parse {
             .Error(pos, message, details)
         case details @ ParseException(pos, message) => Parsed.Error(pos, message, details)
       }
-    }
   }
 
 }

@@ -22,12 +22,10 @@ class SymbolTableSuite extends FunSuite {
     }
   }
 
-  def check(symbol: String)(f: s.SymbolInformation => Boolean): Unit = {
-    test(symbol) {
-      val obtained = globalSymtab.info(symbol)
-      assert(obtained.nonEmpty, symbol)
-      assert(f(obtained.get), obtained.get.toProtoString)
-    }
+  def check(symbol: String)(f: s.SymbolInformation => Boolean): Unit = test(symbol) {
+    val obtained = globalSymtab.info(symbol)
+    assert(obtained.nonEmpty, symbol)
+    assert(f(obtained.get), obtained.get.toProtoString)
   }
 
   // jar classpath entries

@@ -16,7 +16,7 @@ object Versions {
     if (range.length > 4)
       throw new Exception(s"Too many versions for scala-$major.$minor: ${range.length} > 4")
     val desc = if (range.step > 0) range.reverse else range
-    desc.map { x => s"$major.$minor.$x" }
+    desc.map(x => s"$major.$minor.$x")
   }
 
 }

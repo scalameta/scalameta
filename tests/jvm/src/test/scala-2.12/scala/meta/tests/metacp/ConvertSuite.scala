@@ -21,9 +21,8 @@ class ConvertSuite extends FunSuite {
     val output = Metacp.process(settings, reporter)
     assert(output.isSuccess)
   }
-  private def checkConversionSucceeds(library: Library): Unit = {
-    test(library.name.tag(Slow)) { runConversion(library.name, library.classpath()) }
-  }
+  private def checkConversionSucceeds(library: Library): Unit =
+    test(library.name.tag(Slow))(runConversion(library.name, library.classpath()))
 
   Libraries.suite.foreach(checkConversionSucceeds)
 }

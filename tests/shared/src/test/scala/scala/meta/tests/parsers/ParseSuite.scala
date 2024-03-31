@@ -45,12 +45,11 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   def ammonite(code: String)(implicit dialect: Dialect) = code.asAmmoniteInput
     .parseRule(_.entryPointAmmonite())
 
-  def interceptParseErrors(stats: String*)(implicit loc: munit.Location) = {
-    stats.foreach(interceptParseError(_))
-  }
+  def interceptParseErrors(stats: String*)(implicit loc: munit.Location) = stats
+    .foreach(interceptParseError(_))
 
   def interceptParseError(stat: String)(implicit loc: munit.Location): String =
-    try { intercept[parsers.ParseException] { templStat(stat) }.getMessage().replace("\r", "") }
+    try intercept[parsers.ParseException](templStat(stat)).getMessage().replace("\r", "")
     catch {
       case scala.util.control.NonFatal(t) =>
         val msg = "no exception was thrown"
@@ -59,9 +58,9 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     }
 
   def checkError(stat: String)(implicit dialect: Dialect) =
-    test(logger.revealWhitespace(stat).take(50)) { interceptParseError(stat) }
+    test(logger.revealWhitespace(stat).take(50))(interceptParseError(stat))
   def checkOK(stat: String)(implicit dialect: Dialect) =
-    test(logger.revealWhitespace(stat).take(50)) { templStat(stat) }
+    test(logger.revealWhitespace(stat).take(50))(templStat(stat))
 
   protected def checkParsedTree[T <: Tree](
       code: String,
@@ -84,11 +83,11 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       val result = parser(code, dialect)
       throw new ParseException(
         Position.None,
-        s"Statement ${code} should not parse! Got result ${result.structure}"
+        s"Statement $code should not parse! Got result ${result.structure}"
       )
     }
     val obtained = error.getMessage().replace("\r", "")
-    assert(obtained.contains(expected), s"Expected [$obtained] to contain [${expected}].")
+    assert(obtained.contains(expected), s"Expected [$obtained] to contain [$expected].")
   }
 
   protected def matchSubStructure[T <: Tree](
@@ -153,7 +152,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
 
     assertNoDiff(obtained.structure, expectedStructure, "Generated stat")
     val obtainedAgain: T = parser(reprintedCode, dialect)
-    assertNoDiff(obtainedAgain.structure, expectedStructure, s"Reprinted stat: \n${reprintedCode}")
+    assertNoDiff(obtainedAgain.structure, expectedStructure, s"Reprinted stat: \n$reprintedCode")
   }
 
   protected def parseAndCheckTree[T <: Tree](code: String, syntax: String = null)(
@@ -193,19 +192,15 @@ object MoreHelpers {
   implicit class XtensionCode(private val code: String) extends AnyVal {
     def asInput: Input = Input.String(code)
     def asAmmoniteInput: Input = Input.Ammonite(asInput)
-    def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
-      asInput.applyRule(rule)
-    }
-    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
-      asInput.parseRule(rule)
-    }
+    def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = asInput
+      .applyRule(rule)
+    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = asInput
+      .parseRule(rule)
   }
   implicit class XtensionInput(private val input: Input) extends AnyVal {
-    def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
+    def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T =
       requireNonEmptyOrigin(rule(new ScalametaParser(input)))
-    }
-    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = {
+    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T =
       applyRule(_.parseRule(rule))
-    }
   }
 }

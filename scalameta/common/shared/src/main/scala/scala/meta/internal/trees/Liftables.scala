@@ -43,8 +43,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       body: Tree
   ): Option[Tree] = {
     // NOTE: See #277 and #405 to understand why this special-casing is necessary.
-    def specialcaseTermApply: Tree = {
-      q"""
+    def specialcaseTermApply: Tree = q"""
         object ApplyToTripleDots {
           def unapply(t: _root_.scala.meta.Term.Apply): Option[(
             _root_.scala.meta.Term,
@@ -85,7 +84,6 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
             $body
         }
       """
-    }
     // NOTE: we ignore tokens here for the time being
     if (adt.tpe <:< QuasiSymbol.toType) Some(q"Lifts.liftQuasi($localName)")
     else if (adt.tpe <:< TermApplySymbol.toType) Some(specialcaseTermApply)
@@ -103,8 +101,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   // NOTE: We have this check as a special case here, in addition to requires in Trees.scala,
   // because I think this is going to be a very common mistake that new users are going to make,
   // so I'd like that potential mistake to receive extra attention in form of quality error reporting.
-  private def prohibitName(pat: Tree): Tree = {
-    q"""
+  private def prohibitName(pat: Tree): Tree = q"""
       def prohibitName(pat: _root_.scala.meta.Tree): _root_.scala.Unit = {
         def unquotesName(q: _root_.scala.meta.internal.trees.Quasi): Boolean = {
           val tpe = q.hole.arg.tpe // NOTE: no easy way to find this out without holes
@@ -119,7 +116,6 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       }
       prohibitName($pat)
     """
-  }
 
   private def liftPath(path: String): Tree = {
     val init = q"""c.universe.Ident(c.universe.TermName("_root_"))""": Tree
@@ -127,7 +123,6 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       q"c.universe.Select($acc, c.universe.TermName($part))"
     }
   }
-  private def liftField(value: Tree, tpe: Tree): Tree = {
+  private def liftField(value: Tree, tpe: Tree): Tree =
     q"_root_.scala.Predef.implicitly[c.universe.Liftable[$tpe]].apply($value)"
-  }
 }

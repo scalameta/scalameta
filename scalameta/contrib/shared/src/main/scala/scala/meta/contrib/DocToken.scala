@@ -8,24 +8,21 @@ import fastparse.NoWhitespace._
  */
 case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[String]) {
 
-  override def toString: String = {
-    ((name, body) match {
-      case (Some(n), _) => s"$kind(name=$n, body=${body.getOrElse("")})"
-      case (None, Some(kindBody)) => s"$kind($kindBody)"
-      case _ => kind.toString
-    }).replaceAll("\n", " ")
-  }
+  override def toString: String = ((name, body) match {
+    case (Some(n), _) => s"$kind(name=$n, body=${body.getOrElse("")})"
+    case (None, Some(kindBody)) => s"$kind($kindBody)"
+    case _ => kind.toString
+  }).replaceAll("\n", " ")
 
   /**
    * Obtains all the code references from this DocToken.
    */
   def references: List[DocToken.Reference] = body.map { b =>
-    def parseBodyFrom(idx: Int): List[DocToken.Reference] = {
+    def parseBodyFrom(idx: Int): List[DocToken.Reference] =
       parse(b, DocToken.referenceParser(_), startIndex = idx) match {
         case Parsed.Success(value, index) => List(DocToken.Reference(value)) ++ parseBodyFrom(index)
         case _ => List[DocToken.Reference]()
       }
-    }
 
     parseBodyFrom(0)
   }.getOrElse(Nil)

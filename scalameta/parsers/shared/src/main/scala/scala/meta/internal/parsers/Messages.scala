@@ -14,10 +14,8 @@ object Messages {
   }
 
   def QuasiquoteAdjacentEllipsesInPattern(rank: Int): String = {
-    val hint = {
-      "Note that you can extract a list into an unquote when pattern matching," + EOL +
-        "it just cannot follow another list either directly or indirectly."
-    }
+    val hint = "Note that you can extract a list into an unquote when pattern matching," + EOL +
+      "it just cannot follow another list either directly or indirectly."
     QuasiquoteRankMismatch(rank, rank - 1, hint)
   }
 

@@ -6,7 +6,7 @@ import scala.meta._
 class Scala213Suite extends ParseSuite {
   private def runAssert(code: String)(
       expected: Tree
-  )(implicit d: Dialect, loc: munit.Location): Unit = { assertTree(templStat(code)(d))(expected) }
+  )(implicit d: Dialect, loc: munit.Location): Unit = assertTree(templStat(code)(d))(expected)
 
   import dialects.Scala213
 

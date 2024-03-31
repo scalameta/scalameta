@@ -120,7 +120,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("showCode with comments - tricky") { assertTokenizedAsSyntax("x ~/**/y", "x ~/**/y") }
+  test("showCode with comments - tricky")(assertTokenizedAsSyntax("x ~/**/y", "x ~/**/y"))
 
   test("showRaw without comments - easy") {
     assertTokenizedAsStructureLines(

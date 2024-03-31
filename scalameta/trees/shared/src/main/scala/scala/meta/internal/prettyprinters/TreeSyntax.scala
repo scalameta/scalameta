@@ -229,7 +229,7 @@ object TreeSyntax {
       }
     }
 
-    def kw(keyword: String) = fn(sb => {
+    def kw(keyword: String) = fn { sb =>
       val prelast = if (sb.length > 1) sb.charAt(sb.length - 2) else ' '
       val last = if (sb.nonEmpty) sb.charAt(sb.length - 1) else ' '
       val next = if (keyword.nonEmpty) keyword(0) else ' '
@@ -239,7 +239,7 @@ object TreeSyntax {
         opThenOp || underscoreThenOp
       }
       if (danger) s(" " + keyword) else s(keyword)
-    })
+    }
 
     def guessIsBackquoted(t: Name): Boolean = {
       def cantBeWrittenWithoutBackquotes(t: Name): Boolean = {
@@ -247,13 +247,12 @@ object TreeSyntax {
         def foldCodepoints[T](value: String, start: T)(f: (Int, T, Int) => T): T = {
           val length = value.length
           @annotation.tailrec
-          def work(offset: Int, acc: T): T = {
+          def work(offset: Int, acc: T): T =
             if (offset >= length) acc
             else {
               val codepoint = value.codePointAt(offset)
               work(offset + Character.charCount(codepoint), f(offset, acc, codepoint))
             }
-          }
           work(0, start)
         }
         // These rules are transcribed from
@@ -356,13 +355,11 @@ object TreeSyntax {
       def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean = escapableSoftKeywords
         .get(t.value).exists(_.exists(_.isInstance(parent)))
 
-      def isAmbiguousInParent(t: Tree, parent: Tree): Boolean = {
-        t match {
-          case t: Term.Name => isAmbiguousWithPatVarTerm(t, parent) ||
-            isEscapableSoftKeyword(t, parent)
-          case t: Name => isEscapableSoftKeyword(t, parent)
-          case _ => false
-        }
+      def isAmbiguousInParent(t: Tree, parent: Tree): Boolean = t match {
+        case t: Term.Name => isAmbiguousWithPatVarTerm(t, parent) ||
+          isEscapableSoftKeyword(t, parent)
+        case t: Name => isEscapableSoftKeyword(t, parent)
+        case _ => false
       }
       cantBeWrittenWithoutBackquotes(t) || t.parent.exists(isAmbiguousInParent(t, _))
     }
@@ -411,7 +408,7 @@ object TreeSyntax {
         implicit val unquoteDialect: Dialect = dialect.unquoteParentDialect
         if (null eq unquoteDialect)
           throw new UnsupportedOperationException(s"$dialect doesn't support unquoting")
-        if (t.rank > 0) { s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi])) }
+        if (t.rank > 0) s("." * (t.rank + 1), w("{", t.tree, "}", !t.tree.is[Quasi]))
         else {
           val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var] || t.tree.is[Term.This] ||
             t.tree.is[Pat.Wildcard]
@@ -542,7 +539,7 @@ object TreeSyntax {
             " ",
             if (needParensAroundExpr) s("(", i(showExpr), n(")")) else showExpr,
             if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", t.catchp, n("}")) else s(""),
-            t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())
+            t.finallyp.map(finallyp => s(" ", kw("finally"), " ", finallyp)).getOrElse(s())
           )
         )
       case t: Term.TryWithHandler => m(
@@ -555,7 +552,7 @@ object TreeSyntax {
             kw("catch"),
             " ",
             t.catchp,
-            t.finallyp.map { finallyp => s(" ", kw("finally"), " ", finallyp) }.getOrElse(s())
+            t.finallyp.map(finallyp => s(" ", kw("finally"), " ", finallyp)).getOrElse(s())
           )
         )
       case t: Term.FunctionTerm =>
@@ -713,9 +710,9 @@ object TreeSyntax {
         val vbounds = {
           if (t.vbounds.nonEmpty && !dialect.allowViewBounds)
             throw new UnsupportedOperationException(s"$dialect doesn't support view bounds")
-          r(t.vbounds.map { s(" ", kw("<%"), " ", _) })
+          r(t.vbounds.map(s(" ", kw("<%"), " ", _)))
         }
-        val cbounds = r(t.cbounds.map { s(kw(":"), " ", _) })
+        val cbounds = r(t.cbounds.map(s(kw(":"), " ", _)))
         s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
       case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)
 
@@ -847,16 +844,13 @@ object TreeSyntax {
           t.templ
         )
       case t: Defn.Trait =>
-        if (dialect.allowTraitParameters || t.ctor.mods.isEmpty) {
-          r(" ")(
-            t.mods,
-            kw("trait"),
-            s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
-            t.templ
-          )
-        } else {
-          throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
-        }
+        if (dialect.allowTraitParameters || t.ctor.mods.isEmpty) r(" ")(
+          t.mods,
+          kw("trait"),
+          s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
+          t.templ
+        )
+        else throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
 
       case t: Defn.GivenAlias =>
         val name = givenName(t.name, t.paramClauseGroup)
@@ -915,13 +909,13 @@ object TreeSyntax {
         val isGiven = t.parent.exists(_.is[Defn.Given])
         val withGiven =
           if (!isGiven) ""
-          else if (isSelfEmpty && t.stats.isEmpty) {
+          else if (isSelfEmpty && t.stats.isEmpty)
             // this could be just `()`, but it changes the tree
             t.inits match {
               case init :: Nil if init.argClauses.isEmpty => "with {}"
               case _ => ""
             }
-          } else "with"
+          else "with"
         val noExtends = pparents.isEmpty && pearly.isEmpty || isGiven ||
           t.parent.exists(_.is[Term.NewAnonymous])
         val extendsKeyword = if (noExtends) "" else "extends"
@@ -1027,18 +1021,16 @@ object TreeSyntax {
         case _ => s(args)
       }
 
-    implicit def syntaxParamClauseGroups: Syntax[Seq[Member.ParamClauseGroup]] = Syntax { r(_) }
-    implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax { r(_) }
-    implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax { r(_, " ") }
+    implicit def syntaxParamClauseGroups: Syntax[Seq[Member.ParamClauseGroup]] = Syntax(r(_))
+    implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax(r(_))
+    implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax(r(_, " "))
     private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.ParamsType]
     private def printParam(t: Term.Param, keepImplicit: Boolean = false): Show.Result = {
       val mods = if (keepImplicit) t.mods else t.mods.filterNot(isUsingOrImplicit)
-      val nameType =
-        if (t.isNameAnonymous) { o(t.decltpe) }
-        else { s(t.name, t.decltpe) }
+      val nameType = if (t.isNameAnonymous) o(t.decltpe) else s(t.name, t.decltpe)
       s(w(mods, " "), nameType, o(" = ", t.default))
     }
-    implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax { r(_, " ") }
+    implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax(r(_, " "))
     private def printParams(t: Term.ParamClause, needParens: Boolean = true): Show.Result = {
       val v = t.values
       val (useParens, mod) = v match {
@@ -1051,8 +1043,8 @@ object TreeSyntax {
       }
       w("(", s(mod, r(v.map(printParam(_, mod eq Show.None)), ", ")), ")", useParens)
     }
-    implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax { r(_) }
-    implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax { o(kw(": "), _) }
+    implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax(r(_))
+    implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax(o(kw(": "), _))
     implicit def syntaxImportee: Syntax[Seq[Importee]] = Syntax {
       case Seq(t: Importee.Name) => s(t)
       case Seq(t: Importee.Wildcard) => s(t)
@@ -1064,7 +1056,7 @@ object TreeSyntax {
       case importees => s("{ ", r(importees, ", "), " }")
     }
 
-    implicit def syntaxCases: Syntax[Seq[CaseTree]] = Syntax { cases => r(cases.map(i(_))) }
+    implicit def syntaxCases: Syntax[Seq[CaseTree]] = Syntax(cases => r(cases.map(i(_))))
 
     private def printStats(stats: Seq[Stat]) = r {
       val builder = List.newBuilder[Show.Result]
@@ -1085,7 +1077,7 @@ object TreeSyntax {
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 
   }
-  def apply[T <: Tree](dialect: Dialect): Syntax[T] = {
+  def apply[T <: Tree](dialect: Dialect): Syntax[T] =
     // NOTE: This is the current state of the art of smart prettyprinting.
     // If we prettyprint a tree that's just been parsed with the same dialect,
     // then we retain formatting. Otherwise, we don't, even in the tiniest.
@@ -1096,9 +1088,7 @@ object TreeSyntax {
         case _ => reprint(x)(dialect)
       }
     }
-  }
 
-  def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = {
+  def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result =
     new SyntaxInstances(dialect).syntaxTree[T].apply(x)
-  }
 }

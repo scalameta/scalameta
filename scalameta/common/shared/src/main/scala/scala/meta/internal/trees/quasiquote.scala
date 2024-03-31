@@ -27,12 +27,12 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
       val mmods1 = Modifiers(mmods.flags, TypeName("meta"), mmods.annotations)
       if (stats.nonEmpty) c.abort(cdef.pos, "@quasiquote classes must have empty bodies")
       val qmodule = {
-        val qtypesLub = lub(qtypes.map(_.duplicate).map(qtype => {
+        val qtypesLub = lub(qtypes.map(_.duplicate).map { qtype =>
           try c.typecheck(qtype, c.TYPEmode).tpe
           catch {
             case c.TypecheckException(pos, msg) => c.abort(pos.asInstanceOf[c.Position], msg)
           }
-        }))
+        })
         q"""
           object ${TermName(qname)} {
             import scala.language.experimental.macros

@@ -39,11 +39,9 @@ class TransformerSuite extends FunSuite {
       }
     """
     object transformer extends Transformer {
-      override def apply(tree: Tree): Tree = {
-        if (tree.toString == "x") q"y" else super.apply(tree)
-      }
+      override def apply(tree: Tree): Tree = if (tree.toString == "x") q"y" else super.apply(tree)
     }
-    intercept[UnsupportedOperationException] { transformer(tree0) }
+    intercept[UnsupportedOperationException](transformer(tree0))
   }
 
   test("Tree.transform") {

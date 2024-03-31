@@ -10,11 +10,9 @@ class StructureSuite extends ParseSuite {
 
   def checkStructure[T: Parse: Structure](code: String, expected: Tree)(implicit
       loc: Location
-  ): Unit = {
-    test(logger.revealWhitespace(code)) {
-      val obtained: String = code.parse[T].get.structure
-      assertNoDiff(obtained, expected.structure)
-    }
+  ): Unit = test(logger.revealWhitespace(code)) {
+    val obtained: String = code.parse[T].get.structure
+    assertNoDiff(obtained, expected.structure)
   }
 
   checkStructure[Case](

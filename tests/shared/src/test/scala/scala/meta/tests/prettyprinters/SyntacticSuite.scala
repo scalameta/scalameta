@@ -258,7 +258,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("literalTypes") {
-    intercept[ParseException] { dialects.Scala211("val a : 42 = 42").parse[Stat].get.syntax }
+    intercept[ParseException](dialects.Scala211("val a : 42 = 42").parse[Stat].get.syntax)
     val Scala211 = null
     import dialects.Scala3
     assertEquals(q"val a: 42 = 42".syntax, "val a: 42 = 42")
@@ -449,20 +449,20 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(templStat("if (1) if (2) 3 else () else 4").syntax, "if (1) (if (2) 3) else 4")
     assertEquals(
       templStat("if (1) 2 else 3 match { case _ => }").syntax,
-      s"if (1) 2 else 3 match {${EOL}  case _ =>${EOL}}"
+      s"if (1) 2 else 3 match {$EOL  case _ =>$EOL}"
     )
     assertEquals(
       templStat("(if (1) 2 else 3) match { case _ => }").syntax,
-      s"(if (1) 2 else 3) match {${EOL}  case _ =>${EOL}}"
+      s"(if (1) 2 else 3) match {$EOL  case _ =>$EOL}"
     )
     assertEquals(templStat("unit.toCheck += (() => body)").syntax, "unit.toCheck += (() => body)")
     assertEquals(
       templStat("({ foo1; foo2 }).orElse(bar)").syntax,
-      s"{${EOL}  foo1${EOL}  foo2${EOL}}.orElse(bar)"
+      s"{$EOL  foo1$EOL  foo2$EOL}.orElse(bar)"
     )
     assertEquals(
       templStat("(foo match { case _ => }).orElse(bar)").syntax,
-      s"(foo match {${EOL}  case _ =>${EOL}}).orElse(bar)"
+      s"(foo match {$EOL  case _ =>$EOL}).orElse(bar)"
     )
     assertEquals(
       templStat("foo || (if (cond) bar else baz)").syntax,
@@ -470,7 +470,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
     assertEquals(
       templStat("foo && (bar match { case _ => })").syntax,
-      s"foo && (bar match {${EOL}  case _ =>${EOL}})"
+      s"foo && (bar match {$EOL  case _ =>$EOL})"
     )
     assertEquals(
       templStat("\"foo \" + (if (cond) bar else baz)").syntax,
@@ -478,27 +478,27 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )
     assertEquals(
       templStat("foo match { case bar @ (_: T1 | _: T2) => }").syntax,
-      s"foo match {${EOL}  case bar @ (_: T1 | _: T2) =>${EOL}}"
+      s"foo match {$EOL  case bar @ (_: T1 | _: T2) =>$EOL}"
     )
     assertEquals(
       templStat("foo match { case A + B / C => }").syntax,
-      s"foo match {${EOL}  case A + B / C =>${EOL}}"
+      s"foo match {$EOL  case A + B / C =>$EOL}"
     )
     assertEquals(
       templStat("foo match { case (A + B) / C => }").syntax,
-      s"foo match {${EOL}  case (A + B) / C =>${EOL}}"
+      s"foo match {$EOL  case (A + B) / C =>$EOL}"
     )
     assertEquals(
       templStat("foo match { case A + (B / C) => }").syntax,
-      s"foo match {${EOL}  case A + B / C =>${EOL}}"
+      s"foo match {$EOL  case A + B / C =>$EOL}"
     )
     assertEquals(
       templStat("foo match { case bar :: Nil :: Nil => }").syntax,
-      s"foo match {${EOL}  case bar :: Nil :: Nil =>${EOL}}"
+      s"foo match {$EOL  case bar :: Nil :: Nil =>$EOL}"
     )
     assertEquals(
       templStat("foo match { case (bar :: Nil) :: Nil => }").syntax,
-      s"foo match {${EOL}  case (bar :: Nil) :: Nil =>${EOL}}"
+      s"foo match {$EOL  case (bar :: Nil) :: Nil =>$EOL}"
     )
     assertEquals(templStat("@(foo @foo) class Bar").syntax, "@(foo @foo) class Bar")
     assertEquals(templStat("(foo: Foo): @foo").syntax, "(foo: Foo): @foo")
@@ -509,11 +509,11 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(templStat("type T = (A :: B) :: C").syntax, "type T = (A :: B) :: C")
     assertEquals(
       templStat("foo match { case _: A | _: B => }").syntax,
-      s"foo match {${EOL}  case _: A | _: B =>${EOL}}"
+      s"foo match {$EOL  case _: A | _: B =>$EOL}"
     )
     assertEquals(
       templStat("foo match { case _: A | _: B | _: C => }").syntax,
-      s"foo match {${EOL}  case _: A | _: B | _: C =>${EOL}}"
+      s"foo match {$EOL  case _: A | _: B | _: C =>$EOL}"
     )
   }
 
@@ -778,7 +778,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         )
       )
     ))))
-    assertEquals(tree.syntax, s"package foo${EOL}class C${EOL}package baz {$EOL  class D${EOL}}")
+    assertEquals(tree.syntax, s"package foo${EOL}class C${EOL}package baz {$EOL  class D$EOL}")
   }
 
   test("ammonite: package foo; class C; package baz { class D }") {
@@ -843,15 +843,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(tree4.syntax, "f(X)")
   }
 
-  test("case _: Int") { assertEquals(pat("_: Int").syntax, "_: Int") }
+  test("case _: Int")(assertEquals(pat("_: Int").syntax, "_: Int"))
 
-  test("case _: t") { assertEquals(pat("_: t").syntax, "_: t") }
+  test("case _: t")(assertEquals(pat("_: t").syntax, "_: t"))
 
-  test("case _: F[t]") { assertEquals(pat("_: F[t]").syntax, "_: F[t]") }
+  test("case _: F[t]")(assertEquals(pat("_: F[t]").syntax, "_: F[t]"))
 
-  test("case _: F[_]") { assertEquals(pat("_: F[_]").syntax, "_: F[_]") }
+  test("case _: F[_]")(assertEquals(pat("_: F[_]").syntax, "_: F[_]"))
 
-  test("case _: F[?]") { assertEquals(pat("_: F[?]").syntax, "_: F[?]") }
+  test("case _: F[?]")(assertEquals(pat("_: F[?]").syntax, "_: F[?]"))
 
   test("constructors") {
     val tree @ Defn.Class(_, _, _, primary, Template(_, _, _, List(secondary))) =
@@ -1201,9 +1201,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat("list map a -> foo")(q"list map (a -> foo)")
   }
   test("1826 ApplyInfix parentheses on Term.Match") {
-    checkStat(s"list map (_ match {${EOL}  case 1 => 2${EOL}})")(
-      q"list map (_ match { case 1 => 2})"
-    )
+    checkStat(s"list map (_ match {$EOL  case 1 => 2$EOL})")(q"list map (_ match { case 1 => 2})")
   }
 
   test("#1839 ApplyInfix parentheses on Term.Placeholder") {
@@ -1250,7 +1248,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat("\"ラーメン\"")(str("ラーメン"))
   }
 
-  test("#2447 Pat.Bind on tname") { checkStat("{\n  case x @ Y => x\n}")(q"{ case x @ Y => x }") }
+  test("#2447 Pat.Bind on tname")(checkStat("{\n  case x @ Y => x\n}")(q"{ case x @ Y => x }"))
 
   test("#2447 Pat.Bind on tname backticks") {
     checkStat("{\n  case x @ `y` => x\n}")(q"{ case x @ `y` => x }")
@@ -1462,7 +1460,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1063 bad") {
-    val thrown = intercept[ParseException] { term("foo(bar) { val baz = qux; baz: _* }") }
+    val thrown = intercept[ParseException](term("foo(bar) { val baz = qux; baz: _* }"))
     assertEquals(
       thrown.getMessage.substring(0, 52),
       "<input>:1: error: repeated argument not allowed here"
@@ -1602,8 +1600,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val charN = Lit.Char('\n')
     val origin = Origin.Parsed(new Origin.ParsedSource(Input.String(exprU)), 1, 2)
     val charU = charN.withOrigin(origin)
-    checkTree(tree, expr) { Term.Tuple(List(charN, charU)) }
-    checkTree(tree.resetAllOrigins, syntax) { Term.Tuple(List(charN, charN)) }
+    checkTree(tree, expr)(Term.Tuple(List(charN, charU)))
+    checkTree(tree.resetAllOrigins, syntax)(Term.Tuple(List(charN, charN)))
   }
 
   test("pat infix: _ op (a | b)") {

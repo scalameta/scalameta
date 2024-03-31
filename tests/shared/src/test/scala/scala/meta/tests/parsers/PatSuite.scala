@@ -8,18 +8,18 @@ import scala.meta.dialects.Scala211
 
 class PatSuite extends ParseSuite {
 
-  private def assertPat(expr: String)(tree: Tree): Unit = { assertTree(pat(expr))(tree) }
+  private def assertPat(expr: String)(tree: Tree): Unit = assertTree(pat(expr))(tree)
 
-  private def assertPatTyp(expr: String)(tree: Tree): Unit = { assertTree(patternTyp(expr))(tree) }
+  private def assertPatTyp(expr: String)(tree: Tree): Unit = assertTree(patternTyp(expr))(tree)
 
   implicit def caseParser(code: String, dialect: Dialect): Case = super.parseCase(code)(dialect)
-  test("_") { assertPat("_")(Wildcard()) }
+  test("_")(assertPat("_")(Wildcard()))
 
-  test("a @ _") { assertPat("a @ _")(Bind(Var(tname("a")), Wildcard())) }
+  test("a @ _")(assertPat("a @ _")(Bind(Var(tname("a")), Wildcard())))
 
-  test("a") { assertPat("a")(Var(tname("a"))) }
+  test("a")(assertPat("a")(Var(tname("a"))))
 
-  test("`a`") { assertPat("`a`")(tname("a")) }
+  test("`a`")(assertPat("`a`")(tname("a")))
 
   test("a: _") {
     val err = intercept[InvariantFailedException](pat("a: _")).getMessage
@@ -27,11 +27,11 @@ class PatSuite extends ParseSuite {
     assert(err.contains("} is false"), err)
   }
 
-  test("a: Int") { assertPat("a: Int")(Typed(Var(tname("a")), pname("Int"))) }
+  test("a: Int")(assertPat("a: Int")(Typed(Var(tname("a")), pname("Int"))))
 
-  test("_: Int") { assertPat("_: Int")(Typed(Wildcard(), pname("Int"))) }
+  test("_: Int")(assertPat("_: Int")(Typed(Wildcard(), pname("Int"))))
 
-  test("_: t") { assertPat("_: t")(Typed(Wildcard(), pname("t"))) }
+  test("_: t")(assertPat("_: t")(Typed(Wildcard(), pname("t"))))
 
   test("_: F[t]") {
     assertPat("_: F[t]") {
@@ -46,7 +46,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("patTyp: t Map u") {
-    assertPatTyp("t Map u") { Type.ApplyInfix(pname("t"), pname("Map"), pname("u")) }
+    assertPatTyp("t Map u")(Type.ApplyInfix(pname("t"), pname("Map"), pname("u")))
   }
 
   test("patTyp: t & u | v") {
@@ -97,17 +97,17 @@ class PatSuite extends ParseSuite {
     assertPat("_: (t Map u)")(Typed(Wildcard(), Type.ApplyInfix(pname("t"), pname("Map"), pname("u"))))
   }
 
-  test("_: T Map U") { intercept[ParseException] { pat("_: T Map U") } }
+  test("_: T Map U")(intercept[ParseException](pat("_: T Map U")))
 
-  test("_: T forSome { type U }") { intercept[ParseException] { pat("_: T forSome { type U }") } }
+  test("_: T forSome { type U }")(intercept[ParseException](pat("_: T forSome { type U }")))
 
   test("x@(__ : Y)") {
     assertPat("x@(__ : Y)")(Pat.Bind(Pat.Var(tname("x")), Pat.Typed(Pat.Var(tname("__")), pname("Y"))))
   }
 
-  test("foo(x)") { assertPat("foo(x)")(Extract(tname("foo"), Var(tname("x")) :: Nil)) }
+  test("foo(x)")(assertPat("foo(x)")(Extract(tname("foo"), Var(tname("x")) :: Nil)))
 
-  test("foo(_*)") { assertPat("foo(_*)")(Extract(tname("foo"), SeqWildcard() :: Nil)) }
+  test("foo(_*)")(assertPat("foo(_*)")(Extract(tname("foo"), SeqWildcard() :: Nil)))
 
   test("foo(x @ _*)") {
     assertPat("foo(x @ _*)")(Extract(tname("foo"), Bind(Var(tname("x")), SeqWildcard()) :: Nil))
@@ -130,11 +130,11 @@ class PatSuite extends ParseSuite {
     runTestAssert[Pat]("1 `|` 2")(ExtractInfix(lit(1), tname("|"), List(lit(2))))
   }
 
-  test("()") { assertPat("()")(Lit.Unit()) }
+  test("()")(assertPat("()")(Lit.Unit()))
 
-  test("(true, false)") { assertPat("(true, false)")(Tuple(bool(true) :: bool(false) :: Nil)) }
+  test("(true, false)")(assertPat("(true, false)")(Tuple(bool(true) :: bool(false) :: Nil)))
 
-  test("foo\"bar\"") { assertPat("foo\"bar\"")(Interpolate(tname("foo"), str("bar") :: Nil, Nil)) }
+  test("foo\"bar\"")(assertPat("foo\"bar\"")(Interpolate(tname("foo"), str("bar") :: Nil, Nil)))
 
   test("foo\"a $b c\"") {
     assertPat("foo\"a $b c\"")(
@@ -157,7 +157,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("#501") {
-    intercept[ParseException] { pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false") }
+    intercept[ParseException](pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false"))
   }
 
   test("<a>{_*}</a>") {
@@ -170,12 +170,10 @@ class PatSuite extends ParseSuite {
     )
   }
 
-  test("(A, B, C)") {
-    assertPat("(A, B, C)") { Pat.Tuple(List(tname("A"), tname("B"), tname("C"))) }
-  }
+  test("(A, B, C)")(assertPat("(A, B, C)")(Pat.Tuple(List(tname("A"), tname("B"), tname("C")))))
 
   test("((A, B, C))") {
-    assertPat("((A, B, C))") { Pat.Tuple(List(tname("A"), tname("B"), tname("C"))) }
+    assertPat("((A, B, C))")(Pat.Tuple(List(tname("A"), tname("B"), tname("C"))))
   }
 
   test("(A, B, C) :: ((A, B, C))") {

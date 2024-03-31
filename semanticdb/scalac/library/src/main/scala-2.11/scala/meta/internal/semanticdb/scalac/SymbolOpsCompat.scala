@@ -27,10 +27,9 @@ trait SymbolOpsCompat {
       g.termNames.toDouble
     )
     // See comment in scala-2.13/.../SymbolOpsCompat.scala
-    def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = {
-      sym.name.startsWith("to") && ScalaValueClassesSet.contains(sym.owner) &&
+    def isImplicitPrimitiveConversion(mtree: m.Name): Boolean = sym.name.startsWith("to") &&
+      ScalaValueClassesSet.contains(sym.owner) &&
       implicitPrimitiveConversionNames.contains(sym.name.toTermName) &&
       sym.name.toString() != mtree.value
-    }
   }
 }

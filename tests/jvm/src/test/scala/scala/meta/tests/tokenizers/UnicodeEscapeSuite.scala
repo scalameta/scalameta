@@ -16,14 +16,12 @@ class UnicodeEscapeSuite extends BaseTokenizerSuite {
   )
 
   // asserts that tokenize(code).syntax == code
-  def checkRoundtrip(original: String): Unit = {
-    test(logger.revealWhitespace(original)) {
-      val tokens = tokenize(original)
-      val obtained = tokens.toString
-      assertNoDiff(obtained, original)
-    }
+  def checkRoundtrip(original: String): Unit = test(logger.revealWhitespace(original)) {
+    val tokens = tokenize(original)
+    val obtained = tokens.toString
+    assertNoDiff(obtained, original)
   }
 
-  tests.linesIterator.foreach { line => checkRoundtrip(line) }
+  tests.linesIterator.foreach(line => checkRoundtrip(line))
 
 }

@@ -25,10 +25,9 @@ class ScaladocParserSuite extends FunSuite {
       if (tagType.hasLabel) sb.append(" TestLabel")
       sb.append("  Test Description")
       sb.append(nl).append("  ").append(testStringToMerge)
-    } else {
-      // label with spaces
-      if (tagType.hasLabel) sb.append(" Test Label")
-    }
+    } else
+    // label with spaces
+    if (tagType.hasLabel) sb.append(" Test Label")
     sb.append(nl)
   }
 

@@ -40,37 +40,35 @@ class ConversionMacros(val c: Context) extends AstReflection {
   def liftApply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
     val outsideTpe = outside.tpe
     val insideTpe = I.tpe
-    if (outsideTpe <:< insideTpe) { outside }
+    if (outsideTpe <:< insideTpe) outside
     else {
       val liftable = c
         .inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe), silent = true)
-      if (liftable.nonEmpty) { q"$liftable.apply($outside)" }
-      else { c.abort(c.enclosingPosition, typeMismatchMessage(outsideTpe, insideTpe)) }
+      if (liftable.nonEmpty) q"$liftable.apply($outside)"
+      else c.abort(c.enclosingPosition, typeMismatchMessage(outsideTpe, insideTpe))
     }
   }
 
-  def liftUnapply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
+  def liftUnapply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree =
     // NOTE: Here's an interesting idea that I'd like to explore.
     // How about we allow things like `42 match { case q"$x" => x }`?
     // For that to work, we just need to wrap the reification result into `Lift.unapply`!
     ???
-  }
 
-  def unliftApply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
+  def unliftApply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree =
     // NOTE: here we just disregard the expected outside type, because I can't find uses for it
     // duality is a fun thing, but it looks like here it just led me into a dead-end
     q"$inside"
-  }
 
   def unliftUnapply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
     val insideTpe = inside.tpe
     val outsideTpe = O.tpe
-    if (insideTpe <:< outsideTpe) { q"_root_.scala.Some($inside: $insideTpe)" }
+    if (insideTpe <:< outsideTpe) q"_root_.scala.Some($inside: $insideTpe)"
     else {
       val unliftable = c
         .inferImplicitValue(appliedType(MetaUnlift, insideTpe, outsideTpe), silent = true)
-      if (unliftable.nonEmpty) { q"$unliftable.apply($inside)" }
-      else { c.abort(c.enclosingPosition, typeMismatchMessage(insideTpe, outsideTpe)) }
+      if (unliftable.nonEmpty) q"$unliftable.apply($inside)"
+      else c.abort(c.enclosingPosition, typeMismatchMessage(insideTpe, outsideTpe))
     }
   }
 }

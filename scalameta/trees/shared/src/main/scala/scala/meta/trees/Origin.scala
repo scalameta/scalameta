@@ -72,19 +72,16 @@ object Origin {
       val queue = scala.collection.mutable.Queue.empty[Iterator[Any]]
       @scala.annotation.tailrec
       def loop(iterator: Iterator[Any]): DialectOnly =
-        if (!iterator.hasNext) {
-          if (queue.isEmpty) implicitly[DialectOnly] else loop(queue.dequeue())
-        } else {
-          iterator.next() match {
-            case x: scala.meta.Tree => x.origin.dialectOpt match {
-                case Some(dialect) => fromDialect(dialect)
-                case _ => loop(iterator)
-              }
-            case x: Iterable[_] =>
-              queue.enqueue(x.iterator)
-              loop(iterator)
-            case _ => loop(iterator)
-          }
+        if (!iterator.hasNext) if (queue.isEmpty) implicitly[DialectOnly] else loop(queue.dequeue())
+        else iterator.next() match {
+          case x: scala.meta.Tree => x.origin.dialectOpt match {
+              case Some(dialect) => fromDialect(dialect)
+              case _ => loop(iterator)
+            }
+          case x: Iterable[_] =>
+            queue.enqueue(x.iterator)
+            loop(iterator)
+          case _ => loop(iterator)
         }
       loop(Iterator(args))
     }

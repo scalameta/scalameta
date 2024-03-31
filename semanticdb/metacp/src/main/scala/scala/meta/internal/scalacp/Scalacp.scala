@@ -27,9 +27,9 @@ final class Scalacp private (
     val ssym = sym.ssym
     if (ssym.contains("$extension")) return Nil
     val sinfo = sym.toSymbolInformation(SymlinkChildren)
-    if (sym.isUsefulField && sym.isMutable) {
-      List(sinfo) ++ Synthetics.setterInfos(sinfo, SymlinkChildren)
-    } else { List(sinfo) }
+    if (sym.isUsefulField && sym.isMutable) List(sinfo) ++
+      Synthetics.setterInfos(sinfo, SymlinkChildren)
+    else List(sinfo)
   }
 }
 

@@ -26,7 +26,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val isPrivateOK = c.eval(isPrivateOKExpr)
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
-    val adts = {
+    val adts =
       // NOTE: The code below doesn't quite work, because we can have `A` and `B`, none of which inherits each other,
       // but then at runtime we get `C` which inherits both and then execution suddenly takes the wrong path.
       // Real life example: Term.Name and Quasi, none of them are related, so we kinda can reorder their cases, right?
@@ -47,7 +47,6 @@ class LiftableMacros(val c: Context) extends AdtReflection {
       // })
       // unsortedAdts.sortBy(adt => -1 * metric(adt.sym))
       unsortedAdts
-    }
     if (adts.isEmpty) {
       val message = s"materialization failed for Liftable[${weakTypeOf[T]}] " +
         s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, " +

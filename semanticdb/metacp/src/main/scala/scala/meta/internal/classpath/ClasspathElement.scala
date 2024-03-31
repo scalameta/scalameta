@@ -29,12 +29,10 @@ sealed abstract class Classfile extends ClasspathElement {
 
 /** A classpath entry that is a directory. */
 final case class Classdir(relativeUri: String) extends ClasspathElement {
-  def resolve(filename: String): Option[ClasspathElement] = {
-    members.get(filename).orElse {
-      val uri = relativeUri + filename
-      modules.iterator.map(_.resolve(uri)).find(Files.exists(_))
-        .map(x => UncompressedClassfile(uri, AbsolutePath(x)))
-    }
+  def resolve(filename: String): Option[ClasspathElement] = members.get(filename).orElse {
+    val uri = relativeUri + filename
+    modules.iterator.map(_.resolve(uri)).find(Files.exists(_))
+      .map(x => UncompressedClassfile(uri, AbsolutePath(x)))
   }
   val members = mutable.Map.empty[String, ClasspathElement]
 

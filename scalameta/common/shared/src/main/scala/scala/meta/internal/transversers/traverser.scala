@@ -22,8 +22,7 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
 
   def leafHandlerType(): Tree = UnitClass
 
-  def generatedMethods(): Tree = {
-    q"""
+  def generatedMethods(): Tree = q"""
       def apply(treeopt: $OptionClass[$TreeClass]): $UnitClass = treeopt match {
         case $SomeModule(tree) => apply(tree)
         case $NoneModule => // do nothing
@@ -56,5 +55,4 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
         treess.foreach(apply(_))
       }
     """
-  }
 }

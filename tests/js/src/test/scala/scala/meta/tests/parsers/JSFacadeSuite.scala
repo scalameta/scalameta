@@ -15,9 +15,8 @@ class JSFacadeSuite extends FunSuite {
   private[this] def toJSON(a: js.Dictionary[Any]): String = js.JSON
     .stringify(a.asInstanceOf[js.Any], space = 2)
 
-  private[this] def check(a: js.Dictionary[Any], b: js.Dictionary[Any]) = {
+  private[this] def check(a: js.Dictionary[Any], b: js.Dictionary[Any]) =
     assertEquals(toJSON(a), toJSON(b))
-  }
 
   test("parseSource") {
     val code = s"""|object Main {

@@ -17,10 +17,8 @@ class MyIdent extends MyToken
 trait Manual
 object Manual {
   def unapply(x: MyToken): Boolean = x.isInstanceOf[MyIdent]
-  implicit def classifier[T <: MyToken]: Classifier[T, Manual] = {
-    new Classifier[T, Manual] {
-      def apply(x: T): Boolean = Manual.unapply(x)
-    }
+  implicit def classifier[T <: MyToken]: Classifier[T, Manual] = new Classifier[T, Manual] {
+    def apply(x: T): Boolean = Manual.unapply(x)
   }
 }
 

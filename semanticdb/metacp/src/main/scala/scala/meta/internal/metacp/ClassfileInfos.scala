@@ -41,18 +41,16 @@ object ClassfileInfos {
       classpathIndex: ClasspathIndex,
       settings: Settings,
       reporter: Reporter
-  ): Option[ClassfileInfos] = {
-    node.scalaSig match {
-      case Some(scalaSig) => Some(Scalacp.parse(scalaSig, classpathIndex, settings, reporter))
-      case None =>
-        val attrs = if (node.attrs != null) node.attrs.toScala else Nil
-        if (attrs.exists(_.`type` == "Scala")) { None }
-        else {
-          val innerClassNode = node.innerClasses.toScala.find(_.name == node.name)
-          if (innerClassNode.isEmpty) {
-            if (node.name != "module-info") Some(Javacp.parse(node, classpathIndex)) else None
-          } else { None }
-        }
-    }
+  ): Option[ClassfileInfos] = node.scalaSig match {
+    case Some(scalaSig) => Some(Scalacp.parse(scalaSig, classpathIndex, settings, reporter))
+    case None =>
+      val attrs = if (node.attrs != null) node.attrs.toScala else Nil
+      if (attrs.exists(_.`type` == "Scala")) None
+      else {
+        val innerClassNode = node.innerClasses.toScala.find(_.name == node.name)
+        if (innerClassNode.isEmpty)
+          if (node.name != "module-info") Some(Javacp.parse(node, classpathIndex)) else None
+        else None
+      }
   }
 }

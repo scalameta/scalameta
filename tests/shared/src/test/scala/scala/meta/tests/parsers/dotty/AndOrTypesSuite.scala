@@ -12,10 +12,10 @@ class AndOrTypesSuite extends BaseDottySuite {
   test("view bounds not allowed") {
     interceptMessage[IllegalArgumentException](
       "requirement failed: Scala34 doesn't support view bounds"
-    ) { dialects.Scala3("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get }
+    )(dialects.Scala3("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get)
   }
 
-  test("A with B") { runTestAssert[Type]("A with B", None)(With(pname("A"), pname("B"))) }
+  test("A with B")(runTestAssert[Type]("A with B", None)(With(pname("A"), pname("B"))))
 
   test("A & B & C") {
     runTestAssert[Type]("A & B & C")(
@@ -23,9 +23,9 @@ class AndOrTypesSuite extends BaseDottySuite {
     )
   }
 
-  test("A & B") { runTestAssert[Type]("A & B")(ApplyInfix(pname("A"), pname("&"), pname("B"))) }
+  test("A & B")(runTestAssert[Type]("A & B")(ApplyInfix(pname("A"), pname("&"), pname("B"))))
 
-  test("A | B") { runTestAssert[Type]("A | B")(ApplyInfix(pname("A"), pname("|"), pname("B"))) }
+  test("A | B")(runTestAssert[Type]("A | B")(ApplyInfix(pname("A"), pname("|"), pname("B"))))
 
   test("ortype-example") {
     runTestAssert[Stat]("def help(id: UserName | Password): Unit")(Decl.Def(

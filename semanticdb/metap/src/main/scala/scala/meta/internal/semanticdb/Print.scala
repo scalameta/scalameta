@@ -11,48 +11,42 @@ object Print {
 
   def document(format: Format, doc: TextDocument): String = {
     val symtab = PrinterSymtab.fromTextDocument(doc)
-    withPrinter(format, doc, symtab) { printer => printer.print() }
+    withPrinter(format, doc, symtab)(printer => printer.print())
   }
 
-  def tpe(format: Format, tpe: Type, symtab: PrinterSymtab): String = {
-    withInfoPrinter(format, TextDocument(), symtab) { printer => printer.pprint(tpe) }.trim
-  }
+  def tpe(format: Format, tpe: Type, symtab: PrinterSymtab): String =
+    withInfoPrinter(format, TextDocument(), symtab)(printer => printer.pprint(tpe)).trim
 
   def constant(constant: Constant): String = {
     val symtab = PrinterSymtab.fromTextDocument(TextDocument())
-    withInfoPrinter(Format.Detailed, TextDocument(), symtab) { printer => printer.pprint(constant) }
+    withInfoPrinter(Format.Detailed, TextDocument(), symtab)(printer => printer.pprint(constant))
       .trim
   }
 
-  def signature(format: Format, signature: Signature, symtab: PrinterSymtab): String = {
-    withInfoPrinter(format, TextDocument(), symtab) { printer => printer.pprint(signature) }.trim
-  }
+  def signature(format: Format, signature: Signature, symtab: PrinterSymtab): String =
+    withInfoPrinter(format, TextDocument(), symtab)(printer => printer.pprint(signature)).trim
 
-  def info(format: Format, info: SymbolInformation, symtab: PrinterSymtab): String = {
-    withPrinter(format, TextDocument().addSymbols(info), symtab) { printer => printer.pprint(info) }
+  def info(format: Format, info: SymbolInformation, symtab: PrinterSymtab): String =
+    withPrinter(format, TextDocument().addSymbols(info), symtab)(printer => printer.pprint(info))
       .trim
-  }
 
   def synthetic(
       format: Format,
       doc: TextDocument,
       synthetic: Synthetic,
       symtab: PrinterSymtab
-  ): String = { withPrinter(format, doc, symtab) { printer => printer.pprint(synthetic) }.trim }
+  ): String = withPrinter(format, doc, symtab)(printer => printer.pprint(synthetic)).trim
 
-  def tree(format: Format, doc: TextDocument, tree: Tree, symtab: PrinterSymtab): String = {
-    withPrinter(format, doc, symtab) { printer => printer.pprint(tree, None) }.trim
-  }
+  def tree(format: Format, doc: TextDocument, tree: Tree, symtab: PrinterSymtab): String =
+    withPrinter(format, doc, symtab)(printer => printer.pprint(tree, None)).trim
 
   private def withInfoPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
       fn: DocumentPrinter#InfoPrinter => Unit
-  ): String = {
-    withPrinter(format, TextDocument(), symtab) { printer =>
-      val notes = new printer.InfoNotes()
-      val infoPrinter = new printer.InfoPrinter(notes)
-      fn(infoPrinter)
-    }.trim
-  }
+  ): String = withPrinter(format, TextDocument(), symtab) { printer =>
+    val notes = new printer.InfoNotes()
+    val infoPrinter = new printer.InfoPrinter(notes)
+    fn(infoPrinter)
+  }.trim
 
   private def withPrinter(format: Format, doc: TextDocument, symtab: PrinterSymtab)(
       fn: DocumentPrinter => Unit

@@ -61,23 +61,21 @@ trait LegacyTokenData {
   /**
    * Convert current strVal, base to an integer value This is tricky because of max negative value.
    */
-  private def integerVal: BigInt = {
+  private def integerVal: BigInt =
     try BigInt(strVal, base)
     catch {
       case e: Exception => syntaxError(s"malformed integer number: ${e.getMessage}", at = offset)
     }
-  }
 
   /**
    * Convert current strVal, base to double value
    */
-  private def floatingVal: BigDecimal = {
+  private def floatingVal: BigDecimal =
     try BigDecimal(strVal)
     catch {
       case e: Exception =>
         syntaxError(s"malformed floating-point number: ${e.getMessage}", at = offset)
     }
-  }
 
   // these values are always non-negative, since we don't include any unary operators
   def intVal: BigInt = integerVal

@@ -13,9 +13,8 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   protected def assertStruct(obtained: Tree)(expected: String)(implicit loc: munit.Location): Unit =
     assertNoDiff(obtained.structure, expected)
 
-  protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit = {
+  protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit =
     assertTreeStruct(obtained)(expected, expected.structure)
-  }
 
   protected def assertTreeStruct(
       obtained: Tree
@@ -43,9 +42,8 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected def assertSyntax(obtained: Tree, syntax: String = null)(
       expected: Tree
-  )(implicit loc: munit.Location, dialect: Dialect): Unit = {
+  )(implicit loc: munit.Location, dialect: Dialect): Unit =
     assertSyntaxWithClue(obtained, syntax)(expected, expected.structure)
-  }
 
   protected def assertSyntaxWithClue(
       obtained: Tree,
@@ -89,7 +87,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected def assertOriginalSyntax(tree: Tree, original: String)(implicit
       loc: munit.Location
-  ): Unit = { assertNoDiff(tree.toString, original, tree.structure) }
+  ): Unit = assertNoDiff(tree.toString, original, tree.structure)
 
   protected def assertWithOriginalSyntax(tree: Tree, original: String, reprinted: String)(implicit
       loc: munit.Location,

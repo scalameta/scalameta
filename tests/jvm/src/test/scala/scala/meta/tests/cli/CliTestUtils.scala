@@ -7,9 +7,8 @@ import java.nio.charset.StandardCharsets._
 
 object CliTestUtils {
 
-  def withReporter[T](op: Reporter => T): (T, String, String) = {
-    communicate { (out, err) => op(Reporter().withOut(out).withErr(err)) }
-  }
+  def withReporter[T](op: Reporter => T): (T, String, String) =
+    communicate((out, err) => op(Reporter().withOut(out).withErr(err)))
   def communicate[T](op: (PrintStream, PrintStream) => T): (T, String, String) = {
     val outbaos = new ByteArrayOutputStream
     val outps = new PrintStream(outbaos, true, UTF_8.name)

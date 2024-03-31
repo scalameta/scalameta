@@ -196,7 +196,7 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
   import c.internal._
   import decorators._
 
-  private def fail(message: String): Nothing = { c.abort(c.enclosingPosition, message) }
+  private def fail(message: String): Nothing = c.abort(c.enclosingPosition, message)
 
   def hierarchyCheck[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     checkHierarchy(T.tpe, fail, checkSealed = true)
@@ -229,11 +229,9 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
     implicit class XtensionOptional(sym: Symbol) {
       def isNone = sym.hasAnnotation[AdtMetadata.noneClass]
     }
-    def failOnce(message: String): Unit = {
-      if (!root.sym.attachments.contains[FailOnceAttachment]) {
-        root.sym.attachments.update(FailOnceAttachment())
-        fail(message)
-      }
+    def failOnce(message: String): Unit = if (!root.sym.attachments.contains[FailOnceAttachment]) {
+      root.sym.attachments.update(FailOnceAttachment())
+      fail(message)
     }
 
     if (sym.asType.toType <:< typeOf[Optional]) {
@@ -242,9 +240,8 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
         failOnce("an ADT family that inherits from Optional must define a @none object")
       else if (nones.length > 1)
         failOnce("an ADT family that inherits from Optional can't have multiple @none objects")
-    } else {
-      if (sym.isNone) fail(s"@none objects must be in an ADT family that inherits from Optional")
-    }
+    } else if (sym.isNone)
+      fail(s"@none objects must be in an ADT family that inherits from Optional")
 
     q"()"
   }

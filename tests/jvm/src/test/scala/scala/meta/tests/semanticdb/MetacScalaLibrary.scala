@@ -20,7 +20,7 @@ class MetacScalaLibrary extends FunSuite {
   }
 }
 object MetacScalaLibrary {
-  def main(args: Array[String]): Unit = { sys.exit(process(args)) }
+  def main(args: Array[String]): Unit = sys.exit(process(args))
   // Compile all of scala-library with metac and report any semanticdb errors.
   def process(args: Array[String]): Int = {
     val library = Paths.get("target").resolve("scala-library")

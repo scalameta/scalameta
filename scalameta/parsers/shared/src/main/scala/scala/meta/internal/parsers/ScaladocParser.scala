@@ -60,7 +60,7 @@ object ScaladocParser {
   private def codeBlockParser[$: P]: P[CodeBlock] = P {
     def code = codeLineParser.rep(1, sep = nl)
     def pattern = hspaces0 ~ codePrefix ~ nl ~ code ~ codeSuffix
-    pattern.map { x => CodeBlock(if (x.last.nonEmpty) x else x.dropRight(1)) }
+    pattern.map(x => CodeBlock(if (x.last.nonEmpty) x else x.dropRight(1)))
   }
 
   /*
@@ -194,7 +194,7 @@ object ScaladocParser {
         isRight <- isEnd(x.last)
         // covers "not found" (-1) and found at the end (x.length - 1)
         if 0 == (1 + x.indexWhere(_ != '-', 1)) % x.length
-      } yield { if (!isRight) Table.Left else if (!isLeft) Table.Right else Table.Center }
+      } yield if (!isRight) Table.Left else if (!isLeft) Table.Right else Table.Center
     }
 
     def cell = P((escape ~/ AnyChar | !(nl | tableSep) ~ AnyChar).rep)
