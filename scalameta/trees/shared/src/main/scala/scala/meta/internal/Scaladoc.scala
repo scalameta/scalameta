@@ -64,11 +64,8 @@ object Scaladoc {
   /**
    * A table [[https://www.scala-lang.org/blog/2018/10/04/scaladoc-tables.html]]
    */
-  final case class Table(
-      header: Table.Row,
-      align: Seq[Table.Align],
-      rows: Seq[Table.Row]
-  ) extends Term
+  final case class Table(header: Table.Row, align: Seq[Table.Align], rows: Seq[Table.Row])
+      extends Term
 
   object Table {
 
@@ -262,8 +259,7 @@ object Scaladoc {
 
     val tagTypeMap = predefined.map(x => x.tag -> x).toMap
 
-    def getTag(tag: String): TagType =
-      tagTypeMap.getOrElse(tag, TagType.UnknownTag(tag))
+    def getTag(tag: String): TagType = tagTypeMap.getOrElse(tag, TagType.UnknownTag(tag))
   }
 
 }

@@ -7,59 +7,53 @@ class MatchTypeSuite extends BaseDottySuite {
   implicit def parseBlock(code: String, dialect: Dialect): Stat = blockStat(code)(dialect)
 
   test("simple") {
-    val intput =
-      runTestAssert[Stat](
+    val intput = runTestAssert[Stat](
+      """|type Elem[X] = X match {
+         |  case String => Char
+         |  case Array[t] => t
+         |}
+         |""".stripMargin
+    )(Defn.Type(
+      Nil,
+      pname("Elem"),
+      List(pparam("X")),
+      Type.Match(
+        pname("X"),
+        List(
+          TypeCase(pname("String"), pname("Char")),
+          TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
+        )
+      )
+    ))
+  }
+
+  test("simple-indentation") {
+    val intput = runTestAssert[Stat](
+      """|type Elem[X] = 
+         |  X match
+         |    case String => 
+         |      Char
+         |    case Array[t] => t
+         |""".stripMargin,
+      assertLayout = Some(
         """|type Elem[X] = X match {
            |  case String => Char
            |  case Array[t] => t
            |}
            |""".stripMargin
-      )(
-        Defn.Type(
-          Nil,
-          pname("Elem"),
-          List(pparam("X")),
-          Type.Match(
-            pname("X"),
-            List(
-              TypeCase(pname("String"), pname("Char")),
-              TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
-            )
-          )
+      )
+    )(Defn.Type(
+      Nil,
+      pname("Elem"),
+      List(pparam("X")),
+      Type.Match(
+        pname("X"),
+        List(
+          TypeCase(pname("String"), pname("Char")),
+          TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
         )
       )
-  }
-
-  test("simple-indentation") {
-    val intput =
-      runTestAssert[Stat](
-        """|type Elem[X] = 
-           |  X match
-           |    case String => 
-           |      Char
-           |    case Array[t] => t
-           |""".stripMargin,
-        assertLayout = Some(
-          """|type Elem[X] = X match {
-             |  case String => Char
-             |  case Array[t] => t
-             |}
-             |""".stripMargin
-        )
-      )(
-        Defn.Type(
-          Nil,
-          pname("Elem"),
-          List(pparam("X")),
-          Type.Match(
-            pname("X"),
-            List(
-              TypeCase(pname("String"), pname("Char")),
-              TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
-            )
-          )
-        )
-      )
+    ))
   }
 
   test("tuple") {
@@ -68,24 +62,17 @@ class MatchTypeSuite extends BaseDottySuite {
          |  case (x1, ?) => x1
          |}
          |""".stripMargin
-    )(
-      Defn.Type(
-        Nil,
-        pname("Head"),
-        List(pparam("X", hiBound("Tuple"))),
-        Type.Match(
-          pname("X"),
-          List(
-            TypeCase(
-              Type.Tuple(
-                List(pname("x1"), Type.Wildcard(Type.Bounds(None, None)))
-              ),
-              pname("x1")
-            )
-          )
+    )(Defn.Type(
+      Nil,
+      pname("Head"),
+      List(pparam("X", hiBound("Tuple"))),
+      Type.Match(
+        pname("X"),
+        List(
+          TypeCase(Type.Tuple(List(pname("x1"), Type.Wildcard(Type.Bounds(None, None)))), pname("x1"))
         )
       )
-    )
+    ))
   }
 
   test("recursive") {
@@ -95,24 +82,22 @@ class MatchTypeSuite extends BaseDottySuite {
          |  case x *: xs => S[Len[xs]]
          |}
          |""".stripMargin
-    )(
-      Defn.Type(
-        Nil,
-        pname("Len"),
-        List(pparam("X")),
-        Type.Match(
-          pname("X"),
-          List(
-            TypeCase(pname("Unit"), int(0)),
-            TypeCase(
-              Type.ApplyInfix(pname("x"), pname("*:"), pname("xs")),
-              Type.Apply(pname("S"), List(Type.Apply(pname("Len"), List(pname("xs")))))
-            )
+    )(Defn.Type(
+      Nil,
+      pname("Len"),
+      List(pparam("X")),
+      Type.Match(
+        pname("X"),
+        List(
+          TypeCase(pname("Unit"), int(0)),
+          TypeCase(
+            Type.ApplyInfix(pname("x"), pname("*:"), pname("xs")),
+            Type.Apply(pname("S"), List(Type.Apply(pname("Len"), List(pname("xs")))))
           )
-        ),
-        hiBound("Int")
-      )
-    )
+        )
+      ),
+      hiBound("Int")
+    ))
   }
 
   test("concat") {
@@ -122,28 +107,26 @@ class MatchTypeSuite extends BaseDottySuite {
          |  case x1 *: xs1 => x1 *: Concat[xs1, Y]
          |}
          |""".stripMargin
-    )(
-      Defn.Type(
-        Nil,
-        pname("Concat"),
-        List(pparam("X", hiBound("Tuple")), pparam("Y", hiBound("Tuple"))),
-        Type.Match(
-          pname("X"),
-          List(
-            TypeCase(pname("Unit"), pname("Y")),
-            TypeCase(
-              Type.ApplyInfix(pname("x1"), pname("*:"), pname("xs1")),
-              Type.ApplyInfix(
-                pname("x1"),
-                pname("*:"),
-                Type.Apply(pname("Concat"), List(pname("xs1"), pname("Y")))
-              )
+    )(Defn.Type(
+      Nil,
+      pname("Concat"),
+      List(pparam("X", hiBound("Tuple")), pparam("Y", hiBound("Tuple"))),
+      Type.Match(
+        pname("X"),
+        List(
+          TypeCase(pname("Unit"), pname("Y")),
+          TypeCase(
+            Type.ApplyInfix(pname("x1"), pname("*:"), pname("xs1")),
+            Type.ApplyInfix(
+              pname("x1"),
+              pname("*:"),
+              Type.Apply(pname("Concat"), List(pname("xs1"), pname("Y")))
             )
           )
-        ),
-        hiBound("Tuple")
-      )
-    )
+        )
+      ),
+      hiBound("Tuple")
+    ))
   }
 
   test("indent") {
@@ -160,20 +143,18 @@ class MatchTypeSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Type(
-        Nil,
-        pname("Elem"),
-        List(pparam("X")),
-        Type.Match(
-          pname("X"),
-          List(
-            TypeCase(pname("String"), pname("Char")),
-            TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
-          )
+    )(Defn.Type(
+      Nil,
+      pname("Elem"),
+      List(pparam("X")),
+      Type.Match(
+        pname("X"),
+        List(
+          TypeCase(pname("String"), pname("Char")),
+          TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
         )
       )
-    )
+    ))
   }
   test("double-newline") {
     runTestAssert[Stat](
@@ -193,30 +174,20 @@ class MatchTypeSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("match_types"),
+      tpl(Defn.Type(
         Nil,
-        tname("match_types"),
-        tpl(
-          Defn.Type(
-            Nil,
-            pname("Combine"),
-            List(
-              pparam("Left"),
-              pparam("Right")
-            ),
-            Type.Match(
-              pname("Left"),
-              List(
-                TypeCase(pname("Unit"), pname("Right")),
-                TypeCase(pname("?"), pname("Left"))
-              )
-            ),
-            noBounds
-          )
-        )
-      )
-    )
+        pname("Combine"),
+        List(pparam("Left"), pparam("Right")),
+        Type.Match(
+          pname("Left"),
+          List(TypeCase(pname("Unit"), pname("Right")), TypeCase(pname("?"), pname("Left")))
+        ),
+        noBounds
+      ))
+    ))
   }
 
   test("wildcard") {
@@ -240,34 +211,30 @@ class MatchTypeSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("match_types"),
+      tpl(Defn.Type(
         Nil,
-        tname("match_types"),
-        tpl(
-          Defn.Type(
-            Nil,
-            pname("Combine"),
-            List(pparam("L"), pparam("R")),
-            Type.Match(
-              pname("L"),
-              List(
-                TypeCase(
-                  Type.AnonymousLambda(Type.Apply(pname("Foo"), List(Type.AnonymousParam(None)))),
-                  pname("L")
-                ),
-                TypeCase(
-                  Type.Apply(pname("Bar"), List(Type.Wildcard(Type.Bounds(None, None)))),
-                  pname("L")
-                ),
-                TypeCase(Type.PatWildcard(), pname("R")),
-                TypeCase(pname("?"), pname("L"))
-              )
+        pname("Combine"),
+        List(pparam("L"), pparam("R")),
+        Type.Match(
+          pname("L"),
+          List(
+            TypeCase(
+              Type.AnonymousLambda(Type.Apply(pname("Foo"), List(Type.AnonymousParam(None)))),
+              pname("L")
             ),
-            noBounds
+            TypeCase(
+              Type.Apply(pname("Bar"), List(Type.Wildcard(Type.Bounds(None, None)))),
+              pname("L")
+            ),
+            TypeCase(Type.PatWildcard(), pname("R")),
+            TypeCase(pname("?"), pname("L"))
           )
-        )
-      )
-    )
+        ),
+        noBounds
+      ))
+    ))
   }
 }

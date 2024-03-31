@@ -21,8 +21,7 @@ case class CorpusFile(filename: String, projectUrl: String, commit: String) {
   }
 
   /** File on local filesystem */
-  def jFile: File =
-    new File(FileOps.getFile("target", "repos", repo), filename)
+  def jFile: File = new File(FileOps.getFile("target", "repos", repo), filename)
 
   /** Read string contents of this ScalaFile. */
   def read: String = FileOps.readFile(jFile)
@@ -48,6 +47,5 @@ case class CorpusFile(filename: String, projectUrl: String, commit: String) {
                                      |    raw: $rawUrl
                                      |)""".stripMargin
 
-  private def link(url: String) =
-    s"[$repo/${url.replaceFirst(".*/", "")}]($url)"
+  private def link(url: String) = s"[$repo/${url.replaceFirst(".*/", "")}]($url)"
 }

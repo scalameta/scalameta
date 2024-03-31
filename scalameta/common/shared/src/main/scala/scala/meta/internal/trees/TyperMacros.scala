@@ -32,9 +32,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
 
   def interfaceToApi[I, A](
       interface: c.Tree
-  )(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = {
-    q"$interface.asInstanceOf[$A]"
-  }
+  )(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = { q"$interface.asInstanceOf[$A]" }
 
   def productPrefix[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
     q"${T.tpe.typeSymbol.asLeaf.prefix}"
@@ -128,8 +126,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
         case ListListTreeTpe(_) =>
           val acc1 = flushStreak(acc)
           q"$acc1 ++ this.${f.sym}.flatten"
-        case _ =>
-          acc
+        case _ => acc
       }
     )
     flushStreak(acc)

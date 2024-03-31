@@ -42,18 +42,14 @@ private[meta] object Show {
           indentation += 1
           nl(res)
           indentation -= 1
-        case Newline(res) =>
-          nl(res)
-        case Meta(_, res) =>
-          loop(res)
+        case Newline(res) => nl(res)
+        case Meta(_, res) => loop(res)
         case Wrap(prefix, res, suffix) =>
           sb.append(prefix)
           val sbLen = sb.length
           loop(res)
-          if (sbLen != sb.length) sb.append(suffix)
-          else sb.setLength(sbLen - prefix.length)
-        case Function(fn) =>
-          sb.append(fn(sb))
+          if (sbLen != sb.length) sb.append(suffix) else sb.setLength(sbLen - prefix.length)
+        case Function(fn) => sb.append(fn(sb))
       }
       loop(this)
       sb.toString
@@ -70,8 +66,9 @@ private[meta] object Show {
   final case class Wrap(prefix: String, res: Result, suffix: String) extends Result
   final case class Function(fn: StringBuilder => Result) extends Result
 
-  def apply[T](f: T => Result): Show[T] =
-    new Show[T] { def apply(input: T): Result = f(input) }
+  def apply[T](f: T => Result): Show[T] = new Show[T] {
+    def apply(input: T): Result = f(input)
+  }
 
   def sequence[T](xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.sequence
 
@@ -79,8 +76,8 @@ private[meta] object Show {
 
   def repeat[T](xs: Seq[T], sep: String = "")(implicit show: Show[T]): Result =
     repeat(sep)(xs.map(show(_)): _*)
-  def repeat[T](xs: Seq[T], prefix: String, sep: String, suffix: String)(
-      implicit show: Show[T]
+  def repeat[T](xs: Seq[T], prefix: String, sep: String, suffix: String)(implicit
+      show: Show[T]
   ): Result = wrap(prefix, repeat(xs, sep), suffix)
 
   def repeat(xs: Result*): Result = repeat("")(xs: _*)
@@ -96,10 +93,8 @@ private[meta] object Show {
   def meta[T](data: Any, xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.meta
 
   // wrap if non-empty
-  def wrap[T](x: T, suffix: String)(implicit show: Show[T]): Result =
-    wrap("", x, suffix)
-  def wrap[T](prefix: String, x: T)(implicit show: Show[T]): Result =
-    wrap(prefix, x, "")
+  def wrap[T](x: T, suffix: String)(implicit show: Show[T]): Result = wrap("", x, suffix)
+  def wrap[T](prefix: String, x: T)(implicit show: Show[T]): Result = wrap(prefix, x, "")
   def wrap[T](prefix: String, x: T, suffix: String)(implicit show: Show[T]): Result = {
     val result = show(x)
     if (result eq None) result else Wrap(prefix, result, suffix)
@@ -110,20 +105,18 @@ private[meta] object Show {
     wrap("", x, suffix, cond)
   def wrap[T](prefix: String, x: T, cond: Boolean)(implicit show: Show[T]): Result =
     wrap(prefix, x, "", cond)
-  def wrap[T](prefix: String, x: T, suffix: String, cond: Boolean)(
-      implicit show: Show[T]
-  ): Result = {
+  def wrap[T](prefix: String, x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result = {
     val result = show(x)
     if (!cond || (result eq None)) result else Sequence(prefix, result, suffix)
   }
 
   def opt[T](x: Option[T])(implicit show: Show[T]): Result = x.fold[Result](None)(show(_))
-  def opt[T](x: Option[T], suffix: Result)(implicit show: Show[T]): Result =
-    x.fold[Result](None)(x => Sequence(show(x), suffix))
-  def opt[T](prefix: Result, x: Option[T])(implicit show: Show[T]): Result =
-    x.fold[Result](None)(x => Sequence(prefix, show(x)))
-  def opt[T](prefix: Result, x: Option[T], suffix: Result)(implicit show: Show[T]): Result =
-    x.fold[Result](None)(x => Sequence(prefix, show(x), suffix))
+  def opt[T](x: Option[T], suffix: Result)(implicit show: Show[T]): Result = x
+    .fold[Result](None)(x => Sequence(show(x), suffix))
+  def opt[T](prefix: Result, x: Option[T])(implicit show: Show[T]): Result = x
+    .fold[Result](None)(x => Sequence(prefix, show(x)))
+  def opt[T](prefix: Result, x: Option[T], suffix: Result)(implicit show: Show[T]): Result = x
+    .fold[Result](None)(x => Sequence(prefix, show(x), suffix))
 
   def function(fn: StringBuilder => Result): Result = Function(fn)
 

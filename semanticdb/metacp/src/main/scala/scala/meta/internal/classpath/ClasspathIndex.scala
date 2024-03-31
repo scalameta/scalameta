@@ -17,10 +17,7 @@ import scala.util.Properties
 import java.util.zip.ZipException
 
 /** An index to lookup class directories and classfiles by their JVM names. */
-final class ClasspathIndex private (
-    classpath: Classpath,
-    val dirs: collection.Map[String, Classdir]
-) {
+final class ClasspathIndex private (classpath: Classpath, val dirs: collection.Map[String, Classdir]) {
 
   /** Returns a classfile with the given path. */
   def getClassfile(path: String): Option[Classfile] = {
@@ -30,22 +27,15 @@ final class ClasspathIndex private (
   /** Returns a classfile with the given directory and filename. */
   def getClassfile(directory: String, filename: String): Option[Classfile] = {
     dirs.get(directory) match {
-      case Some(pkg) =>
-        pkg.resolve(filename).collect { case e: Classfile =>
-          e
-        }
-      case _ =>
-        None
+      case Some(pkg) => pkg.resolve(filename).collect { case e: Classfile => e }
+      case _ => None
     }
   }
 
   /** Returns true if this path is a class directory. */
-  def isClassdir(path: String): Boolean =
-    dirs.contains(path)
+  def isClassdir(path: String): Boolean = dirs.contains(path)
 
-  override def toString: String = {
-    s"ClasspathIndex($classpath)"
-  }
+  override def toString: String = { s"ClasspathIndex($classpath)" }
 }
 
 object ClasspathIndex {
@@ -59,27 +49,18 @@ object ClasspathIndex {
     def result(): ClasspathIndex = {
       val root = Classdir("/")
       dirs(root.relativeUri) = root
-      if (includeJdk) {
-        expandJdkClasspath()
-      }
+      if (includeJdk) { expandJdkClasspath() }
       classpath.entries.foreach(expandEntry)
       new ClasspathIndex(classpath, dirs)
     }
 
     def expandJdkClasspath(): Unit = {
-      if (Properties.isJavaAtLeast("9")) {
-        expandJrtClasspath()
-      } else {
-        sys.props
-          .collectFirst {
-            case (k, v) if k.endsWith(".boot.class.path") =>
-              Classpath(v).entries
-                .filter(_.isFile)
-                .foreach(expandJarEntry)
-          }
-          .getOrElse {
-            throw new IllegalStateException("Unable to detect bootclasspath")
-          }
+      if (Properties.isJavaAtLeast("9")) { expandJrtClasspath() }
+      else {
+        sys.props.collectFirst {
+          case (k, v) if k.endsWith(".boot.class.path") =>
+            Classpath(v).entries.filter(_.isFile).foreach(expandJarEntry)
+        }.getOrElse { throw new IllegalStateException("Unable to detect bootclasspath") }
       }
     }
 
@@ -93,16 +74,13 @@ object ClasspathIndex {
         moduleLink <- Files.list(pkg).iterator().toScala
       } {
         val module =
-          if (!Files.isSymbolicLink(moduleLink)) moduleLink
-          else Files.readSymbolicLink(moduleLink)
+          if (!Files.isSymbolicLink(moduleLink)) moduleLink else Files.readSymbolicLink(moduleLink)
         classdir.modules ::= module
       }
     }
 
     private def expandEntry(path: AbsolutePath): Unit = {
-      if (path.isFile) expandJarEntry(path)
-      else if (path.isDirectory) expandDirEntry(path)
-      else ()
+      if (path.isFile) expandJarEntry(path) else if (path.isDirectory) expandDirEntry(path) else ()
     }
 
     private def addMember(parent: Classdir, basename: String, element: ClasspathElement): Unit = {
@@ -114,15 +92,12 @@ object ClasspathIndex {
       // $ scala -classpath $(coursier fetch org.scalameta:metacp_2.12:4.0.0-M4 -p):$(coursier fetch org.scalameta:metacp_2.12:4.0.0-M3 -p)
       // scala> scala.meta.internal.metacp.BuildInfo
       // res0: meta.internal.metacp.BuildInfo.type = version: 4.0.0-M4
-      if (!parent.members.contains(basename)) {
-        parent.members(basename) = element
-      }
+      if (!parent.members.contains(basename)) { parent.members(basename) = element }
     }
 
     private def getClassdir(name: String): Classdir = {
       dirs.get(name) match {
-        case Some(dir) =>
-          dir
+        case Some(dir) => dir
         case _ =>
           val parent = getClassdir(PathIO.dirname(name))
           val element = Classdir(name)
@@ -135,20 +110,15 @@ object ClasspathIndex {
     private def expandJarEntry(jarpath: AbsolutePath): Unit = {
       val file = jarpath.toFile
       val jar =
-        try {
-          new JarFile(file)
-        } catch {
-          case zex: ZipException =>
-            return ()
-        }
+        try { new JarFile(file) }
+        catch { case zex: ZipException => return () }
       try {
         val entries = jar.entries()
         while (entries.hasMoreElements) {
           val element = entries.nextElement()
           if (!element.getName.startsWith("META-INF")) {
             val parent = getClassdir(
-              if (element.isDirectory) element.getName
-              else PathIO.dirname(element.getName)
+              if (element.isDirectory) element.getName else PathIO.dirname(element.getName)
             )
             val inJar = CompressedClassfile(element, file)
             addMember(parent, PathIO.basename(element.getName), inJar)
@@ -160,25 +130,18 @@ object ClasspathIndex {
           if (classpathAttr != null) {
             classpathAttr.split(" ").foreach { relpath =>
               val abspath = AbsolutePath(jarpath.toNIO.getParent).resolve(relpath)
-              if (abspath.isFile || abspath.isDirectory) {
-                expandEntry(abspath)
-              }
+              if (abspath.isFile || abspath.isDirectory) { expandEntry(abspath) }
             }
           }
         }
-      } finally {
-        jar.close()
-      }
+      } finally { jar.close() }
     }
 
     private def expandDirEntry(root: AbsolutePath): Unit = {
       Files.walkFileTree(
         root.toNIO,
         new SimpleFileVisitor[Path] {
-          override def visitFile(
-              file: Path,
-              attrs: BasicFileAttributes
-          ): FileVisitResult = {
+          override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
             val name = file.getFileName.toString
             if (name.endsWith(".class")) {
               val relpath = AbsolutePath(file).toRelative(root)
@@ -191,12 +154,8 @@ object ClasspathIndex {
             }
             super.visitFile(file, attrs)
           }
-          override def preVisitDirectory(
-              dir: Path,
-              attrs: BasicFileAttributes
-          ): FileVisitResult = {
-            if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE
-            else FileVisitResult.CONTINUE
+          override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult = {
+            if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE else FileVisitResult.CONTINUE
           }
         }
       )

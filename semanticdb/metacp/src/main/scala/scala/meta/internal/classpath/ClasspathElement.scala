@@ -32,9 +32,7 @@ final case class Classdir(relativeUri: String) extends ClasspathElement {
   def resolve(filename: String): Option[ClasspathElement] = {
     members.get(filename).orElse {
       val uri = relativeUri + filename
-      modules.iterator
-        .map(_.resolve(uri))
-        .find(Files.exists(_))
+      modules.iterator.map(_.resolve(uri)).find(Files.exists(_))
         .map(x => UncompressedClassfile(uri, AbsolutePath(x)))
     }
   }
@@ -53,8 +51,7 @@ final case class Classdir(relativeUri: String) extends ClasspathElement {
 
 /** A classpath entry that is a classfile on disk. */
 final case class UncompressedClassfile(relativeUri: String, path: AbsolutePath) extends Classfile {
-  def openInputStream(): InputStream =
-    Files.newInputStream(path.toNIO)
+  def openInputStream(): InputStream = Files.newInputStream(path.toNIO)
 }
 
 /** A classpath entry that is a classfile inside a jar file. */

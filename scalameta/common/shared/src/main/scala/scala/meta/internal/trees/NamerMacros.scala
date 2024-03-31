@@ -41,9 +41,10 @@ trait CommonNamerMacros extends MacroHelpers {
   }
 
   private val quasiTypeName = TypeName(CommonNamerMacros.quasiName)
-  @inline private[trees] def isQuasiClass(cdef: ClassDef) = isQuasiName(cdef.name)
-  @inline private[trees] def isQuasiName(name: TypeName) =
-    name.toString == CommonNamerMacros.quasiName
+  @inline
+  private[trees] def isQuasiClass(cdef: ClassDef) = isQuasiName(cdef.name)
+  @inline
+  private[trees] def isQuasiName(name: TypeName) = name.toString == CommonNamerMacros.quasiName
 
   private def mkQuasiParent(parent: Tree): Tree = parent match {
     case Ident(name) => Select(Ident(name.toTermName), quasiTypeName)
@@ -63,7 +64,8 @@ trait CommonNamerMacros extends MacroHelpers {
     val qparents = tq"$name" +: tq"$QuasiClass" +: parents.map(mkQuasiParent)
 
     val qstats = mutable.ListBuffer[Tree]()
-    qstats += q"""
+    qstats +=
+      q"""
       def pt: _root_.java.lang.Class[_] = {
         $ArrayClassMethod($ClassOfMethod[$name], this.rank)
       }
@@ -80,23 +82,18 @@ trait CommonNamerMacros extends MacroHelpers {
     def markStubbedMemberName(name: TermName): Boolean = stubbedMembers.add(name.toString)
     def addStubbedMemberWithName(name: TermName): Unit =
       if (markStubbedMemberName(name)) qstats += q"def $name = $stub"
-    def addStubbedOverrideMember(tree: ValOrDefDefApi): Unit =
-      if (markStubbedMemberName(tree.name)) {
-        val stat = tree match {
-          case x: ValDefApi =>
-            q"override def ${x.name} = $stub"
-          case x: DefDefApi =>
-            q"override def ${x.name}[..${x.tparams}](...${x.vparamss}) = $stub"
-          case _ => c.abort(tree.pos, s"Can't stub, not a 'val' or 'def': $tree")
-        }
-        qstats += stat
+    def addStubbedOverrideMember(tree: ValOrDefDefApi): Unit = if (markStubbedMemberName(tree.name)) {
+      val stat = tree match {
+        case x: ValDefApi => q"override def ${x.name} = $stub"
+        case x: DefDefApi => q"override def ${x.name}[..${x.tparams}](...${x.vparamss}) = $stub"
+        case _ => c.abort(tree.pos, s"Can't stub, not a 'val' or 'def': $tree")
       }
+      qstats += stat
+    }
 
     params.foreach(x => addStubbedMemberWithName(x.name))
     extraStubs.foreach(x => addStubbedMemberWithName(TermName(x)))
-    copyParamss.foreach { x =>
-      qstats += q"final override def copy(..$x): $name = $stub"
-    }
+    copyParamss.foreach { x => qstats += q"final override def copy(..$x): $name = $stub" }
 
     extraAbstractDefs.foreach {
       case x: ValOrDefDefApi
@@ -128,16 +125,9 @@ trait CommonNamerMacros extends MacroHelpers {
   }
 
   protected def getPrivateFields(iname: TypeName): PrivateFields = PrivateFields(
-    PrivateField(
-      q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null"
-    ),
-    PrivateField(
-      q"private[meta] override val privateParent: $TreeClass = null"
-    ),
-    PrivateField(
-      q"override val origin: $OriginClass = $OriginModule.None",
-      true
-    )
+    PrivateField(q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null"),
+    PrivateField(q"private[meta] override val privateParent: $TreeClass = null"),
+    PrivateField(q"override val origin: $OriginClass = $OriginModule.None", true)
   )
 
 }

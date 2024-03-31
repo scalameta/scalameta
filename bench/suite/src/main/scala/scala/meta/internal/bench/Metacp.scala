@@ -20,26 +20,20 @@ object Metacp {
 trait Metacp {
   def runImpl(classpath: Classpath, dependencyClasspath: Classpath): Unit = {
     val tmp = Files.createTempDirectory("metacp_")
-    val settings = Settings()
-      .withOut(AbsolutePath(tmp))
-      .withDependencyClasspath(dependencyClasspath)
-      .withClasspath(classpath)
-      .withScalaLibrarySynthetics(false)
-      .withIncludeJdk(true)
+    val settings = Settings().withOut(AbsolutePath(tmp))
+      .withDependencyClasspath(dependencyClasspath).withClasspath(classpath)
+      .withScalaLibrarySynthetics(false).withIncludeJdk(true)
     val reporter = Reporter().withSilentOut().withErr(System.err)
     val result = scala.meta.cli.Metacp.process(settings, reporter)
     if (!result.isSuccess) sys.error("conversion failed")
   }
 }
 
-@BenchmarkMode(Array(SampleTime))
-@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@BenchmarkMode(Array(SampleTime)) @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @Warmup(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 3, time = 10, timeUnit = TimeUnit.SECONDS)
 @Fork(value = 1, jvmArgs = Array("-Xms2G", "-Xmx2G"))
 class MetacpScalaLibrary extends Metacp {
   @Benchmark
-  def run(bs: BenchmarkState): Unit = {
-    runImpl(bs.scalaLibrary, Classpath(Nil))
-  }
+  def run(bs: BenchmarkState): Unit = { runImpl(bs.scalaLibrary, Classpath(Nil)) }
 }

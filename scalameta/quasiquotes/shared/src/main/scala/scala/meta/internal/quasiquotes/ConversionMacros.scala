@@ -40,16 +40,12 @@ class ConversionMacros(val c: Context) extends AstReflection {
   def liftApply[I](outside: c.Tree)(implicit I: c.WeakTypeTag[I]): c.Tree = {
     val outsideTpe = outside.tpe
     val insideTpe = I.tpe
-    if (outsideTpe <:< insideTpe) {
-      outside
-    } else {
-      val liftable =
-        c.inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe), silent = true)
-      if (liftable.nonEmpty) {
-        q"$liftable.apply($outside)"
-      } else {
-        c.abort(c.enclosingPosition, typeMismatchMessage(outsideTpe, insideTpe))
-      }
+    if (outsideTpe <:< insideTpe) { outside }
+    else {
+      val liftable = c
+        .inferImplicitValue(appliedType(MetaLift, outsideTpe, insideTpe), silent = true)
+      if (liftable.nonEmpty) { q"$liftable.apply($outside)" }
+      else { c.abort(c.enclosingPosition, typeMismatchMessage(outsideTpe, insideTpe)) }
     }
   }
 
@@ -69,16 +65,12 @@ class ConversionMacros(val c: Context) extends AstReflection {
   def unliftUnapply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree = {
     val insideTpe = inside.tpe
     val outsideTpe = O.tpe
-    if (insideTpe <:< outsideTpe) {
-      q"_root_.scala.Some($inside: $insideTpe)"
-    } else {
-      val unliftable =
-        c.inferImplicitValue(appliedType(MetaUnlift, insideTpe, outsideTpe), silent = true)
-      if (unliftable.nonEmpty) {
-        q"$unliftable.apply($inside)"
-      } else {
-        c.abort(c.enclosingPosition, typeMismatchMessage(insideTpe, outsideTpe))
-      }
+    if (insideTpe <:< outsideTpe) { q"_root_.scala.Some($inside: $insideTpe)" }
+    else {
+      val unliftable = c
+        .inferImplicitValue(appliedType(MetaUnlift, insideTpe, outsideTpe), silent = true)
+      if (unliftable.nonEmpty) { q"$unliftable.apply($inside)" }
+      else { c.abort(c.enclosingPosition, typeMismatchMessage(insideTpe, outsideTpe)) }
     }
   }
 }

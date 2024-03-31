@@ -118,10 +118,8 @@ class MetacpErrorSuite extends FunSuite {
 
     val output = Files.createTempDirectory("out_")
     output.toFile.deleteOnExit()
-    val settings = Settings()
-      .withOut(AbsolutePath(output))
-      .withClasspath(Classpath(AbsolutePath(input)))
-      .withStubBrokenSignatures(true)
+    val settings = Settings().withOut(AbsolutePath(output))
+      .withClasspath(Classpath(AbsolutePath(input))).withStubBrokenSignatures(true)
       .withLogBrokenSignatures(true)
 
     val (result, out, err) = CliTestUtils.withReporter { reporter =>

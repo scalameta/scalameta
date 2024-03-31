@@ -50,8 +50,7 @@ class CliSuite extends FunSuite {
     import HelloWorld._
     val (success, out, err) = CliTestUtils.withReporter { reporter =>
       val format = scala.meta.metap.Format.Detailed
-      val settings =
-        scala.meta.metap.Settings().withFormat(format).withPaths(List(semanticdb))
+      val settings = scala.meta.metap.Settings().withFormat(format).withPaths(List(semanticdb))
       Metap.process(settings, reporter)
     }
     assert(success)
@@ -94,15 +93,13 @@ class CliSuite extends FunSuite {
   }
 
   test("metac only outputs semanticdb for files in sourceroot") {
-    val projectroot = StringFS
-      .fromString(
-        """|/sourceroot_/Left.scala
-           |object Left { def right = 42 }
-           |/not_sourceroot_/Right.scala
-           |object Right { def left = 41 }
-           |""".stripMargin
-      )
-      .toNIO
+    val projectroot = StringFS.fromString(
+      """|/sourceroot_/Left.scala
+         |object Left { def right = 42 }
+         |/not_sourceroot_/Right.scala
+         |object Right { def left = 41 }
+         |""".stripMargin
+    ).toNIO
     val sourceroot = projectroot.resolve("sourceroot_")
     val notSourceroot = projectroot.resolve("not_sourceroot_")
     val inSourcerootScala = sourceroot.resolve("Left.scala")
@@ -131,17 +128,11 @@ class CliSuite extends FunSuite {
     assert(out.isEmpty)
     assert(Files.exists(inSourcerootSemanticdb))
 
-    def searchForRightScalaSemanticdbIn(in: Path): Iterator[Path] =
-      Files
-        .walk(in)
-        .iterator()
-        .asScala
-        .filter(_.toString.contains("Right.scala.semanticdb"))
+    def searchForRightScalaSemanticdbIn(in: Path): Iterator[Path] = Files.walk(in).iterator()
+      .asScala.filter(_.toString.contains("Right.scala.semanticdb"))
 
-    val rightResults =
-      searchForRightScalaSemanticdbIn(projectroot) ++ searchForRightScalaSemanticdbIn(
-        target
-      )
+    val rightResults = searchForRightScalaSemanticdbIn(projectroot) ++
+      searchForRightScalaSemanticdbIn(target)
     assert(rightResults.isEmpty)
   }
 }

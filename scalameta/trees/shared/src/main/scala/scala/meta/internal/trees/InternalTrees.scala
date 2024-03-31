@@ -69,16 +69,15 @@ trait InternalTree extends Product {
   private def tokensOpt: Option[Tokens] = origin.tokensOpt.orElse(syntaxTokensOpt)
   private lazy val syntaxTokensOpt: Option[Tokens] = origin.dialectOpt.map(tokenizeForDialect)
 
-  private def tokenizeForDialect(dialect: Dialect): Tokens =
-    this match {
-      case Lit.String(value) =>
-        val input = Input.VirtualFile("<InternalTrees.tokens>", value)
-        Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
-      case _ => dialect(textAsInput(dialect)).tokenize.get
-    }
+  private def tokenizeForDialect(dialect: Dialect): Tokens = this match {
+    case Lit.String(value) =>
+      val input = Input.VirtualFile("<InternalTrees.tokens>", value)
+      Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
+    case _ => dialect(textAsInput(dialect)).tokenize.get
+  }
 
-  private[meta] def textAsInput(implicit dialect: Dialect): Input =
-    Input.VirtualFile("<InternalTrees.text>", printSyntaxFor(dialect))
+  private[meta] def textAsInput(implicit dialect: Dialect): Input = Input
+    .VirtualFile("<InternalTrees.text>", printSyntaxFor(dialect))
 
   // ==============================================================
   // Text or syntax
@@ -93,8 +92,7 @@ trait InternalTree extends Product {
   def printSyntaxFor(dialect: Dialect): String =
     if (origin.dialectOpt.contains(dialect)) textOpt.get else reprintSyntax(dialect)
 
-  private def reprintSyntax(dialect: Dialect): String =
-    TreeSyntax.reprint(this)(dialect).toString
+  private def reprintSyntax(dialect: Dialect): String = TreeSyntax.reprint(this)(dialect).toString
 
   private def textOpt: Option[String] = origin.textOpt.orElse(syntaxTextOpt)
   private lazy val syntaxTextOpt: Option[String] = origin.dialectOpt.map(reprintSyntax)

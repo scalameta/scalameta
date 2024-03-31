@@ -65,9 +65,7 @@ object Javacp {
     val hasOuterClassReference = node.fields.toScala.exists(isOuterClassReference)
     val isEnum = node.access.hasFlag(o.ACC_ENUM)
 
-    val classKind =
-      if (classAccess.hasFlag(o.ACC_INTERFACE)) k.INTERFACE
-      else k.CLASS
+    val classKind = if (classAccess.hasFlag(o.ACC_INTERFACE)) k.INTERFACE else k.CLASS
 
     val isJavaLangObject = node.name == "java/lang/Object"
     val classSignature: ClassSignature =
@@ -78,48 +76,41 @@ object Javacp {
         ClassSignature.simple("impossible", Nil)
       } else if (node.signature == null) {
         ClassSignature.simple(node.superName, node.interfaces.toScala.toList)
-      } else {
-        JavaTypeSignature.parse(node.signature, new ClassSignatureVisitor)
-      }
+      } else { JavaTypeSignature.parse(node.signature, new ClassSignatureVisitor) }
 
-    val (classScope: Scope, classTypeParameters) =
-      classSignature.typeParameters match {
-        case Some(tp) => addTypeParameters(tp, classSymbol, scope)
-        case _ => scope -> Nil
-      }
+    val (classScope: Scope, classTypeParameters) = classSignature.typeParameters match {
+      case Some(tp) => addTypeParameters(tp, classSymbol, scope)
+      case _ => scope -> Nil
+    }
     classTypeParameters.foreach(buf += _)
 
     val classParents =
-      if (isJavaLangObject) Nil
-      else classSignature.parents.map(_.toSemanticTpe(classScope))
+      if (isJavaLangObject) Nil else classSignature.parents.map(_.toSemanticTpe(classScope))
 
-    node.fields.toScala
-      .filterNot(_.access.hasFlag(o.ACC_SYNTHETIC))
-      .foreach { field: FieldNode =>
-        if (isOuterClassReference(field)) {
-          // Drop the constructor argument that holds the reference to the outer class.
-          ()
-        } else {
-          val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
-          val fieldDisplayName = field.name
-          val fieldSignature = JavaTypeSignature.parse(
-            if (field.signature == null) field.desc else field.signature,
-            new FieldSignatureVisitor
-          )
-          val fieldInfo = addInfo(
-            fieldSymbol,
-            k.FIELD,
-            fieldDisplayName,
-            s.ValueSignature(fieldSignature.toSemanticTpe(classScope)),
-            field.access
-          )
+    node.fields.toScala.filterNot(_.access.hasFlag(o.ACC_SYNTHETIC)).foreach { field: FieldNode =>
+      if (isOuterClassReference(field)) {
+        // Drop the constructor argument that holds the reference to the outer class.
+        ()
+      } else {
+        val fieldSymbol = Symbols.Global(classSymbol, d.Term(field.name))
+        val fieldDisplayName = field.name
+        val fieldSignature = JavaTypeSignature.parse(
+          if (field.signature == null) field.desc else field.signature,
+          new FieldSignatureVisitor
+        )
+        val fieldInfo = addInfo(
+          fieldSymbol,
+          k.FIELD,
+          fieldDisplayName,
+          s.ValueSignature(fieldSignature.toSemanticTpe(classScope)),
+          field.access
+        )
 
-          decls += fieldInfo.symbol
-        }
+        decls += fieldInfo.symbol
       }
+    }
 
-    val methodSignatures = node.methods.toScala
-      .filterNot(_.access.hasFlag(o.ACC_SYNTHETIC))
+    val methodSignatures = node.methods.toScala.filterNot(_.access.hasFlag(o.ACC_SYNTHETIC))
       .map { method: MethodNode =>
         val signature = JavaTypeSignature.parse(
           if (method.signature == null) method.desc else method.signature,
@@ -134,8 +125,7 @@ object Javacp {
     val byStaticAccess = methodSignatures.sortBy(_.node.access.hasFlag(o.ACC_STATIC))
 
     methodSignatures.foreach {
-      case method: MethodInfo if method.node.name == "<clinit>" =>
-        ()
+      case method: MethodInfo if method.node.name == "<clinit>" => ()
       case method: MethodInfo =>
         val isConstructor = method.node.name == "<init>"
         val methodDisambiguator = {
@@ -143,8 +133,7 @@ object Javacp {
           if (overloads.lengthCompare(1) == 0) "()"
           else {
             val index = overloads.indexWhere(_.signature eq method.signature)
-            if (index == 0) "()"
-            else s"(+${index})"
+            if (index == 0) "()" else s"(+${index})"
           }
         }
         val methodDescriptor = d.Method(method.node.name, methodDisambiguator)
@@ -173,8 +162,7 @@ object Javacp {
             // on JDK 18, 19 or 20.
             None
           case (sigParam, i) =>
-            val nodeParamOpt =
-              Option(method.node.parameters).flatMap(xs => Option(xs.get(i)))
+            val nodeParamOpt = Option(method.node.parameters).flatMap(xs => Option(xs.get(i)))
 
             nodeParamOpt match {
               case Some(nodeParam)
@@ -188,30 +176,26 @@ object Javacp {
                 // was not passed to `javac` and there is a mandated param.
                 // See https://github.com/openjdk/jdk/pull/9862.
                 Some((sigParam, Option(nodeParam.name)))
-              case _ =>
-                Some((sigParam, None))
+              case _ => Some((sigParam, None))
             }
         }
 
         val params = method.signature.params.zipWithIndex
           .collect(Function.unlift(collectNonMandatedParams))
 
-        val parameters: List[s.SymbolInformation] = params.zipWithIndex.map {
-          case ((param: JavaTypeSignature, paramDisplayNameOpt), i) =>
+        val parameters: List[s.SymbolInformation] = params.zipWithIndex
+          .map { case ((param: JavaTypeSignature, paramDisplayNameOpt), i) =>
             val paramDisplayName = paramDisplayNameOpt.getOrElse("param" + i)
             val paramSymbol = Symbols.Global(methodSymbol, d.Parameter(paramDisplayName))
             val isRepeatedType = method.node.access.hasFlag(o.ACC_VARARGS) && i == params.length - 1
             val paramTpe =
               if (isRepeatedType) {
                 param.toSemanticTpe(methodScope) match {
-                  case s.TypeRef(s.NoType, "scala/Array#", targ :: Nil) =>
-                    s.RepeatedType(targ)
-                  case tpe =>
-                    sys.error(s"expected $paramDisplayName to be a scala/Array#, found $tpe")
+                  case s.TypeRef(s.NoType, "scala/Array#", targ :: Nil) => s.RepeatedType(targ)
+                  case tpe => sys
+                      .error(s"expected $paramDisplayName to be a scala/Array#, found $tpe")
                 }
-              } else {
-                param.toSemanticTpe(methodScope)
-              }
+              } else { param.toSemanticTpe(methodScope) }
             addInfo(
               paramSymbol,
               k.PARAMETER,
@@ -219,11 +203,10 @@ object Javacp {
               s.ValueSignature(paramTpe),
               o.ACC_PUBLIC
             )
-        }
+          }
 
         val returnType = {
-          if (isConstructor) s.NoType
-          else method.signature.result.toSemanticTpe(methodScope)
+          if (isConstructor) s.NoType else method.signature.result.toSemanticTpe(methodScope)
         }
 
         val methodKind = if (isConstructor) k.CONSTRUCTOR else k.METHOD
@@ -236,13 +219,8 @@ object Javacp {
           returnType = returnType
         )
 
-        val methodInfo = addInfo(
-          methodSymbol,
-          methodKind,
-          methodDisplayName,
-          methodSig,
-          method.node.access
-        )
+        val methodInfo =
+          addInfo(methodSymbol, methodKind, methodDisplayName, methodSig, method.node.access)
 
         decls += methodInfo.symbol
     }
@@ -253,9 +231,8 @@ object Javacp {
       val innerClassSymbol = ssym(ic.name)
       decls += innerClassSymbol
       val path = ic.name + ".class"
-      val classfile = classpathIndex.getClassfile(path).getOrElse {
-        throw MissingSymbolException(ssym(ic.name))
-      }
+      val classfile = classpathIndex.getClassfile(path)
+        .getOrElse { throw MissingSymbolException(ssym(ic.name)) }
       val innerClassNode = classfile.toClassNode
       buf ++= sinfos(innerClassNode, classpathIndex, ic.access, classScope)
     }
@@ -267,19 +244,12 @@ object Javacp {
       declarations = Some(s.Scope(decls.toScalaSeq))
     )
 
-    addInfo(
-      classSymbol,
-      classKind,
-      classDisplayName,
-      classSig,
-      classAccess
-    )
+    addInfo(classSymbol, classKind, classDisplayName, classSig, classAccess)
     buf
   }
 
   // Returns true if this field holds a reference to an outer enclosing class.
-  private def isOuterClassReference(field: FieldNode): Boolean =
-    field.name.startsWith("this$")
+  private def isOuterClassReference(field: FieldNode): Boolean = field.name.startsWith("this$")
 
   // The logic behind this method is an implementation of the answer in this SO question:
   // https://stackoverflow.com/questions/42676404/how-do-i-know-if-i-am-visiting-an-anonymous-class-in-asm
@@ -287,35 +257,30 @@ object Javacp {
   // as enclosing outer classes. Anonymous classes are distinguished by InnerClassNode.innerName == null.
   private def isAnonymousClass(node: ClassNode): Boolean = {
     node.innerClasses.toScala.exists { ic: InnerClassNode =>
-      ic.name == node.name &&
-      ic.innerName == null
+      ic.name == node.name && ic.innerName == null
     }
   }
 
-  private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type =
-    sig match {
-      case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
-        require(identifier != null, sig.toString)
-        val sym = ssym(identifier)
-        val prefix = styperef(sym, targs.toSemanticTpe(scope))
-        val (result, _) = suffix.foldLeft(prefix -> sym) {
-          case ((accum, owner), s: ClassTypeSignatureSuffix) =>
-            val desc = Descriptor.Type(s.simpleClassTypeSignature.identifier)
-            val symbol = Symbols.Global(owner, desc)
-            styperef(
-              prefix = accum,
-              symbol = symbol,
-              args = s.simpleClassTypeSignature.typeArguments.toSemanticTpe(scope)
-            ) -> symbol
+  private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type = sig match {
+    case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
+      require(identifier != null, sig.toString)
+      val sym = ssym(identifier)
+      val prefix = styperef(sym, targs.toSemanticTpe(scope))
+      val (result, _) = suffix
+        .foldLeft(prefix -> sym) { case ((accum, owner), s: ClassTypeSignatureSuffix) =>
+          val desc = Descriptor.Type(s.simpleClassTypeSignature.identifier)
+          val symbol = Symbols.Global(owner, desc)
+          styperef(
+            prefix = accum,
+            symbol = symbol,
+            args = s.simpleClassTypeSignature.typeArguments.toSemanticTpe(scope)
+          ) -> symbol
         }
-        result
-      case TypeVariableSignature(name) =>
-        styperef(scope.resolve(name))
-      case t: BaseType =>
-        styperef("scala/" + t.name + "#")
-      case ArrayTypeSignature(tpe) =>
-        sarray(tpe.toSemanticTpe(scope))
-    }
+      result
+    case TypeVariableSignature(name) => styperef(scope.resolve(name))
+    case t: BaseType => styperef("scala/" + t.name + "#")
+    case ArrayTypeSignature(tpe) => sarray(tpe.toSemanticTpe(scope))
+  }
 
   private case class TypeParameterInfo(value: TypeParameter, symbol: String)
   private def addTypeParameters(
@@ -334,8 +299,7 @@ object Javacp {
       nextScope = nextScope.enter(typeParameter.identifier, symbol)
       TypeParameterInfo(typeParameter, symbol)
     }
-    nextScope ->
-      infos.map(info => addTypeParameter(info, ownerSymbol, nextScope))
+    nextScope -> infos.map(info => addTypeParameter(info, ownerSymbol, nextScope))
   }
   private def addTypeParameter(
       typeParameter: TypeParameterInfo,
@@ -344,16 +308,11 @@ object Javacp {
   ): s.SymbolInformation = {
     val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_, scope))
     val upperBounds = typeParameters match {
-      case upperBound :: Nil =>
-        upperBound
-      case _ =>
-        s.IntersectionType(types = typeParameters)
+      case upperBound :: Nil => upperBound
+      case _ => s.IntersectionType(types = typeParameters)
     }
     val displayName = typeParameter.value.identifier
-    val sig = s.TypeSignature(
-      typeParameters = Some(s.Scope()),
-      upperBound = upperBounds
-    )
+    val sig = s.TypeSignature(typeParameters = Some(s.Scope()), upperBound = upperBounds)
 
     s.SymbolInformation(
       symbol = typeParameter.symbol,
@@ -388,9 +347,7 @@ object Javacp {
     var slash = false
     val result = new StringBuilder
     val part = new StringBuilder
-    def put(c: Char): Unit = {
-      part.append(c)
-    }
+    def put(c: Char): Unit = { part.append(c) }
     def flush(): Unit = {
       result.append(n.encode(part.toString))
       part.clear()
@@ -404,25 +361,18 @@ object Javacp {
       } else if (c == '$') {
         flush()
         result.append('#')
-      } else {
-        put(c)
-      }
+      } else { put(c) }
       i += 1
     }
-    if (part.nonEmpty) {
-      flush()
-    }
+    if (part.nonEmpty) { flush() }
     result.append('#')
-    if (slash) result.toString
-    else Symbols.EmptyPackage + result.toString
+    if (slash) result.toString else Symbols.EmptyPackage + result.toString
   }
 
   private def saccess(access: Int, symbol: String, kind: s.SymbolInformation.Kind): s.Access = {
     kind match {
-      case k.LOCAL | k.PARAMETER | k.TYPE_PARAMETER | k.PACKAGE =>
-        s.NoAccess
-      case k.INTERFACE =>
-        s.PublicAccess()
+      case k.LOCAL | k.PARAMETER | k.TYPE_PARAMETER | k.PACKAGE => s.NoAccess
+      case k.INTERFACE => s.PublicAccess()
       case _ =>
         if (access.hasFlag(o.ACC_PUBLIC)) s.PublicAccess()
         else if (access.hasFlag(o.ACC_PROTECTED)) s.ProtectedAccess()
@@ -437,8 +387,7 @@ object Javacp {
   private def sannotations(access: Int): Seq[s.Annotation] = {
     val buf = List.newBuilder[s.Annotation]
 
-    def push(symbol: String): Unit =
-      buf += s.Annotation(styperef(symbol))
+    def push(symbol: String): Unit = buf += s.Annotation(styperef(symbol))
 
     if (access.hasFlag(o.ACC_STRICT)) push("scala/annotation/strictfp#")
 
@@ -453,28 +402,24 @@ object Javacp {
     if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL)
     if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC)
     if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM)
-    if (ownerNode.access.hasFlag(o.ACC_INTERFACE) &&
-      !access.hasFlag(o.ACC_ABSTRACT) &&
+    if (ownerNode.access.hasFlag(o.ACC_INTERFACE) && !access.hasFlag(o.ACC_ABSTRACT) &&
       !access.hasFlag(o.ACC_STATIC)) sflip(p.DEFAULT)
     bits
   }
 
-  private def sarray(tpe: s.Type): s.Type =
-    styperef("scala/Array#", tpe :: Nil)
+  private def sarray(tpe: s.Type): s.Type = styperef("scala/Array#", tpe :: Nil)
 
   private def styperef(
       symbol: String,
       args: List[s.Type] = Nil,
       prefix: s.Type = s.NoType
-  ): s.Type = {
-    s.TypeRef(prefix, symbol, args)
-  }
+  ): s.Type = { s.TypeRef(prefix, symbol, args) }
 
   private implicit class XtensionTypeArgument(private val self: TypeArgument) extends AnyVal {
     // FIXME: https://github.com/scalameta/scalameta/issues/1563
     def toSemanticTpe(scope: Scope): s.Type = self match {
-      case ReferenceTypeArgument(None, referenceTypeSignature) =>
-        referenceTypeSignature.toSemanticTpe(scope)
+      case ReferenceTypeArgument(None, referenceTypeSignature) => referenceTypeSignature
+          .toSemanticTpe(scope)
       case ReferenceTypeArgument(Some(_), _) | WildcardTypeArgument =>
         // FIXME: https://github.com/scalameta/scalameta/issues/1703
         styperef("local_wildcard")
@@ -483,8 +428,7 @@ object Javacp {
 
   private implicit class XtensionJavaTypeSignature(private val self: JavaTypeSignature)
       extends AnyVal {
-    def toSemanticTpe(scope: Scope): s.Type =
-      fromJavaTypeSignature(self, scope)
+    def toSemanticTpe(scope: Scope): s.Type = fromJavaTypeSignature(self, scope)
   }
 
   private implicit class XtensionTypeArgumentsOption(private val self: Option[TypeArguments])
@@ -496,8 +440,7 @@ object Javacp {
   }
 
   private implicit class XtensionAccess(private val asmAccess: Int) extends AnyVal {
-    def hasFlag(flag: Int): Boolean =
-      (flag & asmAccess) != 0
+    def hasFlag(flag: Int): Boolean = (flag & asmAccess) != 0
   }
 
 }

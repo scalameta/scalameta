@@ -14,20 +14,11 @@ class ToplevelTermSuite extends TreeSuiteBase {
     val tree = sourceString.parse[Source].get
 
     assertEquals(tree.syntax, sourceString)
-    val expected =
-      Source(
-        List(
-          Defn.Def(
-            Nil,
-            tname("foo"),
-            Nil,
-            List(List(tparam("x", "Int"))),
-            Some(pname("Int")),
-            tname("x")
-          ),
-          Term.Apply(tname("foo"), List(tname("x")))
-        )
-      )
+    val expected = Source(List(
+      Defn
+        .Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
+      Term.Apply(tname("foo"), List(tname("x")))
+    ))
     assertTree(tree)(expected)
   }
 
@@ -41,25 +32,14 @@ class ToplevelTermSuite extends TreeSuiteBase {
     val tree = sourceString.parse[Source].get
 
     assertEquals(tree.syntax, sourceString)
-    val expected =
-      Source(
-        List(
-          Pkg(
-            tname("bar"),
-            List(
-              Defn.Def(
-                Nil,
-                tname("foo"),
-                Nil,
-                List(List(tparam("x", "Int"))),
-                Some(pname("Int")),
-                tname("x")
-              ),
-              Term.Apply(tname("foo"), List(tname("x")))
-            )
-          )
-        )
+    val expected = Source(List(Pkg(
+      tname("bar"),
+      List(
+        Defn
+          .Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
+        Term.Apply(tname("foo"), List(tname("x")))
       )
+    )))
     assertTree(tree)(expected)
   }
 
@@ -71,19 +51,11 @@ class ToplevelTermSuite extends TreeSuiteBase {
     val tree = sourceString.parse[Source].get
 
     assertEquals(tree.syntax, sourceString)
-    val expected = Source(
-      List(
-        Defn.Def(
-          Nil,
-          tname("foo"),
-          Nil,
-          List(List(tparam("x", "Int"))),
-          Some(pname("Int")),
-          tname("x")
-        ),
-        Term.Apply(tname("foo"), List(tname("x")))
-      )
-    )
+    val expected = Source(List(
+      Defn
+        .Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
+      Term.Apply(tname("foo"), List(tname("x")))
+    ))
     assertTree(tree)(expected)
   }
 

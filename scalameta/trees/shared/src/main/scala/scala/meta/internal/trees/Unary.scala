@@ -23,8 +23,7 @@ private[meta] object Unary {
   }
 
   object Numeric {
-    def unapply(token: Token.Ident): Option[Numeric] =
-      numericOpMap.get(token.text)
+    def unapply(token: Token.Ident): Option[Numeric] = numericOpMap.get(token.text)
   }
 
   sealed trait Logical extends Unary {

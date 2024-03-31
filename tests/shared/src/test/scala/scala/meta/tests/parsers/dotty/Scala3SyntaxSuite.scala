@@ -6,9 +6,7 @@ class Scala3SyntaxSuite extends BaseDottySuite {
 
   test("given intOrd: Ord[Int] with \n{ def f(): Int = 1 }") {
     assertEquals(
-      templStat(
-        "given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
-      ).syntax,
+      templStat("given intOrd: Ord[Int] with \n{ def f(): Int = 1 }").syntax,
       "given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
     )
 
@@ -22,9 +20,7 @@ class Scala3SyntaxSuite extends BaseDottySuite {
 
   test("private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }") {
     assertEquals(
-      templStat(
-        "private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
-      ).syntax,
+      templStat("private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }").syntax,
       "private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
     )
 
@@ -65,33 +61,15 @@ class Scala3SyntaxSuite extends BaseDottySuite {
   }
 
   test("given intOrd: Ord[Int]") {
-    assertEquals(
-      templStat("given intOrd: Ord[Int]").syntax,
-      "given intOrd: Ord[Int]"
-    )
+    assertEquals(templStat("given intOrd: Ord[Int]").syntax, "given intOrd: Ord[Int]")
   }
 
   test("backticked-keywords") {
-    assertEquals(
-      tname("enum").syntax,
-      "`enum`"
-    )
-    assertEquals(
-      tname("given").syntax,
-      "`given`"
-    )
-    assertEquals(
-      tname("export").syntax,
-      "`export`"
-    )
-    assertEquals(
-      tname("then").syntax,
-      "`then`"
-    )
-    assertEquals(
-      tname("?=>").syntax,
-      "`?=>`"
-    )
+    assertEquals(tname("enum").syntax, "`enum`")
+    assertEquals(tname("given").syntax, "`given`")
+    assertEquals(tname("export").syntax, "`export`")
+    assertEquals(tname("then").syntax, "`then`")
+    assertEquals(tname("?=>").syntax, "`?=>`")
   }
 
 }

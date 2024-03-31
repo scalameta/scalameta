@@ -10,8 +10,7 @@ class SemanticdbPlugin(val global: Global) extends Plugin with SemanticdbPipelin
   val description = SemanticdbPlugin.description
 
   val components = {
-    if (isSupportedCompiler) List(SemanticdbTyperComponent, SemanticdbJvmComponent)
-    else Nil
+    if (isSupportedCompiler) List(SemanticdbTyperComponent, SemanticdbJvmComponent) else Nil
   }
 
   override def init(options: List[String], errFn: String => Unit): Boolean = {
@@ -25,19 +24,14 @@ class SemanticdbPlugin(val global: Global) extends Plugin with SemanticdbPipelin
     true
   }
 
-  def isAmmonite: Boolean = {
-    global.getClass.getName.startsWith("ammonite")
-  }
+  def isAmmonite: Boolean = { global.getClass.getName.startsWith("ammonite") }
 
   private def outputDirectory: AbsolutePath = {
-    if (isAmmonite) {
-      PathIO.workingDirectory.resolve("out/semanticdb-scalac")
-    } else {
+    if (isAmmonite) { PathIO.workingDirectory.resolve("out/semanticdb-scalac") }
+    else {
       AbsolutePath(
-        global.settings.outputDirs.getSingleOutput
-          .flatMap(so => Option(so.file))
-          .map(_.getAbsolutePath)
-          .getOrElse(global.settings.d.value)
+        global.settings.outputDirs.getSingleOutput.flatMap(so => Option(so.file))
+          .map(_.getAbsolutePath).getOrElse(global.settings.d.value)
       )
     }
   }

@@ -15,7 +15,8 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
 import scala.meta.tests.SkipWindows
 
-abstract class SemanticdbSuite extends FunSuite { self =>
+abstract class SemanticdbSuite extends FunSuite {
+  self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
@@ -25,15 +26,14 @@ abstract class SemanticdbSuite extends FunSuite { self =>
   def yMacroAnnotations: String = {
     if (isScala213) "-Ymacro-annotations"
     else {
-      val paradiseJar =
-        sys.props("sbt.paths.tests.test.options").split(" ").find(_.contains("paradise")).orNull
+      val paradiseJar = sys.props("sbt.paths.tests.test.options").split(" ")
+        .find(_.contains("paradise")).orNull
       if (paradiseJar == null) fail("Missing scalamacros/paradise from scalacOptions")
       paradiseJar + " -Xplugin-require:macro-paradise-plugin"
     }
   }
 
-  def isScala213: Boolean =
-    scala.util.Properties.versionNumberString.startsWith("2.13")
+  def isScala213: Boolean = scala.util.Properties.versionNumberString.startsWith("2.13")
 
   lazy val g: Global = {
     def fail(msg: String) = sys.error(s"SemanticdbSuite initialization failed: $msg")
@@ -42,8 +42,8 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     val pluginjar = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
     if (pluginjar == null) fail("pluginjar not set. broken build?")
     val warnUnusedImports = if (isScala213) "-Wunused:imports" else "-Ywarn-unused-import"
-    val options = s"-Yrangepos $warnUnusedImports -cp " + classpath +
-      " -Xplugin:" + pluginjar + " -Xplugin-require:semanticdb " + yMacroAnnotations
+    val options = s"-Yrangepos $warnUnusedImports -cp " + classpath + " -Xplugin:" + pluginjar +
+      " -Xplugin-require:semanticdb " + yMacroAnnotations
     val args = CommandLineParser.tokenize(options)
     val emptySettings = new Settings(error => fail(s"couldn't apply settings because $error"))
     val reporter = new StoreReporter()
@@ -57,11 +57,8 @@ abstract class SemanticdbSuite extends FunSuite { self =>
   }
   private lazy val databaseOps: SemanticdbOps { val global: self.g.type } = new SemanticdbOps {
     val global: self.g.type = self.g
-    config = config.copy(
-      failures = FailureMode.Error,
-      text = BinaryMode.On,
-      synthetics = BinaryMode.On
-    )
+    config = config
+      .copy(failures = FailureMode.Error, text = BinaryMode.On, synthetics = BinaryMode.On)
     config = customizeConfig(config)
   }
   def customizeConfig(config: SemanticdbConfig): SemanticdbConfig = config
@@ -75,9 +72,7 @@ abstract class SemanticdbSuite extends FunSuite { self =>
           |${error.pos.lineContent}
           |${error.pos.lineCaret}""".stripMargin
     }
-    if (errors.nonEmpty) {
-      fail(diagnostics.mkString("\n"))
-    }
+    if (errors.nonEmpty) { fail(diagnostics.mkString("\n")) }
   }
 
   private def computeDatabaseFromSnippet(code: String): s.TextDocument = {
@@ -101,9 +96,7 @@ abstract class SemanticdbSuite extends FunSuite { self =>
 
     val packageobjectsPhase = run.phaseNamed("packageobjects")
     val basePhases = List(run.parserPhase, run.namerPhase, packageobjectsPhase)
-    val phases =
-      if (unit.isJava) basePhases
-      else basePhases :+ run.typerPhase // can't run typer for Java units in 2.11
+    val phases = if (unit.isJava) basePhases else basePhases :+ run.typerPhase // can't run typer for Java units in 2.11
     reporter.reset()
 
     /* note(@tgodzik)
@@ -133,13 +126,11 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     section.mkString(EOL)
   }
 
-  def checkSection(code: String, expected: String, section: String)(
-      implicit loc: munit.Location
-  ): Unit = {
-    checkSection(code, code, expected, section)
-  }
-  def checkSection(name: TestOptions, code: String, expected: String, section: String)(
-      implicit loc: munit.Location
+  def checkSection(code: String, expected: String, section: String)(implicit
+      loc: munit.Location
+  ): Unit = { checkSection(code, code, expected, section) }
+  def checkSection(name: TestOptions, code: String, expected: String, section: String)(implicit
+      loc: munit.Location
   ): Unit = {
     test(name) {
       val obtained = computeDatabaseSectionFromSnippet(code, section)
@@ -151,9 +142,7 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     checkSection(code, expected, "Occurrences")
   }
 
-  def diagnostics(code: String, expected: String)(
-      implicit loc: munit.Location
-  ): Unit = {
+  def diagnostics(code: String, expected: String)(implicit loc: munit.Location): Unit = {
     throw new UnsupportedOperationException(
       "SemanticdbSuite is not able to test against diagnostics. Use ExpectSuite instead."
     )
@@ -208,8 +197,8 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     }
   }
 
-  def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(
-      implicit hack: OverloadHack2
+  def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(implicit
+      hack: OverloadHack2
   ): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
@@ -220,8 +209,8 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     }
   }
 
-  def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(
-      implicit hack: OverloadHack3
+  def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(implicit
+      hack: OverloadHack3
   ): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
@@ -232,8 +221,8 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     }
   }
 
-  def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(
-      implicit hack: OverloadHack4
+  def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(implicit
+      hack: OverloadHack4
   ): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
@@ -256,10 +245,9 @@ abstract class SemanticdbSuite extends FunSuite { self =>
     }
   }
 
-  def targeted(
-      markup: String,
-      fn: (s.TextDocument, String, String, String, String, String) => Unit
-  )(implicit hack: OverloadHack5): Unit = {
+  def targeted(markup: String, fn: (s.TextDocument, String, String, String, String, String) => Unit)(
+      implicit hack: OverloadHack5
+  ): Unit = {
     test(markup) {
       val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
       occurrences match {

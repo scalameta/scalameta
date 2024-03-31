@@ -12,13 +12,12 @@ class TreeOpsSuite extends FunSuite {
     var obtained = List.empty[String]
     a.foreach(x => obtained = x.structure :: obtained)
     assert(
-      obtained ==
-        List(
-          "Lit.Int(2)",
-          "Term.Name(\"x\")",
-          "Pat.Var(Term.Name(\"x\"))",
-          "Defn.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), None, Lit.Int(2))"
-        )
+      obtained == List(
+        "Lit.Int(2)",
+        "Term.Name(\"x\")",
+        "Pat.Var(Term.Name(\"x\"))",
+        "Defn.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), None, Lit.Int(2))"
+      )
     )
   }
 

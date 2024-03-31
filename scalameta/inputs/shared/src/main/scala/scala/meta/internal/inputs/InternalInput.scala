@@ -10,8 +10,8 @@ import scala.meta.internal.tokenizers.Compat
 trait InternalInput {
   self: Input =>
 
-  private[meta] lazy val tokenCache: mutable.Map[Dialect, Tokens] =
-    Compat.newMutableMap[Dialect, Tokens]
+  private[meta] lazy val tokenCache: mutable.Map[Dialect, Tokens] = Compat
+    .newMutableMap[Dialect, Tokens]
 
   private val newLine = Set('\n', '\r')
 
@@ -26,8 +26,7 @@ trait InternalInput {
     var lastIsCR = false
     while (i < chars.length) {
       // we consider all `\n`, `\r\n` and `\r` as new line
-      if (chars(i) == '\n') buf += (i + 1)
-      else if (lastIsCR) buf += i
+      if (chars(i) == '\n') buf += (i + 1) else if (lastIsCR) buf += i
       lastIsCR = chars(i) == '\r'
       i += 1
     }

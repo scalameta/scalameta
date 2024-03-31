@@ -9,17 +9,23 @@ import scala.meta.inputs._
 import scala.meta.prettyprinters._
 import Show.{sequence => s, repeat => r}
 
-@root trait PositionStyle
+@root
+trait PositionStyle
 object PositionStyle {
-  @leaf object BlackAndWhite extends PositionStyle
-  @leaf object Colorful extends PositionStyle
+  @leaf
+  object BlackAndWhite extends PositionStyle
+  @leaf
+  object Colorful extends PositionStyle
   implicit val default: PositionStyle = BlackAndWhite
 }
 
-@root trait SliceStyle
+@root
+trait SliceStyle
 object SliceStyle {
-  @leaf object Hide extends SliceStyle
-  @leaf object Show extends SliceStyle
+  @leaf
+  object Hide extends SliceStyle
+  @leaf
+  object Show extends SliceStyle
   implicit val default: SliceStyle = Hide
 }
 
@@ -30,8 +36,8 @@ object Positions {
     def apply(input: T) = f(input)
   }
 
-  implicit def positionsTree[T <: Tree: Syntax](
-      implicit positionStyle: PositionStyle,
+  implicit def positionsTree[T <: Tree: Syntax](implicit
+      positionStyle: PositionStyle,
       sliceStyle: SliceStyle
   ): Positions[T] = Positions { x =>
     def loopTree(x: Tree): Show.Result = {
@@ -46,8 +52,7 @@ object Positions {
         case el: Tree => loopTree(el)
         case el: Nil.type => s("Nil".colored(color))
         case el @ List(List()) => s("List(List())".colored(color))
-        case el: ::[_] =>
-          s(
+        case el: ::[_] => s(
             "List(".colored(color),
             r(el.map(el => loopField(el, color)), ", ".colored(color)),
             ")".colored(color)
@@ -57,12 +62,9 @@ object Positions {
         case el => s(el.toString.colored(color))
       }
       def pos(x: Tree): String = {
-        if (x.pos != Position.None) s"{${x.pos.start}..${x.pos.end}}".sliced(x.toString)
-        else ""
+        if (x.pos != Position.None) s"{${x.pos.start}..${x.pos.end}}".sliced(x.toString) else ""
       }
-      def color(x: Tree): String = {
-        if (x.pos != Position.None) GREEN else RED
-      }
+      def color(x: Tree): String = { if (x.pos != Position.None) GREEN else RED }
       val prefix = (x.productPrefix + pos(x) + "(").colored(color(x))
       val fields =
         r(x.productIterator.toList.map(el => loopField(el, color(x))), ", ".colored(color(x)))

@@ -14,8 +14,7 @@ object JSFacade {
   private[this] def mergeJSObjects(objs: js.Dynamic*): js.Dynamic = {
     val result = js.Dictionary.empty[Any]
     for (source <- objs) {
-      for ((key, value) <- source.asInstanceOf[js.Dictionary[Any]])
-        result(key) = value
+      for ((key, value) <- source.asInstanceOf[js.Dictionary[Any]]) result(key) = value
     }
     result.asInstanceOf[js.Dynamic]
   }
@@ -25,8 +24,7 @@ object JSFacade {
   private[this] sealed trait JSLong extends js.Any
   private[this] implicit class LongJSOps(val x: Long) extends AnyVal {
     def toJSLong: JSLong = {
-      if (x >= 0) (x & ((1L << 53) - 1)).toDouble
-      else -((-x) & ((1L << 53) - 1)).toDouble
+      if (x >= 0) (x & ((1L << 53) - 1)).toDouble else -((-x) & ((1L << 53) - 1)).toDouble
     }.asInstanceOf[JSLong]
   }
 
@@ -37,26 +35,17 @@ object JSFacade {
     case _ => ()
   }
 
-  private[this] def toPosition(p: Position): js.Dynamic =
-    js.Dynamic.literal(
-      "start" -> p.start,
-      "end" -> p.end
-    )
+  private[this] def toPosition(p: Position): js.Dynamic = js.Dynamic
+    .literal("start" -> p.start, "end" -> p.end)
 
   private[this] def toNode(t: Tree): js.Dynamic = {
-    val base = js.Dynamic.literal(
-      "type" -> t.productPrefix,
-      "pos" -> toPosition(t.pos)
-    )
+    val base = js.Dynamic.literal("type" -> t.productPrefix, "pos" -> toPosition(t.pos))
 
-    val fields = js
-      .Dictionary(t.productFields.zip(t.productIterator.toList).collect { case (name, value) =>
-        name -> toNode(value)
-      }: _*)
-      .asInstanceOf[js.Dynamic]
+    val fields = js.Dictionary(t.productFields.zip(t.productIterator.toList).collect {
+      case (name, value) => name -> toNode(value)
+    }: _*).asInstanceOf[js.Dynamic]
 
-    def v[A](a: A): js.Dynamic =
-      js.Dynamic.literal("value" -> a.asInstanceOf[js.Any])
+    def v[A](a: A): js.Dynamic = js.Dynamic.literal("value" -> a.asInstanceOf[js.Any])
 
     val value = t match {
       case Lit.Char(value) => v(value.toString)
@@ -80,8 +69,7 @@ object JSFacade {
 
   private[this] def extractDialect(s: Settings): Either[String, Dialect] = {
     s.toOption.flatMap(_.get("dialect")) match {
-      case Some(dialectStr) =>
-        Dialect.standards.get(dialectStr) match {
+      case Some(dialectStr) => Dialect.standards.get(dialectStr) match {
           case Some(dialect) => Right(dialect)
           case None => Left(s"'$dialectStr' is not a valid dialect.")
         }
@@ -89,17 +77,12 @@ object JSFacade {
     }
   }
 
-  private[this] def parse[A <: Tree: Parse](
-      code: String,
-      settings: Settings
-  ): js.Dictionary[Any] =
+  private[this] def parse[A <: Tree: Parse](code: String, settings: Settings): js.Dictionary[Any] =
     extractDialect(settings) match {
       case Left(error) => js.Dictionary("error" -> error)
-      case Right(dialect) =>
-        dialect(code).parse[A] match {
+      case Right(dialect) => dialect(code).parse[A] match {
           case x: Parsed.Success[_] => toNode(x.tree).asInstanceOf[js.Dictionary[Any]]
-          case x: Parsed.Error =>
-            js.Dictionary(
+          case x: Parsed.Error => js.Dictionary(
               "error" -> x.message,
               "pos" -> toPosition(x.pos),
               "lineNumber" -> x.pos.startLine,
@@ -109,25 +92,16 @@ object JSFacade {
     }
 
   @JSExportTopLevel("parseSource")
-  def parseSource(
-      code: String
-  ): js.Dictionary[Any] = parse[Source](code, defaultSettings)
+  def parseSource(code: String): js.Dictionary[Any] = parse[Source](code, defaultSettings)
 
   @JSExportTopLevel("parseSource")
-  def parseSource(
-      code: String,
-      settings: Settings
-  ): js.Dictionary[Any] = parse[Source](code, settings)
+  def parseSource(code: String, settings: Settings): js.Dictionary[Any] =
+    parse[Source](code, settings)
 
   @JSExportTopLevel("parseStat")
-  def parseStat(
-      code: String
-  ): js.Dictionary[Any] = parse[Stat](code, defaultSettings)
+  def parseStat(code: String): js.Dictionary[Any] = parse[Stat](code, defaultSettings)
 
   @JSExportTopLevel("parseStat")
-  def parseStat(
-      code: String,
-      settings: Settings
-  ): js.Dictionary[Any] = parse[Stat](code, settings)
+  def parseStat(code: String, settings: Settings): js.Dictionary[Any] = parse[Stat](code, settings)
 
 }

@@ -45,13 +45,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  fb2
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code)(
-      Term.If(
-        tname("cond"),
-        Term.Block(List(tname("fa1"), tname("fa2"))),
-        Term.Block(List(tname("fb1"), tname("fb2")))
-      )
-    )
+    runTestAssert[Stat](code)(Term.If(
+      tname("cond"),
+      Term.Block(List(tname("fa1"), tname("fa2"))),
+      Term.Block(List(tname("fb1"), tname("fb2")))
+    ))
   }
 
   test("new-if-else-single1") {
@@ -72,11 +70,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = "if (cond) fx else gx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        tname("cond"),
-        tname("fx"),
-        tname("gx")
-      )
+      Term.If(tname("cond"), tname("fx"), tname("gx"))
     )
   }
 
@@ -87,31 +81,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  gx
                   |""".stripMargin
     val output = "if (cond1 && cond2) gx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        Term.ApplyInfix(tname("cond1"), tname("&&"), Nil, List(tname("cond2"))),
-        tname("gx"),
-        Lit.Unit()
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
+      Term.ApplyInfix(tname("cond1"), tname("&&"), Nil, List(tname("cond2"))),
+      tname("gx"),
+      Lit.Unit()
+    ))
   }
 
   test("new-if-single2") {
     val code = """|if (cond1) || cond2(a1) then ok
                   |""".stripMargin
     val output = "if (cond1 || cond2(a1)) ok"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        Term.ApplyInfix(
-          tname("cond1"),
-          tname("||"),
-          Nil,
-          List(Term.Apply(tname("cond2"), List(tname("a1"))))
-        ),
-        tname("ok"),
-        Lit.Unit()
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
+      Term.ApplyInfix(
+        tname("cond1"),
+        tname("||"),
+        Nil,
+        List(Term.Apply(tname("cond2"), List(tname("a1"))))
+      ),
+      tname("ok"),
+      Lit.Unit()
+    ))
   }
 
   test("new-if-single3") {
@@ -123,43 +113,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-if-expr-without-then") {
-    val code =
-      """|{
-         |  if (x > 0) && (y > 0)
-         |    x += 1
-         |}
-         |""".stripMargin
-    val layout =
-      """|{
-         |  if (x > 0) &&(y > 0)
-         |  x += 1
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, Some(layout))(
-      Term.Block(
-        List(
-          Term.If(
-            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
-            Term.Apply(
-              tname("&&"),
-              List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
-            ),
-            Lit.Unit(),
-            Nil
-          ),
-          Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
-        )
-      )
-    )
+    val code = """|{
+                  |  if (x > 0) && (y > 0)
+                  |    x += 1
+                  |}
+                  |""".stripMargin
+    val layout = """|{
+                    |  if (x > 0) &&(y > 0)
+                    |  x += 1
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(Term.Block(List(
+      Term.If(
+        Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+        Term.Apply(tname("&&"), List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))),
+        Lit.Unit(),
+        Nil
+      ),
+      Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+    )))
   }
 
   test("new-if-expr-without-then-2") {
-    val code =
-      """|{
-         |  if (x > 0) && y > 0
-         |    x += 1
-         |}
-         |""".stripMargin
+    val code = """|{
+                  |  if (x > 0) && y > 0
+                  |    x += 1
+                  |}
+                  |""".stripMargin
     runTestError[Stat](
       code,
       """|error: `;` expected but `integer constant` found
@@ -184,13 +164,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  gx2
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        tname("cond"),
-        Term.Block(List(tname("fx1"), tname("fx2"))),
-        Term.Block(List(tname("gx1"), tname("gx2")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
+      tname("cond"),
+      Term.Block(List(tname("fx1"), tname("fx2"))),
+      Term.Block(List(tname("gx1"), tname("gx2")))
+    ))
   }
 
   test("if-else-in-parens-1") {
@@ -202,12 +180,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = "fx(if (cond) A else B)"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Apply(
-        tname("fx"),
-        List(
-          Term.If(tname("cond"), tname("A"), tname("B"))
-        )
-      )
+      Term.Apply(tname("fx"), List(Term.If(tname("cond"), tname("A"), tname("B"))))
     )
   }
 
@@ -228,18 +201,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  B2
                     |})
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Apply(
-        tname("fx"),
-        List(
-          Term.If(
-            tname("cond"),
-            Term.Block(List(tname("A1"), tname("A2"))),
-            Term.Block(List(tname("B1"), tname("B2")))
-          )
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Apply(
+      tname("fx"),
+      List(Term.If(
+        tname("cond"),
+        Term.Block(List(tname("A1"), tname("A2"))),
+        Term.Block(List(tname("B1"), tname("B2")))
+      ))
+    ))
   }
 
   test("new-if-indented") {
@@ -253,11 +222,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        tname("cond"),
-        Term.Block(List(tname("fx1"), tname("fx2"))),
-        Lit.Unit()
-      )
+      Term.If(tname("cond"), Term.Block(List(tname("fx1"), tname("fx2"))), Lit.Unit())
     )
   }
 
@@ -290,19 +255,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  B2
                     |}, secondArg)
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Apply(
-        tname("fx"),
-        List(
-          Term.If(
-            tname("cond"),
-            Term.Block(List(tname("A1"), tname("A2"))),
-            Term.Block(List(tname("B1"), tname("B2")))
-          ),
-          tname("secondArg")
-        )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Apply(
+      tname("fx"),
+      List(
+        Term.If(
+          tname("cond"),
+          Term.Block(List(tname("A1"), tname("A2"))),
+          Term.Block(List(tname("B1"), tname("B2")))
+        ),
+        tname("secondArg")
       )
-    )
+    ))
   }
 
   // --------------------------
@@ -342,11 +305,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = "try fx finally ok"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        tname("fx"),
-        Nil,
-        Some(tname("ok"))
-      )
+      Term.Try(tname("fx"), Nil, Some(tname("ok")))
     )
   }
 
@@ -366,13 +325,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  ok2
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        Term.Block(List(tname("fx"), tname("fy"))),
-        Nil,
-        Some(Term.Block(List(tname("ok1"), tname("ok2"))))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      Term.Block(List(tname("fx"), tname("fy"))),
+      Nil,
+      Some(Term.Block(List(tname("ok1"), tname("ok2"))))
+    ))
   }
 
   test("old-try-catch-single") {
@@ -399,16 +356,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  case y => 2
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        tname("fx"),
-        List(
-          Case(Pat.Var(tname("x")), None, int(1)),
-          Case(Pat.Var(tname("y")), None, int(2))
-        ),
-        None
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      tname("fx"),
+      List(Case(Pat.Var(tname("x")), None, int(1)), Case(Pat.Var(tname("y")), None, int(2))),
+      None
+    ))
   }
 
   test("new-try-catch-multi") {
@@ -424,13 +376,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  case x => ct
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        Term.Block(List(tname("fx"), tname("fy"))),
-        List(Case(Pat.Var(tname("x")), None, tname("ct"))),
-        None
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      Term.Block(List(tname("fx"), tname("fy"))),
+      List(Case(Pat.Var(tname("x")), None, tname("ct"))),
+      None
+    ))
   }
 
   test("new-catch-single1") {
@@ -459,15 +409,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |    fb
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        tname("fx"),
-        List(
-          Case(Pat.Var(tname("x")), None, Term.Block(List(tname("fa"), tname("fb"))))
-        ),
-        None
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      tname("fx"),
+      List(Case(Pat.Var(tname("x")), None, Term.Block(List(tname("fa"), tname("fb"))))),
+      None
+    ))
   }
 
   test("new-catch-multi") {
@@ -491,17 +437,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |    zb
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        tname("fx"),
-        List(
-          Case(Pat.Var(tname("x")), None, Term.Block(List(tname("xa"), tname("xb")))),
-          Case(Pat.Var(tname("y")), None, tname("yab")),
-          Case(Pat.Var(tname("z")), None, Term.Block(List(tname("za"), tname("zb"))))
-        ),
-        None
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      tname("fx"),
+      List(
+        Case(Pat.Var(tname("x")), None, Term.Block(List(tname("xa"), tname("xb")))),
+        Case(Pat.Var(tname("y")), None, tname("yab")),
+        Case(Pat.Var(tname("z")), None, Term.Block(List(tname("za"), tname("zb"))))
+      ),
+      None
+    ))
   }
 
   test("new-catch-handler-nl") {
@@ -544,15 +488,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |    bx
                     |} finally fx
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        tname("fx"),
-        List(
-          Case(Pat.Var(tname("x")), None, Term.Block(List(tname("ax"), tname("bx"))))
-        ),
-        Some(tname("fx"))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      tname("fx"),
+      List(Case(Pat.Var(tname("x")), None, Term.Block(List(tname("ax"), tname("bx"))))),
+      Some(tname("fx"))
+    ))
   }
 
   test("new-catch-inside-catch") {
@@ -575,34 +515,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  } finally fxclose
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Block(
-        List(
-          Term.Try(
-            tname("fx"),
-            List(
-              Case(
-                Pat.Var(tname("x")),
-                None,
-                Term.Try(
-                  tname("fy"),
-                  List(Case(Pat.Var(tname("y")), None, Term.Throw(tname("ex")))),
-                  None
-                )
-              )
-            ),
-            Some(tname("fxclose"))
-          )
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Block(List(Term.Try(
+      tname("fx"),
+      List(Case(
+        Pat.Var(tname("x")),
+        None,
+        Term.Try(tname("fy"), List(Case(Pat.Var(tname("y")), None, Term.Throw(tname("ex")))), None)
+      )),
+      Some(tname("fxclose"))
+    ))))
   }
 
   test("#3532 nested try-finally on same line") {
-    val code =
-      """|try try Right(f()) finally iter.close()
-         |finally arena.close()
-         |""".stripMargin
+    val code = """|try try Right(f()) finally iter.close()
+                  |finally arena.close()
+                  |""".stripMargin
     val layout = "try try Right(f()) finally iter.close() finally arena.close()"
     val tree = Term.Try(
       Term.Try(
@@ -617,12 +544,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally without catch") {
-    val code =
-      """|try
-         |  try Right(f())
-         |  finally iter.close()
-         |finally arena.close()
-         |""".stripMargin
+    val code = """|try
+                  |  try Right(f())
+                  |  finally iter.close()
+                  |finally arena.close()
+                  |""".stripMargin
     val layout = "try try Right(f()) finally iter.close() finally arena.close()"
     val tree = Term.Try(
       Term.Try(
@@ -637,19 +563,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, oneline catch") {
-    val code =
-      """|try
-         |  try Right(f())
-         |  catch case NonFatal(ex) => Left(???)
-         |  finally iter.close()
-         |finally arena.close()
-         |""".stripMargin
-    val layout =
-      """|try try Right(f()) catch {
-         |  case NonFatal(ex) =>
-         |    Left(???)
-         |} finally iter.close() finally arena.close()
-         |""".stripMargin
+    val code = """|try
+                  |  try Right(f())
+                  |  catch case NonFatal(ex) => Left(???)
+                  |  finally iter.close()
+                  |finally arena.close()
+                  |""".stripMargin
+    val layout = """|try try Right(f()) catch {
+                    |  case NonFatal(ex) =>
+                    |    Left(???)
+                    |} finally iter.close() finally arena.close()
+                    |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
@@ -667,20 +591,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, catch with non-indented case") {
-    val code =
-      """|try
-         |  try Right(f())
-         |  catch
-         |  case NonFatal(ex) => Left(???)
-         |  finally iter.close()
-         |finally arena.close()
-         |""".stripMargin
-    val layout =
-      """|try try Right(f()) catch {
-         |  case NonFatal(ex) =>
-         |    Left(???)
-         |} finally iter.close() finally arena.close()
-         |""".stripMargin
+    val code = """|try
+                  |  try Right(f())
+                  |  catch
+                  |  case NonFatal(ex) => Left(???)
+                  |  finally iter.close()
+                  |finally arena.close()
+                  |""".stripMargin
+    val layout = """|try try Right(f()) catch {
+                    |  case NonFatal(ex) =>
+                    |    Left(???)
+                    |} finally iter.close() finally arena.close()
+                    |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
@@ -698,20 +620,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, catch with indented case") {
-    val code =
-      """|try
-         |  try Right(f())
-         |  catch
-         |    case NonFatal(ex) => Left(???)
-         |  finally iter.close()
-         |finally arena.close()
-         |""".stripMargin
-    val layout =
-      """|try try Right(f()) catch {
-         |  case NonFatal(ex) =>
-         |    Left(???)
-         |} finally iter.close() finally arena.close()
-         |""".stripMargin
+    val code = """|try
+                  |  try Right(f())
+                  |  catch
+                  |    case NonFatal(ex) => Left(???)
+                  |  finally iter.close()
+                  |finally arena.close()
+                  |""".stripMargin
+    val layout = """|try try Right(f()) catch {
+                    |  case NonFatal(ex) =>
+                    |    Left(???)
+                    |} finally iter.close() finally arena.close()
+                    |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
@@ -729,21 +649,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try, inner with catch, outer with finally") {
-    val code =
-      """|try
-         |  try Right(f())
-         |  catch
-         |    case NonFatal(ex) => Left(???)
-         |finally arena.close()
-         |""".stripMargin
-    val layout =
-      """|try (
-         |  try Right(f()) catch {
-         |    case NonFatal(ex) =>
-         |      Left(???)
-         |  }
-         |) finally arena.close()
-         |""".stripMargin
+    val code = """|try
+                  |  try Right(f())
+                  |  catch
+                  |    case NonFatal(ex) => Left(???)
+                  |finally arena.close()
+                  |""".stripMargin
+    val layout = """|try (
+                    |  try Right(f()) catch {
+                    |    case NonFatal(ex) =>
+                    |      Left(???)
+                    |  }
+                    |) finally arena.close()
+                    |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         Term.Apply(tname("Right"), List(Term.Apply(tname("f"), Nil))),
@@ -761,18 +679,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 1") {
-    val code =
-      """|try
-         |  try { 1 + 2 }
-         |    + 3
-         |  finally iter.close()
-         |finally arena.close()
-         |""".stripMargin
-    val layout =
-      """|try try {
-         |  1 + 2
-         |} + 3 finally iter.close() finally arena.close()
-         |""".stripMargin
+    val code = """|try
+                  |  try { 1 + 2 }
+                  |    + 3
+                  |  finally iter.close()
+                  |finally arena.close()
+                  |""".stripMargin
+    val layout = """|try try {
+                    |  1 + 2
+                    |} + 3 finally iter.close() finally arena.close()
+                    |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         Term.ApplyInfix(
@@ -791,18 +707,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 2") {
-    val code =
-      """|try
-         |  try { 1 + 2 }
-         |    .foo
-         |  finally iter.close()
-         |finally arena.close()
-         |""".stripMargin
-    val layout =
-      """|try try {
-         |  1 + 2
-         |}.foo finally iter.close() finally arena.close()
-         |""".stripMargin
+    val code = """|try
+                  |  try { 1 + 2 }
+                  |    .foo
+                  |  finally iter.close()
+                  |finally arena.close()
+                  |""".stripMargin
+    val layout = """|try try {
+                    |  1 + 2
+                    |}.foo finally iter.close() finally arena.close()
+                    |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         Term.Select(
@@ -819,32 +733,28 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 3") {
-    val code =
-      """|try
-         |  try { 1 + 2 }
-         |    (foo)
-         |  finally iter.close()
-         |finally arena.close()
-         |""".stripMargin
-    val error =
-      """|<input>:5: error: `;` expected but `finally` found
-         |finally arena.close()
-         |^""".stripMargin
+    val code = """|try
+                  |  try { 1 + 2 }
+                  |    (foo)
+                  |  finally iter.close()
+                  |finally arena.close()
+                  |""".stripMargin
+    val error = """|<input>:5: error: `;` expected but `finally` found
+                   |finally arena.close()
+                   |^""".stripMargin
     runTestError[Stat](code, error)
   }
 
   test("#3532 nested bare try, outer without catch") {
-    val code =
-      """|try
-         |  try 1
-         |    + 2
-         |finally foo
-         |""".stripMargin
-    val layout =
-      """|try (
-         |  try 1 + 2
-         |) finally foo
-         |""".stripMargin
+    val code = """|try
+                  |  try 1
+                  |    + 2
+                  |finally foo
+                  |""".stripMargin
+    val layout = """|try (
+                    |  try 1 + 2
+                    |) finally foo
+                    |""".stripMargin
     val tree = Term.Try(
       Term.Try(Term.ApplyInfix(int(1), tname("+"), Nil, List(int(2))), Nil, None),
       Nil,
@@ -854,21 +764,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested bare try, outer with catch") {
-    val code =
-      """|try
-         |  try 1
-         |    + 2
-         |catch
-         |  case NonFatal(ex) => 3
-         |finally foo
-         |""".stripMargin
-    val layout =
-      """|try (
-         |  try 1 + 2
-         |) catch {
-         |  case NonFatal(ex) => 3
-         |} finally foo
-         |""".stripMargin
+    val code = """|try
+                  |  try 1
+                  |    + 2
+                  |catch
+                  |  case NonFatal(ex) => 3
+                  |finally foo
+                  |""".stripMargin
+    val layout = """|try (
+                    |  try 1 + 2
+                    |) catch {
+                    |  case NonFatal(ex) => 3
+                    |} finally foo
+                    |""".stripMargin
     val tree = Term.Try(
       Term.Try(Term.ApplyInfix(int(1), tname("+"), Nil, List(int(2))), Nil, None),
       List(Case(Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))), None, int(3))),
@@ -883,34 +791,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("old-for-single1") {
     val code = "for (i <- 1 to 3) work"
-    runTestAssert[Stat](code)(
-      Term.For(
-        List(
-          Enumerator.Generator(
-            Pat.Var(tname("i")),
-            Term.ApplyInfix(int(1), tname("to"), Nil, List(int(3)))
-          )
-        ),
-        tname("work")
-      )
-    )
+    runTestAssert[Stat](code)(Term.For(
+      List(
+        Enumerator
+          .Generator(Pat.Var(tname("i")), Term.ApplyInfix(int(1), tname("to"), Nil, List(int(3))))
+      ),
+      tname("work")
+    ))
   }
 
   test("old-for-single2") {
     val code = "for (i <- 1 to 10 if i < 4) work"
     val output = "for (i <- 1 to 10; if i < 4) work"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator.Generator(
-            Pat.Var(tname("i")),
-            Term.ApplyInfix(int(1), tname("to"), Nil, List(int(10)))
-          ),
-          Enumerator.Guard(Term.ApplyInfix(tname("i"), tname("<"), Nil, List(int(4))))
-        ),
-        tname("work")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(
+        Enumerator
+          .Generator(Pat.Var(tname("i")), Term.ApplyInfix(int(1), tname("to"), Nil, List(int(10)))),
+        Enumerator.Guard(Term.ApplyInfix(tname("i"), tname("<"), Nil, List(int(4))))
+      ),
+      tname("work")
+    ))
   }
 
   test("old-for-multi") {
@@ -920,40 +820,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |} work
                   |""".stripMargin
     val output = "for (i <- gen; if i < 4) work"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator.Generator(Pat.Var(tname("i")), tname("gen")),
-          Enumerator.Guard(Term.ApplyInfix(tname("i"), tname("<"), Nil, List(int(4))))
-        ),
-        tname("work")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(
+        Enumerator.Generator(Pat.Var(tname("i")), tname("gen")),
+        Enumerator.Guard(Term.ApplyInfix(tname("i"), tname("<"), Nil, List(int(4))))
+      ),
+      tname("work")
+    ))
   }
 
   test("old-for-yield-single1") {
     val code = "for (i <- 1 to 3) yield i"
-    runTestAssert[Stat](code)(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(
-            Pat.Var(tname("i")),
-            Term.ApplyInfix(int(1), tname("to"), Nil, List(int(3)))
-          )
-        ),
-        tname("i")
-      )
-    )
+    runTestAssert[Stat](code)(Term.ForYield(
+      List(
+        Enumerator
+          .Generator(Pat.Var(tname("i")), Term.ApplyInfix(int(1), tname("to"), Nil, List(int(3))))
+      ),
+      tname("i")
+    ))
   }
 
   test("old-for-yield-single2") {
     val code = "for { i <- gen } yield i"
     val output = "for (i <- gen) yield i"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(Enumerator.Generator(Pat.Var(tname("i")), tname("gen"))),
-        tname("i")
-      )
+      Term.ForYield(List(Enumerator.Generator(Pat.Var(tname("i")), tname("gen"))), tname("i"))
     )
   }
 
@@ -963,12 +854,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  a
                     |  b
                     |}""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(Enumerator.Generator(Pat.Var(tname("i")), tname("gen"))),
-        Term.Block(List(tname("a"), tname("b")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(Enumerator.Generator(Pat.Var(tname("i")), tname("gen"))),
+      Term.Block(List(tname("a"), tname("b")))
+    ))
   }
 
   test("old-for-yield-multi2") {
@@ -981,25 +870,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  aa
                     |  bb
                     |}""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("i")), tname("gen")),
-          Enumerator.Guard(Term.ApplyInfix(tname("i"), tname("<"), Nil, List(int(4))))
-        ),
-        Term.Block(List(tname("aa"), tname("bb")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("i")), tname("gen")),
+        Enumerator.Guard(Term.ApplyInfix(tname("i"), tname("<"), Nil, List(int(4))))
+      ),
+      Term.Block(List(tname("aa"), tname("bb")))
+    ))
   }
 
   test("new-fordo-single1") {
     val code = "for a <- gen do fx"
     val output = "for (a <- gen) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen"))),
-        tname("fx")
-      )
+      Term.For(List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen"))), tname("fx"))
     )
   }
 
@@ -1010,10 +894,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = "for (a <- gen) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen"))),
-        tname("fx")
-      )
+      Term.For(List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen"))), tname("fx"))
     )
   }
 
@@ -1022,15 +903,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |do fx
                   |""".stripMargin
     val output = "for (a <- gen; if cnd) fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("gen")),
-          Enumerator.Guard(tname("cnd"))
-        ),
-        tname("fx")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen")), Enumerator.Guard(tname("cnd"))),
+      tname("fx")
+    ))
   }
 
   test("new-fordo-single4") {
@@ -1040,10 +916,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = "for (a <- gen) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen"))),
-        tname("fx")
-      )
+      Term.For(List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen"))), tname("fx"))
     )
   }
 
@@ -1054,15 +927,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |do fx
                   |""".stripMargin
     val output = "for (a <- x; b <- y) fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
-          Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
-        ),
-        tname("fx")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
+      ),
+      tname("fx")
+    ))
   }
 
   test("new-fordo-multi2") {
@@ -1078,15 +949,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  fy
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
-          Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
-        ),
-        Term.Block(List(tname("fx"), tname("fy")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
+      ),
+      Term.Block(List(tname("fx"), tname("fy")))
+    ))
   }
 
   test("new-for-indented-without-do") {
@@ -1099,14 +968,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  fy
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x"))
-        ),
-        Term.Block(List(tname("fx"), tname("fy")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(Enumerator.Generator(Pat.Var(tname("a")), tname("x"))),
+      Term.Block(List(tname("fx"), tname("fy")))
+    ))
   }
 
   test("new-for-indented-without-do2") {
@@ -1119,14 +984,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  fy
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x"))
-        ),
-        Term.Block(List(tname("fx"), tname("fy")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(Enumerator.Generator(Pat.Var(tname("a")), tname("x"))),
+      Term.Block(List(tname("fx"), tname("fy")))
+    ))
   }
 
   test("new-for-yield-single1") {
@@ -1136,15 +997,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |yield fx
                   |""".stripMargin
     val output = "for (a <- x; b <- y) yield fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
-          Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
-        ),
-        tname("fx")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
+      ),
+      tname("fx")
+    ))
   }
 
   test("new-for-yield-single2") {
@@ -1152,15 +1011,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |yield fx
                   |""".stripMargin
     val output = "for (a <- gen; if cnd) yield fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("gen")),
-          Enumerator.Guard(tname("cnd"))
-        ),
-        tname("fx")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen")), Enumerator.Guard(tname("cnd"))),
+      tname("fx")
+    ))
   }
 
   test("new-for-yield-single3") {
@@ -1169,15 +1023,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  fx
                   |""".stripMargin
     val output = "for (a <- gen; if cnd) yield fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("gen")),
-          Enumerator.Guard(tname("cnd"))
-        ),
-        tname("fx")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen")), Enumerator.Guard(tname("cnd"))),
+      tname("fx")
+    ))
   }
 
   test("new-for-yield-multi") {
@@ -1193,15 +1042,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  fy
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
-          Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
-        ),
-        Term.Block(List(tname("fx"), tname("fy")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
+      ),
+      Term.Block(List(tname("fx"), tname("fy")))
+    ))
   }
 
   test("new-for-case1") {
@@ -1210,15 +1057,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = """|for ( case a: TP <- iter) echo
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator
-            .CaseGenerator(Pat.Typed(Pat.Var(tname("a")), pname("TP")), tname("iter"))
-        ),
-        tname("echo")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(Enumerator.CaseGenerator(Pat.Typed(Pat.Var(tname("a")), pname("TP")), tname("iter"))),
+      tname("echo")
+    ))
   }
 
   test("new-for-case2") {
@@ -1227,16 +1069,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = """|for ( case a: TP <- iter; if cnd) echo
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator
-            .CaseGenerator(Pat.Typed(Pat.Var(tname("a")), pname("TP")), tname("iter")),
-          Enumerator.Guard(tname("cnd"))
-        ),
-        tname("echo")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(
+        Enumerator.CaseGenerator(Pat.Typed(Pat.Var(tname("a")), pname("TP")), tname("iter")),
+        Enumerator.Guard(tname("cnd"))
+      ),
+      tname("echo")
+    ))
   }
 
   test("new-for-case3") {
@@ -1248,21 +1087,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |do fn
                   |""".stripMargin
     val output = "for (x <- gen;  case a1: TP <- iter1; if cnd;  case a2: TP <- iter2) fn"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(
-          Enumerator.Generator(Pat.Var(tname("x")), tname("gen")),
-          Enumerator.CaseGenerator(
-            Pat.Typed(Pat.Var(tname("a1")), pname("TP")),
-            tname("iter1")
-          ),
-          Enumerator.Guard(tname("cnd")),
-          Enumerator
-            .CaseGenerator(Pat.Typed(Pat.Var(tname("a2")), pname("TP")), tname("iter2"))
-        ),
-        tname("fn")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
+      List(
+        Enumerator.Generator(Pat.Var(tname("x")), tname("gen")),
+        Enumerator.CaseGenerator(Pat.Typed(Pat.Var(tname("a1")), pname("TP")), tname("iter1")),
+        Enumerator.Guard(tname("cnd")),
+        Enumerator.CaseGenerator(Pat.Typed(Pat.Var(tname("a2")), pname("TP")), tname("iter2"))
+      ),
+      tname("fn")
+    ))
   }
 
   test("for-new") {
@@ -1272,18 +1105,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |yield work
                   |""".stripMargin
     val output = "for (i <- gen; x = 3; if cnd1 && cnd2) yield work"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("i")), tname("gen")),
-          Enumerator.Val(Pat.Var(tname("x")), int(3)),
-          Enumerator.Guard(
-            Term.ApplyInfix(tname("cnd1"), tname("&&"), Nil, List(tname("cnd2")))
-          )
-        ),
-        tname("work")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("i")), tname("gen")),
+        Enumerator.Val(Pat.Var(tname("x")), int(3)),
+        Enumerator.Guard(Term.ApplyInfix(tname("cnd1"), tname("&&"), Nil, List(tname("cnd2"))))
+      ),
+      tname("work")
+    ))
   }
 
   test("multiline-for") {
@@ -1293,19 +1122,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |yield c
                   |""".stripMargin
     val output = "for ((a, b) <- gen; if a < 5; c <- otherGen) yield c"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(
-            Pat.Tuple(List(Pat.Var(tname("a")), Pat.Var(tname("b")))),
-            tname("gen")
-          ),
-          Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("<"), Nil, List(int(5)))),
-          Enumerator.Generator(Pat.Var(tname("c")), tname("otherGen"))
-        ),
-        tname("c")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(
+        Enumerator
+          .Generator(Pat.Tuple(List(Pat.Var(tname("a")), Pat.Var(tname("b")))), tname("gen")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("<"), Nil, List(int(5)))),
+        Enumerator.Generator(Pat.Var(tname("c")), tname("otherGen"))
+      ),
+      tname("c")
+    ))
   }
 
   test("oneline-for") {
@@ -1314,17 +1139,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = """|for ((arg, param) <- args.zip(vparams)) yield arg
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(
-            Pat.Tuple(List(Pat.Var(tname("arg")), Pat.Var(tname("param")))),
-            Term.Apply(Term.Select(tname("args"), tname("zip")), List(tname("vparams")))
-          )
-        ),
-        tname("arg")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(Enumerator.Generator(
+        Pat.Tuple(List(Pat.Var(tname("arg")), Pat.Var(tname("param")))),
+        Term.Apply(Term.Select(tname("args"), tname("zip")), List(tname("vparams")))
+      )),
+      tname("arg")
+    ))
   }
 
   // --------------------------
@@ -1333,9 +1154,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("old-while-single") {
     val code = "while (cond) fx"
-    runTestAssert[Stat](code)(
-      Term.While(tname("cond"), tname("fx"))
-    )
+    runTestAssert[Stat](code)(Term.While(tname("cond"), tname("fx")))
   }
 
   test("old-while-multi") {
@@ -1344,18 +1163,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  fy
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code)(
-      Term.While(tname("cond"), Term.Block(List(tname("fx"), tname("fy"))))
-    )
+    runTestAssert[Stat](code)(Term.While(tname("cond"), Term.Block(List(tname("fx"), tname("fy")))))
   }
 
   test("new-while-single1") {
     val code = """|while cond do fx
                   |""".stripMargin
     val output = "while (cond) fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.While(tname("cond"), tname("fx"))
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(tname("cond"), tname("fx")))
   }
 
   test("new-while-single2") {
@@ -1363,9 +1178,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |do fx
                   |""".stripMargin
     val output = "while (cond) fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.While(tname("cond"), tname("fx"))
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(tname("cond"), tname("fx")))
   }
 
   test("new-while-indented-witout-do") {
@@ -1395,12 +1208,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  fy
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.While(
-        Term.ApplyInfix(tname("fx"), tname("+"), Nil, List(tname("fy"))),
-        Term.Block(List(tname("fx"), tname("fy")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(
+      Term.ApplyInfix(tname("fx"), tname("+"), Nil, List(tname("fy"))),
+      Term.Block(List(tname("fx"), tname("fy")))
+    ))
   }
 
   test("new-while-multistat") {
@@ -1419,12 +1230,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  fy
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.While(
-        Term.Block(List(tname("s1"), tname("s2"))),
-        Term.Block(List(tname("fx"), tname("fy")))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(
+      Term.Block(List(tname("s1"), tname("s2"))),
+      Term.Block(List(tname("fx"), tname("fy")))
+    ))
   }
 
   test("while-parens-yet-do") {
@@ -1438,59 +1247,49 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  other()
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Def(
-        Nil,
-        tname("read"),
-        Nil,
-        List(List()),
-        Some(pname("String")),
-        Term.Block(
-          List(Term.While(tname("cond"), Term.Block(Nil)), Term.Apply(tname("other"), Nil))
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
+      Nil,
+      tname("read"),
+      Nil,
+      List(List()),
+      Some(pname("String")),
+      Term.Block(List(Term.While(tname("cond"), Term.Block(Nil)), Term.Apply(tname("other"), Nil)))
+    ))
   }
 
   test("while-cond-expr-do") {
-    val code =
-      """|  while (x > 0) && (y > 0) do
-         |    x += 1
-         |""".stripMargin
+    val code = """|  while (x > 0) && (y > 0) do
+                  |    x += 1
+                  |""".stripMargin
 
     val output = "while (x > 0 && y > 0) x += 1"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.While(
-        Term.ApplyInfix(
-          Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
-          tname("&&"),
-          Nil,
-          List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
-        ),
-        Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(
+      Term.ApplyInfix(
+        Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+        tname("&&"),
+        Nil,
+        List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
+      ),
+      Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+    ))
   }
 
   test("while-cond-expr-lf-do") {
-    val code =
-      """|  while (x > 0) && (y > 0)
-         |  do
-         |    x += 1
-         |""".stripMargin
+    val code = """|  while (x > 0) && (y > 0)
+                  |  do
+                  |    x += 1
+                  |""".stripMargin
 
     val output = "while (x > 0 && y > 0) x += 1"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.While(
-        Term.ApplyInfix(
-          Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
-          tname("&&"),
-          Nil,
-          List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
-        ),
-        Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(
+      Term.ApplyInfix(
+        Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+        tname("&&"),
+        Nil,
+        List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
+      ),
+      Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+    ))
   }
 
   test("while-cond-expr-do [non symbolic op]") {
@@ -1505,25 +1304,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
     )
 
-    val code1 =
-      """|  while (x > 0) and (y > 0) do
-         |    x += 1
-         |""".stripMargin
+    val code1 = """|  while (x > 0) and (y > 0) do
+                   |    x += 1
+                   |""".stripMargin
     runTestAssert[Stat](code1, assertLayout = Some(output))(expected)
 
-    val code2 =
-      """|  while (x > 0) and (y > 0)
-         |  do
-         |    x += 1
-         |""".stripMargin
+    val code2 = """|  while (x > 0) and (y > 0)
+                   |  do
+                   |    x += 1
+                   |""".stripMargin
     runTestAssert[Stat](code2, assertLayout = Some(output))(expected)
   }
 
   test("if-cond-expr-with-apply-type") {
-    val code =
-      """|if (sym == defn.BooleanClass) classOf[Boolean]
-         |else if (sym == defn.ByteClass) classOf[Byte]
-         |""".stripMargin
+    val code = """|if (sym == defn.BooleanClass) classOf[Boolean]
+                  |else if (sym == defn.ByteClass) classOf[Byte]
+                  |""".stripMargin
     val layout =
       "if (sym == defn.BooleanClass) classOf[Boolean] else if (sym == defn.ByteClass) classOf[Byte]"
     val expected = Term.If(
@@ -1551,15 +1347,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("if-cond-expr-with-block") {
-    val code =
-      """|if (sym == defn.BooleanClass) { classOf[Boolean] }
-         |else if (sym == defn.ByteClass) classOf[Byte]
-         |""".stripMargin
-    val layout =
-      """|if (sym == defn.BooleanClass) {
-         |  classOf[Boolean]
-         |} else if (sym == defn.ByteClass) classOf[Byte]
-         |""".stripMargin
+    val code = """|if (sym == defn.BooleanClass) { classOf[Boolean] }
+                  |else if (sym == defn.ByteClass) classOf[Byte]
+                  |""".stripMargin
+    val layout = """|if (sym == defn.BooleanClass) {
+                    |  classOf[Boolean]
+                    |} else if (sym == defn.ByteClass) classOf[Byte]
+                    |""".stripMargin
     val expected = Term.If(
       Term.ApplyInfix(
         tname("sym"),
@@ -1585,41 +1379,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("while-cond-expr-without-do") {
-    val code =
-      """|{
-         |  while (x > 0) && (y > 0)
-         |    x += 1
-         |}
-         |""".stripMargin
-    val layout =
-      """|{
-         |  while (x > 0) &&(y > 0)
-         |  x += 1
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, Some(layout))(
-      Term.Block(
-        List(
-          Term.While(
-            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
-            Term.Apply(
-              tname("&&"),
-              List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0))))
-            )
-          ),
-          Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
-        )
-      )
-    )
+    val code = """|{
+                  |  while (x > 0) && (y > 0)
+                  |    x += 1
+                  |}
+                  |""".stripMargin
+    val layout = """|{
+                    |  while (x > 0) &&(y > 0)
+                    |  x += 1
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(Term.Block(List(
+      Term.While(
+        Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+        Term.Apply(tname("&&"), List(Term.ApplyInfix(tname("y"), tname(">"), Nil, List(int(0)))))
+      ),
+      Term.ApplyInfix(tname("x"), tname("+="), Nil, List(int(1)))
+    )))
   }
 
   test("while-cond-expr-without-do-2") {
-    val code =
-      """|{
-         |  while (x > 0) && y > 0
-         |    x += 1
-         |}
-         |""".stripMargin
+    val code = """|{
+                  |  while (x > 0) && y > 0
+                  |    x += 1
+                  |}
+                  |""".stripMargin
     runTestError[Stat](
       code,
       """|error: `;` expected but `integer constant` found
@@ -1639,22 +1423,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |}
                   |""".stripMargin
     val output = "class A { slf => val x = 3 }"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(
-        Nil,
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        Template(
-          Nil,
-          Nil,
-          self("slf"),
-          List(
-            Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(3))
-          )
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      EmptyCtor(),
+      Template(Nil, Nil, self("slf"), List(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(3))))
+    ))
   }
 
   // --------------------------
@@ -1667,12 +1442,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  case 2 =>
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code)(
-      Term.Match(
-        tname("x"),
-        List(Case(int(1), None, Term.Block(Nil)), Case(int(2), None, Term.Block(Nil)))
-      )
-    )
+    runTestAssert[Stat](code)(Term.Match(
+      tname("x"),
+      List(Case(int(1), None, Term.Block(Nil)), Case(int(2), None, Term.Block(Nil)))
+    ))
   }
 
   test("old-match-case-oneline") {
@@ -1682,10 +1455,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |}
                   |""".stripMargin
     runTestAssert[Stat](code)(
-      Term.Match(
-        tname("x"),
-        List(Case(int(1), None, str("1")), Case(int(2), None, str("2")))
-      )
+      Term.Match(tname("x"), List(Case(int(1), None, str("1")), Case(int(2), None, str("2"))))
     )
   }
 
@@ -1699,15 +1469,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |    b2
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code)(
-      Term.Match(
-        tname("x"),
-        List(
-          Case(int(1), None, Term.Block(List(tname("a1"), tname("b1")))),
-          Case(int(2), None, Term.Block(List(tname("a2"), tname("b2"))))
-        )
+    runTestAssert[Stat](code)(Term.Match(
+      tname("x"),
+      List(
+        Case(int(1), None, Term.Block(List(tname("a1"), tname("b1")))),
+        Case(int(2), None, Term.Block(List(tname("a2"), tname("b2"))))
       )
-    )
+    ))
   }
 
   test("old-match-case-inside") {
@@ -1721,22 +1489,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |    "2"
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code)(
-      Term.Match(
-        tname("x"),
-        List(
-          Case(
-            int(1),
-            None,
-            Term.Match(
-              tname("y"),
-              List(Case(int(5), None, str("5")), Case(int(6), None, str("6")))
-            )
-          ),
-          Case(int(2), None, str("2"))
-        )
+    runTestAssert[Stat](code)(Term.Match(
+      tname("x"),
+      List(
+        Case(
+          int(1),
+          None,
+          Term.Match(tname("y"), List(Case(int(5), None, str("5")), Case(int(6), None, str("6"))))
+        ),
+        Case(int(2), None, str("2"))
       )
-    )
+    ))
   }
 
   test("new-match-case-empty") {
@@ -1749,12 +1512,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  case 2 =>
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Match(
-        tname("x"),
-        List(Case(int(1), None, Term.Block(Nil)), Case(int(2), None, Term.Block(Nil)))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Match(
+      tname("x"),
+      List(Case(int(1), None, Term.Block(Nil)), Case(int(2), None, Term.Block(Nil)))
+    ))
   }
 
   test("new-match-case-oneline") {
@@ -1768,10 +1529,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Match(
-        tname("x"),
-        List(Case(int(1), None, str("1")), Case(int(2), None, str("2")))
-      )
+      Term.Match(tname("x"), List(Case(int(1), None, str("1")), Case(int(2), None, str("2"))))
     )
   }
 
@@ -1793,15 +1551,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |    b2
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Match(
-        tname("x"),
-        List(
-          Case(int(1), None, Term.Block(List(tname("a1"), tname("b1")))),
-          Case(int(2), None, Term.Block(List(tname("a2"), tname("b2"))))
-        )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Match(
+      tname("x"),
+      List(
+        Case(int(1), None, Term.Block(List(tname("a1"), tname("b1")))),
+        Case(int(2), None, Term.Block(List(tname("a2"), tname("b2"))))
       )
-    )
+    ))
   }
 
   test("old-match-case-one-align") {
@@ -1818,15 +1574,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |}
                     |""".stripMargin
 
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Match(
-        tname("cond"),
-        List(
-          Case(Pat.Var(tname("a")), None, tname("fa")),
-          Case(Pat.Var(tname("b")), None, tname("fb"))
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Match(
+      tname("cond"),
+      List(Case(Pat.Var(tname("a")), None, tname("fa")), Case(Pat.Var(tname("b")), None, tname("fb")))
+    ))
   }
 
   test("new-match-case-oneline-align") {
@@ -1847,28 +1598,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  c
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Def(
-        Nil,
-        tname("fx"),
-        Nil,
-        Nil,
-        Some(pname("String")),
-        Term.Block(
-          List(
-            Term.Match(
-              tname("x"),
-              List(
-                Case(int(1), None, str("OK")),
-                Case(int(2), None, str("ERROR"))
-              )
-            ),
-            Defn.Val(Nil, List(Pat.Var(tname("c"))), None, str("123")),
-            tname("c")
-          )
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
+      Nil,
+      tname("fx"),
+      Nil,
+      Nil,
+      Some(pname("String")),
+      Term.Block(List(
+        Term
+          .Match(tname("x"), List(Case(int(1), None, str("OK")), Case(int(2), None, str("ERROR")))),
+        Defn.Val(Nil, List(Pat.Var(tname("c"))), None, str("123")),
+        tname("c")
+      ))
+    ))
   }
 
   test("new-match-case-oneline-align-newline") {
@@ -1886,21 +1628,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  end match
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Def(
-        Nil,
-        tname("fx"),
-        Nil,
-        Nil,
-        Some(pname("String")),
-        Term.Block(
-          List(
-            Term.Match(tname("x"), List(Case(int(2), None, str("ERROR")))),
-            Term.EndMarker(tname("match"))
-          )
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
+      Nil,
+      tname("fx"),
+      Nil,
+      Nil,
+      Some(pname("String")),
+      Term.Block(List(
+        Term.Match(tname("x"), List(Case(int(2), None, str("ERROR")))),
+        Term.EndMarker(tname("match"))
+      ))
+    ))
   }
 
   test("unsure-correct") {
@@ -1914,13 +1652,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  case ex => Error
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        Term.Match(tname("func"), List(Case(tname("A"), None, tname("Accept")))),
-        List(Case(Pat.Var(tname("ex")), None, tname("Error"))),
-        None
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      Term.Match(tname("func"), List(Case(tname("A"), None, tname("Accept")))),
+      List(Case(Pat.Var(tname("ex")), None, tname("Error"))),
+      None
+    ))
   }
 
   test("case-match-ignore-indent") {
@@ -1938,18 +1674,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |}
          |""".stripMargin,
       assertLayout = Some(expected)
-    )(
-      Term.Match(
-        tname("x"),
-        List(
-          Case(
-            Pat.Var(tname("x")),
-            None,
-            Term.Block(List(Term.Apply(tname("a"), Nil), Term.Apply(tname("b"), Nil)))
-          )
-        )
-      )
-    )
+    )(Term.Match(
+      tname("x"),
+      List(Case(
+        Pat.Var(tname("x")),
+        None,
+        Term.Block(List(Term.Apply(tname("a"), Nil), Term.Apply(tname("b"), Nil)))
+      ))
+    ))
   }
 
   test("match-chained") {
@@ -1959,20 +1691,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
         List(
           Case(tname("Nil"), None, str("empty")),
           Case(
-            Pat.ExtractInfix(
-              Pat.Var(tname("x")),
-              tname("::"),
-              List(Pat.Var(tname("xs1")))
-            ),
+            Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
             None,
             str("nonempty")
           )
         )
       ),
-      List(
-        Case(str("empty"), None, int(0)),
-        Case(str("nonempty"), None, int(1))
-      )
+      List(Case(str("empty"), None, int(0)), Case(str("nonempty"), None, int(1)))
     )
 
     runTestAssert[Stat](
@@ -2038,39 +1763,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("hello"))),
-        None,
-        Term.Match(
-          Term.ApplyInfix(
-            Term.Match(
-              tname("xs"),
-              List(
-                Case(tname("Nil"), None, str("empty")),
-                Case(
-                  Pat.ExtractInfix(
-                    Pat.Var(tname("x")),
-                    tname("::"),
-                    List(Pat.Var(tname("xs1")))
-                  ),
-                  None,
-                  str("nonempty")
-                )
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("hello"))),
+      None,
+      Term.Match(
+        Term.ApplyInfix(
+          Term.Match(
+            tname("xs"),
+            List(
+              Case(tname("Nil"), None, str("empty")),
+              Case(
+                Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+                None,
+                str("nonempty")
               )
-            ),
-            tname("startsWith"),
-            Nil,
-            List(str("empty"))
+            )
           ),
-          List(
-            Case(bool(true), None, int(0)),
-            Case(bool(false), None, int(1))
-          )
-        )
+          tname("startsWith"),
+          Nil,
+          List(str("empty"))
+        ),
+        List(Case(bool(true), None, int(0)), Case(bool(false), None, int(1)))
       )
-    )
+    ))
 
   }
 
@@ -2093,34 +1809,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("hello"))),
-        None,
-        Term.Match(
-          Term.ApplyInfix(
-            Term.Match(
-              tname("xs"),
-              List(
-                Case(tname("Nil"), None, int(0)),
-                Case(
-                  Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
-                  None,
-                  int(1)
-                )
-              ),
-              Nil
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("hello"))),
+      None,
+      Term.Match(
+        Term.ApplyInfix(
+          Term.Match(
+            tname("xs"),
+            List(
+              Case(tname("Nil"), None, int(0)),
+              Case(
+                Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+                None,
+                int(1)
+              )
             ),
-            tname("+"),
-            Nil,
-            List(int(1))
+            Nil
           ),
-          List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
-          Nil
-        )
+          tname("+"),
+          Nil,
+          List(int(1))
+        ),
+        List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+        Nil
       )
-    )
+    ))
   }
 
   test("match-chained-complex-operator 2") {
@@ -2142,34 +1856,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("hello"))),
-        None,
-        Term.Match(
-          Term.ApplyInfix(
-            Term.Match(
-              Term.ApplyInfix(int(1), tname("+"), Nil, List(tname("xs"))),
-              List(
-                Case(tname("Nil"), None, int(0)),
-                Case(
-                  Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
-                  None,
-                  int(1)
-                )
-              ),
-              Nil
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("hello"))),
+      None,
+      Term.Match(
+        Term.ApplyInfix(
+          Term.Match(
+            Term.ApplyInfix(int(1), tname("+"), Nil, List(tname("xs"))),
+            List(
+              Case(tname("Nil"), None, int(0)),
+              Case(
+                Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+                None,
+                int(1)
+              )
             ),
-            tname("+"),
-            Nil,
-            List(int(1))
+            Nil
           ),
-          List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
-          Nil
-        )
+          tname("+"),
+          Nil,
+          List(int(1))
+        ),
+        List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+        Nil
       )
-    )
+    ))
   }
 
   test("match-chained-complex-operator 3") {
@@ -2192,34 +1904,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("hello"))),
-        None,
-        Term.Match(
-          Term.ApplyInfix(
-            Term.Match(
-              Term.ApplyInfix(int(1), tname("+"), Nil, List(tname("xs"))),
-              List(
-                Case(tname("Nil"), None, int(0)),
-                Case(
-                  Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
-                  None,
-                  int(1)
-                )
-              ),
-              Nil
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("hello"))),
+      None,
+      Term.Match(
+        Term.ApplyInfix(
+          Term.Match(
+            Term.ApplyInfix(int(1), tname("+"), Nil, List(tname("xs"))),
+            List(
+              Case(tname("Nil"), None, int(0)),
+              Case(
+                Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+                None,
+                int(1)
+              )
             ),
-            tname("+"),
-            Nil,
-            List(int(1))
+            Nil
           ),
-          List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
-          Nil
-        )
+          tname("+"),
+          Nil,
+          List(int(1))
+        ),
+        List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+        Nil
       )
-    )
+    ))
   }
 
   test("match-chained-complex-operator 4") {
@@ -2241,34 +1951,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |  case 2 => false
            |}""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("hello"))),
-        None,
-        Term.Match(
-          Term.ApplyInfix(
-            Term.Match(
-              Term.ApplyInfix(int(1), tname("foo"), Nil, List(tname("xs"))),
-              List(
-                Case(tname("Nil"), None, int(0)),
-                Case(
-                  Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
-                  None,
-                  int(1)
-                )
-              ),
-              Nil
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("hello"))),
+      None,
+      Term.Match(
+        Term.ApplyInfix(
+          Term.Match(
+            Term.ApplyInfix(int(1), tname("foo"), Nil, List(tname("xs"))),
+            List(
+              Case(tname("Nil"), None, int(0)),
+              Case(
+                Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+                None,
+                int(1)
+              )
             ),
-            tname("foo"),
-            Nil,
-            List(int(1))
+            Nil
           ),
-          List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
-          Nil
-        )
+          tname("foo"),
+          Nil,
+          List(int(1))
+        ),
+        List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+        Nil
       )
-    )
+    ))
   }
 
   test("match-chained-complex-operator 5") {
@@ -2290,34 +1998,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |  case 2 => false
            |}""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("hello"))),
-        None,
-        Term.Match(
-          Term.ApplyInfix(
-            Term.Match(
-              Term.ApplyInfix(int(1), tname("foo"), Nil, List(tname("xs"))),
-              List(
-                Case(tname("Nil"), None, int(0)),
-                Case(
-                  Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
-                  None,
-                  int(1)
-                )
-              ),
-              Nil
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("hello"))),
+      None,
+      Term.Match(
+        Term.ApplyInfix(
+          Term.Match(
+            Term.ApplyInfix(int(1), tname("foo"), Nil, List(tname("xs"))),
+            List(
+              Case(tname("Nil"), None, int(0)),
+              Case(
+                Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+                None,
+                int(1)
+              )
             ),
-            tname("foo"),
-            Nil,
-            List(int(1))
+            Nil
           ),
-          List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
-          Nil
-        )
+          tname("foo"),
+          Nil,
+          List(int(1))
+        ),
+        List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+        Nil
       )
-    )
+    ))
   }
 
   test("match-non-chained-complex-operator 6") {
@@ -2345,35 +2051,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |  }
            |}""".stripMargin
       )
-    )(
-      Term.Block(
-        List(
-          Defn.Val(
-            Nil,
-            List(Pat.Var(tname("hello"))),
-            None,
-            Term.Match(
-              Term.ApplyInfix(int(1), tname("foo"), Nil, List(tname("xs"))),
-              List(
-                Case(tname("Nil"), None, int(0)),
-                Case(
-                  Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
-                  None,
-                  int(1)
-                )
-              ),
-              Nil
+    )(Term.Block(List(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("hello"))),
+        None,
+        Term.Match(
+          Term.ApplyInfix(int(1), tname("foo"), Nil, List(tname("xs"))),
+          List(
+            Case(tname("Nil"), None, int(0)),
+            Case(
+              Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+              None,
+              int(1)
             )
           ),
-          Term.EndMarker(tname("match")),
-          Term.Match(
-            tname("foo"),
-            List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
-            Nil
-          )
+          Nil
         )
+      ),
+      Term.EndMarker(tname("match")),
+      Term.Match(
+        tname("foo"),
+        List(Case(int(1), None, bool(true)), Case(int(2), None, bool(false))),
+        Nil
       )
-    )
+    )))
   }
 
   test("match-nested") {
@@ -2395,20 +2097,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |    baz
            |}""".stripMargin
       )
-    )(
-      Term.Match(
-        tname("foo"),
-        List(
-          Case(
-            Pat.Var(tname("a")),
-            None,
-            Term.Match(tname("bar"), List(Case(Pat.Var(tname("aa")), None, Term.Block(Nil))), Nil)
-          ),
-          Case(Pat.Var(tname("b")), None, tname("baz"))
+    )(Term.Match(
+      tname("foo"),
+      List(
+        Case(
+          Pat.Var(tname("a")),
+          None,
+          Term.Match(tname("bar"), List(Case(Pat.Var(tname("aa")), None, Term.Block(Nil))), Nil)
         ),
-        Nil
-      )
-    )
+        Case(Pat.Var(tname("b")), None, tname("baz"))
+      ),
+      Nil
+    ))
   }
 
   test("if-then-else with parens in cond and leading infix") {
@@ -2425,25 +2125,23 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|def foo = if ((bar eq baz) && qux != xyz) found else notfound
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("foo"),
-        None,
-        None,
-        Term.If(
-          Term.ApplyInfix(
-            Term.ApplyInfix(tname("bar"), tname("eq"), Nil, List(tname("baz"))),
-            tname("&&"),
-            Nil,
-            Term.ApplyInfix(tname("qux"), tname("!="), Nil, List(tname("xyz"))) :: Nil
-          ),
-          tname("found"),
-          tname("notfound"),
-          Nil
-        )
+    )(Defn.Def(
+      Nil,
+      tname("foo"),
+      None,
+      None,
+      Term.If(
+        Term.ApplyInfix(
+          Term.ApplyInfix(tname("bar"), tname("eq"), Nil, List(tname("baz"))),
+          tname("&&"),
+          Nil,
+          Term.ApplyInfix(tname("qux"), tname("!="), Nil, List(tname("xyz"))) :: Nil
+        ),
+        tname("found"),
+        tname("notfound"),
+        Nil
       )
-    )
+    ))
   }
 
   test("if-then-else with parens in cond and non-leading infix") {
@@ -2460,33 +2158,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|def foo = if ((bar eq baz).qux) found else notfound
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("foo"),
-        None,
-        None,
-        Term.If(
-          Term.Select(
-            Term.ApplyInfix(tname("bar"), tname("eq"), Nil, List(tname("baz"))),
-            tname("qux")
-          ),
-          tname("found"),
-          tname("notfound"),
-          Nil
-        )
+    )(Defn.Def(
+      Nil,
+      tname("foo"),
+      None,
+      None,
+      Term.If(
+        Term
+          .Select(Term.ApplyInfix(tname("bar"), tname("eq"), Nil, List(tname("baz"))), tname("qux")),
+        tname("found"),
+        tname("notfound"),
+        Nil
       )
-    )
+    ))
   }
 
   test("match-dot") {
     val expected = Term.If(
       Term.Match(
         tname("xs"),
-        List(
-          Case(tname("Nil"), None, bool(false)),
-          Case(Pat.Wildcard(), None, bool(true))
-        )
+        List(Case(tname("Nil"), None, bool(false)), Case(Pat.Wildcard(), None, bool(true)))
       ),
       str("nonempty"),
       str("empty")
@@ -2536,10 +2227,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
         Term.Select(
           Term.Match(
             tname("x"),
-            List(
-              Case(int(1), None, str("1")),
-              Case(Pat.Wildcard(), None, str("ERR"))
-            )
+            List(Case(int(1), None, str("1")), Case(Pat.Wildcard(), None, str("ERR")))
           ),
           tname("trim")
         ),
@@ -2590,84 +2278,74 @@ class ControlSyntaxSuite extends BaseDottySuite {
                       |  case x =>
                       |    ok()
                       |})""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(expected))(
-      Term.Apply(
-        tname("fx"),
-        List(
-          tname("p1"),
-          Term.Try(
-            Term.Apply(tname("func"), Nil),
-            List(Case(Pat.Var(tname("x")), None, Term.Apply(tname("ok"), Nil))),
-            None
-          )
+    runTestAssert[Stat](code, assertLayout = Some(expected))(Term.Apply(
+      tname("fx"),
+      List(
+        tname("p1"),
+        Term.Try(
+          Term.Apply(tname("func"), Nil),
+          List(Case(Pat.Var(tname("x")), None, Term.Apply(tname("ok"), Nil))),
+          None
         )
       )
-    )
+    ))
   }
 
   test("match-braces-LFLF") {
-    val code =
-      """|a match {
-         |  case A() =>
-         |    succ
-         |
-         |  case _ => fail
-         |}
-         |""".stripMargin
-    val expected =
-      """|a match {
-         |  case A() => succ
-         |  case _ => fail
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(expected))(
-      Term.Match(
-        tname("a"),
-        List(
-          Case(Pat.Extract(tname("A"), Nil), None, tname("succ")),
-          Case(Pat.Wildcard(), None, tname("fail"))
-        ),
-        Nil
-      )
-    )
+    val code = """|a match {
+                  |  case A() =>
+                  |    succ
+                  |
+                  |  case _ => fail
+                  |}
+                  |""".stripMargin
+    val expected = """|a match {
+                      |  case A() => succ
+                      |  case _ => fail
+                      |}
+                      |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(Term.Match(
+      tname("a"),
+      List(
+        Case(Pat.Extract(tname("A"), Nil), None, tname("succ")),
+        Case(Pat.Wildcard(), None, tname("fail"))
+      ),
+      Nil
+    ))
   }
 
   test("match-last-empty") {
-    val code =
-      """|object Z:
-         |  a match
-         |    case A() =>
-         |      succ
-         |    case _ =>
-         |  
-         |  val x = 0
-         |""".stripMargin
-    val expected =
-      """|object Z {
-         |  a match {
-         |    case A() => succ
-         |    case _ =>
-         |  }
-         |  val x = 0
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(expected))(
-      Defn.Object(
-        Nil,
-        tname("Z"),
-        tpl(
-          Term.Match(
-            tname("a"),
-            List(
-              Case(Pat.Extract(tname("A"), Nil), None, tname("succ")),
-              Case(Pat.Wildcard(), None, Term.Block(Nil))
-            ),
-            Nil
+    val code = """|object Z:
+                  |  a match
+                  |    case A() =>
+                  |      succ
+                  |    case _ =>
+                  |  
+                  |  val x = 0
+                  |""".stripMargin
+    val expected = """|object Z {
+                      |  a match {
+                      |    case A() => succ
+                      |    case _ =>
+                      |  }
+                      |  val x = 0
+                      |}
+                      |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(expected))(Defn.Object(
+      Nil,
+      tname("Z"),
+      tpl(
+        Term.Match(
+          tname("a"),
+          List(
+            Case(Pat.Extract(tname("A"), Nil), None, tname("succ")),
+            Case(Pat.Wildcard(), None, Term.Block(Nil))
           ),
-          Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(0))
-        )
+          Nil
+        ),
+        Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(0))
       )
-    )
+    ))
   }
 
   test("if-infix") {
@@ -2679,22 +2357,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |else
          |  2
          |""".stripMargin,
-      assertLayout = Some(
-        "if (1 max 10 gt 0) 1 else 2"
-      )
-    )(
-      Term.If(
-        Term.ApplyInfix(
-          Term.ApplyInfix(int(1), tname("max"), Nil, List(int(10))),
-          tname("gt"),
-          Nil,
-          List(int(0))
-        ),
-        int(1),
-        int(2),
-        Nil
-      )
-    )
+      assertLayout = Some("if (1 max 10 gt 0) 1 else 2")
+    )(Term.If(
+      Term.ApplyInfix(
+        Term.ApplyInfix(int(1), tname("max"), Nil, List(int(10))),
+        tname("gt"),
+        Nil,
+        List(int(0))
+      ),
+      int(1),
+      int(2),
+      Nil
+    ))
   }
 
   test("no-real-indentation") {
@@ -2725,56 +2399,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Object(
-        Nil,
-        tname("Test"),
-        tpl(
-          Term.Try(
-            Term.Match(
-              Term.Apply(tname("List"), List(int(1), int(2), int(3))),
-              List(
-                Case(
-                  Pat.ExtractInfix(
-                    Pat.Var(tname("x")),
-                    tname("::"),
-                    List(Pat.Var(tname("xs")))
-                  ),
-                  None,
-                  Term.Apply(tname("println"), List(tname("x")))
-                ),
-                Case(
-                  tname("Nil"),
-                  None,
-                  Term.Apply(tname("println"), List(str("Nil")))
-                )
-              ),
-              Nil
-            ),
+    )(Defn.Object(
+      Nil,
+      tname("Test"),
+      tpl(
+        Term.Try(
+          Term.Match(
+            Term.Apply(tname("List"), List(int(1), int(2), int(3))),
             List(
               Case(
-                Pat.Typed(
-                  Pat.Var(tname("ex")),
-                  Type.Select(
-                    Term.Select(tname("java"), tname("io")),
-                    pname("IOException")
-                  )
-                ),
+                Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs")))),
                 None,
-                Term.Apply(tname("println"), List(tname("ex")))
+                Term.Apply(tname("println"), List(tname("x")))
               ),
-              Case(
-                Pat.Typed(Pat.Var(tname("ex")), pname("Throwable")),
-                None,
-                Term.Throw(tname("ex"))
-              )
+              Case(tname("Nil"), None, Term.Apply(tname("println"), List(str("Nil"))))
             ),
-            None
+            Nil
           ),
-          Term.EndMarker(tname("try"))
-        )
+          List(
+            Case(
+              Pat.Typed(
+                Pat.Var(tname("ex")),
+                Type.Select(Term.Select(tname("java"), tname("io")), pname("IOException"))
+              ),
+              None,
+              Term.Apply(tname("println"), List(tname("ex")))
+            ),
+            Case(Pat.Typed(Pat.Var(tname("ex")), pname("Throwable")), None, Term.Throw(tname("ex")))
+          ),
+          None
+        ),
+        Term.EndMarker(tname("try"))
       )
-    )
+    ))
   }
 
   test("comma-indent") {
@@ -2793,32 +2450,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|def f(x: Int) = assert(if (x > 0) true else if (x < 0) true else false, "fail")
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        List(List(tparam("x", "Int"))),
-        None,
-        Term.Apply(
-          tname("assert"),
-          List(
+    )(Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      List(List(tparam("x", "Int"))),
+      None,
+      Term.Apply(
+        tname("assert"),
+        List(
+          Term.If(
+            Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+            bool(true),
             Term.If(
-              Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(0))),
+              Term.ApplyInfix(tname("x"), tname("<"), Nil, List(int(0))),
               bool(true),
-              Term.If(
-                Term.ApplyInfix(tname("x"), tname("<"), Nil, List(int(0))),
-                bool(true),
-                bool(false),
-                Nil
-              ),
+              bool(false),
               Nil
             ),
-            str("fail")
-          )
+            Nil
+          ),
+          str("fail")
         )
       )
-    )
+    ))
   }
 
   test("if-then 1") {
@@ -2837,34 +2492,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("foo"),
+      tpl(Defn.Def(
         Nil,
-        tname("foo"),
-        tpl(
-          Defn.Def(
-            Nil,
-            tname("bar"),
-            Nil,
-            None,
-            Term.If(
+        tname("bar"),
+        Nil,
+        None,
+        Term.If(
+          Term.Apply(
+            tname("map"),
+            Term.Block(
               Term.Apply(
-                tname("map"),
-                Term.Block(
-                  Term.Apply(
-                    tname("op"),
-                    Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
-                  ) :: Nil
-                ) :: Nil
-              ),
-              Term.Apply(tname("err"), List(tname("context"))),
-              Lit.Unit(),
-              Nil
-            )
-          )
+                tname("op"),
+                Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+              ) :: Nil
+            ) :: Nil
+          ),
+          Term.Apply(tname("err"), List(tname("context"))),
+          Lit.Unit(),
+          Nil
         )
-      )
-    )
+      ))
+    ))
   }
 
   test("if-then 2") {
@@ -2881,34 +2532,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
           |}
           |""".stripMargin
       )
-    )(
-      Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("foo"),
+      tpl(Defn.Def(
         Nil,
-        tname("foo"),
-        tpl(
-          Defn.Def(
-            Nil,
-            tname("bar"),
-            Nil,
-            None,
-            Term.If(
+        tname("bar"),
+        Nil,
+        None,
+        Term.If(
+          Term.Apply(
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+            Term.Block(
               Term.Apply(
-                Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
-                Term.Block(
-                  Term.Apply(
-                    tname("op"),
-                    Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
-                  ) :: Nil
-                ) :: Nil
-              ),
-              Term.Apply(tname("err"), List(tname("context"))),
-              Lit.Unit(),
-              Nil
-            )
-          )
+                tname("op"),
+                Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+              ) :: Nil
+            ) :: Nil
+          ),
+          Term.Apply(tname("err"), List(tname("context"))),
+          Lit.Unit(),
+          Nil
         )
-      )
-    )
+      ))
+    ))
   }
 
   test("if-then 3") {
@@ -2921,31 +2568,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|object foo { def bar = if (a + b op c == true) err(context) }
            |""".stripMargin
       )
-    )(
-      Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("foo"),
+      tpl(Defn.Def(
         Nil,
-        tname("foo"),
-        tpl(
-          Defn.Def(
+        tname("bar"),
+        Nil,
+        None,
+        Term.If(
+          Term.ApplyInfix(
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+            tname("op"),
             Nil,
-            tname("bar"),
-            Nil,
-            None,
-            Term.If(
-              Term.ApplyInfix(
-                Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
-                tname("op"),
-                Nil,
-                Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
-              ),
-              Term.Apply(tname("err"), List(tname("context"))),
-              Lit.Unit(),
-              Nil
-            )
-          )
+            Term.ApplyInfix(tname("c"), tname("=="), Nil, List(bool(true))) :: Nil
+          ),
+          Term.Apply(tname("err"), List(tname("context"))),
+          Lit.Unit(),
+          Nil
         )
-      )
-    )
+      ))
+    ))
   }
 
   test("if-then 4") {
@@ -2958,31 +2601,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|object foo { def bar = if (a + b) op c err(context) }
            |""".stripMargin
       )
-    )(
-      Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("foo"),
+      tpl(Defn.Def(
         Nil,
-        tname("foo"),
-        tpl(
-          Defn.Def(
+        tname("bar"),
+        Nil,
+        None,
+        Term.If(
+          Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+          Term.ApplyInfix(
+            tname("op"),
+            tname("c"),
             Nil,
-            tname("bar"),
-            Nil,
-            None,
-            Term.If(
-              Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
-              Term.ApplyInfix(
-                tname("op"),
-                tname("c"),
-                Nil,
-                List(Term.Apply(tname("err"), List(tname("context"))))
-              ),
-              Lit.Unit(),
-              Nil
-            )
-          )
+            List(Term.Apply(tname("err"), List(tname("context"))))
+          ),
+          Lit.Unit(),
+          Nil
         )
-      )
-    )
+      ))
+    ))
   }
 
   test("if-then 5") {
@@ -2995,31 +2634,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|object foo { def bar = if (a + b) op c err(context) }
            |""".stripMargin
       )
-    )(
-      Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("foo"),
+      tpl(Defn.Def(
         Nil,
-        tname("foo"),
-        tpl(
-          Defn.Def(
+        tname("bar"),
+        Nil,
+        None,
+        Term.If(
+          Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+          Term.ApplyInfix(
+            tname("op"),
+            tname("c"),
             Nil,
-            tname("bar"),
-            Nil,
-            None,
-            Term.If(
-              Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
-              Term.ApplyInfix(
-                tname("op"),
-                tname("c"),
-                Nil,
-                List(Term.Apply(tname("err"), List(tname("context"))))
-              ),
-              Lit.Unit(),
-              Nil
-            )
-          )
+            List(Term.Apply(tname("err"), List(tname("context"))))
+          ),
+          Lit.Unit(),
+          Nil
         )
-      )
-    )
+      ))
+    ))
   }
 
   test("if-then 6") {
@@ -3044,159 +2679,127 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Object(
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(Term.ApplyInfix(
+        Term.ApplyInfix(
+          Term.Apply(Term.Select(tname("constraint"), tname("contains")), List(tname("tl"))),
+          tname("||"),
+          Nil,
+          Term.Apply(Term.Select(tname("other"), tname("isRemovable")), List(tname("tl"))) :: Nil
+        ),
+        tname("||"),
         Nil,
-        tname("a"),
-        tpl(
-          Term.ApplyInfix(
-            Term.ApplyInfix(
-              Term.Apply(
-                Term.Select(tname("constraint"), tname("contains")),
-                List(tname("tl"))
-              ),
-              tname("||"),
-              Nil,
-              Term.Apply(
-                Term.Select(tname("other"), tname("isRemovable")),
-                List(tname("tl"))
-              ) :: Nil
-            ),
-            tname("||"),
+        Term.Block(List(
+          Defn.Val(
             Nil,
-            Term.Block(
-              List(
-                Defn.Val(
-                  Nil,
-                  List(Pat.Var(tname("tvars"))),
-                  None,
-                  Term.Apply(
-                    Term.Select(
-                      Term.Apply(
-                        Term.Select(Term.Select(tname("tl"), tname("paramRefs")), tname("map")),
-                        Term.AnonymousFunction(
-                          Term.Apply(
-                            Term.Select(tname("other"), tname("typeVarOfParam")),
-                            List(Term.Placeholder())
-                          )
-                        ) :: Nil
-                      ),
-                      tname("collect")
-                    ),
-                    Term.PartialFunction(
-                      Case(
-                        Pat.Typed(Pat.Var(tname("tv")), pname("TypeVar")),
-                        None,
-                        tname("tv")
-                      ) :: Nil
-                    ) :: Nil
-                  )
+            List(Pat.Var(tname("tvars"))),
+            None,
+            Term.Apply(
+              Term.Select(
+                Term.Apply(
+                  Term.Select(Term.Select(tname("tl"), tname("paramRefs")), tname("map")),
+                  Term.AnonymousFunction(Term.Apply(
+                    Term.Select(tname("other"), tname("typeVarOfParam")),
+                    List(Term.Placeholder())
+                  )) :: Nil
                 ),
+                tname("collect")
+              ),
+              Term.PartialFunction(
+                Case(Pat.Typed(Pat.Var(tname("tv")), pname("TypeVar")), None, tname("tv")) :: Nil
+              ) :: Nil
+            )
+          ),
+          Term.If(
+            Term.Select(Term.This(anon), tname("isCommittable")),
+            Term.Apply(
+              Term.Select(tname("tvars"), tname("foreach")),
+              Term.Function(
+                List(tparam("tvar")),
                 Term.If(
-                  Term.Select(Term.This(anon), tname("isCommittable")),
-                  Term.Apply(
-                    Term.Select(tname("tvars"), tname("foreach")),
-                    Term.Function(
-                      List(tparam("tvar")),
-                      Term.If(
-                        Term.ApplyInfix(
-                          Term.ApplyUnary(
-                            tname("!"),
-                            Term.Select(
-                              Term.Select(tname("tvar"), tname("inst")),
-                              tname("exists")
-                            )
-                          ),
-                          tname("&&"),
-                          Nil,
-                          Term.ApplyUnary(
-                            tname("!"),
-                            Term.Apply(
-                              tname("isOwnedAnywhere"),
-                              List(Term.This(anon), tname("tvar"))
-                            )
-                          ) :: Nil
-                        ),
-                        Term.Apply(
-                          tname("includeVar"),
-                          List(tname("tvar"))
-                        ),
-                        Lit.Unit(),
-                        Nil
-                      )
+                  Term.ApplyInfix(
+                    Term.ApplyUnary(
+                      tname("!"),
+                      Term.Select(Term.Select(tname("tvar"), tname("inst")), tname("exists"))
+                    ),
+                    tname("&&"),
+                    Nil,
+                    Term.ApplyUnary(
+                      tname("!"),
+                      Term.Apply(tname("isOwnedAnywhere"), List(Term.This(anon), tname("tvar")))
                     ) :: Nil
                   ),
+                  Term.Apply(tname("includeVar"), List(tname("tvar"))),
                   Lit.Unit(),
                   Nil
-                ),
-                Term.Apply(
-                  Term.Select(tname("typeComparer"), tname("addToConstraint")),
-                  List(tname("tl"), tname("tvars"))
                 )
-              )
-            ) :: Nil
+              ) :: Nil
+            ),
+            Lit.Unit(),
+            Nil
+          ),
+          Term.Apply(
+            Term.Select(tname("typeComparer"), tname("addToConstraint")),
+            List(tname("tl"), tname("tvars"))
           )
-        )
-      )
-    )
+        )) :: Nil
+      ))
+    ))
   }
 
   test("if-then 7") {
-    val code =
-      """|
-         |  private def genScalaClass(td: TypeDef): js.ClassDef = {
-         |    val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
-         |
-         |    val kind =
-         |      if (isStaticModule(sym)) ClassKind.ModuleClass
-         |      else if (isHijacked) ClassKind.HijackedClass
-         |      else ClassKind.Class
-         |  }
-         |""".stripMargin
+    val code = """|
+                  |  private def genScalaClass(td: TypeDef): js.ClassDef = {
+                  |    val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
+                  |
+                  |    val kind =
+                  |      if (isStaticModule(sym)) ClassKind.ModuleClass
+                  |      else if (isHijacked) ClassKind.HijackedClass
+                  |      else ClassKind.Class
+                  |  }
+                  |""".stripMargin
     val output =
       """|private def genScalaClass(td: TypeDef): js.ClassDef = {
          |  val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
          |  val kind = if (isStaticModule(sym)) ClassKind.ModuleClass else if (isHijacked) ClassKind.HijackedClass else ClassKind.Class
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Def(
-        List(Mod.Private(anon)),
-        tname("genScalaClass"),
-        Nil,
-        List(List(tparam("td", "TypeDef"))),
-        Some(Type.Select(tname("js"), pname("ClassDef"))),
-        Term.Block(
-          List(
-            Defn.Val(
-              Nil,
-              List(Pat.Var(tname("hashedDefs"))),
-              None,
-              Term.Apply(
-                Term.Select(Term.Select(tname("ir"), tname("Hashers")), tname("hashMemberDefs")),
-                List(tname("allMemberDefs"))
-              )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
+      List(Mod.Private(anon)),
+      tname("genScalaClass"),
+      Nil,
+      List(List(tparam("td", "TypeDef"))),
+      Some(Type.Select(tname("js"), pname("ClassDef"))),
+      Term.Block(List(
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("hashedDefs"))),
+          None,
+          Term.Apply(
+            Term.Select(Term.Select(tname("ir"), tname("Hashers")), tname("hashMemberDefs")),
+            List(tname("allMemberDefs"))
+          )
+        ),
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("kind"))),
+          None,
+          Term.If(
+            Term.Apply(tname("isStaticModule"), List(tname("sym"))),
+            Term.Select(tname("ClassKind"), tname("ModuleClass")),
+            Term.If(
+              tname("isHijacked"),
+              Term.Select(tname("ClassKind"), tname("HijackedClass")),
+              Term.Select(tname("ClassKind"), tname("Class")),
+              Nil
             ),
-            Defn.Val(
-              Nil,
-              List(Pat.Var(tname("kind"))),
-              None,
-              Term.If(
-                Term.Apply(tname("isStaticModule"), List(tname("sym"))),
-                Term.Select(tname("ClassKind"), tname("ModuleClass")),
-                Term.If(
-                  tname("isHijacked"),
-                  Term.Select(tname("ClassKind"), tname("HijackedClass")),
-                  Term.Select(tname("ClassKind"), tname("Class")),
-                  Nil
-                ),
-                Nil
-              )
-            )
+            Nil
           )
         )
-      )
-    )
+      ))
+    ))
   }
 
   test("try catch with case guard") {
@@ -3238,93 +2841,83 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Term.Match(
-        tname("arg"),
-        List(
-          Case(
-            Pat.Typed(Pat.Var(tname("arg")), pname("Showable")),
-            None,
-            Term.Try(
-              Term.Select(tname("arg"), tname("show")),
-              List(
-                Case(
-                  Pat.Typed(Pat.Var(tname("ex")), pname("CyclicReference")),
-                  None,
-                  str("... (caught cyclic reference) ...")
-                ),
-                Case(
-                  Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))),
-                  Some(
-                    Term.ApplyInfix(
-                      Term.ApplyUnary(
-                        tname("!"),
-                        Term.Apply(
-                          Term.Select(Term.Select(tname("ctx"), tname("mode")), tname("is")),
-                          List(Term.Select(tname("Mode"), tname("PrintShowExceptions")))
-                        )
-                      ),
-                      tname("&&"),
-                      Nil,
-                      Term.ApplyUnary(
-                        tname("!"),
-                        Term.Select(
-                          Term.Select(
-                            Term.Select(tname("ctx"), tname("settings")),
-                            tname("YshowPrintErrors")
-                          ),
-                          tname("value")
-                        )
-                      ) :: Nil
+    )(Term.Match(
+      tname("arg"),
+      List(
+        Case(
+          Pat.Typed(Pat.Var(tname("arg")), pname("Showable")),
+          None,
+          Term.Try(
+            Term.Select(tname("arg"), tname("show")),
+            List(
+              Case(
+                Pat.Typed(Pat.Var(tname("ex")), pname("CyclicReference")),
+                None,
+                str("... (caught cyclic reference) ...")
+              ),
+              Case(
+                Pat.Extract(tname("NonFatal"), List(Pat.Var(tname("ex")))),
+                Some(Term.ApplyInfix(
+                  Term.ApplyUnary(
+                    tname("!"),
+                    Term.Apply(
+                      Term.Select(Term.Select(tname("ctx"), tname("mode")), tname("is")),
+                      List(Term.Select(tname("Mode"), tname("PrintShowExceptions")))
                     )
                   ),
-                  Term.Block(
-                    List(
-                      Defn.Val(
-                        Nil,
-                        List(Pat.Var(tname("msg"))),
-                        None,
-                        Term.Match(
-                          tname("ex"),
-                          List(
-                            Case(
-                              Pat.Typed(Pat.Var(tname("te")), pname("TypeError")),
-                              None,
-                              Term.Select(tname("te"), tname("toMessage"))
-                            ),
-                            Case(
-                              Pat.Wildcard(),
-                              None,
-                              Term.Select(tname("ex"), tname("getMessage"))
-                            )
-                          ),
-                          Nil
-                        )
+                  tname("&&"),
+                  Nil,
+                  Term.ApplyUnary(
+                    tname("!"),
+                    Term.Select(
+                      Term.Select(
+                        Term.Select(tname("ctx"), tname("settings")),
+                        tname("YshowPrintErrors")
                       ),
-                      Term.Interpolate(
-                        tname("s"),
-                        List(str("[cannot display due to "), str(", raw string = "), str("]")),
-                        List(
-                          tname("msg"),
-                          Term.Block(Term.Select(tname("arg"), tname("toString")) :: Nil)
-                        )
-                      )
+                      tname("value")
+                    )
+                  ) :: Nil
+                )),
+                Term.Block(List(
+                  Defn.Val(
+                    Nil,
+                    List(Pat.Var(tname("msg"))),
+                    None,
+                    Term.Match(
+                      tname("ex"),
+                      List(
+                        Case(
+                          Pat.Typed(Pat.Var(tname("te")), pname("TypeError")),
+                          None,
+                          Term.Select(tname("te"), tname("toMessage"))
+                        ),
+                        Case(Pat.Wildcard(), None, Term.Select(tname("ex"), tname("getMessage")))
+                      ),
+                      Nil
+                    )
+                  ),
+                  Term.Interpolate(
+                    tname("s"),
+                    List(str("[cannot display due to "), str(", raw string = "), str("]")),
+                    List(
+                      tname("msg"),
+                      Term.Block(Term.Select(tname("arg"), tname("toString")) :: Nil)
                     )
                   )
-                )
-              ),
-              None
-            )
-          ),
-          Case(
-            Pat.Wildcard(),
-            None,
-            Term.Apply(Term.Select(tname("String"), tname("valueOf")), List(tname("arg")))
+                ))
+              )
+            ),
+            None
           )
         ),
-        Nil
-      )
-    )
+        Case(
+          Pat.Wildcard(),
+          None,
+          Term.Apply(Term.Select(tname("String"), tname("valueOf")), List(tname("arg")))
+        )
+      ),
+      Nil
+    ))
   }
 
   test("partial function with guard") {
@@ -3342,64 +2935,52 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("tvars"))),
-        None,
-        Term.Apply(
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("tvars"))),
+      None,
+      Term.Apply(
+        Term.Select(
           Term.Select(
-            Term.Select(
-              Term.Apply(
-                Term.Select(tname("targs"), tname("filter")),
-                Term.AnonymousFunction(
-                  Term.ApplyType(
-                    Term.Select(Term.Placeholder(), tname("isInstanceOf")),
-                    List(pname("InferredTypeTree"))
-                  )
+            Term.Apply(
+              Term.Select(tname("targs"), tname("filter")),
+              Term.AnonymousFunction(Term.ApplyType(
+                Term.Select(Term.Placeholder(), tname("isInstanceOf")),
+                List(pname("InferredTypeTree"))
+              )) :: Nil
+            ),
+            tname("tpes")
+          ),
+          tname("collect")
+        ),
+        Term.PartialFunction(
+          Case(
+            Pat.Typed(Pat.Var(tname("tvar")), pname("TypeVar")),
+            Some(Term.ApplyInfix(
+              Term.ApplyInfix(
+                Term.ApplyUnary(tname("!"), Term.Select(tname("tvar"), tname("isInstantiated"))),
+                tname("&&"),
+                Nil,
+                Term.Apply(
+                  Term.Select(
+                    Term.Select(Term.Select(tname("ctx"), tname("typerState")), tname("ownedVars")),
+                    tname("contains")
+                  ),
+                  List(tname("tvar"))
                 ) :: Nil
               ),
-              tname("tpes")
-            ),
-            tname("collect")
-          ),
-          Term.PartialFunction(
-            Case(
-              Pat.Typed(Pat.Var(tname("tvar")), pname("TypeVar")),
-              Some(
-                Term.ApplyInfix(
-                  Term.ApplyInfix(
-                    Term.ApplyUnary(
-                      tname("!"),
-                      Term.Select(tname("tvar"), tname("isInstantiated"))
-                    ),
-                    tname("&&"),
-                    Nil,
-                    Term.Apply(
-                      Term.Select(
-                        Term.Select(
-                          Term.Select(tname("ctx"), tname("typerState")),
-                          tname("ownedVars")
-                        ),
-                        tname("contains")
-                      ),
-                      List(tname("tvar"))
-                    ) :: Nil
-                  ),
-                  tname("&&"),
-                  Nil,
-                  Term.ApplyUnary(
-                    tname("!"),
-                    Term.Apply(Term.Select(tname("locked"), tname("contains")), List(tname("tvar")))
-                  ) :: Nil
-                )
-              ),
-              tname("tvar")
-            ) :: Nil
+              tname("&&"),
+              Nil,
+              Term.ApplyUnary(
+                tname("!"),
+                Term.Apply(Term.Select(tname("locked"), tname("contains")), List(tname("tvar")))
+              ) :: Nil
+            )),
+            tname("tvar")
           ) :: Nil
-        )
+        ) :: Nil
       )
-    )
+    ))
   }
 
   test("nested if else without indent") {
@@ -3415,24 +2996,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|if (columnsVar != null) columnsVar.toInt else if (Properties.isWin) if (ansiconVar != null) ansiconVar.toInt else defaultWidth else defaultWidth
            |""".stripMargin
       )
-    )(
+    )(Term.If(
+      Term.ApplyInfix(tname("columnsVar"), tname("!="), Nil, List(Lit.Null())),
+      Term.Select(tname("columnsVar"), tname("toInt")),
       Term.If(
-        Term.ApplyInfix(tname("columnsVar"), tname("!="), Nil, List(Lit.Null())),
-        Term.Select(tname("columnsVar"), tname("toInt")),
+        Term.Select(tname("Properties"), tname("isWin")),
         Term.If(
-          Term.Select(tname("Properties"), tname("isWin")),
-          Term.If(
-            Term.ApplyInfix(tname("ansiconVar"), tname("!="), Nil, List(Lit.Null())),
-            Term.Select(tname("ansiconVar"), tname("toInt")),
-            tname("defaultWidth"),
-            Nil
-          ),
+          Term.ApplyInfix(tname("ansiconVar"), tname("!="), Nil, List(Lit.Null())),
+          Term.Select(tname("ansiconVar"), tname("toInt")),
           tname("defaultWidth"),
           Nil
         ),
+        tname("defaultWidth"),
         Nil
-      )
-    )
+      ),
+      Nil
+    ))
   }
 
   test("if-then without else") {
@@ -3451,48 +3030,42 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Object(
-        Nil,
-        tname("foo"),
-        tpl(
-          Defn.Def(
-            List(Mod.Private(anon)),
-            tname("assertBounds"),
-            Nil,
-            List(List(tparam("context", "String"))),
-            None,
-            Term.If(
-              Term.ApplyInfix(
-                tname("idx"),
-                tname(">="),
-                Nil,
-                List(Term.Select(tname("query"), tname("length")))
-              ),
-              Term.Apply(tname("err"), List(tname("context"))),
-              Lit.Unit(),
-              Nil
-            )
-          ),
-          Defn.Def(
-            List(Mod.Private(anon)),
-            tname("err"),
-            Nil,
-            List(List(tparam("problem", "String"))),
-            None,
-            Term.Throw(
-              Term.New(
-                Init(
-                  pname("QueryParseException"),
-                  anon,
-                  List(List(tname("query"), tname("idx"), tname("problem")))
-                )
-              )
-            )
+    )(Defn.Object(
+      Nil,
+      tname("foo"),
+      tpl(
+        Defn.Def(
+          List(Mod.Private(anon)),
+          tname("assertBounds"),
+          Nil,
+          List(List(tparam("context", "String"))),
+          None,
+          Term.If(
+            Term.ApplyInfix(
+              tname("idx"),
+              tname(">="),
+              Nil,
+              List(Term.Select(tname("query"), tname("length")))
+            ),
+            Term.Apply(tname("err"), List(tname("context"))),
+            Lit.Unit(),
+            Nil
           )
+        ),
+        Defn.Def(
+          List(Mod.Private(anon)),
+          tname("err"),
+          Nil,
+          List(List(tparam("problem", "String"))),
+          None,
+          Term.Throw(Term.New(Init(
+            pname("QueryParseException"),
+            anon,
+            List(List(tname("query"), tname("idx"), tname("problem")))
+          )))
         )
       )
-    )
+    ))
   }
 
   test("old-style if") {
@@ -3507,32 +3080,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|while (idx < str.length) if ((str charAt idx) != '$' || isEscaped) idx += 1 else idx
            |""".stripMargin
       )
-    )(
-      Term.While(
+    )(Term.While(
+      Term
+        .ApplyInfix(tname("idx"), tname("<"), Nil, List(Term.Select(tname("str"), tname("length")))),
+      Term.If(
         Term.ApplyInfix(
-          tname("idx"),
-          tname("<"),
-          Nil,
-          List(Term.Select(tname("str"), tname("length")))
-        ),
-        Term.If(
           Term.ApplyInfix(
-            Term.ApplyInfix(
-              Term.ApplyInfix(tname("str"), tname("charAt"), Nil, List(tname("idx"))),
-              tname("!="),
-              Nil,
-              List(Lit.Char('$'))
-            ),
-            tname("||"),
+            Term.ApplyInfix(tname("str"), tname("charAt"), Nil, List(tname("idx"))),
+            tname("!="),
             Nil,
-            List(tname("isEscaped"))
+            List(Lit.Char('$'))
           ),
-          Term.ApplyInfix(tname("idx"), tname("+="), Nil, List(int(1))),
-          tname("idx"),
-          Nil
-        )
+          tname("||"),
+          Nil,
+          List(tname("isEscaped"))
+        ),
+        Term.ApplyInfix(tname("idx"), tname("+="), Nil, List(int(1))),
+        tname("idx"),
+        Nil
       )
-    )
+    ))
   }
 
   test("old-style for and if") {
@@ -3549,74 +3116,60 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Term.For(
-        List(Enumerator.Generator(Pat.Var(tname("c")), tname("str"))),
-        Term.If(
-          Term.ApplyInfix(tname("c"), tname("=="), Nil, List(Lit.Char('\n'))),
-          Term.Block(
-            List(
-              Term.ApplyInfix(tname("line"), tname("+="), Nil, List(int(1))),
-              Term.Assign(tname("char"), int(0))
-            )
-          ),
-          Term.Block(
-            Term.ApplyInfix(tname("char"), tname("+="), Nil, List(int(1))) :: Nil
-          ),
-          Nil
-        )
+    )(Term.For(
+      List(Enumerator.Generator(Pat.Var(tname("c")), tname("str"))),
+      Term.If(
+        Term.ApplyInfix(tname("c"), tname("=="), Nil, List(Lit.Char('\n'))),
+        Term.Block(List(
+          Term.ApplyInfix(tname("line"), tname("+="), Nil, List(int(1))),
+          Term.Assign(tname("char"), int(0))
+        )),
+        Term.Block(Term.ApplyInfix(tname("char"), tname("+="), Nil, List(int(1))) :: Nil),
+        Nil
       )
-    )
+    ))
   }
 
   test("several if-then, some nested") {
-    val code =
-      """|classDef
-         |      .foreach {
-         |        case typeSymbol: Symbol =>
-         |          if typ then {
-         |            // foo
-         |          }
-         |          if typeDef then
-         |            if typJava then {
-         |              // foo
-         |            }
-         |        case _ =>
-         |    }
-         |""".stripMargin
-    val output =
-      """|classDef.foreach {
-         |  case typeSymbol: Symbol =>
-         |    if (typ) {}
-         |    if (typeDef) if (typJava) {}
-         |  case _ =>
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Apply(
-        Term.Select(tname("classDef"), tname("foreach")),
-        Term.PartialFunction(
-          List(
-            Case(
-              Pat.Typed(Pat.Var(tname("typeSymbol")), pname("Symbol")),
-              None,
-              Term.Block(
-                List(
-                  Term.If(tname("typ"), Term.Block(Nil), Lit.Unit(), Nil),
-                  Term.If(
-                    tname("typeDef"),
-                    Term.If(tname("typJava"), Term.Block(Nil), Lit.Unit(), Nil),
-                    Lit.Unit(),
-                    Nil
-                  )
-                )
-              )
-            ),
-            Case(Pat.Wildcard(), None, Term.Block(Nil))
-          )
-        ) :: Nil
-      )
-    )
+    val code = """|classDef
+                  |      .foreach {
+                  |        case typeSymbol: Symbol =>
+                  |          if typ then {
+                  |            // foo
+                  |          }
+                  |          if typeDef then
+                  |            if typJava then {
+                  |              // foo
+                  |            }
+                  |        case _ =>
+                  |    }
+                  |""".stripMargin
+    val output = """|classDef.foreach {
+                    |  case typeSymbol: Symbol =>
+                    |    if (typ) {}
+                    |    if (typeDef) if (typJava) {}
+                    |  case _ =>
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Apply(
+      Term.Select(tname("classDef"), tname("foreach")),
+      Term.PartialFunction(List(
+        Case(
+          Pat.Typed(Pat.Var(tname("typeSymbol")), pname("Symbol")),
+          None,
+          Term.Block(List(
+            Term.If(tname("typ"), Term.Block(Nil), Lit.Unit(), Nil),
+            Term.If(
+              tname("typeDef"),
+              Term.If(tname("typJava"), Term.Block(Nil), Lit.Unit(), Nil),
+              Lit.Unit(),
+              Nil
+            )
+          ))
+        ),
+        Case(Pat.Wildcard(), None, Term.Block(Nil))
+      )) :: Nil
+    ))
   }
 
   test("old-style if, with outdent") {
@@ -3625,92 +3178,70 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |          val msg = s"ERROR: Multiple index pages for doc found ${indexes.map(_.file)}"
          |          report.error(msg)
          |""".stripMargin
-    val output =
-      """|if (indexes.size > 1) {
-         |  val msg = s"ERROR: Multiple index pages for doc found ${
-         |    indexes.map(_.file)
-         |  }"
-         |  report.error(msg)
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        Term.ApplyInfix(
-          Term.Select(tname("indexes"), tname("size")),
-          tname(">"),
+    val output = """|if (indexes.size > 1) {
+                    |  val msg = s"ERROR: Multiple index pages for doc found ${
+                    |    indexes.map(_.file)
+                    |  }"
+                    |  report.error(msg)
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
+      Term.ApplyInfix(Term.Select(tname("indexes"), tname("size")), tname(">"), Nil, List(int(1))),
+      Term.Block(List(
+        Defn.Val(
           Nil,
-          List(int(1))
-        ),
-        Term.Block(
-          List(
-            Defn.Val(
-              Nil,
-              List(Pat.Var(tname("msg"))),
-              None,
-              Term.Interpolate(
-                tname("s"),
-                List(str("ERROR: Multiple index pages for doc found "), str("")),
-                Term.Block(
-                  Term.Apply(
-                    Term.Select(tname("indexes"), tname("map")),
-                    List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("file"))))
-                  ) :: Nil
-                ) :: Nil
-              )
-            ),
-            Term.Apply(
-              Term.Select(tname("report"), tname("error")),
-              List(tname("msg"))
-            )
+          List(Pat.Var(tname("msg"))),
+          None,
+          Term.Interpolate(
+            tname("s"),
+            List(str("ERROR: Multiple index pages for doc found "), str("")),
+            Term.Block(
+              Term.Apply(
+                Term.Select(tname("indexes"), tname("map")),
+                List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("file"))))
+              ) :: Nil
+            ) :: Nil
           )
         ),
-        Lit.Unit(),
-        Nil
-      )
-    )
+        Term.Apply(Term.Select(tname("report"), tname("error")), List(tname("msg")))
+      )),
+      Lit.Unit(),
+      Nil
+    ))
   }
 
   test("if-then in parens") {
-    val code =
-      """|{
-         |  if this then
-         |    tvars.foreach(tvar => if !tvar then includeVar(tvar))
-         |  typeComparer.addToConstraint(tvars)
-         |}
-         |""".stripMargin
-    val output =
-      """|{
-         |  if (this) tvars.foreach(tvar => if (!tvar) includeVar(tvar))
-         |  typeComparer.addToConstraint(tvars)
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Block(
-        List(
-          Term.If(
-            Term.This(anon),
-            Term.Apply(
-              Term.Select(tname("tvars"), tname("foreach")),
-              Term.Function(
-                Term.ParamClause(List(tparam("tvar"))),
-                Term.If(
-                  Term.ApplyUnary(tname("!"), tname("tvar")),
-                  Term.Apply(tname("includeVar"), List(tname("tvar"))),
-                  Lit.Unit(),
-                  Nil
-                )
-              ) :: Nil
-            ),
-            Lit.Unit(),
-            Nil
-          ),
-          Term.Apply(
-            Term.Select(tname("typeComparer"), tname("addToConstraint")),
-            List(tname("tvars"))
-          )
-        )
-      )
-    )
+    val code = """|{
+                  |  if this then
+                  |    tvars.foreach(tvar => if !tvar then includeVar(tvar))
+                  |  typeComparer.addToConstraint(tvars)
+                  |}
+                  |""".stripMargin
+    val output = """|{
+                    |  if (this) tvars.foreach(tvar => if (!tvar) includeVar(tvar))
+                    |  typeComparer.addToConstraint(tvars)
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Block(List(
+      Term.If(
+        Term.This(anon),
+        Term.Apply(
+          Term.Select(tname("tvars"), tname("foreach")),
+          Term.Function(
+            Term.ParamClause(List(tparam("tvar"))),
+            Term.If(
+              Term.ApplyUnary(tname("!"), tname("tvar")),
+              Term.Apply(tname("includeVar"), List(tname("tvar"))),
+              Lit.Unit(),
+              Nil
+            )
+          ) :: Nil
+        ),
+        Lit.Unit(),
+        Nil
+      ),
+      Term.Apply(Term.Select(tname("typeComparer"), tname("addToConstraint")), List(tname("tvars")))
+    )))
   }
 
   test("for-if in parens") {
@@ -3730,355 +3261,295 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  for (name <- abstractTypeNames) foo
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Block(
-        List(
-          Defn.Val(
-            Nil,
-            List(Pat.Var(tname("abstractTypeNames"))),
-            None,
-            Term.ForYield(
-              List(
-                Enumerator.Generator(Pat.Var(tname("parent")), tname("parents")),
-                Enumerator.Generator(
-                  Pat.Var(tname("mbr")),
-                  Term.Select(tname("parent"), tname("abstractTypeMembers"))
-                ),
-                Enumerator.Guard(
-                  Term.Apply(
-                    tname("qualifies"),
-                    List(Term.Select(tname("mbr"), tname("symbol")))
-                  )
-                )
-              ),
-              Term.Select(Term.Select(tname("mbr"), tname("name")), tname("asTypeName"))
-            )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Block(List(
+      Defn.Val(
+        Nil,
+        List(Pat.Var(tname("abstractTypeNames"))),
+        None,
+        Term.ForYield(
+          List(
+            Enumerator.Generator(Pat.Var(tname("parent")), tname("parents")),
+            Enumerator.Generator(
+              Pat.Var(tname("mbr")),
+              Term.Select(tname("parent"), tname("abstractTypeMembers"))
+            ),
+            Enumerator
+              .Guard(Term.Apply(tname("qualifies"), List(Term.Select(tname("mbr"), tname("symbol")))))
           ),
-          Term.For(
-            List(Enumerator.Generator(Pat.Var(tname("name")), tname("abstractTypeNames"))),
-            tname("foo")
-          )
+          Term.Select(Term.Select(tname("mbr"), tname("name")), tname("asTypeName"))
         )
+      ),
+      Term.For(
+        List(Enumerator.Generator(Pat.Var(tname("name")), tname("abstractTypeNames"))),
+        tname("foo")
       )
-    )
+    )))
   }
 
   test("several nested if, with () as body") {
-    val code =
-      """|
-         |  if !other
-         |  then
-         |    if (member)
-         |      ()
-         |    else
-         |      overrideError()
-         |  else
-         |    checkOverrideDeprecated()
-         |""".stripMargin
-    val output =
-      """|if (!other) if (member) () else overrideError() else checkOverrideDeprecated()
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        Term.ApplyUnary(tname("!"), tname("other")),
-        Term.If(tname("member"), Lit.Unit(), Term.Apply(tname("overrideError"), Nil), Nil),
-        Term.Apply(tname("checkOverrideDeprecated"), Nil),
-        Nil
-      )
-    )
+    val code = """|
+                  |  if !other
+                  |  then
+                  |    if (member)
+                  |      ()
+                  |    else
+                  |      overrideError()
+                  |  else
+                  |    checkOverrideDeprecated()
+                  |""".stripMargin
+    val output = """|if (!other) if (member) () else overrideError() else checkOverrideDeprecated()
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
+      Term.ApplyUnary(tname("!"), tname("other")),
+      Term.If(tname("member"), Lit.Unit(), Term.Apply(tname("overrideError"), Nil), Nil),
+      Term.Apply(tname("checkOverrideDeprecated"), Nil),
+      Nil
+    ))
   }
 
   test("#3136: block catch handler, indented") {
-    val code =
-      """|try ???
-         |catch
-         |  val a = 10
-         |  handler(a)
-         |""".stripMargin
-    val msg =
-      """|<input>:3: error: illegal start of simple expression
-         |  val a = 10
-         |  ^""".stripMargin
+    val code = """|try ???
+                  |catch
+                  |  val a = 10
+                  |  handler(a)
+                  |""".stripMargin
+    val msg = """|<input>:3: error: illegal start of simple expression
+                 |  val a = 10
+                 |  ^""".stripMargin
     runTestError[Stat](code, msg)
   }
 
   test("match with dedented single case") {
-    val code =
-      """|val a = this match
-         |      case a =>
-         |         that match
-         |        case b => bb
-         |         end match
-         |      case b =>
-         |         that match
-         |        case c => cc
-         |""".stripMargin
-    val output =
-      """|val a = this match {
-         |  case a =>
-         |    that match {
-         |      case b =>
-         |        bb
-         |        end match
-         |    }
-         |  case b =>
-         |    that match {
-         |      case c => cc
-         |    }
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("a"))),
-        None,
-        Term.Match(
-          Term.This(anon),
-          List(
-            Case(
-              Pat.Var(tname("a")),
-              None,
-              Term.Match(
-                tname("that"),
-                List(
-                  Case(
-                    Pat.Var(tname("b")),
-                    None,
-                    Term.Block(List(tname("bb"), Term.EndMarker(tname("match"))))
-                  )
-                ),
-                Nil
-              )
-            ),
-            Case(
-              Pat.Var(tname("b")),
-              None,
-              Term.Match(tname("that"), List(Case(Pat.Var(tname("c")), None, tname("cc"))), Nil)
-            )
-          ),
-          Nil
-        )
-      )
-    )
-  }
-
-  test("single-line try within catch case, then another case") {
-    val code =
-      """|try foo
-         |catch
-         |case _ =>
-         |    try bar finally qux
-         |    try bar catch baz finally qux
-         |    try bar catch case _ => baz finally qux
-         |case xyz =>
-         |""".stripMargin
-    val output =
-      """|try foo catch {
-         |  case _ =>
-         |    try bar finally qux
-         |    try bar catch baz finally qux
-         |    try bar catch {
-         |      case _ => baz
-         |    } finally qux
-         |  case xyz =>
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        tname("foo"),
+    val code = """|val a = this match
+                  |      case a =>
+                  |         that match
+                  |        case b => bb
+                  |         end match
+                  |      case b =>
+                  |         that match
+                  |        case c => cc
+                  |""".stripMargin
+    val output = """|val a = this match {
+                    |  case a =>
+                    |    that match {
+                    |      case b =>
+                    |        bb
+                    |        end match
+                    |    }
+                    |  case b =>
+                    |    that match {
+                    |      case c => cc
+                    |    }
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("a"))),
+      None,
+      Term.Match(
+        Term.This(anon),
         List(
           Case(
-            Pat.Wildcard(),
+            Pat.Var(tname("a")),
             None,
-            Term.Block(
-              List(
-                Term.Try(tname("bar"), Nil, Some(tname("qux"))),
-                Term.TryWithHandler(tname("bar"), tname("baz"), Some(tname("qux"))),
-                Term.Try(
-                  tname("bar"),
-                  List(Case(Pat.Wildcard(), None, tname("baz"))),
-                  Some(tname("qux"))
-                )
-              )
+            Term.Match(
+              tname("that"),
+              List(Case(
+                Pat.Var(tname("b")),
+                None,
+                Term.Block(List(tname("bb"), Term.EndMarker(tname("match"))))
+              )),
+              Nil
             )
           ),
-          Case(Pat.Var(tname("xyz")), None, Term.Block(Nil))
+          Case(
+            Pat.Var(tname("b")),
+            None,
+            Term.Match(tname("that"), List(Case(Pat.Var(tname("c")), None, tname("cc"))), Nil)
+          )
         ),
-        None
+        Nil
       )
-    )
+    ))
   }
 
   test("single-line try within catch case, then another case") {
-    val code =
-      """|try foo
-         |catch
-         |case _ =>
-         |    try bar finally qux
-         |    try bar catch baz finally qux
-         |    try bar catch case _ => baz finally qux
-         |finally xyz
-         |""".stripMargin
-    val output =
-      """|try foo catch {
-         |  case _ =>
-         |    try bar finally qux
-         |    try bar catch baz finally qux
-         |    try bar catch {
-         |      case _ => baz
-         |    } finally qux
-         |} finally xyz
-         |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        tname("foo"),
+    val code = """|try foo
+                  |catch
+                  |case _ =>
+                  |    try bar finally qux
+                  |    try bar catch baz finally qux
+                  |    try bar catch case _ => baz finally qux
+                  |case xyz =>
+                  |""".stripMargin
+    val output = """|try foo catch {
+                    |  case _ =>
+                    |    try bar finally qux
+                    |    try bar catch baz finally qux
+                    |    try bar catch {
+                    |      case _ => baz
+                    |    } finally qux
+                    |  case xyz =>
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      tname("foo"),
+      List(
         Case(
           Pat.Wildcard(),
           None,
-          Term.Block(
-            List(
-              Term.Try(tname("bar"), Nil, Some(tname("qux"))),
-              Term.TryWithHandler(tname("bar"), tname("baz"), Some(tname("qux"))),
-              Term.Try(
-                tname("bar"),
-                List(Case(Pat.Wildcard(), None, tname("baz"))),
-                Some(tname("qux"))
-              )
-            )
-          )
-        ) :: Nil,
-        Some(tname("xyz"))
-      )
-    )
+          Term.Block(List(
+            Term.Try(tname("bar"), Nil, Some(tname("qux"))),
+            Term.TryWithHandler(tname("bar"), tname("baz"), Some(tname("qux"))),
+            Term
+              .Try(tname("bar"), List(Case(Pat.Wildcard(), None, tname("baz"))), Some(tname("qux")))
+          ))
+        ),
+        Case(Pat.Var(tname("xyz")), None, Term.Block(Nil))
+      ),
+      None
+    ))
+  }
+
+  test("single-line try within catch case, then another case") {
+    val code = """|try foo
+                  |catch
+                  |case _ =>
+                  |    try bar finally qux
+                  |    try bar catch baz finally qux
+                  |    try bar catch case _ => baz finally qux
+                  |finally xyz
+                  |""".stripMargin
+    val output = """|try foo catch {
+                    |  case _ =>
+                    |    try bar finally qux
+                    |    try bar catch baz finally qux
+                    |    try bar catch {
+                    |      case _ => baz
+                    |    } finally qux
+                    |} finally xyz
+                    |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      tname("foo"),
+      Case(
+        Pat.Wildcard(),
+        None,
+        Term.Block(List(
+          Term.Try(tname("bar"), Nil, Some(tname("qux"))),
+          Term.TryWithHandler(tname("bar"), tname("baz"), Some(tname("qux"))),
+          Term.Try(tname("bar"), List(Case(Pat.Wildcard(), None, tname("baz"))), Some(tname("qux")))
+        ))
+      ) :: Nil,
+      Some(tname("xyz"))
+    ))
   }
 
   test("#3220") {
-    val code =
-      """|for {
-         |  case (a, b) <- pairs
-         |  x <- a to b
-         |} yield x
-         |""".stripMargin
+    val code = """|for {
+                  |  case (a, b) <- pairs
+                  |  x <- a to b
+                  |} yield x
+                  |""".stripMargin
     val layout = "for ( case (a, b) <- pairs; x <- a to b) yield x"
-    runTestAssert[Stat](code, Some(layout))(
-      Term.ForYield(
-        List(
-          Enumerator.CaseGenerator(
-            Pat.Tuple(List(Pat.Var(tname("a")), Pat.Var(tname("b")))),
-            tname("pairs")
-          ),
-          Enumerator.Generator(
-            Pat.Var(tname("x")),
-            Term.ApplyInfix(tname("a"), tname("to"), Nil, List(tname("b")))
-          )
-        ),
-        tname("x")
-      )
-    )
+    runTestAssert[Stat](code, Some(layout))(Term.ForYield(
+      List(
+        Enumerator
+          .CaseGenerator(Pat.Tuple(List(Pat.Var(tname("a")), Pat.Var(tname("b")))), tname("pairs")),
+        Enumerator.Generator(
+          Pat.Var(tname("x")),
+          Term.ApplyInfix(tname("a"), tname("to"), Nil, List(tname("b")))
+        )
+      ),
+      tname("x")
+    ))
   }
 
   test("#3224") {
-    val code =
-      """|for {
-         |  x2 <- x1
-         |} yield x2
-         |  .x3 {
-         |    case x4
-         |        if x5.x6
-         |          .x7(x8) =>
-         |        x9
-         |  }
-         |""".stripMargin
-    val layout =
-      """|for (x2 <- x1) yield x2.x3 {
-         |  case x4 if x5.x6.x7(x8) => x9
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, Some(layout))(
-      Term.ForYield(
-        List(Enumerator.Generator(Pat.Var(tname("x2")), tname("x1"))),
-        Term.Apply(
-          Term.Select(tname("x2"), tname("x3")),
-          Term.PartialFunction(
-            Case(
-              Pat.Var(tname("x4")),
-              Some(
-                Term.Apply(
-                  Term.Select(Term.Select(tname("x5"), tname("x6")), tname("x7")),
-                  List(tname("x8"))
-                )
-              ),
-              tname("x9")
-            ) :: Nil
+    val code = """|for {
+                  |  x2 <- x1
+                  |} yield x2
+                  |  .x3 {
+                  |    case x4
+                  |        if x5.x6
+                  |          .x7(x8) =>
+                  |        x9
+                  |  }
+                  |""".stripMargin
+    val layout = """|for (x2 <- x1) yield x2.x3 {
+                    |  case x4 if x5.x6.x7(x8) => x9
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, Some(layout))(Term.ForYield(
+      List(Enumerator.Generator(Pat.Var(tname("x2")), tname("x1"))),
+      Term.Apply(
+        Term.Select(tname("x2"), tname("x3")),
+        Term.PartialFunction(
+          Case(
+            Pat.Var(tname("x4")),
+            Some(Term.Apply(
+              Term.Select(Term.Select(tname("x5"), tname("x6")), tname("x7")),
+              List(tname("x8"))
+            )),
+            tname("x9")
           ) :: Nil
-        )
+        ) :: Nil
       )
-    )
+    ))
   }
 
   test("while cond uses match") {
-    val code1 =
-      """|if sArr(last) == ')' then
-         |  while (sArr(last): @switch).match
-         |    case _ => false
-         |  do last -= 1
-         |""".stripMargin
-    val code2 =
-      """|if sArr(last) == ')' then
-         |  while (sArr(last): @switch) match
-         |    case _ => false
-         |  do last -= 1
-         |""".stripMargin
-    val layout =
-      """|if (sArr(last) == ')') while ((sArr(last): @switch) match {
-         |  case _ => false
-         |}) last -= 1
-         |""".stripMargin
+    val code1 = """|if sArr(last) == ')' then
+                   |  while (sArr(last): @switch).match
+                   |    case _ => false
+                   |  do last -= 1
+                   |""".stripMargin
+    val code2 = """|if sArr(last) == ')' then
+                   |  while (sArr(last): @switch) match
+                   |    case _ => false
+                   |  do last -= 1
+                   |""".stripMargin
+    val layout = """|if (sArr(last) == ')') while ((sArr(last): @switch) match {
+                    |  case _ => false
+                    |}) last -= 1
+                    |""".stripMargin
     assertNoDiff(parseStat(code1, dialect).reprint, layout)
     assertNoDiff(parseStat(code2, dialect).reprint, layout)
   }
 
   test("scalafmt #3790 case") {
-    val code =
-      """|case 1 =>
-         |  println(2)
-         |  (3, 4)
-         |""".stripMargin
-    val layout =
-      """|case 1 =>
-         |  println(2)
-         |  (3, 4)
-         |""".stripMargin
+    val code = """|case 1 =>
+                  |  println(2)
+                  |  (3, 4)
+                  |""".stripMargin
+    val layout = """|case 1 =>
+                    |  println(2)
+                    |  (3, 4)
+                    |""".stripMargin
     val tree = Case(
       int(1),
       None,
-      blk(
-        Term.Apply(tname("println"), List(int(2))),
-        Term.Tuple(List(int(3), int(4)))
-      )
+      blk(Term.Apply(tname("println"), List(int(2))), Term.Tuple(List(int(3), int(4))))
     )
     runTestAssert[Case](code, layout)(tree)
   }
 
   test("scalafmt #3790 match optional braces") {
-    val code =
-      """|def foo =
-         |  bar match
-         |  case 1 =>
-         |    println(2)
-         |    (3, 4)
-         |  baz
-         |""".stripMargin
-    val layout =
-      """|def foo = {
-         |  bar match {
-         |    case 1 =>
-         |      println(2)
-         |      (3, 4)
-         |  }
-         |  baz
-         |}
-         |""".stripMargin
+    val code = """|def foo =
+                  |  bar match
+                  |  case 1 =>
+                  |    println(2)
+                  |    (3, 4)
+                  |  baz
+                  |""".stripMargin
+    val layout = """|def foo = {
+                    |  bar match {
+                    |    case 1 =>
+                    |      println(2)
+                    |      (3, 4)
+                    |  }
+                    |  baz
+                    |}
+                    |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),
@@ -4090,10 +3561,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Case(
             int(1),
             None,
-            blk(
-              Term.Apply(tname("println"), List(int(2))),
-              Term.Tuple(List(int(3), int(4)))
-            )
+            blk(Term.Apply(tname("println"), List(int(2))), Term.Tuple(List(int(3), int(4))))
           ) :: Nil,
           Nil
         ),
@@ -4104,22 +3572,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3790 match optional braces, and case class following in case body") {
-    val code =
-      """|def foo =
-         |  bar match
-         |  case 1 =>
-         |    println(2)
-         |    (3, 4)
-         |    case class A(a: Int)
-         |""".stripMargin
-    val layout =
-      """|def foo = bar match {
-         |  case 1 =>
-         |    println(2)
-         |    (3, 4)
-         |    case class A(a: Int)
-         |}
-         |""".stripMargin
+    val code = """|def foo =
+                  |  bar match
+                  |  case 1 =>
+                  |    println(2)
+                  |    (3, 4)
+                  |    case class A(a: Int)
+                  |""".stripMargin
+    val layout = """|def foo = bar match {
+                    |  case 1 =>
+                    |    println(2)
+                    |    (3, 4)
+                    |    case class A(a: Int)
+                    |}
+                    |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),
@@ -4133,13 +3599,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           blk(
             Term.Apply(tname("println"), List(int(2))),
             Term.Tuple(List(int(3), int(4))),
-            Defn.Class(
-              List(Mod.Case()),
-              pname("A"),
-              Nil,
-              ctorp(tparam("a", "Int")),
-              tpl()
-            )
+            Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(tparam("a", "Int")), tpl())
           )
         ) :: Nil,
         Nil
@@ -4149,24 +3609,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3790 match optional braces, and case class following after case body") {
-    val code =
-      """|def foo =
-         |  bar match
-         |  case 1 =>
-         |    println(2)
-         |    (3, 4)
-         |  case class A(a: Int)
-         |""".stripMargin
-    val layout =
-      """|def foo = {
-         |  bar match {
-         |    case 1 =>
-         |      println(2)
-         |      (3, 4)
-         |  }
-         |  case class A(a: Int)
-         |}
-         |""".stripMargin
+    val code = """|def foo =
+                  |  bar match
+                  |  case 1 =>
+                  |    println(2)
+                  |    (3, 4)
+                  |  case class A(a: Int)
+                  |""".stripMargin
+    val layout = """|def foo = {
+                    |  bar match {
+                    |    case 1 =>
+                    |      println(2)
+                    |      (3, 4)
+                    |  }
+                    |  case class A(a: Int)
+                    |}
+                    |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),
@@ -4178,42 +3636,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
           Case(
             int(1),
             None,
-            blk(
-              Term.Apply(tname("println"), List(int(2))),
-              Term.Tuple(List(int(3), int(4)))
-            )
+            blk(Term.Apply(tname("println"), List(int(2))), Term.Tuple(List(int(3), int(4))))
           ) :: Nil,
           Nil
         ),
-        Defn.Class(
-          List(Mod.Case()),
-          pname("A"),
-          Nil,
-          ctorp(List(tparam("a", "Int"))),
-          tpl()
-        )
+        Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(List(tparam("a", "Int"))), tpl())
       )
     )
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3790 match actual braces") {
-    val code =
-      """|def foo =
-         |  bar match {
-         |  case 1 =>
-         |    println(2)
-         |    (3, 4)
-         |  baz}
-         |""".stripMargin
-    val layout =
-      """|def foo = bar match {
-         |  case 1 =>
-         |    println(2)
-         |    (3, 4)
-         |    baz
-         |}
-         |""".stripMargin
+    val code = """|def foo =
+                  |  bar match {
+                  |  case 1 =>
+                  |    println(2)
+                  |    (3, 4)
+                  |  baz}
+                  |""".stripMargin
+    val layout = """|def foo = bar match {
+                    |  case 1 =>
+                    |    println(2)
+                    |    (3, 4)
+                    |    baz
+                    |}
+                    |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),

@@ -23,16 +23,18 @@ object Input {
   }
 
   final case class Stream(stream: java.io.InputStream, charset: Charset) extends Input {
-    lazy val chars = new scala.Predef.String(
-      scala.meta.internal.io.InputStreamIO.readBytes(stream),
-      charset
-    ).toArray
+    lazy val chars =
+      new scala.Predef.String(scala.meta.internal.io.InputStreamIO.readBytes(stream), charset)
+        .toArray
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
     override def toString = s"""Input.Stream(<stream>, Charset.forName("${charset.name}"))"""
   }
   object Stream {
-    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: Stream)
-        extends Serializable {
+    @SerialVersionUID(1L)
+    private class SerializationProxy(
+        @transient
+        private var orig: Stream
+    ) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
         out.writeObject(orig.chars)
         out.writeObject(orig.charset.name)
@@ -61,8 +63,11 @@ object Input {
     def apply(path: nio.Path, charset: Charset): Input.File = apply(AbsolutePath(path), charset)
     def apply(path: nio.Path): Input.File = apply(AbsolutePath(path))
 
-    @SerialVersionUID(1L) private class SerializationProxy(@transient private var orig: File)
-        extends Serializable {
+    @SerialVersionUID(1L)
+    private class SerializationProxy(
+        @transient
+        private var orig: File
+    ) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
         out.writeObject(orig.path)
         out.writeObject(orig.charset.name)

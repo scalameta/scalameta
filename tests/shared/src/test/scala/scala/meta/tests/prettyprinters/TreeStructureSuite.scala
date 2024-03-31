@@ -33,13 +33,7 @@ class TreeStructureSuite extends ParseSuite {
   assertStructure(bool(true))("Lit.Boolean(true)")
   assertStructure(str("lit.str"))("""Lit.String("lit.str")""")
 
-  assertStructure(
-    Case(
-      Pat.Wildcard(),
-      None,
-      Term.Function(List(tparam("")), bool(false))
-    )
-  )(
+  assertStructure(Case(Pat.Wildcard(), None, Term.Function(List(tparam("")), bool(false))))(
     """|
        |Case(
        |  Pat.Wildcard(),
@@ -52,11 +46,7 @@ class TreeStructureSuite extends ParseSuite {
   )
 
   assertStructure(
-    Case(
-      Pat.Wildcard(),
-      None,
-      Term.Function(List(tparam("")), Term.Block(List(bool(false))))
-    )
+    Case(Pat.Wildcard(), None, Term.Function(List(tparam("")), Term.Block(List(bool(false)))))
   )(
     """|
        |Case(
@@ -69,13 +59,11 @@ class TreeStructureSuite extends ParseSuite {
        |""".stripMargin
   )
 
-  assertStructure(
-    Case(
-      Pat.Wildcard(),
-      None,
-      Term.Function(List(tparam("")), Term.Block(List(bool(false), tname("a"))))
-    )
-  )(
+  assertStructure(Case(
+    Pat.Wildcard(),
+    None,
+    Term.Function(List(tparam("")), Term.Block(List(bool(false), tname("a"))))
+  ))(
     """|
        |Case(
        |  Pat.Wildcard(),

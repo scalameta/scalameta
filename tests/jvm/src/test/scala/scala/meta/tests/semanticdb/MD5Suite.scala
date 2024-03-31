@@ -20,11 +20,8 @@ class MD5Suite extends FunSuite {
     val fos = Files.newInputStream(file.toNIO)
     val md = MessageDigest.getInstance("MD5")
     val dis = new DigestInputStream(fos, md)
-    try {
-      while (dis.read() != -1) ()
-    } finally {
-      fos.close()
-    }
+    try { while (dis.read() != -1) () }
+    finally { fos.close() }
     Hex.bytesToHex(md.digest())
   }
 
@@ -41,11 +38,7 @@ class MD5Suite extends FunSuite {
     val doc = docs.documents.head
     test(doc.uri.tag(Slow)) {
       val fromText = stringMD5(doc.text)
-      assertEquals(
-        doc.md5,
-        fromText,
-        "TextDocument.md5 does not match stringMD5(TextDocument.md5)"
-      )
+      assertEquals(doc.md5, fromText, "TextDocument.md5 does not match stringMD5(TextDocument.md5)")
 
       val scalaFile = {
         val targetroot = AbsolutePath(databaseClasspath)

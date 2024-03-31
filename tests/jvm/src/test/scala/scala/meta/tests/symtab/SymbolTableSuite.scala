@@ -10,10 +10,8 @@ import scala.meta.io.Classpath
 import scala.meta.tests.BuildInfo
 
 class SymbolTableSuite extends FunSuite {
-  private val classpath =
-    Classpath(BuildInfo.databaseClasspath) ++
-      Classpath(BuildInfo.commonJVMClassDirectory) ++
-      Library.scalaLibrary.classpath()
+  private val classpath = Classpath(BuildInfo.databaseClasspath) ++
+    Classpath(BuildInfo.commonJVMClassDirectory) ++ Library.scalaLibrary.classpath()
   private val globalSymtab = GlobalSymbolTable(classpath, includeJdk = true)
 
   def checkNotExists(symbol: String): Unit = {

@@ -29,20 +29,16 @@ package object meta
   type XtensionParsersDialectApply // shadow conflicting implicit class
   type XtensionTokenizersDialectApply // shadow conflicting implicit class
   implicit class XtensionDialectApply(private val dialect: scala.meta.Dialect) extends AnyVal {
-    def apply[T](inputLike: T)(
-        implicit convert: scala.meta.common.Convert[T, scala.meta.inputs.Input]
-    ): (scala.meta.Dialect, scala.meta.inputs.Input) = {
-      (dialect, convert(inputLike))
-    }
+    def apply[T](inputLike: T)(implicit
+        convert: scala.meta.common.Convert[T, scala.meta.inputs.Input]
+    ): (scala.meta.Dialect, scala.meta.inputs.Input) = { (dialect, convert(inputLike)) }
     def apply(token: scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token) = {
       (dialect, token)
     }
     def apply(tokens: scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens) = {
       (dialect, tokens)
     }
-    def apply(tree: scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree) = {
-      (dialect, tree)
-    }
+    def apply(tree: scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree) = { (dialect, tree) }
   }
   implicit class XtensionDialectTokenSyntax(
       private val dialectToken: (scala.meta.Dialect, scala.meta.tokens.Token)
@@ -59,8 +55,8 @@ package object meta
       implicit val (dialect, tokens) = dialectTokens
       tokens.syntax
     }
-    def tokenize(
-        implicit tokenize: scala.meta.tokenizers.Tokenize
+    def tokenize(implicit
+        tokenize: scala.meta.tokenizers.Tokenize
     ): scala.meta.tokenizers.Tokenized = {
       val (dialect, tokens) = dialectTokens
       val input = Tokens.tokensToInput(tokens)
@@ -82,8 +78,8 @@ package object meta
   }
 
   implicit class XtensionTree(private val tree: Tree) extends AnyVal {
-    def maybeParseAs[A <: Tree: ClassTag](
-        implicit dialect: Dialect,
+    def maybeParseAs[A <: Tree: ClassTag](implicit
+        dialect: Dialect,
         parse: parsers.Parse[A]
     ): Parsed[A] = tree match {
       case t: A => t.maybeParse

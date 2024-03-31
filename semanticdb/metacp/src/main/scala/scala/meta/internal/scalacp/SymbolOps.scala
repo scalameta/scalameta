@@ -11,18 +11,17 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.scalasig._
 
-trait SymbolOps { _: Scalacp =>
+trait SymbolOps {
+  _: Scalacp =>
   lazy val symbolCache = new HashMap[Symbol, String]
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
     def toSemantic: String = {
       def uncached(sym: Symbol): String = {
-        if (sym.isSemanticdbGlobal) Symbols.Global(sym.owner, sym.descriptor)
-        else freshSymbol()
+        if (sym.isSemanticdbGlobal) Symbols.Global(sym.owner, sym.descriptor) else freshSymbol()
       }
       val ssym = symbolCache.get(sym)
-      if (ssym != null) {
-        ssym
-      } else {
+      if (ssym != null) { ssym }
+      else {
         val ssym = uncached(sym)
         symbolCache.put(sym, ssym)
         ssym
@@ -35,17 +34,14 @@ trait SymbolOps { _: Scalacp =>
     def isSemanticdbLocal: Boolean = {
       val owner = sym.parent.getOrElse(NoSymbol)
       def definitelyGlobal = sym.isPackage
-      def definitelyLocal =
-        sym == NoSymbol ||
-          (owner.isInstanceOf[MethodSymbol] && !sym.isParam) ||
-          ((owner.isAlias || (owner.isType && owner.isDeferred)) && !sym.isParam) ||
-          // NOTE: Scalap doesn't expose locals.
-          // sym.isSelfParameter ||
-          // sym.isLocalDummy ||
-          sym.isRefinementClass ||
-          sym.isAnonymousClass ||
-          sym.isAnonymousFunction ||
-          (sym.isInstanceOf[TypeSymbol] && sym.isExistential)
+      def definitelyLocal = sym == NoSymbol ||
+        (owner.isInstanceOf[MethodSymbol] && !sym.isParam) ||
+        ((owner.isAlias || (owner.isType && owner.isDeferred)) && !sym.isParam) ||
+        // NOTE: Scalap doesn't expose locals.
+        // sym.isSelfParameter ||
+        // sym.isLocalDummy ||
+        sym.isRefinementClass || sym.isAnonymousClass || sym.isAnonymousFunction ||
+        (sym.isInstanceOf[TypeSymbol] && sym.isExistential)
       def ownerLocal = sym.parent.map(_.isSemanticdbLocal).getOrElse(false)
       !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
@@ -77,12 +73,9 @@ trait SymbolOps { _: Scalacp =>
     }
     def descriptor: Descriptor = {
       sym match {
-        case sym: SymbolInfoSymbol =>
-          sym.kind match {
-            case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT =>
-              d.Term(symbolName)
-            case k.METHOD if sym.isValMethod =>
-              d.Term(symbolName)
+        case sym: SymbolInfoSymbol => sym.kind match {
+            case k.LOCAL | k.OBJECT | k.PACKAGE_OBJECT => d.Term(symbolName)
+            case k.METHOD if sym.isValMethod => d.Term(symbolName)
             case k.METHOD | k.CONSTRUCTOR | k.MACRO =>
               val overloads = {
                 val peers = sym.parent.get.semanticdbDecls.syms
@@ -95,24 +88,17 @@ trait SymbolOps { _: Scalacp =>
                 if (overloads.lengthCompare(1) == 0) "()"
                 else {
                   val index = overloads.indexOf(sym)
-                  if (index <= 0) "()"
-                  else s"(+${index})"
+                  if (index <= 0) "()" else s"(+${index})"
                 }
               }
               d.Method(symbolName, disambiguator)
-            case k.TYPE | k.CLASS | k.TRAIT =>
-              d.Type(symbolName)
-            case k.PACKAGE =>
-              d.Package(symbolName)
-            case k.PARAMETER =>
-              d.Parameter(symbolName)
-            case k.TYPE_PARAMETER =>
-              d.TypeParameter(symbolName)
-            case skind =>
-              sys.error(s"unsupported kind $skind for symbol $sym")
+            case k.TYPE | k.CLASS | k.TRAIT => d.Type(symbolName)
+            case k.PACKAGE => d.Package(symbolName)
+            case k.PARAMETER => d.Parameter(symbolName)
+            case k.TYPE_PARAMETER => d.TypeParameter(symbolName)
+            case skind => sys.error(s"unsupported kind $skind for symbol $sym")
           }
-        case sym: ExternalSymbol =>
-          symbolIndex.lookup(sym) match {
+        case sym: ExternalSymbol => symbolIndex.lookup(sym) match {
             case PackageLookup => d.Package(symbolName)
             case JavaLookup => d.Type(symbolName)
             case ScalaLookup if sym.entry.entryType == 9 => d.Type(symbolName)
@@ -120,8 +106,7 @@ trait SymbolOps { _: Scalacp =>
             case ScalaLookup => sys.error(s"unsupported symbol $sym")
             case MissingLookup => throw MissingSymbolException(sym.path)
           }
-        case NoSymbol =>
-          d.None
+        case NoSymbol => d.None
       }
     }
     def semanticdbDecls: SemanticdbDecls = {
@@ -131,14 +116,11 @@ trait SymbolOps { _: Scalacp =>
   }
 
   implicit class XtensionSymbolsSSpec(syms: Seq[Symbol]) {
-    def semanticdbDecls: SemanticdbDecls = {
-      SemanticdbDecls(syms.filter(_.isUseful))
-    }
+    def semanticdbDecls: SemanticdbDecls = { SemanticdbDecls(syms.filter(_.isUseful)) }
 
     def sscope(linkMode: LinkMode): s.Scope = {
       linkMode match {
-        case SymlinkChildren =>
-          s.Scope(symlinks = syms.map(_.ssym))
+        case SymlinkChildren => s.Scope(symlinks = syms.map(_.ssym))
         case HardlinkChildren =>
           syms.map(registerHardlink)
           val hardlinks = syms.map {
@@ -186,15 +168,11 @@ trait SymbolOps { _: Scalacp =>
   implicit class XtensionSymbol(sym: Symbol) {
     def ssym: String = sym.toSemantic
     def self: Type = sym match {
-      case sym: ClassSymbol =>
-        sym.selfType
-          .map {
-            case RefinedType(_, List(_, self)) => self
-            case _ => NoType
-          }
-          .getOrElse(NoType)
-      case _ =>
-        NoType
+      case sym: ClassSymbol => sym.selfType.map {
+          case RefinedType(_, List(_, self)) => self
+          case _ => NoType
+        }.getOrElse(NoType)
+      case _ => NoType
     }
     def isRootPackage: Boolean = sym.path == "<root>"
     def isEmptyPackage: Boolean = sym.path == "<empty>"
@@ -206,8 +184,7 @@ trait SymbolOps { _: Scalacp =>
           case TypeRefType(_, moduleClass, _) => moduleClass
           case _ => NoSymbol
         }
-      case _ =>
-        NoSymbol
+      case _ => NoSymbol
     }
     def isClass: Boolean = sym.isInstanceOf[ClassSymbol] && !sym.isModule
     def isObject: Boolean = sym.isInstanceOf[ObjectSymbol]
@@ -223,8 +200,7 @@ trait SymbolOps { _: Scalacp =>
       case sym: SymbolInfoSymbol =>
         val owner = sym.symbolInfo.owner
         sym.isConstructor && (owner.isModuleClass || owner.isTrait)
-      case _ =>
-        false
+      case _ => false
     }
     def isLocalChild: Boolean = sym.name == "<local child>"
     def isExtensionMethod: Boolean = sym.name.contains("$extension")
@@ -233,29 +209,21 @@ trait SymbolOps { _: Scalacp =>
         case sym: SymbolInfoSymbol =>
           if (sym.isModuleClass) {
             sym.infoType match {
-              case ClassInfoType(_, List(TypeRefType(_, anyRef, _))) =>
-                sym.isSynthetic && sym.semanticdbDecls.syms.isEmpty
-              case _ =>
-                false
+              case ClassInfoType(_, List(TypeRefType(_, anyRef, _))) => sym.isSynthetic &&
+                sym.semanticdbDecls.syms.isEmpty
+              case _ => false
             }
-          } else if (sym.isModule) {
-            sym.moduleClass.isSyntheticValueClassCompanion
-          } else {
-            false
-          }
-        case _ =>
-          false
+          } else if (sym.isModule) { sym.moduleClass.isSyntheticValueClassCompanion }
+          else { false }
+        case _ => false
       }
     }
     def isValMethod: Boolean = {
       sym match {
-        case sym: SymbolInfoSymbol =>
-          sym.kind.isMethod && {
-            (sym.isAccessor && sym.isStable) ||
-            (isUsefulField && !sym.isMutable)
+        case sym: SymbolInfoSymbol => sym.kind.isMethod && {
+            (sym.isAccessor && sym.isStable) || (isUsefulField && !sym.isMutable)
           }
-        case _ =>
-          false
+        case _ => false
       }
     }
     def isScalacField: Boolean = {
@@ -268,31 +236,16 @@ trait SymbolOps { _: Scalacp =>
       val getter = peers.find(m => m.isAccessor && m.name == sym.name.stripSuffix(" "))
       sym.isScalacField && getter.nonEmpty
     }
-    def isUsefulField: Boolean = {
-      sym.isScalacField && !sym.isUselessField
-    }
-    def isSyntheticCaseAccessor: Boolean = {
-      sym.isCaseAccessor && sym.name.contains("$")
-    }
-    def isRefinementClass: Boolean = {
-      sym.name == "<refinement>"
-    }
+    def isUsefulField: Boolean = { sym.isScalacField && !sym.isUselessField }
+    def isSyntheticCaseAccessor: Boolean = { sym.isCaseAccessor && sym.name.contains("$") }
+    def isRefinementClass: Boolean = { sym.name == "<refinement>" }
     def isUseless: Boolean = {
-      sym == NoSymbol ||
-      sym.isAnonymousClass ||
-      sym.isSyntheticConstructor ||
-      sym.isModuleClass ||
-      sym.isLocalChild ||
-      sym.isExtensionMethod ||
-      sym.isSyntheticValueClassCompanion ||
-      sym.isUselessField ||
-      sym.isSyntheticCaseAccessor ||
-      sym.isRefinementClass
+      sym == NoSymbol || sym.isAnonymousClass || sym.isSyntheticConstructor || sym.isModuleClass ||
+      sym.isLocalChild || sym.isExtensionMethod || sym.isSyntheticValueClassCompanion ||
+      sym.isUselessField || sym.isSyntheticCaseAccessor || sym.isRefinementClass
     }
     def isUseful: Boolean = !sym.isUseless
-    def isDefaultParameter: Boolean = {
-      sym.hasFlag(0x02000000) && sym.isParam
-    }
+    def isDefaultParameter: Boolean = { sym.hasFlag(0x02000000) && sym.isParam }
   }
 
   private var nextId = 0
@@ -303,7 +256,5 @@ trait SymbolOps { _: Scalacp =>
   }
 
   lazy val hardlinks = new HashSet[String]
-  private def registerHardlink(sym: Symbol): Unit = {
-    hardlinks.add(sym.ssym)
-  }
+  private def registerHardlink(sym: Symbol): Unit = { hardlinks.add(sym.ssym) }
 }

@@ -18,15 +18,11 @@ object PlatformFileIO {
 
   def readAllBytes(uri: URI): Array[Byte] = {
     val is = uri.toURL.openStream()
-    try {
-      InputStreamIO.readBytes(is)
-    } finally {
-      is.close()
-    }
+    try { InputStreamIO.readBytes(is) }
+    finally { is.close() }
   }
 
-  def readAllBytes(path: AbsolutePath): Array[Byte] =
-    Files.readAllBytes(path.toNIO)
+  def readAllBytes(path: AbsolutePath): Array[Byte] = Files.readAllBytes(path.toNIO)
 
   def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = {
     val stream = Files.newInputStream(path.toNIO)
@@ -47,22 +43,15 @@ object PlatformFileIO {
   def listFiles(path: AbsolutePath): ListFiles =
     new ListFiles(path, Option(path.toFile.list()).toList.flatten.map(RelativePath.apply))
 
-  def isFile(path: AbsolutePath): Boolean =
-    Files.isRegularFile(path.toNIO)
+  def isFile(path: AbsolutePath): Boolean = Files.isRegularFile(path.toNIO)
 
-  def isDirectory(path: AbsolutePath): Boolean =
-    Files.isDirectory(path.toNIO)
+  def isDirectory(path: AbsolutePath): Boolean = Files.isDirectory(path.toNIO)
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     import org.scalameta.collections._
-    val relativeFiles = Files
-      .walk(root.toNIO)
-      .collect(Collectors.toList[Path])
-      .toScala
-      .collect {
-        case path if Files.isRegularFile(path) =>
-          RelativePath(root.toNIO.relativize(path))
-      }
+    val relativeFiles = Files.walk(root.toNIO).collect(Collectors.toList[Path]).toScala.collect {
+      case path if Files.isRegularFile(path) => RelativePath(root.toNIO.relativize(path))
+    }
     ListFiles(root, relativeFiles)
   }
 
@@ -93,9 +82,7 @@ object PlatformFileIO {
       Files.createDirectories(path.toNIO.getParent)
     }
     val map = new util.HashMap[String, String]()
-    if (create) {
-      map.put("create", "true")
-    }
+    if (create) { map.put("create", "true") }
     val uri = URI.create("jar:" + path.toNIO.toUri.toString)
     newFileSystem(uri, map)
   }

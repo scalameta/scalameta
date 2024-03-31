@@ -46,14 +46,13 @@ trait CommonTrees {
   final val phName = meta.Name.Placeholder()
   final val ctor = EmptyCtor()
   final def ctorp(lp: Term.Param*): Ctor.Primary = ctorp(lp.toList)
-  final def ctorp(lp: List[Term.Param], lps: List[Term.Param]*): Ctor.Primary =
-    Ctor.Primary(Nil, anon, lp :: lps.toList)
+  final def ctorp(lp: List[Term.Param], lps: List[Term.Param]*): Ctor.Primary = Ctor
+    .Primary(Nil, anon, lp :: lps.toList)
   final val slf = meta.Self(anon, None)
   final def self(name: String, tpe: String = null) = meta.Self(tname(name), Option(tpe).map(pname))
 
   final def tname(name: String): Term.Name = Term.Name(name)
-  final def tpl(inits: List[Init], stats: List[Stat]): Template =
-    Template(Nil, inits, slf, stats)
+  final def tpl(inits: List[Init], stats: List[Stat]): Template = Template(Nil, inits, slf, stats)
   final def tpl(stats: Stat*): Template = tpl(Nil, stats.toList)
 
   final def tparam(mods: List[Mod], name: String, tpe: Option[Type] = None): Term.Param = {
@@ -64,31 +63,22 @@ trait CommonTrees {
     }
     Term.Param(mods, nameTree, tpe, None)
   }
-  final def tparam(name: String, tpe: Option[Type]): Term.Param =
-    tparam(Nil, name, tpe)
+  final def tparam(name: String, tpe: Option[Type]): Term.Param = tparam(Nil, name, tpe)
   final def tparam(mods: List[Mod], name: String, tpe: Type): Term.Param =
     tparam(mods, name, Option(tpe))
-  final def tparam(name: String, tpe: Type): Term.Param =
-    tparam(Nil, name, tpe)
+  final def tparam(name: String, tpe: Type): Term.Param = tparam(Nil, name, tpe)
   final def tparam(mods: List[Mod], name: String, tpe: String): Term.Param =
     tparam(mods, name, Option(tpe).map(pname))
-  final def tparam(name: String, tpe: String): Term.Param =
-    tparam(Nil, name, tpe)
-  final def tparam(name: String): Term.Param =
-    tparam(Nil, name)
+  final def tparam(name: String, tpe: String): Term.Param = tparam(Nil, name, tpe)
+  final def tparam(name: String): Term.Param = tparam(Nil, name)
 
-  final def tparamval(name: String, tpe: String) =
-    tparam(List(Mod.ValParam()), name, tpe)
-  final def tparamInline(name: String, tpe: String) =
-    tparam(List(Mod.Inline()), name, tpe)
-  final def tparamUsing(name: String, tpe: String) =
-    tparam(List(Mod.Using()), name, tpe)
+  final def tparamval(name: String, tpe: String) = tparam(List(Mod.ValParam()), name, tpe)
+  final def tparamInline(name: String, tpe: String) = tparam(List(Mod.Inline()), name, tpe)
+  final def tparamUsing(name: String, tpe: String) = tparam(List(Mod.Using()), name, tpe)
 
   final def pname(name: String): Type.Name = Type.Name(name)
-  final def pparam(s: String): Type.Param =
-    pparam(s, noBounds)
-  final def pparam(s: String, bounds: Type.Bounds): Type.Param =
-    pparam(Nil, s, bounds)
+  final def pparam(s: String): Type.Param = pparam(s, noBounds)
+  final def pparam(s: String, bounds: Type.Bounds): Type.Param = pparam(Nil, s, bounds)
   final def pparam(
       mods: List[Mod],
       s: String,
@@ -109,8 +99,8 @@ trait CommonTrees {
   final def loBound(bound: String): Type.Bounds = loBound(pname(bound))
   final def hiBound(bound: Type): Type.Bounds = Type.Bounds(None, Some(bound))
   final def hiBound(bound: String): Type.Bounds = hiBound(pname(bound))
-  final def bounds(lo: String = null, hi: String = null): Type.Bounds =
-    Type.Bounds(Option(lo).map(pname), Option(hi).map(pname))
+  final def bounds(lo: String = null, hi: String = null): Type.Bounds = Type
+    .Bounds(Option(lo).map(pname), Option(hi).map(pname))
 
   final def bool(v: Boolean) = Lit.Boolean(v)
   final def lit(v: Boolean) = Lit.Boolean(v)

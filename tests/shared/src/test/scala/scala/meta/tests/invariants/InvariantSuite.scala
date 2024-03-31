@@ -31,17 +31,15 @@ class InvariantSuite extends FunSuite {
          |""".stripMargin.replace("\n", EOL)
     ) {
       val y = 2
-      case class C(x: Int) { require(x != 3 && debug(x, y)) }
+      case class C(x: Int) {
+        require(x != 3 && debug(x, y))
+      }
       C(3)
     }
   }
 
   test("unreachable - 1") {
-    interceptMessage[UnreachableError](
-      "this code path should've been unreachable"
-    ) {
-      unreachable
-    }
+    interceptMessage[UnreachableError]("this code path should've been unreachable") { unreachable }
   }
 
   test("unreachable - 2") {
@@ -52,12 +50,12 @@ class InvariantSuite extends FunSuite {
          |""".stripMargin.replace("\n", EOL)
     ) {
       val y = 2
-      case class C(x: Int) { unreachable(debug(x, y)) }
+      case class C(x: Int) {
+        unreachable(debug(x, y))
+      }
       C(3)
     }
   }
 
-  test("don't evaluate debug") {
-    require(true && debug(throw new Exception))
-  }
+  test("don't evaluate debug") { require(true && debug(throw new Exception)) }
 }

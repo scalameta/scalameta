@@ -13,130 +13,74 @@ class TypeSuite extends ParseSuite {
     assertTree(tpe(expr))(tree)
   }
 
-  test("T") {
-    assertTpe("T")(TypeName("T"))
-  }
+  test("T") { assertTpe("T")(TypeName("T")) }
 
-  test("F[T]") {
-    assertTpe("F[T]") {
-      Apply(TypeName("F"), ArgClause(TypeName("T") :: Nil))
-    }
-  }
+  test("F[T]") { assertTpe("F[T]") { Apply(TypeName("F"), ArgClause(TypeName("T") :: Nil)) } }
 
-  test("F#T") {
-    assertTpe("F#T")(Project(TypeName("F"), TypeName("T")))
-  }
+  test("F#T") { assertTpe("F#T")(Project(TypeName("F"), TypeName("T"))) }
 
   test("A \\/ B") {
     assertTpe("A \\/ B")(ApplyInfix(TypeName("A"), TypeName("\\/"), TypeName("B")))
   }
 
-  test("A * B") {
-    assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B")))
-  }
+  test("A * B") { assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B"))) }
 
   test("A * B + C") {
     assertTpe("A * B + C") {
-      Type.ApplyInfix(
-        Type.ApplyInfix(pname("A"), pname("*"), pname("B")),
-        pname("+"),
-        pname("C")
-      )
+      Type.ApplyInfix(Type.ApplyInfix(pname("A"), pname("*"), pname("B")), pname("+"), pname("C"))
     }
   }
 
   test("A + B * C") {
     assertTpe("A + B * C") {
-      Type.ApplyInfix(
-        Type.ApplyInfix(pname("A"), pname("+"), pname("B")),
-        pname("*"),
-        pname("C")
-      )
+      Type.ApplyInfix(Type.ApplyInfix(pname("A"), pname("+"), pname("B")), pname("*"), pname("C"))
     }
   }
 
   test("A * B + C / D") {
     assertTpe("A * B + C / D") {
       Type.ApplyInfix(
-        Type.ApplyInfix(
-          Type.ApplyInfix(pname("A"), pname("*"), pname("B")),
-          pname("+"),
-          pname("C")
-        ),
+        Type
+          .ApplyInfix(Type.ApplyInfix(pname("A"), pname("*"), pname("B")), pname("+"), pname("C")),
         pname("/"),
         pname("D")
       )
     }
   }
 
-  test("f.T") {
-    assertTpe("f.T") {
-      Type.Select(tname("f"), pname("T"))
-    }
-  }
+  test("f.T") { assertTpe("f.T") { Type.Select(tname("f"), pname("T")) } }
 
-  test("f.type") {
-    assertTpe("f.type") {
-      Type.Singleton(tname("f"))
-    }
-  }
+  test("f.type") { assertTpe("f.type") { Type.Singleton(tname("f")) } }
 
   test("super.T") {
-    assertTpe("super.T") {
-      Type.Select(Term.Super(Anonymous(), Anonymous()), pname("T"))
-    }
+    assertTpe("super.T") { Type.Select(Term.Super(Anonymous(), Anonymous()), pname("T")) }
   }
 
-  test("this.T") {
-    assertTpe("this.T") {
-      Type.Select(Term.This(Anonymous()), pname("T"))
-    }
-  }
+  test("this.T") { assertTpe("this.T") { Type.Select(Term.This(Anonymous()), pname("T")) } }
 
-  test("(A, B)") {
-    assertTpe("(A, B)") {
-      Type.Tuple(pname("A") :: pname("B") :: Nil)
-    }
-  }
+  test("(A, B)") { assertTpe("(A, B)") { Type.Tuple(pname("A") :: pname("B") :: Nil) } }
 
   test("(A, B) => C") {
-    assertTpe("(A, B) => C") {
-      Type.Function(pname("A") :: pname("B") :: Nil, pname("C"))
-    }
+    assertTpe("(A, B) => C") { Type.Function(pname("A") :: pname("B") :: Nil, pname("C")) }
   }
 
   test("T @foo") {
     assertTpe("T @foo") {
-      Type.Annotate(
-        pname("T"),
-        Mod.Annot(Init(pname("foo"), anon, emptyArgClause)) :: Nil
-      )
+      Type.Annotate(pname("T"), Mod.Annot(Init(pname("foo"), anon, emptyArgClause)) :: Nil)
     }
   }
 
-  test("A with B") {
-    assertTpe("A with B") {
-      Type.With(pname("A"), pname("B"))
-    }
-  }
+  test("A with B") { assertTpe("A with B") { Type.With(pname("A"), pname("B")) } }
 
   test("A & B is not a special type") {
-    assertTpe("A & B") {
-      Type.ApplyInfix(pname("A"), pname("&"), pname("B"))
-    }
+    assertTpe("A & B") { Type.ApplyInfix(pname("A"), pname("&"), pname("B")) }
   }
 
   test("A with B {}") {
-    assertTpe("A with B {}") {
-      Type.Refine(Some(Type.With(pname("A"), pname("B"))), Nil)
-    }
+    assertTpe("A with B {}") { Type.Refine(Some(Type.With(pname("A"), pname("B"))), Nil) }
   }
 
-  test("{}") {
-    assertTpe("{}") {
-      Type.Refine(None, Nil)
-    }
-  }
+  test("{}") { assertTpe("{}") { Type.Refine(None, Nil) } }
 
   test("A { def x: A; val y: B; type C }") {
     assertTpe("A { def x: Int; val y: B; type C }") {
@@ -151,10 +95,7 @@ class TypeSuite extends ParseSuite {
 
   test("F[_ >: lo <: hi]") {
     assertTpe("F[_ >: lo <: hi]") {
-      Apply(
-        TypeName("F"),
-        List(Wildcard(Bounds(Some(TypeName("lo")), Some(TypeName("hi")))))
-      )
+      Apply(TypeName("F"), List(Wildcard(Bounds(Some(TypeName("lo")), Some(TypeName("hi"))))))
     }
   }
 
@@ -170,11 +111,7 @@ class TypeSuite extends ParseSuite {
     }
   }
 
-  test("F[_]") {
-    assertTpe("F[_]") {
-      Apply(TypeName("F"), List(Wildcard(Bounds(None, None))))
-    }
-  }
+  test("F[_]") { assertTpe("F[_]") { Apply(TypeName("F"), List(Wildcard(Bounds(None, None)))) } }
 
   test("F[T] forSome { type T }") {
     assertTpe("F[T] forSome { type T }") {
@@ -186,12 +123,10 @@ class TypeSuite extends ParseSuite {
   }
 
   test("a.T forSome { val a: A }") {
-    assertTpe("a.T forSome { val a: A }")(
-      Existential(
-        Select(TermName("a"), TypeName("T")),
-        Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil
-      )
-    )
+    assertTpe("a.T forSome { val a: A }")(Existential(
+      Select(TermName("a"), TypeName("T")),
+      Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil
+    ))
   }
 
   test("A | B is not a special type") {
@@ -199,21 +134,13 @@ class TypeSuite extends ParseSuite {
   }
 
   test("42.type") {
-    intercept[ParseException] {
-      tpe("42")(dialects.Scala211)
-    }
+    intercept[ParseException] { tpe("42")(dialects.Scala211) }
 
     implicit val dialect = dialects.Scala3
 
-    def matchSubStructureTyp3(typ: String, func: PartialFunction[Tree, Unit])(
-        implicit loc: munit.Location
-    ) = {
-      matchSubStructure[Type](typ, func)(
-        parseType,
-        dialects.Scala3,
-        loc
-      )
-    }
+    def matchSubStructureTyp3(typ: String, func: PartialFunction[Tree, Unit])(implicit
+        loc: munit.Location
+    ) = { matchSubStructure[Type](typ, func)(parseType, dialects.Scala3, loc) }
 
     assertTpe("42")(int(42))(dialects.Scala3)
     assertTpe("-42")(int(-42))(dialects.Scala3)
@@ -226,50 +153,36 @@ class TypeSuite extends ParseSuite {
     assertTpe("false")(bool(false))(dialects.Scala3)
     assertTpe("true")(bool(true))(dialects.Scala3)
 
-    val exceptionScala3 = intercept[ParseException] {
-      tpe("() => ()")(dialects.Scala3)
-    }
+    val exceptionScala3 = intercept[ParseException] { tpe("() => ()")(dialects.Scala3) }
     assertNoDiff(exceptionScala3.shortMessage, "illegal literal type (), use Unit instead")
 
-    val exceptionScala2 = intercept[ParseException] {
-      tpe("() => ()")(dialects.Scala213)
-    }
+    val exceptionScala2 = intercept[ParseException] { tpe("() => ()")(dialects.Scala213) }
     assertNoDiff(exceptionScala2.shortMessage, "illegal literal type (), use Unit instead")
 
   }
 
   test("plus-minus-then-underscore-source3") {
-    assertTpe("+_ => Int")(Type.Function(List(pname("+_")), pname("Int")))(
+    assertTpe("+_ => Int")(Type.Function(List(pname("+_")), pname("Int")))(dialects.Scala213Source3)
+    assertTpe("Option[- _]") { Apply(pname("Option"), ArgClause(List(pname("-_")))) }(
       dialects.Scala213Source3
     )
-    assertTpe("Option[- _]") {
-      Apply(pname("Option"), ArgClause(List(pname("-_"))))
-    }(dialects.Scala213Source3)
   }
 
   test("[scala213] (x: Int, y)") {
-    val err = intercept[ParseException] {
-      tpe("(x: Int, y)")(dialects.Scala213)
-    }
+    val err = intercept[ParseException] { tpe("(x: Int, y)")(dialects.Scala213) }
     assertNoDiff(err.shortMessage, "can't mix function type and dependent function type syntaxes")
   }
 
   test("[scala213] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ParseException] {
-      tpe("(x: Int, y: Int)(z: String)")(dialects.Scala213)
-    }
+    val err = intercept[ParseException] { tpe("(x: Int, y: Int)(z: String)")(dialects.Scala213) }
     assertNoDiff(err.shortMessage, "dependent function types are not supported")
   }
 
   test("[scala3] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ParseException] {
-      tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3)
-    }
+    val err = intercept[ParseException] { tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3) }
     assertNoDiff(err.shortMessage, "can't have multiple parameter lists in function types")
   }
 
-  test("#3672 [scala213] ***") {
-    runTestAssert[Type]("***")(pname("***"))
-  }
+  test("#3672 [scala213] ***") { runTestAssert[Type]("***")(pname("***")) }
 
 }

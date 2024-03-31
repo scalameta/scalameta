@@ -39,9 +39,7 @@ class NIOPathTest extends FunSuite {
     assertEquals(abs.getFileName.toString, "foo")
     assertEquals(nonNormalizedFile.getFileName.toString, "scalafmt")
   }
-  test(".getParent") {
-    assertEquals(abs.getParent.getFileName.toString, "bar")
-  }
+  test(".getParent") { assertEquals(abs.getParent.getFileName.toString, "bar") }
   test(".getNameCount") {
     assert(Paths.get(rootString).getNameCount == 0)
     assert(Paths.get("").getNameCount == 1)
@@ -53,9 +51,7 @@ class NIOPathTest extends FunSuite {
     assert(abs.getName(0).toString == "bar")
     assert(abs.getName(1).toString == "foo")
   }
-  test(".subpath") {
-    assert(abs.subpath(0, 1).toString == "bar")
-  }
+  test(".subpath") { assert(abs.subpath(0, 1).toString == "bar") }
   test(".startsWith(Path)") {
     assert(!abs.startsWith("bar"))
     assert(!file.startsWith("build"))
@@ -78,9 +74,7 @@ class NIOPathTest extends FunSuite {
     assert(file.resolveSibling("build.scala").toString == "build.scala")
     assert(abs.resolveSibling("foobar") == abs.getParent.resolve("foobar"))
   }
-  test(".relativize(Path)") {
-    assert(abs.relativize(abs.resolve("qux")) == Paths.get("qux"))
-  }
+  test(".relativize(Path)") { assert(abs.relativize(abs.resolve("qux")) == Paths.get("qux")) }
   test("file.toUri") {
     assert(file.toUri.getPath.endsWith("build.sbt"))
     // NOTE: Paths API seems to work inconsistently under Scala Native.

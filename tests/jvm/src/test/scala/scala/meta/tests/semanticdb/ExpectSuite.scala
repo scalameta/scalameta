@@ -41,7 +41,8 @@ class ExpectSuite extends FunSuite {
         loadExpected.replace(
           """|com/javacp/Test#strictfpMethod(). => @strictfp private[javacp] method strictfpMethod(): Unit
              |  strictfp => scala/annotation/strictfp#""".stripMargin,
-          "com/javacp/Test#strictfpMethod(). => private[javacp] method strictfpMethod(): Unit".stripMargin
+          "com/javacp/Test#strictfpMethod(). => private[javacp] method strictfpMethod(): Unit"
+            .stripMargin
         )
       else loadExpected
     this.assertNoDiff(loadObtained, expected)
@@ -49,20 +50,19 @@ class ExpectSuite extends FunSuite {
   test("metac.expect") {
     import MetacExpect._
     val expected = loadExpected
-    val expectedCompat = if (ScalaVersion.atLeast212_14) {
-      expected
-    } else {
-      // Predef.type etc. was fixed in 2.12.14
-      expected
-        .replace("[43:21..43:22): x => types/Test.C#x.\n", "")
-        .replace("[44:21..44:22): p => types/Test.C#p.\n", "")
-        .replace("[25:23..25:29): Predef => scala/Predef.\n", "")
-        .replace("[23:13..23:19): Predef => scala/Predef.\n", "")
-        .replace("[44:23..44:24): x => types/P#x.\n", "")
-        .replace("Occurrences => 57 entries", "Occurrences => 56 entries")
-        .replace("Occurrences => 147 entries", "Occurrences => 146 entries")
-        .replace("Occurrences => 262 entries", "Occurrences => 259 entries")
-    }
+    val expectedCompat =
+      if (ScalaVersion.atLeast212_14) { expected }
+      else {
+        // Predef.type etc. was fixed in 2.12.14
+        expected.replace("[43:21..43:22): x => types/Test.C#x.\n", "")
+          .replace("[44:21..44:22): p => types/Test.C#p.\n", "")
+          .replace("[25:23..25:29): Predef => scala/Predef.\n", "")
+          .replace("[23:13..23:19): Predef => scala/Predef.\n", "")
+          .replace("[44:23..44:24): x => types/P#x.\n", "")
+          .replace("Occurrences => 57 entries", "Occurrences => 56 entries")
+          .replace("Occurrences => 147 entries", "Occurrences => 146 entries")
+          .replace("Occurrences => 262 entries", "Occurrences => 259 entries")
+      }
     this.assertNoDiff(loadObtained, expectedCompat)
   }
 
@@ -88,8 +88,7 @@ class ExpectSuite extends FunSuite {
 trait ExpectHelpers extends munit.Assertions {
   def filename: String
 
-  def loadExpected: String =
-    new String(Files.readAllBytes(path), UTF_8)
+  def loadExpected: String = new String(Files.readAllBytes(path), UTF_8)
   def loadObtained: String
 
   def path: Path = {
@@ -103,8 +102,7 @@ trait ExpectHelpers extends munit.Assertions {
   def manifestJar: Path = path.resolveSibling("manifest.jar")
   def classDirectory: Path = Paths.get(BuildInfo.databaseClasspath)
 
-  def saveExpected(): Unit =
-    Files.write(path, loadObtained.getBytes(UTF_8))
+  def saveExpected(): Unit = Files.write(path, loadObtained.getBytes(UTF_8))
 
   protected def unifiedDiff(
       originalTitle: String,
@@ -117,22 +115,18 @@ trait ExpectHelpers extends munit.Assertions {
     val revisedLines = revised.split("\n").toSeq.asJava
     val OnlyCurlyBrace = "\\s+}".r
     val diff = {
-      val lines = DiffUtils
-        .generateUnifiedDiff(
-          originalTitle,
-          revisedTitle,
-          originalLines,
-          DiffUtils.diff(originalLines, revisedLines),
-          3
-        )
-        .asScala
+      val lines = DiffUtils.generateUnifiedDiff(
+        originalTitle,
+        revisedTitle,
+        originalLines,
+        DiffUtils.diff(originalLines, revisedLines),
+        3
+      ).asScala
       if (lines.lengthCompare(2) > 0) {
         lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
       }
-      lines
-        .filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
-        .filterNot(_.startsWith("@@"))
-        .mkString("\n")
+      lines.filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
+        .filterNot(_.startsWith("@@")).mkString("\n")
     }
     diff
   }
@@ -165,11 +159,8 @@ trait ExpectHelpers extends munit.Assertions {
   protected def metacp(in: Path): Path = {
     val target = Files.createTempDirectory("target_")
     val (outPath, out, err) = CliTestUtils.communicate { (out, err) =>
-      val settings = scala.meta.metacp
-        .Settings()
-        .withOut(AbsolutePath(target))
-        .withClasspath(Classpath(AbsolutePath(in)))
-        .withUsejavacp(true)
+      val settings = scala.meta.metacp.Settings().withOut(AbsolutePath(target))
+        .withClasspath(Classpath(AbsolutePath(in))).withUsejavacp(true)
         .withScalaLibrarySynthetics(false)
       val reporter = Reporter().withOut(out).withErr(err)
       val result = Metacp.process(settings, reporter)
@@ -194,11 +185,8 @@ object ScalalibExpect extends ExpectHelpers {
   def loadObtained: String = {
     val tmp = Files.createTempDirectory("scala-library-synthetics")
     tmp.toFile.deleteOnExit()
-    val settings = scala.meta.metacp
-      .Settings()
-      .withOut(AbsolutePath(tmp))
-      .withClasspath(Classpath(Nil))
-      .withScalaLibrarySynthetics(true)
+    val settings = scala.meta.metacp.Settings().withOut(AbsolutePath(tmp))
+      .withClasspath(Classpath(Nil)).withScalaLibrarySynthetics(true)
     val reporter = Reporter().withSilentOut()
     Metacp.process(settings, reporter).classpath match {
       case Some(Classpath(List(jar))) => metap(jar.toNIO)
@@ -228,18 +216,11 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
         if (sym.symbol.contains("com.javacp")) {
           // metac references to java defined symbols in com.javacp must have a corresponding metacp entry.
           Some(metacp.getOrElse(sym.symbol, s.SymbolInformation()))
-        } else {
-          metacp.get(sym.symbol)
-        }
+        } else { metacp.get(sym.symbol) }
       }
     } yield {
       val header = "=" * sym.symbol.length
-      val diff = unifiedDiff(
-        "metac",
-        "metacp",
-        sym.toProtoString,
-        javasym.toProtoString
-      )
+      val diff = unifiedDiff("metac", "metacp", sym.toProtoString, javasym.toProtoString)
       if (diff.isEmpty) ""
       else {
         s"""$header
@@ -269,12 +250,8 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
     val newSymbol = sym.signature match {
       case c: ClassSignature if sym.language.isJava =>
         val sortedJavaDeclarations = c.declarations.get.symlinks.sorted
-        sym.copy(
-          signature = c.copy(
-            declarations = Some(
-              c.declarations.get.copy(symlinks = sortedJavaDeclarations)
-            )
-          )
+        sym.copy(signature =
+          c.copy(declarations = Some(c.declarations.get.copy(symlinks = sortedJavaDeclarations)))
         )
       case _ => sym
     }
@@ -284,16 +261,12 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
 
 object ManifestMetap extends ExpectHelpers {
   def filename: String = "manifest.metap"
-  def loadObtained: String = {
-    metap(manifestJar)
-  }
+  def loadObtained: String = { metap(manifestJar) }
 }
 
 object ManifestMetacp extends ExpectHelpers {
   def filename: String = "manifest.metacp"
-  def loadObtained: String = {
-    metap(metacp(manifestJar))
-  }
+  def loadObtained: String = { metap(metacp(manifestJar)) }
 }
 
 object MetacpUndefined extends ExpectHelpers {
@@ -306,9 +279,7 @@ object MetacpUndefined extends ExpectHelpers {
       // that have no SymbolInformation. It's expected that references to the packages
       // scala/ and java/ package have no SymbolInformation because we only process
       // databaseClasspath, scala-library and the JDK are only --dependency-classpath.
-      symbol.startsWith("scala/") ||
-      symbol.startsWith("java/") ||
-      symbol == "local_wildcard"
+      symbol.startsWith("scala/") || symbol.startsWith("java/") || symbol == "local_wildcard"
     }
     interesting.toSeq.sorted.mkString("", "\n", "\n")
   }
@@ -347,8 +318,8 @@ object SaveManifestTest {
       jos.closeEntry()
     }
 
-    val emptyClassfiles =
-      Files.list(classes).iterator.asScala.toList.filter(f => Files.isRegularFile(f))
+    val emptyClassfiles = Files.list(classes).iterator.asScala.toList
+      .filter(f => Files.isRegularFile(f))
     withJar(part0) { jos =>
       emptyClassfiles.foreach { classfile =>
         jos.putNextEntry(new JarEntry(classes.relativize(classfile).toString))

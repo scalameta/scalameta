@@ -10,9 +10,7 @@ class MultipathSuite extends FunSuite {
   assert(tmp.delete())
   assert(tmp.mkdirs())
   val files = List("a", "b")
-  files.foreach(file => {
-    assert(new File(tmp, file).createNewFile())
-  })
+  files.foreach(file => { assert(new File(tmp, file).createNewFile()) })
 
   test("Classpath.syntax") {
     val fromPath = Classpath(List(AbsolutePath(tmp)))

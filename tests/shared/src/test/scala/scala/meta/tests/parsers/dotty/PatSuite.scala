@@ -17,34 +17,19 @@ class PatSuite extends ParseSuite {
 
   import scala.meta.dialects.Scala3
 
-  test("_") {
-    assertPat("_")(Wildcard())
-  }
+  test("_") { assertPat("_")(Wildcard()) }
 
-  test("a @ _") {
+  test("a @ _") { assertPat("a @ _")(Bind(Var(tname("a")), Wildcard())) }
 
-    assertPat("a @ _")(Bind(Var(tname("a")), Wildcard()))
-  }
+  test("a") { assertPat("a")(Var(tname("a"))) }
 
-  test("a") {
-    assertPat("a")(Var(tname("a")))
-  }
+  test("`a`") { assertPat("`a`")(tname("a")) }
 
-  test("`a`") {
-    assertPat("`a`")(tname("a"))
-  }
+  test("a: Int") { assertPat("a: Int")(Typed(Var(tname("a")), pname("Int"))) }
 
-  test("a: Int") {
-    assertPat("a: Int")(Typed(Var(tname("a")), pname("Int")))
-  }
+  test("_: Int") { assertPat("_: Int")(Typed(Wildcard(), pname("Int"))) }
 
-  test("_: Int") {
-    assertPat("_: Int")(Typed(Wildcard(), pname("Int")))
-  }
-
-  test("_: t") {
-    assertPat("_: t")(Typed(Wildcard(), pname("t")))
-  }
+  test("_: t") { assertPat("_: t")(Typed(Wildcard(), pname("t"))) }
 
   test("_: F[t]") {
     assertPat("_: F[t]") {
@@ -55,20 +40,14 @@ class PatSuite extends ParseSuite {
   test("_: F[_]") {
     implicit val Scala3 = dialects.Scala3Future
     assertPat("_: F[_]") {
-      Typed(
-        Wildcard(),
-        Type.Apply(pname("F"), List(Type.AnonymousParam(None)))
-      )
+      Typed(Wildcard(), Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
     }
   }
 
   test("_: F[_]") {
     implicit val Scala3 = dialects.Scala31
     assertPat("_: F[_]") {
-      Pat.Typed(
-        Pat.Wildcard(),
-        Type.Apply(pname("F"), List(Type.Wildcard(Type.Bounds(None, None))))
-      )
+      Pat.Typed(Pat.Wildcard(), Type.Apply(pname("F"), List(Type.Wildcard(Type.Bounds(None, None)))))
     }
   }
 
@@ -76,36 +55,23 @@ class PatSuite extends ParseSuite {
     // might be deprecated later
     implicit val Scala3: Dialect = scala.meta.dialects.Scala31
     assertPat("_: F[*]") {
-      Typed(
-        Wildcard(),
-        Type.Apply(pname("F"), Type.AnonymousParam(None) :: Nil)
-      )
+      Typed(Wildcard(), Type.Apply(pname("F"), Type.AnonymousParam(None) :: Nil))
     }
   }
 
   test("patTyp: t Map u") {
-    assertPatTyp("t Map u") {
-      Type.ApplyInfix(pname("t"), pname("Map"), pname("u"))
-    }
+    assertPatTyp("t Map u") { Type.ApplyInfix(pname("t"), pname("Map"), pname("u")) }
   }
 
   test("patTyp: t & u | v") {
     assertPatTyp("t & u | v") {
-      Type.ApplyInfix(
-        Type.ApplyInfix(pname("t"), pname("&"), pname("u")),
-        pname("|"),
-        pname("v")
-      )
+      Type.ApplyInfix(Type.ApplyInfix(pname("t"), pname("&"), pname("u")), pname("|"), pname("v"))
     }
   }
 
   test("patTyp: t * u + v") {
     assertPatTyp("t * u + v") {
-      Type.ApplyInfix(
-        Type.ApplyInfix(pname("t"), pname("*"), pname("u")),
-        pname("+"),
-        pname("v")
-      )
+      Type.ApplyInfix(Type.ApplyInfix(pname("t"), pname("*"), pname("u")), pname("+"), pname("v"))
     }
   }
 
@@ -121,11 +87,7 @@ class PatSuite extends ParseSuite {
 
   test("patTyp: t + u * v") {
     assertPatTyp("t + u * v") {
-      Type.ApplyInfix(
-        pname("t"),
-        pname("+"),
-        Type.ApplyInfix(pname("u"), pname("*"), pname("v"))
-      )
+      Type.ApplyInfix(pname("t"), pname("+"), Type.ApplyInfix(pname("u"), pname("*"), pname("v")))
     }
   }
 
@@ -135,11 +97,8 @@ class PatSuite extends ParseSuite {
         Term.ApplyType(
           tname("F"),
           List(
-            Type.ApplyInfix(
-              Type.ApplyInfix(pname("t"), pname("&"), pname("u")),
-              pname("|"),
-              pname("v")
-            )
+            Type
+              .ApplyInfix(Type.ApplyInfix(pname("t"), pname("&"), pname("u")), pname("|"), pname("v"))
           )
         ),
         Nil
@@ -148,53 +107,36 @@ class PatSuite extends ParseSuite {
   }
 
   test("_: (t Map u)") {
-    assertPat("_: (t Map u)")(
-      Typed(Wildcard(), Type.ApplyInfix(pname("t"), pname("Map"), pname("u")))
-    )
+    assertPat("_: (t Map u)")(Typed(Wildcard(), Type.ApplyInfix(pname("t"), pname("Map"), pname("u"))))
   }
 
-  test("_: T Map U") {
-    intercept[ParseException] { pat("_: T Map U") }
-  }
+  test("_: T Map U") { intercept[ParseException] { pat("_: T Map U") } }
 
-  test("_: T forSome { type U }") {
-    intercept[ParseException] { pat("_: T forSome { type U }") }
-  }
+  test("_: T forSome { type U }") { intercept[ParseException] { pat("_: T forSome { type U }") } }
 
   test("x@(__ : Y)") {
 
-    assertPat("x@(__ : Y)")(
-      Pat.Bind(Pat.Var(tname("x")), Pat.Typed(Pat.Var(tname("__")), pname("Y")))
-    )
+    assertPat("x@(__ : Y)")(Pat.Bind(Pat.Var(tname("x")), Pat.Typed(Pat.Var(tname("__")), pname("Y"))))
   }
 
-  test("foo(x)") {
-    assertPat("foo(x)")(Extract(tname("foo"), Var(tname("x")) :: Nil))
-  }
+  test("foo(x)") { assertPat("foo(x)")(Extract(tname("foo"), Var(tname("x")) :: Nil)) }
 
-  test("foo(_*)") {
-    assertPat("foo(_*)")(Extract(tname("foo"), SeqWildcard() :: Nil))
-  }
+  test("foo(_*)") { assertPat("foo(_*)")(Extract(tname("foo"), SeqWildcard() :: Nil)) }
 
   test("foo(x @ _*)") {
-    assertPat("foo(x @ _*)")(
-      Extract(tname("foo"), Bind(Var(tname("x")), SeqWildcard()) :: Nil)
-    )
+    assertPat("foo(x @ _*)")(Extract(tname("foo"), Bind(Var(tname("x")), SeqWildcard()) :: Nil))
   }
 
   test("a :: b") {
-    assertPat("a :: b")(
-      ExtractInfix(Var(tname("a")), tname("::"), Var(tname("b")) :: Nil)
-    )
+    assertPat("a :: b")(ExtractInfix(Var(tname("a")), tname("::"), Var(tname("b")) :: Nil))
 
   }
 
   test("a :: ()") {
     assertPat("a :: ()")(ExtractInfix(Var(tname("a")), tname("::"), Nil))
-    val error =
-      """|<input>:1: error: infix patterns cannot have type arguments
-         |a ::[T] ()
-         |    ^""".stripMargin
+    val error = """|<input>:1: error: infix patterns cannot have type arguments
+                   |a ::[T] ()
+                   |    ^""".stripMargin
     runTestError[Pat]("a ::[T] ()", error)
   }
 
@@ -204,45 +146,29 @@ class PatSuite extends ParseSuite {
     runTestAssert[Pat]("1 `|` 2")(ExtractInfix(lit(1), tname("|"), List(lit(2))))
   }
 
-  test("()") {
-    assertPat("()")(Lit.Unit())
-  }
+  test("()") { assertPat("()")(Lit.Unit()) }
 
-  test("(true, false)") {
-    assertPat("(true, false)")(Tuple(bool(true) :: bool(false) :: Nil))
-  }
+  test("(true, false)") { assertPat("(true, false)")(Tuple(bool(true) :: bool(false) :: Nil)) }
 
-  test("foo\"bar\"") {
-    assertPat("foo\"bar\"")(Interpolate(tname("foo"), str("bar") :: Nil, Nil))
-  }
+  test("foo\"bar\"") { assertPat("foo\"bar\"")(Interpolate(tname("foo"), str("bar") :: Nil, Nil)) }
 
   test("foo\"a $b c\"") {
     assertPat("foo\"a $b c\"")(
-      Interpolate(
-        tname("foo"),
-        str("a ") :: str(" c") :: Nil,
-        Var(tname("b")) :: Nil
-      )
+      Interpolate(tname("foo"), str("a ") :: str(" c") :: Nil, Var(tname("b")) :: Nil)
     )
   }
 
   test("foo\"${b @ foo()}\"") {
-    assertPat("foo\"${b @ foo()}\"")(
-      Interpolate(
-        tname("foo"),
-        str("") :: str("") :: Nil,
-        Bind(Var(tname("b")), Extract(tname("foo"), Nil)) :: Nil
-      )
-    )
+    assertPat("foo\"${b @ foo()}\"")(Interpolate(
+      tname("foo"),
+      str("") :: str("") :: Nil,
+      Bind(Var(tname("b")), Extract(tname("foo"), Nil)) :: Nil
+    ))
   }
 
   test("$_") {
     assertPat(""" q"x + $_" """)(
-      Pat.Interpolate(
-        tname("q"),
-        List(str("x + "), str("")),
-        List(Pat.Wildcard())
-      )
+      Pat.Interpolate(tname("q"), List(str("x + "), str("")), List(Pat.Wildcard()))
     )
   }
 
@@ -251,17 +177,12 @@ class PatSuite extends ParseSuite {
   }
 
   test("<a>{_*}</a>") {
-    assertPat("<a>{_*}</a>")(
-      Pat.Xml(List(str("<a>"), str("</a>")), List(SeqWildcard()))
-    )
+    assertPat("<a>{_*}</a>")(Pat.Xml(List(str("<a>"), str("</a>")), List(SeqWildcard())))
   }
 
   test("<a>{ns @ _*}</a>") {
     assertPat("<a>{ns @ _*}</a>")(
-      Pat.Xml(
-        List(str("<a>"), str("</a>")),
-        List(Bind(Var(tname("ns")), SeqWildcard()))
-      )
+      Pat.Xml(List(str("<a>"), str("</a>")), List(Bind(Var(tname("ns")), SeqWildcard())))
     )
   }
 

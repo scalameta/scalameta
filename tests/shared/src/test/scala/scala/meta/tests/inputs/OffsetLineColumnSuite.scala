@@ -10,8 +10,8 @@ class OffsetLineColumnSuite extends FunSuite {
     super.test(testName) {
       val content = Input.String(s)
       val points = 0.to(content.chars.length).map(i => Position.Range(content, i, i))
-      val actual =
-        points.map(p => s"${p.start} ${p.startLine} ${p.startColumn}").mkString("", "\n", "\n")
+      val actual = points.map(p => s"${p.start} ${p.startLine} ${p.startColumn}")
+        .mkString("", "\n", "\n")
       assertEquals(actual, expected)
       points.foreach { p1 =>
         val p2 = Position.Range(content, p1.startLine, p1.startColumn, p1.endLine, p1.endColumn)

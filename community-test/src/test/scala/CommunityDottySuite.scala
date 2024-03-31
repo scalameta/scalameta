@@ -57,14 +57,13 @@ class CommunityDottySuite extends FunSuite {
 
   final val InitTestStats = TestStats(0, 0, None, 0, 0)
 
-  def merger(s1: TestStats, s2: TestStats): TestStats =
-    TestStats(
-      s1.checkedFiles + s2.checkedFiles,
-      s1.errors + s2.errors,
-      s1.lastError.orElse(s2.lastError),
-      s1.timeTaken + s2.timeTaken,
-      s1.linesParsed + s2.linesParsed
-    )
+  def merger(s1: TestStats, s2: TestStats): TestStats = TestStats(
+    s1.checkedFiles + s2.checkedFiles,
+    s1.errors + s2.errors,
+    s1.lastError.orElse(s2.lastError),
+    s1.timeTaken + s2.timeTaken,
+    s1.linesParsed + s2.linesParsed
+  )
 
   val communityBuilds = List(
     dottyBuild("3.0.2", dialects.Scala30, 886),
@@ -84,9 +83,7 @@ class CommunityDottySuite extends FunSuite {
   )
 
   for (build <- communityBuilds) {
-    test(s"community-build-${build.name}-${build.commit}") {
-      check(build)
-    }
+    test(s"community-build-${build.name}-${build.commit}") { check(build) }
   }
 
   def check(implicit build: CommunityBuild): Unit = {
@@ -100,10 +97,8 @@ class CommunityDottySuite extends FunSuite {
     println(s"Files parsed correctly ${stats.checkedFiles - stats.errors}")
     println(s"Files errored: ${stats.errors}")
     println(s"Time taken: ${stats.timeTaken}ms")
-    if (stats.linesParsed < 1000)
-      println(s"Lines parsed: ${stats.linesParsed}")
-    else
-      println(s"Lines parsed: ~${stats.linesParsed / 1000}k")
+    if (stats.linesParsed < 1000) println(s"Lines parsed: ${stats.linesParsed}")
+    else println(s"Lines parsed: ~${stats.linesParsed / 1000}k")
     println(s"Parsing speed per 1k lines ===> ${timePer1KLines} ms/1klines")
     println("--------------------------")
     stats.lastError.foreach(e => throw e)
@@ -127,17 +122,15 @@ class CommunityDottySuite extends FunSuite {
         try {
           import scala.collection.JavaConverters._
           ds.iterator().asScala.toList.partition(Files.isDirectory(_))
-        } finally {
-          ds.close()
-        }
+        } finally { ds.close() }
       files.iterator.flatMap { x =>
         val fileStr = x.toString
         if (fileStr.endsWith(".scala")) Some(checkAbsPath(x, fileStr)) else None
       } ++ dirs.iterator.flatMap(checkFilesRecursive)
     }
 
-  def checkAbsPath(absPath: Path, absPathString: String)(
-      implicit build: CommunityBuild
+  def checkAbsPath(absPath: Path, absPathString: String)(implicit
+      build: CommunityBuild
   ): TestStats = {
     val fileContent = Input.File(absPath)
     implicit val dialect: Dialect =
@@ -151,19 +144,13 @@ class CommunityDottySuite extends FunSuite {
     val lines = fileContent.chars.count(_ == '\n')
     if (excluded(absPathString, build)) {
       try {
-        val taken = timeIt {
-          fileContent.parse[Source].get
-        }
+        val taken = timeIt { fileContent.parse[Source].get }
         println("File marked as error but parsed correctly " + absPathString)
         TestStats(1, 1, None, taken, lines)
-      } catch {
-        case e: Throwable => TestStats(1, 1, None, 0, 0)
-      }
+      } catch { case e: Throwable => TestStats(1, 1, None, 0, 0) }
     } else {
       try {
-        val taken = timeIt {
-          fileContent.parse[Source].get
-        }
+        val taken = timeIt { fileContent.parse[Source].get }
         TestStats(1, 0, None, taken, lines)
       } catch {
         case e: Throwable =>
@@ -190,12 +177,7 @@ class CommunityDottySuite extends FunSuite {
     CommunityBuild("https://github.com/apache/spark.git", ref, "spark", Nil, files, dialect)
   }
 
-  final val ignoreParts = List(
-    ".git/",
-    "tests/",
-    "test-resources/scripting/",
-    "test-resources/repl/",
-    "sbt-test/",
-    "out/"
-  ).map(Paths.get(_))
+  final val ignoreParts =
+    List(".git/", "tests/", "test-resources/scripting/", "test-resources/repl/", "sbt-test/", "out/")
+      .map(Paths.get(_))
 }

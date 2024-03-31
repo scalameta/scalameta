@@ -16,21 +16,16 @@ object Build extends AutoPlugin {
   import autoImport._
   object autoImport {
     trait BenchSuite {
-      def initCommands: List[String] = List(
-        "bench/clean",
-        "wow " + Versions.LatestScala212
-      )
+      def initCommands: List[String] = List("bench/clean", "wow " + Versions.LatestScala212)
 
       def metacpBenches: List[String]
       def metacpCommands: List[String] = {
-        if (metacpBenches.isEmpty) Nil
-        else List("bench/jmh:run " + metacpBenches.mkString(" "))
+        if (metacpBenches.isEmpty) Nil else List("bench/jmh:run " + metacpBenches.mkString(" "))
       }
 
       def scalacBenches: List[String]
       def scalacCommands: List[String] = {
-        if (scalacBenches.isEmpty) Nil
-        else List("bench/jmh:run " + scalacBenches.mkString(" "))
+        if (scalacBenches.isEmpty) Nil else List("bench/jmh:run " + scalacBenches.mkString(" "))
       }
 
       def scalametaBenches: List[String]

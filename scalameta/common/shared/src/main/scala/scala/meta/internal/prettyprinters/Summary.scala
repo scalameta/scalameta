@@ -11,7 +11,9 @@ import org.scalameta.internal.ScalaCompat.EOL
 @implicitNotFound(msg = "don't know how to show[Summary] for ${T}")
 trait Summary[T] extends Show[T]
 object Summary {
-  def apply[T](f: T => Show.Result): Summary[T] = new Summary[T] { def apply(input: T) = f(input) }
+  def apply[T](f: T => Show.Result): Summary[T] = new Summary[T] {
+    def apply(input: T) = f(input)
+  }
 
   implicit def summary[T: Syntax]: Summary[T] = Summary { x =>
     var result = x.syntax.replace(EOL, " ")

@@ -20,8 +20,9 @@ object ScaladocParser {
   private def hspacesMin[$: P](min: Int) = P(CharsWhileIn("\t\r ", min))
   private def hspaces0[$: P] = hspacesMin(0)
   private def hspaces1[$: P] = hspacesMin(1)
-  private def hspacesMinWithLen[$: P](min: Int): P[Int] =
-    (Index ~ hspacesMin(min) ~ Index).map { case (b, e) => e - b }
+  private def hspacesMinWithLen[$: P](min: Int): P[Int] = (Index ~ hspacesMin(min) ~ Index).map {
+    case (b, e) => e - b
+  }
 
   private def nl[$: P]: P0 = P("\n")
   private def nlOrEndPeek[$: P] = &(End | nl)
@@ -116,10 +117,7 @@ object ScaladocParser {
     nl | hspacesMinWithLen(0).flatMap { offset =>
       def dedented = if (offset < indent) Pass else Fail
       def mdCodeBlockPrefix = if (offset <= getMdOffsetMax(mdOffset)) mdCodeBlockFence else Fail
-      dedented |
-        CharIn("@=") |
-        (codePrefix ~ nl) | mdCodeBlockPrefix |
-        tableSep | tableDelim |
+      dedented | CharIn("@=") | (codePrefix ~ nl) | mdCodeBlockPrefix | tableSep | tableDelim |
         listPrefix ~ &(" ")
     }
   }
@@ -140,8 +138,9 @@ object ScaladocParser {
     // special case: @usecase takes a single code line, on the same line
     def labelInline = P(hspaces0 ~ (!nl ~ AnyChar).rep(1).!.map(Word))
     def desc = P {
-      (textParser(indent).? ~ embeddedTermsParser())
-        .map { case (x, terms) => x.fold(terms)(_ +: terms) }
+      (textParser(indent).? ~ embeddedTermsParser()).map { case (x, terms) =>
+        x.fold(terms)(_ +: terms)
+      }
     }
     hspaces0 ~ ("@" ~ labelParser).!.flatMap { tag =>
       val tagType = TagType.getTag(tag)
@@ -176,8 +175,9 @@ object ScaladocParser {
   }
 
   private def listItemParser[$: P](indent: Int, mdOffset: Int) = P {
-    (textParser(indent, mdOffset) ~ embeddedTermsParser(indent, mdOffset))
-      .map { case (x, terms) => ListItem(x, terms) }
+    (textParser(indent, mdOffset) ~ embeddedTermsParser(indent, mdOffset)).map { case (x, terms) =>
+      ListItem(x, terms)
+    }
   }
 
   private def tableParser[$: P]: P[Table] = P {
@@ -194,11 +194,7 @@ object ScaladocParser {
         isRight <- isEnd(x.last)
         // covers "not found" (-1) and found at the end (x.length - 1)
         if 0 == (1 + x.indexWhere(_ != '-', 1)) % x.length
-      } yield {
-        if (!isRight) Table.Left
-        else if (!isLeft) Table.Right
-        else Table.Center
-      }
+      } yield { if (!isRight) Table.Left else if (!isLeft) Table.Right else Table.Center }
     }
 
     def cell = P((escape ~/ AnyChar | !(nl | tableSep) ~ AnyChar).rep)
@@ -243,8 +239,7 @@ object ScaladocParser {
           }
         }
         Table(toRow(headBuilder.result()), alignBuilder.result(), rest.map(toRow))
-      } else
-        Table(toRow(x.head.map(_.trim)), align, rest.tail.map(toRow))
+      } else Table(toRow(x.head.map(_.trim)), align, rest.tail.map(toRow))
     }
 
     tableBeg ~ table ~ tableEnd
@@ -254,22 +249,14 @@ object ScaladocParser {
     def leadingParser = // might not consume full line
       tagParser(0)
     def completeParser = // will consume full line
-      listBlockParser() |
-        mdCodeBlockParser() |
-        codeBlockParser |
-        headingParser |
-        tableParser |
+      listBlockParser() | mdCodeBlockParser() | codeBlockParser | headingParser | tableParser |
         textParser(0) // keep at the end, this is the fallback
-    (nl | Start) ~ (leadingParser | (completeParser ~ nlOrEndPeek)) |
-      textParser(0) // could be following an element leaving trailing text, e.g. tagParser
+    (nl | Start) ~ (leadingParser | (completeParser ~ nlOrEndPeek)) | textParser(0) // could be following an element leaving trailing text, e.g. tagParser
   }
 
   private def embeddedTermsParser[$: P](indent: Int = 0, mdOffset: Int = 0): P[Seq[Term]] = P {
     def completeParser = // will consume full line
-      listBlockParser(indent) |
-        mdCodeBlockParser(mdOffset) |
-        codeBlockParser |
-        tableParser |
+      listBlockParser(indent) | mdCodeBlockParser(mdOffset) | codeBlockParser | tableParser |
         leadTextParser(indent, mdOffset) // keep at the end, this is the fallback
     (nl ~ completeParser ~ nlOrEndPeek).rep
   }

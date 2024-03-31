@@ -12,16 +12,10 @@ object Locator {
   def apply(path: Path)(fn: (Path, TextDocuments) => Unit): Unit = {
     if (Files.exists(path)) {
       if (Files.isDirectory(path)) {
-        Files
-          .walk(path)
-          .iterator()
-          .toScala
-          .filter(_.toString.endsWith(".semanticdb"))
-          .toArray
+        Files.walk(path).iterator().toScala.filter(_.toString.endsWith(".semanticdb")).toArray
           // NOTE: nio.file.Path.compareTo is file system specific,
           // and the behavior is different on windows vs. unix
-          .sortBy(_.toString.toLowerCase)
-          .foreach { path =>
+          .sortBy(_.toString.toLowerCase).foreach { path =>
             val stream = Files.newInputStream(path)
             try fn(path, TextDocuments.parseFrom(stream))
             finally stream.close()
@@ -35,9 +29,7 @@ object Locator {
           val jarIt = jar.entries()
           while (jarIt.hasMoreElements) {
             val jarEntry = jarIt.nextElement()
-            if (jarEntry.getName.endsWith(".semanticdb")) {
-              buf += jarEntry
-            }
+            if (jarEntry.getName.endsWith(".semanticdb")) { buf += jarEntry }
           }
           val jarEntries = buf.result().sortBy(_.getName.toLowerCase)
           jarEntries.foreach { jarEntry =>
@@ -60,12 +52,8 @@ object Locator {
           val stream = Files.newInputStream(path)
           try fn(path, TextDocuments.parseFrom(stream))
           finally stream.close()
-        } else {
-          ()
-        }
+        } else { () }
       }
-    } else {
-      ()
-    }
+    } else { () }
   }
 }

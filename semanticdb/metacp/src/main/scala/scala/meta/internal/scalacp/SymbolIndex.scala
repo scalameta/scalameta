@@ -10,40 +10,28 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
   def lookup(sym: ExternalSymbol): SymbolLookup = {
     lookupCache.getOrElseUpdate(
       sym, {
-        if (sym.isRootPackage ||
-          sym.isEmptyPackage ||
-          classpathIndex.isClassdir(sym.packageResourceName)) {
-          PackageLookup
-        } else if (sym.isScalalibSynthetic) {
-          ScalaLookup
-        } else {
+        if (sym.isRootPackage || sym.isEmptyPackage ||
+          classpathIndex.isClassdir(sym.packageResourceName)) { PackageLookup }
+        else if (sym.isScalalibSynthetic) { ScalaLookup }
+        else {
           sym.parent match {
-            case Some(p: ExternalSymbol) =>
-              lookup(p) match {
+            case Some(p: ExternalSymbol) => lookup(p) match {
                 case PackageLookup =>
                   val scalaShortName = {
-                    if (sym.entry.entryType == 10) sym.name + "$.class"
-                    else sym.name + ".class"
+                    if (sym.entry.entryType == 10) sym.name + "$.class" else sym.name + ".class"
                   }
                   classpathIndex.getClassfile(p.packageResourceName, scalaShortName) match {
-                    case Some(entry) =>
-                      if (entry.hasScalaSig) ScalaLookup
-                      else JavaLookup
+                    case Some(entry) => if (entry.hasScalaSig) ScalaLookup else JavaLookup
                     case None =>
                       val javaShortName = sym.name + ".class"
                       classpathIndex.getClassfile(p.packageResourceName, javaShortName) match {
-                        case Some(entry) =>
-                          if (entry.hasScalaSig) MissingLookup
-                          else JavaLookup
-                        case None =>
-                          MissingLookup
+                        case Some(entry) => if (entry.hasScalaSig) MissingLookup else JavaLookup
+                        case None => MissingLookup
                       }
                   }
-                case otherLookup =>
-                  otherLookup
+                case otherLookup => otherLookup
               }
-            case _ =>
-              MissingLookup
+            case _ => MissingLookup
           }
         }
       }
@@ -53,9 +41,7 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
   private implicit class XtensionSymbolOps(sym: Symbol) {
     def isRootPackage: Boolean = sym.path == "<root>"
     def isEmptyPackage: Boolean = sym.path == "<empty>"
-    def isScalalibSynthetic: Boolean = {
-      scalalibSyntheticsPaths.contains(sym.path)
-    }
+    def isScalalibSynthetic: Boolean = { scalalibSyntheticsPaths.contains(sym.path) }
     def packageResourceName: String = {
       ownerChain.filterNot(_.isEmptyPackage).map(_.name).mkString("", "/", "/")
     }
@@ -69,14 +55,11 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
       buf.result()
     }
   }
-  private lazy val scalalibSyntheticsPaths: Set[String] =
-    Scalalib.synthetics.map { synthetic =>
-      synthetic.relativeUri.stripSuffix(".class").replace('/', '.')
-    }.toSet
+  private lazy val scalalibSyntheticsPaths: Set[String] = Scalalib.synthetics.map { synthetic =>
+    synthetic.relativeUri.stripSuffix(".class").replace('/', '.')
+  }.toSet
 }
 
 object SymbolIndex {
-  def apply(classpathIndex: ClasspathIndex): SymbolIndex = {
-    new SymbolIndex(classpathIndex)
-  }
+  def apply(classpathIndex: ClasspathIndex): SymbolIndex = { new SymbolIndex(classpathIndex) }
 }

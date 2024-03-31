@@ -40,8 +40,7 @@ class TransformerSuite extends FunSuite {
     """
     object transformer extends Transformer {
       override def apply(tree: Tree): Tree = {
-        if (tree.toString == "x") q"y"
-        else super.apply(tree)
+        if (tree.toString == "x") q"y" else super.apply(tree)
       }
     }
     intercept[UnsupportedOperationException] { transformer(tree0) }
@@ -60,15 +59,9 @@ class TransformerSuite extends FunSuite {
     val before = "case class Node(name: String) extends Tree derives a.b.OldName { def a = 1 }"
     val after = "case class Node(name: String) extends Tree derives a.b.NewName { def a = 1 }"
 
-    val beforeTree =
-      before
-        .parse[Source]
-        .get
+    val beforeTree = before.parse[Source].get
 
-    val afterTree = beforeTree
-      .transform { case Type.Name("OldName") =>
-        Type.Name("NewName")
-      }
+    val afterTree = beforeTree.transform { case Type.Name("OldName") => Type.Name("NewName") }
 
     assertEquals(afterTree.toString, after)
 

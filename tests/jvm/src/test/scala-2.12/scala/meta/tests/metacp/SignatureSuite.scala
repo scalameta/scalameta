@@ -24,10 +24,7 @@ import scala.util.control.NonFatal
 class SignatureSuite extends FunSuite {
 
   // Validates that pretty(parse(signature) == signature
-  def assertSignatureRoundtrip(
-      signature: String,
-      visitor: TypedSignatureVisitor[Printable]
-  ): Unit = {
+  def assertSignatureRoundtrip(signature: String, visitor: TypedSignatureVisitor[Printable]): Unit = {
     val obtained = JavaTypeSignature.parse[Printable](signature, visitor).pretty
     assertNoDiff(obtained, signature)
   }
@@ -44,9 +41,8 @@ class SignatureSuite extends FunSuite {
               val node = AbsolutePath(file).toClassNode
               val tests = checkAllSignatures(node)
               tests.foreach { case (signature, unsafe) =>
-                try {
-                  unsafe()
-                } catch {
+                try { unsafe() }
+                catch {
                   case NonFatal(e) =>
                     println(signature)
                     failingSignatures += signature
@@ -68,14 +64,14 @@ class SignatureSuite extends FunSuite {
     }
   }
 
-  def checkFields(node: ClassNode): List[(String, () => Unit)] =
-    node.fields.asScala.map { field: FieldNode =>
+  def checkFields(node: ClassNode): List[(String, () => Unit)] = node.fields.asScala
+    .map { field: FieldNode =>
       val signature = if (field.signature == null) field.desc else field.signature
       (signature, { () => assertSignatureRoundtrip(signature, new FieldSignatureVisitor()) })
     }.toList
 
-  def checkMethods(node: ClassNode): List[(String, () => Unit)] =
-    node.methods.asScala.map { method: MethodNode =>
+  def checkMethods(node: ClassNode): List[(String, () => Unit)] = node.methods.asScala
+    .map { method: MethodNode =>
       val signature = if (method.signature == null) method.desc else method.signature
       (signature, { () => assertSignatureRoundtrip(signature, new MethodSignatureVisitor()) })
     }.toList
@@ -83,14 +79,10 @@ class SignatureSuite extends FunSuite {
   def checkClass(node: ClassNode): List[(String, () => Unit)] =
     if (node.signature == null) Nil
     else {
-      List(
-        (
-          node.signature,
-          { () =>
-            assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor)
-          }
-        )
-      )
+      List((
+        node.signature,
+        { () => assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor) }
+      ))
     }
 
   def checkAllSignatures(node: ClassNode): List[(String, () => Unit)] = {

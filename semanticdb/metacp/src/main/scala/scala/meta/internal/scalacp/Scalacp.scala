@@ -29,9 +29,7 @@ final class Scalacp private (
     val sinfo = sym.toSymbolInformation(SymlinkChildren)
     if (sym.isUsefulField && sym.isMutable) {
       List(sinfo) ++ Synthetics.setterInfos(sinfo, SymlinkChildren)
-    } else {
-      List(sinfo)
-    }
+    } else { List(sinfo) }
   }
 }
 

@@ -94,33 +94,26 @@ trait SymbolInformationPrinter extends BasePrinter {
     private def pprint(ann: Annotation): Unit = {
       out.print("@")
       ann.tpe match {
-        case NoType =>
-          out.print("<?>")
-        case tpe =>
-          pprint(tpe)
+        case NoType => out.print("<?>")
+        case tpe => pprint(tpe)
       }
     }
 
     private def pprint(acc: Access): Unit = {
       acc match {
-        case PrivateAccess() =>
-          out.print("private ")
-        case PrivateThisAccess() =>
-          out.print("private[this] ")
+        case PrivateAccess() => out.print("private ")
+        case PrivateThisAccess() => out.print("private[this] ")
         case PrivateWithinAccess(sym) =>
           out.print("private[")
           pprint(sym, Reference)
           out.print("] ")
-        case ProtectedAccess() =>
-          out.print("protected ")
-        case ProtectedThisAccess() =>
-          out.print("protected[this] ")
+        case ProtectedAccess() => out.print("protected ")
+        case ProtectedThisAccess() => out.print("protected[this] ")
         case ProtectedWithinAccess(sym) =>
           out.print("protected[")
           pprint(sym, Reference)
           out.print("] ")
-        case NoAccess | PublicAccess() =>
-          out.print("")
+        case NoAccess | PublicAccess() => out.print("")
       }
     }
 
@@ -129,20 +122,14 @@ trait SymbolInformationPrinter extends BasePrinter {
         case ClassSignature(tparams, parents, self, decls) =>
           rep("[", tparams.infos, ", ", "]")(pprintDefn)
           rep(" extends ", parents, " with ")(pprint)
-          if (self.nonEmpty || decls.infos.nonEmpty) {
-            out.print(" { ")
-          }
+          if (self.nonEmpty || decls.infos.nonEmpty) { out.print(" { ") }
           if (self.nonEmpty) {
             out.print("self: ")
             pprint(self)
             out.print(" => ")
           }
-          if (decls.infos.nonEmpty) {
-            out.print(s"+${decls.infos.length} decls")
-          }
-          if (self.nonEmpty || decls.infos.nonEmpty) {
-            out.print(" }")
-          }
+          if (decls.infos.nonEmpty) { out.print(s"+${decls.infos.length} decls") }
+          if (self.nonEmpty || decls.infos.nonEmpty) { out.print(" }") }
         case MethodSignature(tparams, paramss, res) =>
           rep("[", tparams.infos, ", ", "]")(pprintDefn)
           rep("(", paramss, ")(", ")")(params => rep(params.infos, ", ")(pprintDefn))
@@ -163,10 +150,8 @@ trait SymbolInformationPrinter extends BasePrinter {
             val alias = lo
             opt(" = ", alias)(pprint)
           }
-        case ValueSignature(tpe) =>
-          pprint(tpe)
-        case NoSignature =>
-          out.print("<?>")
+        case ValueSignature(tpe) => pprint(tpe)
+        case NoSignature => out.print("<?>")
       }
     }
 
@@ -178,8 +163,7 @@ trait SymbolInformationPrinter extends BasePrinter {
               case _: SingleType | _: ThisType | _: SuperType =>
                 prefix(pre)
                 out.print(".")
-              case NoType =>
-                ()
+              case NoType => ()
               case _ =>
                 prefix(pre)
                 out.print("#")
@@ -196,14 +180,10 @@ trait SymbolInformationPrinter extends BasePrinter {
             opt(pre, ".")(prefix)
             out.print("super")
             opt("[", sym, "]")(pprintRef)
-          case ConstantType(const) =>
-            pprint(const)
-          case IntersectionType(types) =>
-            rep(types, " & ")(normal)
-          case UnionType(types) =>
-            rep(types, " | ")(normal)
-          case WithType(types) =>
-            rep(types, " with ")(normal)
+          case ConstantType(const) => pprint(const)
+          case IntersectionType(types) => rep(types, " & ")(normal)
+          case UnionType(types) => rep(types, " | ")(normal)
+          case WithType(types) => rep(types, " with ")(normal)
           case StructuralType(utpe, decls) =>
             decls.infos.foreach(notes.discover)
             opt(utpe)(normal)
@@ -238,8 +218,7 @@ trait SymbolInformationPrinter extends BasePrinter {
             parameters.infos.foreach(notes.discover)
             rep("[", parameters.infos, ", ", "] =>> ")(pprintDefn)
             opt(returnType)(normal)
-          case NoType =>
-            out.print("<?>")
+          case NoType => out.print("<?>")
         }
       }
       def normal(tpe: Type): Unit = {
@@ -247,16 +226,13 @@ trait SymbolInformationPrinter extends BasePrinter {
           case _: SingleType | _: ThisType | _: SuperType =>
             prefix(tpe)
             out.print(".type")
-          case _ =>
-            prefix(tpe)
+          case _ => prefix(tpe)
         }
       }
       normal(tpe)
     }
 
-    private def pprintRef(sym: String): Unit = {
-      pprint(sym, Reference)
-    }
+    private def pprintRef(sym: String): Unit = { pprint(sym, Reference) }
 
     private def pprintDefn(info: SymbolInformation): Unit = {
       notes.discover(info)
@@ -270,8 +246,7 @@ trait SymbolInformationPrinter extends BasePrinter {
     protected def pprint(sym: String, style: SymbolStyle): Unit = {
       val info = notes.visit(sym)
       style match {
-        case Reference =>
-          pprint(info.displayName)
+        case Reference => pprint(info.displayName)
         case Definition =>
           // NOTE: I am aware of some degree of duplication with pprint(info).
           // However, deduplicating these two methods leads to very involved code,
@@ -319,38 +294,24 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
 
     private def pprint(name: String): Unit = {
-      if (name.nonEmpty) out.print(name)
-      else out.print("<?>")
+      if (name.nonEmpty) out.print(name) else out.print("<?>")
     }
 
     def pprint(const: Constant): Unit = {
       const match {
-        case NoConstant =>
-          out.print("<?>")
-        case UnitConstant() =>
-          out.print("()")
-        case BooleanConstant(true) =>
-          out.print(true)
-        case BooleanConstant(false) =>
-          out.print(false)
-        case ByteConstant(value) =>
-          out.print(value.toByte)
-        case ShortConstant(value) =>
-          out.print(value.toShort)
-        case CharConstant(value) =>
-          out.print("'" + value.toChar + "'")
-        case IntConstant(value) =>
-          out.print(value)
-        case LongConstant(value) =>
-          out.print(s"${value}L")
-        case FloatConstant(value) =>
-          out.print(s"${value}f")
-        case DoubleConstant(value) =>
-          out.print(value)
-        case StringConstant(value) =>
-          out.print("\"" + value + "\"")
-        case NullConstant() =>
-          out.print("null")
+        case NoConstant => out.print("<?>")
+        case UnitConstant() => out.print("()")
+        case BooleanConstant(true) => out.print(true)
+        case BooleanConstant(false) => out.print(false)
+        case ByteConstant(value) => out.print(value.toByte)
+        case ShortConstant(value) => out.print(value.toShort)
+        case CharConstant(value) => out.print("'" + value.toChar + "'")
+        case IntConstant(value) => out.print(value)
+        case LongConstant(value) => out.print(s"${value}L")
+        case FloatConstant(value) => out.print(s"${value}f")
+        case DoubleConstant(value) => out.print(value)
+        case StringConstant(value) => out.print("\"" + value + "\"")
+        case NullConstant() => out.print("null")
       }
     }
 
@@ -360,8 +321,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | UNKNOWN_KIND | Kind.Unrecognized(_) =>
             ": "
           case METHOD | CONSTRUCTOR | MACRO | TYPE | TYPE_PARAMETER | OBJECT | PACKAGE |
-              PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE =>
-            ""
+              PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE => ""
         }
       }
     }
@@ -391,9 +351,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       info
     }
 
-    def visited: List[SymbolInformation] = {
-      buf.toList
-    }
+    def visited: List[SymbolInformation] = { buf.toList }
   }
 
   implicit def infoOrder: Ordering[SymbolInformation] = {

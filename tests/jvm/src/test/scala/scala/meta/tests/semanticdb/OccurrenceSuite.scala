@@ -18,35 +18,25 @@ import scala.meta.tests.{BuildInfo, Utils}
 class OccurrenceSuite extends FunSuite {
 
   private def testBody(body: OccurrenceSuite.TestBody): Unit = {
-    val expectedCompat = if (ScalaVersion.atLeast212_14) {
-      body.expected
-    } else {
-      // Predef.type etc. was fixed in 2.12.14
-      body.expected
-        .replace("Predef/*=>scala.Predef.*/.type", "Predef.type")
-        .replace("x/*=>types.Test.C#x.*/.type", "x.type")
-        .replace("p/*=>types.Test.C#p.*/.x/*=>types.P#x.*/.type", "p.x.type")
-    }
+    val expectedCompat =
+      if (ScalaVersion.atLeast212_14) { body.expected }
+      else {
+        // Predef.type etc. was fixed in 2.12.14
+        body.expected.replace("Predef/*=>scala.Predef.*/.type", "Predef.type")
+          .replace("x/*=>types.Test.C#x.*/.type", "x.type")
+          .replace("p/*=>types.Test.C#p.*/.x/*=>types.P#x.*/.type", "p.x.type")
+      }
     assertNoDiff(body.obtained, expectedCompat)
   }
 
   ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212 || ScalaVersion.is213) {
-    OccurrenceSuite.testCases.foreach { t =>
-      test(t.name) {
-        t.body.fold(fail(_), testBody)
-      }
-    }
+    OccurrenceSuite.testCases.foreach { t => test(t.name) { t.body.fold(fail(_), testBody) } }
   }
 }
 
 object OccurrenceSuite {
-  def isExcluded(path: AbsolutePath): Boolean =
-    path.toNIO.endsWith("Exclude.scala")
-  case class TestBody(
-      obtained: String,
-      expected: String,
-      expectpath: AbsolutePath
-  )
+  def isExcluded(path: AbsolutePath): Boolean = path.toNIO.endsWith("Exclude.scala")
+  case class TestBody(obtained: String, expected: String, expectpath: AbsolutePath)
   class TestCase(val name: String)(f: => Either[String, TestBody]) {
     lazy val body: Either[String, TestBody] = f
   }
@@ -55,10 +45,8 @@ object OccurrenceSuite {
     val targetroot = AbsolutePath(BuildInfo.databaseClasspath)
     for {
       dir <- BuildInfo.integrationSourceDirectories
-      absdir = AbsolutePath(dir)
-      if absdir.isDirectory
-      source <- FileIO.listAllFilesRecursively(absdir)
-      if PathIO.extension(source.toNIO) == "scala"
+      absdir = AbsolutePath(dir) if absdir.isDirectory
+      source <- FileIO.listAllFilesRecursively(absdir) if PathIO.extension(source.toNIO) == "scala"
       if !isExcluded(source)
       relpath = source.toRelative(absdir)
     } yield {
@@ -95,17 +83,11 @@ object OccurrenceSuite {
     var offset = 0
     occurrences.foreach { occ =>
       val range = occ.range.get
-      val pos = Position.Range(
-        input,
-        range.startLine,
-        range.startCharacter,
-        range.endLine,
-        range.endCharacter
-      )
+      val pos = Position
+        .Range(input, range.startLine, range.startCharacter, range.endLine, range.endCharacter)
       if (pos.end >= offset) {
         sb.append(doc.text.substring(offset, pos.end))
-        val isPrimaryConstructor =
-          symtab.get(occ.symbol).exists(_.isPrimary)
+        val isPrimaryConstructor = symtab.get(occ.symbol).exists(_.isPrimary)
         if (!occ.symbol.isPackage && !isPrimaryConstructor) {
           printSymbol(sb, occ.symbol, occ.role)
         }
@@ -118,35 +100,25 @@ object OccurrenceSuite {
 
   def printSymbol(sb: StringBuilder, symbol: String, role: SymbolOccurrence.Role): Unit = {
     val arrow = if (role.isDefinition) "<=" else "=>"
-    sb.append("/*")
-      .append(arrow)
+    sb.append("/*").append(arrow)
       // replace package / with dot . to not upset GitHub syntax highlighting.
-      .append(symbol.replace('/', '.'))
-      .append("*/")
+      .append(symbol.replace('/', '.')).append("*/")
   }
 
-  implicit val occurrenceOrdering: Ordering[SymbolOccurrence] =
-    new Ordering[SymbolOccurrence] {
-      override def compare(x: SymbolOccurrence, y: SymbolOccurrence): Int = {
-        if (x.range.isEmpty) 0
-        else if (y.range.isEmpty) 0
+  implicit val occurrenceOrdering: Ordering[SymbolOccurrence] = new Ordering[SymbolOccurrence] {
+    override def compare(x: SymbolOccurrence, y: SymbolOccurrence): Int = {
+      if (x.range.isEmpty) 0
+      else if (y.range.isEmpty) 0
+      else {
+        val a = x.range.get
+        val b = y.range.get
+        val byLine = Integer.compare(a.startLine, b.startLine)
+        if (byLine != 0) { byLine }
         else {
-          val a = x.range.get
-          val b = y.range.get
-          val byLine = Integer.compare(
-            a.startLine,
-            b.startLine
-          )
-          if (byLine != 0) {
-            byLine
-          } else {
-            val byCharacter = Integer.compare(
-              a.startCharacter,
-              b.startCharacter
-            )
-            byCharacter
-          }
+          val byCharacter = Integer.compare(a.startCharacter, b.startCharacter)
+          byCharacter
         }
       }
     }
+  }
 }

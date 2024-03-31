@@ -54,9 +54,7 @@ class ReflectionSuite extends FunSuite {
     val iff = symbolOf[scala.meta.Term.Name].asLeaf
     assertEquals(
       iff.fields.map(_.toString),
-      List(
-        "field Term.Name.value: String @org.scalameta.invariants.nonEmpty"
-      )
+      List("field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
     )
     assertEquals(
       iff.allFields.map(_.toString),
@@ -69,10 +67,9 @@ class ReflectionSuite extends FunSuite {
 
   test("allFields") {
     val allRelevantFields = symbolOf[scala.meta.Tree].asRoot.allLeafs
-      .filter(!_.sym.fullName.endsWith(".Quasi"))
-      .flatMap(_.fields)
-    val duplicateRelevantFieldTpes =
-      allRelevantFields.map(_.tpe).map { case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
+      .filter(!_.sym.fullName.endsWith(".Quasi")).flatMap(_.fields)
+    val duplicateRelevantFieldTpes = allRelevantFields.map(_.tpe)
+      .map { case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
     // NOTE: we can't just do `duplicateRelevantFieldTpes.distinct`, because that doesn't account for `=:=`
     val distinctRelevantFieldTpes = ListBuffer[Type]()
     duplicateRelevantFieldTpes.foreach(tpe =>

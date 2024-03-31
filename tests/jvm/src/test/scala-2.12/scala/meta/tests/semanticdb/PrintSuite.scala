@@ -11,10 +11,7 @@ import scala.meta.metap.Format
 import scala.meta.tests.metacp.Library
 
 class PrintSuite extends FunSuite {
-  val symtab = GlobalSymbolTable(
-    Library.scalaLibrary.classpath(),
-    includeJdk = true
-  )
+  val symtab = GlobalSymbolTable(Library.scalaLibrary.classpath(), includeJdk = true)
 
   val compiler = InteractiveSemanticdb.newCompiler()
   val printerSymtab: PrinterSymtab = new PrinterSymtab {
@@ -28,8 +25,7 @@ class PrintSuite extends FunSuite {
       fn: s.TextDocument => Unit
   ): Unit = {
     test(name) {
-      val wrapped =
-        s"""
+      val wrapped = s"""
 object Wrapped {
 $original
 }
@@ -37,10 +33,7 @@ $original
       val doc = InteractiveSemanticdb.toTextDocument(
         compiler = compiler,
         code = wrapped,
-        options = List(
-          "-P:semanticdb:synthetics:on",
-          "-P:semanticdb:text:on"
-        )
+        options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
       )
       fn(doc)
     }
@@ -118,23 +111,14 @@ $original
   checkConstant(s.CharConstant('a'.toInt), "'a'")
   checkConstant(s.StringConstant("a"), "\"a\"")
 
-  checkSignature(
-    "scala/Predef.assert(+1).",
-    """(assertion: Boolean, message: => Any): Unit"""
-  )
-  checkSignature(
-    "scala/Predef.ArrowAssoc#`->`().",
-    "[B](y: B): Tuple2[A, B]"
-  )
+  checkSignature("scala/Predef.assert(+1).", """(assertion: Boolean, message: => Any): Unit""")
+  checkSignature("scala/Predef.ArrowAssoc#`->`().", "[B](y: B): Tuple2[A, B]")
 
   checkInfo(
     "scala/Predef.assert(+1).",
     """scala/Predef.assert(+1). => @inline @elidable final method assert(assertion: Boolean, message: => Any): Unit"""
   )
-  checkInfo(
-    "scala/Any#",
-    """scala/Any# => abstract class Any { +10 decls }"""
-  )
+  checkInfo("scala/Any#", """scala/Any# => abstract class Any { +10 decls }""")
   checkInfo(
     "java/util/Collections#singletonList().",
     """java/util/Collections#singletonList(). => static method singletonList[T](param0: T): List[T]"""

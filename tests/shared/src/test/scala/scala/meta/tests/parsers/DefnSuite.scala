@@ -6,15 +6,11 @@ import scala.meta.dialects.Scala213
 
 class DefnSuite extends ParseSuite {
   test("val x = 2") {
-    assertTree(templStat("val x = 2"))(
-      Defn.Val(Nil, Pat.Var(tname("x")) :: Nil, None, int(2))
-    )
+    assertTree(templStat("val x = 2"))(Defn.Val(Nil, Pat.Var(tname("x")) :: Nil, None, int(2)))
   }
 
   test("var x = 2") {
-    assertTree(templStat("var x = 2"))(
-      Defn.Var(Nil, Pat.Var(tname("x")) :: Nil, None, Some(int(2)))
-    )
+    assertTree(templStat("var x = 2"))(Defn.Var(Nil, Pat.Var(tname("x")) :: Nil, None, Some(int(2))))
   }
 
   test("val x, y = 2") {
@@ -36,25 +32,21 @@ class DefnSuite extends ParseSuite {
   }
 
   test("val f: Int => String = _.toString") {
-    assertTree(templStat("val f: Int => String = _.toString"))(
-      Defn.Val(
-        Nil,
-        Pat.Var(tname("f")) :: Nil,
-        Some(Type.Function(pname("Int") :: Nil, pname("String"))),
-        Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("toString")))
-      )
-    )
+    assertTree(templStat("val f: Int => String = _.toString"))(Defn.Val(
+      Nil,
+      Pat.Var(tname("f")) :: Nil,
+      Some(Type.Function(pname("Int") :: Nil, pname("String"))),
+      Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("toString")))
+    ))
   }
 
   test("var f: Int => String = _.toString") {
-    assertTree(templStat("var f: Int => String = _.toString"))(
-      Defn.Var(
-        Nil,
-        Pat.Var(tname("f")) :: Nil,
-        Some(Type.Function(pname("Int") :: Nil, pname("String"))),
-        Some(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("toString"))))
-      )
-    )
+    assertTree(templStat("var f: Int => String = _.toString"))(Defn.Var(
+      Nil,
+      Pat.Var(tname("f")) :: Nil,
+      Some(Type.Function(pname("Int") :: Nil, pname("String"))),
+      Some(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("toString"))))
+    ))
   }
 
   test("var x: Int = _") {
@@ -63,16 +55,10 @@ class DefnSuite extends ParseSuite {
     )
   }
 
-  test("var x = _ is not allowed") {
-    intercept[parsers.ParseException] {
-      templStat("var x = _")
-    }
-  }
+  test("var x = _ is not allowed") { intercept[parsers.ParseException] { templStat("var x = _") } }
 
   test("val x: Int = _ is not allowed") {
-    intercept[parsers.ParseException] {
-      templStat("val x: Int = _")
-    }
+    intercept[parsers.ParseException] { templStat("val x: Int = _") }
   }
 
   test("val (x: Int) = 2") {
@@ -89,31 +75,17 @@ class DefnSuite extends ParseSuite {
 
   test("type F[T] = List[T]") {
     assertTree(templStat("type F[T] = List[T]")) {
-      Defn.Type(
-        Nil,
-        pname("F"),
-        pparam("T") :: Nil,
-        Type.Apply(pname("List"), pname("T") :: Nil)
-      )
+      Defn.Type(Nil, pname("F"), pparam("T") :: Nil, Type.Apply(pname("List"), pname("T") :: Nil))
     }
   }
 
   test("def x = 2") {
-    assertTree(templStat("def x = 2")) {
-      Defn.Def(Nil, tname("x"), Nil, Nil, None, int(2))
-    }
+    assertTree(templStat("def x = 2")) { Defn.Def(Nil, tname("x"), Nil, Nil, None, int(2)) }
   }
 
   test("def x[A <: B] = 2") {
     assertTree(templStat("def x[A <: B] = 2")) {
-      Defn.Def(
-        Nil,
-        tname("x"),
-        pparam("A", hiBound("B")) :: Nil,
-        Nil,
-        None,
-        int(2)
-      )
+      Defn.Def(Nil, tname("x"), pparam("A", hiBound("B")) :: Nil, Nil, None, int(2))
     }
   }
 
@@ -122,12 +94,7 @@ class DefnSuite extends ParseSuite {
       Defn.Def(
         Nil,
         tname("x"),
-        pparam(
-          Nil,
-          "A",
-          noBounds,
-          vb = pname("B") :: Nil
-        ) :: Nil,
+        pparam(Nil, "A", noBounds, vb = pname("B") :: Nil) :: Nil,
         Nil,
         None,
         int(2)
@@ -137,14 +104,7 @@ class DefnSuite extends ParseSuite {
 
   test("def x[A: B] = 2") {
     assertTree(templStat("def x[A: B] = 2")) {
-      Defn.Def(
-        Nil,
-        tname("x"),
-        pparam(Nil, "A", cb = pname("B") :: Nil) :: Nil,
-        Nil,
-        None,
-        int(2)
-      )
+      Defn.Def(Nil, tname("x"), pparam(Nil, "A", cb = pname("B") :: Nil) :: Nil, Nil, None, int(2))
     }
   }
 
@@ -154,9 +114,7 @@ class DefnSuite extends ParseSuite {
         Nil,
         tname("f"),
         Nil,
-        (tparam("a", "Int") :: Nil) ::
-          (tparam(Mod.Implicit() :: Nil, "b", "Int") :: Nil)
-          :: Nil,
+        (tparam("a", "Int") :: Nil) :: (tparam(Mod.Implicit() :: Nil, "b", "Int") :: Nil) :: Nil,
         None,
         Term.ApplyInfix(tname("a"), tname("+"), Nil, tname("b") :: Nil)
       )
@@ -212,41 +170,36 @@ class DefnSuite extends ParseSuite {
          |  }.recover(???)
          |}""".stripMargin
     )
-    assertTree(defn)(
-      Defn.Def(
-        Nil,
-        tname("f"),
-        Type.ParamClause(Nil),
-        Nil,
-        None,
-        Term.Block(
-          Term.Function(
-            List(tparam("n", "Int")),
-            Term.Apply(
-              Term.Select(
-                Term.Block(
-                  Term.ForYield(
-                    Enumerator.Generator(
-                      Pat.Wildcard(),
-                      Term.Apply(
-                        Term.Select(
-                          Term.Select(tname("scala"), tname("util")),
-                          tname("Success")
-                        ),
-                        List(int(123))
-                      )
-                    ) :: Nil,
-                    int(42)
-                  ) :: Nil
-                ),
-                tname("recover")
+    assertTree(defn)(Defn.Def(
+      Nil,
+      tname("f"),
+      Type.ParamClause(Nil),
+      Nil,
+      None,
+      Term.Block(
+        Term.Function(
+          List(tparam("n", "Int")),
+          Term.Apply(
+            Term.Select(
+              Term.Block(
+                Term.ForYield(
+                  Enumerator.Generator(
+                    Pat.Wildcard(),
+                    Term.Apply(
+                      Term.Select(Term.Select(tname("scala"), tname("util")), tname("Success")),
+                      List(int(123))
+                    )
+                  ) :: Nil,
+                  int(42)
+                ) :: Nil
               ),
-              List(tname("???"))
-            )
-          ) :: Nil
-        )
+              tname("recover")
+            ),
+            List(tname("???"))
+          )
+        ) :: Nil
       )
-    )
+    ))
   }
 
   test("braces-in-if-cond") {
@@ -254,19 +207,17 @@ class DefnSuite extends ParseSuite {
       """|if (cond) { expr }.select else { expr } + { expr }
          |""".stripMargin
     )
-    assertTree(defn)(
-      Term.If(
-        tname("cond"),
-        Term.Select(Term.Block(List(tname("expr"))), tname("select")),
-        Term.ApplyInfix(
-          Term.Block(List(tname("expr"))),
-          tname("+"),
-          Nil,
-          List(Term.Block(List(tname("expr"))))
-        ),
-        Nil
-      )
-    )
+    assertTree(defn)(Term.If(
+      tname("cond"),
+      Term.Select(Term.Block(List(tname("expr"))), tname("select")),
+      Term.ApplyInfix(
+        Term.Block(List(tname("expr"))),
+        tname("+"),
+        Nil,
+        List(Term.Block(List(tname("expr"))))
+      ),
+      Nil
+    ))
   }
 
   test("braces-in-try-expr") {
@@ -274,13 +225,11 @@ class DefnSuite extends ParseSuite {
       """|try {expr}.select finally {expr}.select 
          |""".stripMargin
     )
-    assertTree(defn)(
-      Term.Try(
-        Term.Select(Term.Block(List(tname("expr"))), tname("select")),
-        Nil,
-        Some(Term.Select(Term.Block(List(tname("expr"))), tname("select")))
-      )
-    )
+    assertTree(defn)(Term.Try(
+      Term.Select(Term.Block(List(tname("expr"))), tname("select")),
+      Nil,
+      Some(Term.Select(Term.Block(List(tname("expr"))), tname("select")))
+    ))
   }
 
   test("braces-in-while-expr") {
@@ -289,10 +238,7 @@ class DefnSuite extends ParseSuite {
          |""".stripMargin
     )
     assertTree(defn)(
-      Term.While(
-        tname("cond"),
-        Term.Select(Term.Block(List(tname("expr"))), tname("select"))
-      )
+      Term.While(tname("cond"), Term.Select(Term.Block(List(tname("expr"))), tname("select")))
     )
   }
 
@@ -301,59 +247,49 @@ class DefnSuite extends ParseSuite {
       """|for (i <- list) {expr}.select
          |""".stripMargin
     )
-    assertTree(defn)(
-      Term.For(
-        List(Enumerator.Generator(Pat.Var(tname("i")), tname("list"))),
-        Term.Select(Term.Block(List(tname("expr"))), tname("select"))
-      )
-    )
+    assertTree(defn)(Term.For(
+      List(Enumerator.Generator(Pat.Var(tname("i")), tname("list"))),
+      Term.Select(Term.Block(List(tname("expr"))), tname("select"))
+    ))
   }
 
   test("inline is not allowed") {
-    intercept[parsers.ParseException] {
-      blockStat("inline def x = 42")
-    }
+    intercept[parsers.ParseException] { blockStat("inline def x = 42") }
   }
 
   test("infix is not allowed") {
-    intercept[parsers.ParseException] {
-      blockStat("infix def x = 42")
-    }
+    intercept[parsers.ParseException] { blockStat("infix def x = 42") }
   }
 
   test("#3210") {
-    val code =
-      """|a3 match {
-         |  case Some(_) =>
-         |    case class A6(a7: A8)
-         |
-         |    object A9
-         |}
-         |""".stripMargin
-    val layout =
-      """|a3 match {
-         |  case Some(_) =>
-         |    case class A6(a7: A8)
-         |    object A9
-         |}
-         |""".stripMargin
+    val code = """|a3 match {
+                  |  case Some(_) =>
+                  |    case class A6(a7: A8)
+                  |
+                  |    object A9
+                  |}
+                  |""".stripMargin
+    val layout = """|a3 match {
+                    |  case Some(_) =>
+                    |    case class A6(a7: A8)
+                    |    object A9
+                    |}
+                    |""".stripMargin
     val tree = Term.Match(
       tname("a3"),
       Case(
         Pat.Extract(tname("Some"), List(Pat.Wildcard())),
         None,
-        Term.Block(
-          List(
-            Defn.Class(
-              List(Mod.Case()),
-              pname("A6"),
-              Nil,
-              ctorp(List(tparam("a7", "A8"))),
-              EmptyTemplate()
-            ),
-            Defn.Object(Nil, tname("A9"), EmptyTemplate())
-          )
-        )
+        Term.Block(List(
+          Defn.Class(
+            List(Mod.Case()),
+            pname("A6"),
+            Nil,
+            ctorp(List(tparam("a7", "A8"))),
+            EmptyTemplate()
+          ),
+          Defn.Object(Nil, tname("A9"), EmptyTemplate())
+        ))
       ) :: Nil,
       Nil
     )
@@ -361,130 +297,104 @@ class DefnSuite extends ParseSuite {
   }
 
   test("#3571 scala213") {
-    val code =
-      """|new A {
-         |  def b: C =
-         |    ???
-         |}
-         |""".stripMargin
-    val layout =
-      """|new A { def b: C = ??? }
-         |""".stripMargin
-    val tree = Term.NewAnonymous(
-      tpl(
-        List(Init(pname("A"), anon, Nil)),
-        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
-      )
-    )
+    val code = """|new A {
+                  |  def b: C =
+                  |    ???
+                  |}
+                  |""".stripMargin
+    val layout = """|new A { def b: C = ??? }
+                    |""".stripMargin
+    val tree = Term.NewAnonymous(tpl(
+      List(Init(pname("A"), anon, Nil)),
+      List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+    ))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3605 scala213") {
-    val code =
-      """|new A {
-         |  def b: C =
-         |    ???
-         |
-         |}
-         |""".stripMargin
-    val layout =
-      """|new A { def b: C = ??? }
-         |""".stripMargin
-    val tree = Term.NewAnonymous(
-      tpl(
-        List(Init(pname("A"), anon, Nil)),
-        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
-      )
-    )
+    val code = """|new A {
+                  |  def b: C =
+                  |    ???
+                  |
+                  |}
+                  |""".stripMargin
+    val layout = """|new A { def b: C = ??? }
+                    |""".stripMargin
+    val tree = Term.NewAnonymous(tpl(
+      List(Init(pname("A"), anon, Nil)),
+      List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+    ))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3617 scala213") {
-    val codeWithoutBlank =
-      """|object Test {
-         |  def bar =
-         |    `f-oo`
-         |}
-         |""".stripMargin
-    val codeWithBlank =
-      """|object Test {
-         |  def bar =
-         |    `f-oo`
-         |
-         |}
-         |""".stripMargin
+    val codeWithoutBlank = """|object Test {
+                              |  def bar =
+                              |    `f-oo`
+                              |}
+                              |""".stripMargin
+    val codeWithBlank = """|object Test {
+                           |  def bar =
+                           |    `f-oo`
+                           |
+                           |}
+                           |""".stripMargin
     val layout = "object Test { def bar = `f-oo` }"
-    val tree = Defn.Object(
-      Nil,
-      tname("Test"),
-      tpl(Defn.Def(Nil, tname("bar"), Nil, None, tname("f-oo")))
-    )
+    val tree = Defn
+      .Object(Nil, tname("Test"), tpl(Defn.Def(Nil, tname("bar"), Nil, None, tname("f-oo"))))
     runTestAssert[Stat](codeWithoutBlank, layout)(tree)
     runTestAssert[Stat](codeWithBlank, layout)(tree)
   }
 
   test("#3571 scala213source3") {
     implicit val Scala213 = scala.meta.dialects.Scala213Source3
-    val code =
-      """|new A {
-         |  def b: C =
-         |    ???
-         |}
-         |""".stripMargin
-    val layout =
-      """|new A { def b: C = ??? }
-         |""".stripMargin
-    val tree = Term.NewAnonymous(
-      tpl(
-        List(Init(pname("A"), anon, Nil)),
-        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
-      )
-    )
+    val code = """|new A {
+                  |  def b: C =
+                  |    ???
+                  |}
+                  |""".stripMargin
+    val layout = """|new A { def b: C = ??? }
+                    |""".stripMargin
+    val tree = Term.NewAnonymous(tpl(
+      List(Init(pname("A"), anon, Nil)),
+      List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+    ))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3605 scala213source3") {
     implicit val Scala213 = scala.meta.dialects.Scala213Source3
-    val code =
-      """|new A {
-         |  def b: C =
-         |    ???
-         |
-         |}
-         |""".stripMargin
-    val layout =
-      """|new A { def b: C = ??? }
-         |""".stripMargin
-    val tree = Term.NewAnonymous(
-      tpl(
-        List(Init(pname("A"), anon, Nil)),
-        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
-      )
-    )
+    val code = """|new A {
+                  |  def b: C =
+                  |    ???
+                  |
+                  |}
+                  |""".stripMargin
+    val layout = """|new A { def b: C = ??? }
+                    |""".stripMargin
+    val tree = Term.NewAnonymous(tpl(
+      List(Init(pname("A"), anon, Nil)),
+      List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+    ))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3617 scala213source3") {
     implicit val Scala213 = scala.meta.dialects.Scala213Source3
-    val codeWithoutBlank =
-      """|object Test {
-         |  def bar =
-         |    `f-oo`
-         |}
-         |""".stripMargin
-    val codeWithBlank =
-      """|object Test {
-         |  def bar =
-         |    `f-oo`
-         |
-         |}
-         |""".stripMargin
+    val codeWithoutBlank = """|object Test {
+                              |  def bar =
+                              |    `f-oo`
+                              |}
+                              |""".stripMargin
+    val codeWithBlank = """|object Test {
+                           |  def bar =
+                           |    `f-oo`
+                           |
+                           |}
+                           |""".stripMargin
     val layout = "object Test { def bar = `f-oo` }"
-    val tree = Defn.Object(
-      Nil,
-      tname("Test"),
-      tpl(Defn.Def(Nil, tname("bar"), Nil, None, tname("f-oo")))
-    )
+    val tree = Defn
+      .Object(Nil, tname("Test"), tpl(Defn.Def(Nil, tname("bar"), Nil, None, tname("f-oo"))))
     runTestAssert[Stat](codeWithoutBlank, layout)(tree)
     runTestAssert[Stat](codeWithBlank, layout)(tree)
   }

@@ -58,10 +58,8 @@ object Position {
         if (isLastLine) inputEnd.endColumn
         else input.lineToOffset(line + 1) - input.lineToOffset(line) - 1
       }
-      val start = input.lineToOffset(startLine) +
-        math.min(startColumn, lineLength(startLine))
-      val end = input.lineToOffset(endLine) +
-        math.min(endColumn, lineLength(endLine))
+      val start = input.lineToOffset(startLine) + math.min(startColumn, lineLength(startLine))
+      val end = input.lineToOffset(endLine) + math.min(endColumn, lineLength(endLine))
       Position.Range(input, start, end)
     }
   }

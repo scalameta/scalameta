@@ -5,7 +5,8 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.internal.semanticdb.Scala._
 import scala.reflect.internal.{Flags => gf}
 
-trait TypeOps { self: SemanticdbOps =>
+trait TypeOps {
+  self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
     def toSemanticTpe: s.Type = {
       def loop(gtpe: g.Type): s.Type = {
@@ -34,8 +35,7 @@ trait TypeOps { self: SemanticdbOps =>
             s.SuperType(spre, ssym)
           case g.ConstantType(g.Constant(sym: g.TermSymbol)) if sym.hasFlag(gf.JAVA_ENUM) =>
             loop(g.SingleType(sym.owner.thisPrefix, sym))
-          case g.ConstantType(g.Constant(_: g.Type)) =>
-            loop(gtpe.widen)
+          case g.ConstantType(g.Constant(_: g.Type)) => loop(gtpe.widen)
           case g.ConstantType(gconst) =>
             val sconst = s.Constant(gconst.value)
             s.ConstantType(sconst)
@@ -52,20 +52,15 @@ trait TypeOps { self: SemanticdbOps =>
             val stpe = loop(gtpe)
             val sdecls = Some(gtparams.sscope(HardlinkChildren))
             s.ExistentialType(stpe, sdecls)
-          case g.PolyType(gtparams, gtpe) =>
-            loop(gtpe) match {
-              case s.NoType =>
-                s.NoType
+          case g.PolyType(gtparams, gtpe) => loop(gtpe) match {
+              case s.NoType => s.NoType
               case stpe =>
                 val stparams = gtparams.sscope(HardlinkChildren)
                 s.UniversalType(Some(stparams), stpe)
             }
-          case g.NoType =>
-            s.NoType
-          case g.NoPrefix =>
-            s.NoType
-          case g.ErrorType =>
-            s.NoType
+          case g.NoType => s.NoType
+          case g.NoPrefix => s.NoType
+          case g.ErrorType => s.NoType
           /**
            * From the Scala compiler:
            * ```
@@ -74,12 +69,9 @@ trait TypeOps { self: SemanticdbOps =>
            * ```
            * This is essentially the same as ErrorType here.
            */
-          case g.WildcardType =>
-            s.NoType
-          case _: g.BoundedWildcardType =>
-            s.NoType
-          case gother =>
-            sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
+          case g.WildcardType => s.NoType
+          case _: g.BoundedWildcardType => s.NoType
+          case gother => sys.error(s"unsupported type ${gother}: ${g.showRaw(gother)}")
         }
       }
       loop(gtpe)
@@ -103,8 +95,7 @@ trait TypeOps { self: SemanticdbOps =>
                 case g.MethodType(ghead, gtpe) =>
                   val (gtail, gret) = flatten(gtpe)
                   (ghead :: gtail, gret)
-                case gother =>
-                  (Nil, gother)
+                case gother => (Nil, gother)
               }
             }
             val (gparamss, gret) = flatten(gtpe)
@@ -117,10 +108,8 @@ trait TypeOps { self: SemanticdbOps =>
             val slo = glo.toSemanticTpe
             val shi = ghi.toSemanticTpe
             s.TypeSignature(stparams, slo, shi)
-          case g.PolyType(gtparams, gtpe) =>
-            loop(gtpe) match {
-              case s.NoSignature =>
-                s.NoSignature
+          case g.PolyType(gtparams, gtpe) => loop(gtpe) match {
+              case s.NoSignature => s.NoSignature
               case t: s.ClassSignature =>
                 val stparams = gtparams.sscope(linkMode)
                 t.copy(typeParameters = Some(stparams))
@@ -135,12 +124,9 @@ trait TypeOps { self: SemanticdbOps =>
                 val stpe = t.tpe
                 s.ValueSignature(s.UniversalType(Some(stparams), stpe))
             }
-          case g.NoType =>
-            s.NoSignature
-          case g.ErrorType =>
-            s.NoSignature
-          case gother =>
-            s.ValueSignature(gother.toSemanticTpe)
+          case g.NoType => s.NoSignature
+          case g.ErrorType => s.NoSignature
+          case gother => s.ValueSignature(gother.toSemanticTpe)
         }
       }
       loop(gtpe)

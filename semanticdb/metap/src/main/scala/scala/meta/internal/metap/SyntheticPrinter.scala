@@ -48,18 +48,15 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
           rep("(", tree.parameters, ", ", ") => ")(pprint)
           pprint(tree.body)
           out.print("}")
-        case tree: IdTree =>
-          pprint(tree.symbol, Reference)
-        case tree: LiteralTree =>
-          pprint(tree.constant)
+        case tree: IdTree => pprint(tree.symbol, Reference)
+        case tree: LiteralTree => pprint(tree.constant)
         case tree: MacroExpansionTree =>
           out.print("(`macro-expandee` : ")
           pprint(tree.tpe)
           out.print(")")
         case tree: OriginalTree =>
-          if (tree.range == originalRange && originalRange.nonEmpty) {
-            out.print("*")
-          } else {
+          if (tree.range == originalRange && originalRange.nonEmpty) { out.print("*") }
+          else {
             out.print("orig(")
             opt(doc.substring(tree.range))(out.print)
             out.print(")")
@@ -73,8 +70,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
           out.print("[")
           rep(tree.typeArguments, ", ")(pprint)
           out.print("]")
-        case NoTree =>
-          out.print("<?>")
+        case NoTree => out.print("<?>")
       }
     }
 

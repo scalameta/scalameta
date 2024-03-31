@@ -8,7 +8,9 @@ import scala.annotation.implicitNotFound
 trait Lift[O, I] extends Convert[O, I]
 
 object Lift {
-  def apply[O, I](f: O => I): Lift[O, I] = new Lift[O, I] { def apply(x: O): I = f(x) }
+  def apply[O, I](f: O => I): Lift[O, I] = new Lift[O, I] {
+    def apply(x: O): I = f(x)
+  }
 
   implicit def liftBoolean[O <: Boolean, I >: Lit]: Lift[O, I] = Lift { x => Lit.Boolean(x) }
   implicit def liftByte[O <: Byte, I >: Lit]: Lift[O, I] = Lift { x => Lit.Byte(x) }
@@ -27,24 +29,18 @@ object Lift {
   implicit def liftAnyToOption[O, I](implicit lift: Lift[O, I]): Lift[O, Option[I]] = Lift { x =>
     Some(lift(x))
   }
-  implicit def liftSomeToList[O, I](implicit lift: Lift[O, I]): Lift[Some[O], List[I]] = Lift {
-    _.toList.map(x => lift(x))
-  }
-  implicit def liftNoneToList[O, I](implicit lift: Lift[O, I]): Lift[None.type, List[I]] = Lift {
-    _ => Nil
-  }
-  implicit def liftOptionToList[O, I](implicit lift: Lift[O, I]): Lift[Option[O], List[I]] = Lift {
-    _.toList.map(x => lift(x))
-  }
+  implicit def liftSomeToList[O, I](implicit lift: Lift[O, I]): Lift[Some[O], List[I]] =
+    Lift { _.toList.map(x => lift(x)) }
+  implicit def liftNoneToList[O, I](implicit lift: Lift[O, I]): Lift[None.type, List[I]] =
+    Lift { _ => Nil }
+  implicit def liftOptionToList[O, I](implicit lift: Lift[O, I]): Lift[Option[O], List[I]] =
+    Lift { _.toList.map(x => lift(x)) }
 
-  implicit def liftListToList[O, I](
-      implicit lift: Lift[O, I]
-  ): Lift[List[O], List[I]] =
+  implicit def liftListToList[O, I](implicit lift: Lift[O, I]): Lift[List[O], List[I]] =
     Lift { _.map(lift.apply) }
 
-  implicit def liftListViaImplicit[O <: Tree, I <: Tree](
-      implicit conv: List[O] => I
-  ): Lift[List[O], I] =
-    Lift(conv)
+  implicit def liftListViaImplicit[O <: Tree, I <: Tree](implicit
+      conv: List[O] => I
+  ): Lift[List[O], I] = Lift(conv)
 
 }

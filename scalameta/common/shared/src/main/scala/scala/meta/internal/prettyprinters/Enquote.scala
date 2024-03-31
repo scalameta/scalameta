@@ -17,7 +17,8 @@ sealed abstract class QuoteStyle(styleStr: String) {
     val sb = new java.lang.StringBuilder(styleStr)
     val styleLen = styleStr.length
     if (styleLen > 1) {
-      @tailrec def iter(off: Int): Unit = {
+      @tailrec
+      def iter(off: Int): Unit = {
         val newoff = s.indexOf(styleStr, off)
         if (newoff < 0) sb.append(s, off, s.length)
         else {

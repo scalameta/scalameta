@@ -11,9 +11,7 @@ object Libraries {
       "org.scalameta",
       "scalameta_2.12",
       "3.2.0",
-      provided = List(
-        ModuleID.scalaReflect("2.12.8")
-      )
+      provided = List(ModuleID.scalaReflect("2.12.8"))
     )
     buf += Library("com.typesafe.akka", "akka-testkit_2.12", "2.5.9")
     buf += Library("com.typesafe.akka", "akka-actor_2.11", "2.5.9")
@@ -21,13 +19,7 @@ object Libraries {
       "org.apache.spark",
       "spark-sql_2.11",
       "2.2.1",
-      provided = List(
-        ModuleID(
-          "org.eclipse.jetty",
-          "jetty-servlet",
-          "9.3.11.v20160721"
-        )
-      )
+      provided = List(ModuleID("org.eclipse.jetty", "jetty-servlet", "9.3.11.v20160721"))
     )
     buf += Library("org.apache.kafka", "kafka_2.12", "1.0.0")
     buf += Library("org.apache.flink", "flink-parent", "1.4.1")
@@ -58,14 +50,13 @@ object Library {
       artifact: String,
       version: String,
       provided: List[ModuleID] = Nil
-  ): Library =
-    Library(
-      List(organization, artifact, version).mkString(":"),
-      { () =>
-        val jars = Jars.fetch(organization, artifact, version, provided = provided)
-        Classpath(jars)
-      }
-    )
+  ): Library = Library(
+    List(organization, artifact, version).mkString(":"),
+    { () =>
+      val jars = Jars.fetch(organization, artifact, version, provided = provided)
+      Classpath(jars)
+    }
+  )
   lazy val scalaLibrary: Library = {
     Library(
       "scala-library",

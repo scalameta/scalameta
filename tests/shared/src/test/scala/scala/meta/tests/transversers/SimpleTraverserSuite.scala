@@ -83,9 +83,7 @@ class SimpleTraverserSuite extends FunSuite {
 
   test("#1200") {
     var i = 0
-    val fn: PartialFunction[Tree, Tree] = {
-      case q"A" if { i += 1; i < 2 } => q"B"
-    }
+    val fn: PartialFunction[Tree, Tree] = { case q"A" if { i += 1; i < 2 } => q"B" }
     q"A".collect(fn)
     i = 0
     q"A".traverse(fn.andThen(_ => ()))

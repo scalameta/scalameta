@@ -34,9 +34,7 @@ object RemoveOrphanSemanticdbFiles {
           val files = Files.newDirectoryStream(dir)
           val isEmpty = !files.iterator().hasNext
           files.close()
-          if (isEmpty) {
-            Files.delete(dir)
-          }
+          if (isEmpty) { Files.delete(dir) }
           FileVisitResult.CONTINUE
         }
       }

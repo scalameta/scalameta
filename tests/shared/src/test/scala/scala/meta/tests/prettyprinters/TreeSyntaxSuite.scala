@@ -11,21 +11,20 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   import scala.meta.dialects.Scala211
 
-  private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String = null)(
-      implicit loc: munit.Location
+  private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String = null)(implicit
+      loc: munit.Location
   ): Unit = {
     val stat = statStr.trim // make sure no trailing newlines
     test(s"${loc.line}: $stat") {
       val sep = if (needNL) "\n" else ""
       val statSyntax = Option(syntaxStr).getOrElse(stat).replace("\n", "\n  ")
 
-      val expectedSyntax =
-        s"""|{
-            |  $statSyntax$sep
-            |  {
-            |    a
-            |  }
-            |}""".stripMargin.replace("\n", EOL)
+      val expectedSyntax = s"""|{
+                               |  $statSyntax$sep
+                               |  {
+                               |    a
+                               |  }
+                               |}""".stripMargin.replace("\n", EOL)
 
       val treeWithSemi = templStat(s"{$stat;{a}}")
       val treeWithSemiStructure = treeWithSemi.structure

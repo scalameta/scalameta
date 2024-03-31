@@ -6,14 +6,10 @@ import scala.meta.internal.metac._
 import scala.meta.metac._
 
 object Metac {
-  def main(args: Array[String]): Unit = {
-    sys.exit(process(args, Reporter()))
-  }
+  def main(args: Array[String]): Unit = { sys.exit(process(args, Reporter())) }
 
   @deprecated("Use `process(Settings.parse(args.toList).get, Reporter())`.", "3.5.0")
-  def process(args: Array[String]): Int = {
-    process(args, Reporter())
-  }
+  def process(args: Array[String]): Int = { process(args, Reporter()) }
 
   @deprecated("Use `process(Settings.parse(args.toList).get, Reporter(out, err))`.", "3.5.0")
   def process(args: Array[String], out: PrintStream, err: PrintStream): Int = {
@@ -23,11 +19,8 @@ object Metac {
   private def process(args: Array[String], reporter: Reporter): Int = {
     val expandedArgs = Args.expand(args)
     Settings.parse(expandedArgs, reporter) match {
-      case Some(settings) =>
-        if (process(settings, reporter)) 0
-        else 1
-      case None =>
-        1
+      case Some(settings) => if (process(settings, reporter)) 0 else 1
+      case None => 1
     }
   }
 

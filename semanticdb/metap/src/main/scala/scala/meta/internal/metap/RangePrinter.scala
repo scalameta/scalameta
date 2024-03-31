@@ -24,17 +24,10 @@ trait RangePrinter extends BasePrinter {
       range.flatMap { range =>
         if (doc.text.nonEmpty) {
           val input = inputCache.getOrElseUpdate(doc, Input.String(doc.text))
-          val pos = Position.Range(
-            input,
-            range.startLine,
-            range.startCharacter,
-            range.endLine,
-            range.endCharacter
-          )
+          val pos = Position
+            .Range(input, range.startLine, range.startCharacter, range.endLine, range.endCharacter)
           Some(pos.text)
-        } else {
-          None
-        }
+        } else { None }
       }
     }
   }

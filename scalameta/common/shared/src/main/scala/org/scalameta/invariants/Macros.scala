@@ -7,9 +7,7 @@ import org.scalameta.internal.MacroHelpers
 class Macros(val c: Context) extends MacroHelpers {
   import c.universe._
 
-  def require(requirement: Tree): Tree = {
-    requireWithClue(requirement, q"null")
-  }
+  def require(requirement: Tree): Tree = { requireWithClue(requirement, q"null") }
 
   def requireWithClue(requirement: Tree, clue: Tree): Tree = {
     val failures = c.freshName(TermName("failures"))
@@ -66,12 +64,9 @@ class Macros(val c: Context) extends MacroHelpers {
     case class And(props: Prop*) extends Prop {
       override def emit = {
         def loop(props: List[Prop]): Tree = props match {
-          case Nil =>
-            ???
-          case prop :: Nil =>
-            prop.emit
-          case prop :: rest =>
-            q"""
+          case Nil => ???
+          case prop :: Nil => prop.emit
+          case prop :: rest => q"""
                 val $failures = ${prop.emit}
                 if (!$failures.isEmpty) $failures
                 else ${loop(rest)}
@@ -83,10 +78,8 @@ class Macros(val c: Context) extends MacroHelpers {
     case class Or(props: Prop*) extends Prop {
       override def emit = {
         def loop(props: List[Prop]): Tree = props match {
-          case Nil =>
-            ???
-          case prop :: Nil =>
-            prop.emit
+          case Nil => ???
+          case prop :: Nil => prop.emit
           case prop :: rest =>
             val restResult = c.freshName(TermName("restResult"))
             val restFailures = c.freshName(TermName("restFailures"))
@@ -119,8 +112,8 @@ class Macros(val c: Context) extends MacroHelpers {
     }
     case class Imply(atom1: Atom, atom2: Atom) extends Prop with Simple {
       override def tree = q"!${atom1.tree} || ${atom2.tree}"
-      override def diagnostic =
-        showCode(atom1.tree) + " is true, but " + showCode(atom2.tree) + " is false"
+      override def diagnostic = showCode(atom1.tree) + " is true, but " + showCode(atom2.tree) +
+        " is false"
     }
 
     def propify(tree: Tree): Prop = tree match {
@@ -144,38 +137,26 @@ class Macros(val c: Context) extends MacroHelpers {
     }
 
     def simplify(prop: Prop): Prop = prop match {
-      case Not(Atom(tree)) =>
-        Not(Atom(tree))
-      case Not(Not(prop)) =>
-        simplify(prop)
-      case Not(And(props @ _*)) =>
-        simplify(Or(props.map(prop => Not(prop)): _*))
-      case Not(Or(props @ _*)) =>
-        simplify(And(props.map(prop => Not(prop)): _*))
-      case Not(Eq(atom1, atom2)) =>
-        simplify(Ne(atom1, atom2))
-      case Not(Ne(atom1, atom2)) =>
-        simplify(Eq(atom1, atom2))
-      case Not(Forall(list, Atom(fn))) =>
-        simplify(Exists(list, Atom(negate(fn))))
-      case Not(Exists(list, Atom(fn))) =>
-        simplify(Forall(list, Atom(negate(fn))))
+      case Not(Atom(tree)) => Not(Atom(tree))
+      case Not(Not(prop)) => simplify(prop)
+      case Not(And(props @ _*)) => simplify(Or(props.map(prop => Not(prop)): _*))
+      case Not(Or(props @ _*)) => simplify(And(props.map(prop => Not(prop)): _*))
+      case Not(Eq(atom1, atom2)) => simplify(Ne(atom1, atom2))
+      case Not(Ne(atom1, atom2)) => simplify(Eq(atom1, atom2))
+      case Not(Forall(list, Atom(fn))) => simplify(Exists(list, Atom(negate(fn))))
+      case Not(Exists(list, Atom(fn))) => simplify(Forall(list, Atom(negate(fn))))
       case And(props @ _*) if props.exists(_.isInstanceOf[Debug]) =>
         simplify(And(props.filter(!_.isInstanceOf[Debug]): _*))
       case And(props @ _*) if props.exists(_.isInstanceOf[And]) =>
         val i = props.indexWhere(_.isInstanceOf[And])
         simplify(And(props.take(i) ++ props(i).asInstanceOf[And].props ++ props.drop(i + 1): _*))
-      case And(props @ _*) =>
-        And(props.map(simplify): _*)
-      case Or(props @ _*) if props.exists(_.isInstanceOf[Debug]) =>
-        Debug()
+      case And(props @ _*) => And(props.map(simplify): _*)
+      case Or(props @ _*) if props.exists(_.isInstanceOf[Debug]) => Debug()
       case Or(props @ _*) if props.exists(_.isInstanceOf[Or]) =>
         val i = props.indexWhere(_.isInstanceOf[Or])
         simplify(Or(props.take(i) ++ props(i).asInstanceOf[Or].props ++ props.drop(i + 1): _*))
-      case Or(props @ _*) =>
-        Or(props.map(simplify): _*)
-      case prop =>
-        prop
+      case Or(props @ _*) => Or(props.map(simplify): _*)
+      case prop => prop
     }
 
     val prop = simplify(propify(tree))

@@ -20,8 +20,7 @@ class PrettyPrinterSuite extends FunSuite {
       val after: Stat = before.syntax.parse[Stat].get
 
       StructurallyEqual(before, after) match {
-        case Left(err) =>
-          fail(
+        case Left(err) => fail(
             s"""|Not Structurally equal: ${err.toString}:
                 |before: ${before.structure}
                 |after : ${after.structure}

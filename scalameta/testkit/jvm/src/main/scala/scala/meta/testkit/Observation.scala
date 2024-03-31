@@ -18,8 +18,7 @@ import scala.collection.mutable
 case class Observation[T](msg: String, line: Int, kind: T)
 
 object Observation {
-  private def wrapInCode(msg: String): String =
-    s"<code>${msg.replaceAll("\n", "</br>")}</code>"
+  private def wrapInCode(msg: String): String = s"<code>${msg.replaceAll("\n", "</br>")}</code>"
 
   /**
    * Returns a markdown table displaying all observations, publish-ready for Github.
@@ -37,9 +36,7 @@ object Observation {
         sb.append(s"${f.githubUrlAtLine(x.line)} | ${wrapInCode(x.msg)}\n")
       }
     }
-    grouped.foreach { case (cat, rs) =>
-      sb.append(s"$cat: ${rs.length}\n")
-    }
+    grouped.foreach { case (cat, rs) => sb.append(s"$cat: ${rs.length}\n") }
     sb.toString()
   }
 }

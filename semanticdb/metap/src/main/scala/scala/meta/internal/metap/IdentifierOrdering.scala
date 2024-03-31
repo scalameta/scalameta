@@ -18,15 +18,10 @@ class IdentifierOrdering[T <: CharSequence] extends Ordering[T] {
       val b = o2.charAt(i)
       if (a.isDigit && b.isDigit) {
         val byDigit = Integer.compare(toDigit(o1, i), toDigit(o2, i))
-        if (byDigit != 0) return byDigit
-        else {
-          i = seekNonDigit(o1, i)
-        }
+        if (byDigit != 0) return byDigit else { i = seekNonDigit(o1, i) }
       } else {
         val result = Character.compare(a, b)
-        if (result != 0) {
-          return result
-        }
+        if (result != 0) { return result }
         i += 1
       }
     }
@@ -34,9 +29,7 @@ class IdentifierOrdering[T <: CharSequence] extends Ordering[T] {
   }
   private def seekNonDigit(cs: T, i: Int): Int = {
     var curr = i
-    while (curr < cs.length() && cs.charAt(curr).isDigit) {
-      curr += 1
-    }
+    while (curr < cs.length() && cs.charAt(curr).isDigit) { curr += 1 }
     curr
   }
   private def toDigit(cs: T, i: Int): Int = {

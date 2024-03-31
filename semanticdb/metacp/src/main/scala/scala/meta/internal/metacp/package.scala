@@ -37,42 +37,33 @@ package object metacp {
     }
     private def fromScalaSigAnnotation: Option[ScalaSig] = {
       Option(node.visibleAnnotations).flatMap {
-        _.toScala.iterator
-          .filter { annot =>
-            annot.desc == Main.SCALA_SIG_ANNOTATION ||
-            annot.desc == Main.SCALA_LONG_SIG_ANNOTATION
+        _.toScala.iterator.filter { annot =>
+          annot.desc == Main.SCALA_SIG_ANNOTATION || annot.desc == Main.SCALA_LONG_SIG_ANNOTATION
+        }.map { _.values.toScala }.collectFirst { case collection.Seq("bytes", anyBytes) =>
+          val baos = new ByteArrayOutputStream()
+          val bytes: Array[Byte] = anyBytes match {
+            case bytesString: String => bytesString.getBytes(StandardCharsets.UTF_8)
+            case bytesArray: util.ArrayList[_] =>
+              bytesArray.toScala.foreach { case bytesString: String =>
+                baos.write(bytesString.getBytes(StandardCharsets.UTF_8))
+              }
+              baos.toByteArray
+            case els => throw new IllegalArgumentException(els.getClass.getName)
           }
-          .map { _.values.toScala }
-          .collectFirst { case collection.Seq("bytes", anyBytes) =>
-            val baos = new ByteArrayOutputStream()
-            val bytes: Array[Byte] = anyBytes match {
-              case bytesString: String =>
-                bytesString.getBytes(StandardCharsets.UTF_8)
-              case bytesArray: util.ArrayList[_] =>
-                bytesArray.toScala.foreach { case bytesString: String =>
-                  baos.write(bytesString.getBytes(StandardCharsets.UTF_8))
-                }
-                baos.toByteArray
-              case els => throw new IllegalArgumentException(els.getClass.getName)
-            }
-            val length = ByteCodecs.decode(bytes)
-            val bytecode = ByteCode(bytes.take(length))
-            ScalaSigAttributeParsers.parse(bytecode)
-          }
+          val length = ByteCodecs.decode(bytes)
+          val bytecode = ByteCode(bytes.take(length))
+          ScalaSigAttributeParsers.parse(bytecode)
+        }
       }
     }
 
   }
   implicit class XtensionAsmPathOps(private val path: AbsolutePath) extends AnyVal {
-    def toClassNode: ClassNode = {
-      readInputStreamToClassNode(Files.newInputStream(path.toNIO))
-    }
+    def toClassNode: ClassNode = { readInputStreamToClassNode(Files.newInputStream(path.toNIO)) }
   }
 
   implicit class XtensionAsmClassfileOps(private val classfile: Classfile) extends AnyVal {
-    def toClassNode: ClassNode = {
-      readInputStreamToClassNode(classfile.openInputStream())
-    }
+    def toClassNode: ClassNode = { readInputStreamToClassNode(classfile.openInputStream()) }
     def hasScalaSig: Boolean = {
       val classNode = readInputStreamToClassNode(classfile.openInputStream())
       classNode.attrs != null && classNode.attrs.toScala.exists(_.`type` match {
@@ -93,8 +84,6 @@ package object metacp {
         SKIP_CODE | SKIP_FRAMES
       )
       node
-    } finally {
-      in.close()
-    }
+    } finally { in.close() }
   }
 }

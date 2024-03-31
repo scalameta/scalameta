@@ -5,8 +5,7 @@ import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
 
 object MultilineComment {
-  def unapply(token: Token): Boolean =
-    token.is[Comment] && AsMultilineComment.isMultiline(token)
+  def unapply(token: Token): Boolean = token.is[Comment] && AsMultilineComment.isMultiline(token)
   def apply(token: Token): Boolean = unapply(token)
 }
 
@@ -16,9 +15,8 @@ object AsMultilineComment {
     pos.endLine > pos.startLine
   }
 
-  def unapply(token: Token): Option[Comment] =
-    token match {
-      case c: Comment if isMultiline(token) => Some(c)
-      case _ => None
-    }
+  def unapply(token: Token): Option[Comment] = token match {
+    case c: Comment if isMultiline(token) => Some(c)
+    case _ => None
+  }
 }

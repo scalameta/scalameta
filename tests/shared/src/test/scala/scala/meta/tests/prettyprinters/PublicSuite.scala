@@ -208,9 +208,7 @@ class PublicSuite extends TreeSuiteBase {
     // Satisfy surface suite.
   }
 
-  test("scala.meta.inputs.Input.None.toString") {
-    assertEquals(Input.None.toString, "Input.None")
-  }
+  test("scala.meta.inputs.Input.None.toString") { assertEquals(Input.None.toString, "Input.None") }
 
   test("scala.meta.inputs.Input.File.toString") {
     val path = RelativePath("hello.scala").toAbsolute
@@ -378,8 +376,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.tokenizers.Tokenized.Error.toString") {
     """"c""".tokenize match {
-      case x: Tokenized.Error =>
-        assertEquals(
+      case x: Tokenized.Error => assertEquals(
           x.toString,
           """|<input>:1: error: unclosed string literal
              |"c

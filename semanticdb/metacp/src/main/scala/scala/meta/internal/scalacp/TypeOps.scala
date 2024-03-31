@@ -6,7 +6,8 @@ import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.tools.scalap.scalax.rules.scalasig._
 
-trait TypeOps { self: Scalacp =>
+trait TypeOps {
+  self: Scalacp =>
   implicit class XtensionTypeSType(tpe: Type) {
     def toSemanticTpe: s.Type = {
       def loop(tpe: Type): s.Type = {
@@ -30,8 +31,7 @@ trait TypeOps { self: Scalacp =>
               // companion classes, not module classes (see #1392).
               // We assume that it's a mistake and work around accordingly.
               val raw = sym.ssym
-              if (raw.isType) Symbols.Global(raw.owner, d.Term(raw.desc.value))
-              else raw
+              if (raw.isType) Symbols.Global(raw.owner, d.Term(raw.desc.value)) else raw
             }
             s.SingleType(spre, ssym)
           case ThisType(sym) =>
@@ -51,8 +51,7 @@ trait TypeOps { self: Scalacp =>
             // default becomes a type symbol.
             val ssym = Symbols.Global(underlying.parent.get.ssym, d.Term(underlying.name))
             s.SingleType(s.NoType, ssym)
-          case ConstantType(underlying: Type) =>
-            loop(underlying) match {
+          case ConstantType(underlying: Type) => loop(underlying) match {
               case s.NoType => s.NoType
               case sarg =>
                 val ssym = "java/lang/Class#"
@@ -75,20 +74,15 @@ trait TypeOps { self: Scalacp =>
             val stpe = loop(tpe)
             val sdecls = Some(tparams.sscope(HardlinkChildren))
             s.ExistentialType(stpe, sdecls)
-          case PolyType(tpe, tparams) =>
-            loop(tpe) match {
-              case s.NoType =>
-                s.NoType
+          case PolyType(tpe, tparams) => loop(tpe) match {
+              case s.NoType => s.NoType
               case stpe =>
                 val stparams = tparams.sscope(HardlinkChildren)
                 s.UniversalType(Some(stparams), stpe)
             }
-          case NoType =>
-            s.NoType
-          case NoPrefixType =>
-            s.NoType
-          case other =>
-            sys.error(s"unsupported type $other")
+          case NoType => s.NoType
+          case NoPrefixType => s.NoType
+          case other => sys.error(s"unsupported type $other")
         }
       }
       loop(tpe)
@@ -112,10 +106,8 @@ trait TypeOps { self: Scalacp =>
             val slo = lo.toSemanticTpe
             val shi = hi.toSemanticTpe
             s.TypeSignature(stparams, slo, shi)
-          case PolyType(tpe, tparams) =>
-            loop(tpe) match {
-              case s.NoSignature =>
-                s.NoSignature
+          case PolyType(tpe, tparams) => loop(tpe) match {
+              case s.NoSignature => s.NoSignature
               case t: s.ClassSignature =>
                 val stparams = tparams.sscope(linkMode)
                 t.copy(typeParameters = Some(stparams))
@@ -130,10 +122,8 @@ trait TypeOps { self: Scalacp =>
                 val stpe = t.tpe
                 s.ValueSignature(s.UniversalType(Some(stparams), stpe))
             }
-          case NoType =>
-            s.NoSignature
-          case other =>
-            s.ValueSignature(other.toSemanticTpe)
+          case NoType => s.NoSignature
+          case other => s.ValueSignature(other.toSemanticTpe)
         }
       }
       loop(tpe)
@@ -144,19 +134,13 @@ trait TypeOps { self: Scalacp =>
     def hasTrivialPrefix: Boolean = {
       def checkTrivialPrefix(pre: Type, sym: Symbol): Boolean = {
         pre match {
-          case TypeRefType(prepre, presym, _) =>
-            checkTrivialPrefix(prepre, presym) &&
-            checkTrivialOwner(presym, sym) &&
-            checkModule(presym)
-          case SingleType(prepre, presym) =>
-            checkTrivialPrefix(prepre, presym) &&
+          case TypeRefType(prepre, presym, _) => checkTrivialPrefix(prepre, presym) &&
+            checkTrivialOwner(presym, sym) && checkModule(presym)
+          case SingleType(prepre, presym) => checkTrivialPrefix(prepre, presym) &&
             checkTrivialOwner(presym, sym)
-          case ThisType(presym) =>
-            checkTrivialOwner(presym, sym)
-          case NoPrefixType =>
-            true
-          case _ =>
-            false
+          case ThisType(presym) => checkTrivialOwner(presym, sym)
+          case NoPrefixType => true
+          case _ => false
         }
       }
       def checkTrivialOwner(presym: Symbol, sym: Symbol): Boolean = {
@@ -180,13 +164,11 @@ trait TypeOps { self: Scalacp =>
     }
     def paramss: List[List[SymbolInfoSymbol]] = {
       tpe match {
-        case NullaryMethodType(_) =>
-          Nil
+        case NullaryMethodType(_) => Nil
         case MethodType(tpe, params) =>
           val symbolInfoParams = params.map(_.asInstanceOf[SymbolInfoSymbol])
           symbolInfoParams.toList +: tpe.paramss
-        case _ =>
-          Nil
+        case _ => Nil
       }
     }
     def ret: Type = {

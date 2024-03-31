@@ -6,11 +6,10 @@ import scala.tools.asm.signature.SignatureVisitor
 class TypeArgumentVisitor extends TypedSignatureVisitor[TypeArgument] {
   var wildcard = Option.empty[WildcardIndicator]
   val referenceTypeSignature = new ReferenceTypeSignatureVisitor
-  override def result(): TypeArgument =
-    wildcard match {
-      case Some(WildcardIndicator.Star) => WildcardTypeArgument
-      case _ => ReferenceTypeArgument(wildcard, referenceTypeSignature.result().get)
-    }
+  override def result(): TypeArgument = wildcard match {
+    case Some(WildcardIndicator.Star) => WildcardTypeArgument
+    case _ => ReferenceTypeArgument(wildcard, referenceTypeSignature.result().get)
+  }
 
   override def visitTypeArgument(wildcard: Char): SignatureVisitor = {
     this.wildcard = wildcard match {
@@ -20,7 +19,5 @@ class TypeArgumentVisitor extends TypedSignatureVisitor[TypeArgument] {
     }
     referenceTypeSignature
   }
-  override def visitTypeArgument(): Unit = {
-    this.wildcard = Some(WildcardIndicator.Star)
-  }
+  override def visitTypeArgument(): Unit = { this.wildcard = Some(WildcardIndicator.Star) }
 }

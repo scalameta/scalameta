@@ -16,18 +16,14 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
         case baseType =>
           throw new IllegalArgumentException(s"Expected Reference Type, obtained $baseType")
       }
-    } else if (typeVariable != null) {
-      Some(typeVariable)
-    } else {
+    } else if (typeVariable != null) { Some(typeVariable) }
+    else {
       simpleClassTypeSignatures.result() match {
         case Nil => None
-        case simpleClass :: suffix =>
-          Some(
-            ClassTypeSignature(
-              simpleClass.result(),
-              suffix.map(s => ClassTypeSignatureSuffix(s.result()))
-            )
-          )
+        case simpleClass :: suffix => Some(ClassTypeSignature(
+            simpleClass.result(),
+            suffix.map(s => ClassTypeSignatureSuffix(s.result()))
+          ))
       }
     }
   }
@@ -55,17 +51,13 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
     }
   }
 
-  override def visitInnerClassType(name: String): Unit = {
-    startSimpleClass(name)
-  }
+  override def visitInnerClassType(name: String): Unit = { startSimpleClass(name) }
 
   override def visitTypeArgument(wildcard: Char): SignatureVisitor = {
     lastSimpleClassTypeSignatures.visitTypeArgument(wildcard)
   }
 
-  override def visitTypeArgument(): Unit = {
-    lastSimpleClassTypeSignatures.visitTypeArgument()
-  }
+  override def visitTypeArgument(): Unit = { lastSimpleClassTypeSignatures.visitTypeArgument() }
 
   override def visitTypeVariable(name: String): Unit = {
     typeVariable = TypeVariableSignature(name)

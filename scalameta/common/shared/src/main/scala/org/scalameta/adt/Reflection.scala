@@ -20,9 +20,8 @@ trait Reflection {
     def hasAnnotation[T: ClassTag]: Boolean = getAnnotation[T].nonEmpty
     def getAnnotation[T: ClassTag]: Option[Tree] = {
       sym.initialize
-      val ann = sym.annotations.find(
-        _.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName
-      )
+      val ann = sym.annotations
+        .find(_.tree.tpe.typeSymbol.fullName == classTag[T].runtimeClass.getCanonicalName)
       ann.map(_.tree)
     }
   }
@@ -30,8 +29,8 @@ trait Reflection {
   implicit class XtensionAdtSymbol(sym: Symbol) {
     def isAdt: Boolean = {
       def inheritsFromAdt = sym.isClass && (sym.asClass.toType <:< typeOf[AdtMetadata.Adt])
-      def isBookkeeping =
-        sym.asClass == symbolOf[AdtMetadata.Adt] || sym.asClass == symbolOf[AstMetadata.Ast]
+      def isBookkeeping = sym.asClass == symbolOf[AdtMetadata.Adt] ||
+        sym.asClass == symbolOf[AstMetadata.Ast]
       inheritsFromAdt && !isBookkeeping
     }
     def isRoot: Boolean = sym.hasAnnotation[AdtMetadata.root]
@@ -40,16 +39,15 @@ trait Reflection {
     def isField: Boolean = isField(isPrivateOK = false)
     def isField(isPrivateOK: Boolean): Boolean = sym match {
       case m: MethodSymbolApi if m.owner.isLeaf =>
-        sym.hasAnnotation[AstMetadata.astField] ||
-        isPrivateOK && isPrivateField ||
+        sym.hasAnnotation[AstMetadata.astField] || isPrivateOK && isPrivateField ||
         m.isPublic && m.isParamAccessor && m.isGetter
       case _ => false
     }
     private[adt] def isAstClass: Boolean = sym.hasAnnotation[AstMetadata.astClass]
     private[adt] def isAuxiliaryField: Boolean = sym.hasAnnotation[AstMetadata.auxiliary]
     private[adt] def isPrivateField: Boolean = sym.hasAnnotation[AdtMetadata.privateField]
-    private[adt] def isPayloadField(isPrivateOK: Boolean): Boolean =
-      !isAuxiliaryField && (isPrivateOK || !isPrivateField)
+    private[adt] def isPayloadField(isPrivateOK: Boolean): Boolean = !isAuxiliaryField &&
+      (isPrivateOK || !isPrivateField)
     def asAdt: Adt =
       if (isRoot) sym.asRoot
       else if (isBranch) sym.asBranch
@@ -77,8 +75,8 @@ trait Reflection {
       sym.initialize
       figureOutDirectSubclasses(sym.asClass).filter(_.isLeaf).map(ensureModule)
     }
-    def allLeafs: List[Symbol] =
-      (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule).distinct
+    def allLeafs: List[Symbol] = (sym.leafs ++ sym.branches.flatMap(_.allLeafs)).map(ensureModule)
+      .distinct
 
     def root: Symbol = sym.asClass.baseClasses.reverse.find(_.isRoot).getOrElse(NoSymbol)
     def allFields: List[Symbol] = {
@@ -95,8 +93,7 @@ trait Reflection {
         // if owner is a package or a package object, it shouldn't be part of the prefix
         val owner = sym.owner
         val names = sym.name.toString :: suffixes
-        if (owner.isPackageClass || owner.name == typeNames.PACKAGE) names
-        else loop(owner, names)
+        if (owner.isPackageClass || owner.name == typeNames.PACKAGE) names else loop(owner, names)
       }
       loop(sym, Nil)
     }
@@ -128,29 +125,24 @@ trait Reflection {
   class Leaf(sym: Symbol) extends Adt(sym) {
     if (!sym.isLeaf) sys.error(s"$sym is not a leaf")
     def fields: List[Field] = fields(false)
-    def fields(isPrivateOK: Boolean): List[Field] =
-      allFields.filter(_.sym.isPayloadField(isPrivateOK))
+    def fields(isPrivateOK: Boolean): List[Field] = allFields
+      .filter(_.sym.isPayloadField(isPrivateOK))
     def allFields: List[Field] = sym.allFields.map(_.asField)
     override def toString = s"leaf $prefix"
   }
   class Field(val sym: Symbol) {
-    if (!sym.isField(isPrivateOK = true))
-      sys.error(s"$sym is not a field")
+    if (!sym.isField(isPrivateOK = true)) sys.error(s"$sym is not a field")
     def owner: Leaf = sym.owner.asLeaf
     def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
     def tpe: Type = sym.info.finalResultType
-    override def toString =
-      s"field ${owner.prefix}.$name: $tpe" + (if (sym.isAuxiliaryField) " (auxiliary)" else "")
+    override def toString = s"field ${owner.prefix}.$name: $tpe" +
+      (if (sym.isAuxiliaryField) " (auxiliary)" else "")
   }
 
   private def isExemptParentSymbol(bsym: ClassSymbol): Boolean = {
-    bsym.isModuleClass ||
-    bsym == symbolOf[Object] ||
-    bsym == symbolOf[Any] ||
-    bsym == symbolOf[scala.Serializable] ||
-    bsym == symbolOf[java.io.Serializable] ||
-    bsym == symbolOf[scala.Product] ||
-    bsym == symbolOf[scala.Equals]
+    bsym.isModuleClass || bsym == symbolOf[Object] || bsym == symbolOf[Any] ||
+    bsym == symbolOf[scala.Serializable] || bsym == symbolOf[java.io.Serializable] ||
+    bsym == symbolOf[scala.Product] || bsym == symbolOf[scala.Equals]
   }
 
   protected def checkHierarchy(tpe: Type, fail: String => Unit, checkSealed: Boolean): Unit = {
@@ -158,15 +150,11 @@ trait Reflection {
     def designation =
       if (sym.isRoot) "root" else if (sym.isBranch) "branch" else if (sym.isLeaf) "leaf" else ???
     val roots = sym.baseClasses.filter(_.isRoot)
-    if (roots.isEmpty && sym.isLeaf)
-      fail(s"rootless leaf is disallowed")
-    else if (roots.length > 1)
-      fail(
-        s"multiple roots for a $designation: " + (roots
-          .map(_.fullName)
-          .init
-          .mkString(", ")) + " and " + roots.last.fullName
-      )
+    if (roots.isEmpty && sym.isLeaf) fail(s"rootless leaf is disallowed")
+    else if (roots.length > 1) fail(
+      s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) +
+        " and " + roots.last.fullName
+    )
     val root = roots.headOption.getOrElse(NoSymbol)
     sym.baseClasses.map(_.asClass).foreach { bsym =>
       val exempt = isExemptParentSymbol(bsym) || root.info.baseClasses.contains(bsym)

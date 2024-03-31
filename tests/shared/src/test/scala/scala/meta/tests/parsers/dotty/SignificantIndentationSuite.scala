@@ -19,13 +19,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  def f: Int
                   |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some("trait A { def f: Int }"))(
-      Defn.Trait(
-        Nil,
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        tpl(defx)
-      )
+      Defn.Trait(Nil, pname("A"), Nil, EmptyCtor(), tpl(defx))
     )
   }
 
@@ -46,20 +40,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Source(
-        List(
-          Pkg(
-            tname("mysadpackage"),
-            List(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int")))
-          ),
-          Pkg(
-            tname("anotherpackage"),
-            List(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int")))
-          )
-        )
-      )
-    )
+    )(Source(List(
+      Pkg(tname("mysadpackage"), List(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int")))),
+      Pkg(tname("anotherpackage"), List(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int"))))
+    )))
   }
 
   test("multistat-example") {
@@ -67,13 +51,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  def f: Int
                   |  def y: String = { fa(); fb() }""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(
-      Defn.Trait(
-        Nil,
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        tpl(defx, defy)
-      )
+      Defn.Trait(Nil, pname("A"), Nil, EmptyCtor(), tpl(defx, defy))
     )
   }
 
@@ -81,14 +59,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val code = """|new A:
                   |  def f: Int
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some("new A { def f: Int }"))(
-      Term.NewAnonymous(
-        tpl(
-          List(Init(pname("A"), anon, emptyArgClause)),
-          List(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int")))
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some("new A { def f: Int }"))(Term.NewAnonymous(tpl(
+      List(Init(pname("A"), anon, emptyArgClause)),
+      List(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int")))
+    )))
   }
 
   // https://github.com/scalameta/scalameta/issues/3093
@@ -98,21 +72,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    def f: Int
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
-      Term.If(
-        tname("x"),
-        Term.Block(
-          Term.NewAnonymous(
-            tpl(
-              List(Init(pname("A"), anon, emptyArgClause)),
-              List(Decl.Def(Nil, tname("f"), Nil, pname("Int")))
-            )
-          ) :: Nil
-        ),
-        Lit.Unit(),
-        Nil
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = None)(Term.If(
+      tname("x"),
+      Term.Block(
+        Term.NewAnonymous(tpl(
+          List(Init(pname("A"), anon, emptyArgClause)),
+          List(Decl.Def(Nil, tname("f"), Nil, pname("Int")))
+        )) :: Nil
+      ),
+      Lit.Unit(),
+      Nil
+    ))
   }
 
   test("empty-anonymous-class") {
@@ -130,14 +100,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Term.NewAnonymous(
-        tpl(
-          Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int")),
-          Decl.Def(Nil, tname("g"), Nil, Nil, pname("Int"))
-        )
-      )
-    )
+    )(Term.NewAnonymous(tpl(
+      Decl.Def(Nil, tname("f"), Nil, Nil, pname("Int")),
+      Decl.Def(Nil, tname("g"), Nil, Nil, pname("Int"))
+    )))
   }
 
   test("indent-and-back") {
@@ -147,38 +113,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  trait T:
                   |    def f: Int = 4
                   |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = None)(
-      Defn.Object(
-        Nil,
-        tname("O"),
-        tpl(
-          Defn.Class(
+    runTestAssert[Stat](code, assertLayout = None)(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        Defn.Class(
+          Nil,
+          pname("C"),
+          Nil,
+          ctor,
+          Template(
             Nil,
-            pname("C"),
             Nil,
-            ctor,
-            Template(
-              Nil,
-              Nil,
-              Self(anon, None),
-              List(Defn.Def(Nil, tname("f"), Nil, Nil, Some(pname("Int")), int(3)))
-            )
-          ),
-          Defn.Trait(
+            Self(anon, None),
+            List(Defn.Def(Nil, tname("f"), Nil, Nil, Some(pname("Int")), int(3)))
+          )
+        ),
+        Defn.Trait(
+          Nil,
+          pname("T"),
+          Nil,
+          EmptyCtor(),
+          Template(
             Nil,
-            pname("T"),
             Nil,
-            EmptyCtor(),
-            Template(
-              Nil,
-              Nil,
-              Self(anon, None),
-              List(Defn.Def(Nil, tname("f"), Nil, Nil, Some(pname("Int")), int(4)))
-            )
+            Self(anon, None),
+            List(Defn.Def(Nil, tname("f"), Nil, Nil, Some(pname("Int")), int(4)))
           )
         )
       )
-    )
+    ))
   }
 
   test("then-no-indent") {
@@ -202,21 +166,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("fn"),
-        Nil,
-        Nil,
-        Some(pname("Unit")),
-        Term.Block(
-          List(
-            Term.If(tname("cond"), tname("truep"), tname("falsep")),
-            Term.Apply(tname("otherStatement"), Nil)
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      Nil,
+      tname("fn"),
+      Nil,
+      Nil,
+      Some(pname("Unit")),
+      Term.Block(List(
+        Term.If(tname("cond"), tname("truep"), tname("falsep")),
+        Term.Apply(tname("otherStatement"), Nil)
+      ))
+    ))
   }
 
   test("then-no-indent-wrong") {
@@ -248,24 +208,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  }
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
+      Nil,
+      pname("X"),
+      Nil,
+      EmptyCtor(),
+      tpl(Defn.Def(
         Nil,
-        pname("X"),
+        tname("fx"),
         Nil,
-        EmptyCtor(),
-        tpl(
-          Defn.Def(
-            Nil,
-            tname("fx"),
-            Nil,
-            List(List()),
-            Some(pname("Unit")),
-            Term.Block(List(tname("f1"), tname("f2")))
-          )
-        )
-      )
-    )
+        List(List()),
+        Some(pname("Unit")),
+        Term.Block(List(tname("f1"), tname("f2")))
+      ))
+    ))
   }
 
   test("indent-inside-brace-not") {
@@ -280,25 +236,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  f2
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(
-        Nil,
-        pname("X"),
-        Nil,
-        EmptyCtor(),
-        tpl(
-          Defn.Def(
-            Nil,
-            tname("fx"),
-            Nil,
-            List(List()),
-            Some(pname("Unit")),
-            tname("f1")
-          ),
-          tname("f2")
-        )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
+      Nil,
+      pname("X"),
+      Nil,
+      EmptyCtor(),
+      tpl(
+        Defn.Def(Nil, tname("fx"), Nil, List(List()), Some(pname("Unit")), tname("f1")),
+        tname("f2")
       )
-    )
+    ))
   }
 
   test("should-indent-yet-brace") {
@@ -315,32 +262,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  private def f2: Int = 1
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(
-        Nil,
-        pname("X"),
-        Nil,
-        EmptyCtor(),
-        tpl(
-          Defn.Def(
-            Nil,
-            tname("fx"),
-            Nil,
-            List(List()),
-            Some(pname("Unit")),
-            Term.Block(Nil)
-          ),
-          Defn.Def(
-            List(Mod.Private(anon)),
-            tname("f2"),
-            Nil,
-            Nil,
-            Some(pname("Int")),
-            int(1)
-          )
-        )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
+      Nil,
+      pname("X"),
+      Nil,
+      EmptyCtor(),
+      tpl(
+        Defn.Def(Nil, tname("fx"), Nil, List(List()), Some(pname("Unit")), Term.Block(Nil)),
+        Defn.Def(List(Mod.Private(anon)), tname("f2"), Nil, Nil, Some(pname("Int")), int(1))
       )
-    )
+    ))
   }
 
   test("selftype-class") {
@@ -354,20 +285,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  expr2
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      EmptyCtor(),
+      Template(
         Nil,
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        Template(
-          Nil,
-          List(Init(pname("B"), anon, emptyArgClause)),
-          self("thisPhase"),
-          List(tname("expr1"), tname("expr2"))
-        )
+        List(Init(pname("B"), anon, emptyArgClause)),
+        self("thisPhase"),
+        List(tname("expr1"), tname("expr2"))
       )
-    )
+    ))
   }
 
   test("lambda-method") {
@@ -385,29 +314,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  end fn
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Object(
-        Nil,
-        tname("X"),
-        tpl(
-          Defn.Val(
-            Nil,
-            List(Pat.Var(tname("fn"))),
-            None,
-            Term.Function(
-              List(
-                tparam("pa"),
-                tparam("pb")
-              ),
-              Term.Block(
-                List(Defn.Def(Nil, tname("helper"), Nil, Nil, None, int(3)), int(3))
-              )
-            )
-          ),
-          Term.EndMarker(tname("fn"))
-        )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Object(
+      Nil,
+      tname("X"),
+      tpl(
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("fn"))),
+          None,
+          Term.Function(
+            List(tparam("pa"), tparam("pb")),
+            Term.Block(List(Defn.Def(Nil, tname("helper"), Nil, Nil, None, int(3)), int(3)))
+          )
+        ),
+        Term.EndMarker(tname("fn"))
       )
-    )
+    ))
   }
 
   test("case-for-in-match") {
@@ -431,49 +353,39 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  private def transformAnnot: Tree
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(
-        Nil,
-        pname("A"),
-        Nil,
-        ctor,
-        tpl(
-          Defn.Def(
-            Nil,
-            tname("forward"),
-            Nil,
-            Nil,
-            Some(pname("Unit")),
-            Term.Match(
-              tname("parents"),
-              List(
-                Case(
-                  Pat.Var(tname("a")),
-                  None,
-                  Term.For(
-                    List(
-                      Enumerator.CaseGenerator(
-                        Pat.Typed(Pat.Var(tname("a")), pname("TP")),
-                        tname("body")
-                      )
-                    ),
-                    tname("fordo")
-                  )
-                ),
-                Case(Pat.Var(tname("b")), None, tname("ok"))
-              )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("forward"),
+          Nil,
+          Nil,
+          Some(pname("Unit")),
+          Term.Match(
+            tname("parents"),
+            List(
+              Case(
+                Pat.Var(tname("a")),
+                None,
+                Term.For(
+                  List(
+                    Enumerator
+                      .CaseGenerator(Pat.Typed(Pat.Var(tname("a")), pname("TP")), tname("body"))
+                  ),
+                  tname("fordo")
+                )
+              ),
+              Case(Pat.Var(tname("b")), None, tname("ok"))
             )
-          ),
-          Decl.Def(
-            List(Mod.Private(anon)),
-            tname("transformAnnot"),
-            Nil,
-            Nil,
-            pname("Tree")
           )
-        )
+        ),
+        Decl.Def(List(Mod.Private(anon)), tname("transformAnnot"), Nil, Nil, pname("Tree"))
       )
-    )
+    ))
   }
 
   test("this-constructor") {
@@ -482,27 +394,19 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    this(message, false)
                   |""".stripMargin
     val output = "class A { def this(msg: String) = this(message, false) }"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      EmptyCtor(),
+      tpl(Ctor.Secondary(
         Nil,
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        tpl(
-          Ctor.Secondary(
-            Nil,
-            Name.This(),
-            List(List(tparam("msg", "String"))),
-            Init(
-              Type.Singleton(Term.This(anon)),
-              anon,
-              List(List(tname("message"), bool(false)))
-            ),
-            Nil
-          )
-        )
-      )
-    )
+        Name.This(),
+        List(List(tparam("msg", "String"))),
+        Init(Type.Singleton(Term.This(anon)), anon, List(List(tname("message"), bool(false)))),
+        Nil
+      ))
+    ))
   }
 
   test("this-constructor-indented-block") {
@@ -518,27 +422,19 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  }
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Class(
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      EmptyCtor(),
+      tpl(Ctor.Secondary(
         Nil,
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        tpl(
-          Ctor.Secondary(
-            Nil,
-            Name.This(),
-            List(List(tparam("msg", "String"))),
-            Init(
-              Type.Singleton(Term.This(anon)),
-              anon,
-              List(List(tname("message"), bool(false)))
-            ),
-            List(tname("otherStat"))
-          )
-        )
-      )
-    )
+        Name.This(),
+        List(List(tparam("msg", "String"))),
+        Init(Type.Singleton(Term.This(anon)), anon, List(List(tname("message"), bool(false)))),
+        List(tname("otherStat"))
+      ))
+    ))
   }
 
   test("indent-equals") {
@@ -563,34 +459,25 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("genApply"),
-        Nil,
-        List(List()),
-        None,
-        Term.Block(
-          List(
-            Term.Match(
-              tname("app"),
-              List(
-                Case(
-                  Pat.Extract(tname("Apply2"), Nil),
-                  None,
-                  Term.Assign(
-                    tname("generatedType"),
-                    Term.Apply(tname("genTypeApply"), List(tname("t")))
-                  )
-                ),
-                Case(Pat.Extract(tname("Apply"), Nil), None, Term.Block(Nil))
-              ),
-              Nil
-            )
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      Nil,
+      tname("genApply"),
+      Nil,
+      List(List()),
+      None,
+      Term.Block(List(Term.Match(
+        tname("app"),
+        List(
+          Case(
+            Pat.Extract(tname("Apply2"), Nil),
+            None,
+            Term.Assign(tname("generatedType"), Term.Apply(tname("genTypeApply"), List(tname("t"))))
+          ),
+          Case(Pat.Extract(tname("Apply"), Nil), None, Term.Block(Nil))
+        ),
+        Nil
+      )))
+    ))
   }
 
   test("outdent-with-prev-check") {
@@ -600,38 +487,28 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    else new WildcardFunction(placeholderParams.reverse, t)
          |  finally placeholderParams = saved
          |""".stripMargin,
-      assertLayout = Some(
-        "def wrapPlaceholders(t: Tree) = try if (placeholderParams.isEmpty) t else new WildcardFunction(placeholderParams.reverse, t) finally placeholderParams = saved"
-      )
-    )(
-      Defn.Def(
+      assertLayout =
+        Some("def wrapPlaceholders(t: Tree) = try if (placeholderParams.isEmpty) t else new WildcardFunction(placeholderParams.reverse, t) finally placeholderParams = saved")
+    )(Defn.Def(
+      Nil,
+      tname("wrapPlaceholders"),
+      Nil,
+      List(List(tparam("t", "Tree"))),
+      None,
+      Term.Try(
+        Term.If(
+          Term.Select(tname("placeholderParams"), tname("isEmpty")),
+          tname("t"),
+          Term.New(Init(
+            pname("WildcardFunction"),
+            anon,
+            List(List(Term.Select(tname("placeholderParams"), tname("reverse")), tname("t")))
+          ))
+        ),
         Nil,
-        tname("wrapPlaceholders"),
-        Nil,
-        List(List(tparam("t", "Tree"))),
-        None,
-        Term.Try(
-          Term.If(
-            Term.Select(tname("placeholderParams"), tname("isEmpty")),
-            tname("t"),
-            Term.New(
-              Init(
-                pname("WildcardFunction"),
-                anon,
-                List(
-                  List(
-                    Term.Select(tname("placeholderParams"), tname("reverse")),
-                    tname("t")
-                  )
-                )
-              )
-            )
-          ),
-          Nil,
-          Some(Term.Assign(tname("placeholderParams"), tname("saved")))
-        )
+        Some(Term.Assign(tname("placeholderParams"), tname("saved")))
       )
-    )
+    ))
   }
 
   test("type-in-next-line") {
@@ -661,34 +538,29 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Class(
-        List(Mod.Abstract()),
-        pname("Documentation"),
-        Nil,
-        EmptyCtor(),
-        tpl(
-          Defn.Class(
-            Nil,
-            pname("Graph"),
-            Nil,
-            EmptyCtor(),
-            tpl(
-              Defn.Type(Nil, pname("Node"), Nil, pname("Int")),
-              Defn.Val(Nil, List(Pat.Var(tname("a"))), Some(pname("Int")), int(3))
-            )
-          ),
-          Decl.Val(
-            Nil,
-            List(Pat.Var(tname("refinementTest"))),
-            Type.Refine(
-              Some(pname("Graph")),
-              List(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int")))
-            )
+    )(Defn.Class(
+      List(Mod.Abstract()),
+      pname("Documentation"),
+      Nil,
+      EmptyCtor(),
+      tpl(
+        Defn.Class(
+          Nil,
+          pname("Graph"),
+          Nil,
+          EmptyCtor(),
+          tpl(
+            Defn.Type(Nil, pname("Node"), Nil, pname("Int")),
+            Defn.Val(Nil, List(Pat.Var(tname("a"))), Some(pname("Int")), int(3))
           )
+        ),
+        Decl.Val(
+          Nil,
+          List(Pat.Var(tname("refinementTest"))),
+          Type.Refine(Some(pname("Graph")), List(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int"))))
         )
       )
-    )
+    ))
   }
 
   test("type-in-next-line-equals") {
@@ -697,9 +569,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |      Int = 3
          |""".stripMargin,
       assertLayout = Some("val refinementTest: Int = 3")
-    )(
-      Defn.Val(Nil, List(Pat.Var(tname("refinementTest"))), Some(pname("Int")), int(3))
-    )
+    )(Defn.Val(Nil, List(Pat.Var(tname("refinementTest"))), Some(pname("Int")), int(3)))
   }
 
   test("type-in-next-line-equals-newline") {
@@ -709,9 +579,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |3
          |""".stripMargin,
       assertLayout = Some("val refinementTest: Int = 3")
-    )(
-      Defn.Val(Nil, List(Pat.Var(tname("refinementTest"))), Some(pname("Int")), int(3))
-    )
+    )(Defn.Val(Nil, List(Pat.Var(tname("refinementTest"))), Some(pname("Int")), int(3)))
   }
 
   test("type-equals-separate") {
@@ -721,16 +589,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |3) = a
          |""".stripMargin,
       assertLayout = Some("def refinementTest(a: Int = 3) = a")
-    )(
-      Defn.Def(
-        Nil,
-        tname("refinementTest"),
-        Nil,
-        List(List(Term.Param(Nil, tname("a"), Some(pname("Int")), Some(int(3))))),
-        None,
-        tname("a")
-      )
-    )
+    )(Defn.Def(
+      Nil,
+      tname("refinementTest"),
+      Nil,
+      List(List(Term.Param(Nil, tname("a"), Some(pname("Int")), Some(int(3))))),
+      None,
+      tname("a")
+    ))
   }
 
   test("type-multi-seq") {
@@ -741,14 +607,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  fy
          |""".stripMargin,
       assertLayout = Some("val refinementTest: Int = {\n  fx\n  fy\n}")
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("refinementTest"))),
-        Some(pname("Int")),
-        Term.Block(List(tname("fx"), tname("fy")))
-      )
-    )
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("refinementTest"))),
+      Some(pname("Int")),
+      Term.Block(List(tname("fx"), tname("fy")))
+    ))
   }
 
   test("equals-block") {
@@ -759,14 +623,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    fy
          |""".stripMargin,
       assertLayout = Some("val refinementTest: Int = {\n  fx\n  fy\n}")
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("refinementTest"))),
-        Some(pname("Int")),
-        Term.Block(List(tname("fx"), tname("fy")))
-      )
-    )
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("refinementTest"))),
+      Some(pname("Int")),
+      Term.Block(List(tname("fx"), tname("fy")))
+    ))
   }
 
   test("given-block-indent") {
@@ -781,21 +643,19 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |  def fb: Int = 2
            |}""".stripMargin
       )
-    )(
-      Defn.Given(
-        Nil,
-        tname("intOrd"),
-        Nil,
-        Nil,
-        tpl(
-          List(Init(Type.Apply(pname("Ord"), List(pname("Int"))), anon, emptyArgClause)),
-          List(
-            Defn.Def(Nil, tname("fa"), Nil, Nil, Some(pname("Int")), int(1)),
-            Defn.Def(Nil, tname("fb"), Nil, Nil, Some(pname("Int")), int(2))
-          )
+    )(Defn.Given(
+      Nil,
+      tname("intOrd"),
+      Nil,
+      Nil,
+      tpl(
+        List(Init(Type.Apply(pname("Ord"), List(pname("Int"))), anon, emptyArgClause)),
+        List(
+          Defn.Def(Nil, tname("fa"), Nil, Nil, Some(pname("Int")), int(1)),
+          Defn.Def(Nil, tname("fb"), Nil, Nil, Some(pname("Int")), int(2))
         )
       )
-    )
+    ))
   }
 
   test("given-block-indent-edge-cases") {
@@ -820,21 +680,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  B
          |""".stripMargin,
       assertLayout = Some("class A extends A with B")
-    )(
-      Defn.Class(
-        Nil,
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        tpl(
-          List(
-            Init(pname("A"), anon, emptyArgClause),
-            Init(pname("B"), anon, emptyArgClause)
-          ),
-          Nil
-        )
-      )
-    )
+    )(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      EmptyCtor(),
+      tpl(List(Init(pname("A"), anon, emptyArgClause), Init(pname("B"), anon, emptyArgClause)), Nil)
+    ))
   }
 
   test("nested-coloneol") {
@@ -845,28 +697,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def hello = 1
          |""".stripMargin,
       assertLayout = Some("case class Test(a: A = new A) { def hello = 1 }")
-    )(
-      Defn.Class(
-        List(Mod.Case()),
-        pname("Test"),
+    )(Defn.Class(
+      List(Mod.Case()),
+      pname("Test"),
+      Nil,
+      Ctor.Primary(
         Nil,
-        Ctor.Primary(
+        anon,
+        List(List(Term.Param(
           Nil,
-          anon,
-          List(
-            List(
-              Term.Param(
-                Nil,
-                tname("a"),
-                Some(pname("A")),
-                Some(Term.New(Init(pname("A"), anon, emptyArgClause)))
-              )
-            )
-          )
-        ),
-        tpl(Defn.Def(Nil, tname("hello"), Nil, Nil, None, int(1)))
-      )
-    )
+          tname("a"),
+          Some(pname("A")),
+          Some(Term.New(Init(pname("A"), anon, emptyArgClause)))
+        )))
+      ),
+      tpl(Defn.Def(Nil, tname("hello"), Nil, Nil, None, int(1)))
+    ))
   }
 
   test("semicolon-closes-indent-region") {
@@ -882,19 +728,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |  f(a)
            |}""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("z"))),
-        None,
-        Term.Block(
-          List(
-            Defn.Val(Nil, List(Pat.Var(tname("a"))), None, int(0)),
-            Term.Apply(tname("f"), List(tname("a")))
-          )
-        )
-      )
-    )
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("z"))),
+      None,
+      Term.Block(List(
+        Defn.Val(Nil, List(Pat.Var(tname("a"))), None, int(0)),
+        Term.Apply(tname("f"), List(tname("a")))
+      ))
+    ))
   }
 
   test("observe-indented-in-braces") {
@@ -908,16 +750,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  foo
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Object(
-        Nil,
-        tname("X"),
-        tpl(
-          Term.If(tname("cond"), tname("f"), Lit.Unit(), Nil),
-          tname("foo")
-        )
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Object(
+      Nil,
+      tname("X"),
+      tpl(Term.If(tname("cond"), tname("f"), Lit.Unit(), Nil), tname("foo"))
+    ))
   }
 
   test("match-case-same-line") {
@@ -933,26 +770,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Term.Match(
-        tname("widen"),
-        List(
-          Case(
-            Pat.Typed(
-              Pat.Bind(
-                Pat.Var(tname("tp")),
-                Pat.Extract(tname("OrNull"), List(Pat.Var(tname("tp1"))))
-              ),
-              pname("OrType")
-            ),
-            None,
-            Term.Block(Nil)
+    )(Term.Match(
+      tname("widen"),
+      List(
+        Case(
+          Pat.Typed(
+            Pat
+              .Bind(Pat.Var(tname("tp")), Pat.Extract(tname("OrNull"), List(Pat.Var(tname("tp1"))))),
+            pname("OrType")
           ),
-          Case(Pat.Var(tname("tp")), None, tname("tp"))
+          None,
+          Term.Block(Nil)
         ),
-        Nil
-      )
-    )
+        Case(Pat.Var(tname("tp")), None, tname("tp"))
+      ),
+      Nil
+    ))
   }
 
   test("object-type") {
@@ -960,18 +793,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object typeAndObjects:
          |  type Ala
          |""".stripMargin,
-      assertLayout = Some(
-        "object typeAndObjects { type Ala }"
-      )
-    )(
-      Defn.Object(
-        Nil,
-        tname("typeAndObjects"),
-        tpl(
-          Decl.Type(Nil, pname("Ala"), Nil, Type.Bounds(None, None))
-        )
-      )
-    )
+      assertLayout = Some("object typeAndObjects { type Ala }")
+    )(Defn.Object(
+      Nil,
+      tname("typeAndObjects"),
+      tpl(Decl.Type(Nil, pname("Ala"), Nil, Type.Bounds(None, None)))
+    ))
   }
 
   test("old-try-catch-same-indent") {
@@ -996,16 +823,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  dd
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.Try(
-        Term.Block(List(tname("fx"), tname("gx"))),
-        List(
-          Case(Pat.Var(tname("aa")), None, Term.Block(Nil)),
-          Case(Pat.Var(tname("bb")), None, Term.Block(Nil))
-        ),
-        Some(Term.Block(List(tname("cc"), tname("dd"))))
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
+      Term.Block(List(tname("fx"), tname("gx"))),
+      List(
+        Case(Pat.Var(tname("aa")), None, Term.Block(Nil)),
+        Case(Pat.Var(tname("bb")), None, Term.Block(Nil))
+      ),
+      Some(Term.Block(List(tname("cc"), tname("dd"))))
+    ))
   }
 
   test("if-else-same-indent") {
@@ -1025,14 +850,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
                     |  gx
                     |} else gx
                     |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.If(
-        Term.Block(List(tname("cond"), tname("cond2"))),
-        Term.Block(List(tname("fx"), tname("gx"))),
-        tname("gx"),
-        Nil
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
+      Term.Block(List(tname("cond"), tname("cond2"))),
+      Term.Block(List(tname("fx"), tname("gx"))),
+      tname("gx"),
+      Nil
+    ))
   }
 
   test("new-fordo-same-indent") {
@@ -1042,10 +865,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |""".stripMargin
     val output = "for (a <- gen) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.For(
-        List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen"))),
-        tname("fx")
-      )
+      Term.For(List(Enumerator.Generator(Pat.Var(tname("a")), tname("gen"))), tname("fx"))
     )
   }
 
@@ -1056,59 +876,51 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  yield fx
                   |""".stripMargin
     val output = "for (a <- x; b <- y) yield fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
-          Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
-        ),
-        tname("fx")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("y"))
+      ),
+      tname("fx")
+    ))
   }
 
   test("new-for-yield-if-with-indent") {
-    val code =
-      """|for
-         |  a <- x
-         |  b <- y
-         |  if
-         |    a < b
-         |  yield fx
-         |""".stripMargin
+    val code = """|for
+                  |  a <- x
+                  |  b <- y
+                  |  if
+                  |    a < b
+                  |  yield fx
+                  |""".stripMargin
     val output = "for (a <- x; b <- y; if a < b) yield fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
-          Enumerator.Generator(Pat.Var(tname("b")), tname("y")),
-          Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("<"), Nil, List(tname("b"))))
-        ),
-        tname("fx")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("y")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("<"), Nil, List(tname("b"))))
+      ),
+      tname("fx")
+    ))
   }
 
   test("old-for-yield-if-with-indent") {
-    val code =
-      """|for {
-         |  a <- x
-         |  b <- y
-         |  if
-         |    a < b
-         |} yield fx
-         |""".stripMargin
+    val code = """|for {
+                  |  a <- x
+                  |  b <- y
+                  |  if
+                  |    a < b
+                  |} yield fx
+                  |""".stripMargin
     val output = "for (a <- x; b <- y; if a < b) yield fx"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
-          Enumerator.Generator(Pat.Var(tname("b")), tname("y")),
-          Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("<"), Nil, List(tname("b"))))
-        ),
-        tname("fx")
-      )
-    )
+    runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("x")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("y")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("<"), Nil, List(tname("b"))))
+      ),
+      tname("fx")
+    ))
   }
 
   test("for-in-parens") {
@@ -1118,34 +930,26 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |   yield a + b).toSet.size
                   |""".stripMargin
     val output = "def foo = (for (a <- List(1); b <- List(2)) yield a + b).toSet.size"
-    runTestAssert[Stat](code, assertLayout = Some(output))(
-      Defn.Def(
-        Nil,
-        tname("foo"),
-        Nil,
-        Nil,
-        None,
+    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      Nil,
+      None,
+      Term.Select(
         Term.Select(
-          Term.Select(
-            Term.ForYield(
-              List(
-                Enumerator.Generator(
-                  Pat.Var(tname("a")),
-                  Term.Apply(tname("List"), List(int(1)))
-                ),
-                Enumerator.Generator(
-                  Pat.Var(tname("b")),
-                  Term.Apply(tname("List"), List(int(2)))
-                )
-              ),
-              Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
+          Term.ForYield(
+            List(
+              Enumerator.Generator(Pat.Var(tname("a")), Term.Apply(tname("List"), List(int(1)))),
+              Enumerator.Generator(Pat.Var(tname("b")), Term.Apply(tname("List"), List(int(2))))
             ),
-            tname("toSet")
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
           ),
-          tname("size")
-        )
+          tname("toSet")
+        ),
+        tname("size")
       )
-    )
+    ))
   }
 
   test("match-chained-same-indent") {
@@ -1168,36 +972,27 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("hello"))),
-        None,
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("hello"))),
+      None,
+      Term.Match(
         Term.Match(
-          Term.Match(
-            tname("xs"),
-            List(
-              Case(tname("Nil"), None, str("empty")),
-              Case(
-                Pat.ExtractInfix(
-                  Pat.Var(tname("x")),
-                  tname("::"),
-                  List(Pat.Var(tname("xs1")))
-                ),
-                None,
-                str("nonempty")
-              )
-            ),
-            Nil
-          ),
+          tname("xs"),
           List(
-            Case(bool(true), None, int(0)),
-            Case(bool(false), None, int(1))
+            Case(tname("Nil"), None, str("empty")),
+            Case(
+              Pat.ExtractInfix(Pat.Var(tname("x")), tname("::"), List(Pat.Var(tname("xs1")))),
+              None,
+              str("nonempty")
+            )
           ),
           Nil
-        )
+        ),
+        List(Case(bool(true), None, int(0)), Case(bool(false), None, int(1))),
+        Nil
       )
-    )
+    ))
 
   }
 
@@ -1215,20 +1010,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("hackGetmembers"),
-        Nil,
-        Nil,
-        None,
-        Term.Match(
-          tname("a"),
-          List(Case(Pat.Var(tname("sym")), Some(tname("cond")), tname("sym"))),
-          Nil
-        )
-      )
-    )
+    )(Defn.Def(
+      Nil,
+      tname("hackGetmembers"),
+      Nil,
+      Nil,
+      None,
+      Term
+        .Match(tname("a"), List(Case(Pat.Var(tname("sym")), Some(tname("cond")), tname("sym"))), Nil)
+    ))
 
   }
   test("match-empty") {
@@ -1249,35 +1039,29 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("mapSymbols"),
-        Nil,
-        Nil,
-        None,
-        Term.Apply(
-          Term.Select(tname("originals"), tname("foreach")),
-          Term.Block(
-            Term.Function(
-              List(tparam("a")),
-              Term.Match(
-                Term.Select(tname("copy"), tname("denot")),
-                List(
-                  Case(
-                    Pat.Typed(Pat.Var(tname("cd")), pname("ClassDenotation")),
-                    None,
-                    Term.Block(Nil)
-                  ),
-                  Case(Pat.Wildcard(), None, Term.Block(Nil))
-                ),
-                Nil
-              )
-            ) :: Nil
+    )(Defn.Def(
+      Nil,
+      tname("mapSymbols"),
+      Nil,
+      Nil,
+      None,
+      Term.Apply(
+        Term.Select(tname("originals"), tname("foreach")),
+        Term.Block(
+          Term.Function(
+            List(tparam("a")),
+            Term.Match(
+              Term.Select(tname("copy"), tname("denot")),
+              List(
+                Case(Pat.Typed(Pat.Var(tname("cd")), pname("ClassDenotation")), None, Term.Block(Nil)),
+                Case(Pat.Wildcard(), None, Term.Block(Nil))
+              ),
+              Nil
+            )
           ) :: Nil
-        )
+        ) :: Nil
       )
-    )
+    ))
 
   }
 
@@ -1296,28 +1080,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("method"),
-        Nil,
-        Nil,
-        None,
-        Term.Return(
-          Term.Block(
-            List(
-              Defn.Val(
-                Nil,
-                List(Pat.Var(tname("a"))),
-                None,
-                Term.ApplyInfix(int(2), tname("+"), Nil, List(int(3)))
-              ),
-              tname("a")
-            )
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      Nil,
+      tname("method"),
+      Nil,
+      Nil,
+      None,
+      Term.Return(Term.Block(List(
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("a"))),
+          None,
+          Term.ApplyInfix(int(2), tname("+"), Nil, List(int(3)))
+        ),
+        tname("a")
+      )))
+    ))
   }
 
   test("return-single-indent") {
@@ -1327,21 +1105,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |     2 
          |     + 3
          |""".stripMargin,
-      assertLayout = Some(
-        "def method = return 2 + 3"
-      )
-    )(
-      Defn.Def(
-        Nil,
-        tname("method"),
-        Nil,
-        Nil,
-        None,
-        Term.Return(
-          Term.ApplyInfix(int(2), tname("+"), Nil, List(int(3)))
-        )
-      )
-    )
+      assertLayout = Some("def method = return 2 + 3")
+    )(Defn.Def(
+      Nil,
+      tname("method"),
+      Nil,
+      Nil,
+      None,
+      Term.Return(Term.ApplyInfix(int(2), tname("+"), Nil, List(int(3))))
+    ))
   }
 
   test("empty-return") {
@@ -1372,45 +1144,35 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("skip"),
-        Nil,
-        Nil,
-        None,
-        Term.Block(
-          List(
-            Term.Match(
-              tname("token"),
-              List(
-                Case(
-                  tname("RBRACE"),
-                  None,
-                  Term.Block(
-                    List(
-                      Term.If(bool(true), Term.Return(Lit.Unit()), Lit.Unit(), Nil),
-                      Term.Apply(tname("change"), List(int(-1)))
-                    )
-                  )
-                ),
-                Case(
-                  tname("LBRACE"),
-                  None,
-                  Term.Block(
-                    List(
-                      Term.If(bool(true), Term.Return(Lit.Unit()), Lit.Unit(), Nil),
-                      Term.Apply(tname("change"), List(int(-1)))
-                    )
-                  )
-                )
-              ),
-              Nil
-            )
+    )(Defn.Def(
+      Nil,
+      tname("skip"),
+      Nil,
+      Nil,
+      None,
+      Term.Block(List(Term.Match(
+        tname("token"),
+        List(
+          Case(
+            tname("RBRACE"),
+            None,
+            Term.Block(List(
+              Term.If(bool(true), Term.Return(Lit.Unit()), Lit.Unit(), Nil),
+              Term.Apply(tname("change"), List(int(-1)))
+            ))
+          ),
+          Case(
+            tname("LBRACE"),
+            None,
+            Term.Block(List(
+              Term.If(bool(true), Term.Return(Lit.Unit()), Lit.Unit(), Nil),
+              Term.Apply(tname("change"), List(int(-1)))
+            ))
           )
-        )
-      )
-    )
+        ),
+        Nil
+      )))
+    ))
   }
 
   test("case-block") {
@@ -1434,30 +1196,25 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("success"))),
-        None,
-        Term.Apply(
-          Term.Select(tname("suffixes"), tname("find")),
-          Term.Block(
-            Term.Function(
-              List(tparam("suffix")),
-              Term.Try(
-                Term.Block(List(bool(true))),
-                Case(
-                  Pat.Typed(Pat.Var(tname("e")), pname("StorageException")),
-                  None,
-                  bool(false)
-                ) :: Nil,
-                None
-              )
-            ) :: Nil
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("success"))),
+      None,
+      Term.Apply(
+        Term.Select(tname("suffixes"), tname("find")),
+        Term.Block(
+          Term.Function(
+            List(tparam("suffix")),
+            Term.Try(
+              Term.Block(List(bool(true))),
+              Case(Pat.Typed(Pat.Var(tname("e")), pname("StorageException")), None, bool(false)) ::
+                Nil,
+              None
+            )
           ) :: Nil
-        )
+        ) :: Nil
       )
-    )
+    ))
   }
 
   test("complext-match-else") {
@@ -1484,31 +1241,28 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("calleeType"))),
-        None,
-        Term.Match(
-          tname("a"),
-          List(
-            Case(
-              Pat.Wildcard(),
-              None,
-              Term.If(
-                tname("cond"),
-                Term
-                  .Match(tname("expr"), List(Case(Pat.Wildcard(), None, tname("f"))), Nil),
-                tname("NoType"),
-                Nil
-              )
-            ),
-            Case(Pat.Wildcard(), None, tname("NoType"))
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("calleeType"))),
+      None,
+      Term.Match(
+        tname("a"),
+        List(
+          Case(
+            Pat.Wildcard(),
+            None,
+            Term.If(
+              tname("cond"),
+              Term.Match(tname("expr"), List(Case(Pat.Wildcard(), None, tname("f"))), Nil),
+              tname("NoType"),
+              Nil
+            )
           ),
-          Nil
-        )
+          Case(Pat.Wildcard(), None, tname("NoType"))
+        ),
+        Nil
       )
-    )
+    ))
   }
 
   test("partial-function") {
@@ -1524,28 +1278,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("withDefault"))),
-        Some(
-          Type.Function(
-            List(Type.Apply(pname("Option"), List(pname("Int")))),
-            pname("Int")
-          )
-        ),
-        Term.PartialFunction(
-          List(
-            Case(
-              Pat.Extract(tname("Some"), List(Pat.Var(tname("x")))),
-              None,
-              tname("x")
-            ),
-            Case(tname("None"), None, int(0))
-          )
-        )
-      )
-    )
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("withDefault"))),
+      Some(Type.Function(List(Type.Apply(pname("Option"), List(pname("Int")))), pname("Int"))),
+      Term.PartialFunction(List(
+        Case(Pat.Extract(tname("Some"), List(Pat.Var(tname("x")))), None, tname("x")),
+        Case(tname("None"), None, int(0))
+      ))
+    ))
   }
 
   test("for-left-arrow") {
@@ -1564,22 +1305,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}) yield a
            |""".stripMargin
       )
-    )(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(
-            Pat.Var(tname("a")),
-            Term.Block(
-              List(
-                Defn.Val(Nil, List(Pat.Var(tname("b"))), None, int(123)),
-                Term.Apply(tname("Some"), List(tname("b")))
-              )
-            )
-          )
-        ),
-        tname("a")
-      )
-    )
+    )(Term.ForYield(
+      List(Enumerator.Generator(
+        Pat.Var(tname("a")),
+        Term.Block(List(
+          Defn.Val(Nil, List(Pat.Var(tname("b"))), None, int(123)),
+          Term.Apply(tname("Some"), List(tname("b")))
+        ))
+      )),
+      tname("a")
+    ))
   }
 
   test("context-arrow") {
@@ -1596,22 +1331,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Val(
-        Nil,
-        List(Pat.Var(tname("a"))),
-        None,
-        Term.ContextFunction(
-          List(tparam("s", "Int")),
-          Term.Block(
-            List(
-              Defn.Val(Nil, List(Pat.Var(tname("a"))), None, int(123)),
-              Term.ApplyInfix(tname("s"), tname("+"), Nil, List(tname("a")))
-            )
-          )
-        )
+    )(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("a"))),
+      None,
+      Term.ContextFunction(
+        List(tparam("s", "Int")),
+        Term.Block(List(
+          Defn.Val(Nil, List(Pat.Var(tname("a"))), None, int(123)),
+          Term.ApplyInfix(tname("s"), tname("+"), Nil, List(tname("a")))
+        ))
       )
-    )
+    ))
   }
 
   test("indented-apply") {
@@ -1620,41 +1351,35 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  fun(a,b,c)
          |    (d, e)
          |""".stripMargin,
-      assertLayout = Some(
-        "def method = fun(a, b, c)(d, e)"
+      assertLayout = Some("def method = fun(a, b, c)(d, e)")
+    )(Defn.Def(
+      Nil,
+      tname("method"),
+      Nil,
+      Nil,
+      None,
+      Term.Apply(
+        Term.Apply(tname("fun"), List(tname("a"), tname("b"), tname("c"))),
+        List(tname("d"), tname("e"))
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("method"),
-        Nil,
-        Nil,
-        None,
-        Term.Apply(
-          Term.Apply(tname("fun"), List(tname("a"), tname("b"), tname("c"))),
-          List(tname("d"), tname("e"))
-        )
-      )
-    )
+    ))
   }
 
   test("#3531 apply with optional braces and trailing comma") {
-    val code =
-      """|Request(
-         |  value = true match
-         |    case true => Some(1)
-         |    case _ => None,
-         |  b = "xxx"
-         |)
-         |""".stripMargin
-    val layout =
-      """|Request(value = true match {
-         |  case true =>
-         |    Some(1)
-         |  case _ =>
-         |    None
-         |}, b = "xxx")
-         |""".stripMargin
+    val code = """|Request(
+                  |  value = true match
+                  |    case true => Some(1)
+                  |    case _ => None,
+                  |  b = "xxx"
+                  |)
+                  |""".stripMargin
+    val layout = """|Request(value = true match {
+                    |  case true =>
+                    |    Some(1)
+                    |  case _ =>
+                    |    None
+                    |}, b = "xxx")
+                    |""".stripMargin
     val tree = Term.Apply(
       tname("Request"),
       List(
@@ -1676,19 +1401,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("#3542 apply with optional braces in intermediate arg, with multiple outdents") {
-    val code =
-      """|A(
-         |  foo = x =>
-         |    x match
-         |      case baz => baz,
-         |  bar = bar
-         |)
-         |""".stripMargin
-    val layout =
-      """|A(foo = x => x match {
-         |  case baz => baz
-         |}, bar = bar)
-         |""".stripMargin
+    val code = """|A(
+                  |  foo = x =>
+                  |    x match
+                  |      case baz => baz,
+                  |  bar = bar
+                  |)
+                  |""".stripMargin
+    val layout = """|A(foo = x => x match {
+                    |  case baz => baz
+                    |}, bar = bar)
+                    |""".stripMargin
     val tree = Term.Apply(
       tname("A"),
       List(
@@ -1712,25 +1435,21 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    (d, e)
          |    (f, g)
          |""".stripMargin,
-      assertLayout = Some(
-        "def method = fun(a, b, c)(d, e)(f, g)"
-      )
-    )(
-      Defn.Def(
-        Nil,
-        tname("method"),
-        Nil,
-        Nil,
-        None,
+      assertLayout = Some("def method = fun(a, b, c)(d, e)(f, g)")
+    )(Defn.Def(
+      Nil,
+      tname("method"),
+      Nil,
+      Nil,
+      None,
+      Term.Apply(
         Term.Apply(
-          Term.Apply(
-            Term.Apply(tname("fun"), List(tname("a"), tname("b"), tname("c"))),
-            List(tname("d"), tname("e"))
-          ),
-          List(tname("f"), tname("g"))
-        )
+          Term.Apply(tname("fun"), List(tname("a"), tname("b"), tname("c"))),
+          List(tname("d"), tname("e"))
+        ),
+        List(tname("f"), tname("g"))
       )
-    )
+    ))
   }
 
   test("indented-for") {
@@ -1738,24 +1457,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|for { project <- projects
          |      (source, id) <- project.sources.zipWithIndex } yield source 
          |""".stripMargin,
-      assertLayout = Some(
-        "for (project <- projects; (source, id) <- project.sources.zipWithIndex) yield source"
-      )
-    )(
-      Term.ForYield(
-        List(
-          Enumerator.Generator(Pat.Var(tname("project")), tname("projects")),
-          Enumerator.Generator(
-            Pat.Tuple(List(Pat.Var(tname("source")), Pat.Var(tname("id")))),
-            Term.Select(
-              Term.Select(tname("project"), tname("sources")),
-              tname("zipWithIndex")
-            )
-          )
-        ),
-        tname("source")
-      )
-    )
+      assertLayout =
+        Some("for (project <- projects; (source, id) <- project.sources.zipWithIndex) yield source")
+    )(Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("project")), tname("projects")),
+        Enumerator.Generator(
+          Pat.Tuple(List(Pat.Var(tname("source")), Pat.Var(tname("id")))),
+          Term.Select(Term.Select(tname("project"), tname("sources")), tname("zipWithIndex"))
+        )
+      ),
+      tname("source")
+    ))
   }
 
   test("non-indented-apply") {
@@ -1771,21 +1484,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("method"),
-        Nil,
-        Nil,
-        None,
-        Term.Block(
-          List(
-            Term.Apply(tname("fun"), List(tname("a"), tname("b"), tname("c"))),
-            Term.Tuple(List(tname("d"), tname("e")))
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      Nil,
+      tname("method"),
+      Nil,
+      Nil,
+      None,
+      Term.Block(List(
+        Term.Apply(tname("fun"), List(tname("a"), tname("b"), tname("c"))),
+        Term.Tuple(List(tname("d"), tname("e")))
+      ))
+    ))
   }
 
   test("indented-apply-braces") {
@@ -1800,19 +1509,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("method"),
-        Nil,
-        Nil,
-        Some(pname("String")),
-        Term.Apply(
-          Term.Apply(tname("fun"), List(int(1), int(2), int(3))),
-          List(Term.Block(List(int(4))))
-        )
-      )
-    )
+    )(Defn.Def(
+      Nil,
+      tname("method"),
+      Nil,
+      Nil,
+      Some(pname("String")),
+      Term
+        .Apply(Term.Apply(tname("fun"), List(int(1), int(2), int(3))), List(Term.Block(List(int(4)))))
+    ))
   }
 
   test("non-indented-apply-braces") {
@@ -1830,21 +1535,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("method2"),
-        Nil,
-        Nil,
-        Some(pname("String")),
-        Term.Block(
-          List(
-            Term.Apply(tname("fun"), List(int(1), int(2), int(3))),
-            Term.Block(List(int(4)))
-          )
-        )
-      )
-    )
+    )(Defn.Def(
+      Nil,
+      tname("method2"),
+      Nil,
+      Nil,
+      Some(pname("String")),
+      Term
+        .Block(List(Term.Apply(tname("fun"), List(int(1), int(2), int(3))), Term.Block(List(int(4)))))
+    ))
   }
 
   test("indented-contructor-params") {
@@ -1861,22 +1560,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
         """|object ExampleThing extends CompositeThing("One", "Two", "Three", "Four")
            |""".stripMargin
       )
-    )(
-      Defn.Object(
-        Nil,
-        tname("ExampleThing"),
-        tpl(
-          Init(
-            pname("CompositeThing"),
-            anon,
-            List(
-              List(str("One"), str("Two"), str("Three"), str("Four"))
-            )
-          ) :: Nil,
-          Nil
-        )
+    )(Defn.Object(
+      Nil,
+      tname("ExampleThing"),
+      tpl(
+        Init(
+          pname("CompositeThing"),
+          anon,
+          List(List(str("One"), str("Two"), str("Three"), str("Four")))
+        ) :: Nil,
+        Nil
       )
-    )
+    ))
   }
 
   test("non-indented-contructor-params") {
@@ -1897,28 +1592,24 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Defn.Object(
-        Nil,
-        tname("O"),
-        tpl(
-          Defn.Object(
+    )(Defn.Object(
+      Nil,
+      tname("O"),
+      tpl(
+        Defn.Object(
+          Nil,
+          tname("ExampleThing"),
+          Template(
             Nil,
-            tname("ExampleThing"),
-            Template(
-              Nil,
-              List(Init(pname("CompositeThing"), anon, emptyArgClause)),
-              Self(anon, None),
-              Nil,
-              Nil
-            )
-          ),
-          Term.Tuple(
-            List(str("One"), str("Two"), str("Three"), str("Four"))
+            List(Init(pname("CompositeThing"), anon, emptyArgClause)),
+            Self(anon, None),
+            Nil,
+            Nil
           )
-        )
+        ),
+        Term.Tuple(List(str("One"), str("Two"), str("Three"), str("Four")))
       )
-    )
+    ))
   }
 
   test("indented-enum-contructor-params") {
@@ -1932,41 +1623,27 @@ class SignificantIndentationSuite extends BaseDottySuite {
         """|enum Namespace(val uri: String | Null) { case xhtml extends Namespace("http://www.w3.org/1999/xhtml") }
            |""".stripMargin
       )
-    )(
-      Defn.Enum(
+    )(Defn.Enum(
+      Nil,
+      pname("Namespace"),
+      Nil,
+      Ctor.Primary(
         Nil,
-        pname("Namespace"),
+        anon,
+        List(List(tparam(
+          List(Mod.ValParam()),
+          "uri",
+          Type.ApplyInfix(pname("String"), pname("|"), pname("Null"))
+        )))
+      ),
+      tpl(Defn.EnumCase(
         Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(
-            List(
-              tparam(
-                List(Mod.ValParam()),
-                "uri",
-                Type.ApplyInfix(pname("String"), pname("|"), pname("Null"))
-              )
-            )
-          )
-        ),
-        tpl(
-          Defn.EnumCase(
-            Nil,
-            tname("xhtml"),
-            Nil,
-            EmptyCtor(),
-            List(
-              Init(
-                pname("Namespace"),
-                anon,
-                List(List(str("http://www.w3.org/1999/xhtml")))
-              )
-            )
-          )
-        )
-      )
-    )
+        tname("xhtml"),
+        Nil,
+        EmptyCtor(),
+        List(Init(pname("Namespace"), anon, List(List(str("http://www.w3.org/1999/xhtml")))))
+      ))
+    ))
   }
 
   test("indented-double-new") {
@@ -1976,22 +1653,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    (d, e)
          |    (f, g)
          |""".stripMargin,
-      assertLayout = Some(
-        "new fun(a, b, c)(d, e)(f, g)"
+      assertLayout = Some("new fun(a, b, c)(d, e)(f, g)")
+    )(Term.New(Init(
+      pname("fun"),
+      anon,
+      List(
+        List(tname("a"), tname("b"), tname("c")),
+        List(tname("d"), tname("e")),
+        List(tname("f"), tname("g"))
       )
-    )(
-      Term.New(
-        Init(
-          pname("fun"),
-          anon,
-          List(
-            List(tname("a"), tname("b"), tname("c")),
-            List(tname("d"), tname("e")),
-            List(tname("f"), tname("g"))
-          )
-        )
-      )
-    )
+    )))
   }
 
   test("then-same-line") {
@@ -2004,32 +1675,27 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |   else
          |      println("No")
          |""".stripMargin,
-      assertLayout = Some(
-        "def f = if (x.exists(x => x == 10)) println(\"Yes\") else println(\"No\")"
+      assertLayout =
+        Some("def f = if (x.exists(x => x == 10)) println(\"Yes\") else println(\"No\")")
+    )(Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      Nil,
+      None,
+      Term.If(
+        Term.Apply(
+          Term.Select(tname("x"), tname("exists")),
+          List(Term.Function(
+            List(tparam("x")),
+            Term.ApplyInfix(tname("x"), tname("=="), Nil, List(int(10)))
+          ))
+        ),
+        Term.Apply(tname("println"), List(str("Yes"))),
+        Term.Apply(tname("println"), List(str("No"))),
+        Nil
       )
-    )(
-      Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        Nil,
-        None,
-        Term.If(
-          Term.Apply(
-            Term.Select(tname("x"), tname("exists")),
-            List(
-              Term.Function(
-                List(tparam("x")),
-                Term.ApplyInfix(tname("x"), tname("=="), Nil, List(int(10)))
-              )
-            )
-          ),
-          Term.Apply(tname("println"), List(str("Yes"))),
-          Term.Apply(tname("println"), List(str("No"))),
-          Nil
-        )
-      )
-    )
+    ))
   }
 
   test("then-same-line-nested") {
@@ -2042,28 +1708,25 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |   else
          |      println("No")
          |""".stripMargin,
-      assertLayout = Some(
-        "def f = if (if (a > 0) true else false) println(\"Yes\") else println(\"No\")"
-      )
-    )(
-      Defn.Def(
-        Nil,
-        tname("f"),
-        None,
-        None,
+      assertLayout =
+        Some("def f = if (if (a > 0) true else false) println(\"Yes\") else println(\"No\")")
+    )(Defn.Def(
+      Nil,
+      tname("f"),
+      None,
+      None,
+      Term.If(
         Term.If(
-          Term.If(
-            Term.ApplyInfix(tname("a"), tname(">"), Nil, List(int(0))),
-            bool(true),
-            bool(false),
-            Nil
-          ),
-          Term.Apply(tname("println"), List(str("Yes"))),
-          Term.Apply(tname("println"), List(str("No"))),
+          Term.ApplyInfix(tname("a"), tname(">"), Nil, List(int(0))),
+          bool(true),
+          bool(false),
           Nil
-        )
+        ),
+        Term.Apply(tname("println"), List(str("Yes"))),
+        Term.Apply(tname("println"), List(str("No"))),
+        Nil
       )
-    )
+    ))
   }
 
   test("package-mixed") {
@@ -2083,36 +1746,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |class BrokenLink
            |""".stripMargin
       )
-    )(
-      Source(
-        List(
-          Pkg(
-            Term.Select(tname("tests"), tname("site")),
-            List(
-              Pkg(
-                Term.Select(tname("some"), tname("other")),
-                List(
-                  Defn.Class(
-                    Nil,
-                    pname("SomeOtherPackage"),
-                    Nil,
-                    EmptyCtor(),
-                    EmptyTemplate()
-                  )
-                )
-              ),
-              Defn.Class(
-                Nil,
-                pname("BrokenLink"),
-                Nil,
-                EmptyCtor(),
-                EmptyTemplate()
-              )
-            )
-          )
-        )
+    )(Source(List(Pkg(
+      Term.Select(tname("tests"), tname("site")),
+      List(
+        Pkg(
+          Term.Select(tname("some"), tname("other")),
+          List(Defn.Class(Nil, pname("SomeOtherPackage"), Nil, EmptyCtor(), EmptyTemplate()))
+        ),
+        Defn.Class(Nil, pname("BrokenLink"), Nil, EmptyCtor(), EmptyTemplate())
       )
-    )
+    ))))
   }
 
   test("empty-case-end-marker") {
@@ -2124,21 +1767,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  end abc
          |""".stripMargin,
       assertLayout = None
-    )(
-      Source(
-        List(
-          Defn.Def(
-            Nil,
-            tname("abc"),
-            Nil,
-            Nil,
-            Some(pname("Unit")),
-            Term.Match(tname("x"), List(Case(Pat.Wildcard(), None, Term.Block(Nil))), Nil)
-          ),
-          Term.EndMarker(tname("abc"))
-        )
-      )
-    )
+    )(Source(List(
+      Defn.Def(
+        Nil,
+        tname("abc"),
+        Nil,
+        Nil,
+        Some(pname("Unit")),
+        Term.Match(tname("x"), List(Case(Pat.Wildcard(), None, Term.Block(Nil))), Nil)
+      ),
+      Term.EndMarker(tname("abc"))
+    )))
   }
 
   test("infix-operator-with-alpha") {
@@ -2149,26 +1788,24 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    send_! "!"
          |""".stripMargin,
       assertLayout = Some("""def send() = c ! "hello" ! "world" send_! "!"""")
-    )(
-      Defn.Def(
-        Nil,
-        tname("send"),
-        Nil,
-        List(List()),
-        None,
+    )(Defn.Def(
+      Nil,
+      tname("send"),
+      Nil,
+      List(List()),
+      None,
+      Term.ApplyInfix(
         Term.ApplyInfix(
-          Term.ApplyInfix(
-            Term.ApplyInfix(tname("c"), tname("!"), Nil, List(str("hello"))),
-            tname("!"),
-            Nil,
-            List(str("world"))
-          ),
-          tname("send_!"),
+          Term.ApplyInfix(tname("c"), tname("!"), Nil, List(str("hello"))),
+          tname("!"),
           Nil,
-          List(str("!"))
-        )
+          List(str("world"))
+        ),
+        tname("send_!"),
+        Nil,
+        List(str("!"))
       )
-    )
+    ))
   }
 
   test("colon-eol-comment1") {
@@ -2178,16 +1815,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def bar: Int = ???
          |""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Object(
-        Nil,
-        tname("Foo"),
-        tpl(
-          Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
-          Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
-        )
+    )(Defn.Object(
+      Nil,
+      tname("Foo"),
+      tpl(
+        Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+        Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
       )
-    )
+    ))
   }
 
   test("colon-eol-comment2") {
@@ -2196,15 +1831,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  def foo: Int = ???
          |""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Object(
-        Nil,
-        tname("Foo"),
-        tpl(
-          Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???"))
-        )
-      )
-    )
+    )(Defn.Object(
+      Nil,
+      tname("Foo"),
+      tpl(Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")))
+    ))
   }
 
   test("colon-eol-multiline-comment") {
@@ -2215,16 +1846,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |   def bar: Int = ???
          |""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Object(
-        Nil,
-        tname("Foo"),
-        tpl(
-          Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
-          Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
-        )
+    )(Defn.Object(
+      Nil,
+      tname("Foo"),
+      tpl(
+        Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+        Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
       )
-    )
+    ))
   }
 
   test("given-with-comment") {
@@ -2234,21 +1863,19 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |   def bar: Int = ???
          |""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Given(
-        Nil,
-        anon,
-        Nil,
-        Nil,
-        tpl(
-          List(Init(pname("Foo"), anon, emptyArgClause)),
-          List(
-            Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
-            Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
-          )
+    )(Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      Nil,
+      tpl(
+        List(Init(pname("Foo"), anon, emptyArgClause)),
+        List(
+          Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+          Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
         )
       )
-    )
+    ))
   }
 
   test("given-with-miltiline-comment") {
@@ -2259,21 +1886,19 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |   def bar: Int = ???
          |""".stripMargin,
       assertLayout = None
-    )(
-      Defn.Given(
-        Nil,
-        anon,
-        Nil,
-        Nil,
-        tpl(
-          List(Init(pname("Foo"), anon, emptyArgClause)),
-          List(
-            Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
-            Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
-          )
+    )(Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      Nil,
+      tpl(
+        List(Init(pname("Foo"), anon, emptyArgClause)),
+        List(
+          Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+          Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
         )
       )
-    )
+    ))
   }
 
   test("comment-bettween-annotation-set") {
@@ -2289,56 +1914,48 @@ class SignificantIndentationSuite extends BaseDottySuite {
           |class B
           |""".stripMargin,
       assertLayout = None
-    )(
-      Source(
-        List(
-          Defn.Class(
-            Nil,
-            pname("A1"),
-            Nil,
-            EmptyCtor(),
-            tpl(
-              Init(
-                Type.Select(
-                  Term.Select(tname("scala"), tname("annotation")),
-                  pname("StaticAnnotation")
-                ),
-                anon,
-                emptyArgClause
-              ) :: Nil,
-              Nil
-            )
-          ),
-          Defn.Class(
-            Nil,
-            pname("A2"),
-            Nil,
-            EmptyCtor(),
-            tpl(
-              Init(
-                Type.Select(
-                  Term.Select(tname("scala"), tname("annotation")),
-                  pname("StaticAnnotation")
-                ),
-                anon,
-                emptyArgClause
-              ) :: Nil,
-              Nil
-            )
-          ),
-          Defn.Class(
-            List(
-              Mod.Annot(Init(pname("A1"), anon, emptyArgClause)),
-              Mod.Annot(Init(pname("A2"), anon, emptyArgClause))
-            ),
-            pname("B"),
-            Nil,
-            EmptyCtor(),
-            EmptyTemplate()
-          )
+    )(Source(List(
+      Defn.Class(
+        Nil,
+        pname("A1"),
+        Nil,
+        EmptyCtor(),
+        tpl(
+          Init(
+            Type
+              .Select(Term.Select(tname("scala"), tname("annotation")), pname("StaticAnnotation")),
+            anon,
+            emptyArgClause
+          ) :: Nil,
+          Nil
         )
+      ),
+      Defn.Class(
+        Nil,
+        pname("A2"),
+        Nil,
+        EmptyCtor(),
+        tpl(
+          Init(
+            Type
+              .Select(Term.Select(tname("scala"), tname("annotation")), pname("StaticAnnotation")),
+            anon,
+            emptyArgClause
+          ) :: Nil,
+          Nil
+        )
+      ),
+      Defn.Class(
+        List(
+          Mod.Annot(Init(pname("A1"), anon, emptyArgClause)),
+          Mod.Annot(Init(pname("A2"), anon, emptyArgClause))
+        ),
+        pname("B"),
+        Nil,
+        EmptyCtor(),
+        EmptyTemplate()
       )
-    )
+    )))
   }
 
   test("i2505") {
@@ -2356,53 +1973,39 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Source(
+    )(Source(List(Defn.Trait(
+      Nil,
+      pname("T2"),
+      Nil,
+      EmptyCtor(),
+      Template(
+        Nil,
+        Nil,
+        self("self", "T"),
         List(
-          Defn.Trait(
+          Defn.Enum(
             Nil,
-            pname("T2"),
+            pname("T2Enum"),
             Nil,
             EmptyCtor(),
-            Template(
+            tpl(Defn.EnumCase(Nil, tname("EnumCase"), Nil, EmptyCtor(), Nil))
+          ),
+          Defn.ExtensionGroup(
+            Nil,
+            List(List(tparam("n", "Int"))),
+            Defn.Def(
+              Nil,
+              tname("negate"),
               Nil,
               Nil,
-              self("self", "T"),
-              List(
-                Defn.Enum(
-                  Nil,
-                  pname("T2Enum"),
-                  Nil,
-                  EmptyCtor(),
-                  tpl(
-                    Defn.EnumCase(
-                      Nil,
-                      tname("EnumCase"),
-                      Nil,
-                      EmptyCtor(),
-                      Nil
-                    )
-                  )
-                ),
-                Defn.ExtensionGroup(
-                  Nil,
-                  List(List(tparam("n", "Int"))),
-                  Defn.Def(
-                    Nil,
-                    tname("negate"),
-                    Nil,
-                    Nil,
-                    Some(pname("Int")),
-                    Term.ApplyUnary(tname("-"), tname("n"))
-                  )
-                )
-              ),
-              Nil
+              Some(pname("Int")),
+              Term.ApplyUnary(tname("-"), tname("n"))
             )
           )
-        )
+        ),
+        Nil
       )
-    )
+    ))))
 
   }
 
@@ -2427,58 +2030,53 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(
-      Source(
-        Defn.Object(
-          Nil,
-          tname("Hello"),
-          tpl(
-            Defn.Val(
+    )(Source(
+      Defn.Object(
+        Nil,
+        tname("Hello"),
+        tpl(
+          Defn.Val(
+            Nil,
+            List(Pat.Var(tname("fun"))),
+            None,
+            Term.Function(
               Nil,
-              List(Pat.Var(tname("fun"))),
-              None,
-              Term.Function(
-                Nil,
-                Term.If(
-                  bool(true),
-                  Term.Block(
-                    Term.NewAnonymous(
-                      Template(
-                        Nil,
-                        List(Init(pname("Object"), anon, emptyArgClause)),
-                        Self(tname("obj"), None),
-                        List(Term.Apply(tname("println"), List(tname("toString")))),
-                        Nil
-                      )
-                    ) :: Nil
-                  ),
-                  Lit.Unit(),
-                  Nil
-                )
+              Term.If(
+                bool(true),
+                Term.Block(
+                  Term.NewAnonymous(Template(
+                    Nil,
+                    List(Init(pname("Object"), anon, emptyArgClause)),
+                    Self(tname("obj"), None),
+                    List(Term.Apply(tname("println"), List(tname("toString")))),
+                    Nil
+                  )) :: Nil
+                ),
+                Lit.Unit(),
+                Nil
               )
-            ),
-            Defn.Def(
-              Nil,
-              tname("main"),
-              Nil,
-              List(List(tparam("args", Type.Apply(pname("Array"), List(pname("String")))))),
-              Some(pname("Unit")),
-              Term.Apply(tname("fun"), Nil)
             )
+          ),
+          Defn.Def(
+            Nil,
+            tname("main"),
+            Nil,
+            List(List(tparam("args", Type.Apply(pname("Array"), List(pname("String")))))),
+            Some(pname("Unit")),
+            Term.Apply(tname("fun"), Nil)
           )
-        ) :: Nil
-      )
-    )
+        )
+      ) :: Nil
+    ))
   }
 
   test("newline within self-type") {
-    val layout =
-      """|trait T2 {
-         |  self { T =>
-         |  }
-         |  enum T2Enum { case EnumCase }
-         |}
-         |""".stripMargin
+    val layout = """|trait T2 {
+                    |  self { T =>
+                    |  }
+                    |  enum T2Enum { case EnumCase }
+                    |}
+                    |""".stripMargin
     val tree = Defn.Trait(
       Nil,
       pname("T2"),
@@ -2494,9 +2092,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           pname("T2Enum"),
           Nil,
           ctor,
-          tpl(
-            Defn.EnumCase(Nil, tname("EnumCase"), Nil, ctor, Nil)
-          )
+          tpl(Defn.EnumCase(Nil, tname("EnumCase"), Nil, ctor, Nil))
         )
       )
     )
@@ -2522,38 +2118,29 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("#3210") {
-    val code =
-      """|a3 match {
-         |  case Some(_) =>
-         |    case class A6(a7: A8)
-         |
-         |    object A9
-         |}
-         |""".stripMargin
-    val layout =
-      """|a3 match {
-         |  case Some(_) =>
-         |    case class A6(a7: A8)
-         |    object A9
-         |}
-         |""".stripMargin
+    val code = """|a3 match {
+                  |  case Some(_) =>
+                  |    case class A6(a7: A8)
+                  |
+                  |    object A9
+                  |}
+                  |""".stripMargin
+    val layout = """|a3 match {
+                    |  case Some(_) =>
+                    |    case class A6(a7: A8)
+                    |    object A9
+                    |}
+                    |""".stripMargin
     val tree = Term.Match(
       tname("a3"),
       Case(
         Pat.Extract(tname("Some"), List(Pat.Wildcard())),
         None,
-        Term.Block(
-          List(
-            Defn.Class(
-              List(Mod.Case()),
-              pname("A6"),
-              Nil,
-              ctorp(tparam("a7", "A8")),
-              EmptyTemplate()
-            ),
-            Defn.Object(Nil, tname("A9"), EmptyTemplate())
-          )
-        )
+        Term.Block(List(
+          Defn
+            .Class(List(Mod.Case()), pname("A6"), Nil, ctorp(tparam("a7", "A8")), EmptyTemplate()),
+          Defn.Object(Nil, tname("A9"), EmptyTemplate())
+        ))
       ) :: Nil,
       Nil
     )
@@ -2561,21 +2148,19 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("def body is partial function") {
-    val code =
-      """|object a:
-         |  def foo: Bar =
-         |    case sym
-         |        if baz =>
-         |  end foo
-         |""".stripMargin
-    val layout =
-      """|object a {
-         |  def foo: Bar = {
-         |    case sym if baz =>
-         |  }
-         |  end foo
-         |}
-         |""".stripMargin
+    val code = """|object a:
+                  |  def foo: Bar =
+                  |    case sym
+                  |        if baz =>
+                  |  end foo
+                  |""".stripMargin
+    val layout = """|object a {
+                    |  def foo: Bar = {
+                    |    case sym if baz =>
+                    |  }
+                    |  end foo
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
@@ -2586,9 +2171,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
             tname("foo"),
             Nil,
             Some(pname("Bar")),
-            Term.PartialFunction(
-              List(Case(Pat.Var(tname("sym")), Some(tname("baz")), Term.Block(Nil)))
-            )
+            Term
+              .PartialFunction(List(Case(Pat.Var(tname("sym")), Some(tname("baz")), Term.Block(Nil))))
           ),
           Term.EndMarker(tname("foo"))
         )
@@ -2597,476 +2181,351 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("def body is non-partial function") {
-    val code =
-      """|object a:
-         |  def foo: Bar =
-         |    case class Baz(baz: Int)
-         |    new Baz(0)
-         |""".stripMargin
-    val layout =
-      """|object a {
-         |  def foo: Bar = {
-         |    case class Baz(baz: Int)
-         |    new Baz(0)
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|object a:
+                  |  def foo: Bar =
+                  |    case class Baz(baz: Int)
+                  |    new Baz(0)
+                  |""".stripMargin
+    val layout = """|object a {
+                    |  def foo: Bar = {
+                    |    case class Baz(baz: Int)
+                    |    new Baz(0)
+                    |  }
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(
-          Defn.Def(
-            Nil,
-            tname("foo"),
-            Nil,
-            Some(pname("Bar")),
-            Term.Block(
-              List(
-                Defn.Class(
-                  List(Mod.Case()),
-                  pname("Baz"),
-                  Nil,
-                  Ctor.Primary(
-                    Nil,
-                    anon,
-                    List(List(tparam("baz", "Int")))
-                  ),
-                  EmptyTemplate()
-                ),
-                Term.New(Init(pname("Baz"), anon, List(List(int(0)))))
-              )
-            )
-          )
-        )
+        tpl(Defn.Def(
+          Nil,
+          tname("foo"),
+          Nil,
+          Some(pname("Bar")),
+          Term.Block(List(
+            Defn.Class(
+              List(Mod.Case()),
+              pname("Baz"),
+              Nil,
+              Ctor.Primary(Nil, anon, List(List(tparam("baz", "Int")))),
+              EmptyTemplate()
+            ),
+            Term.New(Init(pname("Baz"), anon, List(List(int(0)))))
+          ))
+        ))
       )
     }
   }
 
   test("#3252 `new` in arg, then comma 1") {
-    val code =
-      """|object a:
-         |  A(
-         |    b = new B,
-         |    c =
-         |      d,
-         |    e = f
-         |  )
-         |""".stripMargin
+    val code = """|object a:
+                  |  A(
+                  |    b = new B,
+                  |    c =
+                  |      d,
+                  |    e = f
+                  |  )
+                  |""".stripMargin
     val layout = "object a { A(b = new B, c = d, e = f) }"
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(
-          Term.Apply(
-            tname("A"),
-            List(
-              Term.Assign(tname("b"), Term.New(init("B"))),
-              Term.Assign(tname("c"), tname("d")),
-              Term.Assign(tname("e"), tname("f"))
-            )
+        tpl(Term.Apply(
+          tname("A"),
+          List(
+            Term.Assign(tname("b"), Term.New(init("B"))),
+            Term.Assign(tname("c"), tname("d")),
+            Term.Assign(tname("e"), tname("f"))
           )
-        )
+        ))
       )
     }
   }
 
   test("#3252 `new` in arg, then comma 2") {
-    val code =
-      """|object a:
-         |  A(
-         |    b = new B(0),
-         |    c =
-         |      d,
-         |    e = f
-         |  )
-         |""".stripMargin
+    val code = """|object a:
+                  |  A(
+                  |    b = new B(0),
+                  |    c =
+                  |      d,
+                  |    e = f
+                  |  )
+                  |""".stripMargin
     val layout = "object a { A(b = new B(0), c = d, e = f) }"
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(
-          Term.Apply(
-            tname("A"),
-            List(
-              Term.Assign(
-                tname("b"),
-                Term.New(init("B", List(List(int(0)))))
-              ),
-              Term.Assign(tname("c"), tname("d")),
-              Term.Assign(tname("e"), tname("f"))
-            )
+        tpl(Term.Apply(
+          tname("A"),
+          List(
+            Term.Assign(tname("b"), Term.New(init("B", List(List(int(0)))))),
+            Term.Assign(tname("c"), tname("d")),
+            Term.Assign(tname("e"), tname("f"))
           )
-        )
+        ))
       )
     }
   }
 
   test("#3252 `new` in arg, then comma 3") {
-    val code =
-      """|object a:
-         |  A(
-         |    b = new B(0) { def foo = ??? },
-         |    c =
-         |      d,
-         |    e = f
-         |  )
-         |""".stripMargin
+    val code = """|object a:
+                  |  A(
+                  |    b = new B(0) { def foo = ??? },
+                  |    c =
+                  |      d,
+                  |    e = f
+                  |  )
+                  |""".stripMargin
     val layout = "object a { A(b = new B(0) { def foo = ??? }, c = d, e = f) }"
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(
-          Term.Apply(
-            tname("A"),
-            List(
-              Term.Assign(
-                tname("b"),
-                Term.NewAnonymous(
-                  tpl(
-                    List(init("B", List(List(int(0))))),
-                    List(Defn.Def(Nil, tname("foo"), Nil, None, tname("???")))
-                  )
-                )
-              ),
-              Term.Assign(tname("c"), tname("d")),
-              Term.Assign(tname("e"), tname("f"))
-            )
+        tpl(Term.Apply(
+          tname("A"),
+          List(
+            Term.Assign(
+              tname("b"),
+              Term.NewAnonymous(tpl(
+                List(init("B", List(List(int(0))))),
+                List(Defn.Def(Nil, tname("foo"), Nil, None, tname("???")))
+              ))
+            ),
+            Term.Assign(tname("c"), tname("d")),
+            Term.Assign(tname("e"), tname("f"))
           )
-        )
+        ))
       )
     }
   }
 
   test("#3257 `new` in arg value after indent, then comma") {
-    val code =
-      """|object a:
-         |  A(
-         |    b =
-         |      new B,
-         |    c = d
-         |  )
-         |""".stripMargin
+    val code = """|object a:
+                  |  A(
+                  |    b =
+                  |      new B,
+                  |    c = d
+                  |  )
+                  |""".stripMargin
     val layout = "object a { A(b = new B, c = d) }"
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(
-          Term.Apply(
-            tname("A"),
-            List(
-              Term.Assign(tname("b"), Term.New(init("B"))),
-              Term.Assign(tname("c"), tname("d"))
-            )
-          )
-        )
+        tpl(Term.Apply(
+          tname("A"),
+          List(Term.Assign(tname("b"), Term.New(init("B"))), Term.Assign(tname("c"), tname("d")))
+        ))
       )
     }
   }
 
   test("#3257 `if-no-else` in arg value after indent, then comma") {
-    val code =
-      """|object a:
-         |  A(
-         |    b =
-         |      if (a + b) c,
-         |    c = d
-         |  )
-         |""".stripMargin
+    val code = """|object a:
+                  |  A(
+                  |    b =
+                  |      if (a + b) c,
+                  |    c = d
+                  |  )
+                  |""".stripMargin
     val layout = "object a { A(b = if (a + b) c, c = d) }"
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("a"),
-        tpl(
-          Term.Apply(
-            tname("A"),
-            List(
-              Term.Assign(
-                tname("b"),
-                Term.If(
-                  Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
-                  tname("c"),
-                  Lit.Unit(),
-                  Nil
-                )
-              ),
-              Term.Assign(tname("c"), tname("d"))
-            )
+        tpl(Term.Apply(
+          tname("A"),
+          List(
+            Term.Assign(
+              tname("b"),
+              Term.If(
+                Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+                tname("c"),
+                Lit.Unit(),
+                Nil
+              )
+            ),
+            Term.Assign(tname("c"), tname("d"))
           )
-        )
+        ))
       )
     }
   }
 
   test("#3261 chained `match` with outdent, no block, in assign") {
-    val code =
-      """|object small:
-         |  val value =
-         |    Nil match
-         |    case Nil => "empty"
-         |    case _   => "nonempty"
-         |  match
-         |    case "empty"    => 0
-         |    case "nonempty" => 1
-         |""".stripMargin
-    val layout =
-      """|object small {
-         |  val value = (Nil match {
-         |    case Nil => "empty"
-         |    case _ => "nonempty"
-         |  }) match {
-         |    case "empty" => 0
-         |    case "nonempty" => 1
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|object small:
+                  |  val value =
+                  |    Nil match
+                  |    case Nil => "empty"
+                  |    case _   => "nonempty"
+                  |  match
+                  |    case "empty"    => 0
+                  |    case "nonempty" => 1
+                  |""".stripMargin
+    val layout = """|object small {
+                    |  val value = (Nil match {
+                    |    case Nil => "empty"
+                    |    case _ => "nonempty"
+                    |  }) match {
+                    |    case "empty" => 0
+                    |    case "nonempty" => 1
+                    |  }
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("small"),
-        tpl(
-          Defn.Val(
-            Nil,
-            List(Pat.Var(tname("value"))),
-            None,
+        tpl(Defn.Val(
+          Nil,
+          List(Pat.Var(tname("value"))),
+          None,
+          Term.Match(
             Term.Match(
-              Term.Match(
-                tname("Nil"),
-                List(
-                  Case(tname("Nil"), None, str("empty")),
-                  Case(Pat.Wildcard(), None, str("nonempty"))
-                ),
-                Nil
-              ),
-              List(
-                Case(str("empty"), None, int(0)),
-                Case(str("nonempty"), None, int(1))
-              ),
+              tname("Nil"),
+              List(Case(tname("Nil"), None, str("empty")), Case(Pat.Wildcard(), None, str("nonempty"))),
               Nil
-            )
+            ),
+            List(Case(str("empty"), None, int(0)), Case(str("nonempty"), None, int(1))),
+            Nil
           )
-        )
+        ))
       )
     }
   }
 
   test("#3261 chained `match` with outdent, block, in assign") {
-    val code =
-      """|object small:
-         |  val value =
-         |    foo()
-         |    Nil match
-         |    case Nil => "empty"
-         |    case _   => "nonempty"
-         |  match
-         |    case "empty"    => 0
-         |    case "nonempty" => 1
-         |""".stripMargin
-    val layout =
-      """|object small {
-         |  val value = {
-         |    foo()
-         |    Nil match {
-         |      case Nil => "empty"
-         |      case _ => "nonempty"
-         |    }
-         |  } match {
-         |    case "empty" => 0
-         |    case "nonempty" => 1
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|object small:
+                  |  val value =
+                  |    foo()
+                  |    Nil match
+                  |    case Nil => "empty"
+                  |    case _   => "nonempty"
+                  |  match
+                  |    case "empty"    => 0
+                  |    case "nonempty" => 1
+                  |""".stripMargin
+    val layout = """|object small {
+                    |  val value = {
+                    |    foo()
+                    |    Nil match {
+                    |      case Nil => "empty"
+                    |      case _ => "nonempty"
+                    |    }
+                    |  } match {
+                    |    case "empty" => 0
+                    |    case "nonempty" => 1
+                    |  }
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("small"),
-        tpl(
-          Defn.Val(
-            Nil,
-            List(Pat.Var(tname("value"))),
-            None,
-            Term.Match(
-              Term.Block(
+        tpl(Defn.Val(
+          Nil,
+          List(Pat.Var(tname("value"))),
+          None,
+          Term.Match(
+            Term.Block(List(
+              Term.Apply(tname("foo"), Term.ArgClause(Nil, None)),
+              Term.Match(
+                tname("Nil"),
                 List(
-                  Term.Apply(tname("foo"), Term.ArgClause(Nil, None)),
-                  Term.Match(
-                    tname("Nil"),
-                    List(
-                      Case(tname("Nil"), None, str("empty")),
-                      Case(Pat.Wildcard(), None, str("nonempty"))
-                    ),
-                    Nil
-                  )
-                )
-              ),
-              List(
-                Case(str("empty"), None, int(0)),
-                Case(str("nonempty"), None, int(1))
-              ),
-              Nil
-            )
+                  Case(tname("Nil"), None, str("empty")),
+                  Case(Pat.Wildcard(), None, str("nonempty"))
+                ),
+                Nil
+              )
+            )),
+            List(Case(str("empty"), None, int(0)), Case(str("nonempty"), None, int(1))),
+            Nil
           )
-        )
+        ))
       )
     }
   }
 
   test("#3261 chained `match` with outdent, no block, in if cond") {
-    val code =
-      """|object small:
-         |  if
-         |    Nil match
-         |    case Nil => "empty"
-         |    case _   => "nonempty"
-         |  match
-         |    case "empty"    => true
-         |    case "nonempty" => false
-         |  then
-         |    bar
-         |""".stripMargin
-    val layout =
-      """|object small {
-         |  if ((Nil match {
-         |    case Nil => "empty"
-         |    case _ => "nonempty"
-         |  }) match {
-         |    case "empty" => true
-         |    case "nonempty" => false
-         |  }) bar
-         |}
-         |""".stripMargin
+    val code = """|object small:
+                  |  if
+                  |    Nil match
+                  |    case Nil => "empty"
+                  |    case _   => "nonempty"
+                  |  match
+                  |    case "empty"    => true
+                  |    case "nonempty" => false
+                  |  then
+                  |    bar
+                  |""".stripMargin
+    val layout = """|object small {
+                    |  if ((Nil match {
+                    |    case Nil => "empty"
+                    |    case _ => "nonempty"
+                    |  }) match {
+                    |    case "empty" => true
+                    |    case "nonempty" => false
+                    |  }) bar
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("small"),
-        tpl(
-          Term.If(
+        tpl(Term.If(
+          Term.Match(
             Term.Match(
-              Term.Match(
-                tname("Nil"),
-                List(
-                  Case(tname("Nil"), None, str("empty")),
-                  Case(Pat.Wildcard(), None, str("nonempty"))
-                ),
-                Nil
-              ),
-              List(
-                Case(str("empty"), None, bool(true)),
-                Case(str("nonempty"), None, bool(false))
-              ),
+              tname("Nil"),
+              List(Case(tname("Nil"), None, str("empty")), Case(Pat.Wildcard(), None, str("nonempty"))),
               Nil
             ),
-            tname("bar"),
-            Lit.Unit(),
+            List(Case(str("empty"), None, bool(true)), Case(str("nonempty"), None, bool(false))),
             Nil
-          )
-        )
+          ),
+          tname("bar"),
+          Lit.Unit(),
+          Nil
+        ))
       )
     }
   }
 
   test("#3261 chained `match` with outdent, block, in if cond") {
-    val code =
-      """|object small:
-         |  if
-         |    foo()
-         |    Nil match
-         |    case Nil => "empty"
-         |    case _   => "nonempty"
-         |  match
-         |    case "empty"    => true
-         |    case "nonempty" => false
-         |  then
-         |    bar
-         |""".stripMargin
-    val layout =
-      """|object small {
-         |  if ({
-         |    foo()
-         |    Nil match {
-         |      case Nil => "empty"
-         |      case _ => "nonempty"
-         |    }
-         |  } match {
-         |    case "empty" => true
-         |    case "nonempty" => false
-         |  }) bar
-         |}
-         |""".stripMargin
+    val code = """|object small:
+                  |  if
+                  |    foo()
+                  |    Nil match
+                  |    case Nil => "empty"
+                  |    case _   => "nonempty"
+                  |  match
+                  |    case "empty"    => true
+                  |    case "nonempty" => false
+                  |  then
+                  |    bar
+                  |""".stripMargin
+    val layout = """|object small {
+                    |  if ({
+                    |    foo()
+                    |    Nil match {
+                    |      case Nil => "empty"
+                    |      case _ => "nonempty"
+                    |    }
+                    |  } match {
+                    |    case "empty" => true
+                    |    case "nonempty" => false
+                    |  }) bar
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("small"),
-        tpl(
-          Term.If(
-            Term.Match(
-              Term.Block(
-                List(
-                  Term.Apply(tname("foo"), Nil),
-                  Term.Match(
-                    tname("Nil"),
-                    List(
-                      Case(tname("Nil"), None, str("empty")),
-                      Case(Pat.Wildcard(), None, str("nonempty"))
-                    ),
-                    Nil
-                  )
-                )
-              ),
-              List(
-                Case(str("empty"), None, bool(true)),
-                Case(str("nonempty"), None, bool(false))
-              ),
-              Nil
-            ),
-            tname("bar"),
-            Lit.Unit(),
-            Nil
-          )
-        )
-      )
-    }
-  }
-
-  test("#3261 chained `match` with outdent, no block, in try") {
-    val code =
-      """|object small:
-         |  try
-         |    Nil match
-         |    case Nil => "empty"
-         |    case _   => "nonempty"
-         |  match
-         |    case "empty"    => 0
-         |    case "nonempty" => 1
-         |  catch
-         |    case e => e.getMessage()
-         |""".stripMargin
-    val layout =
-      """|object small {
-         |  try (Nil match {
-         |    case Nil => "empty"
-         |    case _ => "nonempty"
-         |  }) match {
-         |    case "empty" => 0
-         |    case "nonempty" => 1
-         |  } catch {
-         |    case e =>
-         |      e.getMessage()
-         |  }
-         |}
-         |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("small"),
-        tpl(
-          Term.Try(
-            Term.Match(
+        tpl(Term.If(
+          Term.Match(
+            Term.Block(List(
+              Term.Apply(tname("foo"), Nil),
               Term.Match(
                 tname("Nil"),
                 List(
@@ -3074,177 +2533,197 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   Case(Pat.Wildcard(), None, str("nonempty"))
                 ),
                 Nil
-              ),
-              List(
-                Case(str("empty"), None, int(0)),
-                Case(str("nonempty"), None, int(1))
-              ),
+              )
+            )),
+            List(Case(str("empty"), None, bool(true)), Case(str("nonempty"), None, bool(false))),
+            Nil
+          ),
+          tname("bar"),
+          Lit.Unit(),
+          Nil
+        ))
+      )
+    }
+  }
+
+  test("#3261 chained `match` with outdent, no block, in try") {
+    val code = """|object small:
+                  |  try
+                  |    Nil match
+                  |    case Nil => "empty"
+                  |    case _   => "nonempty"
+                  |  match
+                  |    case "empty"    => 0
+                  |    case "nonempty" => 1
+                  |  catch
+                  |    case e => e.getMessage()
+                  |""".stripMargin
+    val layout = """|object small {
+                    |  try (Nil match {
+                    |    case Nil => "empty"
+                    |    case _ => "nonempty"
+                    |  }) match {
+                    |    case "empty" => 0
+                    |    case "nonempty" => 1
+                    |  } catch {
+                    |    case e =>
+                    |      e.getMessage()
+                    |  }
+                    |}
+                    |""".stripMargin
+    runTestAssert[Stat](code, Some(layout)) {
+      Defn.Object(
+        Nil,
+        tname("small"),
+        tpl(Term.Try(
+          Term.Match(
+            Term.Match(
+              tname("Nil"),
+              List(Case(tname("Nil"), None, str("empty")), Case(Pat.Wildcard(), None, str("nonempty"))),
               Nil
             ),
-            Case(
-              Pat.Var(tname("e")),
-              None,
-              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
-            ) :: Nil,
-            None
-          )
-        )
+            List(Case(str("empty"), None, int(0)), Case(str("nonempty"), None, int(1))),
+            Nil
+          ),
+          Case(
+            Pat.Var(tname("e")),
+            None,
+            Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+          ) :: Nil,
+          None
+        ))
       )
     }
   }
 
   test("#3261 chained `match` with outdent, block, in try") {
-    val code =
-      """|object small:
-         |  try
-         |    foo()
-         |    Nil match
-         |    case Nil => "empty"
-         |    case _   => "nonempty"
-         |  match
-         |    case "empty"    => 0
-         |    case "nonempty" => 1
-         |  catch
-         |    case e => e.getMessage()
-         |""".stripMargin
-    val layout =
-      """|object small {
-         |  try {
-         |    foo()
-         |    Nil match {
-         |      case Nil => "empty"
-         |      case _ => "nonempty"
-         |    }
-         |  } match {
-         |    case "empty" => 0
-         |    case "nonempty" => 1
-         |  } catch {
-         |    case e =>
-         |      e.getMessage()
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|object small:
+                  |  try
+                  |    foo()
+                  |    Nil match
+                  |    case Nil => "empty"
+                  |    case _   => "nonempty"
+                  |  match
+                  |    case "empty"    => 0
+                  |    case "nonempty" => 1
+                  |  catch
+                  |    case e => e.getMessage()
+                  |""".stripMargin
+    val layout = """|object small {
+                    |  try {
+                    |    foo()
+                    |    Nil match {
+                    |      case Nil => "empty"
+                    |      case _ => "nonempty"
+                    |    }
+                    |  } match {
+                    |    case "empty" => 0
+                    |    case "nonempty" => 1
+                    |  } catch {
+                    |    case e =>
+                    |      e.getMessage()
+                    |  }
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("small"),
-        tpl(
-          Term.Try(
-            Term.Match(
-              Term.Block(
+        tpl(Term.Try(
+          Term.Match(
+            Term.Block(List(
+              Term.Apply(tname("foo"), Term.ArgClause(Nil, None)),
+              Term.Match(
+                tname("Nil"),
                 List(
-                  Term.Apply(tname("foo"), Term.ArgClause(Nil, None)),
-                  Term.Match(
-                    tname("Nil"),
-                    List(
-                      Case(tname("Nil"), None, str("empty")),
-                      Case(Pat.Wildcard(), None, str("nonempty"))
-                    ),
-                    Nil
-                  )
-                )
-              ),
-              List(
-                Case(str("empty"), None, int(0)),
-                Case(str("nonempty"), None, int(1))
-              ),
-              Nil
-            ),
-            Case(
-              Pat.Var(tname("e")),
-              None,
-              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
-            ) :: Nil,
-            None
-          )
-        )
+                  Case(tname("Nil"), None, str("empty")),
+                  Case(Pat.Wildcard(), None, str("nonempty"))
+                ),
+                Nil
+              )
+            )),
+            List(Case(str("empty"), None, int(0)), Case(str("nonempty"), None, int(1))),
+            Nil
+          ),
+          Case(
+            Pat.Var(tname("e")),
+            None,
+            Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+          ) :: Nil,
+          None
+        ))
       )
     }
   }
 
   test("#3261 partial func, in try") {
-    val code =
-      """|object small:
-         |  try
-         |    case Nil => "empty"
-         |    case _   => "nonempty"
-         |  catch
-         |    case e => e.getMessage()
-         |""".stripMargin
-    val layout =
-      """|object small {
-         |  try {
-         |    case Nil => "empty"
-         |    case _ => "nonempty"
-         |  } catch {
-         |    case e =>
-         |      e.getMessage()
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|object small:
+                  |  try
+                  |    case Nil => "empty"
+                  |    case _   => "nonempty"
+                  |  catch
+                  |    case e => e.getMessage()
+                  |""".stripMargin
+    val layout = """|object small {
+                    |  try {
+                    |    case Nil => "empty"
+                    |    case _ => "nonempty"
+                    |  } catch {
+                    |    case e =>
+                    |      e.getMessage()
+                    |  }
+                    |}
+                    |""".stripMargin
     runTestAssert[Stat](code, Some(layout)) {
       Defn.Object(
         Nil,
         tname("small"),
-        tpl(
-          Term.Try(
-            Term.PartialFunction(
-              List(
-                Case(tname("Nil"), None, str("empty")),
-                Case(Pat.Wildcard(), None, str("nonempty"))
-              )
-            ),
-            Case(
-              Pat.Var(tname("e")),
-              None,
-              Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
-            ) :: Nil,
-            None
-          )
-        )
+        tpl(Term.Try(
+          Term.PartialFunction(
+            List(Case(tname("Nil"), None, str("empty")), Case(Pat.Wildcard(), None, str("nonempty")))
+          ),
+          Case(
+            Pat.Var(tname("e")),
+            None,
+            Term.Apply(Term.Select(tname("e"), tname("getMessage")), Nil)
+          ) :: Nil,
+          None
+        ))
       )
     }
   }
 
   test("blank after template 1") {
-    val code =
-      """|class DerivationSpec {
-         |  case class Foo()
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |}
-         |""".stripMargin
-    val layout =
-      """|class DerivationSpec {
-         |  case class Foo()
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|class DerivationSpec {
+                  |  case class Foo()
+                  |
+                  |  {
+                  |    deriveEncoder[Foo]
+                  |  }
+                  |
+                  |  {
+                  |    deriveEncoder[Foo]
+                  |  }
+                  |}
+                  |""".stripMargin
+    val layout = """|class DerivationSpec {
+                    |  case class Foo()
+                    |
+                    |  {
+                    |    deriveEncoder[Foo]
+                    |  }
+                    |  {
+                    |    deriveEncoder[Foo]
+                    |  }
+                    |}
+                    |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("DerivationSpec"),
       Nil,
       ctor,
       tpl(
-        Defn.Class(
-          List(Mod.Case()),
-          pname("Foo"),
-          Nil,
-          ctorp(Nil),
-          EmptyTemplate()
-        ),
+        Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(Nil), EmptyTemplate()),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
       )
@@ -3253,44 +2732,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("blank after template 2") {
-    val code =
-      """|class DerivationSpec {
-         |  case class Foo() extends Bar
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |}
-         |""".stripMargin
-    val layout =
-      """|class DerivationSpec {
-         |  case class Foo() extends Bar
-         |
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |  {
-         |    deriveEncoder[Foo]
-         |  }
-         |}
-         |""".stripMargin
+    val code = """|class DerivationSpec {
+                  |  case class Foo() extends Bar
+                  |
+                  |  {
+                  |    deriveEncoder[Foo]
+                  |  }
+                  |
+                  |  {
+                  |    deriveEncoder[Foo]
+                  |  }
+                  |}
+                  |""".stripMargin
+    val layout = """|class DerivationSpec {
+                    |  case class Foo() extends Bar
+                    |
+                    |  {
+                    |    deriveEncoder[Foo]
+                    |  }
+                    |  {
+                    |    deriveEncoder[Foo]
+                    |  }
+                    |}
+                    |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("DerivationSpec"),
       Nil,
       ctor,
       tpl(
-        Defn.Class(
-          List(Mod.Case()),
-          pname("Foo"),
-          Nil,
-          ctorp(Nil),
-          tpl(List(init("Bar")), Nil)
-        ),
+        Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(Nil), tpl(List(init("Bar")), Nil)),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
       )
@@ -3299,138 +2770,114 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("def name after newline") {
-    val code =
-      """|def
-         |  foo: Bar =
-         |    baz
-         |""".stripMargin
+    val code = """|def
+                  |  foo: Bar =
+                  |    baz
+                  |""".stripMargin
     val layout = "def foo: Bar = baz"
     val tree = Defn.Def(Nil, tname("foo"), Nil, Some(pname("Bar")), tname("baz"))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("def colon after newline") {
-    val code =
-      """|def foo
-         |  : Bar =
-         |    baz
-         |""".stripMargin
+    val code = """|def foo
+                  |  : Bar =
+                  |    baz
+                  |""".stripMargin
     val layout = "def foo: Bar = baz"
     val tree = Defn.Def(Nil, tname("foo"), Nil, Some(pname("Bar")), tname("baz"))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("def newline after colon") {
-    val code =
-      """|def foo
-         |  :
-         |  Bar =
-         |    baz
-         |""".stripMargin
+    val code = """|def foo
+                  |  :
+                  |  Bar =
+                  |    baz
+                  |""".stripMargin
     val layout = "def foo: Bar = baz"
     val tree = Defn.Def(Nil, tname("foo"), Nil, Some(pname("Bar")), tname("baz"))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("def newline around hash") {
-    val code =
-      """|def foo: Bar
-         |  #
-         |  SubBar =
-         |    baz
-         |""".stripMargin
+    val code = """|def foo: Bar
+                  |  #
+                  |  SubBar =
+                  |    baz
+                  |""".stripMargin
     val layout = "def foo: Bar#SubBar = baz"
-    val tree = Defn.Def(
-      Nil,
-      tname("foo"),
-      Nil,
-      Some(Type.Project(pname("Bar"), pname("SubBar"))),
-      tname("baz")
-    )
+    val tree = Defn
+      .Def(Nil, tname("foo"), Nil, Some(Type.Project(pname("Bar"), pname("SubBar"))), tname("baz"))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("def equals after newline, without type") {
-    val code =
-      """|def foo
-         |  =
-         |    baz
-         |""".stripMargin
+    val code = """|def foo
+                  |  =
+                  |    baz
+                  |""".stripMargin
     val layout = "def foo = baz"
     val tree = Defn.Def(Nil, tname("foo"), Nil, None, tname("baz"))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("def equals after newline, with type") {
-    val code =
-      """|def foo: Bar
-         |  =
-         |    baz
-         |""".stripMargin
+    val code = """|def foo: Bar
+                  |  =
+                  |    baz
+                  |""".stripMargin
     val layout = "def foo: Bar = baz"
     val tree = Defn.Def(Nil, tname("foo"), Nil, Some(pname("Bar")), tname("baz"))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("#3571 scala3") {
-    val code =
-      """|new A {
-         |  def b: C =
-         |    ???
-         |}
-         |""".stripMargin
-    val layout =
-      """|new A { def b: C = ??? }
-         |""".stripMargin
-    val tree = Term.NewAnonymous(
-      tpl(
-        List(Init(pname("A"), anon, Nil)),
-        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
-      )
-    )
+    val code = """|new A {
+                  |  def b: C =
+                  |    ???
+                  |}
+                  |""".stripMargin
+    val layout = """|new A { def b: C = ??? }
+                    |""".stripMargin
+    val tree = Term.NewAnonymous(tpl(
+      List(Init(pname("A"), anon, Nil)),
+      List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+    ))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3605 scala3") {
-    val code =
-      """|new A {
-         |  def b: C =
-         |    ???
-         |
-         |}
-         |""".stripMargin
-    val layout =
-      """|new A { def b: C = ??? }
-         |""".stripMargin
-    val tree = Term.NewAnonymous(
-      tpl(
-        List(Init(pname("A"), anon, Nil)),
-        List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
-      )
-    )
+    val code = """|new A {
+                  |  def b: C =
+                  |    ???
+                  |
+                  |}
+                  |""".stripMargin
+    val layout = """|new A { def b: C = ??? }
+                    |""".stripMargin
+    val tree = Term.NewAnonymous(tpl(
+      List(Init(pname("A"), anon, Nil)),
+      List(Defn.Def(Nil, tname("b"), Nil, Some(pname("C")), tname("???")))
+    ))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3617 scala3") {
-    val codeWithoutBlank =
-      """|object Test {
-         |  def bar =
-         |    `f-oo`
-         |}
-         |""".stripMargin
-    val codeWithBlank =
-      """|object Test {
-         |  def bar =
-         |    `f-oo`
-         |
-         |}
-         |""".stripMargin
+    val codeWithoutBlank = """|object Test {
+                              |  def bar =
+                              |    `f-oo`
+                              |}
+                              |""".stripMargin
+    val codeWithBlank = """|object Test {
+                           |  def bar =
+                           |    `f-oo`
+                           |
+                           |}
+                           |""".stripMargin
     val layout = "object Test { def bar = `f-oo` }"
-    val tree = Defn.Object(
-      Nil,
-      tname("Test"),
-      tpl(Defn.Def(Nil, tname("bar"), Nil, None, tname("f-oo")))
-    )
+    val tree = Defn
+      .Object(Nil, tname("Test"), tpl(Defn.Def(Nil, tname("bar"), Nil, None, tname("f-oo"))))
     runTestAssert[Stat](codeWithoutBlank, layout)(tree)
     runTestAssert[Stat](codeWithBlank, layout)(tree)
   }

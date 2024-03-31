@@ -9,20 +9,10 @@ class ModSuite extends ParseSuite {
       Defn.Object(List(Mod.Implicit()), tname("A"), EmptyTemplate())
     )
     assertTree(templStat("implicit class A"))(
-      Defn.Class(
-        List(Mod.Implicit()),
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        EmptyTemplate()
-      )
+      Defn.Class(List(Mod.Implicit()), pname("A"), Nil, EmptyCtor(), EmptyTemplate())
     )
     assertTree(templStat("implicit case object A"))(
-      Defn.Object(
-        List(Mod.Implicit(), Mod.Case()),
-        tname("A"),
-        EmptyTemplate()
-      )
+      Defn.Object(List(Mod.Implicit(), Mod.Case()), tname("A"), EmptyTemplate())
     )
 
     assertTree(templStat("case class A(implicit val a: Int)")) {
@@ -64,10 +54,8 @@ class ModSuite extends ParseSuite {
         tname("foo"),
         Member.ParamClauseGroup(
           Type.ParamClause(Nil),
-          Term.ParamClause(
-            List(tparam(List(Mod.Implicit()), "a", "Int")),
-            Some(Mod.Implicit())
-          ) :: Nil
+          Term.ParamClause(List(tparam(List(Mod.Implicit()), "a", "Int")), Some(Mod.Implicit())) ::
+            Nil
         ) :: Nil,
         Some(pname("Int")),
         tname("a")
@@ -78,22 +66,14 @@ class ModSuite extends ParseSuite {
       Defn.Def(
         List(Mod.Implicit()),
         tname("foo"),
-        Member.ParamClauseGroup(
-          Type.ParamClause(Nil),
-          List(tparam("a", "Int")) :: Nil
-        ) :: Nil,
+        Member.ParamClauseGroup(Type.ParamClause(Nil), List(tparam("a", "Int")) :: Nil) :: Nil,
         Some(pname("Int")),
         tname("a")
       )
     }
 
     assertTree(templStat("implicit val a: Int = 1")) {
-      Defn.Val(
-        List(Mod.Implicit()),
-        List(Pat.Var(tname("a"))),
-        Some(pname("Int")),
-        int(1)
-      )
+      Defn.Val(List(Mod.Implicit()), List(Pat.Var(tname("a"))), Some(pname("Int")), int(1))
     }
 
     assertTree(templStat("implicit val a: Int")) {
@@ -101,12 +81,7 @@ class ModSuite extends ParseSuite {
     }
 
     assertTree(templStat("implicit var a: Int = 1")) {
-      Defn.Var(
-        List(Mod.Implicit()),
-        List(Pat.Var(tname("a"))),
-        Some(pname("Int")),
-        Some(int(1))
-      )
+      Defn.Var(List(Mod.Implicit()), List(Pat.Var(tname("a"))), Some(pname("Int")), Some(int(1)))
 
     }
 
@@ -133,10 +108,7 @@ class ModSuite extends ParseSuite {
   }
 
   test("final") {
-    matchSubStructure[Stat](
-      "final object A",
-      { case Defn.Object(List(Mod.Final()), _, _) => () }
-    )
+    matchSubStructure[Stat]("final object A", { case Defn.Object(List(Mod.Final()), _, _) => () })
     matchSubStructure[Stat](
       "final class A",
       { case Defn.Class(List(Mod.Final()), _, _, _, _) => () }
@@ -158,9 +130,7 @@ class ModSuite extends ParseSuite {
         Ctor.Primary(
           Nil,
           anon,
-          Term.ParamClause(
-            tparam(List(Mod.Final(), Mod.ValParam()), "a", "Int") :: Nil
-          ) :: Nil
+          Term.ParamClause(tparam(List(Mod.Final(), Mod.ValParam()), "a", "Int") :: Nil) :: Nil
         ),
         EmptyTemplate()
       )
@@ -176,20 +146,14 @@ class ModSuite extends ParseSuite {
       { case Defn.Val(List(Mod.Final()), _, _, _) => () }
     )
 
-    matchSubStructure[Stat](
-      "final val a: Int",
-      { case Decl.Val(List(Mod.Final()), _, _) => () }
-    )
+    matchSubStructure[Stat]("final val a: Int", { case Decl.Val(List(Mod.Final()), _, _) => () })
 
     matchSubStructure[Stat](
       "final var a: Int = 1",
       { case Defn.Var(List(Mod.Final()), _, _, _) => () }
     )
 
-    matchSubStructure[Stat](
-      "final var a: Int",
-      { case Decl.Var(List(Mod.Final()), _, _) => () }
-    )
+    matchSubStructure[Stat]("final var a: Int", { case Decl.Var(List(Mod.Final()), _, _) => () })
 
     matchSubStructure[Stat](
       "final type A = Int",
@@ -323,10 +287,7 @@ class ModSuite extends ParseSuite {
   }
 
   test("case") {
-    matchSubStructure[Stat](
-      "case object A",
-      { case Defn.Object(List(Mod.Case()), _, _) => () }
-    )
+    matchSubStructure[Stat]("case object A", { case Defn.Object(List(Mod.Case()), _, _) => () })
 
     matchSubStructure[Stat](
       "case class A(a: Int)",
@@ -500,11 +461,7 @@ class ModSuite extends ParseSuite {
         List(Mod.Case()),
         pname("A"),
         pparam(List(Mod.Covariant()), "T") :: Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam("t", "T")) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, List(tparam("t", "T")) :: Nil),
         EmptyTemplate()
       )
     }
@@ -516,11 +473,7 @@ class ModSuite extends ParseSuite {
         Nil,
         pname("A"),
         pparam(List(Mod.Covariant()), "T") :: Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam("t", "T")) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, List(tparam("t", "T")) :: Nil),
         EmptyTemplate()
       )
     }
@@ -539,18 +492,13 @@ class ModSuite extends ParseSuite {
   }
 
   test("covariant-like in type") {
-    val error =
-      """|<input>:1: error: `]` expected but `identifier` found
-         |type A[`+`T] = B[T]
-         |          ^""".stripMargin
+    val error = """|<input>:1: error: `]` expected but `identifier` found
+                   |type A[`+`T] = B[T]
+                   |          ^""".stripMargin
     runTestError[Stat]("type A[`+`T] = B[T]", error)
   }
 
-  test("covariant in def") {
-    interceptParseError(
-      "def foo[+T](t: T): Int"
-    )
-  }
+  test("covariant in def") { interceptParseError("def foo[+T](t: T): Int") }
 
   test("contravariant in case class") {
     assertTree(templStat("case class A[-T](t: T)")) {
@@ -558,11 +506,7 @@ class ModSuite extends ParseSuite {
         List(Mod.Case()),
         pname("A"),
         pparam(List(Mod.Contravariant()), "T") :: Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam("t", "T")) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, List(tparam("t", "T")) :: Nil),
         EmptyTemplate()
       )
     }
@@ -574,21 +518,16 @@ class ModSuite extends ParseSuite {
         Nil,
         pname("A"),
         pparam(List(Mod.Contravariant()), "T") :: Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam("t", "T")) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, List(tparam("t", "T")) :: Nil),
         EmptyTemplate()
       )
     }
   }
 
   test("contravariant-like in class") {
-    val error =
-      """|<input>:1: error: `]` expected but `identifier` found
-         |class A[`-`T](t: T)
-         |           ^""".stripMargin
+    val error = """|<input>:1: error: `]` expected but `identifier` found
+                   |class A[`-`T](t: T)
+                   |           ^""".stripMargin
     runTestError[Stat]("class A[`-`T](t: T)", error)
   }
 
@@ -604,11 +543,7 @@ class ModSuite extends ParseSuite {
     }
   }
 
-  test("contravariant in def") {
-    interceptParseError(
-      "def foo[-T](t: T): Int"
-    )
-  }
+  test("contravariant in def") { interceptParseError("def foo[-T](t: T): Int") }
 
   test("val param in case class") {
     assertTree(templStat("case class A(val a: Int)")) {
@@ -616,11 +551,7 @@ class ModSuite extends ParseSuite {
         List(Mod.Case()),
         pname("A"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam(List(Mod.ValParam()), "a", "Int")) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, List(tparam(List(Mod.ValParam()), "a", "Int")) :: Nil),
         EmptyTemplate()
       )
     }
@@ -632,11 +563,7 @@ class ModSuite extends ParseSuite {
         Nil,
         pname("A"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam(List(Mod.ValParam()), "a", "Int")) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, List(tparam(List(Mod.ValParam()), "a", "Int")) :: Nil),
         EmptyTemplate()
       )
     }
@@ -683,22 +610,12 @@ class ModSuite extends ParseSuite {
   test("no val param in def") {
     // No ValParam detected inside parameter list
     assertTree(templStat("def foo(a: Int): Int = a")) {
-      Defn.Def(
-        Nil,
-        tname("foo"),
-        Nil,
-        List(tparam("a", "Int")) :: Nil,
-        Some(pname("Int")),
-        tname("a")
-      )
+      Defn
+        .Def(Nil, tname("foo"), Nil, List(tparam("a", "Int")) :: Nil, Some(pname("Int")), tname("a"))
     }
   }
 
-  test("val param in def") {
-    interceptParseError(
-      "def foo(val a: Int): Int"
-    )
-  }
+  test("val param in def") { interceptParseError("def foo(val a: Int): Int") }
 
   test("var param in case class") {
     assertTree(templStat("case class A(var a: Int)")) {
@@ -706,11 +623,7 @@ class ModSuite extends ParseSuite {
         List(Mod.Case()),
         pname("A"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam(List(Mod.VarParam()), "a", "Int")) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, List(tparam(List(Mod.VarParam()), "a", "Int")) :: Nil),
         EmptyTemplate()
       )
     }
@@ -722,11 +635,7 @@ class ModSuite extends ParseSuite {
         Nil,
         pname("A"),
         Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam(List(Mod.VarParam()), "a", "Int")) :: Nil
-        ),
+        Ctor.Primary(Nil, anon, List(tparam(List(Mod.VarParam()), "a", "Int")) :: Nil),
         EmptyTemplate()
       )
     }
@@ -770,11 +679,7 @@ class ModSuite extends ParseSuite {
     }
   }
 
-  test("var param in def") {
-    interceptParseError(
-      "def foo(var a: Int): Int"
-    )
-  }
+  test("var param in def") { interceptParseError("def foo(var a: Int): Int") }
 
   test("macro") {
     matchSubStructure[Stat](
@@ -843,8 +748,7 @@ class ModSuite extends ParseSuite {
               _,
               _,
               _
-            ) =>
-          ()
+            ) => ()
       }
     )
 
@@ -858,8 +762,7 @@ class ModSuite extends ParseSuite {
               _,
               _,
               _
-            ) =>
-          ()
+            ) => ()
       }
     )
 
@@ -873,8 +776,7 @@ class ModSuite extends ParseSuite {
               _,
               _,
               _
-            ) =>
-          ()
+            ) => ()
       }
     )
 
@@ -888,50 +790,43 @@ class ModSuite extends ParseSuite {
               _,
               _,
               _
-            ) =>
-          ()
+            ) => ()
       }
     )
 
   }
 
-  test("Annotation after modifier") {
-    interceptParseError("implicit @foo def foo(a: Int): Int")
-  }
+  test("Annotation after modifier") { interceptParseError("implicit @foo def foo(a: Int): Int") }
 
   test("missing val after parameter modifier") {
     val actual = interceptParseError("class A(implicit b: B, implicit c: C)")
-    val expected =
-      s"""|error: `val` expected but `identifier` found
-          |class A(implicit b: B, implicit c: C)
-          |                                ^""".stripMargin
+    val expected = s"""|error: `val` expected but `identifier` found
+                       |class A(implicit b: B, implicit c: C)
+                       |                                ^""".stripMargin
     assert(actual.contains(expected), actual)
   }
 
   test("repeated parameter modifier on first parameter") {
     val actual = interceptParseError("class A(implicit implicit val b: B)")
-    val expected =
-      s"""|error: repeated modifier
-          |class A(implicit implicit val b: B)
-          |                 ^""".stripMargin
+    val expected = s"""|error: repeated modifier
+                       |class A(implicit implicit val b: B)
+                       |                 ^""".stripMargin
     assert(actual.contains(expected), actual)
   }
 
   test("repeated parameter modifier on second parameter") {
     val actual = interceptParseError("class A(implicit b: B, implicit implicit val c: C)")
-    val expected =
-      s"""|error: repeated modifier
-          |class A(implicit b: B, implicit implicit val c: C)
-          |                                ^""".stripMargin
+    val expected = s"""|error: repeated modifier
+                       |class A(implicit b: B, implicit implicit val c: C)
+                       |                                ^""".stripMargin
     assert(actual.contains(expected), actual)
   }
 
   test("by-name parameter: class with val") {
     val actual = interceptParseError("class A(val b: => B)")
-    val expected =
-      s"""|error: `val' parameters may not be call-by-name
-          |class A(val b: => B)
-          |            ^""".stripMargin
+    val expected = s"""|error: `val' parameters may not be call-by-name
+                       |class A(val b: => B)
+                       |            ^""".stripMargin
     assert(actual.contains(expected), actual)
   }
 
@@ -944,36 +839,33 @@ class ModSuite extends ParseSuite {
 
   test("by-name parameter: case class with val") {
     val actual = interceptParseError("case class A(val b: => B)")
-    val expected =
-      s"""|error: `val' parameters may not be call-by-name
-          |case class A(val b: => B)
-          |                 ^""".stripMargin
+    val expected = s"""|error: `val' parameters may not be call-by-name
+                       |case class A(val b: => B)
+                       |                 ^""".stripMargin
     assert(actual.contains(expected), actual)
   }
 
   test("by-name parameter: class with implicit val") {
     val actual = interceptParseError("class A(implicit val b: => B)")
-    val expected =
-      s"""|error: `val' parameters may not be call-by-name
-          |class A(implicit val b: => B)
-          |                     ^""".stripMargin
+    val expected = s"""|error: `val' parameters may not be call-by-name
+                       |class A(implicit val b: => B)
+                       |                     ^""".stripMargin
     assert(actual.contains(expected), actual)
   }
 
   test("#3122 missing val after package-private modifier") {
     val code = "case class Foo(private[example] field: String)"
-    val expected =
-      Defn.Class(
-        List(Mod.Case()),
-        pname("Foo"),
+    val expected = Defn.Class(
+      List(Mod.Case()),
+      pname("Foo"),
+      Nil,
+      Ctor.Primary(
         Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(tparam(List(Mod.Private(Name("example"))), "field", "String") :: Nil)
-        ),
-        EmptyTemplate()
-      )
+        anon,
+        List(tparam(List(Mod.Private(Name("example"))), "field", "String") :: Nil)
+      ),
+      EmptyTemplate()
+    )
     assertTree(templStat(code))(expected)
   }
 

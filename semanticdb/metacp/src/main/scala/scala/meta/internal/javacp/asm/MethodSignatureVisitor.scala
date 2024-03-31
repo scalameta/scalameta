@@ -29,9 +29,7 @@ class MethodSignatureVisitor
     visitor
   }
 
-  override def visitReturnType: SignatureVisitor = {
-    returnType
-  }
+  override def visitReturnType: SignatureVisitor = { returnType }
 
   override def visitExceptionType: SignatureVisitor = {
     val visitor = new ReferenceTypeSignatureVisitor

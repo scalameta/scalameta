@@ -16,33 +16,23 @@ object ScaladocParser {
   def parseScaladoc(comment: Comment): Option[List[DocToken]] = {
 
     def parseRec(toParse: String): List[DocToken] = {
-      parsers.iterator
-        .map { p =>
-          parse(toParse, p(_))
-        }
-        .collectFirst {
-          case Parsed.Success(value, index) if index != 0 =>
-            // Parse was successful, check the remaining Scaladoc
-            val remainingScaladoc =
-              toParse
-                .substring(index, toParse.length)
-                .dropWhile(c => c == ' ')
+      parsers.iterator.map { p => parse(toParse, p(_)) }.collectFirst {
+        case Parsed.Success(value, index) if index != 0 =>
+          // Parse was successful, check the remaining Scaladoc
+          val remainingScaladoc = toParse.substring(index, toParse.length).dropWhile(c => c == ' ')
 
-            if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n")) {
-              // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
-              if (remainingScaladoc.take(2) == "\n\n") {
-                List(value, DocToken(Paragraph)) ++ parseRec(
-                  remainingScaladoc.dropWhile(_ == '\n')
-                )
-              } else {
-                List(value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
-              }
+          if (remainingScaladoc.trim.nonEmpty || remainingScaladoc.contains("\n\n")) {
+            // Adds the parsed token to the list of tokens and parse the rest of the string recursively.
+            if (remainingScaladoc.take(2) == "\n\n") {
+              List(value, DocToken(Paragraph)) ++ parseRec(remainingScaladoc.dropWhile(_ == '\n'))
             } else {
-              // No more elements to parse, end recursion.
-              List(value)
+              List(value) ++ parseRec(remainingScaladoc.dropWhile(c => c == ' ' || c == '\n'))
             }
-        }
-        .getOrElse(Nil)
+          } else {
+            // No more elements to parse, end recursion.
+            List(value)
+          }
+      }.getOrElse(Nil)
     }
 
     comment.content.map(parseRec)
@@ -54,9 +44,9 @@ object ScaladocParser {
       // Code block start
       headingSymbols
       // Heading description
-        ~ ((AnyChar ~ !"=").rep ~ AnyChar).!.map(c => DocToken(headingType, c.trim))
-        // Code block end
-        ~ headingSymbols
+      ~ ((AnyChar ~ !"=").rep ~ AnyChar).!.map(c => DocToken(headingType, c.trim))
+      // Code block end
+      ~ headingSymbols
     )
   }
 
@@ -71,15 +61,14 @@ object ScaladocParser {
     def paragraphParser[$: P] = "\n\n".rep.!.map(_ => DocToken(Paragraph))
 
     // Parser for CodeBlock instances
-    def codeBlockParser[$: P] =
-      P(
-        // Code block start
-        "{{{"
-        // Code within the code block.
-          ~ ((AnyChar ~ !"}}}").rep ~ AnyChar).!.map(c => DocToken(CodeBlock, c.trim))
-          // Code block end
-          ~ "}}}"
-      )
+    def codeBlockParser[$: P] = P(
+      // Code block start
+      "{{{"
+      // Code within the code block.
+      ~ ((AnyChar ~ !"}}}").rep ~ AnyChar).!.map(c => DocToken(CodeBlock, c.trim))
+      // Code block end
+      ~ "}}}"
+    )
 
     // Parsers for headings/subheadings instances.
     val headingsParsers: List[P[_] => P[DocToken]] = DocToken.allHeadings.reverse.map { heading =>
@@ -119,13 +108,7 @@ object ScaladocParser {
     // Fallback parser(Used when no label or description is provided)
     def descriptionParser[$: P] = bodyParser.map(DocToken(Description, _))
 
-    List(
-      paragraphParser(_: P[_]),
-      inheritDocParser(_: P[_]),
-      codeBlockParser(_: P[_])
-    ) ++
-      headingsParsers ++
-      labelledParsers :+
-      (descriptionParser(_: P[_]))
+    List(paragraphParser(_: P[_]), inheritDocParser(_: P[_]), codeBlockParser(_: P[_])) ++
+      headingsParsers ++ labelledParsers :+ (descriptionParser(_: P[_]))
   }
 }

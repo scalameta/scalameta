@@ -36,24 +36,22 @@ object Mima {
     accessible && include && !exclude
   }
 
-  private val treeAnnotations = Set(
-    "scala.meta.internal.trees.Metadata.astClass",
-    "scala.meta.internal.trees.Metadata.branch"
-  )
+  private val treeAnnotations =
+    Set("scala.meta.internal.trees.Metadata.astClass", "scala.meta.internal.trees.Metadata.branch")
   private def belongsToTree(member: MemberInfo): Boolean = // trees are sealed
     member.owner.annotations.exists(x => treeAnnotations.contains(x.name))
 
   val scalaSpecificCompatibilityPolicy: ProblemFilter = {
     case ReversedMissingMethodProblem(member) => // ignore sealed types
       !belongsToTree(member)
-    case InheritedNewAbstractMethodProblem(absmeth, newmeth) =>
-      !belongsToTree(absmeth) && !belongsToTree(newmeth)
-    case _ =>
-      true
+    case InheritedNewAbstractMethodProblem(absmeth, newmeth) => !belongsToTree(absmeth) &&
+      !belongsToTree(newmeth)
+    case _ => true
   }
 
-  @inline private def exclude[A <: ProblemRef: ClassTag](metaType: String): ProblemFilter =
-    ProblemFilters.exclude[A]("scala.meta." + metaType)
+  @inline
+  private def exclude[A <: ProblemRef: ClassTag](metaType: String): ProblemFilter = ProblemFilters
+    .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
     // Tree

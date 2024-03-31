@@ -12,9 +12,7 @@ import scala.meta.tokenizers._
 import scala.meta.internal.tokenizers.ScalametaTokenizer.UnexpectedInputEndException
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
-  def tokenize(): Tokens = {
-    input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize())
-  }
+  def tokenize(): Tokens = { input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize()) }
 
   private def uncachedTokenize(): Tokens = {
     val legacyTokens: Array[LegacyTokenData] = {
@@ -27,7 +25,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     }
 
     val tokens = new java.util.ArrayList[Token](legacyTokens.length)
-    @inline def pushToken(token: Token): Unit = tokens.add(token)
+    @inline
+    def pushToken(token: Token): Unit = tokens.add(token)
     pushToken(new Token.BOF(input, dialect))
 
     val isAmmoniteInput: Boolean = input.isInstanceOf[Input.Ammonite]
@@ -39,33 +38,27 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def pushLegacyToken(curr: LegacyTokenData, next: => Option[LegacyTokenData]): Unit = {
       val token = (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-        case INTLIT =>
-          Token.Constant.Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
-        case LONGLIT =>
-          Token.Constant.Long(input, dialect, curr.offset, curr.endOffset + 1, curr.longVal)
-        case FLOATLIT =>
-          Token.Constant.Float(input, dialect, curr.offset, curr.endOffset + 1, curr.floatVal)
-        case DOUBLELIT =>
-          Token.Constant.Double(input, dialect, curr.offset, curr.endOffset + 1, curr.doubleVal)
-        case CHARLIT =>
-          Token.Constant.Char(input, dialect, curr.offset, curr.endOffset + 1, curr.charVal)
-        case SYMBOLLIT =>
-          Token.Constant.Symbol(
-            input,
-            dialect,
-            curr.offset,
-            curr.endOffset + 1,
-            scala.Symbol(curr.strVal)
-          )
-        case STRINGLIT =>
-          Token.Constant.String(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+        case INTLIT => Token.Constant
+            .Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
+        case LONGLIT => Token.Constant
+            .Long(input, dialect, curr.offset, curr.endOffset + 1, curr.longVal)
+        case FLOATLIT => Token.Constant
+            .Float(input, dialect, curr.offset, curr.endOffset + 1, curr.floatVal)
+        case DOUBLELIT => Token.Constant
+            .Double(input, dialect, curr.offset, curr.endOffset + 1, curr.doubleVal)
+        case CHARLIT => Token.Constant
+            .Char(input, dialect, curr.offset, curr.endOffset + 1, curr.charVal)
+        case SYMBOLLIT => Token.Constant
+            .Symbol(input, dialect, curr.offset, curr.endOffset + 1, scala.Symbol(curr.strVal))
+        case STRINGLIT => Token.Constant
+            .String(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
         case STRINGPART => unreachable
         case TRUE => Token.KwTrue(input, dialect, curr.offset)
         case FALSE => Token.KwFalse(input, dialect, curr.offset)
         case NULL => Token.KwNull(input, dialect, curr.offset)
 
-        case INTERPOLATIONID =>
-          Token.Interpolation.Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
+        case INTERPOLATIONID => Token.Interpolation
+            .Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case XMLLIT => Token.Xml.Start(input, dialect, curr.offset, curr.offset)
         case XMLLITEND => unreachable
 
@@ -191,7 +184,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         if (nextIndex < legacyTokens.length) Some(legacyTokens(nextIndex)) else None
       }
 
-      @inline def nextToken() = legacyIndex += 1
+      @inline
+      def nextToken() = legacyIndex += 1
       def pushTokenAndNext(token: Token): Unit = {
         pushToken(token)
         nextToken()
@@ -280,7 +274,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           )
         }
 
-        @tailrec def emitContents(): Unit = {
+        @tailrec
+        def emitContents(): Unit = {
           curr.token match {
             case XMLLIT =>
               emitPart(curr.offset, curr.endOffset + 1)

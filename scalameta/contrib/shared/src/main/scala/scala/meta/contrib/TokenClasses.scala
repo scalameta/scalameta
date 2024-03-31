@@ -11,41 +11,35 @@ import scala.meta.tokens.Token._
 @classifier
 trait Trivia
 object Trivia {
-  def unapply(token: Token): Boolean =
-    token.isAny[T.Trivia, BOF, EOF]
+  def unapply(token: Token): Boolean = token.isAny[T.Trivia, BOF, EOF]
 }
 
 @classifier
 trait Keyword
 object Keyword {
-  def unapply(token: Token): Boolean =
-    token.is[T.Keyword]
+  def unapply(token: Token): Boolean = token.is[T.Keyword]
 }
 
 @classifier
 trait Delim
 object Delim {
-  def unapply(token: Token): Boolean =
-    token.is[T.Symbolic]
+  def unapply(token: Token): Boolean = token.is[T.Symbolic]
 }
 
 @classifier
 trait Modifier
 object Modifier {
-  def unapply(token: Token): Boolean =
-    token.isAny[T.ModifierKeyword, KwSuper]
+  def unapply(token: Token): Boolean = token.isAny[T.ModifierKeyword, KwSuper]
 }
 
 @classifier
 trait Literal
 object Literal {
-  def unapply(token: Token): Boolean =
-    token.is[T.Literal]
+  def unapply(token: Token): Boolean = token.is[T.Literal]
 }
 
 @classifier
 trait Whitespace
 object Whitespace {
-  def unapply(token: Token): Boolean =
-    token.is[T.Whitespace]
+  def unapply(token: Token): Boolean = token.is[T.Whitespace]
 }

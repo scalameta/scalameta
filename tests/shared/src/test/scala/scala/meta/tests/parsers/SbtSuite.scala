@@ -14,9 +14,7 @@ class SbtSuite extends FunSuite {
     assertEquals(tree.structure, simpleBuildStructure)
   }
 
-  test("\"...\".parse[Stat]") {
-    intercept[ParseException] { simpleBuildSyntax.parse[Stat].get }
-  }
+  test("\"...\".parse[Stat]") { intercept[ParseException] { simpleBuildSyntax.parse[Stat].get } }
 
   test("source\"...\"") {
     val tree = source"""
@@ -37,20 +35,19 @@ class SbtSuite extends FunSuite {
     assertEquals(tree.structure, simpleBuildStructure)
   }
 
-  private def simpleBuildSyntax =
-    """|
-       |lazy val commonSettings = Seq(
-       |  organization := "com.example",
-       |  version := "0.1.0",
-       |  scalaVersion := "2.11.7"
-       |)
-       |
-       |lazy val root = (project in file(".")).
-       |  settings(commonSettings: _*).
-       |  settings(
-       |    name := "hello"
-       |  )
-       |""".stripMargin.replace("\n", EOL)
+  private def simpleBuildSyntax = """|
+                                     |lazy val commonSettings = Seq(
+                                     |  organization := "com.example",
+                                     |  version := "0.1.0",
+                                     |  scalaVersion := "2.11.7"
+                                     |)
+                                     |
+                                     |lazy val root = (project in file(".")).
+                                     |  settings(commonSettings: _*).
+                                     |  settings(
+                                     |    name := "hello"
+                                     |  )
+                                     |""".stripMargin.replace("\n", EOL)
 
   private def simpleBuildStructure = {
     """
