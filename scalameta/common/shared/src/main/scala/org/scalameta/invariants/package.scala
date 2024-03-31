@@ -24,7 +24,7 @@ package object invariants {
   // This is surprisingly helpful when writing certain complex `require` calls.
   implicit class XtensionImplication(private val left: Boolean) extends AnyVal {
     def ==>(right: Boolean) = !left || right
-    def <==(right: Boolean) = (right ==> left)
+    def <==(right: Boolean) = right ==> left
     def <==>(right: Boolean) = (left ==> right) && (right ==> left)
   }
 }

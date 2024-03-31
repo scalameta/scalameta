@@ -156,13 +156,13 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     def standardDialectSingleton = instantiateStandardDialect(dialectTree.tpe.termSymbol)
     standardDialectReference
       .orElse(standardDialectSingleton)
-      .getOrElse({
+      .getOrElse {
         val suggestion =
           s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
         val message =
           s"$dialectTree of type ${dialectTree.tpe} is not supported by quasiquotes ($suggestion)"
         c.abort(c.enclosingPosition, message)
-      })
+      }
   }
 
   private def instantiateParser(interpolator: ReflectSymbol): MetaParser = {

@@ -206,7 +206,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
 
         // step 6: generate copy
         if (needs(TermName("copy"), companion = false, duplicate = false) && !isVararg) {
-          val copyParamss = paramss.map(_.map({
+          val copyParamss = paramss.map(_.map {
             case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
             case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
             // NOTE: This doesn't compile, producing nonsensical errors
@@ -215,28 +215,28 @@ class DataMacros(val c: Context) extends MacroHelpers {
             // Therefore, I'm making the parameter of copy eager, even though I'd like it to be lazy.
             // case ByNeedParam(mods, name, tpt, default) => q"$mods val $name: ${byNameTpt(tpt)} = this.$name"
             case ByNeedParam(mods, name, tpt, default) => q"$mods val $name: $tpt = this.$name"
-          }))
-          val copyArgss = paramss.map(_.map({
+          })
+          val copyArgss = paramss.map(_.map {
             case VanillaParam(mods, name, tpt, default) => q"$name"
             case VarargParam(mods, name, tpt, default) => q"$name: _*"
             case ByNeedParam(mods, name, tpt, default) => q"(() => $name)"
-          }))
+          })
           stats1 += q"def copy[..$itparams](...$copyParamss): $name[..$tparamrefs] = new $name[..$tparamrefs](...$copyArgss)"
         }
 
         // step 7: generate Companion.apply
         if (needs(TermName("apply"), companion = true, duplicate = false)) {
-          val applyParamss = paramss.map(_.map({
+          val applyParamss = paramss.map(_.map {
             case VanillaParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
             case VarargParam(mods, name, tpt, default) => q"$mods val $name: $tpt = $default"
             case ByNeedParam(mods, name, tpt, default) =>
               q"$mods val $name: ${byNameTpt(tpt)} = $default"
-          }))
-          val applyArgss = paramss.map(_.map({
+          })
+          val applyArgss = paramss.map(_.map {
             case VanillaParam(mods, name, tpt, default) => q"$name"
             case VarargParam(mods, name, tpt, default) => q"$name: _*"
             case ByNeedParam(mods, name, tpt, default) => q"(() => $name)"
-          }))
+          })
           mstats1 += q"def apply[..$itparams](...$applyParamss): $name[..$tparamrefs] = new $name[..$tparamrefs](...$applyArgss)"
         }
 
@@ -249,11 +249,11 @@ class DataMacros(val c: Context) extends MacroHelpers {
           if (unapplyParams.length > 22) {
             // do nothing
           } else if (unapplyParams.length != 0) {
-            val successTargs = unapplyParams.map({
+            val successTargs = unapplyParams.map {
               case VanillaParam(mods, name, tpt, default) => tpt
               case VarargParam(mods, name, Vararg(tpt), default) => tq"_root_.scala.Seq[$tpt]"
               case ByNeedParam(mods, name, tpt, default) => tpt
-            })
+            }
             val successTpe = tq"(..$successTargs)"
             val successArgs = q"(..${unapplyParams.map(p => q"x.${p.name}")})"
             mstats1 += q"""

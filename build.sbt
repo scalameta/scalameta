@@ -190,7 +190,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies ++= List(
       "com.lihaoyi" %%% "fastparse" % "3.0.2"
     ),
-    mergedModule({ base =>
+    mergedModule { base =>
       val scalameta = base / "scalameta"
       List(
         scalameta / "io",
@@ -199,7 +199,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform)
         scalameta / "dialects",
         scalameta / "inputs"
       )
-    })
+    }
   )
   .configureCross(crossPlatformPublishSettings)
   .configureCross(crossPlatformShading)
@@ -215,12 +215,12 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     sharedSettings,
     description := "Scalameta APIs for parsing and their baseline implementation",
     enableHardcoreMacros,
-    mergedModule({ base =>
+    mergedModule { base =>
       List(
         base / "scalameta" / "quasiquotes",
         base / "scalameta" / "transversers"
       )
-    })
+    }
   )
   .configureCross(crossPlatformPublishSettings)
   .configureCross(crossPlatformShading)
@@ -281,11 +281,11 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
         base / "semanticdb" / "semanticdb"
       )
     },
-    mergedModule({ base =>
+    mergedModule { base =>
       List(
         base / "scalameta" / "contrib"
       )
-    })
+    }
   )
   .configureCross(crossPlatformPublishSettings)
   .configureCross(crossPlatformShading)
@@ -470,7 +470,7 @@ lazy val bench = project
       "sourceroot" -> (ThisBuild / baseDirectory).value
     ),
     buildInfoPackage := "scala.meta.internal.bench",
-    Jmh / run := (Def.inputTaskDyn {
+    Jmh / run := Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
       val semanticdbScalacJar =
         (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
@@ -480,7 +480,7 @@ lazy val bench = project
       buf += "-p"
       buf += s"semanticdbScalacJar=$semanticdbScalacJar"
       (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
-    }).evaluated
+    }.evaluated
   )
   .dependsOn(tests.jvm)
 

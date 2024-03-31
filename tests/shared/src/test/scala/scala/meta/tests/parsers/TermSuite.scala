@@ -203,7 +203,7 @@ class TermSuite extends ParseSuite {
 
   test("a(0) = true") {
     assertTerm("a(0) = true") {
-      Assign(Apply(tname("a"), (int(0) :: Nil)), bool(true))
+      Assign(Apply(tname("a"), int(0) :: Nil), bool(true))
     }
   }
 

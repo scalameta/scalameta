@@ -66,9 +66,9 @@ class TransformerSuite extends FunSuite {
         .get
 
     val afterTree = beforeTree
-      .transform({ case Type.Name("OldName") =>
+      .transform { case Type.Name("OldName") =>
         Type.Name("NewName")
-      })
+      }
 
     assertEquals(afterTree.toString, after)
 

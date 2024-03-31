@@ -202,7 +202,7 @@ object TreeSyntax {
           Set[Int]('(', ')', '[', ']', '{', '}').contains(codepoint)
         def lexicalDelimiter(codepoint: Int): Boolean =
           Set[Int]('`', '\'', '"', '.', ';', ',').contains(codepoint)
-        def lexicalOperator(codepoint: Int): Boolean = (
+        def lexicalOperator(codepoint: Int): Boolean =
           '\u0020' <= codepoint &&
             codepoint <= '\u007E' &&
             (!lexicalWhitespace(codepoint)
@@ -212,7 +212,6 @@ object TreeSyntax {
               && !lexicalDelimiter(codepoint)) ||
             Set[Int](Character.MATH_SYMBOL, Character.OTHER_SYMBOL)
               .contains(Character.getType(codepoint))
-        )
 
         sealed trait OperatorState
         case object Accepted extends OperatorState
@@ -225,7 +224,7 @@ object TreeSyntax {
 
         def validPlainid(string: String): Boolean = {
           val (_, validity) =
-            foldCodepoints[(OperatorState, ValidityState)](string, (Accepted, Valid))({
+            foldCodepoints[(OperatorState, ValidityState)](string, (Accepted, Valid)) {
               // Any invalid state is invalid
               case (offset, (_, Invalid), _) => (Forbidden, Invalid)
               // Must start with either a letter or an operator
@@ -247,7 +246,7 @@ object TreeSyntax {
               case (offset, (Forbidden, Valid), next) if lexicalDigit(next) => (Forbidden, Valid)
               // Bail on anything not matched here
               case (_, (_, _), next) => (Forbidden, Invalid)
-            })
+            }
 
           validity == Valid
         }
