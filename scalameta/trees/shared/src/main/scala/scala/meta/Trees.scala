@@ -211,7 +211,7 @@ object Term {
     def body: Term
   }
   @ast class ContextFunction(paramClause: ParamClause, body: Term) extends FunctionTerm {
-    @replacedField("4.6.0") final override def params: List[Param] = paramClause.values
+    @replacedField("4.6.0") override final def params: List[Param] = paramClause.values
     checkFields(
       paramClause.values.forall(param =>
         param.is[Param.Quasi] ||
@@ -220,7 +220,7 @@ object Term {
     )
   }
   @ast class Function(paramClause: ParamClause, body: Term) extends FunctionTerm {
-    @replacedField("4.6.0") final override def params: List[Param] = paramClause.values
+    @replacedField("4.6.0") override final def params: List[Param] = paramClause.values
     checkFields(
       paramClause.is[ParamClause.Quasi] || {
         val params = paramClause.values
@@ -312,7 +312,7 @@ object Type {
       paramClause: FuncParamClause,
       res: Type
   ) extends FunctionType {
-    @replacedField("4.6.0") final override def params: List[Type] = paramClause.values
+    @replacedField("4.6.0") override final def params: List[Type] = paramClause.values
   }
   @ast class PolyFunction(tparamClause: ParamClause, tpe: Type)
       extends Type with Tree.WithTParamClause with Member.Function {
@@ -325,7 +325,7 @@ object Type {
       paramClause: FuncParamClause,
       res: Type
   ) extends FunctionType {
-    @replacedField("4.6.0") final override def params: List[Type] = paramClause.values
+    @replacedField("4.6.0") override final def params: List[Type] = paramClause.values
   }
   @ast @deprecated("Implicit functions are not supported in any dialect")
   class ImplicitFunction(
