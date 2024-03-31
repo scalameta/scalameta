@@ -15,13 +15,11 @@ class CliSuite extends FunSuite {
     val scalaFile = sourceroot.resolve("HelloWorld.scala")
     Files.write(
       scalaFile,
-      """
-      |object HelloWorld {
-      |  def main(args: Array[String]): Unit = {
-      |    println("hello world")
-      |  }
-      |}
-    """.trim.stripMargin.getBytes(UTF_8)
+      """|object HelloWorld {
+         |  def main(args: Array[String]): Unit = {
+         |    println("hello world")
+         |  }
+         |}""".stripMargin.getBytes(UTF_8)
     )
     val target = Files.createTempDirectory("target_")
     val semanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
@@ -60,37 +58,37 @@ class CliSuite extends FunSuite {
     assertNoDiff(
       out,
       """|HelloWorld.scala
-       |----------------
-       |
-       |Summary:
-       |Schema => SemanticDB v4
-       |Uri => HelloWorld.scala
-       |Text => non-empty
-       |Language => Scala
-       |Symbols => 3 entries
-       |Occurrences => 7 entries
-       |
-       |Symbols:
-       |_empty_/HelloWorld. => final object HelloWorld extends AnyRef { +1 decls }
-       |  AnyRef => scala/AnyRef#
-       |_empty_/HelloWorld.main(). => method main(args: Array[String]): Unit
-       |  args => _empty_/HelloWorld.main().(args)
-       |  Array => scala/Array#
-       |  String => scala/Predef.String#
-       |  Unit => scala/Unit#
-       |_empty_/HelloWorld.main().(args) => param args: Array[String]
-       |  Array => scala/Array#
-       |  String => scala/Predef.String#
-       |
-       |Occurrences:
-       |[0:7..0:17): HelloWorld <= _empty_/HelloWorld.
-       |[1:6..1:10): main <= _empty_/HelloWorld.main().
-       |[1:11..1:15): args <= _empty_/HelloWorld.main().(args)
-       |[1:17..1:22): Array => scala/Array#
-       |[1:23..1:29): String => scala/Predef.String#
-       |[1:33..1:37): Unit => scala/Unit#
-       |[2:4..2:11): println => scala/Predef.println(+1).
-    """.trim.stripMargin
+         |----------------
+         |
+         |Summary:
+         |Schema => SemanticDB v4
+         |Uri => HelloWorld.scala
+         |Text => non-empty
+         |Language => Scala
+         |Symbols => 3 entries
+         |Occurrences => 7 entries
+         |
+         |Symbols:
+         |_empty_/HelloWorld. => final object HelloWorld extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/HelloWorld.main(). => method main(args: Array[String]): Unit
+         |  args => _empty_/HelloWorld.main().(args)
+         |  Array => scala/Array#
+         |  String => scala/Predef.String#
+         |  Unit => scala/Unit#
+         |_empty_/HelloWorld.main().(args) => param args: Array[String]
+         |  Array => scala/Array#
+         |  String => scala/Predef.String#
+         |
+         |Occurrences:
+         |[0:7..0:17): HelloWorld <= _empty_/HelloWorld.
+         |[1:6..1:10): main <= _empty_/HelloWorld.main().
+         |[1:11..1:15): args <= _empty_/HelloWorld.main().(args)
+         |[1:17..1:22): Array => scala/Array#
+         |[1:23..1:29): String => scala/Predef.String#
+         |[1:33..1:37): Unit => scala/Unit#
+         |[2:4..2:11): println => scala/Predef.println(+1).
+         |""".stripMargin
     )
     assert(err.isEmpty)
   }

@@ -1049,7 +1049,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|type A = AnyRef with
        |  type T>: Null
-       """.stripMargin,
+       |""".stripMargin,
     """|Type.ParamClause type A @@= AnyRef with
        |Type.Refine AnyRef with
        |  type T>: Null
@@ -1062,7 +1062,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
 
   checkPositions[Type](
     """|(x: X, y: Y) => Z
-     """.stripMargin,
+       |""".stripMargin,
     """|Type.FuncParamClause (x: X, y: Y)
        |Type.TypedParam x: X
        |Type.TypedParam y: Y
@@ -1071,7 +1071,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
 
   checkPositions[Type](
     """|(X*, => Y*) => Z
-   """.stripMargin,
+       |""".stripMargin,
     """|Type.FuncParamClause (X*, => Y*)
        |Type.Repeated X*
        |Type.Repeated => Y*

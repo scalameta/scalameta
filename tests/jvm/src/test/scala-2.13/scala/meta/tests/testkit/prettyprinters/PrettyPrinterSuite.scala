@@ -21,10 +21,12 @@ class PrettyPrinterSuite extends FunSuite {
 
       StructurallyEqual(before, after) match {
         case Left(err) =>
-          fail(s"""Not Structurally equal: ${err.toString}:
-                  |before: ${before.structure}
-                  |after : ${after.structure}
-             """.stripMargin)
+          fail(
+            s"""|Not Structurally equal: ${err.toString}:
+                |before: ${before.structure}
+                |after : ${after.structure}
+                |""".stripMargin
+          )
         case _ => Nil
       }
 

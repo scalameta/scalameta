@@ -95,13 +95,13 @@ class InteractiveSuite extends FunSuite {
   )
 
   check(
-    """package b
-      |import scala.concurrent.Future
-      |object a {
-      |  val x = _root_.scala.List()
-      |  x + "string"
-      |}
-    """.stripMargin,
+    """|package b
+       |import scala.concurrent.Future
+       |object a {
+       |  val x = _root_.scala.List()
+       |  x + "string"
+       |}
+       |""".stripMargin,
     // Note that scala don't resolve to a symbol, this is a sign that the
     // typer hijacking is not working as expected with interactive.Global.
     expectedPrevious,
@@ -115,10 +115,10 @@ class InteractiveSuite extends FunSuite {
 
   // This tests a case where SymbolOps.toSemantic crashes
   check(
-    """
-      |object b {
-      |  def add(a: In) = 1
-      |}""".stripMargin,
+    """|
+       |object b {
+       |  def add(a: In) = 1
+       |}""".stripMargin,
     """|interactive.scala
        |-----------------
        |
@@ -147,6 +147,6 @@ class InteractiveSuite extends FunSuite {
        |
        |Diagnostics:
        |[2:13..2:15) [error] not found: type In
-    """.stripMargin
+       |""".stripMargin
   )
 }

@@ -62,16 +62,16 @@ class ConfigSuite extends FunSuite {
   check(
     "symbols:local-only",
     List("-P:semanticdb:symbols:local-only"),
-    """
-      |/A.scala
-      |object A {
-      |  val x = {
-      |    val y = 1 // local0
-      |    val z = 2 // local1
-      |    y + z
-      |  }
-      |}
-    """.stripMargin,
+    """|
+       |/A.scala
+       |object A {
+       |  val x = {
+       |    val y = 1 // local0
+       |    val z = 2 // local1
+       |    y + z
+       |  }
+       |}
+       |""".stripMargin,
     { doc =>
       val symbols = doc.symbols.map(_.symbol).sorted.mkString("\n")
       assertNoDiff(
@@ -86,26 +86,26 @@ class ConfigSuite extends FunSuite {
   check(
     "symbols:none",
     List("-P:semanticdb:symbols:none"),
-    """
-      |/A.scala
-      |object A {
-      |}
-    """.stripMargin,
+    """|
+       |/A.scala
+       |object A {
+       |}
+       |""".stripMargin,
     { doc => assert(doc.symbols.isEmpty) }
   )
 
   check(
     "symbols:all",
     List("-P:semanticdb:symbols:all"),
-    """
-      |/A.scala
-      |object A {
-      |  val x = {
-      |    val y = 2
-      |    2
-      |  }
-      |}
-    """.stripMargin,
+    """|
+       |/A.scala
+       |object A {
+       |  val x = {
+       |    val y = 2
+       |    2
+       |  }
+       |}
+       |""".stripMargin,
     { doc =>
       val obtained = doc.symbols.map(i => i.symbol + " " + i.displayName).sorted.mkString("\n")
       assertNoDiff(
@@ -137,7 +137,7 @@ class ConfigSuite extends FunSuite {
     List(s"-P:semanticdb:md5:off"),
     """|/A.scala
        |object A
-    """.stripMargin,
+       |""".stripMargin,
     { doc => assert(doc.md5.isEmpty) }
   )
 

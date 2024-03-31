@@ -75,8 +75,10 @@ class ScalametaParserPropertyTest extends FunSuite {
     val result = runAnalysis()
     val parserBroken = result.count(_._2.kind == ParserBroken)
     val prettyPrinterBroken = result.count(_._2.kind == PrettyPrinterBroken)
-    println(s"""Parser broken: $parserBroken
-               |Pretty printer broken: $prettyPrinterBroken""".stripMargin)
+    println(
+      s"""|Parser broken: $parserBroken
+          |Pretty printer broken: $prettyPrinterBroken""".stripMargin
+    )
     assert(parserBroken <= 4)
     assert(prettyPrinterBroken <= 1888)
   }

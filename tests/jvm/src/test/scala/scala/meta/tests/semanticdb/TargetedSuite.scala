@@ -13,24 +13,24 @@ class TargetedSuite extends SemanticdbSuite {
 
   targeted(
     // curried function application with named args, #648
-    """package a
-      |object Curry {
-      |  def bar(children: Int)(x: Int) = children + x
-      |  <<bar>>(children = 4)(3)
-      |}
-    """.trim.stripMargin,
+    """|package a
+       |object Curry {
+       |  def bar(children: Int)(x: Int) = children + x
+       |  <<bar>>(children = 4)(3)
+       |}
+       |""".stripMargin,
     { (_, second) => assertEquals(second, "a/Curry.bar().") }
   )
 
   targeted(
-    """
-      |package b
-      |case class User(name: String, age: Int)
-      |object M {
-      |  val u: User = ???
-      |  u.<<copy>>(<<age>> = 43)
-      |}
-    """.trim.stripMargin,
+    """|
+       |package b
+       |case class User(name: String, age: Int)
+       |object M {
+       |  val u: User = ???
+       |  u.<<copy>>(<<age>> = 43)
+       |}
+       |""".stripMargin,
     { (_, copy, age) =>
       assertEquals(copy, "b/User#copy().")
       assertEquals(age, "b/User#copy().(age)")
@@ -49,7 +49,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  val k = sourcecode.Name.generate
        |  assert(x.value == "Foo")
        |}
-    """.stripMargin,
+       |""".stripMargin,
     """|[0:8..0:9): e <= e/
        |[1:7..1:12): scala => scala/
        |[1:13..1:17): meta => scala/meta/
@@ -77,15 +77,15 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """package f
-      |import scala.List
-      |object an {
-      |  for {
-      |    i <- List.apply(1, 2)
-      |    <<j>> <- List.apply(3, 4)
-      |  } yield j
-      |}
-      """.stripMargin,
+    """|package f
+       |import scala.List
+       |object an {
+       |  for {
+       |    i <- List.apply(1, 2)
+       |    <<j>> <- List.apply(3, 4)
+       |  } yield j
+       |}
+       |""".stripMargin,
     { (db, j) =>
       val denot = db.symbols.find(_.symbol == j).get
       assert(denot.symbol.startsWith("local"))
@@ -93,13 +93,13 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """package g
-      |object ao {
-      |  object <<foo>>
-      |  def <<foo>>(a: Int): Unit = ()
-      |  def <<foo>>(a: String): Unit = ()
-      |}
-    """.stripMargin,
+    """|package g
+       |object ao {
+       |  object <<foo>>
+       |  def <<foo>>(a: Int): Unit = ()
+       |  def <<foo>>(a: String): Unit = ()
+       |}
+       |""".stripMargin,
     (doc, foo1, foo2, foo3) => {
       assertEquals(foo1, "g/ao.foo.")
       assertEquals(foo2, "g/ao.foo().")
@@ -108,13 +108,13 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """package h
-      |object ao {
-      |  val local = 1
-      |  def foo(a: Int = 1, b: Int = 2, c: Int = 3): Int = a + b + c
-      |  def baseCase = <<foo>>(<<local>>, <<c>> = 3)
-      |}
-    """.stripMargin,
+    """|package h
+       |object ao {
+       |  val local = 1
+       |  def foo(a: Int = 1, b: Int = 2, c: Int = 3): Int = a + b + c
+       |  def baseCase = <<foo>>(<<local>>, <<c>> = 3)
+       |}
+       |""".stripMargin,
     (doc, foo1, local, c) => {
       assertEquals(foo1, "h/ao.foo().")
       assertEquals(local, "h/ao.local.")
@@ -123,13 +123,13 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """package i
-      |object ao {
-      |  val local = 1
-      |  def foo(a: Int = 1, b: Int = 2, c: Int = 3): Int = a + b + c
-      |  def recursive = <<foo>>(<<local>>, <<c>> = <<foo>>(<<local>>, <<c>> = 3))
-      |}
-    """.stripMargin,
+    """|package i
+       |object ao {
+       |  val local = 1
+       |  def foo(a: Int = 1, b: Int = 2, c: Int = 3): Int = a + b + c
+       |  def recursive = <<foo>>(<<local>>, <<c>> = <<foo>>(<<local>>, <<c>> = 3))
+       |}
+       |""".stripMargin,
     (doc, foo1, local1, c1, foo2, local2, c2) => {
       assertEquals(foo1, "i/ao.foo().")
       assertEquals(foo2, "i/ao.foo().")
@@ -141,13 +141,13 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """package j
-      |object ao {
-      |  case class Msg(body: String, head: String = "default", tail: String)
-      |  val bodyText = "body"
-      |  val msg = <<Msg>>(<<bodyText>>, tail = "tail")
-      |}
-    """.stripMargin,
+    """|package j
+       |object ao {
+       |  case class Msg(body: String, head: String = "default", tail: String)
+       |  val bodyText = "body"
+       |  val msg = <<Msg>>(<<bodyText>>, tail = "tail")
+       |}
+       |""".stripMargin,
     (doc, msg, bodyText) => {
       assertEquals(msg, "j/ao.Msg.")
       assertEquals(bodyText, "j/ao.bodyText.")
@@ -155,15 +155,15 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """package k
-      |class target {
-      |  def foo(a: Int, b: Int = 1, c: Int = 2): Int = ???
-      |}
-      |object consumer {
-      |  def unstableQual = new target
-      |  unstableQual.<<foo>>(1, <<c>> = 1)
-      |}
-    """.stripMargin,
+    """|package k
+       |class target {
+       |  def foo(a: Int, b: Int = 1, c: Int = 2): Int = ???
+       |}
+       |object consumer {
+       |  def unstableQual = new target
+       |  unstableQual.<<foo>>(1, <<c>> = 1)
+       |}
+       |""".stripMargin,
     (doc, foo, c) => {
       assertEquals(foo, "k/target#foo().")
       assertEquals(c, "k/target#foo().(c)")
@@ -171,16 +171,16 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """package l
-      |trait GrandParent{ def method: String }
-      |trait Parent extends GrandParent{ override def method: String = "" }
-      |trait Child extends Parent
-      |object Max extends Child{ 
-      |  override def method: String = "" 
-      |  override def toString = "a"
-      |}
-      |
-    """.stripMargin,
+    """|package l
+       |trait GrandParent{ def method: String }
+       |trait Parent extends GrandParent{ override def method: String = "" }
+       |trait Child extends Parent
+       |object Max extends Child{ 
+       |  override def method: String = "" 
+       |  override def toString = "a"
+       |}
+       |
+       |""".stripMargin,
     (doc) => {
 
       def overriddenSymbols(sym: String) = doc.symbols.find(_.symbol == sym).map { info =>
@@ -207,17 +207,17 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """package m
-      |  import scala.languageFeature.implicitConversions
-      |  object ImplicitConversion {
-      |    val a: Int = 5
-      |    val b: Long = <<a>>
-      |    val c: Double = <<a>>
-      |    val d: Float = <<a>>
-      |    val toLong: Int = 42
-      |    val e: Long = <<toLong>>
-      |}
-    """.stripMargin,
+    """|package m
+       |  import scala.languageFeature.implicitConversions
+       |  object ImplicitConversion {
+       |    val a: Int = 5
+       |    val b: Long = <<a>>
+       |    val c: Double = <<a>>
+       |    val d: Float = <<a>>
+       |    val toLong: Int = 42
+       |    val e: Long = <<toLong>>
+       |}
+       |""".stripMargin,
     (_, long, double, float, toInt) => {
       assertEquals(long, "m/ImplicitConversion.a.")
       assertEquals(double, "m/ImplicitConversion.a.")
@@ -227,16 +227,16 @@ class TargetedSuite extends SemanticdbSuite {
   )
 
   targeted(
-    """
-    package n
-      | object ForCompWithFilter {
-      |  val foo: Option[(Int, Int)] = None
-      |  for {
-      |    (_, _) <- <<foo>>
-      |    (_, _) <- <<foo>>
-      |  } yield ()
-      |}
-    """.stripMargin,
+    """|
+       |  package n
+       | object ForCompWithFilter {
+       |  val foo: Option[(Int, Int)] = None
+       |  for {
+       |    (_, _) <- <<foo>>
+       |    (_, _) <- <<foo>>
+       |  } yield ()
+       |}
+       |""".stripMargin,
     (_, foo1, foo2) => {
       assertEquals(foo1, "n/ForCompWithFilter.foo.")
       assertEquals(foo2, "n/ForCompWithFilter.foo.")

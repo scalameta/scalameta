@@ -146,12 +146,12 @@ class EnumSuite extends BaseDottySuite {
     def ext(tp: String) = Init(Type.Apply(pname("Option"), List(pname(tp))), anon, emptyArgClause)
 
     {
-      val opt = """
-                  |enum Option[+T] {
-                  |  case Some(x: T)
-                  |  case None
-                  |}
-      """.stripMargin
+      val opt = """|
+                   |enum Option[+T] {
+                   |  case Some(x: T)
+                   |  case None
+                   |}
+                   |""".stripMargin
       runTestAssert[Stat](opt)(
         Defn.Enum(
           Nil,
@@ -401,7 +401,7 @@ class EnumSuite extends BaseDottySuite {
     val code =
       """|enum A:
          |  case B, C
-      """.stripMargin
+         |""".stripMargin
     val expected = "enum A { case B, C }"
     runTestAssert[Stat](code, assertLayout = Some(expected))(
       enumWithCase(
@@ -416,7 +416,7 @@ class EnumSuite extends BaseDottySuite {
       """|@annot
          |enum A:
          |  case B, C
-      """.stripMargin
+         |""".stripMargin
     val expected = "@annot enum A { case B, C }"
     runTestAssert[Stat](code, assertLayout = Some(expected))(
       Defn.Enum(
@@ -435,7 +435,7 @@ class EnumSuite extends BaseDottySuite {
          |  case B(v: Int)
          |  case C(v: String)
          |}
-      """.stripMargin
+         |""".stripMargin
     runTestAssert[Stat](code)(
       Defn.Enum(
         Nil,
@@ -483,7 +483,7 @@ class EnumSuite extends BaseDottySuite {
          |    case B(v: Int)
          |    case C(v: String)
          |  def fx: Int = 4
-      """.stripMargin
+         |""".stripMargin
     val expected =
       """|enum A { self =>
          |  case B(v: Int)
@@ -539,13 +539,13 @@ class EnumSuite extends BaseDottySuite {
          |  }
          |  object X:
          |    val x = "x"
-      """.stripMargin
+         |""".stripMargin
     val expected =
       """|object Main {
          |  enum A { case B, C }
          |  object X { val x = "x" }
          |}
-      """.stripMargin
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(expected))(
       Defn.Object(
         Nil,
@@ -584,7 +584,7 @@ class EnumSuite extends BaseDottySuite {
          |  enum A { kind => case B, C }
          |  end A
          |}
-      """.stripMargin
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Defn.Object(
         Nil,
@@ -618,7 +618,7 @@ class EnumSuite extends BaseDottySuite {
          |  val a = () =>  
          |    fx()
          |    gx()
-    """.stripMargin
+         |""".stripMargin
     val expected =
       """|enum T2Enum {
          |  case Hmm

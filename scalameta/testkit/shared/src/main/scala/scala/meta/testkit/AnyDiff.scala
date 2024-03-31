@@ -28,15 +28,15 @@ case class AnyDiff(a: Any, b: Any) extends Exception {
   private def compare(a: Any, b: Any): String =
     (a, b) match {
       case (t1: Tree, t2: Tree) =>
-        s"""$toString
-           |Syntax diff:
-           |${t1.syntax}
-           |${t2.syntax}
-           |
-           |Structure diff:
-           |${t1.structure}
-           |${t2.structure}
-           """.stripMargin
+        s"""|$toString
+            |Syntax diff:
+            |${t1.syntax}
+            |${t2.syntax}
+            |
+            |Structure diff:
+            |${t1.structure}
+            |${t2.structure}
+            |""".stripMargin
       case (t1: List[_], t2: List[_]) =>
         t1.zip(t2).map { case (a, b) => compare(a, b) }.mkString
       case _ => toString

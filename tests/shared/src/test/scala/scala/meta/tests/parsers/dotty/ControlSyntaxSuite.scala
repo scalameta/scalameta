@@ -3143,16 +3143,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("if-then 7") {
     val code =
-      """
-  private def genScalaClass(td: TypeDef): js.ClassDef = {
-    val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
-
-    val kind =
-      if (isStaticModule(sym)) ClassKind.ModuleClass
-      else if (isHijacked) ClassKind.HijackedClass
-      else ClassKind.Class
-  }
-    """.stripMargin
+      """|
+         |  private def genScalaClass(td: TypeDef): js.ClassDef = {
+         |    val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
+         |
+         |    val kind =
+         |      if (isStaticModule(sym)) ClassKind.ModuleClass
+         |      else if (isHijacked) ClassKind.HijackedClass
+         |      else ClassKind.Class
+         |  }
+         |""".stripMargin
     val output =
       """|private def genScalaClass(td: TypeDef): js.ClassDef = {
          |  val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
@@ -3765,16 +3765,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("several nested if, with () as body") {
     val code =
-      """
-          if !other
-          then
-            if (member)
-              ()
-            else
-              overrideError()
-          else
-            checkOverrideDeprecated()
-    """.stripMargin
+      """|
+         |  if !other
+         |  then
+         |    if (member)
+         |      ()
+         |    else
+         |      overrideError()
+         |  else
+         |    checkOverrideDeprecated()
+         |""".stripMargin
     val output =
       """|if (!other) if (member) () else overrideError() else checkOverrideDeprecated()
          |""".stripMargin

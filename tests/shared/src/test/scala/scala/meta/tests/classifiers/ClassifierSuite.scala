@@ -37,39 +37,43 @@ trait Auto2 {
 
 class ClassifierSuite extends FunSuite {
   test("unclassifiable inheritance") {
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       (??? : Unclassifiable).is[Derived]
-    """) == """
-      |value is is not a member of org.scalameta.tests.classifiers.Unclassifiable
-    """.trim.stripMargin)
+    """),
+      "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable"
+    )
   }
 
   test("unclassifiable typeclass") {
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       (??? : Unclassifiable).is[Manual]
       (??? : Unclassifiable).is[Auto1]
       (??? : Unclassifiable).is[Auto2]
-    """) == """
-      |value is is not a member of org.scalameta.tests.classifiers.Unclassifiable
-    """.trim.stripMargin)
+    """),
+      "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable"
+    )
   }
 
   test("classifiable inheritance") {
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       (??? : MyToken).is[MyIdent]
-    """) == """
-      |don't know how to check whether org.scalameta.tests.classifiers.MyToken is org.scalameta.tests.classifiers.MyIdent
-    """.trim.stripMargin)
+    """),
+      "don't know how to check whether org.scalameta.tests.classifiers.MyToken is org.scalameta.tests.classifiers.MyIdent"
+    )
 
-    assert(typecheckError("""
+    assertEquals(
+      typecheckError("""
       import scala.meta._
       (??? : MyIdent).is[MyIdent]
-    """) == """
-      |don't know how to check whether org.scalameta.tests.classifiers.MyIdent is org.scalameta.tests.classifiers.MyIdent
-    """.trim.stripMargin)
+    """),
+      "don't know how to check whether org.scalameta.tests.classifiers.MyIdent is org.scalameta.tests.classifiers.MyIdent"
+    )
   }
 
   test("classifiable typeclass") {

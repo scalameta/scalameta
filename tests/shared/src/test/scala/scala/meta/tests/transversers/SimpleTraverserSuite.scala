@@ -23,49 +23,48 @@ class SimpleTraverserSuite extends FunSuite {
     }
     traverser(tree0)
     assertEquals(
-      log.mkString("\n").replace("\r", ""),
-      """
-      |def foo(x: x)(x: Int) = x + x       class C(x: x) {         def bar(x: x) = ???       }
-      |def foo(x: x)(x: Int) = x + x
-      |foo
-      |(x: x)(x: Int)
-      |
-      |(x: x)
-      |x: x
-      |x
-      |x
-      |(x: Int)
-      |x: Int
-      |x
-      |Int
-      |x + x
-      |x
-      |+
-      |
-      |x
-      |x
-      |class C(x: x) {         def bar(x: x) = ???       }
-      |C
-      |
-      |def this(x: x)
-      |
-      |(x: x)
-      |x: x
-      |x
-      |x
-      |{         def bar(x: x) = ???       }
-      |
-      |
-      |def bar(x: x) = ???
-      |bar
-      |(x: x)
-      |
-      |(x: x)
-      |x: x
-      |x
-      |x
-      |???
-    """.trim.stripMargin
+      log.mkString("", "\n", "\n").replace("\r", ""),
+      """|def foo(x: x)(x: Int) = x + x       class C(x: x) {         def bar(x: x) = ???       }
+         |def foo(x: x)(x: Int) = x + x
+         |foo
+         |(x: x)(x: Int)
+         |
+         |(x: x)
+         |x: x
+         |x
+         |x
+         |(x: Int)
+         |x: Int
+         |x
+         |Int
+         |x + x
+         |x
+         |+
+         |
+         |x
+         |x
+         |class C(x: x) {         def bar(x: x) = ???       }
+         |C
+         |
+         |def this(x: x)
+         |
+         |(x: x)
+         |x: x
+         |x
+         |x
+         |{         def bar(x: x) = ???       }
+         |
+         |
+         |def bar(x: x) = ???
+         |bar
+         |(x: x)
+         |
+         |(x: x)
+         |x: x
+         |x
+         |x
+         |???
+         |""".stripMargin
     )
   }
 
