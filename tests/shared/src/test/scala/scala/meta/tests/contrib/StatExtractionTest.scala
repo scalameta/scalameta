@@ -30,23 +30,23 @@ class StatExtractionTest extends FunSuite {
 
   test("Test extract def stats with single stat") {
     val stats = q"def foo = 2".extract[Stat]
-    assert(stats.exists(_ isEqual q"2"))
+    assert(stats.exists(_.isEqual(q"2")))
   }
 
   test("Test extract def stats with single stat in a block") {
     val stats = q"def foo = { 2 }".extract[Stat]
-    assert(stats.exists(_ isEqual q"2"))
+    assert(stats.exists(_.isEqual(q"2")))
   }
 
   test("Test extract val stats with single stat") {
     val stats = q"val foo = 2".extract[Stat]
-    assert(stats.exists(_ isEqual q"2"))
+    assert(stats.exists(_.isEqual(q"2")))
     assertEquals(stats.size, 1)
   }
 
   test("Test extract var stats with single stat") {
     val stats = q"var foo = 2".extract[Stat]
-    assert(stats.exists(_ isEqual q"2"))
+    assert(stats.exists(_.isEqual(q"2")))
     assertEquals(stats.size, 1)
   }
 }

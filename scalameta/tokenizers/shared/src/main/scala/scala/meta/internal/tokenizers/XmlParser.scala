@@ -103,7 +103,7 @@ class XmlParser(dialect: Dialect) {
       (getType(ch).toByte match {
         case COMBINING_SPACING_MARK | ENCLOSING_MARK | NON_SPACING_MARK | MODIFIER_LETTER |
             DECIMAL_DIGIT_NUMBER => true
-        case _ => ".-:" contains ch
+        case _ => ".-:".contains(ch)
       })
     }
 

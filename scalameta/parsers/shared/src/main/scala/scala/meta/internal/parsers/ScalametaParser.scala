@@ -4016,7 +4016,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     else refinementInBraces(Some(refineWith(innerType, inBraces(refineStatSeq()))), minIndent)
   }
 
-  def existentialStats(): List[Stat] = inBraces(refineStatSeq()) map {
+  def existentialStats(): List[Stat] = inBraces(refineStatSeq()).map {
     case stat if stat.isExistentialStat => stat
     case other => syntaxError("not a legal existential clause", at = other)
   }
