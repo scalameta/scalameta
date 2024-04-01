@@ -76,8 +76,8 @@ testOnly / aggregate := false
 packagedArtifacts := Map.empty
 ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject
 console := (scalameta.jvm / Compile / console).value
-Global / resolvers += "scala-integration" at
-  "https://scala-ci.typesafe.com/artifactory/scala-integration/"
+Global / resolvers +=
+  "scala-integration".at("https://scala-ci.typesafe.com/artifactory/scala-integration/")
 
 val commonJsSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
@@ -510,10 +510,11 @@ lazy val protobufSettings = Def.settings(
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion % "protobuf",
-      "com.thesamet.scalapb" % "protoc-gen-scala" % scalapbVersion % "protobuf" artifacts
-        (if (scala.util.Properties.isWin)
-           Artifact("protoc-gen-scala", PB.ProtocPlugin, "bat", "windows")
-         else Artifact("protoc-gen-scala", PB.ProtocPlugin, "sh", "unix"))
+      ("com.thesamet.scalapb" % "protoc-gen-scala" % scalapbVersion % "protobuf").artifacts(
+        if (scala.util.Properties.isWin)
+          Artifact("protoc-gen-scala", PB.ProtocPlugin, "bat", "windows")
+        else Artifact("protoc-gen-scala", PB.ProtocPlugin, "sh", "unix")
+      )
     )
   }
 )

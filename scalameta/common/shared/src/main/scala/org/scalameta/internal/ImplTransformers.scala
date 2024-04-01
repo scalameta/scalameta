@@ -41,7 +41,7 @@ trait ImplTransformers {
 
       val expanded = annottees match {
         case (cdef @ ClassDef(mods, _, _, _)) :: (mdef: ModuleDef) :: rest =>
-          if (!(mods hasFlag TRAIT)) {
+          if (!mods.hasFlag(TRAIT)) {
             if (!allowClasses) failUexpectedAnnottees()
             transformClass(cdef, mdef) ++ rest
           } else {
@@ -50,7 +50,7 @@ trait ImplTransformers {
           }
         case (cdef @ ClassDef(mods, name, _, _)) :: rest =>
           val syntheticMdef = q"object ${name.toTermName}"
-          if (!(mods hasFlag TRAIT)) {
+          if (!mods.hasFlag(TRAIT)) {
             if (!allowClasses) failUexpectedAnnottees()
             transformClass(cdef, syntheticMdef) ++ rest
           } else {

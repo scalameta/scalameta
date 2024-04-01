@@ -201,7 +201,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       fetchToken()
       if (token == ERROR) popStringInterpolation()
     } else {
-      curr copyFrom next
+      curr.copyFrom(next)
       next.token = EMPTY
     }
 
@@ -661,7 +661,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             nextChar()
           }
         }
-        val alt = if (oct == LF) "\\n" else "\\u%04x" format oct
+        val alt = if (oct == LF) "\\n" else "\\u%04x".format(oct)
         def msg(what: String) = s"Octal escape literals are $what, use $alt instead."
         deprecationWarning(msg("deprecated"), at = start)
         putChar(oct)
