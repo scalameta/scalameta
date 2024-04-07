@@ -660,6 +660,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionTry :: xs
               if !next.isAny[KwCatch, KwFinally] && isLeadingInfix != LeadingInfix.Yes => strip(xs)
           case Nil | (_: CanProduceLF) :: _ => Some(rs)
+          case RegionParen :: RegionForMaybeParens :: _ => Some(rs)
           case _ => None
         }
         val ok = lastNewlinePos >= 0 && !CantStartStat(next) &&
