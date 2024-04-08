@@ -1334,4 +1334,106 @@ class TermSuite extends ParseSuite {
     runTestAssert[Term](code, Some(layout))(tree)
   }
 
+  test("scalafmt #3911 for in parens, NL after `(`, NL between") {
+    val code = """|for (
+                  |  a <- fooa
+                  |  b <- foob
+                  |  if a === b
+                  |) yield a
+                  |""".stripMargin
+    val layout = "for (a <- fooa; b <- foob; if a === b) yield a"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("fooa")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("foob")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("==="), Nil, List(tname("b"))))
+      ),
+      tname("a")
+    )
+    runTestAssert[Term](code, layout)(tree)
+  }
+
+  test("scalafmt #3911 for in parens, NL after `(`, `;` between") {
+    val code = """|for (
+                  |  a <- fooa;
+                  |  b <- foob;
+                  |  if a === b
+                  |) yield a
+                  |""".stripMargin
+    val layout = "for (a <- fooa; b <- foob; if a === b) yield a"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("fooa")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("foob")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("==="), Nil, List(tname("b"))))
+      ),
+      tname("a")
+    )
+    runTestAssert[Term](code, layout)(tree)
+  }
+
+  test("scalafmt #3911 for in parens, no NL after `(`, NL between") {
+    val code = """|for (a <- fooa
+                  |     b <- foob
+                  |     if a === b) yield a
+                  |""".stripMargin
+    val layout = "for (a <- fooa; b <- foob; if a === b) yield a"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("fooa")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("foob")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("==="), Nil, List(tname("b"))))
+      ),
+      tname("a")
+    )
+    runTestAssert[Term](code, layout)(tree)
+  }
+
+  test("scalafmt #3911 for in parens, no NL after `(`, `;` between") {
+    val code = """|for (a <- fooa;
+                  |     b <- foob;
+                  |     if a === b) yield a
+                  |""".stripMargin
+    val layout = "for (a <- fooa; b <- foob; if a === b) yield a"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("fooa")),
+        Enumerator.Generator(Pat.Var(tname("b")), tname("foob")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("==="), Nil, List(tname("b"))))
+      ),
+      tname("a")
+    )
+    runTestAssert[Term](code, layout)(tree)
+  }
+
+  test("scalafmt #3911 for in parens, no NL after `(`, NL between, no NL before guard") {
+    val code = """|for (a <- fooa if
+                  |       a > 0) yield a
+                  |""".stripMargin
+    val layout = "for (a <- fooa; if a > 0) yield a"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("fooa")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname(">"), Nil, List(lit(0))))
+      ),
+      tname("a")
+    )
+    runTestAssert[Term](code, layout)(tree)
+  }
+
+  test("scalafmt #3911 for in parens, no NL after `(`, `;` between, no NL before guard op") {
+    val code = """|for (a <- fooa if a >
+                  |       0) yield a
+                  |""".stripMargin
+    val layout = "for (a <- fooa; if a > 0) yield a"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Generator(Pat.Var(tname("a")), tname("fooa")),
+        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname(">"), Nil, List(lit(0))))
+      ),
+      tname("a")
+    )
+    runTestAssert[Term](code, layout)(tree)
+  }
+
 }
