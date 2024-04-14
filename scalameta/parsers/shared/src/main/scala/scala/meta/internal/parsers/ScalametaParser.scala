@@ -314,7 +314,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(treeToTreePos)
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
-  def auto = AutoPos
 
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
     atPos(start.startTokenPos, end)(body)
@@ -358,18 +357,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     body.map(atPosOpt(startTokenPos, end))
   }
 
-  def autoPos[T <: Tree](body: => T): T = atPos(start = auto, end = auto)(body)
-  def autoPosOpt[T <: Tree](body: => T): T = atPosOpt(start = auto, end = auto)(body)
+  def autoPos[T <: Tree](body: => T): T = atPos(start = AutoPos, end = AutoPos)(body)
+  def autoPosOpt[T <: Tree](body: => T): T = atPosOpt(start = AutoPos, end = AutoPos)(body)
   @inline
-  def autoEndPos[T <: Tree](start: Int)(body: => T): T = atPos(start = start, end = auto)(body)
+  def autoEndPos[T <: Tree](start: Int)(body: => T): T = atPos(start = start, end = AutoPos)(body)
   @inline
-  def autoEndPosOpt[T <: Tree](start: Int)(body: => T): T = atPosOpt(start = start, end = auto)(body)
+  def autoEndPosOpt[T <: Tree](start: Int)(body: => T): T =
+    atPosOpt(start = start, end = AutoPos)(body)
   @inline
   def autoEndPos[T <: Tree](start: StartPos)(body: => T): T = autoEndPos(start.startTokenPos)(body)
   @inline
   def autoPrevPos[T <: Tree](body: => T) = autoEndPos(prevTokenPos)(body)
 
-  def autoPosTry[T <: Tree](body: => Try[T]): Try[T] = atPosTry(start = auto, end = auto)(body)
+  def autoPosTry[T <: Tree](body: => Try[T]): Try[T] = atPosTry(start = AutoPos, end = AutoPos)(body)
 
   /* ------------- ERROR HANDLING ------------------------------------------- */
 
@@ -2235,7 +2235,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def getFewerBracesApplyOnColon(fun: Term, startPos: Int): Option[Term] = {
     val colonPos = tokenPos
     getFewerBracesArgOnColon().map { arg =>
-      val endPos = auto.endTokenPos
+      val endPos = AutoPos.endTokenPos
       val argClause = atPos(colonPos, endPos)(Term.ArgClause(arg :: Nil))
       val arguments = atPos(startPos, endPos)(Term.Apply(fun, argClause))
       simpleExprRest(arguments, canApply = true, startPos = startPos)
