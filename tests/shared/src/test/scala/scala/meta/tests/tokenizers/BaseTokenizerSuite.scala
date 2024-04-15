@@ -24,11 +24,17 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
 
   def assertTokenizedAsStructureLines(code: String, expected: String, dialect: Dialect = Scala211)(
       implicit loc: Location
-  ): Unit = assertNoDiff(tokenize(code, dialect).map(_.structure).mkString("\n"), expected)
+  ): Unit = assertTokensAsStructureLines(tokenize(code, dialect), expected)
+
+  def assertTokensAsStructureLines(tokens: Tokens, expected: String)(implicit loc: Location): Unit =
+    assertNoDiff(tokens.map(_.structure).mkString("\n"), expected)
 
   def assertTokenizedAsSyntax(code: String, expected: String, dialect: Dialect = Scala211)(implicit
       loc: Location
-  ): Unit = assertNoDiff(tokenize(code, dialect).map(_.syntax).mkString, expected)
+  ): Unit = assertTokensAsSyntax(tokenize(code, dialect), expected)
+
+  def assertTokensAsSyntax(tokens: Tokens, expected: String)(implicit loc: Location): Unit =
+    assertNoDiff(tokens.map(_.syntax).mkString, expected)
 
   implicit class ImplicitString(value: String) {
     def tq(repl: String): String = value.replace(repl, "\"\"\"")

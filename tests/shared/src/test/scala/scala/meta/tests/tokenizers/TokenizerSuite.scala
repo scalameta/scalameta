@@ -1642,4 +1642,56 @@ class TokenizerSuite extends BaseTokenizerSuite {
     }
   }
 
+  Seq(
+    // high-surrogate char codes
+    55297
+  ).foreach { ch =>
+    test(s"#3690 high-surrogate with char code $ch") {
+      def tokens = tokenize(
+        s"""|"${ch.toChar}"
+            |""".stripMargin,
+        dialects.Scala213
+      )
+      val exception = intercept[TokenizeException](tokens)
+      val err = "<input>:1: error: invalid unicode surrogate pair"
+      assertEquals(exception.getMessage.substring(0, err.length), err)
+    }
+  }
+
+  Seq(
+    // regular or low-surrogate or char codes
+    56375
+  ).foreach { ch =>
+    test(s"#3690 non-high-surrogate with char code $ch") {
+      tokenize(
+        s"""|"${ch.toChar}"
+            |""".stripMargin,
+        dialects.Scala213
+      ) match {
+        case Tokens(_: BOF, Constant.String(str), _: LF, _: EOF) =>
+          assertEquals(str.length, 1)
+          assertEquals(str, s"${ch.toChar}")
+        case tokens => fail(s"unexpected tokens: ${tokens.structure}")
+      }
+    }
+  }
+
+  Seq(
+    // full-surrogate char code pairs
+    (55297, 56375),
+    (0xdbff, 0xdfff)
+  ).foreach { case (hi, lo) =>
+    test(s"#3690 full-surrogate with char codes $hi and $lo") {
+      tokenize(
+        s"""|"${hi.toChar}${lo.toChar}"
+            |""".stripMargin,
+        dialects.Scala213
+      ) match {
+        case Tokens(_: BOF, Constant.String(str), _: LF, _: EOF) =>
+          assertEquals(str, s"${hi.toChar}${lo.toChar}")
+        case tokens => fail(s"unexpected tokens: ${tokens.structure}")
+      }
+    }
+  }
+
 }
