@@ -1643,26 +1643,11 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   Seq(
-    // high-surrogate char codes
-    55297
-  ).foreach { ch =>
-    test(s"#3690 high-surrogate with char code $ch") {
-      def tokens = tokenize(
-        s"""|"${ch.toChar}"
-            |""".stripMargin,
-        dialects.Scala213
-      )
-      val exception = intercept[TokenizeException](tokens)
-      val err = "<input>:1: error: invalid unicode surrogate pair"
-      assertEquals(exception.getMessage.substring(0, err.length), err)
-    }
-  }
-
-  Seq(
-    // regular or low-surrogate or char codes
+    // regular or half-surrogate char codes
+    55297,
     56375
   ).foreach { ch =>
-    test(s"#3690 non-high-surrogate with char code $ch") {
+    test(s"#3690 any character with char code $ch") {
       tokenize(
         s"""|"${ch.toChar}"
             |""".stripMargin,
