@@ -1459,7 +1459,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         def tryWithHandler(handler: Term) = Term.TryWithHandler(body, handler, finallyopt)
         def tryInDelims(f: (=> Either[Term, List[Case]]) => Either[Term, List[Case]]): Term = {
           val catchPos = tokenPos
-          f(caseClausesIfAny().toRight(blockWithinDelims()))
+          f(caseClausesIfAny().toRight(blockRaw()))
             .fold(x => tryWithHandler(autoEndPos(catchPos)(x)), tryWithCases)
         }
 
@@ -2070,13 +2070,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def macroSplice(): Term = autoPos(QuotedSpliceContext.within {
     next()
     if (QuotedPatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBraces(pattern())))
-    else Term.SplicedMacroExpr(autoPos(inBraces(blockWithinDelims())))
+    else Term.SplicedMacroExpr(autoPos(inBraces(blockRaw())))
   })
 
   private def macroQuote(): Term = autoPos(QuotedSpliceContext.within {
     next()
     token match {
-      case _: LeftBrace => Term.QuotedMacroExpr(autoPos(inBracesOnOpen(blockWithinDelims())))
+      case _: LeftBrace => Term.QuotedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
       case _: LeftBracket => Term.QuotedMacroType(inBracketsOnOpen(typeBlock()))
       case t => syntaxError("Quotation only works for expressions and types", at = t)
     }
@@ -2139,7 +2139,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val colonPos = tokenPos
       def addPos(term: Term) = autoEndPos(colonPos)(term)
       def tryGetArgAsLambdaBlock(postCheck: => Boolean) = tryGetArgAsLambda().flatMap { arg =>
-        if (postCheck) Some(addPos(Term.Block(arg :: Nil))) else None
+        if (postCheck) Some(addPos(toBlockRaw(arg :: Nil))) else None
       }
       peekToken match {
         case _: Indentation.Indent =>
@@ -2328,11 +2328,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     else orElse
   }
 
-  private def blockWithinDelims(allowRepeated: Boolean = false) = Term
-    .Block(blockStatSeq(allowRepeated = allowRepeated))
+  private def blockRaw(allowRepeated: Boolean = false): Term.Block =
+    toBlockRaw(blockStatSeq(allowRepeated = allowRepeated))
 
   private def blockInDelims(f: (=> Term.Block) => Term, allowRepeated: Boolean = false): Term =
-    autoPos(f(blockWithinDelims(allowRepeated = allowRepeated)))
+    autoPos(f(blockRaw(allowRepeated = allowRepeated)))
 
   private def blockOnIndent(keepBlock: Boolean = false): Term = blockInDelims { x =>
     val term = indentedOnOpen(x)
@@ -3468,13 +3468,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def getStats() = statSeq(templateStat())
     val body: Stat = token match {
-      case _: LeftBrace => autoPos(Term.Block(inBracesOnOpen(getStats())))
-      case _: Indentation.Indent =>
-        val block = autoPos(Term.Block(indentedOnOpen(getStats())))
-        block.stats match {
+      case _: LeftBrace => autoPos(toBlockRaw(inBracesOnOpen(getStats())))
+      case _: Indentation.Indent => autoPosOpt(indentedOnOpen(getStats() match {
           case stat :: Nil => stat
-          case _ => block
-        }
+          case stats => toBlockRaw(stats)
+        }))
       case _ if isDefIntro(tokenPos) => nonLocalDefOrDcl()
       case _ => syntaxError("Extension without extension method", token)
     }
@@ -4043,9 +4041,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
     statSeq(consumeStat) match {
       case Nil => failEmpty()
-      case (stat @ Stat.Quasi(1, _)) :: Nil => Term.Block(List(stat))
+      case (stat @ Stat.Quasi(1, _)) :: Nil => toBlockRaw(List(stat))
       case stat :: Nil => stat
-      case stats if stats.forall(_.isBlockStat) => Term.Block(stats)
+      case stats if stats.forall(_.isBlockStat) => toBlockRaw(stats)
       case stats if stats.forall(_.isTopLevelStat) => failMix(Some("try source\"...\" instead"))
       case _ => failMix(None)
     }
@@ -4300,6 +4298,9 @@ object ScalametaParser {
     body
     while (cond) body
   }
+
+  @inline
+  private def toBlockRaw(stats: List[Stat]): Term.Block = Term.Block(stats)
 
   private def dropOuterBlock(term: Term.Block): Term = term.stats match {
     case (stat: Term) :: Nil => stat
