@@ -705,9 +705,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Term.Name fx
+       |Term.Block fx
        |      // c1
-       |Term.Name gx
+       |Term.Block gx
        |      // c2
        |""".stripMargin
   )
@@ -738,13 +738,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -782,9 +787,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Term.Name fx
+       |Term.Block fx
        |      // c1
-       |Term.Name gx
+       |Term.Block gx
        |      // c2
        |""".stripMargin
   )
@@ -816,13 +821,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -854,13 +864,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -890,13 +905,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    /* c2 */
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    /* c2 */
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -1147,7 +1167,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin,
     """|Defn.Val val b =
        |    1 // comment
-       |Lit.Int 1 // comment
        |""".stripMargin
   )
 
@@ -1177,7 +1196,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin,
     """|Defn.Val val b = // comment1
        |    1 // comment2
-       |Lit.Int 1 // comment2
        |""".stripMargin
   )
 
@@ -1209,7 +1227,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Defn.Val val b =
        |    // comment1
        |    1 // comment2
-       |Lit.Int 1 // comment2
        |""".stripMargin
   )
 
@@ -1307,7 +1324,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Defn.Val val b =
        |    1
        |    // comment
-       |Lit.Int 1
+       |Term.Block 1
        |    // comment
        |""".stripMargin
   )
@@ -1343,7 +1360,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Defn.Val val b = // comment1
        |    1
        |    // comment2
-       |Lit.Int 1
+       |Term.Block 1
        |    // comment2
        |""".stripMargin
   )
@@ -1381,7 +1398,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    // comment1
        |    1
        |    // comment2
-       |Lit.Int 1
+       |Term.Block 1
        |    // comment2
        |""".stripMargin
   )

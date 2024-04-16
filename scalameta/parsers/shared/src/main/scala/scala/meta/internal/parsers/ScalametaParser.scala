@@ -2331,9 +2331,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def blockRaw(allowRepeated: Boolean = false): Term.Block =
     toBlockRaw(blockStatSeq(allowRepeated = allowRepeated))
 
-  private def blockOnIndent(keepBlock: Boolean = false): Term = autoPos {
+  private def blockOnIndent(keepBlock: Boolean = false): Term = autoPosOpt {
     indentedOnOpen(blockStatSeq() match {
-      case (t: Term) :: Nil if !keepBlock => t
+      case (t: Term) :: Nil
+          if !(keepBlock || isPrecededByDetachedComment(tokenPos, t.endTokenPos)) => t
       case stats => toBlockRaw(stats)
     })
   }
@@ -2348,7 +2349,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (isOptional) blockOnOther(allowRepeated) else blockOnBrace(allowRepeated)
     }
 
-  private def blockOnOther(allowRepeated: Boolean = false): Term = autoPos {
+  private def blockOnOther(allowRepeated: Boolean = false): Term = autoPosOpt {
     blockStatSeq(allowRepeated = allowRepeated) match {
       case (term: Term) :: Nil => term
       case stats => toBlockRaw(stats)
@@ -3474,7 +3475,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val body: Stat = token match {
       case _: LeftBrace => blockOnBrace(getStats())
       case _: Indentation.Indent => autoPosOpt(indentedOnOpen(getStats() match {
-          case stat :: Nil => stat
+          case t :: Nil if !isPrecededByDetachedComment(tokenPos, t.endTokenPos) => t
           case stats => toBlockRaw(stats)
         }))
       case _ if isDefIntro(tokenPos) => nonLocalDefOrDcl()

@@ -170,18 +170,20 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |    
          |    /** */
          |""".stripMargin,
-      assertLayout = Some("extension (a: Int) def double = a * 2")
+      """|extension (a: Int) {
+         |  def double = a * 2
+         |}""".stripMargin
     )(Defn.ExtensionGroup(
       Nil,
       List(List(tparam("a", "Int"))),
-      Defn.Def(
+      blk(Defn.Def(
         Nil,
         tname("double"),
         Nil,
         Nil,
         None,
         Term.ApplyInfix(tname("a"), tname("*"), Nil, List(int(2)))
-      )
+      ))
     ))
   }
 
