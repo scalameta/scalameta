@@ -55,21 +55,14 @@ private[meta] case class CharArrayReader private (
     else {
       begCharOffset = endCharOffset
       val (hi, hiEnd) = readUnicodeChar(buf, endCharOffset)
-      val isHiSurrogate = Character.isHighSurrogate(hi)
-      if (isHiSurrogate && hiEnd >= buf.length)
-        readerError("invalid unicode surrogate pair", at = begCharOffset)
-      else if (!isHiSurrogate || ch == '\'' && buf(hiEnd) == '\'' && !wasMultiChar) {
-        ch = hi
-        endCharOffset = hiEnd
-      } else {
+      endCharOffset = hiEnd
+      if (hiEnd < buf.length && Character.isHighSurrogate(hi)) {
         val (lo, loEnd) = readUnicodeChar(buf, hiEnd)
-        if (!Character.isLowSurrogate(lo))
-          readerError("invalid unicode surrogate pair", at = begCharOffset)
-        else {
+        if (Character.isLowSurrogate(lo)) {
           ch = Character.toCodePoint(hi, lo)
           endCharOffset = loEnd
-        }
-      }
+        } else ch = hi
+      } else ch = hi
     }
 
   def nextNonWhitespace = {
