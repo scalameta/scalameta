@@ -92,6 +92,14 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   @inline
   private def isFollowedByNL(index: Int): Boolean = tokens(getStrictNext(index)).is[AtEOLorF]
 
+  @tailrec
+  final def isPrecededByDetachedComment(idx: Int, end: Int): Boolean = idx > end &&
+    (tokens(idx) match {
+      case _: Comment => isPrecededByNL(idx)
+      case _: Whitespace => isPrecededByDetachedComment(idx - 1, end)
+      case _ => false
+    })
+
   @inline
   private def isEndMarkerIdentifier(token: Token) = soft.KwEnd(token)
 

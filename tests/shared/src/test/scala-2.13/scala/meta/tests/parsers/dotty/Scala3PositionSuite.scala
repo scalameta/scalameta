@@ -705,9 +705,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Term.Name fx
+       |Term.Block fx
        |      // c1
-       |Term.Name gx
+       |Term.Block gx
        |      // c2
        |""".stripMargin
   )
@@ -738,13 +738,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -782,9 +787,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Term.Name fx
+       |Term.Block fx
        |      // c1
-       |Term.Name gx
+       |Term.Block gx
        |      // c2
        |""".stripMargin
   )
@@ -816,13 +821,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -854,13 +864,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    // c2
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -890,13 +905,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    /* c2 */
-       |Term.If if cond then
+       |Term.Block if cond then
        |      fx
        |      // c1
        |    else
        |      gx
        |    /* c2 */
-       |Term.Name fx
+       |Term.If if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |Term.Block fx
        |      // c1
        |""".stripMargin
   )
@@ -1125,6 +1145,284 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Param baz
        |Term.Apply println(baz)
        |Term.ArgClause (baz)
+       |""".stripMargin
+  )
+
+  // #3689 1
+  checkPositions[Term](
+    """|{
+       |  val a = 1 // comment
+       |}
+       |""".stripMargin,
+    """|Defn.Val val a = 1
+       |""".stripMargin
+  )
+
+  // #3689 2
+  checkPositions[Term](
+    """|{
+       |  val b =
+       |    1 // comment
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b =
+       |    1 // comment
+       |""".stripMargin
+  )
+
+  // #3689 2.1
+  checkPositions[Term](
+    """|{
+       |  val b = {
+       |    1 // comment
+       |  }
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = {
+       |    1 // comment
+       |  }
+       |Term.Block {
+       |    1 // comment
+       |  }
+       |""".stripMargin
+  )
+
+  // #3689 3
+  checkPositions[Term](
+    """|{
+       |  val b = // comment1
+       |    1 // comment2
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = // comment1
+       |    1 // comment2
+       |""".stripMargin
+  )
+
+  // #3689 3.1
+  checkPositions[Term](
+    """|{
+       |  val b = /* comment1 */ {
+       |    1 // comment2
+       |  }
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = /* comment1 */ {
+       |    1 // comment2
+       |  }
+       |Term.Block {
+       |    1 // comment2
+       |  }
+       |""".stripMargin
+  )
+
+  // #3689 4
+  checkPositions[Term](
+    """|{
+       |  val b =
+       |    // comment1
+       |    1 // comment2
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b =
+       |    // comment1
+       |    1 // comment2
+       |""".stripMargin
+  )
+
+  // #3689 4.1
+  checkPositions[Term](
+    """|{
+       |  val b = {
+       |    // comment1
+       |    1 // comment2
+       |  }
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = {
+       |    // comment1
+       |    1 // comment2
+       |  }
+       |Term.Block {
+       |    // comment1
+       |    1 // comment2
+       |  }
+       |""".stripMargin
+  )
+
+  // #3689 5
+  checkPositions[Term](
+    """|{
+       |  val b = // comment
+       |    1
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = // comment
+       |    1
+       |""".stripMargin
+  )
+
+  // #3689 5.1
+  checkPositions[Term](
+    """|{
+       |  val b = /* comment */ {
+       |    1
+       |  }
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = /* comment */ {
+       |    1
+       |  }
+       |Term.Block {
+       |    1
+       |  }
+       |""".stripMargin
+  )
+
+  // #3689 6
+  checkPositions[Term](
+    """|{
+       |  val b =
+       |    // comment
+       |    1
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b =
+       |    // comment
+       |    1
+       |""".stripMargin
+  )
+
+  // #3689 6.1
+  checkPositions[Term](
+    """|{
+       |  val b = {
+       |    // comment
+       |    1
+       |  }
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = {
+       |    // comment
+       |    1
+       |  }
+       |Term.Block {
+       |    // comment
+       |    1
+       |  }
+       |""".stripMargin
+  )
+
+  // #3689 7
+  checkPositions[Term](
+    """|{
+       |  val b =
+       |    1
+       |    // comment
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b =
+       |    1
+       |    // comment
+       |Term.Block 1
+       |    // comment
+       |""".stripMargin
+  )
+
+  // #3689 7.1
+  checkPositions[Term](
+    """|{
+       |  val b = {
+       |    1
+       |    // comment
+       |  }
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = {
+       |    1
+       |    // comment
+       |  }
+       |Term.Block {
+       |    1
+       |    // comment
+       |  }
+       |""".stripMargin
+  )
+
+  // #3689 8
+  checkPositions[Term](
+    """|{
+       |  val b = // comment1
+       |    1
+       |    // comment2
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = // comment1
+       |    1
+       |    // comment2
+       |Term.Block 1
+       |    // comment2
+       |""".stripMargin
+  )
+
+  // #3689 8.1
+  checkPositions[Term](
+    """|{
+       |  val b = /* comment1 */ {
+       |    1
+       |    // comment2
+       |  }
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = /* comment1 */ {
+       |    1
+       |    // comment2
+       |  }
+       |Term.Block {
+       |    1
+       |    // comment2
+       |  }
+       |""".stripMargin
+  )
+
+  // #3689 9
+  checkPositions[Term](
+    """|{
+       |  val b =
+       |    // comment1
+       |    1
+       |    // comment2
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b =
+       |    // comment1
+       |    1
+       |    // comment2
+       |Term.Block 1
+       |    // comment2
+       |""".stripMargin
+  )
+
+  // #3689 9.1
+  checkPositions[Term](
+    """|{
+       |  val b = {
+       |    // comment1
+       |    1
+       |    // comment2
+       |  }
+       |}
+       |""".stripMargin,
+    """|Defn.Val val b = {
+       |    // comment1
+       |    1
+       |    // comment2
+       |  }
+       |Term.Block {
+       |    // comment1
+       |    1
+       |    // comment2
+       |  }
        |""".stripMargin
   )
 
