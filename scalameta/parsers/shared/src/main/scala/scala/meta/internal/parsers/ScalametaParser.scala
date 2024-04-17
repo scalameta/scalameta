@@ -2331,25 +2331,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def blockRaw(allowRepeated: Boolean = false): Term.Block =
     toBlockRaw(blockStatSeq(allowRepeated = allowRepeated))
 
-  private def blockInDelims(f: (=> Term.Block) => Term, allowRepeated: Boolean = false): Term =
-    autoPos(f(blockRaw(allowRepeated = allowRepeated)))
-
-  private def blockOnIndent(keepBlock: Boolean = false): Term = blockInDelims { x =>
-    val term = indentedOnOpen(x)
-    if (keepBlock) term else dropOuterBlock(term)
+  private def blockOnIndent(keepBlock: Boolean = false): Term = autoPos {
+    indentedOnOpen(blockStatSeq() match {
+      case (t: Term) :: Nil if !keepBlock => t
+      case stats => toBlockRaw(stats)
+    })
   }
   private def blockExprOnIndent(keepBlock: Boolean = false): Term =
     blockExprPartial[Indentation.Outdent](blockOnIndent(keepBlock))
 
+  private def blockOnBrace(fstats: => List[Stat]): Term = autoPos(toBlockRaw(inBracesOnOpen(fstats)))
   private def blockOnBrace(allowRepeated: Boolean = false): Term =
-    blockInDelims(inBracesOnOpen, allowRepeated)
+    blockOnBrace(blockStatSeq(allowRepeated = allowRepeated))
   private def blockExprOnBrace(allowRepeated: Boolean = false, isOptional: Boolean = false): Term =
     blockExprPartial[RightBrace] {
       if (isOptional) blockOnOther(allowRepeated) else blockOnBrace(allowRepeated)
     }
 
-  private def blockOnOther(allowRepeated: Boolean = false): Term =
-    blockInDelims(dropOuterBlock(_), allowRepeated)
+  private def blockOnOther(allowRepeated: Boolean = false): Term = autoPos {
+    blockStatSeq(allowRepeated = allowRepeated) match {
+      case (term: Term) :: Nil => term
+      case stats => toBlockRaw(stats)
+    }
+  }
 
   def caseClause(forceSingleExpr: Boolean = false): Case = atPos(prevTokenPos, EndPosPreOutdent) {
     if (token.isNot[KwCase]) {
@@ -3468,7 +3472,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def getStats() = statSeq(templateStat())
     val body: Stat = token match {
-      case _: LeftBrace => autoPos(toBlockRaw(inBracesOnOpen(getStats())))
+      case _: LeftBrace => blockOnBrace(getStats())
       case _: Indentation.Indent => autoPosOpt(indentedOnOpen(getStats() match {
           case stat :: Nil => stat
           case stats => toBlockRaw(stats)
@@ -4301,11 +4305,6 @@ object ScalametaParser {
 
   @inline
   private def toBlockRaw(stats: List[Stat]): Term.Block = Term.Block(stats)
-
-  private def dropOuterBlock(term: Term.Block): Term = term.stats match {
-    case (stat: Term) :: Nil => stat
-    case _ => term
-  }
 
   private def maybeAnonymousFunction(t: Term): Term = {
     val ok = PlaceholderChecks.hasPlaceholder(t, includeArg = false)
