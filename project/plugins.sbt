@@ -34,4 +34,4 @@ addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.17")
 
 addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.2.0")
 
-addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.1.3")
+addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.1.4")
