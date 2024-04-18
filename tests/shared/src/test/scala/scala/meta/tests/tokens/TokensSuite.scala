@@ -55,19 +55,17 @@ class TokensApiSuite extends FunSuite {
     val tokens = tokenize("((1 + 1) == 2)").drop(1).dropRight(1)
 
     assertEquals(tokens.length, 13)
-    assert(tokens.segmentLength(_.is[LeftParen]) == 2)
-    assert(tokens.segmentLengthRight(_.is[RightParen]) == 1)
-    assert(tokens.take(2).syntax == "((")
-    assert(tokens.slice(11, 13).syntax == "2)")
-    assert(tokens.takeRight(2).syntax == "2)")
-    assert(tokens.drop(11).syntax == "2)")
-    assert(tokens.dropRight(11).syntax == "((")
-    assert(tokens.takeWhile(_.is[LeftParen]).syntax == "((")
-    assert(tokens.segmentLengthRight(_.is[RightParen]) == 1)
-    assert(tokens.takeRightWhile(_.is[RightParen]).syntax == ")")
-    assert(tokens.segmentLength(_.is[LeftParen]) == 2)
-    assert(tokens.dropWhile(_.is[LeftParen]).syntax == "1 + 1) == 2)")
-    assert(tokens.dropRightWhile(_.is[RightParen]).syntax == "((1 + 1) == 2")
+    assertEquals(tokens.segmentLength(_.is[LeftParen]), 2)
+    assertEquals(tokens.segmentLengthRight(_.is[RightParen]), 1)
+    assertEquals(tokens.take(2).syntax, "((")
+    assertEquals(tokens.slice(11, 13).syntax, "2)")
+    assertEquals(tokens.takeRight(2).syntax, "2)")
+    assertEquals(tokens.drop(11).syntax, "2)")
+    assertEquals(tokens.dropRight(11).syntax, "((")
+    assertEquals(tokens.takeWhile(_.is[LeftParen]).syntax, "((")
+    assertEquals(tokens.takeRightWhile(_.is[RightParen]).syntax, ")")
+    assertEquals(tokens.dropWhile(_.is[LeftParen]).syntax, "1 + 1) == 2)")
+    assertEquals(tokens.dropRightWhile(_.is[RightParen]).syntax, "((1 + 1) == 2")
     assert {
       val (front, back) = tokens.splitAt(8)
       front.syntax == "((1 + 1)" && back.syntax == " == 2)"
@@ -87,19 +85,19 @@ class TokensApiSuite extends FunSuite {
 
     val slice = tokens.slice(0, 5)
     assertEquals(slice.length, 5)
-    for (i <- 0 until 5) assert(slice(i) == tokens(i))
+    for (i <- 0 until 5) assertEquals(slice(i), tokens(i))
   }
 
   test("Tokens.slice - 'from' == 'until'") {
     val tokens = tokenize("val foo = 1")
 
-    assert(tokens.slice(1, 1).length == 0)
+    assertEquals(tokens.slice(1, 1).length, 0)
   }
 
   test("Tokens.slice - 'from' > 'until'") {
     val tokens = tokenize("val foo = 1")
 
-    assert(tokens.slice(5, 1).length == 0)
+    assertEquals(tokens.slice(5, 1).length, 0)
   }
 
   test("Tokens.slice - 'from' < 0") {
@@ -114,13 +112,13 @@ class TokensApiSuite extends FunSuite {
   test("Tokens.slice - 'from' > 'length'") {
     val tokens = tokenize("1 + 2")
 
-    assert(tokens.slice(100, 101).length == 0)
+    assertEquals(tokens.slice(100, 101).length, 0)
   }
 
   test("Tokens.slice - 'until' > 'length'") {
     val tokens = tokenize("val foo = 0")
 
-    assert(tokens.slice(0, 100) == tokens)
+    assertEquals(tokens.slice(0, 100), tokens)
   }
 
   test("Tokens.slice - multiple calls") {
@@ -129,8 +127,8 @@ class TokensApiSuite extends FunSuite {
     val slice = tokens.slice(0, 18).slice(5, 15).slice(6, 8)
 
     assertEquals(slice.length, 2)
-    assert(slice(0) == tokens(11))
-    assert(slice(1) == tokens(12))
+    assertEquals(slice(0), tokens(11))
+    assertEquals(slice(1), tokens(12))
   }
 
   test("Tokens.span - predicate is always true") {
