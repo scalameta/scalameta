@@ -2289,7 +2289,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     inParensOnOpenOr(token match {
       case t @ Ellipsis(2) => (ellipsis[Term](t) :: Nil).reduceWith(Term.ArgClause(_))
       case x =>
-        val using = x.text == soft.KwUsing.name && !CantStartStat(peekToken)
+        val using = x.text == soft.KwUsing.name && mightStartStat(peekToken, closeDelimOK = false)
         val mod = if (using) Some(atCurPosNext(Mod.Using())) else None
         argumentExprsInParens(location).reduceWith(Term.ArgClause(_, mod))
     })(Term.ArgClause(Nil))
@@ -2422,7 +2422,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def enumerators(): List[Enumerator] = listBy[Enumerator] { enums =>
     enumeratorBuf(enums, isFirst = true)
-    while (StatSep(token) && nextIf(!peekToken.isAny[Indentation.Outdent, KwDo]))
+    while (StatSep(token) && nextIf(!peekToken.isAny[Indentation.Outdent, KwDo, CloseDelim]))
       enumeratorBuf(enums, isFirst = false)
   }
 

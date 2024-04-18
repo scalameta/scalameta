@@ -194,17 +194,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def apply(token: Token) = unapply(token)
   }
 
-  object CantStartStat {
-    def unapply(token: Token): Boolean = token match {
-      case _: KwCatch | _: KwElse | _: KwExtends | _: KwFinally | _: KwForsome | _: KwMatch |
-          _: KwWith | _: KwYield | _: RightParen | _: LeftBracket | _: RightBracket |
-          _: RightBrace | _: Comma | _: Colon | _: Dot | _: Equals | _: Semicolon | _: Hash |
-          _: RightArrow | _: LeftArrow | _: Subtype | _: Supertype | _: Viewbound | _: AtEOLorF =>
-        true
-      case _ => false
-    }
-
-    def apply(token: Token) = unapply(token)
+  def mightStartStat(token: Token, closeDelimOK: Boolean): Boolean = token match {
+    case _: KwCatch | _: KwElse | _: KwExtends | _: KwFinally | _: KwForsome | _: KwMatch |
+        _: KwWith | _: KwYield | _: LeftBracket | _: Comma | _: Colon | _: Dot | _: Equals |
+        _: Semicolon | _: Hash | _: RightArrow | _: LeftArrow | _: Subtype | _: Supertype |
+        _: Viewbound | _: AtEOLorF => false
+    case _: CloseDelim => closeDelimOK
+    case _ => true
   }
 
   private def canEndStat(token: Token): Boolean = token match {
@@ -652,7 +648,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionParen :: RegionForMaybeParens :: _ => Some(rs)
           case _ => None
         }
-        val ok = lastNewlinePos >= 0 && !CantStartStat(next) &&
+        val ok = lastNewlinePos >= 0 && mightStartStat(next, closeDelimOK = true) &&
           (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker())
         if (ok) strip(regions).map(rs => Right(lastWhitespaceToken(rs, lineIndent))) else None
       }
