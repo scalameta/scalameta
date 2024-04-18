@@ -56,7 +56,12 @@ class TokensApiSuite extends FunSuite {
 
     assertEquals(tokens.length, 13)
     assertEquals(tokens.segmentLength(_.is[LeftParen]), 2)
+    assertEquals(tokens.segmentLength(_.is[BOF]), 0)
+    assertEquals(tokens.segmentLength(!_.is[BOF]), 13)
     assertEquals(tokens.segmentLengthRight(_.is[RightParen]), 1)
+    assertEquals(tokens.segmentLengthRight(_.is[EOF]), 0)
+    assertEquals(tokens.segmentLengthRight(!_.is[EOF]), 13)
+    assertEquals(tokens.drop(1).segmentLengthRight(!_.is[LeftParen]), 11)
     assertEquals(tokens.take(2).syntax, "((")
     assertEquals(tokens.slice(11, 13).syntax, "2)")
     assertEquals(tokens.takeRight(2).syntax, "2)")
