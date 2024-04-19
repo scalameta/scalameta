@@ -16,41 +16,23 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   import ScannerTokens._
 
-  @tailrec
-  final def getPrevIndex(index: Int): Int =
-    if (index <= 0) 0
-    else {
-      val prev = index - 1
-      if (tokens(prev).is[Trivia]) getPrevIndex(prev) else prev
-    }
+  @inline
+  final def skipBefore(index: Int, p: Token => Boolean): Int =
+    if (index <= 0) 0 else tokens.rskipIf(p, index - 1, 0)
+  @inline
+  final def skipAfter(index: Int, p: Token => Boolean): Int = {
+    val max = tokens.length - 1
+    if (index < max) tokens.skipIf(p, index + 1, max) else max
+  }
 
-  def getPrevToken(index: Int): Token = tokens(getPrevIndex(index))
+  final def getPrevIndex(index: Int): Int = skipBefore(index, _.is[Trivia])
+  final def getNextIndex(index: Int): Int = skipAfter(index, _.is[Trivia])
 
-  @tailrec
-  final def getNextIndex(index: Int): Int =
-    if (index >= tokens.length - 1) tokens.length - 1
-    else {
-      val next = index + 1
-      if (tokens(next).is[Trivia]) getNextIndex(next) else next
-    }
+  final def getPrevToken(index: Int): Token = tokens(getPrevIndex(index))
+  final def getNextToken(index: Int): Token = tokens(getNextIndex(index))
 
-  def getNextToken(index: Int): Token = tokens(getNextIndex(index))
-
-  @tailrec
-  final def getStrictPrev(index: Int): Int =
-    if (index <= 0) 0
-    else {
-      val prev = index - 1
-      if (tokens(prev).is[HTrivia]) getStrictPrev(prev) else prev
-    }
-
-  @tailrec
-  final def getStrictNext(index: Int): Int =
-    if (index >= tokens.length - 1) tokens.length - 1
-    else {
-      val next = index + 1
-      if (tokens(next).is[HTrivia]) getStrictNext(next) else next
-    }
+  final def getStrictPrev(index: Int): Int = skipBefore(index, _.is[HTrivia])
+  final def getStrictNext(index: Int): Int = skipAfter(index, _.is[HTrivia])
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
