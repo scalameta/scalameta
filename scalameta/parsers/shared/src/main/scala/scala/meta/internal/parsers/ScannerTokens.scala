@@ -41,7 +41,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     if (index <= 0) 0
     else {
       val prev = index - 1
-      if (tokens(prev).isAny[HSpace, Comment]) getStrictPrev(prev) else prev
+      if (tokens(prev).is[HTrivia]) getStrictPrev(prev) else prev
     }
 
   @tailrec
@@ -49,7 +49,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     if (index >= tokens.length - 1) tokens.length - 1
     else {
       val next = index + 1
-      if (tokens(next).isAny[HSpace, Comment]) getStrictNext(next) else next
+      if (tokens(next).is[HTrivia]) getStrictNext(next) else next
     }
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
