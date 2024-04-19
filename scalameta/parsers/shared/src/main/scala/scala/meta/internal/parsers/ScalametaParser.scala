@@ -343,7 +343,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (nonSpaceEnd < startPos) return (startPos, if (endPos == startPos) endPos else endExcl)
       val start = tokens.skipIf(_.is[Trivia], startPos, endExcl)
       if (start > endPos) return (startPos, nonSpaceEnd + 1)
-      (start, nonSpaceEnd + 1)
+      if (!tokens(nonSpaceEnd).is[Comment]) return (start, nonSpaceEnd + 1)
+      val end = tokens.rskipIf(_.is[HTrivia], nonSpaceEnd - 1, start)
+      (start, (if (tokens(end).is[AtEOLorF]) nonSpaceEnd else end) + 1)
     }
     val (start, endExcl) = getPosRange()
     body.withOrigin(Origin.Parsed(originSource, start, endExcl))
