@@ -55,23 +55,48 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
 
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 
-  override def segmentLength(p: Token => Boolean, from: Int = 0): Int =
-    if (from >= length) 0
+  override def segmentLength(p: Token => Boolean, from: Int = 0): Int = skipIf(p, from) - from
+
+  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int = {
+    val beg = length - from - 1
+    beg - rskipIf(p, beg)
+  }
+
+  @inline
+  def skipIf(p: Token => Boolean, rangeBeg: Int): Int = skipIf(p, rangeBeg, length)
+  @inline
+  def rskipIf(p: Token => Boolean, rangeBeg: Int): Int = rskipIf(p, rangeBeg, -1)
+
+  /**
+   * Skip tokens satisfying a given predicate.
+   * @param rangeBeg
+   *   first index to check
+   * @param rangeEnd
+   *   first index not to check
+   */
+  def skipIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int =
+    if (rangeBeg < 0 || rangeBeg >= rangeEnd) rangeBeg
     else {
-      val lo = start + from
-      val hi = end
-      var i = lo
-      while (i < hi && p(tokens(i))) i += 1
-      i - lo
+      val stop = start + rangeEnd.min(length)
+      var i = start + rangeBeg
+      while (i < stop && p(tokens(i))) i += 1
+      i - start
     }
 
-  def segmentLengthRight(p: Token => Boolean, from: Int = 0): Int =
-    if (from >= length) 0
+  /**
+   * Skip tokens satisfying a given predicate, iterating in reverse.
+   * @param rangeBeg
+   *   first index to check
+   * @param rangeEnd
+   *   first index not to check
+   */
+  def rskipIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int =
+    if (rangeBeg >= length || rangeBeg <= rangeEnd) rangeBeg
     else {
-      val hi = end - from - 1
-      var i = hi
-      while (i >= start && p(tokens(i))) i -= 1
-      hi - i
+      val stop = start + rangeEnd.max(-1)
+      var i = start + rangeBeg
+      while (i > stop && p(tokens(i))) i -= 1
+      i - start
     }
 
   override def take(n: Int): Tokens = slice(0, n)
