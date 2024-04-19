@@ -336,15 +336,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private val originSource = new Origin.ParsedSource(input)
 
   def atPosWithBody[T <: Tree](startPos: Int, body: T, endPos: Int): T = {
-    @tailrec
-    def getStart(pos: Int): Int =
-      if (pos > endPos) startPos else if (tokens(pos).is[Trivia]) getStart(pos + 1) else pos
-    @tailrec
-    def getEnd(pos: Int): Int =
-      if (!tokens(pos).is[Whitespace]) pos else if (pos == startPos) endPos else getEnd(pos - 1)
-    val start = getStart(startPos)
-    val end = if (endPos < startPos) startPos - 1 else getEnd(endPos)
-    val endExcl = if (start == end && tokens(start).is[Trivia]) end else end + 1
+    def getPosRange(): (Int, Int) = { // uses "return"
+      if (endPos < startPos) return (startPos, startPos)
+      val endExcl = endPos + 1
+      val nonSpaceEnd = tokens.rskipIf(_.is[Whitespace], endPos, startPos - 1)
+      if (nonSpaceEnd < startPos) return (startPos, if (endPos == startPos) endPos else endExcl)
+      val start = tokens.skipIf(_.is[Trivia], startPos, endExcl)
+      if (start > endPos) return (startPos, nonSpaceEnd + 1)
+      (start, nonSpaceEnd + 1)
+    }
+    val (start, endExcl) = getPosRange()
     body.withOrigin(Origin.Parsed(originSource, start, endExcl))
   }
 
