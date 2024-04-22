@@ -22,15 +22,15 @@ addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "1.3.2")
 
 addSbtPlugin("org.portable-scala" % "sbt-scala-native-crossproject" % "1.3.2")
 
-addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.12.0")
+addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.16.0")
 
 addSbtPlugin("org.scala-debugger" % "sbt-jdi-tools" % "1.1.1")
 
-addSbtPlugin("org.scalameta" % "sbt-munit" % "0.7.29")
+addSbtPlugin("org.scalameta" % "sbt-munit" % "1.0.0-M12")
 
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.5.2")
 
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.4.17")
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.5.1")
 
 addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.2.0")
 
