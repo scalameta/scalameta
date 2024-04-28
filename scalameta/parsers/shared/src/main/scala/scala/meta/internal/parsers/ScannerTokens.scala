@@ -528,9 +528,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ => sepRegions
         })
       case _: KwFor => currRef(RegionFor(next) :: sepRegions)
-      case _: KwWhile if dialect.allowSignificantIndentation =>
-        currRef(RegionWhile(next) :: sepRegions)
-      case _: KwIf if dialect.allowSignificantIndentation =>
+      case _: KwWhile if dialect.allowQuietSyntax => currRef(RegionWhile(next) :: sepRegions)
+      case _: KwIf if dialect.allowQuietSyntax =>
         currRef(dropRegionLine(sepRegions) match {
           case rs @ (_: RegionCaseExpr | _: RegionFor) :: _ => rs
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
@@ -541,7 +540,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case (_: RegionIf) :: rs => currRef(RegionThen :: rs)
           case _ => currRef(RegionThen :: sepRegions)
         }
-      case _: KwElse if dialect.allowSignificantIndentation =>
+      case _: KwElse if dialect.allowQuietSyntax =>
         dropRegionLine(sepRegions) match {
           case (r: RegionIndent) :: RegionThen :: rs => outdentThenCurrRef(r, rs)
           case (_: RegionControl) :: rs => currRef(rs)
@@ -588,7 +587,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               case _: Dot | _: KwMatch => rc.asCond() :: rs
               // might continue cond or start body
               case _: Ident | _: LeftBrace | _: LeftBracket | _: LeftParen | _: Underscore
-                  if dialect.allowSignificantIndentation => rc.asCondOrBody() :: rs
+                  if dialect.allowQuietSyntax => rc.asCondOrBody() :: rs
               case _ => rc.asBody().fold(rs)(_ :: rs)
             }
           case RegionForMaybeParens if prev.is[RightParen] =>

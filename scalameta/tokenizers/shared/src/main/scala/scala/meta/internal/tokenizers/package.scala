@@ -70,7 +70,7 @@ package object tokenizers {
       dialectKeywords += "given"
       dialectKeywords += "?=>"
     }
-    if (dialect.allowSignificantIndentation) dialectKeywords += "then"
+    if (dialect.allowQuietSyntax) dialectKeywords += "then"
 
     baseKeywords ++ dialectKeywords.result()
   }

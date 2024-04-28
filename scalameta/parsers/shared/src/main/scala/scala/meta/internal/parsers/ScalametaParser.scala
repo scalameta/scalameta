@@ -1414,7 +1414,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def condExprInParens[T <: Token: ClassTag]: Term =
-    if (dialect.allowSignificantIndentation) {
+    if (dialect.allowQuietSyntax) {
       val startPos = tokenPos
       val simpleExpr = condExpr()
       tryParse {
@@ -1496,7 +1496,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           if (acceptOpt[LeftBrace]) inBracesAfterOpen(enumerators())
           else if (token.is[LeftParen]) {
             def parseInParens() = inParensOnOpen(enumerators())
-            if (dialect.allowSignificantIndentation)
+            if (dialect.allowQuietSyntax)
               // Dotty retry in case of `for (a,b) <- list1.zip(list2) yield (a, b)`
               tryParse(Try(parseInParens()).toOption).getOrElse(enumerators())
             else parseInParens()

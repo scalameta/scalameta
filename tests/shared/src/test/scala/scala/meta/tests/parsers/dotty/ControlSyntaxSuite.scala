@@ -3692,10 +3692,23 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |    openDoor()
                   |}
                   |""".stripMargin
-    val error = """|<input>:3: error: `then` expected but `else` found
-                   |  else
-                   |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|def demo() = {
+                    |  if (true) greet() else sayGoodbye()
+                    |  openDoor()
+                    |}""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("demo"),
+      Nil,
+      List(Nil),
+      None,
+      blk(
+        Term
+          .If(lit(true), Term.Apply(tname("greet"), Nil), Term.Apply(tname("sayGoodbye"), Nil), Nil),
+        Term.Apply(tname("openDoor"), Nil)
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3941 no significant indentation with quiet syntax: if-then 2") {
@@ -3709,10 +3722,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |    openDoor()
                   |}
                   |""".stripMargin
-    val error = """|<input>:5: error: `;` expected but `else` found
-                   |  else
-                   |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|def demo() = {
+                    |  if (a + b == c + d) greet() else sayGoodbye()
+                    |  openDoor()
+                    |}""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("demo"),
+      Nil,
+      List(Nil),
+      None,
+      blk(
+        Term.If(
+          Term.ApplyInfix(
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+            tname("=="),
+            Nil,
+            List(Term.ApplyInfix(tname("c"), tname("+"), Nil, List(tname("d"))))
+          ),
+          Term.Apply(tname("greet"), Nil),
+          Term.Apply(tname("sayGoodbye"), Nil),
+          Nil
+        ),
+        Term.Apply(tname("openDoor"), Nil)
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3941 no significant indentation with quiet syntax: while-do 1") {
@@ -3751,10 +3786,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |    openDoor()
                   |}
                   |""".stripMargin
-    val error = """|<input>:4: error: do {...} while (...) syntax is no longer supported
-                   |  do
-                   |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|def demo() = {
+                    |  while (a + b == c + d) sayGoodbye()
+                    |  openDoor()
+                    |}""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("demo"),
+      Nil,
+      List(Nil),
+      None,
+      blk(
+        Term.While(
+          Term.ApplyInfix(
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+            tname("=="),
+            Nil,
+            List(Term.ApplyInfix(tname("c"), tname("+"), Nil, List(tname("d"))))
+          ),
+          Term.Apply(tname("sayGoodbye"), Nil)
+        ),
+        Term.Apply(tname("openDoor"), Nil)
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
