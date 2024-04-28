@@ -102,7 +102,7 @@ trait LegacyTokenData {
       case ENUM if !dialect.allowEnums =>
       case GIVEN if !dialect.allowGivenUsing =>
       case EXPORT if !dialect.allowExportClause =>
-      case THEN if !dialect.allowSignificantIndentation =>
+      case THEN if !dialect.allowQuietSyntax =>
       case TYPELAMBDAARROW if !dialect.allowTypeLambdas =>
       case CTXARROW if !dialect.allowGivenUsing =>
       case x =>

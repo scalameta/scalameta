@@ -3683,4 +3683,133 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("scalafmt #3941 no significant indentation with quiet syntax: if-then 1") {
+    implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code = """|def demo() = {
+                  |  if true then greet()
+                  |  else
+                  |    sayGoodbye()
+                  |    openDoor()
+                  |}
+                  |""".stripMargin
+    val layout = """|def demo() = {
+                    |  if (true) greet() else sayGoodbye()
+                    |  openDoor()
+                    |}""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("demo"),
+      Nil,
+      List(Nil),
+      None,
+      blk(
+        Term
+          .If(lit(true), Term.Apply(tname("greet"), Nil), Term.Apply(tname("sayGoodbye"), Nil), Nil),
+        Term.Apply(tname("openDoor"), Nil)
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3941 no significant indentation with quiet syntax: if-then 2") {
+    implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code = """|def demo() = {
+                  |  if (a + b)
+                  |    == (c + d)
+                  |  then greet()
+                  |  else
+                  |    sayGoodbye()
+                  |    openDoor()
+                  |}
+                  |""".stripMargin
+    val layout = """|def demo() = {
+                    |  if (a + b == c + d) greet() else sayGoodbye()
+                    |  openDoor()
+                    |}""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("demo"),
+      Nil,
+      List(Nil),
+      None,
+      blk(
+        Term.If(
+          Term.ApplyInfix(
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+            tname("=="),
+            Nil,
+            List(Term.ApplyInfix(tname("c"), tname("+"), Nil, List(tname("d"))))
+          ),
+          Term.Apply(tname("greet"), Nil),
+          Term.Apply(tname("sayGoodbye"), Nil),
+          Nil
+        ),
+        Term.Apply(tname("openDoor"), Nil)
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3941 no significant indentation with quiet syntax: while-do 1") {
+    implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code = """|def demo() = {
+                  |  while true do
+                  |    sayGoodbye()
+                  |    openDoor()
+                  |}
+                  |""".stripMargin
+    val layout = """|def demo() = {
+                    |  while (true) sayGoodbye()
+                    |  openDoor()
+                    |}""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("demo"),
+      Nil,
+      List(Nil),
+      None,
+      blk(
+        Term.While(lit(true), Term.Apply(tname("sayGoodbye"), Nil)),
+        Term.Apply(tname("openDoor"), Nil)
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scalafmt #3941 no significant indentation with quiet syntax: while-do 2") {
+    implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code = """|def demo() = {
+                  |  while (a + b)
+                  |    == (c + d)
+                  |  do
+                  |    sayGoodbye()
+                  |    openDoor()
+                  |}
+                  |""".stripMargin
+    val layout = """|def demo() = {
+                    |  while (a + b == c + d) sayGoodbye()
+                    |  openDoor()
+                    |}""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("demo"),
+      Nil,
+      List(Nil),
+      None,
+      blk(
+        Term.While(
+          Term.ApplyInfix(
+            Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+            tname("=="),
+            Nil,
+            List(Term.ApplyInfix(tname("c"), tname("+"), Nil, List(tname("d"))))
+          ),
+          Term.Apply(tname("sayGoodbye"), Nil)
+        ),
+        Term.Apply(tname("openDoor"), Nil)
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }

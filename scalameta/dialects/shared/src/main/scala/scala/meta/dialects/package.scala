@@ -95,7 +95,7 @@ package object dialects {
     .withAllowAsForImportRename(true).withAllowStarWildcardImport(true)
     .withAllowProcedureSyntax(false).withAllowDoWhile(false).withAllowStarAsTypePlaceholder(true)
     .withUseInfixTypePrecedence(true).withAllowInfixOperatorAfterNL(true)
-    .withAllowBinaryLiterals(false)
+    .withAllowBinaryLiterals(false).withAllowQuietSyntax(true)
 
   implicit val Scala31: Dialect = Scala30.withAllowErasedDefs(true)
 
