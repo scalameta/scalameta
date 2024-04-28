@@ -158,6 +158,8 @@ final class Dialect private[meta] (
      * It wasn't available in Scala 3.0 and got introduced later.
      */
     val allowFewerBraces: Boolean,
+    // https://docs.scala-lang.org/scala3/reference/other-new-features/control-syntax.html
+    val allowQuietSyntax: Boolean,
     // Are binary literals allowed? SIP-42.
     val allowBinaryLiterals: Boolean
 ) extends Product with Serializable {
@@ -253,6 +255,7 @@ final class Dialect private[meta] (
     allowInfixOperatorAfterNL = false,
     allowParamClauseInterleaving = false,
     allowFewerBraces = false,
+    allowQuietSyntax = false,
     allowBinaryLiterals = false
     // NOTE(olafur): declare the default value for new fields above this comment.
   )
@@ -385,6 +388,8 @@ final class Dialect private[meta] (
 
   def withAllowFewerBraces(newValue: Boolean): Dialect = privateCopy(allowFewerBraces = newValue)
 
+  def withAllowQuietSyntax(newValue: Boolean): Dialect = privateCopy(allowQuietSyntax = newValue)
+
   def withAllowBinaryLiterals(newValue: Boolean): Dialect =
     privateCopy(allowBinaryLiterals = newValue)
 
@@ -452,6 +457,7 @@ final class Dialect private[meta] (
       allowInfixOperatorAfterNL: Boolean = this.allowInfixOperatorAfterNL,
       allowParamClauseInterleaving: Boolean = this.allowParamClauseInterleaving,
       allowFewerBraces: Boolean = this.allowFewerBraces,
+      allowQuietSyntax: Boolean = this.allowQuietSyntax,
       allowBinaryLiterals: Boolean = this.allowBinaryLiterals
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
@@ -514,6 +520,7 @@ final class Dialect private[meta] (
       allowInfixOperatorAfterNL = allowInfixOperatorAfterNL,
       allowParamClauseInterleaving = allowParamClauseInterleaving,
       allowFewerBraces = allowFewerBraces,
+      allowQuietSyntax = allowQuietSyntax,
       allowBinaryLiterals = allowBinaryLiterals
     )
     if (equivalent) return this // RETURN!
@@ -578,6 +585,7 @@ final class Dialect private[meta] (
       allowInfixOperatorAfterNL = allowInfixOperatorAfterNL,
       allowParamClauseInterleaving = allowParamClauseInterleaving,
       allowFewerBraces = allowFewerBraces,
+      allowQuietSyntax = allowQuietSyntax,
       allowBinaryLiterals = allowBinaryLiterals,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
@@ -665,6 +673,7 @@ final class Dialect private[meta] (
       allowInfixOperatorAfterNL: Boolean,
       allowParamClauseInterleaving: Boolean,
       allowFewerBraces: Boolean,
+      allowQuietSyntax: Boolean,
       allowBinaryLiterals: Boolean
   ): Boolean =
     // do not include deprecated values in this comparison
@@ -716,6 +725,7 @@ final class Dialect private[meta] (
       this.useInfixTypePrecedence == useInfixTypePrecedence &&
       this.allowInfixOperatorAfterNL == allowInfixOperatorAfterNL &&
       this.allowParamClauseInterleaving == allowParamClauseInterleaving &&
+      this.allowQuietSyntax == allowQuietSyntax && // separated from "significant indentation"
       this.allowFewerBraces == allowFewerBraces && this.allowBinaryLiterals == allowBinaryLiterals
 
   @inline
@@ -778,6 +788,7 @@ final class Dialect private[meta] (
       allowInfixOperatorAfterNL = that.allowInfixOperatorAfterNL,
       allowParamClauseInterleaving = that.allowParamClauseInterleaving,
       allowFewerBraces = that.allowFewerBraces,
+      allowQuietSyntax = that.allowQuietSyntax,
       allowBinaryLiterals = that.allowBinaryLiterals
     )
 
