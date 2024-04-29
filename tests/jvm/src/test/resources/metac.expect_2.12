@@ -4656,7 +4656,7 @@ Occurrences:
 [15:9..15:9):  <= types/P#X#`<init>`().
 [16:6..16:7): x <= types/P#x.
 [16:14..16:15): X => types/P#X#
-[17:0..17:0):  => types/P#X#`<init>`().
+[16:15..16:15):  => types/P#X#`<init>`().
 [19:6..19:7): T <= types/T#
 [19:8..19:8):  <= types/T#`<init>`().
 [20:8..20:9): C <= types/T#C#
@@ -4665,7 +4665,7 @@ Occurrences:
 [21:9..21:9):  <= types/T#X#`<init>`().
 [22:6..22:7): x <= types/T#x.
 [22:14..22:15): X => types/T#X#
-[23:0..23:0):  => types/T#X#`<init>`().
+[22:15..22:15):  => types/T#X#`<init>`().
 [25:7..25:11): Test <= types/Test.
 [26:8..26:9): M <= types/Test.M#
 [26:10..26:10):  <= types/Test.M#`<init>`().
