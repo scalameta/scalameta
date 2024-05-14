@@ -1171,6 +1171,192 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("better-fors-1") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |} yield a + b
+                  |""".stripMargin
+    matchSubStructureWithDialect[Stat](
+      code,
+      { case Term.ForYield(List(_: Enumerator.Val, _: Enumerator.Generator), _) => () },
+      dialects.Scala3.withAllowBetterFors(true)
+    )
+  }
+
+  test("better-fors-2") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |  c = 3
+                  |} yield a + b + c
+                  |""".stripMargin
+    matchSubStructureWithDialect[Stat](
+      code,
+      {
+        case Term
+              .ForYield(List(_: Enumerator.Val, _: Enumerator.Generator, _: Enumerator.Val), _) =>
+          ()
+      },
+      dialects.Scala3.withAllowBetterFors(true)
+    )
+  }
+
+  test("better-fors-3") {
+    val code = """|for {
+                  |  a = 1
+                  |  b = 3
+                  |  c <- Some(4)
+                  |} yield a + b + c
+                  |""".stripMargin
+    matchSubStructureWithDialect[Stat](
+      code,
+      {
+        case Term
+              .ForYield(List(_: Enumerator.Val, _: Enumerator.Val, _: Enumerator.Generator), _) =>
+          ()
+      },
+      dialects.Scala3.withAllowBetterFors(true)
+    )
+  }
+
+  test("better-fors-4") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |  c = 3
+                  |  d <- Some(4)
+                  |} yield a + b + c + d
+                  |""".stripMargin
+    matchSubStructureWithDialect[Stat](
+      code,
+      {
+        case Term.ForYield(
+              List(
+                _: Enumerator.Val,
+                _: Enumerator.Generator,
+                _: Enumerator.Val,
+                _: Enumerator.Generator
+              ),
+              _
+            ) => ()
+      },
+      dialects.Scala3.withAllowBetterFors(true)
+    )
+  }
+
+  test("better-fors-5") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |  if b > 0
+                  |  c = 3
+                  |  d <- Some(4)
+                  |} yield a + b + c + d
+                  |""".stripMargin
+    matchSubStructureWithDialect[Stat](
+      code,
+      {
+        case Term.ForYield(
+              List(
+                _: Enumerator.Val,
+                _: Enumerator.Generator,
+                _: Enumerator.Guard,
+                _: Enumerator.Val,
+                _: Enumerator.Generator
+              ),
+              _
+            ) => ()
+      },
+      dialects.Scala3.withAllowBetterFors(true)
+    )
+  }
+
+  test("better-fors-6") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |  c = 3
+                  |  if b > 0
+                  |  d <- Some(4)
+                  |} yield a + b + c + d
+                  |""".stripMargin
+    matchSubStructureWithDialect[Stat](
+      code,
+      {
+        case Term.ForYield(
+              List(
+                _: Enumerator.Val,
+                _: Enumerator.Generator,
+                _: Enumerator.Val,
+                _: Enumerator.Guard,
+                _: Enumerator.Generator
+              ),
+              _
+            ) => ()
+      },
+      dialects.Scala3.withAllowBetterFors(true)
+    )
+  }
+
+  test("better-fors-7") {
+    val code = """|for {
+                  |  a = 1
+                  |  if b > 0
+                  |  b <- Some(2)
+                  |} yield a + b
+                  |""".stripMargin
+    runTestError[Stat](
+      code,
+      """| error: `<-` expected but `=` found
+         |  a = 1
+         |    ^""".stripMargin
+    )
+  }
+
+  test("better-fors-8") {
+    val code = """|for {
+                  |  if a > 0
+                  |  b <- Some(2)
+                  |} yield b
+                  |""".stripMargin
+    runTestError[Stat](
+      code,
+      """|error: illegal start of simple pattern
+         |  if a > 0
+         |  ^""".stripMargin
+    )
+  }
+
+  test("better-fors-9") {
+    val code = """|for {
+                  |  a = 1
+                  |  b = 3
+                  |  if b > 0
+                  |  c <- Some(2)
+                  |} yield a + b + c
+                  |""".stripMargin
+    runTestError[Stat](
+      code,
+      """|error: `<-` expected but `=` found
+         |  a = 1
+         |    ^""".stripMargin
+    )
+  }
+
+  test("better-fors-10") {
+    val code = """|for {
+                  |  a = 1
+                  |} yield a
+                  |""".stripMargin
+    runTestError[Stat](
+      code,
+      """|error: `<-` expected but `=` found
+         |  a = 1
+         |    ^""".stripMargin
+    )
+  }
+
   // --------------------------
   // WHILE
   // --------------------------

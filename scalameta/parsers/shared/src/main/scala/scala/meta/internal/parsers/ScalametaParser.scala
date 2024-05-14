@@ -2434,29 +2434,35 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def enumeratorGuardOnIf() = autoPos(Enumerator.Guard(guardOnIf()))
 
   def enumerators(): List[Enumerator] = listBy[Enumerator] { enums =>
-    enumeratorBuf(enums, isFirst = true)
+    enumeratorBuf(enums, allowGuard = false, allowEQ = dialect.allowBetterFors)
     while (StatSep(token) && nextIf(!peekToken.isAny[Indentation.Outdent, KwDo, CloseDelim]))
-      enumeratorBuf(enums, isFirst = false)
+      enumeratorBuf(
+        enums,
+        allowGuard = true,
+        allowEQ = dialect.allowBetterFors || enums.exists(!_.isInstanceOf[Enumerator.Val])
+      )
   }
 
   private def enumeratorBuf(
       buf: ListBuffer[Enumerator],
-      isFirst: Boolean,
+      allowGuard: Boolean,
+      allowEQ: Boolean,
       allowNestedIf: Boolean = true
   ): Unit = token match {
-    case _: KwIf if !isFirst => buf += enumeratorGuardOnIf()
+    case _: KwIf if allowGuard => buf += enumeratorGuardOnIf()
     case t: Ellipsis => buf += ellipsis[Enumerator](t, 1)
     case t: Unquote if !peekToken.isAny[Equals, LeftArrow] => buf += unquote[Enumerator](t) // support for q"for ($enum1; ..$enums; $enum2)"
-    case _ => generatorBuf(buf, !isFirst, allowNestedIf)
+    case _ => generatorBuf(buf, allowEQ, allowNestedIf)
   }
 
   def quasiquoteEnumerator(): Enumerator = entrypointEnumerator()
 
-  def entrypointEnumerator(): Enumerator =
-    listBy[Enumerator](enumeratorBuf(_, isFirst = false, allowNestedIf = false)) match {
-      case enumerator :: Nil => enumerator
-      case other => unreachable(Map("enumerators" -> other))
-    }
+  def entrypointEnumerator(): Enumerator = listBy[Enumerator](
+    enumeratorBuf(_, allowGuard = true, allowEQ = true, allowNestedIf = false)
+  ) match {
+    case enumerator :: Nil => enumerator
+    case other => unreachable(Map("enumerators" -> other))
+  }
 
   private def generatorBuf(
       buf: ListBuffer[Enumerator],
