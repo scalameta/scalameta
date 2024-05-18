@@ -1341,16 +1341,10 @@ class TermSuite extends ParseSuite {
                   |  if a === b
                   |) yield a
                   |""".stripMargin
-    val layout = "for (a <- fooa; b <- foob; if a === b) yield a"
-    val tree = Term.ForYield(
-      List(
-        Enumerator.Generator(Pat.Var(tname("a")), tname("fooa")),
-        Enumerator.Generator(Pat.Var(tname("b")), tname("foob")),
-        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("==="), Nil, List(tname("b"))))
-      ),
-      tname("a")
-    )
-    runTestAssert[Term](code, layout)(tree)
+    val error = """|<input>:3: error: `)` expected but `<-` found
+                   |  b <- foob
+                   |    ^""".stripMargin
+    runTestError[Term](code, error)
   }
 
   test("scalafmt #3911 for in parens, NL after `(`, `;` between") {
@@ -1377,16 +1371,10 @@ class TermSuite extends ParseSuite {
                   |     b <- foob
                   |     if a === b) yield a
                   |""".stripMargin
-    val layout = "for (a <- fooa; b <- foob; if a === b) yield a"
-    val tree = Term.ForYield(
-      List(
-        Enumerator.Generator(Pat.Var(tname("a")), tname("fooa")),
-        Enumerator.Generator(Pat.Var(tname("b")), tname("foob")),
-        Enumerator.Guard(Term.ApplyInfix(tname("a"), tname("==="), Nil, List(tname("b"))))
-      ),
-      tname("a")
-    )
-    runTestAssert[Term](code, layout)(tree)
+    val error = """|<input>:2: error: `)` expected but `<-` found
+                   |     b <- foob
+                   |       ^""".stripMargin
+    runTestError[Term](code, error)
   }
 
   test("scalafmt #3911 for in parens, no NL after `(`, `;` between") {
@@ -1443,10 +1431,20 @@ class TermSuite extends ParseSuite {
                   |      && satisfiable) {}
                   |
                   |""".stripMargin
-    val error = """|<input>:3: error: `<-` expected but `\n` found
-                   |      && (cond)
-                   |               ^""".stripMargin
-    runTestError(code, error)
+    val layout = "for (m <- decls; if oneCond && cond && satisfiable) {}"
+    val tree = Term.For(
+      List(
+        Enumerator.Generator(Pat.Var(tname("m")), tname("decls")),
+        Enumerator.Guard(Term.ApplyInfix(
+          Term.ApplyInfix(tname("oneCond"), tname("&&"), Nil, List(tname("cond"))),
+          tname("&&"),
+          Nil,
+          List(tname("satisfiable"))
+        ))
+      ),
+      blk()
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
