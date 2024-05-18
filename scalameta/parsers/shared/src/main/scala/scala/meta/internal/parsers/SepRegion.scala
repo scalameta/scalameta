@@ -170,15 +170,23 @@ object RegionFor {
 sealed trait RegionFor extends RegionControl {
   def isControlKeyword(token: Token): Boolean = token.is[Token.KwFor]
   def isTerminatingToken(token: Token): Boolean = token.isAny[Token.KwDo, Token.KwYield]
+  def isClosingConditionToken(token: Token): Boolean
 }
 case object RegionForMaybeParens extends RegionFor {
   def isTerminatingTokenRequired(): Boolean = false
+  def isClosingConditionToken(token: Token): Boolean = false
+}
+case object RegionForParens extends RegionFor {
+  def isTerminatingTokenRequired(): Boolean = false
+  def isClosingConditionToken(token: Token): Boolean = token.is[Token.RightParen]
 }
 case object RegionForBraces extends RegionFor {
   def isTerminatingTokenRequired(): Boolean = false
+  def isClosingConditionToken(token: Token): Boolean = token.is[Token.RightBrace]
 }
 case object RegionForOther extends RegionFor {
   def isTerminatingTokenRequired(): Boolean = true
+  def isClosingConditionToken(token: Token): Boolean = false
 }
 
 case object RegionTry extends SepRegionNonIndented with CanProduceLF

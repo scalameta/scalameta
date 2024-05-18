@@ -591,9 +591,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               case _: LeftArrow => RegionForOther :: rs
               case _ => rs
             }
-          case RegionForBraces if prev.is[RightBrace] => rs
+          case r: RegionFor if r.isClosingConditionToken(prev) => rs
           case _ => if (prevToken.is[AtEOL] || curr.is[CloseDelim]) rs else regions
         }
+      case RegionParen :: RegionForMaybeParens :: rs if curr.is[LeftArrow] =>
+        RegionParen :: RegionForParens :: rs
       case _ => regions
     }
 
@@ -645,7 +647,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionTry :: xs
               if !next.isAny[KwCatch, KwFinally] && isLeadingInfix != LeadingInfix.Yes => strip(xs)
           case Nil | (_: CanProduceLF) :: _ => Some(rs)
-          case RegionParen :: RegionForMaybeParens :: _ => Some(rs)
+          case RegionParen :: RegionForParens :: _ => Some(rs)
           case _ => None
         }
         val ok = lastNewlinePos >= 0 && mightStartStat(next, closeDelimOK = true) &&
@@ -655,7 +657,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
       // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change-1
       lazy val isLeadingInfix = sepRegionsOrig match {
-        case Nil | (_: CanProduceLF) :: _
+        case Nil | (_: CanProduceLF) :: _ | RegionParen :: RegionForParens :: _
             if !newlines && lastNewlinePos >= 0 && dialect.allowInfixOperatorAfterNL &&
               next.isSymbolicInfixOperator => isLeadingInfixArg(nextPos + 1, nextIndent)
         case _ => LeadingInfix.No
@@ -803,8 +805,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 }
               case _: KwTry => emitIndent(sepRegions)
               case _ => dropRegionLine(sepRegions) match {
-                  case RegionForBraces :: rs if prev.is[RightBrace] =>
-                    val ko = RegionForBraces.isTerminatingToken(next)
+                  case (r: RegionFor) :: rs if r.isClosingConditionToken(prev) =>
+                    val ko = r.isTerminatingToken(next)
                     if (ko) None else emitIndent(rs)
                   case RegionForMaybeParens :: rs if prev.is[RightParen] =>
                     val ko = next.is[LeftArrow] || RegionForMaybeParens.isTerminatingToken(next)

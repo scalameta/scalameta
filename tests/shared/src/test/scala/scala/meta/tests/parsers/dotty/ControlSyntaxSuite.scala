@@ -1155,10 +1155,25 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |      && satisfiable) {}
                   |
                   |""".stripMargin
-    val error = """|<input>:1: error: `)` expected but `<-` found
-                   |for (m <- decls
-                   |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "for (m <- decls; if oneCond && cond && satisfiable) {}"
+    val tree = Term.For(
+      List(
+        Enumerator.Generator(Pat.Var(Term.Name("m")), Term.Name("decls")),
+        Enumerator.Guard(Term.ApplyInfix(
+          Term.ApplyInfix(
+            Term.Name("oneCond"),
+            Term.Name("&&"),
+            Type.ArgClause(Nil),
+            Term.ArgClause(List(Term.Name("cond")), None)
+          ),
+          Term.Name("&&"),
+          Type.ArgClause(Nil),
+          Term.ArgClause(List(Term.Name("satisfiable")), None)
+        ))
+      ),
+      Term.Block(Nil)
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // --------------------------
