@@ -1436,4 +1436,17 @@ class TermSuite extends ParseSuite {
     runTestAssert[Term](code, layout)(tree)
   }
 
+  test("#3713 cond in parens within enums") {
+    val code = """|for (m <- decls
+                  |    if oneCond
+                  |      && (cond)
+                  |      && satisfiable) {}
+                  |
+                  |""".stripMargin
+    val error = """|<input>:3: error: `<-` expected but `\n` found
+                   |      && (cond)
+                   |               ^""".stripMargin
+    runTestError(code, error)
+  }
+
 }
