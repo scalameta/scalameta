@@ -1148,6 +1148,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))
   }
 
+  test("#3713 code in parens within enums") {
+    val code = """|for (m <- decls
+                  |    if oneCond
+                  |      && (cond)
+                  |      && satisfiable) {}
+                  |
+                  |""".stripMargin
+    val layout = "for (m <- decls; if oneCond && cond && satisfiable) {}"
+    val tree = Term.For(
+      List(
+        Enumerator.Generator(Pat.Var(Term.Name("m")), Term.Name("decls")),
+        Enumerator.Guard(Term.ApplyInfix(
+          Term.ApplyInfix(
+            Term.Name("oneCond"),
+            Term.Name("&&"),
+            Type.ArgClause(Nil),
+            Term.ArgClause(List(Term.Name("cond")), None)
+          ),
+          Term.Name("&&"),
+          Type.ArgClause(Nil),
+          Term.ArgClause(List(Term.Name("satisfiable")), None)
+        ))
+      ),
+      Term.Block(Nil)
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   // --------------------------
   // WHILE
   // --------------------------
