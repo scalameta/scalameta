@@ -1148,6 +1148,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))
   }
 
+  test("#3713 code in parens within enums") {
+    val code = """|for (m <- decls
+                  |    if oneCond
+                  |      && (cond)
+                  |      && satisfiable) {}
+                  |
+                  |""".stripMargin
+    val error = """|<input>:1: error: `)` expected but `<-` found
+                   |for (m <- decls
+                   |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   // --------------------------
   // WHILE
   // --------------------------
