@@ -1436,4 +1436,26 @@ class TermSuite extends ParseSuite {
     runTestAssert[Term](code, layout)(tree)
   }
 
+  test("issue-metals") {
+    runTestAssert(
+      """|
+         | for (thread <- all
+         |        if cond1 
+         |           && thread.cond) {
+         |      }
+         |""".stripMargin,
+      Some("for (thread <- all; if cond1 && thread.cond) {}")
+    )(Term.For(
+      List(
+        Enumerator.Generator(Pat.Var(Term.Name("thread")), Term.Name("all")),
+        Enumerator.Guard(Term.ApplyInfix(
+          Term.Name("cond1"),
+          Term.Name("&&"),
+          Type.ArgClause(Nil),
+          Term.ArgClause(List(Term.Select(Term.Name("thread"), Term.Name("cond"))), None)
+        ))
+      ),
+      Term.Block(Nil)
+    ))
+  }
 }
