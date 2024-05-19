@@ -647,7 +647,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionTry :: xs
               if !next.isAny[KwCatch, KwFinally] && isLeadingInfix != LeadingInfix.Yes => strip(xs)
           case Nil | (_: CanProduceLF) :: _ => Some(rs)
-          case RegionParen :: RegionForParens :: _ => Some(rs)
           case _ => None
         }
         val ok = lastNewlinePos >= 0 && mightStartStat(next, closeDelimOK = true) &&
@@ -657,7 +656,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
       // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change-1
       lazy val isLeadingInfix = sepRegionsOrig match {
-        case Nil | (_: CanProduceLF) :: _ | RegionParen :: RegionForParens :: _
+        case Nil | (_: CanProduceLF) :: _
             if !newlines && lastNewlinePos >= 0 && dialect.allowInfixOperatorAfterNL &&
               next.isSymbolicInfixOperator => isLeadingInfixArg(nextPos + 1, nextIndent)
         case _ => LeadingInfix.No
