@@ -241,11 +241,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: ~1.0") {
-    def error(code: String) = s"""|<input>:1: error: bad unary op `~` for floating-point
-                                  |~$code
-                                  | ^""".stripMargin
-    runTestError[Stat]("~1.0", error("1.0"))
-    runTestError[Stat]("~1.0(0)", error("1.0(0)"))
+    val tree = Term.ApplyUnary(tname("~"), lit(1d))
+    runTestAssert[Stat]("~1.0", "~1.0d")(tree)
+    runTestAssert[Stat]("~1.0(0)", "(~1.0d)(0)")(Term.Apply(tree, List(lit(0))))
   }
 
   test("unary: !1.0") {
