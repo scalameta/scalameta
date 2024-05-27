@@ -1211,10 +1211,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def numericLiteral(startPos: Int, unary: Unary.Numeric): Lit = {
     val number = token.asInstanceOf[NumericConstant[_]]
     next()
-    autoEndPos(startPos)(numericLiteralAt(number, unary))
+    autoEndPos(startPos)(numericLiteralWithUnaryAt(number, unary))
   }
 
-  private def numericLiteralAt(token: NumericConstant[_], unary: Unary.Numeric): Lit = {
+  private def numericLiteralMaybeWithUnaryAt(
+      token: NumericConstant[_],
+      unary: Unary.Numeric
+  ): Either[Lit, Lit] = {
     def getBigInt(tok: NumericConstant[BigInt], dec: BigInt, hex: BigInt, typ: String) = {
       // decimal never starts with `0` as octal was removed in 2.11; "hex" includes `0x` or `0b`
       // non-decimal literals allow signed overflow within unsigned range
@@ -1227,20 +1230,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       } else if (value >= max) syntaxError(s"integer number too large for $typ", at = tok)
       result
     }
-    def getBigDecimal(tok: NumericConstant[BigDecimal]) = unary(tok.value)
-      .getOrElse(syntaxError(s"bad unary op `${unary.op}` for floating-point", at = tok))
+    def getBigDecimal(tok: NumericConstant[BigDecimal], f: BigDecimal => Lit) = {
+      val number = tok.value
+      unary(number).fold[Either[Lit, Lit]](Left(f(number)))(x => Right(f(x)))
+    }
     token match {
-      case tok: Constant.Int => Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue)
-      case tok: Constant.Long => Lit
-          .Long(getBigInt(tok, bigIntMaxLong, bigIntMaxULong, "Long").longValue)
-      case tok: Constant.Float => Lit.Float(getBigDecimal(tok))
-      case tok: Constant.Double => Lit.Double(getBigDecimal(tok))
+      case tok: Constant.Int =>
+        Right(Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue))
+      case tok: Constant.Long =>
+        Right(Lit.Long(getBigInt(tok, bigIntMaxLong, bigIntMaxULong, "Long").longValue))
+      case tok: Constant.Float => getBigDecimal(tok, Lit.Float.apply)
+      case tok: Constant.Double => getBigDecimal(tok, Lit.Double.apply)
       case t => unreachable(t)
     }
   }
 
+  private def numericLiteralWithUnaryAt(token: NumericConstant[_], unary: Unary.Numeric): Lit =
+    numericLiteralMaybeWithUnaryAt(token, unary) match {
+      case Right(x) => x
+      case _ => syntaxError(s"bad unary op `${unary.op}` for floating-point", at = token)
+    }
+
   def literal(): Lit = atCurPosNext(token match {
-    case number: NumericConstant[_] => numericLiteralAt(number, Unary.Noop)
+    case number: NumericConstant[_] => numericLiteralWithUnaryAt(number, Unary.Noop)
     case Constant.Char(value) => Lit.Char(value)
     case Constant.String(value) => Lit.String(value)
     case t: Constant.Symbol =>
@@ -2008,8 +2020,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def op = atPos(startPos)(Term.Name(ident))
       def addPos(tree: Term) = autoEndPos(startPos)(tree)
       def rest(tree: Term) = simpleExprRest(tree, canApply = true, startPos = startPos)
+      def applyUnary(term: Term) = addPos(Term.ApplyUnary(op, term))
       def otherwise = simpleExpr0(allowRepeated = true) match {
-        case Success(result) => addPos(Term.ApplyUnary(op, result))
+        case Success(result) => applyUnary(result)
         case Failure(_) =>
           // maybe it is not unary operator but simply an ident `trait - {...}`
           // we would fail here anyway, let's try to treat it as ident
@@ -2017,7 +2030,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       (token, unary) match {
         case (tok: NumericConstant[_], unary: Unary.Numeric) =>
-          next(); rest(addPos(numericLiteralAt(tok, unary)))
+          next(); rest(numericLiteralMaybeWithUnaryAt(tok, unary).fold(applyUnary, addPos))
         case (tok: BooleanConstant, unary: Unary.Logical) =>
           next(); rest(addPos(Lit.Boolean(unary(tok.value))))
         case _ => otherwise
