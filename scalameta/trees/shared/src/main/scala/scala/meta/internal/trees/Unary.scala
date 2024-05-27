@@ -8,8 +8,10 @@ private[meta] sealed trait Unary {
 
 private[meta] object Unary {
 
-  private val numericOpMap = Seq[Numeric](Plus, Minus, Tilde).map(x => x.op -> x).toMap
-  val opMap = numericOpMap ++ Seq[Unary](Not).map(x => x.op -> x)
+  private val numericOpMap = Seq[Numeric](Plus, Minus, Tilde).map(unaryWithKey).toMap
+  val opMap = numericOpMap ++ Seq[Unary](Not).map(unaryWithKey)
+
+  private def unaryWithKey[T <: Unary](unary: T) = unary.op -> unary
 
   def unapply(token: Token.Ident): Option[(String, Unary)] = {
     val op = token.text
