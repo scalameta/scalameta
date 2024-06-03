@@ -2,17 +2,19 @@ package scala.meta.parser.dotty
 
 import scala.meta._
 
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+import scala.concurrent.duration
 import scala.language.postfixOps
 
 import munit.FunSuite
 import sys.process._
 
 class CommunityDottySuite extends FunSuite {
+
+  override val munitTimeout = new duration.FiniteDuration(3, duration.MINUTES)
 
   val communityDirectory = Paths.get("community-projects")
 

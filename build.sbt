@@ -281,7 +281,7 @@ lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/testkit")).settings(
     sharedSettings,
     hasLargeIntegrationTests,
-    libraryDependencies ++= Seq("org.scalameta" %%% "munit" % munitVersion),
+    libraryDependencies += munitLibrary.value,
     testFrameworks := List(new TestFramework("munit.Framework")),
     description := "Testing utilities for scalameta APIs"
   ).dependsOn(scalameta).configureCross(crossPlatformPublishSettings).jvmSettings(
@@ -339,7 +339,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
     "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value
   ),
   buildInfoPackage := "scala.meta.tests",
-  libraryDependencies ++= List("org.scalameta" %%% "munit" % munitVersion),
+  libraryDependencies += munitLibrary.value,
   Test / testOptions += Tests.Argument("--exclude-tags=Slow"),
   inConfig(Slow)(Defaults.testTasks),
   inConfig(All)(Defaults.testTasks),
@@ -351,7 +351,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
 lazy val communitytest = project.in(file("community-test")).settings(
   nonPublishableSettings,
   sharedSettings,
-  libraryDependencies += "org.scalameta" %% "munit" % munitVersion,
+  libraryDependencies += munitLibrary.value,
   testFrameworks := List(new TestFramework("munit.Framework"))
 ).dependsOn(scalameta.jvm)
 
@@ -425,6 +425,11 @@ lazy val requiresMacrosSetting = Def.settings(scalacOptions += {
 def isScalaBinaryVersion(version: String) = Def.setting(scalaBinaryVersion.value == version)
 lazy val isScala211 = isScalaBinaryVersion("2.11")
 lazy val isScala213 = isScalaBinaryVersion("2.13")
+
+lazy val munitLibrary = Def.setting {
+  val munitV = if (isScala211.value) "0.7.29" else munitVersion
+  "org.scalameta" %%% "munit" % munitV
+}
 
 lazy val sharedSettings = Def.settings(
   version ~= { dynVer =>
