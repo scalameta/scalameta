@@ -23,7 +23,7 @@ import scala.collection.JavaConverters._
 import scala.util.Properties
 
 import munit.FunSuite
-import munit.internal.difflib.DiffUtils
+import munit.diff.DiffUtils
 
 class ExpectSuite extends FunSuite {
 
