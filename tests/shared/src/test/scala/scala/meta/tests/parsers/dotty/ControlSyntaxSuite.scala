@@ -1171,6 +1171,237 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("enum-val-first-ok-1") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |} yield a + b
+                  |""".stripMargin
+    val layout = "for (a = 1; b <- Some(2)) yield a + b"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Val(Pat.Var(tname("a")), lit(1)),
+        Enumerator.Generator(Pat.Var(tname("b")), Term.Apply(tname("Some"), List(lit(2))))
+      ),
+      Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("enum-val-first-ok-2") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |  c = 3
+                  |} yield a + b + c
+                  |""".stripMargin
+    val layout = "for (a = 1; b <- Some(2); c = 3) yield a + b + c"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Val(Pat.Var(tname("a")), lit(1)),
+        Enumerator.Generator(Pat.Var(tname("b")), Term.Apply(tname("Some"), List(lit(2)))),
+        Enumerator.Val(Pat.Var(tname("c")), lit(3))
+      ),
+      Term.ApplyInfix(
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+        tname("+"),
+        Nil,
+        List(tname("c"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("enum-val-first-ok-3") {
+    val code = """|for {
+                  |  a = 1
+                  |  b = 3
+                  |  c <- Some(4)
+                  |} yield a + b + c
+                  |""".stripMargin
+    val layout = "for (a = 1; b = 3; c <- Some(4)) yield a + b + c"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Val(Pat.Var(tname("a")), lit(1)),
+        Enumerator.Val(Pat.Var(tname("b")), lit(3)),
+        Enumerator.Generator(Pat.Var(tname("c")), Term.Apply(tname("Some"), List(lit(4))))
+      ),
+      Term.ApplyInfix(
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+        tname("+"),
+        Nil,
+        List(tname("c"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("enum-val-first-ok-4") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |  c = 3
+                  |  d <- Some(4)
+                  |} yield a + b + c + d
+                  |""".stripMargin
+    val layout = "for (a = 1; b <- Some(2); c = 3; d <- Some(4)) yield a + b + c + d"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Val(Pat.Var(tname("a")), lit(1)),
+        Enumerator.Generator(Pat.Var(tname("b")), Term.Apply(tname("Some"), List(lit(2)))),
+        Enumerator.Val(Pat.Var(tname("c")), lit(3)),
+        Enumerator.Generator(Pat.Var(tname("d")), Term.Apply(tname("Some"), List(lit(4))))
+      ),
+      Term.ApplyInfix(
+        Term.ApplyInfix(
+          Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+          tname("+"),
+          Nil,
+          List(tname("c"))
+        ),
+        tname("+"),
+        Nil,
+        List(tname("d"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("enum-val-first-ok-5") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |  if b > 0
+                  |  c = 3
+                  |  d <- Some(4)
+                  |} yield a + b + c + d
+                  |""".stripMargin
+    val layout = "for (a = 1; b <- Some(2); if b > 0; c = 3; d <- Some(4)) yield a + b + c + d"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Val(Pat.Var(tname("a")), lit(1)),
+        Enumerator.Generator(Pat.Var(tname("b")), Term.Apply(tname("Some"), List(lit(2)))),
+        Enumerator.Guard(Term.ApplyInfix(tname("b"), tname(">"), Nil, List(lit(0)))),
+        Enumerator.Val(Pat.Var(tname("c")), lit(3)),
+        Enumerator.Generator(Pat.Var(tname("d")), Term.Apply(tname("Some"), List(lit(4))))
+      ),
+      Term.ApplyInfix(
+        Term.ApplyInfix(
+          Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+          tname("+"),
+          Nil,
+          List(tname("c"))
+        ),
+        tname("+"),
+        Nil,
+        List(tname("d"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("enum-val-first-ok-6") {
+    val code = """|for {
+                  |  a = 1
+                  |  b <- Some(2)
+                  |  c = 3
+                  |  if b > 0
+                  |  d <- Some(4)
+                  |} yield a + b + c + d
+                  |""".stripMargin
+    val layout = "for (a = 1; b <- Some(2); c = 3; if b > 0; d <- Some(4)) yield a + b + c + d"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Val(Pat.Var(tname("a")), lit(1)),
+        Enumerator.Generator(Pat.Var(tname("b")), Term.Apply(tname("Some"), List(lit(2)))),
+        Enumerator.Val(Pat.Var(tname("c")), lit(3)),
+        Enumerator.Guard(Term.ApplyInfix(tname("b"), tname(">"), Nil, List(lit(0)))),
+        Enumerator.Generator(Pat.Var(tname("d")), Term.Apply(tname("Some"), List(lit(4))))
+      ),
+      Term.ApplyInfix(
+        Term.ApplyInfix(
+          Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+          tname("+"),
+          Nil,
+          List(tname("c"))
+        ),
+        tname("+"),
+        Nil,
+        List(tname("d"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("enum-val-first-ok-7") {
+    val code = """|for {
+                  |  a = 1
+                  |  if b > 0
+                  |  b <- Some(2)
+                  |} yield a + b
+                  |""".stripMargin
+    val layout = "for (a = 1; if b > 0; b <- Some(2)) yield a + b"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Val(Pat.Var(tname("a")), lit(1)),
+        Enumerator.Guard(Term.ApplyInfix(tname("b"), tname(">"), Nil, List(lit(0)))),
+        Enumerator.Generator(Pat.Var(tname("b")), Term.Apply(tname("Some"), List(lit(2))))
+      ),
+      Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("enum-val-first-ok-8") {
+    val code = """|for {
+                  |  if a > 0
+                  |  b <- Some(2)
+                  |} yield b
+                  |""".stripMargin
+    runTestError[Stat](
+      code,
+      """|error: illegal start of simple pattern
+         |  if a > 0
+         |  ^""".stripMargin
+    )
+  }
+
+  test("enum-val-first-ok-9") {
+    val code = """|for {
+                  |  a = 1
+                  |  b = 3
+                  |  if b > 0
+                  |  c <- Some(2)
+                  |} yield a + b + c
+                  |""".stripMargin
+    val layout = "for (a = 1; b = 3; if b > 0; c <- Some(2)) yield a + b + c"
+    val tree = Term.ForYield(
+      List(
+        Enumerator.Val(Pat.Var(tname("a")), lit(1)),
+        Enumerator.Val(Pat.Var(tname("b")), lit(3)),
+        Enumerator.Guard(Term.ApplyInfix(tname("b"), tname(">"), Nil, List(lit(0)))),
+        Enumerator.Generator(Pat.Var(tname("c")), Term.Apply(tname("Some"), List(lit(2))))
+      ),
+      Term.ApplyInfix(
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))),
+        tname("+"),
+        Nil,
+        List(tname("c"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("enum-val-first-ok-10") {
+    val code = """|for {
+                  |  a = 1
+                  |} yield a
+                  |""".stripMargin
+    val layout = "for (a = 1) yield a"
+    val tree = Term.ForYield(List(Enumerator.Val(Pat.Var(tname("a")), lit(1))), tname("a"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   // --------------------------
   // WHILE
   // --------------------------
