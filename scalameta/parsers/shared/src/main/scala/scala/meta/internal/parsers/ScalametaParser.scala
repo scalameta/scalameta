@@ -2434,35 +2434,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def enumeratorGuardOnIf() = autoPos(Enumerator.Guard(guardOnIf()))
 
   def enumerators(): List[Enumerator] = listBy[Enumerator] { enums =>
-    enumeratorBuf(enums, isFirst = true)
-    while (StatSep(token) && nextIf(!peekToken.isAny[Indentation.Outdent, KwDo, CloseDelim]))
-      enumeratorBuf(enums, isFirst = false)
+    doWhile {
+      enums += enumerator(isFirst = enums.isEmpty)
+      while (token.is[Token.KwIf]) enums += enumeratorGuardOnIf()
+    }(StatSep(token) && nextIf(!peekToken.isAny[Indentation.Outdent, KwDo, CloseDelim]))
   }
 
-  private def enumeratorBuf(
-      buf: ListBuffer[Enumerator],
-      isFirst: Boolean,
-      allowNestedIf: Boolean = true
-  ): Unit = token match {
-    case _: KwIf if !isFirst => buf += enumeratorGuardOnIf()
-    case t: Ellipsis => buf += ellipsis[Enumerator](t, 1)
-    case t: Unquote if !peekToken.isAny[Equals, LeftArrow] => buf += unquote[Enumerator](t) // support for q"for ($enum1; ..$enums; $enum2)"
-    case _ => generatorBuf(buf, !isFirst, allowNestedIf)
+  private def enumerator(isFirst: Boolean = false): Enumerator = token match {
+    case _: KwIf if !isFirst => enumeratorGuardOnIf()
+    case t: Ellipsis => ellipsis[Enumerator](t, 1)
+    case t: Unquote if !peekToken.isAny[Equals, LeftArrow] => unquote[Enumerator](t) // support for q"for ($enum1; ..$enums; $enum2)"
+    case _ => generator(!isFirst)
   }
 
   def quasiquoteEnumerator(): Enumerator = entrypointEnumerator()
 
-  def entrypointEnumerator(): Enumerator =
-    listBy[Enumerator](enumeratorBuf(_, isFirst = false, allowNestedIf = false)) match {
-      case enumerator :: Nil => enumerator
-      case other => unreachable(Map("enumerators" -> other))
-    }
+  def entrypointEnumerator(): Enumerator = enumerator()
 
-  private def generatorBuf(
-      buf: ListBuffer[Enumerator],
-      eqOK: Boolean,
-      allowNestedIf: Boolean = true
-  ): Unit = {
+  private def generator(eqOK: Boolean): Enumerator with Tree.WithBody = {
     val startPos = tokenPos
     val hasVal = acceptOpt[KwVal]
     val isCase = acceptOpt[KwCase]
@@ -2477,12 +2466,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (hasEq && eqOK) next() else accept[LeftArrow]
     val rhs = expr()
 
-    buf += autoEndPos(startPos) {
+    autoEndPos(startPos) {
       if (hasEq) Enumerator.Val(pat, rhs)
       else if (isCase) Enumerator.CaseGenerator(pat, rhs)
       else Enumerator.Generator(pat, rhs)
     }
-    if (allowNestedIf) while (token.is[KwIf]) buf += enumeratorGuardOnIf()
   }
 
   /* -------- PATTERNS ------------------------------------------- */
