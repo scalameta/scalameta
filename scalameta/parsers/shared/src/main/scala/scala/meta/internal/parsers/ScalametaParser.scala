@@ -2444,14 +2444,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _: KwIf if !isFirst => enumeratorGuardOnIf()
     case t: Ellipsis => ellipsis[Enumerator](t, 1)
     case t: Unquote if !peekToken.isAny[Equals, LeftArrow] => unquote[Enumerator](t) // support for q"for ($enum1; ..$enums; $enum2)"
-    case _ => generator(!isFirst)
+    case _ => generator()
   }
 
   def quasiquoteEnumerator(): Enumerator = entrypointEnumerator()
 
   def entrypointEnumerator(): Enumerator = enumerator()
 
-  private def generator(eqOK: Boolean): Enumerator with Tree.WithBody = {
+  private def generator(): Enumerator with Tree.WithBody = {
     val startPos = tokenPos
     val hasVal = acceptOpt[KwVal]
     val isCase = acceptOpt[KwCase]
@@ -2463,7 +2463,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (hasEq) deprecationWarning("val keyword in for comprehension is deprecated", at = token)
       else syntaxError("val in for comprehension must be followed by assignment", at = token)
 
-    if (hasEq && eqOK) next() else accept[LeftArrow]
+    if (hasEq) next() else accept[LeftArrow]
     val rhs = expr()
 
     autoEndPos(startPos) {
