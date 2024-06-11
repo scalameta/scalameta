@@ -300,12 +300,20 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("
   .configs(Slow, All).settings(
     sharedSettings,
     testFrameworks := List(new TestFramework("munit.Framework")),
+    Test / unmanagedSourceDirectories ++= {
+      val base = (Compile / baseDirectory).value
+      List(base / "src" / "test" / ("scala-" + scalaVersion.value))
+    },
     nonPublishableSettings,
     description := "Tests for scalameta APIs",
     exposePaths("tests", Test)
   ).settings(testSettings: _*).jvmSettings(
     libraryDependencies += {
-      val coursierVersion = if (isScala211.value) "2.0.0-RC5-6" else "2.1.10"
+      val coursierVersion =
+        if (isScala211.value) "2.0.0-RC5-6"
+        else if (scalaVersion.value == "2.13.11") "2.1.8"
+        else if (scalaVersion.value == "2.13.12") "2.1.9"
+        else "2.1.10"
       "io.get-coursier" %% "coursier" % coursierVersion
     },
     dependencyOverrides += {
@@ -427,7 +435,11 @@ lazy val isScala211 = isScalaBinaryVersion("2.11")
 lazy val isScala213 = isScalaBinaryVersion("2.13")
 
 lazy val munitLibrary = Def.setting {
-  val munitV = if (isScala211.value) "0.7.29" else munitVersion
+  val munitV =
+    if (isScala211.value) "0.7.29"
+    else if (scalaVersion.value == "2.13.11") "1.0.0-M10"
+    else if (scalaVersion.value == "2.13.12") "1.0.0-M11"
+    else munitVersion
   "org.scalameta" %%% "munit" % munitV
 }
 
@@ -510,7 +522,8 @@ lazy val protobufSettings = Def.settings(
   libraryDependencies ++= {
     val scalapbVersion =
       if (isScala211.value) "0.9.8"
-      else if (scalaVersion.value == "2.13.0" || scalaVersion.value == "2.13.1") "0.10.11"
+      // freeze versions so that we don't depend on newer version, scalapb 0.11.13 depends on Scala 2.13.10
+      else if (scalaVersion.value == "2.13.11") "0.11.13"
       else scalapb.compiler.Version.scalapbVersion
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
