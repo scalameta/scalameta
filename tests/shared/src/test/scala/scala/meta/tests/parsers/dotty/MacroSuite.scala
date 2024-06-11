@@ -314,4 +314,13 @@ class MacroSuite extends BaseDottySuite {
     ))
     runTestAssert[Stat](code)(tree)
   }
+
+  test("#6483-metals") {
+    val code = "${ fn }[Int](0)"
+    val tree = Term.Apply(
+      Term.ApplyType(Term.SplicedMacroExpr(blk(tname("fn"))), List(Type.Name("Int"))),
+      List(lit(0))
+    )
+    runTestAssert[Stat](code)(tree)
+  }
 }
