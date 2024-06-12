@@ -153,7 +153,8 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file(
     enableMacros,
     buildInfoPackage := "scala.meta.internal",
     buildInfoKeys := Seq[BuildInfoKey](version),
-    protobufSettings
+    protobufSettings,
+    crossScalaVersions := AllScalaVersions
   ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
 
@@ -161,6 +162,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("
   .settings(
     sharedSettings,
     description := "Scalameta abstract syntax trees",
+    crossScalaVersions := AllScalaVersions,
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableHardcoreMacros,
@@ -183,6 +185,7 @@ lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     sharedSettings,
     description := "Scalameta APIs for parsing and their baseline implementation",
     enableHardcoreMacros,
+    crossScalaVersions := AllScalaVersions,
     mergedModule { base =>
       List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
     }
@@ -223,6 +226,7 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta")).settings(
     sharedSettings,
     description := "Scalameta umbrella module that includes all public APIs",
+    crossScalaVersions := AllScalaVersions,
     libraryDependencies ++= List("org.scala-lang" % "scalap" % scalaVersion.value),
     Compile / unmanagedSourceDirectories ++= {
       val base = (ThisBuild / baseDirectory).value
