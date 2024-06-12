@@ -315,12 +315,44 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
 
-  test("#6483-metals") {
+  test("#6483-metals splice") {
     val code = "${ fn }[Int](0)"
+    val codeInParens = "( ${ fn } )[Int](0)"
     val tree = Term.Apply(
       Term.ApplyType(Term.SplicedMacroExpr(blk(tname("fn"))), List(Type.Name("Int"))),
       List(lit(0))
     )
     runTestAssert[Stat](code)(tree)
+    runTestAssert[Stat](codeInParens, code)(tree)
   }
+
+  test("#6483-metals splice in braces") {
+    val code = """|{
+                  |  ${ fn }
+                  |}[Int](0)""".stripMargin
+    val error = """|<input>:3: error: `;` expected but `[` found
+                   |}[Int](0)
+                   | ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#6483-metals poly in parens") {
+    val code = "([B] => (c: B) => fn[B](c))[Int](0)"
+    val error = """|<input>:1: error: `;` expected but `[` found
+                   |([B] => (c: B) => fn[B](c))[Int](0)
+                   |                           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#6483-metals poly in braces") {
+    val code = """|{
+                  |  [B] => (c: B) => fn[B](c)
+                  |}[Int](0)
+                  |""".stripMargin
+    val error = """|<input>:3: error: `;` expected but `[` found
+                   |}[Int](0)
+                   | ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
