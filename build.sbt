@@ -148,7 +148,10 @@ lazy val metac = project.in(file("semanticdb/metac")).settings(
 lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("scalameta/common"))
   .settings(
     sharedSettings,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.1",
+    libraryDependencies += {
+      val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.2"
+      "com.lihaoyi" %%% "sourcecode" % sourceCodeVersion
+    },
     description := "Bag of private and public helpers used in scalameta APIs and implementations",
     enableMacros,
     buildInfoPackage := "scala.meta.internal",
@@ -166,7 +169,10 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("
     // NOTE: uncomment this to update ast.md
     // scalacOptions += "-Xprint:typer",
     enableHardcoreMacros,
-    libraryDependencies ++= List("com.lihaoyi" %%% "fastparse" % "3.0.2"),
+    libraryDependencies ++= {
+      val fastparseVersion = if (isScala211.value) "3.0.2" else "3.1.0"
+      List("com.lihaoyi" %%% "fastparse" % fastparseVersion),
+    },
     mergedModule { base =>
       val scalameta = base / "scalameta"
       List(
@@ -526,8 +532,9 @@ lazy val protobufSettings = Def.settings(
   libraryDependencies ++= {
     val scalapbVersion =
       if (isScala211.value) "0.9.8"
-      // freeze versions so that we don't depend on newer version, scalapb 0.11.13 depends on Scala 2.13.10
+      // freeze versions so that we don't depend on newer version, scalapb 0.11.13 depends on Scala 2.13.10 etc.
       else if (scalaVersion.value == "2.13.11") "0.11.13"
+      else if (scalaVersion.value == "2.13.12" || scalaVersion.value == "2.13.13") "0.11.15"
       else scalapb.compiler.Version.scalapbVersion
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
