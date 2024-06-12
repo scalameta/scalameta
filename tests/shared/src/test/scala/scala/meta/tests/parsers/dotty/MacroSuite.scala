@@ -318,10 +318,8 @@ class MacroSuite extends BaseDottySuite {
   test("#6483-metals splice") {
     val code = "${ fn }[Int](0)"
     val codeInParens = "( ${ fn } )[Int](0)"
-    val tree = Term.Apply(
-      Term.ApplyType(Term.SplicedMacroExpr(blk(tname("fn"))), List(Type.Name("Int"))),
-      List(lit(0))
-    )
+    val tree = Term
+      .Apply(Term.ApplyType(Term.SplicedMacroExpr(blk(tname("fn"))), List(pname("Int"))), List(lit(0)))
     runTestAssert[Stat](code)(tree)
     runTestAssert[Stat](codeInParens, code)(tree)
   }
@@ -330,18 +328,29 @@ class MacroSuite extends BaseDottySuite {
     val code = """|{
                   |  ${ fn }
                   |}[Int](0)""".stripMargin
-    val error = """|<input>:3: error: `;` expected but `[` found
-                   |}[Int](0)
-                   | ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Term.Apply(
+      Term.ApplyType(blk(Term.SplicedMacroExpr(blk(tname("fn")))), List(pname("Int"))),
+      List(lit(0))
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
   test("#6483-metals poly in parens") {
     val code = "([B] => (c: B) => fn[B](c))[Int](0)"
-    val error = """|<input>:1: error: `;` expected but `[` found
-                   |([B] => (c: B) => fn[B](c))[Int](0)
-                   |                           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Term.Apply(
+      Term.ApplyType(
+        Term.PolyFunction(
+          List(pparam("B")),
+          Term.Function(
+            List(tparam("c", "B")),
+            Term.Apply(Term.ApplyType(tname("fn"), List(pname("B"))), List(tname("c")))
+          )
+        ),
+        List(pname("Int"))
+      ),
+      List(lit(0))
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
   test("#6483-metals poly in braces") {
@@ -349,10 +358,20 @@ class MacroSuite extends BaseDottySuite {
                   |  [B] => (c: B) => fn[B](c)
                   |}[Int](0)
                   |""".stripMargin
-    val error = """|<input>:3: error: `;` expected but `[` found
-                   |}[Int](0)
-                   | ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Term.Apply(
+      Term.ApplyType(
+        blk(Term.PolyFunction(
+          List(pparam("B")),
+          Term.Function(
+            List(tparam("c", "B")),
+            Term.Apply(Term.ApplyType(tname("fn"), List(pname("B"))), List(tname("c")))
+          )
+        )),
+        List(pname("Int"))
+      ),
+      List(lit(0))
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
 }
