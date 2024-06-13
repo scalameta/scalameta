@@ -2127,16 +2127,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           newLineOptWhenFollowedBy[Dot]
           simpleExprRest(clause, canApply = false, startPos = startPos)
         } else simpleExprRest(selector(t, startPos), canApply = true, startPos = startPos)
-      case _: LeftBracket => t match {
+      case _: LeftBracket =>
+        @tailrec
+        def isOk(tree: Tree): Boolean = tree match {
           case _: Quasi | _: Term.Name | _: Term.Select | _: Term.Apply | _: Term.ApplyInfix |
               _: Term.ApplyUnary | _: Term.New | _: Term.Placeholder | _: Term.ApplyUsing |
-              _: Term.Interpolate | _: Term.SplicedMacroExpr =>
-            var app: Term = t
-            while (token.is[LeftBracket]) app = addPos(Term.ApplyType(app, exprTypeArgs()))
-
-            simpleExprRest(app, canApply = true, startPos = startPos)
-          case _ => addPos(t)
+              _: Term.Interpolate | _: Term.SplicedMacroExpr | _: Term.PolyFunction => true
+          case Term.Block(t :: Nil) => isOk(t)
+          case _ => false
         }
+        if (isOk(t)) {
+          var app: Term = t
+          while (token.is[LeftBracket]) app = addPos(Term.ApplyType(app, exprTypeArgs()))
+          simpleExprRest(app, canApply = true, startPos = startPos)
+        } else addPos(t)
       case tok @ (_: LeftParen | _: LeftBrace) if canApply =>
         def argClause = if (tok.is[LeftBrace]) getArgClauseOnBrace() else getArgClauseOnParen()
         val arguments = addPos(Term.Apply(t, argClause))

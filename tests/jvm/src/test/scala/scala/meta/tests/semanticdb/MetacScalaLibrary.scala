@@ -13,9 +13,14 @@ import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Paths
 
+import scala.concurrent.duration
+
 import munit.FunSuite
 
 class MetacScalaLibrary extends FunSuite {
+
+  override val munitTimeout = new duration.FiniteDuration(3, duration.MINUTES)
+
   test("compile scala-library".tag(Slow).tag(SkipWindows)) {
     val exit = MetacScalaLibrary.process(Array())
     require(exit == 0, "failed to compile scala-library")

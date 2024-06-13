@@ -315,12 +315,63 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
 
-  test("#6483-metals") {
+  test("#6483-metals splice") {
     val code = "${ fn }[Int](0)"
+    val codeInParens = "( ${ fn } )[Int](0)"
+    val tree = Term
+      .Apply(Term.ApplyType(Term.SplicedMacroExpr(blk(tname("fn"))), List(pname("Int"))), List(lit(0)))
+    runTestAssert[Stat](code)(tree)
+    runTestAssert[Stat](codeInParens, code)(tree)
+  }
+
+  test("#6483-metals splice in braces") {
+    val code = """|{
+                  |  ${ fn }
+                  |}[Int](0)""".stripMargin
     val tree = Term.Apply(
-      Term.ApplyType(Term.SplicedMacroExpr(blk(tname("fn"))), List(Type.Name("Int"))),
+      Term.ApplyType(blk(Term.SplicedMacroExpr(blk(tname("fn")))), List(pname("Int"))),
       List(lit(0))
     )
     runTestAssert[Stat](code)(tree)
   }
+
+  test("#6483-metals poly in parens") {
+    val code = "([B] => (c: B) => fn[B](c))[Int](0)"
+    val tree = Term.Apply(
+      Term.ApplyType(
+        Term.PolyFunction(
+          List(pparam("B")),
+          Term.Function(
+            List(tparam("c", "B")),
+            Term.Apply(Term.ApplyType(tname("fn"), List(pname("B"))), List(tname("c")))
+          )
+        ),
+        List(pname("Int"))
+      ),
+      List(lit(0))
+    )
+    runTestAssert[Stat](code)(tree)
+  }
+
+  test("#6483-metals poly in braces") {
+    val code = """|{
+                  |  [B] => (c: B) => fn[B](c)
+                  |}[Int](0)
+                  |""".stripMargin
+    val tree = Term.Apply(
+      Term.ApplyType(
+        blk(Term.PolyFunction(
+          List(pparam("B")),
+          Term.Function(
+            List(tparam("c", "B")),
+            Term.Apply(Term.ApplyType(tname("fn"), List(pname("B"))), List(tname("c")))
+          )
+        )),
+        List(pname("Int"))
+      ),
+      List(lit(0))
+    )
+    runTestAssert[Stat](code)(tree)
+  }
+
 }
