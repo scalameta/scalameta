@@ -37,6 +37,8 @@ object TreeStructure {
           x match {
             case _: Quasi => default
             case x: Lit.String => s(DoubleQuotes.orTriple(x.value))
+            case x: Lit.Char => s(s"'${x.value}'")
+            case x: Lit.Symbol => s(s"""Symbol("${x.value.name}")""")
             case _: Lit.Unit | _: Lit.Null => s()
             case x: Lit.Double => s(asFloat(x.format, 'd'))
             case x: Lit.Float => s(asFloat(x.format, 'f'))

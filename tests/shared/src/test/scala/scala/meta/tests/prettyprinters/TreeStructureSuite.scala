@@ -32,8 +32,8 @@ class TreeStructureSuite extends ParseSuite {
   assertStructure(bool(false))("Lit.Boolean(false)")
   assertStructure(bool(true))("Lit.Boolean(true)")
   assertStructure(str("lit.str"))("""Lit.String("lit.str")""")
-  assertStructure(lit('a'))("Lit.Char(a)")
-  assertStructure(sym("a"))("""Lit.Symbol(Symbol(a))""")
+  assertStructure(lit('a'))("Lit.Char('a')")
+  assertStructure(sym("a"))("""Lit.Symbol(Symbol("a"))""")
 
   assertStructure(Case(Pat.Wildcard(), None, Term.Function(List(tparam("")), bool(false))))(
     """|
