@@ -1447,4 +1447,20 @@ class TermSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  Seq( // tuples of (operator, whether it's an assignment)
+    ("foo", false),
+    ("!=", false),
+    ("+=", true),
+    ("~=", true),
+    (":=", true)
+  ).foreach { case (op, isAssignment) =>
+    test(s"isAssignmentOp($op) == $isAssignment") {
+      matchSubStructure[Term](op, { case x: Name if x.isAssignmentOp == isAssignment => })
+      matchSubStructure[Term](
+        s"a $op b",
+        { case x: Member.Infix if x.isAssignment == isAssignment => }
+      )
+    }
+  }
+
 }

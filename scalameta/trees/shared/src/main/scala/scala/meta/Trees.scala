@@ -751,6 +751,7 @@ object Member {
     def lhs: Tree
     def op: Name
     def arg: Tree
+    final def isAssignment: Boolean = op.isAssignmentOp
   }
 
   @branch

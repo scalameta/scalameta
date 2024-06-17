@@ -34,7 +34,9 @@ package object trees {
     // opPrecedence?
     def precedence: Int = if (name.is[Name.Quasi]) 1 else name.value.precedence
 
-    def isUnaryOp: Boolean = name.value.isUnaryOp
+    def isUnaryOp: Boolean = !name.is[Name.Quasi] && name.value.isUnaryOp
+
+    def isAssignmentOp: Boolean = !name.is[Name.Quasi] && name.value.isAssignmentOp
   }
 
   implicit class XtensionTreesString(private val value: String) extends AnyVal {
