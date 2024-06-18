@@ -752,6 +752,7 @@ object Member {
     def op: Name
     def arg: Tree
     final def isAssignment: Boolean = op.isAssignmentOp
+    final def isLeftAssoc: Boolean = op.isLeftAssoc
   }
 
   @branch
