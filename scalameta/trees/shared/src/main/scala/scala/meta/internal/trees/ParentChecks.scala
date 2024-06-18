@@ -32,7 +32,7 @@ object ParentChecks {
   def PatVar(tree: Pat.Var, parent: Tree, destination: String): Boolean = parent match {
     case _: Pat.Bind => true
     case _: Decl.Val | _: Decl.Var | _: Defn.Val | _: Defn.Var => destination == "pats"
-    case _: Enumerator.Generator | _: Enumerator.Val => destination == "pat"
+    case _: Enumerator.Assign => destination == "pat"
     case _ =>
       val value = tree.name.value
       value.isEmpty || !value(0).isUpper
