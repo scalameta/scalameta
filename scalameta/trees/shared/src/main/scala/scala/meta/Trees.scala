@@ -1177,18 +1177,18 @@ object Mod {
 @branch
 trait Enumerator extends Tree
 object Enumerator {
-  @ast
-  class Generator(pat: Pat, rhs: Term) extends Enumerator with Tree.WithBody {
+  @branch
+  trait Assign extends Enumerator with Tree.WithBody {
+    def pat: Pat
+    def rhs: Term
     override def body: Tree = rhs
   }
   @ast
-  class CaseGenerator(pat: Pat, rhs: Term) extends Enumerator with Tree.WithBody {
-    override def body: Tree = rhs
-  }
+  class Generator(pat: Pat, rhs: Term) extends Assign
   @ast
-  class Val(pat: Pat, rhs: Term) extends Enumerator with Tree.WithBody {
-    override def body: Tree = rhs
-  }
+  class CaseGenerator(pat: Pat, rhs: Term) extends Assign
+  @ast
+  class Val(pat: Pat, rhs: Term) extends Assign
   @ast
   class Guard(cond: Term) extends Enumerator
 }

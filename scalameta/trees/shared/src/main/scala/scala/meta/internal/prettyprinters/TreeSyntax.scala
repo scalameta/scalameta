@@ -342,8 +342,7 @@ object TreeSyntax {
           case p: Case => p.pat eq t
           case p: Defn.Val => p.pats.contains(t)
           case p: Defn.Var => p.pats.contains(t)
-          case p: Enumerator.Generator => p.pat eq t
-          case p: Enumerator.Val => p.pat eq t
+          case p: Enumerator.Assign => p.pat eq t
           case _ => false
         }
         looksLikePatVar && thisLocationAlsoAcceptsPatVars

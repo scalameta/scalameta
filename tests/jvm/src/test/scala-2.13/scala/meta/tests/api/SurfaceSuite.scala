@@ -296,6 +296,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Defn.Val
          |scala.meta.Defn.Var
          |scala.meta.Enumerator
+         |scala.meta.Enumerator.Assign
          |scala.meta.Enumerator.CaseGenerator
          |scala.meta.Enumerator.Generator
          |scala.meta.Enumerator.Guard
