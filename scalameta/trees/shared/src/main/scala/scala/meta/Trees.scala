@@ -33,8 +33,22 @@ object Tree extends InternalTreeXtensions {
     def body: Tree
   }
   @branch
-  trait WithCases extends Tree {
+  trait WithPats extends Tree {
+    def pats: List[Pat]
+  }
+  @branch
+  trait WithExprs extends Tree {
+    def exprs: List[Tree]
+  }
+  @branch
+  trait WithStats extends WithExprs {
+    def stats: List[Stat]
+    final def exprs: List[Tree] = stats
+  }
+  @branch
+  trait WithCases extends Tree with WithExprs {
     def cases: List[CaseTree]
+    final def exprs: List[Tree] = cases
   }
   @branch
   trait WithDeclTpe extends Tree {
@@ -45,8 +59,9 @@ object Tree extends InternalTreeXtensions {
     def decltpe: Option[Type]
   }
   @branch
-  trait WithEnums extends Tree {
+  trait WithEnums extends Tree with WithExprs {
     def enums: List[Enumerator]
+    final def exprs: List[Tree] = enums
   }
   @branch
   trait WithParamClauses extends Tree {
@@ -66,6 +81,14 @@ object Tree extends InternalTreeXtensions {
   @branch
   trait WithParamClauseGroups extends Tree {
     def paramClauseGroups: List[Member.ParamClauseGroup]
+  }
+  @branch
+  trait WithCond extends Tree {
+    def cond: Term
+  }
+  @branch
+  trait WithCondOpt extends Tree {
+    def cond: Option[Term]
   }
 
 }
@@ -266,7 +289,7 @@ object Term {
     checkFields(ParentChecks.MemberTuple(args))
   }
   @ast
-  class Block(stats: List[Stat]) extends Term {
+  class Block(stats: List[Stat]) extends Term with Tree.WithStats {
     checkParent(ParentChecks.TermBlock)
   }
   @ast
@@ -278,7 +301,7 @@ object Term {
       elsep: Term,
       @newField("4.4.0")
       mods: List[Mod] = Nil
-  ) extends Term
+  ) extends Term with Tree.WithCond with Stat.WithMods
   @ast
   class QuotedMacroExpr(body: Term) extends Term
   @ast
@@ -342,9 +365,13 @@ object Term {
   @ast
   class PartialFunction(cases: List[Case] @nonEmpty) extends Term with Tree.WithCases
   @ast
-  class While(expr: Term, body: Term) extends Term with Tree.WithBody
+  class While(expr: Term, body: Term) extends Term with Tree.WithCond with Tree.WithBody {
+    override final def cond: Term = expr
+  }
   @ast
-  class Do(body: Term, expr: Term) extends Term with Tree.WithBody
+  class Do(body: Term, expr: Term) extends Term with Tree.WithBody with Tree.WithCond {
+    override final def cond: Term = expr
+  }
   @ast
   class For(enums: List[Enumerator] @nonEmpty, body: Term)
       extends Term with Tree.WithBody with Tree.WithEnums {
@@ -471,11 +498,11 @@ object Type {
   @deprecated("Or unused, replaced by ApplyInfix", "4.5.1") @ast
   class Or(lhs: Type, rhs: Type) extends Type
   @ast
-  class Refine(tpe: Option[Type], stats: List[Stat]) extends Type {
+  class Refine(tpe: Option[Type], stats: List[Stat]) extends Type with Tree.WithStats {
     checkFields(stats.forall(_.isRefineStat))
   }
   @ast
-  class Existential(tpe: Type, stats: List[Stat] @nonEmpty) extends Type {
+  class Existential(tpe: Type, stats: List[Stat] @nonEmpty) extends Type with Tree.WithStats {
     checkFields(stats.forall(_.isExistentialStat))
   }
   @ast
@@ -592,7 +619,9 @@ object Type {
 trait Pat extends Tree
 object Pat {
   @ast
-  class ArgClause(values: List[Pat]) extends Member.ArgClause
+  class ArgClause(values: List[Pat]) extends Member.ArgClause with Tree.WithPats {
+    override final def pats: List[Pat] = values
+  }
   @ast
   class Var(name: Term.Name) extends Pat with Member.Term {
     // NOTE: can't do this check here because of things like `val X = 2`
@@ -612,10 +641,11 @@ object Pat {
   @ast
   class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast
-  class Tuple(args: List[Pat] @nonEmpty) extends Pat with Member.Tuple {
+  class Tuple(args: List[Pat] @nonEmpty) extends Pat with Member.Tuple with Tree.WithPats {
     // tuple may have one element (see scala.Tuple1)
     // however, this element may not be another single-element Tuple
     checkFields(ParentChecks.MemberTuple(args))
+    override final def pats: List[Pat] = args
   }
   @ast
   class Repeated(name: Term.Name) extends Pat
@@ -774,10 +804,10 @@ trait Decl extends Stat
 object Decl {
   @ast
   class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: sm.Type)
-      extends Decl with Stat.WithMods with Tree.WithDeclTpe
+      extends Decl with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpe
   @ast
   class Var(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: sm.Type)
-      extends Decl with Stat.WithMods with Tree.WithDeclTpe
+      extends Decl with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpe
 
   @ast
   class Def(
@@ -836,7 +866,7 @@ trait Defn extends Stat
 object Defn {
   @ast
   class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: Option[sm.Type], rhs: Term)
-      extends Defn with Stat.WithMods with Tree.WithDeclTpeOpt with Tree.WithBody {
+      extends Defn with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpeOpt with Tree.WithBody {
     checkFields(!rhs.is[Term.Placeholder])
     checkFields(pats.forall(!_.is[Term.Name]))
     override def body: Tree = rhs
@@ -853,7 +883,7 @@ object Defn {
       decltpe: Option[sm.Type],
       @replacesFields("4.7.2", VarRhsCtor)
       body: Term
-  ) extends Defn with Stat.WithMods with Tree.WithDeclTpeOpt with Tree.WithBody {
+  ) extends Defn with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpeOpt with Tree.WithBody {
     checkFields(
       if (body.is[Term.Placeholder]) decltpe.nonEmpty && pats.forall(_.is[Pat.Var])
       else pats.forall(!_.is[Term.Name])
@@ -1039,7 +1069,7 @@ object Defn {
 }
 
 @ast
-class Pkg(ref: Term.Ref, stats: List[Stat]) extends Member.Term with Stat {
+class Pkg(ref: Term.Ref, stats: List[Stat]) extends Member.Term with Stat with Tree.WithStats {
   checkFields(ref.isQualId)
   def name: Term.Name = ref match {
     case name: Term.Name => name
@@ -1073,7 +1103,7 @@ object Ctor {
       paramClauses: Seq[Term.ParamClause] @nonEmpty,
       init: Init,
       stats: List[Stat]
-  ) extends Ctor with Stat with Stat.WithMods with Tree.WithParamClauses {
+  ) extends Ctor with Stat with Stat.WithMods with Tree.WithParamClauses with Tree.WithStats {
     checkFields(stats.forall(_.isBlockStat))
     @replacedField("4.6.0")
     final def paramss: List[List[Term.Param]] = paramClauses.map(_.values).toList
@@ -1103,7 +1133,7 @@ class Template(
     stats: List[Stat],
     @newField("4.4.0")
     derives: List[Type] = Nil
-) extends Tree {
+) extends Tree with Tree.WithStats {
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
   checkFields(stats.forall(_.isTemplateStat))
 }
@@ -1190,7 +1220,7 @@ object Enumerator {
   @ast
   class Val(pat: Pat, rhs: Term) extends Assign
   @ast
-  class Guard(cond: Term) extends Enumerator
+  class Guard(cond: Term) extends Enumerator with Tree.WithCond
 }
 
 @branch
@@ -1237,12 +1267,13 @@ trait CaseTree extends Tree with Tree.WithBody {
   def body: Tree
 }
 @ast
-class Case(pat: Pat, cond: Option[Term], body: Term) extends CaseTree
+class Case(pat: Pat, cond: Option[Term], body: Term)
+    extends CaseTree with Tree.WithCondOpt with Tree.WithBody
 @ast
 class TypeCase(pat: Type, body: Type) extends CaseTree
 
 @ast
-class Source(stats: List[Stat]) extends Tree {
+class Source(stats: List[Stat]) extends Tree with Tree.WithStats {
   // NOTE: This validation has been removed to allow dialects with top-level terms.
   // Ideally, we should push the validation into a dialect-specific prettyprinter when #220 is fixed.
   // checkFields(stats.forall(_.isTopLevelStat))

@@ -448,12 +448,17 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Term.Xml
          |scala.meta.Tree.WithBody
          |scala.meta.Tree.WithCases
+         |scala.meta.Tree.WithCond
+         |scala.meta.Tree.WithCondOpt
          |scala.meta.Tree.WithDeclTpe
          |scala.meta.Tree.WithDeclTpeOpt
          |scala.meta.Tree.WithEnums
+         |scala.meta.Tree.WithExprs
          |scala.meta.Tree.WithParamClauseGroup
          |scala.meta.Tree.WithParamClauseGroups
          |scala.meta.Tree.WithParamClauses
+         |scala.meta.Tree.WithPats
+         |scala.meta.Tree.WithStats
          |scala.meta.Tree.WithTParamClause
          |scala.meta.Type
          |scala.meta.Type.And
