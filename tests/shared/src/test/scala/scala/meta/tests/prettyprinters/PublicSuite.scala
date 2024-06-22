@@ -196,6 +196,7 @@ class PublicSuite extends TreeSuiteBase {
   }
 
   test("scala.meta.inputs.InputException") {}
+  test("scala.meta.inputs.InputRange") {}
 
   test("scala.meta.inputs.Input.toString") {
     // covered below

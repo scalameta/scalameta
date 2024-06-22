@@ -122,6 +122,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.inputs.Input.String *
          |scala.meta.inputs.Input.VirtualFile *
          |scala.meta.inputs.InputException *
+         |scala.meta.inputs.InputRange *
          |scala.meta.inputs.Position
          |scala.meta.inputs.Position.None *
          |scala.meta.inputs.Position.Range *
