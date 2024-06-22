@@ -244,8 +244,27 @@ class TargetedSuite extends SemanticdbSuite {
                   |}
                   |""".stripMargin
     test(code) {
-      val err = intercept[RuntimeException](computePayloadFromSnippet(code)).getMessage
-      assertEquals(err.substring(0, 19), "ambiguous mEnd: ``[")
+      assertEquals(
+        computePayloadFromSnippet(code).linesIterator.drop(3).filter(!_.startsWith("Uri => "))
+          .mkString("", "\n", "\n"),
+        """|Summary:
+           |Schema => SemanticDB v4
+           |Text => non-empty
+           |Language => Scala
+           |Symbols => 2 entries
+           |Occurrences => 2 entries
+           |
+           |Symbols:
+           |_empty_/AmbiguousMend# => trait AmbiguousMend extends AnyRef { +1 decls }
+           |  AnyRef => scala/AnyRef#
+           |_empty_/AmbiguousMend#x(). => abstract method x: Unit
+           |  Unit => scala/Unit#
+           |
+           |Occurrences:
+           |[0:6..0:19): AmbiguousMend <= _empty_/AmbiguousMend#
+           |[1:6..1:7): x <= _empty_/AmbiguousMend#x().
+           |""".stripMargin
+      )
     }
   }
 

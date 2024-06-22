@@ -73,8 +73,10 @@ trait TextDocumentOps {
       locally {
         object traverser extends m.Traverser {
           private def indexName(mname: m.Name): Unit = {
+            val mpos = mname.pos
+            if (mpos.isEmpty) return // for instance, missing type in method declaration
             todo += mname
-            val range = mname.tokens.findNot(_.is[m.Token.LeftParen]).getOrElse(mname.pos)
+            val range = mname.tokens.findNot(_.is[m.Token.LeftParen]).getOrElse(mpos)
             mstarts.put(range.start, mname).foreach(errorAmbiguous("mStart", mname, _))
             mends.put(range.end, mname).foreach(errorAmbiguous("mEnd", mname, _))
           }
