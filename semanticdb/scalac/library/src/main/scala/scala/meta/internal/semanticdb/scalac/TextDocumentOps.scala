@@ -75,10 +75,8 @@ trait TextDocumentOps {
           private def indexName(mname: m.Name): Unit = {
             todo += mname
             val range = mname.tokens.findNot(_.is[m.Token.LeftParen]).getOrElse(mname.pos)
-            if (mstarts.contains(range.start)) errorAmbiguous("mStart", mname, mstarts(range.start))
-            if (mends.contains(range.end)) errorAmbiguous("mEnd", mname, mends(range.end))
-            mstarts(range.start) = mname
-            mends(range.end) = mname
+            mstarts.put(range.start, mname).foreach(errorAmbiguous("mStart", mname, _))
+            mends.put(range.end, mname).foreach(errorAmbiguous("mEnd", mname, _))
           }
           private def getAssignLhsNames(values: Iterable[m.Term]): List[m.Name] = {
             val names = List.newBuilder[m.Name]
@@ -110,9 +108,7 @@ trait TextDocumentOps {
             mencl match {
               case mencl: m.Ctor.Primary =>
                 val menclName = mencl.parent.get.asInstanceOf[m.Member].name
-                if (mwithinctors.contains(menclName))
-                  errorAmbiguous("mWithinCtors", mname, mwithinctors(menclName))
-                mwithinctors(menclName) = mname
+                mwithinctors.put(menclName, mname).foreach(errorAmbiguous("mWithinCtors", mname, _))
               case _ =>
                 def findBinder(pat: m.Pat) = pat.collect { case m.Pat.Var(name) => name }.head
                 val menclName = mencl match {
@@ -122,9 +118,7 @@ trait TextDocumentOps {
                   case m.Defn.Val(_, pat :: Nil, _, _) => findBinder(pat)
                   case m.Defn.Var.Initial(_, pat :: Nil, _, _) => findBinder(pat)
                 }
-                if (mwithins.contains(menclName))
-                  errorAmbiguous("mWithins", mname, mwithins(menclName))
-                mwithins(menclName) = mname
+                mwithins.put(menclName, mname).foreach(errorAmbiguous("mWithins", mname, _))
             }
           }
           def indexPats(pats: List[m.Pat], pos: m.Position): Unit = pats match {
@@ -205,6 +199,8 @@ trait TextDocumentOps {
               }
             }
           }
+          private def success(mtree: Option[m.Name], gsym0: => g.Symbol): Unit = mtree
+            .foreach(success(_, gsym0))
           private def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
             // We cannot be guaranteed that all symbols have a position, see
             // https://github.com/scalameta/scalameta/issues/665
@@ -245,82 +241,67 @@ trait TextDocumentOps {
               if (!selectionFromGlobalStructuralType) occurrences(pos) = symbol
             }
 
-            def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit =
-              if (map.contains(mtree)) {
+            def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = map.get(mtree)
+              .foreach { mname =>
                 val gsym = gsym0.getterIn(gsym0.owner).orElse(gsym0)
                 if (!gsym.hasAccessBoundary) return
                 val within1 = gsym.privateWithin
                 val within2 = within1.owner.info.member {
-                  if (within1.name.isTermName) within1.name.toTypeName else within1.name.toTermName
+                  val wname = within1.name
+                  if (wname.isTermName) wname.toTypeName else wname.toTermName
                 }
-                success(map(mtree), wrapAlternatives("<within " + symbol + ">", within1, within2))
+                success(mname, wrapAlternatives("<within " + symbol + ">", within1, within2))
               }
             tryWithin(mwithins, gsym)
             tryWithin(mwithinctors, gsym.primaryConstructor)
           }
-          private def tryNamedArg(gtree: g.Tree, gstart: Int, gpoint: Int): Unit =
-            if (margnames.contains(gstart) || margnames.contains(gpoint)) for {
+          private def tryNamedArg(gsym: g.Symbol, gstart: Int, gpoint: Int): Unit =
+            if (gsym != null && (gsym.isMethod || gsym.isConstructor)) for {
               margnames <- margnames.get(gstart) ++ margnames.get(gpoint)
               margname <- margnames
-              if gtree.symbol != null && (gtree.symbol.isMethod || gtree.symbol.isConstructor)
-              gparams <- gtree.symbol.paramss
+              gparams <- gsym.paramss
               gparam <- gparams.find(_.name.decoded == margname.value)
             } success(margname, gparam)
           private def tryFindMtree(gtree: g.Tree): Unit = {
-            def tryMstart(start: Int): Boolean = {
-              if (!mstarts.contains(start)) return false
-              success(mstarts(start), gtree.symbol)
-              true
-            }
-            def tryMend(end: Int): Boolean = {
-              if (!mends.contains(end)) return false
-              success(mends(end), gtree.symbol)
-              true
-            }
-            def tryMpos(start: Int, end: Int): Boolean = {
-              if (!mstarts.contains(start)) return false
-              val mtree = mstarts(start)
-              if (mtree.pos.end != end) return false
-              success(mtree, gtree.symbol)
-              true
-            }
+            val gpos = gtree.pos
+            if (gpos == null || gpos == NoPosition) return
+            val gsym = gtree.symbol
+
+            def tryMstart(pos: Int): Unit = success(mstarts.get(pos), gsym)
+            def tryMend(pos: Int): Unit = success(mends.get(pos), gsym)
 
             gtree match {
-              case _: g.DefTree => trySymbolDefinition(gtree.symbol)
+              case _: g.DefTree => trySymbolDefinition(gsym)
               case _ =>
             }
 
-            if (gtree.pos == null || gtree.pos == NoPosition) return
-            val gstart = gtree.pos.start
-            val gpoint = gtree.pos.point
-            val gend = gtree.pos.end
+            val gstart = gpos.start
+            val gpoint = gpos.point
+            tryNamedArg(gsym, gstart, gpoint)
 
-            tryNamedArg(gtree, gstart, gpoint)
+            (gtree match {
+              case gtree: g.Template => gtree.body.iterator.map(_.symbol)
+                  .find(x => x != null && x.isPrimaryConstructor).orElse(Some(g.NoSymbol))
+              case gtree: g.DefDef =>
+                val gsym = gtree.symbol
+                if (gsym.isConstructor) Some(gsym) else None
+              case _ => None
+            }).foreach(success(mctordefs.get(gstart), _))
 
-            if (mctordefs.contains(gstart)) {
-              val mname = mctordefs(gstart)
-              gtree match {
-                case gtree: g.Template =>
-                  val gctor = gtree.body.find(x => Option(x.symbol).exists(_.isPrimaryConstructor))
-                  success(mname, gctor.map(_.symbol).getOrElse(g.NoSymbol))
-                case gtree: g.DefDef if gtree.symbol.isConstructor => success(mname, gtree.symbol)
-                case _ =>
-              }
-            }
-
-            if (mctorrefs.contains(gpoint)) {
-              val mname = mctorrefs(gpoint)
-              gtree match {
-                case g.Select(_, g.nme.CONSTRUCTOR) => success(mname, gtree.symbol)
-                case _ =>
-              }
+            gtree match {
+              case g.Select(_, g.nme.CONSTRUCTOR) => success(mctorrefs.get(gpoint), gsym)
+              case _ =>
             }
 
             // Ideally, we'd like a perfect match when gtree.pos == mtree.pos.
             // Unfortunately, this is often not the case as demonstrated by a bunch of cases above and below.
-            if (tryMpos(gstart, gend)) return
+            val gend = gpos.end
+            val gstartMtree = mstarts.get(gstart)
+            gstartMtree match {
+              case Some(mtree) if mtree.pos.end == gend => success(mtree, gsym); return
+              case _ =>
+            }
 
-            val gsym = gtree.symbol
             gtree match {
               case gtree: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
               case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
@@ -366,17 +347,16 @@ trait TextDocumentOps {
                   else mstarts.get(sel.namePos).map(mname => (sel.name, mname))
                 }
                 sels.foreach { case (gname, mname) =>
-                  val import1 = gtree.expr.tpe.member(gname.toTermName)
-                  val import2 = gtree.expr.tpe.member(gname.toTypeName)
-                  success(
-                    mname,
-                    wrapAlternatives("<import " + gtree.expr + "." + gname + ">", import1, import2)
-                  )
+                  val gexpr = gtree.expr
+                  val gtpe = gexpr.tpe
+                  val import1 = gtpe.member(gname.toTermName)
+                  val import2 = gtpe.member(gname.toTypeName)
+                  val altName = "<import " + gexpr + "." + gname + ">"
+                  success(mname, wrapAlternatives(altName, import1, import2))
                 }
-              case gtree: g.AppliedTypeTree =>
-                if (gtree.symbol.name == g.typeNames.REPEATED_PARAM_CLASS_NAME &&
-                  mstarts.contains(gstart) && gtree.args.nonEmpty)
-                  success(mstarts(gstart), gtree.args.head.symbol)
+              case gtree: g.AppliedTypeTree
+                  if gtree.symbol.name == g.typeNames.REPEATED_PARAM_CLASS_NAME =>
+                gtree.args.headOption.foreach(x => success(gstartMtree, x.symbol))
               case _ =>
             }
           }
@@ -518,9 +498,7 @@ trait TextDocumentOps {
             }
           }
 
-          override def traverse(gtree: g.Tree): Unit = {
-            if (isVisited(gtree)) return
-            else isVisited += gtree
+          override def traverse(gtree: g.Tree): Unit = if (isVisited.add(gtree)) {
             gtree.attachments.all.foreach {
               case att: g.analyzer.MacroExpansionAttachment => traverse(att.expandee)
               case _ =>
@@ -573,23 +551,28 @@ trait TextDocumentOps {
                 }
 
               case gtree: g.MemberDef =>
-                gtree.symbol.annotations.foreach(ann => traverse(ann.original))
+                val gsym = gtree.symbol
                 tryFindMtree(gtree)
-                if (gtree.symbol != null && !gtree.symbol.isSynthetic && gtree.pos != null &&
-                  gtree.pos.isRange && msinglevalpats.contains(gtree.pos.start)) {
+                if (gsym != null) {
+                  gsym.annotations.foreach(ann => traverse(ann.original))
                   // Map Defn.Val position of val pattern with single binder to the position
                   // of the single binder. For example, map `val Foo(x) = ..` to the position of `x`.
-                  val mpos = msinglevalpats(gtree.pos.start)
-                  occurrences(mpos) = gtree.symbol.toSemantic
-                  binders += mpos
+                  if (!gsym.isSynthetic) {
+                    val gpos = gtree.pos
+                    if (gpos != null && gpos.isRange) msinglevalpats.get(gpos.start)
+                      .foreach { mpos =>
+                        occurrences(mpos) = gsym.toSemantic
+                        binders += mpos
+                      }
+                  }
                 }
               case _: g.Apply | _: g.TypeApply =>
                 tryFindSynthetic(gtree)
-                if (gtree.pos != null && gtree.pos.isRange)
-                  tryNamedArg(gtree, gtree.pos.start, gtree.pos.point)
+                val gpos = gtree.pos
+                if (gpos != null && gpos.isRange) tryNamedArg(gtree.symbol, gpos.start, gpos.point)
                 // fix #2040
                 gtree match {
-                  case view: g.ApplyImplicitView if view.args.nonEmpty => traverse(view.args.head)
+                  case view: g.ApplyImplicitView => view.args.headOption.foreach(traverse)
                   case _ =>
                 }
               case select: g.Select if isSyntheticName(select) =>
