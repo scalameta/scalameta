@@ -123,13 +123,20 @@ abstract class SemanticdbSuite extends FunSuite {
     unit.toTextDocument
   }
 
-  private def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String = {
+  protected def computePayloadFromSnippet(code: String): String = {
     val document = computeDatabaseFromSnippet(code)
     val format = scala.meta.metap.Format.Detailed
-    val payload = s.Print.document(format, document).split(EOL)
-    val section = payload.dropWhile(_ != sectionName + ":").drop(1).takeWhile(_ != "")
-    section.mkString(EOL)
+    s.Print.document(format, document)
   }
+
+  protected def computeSectionFromPayload(payload: String, sectionName: String): String = {
+    val sectionLine = sectionName + ":"
+    payload.linesIterator.dropWhile(_ != sectionLine).drop(1).takeWhile(_ != "")
+      .mkString("", EOL, EOL)
+  }
+
+  protected def computeDatabaseSectionFromSnippet(code: String, sectionName: String): String =
+    computeSectionFromPayload(computePayloadFromSnippet(code), sectionName)
 
   def checkSection(code: String, expected: String, section: String)(implicit
       loc: munit.Location

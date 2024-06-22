@@ -237,4 +237,16 @@ class TargetedSuite extends SemanticdbSuite {
       assertEquals(foo2, "n/ForCompWithFilter.foo.")
     }
   )
+
+  locally { // #3738
+    val code = """|trait AmbiguousMend {
+                  |  def x
+                  |}
+                  |""".stripMargin
+    test(code) {
+      val err = intercept[RuntimeException](computePayloadFromSnippet(code)).getMessage
+      assertEquals(err.substring(0, 19), "ambiguous mEnd: ``[")
+    }
+  }
+
 }
