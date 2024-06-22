@@ -111,7 +111,7 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
 
   def takeRightWhile(p: Token => Boolean): Tokens = takeRight(segmentLengthRight(p))
 
-  override def dropWhile(p: Token => Boolean): Tokens = drop(segmentLength(p, 0))
+  override def dropWhile(p: Token => Boolean): Tokens = drop(segmentLength(p))
 
   def dropRightWhile(p: Token => Boolean): Tokens = dropRight(segmentLengthRight(p))
 
@@ -120,6 +120,11 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
   override def span(p: Token => Boolean): (Tokens, Tokens) = splitAt(segmentLength(p))
 
   def spanRight(p: Token => Boolean): (Tokens, Tokens) = splitAt(length - segmentLengthRight(p))
+
+  def findNot(p: Token => Boolean): Option[Token] = {
+    val idx = segmentLength(p)
+    if (idx < length) Some(get(idx)) else None
+  }
 }
 
 object Tokens {
