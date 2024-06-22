@@ -74,19 +74,11 @@ trait TextDocumentOps {
         object traverser extends m.Traverser {
           private def indexName(mname: m.Name): Unit = {
             todo += mname
-            val tok = mname.tokens.dropWhile(_.is[m.Token.LeftParen]).headOption
-            val mstart1 = tok.map(_.start).getOrElse(mname.pos.start)
-            val mend1 = tok.map(_.end).getOrElse(mname.pos.end)
-            if (mstarts.contains(mstart1)) {
-              val details = syntaxAndPos(mname) + " " + syntaxAndPos(mstarts(mstart1))
-              sys.error(s"ambiguous mstart $details")
-            }
-            if (mends.contains(mend1)) {
-              val details = syntaxAndPos(mname) + " " + syntaxAndPos(mends(mend1))
-              sys.error(s"ambiguous mend $details")
-            }
-            mstarts(mstart1) = mname
-            mends(mend1) = mname
+            val range = mname.tokens.findNot(_.is[m.Token.LeftParen]).getOrElse(mname.pos)
+            if (mstarts.contains(range.start)) errorAmbiguous("mStart", mname, mstarts(range.start))
+            if (mends.contains(range.end)) errorAmbiguous("mEnd", mname, mends(range.end))
+            mstarts(range.start) = mname
+            mends(range.end) = mname
           }
           private def getAssignLhsNames(values: Iterable[m.Term]): List[m.Name] = {
             val names = List.newBuilder[m.Name]
@@ -117,12 +109,9 @@ trait TextDocumentOps {
             val mencl = mname.parent.flatMap(_.parent).get
             mencl match {
               case mencl: m.Ctor.Primary =>
-                val menclDefn = mencl.parent.get.asInstanceOf[m.Member]
-                val menclName = menclDefn.name
-                if (mwithinctors.contains(menclName)) {
-                  val details = syntaxAndPos(mname) + " " + syntaxAndPos(mwithinctors(menclName))
-                  sys.error(s"ambiguous mwithinctors $details")
-                }
+                val menclName = mencl.parent.get.asInstanceOf[m.Member].name
+                if (mwithinctors.contains(menclName))
+                  errorAmbiguous("mWithinCtors", mname, mwithinctors(menclName))
                 mwithinctors(menclName) = mname
               case _ =>
                 def findBinder(pat: m.Pat) = pat.collect { case m.Pat.Var(name) => name }.head
@@ -133,10 +122,8 @@ trait TextDocumentOps {
                   case m.Defn.Val(_, pat :: Nil, _, _) => findBinder(pat)
                   case m.Defn.Var.Initial(_, pat :: Nil, _, _) => findBinder(pat)
                 }
-                if (mwithins.contains(menclName)) {
-                  val details = syntaxAndPos(mname) + " " + syntaxAndPos(mwithins(menclName))
-                  sys.error(s"ambiguous mwithins $details")
-                }
+                if (mwithins.contains(menclName))
+                  errorAmbiguous("mWithins", mname, mwithins(menclName))
                 mwithins(menclName) = mname
             }
           }
@@ -701,7 +688,10 @@ trait TextDocumentOps {
       s"$text [${gtree.pos.start}..${gtree.pos.end})"
     }
 
-  private def syntaxAndPos(mtree: m.Tree): String = s"${mtree.pos.syntax} $mtree"
+  private def syntaxAndPos(mtree: m.Tree): String = s"`$mtree`[${mtree.pos.syntax}]"
+
+  private def errorAmbiguous(kind: String, ntree: m.Tree, otree: m.Tree): Unit = sys
+    .error(s"ambiguous $kind: ${syntaxAndPos(ntree)} ${syntaxAndPos(otree)}")
 
   private def wrapAlternatives(name: String, alts: g.Symbol*): g.Symbol = {
     val normalizedAlts = {
