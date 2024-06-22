@@ -9,15 +9,21 @@ package scala.meta.inputs
 // * Line 0 is the first line in the input.
 // * Column 0 is the first character in the line.
 // -1 is the sentinel value used in Position.None.
-sealed trait Position {
+
+trait InputRange {
   def input: Input
   def start: Int
+  def end: Int
+  def text: String
+
+  override def toString = s"[$start..$end) in $input"
+}
+
+sealed trait Position extends InputRange {
   def startLine: Int
   def startColumn: Int
-  def end: Int
   def endLine: Int
   def endColumn: Int
-  def text: String
 
   final def isEmpty: Boolean = start == end
 }
@@ -41,7 +47,6 @@ object Position {
     lazy val endLine: Int = input.offsetToLine(end)
     def endColumn: Int = end - input.lineToOffset(endLine)
     lazy val text = new String(input.chars, start, end - start)
-    override def toString = s"[$start..$end) in $input"
   }
 
   object Range {

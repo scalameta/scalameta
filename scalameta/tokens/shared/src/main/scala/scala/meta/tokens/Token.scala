@@ -14,11 +14,8 @@ import scala.math.ScalaNumber
 // Therefore Token.end can point to the last character plus one.
 // Btw, Token.start can also point to the last character plus one if it's an EOF token.
 @root
-trait Token extends InternalToken {
-  def input: Input
+trait Token extends InternalToken with InputRange {
   def dialect: Dialect
-  def start: Int
-  def end: Int
   def pos: Position
   def text: String = pos.text
 
