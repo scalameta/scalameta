@@ -1,7 +1,5 @@
 package scala.meta.internal.io
 
-import scala.meta.internal.semanticdb.TextDocument
-import scala.meta.internal.semanticdb.TextDocuments
 import scala.meta.io.AbsolutePath
 import scala.meta.io._
 
@@ -10,8 +8,6 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-
-import scalapb.GeneratedMessage
 
 object PlatformFileIO {
 
@@ -32,18 +28,18 @@ object PlatformFileIO {
     } else throw new UnsupportedOperationException(s"Can't read $uri as InputStream")
 
   // copy-pasted from JVM
-  def write(path: AbsolutePath, proto: GeneratedMessage): Unit = {
+  def write[A](path: AbsolutePath, msg: A)(implicit osio: OutputStreamIO[A]): Unit = {
     Files.createDirectories(path.toNIO.getParent)
     val os = Files.newOutputStream(path.toNIO)
-    try proto.writeTo(os)
+    try osio.write(msg, os)
     finally os.close()
   }
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = Files.readAllBytes(path.toNIO)
 
-  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = {
+  def read[A](path: AbsolutePath)(implicit isio: InputStreamIO[A]): A = {
     val stream = Files.newInputStream(path.toNIO)
-    try TextDocuments.parseFrom(stream).documents
+    try isio.read(stream)
     finally stream.close()
   }
 

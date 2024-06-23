@@ -2,7 +2,6 @@ package scala.meta.internal
 
 import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.inputs._
-import scala.meta.internal.{semanticdb => s}
 
 package object inputs {
   implicit class XtensionPositionFormatMessage(private val pos: Position) extends AnyVal {
@@ -33,25 +32,6 @@ package object inputs {
       case _ => "<input>"
     }
     def structure: String = input.toString
-  }
-
-  implicit class XtensionPositionToRange(private val pos: Position) extends AnyVal {
-    def toRange: s.Range = s.Range(
-      startLine = pos.startLine,
-      startCharacter = pos.startColumn,
-      endLine = pos.endLine,
-      endCharacter = pos.endColumn
-    )
-  }
-
-  implicit class XtensionRangeToPosition(private val range: s.Range) extends AnyVal {
-    def toPosition(input: Input): Position = Position.Range(
-      input = input,
-      startLine = range.startLine,
-      startColumn = range.startCharacter,
-      endLine = range.endLine,
-      endColumn = range.endCharacter
-    )
   }
 
   implicit class XtensionPositionSyntaxStructure(private val pos: Position) extends AnyVal {

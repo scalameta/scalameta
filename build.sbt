@@ -102,9 +102,14 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
+  protobufSettings,
   mimaPreviousArtifacts := Set.empty,
   moduleName := "semanticdb-scalac-core",
   description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
+  Compile / unmanagedSourceDirectories ++= {
+    val base = (ThisBuild / baseDirectory).value / "semanticdb"
+    List(base / "metap", base / "cli", base / "semanticdb", base / "metacp", base / "symtab")
+  },
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
 ).dependsOn(scalameta.jvm)
 
@@ -156,7 +161,6 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file(
     enableMacros,
     buildInfoPackage := "scala.meta.internal",
     buildInfoKeys := Seq[BuildInfoKey](version),
-    protobufSettings,
     crossScalaVersions := AllScalaVersions
   ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
@@ -234,21 +238,9 @@ lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     description := "Scalameta umbrella module that includes all public APIs",
     crossScalaVersions := AllScalaVersions,
     libraryDependencies ++= List("org.scala-lang" % "scalap" % scalaVersion.value),
-    Compile / unmanagedSourceDirectories ++= {
-      val base = (ThisBuild / baseDirectory).value
-      List(
-        base / "semanticdb" / "metap",
-        base / "semanticdb" / "cli",
-        base / "semanticdb" / "semanticdb"
-      )
-    },
     mergedModule(base => List(base / "scalameta" / "contrib"))
-  ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading).jvmSettings(
-    Compile / unmanagedSourceDirectories ++= List(
-      (ThisBuild / baseDirectory).value / "semanticdb" / "metacp",
-      (ThisBuild / baseDirectory).value / "semanticdb" / "symtab"
-    )
-  ).jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(parsers)
+  ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
+  .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(parsers)
 
 /* ======================== TESTS ======================== */
 lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(

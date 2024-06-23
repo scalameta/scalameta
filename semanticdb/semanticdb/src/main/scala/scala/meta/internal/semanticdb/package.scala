@@ -1,8 +1,13 @@
 package scala.meta.internal
 
+import scala.meta.internal.io.InputStreamIO
+import scala.meta.internal.io.OutputStreamIO
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
 import scala.meta.internal.semanticdb.{Language => l}
+
+import java.io.InputStream
+import java.io.OutputStream
 
 package object semanticdb {
 
@@ -136,4 +141,14 @@ package object semanticdb {
   implicit class XtensionSemanticdbAccess(private val access: Access) extends AnyVal {
     def nonEmpty: Boolean = access.isDefined
   }
+
+  implicit object ImplicitTextDocumentsInputStreamIO extends InputStreamIO[TextDocuments] {
+    def read(is: Array[Byte]): TextDocuments = TextDocuments.parseFrom(is)
+    def read(is: InputStream): TextDocuments = TextDocuments.parseFrom(is)
+  }
+
+  implicit object ImplicitTextDocumentsOutputStreamIO extends OutputStreamIO[TextDocuments] {
+    def write(obj: TextDocuments, os: OutputStream): Unit = obj.writeTo(os)
+  }
+
 }

@@ -1,12 +1,9 @@
 package scala.meta.internal.io
 
-import scala.meta.internal.semanticdb._
 import scala.meta.io._
 
 import java.net.URI
 import java.nio.charset.Charset
-
-import scalapb.GeneratedMessage
 
 object FileIO {
 
@@ -14,9 +11,9 @@ object FileIO {
 
   def readAllBytes(uri: URI): Array[Byte] = PlatformFileIO.readAllBytes(uri)
 
-  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = PlatformFileIO.readAllDocuments(path)
+  def read[A: InputStreamIO](path: AbsolutePath): A = PlatformFileIO.read[A](path)
 
-  def write(path: AbsolutePath, proto: GeneratedMessage): Unit = PlatformFileIO.write(path, proto)
+  def write[A: OutputStreamIO](path: AbsolutePath, msg: A): Unit = PlatformFileIO.write(path, msg)
 
   def slurp(path: AbsolutePath, charset: Charset): String = PlatformFileIO.slurp(path, charset)
 

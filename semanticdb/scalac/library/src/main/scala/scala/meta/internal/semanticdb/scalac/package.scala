@@ -1,5 +1,7 @@
 package scala.meta.internal.semanticdb
 
+import scala.meta.inputs.Input
+import scala.meta.inputs.Position
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 
@@ -19,6 +21,25 @@ package object scalac {
     }
     def save(targetroot: AbsolutePath): Unit = write(targetroot, append = false)
     def append(targetroot: AbsolutePath): Unit = write(targetroot, append = true)
+  }
+
+  implicit class XtensionPositionToRange(private val pos: Position) extends AnyVal {
+    def toRange: s.Range = s.Range(
+      startLine = pos.startLine,
+      startCharacter = pos.startColumn,
+      endLine = pos.endLine,
+      endCharacter = pos.endColumn
+    )
+  }
+
+  implicit class XtensionRangeToPosition(private val range: s.Range) extends AnyVal {
+    def toPosition(input: Input): Position = Position.Range(
+      input = input,
+      startLine = range.startLine,
+      startColumn = range.startCharacter,
+      endLine = range.endLine,
+      endColumn = range.endCharacter
+    )
   }
 
 }

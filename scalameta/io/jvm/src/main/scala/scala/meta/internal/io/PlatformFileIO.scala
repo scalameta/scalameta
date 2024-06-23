@@ -1,6 +1,5 @@
 package scala.meta.internal.io
 
-import scala.meta.internal.semanticdb._
 import scala.meta.io._
 
 import java.net.URI
@@ -14,8 +13,6 @@ import java.nio.file.Path
 import java.util
 import java.util.stream.Collectors
 
-import scalapb.GeneratedMessage
-
 object PlatformFileIO {
 
   def readAllBytes(uri: URI): Array[Byte] = {
@@ -26,16 +23,18 @@ object PlatformFileIO {
 
   def readAllBytes(path: AbsolutePath): Array[Byte] = Files.readAllBytes(path.toNIO)
 
-  def readAllDocuments(path: AbsolutePath): Seq[TextDocument] = {
+  def read[A](path: AbsolutePath)(implicit isio: InputStreamIO[A]): A = {
     val stream = Files.newInputStream(path.toNIO)
-    try TextDocuments.parseFrom(stream).documents
+    try isio.read(stream)
     finally stream.close()
   }
 
-  def write(path: AbsolutePath, proto: GeneratedMessage, openOptions: OpenOption*): Unit = {
+  def write[A](path: AbsolutePath, msg: A, openOptions: OpenOption*)(implicit
+      osio: OutputStreamIO[A]
+  ): Unit = {
     Files.createDirectories(path.toNIO.getParent)
     val os = Files.newOutputStream(path.toNIO, openOptions: _*)
-    try proto.writeTo(os)
+    try osio.write(msg, os)
     finally os.close()
   }
 
