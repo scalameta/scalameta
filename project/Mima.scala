@@ -28,12 +28,23 @@ object Mima {
           })
         (ref.fullName, accessible)
     }
-    def include = fullName.startsWith("scala.meta.")
-    def exclude = fullName.split(Array('.', '#', '$')).exists {
+
+    def exclude(parts: Seq[String]) = parts.exists {
       case "internal" | "contrib" => true
       case _ => false
     }
-    accessible && include && !exclude
+    def excludeSemantic(relName: String, parts: Seq[String]) = // semantic packages
+      relName == "cli.Reporter" || relName == "cli.Reporter$" ||
+        parts.headOption.exists(Set("metap", "metacp").contains) ||
+        parts.lastOption.exists(Set("Metap", "Metacp").contains)
+
+    accessible && {
+      val relName = fullName.stripPrefix("scala.meta.")
+      (relName ne fullName) && ! {
+        val parts = relName.split(Array('.', '#', '$'))
+        exclude(parts) || excludeSemantic(relName, parts)
+      }
+    }
   }
 
   private val treeAnnotations =

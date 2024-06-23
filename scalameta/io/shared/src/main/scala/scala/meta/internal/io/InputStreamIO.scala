@@ -2,6 +2,11 @@ package scala.meta.internal.io
 
 import java.io._
 
+trait InputStreamIO[A] {
+  def read(is: Array[Byte]): A
+  def read(is: InputStream): A
+}
+
 object InputStreamIO {
   def readBytes(is: InputStream): Array[Byte] = {
     val baos = new ByteArrayOutputStream()
