@@ -527,7 +527,7 @@ lazy val protobufSettings = Def.settings(
       true // Don't append filename to package
     )._2
   )),
-  Compile / PB.protoSources := Seq(file("semanticdb/semanticdb")),
+  Compile / PB.protoSources := Seq(file("semanticdb/semanticdb/src/main/proto")),
   PB.additionalDependencies := Nil,
   libraryDependencies ++= {
     val scalapbVersion =
