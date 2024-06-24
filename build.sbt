@@ -506,7 +506,6 @@ lazy val mergeSettings = Def.settings(
 )
 
 lazy val protobufSettings = Def.settings(
-  sharedSettings,
   Compile / packageSrc / mappings ++= {
     val base = (Compile / sourceManaged).value
     val files = (Compile / managedSources).value
