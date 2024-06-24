@@ -97,6 +97,8 @@ lazy val nativeSettings = Seq(
   nativeConfig ~= { _.withMode(scalanative.build.Mode.releaseFast) }
 )
 
+val allPlatforms = Seq(JSPlatform, JVMPlatform, NativePlatform)
+
 /* ======================== SEMANTICDB ======================== */
 lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).settings(
   moduleName := "semanticdb-scalac-core",
@@ -178,59 +180,56 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
 ).dependsOn(semanticdbScalacCore)
 
 /* ======================== SCALAMETA ======================== */
-lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("scalameta/common"))
-  .settings(
-    moduleName := "common",
-    sharedSettings,
-    libraryDependencies += {
-      val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.2"
-      "com.lihaoyi" %%% "sourcecode" % sourceCodeVersion
-    },
-    description := "Bag of private and public helpers used in scalameta APIs and implementations",
-    enableMacros,
-    buildInfoPackage := "scala.meta.internal",
-    buildInfoKeys := Seq[BuildInfoKey](version),
-    crossScalaVersions := AllScalaVersions
-  ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
+lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
+  moduleName := "common",
+  sharedSettings,
+  libraryDependencies += {
+    val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.2"
+    "com.lihaoyi" %%% "sourcecode" % sourceCodeVersion
+  },
+  description := "Bag of private and public helpers used in scalameta APIs and implementations",
+  enableMacros,
+  buildInfoPackage := "scala.meta.internal",
+  buildInfoKeys := Seq[BuildInfoKey](version),
+  crossScalaVersions := AllScalaVersions
+).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
 
-lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("scalameta/trees"))
-  .settings(
-    moduleName := "trees",
-    sharedSettings,
-    description := "Scalameta abstract syntax trees",
-    crossScalaVersions := AllScalaVersions,
-    // NOTE: uncomment this to update ast.md
-    // scalacOptions += "-Xprint:typer",
-    enableHardcoreMacros,
-    libraryDependencies ++= {
-      val fastparseVersion = if (isScala211.value) "3.0.2" else "3.1.0"
-      List("com.lihaoyi" %%% "fastparse" % fastparseVersion),
-    },
-    mergedModule { base =>
-      val scalameta = base / "scalameta"
-      List(
-        scalameta / "io",
-        scalameta / "tokenizers",
-        scalameta / "tokens",
-        scalameta / "dialects",
-        scalameta / "inputs"
-      )
-    }
-  ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
+lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
+  moduleName := "trees",
+  sharedSettings,
+  description := "Scalameta abstract syntax trees",
+  crossScalaVersions := AllScalaVersions,
+  // NOTE: uncomment this to update ast.md
+  // scalacOptions += "-Xprint:typer",
+  enableHardcoreMacros,
+  libraryDependencies ++= {
+    val fastparseVersion = if (isScala211.value) "3.0.2" else "3.1.0"
+    List("com.lihaoyi" %%% "fastparse" % fastparseVersion),
+  },
+  mergedModule { base =>
+    val scalameta = base / "scalameta"
+    List(
+      scalameta / "io",
+      scalameta / "tokenizers",
+      scalameta / "tokens",
+      scalameta / "dialects",
+      scalameta / "inputs"
+    )
+  }
+).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 
-lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/parsers")).settings(
-    moduleName := "parsers",
-    sharedSettings,
-    description := "Scalameta APIs for parsing and their baseline implementation",
-    enableHardcoreMacros,
-    crossScalaVersions := AllScalaVersions,
-    mergedModule { base =>
-      List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
-    }
-  ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
+lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).settings(
+  moduleName := "parsers",
+  sharedSettings,
+  description := "Scalameta APIs for parsing and their baseline implementation",
+  enableHardcoreMacros,
+  crossScalaVersions := AllScalaVersions,
+  mergedModule { base =>
+    List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
+  }
+).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
     commonJsSettings,
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
@@ -263,15 +262,14 @@ def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
   }
 )
 
-lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/scalameta")).settings(
-    moduleName := "scalameta",
-    sharedSettings,
-    description := "Scalameta umbrella module that includes all public APIs",
-    crossScalaVersions := AllScalaVersions,
-    libraryDependencies ++= List("org.scala-lang" % "scalap" % scalaVersion.value),
-    mergedModule(base => List(base / "scalameta" / "contrib"))
-  ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
+lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta")).settings(
+  moduleName := "scalameta",
+  sharedSettings,
+  description := "Scalameta umbrella module that includes all public APIs",
+  crossScalaVersions := AllScalaVersions,
+  libraryDependencies ++= List("org.scala-lang" % "scalap" % scalaVersion.value),
+  mergedModule(base => List(base / "scalameta" / "contrib"))
+).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(parsers)
 
 /* ======================== TESTS ======================== */
@@ -311,55 +309,51 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
 lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-macros"))
   .settings(sharedSettings, nonPublishableSettings, enableMacros)
 
-lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .in(file("scalameta/testkit")).settings(
-    moduleName := "testkit",
-    sharedSettings,
-    hasLargeIntegrationTests,
-    libraryDependencies += munitLibrary.value,
-    testFrameworks := List(new TestFramework("munit.Framework")),
-    description := "Testing utilities for scalameta APIs"
-  ).dependsOn(scalameta).configureCross(crossPlatformPublishSettings).jvmSettings(
-    libraryDependencies ++= {
-      if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
-      else Nil
-    },
-    libraryDependencies ++= List(
-      // These are used to download and extract a corpus tar.gz
-      "org.rauschig" % "jarchivelib" % "1.2.0",
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
-    )
-  ).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
-
-lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("tests"))
-  .configs(Slow, All).settings(
-    sharedSettings,
-    testFrameworks := List(new TestFramework("munit.Framework")),
-    Test / unmanagedSourceDirectories ++= {
-      val base = (Compile / baseDirectory).value
-      List(base / "src" / "test" / ("scala-" + scalaVersion.value))
-    },
-    nonPublishableSettings,
-    description := "Tests for scalameta APIs",
-    exposePaths("tests", Test)
-  ).settings(testSettings: _*).jvmSettings(
-    libraryDependencies += {
-      val coursierVersion =
-        if (isScala211.value) "2.0.0-RC5-6"
-        else if (scalaVersion.value == "2.13.11") "2.1.8"
-        else if (scalaVersion.value == "2.13.12") "2.1.9"
-        else "2.1.10"
-      "io.get-coursier" %% "coursier" % coursierVersion
-    },
-    dependencyOverrides += {
-      val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
-      "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
-    },
-    // Needed because some tests rely on the --usejavacp option
-    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
-  ).jvmConfigure(
-    _.dependsOn(semanticdbMetac, semanticdbMetacp, semanticdbMetap, semanticdbIntegration)
+lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).settings(
+  moduleName := "testkit",
+  sharedSettings,
+  hasLargeIntegrationTests,
+  libraryDependencies += munitLibrary.value,
+  testFrameworks := List(new TestFramework("munit.Framework")),
+  description := "Testing utilities for scalameta APIs"
+).dependsOn(scalameta).configureCross(crossPlatformPublishSettings).jvmSettings(
+  libraryDependencies ++= {
+    if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
+    else Nil
+  },
+  libraryDependencies ++= List(
+    // These are used to download and extract a corpus tar.gz
+    "org.rauschig" % "jarchivelib" % "1.2.0",
+    "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
   )
+).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
+
+lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).configs(Slow, All).settings(
+  sharedSettings,
+  testFrameworks := List(new TestFramework("munit.Framework")),
+  Test / unmanagedSourceDirectories ++= {
+    val base = (Compile / baseDirectory).value
+    List(base / "src" / "test" / ("scala-" + scalaVersion.value))
+  },
+  nonPublishableSettings,
+  description := "Tests for scalameta APIs",
+  exposePaths("tests", Test)
+).settings(testSettings: _*).jvmSettings(
+  libraryDependencies += {
+    val coursierVersion =
+      if (isScala211.value) "2.0.0-RC5-6"
+      else if (scalaVersion.value == "2.13.11") "2.1.8"
+      else if (scalaVersion.value == "2.13.12") "2.1.9"
+      else "2.1.10"
+    "io.get-coursier" %% "coursier" % coursierVersion
+  },
+  dependencyOverrides += {
+    val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
+    "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
+  },
+  // Needed because some tests rely on the --usejavacp option
+  Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+).jvmConfigure(_.dependsOn(semanticdbMetac, semanticdbMetacp, semanticdbMetap, semanticdbIntegration))
   .jsSettings(commonJsSettings, scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
   .nativeSettings(
     nativeSettings,
