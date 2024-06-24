@@ -99,11 +99,11 @@ lazy val nativeSettings = Seq(
 
 /* ======================== SEMANTICDB ======================== */
 lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).settings(
+  moduleName := "semanticdb-scalac-core",
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
-  moduleName := "semanticdb-scalac-core",
   description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
 ).dependsOn(semanticdbShared)
@@ -144,6 +144,7 @@ lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).s
 ).dependsOn(semanticdbScalacCore)
 
 lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
+  moduleName := "metac", // that was name chosen originally, must keep it
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
@@ -155,6 +156,7 @@ lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
 ).dependsOn(semanticdbScalacCore)
 
 lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
+  moduleName := "semanticdb-metap",
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
@@ -165,6 +167,7 @@ lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
 ).dependsOn(semanticdbShared)
 
 lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
+  moduleName := "semanticdb-metacp",
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
@@ -177,6 +180,7 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
 /* ======================== SCALAMETA ======================== */
 lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("scalameta/common"))
   .settings(
+    moduleName := "common",
     sharedSettings,
     libraryDependencies += {
       val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.2"
@@ -192,6 +196,7 @@ lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file(
 
 lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("scalameta/trees"))
   .settings(
+    moduleName := "trees",
     sharedSettings,
     description := "Scalameta abstract syntax trees",
     crossScalaVersions := AllScalaVersions,
@@ -217,6 +222,7 @@ lazy val trees = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("
 
 lazy val parsers = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/parsers")).settings(
+    moduleName := "parsers",
     sharedSettings,
     description := "Scalameta APIs for parsing and their baseline implementation",
     enableHardcoreMacros,
@@ -259,6 +265,7 @@ def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
 
 lazy val scalameta = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/scalameta")).settings(
+    moduleName := "scalameta",
     sharedSettings,
     description := "Scalameta umbrella module that includes all public APIs",
     crossScalaVersions := AllScalaVersions,
@@ -306,6 +313,7 @@ lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-m
 
 lazy val testkit = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("scalameta/testkit")).settings(
+    moduleName := "testkit",
     sharedSettings,
     hasLargeIntegrationTests,
     libraryDependencies += munitLibrary.value,
