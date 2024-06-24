@@ -102,15 +102,20 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
-  protobufSettings,
   mimaPreviousArtifacts := Set.empty,
   moduleName := "semanticdb-scalac-core",
   description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
-  Compile / unmanagedSourceDirectories ++= {
-    val base = (ThisBuild / baseDirectory).value / "semanticdb"
-    List(base / "metap", base / "cli", base / "semanticdb", base / "metacp", base / "symtab")
-  },
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+).dependsOn(semanticdbShared)
+
+lazy val semanticdbShared = project.in(file("semanticdb/semanticdb")).settings(
+  moduleName := "semanticdb-shared",
+  sharedSettings,
+  publishJVMSettings,
+  fullCrossVersionSettings,
+  protobufSettings,
+  mimaPreviousArtifacts := Set.empty,
+  description := "Library defining SemanticDB data structures"
 ).dependsOn(scalameta.jvm)
 
 lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).settings(
@@ -138,7 +143,7 @@ lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).s
   }
 ).dependsOn(semanticdbScalacCore)
 
-lazy val metac = project.in(file("semanticdb/metac")).settings(
+lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
@@ -147,7 +152,27 @@ lazy val metac = project.in(file("semanticdb/metac")).settings(
   description := "Scalac 2.x launcher that generates SemanticDB on compile",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   mainClass := Some("scala.meta.cli.Metac")
-).dependsOn(semanticdbScalacPlugin)
+).dependsOn(semanticdbScalacCore)
+
+lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
+  sharedSettings,
+  publishJVMSettings,
+  fullCrossVersionSettings,
+  crossScalaVersions := LanguageVersions,
+  mimaPreviousArtifacts := Set.empty,
+  description := "Prints SemanticDB files",
+  mainClass := Some("scala.meta.cli.Metap")
+).dependsOn(semanticdbShared)
+
+lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
+  sharedSettings,
+  publishJVMSettings,
+  fullCrossVersionSettings,
+  crossScalaVersions := LanguageVersions,
+  mimaPreviousArtifacts := Set.empty,
+  description := "Generates SemanticDB files for a classpath",
+  mainClass := Some("scala.meta.cli.Metacp")
+).dependsOn(semanticdbScalacCore)
 
 /* ======================== SCALAMETA ======================== */
 lazy val common = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("scalameta/common"))
@@ -324,7 +349,9 @@ lazy val tests = crossProject(JSPlatform, JVMPlatform, NativePlatform).in(file("
     },
     // Needed because some tests rely on the --usejavacp option
     Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
-  ).jvmConfigure(_.dependsOn(metac, semanticdbIntegration))
+  ).jvmConfigure(
+    _.dependsOn(semanticdbMetac, semanticdbMetacp, semanticdbMetap, semanticdbIntegration)
+  )
   .jsSettings(commonJsSettings, scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
   .nativeSettings(
     nativeSettings,
