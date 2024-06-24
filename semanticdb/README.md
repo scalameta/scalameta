@@ -7,6 +7,6 @@ communication between tools.
 
 [Protobuf schema](semanticdb/src/main/proto/semanticdb.proto)
 
-[Specification](semanticdb3/semanticdb3.md)
+[Specification](semanticdb.md)
 
-[Quickstart guide](semanticdb3/guide.md)
+[Quickstart guide](guide.md)
