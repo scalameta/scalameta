@@ -1679,4 +1679,94 @@ class TokenizerSuite extends BaseTokenizerSuite {
     }
   }
 
+  test("scala3 code using CRLF") {
+    val code = """|object A:
+                  |  foo.map:
+                  |    bar
+                  |    + baz
+                  |  for
+                  |    a <- foo
+                  |    b <- bar
+                  |  yield
+                  |    a + b
+                  |""".stripMargin
+    val struct = """|BOF [0..0)
+                    |KwObject [0..6)
+                    |Space [6..7)
+                    |Ident(A) [7..8)
+                    |Colon [8..9)
+                    |CR [9..10)
+                    |LF [10..11)
+                    |Space [11..12)
+                    |Space [12..13)
+                    |Ident(foo) [13..16)
+                    |Dot [16..17)
+                    |Ident(map) [17..20)
+                    |Colon [20..21)
+                    |CR [21..22)
+                    |LF [22..23)
+                    |Space [23..24)
+                    |Space [24..25)
+                    |Space [25..26)
+                    |Space [26..27)
+                    |Ident(bar) [27..30)
+                    |CR [30..31)
+                    |LF [31..32)
+                    |Space [32..33)
+                    |Space [33..34)
+                    |Space [34..35)
+                    |Space [35..36)
+                    |Ident(+) [36..37)
+                    |Space [37..38)
+                    |Ident(baz) [38..41)
+                    |CR [41..42)
+                    |LF [42..43)
+                    |Space [43..44)
+                    |Space [44..45)
+                    |KwFor [45..48)
+                    |CR [48..49)
+                    |LF [49..50)
+                    |Space [50..51)
+                    |Space [51..52)
+                    |Space [52..53)
+                    |Space [53..54)
+                    |Ident(a) [54..55)
+                    |Space [55..56)
+                    |LeftArrow [56..58)
+                    |Space [58..59)
+                    |Ident(foo) [59..62)
+                    |CR [62..63)
+                    |LF [63..64)
+                    |Space [64..65)
+                    |Space [65..66)
+                    |Space [66..67)
+                    |Space [67..68)
+                    |Ident(b) [68..69)
+                    |Space [69..70)
+                    |LeftArrow [70..72)
+                    |Space [72..73)
+                    |Ident(bar) [73..76)
+                    |CR [76..77)
+                    |LF [77..78)
+                    |Space [78..79)
+                    |Space [79..80)
+                    |KwYield [80..85)
+                    |CR [85..86)
+                    |LF [86..87)
+                    |Space [87..88)
+                    |Space [88..89)
+                    |Space [89..90)
+                    |Space [90..91)
+                    |Ident(a) [91..92)
+                    |Space [92..93)
+                    |Ident(+) [93..94)
+                    |Space [94..95)
+                    |Ident(b) [95..96)
+                    |CR [96..97)
+                    |LF [97..98)
+                    |EOF [98..98)
+                    |""".stripMargin
+    assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
+  }
+
 }

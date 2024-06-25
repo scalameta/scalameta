@@ -292,20 +292,27 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("scala3 infix syntax 3.4") {
-    runTestAssert[Stat](
-      """|{
-         |  freezing
-         |  |
-         |  boiling
-         |}
-         |""".stripMargin,
-      Some(
-        """|{
-           |  freezing | boiling
-           |}
-           |""".stripMargin
-      )
-    )(Term.Block(List(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling"))))))
+    val code = """|{
+                  |  freezing
+                  |  |
+                  |  boiling
+                  |}
+                  |""".stripMargin
+    val layout = """|{
+                    |  freezing | boiling
+                    |}
+                    |""".stripMargin
+    val tree = blk(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling"))))
+    runTestAssert[Stat](code, Some(layout))(tree)
+    // now use CRLF
+    val layoutCrlf = """|{
+                        |  freezing
+                        |  |
+                        |  boiling
+                        |}
+                        |""".stripMargin
+    val treeCrlf = blk(tname("freezing"), tname("|"), tname("boiling"))
+    parseAndCheckTree[Stat](code.replace("\n", "\r\n"), layoutCrlf)(treeCrlf)
   }
 
   test("scala3 infix syntax 3.5") {
