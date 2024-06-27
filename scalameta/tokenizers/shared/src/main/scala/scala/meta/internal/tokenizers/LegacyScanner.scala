@@ -327,10 +327,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         def fetchDoubleQuote(): Unit =
           if (token == INTERPOLATIONID) {
             nextRawChar()
+            offset += 1
             if (ch == '\"')
               if (lookaheadReader.getc() == '\"') {
                 nextRawChar() // now eat it
-                offset += 3
+                offset += 2
                 nextRawChar()
                 getStringPart(multiLine = true)
                 pushSepRegions(STRINGPART) // indicate string part
@@ -341,7 +342,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
                 strVal = ""
               }
             else {
-              offset += 1
               getStringPart(multiLine = false)
               pushSepRegions(STRINGLIT) // indicate single line string part
             }
