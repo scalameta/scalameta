@@ -169,6 +169,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     }
 
     def loop(startingFrom: Int, braceBalance: Int = 0): Int = {
+      if (startingFrom >= legacyTokens.length) return startingFrom
+
       var legacyIndex = startingFrom
       def prev = legacyTokens(legacyIndex - 1)
       def curr =
@@ -185,12 +187,11 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         pushToken(token)
         nextToken()
       }
-      def emitToken() = pushTokenAndNext(getToken(curr, next))
-      if (legacyIndex >= legacyTokens.length) return legacyIndex
+      @inline
+      def getCurrToken(): Token = getToken(curr, next)
 
-      emitToken()
-
-      if (prev.token == INTERPOLATIONID) {
+      def emitTokenInterpolation(token: Token.Interpolation.Id) = {
+        pushTokenAndNext(token)
         // NOTE: funnily enough, messing with interpolation tokens is what I've been doing roughly 3 years ago, on New Year's Eve of 2011/2012
         // I vividly remember spending 2 or 3 days making scanner emit detailed tokens for string interpolations, and that was tedious.
         // Now we need to do the same for our new token stream, but I don't really feel like going through the pain again.
@@ -217,14 +218,14 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
               Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset)
             )
             if (nextChar == '{') {
-              emitToken()
+              emitCurrToken()
               legacyIndex = loop(legacyIndex, braceBalance = 1)
             } else {
               require(
                 curr.token == IDENTIFIER || curr.token == THIS ||
                   curr.token == USCORE && nextChar == '_'
               )
-              emitToken()
+              emitCurrToken()
             }
             pushToken(Token.Interpolation.SpliceEnd(input, dialect, curr.offset, curr.offset))
             emitContents()
@@ -249,7 +250,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         }
       }
 
-      if (prev.token == XMLLIT) {
+      def emitTokenXml(token: Token.Xml.Start) = {
         def emitSpliceStart(offset: Offset) =
           pushToken(Token.Xml.SpliceStart(input, dialect, offset, offset))
         def emitSpliceEnd(offset: Offset) =
@@ -267,7 +268,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           case LBRACE =>
             // We are at the start of an embedded scala expression
             emitSpliceStart(curr.offset)
-            emitToken()
+            emitCurrToken()
             legacyIndex = loop(legacyIndex, braceBalance = 1)
             emitSpliceEnd(curr.offset)
             emitContents()
@@ -277,13 +278,20 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             nextToken()
         }
 
-        // Xml.Start has been emitted. Backtrack to emit first part
-        legacyIndex -= 1
+        pushToken(token)
         emitContents()
         assert(prev.token == XMLLITEND)
         val xmlEndIndex = prev.endOffset + 1
         pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
       }
+      def emitToken(token: Token): Unit = token match {
+        case t: Token.Interpolation.Id => emitTokenInterpolation(t)
+        case t: Token.Xml.Start => emitTokenXml(t)
+        case _ => pushTokenAndNext(token)
+      }
+      def emitCurrToken(): Unit = emitToken(getCurrToken())
+
+      emitCurrToken()
 
       lastEmittedToken match {
         case _: Token.RightBrace if braceBalance > 1 => loop(legacyIndex, braceBalance - 1)
