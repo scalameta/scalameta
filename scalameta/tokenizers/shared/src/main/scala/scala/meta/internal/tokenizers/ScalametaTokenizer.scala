@@ -59,7 +59,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
         case INTERPOLATIONID => Token.Interpolation
             .Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-        case XMLLIT => Token.Xml.Start(input, dialect, curr.offset, curr.offset)
+        case XMLLIT => getXmlPart(curr)
         case XMLLITEND => unreachable
 
         case NEW => Token.KwNew(input, dialect, curr.offset)
@@ -250,43 +250,38 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         }
       }
 
-      def emitTokenXml(token: Token.Xml.Start) = {
-        def emitSpliceStart(offset: Offset) =
-          pushToken(Token.Xml.SpliceStart(input, dialect, offset, offset))
-        def emitSpliceEnd(offset: Offset) =
-          pushToken(Token.Xml.SpliceEnd(input, dialect, offset, offset))
-        def emitPart(from: Int, to: Int) = pushTokenAndNext(
-          Token.Xml.Part(input, dialect, from, to, new String(input.chars, from, to - from))
-        )
-
+      def emitTokenXml(token: Token.Xml.Part) = {
         @tailrec
         def emitContents(): Unit = curr.token match {
           case XMLLIT =>
-            emitPart(curr.offset, curr.endOffset + 1)
+            pushToken(getXmlPart(curr))
+            nextToken()
             emitContents()
 
           case LBRACE =>
             // We are at the start of an embedded scala expression
-            emitSpliceStart(curr.offset)
-            emitCurrToken()
+            pushToken(Token.Xml.SpliceStart(input, dialect, curr.offset, curr.offset))
+            pushToken(getCurrToken())
+            nextToken()
             legacyIndex = loop(legacyIndex, braceBalance = 1)
-            emitSpliceEnd(curr.offset)
+            pushToken(Token.Xml.SpliceEnd(input, dialect, curr.offset, curr.offset))
             emitContents()
 
           case XMLLITEND =>
             // We have reached the final xml part
+            val xmlEndIndex = curr.endOffset + 1
+            pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
             nextToken()
         }
 
+        pushToken(Token.Xml.Start(input, dialect, token.start, token.start))
         pushToken(token)
+        nextToken()
         emitContents()
-        assert(prev.token == XMLLITEND)
-        val xmlEndIndex = prev.endOffset + 1
-        pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
       }
       def emitToken(token: Token): Unit = token match {
         case t: Token.Interpolation.Id => emitTokenInterpolation(t)
-        case t: Token.Xml.Start => emitTokenXml(t)
+        case t: Token.Xml.Part => emitTokenXml(t)
         case _ => pushTokenAndNext(token)
       }
       def emitCurrToken(): Unit = emitToken(getCurrToken())
@@ -311,6 +306,14 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     tokens.toArray(underlying)
     Tokens(underlying, 0, underlying.length)
   }
+
+  private def getXmlPart(curr: LegacyTokenData): Token = {
+    val beg = curr.offset
+    val end = curr.endOffset + 1
+    val part = new String(input.chars, beg, end - beg)
+    Token.Xml.Part(input, dialect, beg, end, part)
+  }
+
 }
 
 object ScalametaTokenizer {
