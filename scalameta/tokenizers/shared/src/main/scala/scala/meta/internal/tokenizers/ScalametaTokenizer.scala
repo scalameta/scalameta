@@ -169,11 +169,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       pushToken(token)
     }
 
-    def loop(
-        startingFrom: Int,
-        braceBalance: Int = 0,
-        returnWhenBraceBalanceHitsZero: Boolean = false
-    ): Int = {
+    def loop(startingFrom: Int, braceBalance: Int = 0): Int = {
       var legacyIndex = startingFrom
       def prev = legacyTokens(legacyIndex - 1)
       def curr =
@@ -197,12 +193,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       if (legacyIndex >= legacyTokens.length) return legacyIndex
 
       emitToken()
-
-      // NOTE: need to track this in order to correctly emit SpliceEnd tokens after splices end
-      var braceBalance1 = braceBalance
-      if (prev.token == LBRACE) braceBalance1 += 1
-      if (prev.token == RBRACE) braceBalance1 -= 1
-      if (braceBalance1 == 0 && returnWhenBraceBalanceHitsZero) return legacyIndex
 
       if (prev.token == INTERPOLATIONID) {
         // NOTE: funnily enough, messing with interpolation tokens is what I've been doing roughly 3 years ago, on New Year's Eve of 2011/2012
@@ -230,9 +220,10 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             pushTokenAndNext(
               Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset)
             )
-            if (nextChar == '{')
-              legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
-            else {
+            if (nextChar == '{') {
+              emitToken()
+              legacyIndex = loop(legacyIndex, braceBalance = 1)
+            } else {
               require(
                 curr.token == IDENTIFIER || curr.token == THIS ||
                   curr.token == USCORE && nextChar == '_'
@@ -280,7 +271,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           case LBRACE =>
             // We are at the start of an embedded scala expression
             emitSpliceStart(curr.offset)
-            legacyIndex = loop(legacyIndex, returnWhenBraceBalanceHitsZero = true)
+            emitToken()
+            legacyIndex = loop(legacyIndex, braceBalance = 1)
             emitSpliceEnd(curr.offset)
             emitContents()
 
@@ -297,7 +289,13 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
       }
 
-      loop(legacyIndex, braceBalance1, returnWhenBraceBalanceHitsZero)
+      lastEmittedToken match {
+        case _: Token.RightBrace if braceBalance > 1 => loop(legacyIndex, braceBalance - 1)
+        case _: Token.LeftBrace if braceBalance > 0 => loop(legacyIndex, braceBalance + 1)
+        case _: Token.RightBrace => require(braceBalance > 0); legacyIndex
+        case _: Token.LeftBrace => loop(loop(legacyIndex, 1))
+        case _ => loop(legacyIndex, braceBalance)
+      }
     }
 
     try loop(startingFrom = 0)
