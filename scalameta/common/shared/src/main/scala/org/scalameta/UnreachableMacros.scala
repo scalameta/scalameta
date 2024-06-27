@@ -9,4 +9,6 @@ class UnreachableMacros(val c: Context) extends MacroHelpers {
   def unreachable: c.Tree = q"$UnreachableErrorModule.raise(${Map.empty[String, Tree]})"
   def unreachableWithDebug(dsl: c.Tree): c.Tree =
     q"$UnreachableErrorModule.raise(${debuggees(dsl)})"
+  def unreachableWithDebugAndClue(dsl: c.Tree, clue: c.Tree): c.Tree =
+    q"$UnreachableErrorModule.raise(${debuggees(dsl)}, $clue)"
 }
