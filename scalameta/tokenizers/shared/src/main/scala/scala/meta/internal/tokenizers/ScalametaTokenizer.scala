@@ -35,7 +35,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def lastEmittedToken: Token = tokens.get(tokens.size() - 1)
     def isAtLineStart: Boolean = lastEmittedToken.isInstanceOf[Token.AtEOLorF]
 
-    def getToken(curr: LegacyTokenData, next: => Option[LegacyTokenData]): Token = {
+    def getToken(curr: LegacyTokenData): Token = {
       (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case INTLIT => Token.Constant
@@ -121,15 +121,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case DOT => Token.Dot(input, dialect, curr.offset)
         case COLON => Token.Colon(input, dialect, curr.offset)
         case EQUALS => Token.Equals(input, dialect, curr.offset)
-        case AT =>
-          val isAmmonite = input.isInstanceOf[Input.Ammonite] && isAtLineStart &&
-            next.exists(_.token == WHITESPACE)
-          val atToken = Token.At(input, dialect, curr.offset)
-          if (isAmmonite) {
-            pushToken(new Token.EOF(input, dialect, curr.offset))
-            pushToken(atToken)
-            new Token.BOF(input, dialect, curr.endOffset)
-          } else atToken
+        case AT => Token.At(input, dialect, curr.offset)
         case HASH => Token.Hash(input, dialect, curr.offset)
         case USCORE => Token.Underscore(input, dialect, curr.offset)
         case ARROW => Token.RightArrow(input, dialect, curr.offset, curr.endOffset + 1)
@@ -176,10 +168,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       def curr =
         if (legacyIndex < legacyTokens.length) legacyTokens(legacyIndex)
         else throw new UnexpectedInputEndException()
-      def next = {
-        val nextIndex = legacyIndex + 1
-        if (nextIndex < legacyTokens.length) Some(legacyTokens(nextIndex)) else None
-      }
 
       @inline
       def nextToken() = legacyIndex += 1
@@ -188,8 +176,13 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         nextToken()
       }
       @inline
-      def getCurrToken(): Token = getToken(curr, next)
+      def getCurrToken(): Token = getToken(curr)
+      def getNextTokenOrFail(): Token = {
+        nextToken()
+        getCurrToken()
+      }
 
+      def emitTokenWhitespace(token: Token.Whitespace): Unit = pushTokenAndNext(token)
       def emitTokenInterpolation(token: Token.Interpolation.Id) = {
         pushTokenAndNext(token)
         // NOTE: funnily enough, messing with interpolation tokens is what I've been doing roughly 3 years ago, on New Year's Eve of 2011/2012
@@ -284,7 +277,20 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         val xmlEndIndex = prev.endOffset + 1
         pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
       }
+      @tailrec
       def emitToken(token: Token): Unit = token match {
+        case _: Token.At if input.isInstanceOf[Input.Ammonite] && isAtLineStart =>
+          getNextTokenOrFail() match {
+            case t: Token.Whitespace =>
+              pushToken(Token.EOF(input, dialect, token.start))
+              pushToken(token)
+              pushToken(Token.BOF(input, dialect, token.end))
+              emitTokenWhitespace(t)
+            case t =>
+              pushToken(token)
+              emitToken(t)
+          }
+        case t: Token.Whitespace => emitTokenWhitespace(t)
         case t: Token.Interpolation.Id => emitTokenInterpolation(t)
         case t: Token.Xml.Start => emitTokenXml(t)
         case _ => pushTokenAndNext(token)
