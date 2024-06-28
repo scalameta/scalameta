@@ -18,7 +18,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   val reporter: Reporter = Reporter(input)
   val curr: LegacyTokenData = new LegacyTokenData {}
   val next: LegacyTokenData = new LegacyTokenData {}
-  val prev: LegacyTokenData = new LegacyTokenData {}
   val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
 
   import curr._
@@ -26,7 +25,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   import reporter._
   curr.input = this.input
   next.input = this.input
-  prev.input = this.input
 
   private var openComments = 0
   private def putCommentChar(): Unit = nextCommentChar()
@@ -876,9 +874,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             exploratoryScanner.nextToken()
             exploratoryScanner.curr.token match {
               case LBRACE => loop(balance + 1)
-              case RBRACE =>
-                if (balance == 1) () // do nothing, this is the end of the unquote
-                else loop(balance - 1)
+              case RBRACE => if (balance > 1) loop(balance - 1)
               case _ => loop(balance)
             }
           }
