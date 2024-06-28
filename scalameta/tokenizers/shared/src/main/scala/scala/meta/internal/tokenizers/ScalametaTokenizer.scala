@@ -44,101 +44,97 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def isAtLineStart: Boolean = lastEmittedToken.isInstanceOf[Token.AtEOLorF]
 
     def emitTokenWhitespace(token: Token.Whitespace): Unit = pushToken(token)
+    def emitTokenInterpolation(token: Token.Interpolation.Id) = {
+      def pushPart(end: Offset) =
+        pushToken(Token.Interpolation.Part(input, dialect, curr.offset, end, curr.strVal))
+      @tailrec
+      def emitContents(): Unit =
+        if (curr.token == STRINGPART) {
+          val dollarOffset = curr.endOffset + 1
+          require(input.chars(dollarOffset) == '$')
+          pushPart(dollarOffset)
+          val postDollarOffset = dollarOffset + 1
+          pushToken(Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset))
+          val spliceToken = getNextTokenOrFail()
+          pushToken(spliceToken)
+          curr.token match {
+            case LBRACE => loop(braceBalance = 1)
+            case IDENTIFIER | THIS =>
+            case USCORE if input.chars(postDollarOffset) == '_' =>
+            case _ => unreachable(debug(curr), s"unexpected interpolation: $spliceToken")
+          }
+          nextTokenOrFail()
+          pushToken(Token.Interpolation.SpliceEnd(input, dialect, curr.offset, curr.offset))
+          emitContents()
+        } else require(curr.token == STRINGLIT)
+
+      // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
+      // i.e. STRINGLIT (if the interpolation is empty) or STRINGPART (if it's not)
+      // NOTE: before emitEnd, curr is the first token that follows the concluding STRINGLIT of the interpolation
+      // for example, EOF in the case of `q""` or `q"$foobar"`
+      pushToken(token)
+      nextTokenOrFail()
+      val numQuotes = curr.offset - token.end
+
+      pushToken(Token.Interpolation.Start(input, dialect, token.end, curr.offset))
+      emitContents()
+
+      val endEndPos = curr.endOffset + 1
+      val endBegPos = endEndPos - numQuotes
+      require(input.chars(endBegPos) == '\"')
+      pushPart(endBegPos)
+
+      pushToken(Token.Interpolation.End(input, dialect, endBegPos, endEndPos))
+    }
+    def emitTokenXml(token: Token.Xml.Part) = {
+      @tailrec
+      def emitContents(): Unit = curr.token match {
+        case XMLLIT =>
+          pushToken(getXmlPart(curr))
+          nextTokenOrFail()
+          emitContents()
+
+        case LBRACE =>
+          // We are at the start of an embedded scala expression
+          pushToken(Token.Xml.SpliceStart(input, dialect, curr.offset, curr.offset))
+          pushToken(getCurrToken())
+          loop(braceBalance = 1)
+          nextTokenOrFail()
+          pushToken(Token.Xml.SpliceEnd(input, dialect, curr.offset, curr.offset))
+          emitContents()
+
+        case XMLLITEND =>
+          // We have reached the final xml part
+          val xmlEndIndex = curr.endOffset + 1
+          pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
+      }
+
+      pushToken(Token.Xml.Start(input, dialect, token.start, token.start))
+      pushToken(token)
+      nextTokenOrFail()
+      emitContents()
+    }
+    @tailrec
+    def emitToken(token: Token): Unit = token match {
+      case _: Token.At if input.isInstanceOf[Input.Ammonite] && isAtLineStart =>
+        getNextTokenOrFail() match {
+          case t: Token.Whitespace =>
+            pushToken(Token.EOF(input, dialect, token.start))
+            pushToken(token)
+            pushToken(Token.BOF(input, dialect, token.end))
+            emitTokenWhitespace(t)
+          case t =>
+            pushToken(token)
+            emitToken(t)
+        }
+      case t: Token.Whitespace => emitTokenWhitespace(t)
+      case t: Token.Interpolation.Id => emitTokenInterpolation(t)
+      case t: Token.Xml.Part => emitTokenXml(t)
+      case _ => pushToken(token)
+    }
 
     def loop(braceBalance: Int = 0): Unit = if (nextToken()) {
-      def emitTokenInterpolation(token: Token.Interpolation.Id) = {
-        def pushPart(end: Offset) =
-          pushToken(Token.Interpolation.Part(input, dialect, curr.offset, end, curr.strVal))
-        @tailrec
-        def emitContents(): Unit =
-          if (curr.token == STRINGPART) {
-            val dollarOffset = curr.endOffset + 1
-            require(input.chars(dollarOffset) == '$')
-            pushPart(dollarOffset)
-            val postDollarOffset = dollarOffset + 1
-            pushToken(
-              Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset)
-            )
-            val spliceToken = getNextTokenOrFail()
-            pushToken(spliceToken)
-            curr.token match {
-              case LBRACE => loop(braceBalance = 1)
-              case IDENTIFIER | THIS =>
-              case USCORE if input.chars(postDollarOffset) == '_' =>
-              case _ => unreachable(debug(curr), s"unexpected interpolation: $spliceToken")
-            }
-            nextTokenOrFail()
-            pushToken(Token.Interpolation.SpliceEnd(input, dialect, curr.offset, curr.offset))
-            emitContents()
-          } else require(curr.token == STRINGLIT)
-
-        // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
-        // i.e. STRINGLIT (if the interpolation is empty) or STRINGPART (if it's not)
-        // NOTE: before emitEnd, curr is the first token that follows the concluding STRINGLIT of the interpolation
-        // for example, EOF in the case of `q""` or `q"$foobar"`
-        pushToken(token)
-        nextTokenOrFail()
-        val numQuotes = curr.offset - token.end
-
-        pushToken(Token.Interpolation.Start(input, dialect, token.end, curr.offset))
-        emitContents()
-
-        val endEndPos = curr.endOffset + 1
-        val endBegPos = endEndPos - numQuotes
-        require(input.chars(endBegPos) == '\"')
-        pushPart(endBegPos)
-
-        pushToken(Token.Interpolation.End(input, dialect, endBegPos, endEndPos))
-      }
-      def emitTokenXml(token: Token.Xml.Part) = {
-        @tailrec
-        def emitContents(): Unit = curr.token match {
-          case XMLLIT =>
-            pushToken(getXmlPart(curr))
-            nextTokenOrFail()
-            emitContents()
-
-          case LBRACE =>
-            // We are at the start of an embedded scala expression
-            pushToken(Token.Xml.SpliceStart(input, dialect, curr.offset, curr.offset))
-            pushToken(getCurrToken())
-            loop(braceBalance = 1)
-            nextTokenOrFail()
-            pushToken(Token.Xml.SpliceEnd(input, dialect, curr.offset, curr.offset))
-            emitContents()
-
-          case XMLLITEND =>
-            // We have reached the final xml part
-            val xmlEndIndex = curr.endOffset + 1
-            pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
-        }
-
-        pushToken(Token.Xml.Start(input, dialect, token.start, token.start))
-        pushToken(token)
-        nextTokenOrFail()
-        emitContents()
-      }
-      @tailrec
-      def emitToken(token: Token): Unit = token match {
-        case _: Token.At if input.isInstanceOf[Input.Ammonite] && isAtLineStart =>
-          getNextTokenOrFail() match {
-            case t: Token.Whitespace =>
-              pushToken(Token.EOF(input, dialect, token.start))
-              pushToken(token)
-              pushToken(Token.BOF(input, dialect, token.end))
-              emitTokenWhitespace(t)
-            case t =>
-              pushToken(token)
-              emitToken(t)
-          }
-        case t: Token.Whitespace => emitTokenWhitespace(t)
-        case t: Token.Interpolation.Id => emitTokenInterpolation(t)
-        case t: Token.Xml.Part => emitTokenXml(t)
-        case _ => pushToken(token)
-      }
-
       emitToken(getCurrToken())
-
       lastEmittedToken match {
         case _: Token.RightBrace if braceBalance > 1 => loop(braceBalance - 1)
         case _: Token.LeftBrace if braceBalance > 0 => loop(braceBalance + 1)
