@@ -2882,4 +2882,144 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](codeWithBlank, layout)(tree)
   }
 
+  test("scala3 code using CRLF 1: fewer braces and leading infix") {
+    val code = """|object A:
+                  |  foo.map:
+                  |    bar
+                  |    + baz
+                  |""".stripMargin
+    val layout = """|object A {
+                    |  foo.map {
+                    |    bar + baz
+                    |  }
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Term.Apply(
+        Term.Select(tname("foo"), tname("map")),
+        List(blk(Term.ApplyInfix(tname("bar"), tname("+"), Nil, List(tname("baz")))))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scala3 code using CRLF 2: for-yield without braces") {
+    val code = """|object A:
+                  |  for
+                  |    a <- foo
+                  |    b <- bar
+                  |  yield
+                  |    a + b
+                  |""".stripMargin
+    val layout = """|object A { for (a <- foo; b <- bar) yield a + b }
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Term.ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(tname("a")), tname("foo")),
+          Enumerator.Generator(Pat.Var(tname("b")), tname("bar"))
+        ),
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scala3 code using CRLF 3: for-yield with braces") {
+    val code = """|object A:
+                  |  for {
+                  |    a <- foo
+                  |    b <- bar
+                  |  }
+                  |  yield
+                  |    a + b
+                  |""".stripMargin
+    val layout = """|object A { for (a <- foo; b <- bar) yield a + b }
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Term.ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(tname("a")), tname("foo")),
+          Enumerator.Generator(Pat.Var(tname("b")), tname("bar"))
+        ),
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scala3 code using CRLF 4: for-yield with parens") {
+    val code = """|object A:
+                  |  for (
+                  |    a <- foo;
+                  |    b <- bar
+                  |  )
+                  |  yield
+                  |    a + b
+                  |""".stripMargin
+    val layout = """|object A { for (a <- foo; b <- bar) yield a + b }
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Term.ForYield(
+        List(
+          Enumerator.Generator(Pat.Var(tname("a")), tname("foo")),
+          Enumerator.Generator(Pat.Var(tname("b")), tname("bar"))
+        ),
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scala3 code using CRLF 5: match operator with select") {
+    val code = """|object A:
+                  |  foo.match
+                  |    case bar => baz
+                  |  .qux
+                  |""".stripMargin
+    val layout = """|object A {
+                    |  (foo match {
+                    |    case bar => baz
+                    |  }).qux
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Term.Select(
+        Term.Match(tname("foo"), List(Case(Pat.Var(tname("bar")), None, tname("baz"))), Nil),
+        tname("qux")
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("scala3 code using CRLF 6: while-do") {
+    val code = """|object A:
+                  |  while
+                  |    a < b
+                  |  do
+                  |    a + b
+                  |""".stripMargin
+    val layout = """|object A { while (a < b) a + b }
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Term.While(
+        Term.ApplyInfix(tname("a"), tname("<"), Nil, List(tname("b"))),
+        Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b")))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
