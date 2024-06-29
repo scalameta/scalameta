@@ -35,8 +35,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def lastEmittedToken: Token = tokens.get(tokens.size() - 1)
     def isAtLineStart: Boolean = lastEmittedToken.isInstanceOf[Token.AtEOLorF]
 
-    def pushLegacyToken(curr: LegacyTokenData, next: => Option[LegacyTokenData]): Unit = {
-      val token = (curr.token: @scala.annotation.switch) match {
+    def getToken(curr: LegacyTokenData, next: => Option[LegacyTokenData]): Token = {
+      (curr.token: @scala.annotation.switch) match {
         case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
         case INTLIT => Token.Constant
             .Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
@@ -166,7 +166,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case UNDEF => unreachable
         case ERROR => unreachable
       }
-      pushToken(token)
     }
 
     def loop(
@@ -190,10 +189,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         pushToken(token)
         nextToken()
       }
-      def emitToken() = {
-        pushLegacyToken(curr, next)
-        nextToken()
-      }
+      def emitToken() = pushTokenAndNext(getToken(curr, next))
       if (legacyIndex >= legacyTokens.length) return legacyIndex
 
       emitToken()
