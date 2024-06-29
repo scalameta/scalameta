@@ -279,7 +279,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       }
 
     val iterPos = 1 + prevPos
-    if (iterPos < currPos) iter(iterPos, prevPos, if (tokens(prevPos).is[EOL]) 0 else -1)
+    if (iterPos < currPos) iter(iterPos, prevPos, if (tokens(prevPos).is[AtEOL]) 0 else -1)
     else if (tokens(currPos).is[EOF]) currPos
     else prevPos
   }
@@ -289,7 +289,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     val nextPos = currentPosition + 1
     nextPos < tokens.length && {
       val nextToken = tokens(nextPos)
-      nextToken.is[EOL] || nextToken.is[Trivia] && isAheadNewLine(nextPos)
+      nextToken.is[AtEOL] || nextToken.is[Trivia] && isAheadNewLine(nextPos)
     }
   }
 
@@ -606,7 +606,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     else {
       @tailrec
       def findLastEOL(pos: Int): Int =
-        if (pos == prevPos) -1 else if (tokens(pos).is[EOL]) pos else findLastEOL(pos - 1)
+        if (pos == prevPos) -1 else if (tokens(pos).is[AtEOL]) pos else findLastEOL(pos - 1)
       @tailrec
       def hasBlank(pos: Int, hadEOL: Boolean): Boolean =
         if (pos == prevPos) false
