@@ -3192,7 +3192,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def dotselectors = Importer(sid, importees())
     def name(tn: Term.Name) = copyPos(tn)(Name.Indeterminate(tn.value))
     sid match {
-      case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isStableId =>
+      case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isPath =>
         if (acceptOpt[Dot]) dotselectors
         else if (acceptOpt(soft.KwAs(_))) Importer(sid, importeeRename(name(tn)) :: Nil)
         else if (Wildcard.isStar(tn.tokens.head))

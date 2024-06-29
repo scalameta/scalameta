@@ -109,10 +109,15 @@ class ExportImportSuite extends BaseDottySuite {
     val code = """|case class A():
                   |  export A.this.value
                   |""".stripMargin
-    val error = """|<input>:2: error: `.` expected but `outdent` found
-                   |  export A.this.value
-                   |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "case class A() { export A.this.value }"
+    val tree = Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      Nil,
+      ctorp(Nil),
+      tpl(Export(List(Importer(Term.This(Name("A")), List(Importee.Name(Name("value")))))))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

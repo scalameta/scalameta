@@ -1234,7 +1234,7 @@ class Export(importers: List[Importer] @nonEmpty) extends ImportExportStat
 
 @ast
 class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree {
-  checkFields(ref.isStableId)
+  checkFields(ref.isPath)
 }
 
 @branch
