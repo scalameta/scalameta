@@ -244,10 +244,25 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
 
     (ch: @switch) match {
-      case ' ' | '\t' | CR | LF | FF =>
-        token = WHITESPACE
-        strVal = ch.toChar.toString
+      case ' ' =>
         nextChar()
+        strVal = " "
+        token = WHITESPACE_SPC
+      case '\t' =>
+        nextChar()
+        strVal = "\t"
+        token = WHITESPACE_TAB
+      case FF =>
+        nextChar()
+        strVal = "\f"
+        token = WHITESPACE_FF
+      case LF =>
+        nextChar()
+        strVal = "\n"
+        token = WHITESPACE_LF
+      case CR =>
+        nextChar()
+        token = WHITESPACE_CR
       // nextToken()
       case
           // uppercase alpha
