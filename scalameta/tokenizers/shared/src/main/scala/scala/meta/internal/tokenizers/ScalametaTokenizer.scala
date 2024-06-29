@@ -31,11 +31,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def pushToken(token: Token): Unit = tokens.add(token)
     pushToken(new Token.BOF(input, dialect))
 
-    val isAmmoniteInput: Boolean = input.isInstanceOf[Input.Ammonite]
-    def isAtLineStart: Boolean = {
-      val last = tokens.get(tokens.size() - 1) // tokens is non-empty, contains BOF
-      last.isInstanceOf[Token.EOL] || last.isInstanceOf[Token.BOF]
-    }
+    // tokens is non-empty, contains BOF
+    def lastEmittedToken: Token = tokens.get(tokens.size() - 1)
+    def isAtLineStart: Boolean = lastEmittedToken.isInstanceOf[Token.AtEOLorF]
 
     def pushLegacyToken(curr: LegacyTokenData, next: => Option[LegacyTokenData]): Unit = {
       val token = (curr.token: @scala.annotation.switch) match {
@@ -124,7 +122,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case COLON => Token.Colon(input, dialect, curr.offset)
         case EQUALS => Token.Equals(input, dialect, curr.offset)
         case AT =>
-          val isAmmonite = isAmmoniteInput && isAtLineStart && next.exists(_.token == WHITESPACE)
+          val isAmmonite = input.isInstanceOf[Input.Ammonite] && isAtLineStart &&
+            next.exists(_.token == WHITESPACE)
           val atToken = Token.At(input, dialect, curr.offset)
           if (isAmmonite) {
             pushToken(new Token.EOF(input, dialect, curr.offset))
