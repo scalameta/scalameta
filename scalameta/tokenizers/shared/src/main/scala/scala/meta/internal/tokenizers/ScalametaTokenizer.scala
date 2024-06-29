@@ -278,13 +278,11 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case MACROQUOTE => Token.MacroQuote(input, dialect, curr.offset)
       case MACROSPLICE => Token.MacroSplice(input, dialect, curr.offset)
 
-      case WHITESPACE =>
-        if (curr.strVal == " ") Token.Space(input, dialect, curr.offset)
-        else if (curr.strVal == "\t") Token.Tab(input, dialect, curr.offset)
-        else if (curr.strVal == "\r") Token.CR(input, dialect, curr.offset)
-        else if (curr.strVal == "\n") Token.LF(input, dialect, curr.offset)
-        else if (curr.strVal == "\f") Token.FF(input, dialect, curr.offset)
-        else unreachable(debug(curr.strVal))
+      case WHITESPACE_SPC => Token.Space(input, dialect, curr.offset)
+      case WHITESPACE_TAB => Token.Tab(input, dialect, curr.offset)
+      case WHITESPACE_CR => Token.CR(input, dialect, curr.offset)
+      case WHITESPACE_LF => Token.LF(input, dialect, curr.offset)
+      case WHITESPACE_FF => Token.FF(input, dialect, curr.offset)
 
       case COMMENT =>
         var value = new String(input.chars, curr.offset, curr.endOffset - curr.offset + 1)
