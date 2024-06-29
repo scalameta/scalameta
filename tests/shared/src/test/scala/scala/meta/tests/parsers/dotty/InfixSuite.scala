@@ -305,14 +305,7 @@ class InfixSuite extends BaseDottySuite {
     val tree = blk(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling"))))
     runTestAssert[Stat](code, Some(layout))(tree)
     // now use CRLF
-    val layoutCrlf = """|{
-                        |  freezing
-                        |  |
-                        |  boiling
-                        |}
-                        |""".stripMargin
-    val treeCrlf = blk(tname("freezing"), tname("|"), tname("boiling"))
-    parseAndCheckTree[Stat](code.replace("\n", "\r\n"), layoutCrlf)(treeCrlf)
+    runTestAssert[Stat](code.replace("\n", "\r\n"), layout)(tree)
   }
 
   test("scala3 infix syntax 3.5") {

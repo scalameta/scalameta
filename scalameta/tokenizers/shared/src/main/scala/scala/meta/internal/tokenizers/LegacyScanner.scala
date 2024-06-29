@@ -262,7 +262,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         token = WHITESPACE_LF
       case CR =>
         nextChar()
-        token = WHITESPACE_CR
+        if (ch != LF || wasMultiChar) {
+          strVal = "\r"
+          token = WHITESPACE_CR
+        } else {
+          nextChar()
+          strVal = "\r\n"
+          token = WHITESPACE_CRLF
+        }
       // nextToken()
       case
           // uppercase alpha
