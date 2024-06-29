@@ -20,6 +20,9 @@ package object scalameta {
   //   foo + bar = "foobar"
   def unreachable(dsl: Boolean): Nothing = macro UnreachableMacros.unreachableWithDebug
 
+  def unreachable(dsl: Boolean, clue: String): Nothing =
+    macro UnreachableMacros.unreachableWithDebugAndClue
+
   // A marker method used to denote debugging boundaries for `org.scalameta.unreachable`
   // and `org.scalameta.invariants.requireXXX`. See corresponding documentation for more info.
   def debug(xs: Any*): Boolean = true
