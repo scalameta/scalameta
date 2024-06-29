@@ -104,4 +104,15 @@ class ExportImportSuite extends BaseDottySuite {
       List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Name(Name("*")))))
     ))
   }
+
+  test("#3754 export Type.this.field") {
+    val code = """|case class A():
+                  |  export A.this.value
+                  |""".stripMargin
+    val error = """|<input>:2: error: `.` expected but `outdent` found
+                   |  export A.this.value
+                   |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
