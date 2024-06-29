@@ -25,6 +25,8 @@ object TokenStructure {
       case t: Comment => Chars.escape(t.value)
       case t: Ellipsis => t.rank.toString
       case t: Unquote => t.text
+      case t: MultiHS => t.len.toString
+      case t: MultiNL => t.tokens.length.toString
       case _ => null
     }
     val label = {
