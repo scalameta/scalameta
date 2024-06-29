@@ -184,65 +184,50 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
       def emitTokenWhitespace(token: Token.Whitespace): Unit = pushTokenAndNext(token)
       def emitTokenInterpolation(token: Token.Interpolation.Id) = {
-        pushTokenAndNext(token)
-        // NOTE: funnily enough, messing with interpolation tokens is what I've been doing roughly 3 years ago, on New Year's Eve of 2011/2012
-        // I vividly remember spending 2 or 3 days making scanner emit detailed tokens for string interpolations, and that was tedious.
-        // Now we need to do the same for our new token stream, but I don't really feel like going through the pain again.
-        // Therefore, I'm giving up the 1-to-1 legacy-to-new token correspondence and will be trying to reverse engineer sane tokens here rather than in scanner.
-        var startEnd = prev.endOffset + 1
-        while (startEnd < input.chars.length && input.chars(startEnd) == '\"') startEnd += 1
-        val numStartQuotes = startEnd - prev.endOffset - 1
-        val numQuotes = if (numStartQuotes <= 2) 1 else 3
-        def emitStart(offset: Offset) =
-          pushToken(Token.Interpolation.Start(input, dialect, offset, offset + numQuotes))
-        def emitEnd(offset: Offset) =
-          pushToken(Token.Interpolation.End(input, dialect, offset, offset + numQuotes))
+        def pushPart(end: Offset) =
+          pushToken(Token.Interpolation.Part(input, dialect, curr.offset, end, curr.strVal))
         @tailrec
         def emitContents(): Unit =
           if (curr.token == STRINGPART) {
             val dollarOffset = curr.endOffset + 1
             require(input.chars(dollarOffset) == '$')
-            pushToken(
-              Token.Interpolation.Part(input, dialect, curr.offset, dollarOffset, curr.strVal)
-            )
+            pushPart(dollarOffset)
             val postDollarOffset = dollarOffset + 1
-            val nextChar = input.chars(postDollarOffset)
-            pushTokenAndNext(
+            pushToken(
               Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset)
             )
-            if (nextChar == '{') {
-              emitCurrToken()
-              legacyIndex = loop(legacyIndex, braceBalance = 1)
-            } else {
-              require(
-                curr.token == IDENTIFIER || curr.token == THIS ||
-                  curr.token == USCORE && nextChar == '_'
-              )
-              emitCurrToken()
+            val spliceToken = getNextTokenOrFail()
+            pushToken(spliceToken)
+            nextToken()
+            prev.token match {
+              case LBRACE => legacyIndex = loop(legacyIndex, braceBalance = 1)
+              case IDENTIFIER | THIS =>
+              case USCORE if input.chars(postDollarOffset) == '_' =>
+              case _ => unreachable(debug(prev), s"unexpected interpolation: $spliceToken")
             }
             pushToken(Token.Interpolation.SpliceEnd(input, dialect, curr.offset, curr.offset))
             emitContents()
-          } else {
-            require(curr.token == STRINGLIT)
-            curr.endOffset -= numQuotes
-            val nextOffset = curr.endOffset + 1
-            require(input.chars(nextOffset) == '\"')
-            pushTokenAndNext(
-              Token.Interpolation.Part(input, dialect, curr.offset, nextOffset, curr.strVal)
-            )
-          }
+          } else require(curr.token == STRINGLIT)
+
         // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
         // i.e. STRINGLIT (if the interpolation is empty) or STRINGPART (if it's not)
         // NOTE: before emitEnd, curr is the first token that follows the concluding STRINGLIT of the interpolation
         // for example, EOF in the case of `q""` or `q"$foobar"`
-        numStartQuotes match {
-          case 1 => emitStart(curr.offset - 1); emitContents(); emitEnd(curr.offset - 1)
-          case 2 =>
-            emitStart(curr.offset); curr.offset += 1; emitContents(); emitEnd(curr.offset - 1)
-          case _ => emitStart(curr.offset - 3); emitContents(); emitEnd(curr.offset - 3)
-        }
-      }
+        pushToken(token)
+        nextToken()
+        val numQuotes = curr.offset - token.end
 
+        pushToken(Token.Interpolation.Start(input, dialect, token.end, curr.offset))
+        emitContents()
+
+        val endEndPos = curr.endOffset + 1
+        val endBegPos = endEndPos - numQuotes
+        require(input.chars(endBegPos) == '\"')
+        pushPart(endBegPos)
+
+        pushToken(Token.Interpolation.End(input, dialect, endBegPos, endEndPos))
+        nextToken()
+      }
       def emitTokenXml(token: Token.Xml.Part) = {
         @tailrec
         def emitContents(): Unit = curr.token match {
@@ -290,9 +275,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case t: Token.Xml.Part => emitTokenXml(t)
         case _ => pushTokenAndNext(token)
       }
-      def emitCurrToken(): Unit = emitToken(getCurrToken())
 
-      emitCurrToken()
+      emitToken(getCurrToken())
 
       lastEmittedToken match {
         case _: Token.RightBrace if braceBalance > 1 => loop(legacyIndex, braceBalance - 1)
