@@ -1,7 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import org.scalameta.unreachable
-import scala.meta.internal.inputs._
+import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.{semanticdb => s}
 
 import scala.{meta => m}
