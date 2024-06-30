@@ -104,4 +104,20 @@ class ExportImportSuite extends BaseDottySuite {
       List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Name(Name("*")))))
     ))
   }
+
+  test("#3754 export Type.this.field") {
+    val code = """|case class A():
+                  |  export A.this.value
+                  |""".stripMargin
+    val layout = "case class A() { export A.this.value }"
+    val tree = Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      Nil,
+      ctorp(Nil),
+      tpl(Export(List(Importer(Term.This(Name("A")), List(Importee.Name(Name("value")))))))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }

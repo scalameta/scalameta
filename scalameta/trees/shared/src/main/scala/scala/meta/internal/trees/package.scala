@@ -80,26 +80,27 @@ package object trees {
   }
 
   implicit class XtensionTreesTerm(private val tree: Term) extends AnyVal {
+    @tailrec
     def isExtractor: Boolean = tree match {
       case quasi: Term.Quasi => true
-      case ref: Term.Ref => ref.isStableId
+      case ref: Term.Ref => ref.isPath
       case t: Term.ApplyType => t.fun.isExtractor
       case _ => false
     }
   }
 
   implicit class XtensionTreesTermRef(private val tree: Term.Ref) extends AnyVal {
-    def isPath: Boolean = tree.isStableId || tree.is[Term.This]
+    @tailrec
     def isQualId: Boolean = tree match {
       case _: Term.Ref.Quasi => true
       case _: Term.Name => true
       case Term.Select(qual: Term.Ref, _) => qual.isQualId
       case _ => false
     }
-    def isStableId: Boolean = tree match {
-      case _: Term.Ref.Quasi => true
-      case _: Term.Name | _: Term.Anonymous | Term.Select(_: Term.Super, _) => true
-      case Term.Select(qual: Term.Quasi, _) => true
+    @tailrec
+    def isPath: Boolean = tree match {
+      case _: Term.Ref.Quasi | _: Term.This | _: Term.Name | _: Term.Anonymous => true
+      case Term.Select(_: Term.Super | _: Term.Quasi, _) => true
       case Term.Select(qual: Term.Ref, _) => qual.isPath
       case _ => false
     }
