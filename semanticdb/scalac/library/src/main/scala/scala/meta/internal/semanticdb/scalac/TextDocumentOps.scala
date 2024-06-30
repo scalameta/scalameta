@@ -212,11 +212,9 @@ trait TextDocumentOps {
             if (pos == m.Position.None) return
             if (occurrences.contains(pos)) return
 
-            val gsym = {
-              def isClassRefInCtorCall = gsym0.isConstructor &&
-                !mtree.isAny[m.Name.Anonymous, m.Name.This]
-              if (gsym0 != null && isClassRefInCtorCall) gsym0.owner else gsym0
-            }
+            val gsym =
+              if (gsym0.isConstructor && !mtree.isAny[m.Name.Anonymous, m.Name.This]) gsym0.owner
+              else gsym0
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
 
