@@ -289,6 +289,8 @@ object Token {
   class LF extends EOL
   @fixed("\f")
   class FF extends EOL
+  @fixed("\r\n")
+  class CRLF extends EOL
   @freeform("comment")
   class Comment(value: String) extends HTrivia
   @freeform("beginning of file")

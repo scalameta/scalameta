@@ -119,7 +119,8 @@ object LegacyToken {
   final val WHITESPACE_LF = WHITESPACE_BEG + 2
   final val WHITESPACE_FF = WHITESPACE_BEG + 3
   final val WHITESPACE_CR = WHITESPACE_BEG + 4
-  final val WHITESPACE_END = WHITESPACE_BEG + 5
+  final val WHITESPACE_CRLF = WHITESPACE_BEG + 5
+  final val WHITESPACE_END = WHITESPACE_BEG + 6
 
   final val COMMENT = 300
 

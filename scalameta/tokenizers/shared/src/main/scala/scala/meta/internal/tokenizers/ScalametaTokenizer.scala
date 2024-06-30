@@ -264,6 +264,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case WHITESPACE_TAB => Token.Tab(input, dialect, curr.offset)
       case WHITESPACE_CR => Token.CR(input, dialect, curr.offset)
       case WHITESPACE_LF => Token.LF(input, dialect, curr.offset)
+      case WHITESPACE_CRLF => Token.CRLF(input, dialect, curr.offset)
       case WHITESPACE_FF => Token.FF(input, dialect, curr.offset)
 
       case COMMENT =>
