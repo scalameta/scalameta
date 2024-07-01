@@ -240,7 +240,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       else {
         val token = tokens(pos)
         token match {
-          case _: EOL | _: BOF => (acc, pos)
+          case _: AtEOL | _: BOF => (acc, pos)
           case c: Comment =>
             if (AsMultilineComment.isMultiline(c)) (multilineCommentIndent(c), pos)
             else countIndentInternal(pos - 1)
@@ -271,7 +271,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def iter(i: Int, pos: Int, indent: Int): Int =
       if (i >= currPos) if (pos < currPos) pos else currPos - 1
       else tokens(i) match {
-        case _: EOL => iter(i + 1, i, 0)
+        case _: AtEOL => iter(i + 1, i, 0)
         case _: HSpace if indent >= 0 => iter(i + 1, pos, indent + 1)
         case _: Whitespace => iter(i + 1, pos, indent)
         case _: Comment if indent < 0 || outdent <= indent => iter(i + 1, i + 1, -1)
@@ -606,12 +606,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     else {
       @tailrec
       def findLastEOL(pos: Int): Int =
-        if (pos == prevPos) -1 else if (tokens(pos).is[AtEOL]) pos else findLastEOL(pos - 1)
+        if (pos <= prevPos) -1 else if (tokens(pos).is[AtEOL]) pos else findLastEOL(pos - 1)
       @tailrec
       def hasBlank(pos: Int, hadEOL: Boolean): Boolean =
         if (pos == prevPos) false
         else tokens(pos) match {
-          case _: EOL => hadEOL || hasBlank(pos - 1, true)
+          case _: AtEOL => hadEOL || hasBlank(pos - 1, true)
           case _: Whitespace => hasBlank(pos - 1, hadEOL)
           case _ => hasBlank(pos - 1, false)
         }
