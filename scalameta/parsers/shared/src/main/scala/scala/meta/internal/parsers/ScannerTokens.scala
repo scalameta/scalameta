@@ -617,21 +617,21 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         }
 
       val hasLF = indentPos > prevPos // includes indentPos = -1
-      val lastNewlinePos = if (hasLF) findLastEOL(indentPos) else -1
-      val newlines = lastNewlinePos >= 0 && hasBlank(lastNewlinePos - 1, true)
+      val eolPos = if (hasLF) findLastEOL(indentPos) else -1
+      val multiEOL = eolPos >= 0 && hasBlank(eolPos - 1, true)
 
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
         val regions = if (lineIndent < 0) rs else RegionLine(lineIndent) :: rs
-        val token = tokens(lastNewlinePos)
-        val out = if (newlines) LFLF(token.input, token.dialect, token.start, token.end) else token
-        TokenRef(regions, out, lastNewlinePos, null)
+        val token = tokens(eolPos)
+        val out = if (multiEOL) LFLF(token.input, token.dialect, token.start, token.end) else token
+        TokenRef(regions, out, eolPos, null)
       }
 
       def getIfCanProduceLF(regions: List[SepRegion], lineIndent: Int = -1) = {
         @inline
         def derives(token: Token) = soft.KwDerives(token)
         @inline
-        def blankBraceOr(ok: => Boolean): Boolean = if (next.is[LeftBrace]) newlines else ok
+        def blankBraceOr(ok: => Boolean): Boolean = if (next.is[LeftBrace]) multiEOL else ok
         def isEndMarker() = isEndMarkerSpecifier(prev) && {
           val prevPrevPos = getStrictPrev(prevPos)
           isEndMarkerIdentifier(tokens(prevPrevPos)) && isPrecededByNL(prevPrevPos)
@@ -649,7 +649,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case Nil | (_: CanProduceLF) :: _ => Some(rs)
           case _ => None
         }
-        val ok = lastNewlinePos >= 0 && mightStartStat(next, closeDelimOK = true) &&
+        val ok = eolPos >= 0 && mightStartStat(next, closeDelimOK = true) &&
           (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker())
         if (ok) strip(regions).map(rs => Right(lastWhitespaceToken(rs, lineIndent))) else None
       }
@@ -657,16 +657,16 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change-1
       lazy val isLeadingInfix = sepRegionsOrig match {
         case Nil | (_: CanProduceLF) :: _
-            if !newlines && lastNewlinePos >= 0 && dialect.allowInfixOperatorAfterNL &&
+            if !multiEOL && eolPos >= 0 && dialect.allowInfixOperatorAfterNL &&
               next.isSymbolicInfixOperator => isLeadingInfixArg(nextPos + 1, nextIndent)
         case _ => LeadingInfix.No
       }
 
       def getInfixLFIfNeeded() = {
         def getInfixLF(invalid: Option[String]) = Some(Right {
-          val lf = tokens(lastNewlinePos)
+          val lf = tokens(eolPos)
           val out = InfixLF(lf.input, lf.dialect, lf.start, lf.end, invalid)
-          TokenRef(sepRegionsOrig, out, lastNewlinePos, null)
+          TokenRef(sepRegionsOrig, out, eolPos, null)
         })
         isLeadingInfix match {
           case LeadingInfix.Yes => getInfixLF(None)
