@@ -232,7 +232,7 @@ Occurrences:
 [22:15..22:15):  <= advanced/D#`<init>`().
 [22:23..22:24): C => advanced/C#
 [22:25..22:27): CC => advanced/D#[CC]
-[23:0..23:0):  => advanced/C#`<init>`().
+[22:31..22:31):  => advanced/C#`<init>`().
 [24:7..24:11): Test <= advanced/Test.
 [25:6..25:7): s <= advanced/Test.s.
 [25:14..25:24): Structural => advanced/Structural#
@@ -886,7 +886,7 @@ Occurrences:
 [2:13..2:15): x1 <= classes/C1#x1.
 [2:17..2:20): Int => scala/Int#
 [2:30..2:36): AnyVal => scala/AnyVal#
-[3:0..3:0):  => scala/AnyVal#`<init>`().
+[2:36..2:36):  => scala/AnyVal#`<init>`().
 [4:6..4:8): C2 <= classes/C2#
 [4:8..4:8):  <= classes/C2#`<init>`().
 [4:13..4:15): x2 <= classes/C2#x2.
@@ -3642,7 +3642,7 @@ Uri => semanticdb/integration/src/main/scala/example/Selfs.scala
 Text => non-empty
 Language => Scala
 Symbols => 19 entries
-Occurrences => 37 entries
+Occurrences => 38 entries
 
 Symbols:
 local0 => selfparam self
@@ -3681,6 +3681,7 @@ selfs/C7#`<init>`(). => primary ctor <init>()
 Occurrences:
 [0:8..0:13): selfs <= selfs/
 [2:6..2:7): B <= selfs/B#
+[2:7..2:7):  <= selfs/B#`<init>`().
 [4:6..4:8): C1 <= selfs/C1#
 [4:9..4:9):  <= selfs/C1#`<init>`().
 [4:17..4:18): B => selfs/B#
@@ -4049,7 +4050,7 @@ Occurrences:
 [33:9..33:16): Ordered => scala/package.Ordered#
 [33:17..33:18): F => example/Synthetic#F#
 [33:26..33:27): F => example/Synthetic#F#
-[34:0..34:0):  => example/Synthetic#F#`<init>`().
+[33:27..33:27):  => example/Synthetic#F#`<init>`().
 [35:9..35:14): scala => scala/
 [35:15..35:25): concurrent => scala/concurrent/
 [35:26..35:42): ExecutionContext => scala/concurrent/ExecutionContext.
@@ -4291,7 +4292,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 143 entries
-Occurrences => 263 entries
+Occurrences => 265 entries
 
 Symbols:
 local0 => abstract method k: Int
@@ -4647,7 +4648,9 @@ Occurrences:
 [7:25..7:35): annotation => scala/annotation/
 [7:36..7:52): StaticAnnotation => scala/annotation/StaticAnnotation#
 [9:6..9:7): B <= types/B#
+[9:7..9:7):  <= types/B#`<init>`().
 [11:6..11:7): C <= types/C#
+[11:7..11:7):  <= types/C#`<init>`().
 [13:6..13:7): P <= types/P#
 [13:8..13:8):  <= types/P#`<init>`().
 [14:8..14:9): C <= types/P#C#
