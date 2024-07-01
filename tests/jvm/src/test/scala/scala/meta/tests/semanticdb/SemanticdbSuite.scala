@@ -2,7 +2,7 @@ package scala.meta.tests
 package semanticdb
 
 import org.scalameta.internal.ScalaCompat.EOL
-import scala.meta.internal.inputs._
+import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb.scalac.CommandLineParser
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb => s}

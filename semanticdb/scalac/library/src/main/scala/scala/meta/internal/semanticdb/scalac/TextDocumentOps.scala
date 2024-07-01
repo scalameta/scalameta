@@ -5,6 +5,7 @@ import scala.meta.Dialect
 import scala.meta.internal.inputs._
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.scalacp._
+import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.{semanticdb => s}
 

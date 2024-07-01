@@ -1,6 +1,7 @@
 package scala.meta.internal.metap
 
 import scala.meta.inputs._
+import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb._
 
 import scala.collection.mutable
@@ -21,13 +22,11 @@ trait RangePrinter extends BasePrinter {
 
   private val inputCache = new mutable.HashMap[TextDocument, Input]
   implicit class DocumentOps(doc: TextDocument) {
-    def substring(range: Option[Range]): Option[String] = range.flatMap { range =>
-      if (doc.text.nonEmpty) {
-        val input = inputCache.getOrElseUpdate(doc, Input.String(doc.text))
-        val pos = Position
-          .Range(input, range.startLine, range.startCharacter, range.endLine, range.endCharacter)
-        Some(pos.text)
-      } else None
+    def substring(range: Option[Range]): Option[String] = range match {
+      case Some(range) if doc.text.nonEmpty =>
+        val pos = range.toPosition(inputCache.getOrElseUpdate(doc, Input.String(doc.text)))
+        Some(if (pos.isEmpty) "" else pos.text)
+      case _ => None
     }
   }
 
