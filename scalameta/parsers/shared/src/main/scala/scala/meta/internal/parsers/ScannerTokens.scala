@@ -318,8 +318,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def isTrailingComma: Boolean = dialect.allowTrailingCommas && curr.is[Comma] &&
       next.is[CloseDelim] && next.pos.startLine > curr.pos.endLine
 
-    def mkIndent(pointPos: Int, regions: List[SepRegion], next: TokenRef = null): TokenRef =
-      TokenRef(regions, mkIndentToken(pointPos), prevPos, currPos, pointPos, next)
+    def mkIndent(pos: Int, pointPos: Int, rs: List[SepRegion], next: TokenRef = null): TokenRef =
+      TokenRef(rs, mkIndentToken(pointPos), pos, nextPos, pointPos, next)
 
     def mkOutdentTo(region: SepRegionIndented, maxPointPos: Int, regions: List[SepRegion]) =
       mkOutdentAt(region.indent, maxPointPos, regions)
@@ -393,8 +393,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             if dialect.allowSignificantIndentation && curr.pos.endLine == next.pos.startLine =>
           val regions = markRegions()
           val nextRegions = RegionIndent(findIndent(sepRegions)) :: regions
-          val nextToken = mkIndentToken(nextPos)
-          currRef(regions, TokenRef(nextRegions, nextToken, currPos, nextPos, nextPos))
+          currRef(regions, mkIndent(currPos, nextPos, nextRegions))
         case _: KwCase | _: LeftBrace => currRef(markRegions())
         case _ => currRef(sepRegions)
       }
@@ -620,11 +619,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       val eolPos = if (hasLF) findLastEOL(indentPos) else -1
       val multiEOL = eolPos >= 0 && hasBlank(eolPos - 1, true)
 
+      def eolRef(rs: List[SepRegion], out: Token) = TokenRef(rs, out, eolPos, nextPos, eolPos, null)
+
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
         val regions = if (lineIndent < 0) rs else RegionLine(lineIndent) :: rs
         val token = tokens(eolPos)
         val out = if (multiEOL) LFLF(token.input, token.dialect, token.start, token.end) else token
-        TokenRef(regions, out, eolPos, null)
+        eolRef(regions, out)
       }
 
       def getIfCanProduceLF(regions: List[SepRegion], lineIndent: Int = -1) = {
@@ -666,7 +667,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         def getInfixLF(invalid: Option[String]) = Some(Right {
           val lf = tokens(eolPos)
           val out = InfixLF(lf.input, lf.dialect, lf.start, lf.end, invalid)
-          TokenRef(sepRegionsOrig, out, eolPos, null)
+          eolRef(sepRegionsOrig, out)
         })
         isLeadingInfix match {
           case LeadingInfix.Yes => getInfixLF(None)
@@ -749,7 +750,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             def getPrevIndent() = findIndent(sepRegions)
             def exceedsIndent = nextIndent > getPrevIndent()
             def emitIndentWith(ri: SepRegionIndented, rs: List[SepRegion], next: TokenRef = null) =
-              Some(Right(mkIndent(indentPos, ri :: rs, next)))
+              Some(Right(mkIndent(prevPos, indentPos, ri :: rs, next)))
             def emitIndent(regions: List[SepRegion], next: TokenRef = null) =
               emitIndentWith(RegionIndent(nextIndent), regions, next)
             def emitIndentAndOutdent(regions: List[SepRegion]) =
