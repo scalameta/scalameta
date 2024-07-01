@@ -25,7 +25,7 @@ sealed trait Position extends InputRange {
   def endLine: Int
   def endColumn: Int
 
-  final def isEmpty: Boolean = start == end
+  final def isEmpty: Boolean = start >= end
 }
 
 object Position {
@@ -46,7 +46,7 @@ object Position {
     def startColumn: Int = start - input.lineToOffset(startLine)
     lazy val endLine: Int = input.offsetToLine(end)
     def endColumn: Int = end - input.lineToOffset(endLine)
-    lazy val text = new String(input.chars, start, end - start)
+    lazy val text = if (isEmpty) "" else new String(input.chars, start, end - start)
   }
 
   object Range {
