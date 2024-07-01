@@ -1,7 +1,7 @@
 package classes
 
-class C1/*<=classes.C1#*/(val x1/*<=classes.C1#x1.*/: Int/*=>scala.Int#*/) extends AnyVal/*=>scala.AnyVal#*/
-/*=>scala.AnyVal#`<init>`().*/
+class C1/*<=classes.C1#*/(val x1/*<=classes.C1#x1.*/: Int/*=>scala.Int#*/) extends AnyVal/*=>scala.AnyVal#*//*=>scala.AnyVal#`<init>`().*/
+
 class C2/*<=classes.C2#*/(val x2/*<=classes.C2#x2.*/: Int/*=>scala.Int#*/) extends AnyVal/*=>scala.AnyVal#*//*=>scala.AnyVal#`<init>`().*/
 object C2/*<=classes.C2.*/
 
