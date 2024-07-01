@@ -106,7 +106,7 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
       // step 7: generate boilerplate parameters
       var boilerplateParams = List(q"val input: $Input", q"val dialect: $Dialect")
       if (!hasMethod("start")) boilerplateParams :+= q"val start: $Int"
-      if (!hasMethod("end")) boilerplateParams :+= q"val end: $Int"
+      if (!isFixed && !hasMethod("end")) boilerplateParams :+= q"val end: $Int"
       val paramss1 = (boilerplateParams ++ unapplyParams) +: paramss.tail
 
       // step 8: generate implementation of `Companion.apply`
