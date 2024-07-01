@@ -3916,12 +3916,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def templateParents(afterExtend: Boolean = false): List[Init] = {
-    def isCommaSeparated(token: Token): Boolean = afterExtend && token.is[Comma] &&
-      dialect.allowCommaSeparatedExtend
-    val parents = ListBuffer[Init]()
-    parents += init()
-    while (token.is[KwWith] || isCommaSeparated(token)) { next(); parents += init() }
-    parents.toList
+    val isSeparator: Token => Boolean =
+      if (afterExtend && dialect.allowCommaSeparatedExtend) _.isAny[KwWith, Comma] else _.is[KwWith]
+    listBy[Init](x => doWhile(x += init())(nextIf(isSeparator(token))))
   }
 
   def derivesClasses(): List[Type] =
