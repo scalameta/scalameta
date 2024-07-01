@@ -81,26 +81,24 @@ trait TextDocumentOps {
             mstarts.put(range.start, mname).foreach(errorAmbiguous("mStart", mname, _))
             mends.put(range.end, mname).foreach(errorAmbiguous("mEnd", mname, _))
           }
-          private def getAssignLhsNames(values: Iterable[m.Term]): List[m.Name] = {
+          private def getAssignLhsAndIndexRhs(terms: Seq[m.Term.ArgClause]): List[m.Name] = {
             val names = List.newBuilder[m.Name]
-            values.foreach {
-              case m.Term.Assign(lhs: m.Term.Name, _) => names += lhs
+            terms.foreach(_.values.foreach {
+              case t: m.Term.Assign =>
+                indexArgNames(t.rhs)
+                t.lhs match {
+                  case lhs: m.Term.Name => names += lhs
+                  case _ =>
+                }
               case _ =>
-            }
+            })
             names.result()
           }
-          private def indexAssignRhs(values: Seq[m.Term]): Unit = values.foreach {
-            case m.Term.Assign(_, rhs) => indexArgNames(rhs)
-            case _ =>
-          }
           private def indexArgNames(mapp: m.Tree): Unit = mapp match {
-            case t: m.Init =>
-              margnames(t.pos.start) = getAssignLhsNames(t.argClauses.flatMap(_.values))
-              t.argClauses.foreach(x => indexAssignRhs(x.values))
+            case t: m.Init => margnames(t.pos.start) = getAssignLhsAndIndexRhs(t.argClauses)
 
             case t: m.Term.Apply =>
-              margnames(t.fun.pos.end) = getAssignLhsNames(t.argClause.values)
-              indexAssignRhs(t.argClause.values)
+              margnames(t.fun.pos.end) = getAssignLhsAndIndexRhs(t.argClause :: Nil)
 
             case t: m.Term.Select => indexArgNames(t.qual)
             case _ =>
@@ -215,11 +213,9 @@ trait TextDocumentOps {
             if (pos == m.Position.None) return
             if (occurrences.contains(pos)) return
 
-            val gsym = {
-              def isClassRefInCtorCall = gsym0.isConstructor &&
-                !mtree.isAny[m.Name.Anonymous, m.Name.This]
-              if (gsym0 != null && isClassRefInCtorCall) gsym0.owner else gsym0
-            }
+            val gsym =
+              if (gsym0.isConstructor && !mtree.isAny[m.Name.Anonymous, m.Name.This]) gsym0.owner
+              else gsym0
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
 
