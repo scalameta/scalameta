@@ -25,7 +25,7 @@ sealed trait Position extends InputRange {
   def endLine: Int
   def endColumn: Int
 
-  final def isEmpty: Boolean = start == end
+  final def isEmpty: Boolean = start >= end
 }
 
 object Position {
@@ -46,26 +46,38 @@ object Position {
     def startColumn: Int = start - input.lineToOffset(startLine)
     lazy val endLine: Int = input.offsetToLine(end)
     def endColumn: Int = end - input.lineToOffset(endLine)
-    lazy val text = new String(input.chars, start, end - start)
+    lazy val text = if (isEmpty) "" else new String(input.chars, start, end - start)
   }
 
   object Range {
-    def apply(
-        input: Input,
-        startLine: Int,
-        startColumn: Int,
-        endLine: Int,
-        endColumn: Int
-    ): Position.Range = {
-      val inputEnd = Position.Range(input, input.chars.length, input.chars.length)
-      def lineLength(line: Int): Int = {
-        val isLastLine = line == inputEnd.startLine
-        if (isLastLine) inputEnd.endColumn
-        else input.lineToOffset(line + 1) - input.lineToOffset(line) - 1
+    @inline
+    private def getPositionOffset(lineOffset: Int, lineColumn: Int, lineLength: Int): Int =
+      lineOffset + math.min(lineColumn, lineLength)
+
+    def apply(input: Input, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int): Range = {
+      require(startLine <= endLine)
+
+      def lineOffsetAndLength(line: Int): (Int, Int) = {
+        val off = input.lineToOffset(line)
+        (off, input.lineToOffset(line + 1) - off - 1)
       }
-      val start = input.lineToOffset(startLine) + math.min(startColumn, lineLength(startLine))
-      val end = input.lineToOffset(endLine) + math.min(endColumn, lineLength(endLine))
-      Position.Range(input, start, end)
+
+      val (endLineOff, endLineLen) = {
+        val inputEndOff = input.chars.length
+        val inputLastLine = input.offsetToLine(inputEndOff)
+        if (inputLastLine == endLine) {
+          val inputLastLineOff = input.lineToOffset(inputLastLine)
+          (inputLastLineOff, inputEndOff - inputLastLineOff)
+        } else lineOffsetAndLength(endLine)
+      }
+
+      val (begLineOff, begLineLen) =
+        if (endLine == startLine) (endLineOff, endLineLen) else lineOffsetAndLength(startLine)
+
+      val beg = getPositionOffset(begLineOff, startColumn, begLineLen)
+      val end = getPositionOffset(endLineOff, endColumn, endLineLen)
+
+      Position.Range(input, beg, end)
     }
   }
 }
