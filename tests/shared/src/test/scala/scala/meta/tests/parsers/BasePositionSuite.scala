@@ -51,37 +51,37 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
   ): Unit = test(code) {
     implicit val D = defaultDialect
     val tree = MoreHelpers.requireNonEmptyOrigin(code.name.parse[T].get)
-    val tokens = tree.collect {
+    val sb = new StringBuilder
+    tree.traverse {
       // Reduce the expected output by ignoring lines that can be trivially
       // verified. A line can be trivially verified when you can re-print the
       // `.syntax` without using tokens. For example, if a Mod.Lazy tree has
       // the syntax "lazy" then it's trivially verified and excluded from the
       // output.
-      case t if t eq tree => Nil
-      case t @ Lit(value) if t.syntax == value.toString => Nil
+      case `tree` =>
+      case t @ Lit(value) if t.syntax == value.toString =>
       case t @ Lit.Unit() if t.syntax == "()" => // This case is needed for Scala.js.
-        Nil
-      case t @ Name(value) if t.syntax == value => Nil
-      case t @ Importee.Name(Name(value)) if t.syntax == value => Nil
-      case t @ Pat.Var(Name(value)) if t.syntax == value => Nil
-      case t: Mod if s"Mod.${t.syntax.capitalize}" == t.productPrefix => Nil
-      case t: Type.Param if t.syntax == t.name.value => Nil
-      case t @ Term.Param(Nil, name, Some(tpe), _) if t.syntax == s"$name: $tpe" => Nil
-      case t @ Init(Type.Name(value), anon, Nil) if t.syntax == value => Nil
-      case t: Importee.Wildcard if t.syntax == "_" => Nil
-      case t: Pat.Wildcard if t.syntax == "_" => Nil
-      case t @ Term.ArgClause(arg :: Nil, None) if t.syntax == arg.syntax => Nil
-      case t @ Pat.ArgClause(arg :: Nil) if t.syntax == arg.syntax => Nil
+      case t @ Name(value) if t.syntax == value =>
+      case t @ Importee.Name(Name(value)) if t.syntax == value =>
+      case t @ Pat.Var(Name(value)) if t.syntax == value =>
+      case t: Mod if s"Mod.${t.syntax.capitalize}" == t.productPrefix =>
+      case t: Type.Param if t.syntax == t.name.value =>
+      case t @ Term.Param(Nil, name, Some(tpe), _) if t.syntax == s"$name: $tpe" =>
+      case t @ Init(Type.Name(value), anon, Nil) if t.syntax == value =>
+      case t: Importee.Wildcard if t.syntax == "_" =>
+      case t: Pat.Wildcard if t.syntax == "_" =>
+      case t @ Term.ArgClause(arg :: Nil, None) if t.syntax == arg.syntax =>
+      case t @ Pat.ArgClause(arg :: Nil) if t.syntax == arg.syntax =>
       case t =>
+        sb.append(t.productPrefix).append(' ')
         val syntax = t.syntax
-        val out =
-          if (syntax.isEmpty) {
-            val (leading, trailing) = t.pos.lineContent.splitAt(t.pos.startColumn)
-            s"${t.productPrefix} $leading@@$trailing"
-          } else s"${t.productPrefix} $syntax"
-        List(out)
+        if (syntax.isEmpty) {
+          val (leading, trailing) = t.pos.lineContent.splitAt(t.pos.startColumn)
+          sb.append(leading).append("@@").append(trailing)
+        } else sb.append(syntax)
+        sb.append("\n")
     }
-    val obtained = tokens.flatten.mkString("\n")
+    val obtained = sb.result()
     assertNoDiff(obtained, expected)
   }
 }
