@@ -46,9 +46,11 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
    * encloses the `{` token. The correct output should be
    * {{{Name.Anonymous trait A @@{ self: B =>}}}.
    */
-  def checkPositions[T <: Tree: Parse](code: TestOptions, expected: String)(implicit
-      loc: Location
-  ): Unit = test(code) {
+  def checkPositions[T <: Tree: Parse](
+      code: TestOptions,
+      expected: String,
+      showFieldName: Boolean = false
+  )(implicit loc: Location): Unit = test(code) {
     implicit val D = defaultDialect
     val tree = MoreHelpers.requireNonEmptyOrigin(code.name.parse[T].get)
     val sb = new StringBuilder
@@ -73,13 +75,29 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
       case t @ Term.ArgClause(arg :: Nil, None) if t.syntax == arg.syntax =>
       case t @ Pat.ArgClause(arg :: Nil) if t.syntax == arg.syntax =>
       case t =>
+        object IterableIndex {
+          def unapply(obj: Any): Option[Int] = obj match {
+            case x: Iterable[_] => x.zipWithIndex.collectFirst { case (`t`, idx) => idx }
+            case _ => None
+          }
+        }
+        val nameOpt =
+          if (showFieldName) t.parent.flatMap { p =>
+            p.productFields.iterator.zip(p.productIterator).collectFirst {
+              case (name, `t`) => name
+              case (name, IterableIndex(idx)) => s"$name$idx"
+            }
+          }.orElse(Some("?"))
+          else None
+        nameOpt.foreach(x => sb.append('<').append(x).append('>'))
         sb.append(t.productPrefix).append(' ')
         val syntax = t.syntax
         if (syntax.isEmpty) {
           val (leading, trailing) = t.pos.lineContent.splitAt(t.pos.startColumn)
           sb.append(leading).append("@@").append(trailing)
         } else sb.append(syntax)
-        sb.append("\n")
+        nameOpt.foreach(x => sb.append("</").append(x).append('>'))
+        sb.append('\n')
     }
     val obtained = sb.result()
     assertNoDiff(obtained, expected)
