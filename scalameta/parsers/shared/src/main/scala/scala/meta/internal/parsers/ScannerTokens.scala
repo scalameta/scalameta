@@ -326,7 +326,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
     def mkOutdentAt(outdent: Int, maxPointPos: Int, regions: List[SepRegion]) = {
       val pointPos = findOutdentPos(prevPos, maxPointPos, outdent)
-      TokenRef(regions, mkOutdentToken(pointPos), prevPos, currPos, pointPos)
+      val (nextPrevPos, nextCurrPos) =
+        if (pointPos > currPos) (currPos, pointPos) else (prevPos, currPos)
+      TokenRef(regions, mkOutdentToken(pointPos), nextPrevPos, nextCurrPos, pointPos)
     }
 
     @tailrec
