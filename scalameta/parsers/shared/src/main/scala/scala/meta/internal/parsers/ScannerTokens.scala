@@ -606,27 +606,29 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       else nonTrivial(getNonTrivialRegions(sepRegionsOrig))
     else {
       @tailrec
-      def findLastEOL(pos: Int): Int =
-        if (pos <= prevPos) -1 else if (tokens(pos).is[AtEOL]) pos else findLastEOL(pos - 1)
+      def findFirstEOL(pos: Int): Int =
+        if (pos > indentPos) -1 else if (tokens(pos).is[AtEOL]) pos else findFirstEOL(pos + 1)
       @tailrec
       def hasBlank(pos: Int, hadEOL: Boolean): Boolean =
-        if (pos == prevPos) false
+        if (pos > indentPos) false
         else tokens(pos) match {
-          case _: AtEOL => hadEOL || hasBlank(pos - 1, true)
-          case _: Whitespace => hasBlank(pos - 1, hadEOL)
-          case _ => hasBlank(pos - 1, false)
+          case _: AtEOL => hadEOL || hasBlank(pos + 1, true)
+          case _: Whitespace => hasBlank(pos + 1, hadEOL)
+          case _ => hasBlank(pos + 1, false)
         }
 
       val hasLF = indentPos > prevPos // includes indentPos = -1
-      val eolPos = if (hasLF) findLastEOL(indentPos) else -1
-      val multiEOL = eolPos >= 0 && hasBlank(eolPos - 1, true)
+      val eolPos = if (hasLF) findFirstEOL(prevPos + 1) else -1
+      val multiEOL = eolPos >= 0 && hasBlank(eolPos + 1, true)
 
       def eolRef(rs: List[SepRegion], out: Token) = TokenRef(rs, out, eolPos, nextPos, eolPos, null)
 
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
         val regions = if (lineIndent < 0) rs else RegionLine(lineIndent) :: rs
         val token = tokens(eolPos)
-        val out = if (multiEOL) LFLF(token.input, token.dialect, token.start, token.end) else token
+        val out =
+          if (!multiEOL) token
+          else LFLF(token.input, token.dialect, token.start, tokens(indentPos).end)
         eolRef(regions, out)
       }
 
