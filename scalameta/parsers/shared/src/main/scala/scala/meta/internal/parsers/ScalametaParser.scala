@@ -383,7 +383,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def is[T: ClassTag] = classTag[T].runtimeClass.isAssignableFrom(token.getClass())
   }
 
-  private def syntaxErrorExpected[T <: Token: ClassTag]: Nothing =
+  private def syntaxErrorExpected[T <: Token: ClassTag]: Nothing = syntaxErrorExpected[T](token)
+  private def syntaxErrorExpected[T <: Token: ClassTag](token: Token): Nothing =
     syntaxError(syntaxExpectedMessage[T](token), at = token)
   private def expectAt[T <: Token: ClassTag](tok: Token, msg: => String, exists: Boolean): Unit =
     if (tok.is[T] != exists) syntaxError(msg, at = tok)
@@ -438,9 +439,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def acceptAfterOptNL[T <: Token: ClassTag]: Unit = acceptAfterOpt[T, AtEOL]
 
   def acceptStatSep(): Unit = token match {
-    case _: AtEOL => next()
-    case t if isEndMarkerIntro(tokenPos) =>
-    case _ => accept[Semicolon]
+    case _: AtEOL | _: Semicolon => next()
+    case _ if isEndMarkerIntro(tokenPos) =>
+    case t => syntaxErrorExpected[Semicolon](t)
   }
   def acceptStatSepOpt() = if (!StatSeqEnd(token)) acceptStatSep()
 
