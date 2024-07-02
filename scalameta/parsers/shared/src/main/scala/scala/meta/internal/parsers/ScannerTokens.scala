@@ -244,7 +244,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case c: Comment =>
             if (AsMultilineComment.isMultiline(c)) (multilineCommentIndent(c), pos)
             else countIndentInternal(pos - 1)
-          case _: HSpace => countIndentInternal(pos - 1, acc + 1)
+          case t: HSpace => countIndentInternal(pos - 1, acc + t.len)
           case _ => (-1, -1)
         }
       }
@@ -272,7 +272,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       if (i >= currPos) if (pos < currPos) pos else currPos - 1
       else tokens(i) match {
         case _: AtEOL => iter(i + 1, i, 0)
-        case _: HSpace if indent >= 0 => iter(i + 1, pos, indent + 1)
+        case t: HSpace if indent >= 0 => iter(i + 1, pos, indent + t.len)
         case _: Whitespace => iter(i + 1, pos, indent)
         case _: Comment if indent < 0 || outdent <= indent => iter(i + 1, i + 1, -1)
         case _ => pos
@@ -609,17 +609,18 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def findFirstEOL(pos: Int): Int =
         if (pos > indentPos) -1 else if (tokens(pos).is[AtEOL]) pos else findFirstEOL(pos + 1)
       @tailrec
-      def hasBlank(pos: Int, hadEOL: Boolean): Boolean =
+      def hasBlank(pos: Int, hadEOL: Boolean = false): Boolean =
         if (pos > indentPos) false
         else tokens(pos) match {
+          case _: MultiNL => true
           case _: AtEOL => hadEOL || hasBlank(pos + 1, true)
           case _: Whitespace => hasBlank(pos + 1, hadEOL)
-          case _ => hasBlank(pos + 1, false)
+          case _ => hasBlank(pos + 1)
         }
 
       val hasLF = indentPos > prevPos // includes indentPos = -1
       val eolPos = if (hasLF) findFirstEOL(prevPos + 1) else -1
-      val multiEOL = eolPos >= 0 && hasBlank(eolPos + 1, true)
+      val multiEOL = eolPos >= 0 && hasBlank(eolPos)
 
       def eolRef(rs: List[SepRegion], out: Token) = TokenRef(rs, out, eolPos, nextPos, eolPos, null)
 
@@ -627,7 +628,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         val regions = if (lineIndent < 0) rs else RegionLine(lineIndent) :: rs
         val token = tokens(eolPos)
         val out =
-          if (!multiEOL) token
+          if (!multiEOL || token.is[MultiEOL]) token
           else LFLF(token.input, token.dialect, token.start, tokens(indentPos).end)
         eolRef(regions, out)
       }
@@ -890,7 +891,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     @tailrec
     def iter(pos: Int, indent: Int, prevNoNL: Boolean): LeadingInfix = tokens(pos) match {
       case _: EOL => if (prevNoNL) iter(pos + 1, 0, false) else LeadingInfix.No
-      case _: HSpace => iter(pos + 1, if (prevNoNL) indent else indent + 1, prevNoNL)
+      case t: HSpace => iter(pos + 1, if (prevNoNL) indent else indent + t.len, prevNoNL)
       case c: Comment =>
         val commentIndent = multilineCommentIndent(c)
         iter(pos + 1, if (commentIndent < 0) indent else commentIndent, true)

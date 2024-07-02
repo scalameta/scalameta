@@ -10,6 +10,7 @@ import scala.meta.tokenizers._
 import scala.meta.tokens._
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
   import LegacyToken._
@@ -43,7 +44,36 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def lastEmittedToken: Token = tokens.get(tokens.size() - 1)
     def isAtLineStart: Boolean = lastEmittedToken.isInstanceOf[Token.AtEOLorF]
 
-    def emitTokenWhitespace(token: Token.Whitespace): Unit = pushToken(token)
+    val bufHS = new ListBuffer[Token.HSpace] // just horizontal tokens
+    val bufVS = new ListBuffer[Token.EOL] // consecutive EOL, without embedded horizontal space
+
+    def flushWS[A <: Token](buf: ListBuffer[A])(f: (Int, Int, List[A]) => Token.Whitespace): Unit =
+      buf.lastOption.foreach { last =>
+        if (buf.length == 1) pushToken(last)
+        else {
+          val res = buf.result()
+          pushToken(f(res.head.start, last.end, res))
+        }
+        buf.clear()
+      }
+    def flushHS(): Unit = flushWS(bufHS) { case (beg, end, res) =>
+      Token.MultiHS(input, dialect, beg, end, res)
+    }
+    def flushVS(): Unit = flushWS(bufVS) { case (beg, end, res) =>
+      Token.MultiNL(input, dialect, beg, end, res)
+    }
+    @tailrec
+    def emitTokenWhitespace(token: Token.Whitespace): Token = {
+      token match {
+        case t: Token.HSpace => bufHS += t
+        case t: Token.EOL => bufVS += t; bufHS.clear() // simply ignore trailing space
+        case _ => unreachable
+      }
+      getNextTokenOrFail() match {
+        case nt: Token.Whitespace => emitTokenWhitespace(nt)
+        case nt => flushVS(); flushHS(); nt
+      }
+    }
     def emitTokenInterpolation(token: Token.Interpolation.Id) = {
       def pushPart(end: Offset) =
         pushToken(Token.Interpolation.Part(input, dialect, curr.offset, end, curr.strVal))
@@ -122,12 +152,12 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             pushToken(Token.EOF(input, dialect, token.start))
             pushToken(token)
             pushToken(Token.BOF(input, dialect, token.end))
-            emitTokenWhitespace(t)
+            emitToken(emitTokenWhitespace(t))
           case t =>
             pushToken(token)
             emitToken(t)
         }
-      case t: Token.Whitespace => emitTokenWhitespace(t)
+      case t: Token.Whitespace => emitToken(emitTokenWhitespace(t))
       case t: Token.Interpolation.Id => emitTokenInterpolation(t)
       case t: Token.Xml.Part => emitTokenXml(t)
       case _ => pushToken(token)
