@@ -1386,7 +1386,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def tryAcceptWithOptLF[T: ClassTag]: Boolean = acceptOpt[T] || {
-    val ok = token.is[EOL] && tryAhead[T]
+    val ok = token.is[AtEOL] && tryAhead[T]
     if (ok) next()
     ok
   }
@@ -2168,7 +2168,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             Some(addPos(blockExprOnIndent(keepBlock = true)))
           }
         case _: Indentation => syntaxError("expected fewer-braces method body", token)
-        case _: EOL =>
+        case _: AtEOL =>
           val colon = token
           nextTwice()
           val argOpt = tryGetArgAsLambdaBlock(true)
@@ -2867,7 +2867,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def loop: Unit = token match {
       case NonParamsModifier() if isParams =>
       case _: Unquote if continueLoop =>
-      case _: EOL if !isLocal => next(); loop
+      case _: AtEOL if !isLocal => next(); loop
       case _: Unquote | _: Ellipsis => appendMod; loop
       case _ if isModifier(tokenPos) => appendMod; loop
       case _ =>
