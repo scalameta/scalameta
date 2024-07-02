@@ -1426,4 +1426,31 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
+  checkPositions[Term](
+    """|if a then
+       |  if aa then
+       |    aaa
+       |    // c1
+       |  if aa then
+       |    aaa
+       |""".stripMargin,
+    """|<thenp>Term.Block if aa then
+       |    aaa
+       |    // c1
+       |  if aa then
+       |    aaa</thenp>
+       |<stats0>Term.If if aa then
+       |    aaa
+       |    // c1</stats0>
+       |<thenp>Term.Block aaa
+       |    // c1</thenp>
+       |<elsep>Lit.Unit     // c1@@</elsep>
+       |<stats1>Term.If if aa then
+       |    aaa</stats1>
+       |<elsep>Lit.Unit     aaa@@</elsep>
+       |<elsep>Lit.Unit @@</elsep>
+       |""".stripMargin,
+    showFieldName = true
+  )
+
 }
