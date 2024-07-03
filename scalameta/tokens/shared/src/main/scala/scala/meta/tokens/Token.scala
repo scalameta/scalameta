@@ -284,7 +284,7 @@ object Token {
   @fixed("\t")
   class Tab extends HSpace
   @fixed("\r")
-  class CR extends AtEOL
+  class CR extends EOL
   @fixed("\n")
   class LF extends EOL
   @fixed("\f")
