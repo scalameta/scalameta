@@ -24,6 +24,11 @@ trait Token extends InternalToken with InputRange {
 }
 
 object Token {
+  @branch
+  trait MultiToken extends Token {
+    def tokens: List[Token]
+  }
+
   // Literals (include some keywords from above, constants, interpolations and xml)
   @branch
   trait Literal extends Token
@@ -52,9 +57,13 @@ object Token {
   @branch
   trait AtEOLorF extends Token
   @branch
-  trait AtEOL extends Whitespace with AtEOLorF
+  trait AtEOL extends Whitespace with AtEOLorF {
+    def newlines: Int = 1
+  }
   @branch
   trait EOL extends AtEOL
+  @branch
+  trait MultiEOL extends AtEOL
 
   @branch
   trait Symbolic extends Token
@@ -291,6 +300,12 @@ object Token {
   class FF extends EOL
   @fixed("\r\n")
   class CRLF extends EOL
+  @freeform("multiple horizontal spaces")
+  class MultiHS(tokens: List[HSpace]) extends HSpace
+  @freeform("multiple newlines")
+  class MultiNL(tokens: List[EOL]) extends MultiEOL with MultiToken {
+    override def newlines: Int = tokens.length
+  }
   @freeform("comment")
   class Comment(value: String) extends HTrivia
   @freeform("beginning of file")
@@ -304,7 +319,7 @@ object Token {
     def end = start
   }
   @freeform("\n\n")
-  private[meta] class LFLF extends AtEOL
+  private[meta] class LFLF extends MultiEOL
   @freeform("\n")
   private[meta] class InfixLF(invalid: Option[String]) extends EOL
 

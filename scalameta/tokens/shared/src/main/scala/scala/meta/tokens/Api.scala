@@ -178,24 +178,33 @@ private[meta] trait Aliases {
       type End = scala.meta.tokens.Token.Xml.End
       val End = scala.meta.tokens.Token.Xml.End
     }
+
+    // horizontal space
+    type MultiHS = scala.meta.tokens.Token.MultiHS
+    val MultiHS = scala.meta.tokens.Token.MultiHS
     type Space = scala.meta.tokens.Token.Space
     val Space = scala.meta.tokens.Token.Space
     type Tab = scala.meta.tokens.Token.Tab
     val Tab = scala.meta.tokens.Token.Tab
+
+    // vertical space
+    type MultiNL = scala.meta.tokens.Token.MultiNL
+    val MultiNL = scala.meta.tokens.Token.MultiNL
     type CR = scala.meta.tokens.Token.CR
     val CR = scala.meta.tokens.Token.CR
     type LF = scala.meta.tokens.Token.LF
     val LF = scala.meta.tokens.Token.LF
     type FF = scala.meta.tokens.Token.FF
     val FF = scala.meta.tokens.Token.FF
+    type LFLF = scala.meta.tokens.Token.LFLF
+    val LFLF = scala.meta.tokens.Token.LFLF
+
     type Comment = scala.meta.tokens.Token.Comment
     val Comment = scala.meta.tokens.Token.Comment
     type BOF = scala.meta.tokens.Token.BOF
     val BOF = scala.meta.tokens.Token.BOF
     type EOF = scala.meta.tokens.Token.EOF
     val EOF = scala.meta.tokens.Token.EOF
-    type LFLF = scala.meta.tokens.Token.LFLF
-    val LFLF = scala.meta.tokens.Token.LFLF
     type Ellipsis = scala.meta.tokens.Token.Ellipsis
     val Ellipsis = scala.meta.tokens.Token.Ellipsis
     type Unquote = scala.meta.tokens.Token.Unquote
