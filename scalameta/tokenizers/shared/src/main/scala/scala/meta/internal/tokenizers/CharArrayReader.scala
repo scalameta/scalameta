@@ -29,12 +29,15 @@ private[meta] case class CharArrayReader private (
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {
     nextRawChar()
-    if (ch < ' ') {
-      skipCR()
-      potentialLineEnd()
-    }
-    if (ch == '"' && !dialect.allowMultilinePrograms)
-      readerError("double quotes are not allowed in single-line quasiquotes", at = begCharOffset)
+
+    /** Handle line ends */
+    val isEol = checkLineEnd()
+
+    if (!dialect.allowMultilinePrograms)
+      if (isEol)
+        readerError("line breaks are not allowed in single-line quasiquotes", at = begCharOffset)
+      else if (ch == '"')
+        readerError("double quotes are not allowed in single-line quasiquotes", at = begCharOffset)
   }
 
   final def nextCommentChar(): Unit =
@@ -69,19 +72,6 @@ private[meta] case class CharArrayReader private (
     while (ch == ' ' || ch == '\t') nextRawChar()
     ch
   }
-
-  /** replace CR;LF by LF */
-  private def skipCR() = if (ch == CR && endCharOffset < buf.length && buf(endCharOffset) == '\\') {
-    val (c, nextOffset) = readUnicodeChar(buf, endCharOffset)
-    if (c == LF) {
-      ch = LF
-      endCharOffset = nextOffset
-    }
-  }
-
-  /** Handle line ends */
-  private def potentialLineEnd(): Unit = if (checkLineEnd() && !dialect.allowMultilinePrograms)
-    readerError("line breaks are not allowed in single-line quasiquotes", at = begCharOffset)
 
   private def checkLineEnd(): Boolean = {
     val ok = ch == LF || ch == FF
