@@ -147,9 +147,9 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     val reprintedCode = obtained.reprint
     assertLayout.foreach(assertNoDiff(reprintedCode, _, s"Reprinted syntax:\n $expectedStructure"))
 
-    assertNoDiff(obtained.structure, expectedStructure, "Generated stat")
+    assertStruct(obtained, "Generated stat")(expectedStructure)
     val obtainedAgain: T = parser(reprintedCode, dialect)
-    assertNoDiff(obtainedAgain.structure, expectedStructure, s"Reprinted stat: \n$reprintedCode")
+    assertStruct(obtainedAgain, s"Reprinted stat: \n$reprintedCode")(expectedStructure)
   }
 
   protected def parseAndCheckTree[T <: Tree](code: String, syntax: String = null)(
