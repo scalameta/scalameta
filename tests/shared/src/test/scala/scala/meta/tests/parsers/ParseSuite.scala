@@ -65,7 +65,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       f: ScalametaParser => T,
       syntax: String = null
   )(tree: Tree)(implicit loc: munit.Location, dialect: Dialect): Unit =
-    checkTree(parseRule(code, f), syntax)(tree)
+    checkTree(parseRule(code, f), TestHelpers.getSyntax(code, syntax))(tree)
 
   protected def checkStat(code: String, syntax: String = null)(
       tree: Tree
@@ -109,12 +109,10 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
    * @see
    *   runTestAssert(code, assertLayout)(expected)
    */
-  protected def runTestAssert[T <: Tree](code: String, assertLayout: String = null)(
+  protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
       expected: Tree
-  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
-    val assertLayoutOpt = Some(if (assertLayout eq null) code else assertLayout)
-    runTestAssert[T](code, assertLayoutOpt)(expected)
-  }
+  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit =
+    runTestAssert[T](code, assertLayout.getOrElse(""))(expected)
 
   /**
    * General method used to assert a given 'code' parses to expected tree structure and back. We
@@ -137,15 +135,16 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
    * @param parser
    *   Function used to convert code into structured tree
    */
-  protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
+  protected def runTestAssert[T <: Tree](code: String, assertLayout: String = null)(
       expected: Tree
   )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
     val expectedStructure = expected.structure
     val obtained: T = parser(code, dialect)
 
     // check bijection
-    val reprintedCode = obtained.reprint
-    assertLayout.foreach(assertNoDiff(reprintedCode, _, s"Reprinted syntax:\n $expectedStructure"))
+    val reprintedCode = assertSyntaxWithClue(obtained)(TestHelpers.getSyntax(code, assertLayout))(
+      s"Reprinted syntax:\n $expectedStructure"
+    )
 
     assertStruct(obtained, "Generated stat")(expectedStructure)
     val obtainedAgain: T = parser(reprintedCode, dialect)
@@ -156,7 +155,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       expected: Tree
   )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
     val obtained: T = parser(code, dialect)
-    checkTree(obtained, syntax)(expected)
+    checkTree(obtained, TestHelpers.getSyntax(code, syntax))(expected)
   }
 
   protected def checkWithOriginalSyntax[T <: Tree](tree: T, originalOpt: String = null)(
