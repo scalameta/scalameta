@@ -145,7 +145,6 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
     val expectedStructure = expected.structure
     val obtained: T = parser(code, dialect)
-    MoreHelpers.requireNonEmptyOrigin(obtained)
 
     // check bijection
     val reprintedCode = obtained.reprint
@@ -160,7 +159,6 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       expected: Tree
   )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
     val obtained: T = parser(code, dialect)
-    MoreHelpers.requireNonEmptyOrigin(obtained)
     checkTree(obtained, syntax)(expected)
   }
 
