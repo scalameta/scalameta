@@ -138,24 +138,44 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   protected def runTestAssert[T <: Tree](code: String, assertLayout: String = null)(
       expected: Tree
   )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
-    val expectedStructure = expected.structure
-    val obtained: T = parser(code, dialect)
-
-    // check bijection
-    val reprintedCode = assertSyntaxWithClue(obtained)(TestHelpers.getSyntax(code, assertLayout))(
-      s"Reprinted syntax:\n $expectedStructure"
-    )
-
-    assertStruct(obtained, "Generated stat")(expectedStructure)
-    val obtainedAgain: T = parser(reprintedCode, dialect)
-    assertStruct(obtainedAgain, s"Reprinted stat: \n$reprintedCode")(expectedStructure)
+    val struct = expected.structure
+    parseAndCheckTreeWithSyntaxAndStruct[T](code, assertLayout, struct, "Original").foreach {
+      parseAndCheckTreeWithSyntaxAndStruct[T](_, assertLayout, struct, "Reprinted")
+    }
   }
 
   protected def parseAndCheckTree[T <: Tree](code: String, syntax: String = null)(
       expected: Tree
-  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit =
+    parseAndCheckTreeWithSyntaxAndStruct[T](code, syntax, expected.structure)
+
+  private def parseAndCheckTreeWithSyntaxAndStructImpl[T <: Tree](
+      code: String,
+      syntax: String,
+      struct: String,
+      extraClue: String = ""
+  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): String = {
     val obtained: T = parser(code, dialect)
-    checkTree(obtained, TestHelpers.getSyntax(code, syntax))(expected)
+    assertStruct(obtained, extraClue)(struct)
+    assertSyntaxWithClue(obtained)(syntax)(
+      TestHelpers.getMessageWithExtraClue("tree syntax not equal", extraClue) + "\n" + struct
+    )
+  }
+
+  protected def parseAndCheckTreeWithSyntaxAndStruct[T <: Tree](
+      code: String,
+      syntax: String,
+      struct: String,
+      extraClue: String = ""
+  )(implicit
+      loc: munit.Location,
+      parser: (String, Dialect) => T,
+      dialect: Dialect
+  ): Option[String] = {
+    val expectedSyntax = TestHelpers.getSyntax(code, syntax)
+    val reprinted =
+      parseAndCheckTreeWithSyntaxAndStructImpl[T](code, expectedSyntax, struct, extraClue)
+    if (reprinted == code) None else Some(reprinted)
   }
 
   protected def checkWithOriginalSyntax[T <: Tree](tree: T, originalOpt: String = null)(
