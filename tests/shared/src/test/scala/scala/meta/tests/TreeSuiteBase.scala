@@ -10,18 +10,25 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   def emptyArgClause = Seq.empty[Term.ArgClause]
 
-  protected def assertStruct(obtained: Tree)(expected: String)(implicit loc: munit.Location): Unit =
-    assertNoDiff(obtained.structure, expected)
+  protected def assertStruct(obtained: Tree, extraClue: String = "")(
+      expected: String
+  )(implicit loc: munit.Location): Unit = {
+    def msg = TestHelpers.getMessageWithExtraClue("tree structure not equal", extraClue)
+    assertNoDiff(obtained.structure, expected, msg)
+  }
 
-  protected def assertTree(obtained: Tree)(expected: Tree)(implicit loc: munit.Location): Unit =
-    assertTreeStruct(obtained)(expected, expected.structure)
+  protected def assertTree(obtained: Tree, extraClue: String = "")(expected: Tree)(implicit
+      loc: munit.Location
+  ): Unit = assertTreeStruct(obtained, extraClue)(expected, expected.structure)
 
   protected def assertTreeStruct(
-      obtained: Tree
+      obtained: Tree,
+      extraClue: String = ""
   )(expected: Tree, expectedStruct: String)(implicit loc: munit.Location): Unit = {
-    assertStruct(obtained)(expectedStruct)
+    assertStruct(obtained, extraClue)(expectedStruct)
     expected.origin match {
-      case Origin.None => fail("origin should not be None")
+      case Origin.None =>
+        fail(TestHelpers.getMessageWithExtraClue("origin should not be None", extraClue))
       case _ =>
     }
   }
