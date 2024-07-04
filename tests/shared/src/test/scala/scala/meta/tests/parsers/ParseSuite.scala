@@ -4,9 +4,6 @@ package parsers
 import org.scalameta.logger
 import scala.meta._
 import scala.meta.internal.parsers._
-import scala.meta.trees.Origin
-
-import munit._
 
 class ParseSuite extends TreeSuiteBase with CommonTrees {
   import MoreHelpers._
@@ -176,32 +173,4 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     } else runTestAssert[T](original, reprinted)(tree)
   }
 
-}
-
-object MoreHelpers {
-  def requireNonEmptyOrigin(tree: Tree)(implicit dialect: Dialect): tree.type = {
-    val missingOrigin = tree.collect { case t if t.origin == Origin.None => t }
-    Assertions.assertEquals(
-      missingOrigin.map(_.structure),
-      Nil,
-      "Expected all trees to have non-empty `.origin`.\n" +
-        "To fix this failure, update ScalametaParser to use `autoPos()` where the trees below got constructed.\n" +
-        "Pro tip: you may also want to add a PositionSuite test for this tree node to verify that the position you set is correct."
-    )
-    tree
-  }
-  implicit class XtensionCode(private val code: String) extends AnyVal {
-    def asInput: Input = Input.String(code)
-    def asAmmoniteInput: Input = Input.Ammonite(asInput)
-    def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = asInput
-      .applyRule(rule)
-    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = asInput
-      .parseRule(rule)
-  }
-  implicit class XtensionInput(private val input: Input) extends AnyVal {
-    def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T =
-      requireNonEmptyOrigin(rule(new ScalametaParser(input)))
-    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T =
-      applyRule(_.parseRule(rule))
-  }
 }
