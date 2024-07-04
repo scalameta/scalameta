@@ -934,7 +934,7 @@ object ScannerTokens {
     def loop(idx: Int, indent: Int): Int =
       if (idx <= 0) -1
       else str.charAt(idx) match {
-        case '\n' => indent
+        case '\n' | '\r' => indent
         case ' ' | '\t' => loop(idx - 1, indent + 1)
         case _ => loop(idx - 1, 0)
       }

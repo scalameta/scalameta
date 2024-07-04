@@ -172,9 +172,19 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       parser: (String, Dialect) => T,
       dialect: Dialect
   ): Option[String] = {
-    val expectedSyntax = TestHelpers.getSyntax(code, syntax)
+    val codeLF = code.replaceAll("\\r+\\n", "\n")
+    val expectedSyntax = TestHelpers.getSyntax(codeLF, syntax)
     val reprinted =
       parseAndCheckTreeWithSyntaxAndStructImpl[T](code, expectedSyntax, struct, extraClue)
+    def checkAlternative(altCode: String, altMsg: String): Unit = if (code != altCode) {
+      val res =
+        parseAndCheckTreeWithSyntaxAndStructImpl[T](altCode, expectedSyntax, struct, extraClue)
+      if (expectedSyntax.nonEmpty)
+        assertNoDiff(res, reprinted, TestHelpers.getMessageWithExtraClue(altMsg, extraClue))
+    }
+    checkAlternative(codeLF, "LF vs original")
+    checkAlternative(codeLF.replace("\n", "\r\n"), "CRLF vs original")
+    checkAlternative(codeLF.replace("\n", "\r"), "CR vs original")
     if (reprinted == code) None else Some(reprinted)
   }
 
