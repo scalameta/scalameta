@@ -1247,4 +1247,53 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
+  test("huge-if") {
+    val nestedNum = 20
+    def generateIfs(num: Int, ident: String): String = {
+      if (num <= 1) "if (1 >= 10) {}"
+      else s"""|if (1 >= 10) {
+               |${ident}  ${generateIfs(num - 1, ident + "  ")}
+               |${ident}}""".stripMargin
+    }
+
+    val code = s"""|object Test {
+                   |  def apply(): Unit = {
+                   |    ${generateIfs(nestedNum, "    ")}
+                   |  }
+                   |}
+                   |""".stripMargin
+
+    def generateIfsTree(num: Int): Term.If = {
+      val inner = if (num <= 1) Nil else List(generateIfsTree(num - 1))
+      Term.If(
+        Term.ApplyInfix(
+          Lit.Int(1),
+          Term.Name(">="),
+          Type.ArgClause(Nil),
+          Term.ArgClause(List(Lit.Int(10)), None)
+        ),
+        Term.Block(inner),
+        Lit.Unit(),
+        Nil
+      )
+    }
+    runTestAssert[Source](code, assertLayout = Some(code))(Source(List(Defn.Object(
+      Nil,
+      Term.Name("Test"),
+      Template(
+        Nil,
+        Nil,
+        Self(Name.Anonymous(), None),
+        List(Defn.Def(
+          Nil,
+          Term.Name("apply"),
+          List(Member.ParamClauseGroup(Type.ParamClause(Nil), List(Term.ParamClause(Nil, None)))),
+          Some(Type.Name("Unit")),
+          Term.Block(List(generateIfsTree(nestedNum)))
+        )),
+        Nil
+      )
+    ))))
+
+  }
 }
