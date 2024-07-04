@@ -53,10 +53,18 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
     assertSyntaxWithClue(obtained, syntax)(expected, expected.structure)
 
   protected def assertSyntaxWithClue(
+      obtained: Tree
+  )(syntax: String)(clue: => Any)(implicit loc: munit.Location, dialect: Dialect): String = {
+    val reprinted = obtained.reprint
+    if (syntax.nonEmpty) assertNoDiff(reprinted, syntax, clue)
+    reprinted
+  }
+
+  protected def assertSyntaxWithClue(
       obtained: Tree,
       syntax: String = null
   )(expected: Tree, clue: => Any)(implicit loc: munit.Location, dialect: Dialect): Unit =
-    assertNoDiff(obtained.reprint, Option(syntax).getOrElse(expected.reprint), clue)
+    assertSyntaxWithClue(obtained)(TestHelpers.getSyntax(expected.reprint, syntax))(clue)
 
   protected def checkTree(obtained: Tree, syntax: String = null)(
       expected: Tree
