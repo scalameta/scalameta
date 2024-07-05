@@ -204,7 +204,7 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   // scalacOptions += "-Xprint:typer",
   enableHardcoreMacros,
   libraryDependencies ++= {
-    val fastparseVersion = if (isScala211.value) "3.0.2" else "3.1.0"
+    val fastparseVersion = if (isScala211.value) "3.0.2" else "3.1.1"
     List("com.lihaoyi" %%% "fastparse" % fastparseVersion),
   },
   mergedModule { base =>
