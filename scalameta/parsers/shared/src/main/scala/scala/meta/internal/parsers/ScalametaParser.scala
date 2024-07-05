@@ -1416,13 +1416,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
     val cond =
-      if (!dialect.allowQuietSyntax)
-        try condExpr()
-        finally newLinesOpt()
-      else if (!token.is[LeftParen])
-        try expr()
-        finally acceptAfterOptNL[T]
-      else {
+      if (!dialect.allowQuietSyntax) {
+        val cond = condExpr()
+        newLinesOpt()
+        cond
+      } else if (!token.is[LeftParen]) {
+        val cond = expr()
+        acceptAfterOptNL[T]
+        cond
+      } else {
         val startPos = tokenPos
         val simpleExpr = condExpr()
         if (acceptIfAfterOptNL[T]) simpleExpr
