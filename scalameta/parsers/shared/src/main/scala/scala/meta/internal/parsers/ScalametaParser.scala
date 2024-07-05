@@ -1421,24 +1421,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def condExprInParens[T <: Token: ClassTag]: Term =
-    if (dialect.allowQuietSyntax) {
-      val startPos = tokenPos
-      val simpleExpr = condExpr()
-      tryParse {
-        val simpleRest = simpleExprRest(simpleExpr, canApply = true, startPos = startPos)
-        Try(postfixExpr(startPos, simpleRest, allowRepeated = false)).toOption.flatMap { x =>
-          val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
-          newLinesOpt()
-          if (acceptOpt[T]) Some(exprCond) else None
-        }
-      }.getOrElse {
-        newLinesOpt()
-        acceptOpt[T]
-        simpleExpr
-      }
-    } else
+    if (!dialect.allowQuietSyntax)
       try condExpr()
       finally newLinesOpt()
+    else {
+      val startPos = tokenPos
+      val simpleExpr = condExpr()
+      if (acceptIfAfterOptNL[T]) simpleExpr
+      else {
+        val complexExpr = tryParse {
+          val simpleRest = simpleExprRest(simpleExpr, canApply = true, startPos = startPos)
+          Try(postfixExpr(startPos, simpleRest, allowRepeated = false)).toOption.flatMap { x =>
+            val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
+            if (acceptIfAfterOptNL[T]) Some(exprCond) else None
+          }
+        }
+        complexExpr.getOrElse {
+          newLinesOpt()
+          simpleExpr
+        }
+      }
+    }
 
   // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
   // if yes, then nothing has to change here
