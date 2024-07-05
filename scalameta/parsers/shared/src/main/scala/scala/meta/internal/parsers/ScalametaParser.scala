@@ -1408,40 +1408,42 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
     accept[KwIf]
-    val cond =
-      if (token.is[LeftParen]) condExprInParens[KwThen]
-      else
-        try expr()
-        finally acceptAfterOptNL[KwThen]
-
-    val thenp = expr()
+    val (cond, thenp) = condExprWithBody[KwThen]
     if (acceptIfAfterOptNL[KwElse]) Term.If(cond, thenp, expr(), mods)
     else if (token.is[Semicolon] && tryAhead[KwElse]) { next(); Term.If(cond, thenp, expr(), mods) }
     else Term.If(cond, thenp, autoPos(Lit.Unit()), mods)
   }
 
-  private def condExprInParens[T <: Token: ClassTag]: Term =
-    if (!dialect.allowQuietSyntax)
-      try condExpr()
-      finally newLinesOpt()
-    else {
-      val startPos = tokenPos
-      val simpleExpr = condExpr()
-      if (acceptIfAfterOptNL[T]) simpleExpr
+  private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
+    val cond =
+      if (!dialect.allowQuietSyntax)
+        try condExpr()
+        finally newLinesOpt()
+      else if (!token.is[LeftParen])
+        try expr()
+        finally acceptAfterOptNL[T]
       else {
-        val complexExpr = tryParse {
-          val simpleRest = simpleExprRest(simpleExpr, canApply = true, startPos = startPos)
-          Try(postfixExpr(startPos, simpleRest, allowRepeated = false)).toOption.flatMap { x =>
-            val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
-            if (acceptIfAfterOptNL[T]) Some(exprCond) else None
+        val startPos = tokenPos
+        val simpleExpr = condExpr()
+        if (acceptIfAfterOptNL[T]) simpleExpr
+        else {
+          val complexExpr = tryParse {
+            val simpleRest = simpleExprRest(simpleExpr, canApply = true, startPos = startPos)
+            Try(postfixExpr(startPos, simpleRest, allowRepeated = false)).toOption.flatMap { x =>
+              val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
+              if (acceptIfAfterOptNL[T]) Some(exprCond) else None
+            }
+          }
+          complexExpr.getOrElse {
+            newLinesOpt()
+            simpleExpr
           }
         }
-        complexExpr.getOrElse {
-          newLinesOpt()
-          simpleExpr
-        }
       }
-    }
+    val body = expr()
+
+    (cond, body)
+  }
 
   // FIXME: when parsing `(2 + 3)`, do we want the ApplyInfix's position to include parentheses?
   // if yes, then nothing has to change here
@@ -1486,12 +1488,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
       case _: KwWhile =>
         next()
-        val cond =
-          if (token.is[LeftParen]) condExprInParens[KwDo]
-          else
-            try expr()
-            finally acceptAfterOptNL[KwDo]
-        Term.While(cond, expr())
+        val (cond, body) = condExprWithBody[KwDo]
+        Term.While(cond, body)
       case _: KwDo if dialect.allowDoWhile =>
         next()
         val body = expr()
