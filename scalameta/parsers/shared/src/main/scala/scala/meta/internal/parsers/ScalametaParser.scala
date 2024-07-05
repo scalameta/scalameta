@@ -1386,12 +1386,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       syntaxError("error in interpolated string: identifier, `this' or block expected", at = token)
   }
 
-  private def tryAcceptWithOptLF[T: ClassTag]: Boolean = acceptOpt[T] || {
-    val ok = token.is[AtEOL] && tryAhead[T]
-    if (ok) next()
-    ok
-  }
-
   /**
    * Deals with Scala 3 concept of {{{inline x match { ...}}}. Since matches can also be chained in
    * Scala 3 we need to create the Match first and only then add the the inline modifier.
@@ -1421,7 +1415,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         finally acceptAfterOptNL[KwThen]
 
     val thenp = expr()
-    if (tryAcceptWithOptLF[KwElse]) Term.If(cond, thenp, expr(), mods)
+    if (acceptIfAfterOptNL[KwElse]) Term.If(cond, thenp, expr(), mods)
     else if (token.is[Semicolon] && tryAhead[KwElse]) { next(); Term.If(cond, thenp, expr(), mods) }
     else Term.If(cond, thenp, autoPos(Lit.Unit()), mods)
   }
@@ -1469,7 +1463,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case _ => expr()
         }
 
-        def finallyopt = if (tryAcceptWithOptLF[KwFinally]) Some(expr()) else None
+        def finallyopt = if (acceptIfAfterOptNL[KwFinally]) Some(expr()) else None
 
         def tryWithCases(cases: List[Case]) = Term.Try(body, cases, finallyopt)
         def tryWithHandler(handler: Term) = Term.TryWithHandler(body, handler, finallyopt)
@@ -1479,7 +1473,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             .fold(x => tryWithHandler(autoEndPos(catchPos)(x)), tryWithCases)
         }
 
-        if (tryAcceptWithOptLF[KwCatch]) token match {
+        if (acceptIfAfterOptNL[KwCatch]) token match {
           case _: KwCase => next(); tryWithCases(caseClause(true) :: Nil)
           case _: Indentation.Indent => tryInDelims(indentedOnOpen)
           case _: LeftBrace => tryInDelims(inBracesOnOpen)
