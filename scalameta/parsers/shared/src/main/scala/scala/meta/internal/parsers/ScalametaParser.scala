@@ -1415,34 +1415,49 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
-    val cond =
+    val (cond, bodyOpt) =
       if (!dialect.allowQuietSyntax) {
         val cond = condExpr()
         newLinesOpt()
-        cond
+        (cond, None)
       } else if (!token.is[LeftParen]) {
         val cond = expr()
         acceptAfterOptNL[T]
-        cond
+        (cond, None)
       } else {
         val startPos = tokenPos
         val simpleExpr = condExpr()
-        if (acceptIfAfterOptNL[T]) simpleExpr
+        if (acceptIfAfterOptNL[T]) (simpleExpr, None)
         else {
+          // let's consider case when something can continue cond or start body
+          val argsOrInitBody = token match {
+            case _: LeftParen => Some(inParensOrTupleOrUnitExpr(allowRepeated = false))
+            case _: LeftBrace => Some(blockExprOnBrace())
+            case _ => None
+          }
           val complexExpr = tryParse {
-            val simpleRest = simpleExprRest(simpleExpr, canApply = true, startPos = startPos)
+            val simpleExprWithArgs = argsOrInitBody.fold(simpleExpr) { t =>
+              val args = copyPos(t)(termInfixContext.toArgClause(t))
+              autoEndPos(startPos)(Term.Apply(simpleExpr, args))
+            }
+            val simpleRest = simpleExprRest(simpleExprWithArgs, canApply = true, startPos = startPos)
             Try(postfixExpr(startPos, simpleRest, allowRepeated = false)).toOption.flatMap { x =>
               val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
-              if (acceptIfAfterOptNL[T]) Some(exprCond) else None
+              if (acceptIfAfterOptNL[T]) Some(exprCond -> None) else None
             }
           }
           complexExpr.getOrElse {
-            newLinesOpt()
-            simpleExpr
+            if (argsOrInitBody.isEmpty) newLinesOpt()
+            simpleExpr -> argsOrInitBody.map { t =>
+              val startPos = t.startTokenPos
+              val rest = simpleExprRest(t, canApply = true, startPos = startPos)
+              val init = postfixExpr(startPos, rest, allowRepeated = false)
+              exprOtherRest(startPos, init, NoStat, allowRepeated = false)
+            }
           }
         }
       }
-    val body = expr()
+    val body = bodyOpt.getOrElse(expr())
 
     (cond, body)
   }
@@ -1814,6 +1829,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       override def toString = s"[$lhs $op$targs]"
     }
 
+    def toArgClause(rhs: Typ): Term.ArgClause = copyPos(rhs)(
+      (rhs match {
+        case _: Lit.Unit => Nil
+        case t: Term.Tuple => t.args
+        case _ => rhs :: Nil
+      }).reduceWith(Term.ArgClause(_))
+    )
+
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
       val UnfinishedInfix(lhsExt, op, targs) = unf
       val lhs = lhsExt match {
@@ -1824,14 +1847,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (lhs.is[Term.Repeated])
         syntaxError("repeated argument not allowed here", at = lhs.tokens.last)
 
-      val args = copyPos(rhs)(
-        (rhs match {
-          case _: Lit.Unit => Nil
-          case t: Term.Tuple => t.args
-          case _ => rhs :: Nil
-        }).reduceWith(Term.ArgClause(_))
-      )
-      atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, args))
+      atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, toArgClause(rhs)))
     }
   }
 
