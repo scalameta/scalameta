@@ -1698,4 +1698,52 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
   }
 
+  test("code with Shebang line") {
+    val code = """|#!/usr/bin/env foo bar && qux >/dev/null
+                  |package foo
+                  |
+                  |import bar
+                  |
+                  |class Baz()
+                  |""".stripMargin
+    val struct = """|BOF [0..0)
+                    |Ident(#!/) [0..3)
+                    |Ident(usr) [3..6)
+                    |Ident(/) [6..7)
+                    |Ident(bin) [7..10)
+                    |Ident(/) [10..11)
+                    |Ident(env) [11..14)
+                    |Space [14..15)
+                    |Ident(foo) [15..18)
+                    |Space [18..19)
+                    |Ident(bar) [19..22)
+                    |Space [22..23)
+                    |Ident(&&) [23..25)
+                    |Space [25..26)
+                    |Ident(qux) [26..29)
+                    |Space [29..30)
+                    |Ident(>/) [30..32)
+                    |Ident(dev) [32..35)
+                    |Ident(/) [35..36)
+                    |KwNull [36..40)
+                    |CRLF [40..42)
+                    |KwPackage [42..49)
+                    |Space [49..50)
+                    |Ident(foo) [50..53)
+                    |MultiNL(2) [53..57)
+                    |KwImport [57..63)
+                    |Space [63..64)
+                    |Ident(bar) [64..67)
+                    |MultiNL(2) [67..71)
+                    |KwClass [71..76)
+                    |Space [76..77)
+                    |Ident(Baz) [77..80)
+                    |LeftParen [80..81)
+                    |RightParen [81..82)
+                    |CRLF [82..84)
+                    |EOF [84..84)
+                    |""".stripMargin
+    assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
+  }
+
 }
