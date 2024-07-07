@@ -600,6 +600,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.tokens.Token.RightBracket
          |scala.meta.tokens.Token.RightParen
          |scala.meta.tokens.Token.Semicolon
+         |scala.meta.tokens.Token.Shebang
          |scala.meta.tokens.Token.Space
          |scala.meta.tokens.Token.Subtype
          |scala.meta.tokens.Token.Supertype

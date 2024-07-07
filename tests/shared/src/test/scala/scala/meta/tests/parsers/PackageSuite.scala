@@ -143,10 +143,19 @@ class PackageSuite extends ParseSuite {
                   |
                   |class Qux()
                   |""".stripMargin
-    val error = """|<input>:1: error: illegal start of definition `identifier`
-                   |#!/usr/bin/env foo bar && qux >/dev/null
-                   |^""".stripMargin
-    runTestError[Source](code, error)
+    val layout = """|#!/usr/bin/env foo bar && qux >/dev/null
+                    |package foo
+                    |import bar.baz
+                    |class Qux()
+                    |""".stripMargin
+    val tree = Source(List(Pkg(
+      tname("foo"),
+      List(
+        Import(List(Importer(tname("bar"), List(Importee.Name(Name("baz")))))),
+        Defn.Class(Nil, Type.Name("Qux"), Nil, ctorp(Nil), tpl())
+      )
+    )))
+    runTestAssert[Source](code, layout)(tree)
   }
 
 }

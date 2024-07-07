@@ -171,7 +171,16 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     if (startsStringPart(sepRegions)) popSepRegions()
   }
 
-  def initialize(): Unit = if (endCharOffset == 0) nextChar()
+  def initialize(bof: Boolean = false): Unit = if (endCharOffset == 0) {
+    nextChar()
+    if (bof && '#' == ch && !wasMultiChar && buf(endCharOffset) == '!') {
+      next.offset = begCharOffset
+      do { putChar(ch); nextChar() } while (ch != CR && ch != LF && ch != FF && ch != SU)
+      next.strVal = getAndResetCBuf()
+      next.endOffset = begCharOffset
+      next.token = SHEBANG
+    }
+  }
 
   /**
    * Produce next token, filling curr TokenData fields of Scanner.
