@@ -142,7 +142,7 @@ class ScalaExprPositionParser(dialect: Dialect) {
     val input = ctx.input
     val index = ctx.index
     val scanner = new LegacyScanner(Input.String(input.slice(index, input.length)), dialect)
-    scanner.reader.nextChar()
+    scanner.initialize()
 
     @tailrec
     def rec(curlyBraceCount: Int): Boolean = {

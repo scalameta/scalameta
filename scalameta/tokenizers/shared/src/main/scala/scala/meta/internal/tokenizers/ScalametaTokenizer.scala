@@ -19,7 +19,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
   private def uncachedTokenize(): Tokens = {
     val scanner = new LegacyScanner(input, dialect)
-    scanner.reader.nextChar()
+    scanner.initialize()
 
     def curr = scanner.curr
     def nextToken(): Boolean = {
