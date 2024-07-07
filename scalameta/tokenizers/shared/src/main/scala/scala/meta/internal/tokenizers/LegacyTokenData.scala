@@ -23,7 +23,7 @@ trait LegacyTokenData {
   /** the offset of the character following the token preceding this one */
   var lastOffset: Offset = 0
 
-  /** the offset of the last character of the current token */
+  /** the offset past the last character of the current token */
   var endOffset: Offset = 0
 
   /** the name of an identifier */

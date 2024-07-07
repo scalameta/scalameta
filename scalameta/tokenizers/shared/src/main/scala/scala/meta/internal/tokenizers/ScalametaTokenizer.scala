@@ -80,7 +80,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       @tailrec
       def emitContents(): Unit =
         if (curr.token == STRINGPART) {
-          val dollarOffset = curr.endOffset + 1
+          val dollarOffset = curr.endOffset
           require(input.chars(dollarOffset) == '$')
           pushPart(dollarOffset)
           val postDollarOffset = dollarOffset + 1
@@ -109,7 +109,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       pushToken(Token.Interpolation.Start(input, dialect, token.end, curr.offset))
       emitContents()
 
-      val endEndPos = curr.endOffset + 1
+      val endEndPos = curr.endOffset
       val endBegPos = endEndPos - numQuotes
       require(input.chars(endBegPos) == '\"')
       pushPart(endBegPos)
@@ -135,7 +135,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
         case XMLLITEND =>
           // We have reached the final xml part
-          val xmlEndIndex = curr.endOffset + 1
+          val xmlEndIndex = curr.endOffset
           pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
       }
 
@@ -186,34 +186,32 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
   private def getXmlPart(curr: LegacyTokenData): Token = {
     val beg = curr.offset
-    val end = curr.endOffset + 1
+    val end = curr.endOffset
     val part = new String(input.chars, beg, end - beg)
     Token.Xml.Part(input, dialect, beg, end, part)
   }
 
   private def getToken(curr: LegacyTokenData): Token = {
     (curr.token: @scala.annotation.switch) match {
-      case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
-      case INTLIT => Token.Constant.Int(input, dialect, curr.offset, curr.endOffset + 1, curr.intVal)
-      case LONGLIT => Token.Constant
-          .Long(input, dialect, curr.offset, curr.endOffset + 1, curr.longVal)
+      case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset, curr.name)
+      case INTLIT => Token.Constant.Int(input, dialect, curr.offset, curr.endOffset, curr.intVal)
+      case LONGLIT => Token.Constant.Long(input, dialect, curr.offset, curr.endOffset, curr.longVal)
       case FLOATLIT => Token.Constant
-          .Float(input, dialect, curr.offset, curr.endOffset + 1, curr.floatVal)
+          .Float(input, dialect, curr.offset, curr.endOffset, curr.floatVal)
       case DOUBLELIT => Token.Constant
-          .Double(input, dialect, curr.offset, curr.endOffset + 1, curr.doubleVal)
-      case CHARLIT => Token.Constant
-          .Char(input, dialect, curr.offset, curr.endOffset + 1, curr.charVal)
+          .Double(input, dialect, curr.offset, curr.endOffset, curr.doubleVal)
+      case CHARLIT => Token.Constant.Char(input, dialect, curr.offset, curr.endOffset, curr.charVal)
       case SYMBOLLIT => Token.Constant
-          .Symbol(input, dialect, curr.offset, curr.endOffset + 1, scala.Symbol(curr.strVal))
+          .Symbol(input, dialect, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
       case STRINGLIT => Token.Constant
-          .String(input, dialect, curr.offset, curr.endOffset + 1, curr.strVal)
+          .String(input, dialect, curr.offset, curr.endOffset, curr.strVal)
       case STRINGPART => unreachable
       case TRUE => Token.KwTrue(input, dialect, curr.offset)
       case FALSE => Token.KwFalse(input, dialect, curr.offset)
       case NULL => Token.KwNull(input, dialect, curr.offset)
 
       case INTERPOLATIONID => Token.Interpolation
-          .Id(input, dialect, curr.offset, curr.endOffset + 1, curr.name)
+          .Id(input, dialect, curr.offset, curr.endOffset, curr.name)
       case XMLLIT => getXmlPart(curr)
       case XMLLITEND => unreachable
 
@@ -279,8 +277,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case AT => Token.At(input, dialect, curr.offset)
       case HASH => Token.Hash(input, dialect, curr.offset)
       case USCORE => Token.Underscore(input, dialect, curr.offset)
-      case ARROW => Token.RightArrow(input, dialect, curr.offset, curr.endOffset + 1)
-      case LARROW => Token.LeftArrow(input, dialect, curr.offset, curr.endOffset + 1)
+      case ARROW => Token.RightArrow(input, dialect, curr.offset, curr.endOffset)
+      case LARROW => Token.LeftArrow(input, dialect, curr.offset, curr.endOffset)
       case SUBTYPE => Token.Subtype(input, dialect, curr.offset)
       case SUPERTYPE => Token.Supertype(input, dialect, curr.offset)
       case VIEWBOUND => Token.Viewbound(input, dialect, curr.offset)
@@ -298,13 +296,13 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case WHITESPACE_FF => Token.FF(input, dialect, curr.offset)
 
       case COMMENT =>
-        var value = new String(input.chars, curr.offset, curr.endOffset - curr.offset + 1)
+        var value = new String(input.chars, curr.offset, curr.endOffset - curr.offset)
         if (value.startsWith("//")) value = value.stripPrefix("//")
         if (value.startsWith("/*")) value = value.stripPrefix("/*").stripSuffix("*/")
-        Token.Comment(input, dialect, curr.offset, curr.endOffset + 1, value)
+        Token.Comment(input, dialect, curr.offset, curr.endOffset, value)
 
-      case ELLIPSIS => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset + 1, curr.base)
-      case UNQUOTE => Token.Unquote(input, dialect, curr.offset, curr.endOffset + 1)
+      case ELLIPSIS => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset, curr.base)
+      case UNQUOTE => Token.Unquote(input, dialect, curr.offset, curr.endOffset)
 
       case EOF => new Token.EOF(input, dialect)
 
