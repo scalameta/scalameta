@@ -108,7 +108,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val start = offset
     curr.token = token
     curr.strVal = new String(input.chars, start, endExclusive - start)
-    curr.endOffset = endExclusive - 1
+    curr.endOffset = endExclusive
     reader.endCharOffset = endExclusive
     reader.nextChar()
   }
@@ -222,10 +222,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     // upd. Speaking of corner cases, positions of tokens emitted by string interpolation tokenizers are simply insane,
     // and need to be reverse engineered having some context (previous tokens, number of quotes in the interpolation) in mind.
     // Therefore I don't even attempt to handle them here, and instead apply fixups elsewhere when converting legacy TOKENS into new LegacyToken instances.
-    if (curr.token != STRINGPART) { // endOffset of STRINGPART tokens is set elsewhere
-      curr.endOffset = begCharOffset - 1
-      if (endCharOffset >= buf.length && ch == SU) curr.endOffset = buf.length - 1
-    }
+    if (curr.token != STRINGPART) // endOffset of STRINGPART tokens is set elsewhere
+      curr.endOffset = if (endCharOffset >= buf.length && ch == SU) buf.length else begCharOffset
   }
 
   /**
@@ -600,12 +598,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           getStringPart(multiLine)
         } else if (ch == '{') {
           finishStringPart()
-          endOffset = endCharOffset - 3
+          endOffset = endCharOffset - 2
           nextRawChar()
           next.token = LBRACE
         } else if (ch == '_' && dialect.allowSpliceUnderscores) {
           finishStringPart()
-          endOffset = endCharOffset - 3
+          endOffset = endCharOffset - 2
           nextRawChar()
           if (Character.isUnicodeIdentifierStart(ch)) {
             putChar('_')
@@ -613,7 +611,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           } else next.token = USCORE
         } else if (Character.isUnicodeIdentifierStart(ch)) {
           finishStringPart()
-          endOffset = endCharOffset - 3
+          endOffset = endCharOffset - 2
           identifier()
         } else {
           var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
@@ -888,7 +886,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def getUnquote(): Unit = {
     require(ch == '$')
     val start = endCharOffset
-    val endInclusive = {
+    val endExclusive = {
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
       val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)
       exploratoryScanner.reader.nextChar()
@@ -918,7 +916,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       }
       start + exploratoryScanner.curr.endOffset
     }
-    finishComposite(UNQUOTE, endInclusive + 1)
+    finishComposite(UNQUOTE, endExclusive)
   }
 
 // Errors -----------------------------------------------------------------
