@@ -18,7 +18,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   val reporter: Reporter = Reporter(input)
   val curr: LegacyTokenData = new LegacyTokenData {}
   val next: LegacyTokenData = new LegacyTokenData {}
-  val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
+  private val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
 
   import curr._
   import reader._
@@ -170,6 +170,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     popSepRegions()
     if (startsStringPart(sepRegions)) popSepRegions()
   }
+
+  def initialize(): Unit = if (endCharOffset == 0) nextChar()
 
   /**
    * Produce next token, filling curr TokenData fields of Scanner.
@@ -891,7 +893,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val endInclusive = {
       val exploratoryInput = Input.Slice(input, start, input.chars.length)
       val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)
-      exploratoryScanner.reader.nextChar()
+      exploratoryScanner.initialize()
       exploratoryScanner.nextToken()
       exploratoryScanner.curr.token match {
         case LBRACE =>
