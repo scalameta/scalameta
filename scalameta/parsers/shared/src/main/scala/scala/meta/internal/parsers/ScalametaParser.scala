@@ -140,9 +140,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   /* ------------- TOKEN STREAM HELPERS -------------------------------------------- */
 
   @inline
-  private def isColonIndent(): Boolean = token.is[Colon] && isIndentAfter()
+  private def nextIfColonIndent(): Boolean = token.is[Colon] && nextIfIndentAhead()
   @inline
-  private def isIndentAfter(): Boolean = peekToken.is[Indentation.Indent]
+  private def nextIfIndentAhead(): Boolean = tryAhead[Indentation.Indent]
 
   /* ------------- PARSER-SPECIFIC TOKENS -------------------------------------------- */
 
@@ -2255,8 +2255,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     paramClauseOpt.flatMap { params =>
       val contextFunction = token.is[ContextArrow]
-      if ((contextFunction || token.is[RightArrow]) && isIndentAfter()) Some {
-        next()
+      if ((contextFunction || token.is[RightArrow]) && nextIfIndentAhead()) Some {
         val trm = blockExprOnIndent()
         autoEndPos(paramPos) {
           if (contextFunction) Term.ContextFunction(params, trm) else Term.Function(params, trm)
@@ -4249,15 +4248,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def packageOrPackageObjectDef(statpf: PartialFunction[Token, Stat]): Stat = autoPos {
-    accept[KwPackage]
+  private def packageOrPackageObjectDef(statpf: PartialFunction[Token, Stat]): Stat = autoPos {
+    next()
     if (acceptOpt[KwObject]) Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
     else {
       def packageBody =
-        if (isColonIndent()) {
-          next()
-          indentedOnOpen(statSeq(statpf))
-        } else inBracesOrNil(statSeq(statpf))
+        if (nextIfColonIndent()) indentedOnOpen(statSeq(statpf)) else inBracesOrNil(statSeq(statpf))
       Pkg(qualId(), packageBody)
     }
   }
@@ -4283,7 +4279,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           if (!token.is[EOF]) acceptStatSep()
           statSeqBuf(buf, statpf)
         })
-        if (isColonIndent()) { next(); inPackageOnOpen[Indentation.Outdent] }
+        if (nextIfColonIndent()) inPackageOnOpen[Indentation.Outdent]
         else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace]
         else bracelessPackageStats(x => f(List(getPackage(x))))
       case _: AtEOL | _: Semicolon => next(); bracelessPackageStats(f)
