@@ -48,6 +48,7 @@ class ReflectionSuite extends FunSuite {
          |Token.MultiHS
          |Token.MultiNL
          |Token.RightArrow
+         |Token.Shebang
          |Token.Unquote
          |Token.Xml.End
          |Token.Xml.Part

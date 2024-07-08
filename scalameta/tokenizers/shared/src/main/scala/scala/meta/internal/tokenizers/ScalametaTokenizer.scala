@@ -19,7 +19,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
   private def uncachedTokenize(): Tokens = {
     val scanner = new LegacyScanner(input, dialect)
-    scanner.initialize()
+    scanner.initialize(bof = true)
 
     def curr = scanner.curr
     def nextToken(): Boolean = {
@@ -305,6 +305,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case UNQUOTE => Token.Unquote(input, dialect, curr.offset, curr.endOffset)
 
       case EOF => new Token.EOF(input, dialect)
+      case SHEBANG => new Token.Shebang(input, dialect, curr.offset, curr.endOffset, curr.strVal)
 
       case EMPTY => unreachable
       case UNDEF => unreachable

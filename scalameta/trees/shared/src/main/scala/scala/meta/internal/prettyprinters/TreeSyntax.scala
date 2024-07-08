@@ -1005,7 +1005,12 @@ object TreeSyntax {
 
       case t: TypeCase => s("case ", t.pat, " ", kw("=>"), " ", t.body)
       // Source
-      case t: Source => r(t.stats, EOL)
+      case t: Source =>
+        val shebang = t.origin.tokensOpt.flatMap { x =>
+          val shebangOk = x.length >= 2 && x(0).is[Token.BOF] && x(1).is[Token.Shebang]
+          if (shebangOk) Some(x(1).asInstanceOf[Token.Shebang].value) else None
+        }
+        s(o(shebang, EOL), r(t.stats, EOL))
       case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
       case t: Term.AnonymousFunction => s(t.body)
     }

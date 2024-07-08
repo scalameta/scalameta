@@ -313,6 +313,8 @@ object Token {
     def this(input: Input, dialect: Dialect) = this(input, dialect, 0)
     def end = start
   }
+  @freeform("`#!` line at the beginning of file`")
+  class Shebang(value: String) extends Token
   @freeform("end of file")
   class EOF extends AtEOLorF {
     def this(input: Input, dialect: Dialect) = this(input, dialect, input.chars.length)

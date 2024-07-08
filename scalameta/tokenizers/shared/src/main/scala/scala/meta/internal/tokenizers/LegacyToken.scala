@@ -14,6 +14,7 @@ object LegacyToken {
   final val UNDEF = -2
   final val ERROR = -1
   final val EOF = 0
+  final val SHEBANG = 1
 
   /** literals */
   final val LITERAL_BEG = 1001

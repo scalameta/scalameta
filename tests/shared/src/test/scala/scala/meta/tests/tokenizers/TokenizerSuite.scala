@@ -1698,4 +1698,34 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
   }
 
+  test("code with Shebang line") {
+    val code = """|#!/usr/bin/env foo bar && qux >/dev/null
+                  |package foo
+                  |
+                  |import bar
+                  |
+                  |class Baz()
+                  |""".stripMargin
+    val struct = """|BOF [0..0)
+                    |Shebang [0..40)
+                    |CRLF [40..42)
+                    |KwPackage [42..49)
+                    |Space [49..50)
+                    |Ident(foo) [50..53)
+                    |MultiNL(2) [53..57)
+                    |KwImport [57..63)
+                    |Space [63..64)
+                    |Ident(bar) [64..67)
+                    |MultiNL(2) [67..71)
+                    |KwClass [71..76)
+                    |Space [76..77)
+                    |Ident(Baz) [77..80)
+                    |LeftParen [80..81)
+                    |RightParen [81..82)
+                    |CRLF [82..84)
+                    |EOF [84..84)
+                    |""".stripMargin
+    assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
+  }
+
 }

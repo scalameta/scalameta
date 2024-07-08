@@ -134,4 +134,28 @@ class PackageSuite extends ParseSuite {
          |""".stripMargin
     ))(Source(List(Pkg(tname("foo"), List(Pkg(tname("bar"), List(Pkg(tname("baz"), List()))))))))
   }
+
+  test("code with Shebang line") {
+    val code = """|#!/usr/bin/env foo bar && qux >/dev/null
+                  |package foo
+                  |
+                  |import bar.baz
+                  |
+                  |class Qux()
+                  |""".stripMargin
+    val layout = """|#!/usr/bin/env foo bar && qux >/dev/null
+                    |package foo
+                    |import bar.baz
+                    |class Qux()
+                    |""".stripMargin
+    val tree = Source(List(Pkg(
+      tname("foo"),
+      List(
+        Import(List(Importer(tname("bar"), List(Importee.Name(Name("baz")))))),
+        Defn.Class(Nil, Type.Name("Qux"), Nil, ctorp(Nil), tpl())
+      )
+    )))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
 }

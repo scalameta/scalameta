@@ -4258,14 +4258,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def source(): Source =
-    autoPos(batchSource(if (dialect.allowToplevelTerms) consumeStat else topStat))
+  def source(): Source = autoPos {
+    if (acceptOpt[Shebang]) newLinesOpt()
+    val statpf = if (dialect.allowToplevelTerms) consumeStat else topStat
 
-  def quasiquoteSource(): Source = entrypointSource()
-
-  def entrypointSource(): Source = source()
-
-  def batchSource(statpf: PartialFunction[Token, Stat] = topStat): Source = autoPos {
     @tailrec
     def bracelessPackageStats(f: List[Stat] => List[Stat]): List[Stat] = token match {
       case _: KwPackage if tryAheadNot[KwObject] =>
@@ -4288,6 +4284,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     Source(bracelessPackageStats(identity))
   }
+
+  def entrypointSource(): Source = source()
+
+  def quasiquoteSource(): Source = entrypointSource()
+
 }
 
 object ScalametaParser {
