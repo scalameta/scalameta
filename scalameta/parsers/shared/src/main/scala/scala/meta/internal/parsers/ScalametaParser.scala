@@ -4270,49 +4270,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def entrypointSource(): Source = source()
 
   def batchSource(statpf: PartialFunction[Token, Stat] = topStat): Source = autoPos {
-    val buf = new ListBuffer[Stat]
     @tailrec
     def bracelessPackageStats(f: List[Stat] => List[Stat]): List[Stat] = token match {
-      case _: EOF => f(buf.toList)
-      case StatSep() =>
-        next()
-        bracelessPackageStats(f)
       case _: KwPackage if tryAheadNot[KwObject] =>
         val startPos = prevTokenPos
         val qid = qualId()
-        def inPackage(stats: => List[Stat]) = {
-          buf += autoEndPos(startPos)(Pkg(qid, stats))
-          acceptStatSepOpt()
-        }
-        if (token.is[LeftBrace]) {
-          inPackage(inBracesOnOpen(statSeq(statpf)))
-          bracelessPackageStats(f)
-        } else if (isColonIndent()) {
+        def getPackage(stats: List[Stat]) = autoEndPos(startPos)(Pkg(qid, stats))
+        def inPackageOnOpen[T <: Token: ClassTag] = f(listBy[Stat] { buf =>
           next()
-          inPackage(indentedOnOpen(statSeq(statpf)))
-          bracelessPackageStats(f)
-        } else bracelessPackageStats(x => f(List(autoEndPos(startPos)(Pkg(qid, x)))))
-      case _: LeftBrace =>
-        inBracesOnOpen(statSeqBuf(buf, statpf))
-        f(buf.toList)
-      case _ =>
-        statSeqBuf(buf, statpf)
-        f(buf.toList)
+          buf += getPackage(statSeq(statpf))
+          acceptAfterOptNL[T]
+          if (!token.is[EOF]) acceptStatSep()
+          statSeqBuf(buf, statpf)
+        })
+        if (isColonIndent()) { next(); inPackageOnOpen[Indentation.Outdent] }
+        else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace]
+        else bracelessPackageStats(x => f(List(getPackage(x))))
+      case _: AtEOL | _: Semicolon => next(); bracelessPackageStats(f)
+      case _ => f(statSeq(statpf))
     }
-    val bracelessPackageStatsOpt: Option[List[Stat]] =
-      if (token.is[KwPackage]) tryParse {
-        val startPos = tokenPos
-        next()
-        if (token.is[KwObject]) None
-        else {
-          val ref = qualId()
-          newLineOpt()
-          if (token.is[LeftBrace] || isColonIndent()) None
-          else Some(List(autoEndPos(startPos)(Pkg(ref, bracelessPackageStats(identity)))))
-        }
-      }
-      else None
-    Source(bracelessPackageStatsOpt.getOrElse { statSeqBuf(buf, statpf); buf.toList })
+
+    Source(bracelessPackageStats(identity))
   }
 }
 
