@@ -168,7 +168,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       lastEmittedToken match {
         case _: Token.RightBrace if braceBalance > 1 => loop(braceBalance - 1)
         case _: Token.LeftBrace if braceBalance > 0 => loop(braceBalance + 1)
-        case _: Token.RightBrace => require(braceBalance > 0)
+        case _: Token.RightBrace if braceBalance == 1 =>
+        case _: Token.RightBrace => loop(braceBalance = 0) // invalid number of braces, we ignore them
         case _: Token.LeftBrace => loop(braceBalance = 1); loop()
         case _ => loop(braceBalance)
       }

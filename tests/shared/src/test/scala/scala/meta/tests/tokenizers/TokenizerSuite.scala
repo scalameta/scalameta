@@ -146,6 +146,58 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
+  test("tokenized-wrong-number-braces1") {
+    assertTokenizedAsStructureLines(
+      "class C  {\t val x = 2}}\n",
+      """|BOF [0..0)
+         |KwClass [0..5)
+         |Space [5..6)
+         |Ident(C) [6..7)
+         |MultiHS(2) [7..9)
+         |LeftBrace [9..10)
+         |MultiHS(2) [10..12)
+         |KwVal [12..15)
+         |Space [15..16)
+         |Ident(x) [16..17)
+         |Space [17..18)
+         |Equals [18..19)
+         |Space [19..20)
+         |Constant.Int(2) [20..21)
+         |RightBrace [21..22)
+         |RightBrace [22..23)
+         |LF [23..24)
+         |EOF [24..24)
+         |""".stripMargin
+    )
+  }
+
+  test("tokenized-wrong-number-braces2") {
+    assertTokenizedAsStructureLines(
+      "class C  {{\t val x = 2}\n{}",
+      """|BOF [0..0)
+         |KwClass [0..5)
+         |Space [5..6)
+         |Ident(C) [6..7)
+         |MultiHS(2) [7..9)
+         |LeftBrace [9..10)
+         |LeftBrace [10..11)
+         |MultiHS(2) [11..13)
+         |KwVal [13..16)
+         |Space [16..17)
+         |Ident(x) [17..18)
+         |Space [18..19)
+         |Equals [19..20)
+         |Space [20..21)
+         |Constant.Int(2) [21..22)
+         |RightBrace [22..23)
+         |LF [23..24)
+         |LeftBrace [24..25)
+         |RightBrace [25..26)
+         |EOF [26..26)
+         |""".stripMargin
+    )
+  }
+
   test("showRaw without comments - hard") {
     assertTokenizedAsStructureLines(
       """|class C {
