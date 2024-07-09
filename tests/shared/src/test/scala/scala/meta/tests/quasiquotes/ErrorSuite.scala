@@ -225,7 +225,7 @@ class ErrorSuite extends FunSuite {
     )
   }
 
-  test("q\"\"\" \"x\" \"\"\"\"") {
+  test("q\"\"\" \"$x\" \"\"\"") {
     assertEquals(
       typecheckError(
         """
@@ -590,6 +590,38 @@ class ErrorSuite extends FunSuite {
       """|<macro>:5: can't unquote into string interpolations
       |      qQQQ s"$foo" QQQ
       |             ^""".replace("QQQ", "\"\"\"").stripMargin
+    )
+  }
+
+  test("unquote into single-line string interpolations, with braces") {
+    assertEquals(
+      typecheckError(
+        """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val foo = "foo"
+      qQQQ s"${foo}" QQQ
+    """
+      ).replace("\r", ""),
+      """|<macro>:5: can't unquote into string interpolations
+         |      qQQQ s"${foo}" QQQ
+         |             ^""".replace("QQQ", "\"\"\"").stripMargin
+    )
+  }
+
+  test("unquote into single-line string interpolations, with braces amd complex expression") {
+    assertEquals(
+      typecheckError(
+        """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val foo = "foo"
+      qQQQ s"${foo + foo}" QQQ
+    """
+      ).replace("\r", ""),
+      """|<macro>:5: can't unquote into string interpolations
+         |      qQQQ s"${foo + foo}" QQQ
+         |             ^""".replace("QQQ", "\"\"\"").stripMargin
     )
   }
 

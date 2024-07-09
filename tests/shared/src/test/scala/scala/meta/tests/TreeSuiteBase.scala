@@ -1,5 +1,6 @@
 package scala.meta.tests
 
+import org.scalameta.internal.ScalaCompat
 import scala.meta._
 import scala.meta.tests.parsers.CommonTrees
 import scala.meta.trees.Origin
@@ -102,6 +103,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected implicit class ImplicitString(value: String) {
     def tq(repl: String = "QQQ"): String = value.replace(repl, "\"\"\"")
+    def lf2nl: String = if (ScalaCompat.EOL == "\n") value else value.replace("\n", ScalaCompat.EOL)
   }
 
   protected def assertOriginalSyntax(tree: Tree, original: String)(implicit

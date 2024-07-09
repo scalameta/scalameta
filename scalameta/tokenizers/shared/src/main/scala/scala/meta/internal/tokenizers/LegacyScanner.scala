@@ -2,6 +2,7 @@ package scala.meta
 package internal
 package tokenizers
 
+import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.inputs._
 import scala.meta.internal.tokens.Chars._
 
@@ -788,7 +789,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     val result: Int = fastparse.parse(input.text, xmlParser.XmlExpr(_), startIndex = start) match {
       case x: Parsed.Success[_] => x.index
       case x: Parsed.Failure => syntaxError(
-          s"malformed xml literal, expected:\n${x.extra.trace().terminalsMsg}",
+          "malformed xml literal, expected:" + EOL + x.extra.trace().terminalsMsg,
           at = x.index
         )
     }
