@@ -22,12 +22,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     val scanner = new LegacyScanner(input, dialect)
     scanner.initialize(bof = true)
 
-    import scanner.{curr, nextToken}
-    def getCurrToken(): Token = getToken(curr)
-    def getNextTokenOrFail(): Token = {
-      nextToken()
-      getCurrToken()
-    }
+    import scanner.nextToken
 
     val tokens = new java.util.ArrayList[Token]()
     @inline
@@ -63,85 +58,87 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
         case t: Token.EOL => bufVS += t; bufHS.clear() // simply ignore trailing space
         case _ => unreachable
       }
-      getNextTokenOrFail() match {
+      getToken(nextToken()) match {
         case nt: Token.Whitespace => emitTokenWhitespace(nt)
         case nt => flushVS(); flushHS(); nt
       }
     }
     def emitTokenInterpolation(token: Token.Interpolation.Id) = {
-      def pushPart(end: Offset) =
+      def pushPart(curr: LegacyTokenData, end: Offset) =
         pushToken(Token.Interpolation.Part(input, dialect, curr.offset, end, curr.strVal))
       @tailrec
-      def emitContents(): Unit =
-        if (curr.token == STRINGPART) {
-          val dollarOffset = curr.endOffset
+      def emitContents(beg: LegacyTokenData): LegacyTokenData =
+        if (beg.token == STRINGPART) {
+          val dollarOffset = beg.endOffset
           require(input.chars(dollarOffset) == '$')
-          pushPart(dollarOffset)
+          pushPart(beg, dollarOffset)
           val postDollarOffset = dollarOffset + 1
           pushToken(Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset))
-          val spliceToken = getNextTokenOrFail()
+          val splice = nextToken()
+          val spliceToken = getToken(splice)
           pushToken(spliceToken)
-          curr.token match {
+          splice.token match {
             case LBRACE => loop(braceBalance = 1)
             case IDENTIFIER | THIS =>
             case USCORE if input.chars(postDollarOffset) == '_' =>
-            case _ => unreachable(debug(curr), s"unexpected interpolation: $spliceToken")
+            case _ => unreachable(debug(splice), s"unexpected interpolation: $spliceToken")
           }
-          nextToken()
-          pushToken(Token.Interpolation.SpliceEnd(input, dialect, curr.offset, curr.offset))
-          emitContents()
-        } else require(curr.token == STRINGLIT)
+          val end = nextToken()
+          pushToken(Token.Interpolation.SpliceEnd(input, dialect, end.offset, end.offset))
+          emitContents(end)
+        } else {
+          require(beg.token == STRINGLIT)
+          beg
+        }
 
       // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
       // i.e. STRINGLIT (if the interpolation is empty) or STRINGPART (if it's not)
       // NOTE: before emitEnd, curr is the first token that follows the concluding STRINGLIT of the interpolation
       // for example, EOF in the case of `q""` or `q"$foobar"`
       pushToken(token)
-      nextToken()
-      val numQuotes = curr.offset - token.end
+      val beg = nextToken()
+      val numQuotes = beg.offset - token.end
 
-      pushToken(Token.Interpolation.Start(input, dialect, token.end, curr.offset))
-      emitContents()
+      pushToken(Token.Interpolation.Start(input, dialect, token.end, beg.offset))
+      val end = emitContents(beg)
 
-      val endEndPos = curr.endOffset
+      val endEndPos = end.endOffset
       val endBegPos = endEndPos - numQuotes
       require(input.chars(endBegPos) == '\"')
-      pushPart(endBegPos)
+      pushPart(end, endBegPos)
 
       pushToken(Token.Interpolation.End(input, dialect, endBegPos, endEndPos))
     }
     def emitTokenXml(token: Token.Xml.Part) = {
       @tailrec
-      def emitContents(): Unit = curr.token match {
+      def emitContents(beg: LegacyTokenData): Unit = beg.token match {
         case XMLLIT =>
-          pushToken(getXmlPart(curr))
-          nextToken()
-          emitContents()
+          pushToken(getXmlPart(beg))
+          emitContents(nextToken())
 
         case LBRACE =>
           // We are at the start of an embedded scala expression
-          pushToken(Token.Xml.SpliceStart(input, dialect, curr.offset, curr.offset))
-          pushToken(getCurrToken())
+          pushToken(Token.Xml.SpliceStart(input, dialect, beg.offset, beg.offset))
+          pushToken(getToken(beg))
           loop(braceBalance = 1)
-          nextToken()
-          pushToken(Token.Xml.SpliceEnd(input, dialect, curr.offset, curr.offset))
-          emitContents()
+          val end = nextToken()
+          pushToken(Token.Xml.SpliceEnd(input, dialect, end.offset, end.offset))
+          emitContents(end)
 
         case XMLLITEND =>
           // We have reached the final xml part
-          val xmlEndIndex = curr.endOffset
+          val xmlEndIndex = beg.endOffset
           pushToken(Token.Xml.End(input, dialect, xmlEndIndex, xmlEndIndex))
       }
 
       pushToken(Token.Xml.Start(input, dialect, token.start, token.start))
       pushToken(token)
-      nextToken()
-      emitContents()
+      emitContents(nextToken())
     }
     @tailrec
     def emitToken(token: Token): Unit = token match {
       case _: Token.At if input.isInstanceOf[Input.Ammonite] && isAtLineStart =>
-        getNextTokenOrFail() match {
+        getToken(nextToken()) match {
           case t: Token.Whitespace =>
             pushToken(Token.EOF(input, dialect, token.start))
             pushToken(token)
@@ -157,15 +154,16 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case _ => pushToken(token)
     }
 
-    def loop(braceBalance: Int = 0): Unit = if (curr.token != EOF) {
-      emitToken(getNextTokenOrFail())
-      lastEmittedToken match {
-        case _: Token.RightBrace if braceBalance > 1 => loop(braceBalance - 1)
-        case _: Token.LeftBrace if braceBalance > 0 => loop(braceBalance + 1)
-        case _: Token.RightBrace if braceBalance == 1 =>
-        case _: Token.RightBrace => loop(braceBalance = 0) // invalid number of braces, we ignore them
-        case _: Token.LeftBrace => loop(braceBalance = 1); loop()
-        case _ => loop(braceBalance)
+    def loop(braceBalance: Int = 0): Unit = {
+      val curr = scanner.nextTokenOrEof()
+      if (null ne curr) {
+        emitToken(getToken(curr))
+        lastEmittedToken match {
+          case _: Token.RightBrace if braceBalance == 1 => // done
+          case _: Token.RightBrace if braceBalance > 1 => loop(braceBalance - 1)
+          case _: Token.LeftBrace if braceBalance > 0 => loop(braceBalance + 1)
+          case _ => loop(braceBalance)
+        }
       }
     }
 

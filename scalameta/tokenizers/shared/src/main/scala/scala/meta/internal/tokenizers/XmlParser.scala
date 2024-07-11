@@ -143,22 +143,22 @@ class ScalaExprPositionParser(dialect: Dialect)(implicit reporter: Reporter) {
     val scanner = new LegacyScanner(input, dialect)
     scanner.initialize()
 
+    def getNextIndex(ltd: LegacyTokenData) = index + ltd.offset
+
     @tailrec
-    def rec(curlyBraceCount: Int): Boolean = {
-      scanner.nextToken()
-      (scanner.curr.token: @switch) match {
+    def rec(curlyBraceCount: Int): ParsingRun[Unit] = {
+      val ltd = scanner.nextToken()
+      (ltd.token: @switch) match {
+        case LegacyToken.RBRACE if curlyBraceCount == 0 =>
+          val nextIndex = getNextIndex(ltd)
+          _splicePositions += XmlTokenRange(index, nextIndex)
+          ctx.freshSuccessUnit(index = nextIndex)
+        case LegacyToken.EOF => ctx.freshFailure(getNextIndex(ltd))
         case LegacyToken.LBRACE => rec(curlyBraceCount + 1)
-        case LegacyToken.RBRACE if curlyBraceCount == 1 => true
         case LegacyToken.RBRACE => rec(curlyBraceCount - 1)
-        case LegacyToken.EOF => false
         case _ => rec(curlyBraceCount)
       }
     }
-    val parsedSuccesfully = rec(1)
-    val nextIndex = index + scanner.curr.offset
-    if (parsedSuccesfully) {
-      _splicePositions += XmlTokenRange(index, nextIndex)
-      ctx.freshSuccessUnit(index = nextIndex)
-    } else ctx.freshFailure(nextIndex)
+    rec(0)
   }
 }

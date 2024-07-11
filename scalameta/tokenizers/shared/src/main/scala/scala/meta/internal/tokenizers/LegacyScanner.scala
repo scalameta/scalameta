@@ -14,8 +14,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   import LegacyToken._
 
   private val unquoteDialect = dialect.unquoteParentDialect
-  val curr: LegacyTokenData = new LegacyTokenData {}
-  val next: LegacyTokenData = new LegacyTokenData {}
+
+  private val curr: LegacyTokenData = new LegacyTokenData
+  private val next: LegacyTokenData = new LegacyTokenData
+
   private val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
 
   import curr._
@@ -178,10 +180,13 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     }
   }
 
+  @inline
+  def nextTokenOrEof(): LegacyTokenData = if (token == EOF) null else nextToken()
+
   /**
    * Produce next token, filling curr TokenData fields of Scanner.
    */
-  def nextToken(): Unit = {
+  def nextToken(): LegacyTokenData = {
     val lastToken = token
     // Adapt sepRegions according to last token
     (lastToken: @switch) match {
@@ -231,6 +236,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     // Therefore I don't even attempt to handle them here, and instead apply fixups elsewhere when converting legacy TOKENS into new LegacyToken instances.
     if (curr.token != STRINGPART) // endOffset of STRINGPART tokens is set elsewhere
       curr.endOffset = if (endCharOffset >= buf.length && ch == SU) buf.length else begCharOffset
+
+    curr
   }
 
   /**
@@ -884,25 +891,26 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         syntaxError(s"invalid unquote: $msg", at = start + at.start)
     })
     exploratoryScanner.initialize()
-    exploratoryScanner.nextToken()
-    exploratoryScanner.curr.token match {
+    val ltd = exploratoryScanner.nextToken()
+    val ltdEnd = ltd.token match {
       case LBRACE =>
         @tailrec
-        def loop(balance: Int): Unit = {
-          exploratoryScanner.nextToken()
-          exploratoryScanner.curr.token match {
+        def loop(balance: Int): LegacyTokenData = {
+          val ltd = exploratoryScanner.nextToken()
+          ltd.token match {
             case LBRACE => loop(balance + 1)
-            case RBRACE => if (balance > 0) loop(balance - 1)
+            case RBRACE => if (balance > 0) loop(balance - 1) else ltd
             case _ => loop(balance)
           }
         }
         loop(0)
       case IDENTIFIER | THIS | USCORE =>
-      // do nothing, this is the end of the unquote
+        // do nothing, this is the end of the unquote
+        ltd
       case _ =>
         syntaxError("invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected", at = start)
     }
-    finishComposite(UNQUOTE, start + exploratoryScanner.curr.endOffset)
+    finishComposite(UNQUOTE, start + ltdEnd.endOffset)
   }
 
 // Errors -----------------------------------------------------------------
