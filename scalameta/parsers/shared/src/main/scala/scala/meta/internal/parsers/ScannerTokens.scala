@@ -625,7 +625,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def eolRef(rs: List[SepRegion], out: Token) = TokenRef(rs, out, eolPos, nextPos, eolPos, null)
 
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
-        val regions = if (lineIndent < 0) rs else RegionLine(lineIndent) :: rs
+        val addRegionLine = lineIndent >= 0 && findIndent(rs) < lineIndent
+        val regions = if (addRegionLine) RegionLine(lineIndent) :: rs else rs
         val token = tokens(eolPos)
         val out =
           if (!multiEOL || token.is[MultiEOL]) token

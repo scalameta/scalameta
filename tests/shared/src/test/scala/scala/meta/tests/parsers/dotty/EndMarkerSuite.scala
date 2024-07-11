@@ -333,8 +333,8 @@ class EndMarkerSuite extends BaseDottySuite {
                     |    }
                     |    end match
                     |  }
-                    |  end FmtTest
                     |}
+                    |end FmtTest
                     |""".stripMargin
     val tree = Source(List(
       Defn.Class(
@@ -360,10 +360,10 @@ class EndMarkerSuite extends BaseDottySuite {
               ),
               Term.EndMarker(tname("match"))
             )
-          ),
-          Term.EndMarker(tname("FmtTest")) // should not be here
+          )
         )
-      ) // should be end marker here
+      ),
+      Term.EndMarker(tname("FmtTest"))
     ))
     runTestAssert[Source](code, layout)(tree)
   }
