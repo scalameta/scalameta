@@ -311,4 +311,61 @@ class EndMarkerSuite extends BaseDottySuite {
     ))
   }
 
+  test("scalafmt#4098") {
+    val code = """|class FmtTest:
+                  |
+                  |  private val const = 3
+                  |
+                  |  def testBrokenMatch(s: String) =
+                  |    s match
+                  |      case "hello" =>
+                  |        val a = 1
+                  |    end match
+                  |  
+                  |end FmtTest
+                  |""".stripMargin
+    val layout = """|class FmtTest {
+                    |  private val const = 3
+                    |  def testBrokenMatch(s: String) = {
+                    |    s match {
+                    |      case "hello" =>
+                    |        val a = 1
+                    |    }
+                    |    end match
+                    |  }
+                    |}
+                    |end FmtTest
+                    |""".stripMargin
+    val tree = Source(List(
+      Defn.Class(
+        Nil,
+        pname("FmtTest"),
+        Nil,
+        ctor,
+        tpl(
+          Defn.Val(List(Mod.Private(anon)), List(Pat.Var(tname("const"))), None, lit(3)),
+          Defn.Def(
+            Nil,
+            tname("testBrokenMatch"),
+            Nil,
+            List(List(tparam("s", "String"))),
+            None,
+            blk(
+              Term.Match(
+                tname("s"),
+                List(
+                  Case(lit("hello"), None, blk(Defn.Val(Nil, List(Pat.Var(tname("a"))), None, lit(1))))
+                ),
+                Nil
+              ),
+              Term.EndMarker(tname("match"))
+            )
+          )
+        )
+      ),
+      Term.EndMarker(tname("FmtTest"))
+    ))
+    runTestAssert[Source](code, layout)(tree)
+  }
+
 }
