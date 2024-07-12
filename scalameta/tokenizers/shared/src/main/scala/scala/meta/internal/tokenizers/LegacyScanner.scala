@@ -897,37 +897,32 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def getUnquote(): Unit = {
     require(ch == '$')
     val start = endCharOffset
-    val endExclusive = {
-      val exploratoryInput = Input.Slice(input, start, input.chars.length)
-      val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)
-      exploratoryScanner.initialize()
-      exploratoryScanner.nextToken()
-      exploratoryScanner.curr.token match {
-        case LBRACE =>
-          @tailrec
-          def loop(balance: Int): Unit = {
-            exploratoryScanner.nextToken()
-            exploratoryScanner.curr.token match {
-              case LBRACE => loop(balance + 1)
-              case RBRACE => if (balance > 1) loop(balance - 1)
-              case _ => loop(balance)
-            }
+    val exploratoryInput = Input.Slice(input, start, input.chars.length)
+    val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)
+    exploratoryScanner.initialize()
+    exploratoryScanner.nextToken()
+    exploratoryScanner.curr.token match {
+      case LBRACE =>
+        @tailrec
+        def loop(balance: Int): Unit = {
+          exploratoryScanner.nextToken()
+          exploratoryScanner.curr.token match {
+            case LBRACE => loop(balance + 1)
+            case RBRACE => if (balance > 1) loop(balance - 1)
+            case _ => loop(balance)
           }
-          try loop(balance = 1)
-          catch {
-            case TokenizeException(pos, message) =>
-              syntaxError(s"invalid unquote: $message", at = start + pos.start)
-          }
-        case IDENTIFIER | THIS | USCORE =>
-        // do nothing, this is the end of the unquote
-        case _ => syntaxError(
-            "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",
-            at = start
-          )
-      }
-      start + exploratoryScanner.curr.endOffset
+        }
+        try loop(balance = 1)
+        catch {
+          case TokenizeException(pos, message) =>
+            syntaxError(s"invalid unquote: $message", at = start + pos.start)
+        }
+      case IDENTIFIER | THIS | USCORE =>
+      // do nothing, this is the end of the unquote
+      case _ =>
+        syntaxError("invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected", at = start)
     }
-    finishComposite(UNQUOTE, endExclusive)
+    finishComposite(UNQUOTE, start + exploratoryScanner.curr.endOffset)
   }
 
 // Errors -----------------------------------------------------------------
