@@ -165,16 +165,18 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   }
 
   @inline
-  def nextTokenOrEof(): LegacyTokenData = if (token == EOF) null else nextToken()
+  def nextTokenOrEof(): LegacyTokenData = nextToken { prev.token = PASTEOF }
 
   /**
    * Produce next token, filling curr TokenData fields of Scanner.
    */
-  def nextToken(): LegacyTokenData = {
+  def nextToken(): LegacyTokenData = nextToken(throw new UnexpectedInputEndException(prev))
+
+  private def nextToken(onEof: => Unit): LegacyTokenData = {
     val lastToken = prev.token
     // Adapt sepRegions according to last token
     (lastToken: @switch) match {
-      case EOF => throw new UnexpectedInputEndException(prev)
+      case EOF | PASTEOF => onEof; return prev
       case LPAREN => pushSepRegions(RPAREN)
       case LBRACKET => pushSepRegions(RBRACKET)
       case LBRACE => pushSepRegions(RBRACE)

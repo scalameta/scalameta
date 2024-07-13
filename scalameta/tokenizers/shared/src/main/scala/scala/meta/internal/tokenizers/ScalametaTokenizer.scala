@@ -154,17 +154,17 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case _ => pushToken(token)
     }
 
-    def loop(braceBalance: Int = 0): Unit = {
+    def loop(braceBalance: Int = 0): LegacyTokenData = {
       val curr = scanner.nextTokenOrEof()
-      if (null ne curr) {
+      if (curr.ok) {
         emitToken(getToken(curr))
         lastEmittedToken match {
-          case _: Token.RightBrace if braceBalance == 1 => // done
+          case _: Token.RightBrace if braceBalance == 1 => curr // done
           case _: Token.RightBrace if braceBalance > 1 => loop(braceBalance - 1)
           case _: Token.LeftBrace if braceBalance > 0 => loop(braceBalance + 1)
           case _ => loop(braceBalance)
         }
-      }
+      } else curr
     }
 
     try loop()
