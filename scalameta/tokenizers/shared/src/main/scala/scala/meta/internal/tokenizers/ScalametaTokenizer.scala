@@ -5,7 +5,6 @@ package tokenizers
 import org.scalameta._
 import org.scalameta.invariants._
 import scala.meta.inputs._
-import scala.meta.internal.tokenizers.ScalametaTokenizer.UnexpectedInputEndException
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 
@@ -21,17 +20,10 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     val scanner = new LegacyScanner(input, dialect)
     scanner.initialize(bof = true)
 
-    def curr = scanner.curr
-    def nextToken(): Boolean = {
-      val ok = curr.token != EOF
-      if (ok) scanner.nextToken()
-      ok
-    }
-    def nextTokenOrFail(): Unit = if (!nextToken()) throw new UnexpectedInputEndException()
-    @inline
+    import scanner.{curr, nextToken}
     def getCurrToken(): Token = getToken(curr)
     def getNextTokenOrFail(): Token = {
-      nextTokenOrFail()
+      nextToken()
       getCurrToken()
     }
 
@@ -93,7 +85,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             case USCORE if input.chars(postDollarOffset) == '_' =>
             case _ => unreachable(debug(curr), s"unexpected interpolation: $spliceToken")
           }
-          nextTokenOrFail()
+          nextToken()
           pushToken(Token.Interpolation.SpliceEnd(input, dialect, curr.offset, curr.offset))
           emitContents()
         } else require(curr.token == STRINGLIT)
@@ -103,7 +95,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       // NOTE: before emitEnd, curr is the first token that follows the concluding STRINGLIT of the interpolation
       // for example, EOF in the case of `q""` or `q"$foobar"`
       pushToken(token)
-      nextTokenOrFail()
+      nextToken()
       val numQuotes = curr.offset - token.end
 
       pushToken(Token.Interpolation.Start(input, dialect, token.end, curr.offset))
@@ -121,7 +113,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       def emitContents(): Unit = curr.token match {
         case XMLLIT =>
           pushToken(getXmlPart(curr))
-          nextTokenOrFail()
+          nextToken()
           emitContents()
 
         case LBRACE =>
@@ -129,7 +121,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           pushToken(Token.Xml.SpliceStart(input, dialect, curr.offset, curr.offset))
           pushToken(getCurrToken())
           loop(braceBalance = 1)
-          nextTokenOrFail()
+          nextToken()
           pushToken(Token.Xml.SpliceEnd(input, dialect, curr.offset, curr.offset))
           emitContents()
 
@@ -141,7 +133,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
       pushToken(Token.Xml.Start(input, dialect, token.start, token.start))
       pushToken(token)
-      nextTokenOrFail()
+      nextToken()
       emitContents()
     }
     @tailrec
@@ -163,8 +155,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case _ => pushToken(token)
     }
 
-    def loop(braceBalance: Int = 0): Unit = if (nextToken()) {
-      emitToken(getCurrToken())
+    def loop(braceBalance: Int = 0): Unit = if (curr.token != EOF) {
+      emitToken(getNextTokenOrFail())
       lastEmittedToken match {
         case _: Token.RightBrace if braceBalance > 1 => loop(braceBalance - 1)
         case _: Token.LeftBrace if braceBalance > 0 => loop(braceBalance + 1)
@@ -317,8 +309,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 }
 
 object ScalametaTokenizer {
-  class UnexpectedInputEndException() extends Exception
-
   def toTokenize: Tokenize = new Tokenize {
     def apply(input: Input, dialect: Dialect): Tokenized =
       try {
