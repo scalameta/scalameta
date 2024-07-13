@@ -934,14 +934,4 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   override def toString = token.toString
 
-  /**
-   * Initialize scanner; call f on each scanned token data
-   */
-  def foreach(f: LegacyTokenData => Unit): Unit = {
-    nextChar()
-    do {
-      nextToken()
-      f(curr)
-    } while (curr.token != EOF)
-  }
 }
