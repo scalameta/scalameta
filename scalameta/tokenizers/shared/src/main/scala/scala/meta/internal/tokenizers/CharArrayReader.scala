@@ -40,6 +40,11 @@ private[meta] case class CharArrayReader private (
         readerError("double quotes are not allowed in single-line quasiquotes", at = begCharOffset)
   }
 
+  final def nextCharFrom(offset: Int): Unit = {
+    endCharOffset = offset
+    nextChar()
+  }
+
   final def nextCommentChar(): Unit =
     if (endCharOffset >= buf.length) ch = SU
     else {
