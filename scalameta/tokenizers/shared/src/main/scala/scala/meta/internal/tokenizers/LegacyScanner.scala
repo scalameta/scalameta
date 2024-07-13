@@ -4,18 +4,16 @@ package tokenizers
 
 import scala.meta.inputs._
 import scala.meta.internal.tokens.Chars._
-import scala.meta.tokenizers.TokenizeException
 
 import scala.annotation.switch
 import scala.annotation.tailrec
 import scala.collection.mutable
 
-class LegacyScanner(input: Input, dialect: Dialect) {
+class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter) {
 
   import LegacyToken._
 
   private val unquoteDialect = dialect.unquoteParentDialect
-  val reporter: Reporter = Reporter(input)
   val curr: LegacyTokenData = new LegacyTokenData {}
   val next: LegacyTokenData = new LegacyTokenData {}
   private val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
@@ -23,8 +21,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   import curr._
   import reader._
   import reporter._
-  curr.input = this.input
-  next.input = this.input
 
   private var openComments = 0
   private def putCommentChar(): Unit = nextCommentChar()
@@ -898,7 +894,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     require(ch == '$')
     val start = endCharOffset
     val exploratoryInput = Input.Slice(input, start, input.chars.length)
-    val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)
+    val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)(new Reporter {
+      override def input: Input = exploratoryInput
+      override protected def error(msg: String, at: Position): Nothing =
+        syntaxError(s"invalid unquote: $msg", at = start + at.start)
+    })
     exploratoryScanner.initialize()
     exploratoryScanner.nextToken()
     exploratoryScanner.curr.token match {
@@ -908,15 +908,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           exploratoryScanner.nextToken()
           exploratoryScanner.curr.token match {
             case LBRACE => loop(balance + 1)
-            case RBRACE => if (balance > 1) loop(balance - 1)
+            case RBRACE => if (balance > 0) loop(balance - 1)
             case _ => loop(balance)
           }
         }
-        try loop(balance = 1)
-        catch {
-          case TokenizeException(pos, message) =>
-            syntaxError(s"invalid unquote: $message", at = start + pos.start)
-        }
+        loop(0)
       case IDENTIFIER | THIS | USCORE =>
       // do nothing, this is the end of the unquote
       case _ =>

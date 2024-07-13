@@ -11,9 +11,6 @@ trait LegacyTokenData {
 
   import LegacyToken._
 
-  /** the input that is currently being tokenized */
-  var input: Input = null
-
   /** the next token */
   var token: LegacyToken = EMPTY
 
@@ -36,7 +33,6 @@ trait LegacyTokenData {
   var base: Int = 0
 
   def copyFrom(td: LegacyTokenData): this.type = {
-    this.input = td.input
     this.token = td.token
     this.offset = td.offset
     this.lastOffset = td.lastOffset
@@ -50,9 +46,6 @@ trait LegacyTokenData {
   override def toString =
     s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
 
-  lazy val reporter: Reporter = Reporter(input)
-  import reporter._
-
   /**
    * Convert current strVal to char value
    */
@@ -61,35 +54,36 @@ trait LegacyTokenData {
   /**
    * Convert current strVal, base to an integer value This is tricky because of max negative value.
    */
-  private def integerVal: BigInt =
+  private def integerVal(implicit reporter: Reporter): BigInt =
     try BigInt(strVal, base)
     catch {
-      case e: Exception => syntaxError(s"malformed integer number: ${e.getMessage}", at = offset)
+      case e: Exception => reporter
+          .syntaxError(s"malformed integer number: ${e.getMessage}", at = offset)
     }
 
   /**
    * Convert current strVal, base to double value
    */
-  private def floatingVal: BigDecimal =
+  private def floatingVal(implicit reporter: Reporter): BigDecimal =
     try BigDecimal(strVal)
     catch {
-      case e: Exception =>
-        syntaxError(s"malformed floating-point number: ${e.getMessage}", at = offset)
+      case e: Exception => reporter
+          .syntaxError(s"malformed floating-point number: ${e.getMessage}", at = offset)
     }
 
   // these values are always non-negative, since we don't include any unary operators
-  def intVal: BigInt = integerVal
-  def longVal: BigInt = integerVal
-  def floatVal: BigDecimal = {
+  def intVal(implicit reporter: Reporter): BigInt = integerVal
+  def longVal(implicit reporter: Reporter): BigInt = integerVal
+  def floatVal(implicit reporter: Reporter): BigDecimal = {
     val value = floatingVal
-    if (value > LegacyTokenData.bigDecimalMaxFloat)
-      syntaxError("floating-point value out of range for Float", offset)
+    if (value > LegacyTokenData.bigDecimalMaxFloat) reporter
+      .syntaxError("floating-point value out of range for Float", offset)
     value
   }
-  def doubleVal: BigDecimal = {
+  def doubleVal(implicit reporter: Reporter): BigDecimal = {
     val value = floatingVal
-    if (value > LegacyTokenData.bigDecimalMaxDouble)
-      syntaxError("floating-point value out of range for Double", offset)
+    if (value > LegacyTokenData.bigDecimalMaxDouble) reporter
+      .syntaxError("floating-point value out of range for Double", offset)
     value
   }
 

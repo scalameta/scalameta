@@ -14,6 +14,8 @@ import scala.collection.mutable.ListBuffer
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
   import LegacyToken._
 
+  private implicit lazy val reporter: Reporter = Reporter(input)
+
   def tokenize(): Tokens = input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize())
 
   private def uncachedTokenize(): Tokens = {
