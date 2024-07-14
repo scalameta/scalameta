@@ -131,15 +131,16 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   @inline
   private def pushSepRegions(sr: LegacyToken) = sepRegions = sr :: sepRegions
 
-  @inline
-  private def popSepRegions() = sepRegions = sepRegions.tail
+  private def popSepRegionsIf(token: LegacyToken) = sepRegions match {
+    case head :: tail if head == token => sepRegions = tail; true
+    case _ => false
+  }
 
-  @inline
-  private def isHead(legacyTokens: List[LegacyToken], head: LegacyToken) = legacyTokens.nonEmpty &&
-    legacyTokens.head == head
-
-  @inline
-  private def isSepRegionsHead(head: LegacyToken) = isHead(sepRegions, head)
+  @tailrec
+  private def popSepRegionsUntil(token: LegacyToken): Boolean = sepRegions match {
+    case head :: tail => sepRegions = tail; head == token || popSepRegionsUntil(token)
+    case _ => false
+  }
 
   /**
    * A map of upcoming xml literal parts that are left to be returned in nextToken().
@@ -150,22 +151,6 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private val upcomingXmlLiteralParts = mutable.Map.empty[Offset, (Offset, Boolean)]
 
 // Get next token ------------------------------------------------------------
-
-  /**
-   * Are we directly in a string interpolation expression?
-   */
-  private def inStringInterpolation = isSepRegionsHead(STRINGLIT)
-
-  /**
-   * STRINGPART follows STRINGLIT in multiline interpolation
-   */
-  @inline
-  private def startsStringPart(sr: List[LegacyToken]) = isHead(sr, STRINGPART)
-
-  private def popStringInterpolation(): Unit = if (inStringInterpolation) {
-    popSepRegions()
-    if (startsStringPart(sepRegions)) popSepRegions()
-  }
 
   def initialize(bof: Boolean = false): Unit = if (endCharOffset == 0) {
     nextChar()
@@ -193,12 +178,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       case LBRACKET => pushSepRegions(RBRACKET)
       case LBRACE => pushSepRegions(RBRACE)
       case CASE => pushSepRegions(ARROW)
-      case RBRACE =>
-        while (sepRegions.nonEmpty && sepRegions.head != RBRACE) popSepRegions()
-        if (sepRegions.nonEmpty) popSepRegions()
-      case RBRACKET | RPAREN => if (isSepRegionsHead(lastToken)) popSepRegions()
-      case ARROW => if (isSepRegionsHead(lastToken)) popSepRegions()
-      case STRINGLIT => popStringInterpolation()
+      case RBRACE => popSepRegionsUntil(RBRACE)
+      case RBRACKET | RPAREN | ARROW => popSepRegionsIf(lastToken)
+      case STRINGLIT => popSepRegionsIf(lastToken) && popSepRegionsIf(STRINGPART)
       case _ =>
     }
 
@@ -220,7 +202,11 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
    * read next token, filling TokenData fields of Scanner.
    */
   private final def fetchToken(): Unit = {
-    if (inStringInterpolation) return getStringPart(multiLine = startsStringPart(sepRegions.tail))
+    sepRegions match {
+      case STRINGLIT :: tail => // STRINGPART follows STRINGLIT in multiline interpolation
+        return getStringPart(multiLine = tail.headOption.contains(STRINGPART))
+      case _ =>
+    }
     if (fetchXmlPart()) return
 
     @inline
