@@ -17,16 +17,10 @@ class LegacyTokenData {
   /** the offset of the first character of the current token */
   var offset: Offset = 0
 
-  /** the offset of the character following the token preceding this one */
-  var lastOffset: Offset = 0
-
   /** the offset past the last character of the current token */
   var endOffset: Offset = 0
 
-  /** the name of an identifier */
-  var name: String = _
-
-  /** the string value of a literal */
+  /** the string value of a literal or name of identifier */
   var strVal: String = _
 
   /** the base of a number */
@@ -35,16 +29,14 @@ class LegacyTokenData {
   def copyFrom(td: LegacyTokenData): this.type = {
     this.token = td.token
     this.offset = td.offset
-    this.lastOffset = td.lastOffset
     this.endOffset = td.endOffset
-    this.name = td.name
     this.strVal = td.strVal
     this.base = td.base
     this
   }
 
   override def toString =
-    s"{token = $token, position = $offset..$endOffset, lastOffset = $lastOffset, name = $name, strVal = $strVal, base = $base}"
+    s"{token = $token, position = [$offset,$endOffset), strVal = $strVal, base = $base}"
 
   /**
    * Convert current strVal to char value
@@ -90,9 +82,9 @@ class LegacyTokenData {
   def setIdentifier(ident: String, dialect: Dialect, check: Boolean = true)(
       fCheck: LegacyTokenData => Unit
   ): Unit = {
-    name = ident
+    strVal = ident
     token = IDENTIFIER
-    if (check) kw2legacytoken.get(name).foreach {
+    if (check) kw2legacytoken.get(ident).foreach {
       case ENUM if !dialect.allowEnums =>
       case GIVEN if !dialect.allowGivenUsing =>
       case EXPORT if !dialect.allowExportClause =>
