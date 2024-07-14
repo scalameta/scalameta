@@ -106,9 +106,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     val start = offset
     curr.token = token
     curr.strVal = new String(input.chars, start, endExclusive - start)
-    curr.endOffset = endExclusive
-    reader.endCharOffset = endExclusive
-    reader.nextChar()
+    reader.nextCharFrom(endExclusive)
   }
 
   /** Clear buffer and set string */
@@ -208,34 +206,14 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     if (next.token == EMPTY) {
       lastOffset = begCharOffset
       if (lastOffset > 0 && buf(lastOffset) == '\n' && buf(lastOffset - 1) == '\r') lastOffset -= 1
-
+      offset = begCharOffset
       fetchToken()
+      (if (next.token == EMPTY) curr else next).endOffset =
+        if (endCharOffset >= buf.length && ch == SU) buf.length else begCharOffset
     } else {
       curr.copyFrom(next)
       next.token = EMPTY
     }
-
-    // NOTE: endOffset is used to determine range positions for certain tokens.
-    // Most tokens (e.g. `(' or `;') have constant widths, so their range positions can be calculated trivially from their offsets,
-    // however some tokens have variable widths,
-    // and for them we need to remember where their parsing ended in order to calculate their positions.
-    // That's what endOffset does (indirectly): each token's position should be [curr.offset, curr.endOffset]
-    //
-    // Now how do we calculate endOffset?
-    // 1) What we have at hand is `charOffset`, which is the position right after the position of the character that's just been read.
-    // 2) This means that `charOffset - 1` is the position of the character that's just been read.
-    // 3) Since reading that character terminated fetchToken, this means that that character is the first character of the next token.
-    // 4) This means that `charOffset - 2` is where the last character of the our current token lies.
-    //
-    // The only corner case here is EOF. In that case the virtual position of the character that's just been read (or, more precisely,
-    // that's been attempted to be read) seems to be `buf.length`, but some other logic in the scanner suggests that sometimes it can even
-    // be `buf.length + 1` or more. Therefore, we don't bother ourselves with doing decrements and just assign endOffset to be `buf.length - 1`.
-    //
-    // upd. Speaking of corner cases, positions of tokens emitted by string interpolation tokenizers are simply insane,
-    // and need to be reverse engineered having some context (previous tokens, number of quotes in the interpolation) in mind.
-    // Therefore I don't even attempt to handle them here, and instead apply fixups elsewhere when converting legacy TOKENS into new LegacyToken instances.
-    if (curr.token != STRINGPART) // endOffset of STRINGPART tokens is set elsewhere
-      curr.endOffset = if (endCharOffset >= buf.length && ch == SU) buf.length else begCharOffset
 
     curr
   }
@@ -244,10 +222,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
    * read next token, filling TokenData fields of Scanner.
    */
   private final def fetchToken(): Unit = {
-    offset = begCharOffset
-
     if (inStringInterpolation) return getStringPart(multiLine = startsStringPart(sepRegions.tail))
-    else if (fetchXmlPart()) return
+    if (fetchXmlPart()) return
 
     @inline
     def getIdentRestCheckInterpolation() = {
@@ -642,7 +618,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     upcomingXmlLiteralParts.remove(offset) match {
       case Some((end, isLastPart)) =>
         finishComposite(XMLLIT, end)
-        if (isLastPart) next.token = XMLLITEND
+        if (isLastPart) {
+          curr.endOffset = end
+          next.token = XMLLITEND
+        }
         true
       case _ => false
     }
