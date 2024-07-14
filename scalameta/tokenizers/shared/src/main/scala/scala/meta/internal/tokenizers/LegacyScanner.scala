@@ -17,6 +17,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 
   private val curr: LegacyTokenData = new LegacyTokenData
   private val next: LegacyTokenData = new LegacyTokenData
+  private var prev: LegacyTokenData = curr
 
   private val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
 
@@ -170,10 +171,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
    * Produce next token, filling curr TokenData fields of Scanner.
    */
   def nextToken(): LegacyTokenData = {
-    val lastToken = token
+    val lastToken = prev.token
     // Adapt sepRegions according to last token
     (lastToken: @switch) match {
-      case EOF => throw new UnexpectedInputEndException(curr)
+      case EOF => throw new UnexpectedInputEndException(prev)
       case LPAREN => pushSepRegions(RPAREN)
       case LBRACKET => pushSepRegions(RBRACKET)
       case LBRACE => pushSepRegions(RBRACE)
@@ -185,17 +186,15 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     }
 
     // Read a token or copy it from `next` tokenData
+    if (prev eq next) next.token = EMPTY
     if (next.token == EMPTY) {
       offset = begCharOffset
       fetchToken()
       (if (next.token == EMPTY) curr else next).endOffset =
         if (endCharOffset >= buf.length && ch == SU) buf.length else begCharOffset
-    } else {
-      curr.copyFrom(next)
-      next.token = EMPTY
-    }
-
-    curr
+      prev = curr
+    } else prev = next
+    prev
   }
 
   /**

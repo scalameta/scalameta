@@ -26,15 +26,6 @@ class LegacyTokenData {
   /** the base of a number */
   var base: Int = 0
 
-  def copyFrom(td: LegacyTokenData): this.type = {
-    this.token = td.token
-    this.offset = td.offset
-    this.endOffset = td.endOffset
-    this.strVal = td.strVal
-    this.base = td.base
-    this
-  }
-
   override def toString =
     s"{token = $token, position = [$offset,$endOffset), strVal = $strVal, base = $base}"
 
