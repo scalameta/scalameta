@@ -208,7 +208,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       if (lastOffset > 0 && buf(lastOffset) == '\n' && buf(lastOffset - 1) == '\r') lastOffset -= 1
 
       fetchToken()
-      if (token == ERROR) popStringInterpolation()
     } else {
       curr.copyFrom(next)
       next.token = EMPTY

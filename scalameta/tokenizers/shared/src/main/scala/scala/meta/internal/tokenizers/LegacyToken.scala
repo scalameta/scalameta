@@ -11,8 +11,6 @@ object LegacyToken {
 
   /** special tokens */
   final val EMPTY = -3
-  final val UNDEF = -2
-  final val ERROR = -1
   final val EOF = 0
   final val SHEBANG = 1
 

@@ -308,9 +308,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case EOF => new Token.EOF(input, dialect)
       case SHEBANG => new Token.Shebang(input, dialect, curr.offset, curr.endOffset, curr.strVal)
 
-      case EMPTY => unreachable
-      case UNDEF => unreachable
-      case ERROR => unreachable
+      case _ => unreachable(debug(curr))
     }
   }
 
