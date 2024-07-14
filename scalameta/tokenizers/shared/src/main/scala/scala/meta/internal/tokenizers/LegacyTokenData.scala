@@ -7,7 +7,7 @@ import scala.meta.inputs._
 import java.math.MathContext
 import java.math.RoundingMode
 
-trait LegacyTokenData {
+class LegacyTokenData {
 
   import LegacyToken._
 
