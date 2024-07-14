@@ -189,6 +189,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val lastToken = token
     // Adapt sepRegions according to last token
     (lastToken: @switch) match {
+      case EOF => throw new UnexpectedInputEndException(curr)
       case LPAREN => pushSepRegions(RPAREN)
       case LBRACKET => pushSepRegions(RBRACKET)
       case LBRACE => pushSepRegions(RBRACE)
