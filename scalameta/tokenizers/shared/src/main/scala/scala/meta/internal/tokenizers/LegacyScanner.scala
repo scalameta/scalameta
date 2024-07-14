@@ -359,20 +359,19 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           if (token == INTERPOLATIONID) {
             nextRawChar()
             offset += 1
-            if (ch == '\"')
-              if (lookaheadReader.getc() == '\"') {
-                nextRawChar() // now eat it
+            if (ch == '\"') {
+              nextChar()
+              if (ch == '\"') {
                 offset += 2
                 nextRawChar()
                 getStringPart(multiLine = true)
                 pushSepRegions(STRINGPART) // indicate string part
                 pushSepRegions(STRINGLIT) // once more to indicate multi line string part
               } else {
-                nextChar()
                 token = STRINGLIT
                 strVal = ""
               }
-            else {
+            } else {
               getStringPart(multiLine = false)
               pushSepRegions(STRINGLIT) // indicate single line string part
             }
@@ -382,7 +381,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
               nextChar()
               if (ch == '\"') {
                 nextRawChar()
-                getRawStringLit()
+                getMultilineStringLit()
               } else {
                 token = STRINGLIT
                 strVal = ""
@@ -531,37 +530,37 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 
   private def getStringLit() =
     if (getLitChars('"')) {
-      setStrVal()
       nextChar()
-      token = STRINGLIT
+      finishStringLit()
     } else if (ch == '$') syntaxError("can't unquote into string literals", at = begCharOffset)
     else syntaxError("unclosed string literal", at = offset)
 
   @tailrec
-  private def getRawStringLit(): Unit =
-    if (ch == '\"') {
-      nextRawChar()
-      if (isTripleQuote()) {
-        setStrVal()
-        token = STRINGLIT
-      } else getRawStringLit()
-    } else if (ch == SU) incompleteInputError("unclosed multi-line string literal", at = offset)
+  private def getMultilineStringLit(): Unit =
+    if (ch == '\"') { if (!canFinishMultilineStringLit()) getMultilineStringLit() }
+    else if (ch == SU) incompleteInputError("unclosed multi-line string literal", at = offset)
     else if (isUnquoteDollar())
       syntaxError("can't unquote into string literals", at = begCharOffset)
     else {
       putChar(ch)
       nextRawChar()
-      getRawStringLit()
+      getMultilineStringLit()
     }
+
+  private def finishStringLit() = {
+    setStrVal()
+    token = STRINGLIT
+  }
+  private def finishStringPart() = {
+    setStrVal()
+    token = STRINGPART
+    endOffset = endCharOffset - 2
+    next.lastOffset = begCharOffset
+    next.offset = begCharOffset
+  }
 
   @scala.annotation.tailrec
   private def getStringPart(multiLine: Boolean): Unit = {
-    def finishStringPart() = {
-      setStrVal()
-      token = STRINGPART
-      next.lastOffset = begCharOffset
-      next.offset = begCharOffset
-    }
     def identifier() = {
       do {
         putChar(ch)
@@ -575,16 +574,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       }
     }
     if (ch == '"')
-      if (multiLine) {
-        nextRawChar()
-        if (isTripleQuote()) {
-          setStrVal()
-          token = STRINGLIT
-        } else getStringPart(multiLine)
-      } else {
+      if (multiLine) { if (!canFinishMultilineStringLit()) getStringPart(true) }
+      else {
         nextChar()
-        setStrVal()
-        token = STRINGLIT
+        finishStringLit()
       }
     else if (ch == '\\' && !multiLine) {
       putChar(ch)
@@ -605,12 +598,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           getStringPart(multiLine)
         } else if (ch == '{') {
           finishStringPart()
-          endOffset = endCharOffset - 2
           nextRawChar()
           next.token = LBRACE
         } else if (ch == '_' && dialect.allowSpliceUnderscores) {
           finishStringPart()
-          endOffset = endCharOffset - 2
           nextRawChar()
           if (Character.isUnicodeIdentifierStart(ch)) {
             putChar('_')
@@ -618,7 +609,6 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           } else next.token = USCORE
         } else if (Character.isUnicodeIdentifierStart(ch)) {
           finishStringPart()
-          endOffset = endCharOffset - 2
           identifier()
         } else {
           var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
@@ -650,25 +640,20 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       case _ => false
     }
 
-  private def isTripleQuote(): Boolean =
+  private def canFinishMultilineStringLit(): Boolean = {
+    nextRawChar()
     if (ch == '"') {
       nextRawChar()
       if (ch == '"') {
-        nextChar()
-        while (ch == '"') {
-          putChar('"')
-          nextChar()
-        }
-        true
-      } else {
-        putChar('"')
-        putChar('"')
-        false
+        while ({ nextChar(); ch == '"' }) putChar('"')
+        finishStringLit()
+        return true
       }
-    } else {
       putChar('"')
-      false
     }
+    putChar('"')
+    false
+  }
 
   /**
    * copy current character into cbuf, interpreting any escape sequences, and advance to next
@@ -691,8 +676,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           }
         }
         val alt = if (oct == LF) "\\n" else "\\u%04x".format(oct)
-        def msg(what: String) = s"Octal escape literals are $what, use $alt instead."
-        deprecationWarning(msg("deprecated"), at = start)
+        deprecationWarning(s"Octal escape literals are deprecated, use $alt instead.", at = start)
         putChar(oct)
       } else {
         ch match {
