@@ -3,6 +3,7 @@ package internal
 package tokenizers
 
 import scala.meta.inputs._
+import scala.meta.internal.inputs._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 
@@ -10,7 +11,7 @@ trait Reporter {
   // NOTE: not making this public, e.g. by exposing Position.Offset
   // because I don't want to advertise this style of positioning
   private implicit class XtensionOffsetPosition(offset: Offset) {
-    def pos = Position.Range(input, offset, offset)
+    def pos = input.pos(offset)
   }
 
   def input: Input

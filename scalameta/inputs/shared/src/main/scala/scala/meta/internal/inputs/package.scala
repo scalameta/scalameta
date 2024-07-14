@@ -4,7 +4,8 @@ import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.inputs._
 
 package object inputs {
-  implicit class XtensionPositionFormatMessage(private val pos: Position) extends AnyVal {
+
+  implicit class XtensionPosition(private val pos: Position) extends AnyVal {
     def lineContent: String = {
       val input = pos.input
       val start = input.lineToOffset(pos.startLine)
@@ -22,19 +23,7 @@ package object inputs {
         val caret = lineCaret
         header + EOL + line + EOL + caret
       } else s"$severity: $message"
-  }
 
-  implicit class XtensionInputSyntaxStructure(private val input: Input) extends AnyVal {
-    def syntax: String = input match {
-      case Input.None => "<none>"
-      case Input.File(path, _) => path.toString
-      case Input.VirtualFile(path, _) => path
-      case _ => "<input>"
-    }
-    def structure: String = input.toString
-  }
-
-  implicit class XtensionPositionSyntaxStructure(private val pos: Position) extends AnyVal {
     def syntax: String = pos match {
       case Position.None => s"<none>"
       case Position.Range(input, start, end) => s"${input.syntax}@$start..$end"
@@ -44,4 +33,18 @@ package object inputs {
       case Position.Range(input, start, end) => s"Position.Range(${input.structure}, $start, $end)"
     }
   }
+
+  implicit class XtensionInput(private val input: Input) extends AnyVal {
+    def syntax: String = input match {
+      case Input.None => "<none>"
+      case Input.File(path, _) => path.toString
+      case Input.VirtualFile(path, _) => path
+      case _ => "<input>"
+    }
+    def structure: String = input.toString
+
+    def pos(beg: Int, end: Int): Position = Position.Range(input, beg, end)
+    def pos(offset: Int): Position = pos(offset, offset)
+  }
+
 }
