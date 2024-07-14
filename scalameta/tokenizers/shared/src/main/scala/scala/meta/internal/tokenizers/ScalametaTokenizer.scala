@@ -22,12 +22,18 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     val scanner = new LegacyScanner(input, dialect)
     scanner.initialize(bof = true)
 
-    import scanner.nextToken
-
     val tokens = new java.util.ArrayList[Token]()
     @inline
     def pushToken(token: Token): Unit = tokens.add(token)
     pushToken(new Token.BOF(input, dialect))
+
+    def nextToken(): LegacyTokenData = {
+      val nt = scanner.nextToken()
+      if (nt.token == INVALID) {
+        pushToken(getToken(nt))
+        scanner.nextToken()
+      } else nt
+    }
 
     // tokens is non-empty, contains BOF
     def lastEmittedToken: Token = tokens.get(tokens.size() - 1)
@@ -73,8 +79,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           pushPart(beg)
           pushToken(Token.Interpolation.SpliceStart(input, dialect, dollarOffset, dollarOffset + 1))
           val splice = nextToken()
-          val spliceToken = getToken(splice)
-          pushToken(spliceToken)
+          pushToken(getToken(splice))
           if (splice.token == LBRACE) loop(braceBalance = 1)
           val end = nextToken()
           pushToken(Token.Interpolation.SpliceEnd(input, dialect, end.offset, end.offset))
@@ -188,7 +193,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
           .Symbol(input, dialect, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))
       case STRINGLIT => Token.Constant
           .String(input, dialect, curr.offset, curr.endOffset, curr.strVal)
-      case STRINGPART => unreachable
       case TRUE => Token.KwTrue(input, dialect, curr.offset)
       case FALSE => Token.KwFalse(input, dialect, curr.offset)
       case NULL => Token.KwNull(input, dialect, curr.offset)
@@ -196,7 +200,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case INTERPOLATIONID => Token.Interpolation
           .Id(input, dialect, curr.offset, curr.endOffset, curr.strVal)
       case XMLLIT => getXmlPart(curr)
-      case XMLLITEND => unreachable
 
       case NEW => Token.KwNew(input, dialect, curr.offset)
       case THIS => Token.KwThis(input, dialect, curr.offset)
@@ -216,9 +219,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case IMPORT => Token.KwImport(input, dialect, curr.offset)
       case EXPORT => Token.KwExport(input, dialect, curr.offset)
       case CLASS => Token.KwClass(input, dialect, curr.offset)
-      case CASECLASS => unreachable
       case OBJECT => Token.KwObject(input, dialect, curr.offset)
-      case CASEOBJECT => unreachable
       case TRAIT => Token.KwTrait(input, dialect, curr.offset)
       case EXTENDS => Token.KwExtends(input, dialect, curr.offset)
       case WITH => Token.KwWith(input, dialect, curr.offset)
@@ -289,10 +290,15 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
       case EOF => new Token.EOF(input, dialect)
       case SHEBANG => new Token.Shebang(input, dialect, curr.offset, curr.endOffset, curr.strVal)
+      case INVALID => getInvalid(curr, curr.strVal)
 
+      // the rest of tokens shouldn't be obtained via this method
       case _ => unreachable(debug(curr))
     }
   }
+
+  private def getInvalid(curr: LegacyTokenData, error: String): Token.Invalid =
+    new Token.Invalid(input, dialect, curr.offset, curr.endOffset, error)
 
 }
 

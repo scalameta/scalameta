@@ -14,6 +14,7 @@ object LegacyToken {
   final val PASTEOF = -1
   final val EOF = 0
   final val SHEBANG = 1
+  final val INVALID = 2 // non-negative: we want to continue tokenizing
 
   /** literals */
   final val LITERAL_BEG = 1001

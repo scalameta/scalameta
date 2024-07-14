@@ -161,7 +161,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   @inline
   def peekToken = in.peekToken
   @inline
-  def next() = in.next()
+  def next() = {
+    in.next()
+    token match {
+      case t: Token.Invalid => reporter.syntaxError(t.error, at = t)
+      case _ =>
+    }
+  }
   def nextTwice() = { next(); next() }
 
   @inline

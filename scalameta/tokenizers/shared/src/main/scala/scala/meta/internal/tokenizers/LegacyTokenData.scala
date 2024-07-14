@@ -86,6 +86,11 @@ class LegacyTokenData {
     }
   }
 
+  private[tokenizers] def setInvalidToken(message: String): Unit = {
+    token = INVALID
+    strVal = message
+  }
+
   @inline
   def ok: Boolean = token >= 0
 

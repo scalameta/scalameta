@@ -4,6 +4,7 @@ package tokenizers
 
 import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta.inputs._
+import scala.meta.internal.inputs._
 import scala.meta.internal.tokens.Chars._
 
 import scala.annotation.switch
@@ -118,9 +119,11 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     token = tokenValue
   }
 
+  private def resetCBuf(): Unit = cbuf.setLength(0)
+
   private def getAndResetCBuf(): String =
     try cbuf.toString
-    finally cbuf.setLength(0)
+    finally resetCBuf()
 
   /**
    * a stack of tokens which indicates whether line-ends can be statement separators also used for
@@ -195,6 +198,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     // Read a token or copy it from `next` tokenData
     if (prev eq next) next.token = EMPTY
     if (next.token == EMPTY) {
+      resetCBuf()
       offset = begCharOffset
       endOffset = -1
       fetchToken()
@@ -855,6 +859,17 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   }
 
 // Errors -----------------------------------------------------------------
+
+  private def setInvalidToken(tok: LegacyTokenData, offset: Int)(message: String): Unit =
+    if (tok.token != INVALID) {
+      tok.setInvalidToken(message)
+      tok.offset = offset
+      tok.endOffset = offset
+    }
+
+  @inline
+  private def setInvalidToken(tok: LegacyTokenData)(message: => String): Unit =
+    setInvalidToken(tok, begCharOffset)(message)
 
   override def toString = token.toString
 
