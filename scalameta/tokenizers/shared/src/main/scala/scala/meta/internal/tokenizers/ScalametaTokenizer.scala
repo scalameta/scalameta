@@ -186,7 +186,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
   private def getToken(curr: LegacyTokenData): Token = {
     (curr.token: @scala.annotation.switch) match {
-      case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset, curr.name)
+      case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset, curr.strVal)
       case INTLIT => Token.Constant.Int(input, dialect, curr.offset, curr.endOffset, curr.intVal)
       case LONGLIT => Token.Constant.Long(input, dialect, curr.offset, curr.endOffset, curr.longVal)
       case FLOATLIT => Token.Constant
@@ -204,7 +204,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       case NULL => Token.KwNull(input, dialect, curr.offset)
 
       case INTERPOLATIONID => Token.Interpolation
-          .Id(input, dialect, curr.offset, curr.endOffset, curr.name)
+          .Id(input, dialect, curr.offset, curr.endOffset, curr.strVal)
       case XMLLIT => getXmlPart(curr)
       case XMLLITEND => unreachable
 

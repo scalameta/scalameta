@@ -96,7 +96,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private def finishNamed(isBackquoted: Boolean = false): Unit = curr
     .setIdentifier(getAndResetCBuf(), dialect, check = !isBackquoted) { x =>
       if (x.token == IDENTIFIER && emitIdentifierDeprecationWarnings) deprecationWarning(
-        s"${x.name} is now a reserved word; usage as an identifier is deprecated",
+        s"${x.strVal} is now a reserved word; usage as an identifier is deprecated",
         at = x.token
       )
     }
@@ -204,8 +204,6 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 
     // Read a token or copy it from `next` tokenData
     if (next.token == EMPTY) {
-      lastOffset = begCharOffset
-      if (lastOffset > 0 && buf(lastOffset) == '\n' && buf(lastOffset - 1) == '\r') lastOffset -= 1
       offset = begCharOffset
       fetchToken()
       (if (next.token == EMPTY) curr else next).endOffset =
@@ -462,7 +460,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     if (getLitChars('`')) {
       nextChar()
       finishNamed(isBackquoted = true)
-      if (name.isEmpty) syntaxError("empty quoted identifier", at = offset)
+      if (strVal.isEmpty) syntaxError("empty quoted identifier", at = offset)
     } else if (ch == '$') syntaxError("can't unquote into quoted identifiers", at = begCharOffset)
     else syntaxError("unclosed quoted identifier", at = offset)
   }
@@ -538,7 +536,6 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     setStrVal()
     token = STRINGPART
     endOffset = endCharOffset - 2
-    next.lastOffset = begCharOffset
     next.offset = begCharOffset
   }
 
@@ -825,7 +822,6 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     } else {
       op()
       token = SYMBOLLIT
-      strVal = name
     }
   }
 
