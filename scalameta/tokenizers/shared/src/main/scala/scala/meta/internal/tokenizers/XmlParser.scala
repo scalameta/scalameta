@@ -14,7 +14,7 @@ import fastparse._
  * [[https://github.com/scalameta/fastparse/pull/1#issuecomment-244940542]] and adapted to more
  * closely match scala-xml and then adapted to fastparse 2.3.1
  */
-class XmlParser(dialect: Dialect) {
+class XmlParser(dialect: Dialect)(implicit reporter: Reporter) {
 
   val blockParser = new ScalaExprPositionParser(dialect)
 
@@ -132,16 +132,15 @@ class XmlParser(dialect: Dialect) {
  *
  * Doesn't really parse scala expressions, only reads until the curly brace balance hits 0.
  */
-class ScalaExprPositionParser(dialect: Dialect) {
+class ScalaExprPositionParser(dialect: Dialect)(implicit reporter: Reporter) {
   case class XmlTokenRange(from: Int, to: Int) // from is inclusive, to is exclusive
   private val _splicePositions = List.newBuilder[XmlTokenRange]
   def splicePositions: List[XmlTokenRange] = _splicePositions.result()
 
   def blockRun = { implicit ctx: ParsingRun[_] =>
-    var curlyBraceCount = 1
-    val input = ctx.input
     val index = ctx.index
-    val scanner = new LegacyScanner(Input.String(input.slice(index, input.length)), dialect)
+    val input = Input.String(ctx.input.slice(index, ctx.input.length))
+    val scanner = new LegacyScanner(input, dialect)
     scanner.initialize()
 
     @tailrec
