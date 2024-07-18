@@ -1219,13 +1219,13 @@ class TokenizerSuite extends BaseTokenizerSuite {
       "3_14E_F",
       """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
          |3_14E_F
-         |    ^""".stripMargin
+         |     ^""".stripMargin
     ),
     (
       "3_14ef",
       """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
          |3_14ef
-         |    ^""".stripMargin
+         |     ^""".stripMargin
     ),
     (
       "3_14E-2_",

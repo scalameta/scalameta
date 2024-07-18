@@ -274,7 +274,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         if (isUnquoteNextNoDollar()) getUnquote()
         else {
           putCharAndNext()
-          if (dialect.allowSpliceAndQuote && lookaheadReader.nextNonWhitespace == '{') {
+          if (dialect.allowSpliceAndQuote && peekNonWhitespace().ch == '{') {
             token = MACROSPLICE
             setStrVal()
           } else getIdentRestCheckInterpolation()
@@ -366,6 +366,11 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           }
         fetchDoubleQuote()
       case '\'' =>
+        def isNonLiteralBraceOrBracket = {
+          val nextNonWhitespace = peekNonWhitespace()
+          (nextNonWhitespace.ch == '{' || nextNonWhitespace.ch == '[') &&
+          peekRawChar(nextNonWhitespace.end).ch != '\''
+        }
         def fetchSingleQuote() = {
           nextRawChar()
           if (isUnquoteDollar())
@@ -374,26 +379,16 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
             syntaxError("can't use unescaped LF in character literals", at = begCharOffset)
           else if (isIdentifierStart(ch)) charLitOr(getIdentRest)
           else if (isOperatorPart(ch) && (ch != '\\' || wasMultiChar)) charLitOr(getOperatorRest)
-          else {
-            def isNonLiteralBraceOrBracket = {
-              val lookahead = lookaheadReader
-              val nextNonWhitespace = lookahead.nextNonWhitespace
-              (nextNonWhitespace == '{' || nextNonWhitespace == '[') && {
-                lookahead.nextRawChar()
-                lookahead.ch != '\''
-              }
-            }
-            if (dialect.allowSpliceAndQuote && isNonLiteralBraceOrBracket) {
-              token = MACROQUOTE
+          else if (dialect.allowSpliceAndQuote && isNonLiteralBraceOrBracket) {
+            token = MACROQUOTE
+            setStrVal()
+          } else {
+            getLitChar()
+            if (ch == '\'') {
+              nextChar()
+              token = CHARLIT
               setStrVal()
-            } else {
-              getLitChar()
-              if (ch == '\'') {
-                nextChar()
-                token = CHARLIT
-                setStrVal()
-              } else syntaxError("unclosed character literal", at = offset)
-            }
+            } else syntaxError("unclosed character literal", at = offset)
           }
         }
         fetchSingleQuote()
@@ -473,7 +468,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' | '?' | ':' | '=' | '&' |
         '|' | '\\' => putCharAndNext(); getOperatorRest()
     case '/' =>
-      val peekNextChar = lookaheadReader.getc()
+      val peekNextChar = peekRawChar().ch
       if (peekNextChar == '/' || peekNextChar == '*') finishNamed()
       else {
         putCharAndNext()
@@ -486,13 +481,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 
   // True means that we need to switch into unquote reading mode.
   private def isUnquoteNextNoDollar(): Boolean = unquoteDialect != null && {
-    val isDollar = lookaheadReader.getc() == '$'
-    if (isDollar)
-      // Skip the first dollar and move on to whatever we've been doing:
-      // starting or continuing tokenization of an identifier,
-      // or continuing reading a string literal, or whatever.
-      nextChar()
-    !isDollar
+    // Skip the first dollar and move on to whatever we've been doing:
+    // starting or continuing tokenization of an identifier,
+    // or continuing reading a string literal, or whatever.
+    !nextCharIf(_ == '$')
   }
   @inline
   private def isUnquoteDollar(): Boolean = ch == '$' && isUnquoteNextNoDollar()
@@ -692,25 +684,19 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   }
 
   private def getFractionExponent(): Boolean = (ch == 'e' || ch == 'E') && {
-    val lookahead = lookaheadReader
-    lookahead.nextChar()
-    val sign = lookahead.ch == '+' || lookahead.ch == '-'
-    if (sign) lookahead.nextChar()
-    if (!lookahead.isDigit()) {
-      if (lookahead.isNumberSeparator(checkOnly = true)) {
-        val separatorOffset = lookahead.begCharOffset
-        lookahead.nextChar()
-        if (lookahead.isDigit()) syntaxError("leading number separator", at = separatorOffset)
-      }
-      syntaxError(
-        s"Invalid literal floating-point number, exponent not followed by integer",
-        at = begCharOffset
-      )
-    }
     putCharAndNext()
-    if (sign) putCharAndNext()
-    readDigits(10)
-    token = DOUBLELIT
+    if (ch == '+' || ch == '-') putCharAndNext()
+    if (isDigit()) {
+      readDigits(10)
+      token = DOUBLELIT
+    } else {
+      val errorOffset = begCharOffset
+      val isLeadingSeparator = isNumberSeparator(checkOnly = true) && { nextChar(); isDigit() }
+      val error =
+        if (isLeadingSeparator) "leading number separator"
+        else s"Invalid literal floating-point number, exponent not followed by integer"
+      syntaxError(error, at = errorOffset)
+    }
     true
   }
 
@@ -761,10 +747,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       val isFractionExp = getFractionExponent()
       if (getFractionWithSuffix() || isFractionExp) setFractionDone()
       else if (ch == '.') {
-        val lookahead = lookaheadReader
-        lookahead.nextChar()
-        if (lookahead.isDigit()) {
-          putCharAndNext() // '.'
+        val nextChar = peekRawChar()
+        if (CharArrayReader.isDigit(nextChar.ch)) {
+          putChar(ch) // '.'
+          setNextRawChar(nextChar)
           setFractionOnDot()
         } else setNumberInt(INTLIT)
       } else setNumberInteger()

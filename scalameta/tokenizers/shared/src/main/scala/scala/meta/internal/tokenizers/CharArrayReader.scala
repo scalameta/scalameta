@@ -5,6 +5,8 @@ package tokenizers
 import scala.meta.inputs._
 import scala.meta.internal.tokens.Chars._
 
+import scala.annotation.tailrec
+
 private[meta] case class CharArrayReader private (
     buf: Array[Char],
     dialect: Dialect,
@@ -29,8 +31,10 @@ private[meta] case class CharArrayReader private (
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {
     nextRawChar()
+    checkRawChar()
+  }
 
-    /** Handle line ends */
+  private def checkRawChar(): Unit = {
     val isEol = checkLineEnd()
 
     if (!dialect.allowMultilinePrograms)
@@ -58,25 +62,34 @@ private[meta] case class CharArrayReader private (
    * Advance one character, leaving CR;LF pairs intact. This is for use in multi-line strings, so
    * there are no "potential line ends" here.
    */
-  final def nextRawChar(): Unit =
-    if (endCharOffset >= buf.length) ch = SU
-    else {
-      begCharOffset = endCharOffset
-      val (hi, hiEnd) = readUnicodeChar(buf, endCharOffset)
-      endCharOffset = hiEnd
-      if (hiEnd < buf.length && Character.isHighSurrogate(hi)) {
-        val (lo, loEnd) = readUnicodeChar(buf, hiEnd)
-        if (Character.isLowSurrogate(lo)) {
-          ch = Character.toCodePoint(hi, lo)
-          endCharOffset = loEnd
-        } else ch = hi
-      } else ch = hi
-    }
+  final def nextRawChar(): Unit = setNextRawChar(peekRawChar(endCharOffset))
 
-  def nextNonWhitespace = {
-    while (ch == ' ' || ch == '\t') nextRawChar()
-    ch
+  private[tokenizers] def setNextRawChar(nextChar: NextChar): Unit = {
+    ch = nextChar.ch
+    if (endCharOffset < nextChar.end) {
+      begCharOffset = endCharOffset
+      endCharOffset = nextChar.end
+    }
   }
+
+  final def nextCharIf(f: Int => Boolean): Boolean = {
+    val nextChar = peekRawChar(endCharOffset)
+    val ok = f(nextChar.ch)
+    if (ok) {
+      setNextRawChar(nextChar)
+      checkRawChar()
+    }
+    ok
+  }
+
+  @inline
+  final def peekRawChar(): NextChar = peekRawChar(endCharOffset)
+
+  @inline
+  final def peekRawChar(offset: Int): NextChar = CharArrayReader.readRawChar(buf, offset)
+
+  @inline
+  final def peekNonWhitespace(): NextChar = findNonWhitespace(buf, ch, endCharOffset)
 
   private def checkLineEnd(): Boolean = {
     val ok = ch == LF || ch == FF
@@ -87,12 +100,6 @@ private[meta] case class CharArrayReader private (
     ok
   }
 
-  /** A new reader that takes off at the current character position */
-  def lookaheadReader = copy()
-
-  /** A mystery why CharArrayReader.nextChar() returns Unit */
-  def getc() = { nextChar(); ch }
-
   final def wasMultiChar: Boolean = begCharOffset < endCharOffset - 1
 
   private[tokenizers] def isNumberSeparator(checkOnly: Boolean = false): Boolean =
@@ -102,11 +109,18 @@ private[meta] case class CharArrayReader private (
     else syntaxError("numeric separators are not allowed", at = begCharOffset)
 
   @inline
-  private[tokenizers] def isDigit(): Boolean = ch >= '0' && ch <= '9'
+  private[tokenizers] def isDigit(): Boolean = CharArrayReader.isDigit(ch)
 
 }
 
 object CharArrayReader {
+
+  case class NextChar(ch: Int, end: Int)
+
+  private val noNextChar = NextChar(SU, -1)
+
+  @inline
+  private[tokenizers] def isDigit(ch: Int): Boolean = ch >= '0' && ch <= '9'
 
   /** Read next char interpreting \\uxxxx escapes; doesn't mutate internal state */
   private def readUnicodeChar(buf: Array[Char], offset: Int): (Char, Int) = {
@@ -134,6 +148,26 @@ object CharArrayReader {
 
     val code = udigit << 12 | udigit << 8 | udigit << 4 | udigit
     (code.toChar, escapedOffset)
+  }
+
+  final def readRawChar(buf: Array[Char], offset: Int): NextChar =
+    if (offset >= buf.length) noNextChar
+    else {
+      val (hi, hiEnd) = readUnicodeChar(buf, offset)
+      if (hiEnd < buf.length && Character.isHighSurrogate(hi)) {
+        val (lo, loEnd) = readUnicodeChar(buf, hiEnd)
+        if (Character.isLowSurrogate(lo)) return NextChar(Character.toCodePoint(hi, lo), loEnd)
+      }
+      NextChar(hi, hiEnd)
+    }
+
+  def findNonWhitespace(buf: Array[Char], ch: Int, offset: Int): NextChar =
+    findNonWhitespace(buf, NextChar(ch, offset))
+
+  @tailrec
+  def findNonWhitespace(buf: Array[Char], nextChar: NextChar): NextChar = nextChar.ch match {
+    case ' ' | '\t' => findNonWhitespace(buf, readRawChar(buf, nextChar.end))
+    case _ => nextChar
   }
 
 }
