@@ -182,12 +182,18 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
   private def getToken(curr: LegacyTokenData): Token = {
     (curr.token: @scala.annotation.switch) match {
       case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset, curr.strVal)
-      case INTLIT => Token.Constant.Int(input, dialect, curr.offset, curr.endOffset, curr.intVal)
-      case LONGLIT => Token.Constant.Long(input, dialect, curr.offset, curr.endOffset, curr.longVal)
-      case FLOATLIT => Token.Constant
-          .Float(input, dialect, curr.offset, curr.endOffset, curr.floatVal)
-      case DOUBLELIT => Token.Constant
-          .Double(input, dialect, curr.offset, curr.endOffset, curr.doubleVal)
+      case INTLIT => curr.intVal
+          .fold(getInvalid(curr, _), Token.Constant.Int(input, dialect, curr.offset, curr.endOffset, _))
+      case LONGLIT => curr.longVal
+          .fold(getInvalid(curr, _), Token.Constant.Long(input, dialect, curr.offset, curr.endOffset, _))
+      case FLOATLIT => curr.floatVal.fold(
+          getInvalid(curr, _),
+          Token.Constant.Float(input, dialect, curr.offset, curr.endOffset, _)
+        )
+      case DOUBLELIT => curr.doubleVal.fold(
+          getInvalid(curr, _),
+          Token.Constant.Double(input, dialect, curr.offset, curr.endOffset, _)
+        )
       case CHARLIT => Token.Constant.Char(input, dialect, curr.offset, curr.endOffset, curr.charVal)
       case SYMBOLLIT => Token.Constant
           .Symbol(input, dialect, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))

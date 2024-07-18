@@ -5,6 +5,8 @@ package tokenizers
 import java.math.MathContext
 import java.math.RoundingMode
 
+import scala.util.Try
+
 class LegacyTokenData {
 
   import LegacyToken._
@@ -35,37 +37,27 @@ class LegacyTokenData {
   /**
    * Convert current strVal, base to an integer value This is tricky because of max negative value.
    */
-  private def integerVal(implicit reporter: Reporter): BigInt =
-    try BigInt(strVal, base)
-    catch {
-      case e: Exception => reporter
-          .syntaxError(s"malformed integer number: ${e.getMessage}", at = offset)
-    }
+  private def integerVal: Either[String, BigInt] =
+    try Right(BigInt(strVal, base))
+    catch { case e: Exception => Left(s"malformed integer number: ${e.getMessage}") }
 
   /**
    * Convert current strVal, base to double value
    */
-  private def floatingVal(implicit reporter: Reporter): BigDecimal =
-    try BigDecimal(strVal)
-    catch {
-      case e: Exception => reporter
-          .syntaxError(s"malformed floating-point number: ${e.getMessage}", at = offset)
-    }
+  private def floatingVal: Either[String, BigDecimal] =
+    try Right(BigDecimal(strVal))
+    catch { case e: Exception => Left(s"malformed floating-point number: ${e.getMessage}") }
 
   // these values are always non-negative, since we don't include any unary operators
-  def intVal(implicit reporter: Reporter): BigInt = integerVal
-  def longVal(implicit reporter: Reporter): BigInt = integerVal
-  def floatVal(implicit reporter: Reporter): BigDecimal = {
-    val value = floatingVal
-    if (value > LegacyTokenData.bigDecimalMaxFloat) reporter
-      .syntaxError("floating-point value out of range for Float", offset)
-    value
+  def intVal: Either[String, BigInt] = integerVal
+  def longVal: Either[String, BigInt] = integerVal
+  def floatVal: Either[String, BigDecimal] = floatingVal.right.flatMap { value =>
+    if (value <= LegacyTokenData.bigDecimalMaxFloat) Right(value)
+    else Left("floating-point value out of range for Float")
   }
-  def doubleVal(implicit reporter: Reporter): BigDecimal = {
-    val value = floatingVal
-    if (value > LegacyTokenData.bigDecimalMaxDouble) reporter
-      .syntaxError("floating-point value out of range for Double", offset)
-    value
+  def doubleVal: Either[String, BigDecimal] = floatingVal.right.flatMap { value =>
+    if (value <= LegacyTokenData.bigDecimalMaxDouble) Right(value)
+    else Left("floating-point value out of range for Double")
   }
 
   def setIdentifier(ident: String, dialect: Dialect, check: Boolean = true)(

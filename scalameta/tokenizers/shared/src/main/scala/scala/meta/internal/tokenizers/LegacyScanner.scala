@@ -686,15 +686,13 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 
   @tailrec
   private def readDigits(base: Int, prevSeparatorOffset: Int = -1): Unit =
-    if (digit2int(ch, base) >= 0) {
-      putCharAndNext()
-      readDigits(base)
-    } else if (isNumberSeparator()) {
-      val offset = begCharOffset
-      nextChar()
-      readDigits(base, offset)
-    } else if (prevSeparatorOffset >= 0)
-      syntaxError("trailing number separator", at = prevSeparatorOffset)
+    if (digit2int(ch, base) >= 0) { putCharAndNext(); readDigits(base) }
+    else looksLikeNumberSeparator() match {
+      case Some(true) => val offset = begCharOffset; nextChar(); readDigits(base, offset)
+      case Some(false) => setInvalidToken(next)("numeric separators are not allowed")
+      case _ if prevSeparatorOffset < 0 =>
+      case _ => setInvalidToken(next, prevSeparatorOffset)("trailing number separator")
+    }
 
   /**
    * read fractional part and exponent of floating point number if one is present.
@@ -712,18 +710,18 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   }
 
   private def getFractionExponent(): Boolean = (ch == 'e' || ch == 'E') && {
+    val preExponentLen = cbuf.length()
     putCharAndNext()
     if (ch == '+' || ch == '-') putCharAndNext()
-    if (isDigit()) {
-      readDigits(10)
-      token = DOUBLELIT
-    } else {
-      val errorOffset = begCharOffset
-      val isLeadingSeparator = isNumberSeparator(checkOnly = true) && { nextChar(); isDigit() }
-      val error =
+    token = DOUBLELIT
+    if (isDigit()) readDigits(10)
+    else {
+      cbuf.setLength(preExponentLen) // to make it a parsable value
+      setInvalidToken(next) {
+        val isLeadingSeparator = isNumberSeparator() && { nextChar(); isDigit() }
         if (isLeadingSeparator) "leading number separator"
         else s"Invalid literal floating-point number, exponent not followed by integer"
-      syntaxError(error, at = errorOffset)
+      }
     }
     true
   }
@@ -745,7 +743,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   }
 
   private def checkNoLetter(): Unit = if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator())
-    syntaxError("Invalid literal number, followed by identifier character", at = begCharOffset)
+    setInvalidToken(next)("Invalid literal number, followed by identifier character")
 
   /**
    * Read a number into strVal and set base
@@ -756,8 +754,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     if (hadLeadingZero && noMoreDigits) putChar('0')
 
     def setNumberInt(tokenValue: LegacyToken) = {
-      if (hadLeadingZero && !noMoreDigits) // octal deprecated in 2.10, removed in 2.11
-        syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
+      if (hadLeadingZero && !noMoreDigits) { // octal deprecated in 2.10, removed in 2.11
+        val message = "Non-zero integral values may not have a leading zero."
+        setInvalidToken(next, offset)(message)
+      }
       setTokStrVal(tokenValue)
     }
 

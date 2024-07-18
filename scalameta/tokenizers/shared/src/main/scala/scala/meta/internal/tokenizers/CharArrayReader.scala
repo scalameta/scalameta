@@ -104,11 +104,10 @@ private[meta] case class CharArrayReader private (
 
   final def wasMultiChar: Boolean = begCharOffset < endCharOffset - 1
 
-  private[tokenizers] def isNumberSeparator(checkOnly: Boolean = false): Boolean =
-    if (ch != '_') false
-    else if (dialect.allowNumericLiteralUnderscoreSeparators) true
-    else if (checkOnly) false
-    else syntaxError("numeric separators are not allowed", at = begCharOffset)
+  private[tokenizers] def isNumberSeparator(): Boolean = looksLikeNumberSeparator().contains(true)
+
+  private[tokenizers] def looksLikeNumberSeparator(): Option[Boolean] =
+    if (ch != '_') None else Some(dialect.allowNumericLiteralUnderscoreSeparators)
 
   @inline
   private[tokenizers] def isDigit(): Boolean = CharArrayReader.isDigit(ch)

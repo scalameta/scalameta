@@ -1366,16 +1366,12 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: trailing number separator
          |3.1_4_dd
          |     ^""".stripMargin
-    ),
-    (
-      "3.1_4_dd",
-      """|<input>:1: error: trailing number separator
-         |3.1_4_dd
-         |     ^""".stripMargin
     )
   ).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala213: $value") {
-      interceptMessage[TokenizeException](error.lf2nl)(dialects.Scala213(value).tokenize.get)
+      interceptMessage[ParseException](error.lf2nl)(
+        value.parseRule(_.entrypointExpr())(dialects.Scala213)
+      )
     }
   }
 
@@ -1386,7 +1382,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
        | ^""".stripMargin
   )).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala212: $value") {
-      interceptMessage[TokenizeException](error.lf2nl)(dialects.Scala212(value).tokenize.get)
+      interceptMessage[ParseException](error.lf2nl)(
+        value.parseRule(_.entrypointExpr())(dialects.Scala212)
+      )
     }
   }
 
@@ -1769,7 +1767,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   ).foreach { case (code, error) =>
     test(s"numeric literal fail scala213: $code") {
-      interceptMessage[TokenizeException](error.lf2nl)(dialects.Scala213(code).tokenize.get)
+      interceptMessage[ParseException](error.lf2nl)(
+        code.parseRule(_.entrypointExpr())(dialects.Scala213)
+      )
     }
   }
 
