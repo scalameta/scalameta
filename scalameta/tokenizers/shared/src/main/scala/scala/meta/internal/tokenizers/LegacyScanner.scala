@@ -651,7 +651,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         case '\"' => '\"'
         case '\'' => '\''
         case '\\' => '\\'
-        case _ => syntaxError("invalid escape character", at = begCharOffset); ch
+        case _ => putChar('\\'); ch
       })
     } else if (isUnquoteDollar()) {} // bail and let the caller handle this
     else putCharAndNext()
@@ -819,7 +819,6 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 // Unquotes -----------------------------------------------------------------
 
   private def getUnquote(): Unit = {
-    require(ch == '$')
     val start = endCharOffset
     val exploratoryInput = Input.Slice(input, start, input.chars.length)
     val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)(new Reporter {
