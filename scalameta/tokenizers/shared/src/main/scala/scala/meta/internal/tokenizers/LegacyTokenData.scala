@@ -2,8 +2,6 @@ package scala.meta
 package internal
 package tokenizers
 
-import scala.meta.inputs._
-
 import java.math.MathContext
 import java.math.RoundingMode
 
@@ -87,6 +85,10 @@ class LegacyTokenData {
         fCheck(this)
     }
   }
+
+  @inline
+  def ok: Boolean = token >= 0
+
 }
 
 object LegacyTokenData {
