@@ -87,6 +87,19 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
    */
   private def putChar(c: Int): Unit = cbuf.appendCodePoint(c)
 
+  private def putCharAndNext(c: Int): Unit = {
+    putChar(c)
+    nextChar()
+  }
+
+  @inline
+  private def putCharAndNext(): Unit = putCharAndNext(ch)
+
+  private def putCharAndNextRaw(): Unit = {
+    putChar(ch)
+    nextRawChar()
+  }
+
   /**
    * Determines whether this scanner should emit identifier deprecation warnings, e.g. when seeing
    * `macro' or `then', which are planned to become keywords in future versions of Scala.
@@ -157,7 +170,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     nextChar()
     if (bof && '#' == ch && !wasMultiChar && buf(endCharOffset) == '!') {
       next.offset = begCharOffset
-      do { putChar(ch); nextChar() } while (ch != CR && ch != LF && ch != FF && ch != SU)
+      do putCharAndNext() while (ch != CR && ch != LF && ch != FF && ch != SU)
       next.strVal = getAndResetCBuf()
       next.endOffset = begCharOffset
       next.token = SHEBANG
@@ -255,14 +268,12 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z' |
           // other ident chars
           '_' =>
-        putChar(ch)
-        nextChar()
+        putCharAndNext()
         getIdentRestCheckInterpolation()
       case '$' =>
         if (isUnquoteNextNoDollar()) getUnquote()
         else {
-          putChar(ch)
-          nextChar()
+          putCharAndNext()
           if (dialect.allowSpliceAndQuote && lookaheadReader.nextNonWhitespace == '{') {
             token = MACROSPLICE
             setStrVal()
@@ -285,8 +296,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         fetchLT()
       case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | /*'<' | */
           '>' | '?' | ':' | '=' | '&' | '|' | '\\' =>
-        putChar(ch)
-        nextChar()
+        putCharAndNext()
         getOperatorRest()
       case '/' =>
         nextChar()
@@ -420,12 +430,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           if (ch == '\u21D2') { nextChar(); token = ARROW }
           else if (ch == '\u2190') { nextChar(); token = LARROW }
           else if (Character.isUnicodeIdentifierStart(ch)) {
-            putChar(ch)
-            nextChar()
+            putCharAndNext()
             getIdentRest()
           } else if (isSpecial(ch)) {
-            putChar(ch)
-            nextChar()
+            putCharAndNext()
             getOperatorRest()
           } else {
             syntaxError(
@@ -453,29 +461,26 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   @tailrec
   private final def getIdentRest(): Unit =
     if (ch == '_') {
-      putChar(ch)
-      nextChar()
+      putCharAndNext()
       if (isIdentifierPart(ch)) getIdentRest() else getOperatorRest()
     } else if (if (ch == '$') !isUnquoteNextNoDollar() else isUnicodeIdentifierPart(ch)) {
-      putChar(ch)
-      nextChar()
+      putCharAndNext()
       getIdentRest()
     } else finishNamed()
 
   @tailrec
   private def getOperatorRest(): Unit = (ch: @switch) match {
     case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' | '?' | ':' | '=' | '&' |
-        '|' | '\\' => putChar(ch); nextChar(); getOperatorRest()
+        '|' | '\\' => putCharAndNext(); getOperatorRest()
     case '/' =>
       val peekNextChar = lookaheadReader.getc()
       if (peekNextChar == '/' || peekNextChar == '*') finishNamed()
       else {
-        putChar('/')
-        nextChar()
+        putCharAndNext()
         getOperatorRest()
       }
     case _ =>
-      if (isSpecial(ch)) { putChar(ch); nextChar(); getOperatorRest() }
+      if (isSpecial(ch)) { putCharAndNext(); getOperatorRest() }
       else finishNamed()
   }
 
@@ -508,8 +513,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     else if (isUnquoteDollar())
       syntaxError("can't unquote into string literals", at = begCharOffset)
     else {
-      putChar(ch)
-      nextRawChar()
+      putCharAndNextRaw()
       getMultilineStringLit()
     }
 
@@ -527,10 +531,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   @scala.annotation.tailrec
   private def getStringPart(multiLine: Boolean): Unit = {
     def identifier() = {
-      do {
-        putChar(ch)
-        nextRawChar()
-      } while (isUnicodeIdentifierPart(ch))
+      do putCharAndNextRaw() while (isUnicodeIdentifierPart(ch))
       next.setIdentifier(getAndResetCBuf(), dialect) { x =>
         if (x.token != IDENTIFIER && x.token != THIS) syntaxError(
           "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",
@@ -545,12 +546,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         finishStringLit()
       }
     else if (ch == '\\' && !multiLine) {
-      putChar(ch)
-      nextRawChar()
-      if (ch == '"' || ch == '\\') {
-        putChar(ch)
-        nextRawChar()
-      }
+      putCharAndNextRaw()
+      if (ch == '"' || ch == '\\') putCharAndNextRaw()
       getStringPart(multiLine)
     } else if (ch == '$' && !wasMultiChar)
       if (isUnquoteNextNoDollar())
@@ -558,8 +555,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       else {
         nextRawChar()
         if (ch == '$' || (ch == '"' && dialect.allowInterpolationDolarQuoteEscape)) {
-          putChar(ch)
-          nextRawChar()
+          putCharAndNextRaw()
           getStringPart(multiLine)
         } else if (ch == '{') {
           finishStringPart()
@@ -588,8 +584,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         if (multiLine) incompleteInputError("unclosed multi-line string interpolation", at = offset)
         else syntaxError("unclosed string interpolation", at = offset)
       else {
-        putChar(ch)
-        nextRawChar()
+        putCharAndNextRaw()
         getStringPart(multiLine)
       }
     }
@@ -613,7 +608,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     if (ch == '"') {
       nextRawChar()
       if (ch == '"') {
-        while ({ nextChar(); ch == '"' }) putChar('"')
+        nextChar()
+        while (ch == '"') putCharAndNext()
         finishStringLit()
         return true
       }
@@ -646,31 +642,19 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         val alt = if (oct == LF) "\\n" else "\\u%04x".format(oct)
         deprecationWarning(s"Octal escape literals are deprecated, use $alt instead.", at = start)
         putChar(oct)
-      } else {
-        ch match {
-          case 'b' => putChar('\b')
-          case 't' => putChar('\t')
-          case 'n' => putChar('\n')
-          case 'f' => putChar('\f')
-          case 'r' => putChar('\r')
-          case '\"' => putChar('\"')
-          case '\'' => putChar('\'')
-          case '\\' => putChar('\\')
-          case _ => invalidEscape()
-        }
-        nextChar()
-      }
-    } else if (isUnquoteDollar()) {
-      // bail and let the caller handle this
-    } else {
-      putChar(ch)
-      nextChar()
-    }
-
-  private def invalidEscape(): Unit = {
-    syntaxError("invalid escape character", at = begCharOffset)
-    putChar(ch)
-  }
+      } else putCharAndNext(ch match {
+        case 'b' => '\b'
+        case 't' => '\t'
+        case 'n' => '\n'
+        case 'f' => '\f'
+        case 'r' => '\r'
+        case '\"' => '\"'
+        case '\'' => '\''
+        case '\\' => '\\'
+        case _ => syntaxError("invalid escape character", at = begCharOffset); ch
+      })
+    } else if (isUnquoteDollar()) {} // bail and let the caller handle this
+    else putCharAndNext()
 
   @tailrec
   private def getLitChars(delimiter: Char): Boolean = {
@@ -686,8 +670,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   @tailrec
   private def readDigits(base: Int, wasSeparator: Boolean = false): Unit =
     if (digit2int(ch, base) >= 0) {
-      putChar(ch)
-      nextChar()
+      putCharAndNext()
       readDigits(base)
     } else if (isNumberSeparator()) {
       nextChar()
@@ -724,12 +707,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         at = begCharOffset
       )
     }
-    putChar(ch)
-    nextChar()
-    if (sign) {
-      putChar(ch)
-      nextChar()
-    }
+    putCharAndNext()
+    if (sign) putCharAndNext()
     readDigits(10)
     token = DOUBLELIT
     true
@@ -785,8 +764,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         val lookahead = lookaheadReader
         lookahead.nextChar()
         if (lookahead.isDigit()) {
-          putChar(ch) // '.'
-          nextChar()
+          putCharAndNext() // '.'
           setFractionOnDot()
         } else setNumberInt(INTLIT)
       } else setNumberInteger()
@@ -798,8 +776,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
    * return a symbol literal token
    */
   private def charLitOr(op: () => Unit): Unit = {
-    putChar(ch)
-    nextChar()
+    putCharAndNext()
     if (ch == '\'') {
       nextChar()
       token = CHARLIT
