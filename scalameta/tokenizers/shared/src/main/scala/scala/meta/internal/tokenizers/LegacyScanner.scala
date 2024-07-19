@@ -26,28 +26,27 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   import reporter._
 
   private var openComments = 0
-  private def putCommentChar(): Unit = nextCommentChar()
 
   @tailrec
   private def skipLineComment(): Unit = ch match {
     case SU | CR | LF =>
     case '$' if isUnquoteNextNoDollar() =>
       syntaxError("can't unquote into single-line comments", at = begCharOffset)
-    case _ => putCommentChar(); skipLineComment()
+    case _ => nextCommentChar(); skipLineComment()
   }
   private def maybeOpen(): Unit = {
-    putCommentChar()
+    nextCommentChar()
     if (ch == '*') {
-      putCommentChar()
+      nextCommentChar()
       openComments += 1
     }
   }
   private def maybeClose(): Boolean = {
-    putCommentChar()
+    nextCommentChar()
     (ch == '/') && {
       openComments -= 1
       val close = openComments == 0
-      if (close) nextChar() else putCommentChar()
+      if (close) nextChar() else nextCommentChar()
       close
     }
   }
@@ -58,21 +57,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     case SU => incompleteInputError("unclosed comment", at = offset)
     case '$' if isUnquoteNextNoDollar() =>
       syntaxError("can't unquote into multi-line comments", at = begCharOffset)
-    case _ => putCommentChar(); skipNestedComments()
-  }
-
-  private def skipToCommentEnd(): Unit = {
-    val isLineComment = ch == '/'
-    putCommentChar()
-    if (isLineComment) skipLineComment()
-    else {
-      openComments = 1
-      if (ch == '*') {
-        putCommentChar()
-        // Check for the amazing corner case of /**/
-        if (ch == '/') nextChar() else skipNestedComments()
-      } else skipNestedComments()
-    }
+    case _ => nextCommentChar(); skipNestedComments()
   }
 
   private def isAtEnd = endCharOffset >= buf.length
@@ -291,9 +276,14 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       case '/' =>
         nextChar()
         ch match {
-          case '/' | '*' =>
-            skipToCommentEnd()
+          case '/' =>
             token = COMMENT
+            skipLineComment()
+          case '*' =>
+            token = COMMENT
+            openComments = 1
+            nextCommentChar()
+            skipNestedComments()
           case _ =>
             putChar('/')
             getOperatorRest()
