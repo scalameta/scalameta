@@ -703,9 +703,13 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private def setFractionOnDot(): Unit = {
     readDigits(10)
     token = DOUBLELIT
-    getFractionExponent()
-    getFractionWithSuffix()
+    getFractionExponentAndTypeSuffix()
     setFractionDone()
+  }
+
+  private def getFractionExponentAndTypeSuffix(): Boolean = {
+    val hasExponent = getFractionExponent()
+    getFractionTypeSuffix() || hasExponent
   }
 
   private def getFractionExponent(): Boolean = (ch == 'e' || ch == 'E') && {
@@ -736,14 +740,14 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   }
 
   @inline
-  private def getFractionWithSuffix(): Boolean = {
-    val ok = ch match {
-      case 'd' | 'D' => token = DOUBLELIT; true
-      case 'f' | 'F' => token = FLOATLIT; true
-      case _ => false
+  private def getFractionTypeSuffix(): Boolean = {
+    ch match {
+      case 'd' | 'D' => token = DOUBLELIT
+      case 'f' | 'F' => token = FLOATLIT
+      case _ => return false
     }
-    if (ok) nextChar()
-    ok
+    nextChar()
+    true
   }
 
   private def setFractionDone(): Unit = {
@@ -778,9 +782,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         setNumberInt(INTLIT)
       }
 
-    if (base == 10) {
-      val isFractionExp = getFractionExponent()
-      if (getFractionWithSuffix() || isFractionExp) setFractionDone()
+    if (base == 10)
+      if (getFractionExponentAndTypeSuffix()) setFractionDone()
       else if (ch == '.') {
         val lookahead = lookaheadReader
         lookahead.nextChar()
@@ -790,7 +793,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           setFractionOnDot()
         } else setNumberInt(INTLIT)
       } else setNumberInteger()
-    } else setNumberInteger()
+    else setNumberInteger()
   }
 
   /**
