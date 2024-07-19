@@ -70,26 +70,16 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       def emitContents(beg: LegacyTokenData): LegacyTokenData =
         if (beg.token == STRINGPART) {
           val dollarOffset = beg.endOffset
-          require(input.chars(dollarOffset) == '$')
           pushPart(beg, dollarOffset)
-          val postDollarOffset = dollarOffset + 1
-          pushToken(Token.Interpolation.SpliceStart(input, dialect, dollarOffset, postDollarOffset))
+          pushToken(Token.Interpolation.SpliceStart(input, dialect, dollarOffset, dollarOffset + 1))
           val splice = nextToken()
           val spliceToken = getToken(splice)
           pushToken(spliceToken)
-          splice.token match {
-            case LBRACE => loop(braceBalance = 1)
-            case IDENTIFIER | THIS =>
-            case USCORE if input.chars(postDollarOffset) == '_' =>
-            case _ => unreachable(debug(splice), s"unexpected interpolation: $spliceToken")
-          }
+          if (splice.token == LBRACE) loop(braceBalance = 1)
           val end = nextToken()
           pushToken(Token.Interpolation.SpliceEnd(input, dialect, end.offset, end.offset))
           emitContents(end)
-        } else {
-          require(beg.token == STRINGLIT)
-          beg
-        }
+        } else beg
 
       // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
       // i.e. STRINGLIT (if the interpolation is empty) or STRINGPART (if it's not)
@@ -104,7 +94,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
 
       val endEndPos = end.endOffset
       val endBegPos = endEndPos - numQuotes
-      require(input.chars(endBegPos) == '\"')
       pushPart(end, endBegPos)
 
       pushToken(Token.Interpolation.End(input, dialect, endBegPos, endEndPos))
