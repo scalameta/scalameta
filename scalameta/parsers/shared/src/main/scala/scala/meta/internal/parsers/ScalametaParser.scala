@@ -2083,7 +2083,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         })
       case _: LeftBracket if dialect.allowPolymorphicFunctions => Success(polyFunction())
       case _: Indentation.Indent => Success(blockExprOnIndent())
-      case _ => Failure(new ParseException(token.pos, "illegal start of simple expression"))
+      case _ => Failure(ParseException(token.pos, "illegal start of simple expression"))
     }) match {
       case Success(x) => Success(simpleExprRest(x, canApply = canApply, startPos = startPos))
       case x: Failure[_] => x
@@ -2635,9 +2635,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       syntaxError(msg, at = token)
     }
 
-    def simplePattern(): Pat =
-      // simple diagnostics for this entry point
-      simplePattern(token => syntaxError("illegal start of simple pattern", at = token))
     def simplePattern(
         onError: Token => Nothing,
         isRhs: Boolean = false,
