@@ -531,54 +531,62 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         )
       }
     }
-    if (ch == '"')
-      if (multiLine) { if (!canFinishMultilineStringLit()) getStringPart(true) }
-      else {
-        nextChar()
-        finishStringLit()
-      }
-    else if (ch == '\\' && !multiLine) {
+
+    def unclosedLiteralError() = {
+      if (!multiLine) syntaxError("unclosed string interpolation", at = offset)
+      incompleteInputError("unclosed multi-line string interpolation", at = offset)
+    }
+
+    if (wasMultiChar) {
       putCharAndNextRaw()
-      if (ch == '"' || ch == '\\') putCharAndNextRaw()
       getStringPart(multiLine)
-    } else if (ch == '$' && !wasMultiChar)
-      if (isUnquoteNextNoDollar())
-        syntaxError("can't unquote into string interpolations", at = begCharOffset)
-      else {
-        nextRawChar()
-        if (ch == '$' || (ch == '"' && dialect.allowInterpolationDolarQuoteEscape)) {
-          putCharAndNextRaw()
-          getStringPart(multiLine)
-        } else if (ch == '{') {
-          finishStringPart()
-          nextRawChar()
-          next.token = LBRACE
-        } else if (ch == '_' && dialect.allowSpliceUnderscores) {
-          finishStringPart()
-          nextRawChar()
-          if (Character.isUnicodeIdentifierStart(ch)) {
-            putChar('_')
-            identifier()
-          } else next.token = USCORE
-        } else if (Character.isUnicodeIdentifierStart(ch)) {
-          finishStringPart()
-          identifier()
-        } else {
-          var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
-          if (dialect.allowSpliceUnderscores) supportedCombos = supportedCombos :+ "`$'_"
-          val s_supportedCombos = supportedCombos.mkString("Not one of: ", ", ", "")
-          syntaxError(s_supportedCombos, at = offset)
+    } else (ch: @switch) match {
+      case '"' =>
+        if (multiLine) { if (!canFinishMultilineStringLit()) getStringPart(true) }
+        else {
+          nextChar()
+          finishStringLit()
         }
-      }
-    else {
-      val isUnclosedLiteral = !wasMultiChar && (ch == SU || (!multiLine && (ch == CR || ch == LF)))
-      if (isUnclosedLiteral)
-        if (multiLine) incompleteInputError("unclosed multi-line string interpolation", at = offset)
-        else syntaxError("unclosed string interpolation", at = offset)
-      else {
+      case '\\' if !multiLine =>
+        putCharAndNextRaw()
+        if (ch == '"' || ch == '\\') putCharAndNextRaw()
+        getStringPart(multiLine)
+      case '$' =>
+        if (isUnquoteNextNoDollar())
+          syntaxError("can't unquote into string interpolations", at = begCharOffset)
+        nextRawChar()
+        (ch: @switch) match {
+          case '$' =>
+            putCharAndNextRaw()
+            getStringPart(multiLine)
+          case '"' if dialect.allowInterpolationDolarQuoteEscape =>
+            putCharAndNextRaw()
+            getStringPart(multiLine)
+          case '{' =>
+            finishStringPart()
+            nextRawChar()
+            next.token = LBRACE
+          case '_' if dialect.allowSpliceUnderscores =>
+            finishStringPart()
+            nextRawChar()
+            if (Character.isUnicodeIdentifierStart(ch)) {
+              putChar('_')
+              identifier()
+            } else next.token = USCORE
+          case _ if Character.isUnicodeIdentifierStart(ch) =>
+            finishStringPart()
+            identifier()
+          case _ =>
+            var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
+            if (dialect.allowSpliceUnderscores) supportedCombos = supportedCombos :+ "`$'_"
+            val s_supportedCombos = supportedCombos.mkString("Not one of: ", ", ", "")
+            syntaxError(s_supportedCombos, at = offset)
+        }
+      case SU => unclosedLiteralError()
+      case CR | LF if !multiLine => unclosedLiteralError()
+      case _ =>
         putCharAndNextRaw()
         getStringPart(multiLine)
-      }
     }
   }
 
