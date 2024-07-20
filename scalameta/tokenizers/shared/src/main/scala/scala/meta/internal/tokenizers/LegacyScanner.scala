@@ -30,11 +30,14 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private var openComments = 0
 
   @tailrec
-  private def skipLineComment(): Unit = ch match {
-    case SU | CR | LF =>
-    case '$' if isUnquoteNextNoDollar() =>
-      syntaxError("can't unquote into single-line comments", at = begCharOffset)
-    case _ => nextCommentChar(); skipLineComment()
+  private def skipLineComment(): Unit = {
+    nextCommentChar()
+    ch match {
+      case SU | CR | LF => return
+      case _ =>
+    }
+    if (isUnquoteDollar()) setInvalidToken(next)("can't unquote into single-line comments")
+    skipLineComment()
   }
   private def maybeOpen(): Unit = {
     nextCommentChar()
@@ -57,9 +60,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     case '/' => maybeOpen(); skipNestedComments()
     case '*' => if (!maybeClose()) skipNestedComments()
     case SU => setInvalidToken(next)("unclosed comment")
-    case '$' if isUnquoteNextNoDollar() =>
-      syntaxError("can't unquote into multi-line comments", at = begCharOffset)
-    case _ => nextCommentChar(); skipNestedComments()
+    case _ =>
+      if (isUnquoteDollar()) setInvalidToken(next)("can't unquote into multi-line comments")
+      nextCommentChar(); skipNestedComments()
   }
 
   private def isAtEnd = endCharOffset >= buf.length
@@ -385,8 +388,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         }
         def fetchSingleQuote() = {
           nextRawChar()
-          if (isUnquoteDollar())
-            syntaxError("can't unquote into character literals", at = begCharOffset)
+          if (isUnquoteDollar()) {
+            setInvalidToken(next)("can't unquote into character literals")
+            nextRawChar()
+          }
           if (ch == LF && !wasMultiChar)
             setInvalidToken(curr)("can't use unescaped LF in character literals")
           else if (isIdentifierStart(ch)) charLitOr(getIdentRest)
@@ -447,14 +452,17 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 
 // Identifiers ---------------------------------------------------------------
 
+  @tailrec
   private def getBackquotedIdent(): Unit = {
     nextChar()
     if (getLitChars('`')) {
       nextChar()
       finishNamed(isBackquoted = true)
       if (strVal.isEmpty) curr.setInvalidToken("empty quoted identifier")
-    } else if (ch == '$') syntaxError("can't unquote into quoted identifiers", at = begCharOffset)
-    else curr.setInvalidToken("unclosed quoted identifier")
+    } else if (ch == '$') {
+      setInvalidToken(next)("can't unquote into quoted identifiers")
+      getBackquotedIdent()
+    } else curr.setInvalidToken("unclosed quoted identifier")
   }
 
   @tailrec
@@ -495,12 +503,16 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 
 // Literals -----------------------------------------------------------------
 
-  private def getStringLit() =
+  @tailrec
+  private def getStringLit(): Unit =
     if (getLitChars('"')) {
       nextChar()
       finishStringLit()
-    } else if (ch == '$') syntaxError("can't unquote into string literals", at = begCharOffset)
-    else {
+    } else if (ch == '$') {
+      setInvalidToken(next)("can't unquote into string literals")
+      nextChar()
+      getStringLit()
+    } else {
       finishStringLit()
       setInvalidToken(next, offset)("unclosed string literal")
     }
@@ -511,9 +523,11 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     else if (ch == SU) {
       setInvalidToken(next)("unclosed multi-line string literal")
       finishStringLit()
-    } else if (isUnquoteDollar())
-      syntaxError("can't unquote into string literals", at = begCharOffset)
-    else {
+    } else if (isUnquoteDollar()) {
+      setInvalidToken(next)("can't unquote into multi-line string literals")
+      nextRawChar()
+      getMultilineStringLit()
+    } else {
       putCharAndNextRaw()
       getMultilineStringLit()
     }
@@ -546,14 +560,15 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         getStringPart(multiLine)
       case '$' =>
         val dollarOffset = begCharOffset
-        if (isUnquoteNextNoDollar())
-          syntaxError("can't unquote into string interpolations", at = begCharOffset)
+        val isUnquote = isUnquoteNextNoDollar()
+        if (isUnquote) setInvalidToken(next)("can't unquote into string interpolations")
         nextRawChar()
-        val done = (ch: @switch) match {
-          case '$' => false
-          case '"' if dialect.allowInterpolationDolarQuoteEscape => false
-          case _ => true
-        }
+        val done = isUnquote ||
+          ((ch: @switch) match {
+            case '$' => false
+            case '"' if dialect.allowInterpolationDolarQuoteEscape => false
+            case _ => true
+          })
         if (done) {
           setTokStrVal(STRINGPART)
           endOffset = dollarOffset
@@ -854,8 +869,13 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       case IDENTIFIER | THIS | USCORE =>
         // do nothing, this is the end of the unquote
         ltd
-      case _ =>
-        syntaxError("invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected", at = start)
+      case t =>
+        if (t == INVALID) setInvalidToken(curr, start + ltd.offset)(ltd.strVal)
+        else {
+          val message = "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected"
+          setInvalidToken(curr, start)(message)
+        }
+        return reader.nextCharFrom(start + ltd.endOffset)
     }
     finishComposite(UNQUOTE, start + ltdEnd.endOffset)
   }
