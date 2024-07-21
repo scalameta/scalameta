@@ -10,7 +10,6 @@ import scala.annotation.tailrec
 private[meta] case class CharArrayReader private (
     buf: Array[Char],
     dialect: Dialect,
-    reporter: Reporter,
     /** the last read character */
     var ch: Int = SU,
     /** The offset one past the last read character */
@@ -23,10 +22,8 @@ private[meta] case class CharArrayReader private (
 ) {
 
   import CharArrayReader._
-  import reporter._
 
-  def this(input: Input, dialect: Dialect, reporter: Reporter) =
-    this(buf = input.chars, dialect = dialect, reporter = reporter)
+  def this(input: Input, dialect: Dialect) = this(buf = input.chars, dialect = dialect)
 
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {

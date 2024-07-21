@@ -11,7 +11,7 @@ import scala.annotation.switch
 import scala.annotation.tailrec
 import scala.collection.mutable
 
-class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter) {
+class LegacyScanner(input: Input, dialect: Dialect) {
 
   import LegacyToken._
 
@@ -21,11 +21,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private val next: LegacyTokenData = new LegacyTokenData
   private var prev: LegacyTokenData = curr
 
-  private val reader: CharArrayReader = new CharArrayReader(input, dialect, reporter)
+  private val reader: CharArrayReader = new CharArrayReader(input, dialect)
 
   import curr._
   import reader._
-  import reporter._
 
   private var openComments = 0
 
@@ -90,20 +89,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     nextRawChar()
   }
 
-  /**
-   * Determines whether this scanner should emit identifier deprecation warnings, e.g. when seeing
-   * `macro' or `then', which are planned to become keywords in future versions of Scala.
-   */
-  private def emitIdentifierDeprecationWarnings = true
-
   /** Clear buffer and set name and token */
   private def finishNamed(isBackquoted: Boolean = false): Unit = curr
-    .setIdentifier(getAndResetCBuf(), dialect, check = !isBackquoted) { x =>
-      if (x.token == IDENTIFIER && emitIdentifierDeprecationWarnings) deprecationWarning(
-        s"${x.strVal} is now a reserved word; usage as an identifier is deprecated",
-        at = x.token
-      )
-    }
+    .setIdentifier(getAndResetCBuf(), dialect, check = !isBackquoted) { _ => }
 
   /* much like endOffset, end is inclusive */
   private def finishComposite(token: LegacyToken, endExclusive: Offset): Unit = {
@@ -687,7 +675,6 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           }
         }
         val alt = if (oct == LF) "\\n" else "\\u%04x".format(oct)
-        deprecationWarning(s"Octal escape literals are deprecated, use $alt instead.", at = start)
         putChar(oct)
       } else putCharAndNext(ch match {
         case 'b' => '\b'
@@ -862,11 +849,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private def getUnquote(): Unit = {
     val start = endCharOffset
     val exploratoryInput = Input.Slice(input, start, input.chars.length)
-    val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)(new Reporter {
-      override def input: Input = exploratoryInput
-      override protected def error(msg: String, at: Position): Nothing =
-        syntaxError(s"invalid unquote: $msg", at = start + at.start)
-    })
+    val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)
     exploratoryScanner.initialize()
     val ltd = exploratoryScanner.nextToken()
     val ltdEnd = ltd.token match {

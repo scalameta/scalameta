@@ -47,7 +47,6 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
     import scala.meta.tests.parsers.MoreHelpers._
 
     val input = code.asInput
-    implicit val reporter: Reporter = Reporter(input)
     val scanner = new LegacyScanner(input = input, dialect = dialect)
     scanner.initialize()
     val sb = new StringBuilder
