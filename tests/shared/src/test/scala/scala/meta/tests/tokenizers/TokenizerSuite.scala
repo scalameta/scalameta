@@ -44,7 +44,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |  val hello = 42
         |  val `world` = 42
         |}
-        |""".stripMargin.tq("QQQ"),
+        |""".stripMargin.tq(),
       """
         |class C {
         |  val x1a = 2
@@ -75,7 +75,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |  val hello = 42
         |  val `world` = 42
         |}
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -94,7 +94,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |  qQQQclass $YQQQ
         |  qQQQclass ${Y}QQQ
         |}
-        |""".stripMargin.tq("QQQ"),
+        |""".stripMargin.tq(),
       """
         |class C {
         |  q""
@@ -108,7 +108,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |  qQQQclass $YQQQ
         |  qQQQclass ${Y}QQQ
         |}
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -228,7 +228,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |  val x7f = QQQf\nQQQ
          |  val hello = 42
          |  val `world` = 42
-         |}""".stripMargin.tq("QQQ"),
+         |}""".stripMargin.tq(),
       """
         |BOF [0..0)
         |KwClass [0..5)
@@ -482,7 +482,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |LF [470..471)
         |RightBrace [471..472)
         |EOF [472..472)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -499,7 +499,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |  qQQQ${d} + 2QQQ
          |  qQQQclass $YQQQ
          |  qQQQclass ${Y}QQQ
-         |}""".stripMargin.tq("QQQ"),
+         |}""".stripMargin.tq(),
       """
         |BOF [0..0)
         |KwClass [0..5)
@@ -610,7 +610,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |LF [153..154)
         |RightBrace [154..155)
         |EOF [155..155)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -745,7 +745,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |Interpolation.Part() [4..4)
         |Interpolation.End(QQQ) [4..7)
         |EOF [7..7)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -760,7 +760,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |Interpolation.End(QQQ) [4..7)
         |Semicolon [7..8)
         |EOF [8..8)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -774,7 +774,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |Interpolation.Part(a) [4..5)
         |Interpolation.End(QQQ) [5..8)
         |EOF [8..8)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -789,7 +789,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |Interpolation.End(QQQ) [5..8)
         |Semicolon [8..9)
         |EOF [9..9)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -929,7 +929,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |Ident(-) [0..1)
         |Constant.Int(2147483648) [1..11)
         |EOF [11..11)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -942,7 +942,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |Xml.Part(<foo>bar</foo>) [0..14)
         |Xml.End [14..14)
         |EOF [14..14)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 
@@ -956,7 +956,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |Xml.End [14..14)
         |Space [14..15)
         |EOF [15..15)
-        |""".stripMargin.tq("QQQ")
+        |""".stripMargin.tq()
     )
   }
 

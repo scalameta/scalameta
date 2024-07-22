@@ -100,6 +100,10 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       .reprint(tree).toString
   }
 
+  protected implicit class ImplicitString(value: String) {
+    def tq(repl: String = "QQQ"): String = value.replace(repl, "\"\"\"")
+  }
+
   protected def assertOriginalSyntax(tree: Tree, original: String)(implicit
       loc: munit.Location
   ): Unit = assertNoDiff(tree.toString, original, tree.structure)
