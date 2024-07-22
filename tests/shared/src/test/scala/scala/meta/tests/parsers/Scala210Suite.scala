@@ -8,7 +8,7 @@ class Scala210Suite extends ParseSuite {
   test("$_") {
     val error = """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr
                    | val q"x + $_" = tree 
-                   |       ^""".stripMargin.lf2nl
+                   |            ^""".stripMargin.lf2nl
     interceptMessage[TokenizeException](error)(stat(""" val q"x + $_" = tree """))
   }
 

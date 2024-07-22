@@ -1960,7 +1960,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     interceptMessage[TokenizeException](
       """|<input>:2: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
          |  def foo = s"b$"
-         |              ^""".stripMargin.lf2nl
+         |                ^""".stripMargin.lf2nl
     )(tokenize(code, dialects.Scala213))
 
     // scala3

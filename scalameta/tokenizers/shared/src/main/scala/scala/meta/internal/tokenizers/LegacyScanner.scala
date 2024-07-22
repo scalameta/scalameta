@@ -215,7 +215,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private final def fetchToken(): Unit = {
     sepRegions match {
       case STRINGLIT :: tail => // STRINGPART follows STRINGLIT in multiline interpolation
-        return getStringPart(multiLine = tail.headOption.contains(STRINGPART))
+        return if (token == STRINGPART) getStringSplice()
+        else getStringPart(multiLine = tail.headOption.contains(STRINGPART))
       case _ =>
     }
     if (fetchXmlPart()) return
@@ -333,14 +334,14 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         base = 10
         getNumber()
       case '`' => getBackquotedIdent()
-      case '\"' =>
+      case '"' =>
         def fetchDoubleQuote(): Unit =
           if (token == INTERPOLATIONID) {
             nextRawChar()
             offset = begCharOffset
-            if (ch == '\"') {
+            if (ch == '"') {
               nextChar()
-              if (ch == '\"') {
+              if (ch == '"') {
                 nextRawChar()
                 offset = begCharOffset
                 getStringPart(multiLine = true)
@@ -357,9 +358,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
             }
           } else {
             nextChar()
-            if (ch == '\"') {
+            if (ch == '"') {
               nextChar()
-              if (ch == '\"') {
+              if (ch == '"') {
                 nextRawChar()
                 getMultilineStringLit()
               } else {
@@ -502,7 +503,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
 
   @tailrec
   private def getMultilineStringLit(): Unit =
-    if (ch == '\"') { if (!canFinishMultilineStringLit()) getMultilineStringLit() }
+    if (ch == '"') { if (!canFinishMultilineStringLit()) getMultilineStringLit() }
     else if (ch == SU) incompleteInputError("unclosed multi-line string literal", at = offset)
     else if (isUnquoteDollar())
       syntaxError("can't unquote into string literals", at = begCharOffset)
@@ -512,25 +513,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     }
 
   private def finishStringLit() = setTokStrVal(STRINGLIT)
-  private def finishStringPart() = {
-    setTokStrVal(STRINGPART)
-    endOffset = endCharOffset - 2
-    next.offset = begCharOffset
-  }
 
   @scala.annotation.tailrec
   private def getStringPart(multiLine: Boolean): Unit = {
-    def identifier() = {
-      do putCharAndNextRaw() while (isUnicodeIdentifierPart(ch))
-      next.endOffset = begCharOffset
-      next.setIdentifier(getAndResetCBuf(), dialect) { x =>
-        if (x.token != IDENTIFIER && x.token != THIS) syntaxError(
-          "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",
-          at = x.offset
-        )
-      }
-    }
-
     def unclosedLiteralError() = {
       if (!multiLine) syntaxError("unclosed string interpolation", at = offset)
       incompleteInputError("unclosed multi-line string interpolation", at = offset)
@@ -553,41 +538,57 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         if (ch == '"' || ch == '\\') putCharAndNextRaw()
         getStringPart(multiLine)
       case '$' =>
+        val dollarOffset = begCharOffset
         if (isUnquoteNextNoDollar())
           syntaxError("can't unquote into string interpolations", at = begCharOffset)
         nextRawChar()
-        (ch: @switch) match {
-          case '$' =>
-            putCharAndNextRaw()
-            getStringPart(multiLine)
-          case '"' if dialect.allowInterpolationDolarQuoteEscape =>
-            putCharAndNextRaw()
-            getStringPart(multiLine)
-          case '{' =>
-            finishStringPart()
-            nextRawChar()
-            next.token = LBRACE
-          case '_' if dialect.allowSpliceUnderscores =>
-            finishStringPart()
-            nextRawChar()
-            if (Character.isUnicodeIdentifierStart(ch)) {
-              putChar('_')
-              identifier()
-            } else next.token = USCORE
-          case _ if Character.isUnicodeIdentifierStart(ch) =>
-            finishStringPart()
-            identifier()
-          case _ =>
-            var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
-            if (dialect.allowSpliceUnderscores) supportedCombos = supportedCombos :+ "`$'_"
-            val s_supportedCombos = supportedCombos.mkString("Not one of: ", ", ", "")
-            syntaxError(s_supportedCombos, at = offset)
+        val done = (ch: @switch) match {
+          case '$' => false
+          case '"' if dialect.allowInterpolationDolarQuoteEscape => false
+          case _ => true
+        }
+        if (done) {
+          setTokStrVal(STRINGPART)
+          endOffset = dollarOffset
+        } else {
+          putCharAndNextRaw()
+          getStringPart(multiLine)
         }
       case SU => unclosedLiteralError()
       case CR | LF if !multiLine => unclosedLiteralError()
       case _ =>
         putCharAndNextRaw()
         getStringPart(multiLine)
+    }
+  }
+
+  private def getStringSplice(): Unit = {
+    def identifier() = {
+      do putCharAndNextRaw() while (isUnicodeIdentifierPart(ch))
+      curr.setIdentifier(getAndResetCBuf(), dialect) { x =>
+        if (x.token != IDENTIFIER && x.token != THIS) syntaxError(
+          "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",
+          at = x.offset
+        )
+      }
+    }
+
+    (ch: @switch) match {
+      case '{' =>
+        nextRawChar()
+        token = LBRACE
+      case '_' if dialect.allowSpliceUnderscores =>
+        nextRawChar()
+        if (Character.isUnicodeIdentifierStart(ch)) {
+          putChar('_')
+          identifier()
+        } else token = USCORE
+      case _ if Character.isUnicodeIdentifierStart(ch) => identifier()
+      case _ =>
+        var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
+        if (dialect.allowSpliceUnderscores) supportedCombos = supportedCombos :+ "`$'_"
+        val s_supportedCombos = supportedCombos.mkString("Not one of: ", ", ", "")
+        syntaxError(s_supportedCombos, at = offset)
     }
   }
 
