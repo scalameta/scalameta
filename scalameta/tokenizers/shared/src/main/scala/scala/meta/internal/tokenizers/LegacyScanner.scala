@@ -336,17 +336,18 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         def fetchDoubleQuote(): Unit =
           if (token == INTERPOLATIONID) {
             nextRawChar()
-            offset += 1
+            offset = begCharOffset
             if (ch == '\"') {
               nextChar()
               if (ch == '\"') {
-                offset += 2
                 nextRawChar()
+                offset = begCharOffset
                 getStringPart(multiLine = true)
                 pushSepRegions(STRINGPART) // indicate string part
                 pushSepRegions(STRINGLIT) // once more to indicate multi line string part
               } else {
                 token = STRINGLIT
+                endOffset = offset
                 strVal = ""
               }
             } else {
@@ -539,11 +540,11 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       getStringPart(multiLine)
     } else (ch: @switch) match {
       case '"' =>
-        if (multiLine)
-          if (canFinishMultilineStringLit()) endOffset = begCharOffset else getStringPart(true)
-        else {
-          nextChar()
+        if (multiLine) {
+          if (!canFinishMultilineStringLit(withoutQuotes = true)) getStringPart(true)
+        } else {
           endOffset = begCharOffset
+          nextChar()
           finishStringLit()
         }
       case '\\' if !multiLine =>
@@ -602,13 +603,22 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       case _ => false
     }
 
-  private def canFinishMultilineStringLit(): Boolean = {
+  private def canFinishMultilineStringLit(withoutQuotes: Boolean = false): Boolean = {
+    var qte1 = begCharOffset
     nextRawChar()
     if (ch == '"') {
+      var qte2 = begCharOffset
       nextRawChar()
       if (ch == '"') {
+        var qte3 = begCharOffset
         nextChar()
-        while (ch == '"') putCharAndNext()
+        while (ch == '"') {
+          qte1 = qte2
+          qte2 = qte3
+          qte3 = begCharOffset
+          putCharAndNext()
+        }
+        if (withoutQuotes) endOffset = qte1
         finishStringLit()
         return true
       }
