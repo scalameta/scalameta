@@ -2059,22 +2059,29 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   test("code with double-quote string within single-line quasiquotes") {
     val code = " \"...\" "
-    val error = """|<input>:1: error: double quotes are not allowed in single-line quasiquotes
-                   | "..." 
-                   | ^""".stripMargin.lf2nl
-    interceptMessage[TokenizeException](error)(
-      tokenize(code, dialects.Scala213.unquoteTerm(multiline = false))
-    )
+    val struct = """|BOF [0..0)
+                    |Space [0..1)
+                    |Constant.String(...) [1..6)
+                    |Invalid(double quotes are not allowed in single-line quasiquotes) [1..1)
+                    |Space [6..7)
+                    |EOF [7..7)
+                    |""".stripMargin
+    assertTokenizedAsStructureLines(code, struct, dialects.Scala213.unquoteTerm(multiline = false))
   }
 
   test("code with interpolation within single-line quasiquotes") {
     val code = " s\"...\" "
-    val error = """|<input>:1: error: double quotes are not allowed in single-line quasiquotes
-                   | s"..." 
-                   |  ^""".stripMargin.lf2nl
-    interceptMessage[TokenizeException](error)(
-      tokenize(code, dialects.Scala213.unquoteTerm(multiline = false))
-    )
+    val struct = """|BOF [0..0)
+                    |Space [0..1)
+                    |Interpolation.Id(s) [1..2)
+                    |Invalid(double quotes are not allowed in single-line quasiquotes) [2..2)
+                    |Interpolation.Start(") [2..3)
+                    |Interpolation.Part(...) [3..6)
+                    |Interpolation.End(") [6..7)
+                    |Space [7..8)
+                    |EOF [8..8)
+                    |""".stripMargin
+    assertTokenizedAsStructureLines(code, struct, dialects.Scala213.unquoteTerm(multiline = false))
   }
 
   test("interpolator with $ character") {

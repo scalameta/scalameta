@@ -34,15 +34,7 @@ private[meta] case class CharArrayReader private (
     checkRawChar()
   }
 
-  private def checkRawChar(): Unit = {
-    val isEol = checkLineEnd()
-
-    if (!dialect.allowMultilinePrograms)
-      if (isEol)
-        readerError("line breaks are not allowed in single-line quasiquotes", at = begCharOffset)
-      else if (ch == '"')
-        readerError("double quotes are not allowed in single-line quasiquotes", at = begCharOffset)
-  }
+  private def checkRawChar(): Unit = checkLineEnd()
 
   final def nextCharFrom(offset: Int): Unit = {
     endCharOffset = offset
@@ -93,13 +85,9 @@ private[meta] case class CharArrayReader private (
   @inline
   final def peekNonWhitespace(): NextChar = findNonWhitespace(buf, ch, endCharOffset)
 
-  private def checkLineEnd(): Boolean = {
-    val ok = ch == LF || ch == FF
-    if (ok) {
-      lastLineStartOffset = lineStartOffset
-      lineStartOffset = endCharOffset
-    }
-    ok
+  private def checkLineEnd(): Unit = if (ch == LF || ch == FF) {
+    lastLineStartOffset = lineStartOffset
+    lineStartOffset = endCharOffset
   }
 
   final def wasMultiChar: Boolean = begCharOffset < endCharOffset - 1

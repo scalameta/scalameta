@@ -228,10 +228,20 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     }
     if (fetchXmlPart()) return
 
+    def noQuasiDoubleQuote(error: String): Unit = // only triple quote
+      if (!dialect.allowMultilinePrograms) setInvalidToken(next)(error)
     @inline
+    def noQuasiDoubleQuoteNL(): Unit =
+      noQuasiDoubleQuote("line breaks are not allowed in single-line quasiquotes")
+    @inline
+    def noQuasiDoubleQuoteDQ(): Unit =
+      noQuasiDoubleQuote("double quotes are not allowed in single-line quasiquotes")
     def getIdentRestCheckInterpolation() = {
       getIdentRest()
-      if (ch == '"' && token == IDENTIFIER) token = INTERPOLATIONID
+      if (ch == '"' && token == IDENTIFIER) {
+        token = INTERPOLATIONID
+        noQuasiDoubleQuoteDQ()
+      }
     }
 
     @inline
@@ -248,10 +258,12 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         strVal = "\t"
         token = WHITESPACE_TAB
       case FF =>
+        noQuasiDoubleQuoteNL()
         nextChar()
         strVal = "\f"
         token = WHITESPACE_FF
       case LF =>
+        noQuasiDoubleQuoteNL()
         nextChar()
         strVal = "\n"
         token = WHITESPACE_LF
@@ -260,14 +272,16 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         if (ch != LF) {
           strVal = "\r"
           token = WHITESPACE_CR
-        } else if (wasMultiChar) {
-          nextChar()
-          strVal = "\n"
-          token = WHITESPACE_LF
         } else {
+          if (wasMultiChar) {
+            strVal = "\n"
+            token = WHITESPACE_LF
+          } else {
+            strVal = "\r\n"
+            token = WHITESPACE_CRLF
+          }
+          noQuasiDoubleQuoteNL()
           nextChar()
-          strVal = "\r\n"
-          token = WHITESPACE_CRLF
         }
       // nextToken()
       case
@@ -367,6 +381,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
               pushSepRegions(STRINGLIT) // indicate single line string part
             }
           } else {
+            noQuasiDoubleQuoteDQ()
             nextChar()
             if (ch == '"') {
               nextChar()
