@@ -660,17 +660,16 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   }
 
   @tailrec
-  private def readDigits(base: Int, wasSeparator: Boolean = false): Unit =
+  private def readDigits(base: Int, prevSeparatorOffset: Int = -1): Unit =
     if (digit2int(ch, base) >= 0) {
       putCharAndNext()
       readDigits(base)
     } else if (isNumberSeparator()) {
+      val offset = begCharOffset
       nextChar()
-      readDigits(base, true)
-    } else if (wasSeparator) {
-      val pos = if (ch == SU) begCharOffset else begCharOffset - 1
-      syntaxError("trailing number separator", at = pos)
-    }
+      readDigits(base, offset)
+    } else if (prevSeparatorOffset >= 0)
+      syntaxError("trailing number separator", at = prevSeparatorOffset)
 
   /**
    * read fractional part and exponent of floating point number if one is present.
