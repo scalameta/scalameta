@@ -15,7 +15,7 @@ import munit.sbtmunit.BuildInfo.munitVersion
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 lazy val LanguageVersions = LatestScalaVersions
-lazy val LanguageVersion = LanguageVersions.head
+lazy val LanguageVersion = EarliestScala213
 def customVersion = sys.props.get("scalameta.version")
 def parseTagVersion: String = {
   import scala.sys.process._
@@ -81,6 +81,7 @@ Global / resolvers +=
 
 val commonJsSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
+  scalaVersion := LatestScala213,
   scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
   scalacOptions ++= {
     if (isSnapshot.value) Seq.empty
@@ -94,6 +95,7 @@ val commonJsSettings = Seq(
 
 lazy val nativeSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
+  scalaVersion := LatestScala213,
   nativeConfig ~= { _.withMode(scalanative.build.Mode.releaseFast) }
 )
 
@@ -751,6 +753,7 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
 lazy val docs = project.in(file("scalameta-docs")).settings(
   sharedSettings,
   crossScalaVersions := List(LatestScala213),
+  scalaVersion := LatestScala213,
   nonPublishableSettings,
   buildInfoKeys := Seq[BuildInfoKey]("scalameta" -> scalameta),
   buildInfoPackage := "docs",
