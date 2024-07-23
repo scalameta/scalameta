@@ -62,18 +62,20 @@ private[meta] case class CharArrayReader private (
    * Advance one character, leaving CR;LF pairs intact. This is for use in multi-line strings, so
    * there are no "potential line ends" here.
    */
-  final def nextRawChar(): Unit = setNextRawChar(peekRawChar(endCharOffset))
+  final def nextRawChar(): Unit = setNextRawChar(peekRawChar())
 
-  private[tokenizers] def setNextRawChar(nextChar: NextChar): Unit = {
+  @inline
+  private[tokenizers] def setNextRawChar(nextChar: NextChar): Unit =
+    setNextRawChar(endCharOffset, nextChar)
+
+  private[tokenizers] def setNextRawChar(peekEndOffset: Int, nextChar: NextChar): Unit = {
     ch = nextChar.ch
-    if (endCharOffset < nextChar.end) {
-      begCharOffset = endCharOffset
-      endCharOffset = nextChar.end
-    }
+    if (begCharOffset < peekEndOffset) begCharOffset = peekEndOffset
+    if (peekEndOffset < nextChar.end) endCharOffset = nextChar.end
   }
 
   final def nextCharIf(f: Int => Boolean): Boolean = {
-    val nextChar = peekRawChar(endCharOffset)
+    val nextChar = peekRawChar()
     val ok = f(nextChar.ch)
     if (ok) {
       setNextRawChar(nextChar)
