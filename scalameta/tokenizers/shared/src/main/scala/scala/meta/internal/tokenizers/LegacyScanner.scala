@@ -111,6 +111,11 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   /** Clear buffer and set string */
   private def setStrVal(): Unit = strVal = getAndResetCBuf()
 
+  private def setTokStrVal(tokenValue: Int): Unit = {
+    setStrVal()
+    token = tokenValue
+  }
+
   private def getAndResetCBuf(): String =
     try cbuf.toString
     finally cbuf.setLength(0)
@@ -261,10 +266,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
         if (isUnquoteNextNoDollar()) getUnquote()
         else {
           putCharAndNext()
-          if (dialect.allowSpliceAndQuote && peekNonWhitespace().ch == '{') {
-            token = MACROSPLICE
-            setStrVal()
-          } else getIdentRestCheckInterpolation()
+          if (dialect.allowSpliceAndQuote && peekNonWhitespace().ch == '{')
+            setTokStrVal(MACROSPLICE)
+          else getIdentRestCheckInterpolation()
         }
       case '<' => // is XMLSTART?
         def fetchLT() = {
@@ -371,15 +375,13 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
             syntaxError("can't use unescaped LF in character literals", at = begCharOffset)
           else if (isIdentifierStart(ch)) charLitOr(getIdentRest)
           else if (isOperatorPart(ch) && (ch != '\\' || wasMultiChar)) charLitOr(getOperatorRest)
-          else if (dialect.allowSpliceAndQuote && isNonLiteralBraceOrBracket) {
-            token = MACROQUOTE
-            setStrVal()
-          } else {
+          else if (dialect.allowSpliceAndQuote && isNonLiteralBraceOrBracket)
+            setTokStrVal(MACROQUOTE)
+          else {
             getLitChar()
             if (ch == '\'') {
               nextChar()
-              token = CHARLIT
-              setStrVal()
+              setTokStrVal(CHARLIT)
             } else syntaxError("unclosed character literal", at = offset)
           }
         }
@@ -501,13 +503,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       getMultilineStringLit()
     }
 
-  private def finishStringLit() = {
-    setStrVal()
-    token = STRINGLIT
-  }
+  private def finishStringLit() = setTokStrVal(STRINGLIT)
   private def finishStringPart() = {
-    setStrVal()
-    token = STRINGPART
+    setTokStrVal(STRINGPART)
     endOffset = endCharOffset - 2
     next.offset = begCharOffset
   }
@@ -733,8 +731,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     def setNumberInt(tokenValue: LegacyToken) = {
       if (hadLeadingZero && !noMoreDigits) // octal deprecated in 2.10, removed in 2.11
         syntaxError("Non-zero integral values may not have a leading zero.", at = offset)
-      setStrVal()
-      token = tokenValue
+      setTokStrVal(tokenValue)
     }
 
     def setNumberInteger() =
@@ -767,8 +764,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     putCharAndNext()
     if (ch == '\'') {
       nextChar()
-      token = CHARLIT
-      setStrVal()
+      setTokStrVal(CHARLIT)
     } else {
       op()
       token = SYMBOLLIT
