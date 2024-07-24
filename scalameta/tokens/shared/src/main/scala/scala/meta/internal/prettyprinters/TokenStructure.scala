@@ -27,6 +27,7 @@ object TokenStructure {
       case t: Unquote => t.text
       case t: MultiHS => t.len.toString
       case t: MultiNL => t.tokens.length.toString
+      case t: Invalid => t.error
       case _ => null
     }
     val label = {

@@ -367,25 +367,9 @@ class PublicSuite extends TreeSuiteBase {
     // n/a
   }
 
-  test("scala.meta.tokenizers.TokenizeException.toString") {
-    interceptMessage[TokenizeException](
-      """|<input>:1: error: unclosed string literal
-         |"c
-         |^""".stripMargin.lf2nl
-    )(""""c""".tokenize.get)
-  }
+  test("scala.meta.tokenizers.TokenizeException.toString") {}
 
-  test("scala.meta.tokenizers.Tokenized.Error.toString") {
-    """"c""".tokenize match {
-      case x: Tokenized.Error => assertEquals(
-          x.toString,
-          """|<input>:1: error: unclosed string literal
-             |"c
-             |^""".stripMargin.lf2nl
-        )
-      case x => fail(s"tokenized is not an error: $x")
-    }
-  }
+  test("scala.meta.tokenizers.Tokenized.Error.toString") {}
 
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
     val tokenized = "foo + bar".tokenize

@@ -41,6 +41,7 @@ class ReflectionSuite extends TreeSuiteBase {
          |Token.Interpolation.SpliceEnd
          |Token.Interpolation.SpliceStart
          |Token.Interpolation.Start
+         |Token.Invalid
          |Token.LFLF
          |Token.LeftArrow
          |Token.MultiHS

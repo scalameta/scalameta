@@ -14,7 +14,7 @@ class QuasiquoteSuite extends ParseSuite {
     test("single-line allow unicode escaping")(assertTree(term("\\u0061"))(tname("a")))
 
     test("single-line disallow line breaks")(
-      interceptMessage[TokenizeException](
+      interceptMessage[ParseException](
         """|<input>:1: error: line breaks are not allowed in single-line quasiquotes
            |foo + 
            |      ^""".stripMargin.lf2nl
@@ -22,7 +22,7 @@ class QuasiquoteSuite extends ParseSuite {
     )
 
     test("single-line disallow double quote strings")(
-      interceptMessage[TokenizeException](
+      interceptMessage[ParseException](
         """|<input>:1: error: double quotes are not allowed in single-line quasiquotes
            |"a"
            |^""".stripMargin.lf2nl
@@ -30,7 +30,7 @@ class QuasiquoteSuite extends ParseSuite {
     )
 
     test("single-line disallow double quote interpolations")(
-      interceptMessage[TokenizeException](
+      interceptMessage[ParseException](
         """|<input>:1: error: double quotes are not allowed in single-line quasiquotes
            |s"a"
            | ^""".stripMargin.lf2nl
@@ -38,7 +38,7 @@ class QuasiquoteSuite extends ParseSuite {
     )
 
     test("single-line disallow char literal unquote")(
-      interceptMessage[TokenizeException](
+      interceptMessage[ParseException](
         """|<input>:1: error: can't unquote into character literals
            | '$x' 
            |  ^""".stripMargin.lf2nl
@@ -64,7 +64,7 @@ class QuasiquoteSuite extends ParseSuite {
     test("multi-line allow double quotes")(assertTree(term("\"a\""))(str("a")))
 
     test("multi-line disallow single-line unquote") {
-      interceptMessage[TokenizeException](
+      interceptMessage[ParseException](
         """|<input>:2: error: can't unquote into string literals
            |" $x "
            |  ^""".stripMargin.lf2nl
@@ -76,8 +76,8 @@ class QuasiquoteSuite extends ParseSuite {
     }
 
     test("multi-line disallow multi-line unquote") {
-      interceptMessage[TokenizeException](
-        """|<input>:2: error: can't unquote into string literals
+      interceptMessage[ParseException](
+        """|<input>:2: error: can't unquote into multi-line string literals
            |QQQ $x QQQ
            |    ^""".stripMargin.tq().lf2nl
       )(term(

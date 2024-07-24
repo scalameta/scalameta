@@ -10,7 +10,6 @@ import scala.annotation.tailrec
 private[meta] case class CharArrayReader private (
     buf: Array[Char],
     dialect: Dialect,
-    reporter: Reporter,
     /** the last read character */
     var ch: Int = SU,
     /** The offset one past the last read character */
@@ -23,10 +22,8 @@ private[meta] case class CharArrayReader private (
 ) {
 
   import CharArrayReader._
-  import reporter._
 
-  def this(input: Input, dialect: Dialect, reporter: Reporter) =
-    this(buf = input.chars, dialect = dialect, reporter = reporter)
+  def this(input: Input, dialect: Dialect) = this(buf = input.chars, dialect = dialect)
 
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {
@@ -34,15 +31,7 @@ private[meta] case class CharArrayReader private (
     checkRawChar()
   }
 
-  private def checkRawChar(): Unit = {
-    val isEol = checkLineEnd()
-
-    if (!dialect.allowMultilinePrograms)
-      if (isEol)
-        readerError("line breaks are not allowed in single-line quasiquotes", at = begCharOffset)
-      else if (ch == '"')
-        readerError("double quotes are not allowed in single-line quasiquotes", at = begCharOffset)
-  }
+  private def checkRawChar(): Unit = checkLineEnd()
 
   final def nextCharFrom(offset: Int): Unit = {
     endCharOffset = offset
@@ -93,22 +82,17 @@ private[meta] case class CharArrayReader private (
   @inline
   final def peekNonWhitespace(): NextChar = findNonWhitespace(buf, ch, endCharOffset)
 
-  private def checkLineEnd(): Boolean = {
-    val ok = ch == LF || ch == FF
-    if (ok) {
-      lastLineStartOffset = lineStartOffset
-      lineStartOffset = endCharOffset
-    }
-    ok
+  private def checkLineEnd(): Unit = if (ch == LF || ch == FF) {
+    lastLineStartOffset = lineStartOffset
+    lineStartOffset = endCharOffset
   }
 
   final def wasMultiChar: Boolean = begCharOffset < endCharOffset - 1
 
-  private[tokenizers] def isNumberSeparator(checkOnly: Boolean = false): Boolean =
-    if (ch != '_') false
-    else if (dialect.allowNumericLiteralUnderscoreSeparators) true
-    else if (checkOnly) false
-    else syntaxError("numeric separators are not allowed", at = begCharOffset)
+  private[tokenizers] def isNumberSeparator(): Boolean = looksLikeNumberSeparator().contains(true)
+
+  private[tokenizers] def looksLikeNumberSeparator(): Option[Boolean] =
+    if (ch != '_') None else Some(dialect.allowNumericLiteralUnderscoreSeparators)
 
   @inline
   private[tokenizers] def isDigit(): Boolean = CharArrayReader.isDigit(ch)

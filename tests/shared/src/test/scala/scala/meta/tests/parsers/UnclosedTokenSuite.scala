@@ -1,21 +1,20 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.parsers.ParseException
 
 class UnclosedTokenSuite extends ParseSuite {
   test("unclosed-string-1") {
-    interceptMessage[TokenizeException](
-      """|<input>:1: error: unclosed string interpolation
+    interceptMessage[ParseException](
+      """|<input>:1: error: unclosed single-line string interpolation
          | s"start   
-         |   ^""".stripMargin.lf2nl
+         |           ^""".stripMargin.lf2nl
     )(stat(""" s"start   """))
   }
 
   test("unclosed-string-2") {
-    interceptMessage[TokenizeException](
+    interceptMessage[ParseException](
       """|<input>:1: error: unclosed string literal
          | x"${1 + " 
          |         ^""".stripMargin.lf2nl
@@ -23,7 +22,7 @@ class UnclosedTokenSuite extends ParseSuite {
   }
 
   test("unclosed-escape") {
-    interceptMessage[TokenizeException](
+    interceptMessage[ParseException](
       """|<input>:1: error: unclosed string literal
          | "start \" 
          | ^""".stripMargin.lf2nl
@@ -39,10 +38,10 @@ class UnclosedTokenSuite extends ParseSuite {
   }
 
   test("unclosed-char") {
-    interceptMessage[TokenizeException](
+    interceptMessage[ParseException](
       """|<input>:1: error: unclosed character literal
          | '.,
-         | ^""".stripMargin.lf2nl
+         |   ^""".stripMargin.lf2nl
     )(stat(
       """| '.,
          |""".stripMargin
@@ -50,7 +49,7 @@ class UnclosedTokenSuite extends ParseSuite {
   }
 
   test("unclosed-char-with-NL") {
-    interceptMessage[TokenizeException](
+    interceptMessage[ParseException](
       """|<input>:1: error: can't use unescaped LF in character literals
          | '
          |  ^""".stripMargin.lf2nl
@@ -62,9 +61,9 @@ class UnclosedTokenSuite extends ParseSuite {
   }
 
   test("unclosed-multi-string-literal") {
-    interceptMessage[TokenizeException](
-      s"""|<input>:1: error: unclosed multi-line string literal
-          |""\"
+    interceptMessage[ParseException](
+      s"""|<input>:4: error: unclosed multi-line string literal
+          |
           |^""".stripMargin.lf2nl
     )(stat(
       s"""|""\"
@@ -75,10 +74,10 @@ class UnclosedTokenSuite extends ParseSuite {
   }
 
   test("unclosed-comment") {
-    interceptMessage[TokenizeException](
-      """|<input>:1: error: unclosed comment
-         |/*
-         |^""".stripMargin.lf2nl
+    interceptMessage[ParseException](
+      """|<input>:2: error: unclosed comment
+         | * foo
+         |      ^""".stripMargin.lf2nl
     )(stat(
       """|/*
          | * foo

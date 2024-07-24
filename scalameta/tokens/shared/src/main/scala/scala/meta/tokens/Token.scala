@@ -336,6 +336,9 @@ object Token {
     require(dialect.allowUnquotes, s"$dialect doesn't support unquoting")
   }
 
+  @freeform("invalid token, tokenizer error")
+  private[meta] class Invalid(error: String) extends Token
+
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
   implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax
