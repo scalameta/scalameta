@@ -40,7 +40,7 @@ jobs:
           - '2.13.14'
         java:
           - '8'
-          - '21'
+          - '17'
     steps:
       - uses: actions/checkout@v4
         with:
