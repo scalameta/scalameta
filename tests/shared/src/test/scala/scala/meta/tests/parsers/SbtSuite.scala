@@ -5,13 +5,11 @@ import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 import scala.meta.dialects.Sbt0137
 
-import munit._
-
-class SbtSuite extends FunSuite {
+class SbtSuite extends TreeSuiteBase {
   test("\"...\".parse[Source]") {
     val tree = simpleBuildSyntax.parse[Source].get
-    assertEquals(tree.syntax, simpleBuildSyntax)
-    assertEquals(tree.structure, simpleBuildStructure)
+    assertStruct(tree)(simpleBuildStructure)
+    assertSyntaxWithClue(tree)(expectedSyntax)(simpleBuildStructure)
   }
 
   test("\"...\".parse[Stat]")(intercept[ParseException](simpleBuildSyntax.parse[Stat].get))
@@ -30,9 +28,8 @@ class SbtSuite extends FunSuite {
           name := "hello"
         )
     """
-    // native fails with a positive lookahead
-    assertNoDiff(tree.syntax, simpleBuildSyntax.replaceAll("\n(.)", "\n      $1"))
-    assertEquals(tree.structure, simpleBuildStructure)
+    assertStruct(tree)(simpleBuildStructure)
+    assertSyntaxWithClue(tree)(expectedSyntax)(simpleBuildStructure)
   }
 
   private def simpleBuildSyntax = """|
@@ -47,7 +44,10 @@ class SbtSuite extends FunSuite {
                                      |  settings(
                                      |    name := "hello"
                                      |  )
-                                     |""".stripMargin.replace("\n", EOL)
+                                     |""".stripMargin.lf2nl
+  // native fails with a positive lookahead
+  private def expectedSyntax: String = simpleBuildSyntax.replaceAll(s"[,]$EOL[ ]+", ", ")
+    .replaceAll(s"$EOL[ ]+", "").replaceAll(s"$EOL[)]", ")").replaceAll(s"$EOL$EOL", EOL)
 
   private def simpleBuildStructure =
     """

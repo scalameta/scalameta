@@ -10,7 +10,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[TokenizeException](
       """|<input>:1: error: unclosed string interpolation
          | s"start   
-         |   ^""".stripMargin.replace("\n", EOL)
+         |   ^""".stripMargin.lf2nl
     )(stat(""" s"start   """))
   }
 
@@ -18,7 +18,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[TokenizeException](
       """|<input>:1: error: unclosed string literal
          | x"${1 + " 
-         |         ^""".stripMargin.replace("\n", EOL)
+         |         ^""".stripMargin.lf2nl
     )(stat(""" x"${1 + " """))
   }
 
@@ -26,7 +26,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[TokenizeException](
       """|<input>:1: error: unclosed string literal
          | "start \" 
-         | ^""".stripMargin.replace("\n", EOL)
+         | ^""".stripMargin.lf2nl
     )(stat(""" "start \" """))
   }
 
@@ -34,7 +34,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[ParseException](
       """|<input>:1: error: `}` expected but `end of file` found
          | s"${1+ 
-         |        ^""".stripMargin.replace("\n", EOL)
+         |        ^""".stripMargin.lf2nl
     )(stat(""" s"${1+ """))
   }
 
@@ -42,7 +42,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[TokenizeException](
       """|<input>:1: error: unclosed character literal
          | '.,
-         | ^""".stripMargin.replace("\n", EOL)
+         | ^""".stripMargin.lf2nl
     )(stat(
       """| '.,
          |""".stripMargin
@@ -53,7 +53,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[TokenizeException](
       """|<input>:1: error: can't use unescaped LF in character literals
          | '
-         |  ^""".stripMargin.replace("\n", EOL)
+         |  ^""".stripMargin.lf2nl
     )(stat(
       """| '
          |abc
@@ -65,7 +65,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[TokenizeException](
       s"""|<input>:1: error: unclosed multi-line string literal
           |""\"
-          |^""".stripMargin.replace("\n", EOL)
+          |^""".stripMargin.lf2nl
     )(stat(
       s"""|""\"
           |foo
@@ -78,7 +78,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[TokenizeException](
       """|<input>:1: error: unclosed comment
          |/*
-         |^""".stripMargin.replace("\n", EOL)
+         |^""".stripMargin.lf2nl
     )(stat(
       """|/*
          | * foo

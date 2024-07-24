@@ -1,11 +1,10 @@
 package scala.meta.tests.transversers
 
 import scala.meta._
+import scala.meta.tests.TreeSuiteBase
 import scala.meta.transversers.SimpleTraverser
 
-import munit._
-
-class SimpleTraverserSuite extends FunSuite {
+class SimpleTraverserSuite extends TreeSuiteBase {
 
   test("Traverser Ok") {
     val tree0 = q"""
@@ -23,7 +22,7 @@ class SimpleTraverserSuite extends FunSuite {
     }
     traverser(tree0)
     assertEquals(
-      log.mkString("", "\n", "\n").replace("\r", ""),
+      log.mkString("", "\n", "\n").nl2lf,
       """|def foo(x: x)(x: Int) = x + x       class C(x: x) {         def bar(x: x) = ???       }
          |def foo(x: x)(x: Int) = x + x
          |foo

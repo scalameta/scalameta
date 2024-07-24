@@ -47,7 +47,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     .foreach(interceptParseError(_))
 
   def interceptParseError(stat: String)(implicit loc: munit.Location): String =
-    try intercept[parsers.ParseException](templStat(stat)).getMessage().replace("\r", "")
+    try intercept[parsers.ParseException](templStat(stat)).getMessage().nl2lf
     catch {
       case scala.util.control.NonFatal(t) =>
         val msg = "no exception was thrown"
@@ -84,7 +84,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
         s"Statement $code should not parse! Got result ${result.structure}"
       )
     }
-    val obtained = error.getMessage().replace("\r", "")
+    val obtained = error.getMessage().nl2lf
     assert(obtained.contains(expected), s"Expected [$obtained] to contain [$expected].")
   }
 

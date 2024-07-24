@@ -6,9 +6,7 @@ import org.scalameta.internal.ScalaCompat.EOL
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
-import munit._
-
-class ReflectionSuite extends FunSuite {
+class ReflectionSuite extends TreeSuiteBase {
   object TokenReflection
       extends {
         val u: ru.type = ru
@@ -55,7 +53,7 @@ class ReflectionSuite extends FunSuite {
          |Token.Xml.SpliceEnd
          |Token.Xml.SpliceStart
          |Token.Xml.Start
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )
   }
 }

@@ -7,7 +7,7 @@ import scala.meta.internal.inputs._
 
 import munit._
 
-class FormatMessageSuite extends FunSuite {
+class FormatMessageSuite extends TreeSuiteBase {
   private def test(s: String)(expected: String): Unit = {
     val testName = if (s != "") s.replace("\n", "\\n") else "empty string"
     super.test(testName) {
@@ -23,7 +23,7 @@ class FormatMessageSuite extends FunSuite {
        |<input>:1: error: foo
        |
        |^
-       |""".stripMargin.replace("\n", EOL)
+       |""".stripMargin.lf2nl
   )
 
   test("\n")(
@@ -34,7 +34,7 @@ class FormatMessageSuite extends FunSuite {
        |<input>:2: error: foo
        |
        |^
-       |""".stripMargin.replace("\n", EOL)
+       |""".stripMargin.lf2nl
   )
 
   test("foo")(
@@ -51,7 +51,7 @@ class FormatMessageSuite extends FunSuite {
        |<input>:1: error: foo
        |foo
        |   ^
-       |""".stripMargin.replace("\n", EOL)
+       |""".stripMargin.lf2nl
   )
 
   test("foo\n")(
@@ -71,7 +71,7 @@ class FormatMessageSuite extends FunSuite {
        |<input>:2: error: foo
        |
        |^
-       |""".stripMargin.replace("\n", EOL)
+       |""".stripMargin.lf2nl
   )
 
   test("foo\nbar")(
@@ -100,6 +100,6 @@ class FormatMessageSuite extends FunSuite {
        |<input>:2: error: foo
        |bar
        |   ^
-       |""".stripMargin.replace("\n", EOL)
+       |""".stripMargin.lf2nl
   )
 }

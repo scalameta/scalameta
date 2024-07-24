@@ -8,9 +8,7 @@ import scala.meta.internal.trees.AstNamerMacros
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
-import munit._
-
-class SurfaceSuite extends FunSuite {
+class SurfaceSuite extends TreeSuiteBase {
   object CoreReflection
       extends {
         val u: ru.type = ru
@@ -180,7 +178,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.trees.Origin.None *
          |scala.meta.trees.Origin.Parsed *
          |scala.meta.trees.Origin.ParsedSource *
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )
   }
 
@@ -260,7 +258,7 @@ class SurfaceSuite extends FunSuite {
          |* scala.meta.tokens.Token.isBackquoted: Boolean
          |* scala.meta.tokens.Token.isIdentSymbolicInfixOperator: Boolean
          |* scala.meta.tokens.Token.isSymbolicInfixOperator: Boolean
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )
   }
 
@@ -505,7 +503,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Type.Wildcard
          |scala.meta.Type.With
          |scala.meta.TypeCase
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )
   }
 
@@ -613,7 +611,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.tokens.Token.Xml.SpliceEnd
          |scala.meta.tokens.Token.Xml.SpliceStart
          |scala.meta.tokens.Token.Xml.Start
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )
   }
 }

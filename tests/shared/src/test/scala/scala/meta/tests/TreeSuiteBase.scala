@@ -104,6 +104,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   protected implicit class ImplicitString(value: String) {
     def tq(repl: String = "QQQ"): String = value.replace(repl, "\"\"\"")
     def lf2nl: String = if (ScalaCompat.EOL == "\n") value else value.replace("\n", ScalaCompat.EOL)
+    def nl2lf: String = if (ScalaCompat.EOL == "\n") value else value.replace(ScalaCompat.EOL, "\n")
   }
 
   protected def assertOriginalSyntax(tree: Tree, original: String)(implicit

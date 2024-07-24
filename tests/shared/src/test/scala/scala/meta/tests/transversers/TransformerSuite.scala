@@ -1,11 +1,9 @@
 package scala.meta.tests.transversers
 
-import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
+import scala.meta.tests.TreeSuiteBase
 
-import munit._
-
-class TransformerSuite extends FunSuite {
+class TransformerSuite extends TreeSuiteBase {
 
   test("Transformer Ok") {
     val tree0 = q"""
@@ -27,7 +25,7 @@ class TransformerSuite extends FunSuite {
       """|{
          |  def foo(y: y)(y: Int) = y + y + 1
          |  class C(y: y) { def bar(y: y) = ??? }
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
