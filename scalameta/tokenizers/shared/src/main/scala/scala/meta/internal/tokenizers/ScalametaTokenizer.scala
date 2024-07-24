@@ -64,13 +64,13 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       }
     }
     def emitTokenInterpolation(token: Token.Interpolation.Id) = {
-      def pushPart(curr: LegacyTokenData, end: Offset) =
-        pushToken(Token.Interpolation.Part(input, dialect, curr.offset, end, curr.strVal))
+      def pushPart(curr: LegacyTokenData) =
+        pushToken(Token.Interpolation.Part(input, dialect, curr.offset, curr.endOffset, curr.strVal))
       @tailrec
       def emitContents(beg: LegacyTokenData): LegacyTokenData =
         if (beg.token == STRINGPART) {
           val dollarOffset = beg.endOffset
-          pushPart(beg, dollarOffset)
+          pushPart(beg)
           pushToken(Token.Interpolation.SpliceStart(input, dialect, dollarOffset, dollarOffset + 1))
           val splice = nextToken()
           val spliceToken = getToken(splice)
@@ -87,16 +87,17 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
       // for example, EOF in the case of `q""` or `q"$foobar"`
       pushToken(token)
       val beg = nextToken()
-      val numQuotes = beg.offset - token.end
 
       pushToken(Token.Interpolation.Start(input, dialect, token.end, beg.offset))
       val end = emitContents(beg)
 
       val endEndPos = end.endOffset
-      val endBegPos = endEndPos - numQuotes
-      pushPart(end, endBegPos)
+      pushPart(end)
 
-      pushToken(Token.Interpolation.End(input, dialect, endBegPos, endEndPos))
+      val next = nextToken()
+      pushToken(Token.Interpolation.End(input, dialect, endEndPos, next.offset))
+
+      getToken(next)
     }
     def emitTokenXml(token: Token.Xml.Part) = {
       @tailrec
@@ -138,7 +139,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
             emitToken(t)
         }
       case t: Token.Whitespace => emitToken(emitTokenWhitespace(t))
-      case t: Token.Interpolation.Id => emitTokenInterpolation(t)
+      case t: Token.Interpolation.Id => emitToken(emitTokenInterpolation(t))
       case t: Token.Xml.Part => emitTokenXml(t)
       case _ => pushToken(token)
     }
