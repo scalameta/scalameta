@@ -19,7 +19,7 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
 
   def assertTokens(code: String, dialect: Dialect = Scala211)(
       expected: PartialFunction[Tokens, Unit]
-  ) = {
+  )(implicit location: munit.Location) = {
     val obtained = tokenize(code, dialect)
     expected.lift(obtained).getOrElse(fail("Got unexpected tokens: " + obtained))
   }

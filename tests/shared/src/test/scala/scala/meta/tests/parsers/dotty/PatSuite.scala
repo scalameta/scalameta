@@ -7,11 +7,13 @@ import scala.meta.tests.parsers.ParseSuite
 class PatSuite extends ParseSuite {
   import Pat._
 
-  private def assertPat(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit =
-    assertTree(pat(expr))(tree)
+  private def assertPat(expr: String)(
+      tree: Tree
+  )(implicit dialect: Dialect, loc: munit.Location): Unit = assertTree(pat(expr))(tree)
 
-  private def assertPatTyp(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit =
-    assertTree(patternTyp(expr))(tree)
+  private def assertPatTyp(expr: String)(
+      tree: Tree
+  )(implicit dialect: Dialect, loc: munit.Location): Unit = assertTree(patternTyp(expr))(tree)
 
   import scala.meta.dialects.Scala3
 
