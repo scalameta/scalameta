@@ -14,8 +14,6 @@ import complete.DefaultParsers._
 import munit.sbtmunit.BuildInfo.munitVersion
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
-lazy val LanguageVersions = LatestScalaVersions
-lazy val LanguageVersion = LatestScala213
 def customVersion = sys.props.get("scalameta.version")
 def parseTagVersion: String = {
   import scala.sys.process._
@@ -400,7 +398,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
 lazy val communitytest = project.in(file("community-test")).settings(
   nonPublishableSettings,
   sharedSettings,
-  crossScalaVersions := LanguageVersions,
+  crossScalaVersions := LatestScalaVersions,
   libraryDependencies += munitLibrary.value,
   testFrameworks := List(new TestFramework("munit.Framework"))
 ).dependsOn(scalameta.jvm)
@@ -409,7 +407,7 @@ lazy val communitytest = project.in(file("community-test")).settings(
 lazy val bench = project.in(file("bench/suite")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
     sharedSettings,
-    crossScalaVersions := LanguageVersions,
+    crossScalaVersions := LatestScalaVersions,
     nonPublishableSettings,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
@@ -492,7 +490,7 @@ lazy val sharedSettings = Def.settings(
       if (isCI) dynVer else localSnapshotVersion // only for local publishing
     }
   },
-  scalaVersion := LanguageVersion,
+  scalaVersion := LatestScala213,
   organization := "org.scalameta",
   libraryDependencies ++= {
     if (isScala213.value) Nil
