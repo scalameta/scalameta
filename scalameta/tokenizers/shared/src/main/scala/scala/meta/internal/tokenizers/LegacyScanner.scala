@@ -56,7 +56,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private final def skipNestedComments(): Unit = ch match {
     case '/' => maybeOpen(); skipNestedComments()
     case '*' => if (!maybeClose()) skipNestedComments()
-    case SU => incompleteInputError("unclosed comment", at = offset)
+    case SU => setInvalidToken(next)("unclosed comment")
     case '$' if isUnquoteNextNoDollar() =>
       syntaxError("can't unquote into multi-line comments", at = begCharOffset)
     case _ => nextCommentChar(); skipNestedComments()
@@ -231,6 +231,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       if (ch == '"' && token == IDENTIFIER) token = INTERPOLATIONID
     }
 
+    @inline
+    def reportIllegalCharacter(): Unit = curr
+      .setInvalidToken(s"illegal character '\\u${"%04x".format(ch)}'")
+
     (ch: @switch) match {
       case ' ' =>
         nextChar()
@@ -289,9 +293,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           last match {
             case ' ' | '\t' | '\n' | '{' | '(' | '>' if isNameStart(ch) || ch == '!' || ch == '?' =>
               if (dialect.allowXmlLiterals) getXml()
-              else syntaxError("xml literals are not supported", at = offset)
+              else curr.setInvalidToken("xml literals are not supported")
             case _ =>
-              // Console.println("found '<', but last is '"+in.last+"'"); // DEBUG
               putChar('<')
               getOperatorRest()
           }
@@ -384,8 +387,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           nextRawChar()
           if (isUnquoteDollar())
             syntaxError("can't unquote into character literals", at = begCharOffset)
-          else if (ch == LF && buf(begCharOffset) != '\\')
-            syntaxError("can't use unescaped LF in character literals", at = begCharOffset)
+          if (ch == LF && !wasMultiChar)
+            setInvalidToken(curr)("can't use unescaped LF in character literals")
           else if (isIdentifierStart(ch)) charLitOr(getIdentRest)
           else if (isOperatorPart(ch) && (ch != '\\' || wasMultiChar)) charLitOr(getOperatorRest)
           else if (dialect.allowSpliceAndQuote && isNonLiteralBraceOrBracket)
@@ -395,7 +398,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
             if (ch == '\'') {
               nextChar()
               setTokStrVal(CHARLIT)
-            } else syntaxError("unclosed character literal", at = offset)
+            } else setInvalidToken(curr)("unclosed character literal")
           }
         }
         fetchSingleQuote()
@@ -424,26 +427,20 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
           offset = input.chars.length
           token = EOF
         } else {
-          syntaxError("illegal character", at = offset)
+          reportIllegalCharacter()
           nextChar()
         }
+      case '\u21D2' => nextChar(); token = ARROW
+      case '\u2190' => nextChar(); token = LARROW
       case _ =>
         def fetchOther() =
-          if (ch == '\u21D2') { nextChar(); token = ARROW }
-          else if (ch == '\u2190') { nextChar(); token = LARROW }
-          else if (Character.isUnicodeIdentifierStart(ch)) {
+          if (Character.isUnicodeIdentifierStart(ch)) {
             putCharAndNext()
             getIdentRest()
           } else if (isSpecial(ch)) {
             putCharAndNext()
             getOperatorRest()
-          } else {
-            syntaxError(
-              "illegal character '" + ("" + '\\' + 'u' + "%04x".format(ch.toInt)) + "'",
-              at = offset
-            )
-            nextChar()
-          }
+          } else reportIllegalCharacter()
         fetchOther()
     }
   }
@@ -455,9 +452,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     if (getLitChars('`')) {
       nextChar()
       finishNamed(isBackquoted = true)
-      if (strVal.isEmpty) syntaxError("empty quoted identifier", at = offset)
+      if (strVal.isEmpty) curr.setInvalidToken("empty quoted identifier")
     } else if (ch == '$') syntaxError("can't unquote into quoted identifiers", at = begCharOffset)
-    else syntaxError("unclosed quoted identifier", at = offset)
+    else curr.setInvalidToken("unclosed quoted identifier")
   }
 
   @tailrec
@@ -503,13 +500,18 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       nextChar()
       finishStringLit()
     } else if (ch == '$') syntaxError("can't unquote into string literals", at = begCharOffset)
-    else syntaxError("unclosed string literal", at = offset)
+    else {
+      finishStringLit()
+      setInvalidToken(next, offset)("unclosed string literal")
+    }
 
   @tailrec
   private def getMultilineStringLit(): Unit =
     if (ch == '"') { if (!canFinishMultilineStringLit()) getMultilineStringLit() }
-    else if (ch == SU) incompleteInputError("unclosed multi-line string literal", at = offset)
-    else if (isUnquoteDollar())
+    else if (ch == SU) {
+      setInvalidToken(next)("unclosed multi-line string literal")
+      finishStringLit()
+    } else if (isUnquoteDollar())
       syntaxError("can't unquote into string literals", at = begCharOffset)
     else {
       putCharAndNextRaw()
@@ -521,8 +523,9 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   @scala.annotation.tailrec
   private def getStringPart(multiLine: Boolean): Unit = {
     def unclosedLiteralError() = {
-      if (!multiLine) syntaxError("unclosed string interpolation", at = offset)
-      incompleteInputError("unclosed multi-line string interpolation", at = offset)
+      finishStringLit()
+      val what = if (multiLine) "multi" else "single"
+      setInvalidToken(next)(s"unclosed $what-line string interpolation")
     }
 
     if (wasMultiChar) {
@@ -570,10 +573,10 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     def identifier() = {
       do putCharAndNextRaw() while (isUnicodeIdentifierPart(ch))
       curr.setIdentifier(getAndResetCBuf(), dialect) { x =>
-        if (x.token != IDENTIFIER && x.token != THIS) syntaxError(
-          "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",
-          at = x.offset
-        )
+        if (x.token != IDENTIFIER && x.token != THIS) {
+          val message = "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected"
+          setInvalidToken(next, offset)(message)
+        }
       }
     }
 
@@ -590,9 +593,8 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       case _ if Character.isUnicodeIdentifierStart(ch) => identifier()
       case _ =>
         var supportedCombos = List("`$$'", "`$'ident", "`$'this", "`$'BlockExpr")
-        if (dialect.allowSpliceUnderscores) supportedCombos = supportedCombos :+ "`$'_"
-        val s_supportedCombos = supportedCombos.mkString("Not one of: ", ", ", "")
-        syntaxError(s_supportedCombos, at = offset)
+        if (dialect.allowSpliceUnderscores) supportedCombos = "`$'_" :: supportedCombos
+        setInvalidToken(curr)(supportedCombos.mkString("Not one of: ", ", ", ""))
     }
   }
 
@@ -796,17 +798,17 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     }
   }
 
-  private def getXml(): Unit = {
+  private def getXml(): Boolean = {
     // 1. Collect positions of scala expressions inside this xml literal.
     import fastparse.Parsed
     val start = offset
     val xmlParser = new XmlParser(dialect)
     val result: Int = fastparse.parse(input.text, xmlParser.XmlExpr(_), startIndex = start) match {
       case x: Parsed.Success[_] => x.index
-      case x: Parsed.Failure => syntaxError(
-          "malformed xml literal, expected:" + EOL + x.extra.trace().terminalsMsg,
-          at = x.index
-        )
+      case x: Parsed.Failure =>
+        val err = "malformed xml literal, expected:" + EOL + x.extra.trace().terminalsMsg
+        setInvalidToken(curr, x.index)(err)
+        return false
     }
 
     // 2. Populate upcomingXmlLiteralParts with xml literal part positions.

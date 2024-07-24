@@ -998,32 +998,32 @@ class TokenizerSuite extends BaseTokenizerSuite {
                   |  val a = <foo>bar
                   |  val b = <baz qux="...">cde<?
                   |""".stripMargin
-    interceptMessage[TokenizeException](
+    interceptMessage[ParseException](
       """|<input>:3: error: malformed xml literal, expected:
          |Expected ("{{" | "}}" | "&" | "&#" | "&#x" | "{" | "<xml:unparsed" | "<![CDATA[" | "<!--" | "</"):3:29, found "<?\n"
          |  val b = <baz qux="...">cde<?
          |                            ^""".stripMargin.lf2nl
-    )(code.asInput.tokenize.get)
+    )(code.asInput.parseRule(_.entrypointStat()))
   }
 
   test("unsupported xml literal - 1 BOF") {
     implicit val dialect = dialects.Scala213.withAllowXmlLiterals(false)
     val code = "<foo>bar</foo>"
-    interceptMessage[TokenizeException](
+    interceptMessage[ParseException](
       """|<input>:1: error: xml literals are not supported
          |<foo>bar</foo>
          |^""".stripMargin.lf2nl
-    )(dialect(code.asInput).tokenize.get)
+    )(code.asInput.parseRule(_.entrypointStat())(dialect))
   }
 
   test("unsupported xml literal - 2 after space") {
     implicit val dialect = dialects.Scala213.withAllowXmlLiterals(false)
     val code = "val a = <foo>bar</foo>"
-    interceptMessage[TokenizeException](
+    interceptMessage[ParseException](
       """|<input>:1: error: xml literals are not supported
          |val a = <foo>bar</foo>
          |        ^""".stripMargin.lf2nl
-    )(dialect(code.asInput).tokenize.get)
+    )(code.asInput.parseRule(_.entrypointStat())(dialect))
   }
 
   test("unsupported xml literal - 3 plus/no space") {
@@ -1127,7 +1127,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     }
   }
 
-  test("Interpolated with quote escape") {
+  test("Interpolated with quote escape 1") {
     val stringInterpolation = """s"$"$name$" in quotes""""
 
     assertTokens(stringInterpolation, dialects.Scala3) {
@@ -1145,11 +1145,26 @@ class TokenizerSuite extends BaseTokenizerSuite {
           ) =>
     }
 
-    assert(
-      dialects.Scala212(stringInterpolation).tokenize.isInstanceOf[Tokenized.Error],
-      "$\" should not tokenize in Scala 2"
+    assertTokenizedAsStructureLines(
+      stringInterpolation,
+      """|BOF [0..0)
+         |Interpolation.Id(s) [0..1)
+         |Interpolation.Start(") [1..2)
+         |Interpolation.Part() [2..2)
+         |Interpolation.SpliceStart [2..3)
+         |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [3..3)
+         |Constant.String() [3..3)
+         |Interpolation.SpliceEnd [4..4)
+         |Interpolation.Part($name$) [4..10)
+         |Interpolation.End(") [10..11)
+         |Constant.String( in quotes) [11..21)
+         |EOF [22..22)
+         |""".stripMargin,
+      dialects.Scala212
     )
+  }
 
+  test("Interpolated with quote escape 2") {
     val stringInterpolationWithUnicode = s"""check_success(s"${'\\' + "u0024"}")"""
 
     assertTokens(stringInterpolationWithUnicode, dialects.Scala3) {
@@ -1215,7 +1230,22 @@ class TokenizerSuite extends BaseTokenizerSuite {
             EOF()
           ) =>
     }
-    assert(dialects.Scala3("s\"$enum\"").tokenize.isInstanceOf[Tokenized.Error])
+    assertTokenizedAsStructureLines(
+      "s\"$enum\"",
+      """|BOF [0..0)
+         |Interpolation.Id(s) [0..1)
+         |Interpolation.Start(") [1..2)
+         |Interpolation.Part() [2..2)
+         |Interpolation.SpliceStart [2..3)
+         |KwEnum [3..7)
+         |Invalid(invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected) [3..3)
+         |Interpolation.SpliceEnd [7..7)
+         |Interpolation.Part() [7..7)
+         |Interpolation.End(") [7..8)
+         |EOF [8..8)
+         |""".stripMargin,
+      dialects.Scala3
+    )
   }
 
   test("macro") {
@@ -1382,8 +1412,21 @@ class TokenizerSuite extends BaseTokenizerSuite {
             EOF()
           ) =>
     }
-    assert("""s"\\"Hello"""".tokenize.isInstanceOf[Tokenized.Error])
+  }
 
+  test("Interpolated string - escape, unclosed") {
+    val struct = """|BOF [0..0)
+                    |Interpolation.Id(s) [0..1)
+                    |Interpolation.Start(") [1..2)
+                    |Interpolation.Part(\\\\) [2..4)
+                    |Interpolation.End(") [4..5)
+                    |Interpolation.Id(Hello) [5..10)
+                    |Interpolation.Start(") [10..11)
+                    |Interpolation.Part() [11..11)
+                    |Invalid(unclosed single-line string interpolation) [11..11)
+                    |Interpolation.End() [11..11)
+                    |EOF [11..11)""".stripMargin
+    assertTokenizedAsStructureLines("""s"\\"Hello"""", struct)
   }
 
   test("Multiline interpolated string - ignore escape") {
@@ -1957,18 +2000,61 @@ class TokenizerSuite extends BaseTokenizerSuite {
                   |""".stripMargin
 
     // scala213
-    interceptMessage[TokenizeException](
-      """|<input>:2: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
-         |  def foo = s"b$"
-         |                ^""".stripMargin.lf2nl
-    )(tokenize(code, dialects.Scala213))
+    val struct213 = """|BOF [0..0)
+                       |KwObject [0..6)
+                       |Space [6..7)
+                       |Ident(a) [7..8)
+                       |Space [8..9)
+                       |LeftBrace [9..10)
+                       |LF [10..11)
+                       |MultiHS(2) [11..13)
+                       |KwDef [13..16)
+                       |Space [16..17)
+                       |Ident(foo) [17..20)
+                       |Space [20..21)
+                       |Equals [21..22)
+                       |Space [22..23)
+                       |Interpolation.Id(s) [23..24)
+                       |Interpolation.Start(") [24..25)
+                       |Interpolation.Part(b) [25..26)
+                       |Interpolation.SpliceStart [26..27)
+                       |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [27..27)
+                       |Constant.String() [27..27)
+                       |Interpolation.SpliceEnd [28..28)
+                       |Interpolation.Part(\n) [28..29)
+                       |Interpolation.End() [29..29)
+                       |RightBrace [29..30)
+                       |LF [30..31)
+                       |EOF [31..31)
+                       |""".stripMargin
+    assertTokenizedAsStructureLines(code, struct213, dialects.Scala213)
 
     // scala3
-    val thrown = interceptMessage[TokenizeException](
-      """|<input>:2: error: unclosed string interpolation
-         |  def foo = s"b$"
-         |              ^""".stripMargin.lf2nl
-    )(tokenize(code, dialects.Scala3))
+    val struct3 = """|BOF [0..0)
+                     |KwObject [0..6)
+                     |Space [6..7)
+                     |Ident(a) [7..8)
+                     |Space [8..9)
+                     |LeftBrace [9..10)
+                     |LF [10..11)
+                     |MultiHS(2) [11..13)
+                     |KwDef [13..16)
+                     |Space [16..17)
+                     |Ident(foo) [17..20)
+                     |Space [20..21)
+                     |Equals [21..22)
+                     |Space [22..23)
+                     |Interpolation.Id(s) [23..24)
+                     |Interpolation.Start(") [24..25)
+                     |Interpolation.Part(b") [25..28)
+                     |Invalid(unclosed single-line string interpolation) [28..28)
+                     |Interpolation.End() [28..28)
+                     |LF [28..29)
+                     |RightBrace [29..30)
+                     |LF [30..31)
+                     |EOF [31..31)
+                     |""".stripMargin
+    assertTokenizedAsStructureLines(code, struct3, dialects.Scala3)
   }
 
   test("code with double-quote string within single-line quasiquotes") {

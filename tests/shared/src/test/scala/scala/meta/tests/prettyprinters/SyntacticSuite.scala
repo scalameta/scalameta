@@ -1586,7 +1586,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val error = """|<input>:1: error: can't use unescaped LF in character literals
                    |('
                    |  ^""".stripMargin.lf2nl
-    interceptMessage[TokenizeException](error)(super.term(expr))
+    interceptMessage[ParseException](error)(super.term(expr))
   }
 
   test("#1384 char ok escaped LF") {

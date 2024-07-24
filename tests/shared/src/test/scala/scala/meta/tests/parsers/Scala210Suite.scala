@@ -9,7 +9,7 @@ class Scala210Suite extends ParseSuite {
     val error = """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr
                    | val q"x + $_" = tree 
                    |            ^""".stripMargin.lf2nl
-    interceptMessage[TokenizeException](error)(stat(""" val q"x + $_" = tree """))
+    interceptMessage[ParseException](error)(stat(""" val q"x + $_" = tree """))
   }
 
   test("case classes without a parameter list are allowed")(templStat("case class A"))
