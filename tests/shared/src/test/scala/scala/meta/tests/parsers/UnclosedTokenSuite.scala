@@ -38,4 +38,52 @@ class UnclosedTokenSuite extends ParseSuite {
     )(stat(""" s"${1+ """))
   }
 
+  test("unclosed-char") {
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: unclosed character literal
+         | '.,
+         | ^""".stripMargin.replace("\n", EOL)
+    )(stat(
+      """| '.,
+         |""".stripMargin
+    ))
+  }
+
+  test("unclosed-char-with-NL") {
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: can't use unescaped LF in character literals
+         | '
+         |  ^""".stripMargin.replace("\n", EOL)
+    )(stat(
+      """| '
+         |abc
+         |""".stripMargin
+    ))
+  }
+
+  test("unclosed-multi-string-literal") {
+    interceptMessage[TokenizeException](
+      s"""|<input>:1: error: unclosed multi-line string literal
+          |""\"
+          |^""".stripMargin.replace("\n", EOL)
+    )(stat(
+      s"""|""\"
+          |foo
+          |""
+          |""".stripMargin
+    ))
+  }
+
+  test("unclosed-comment") {
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: unclosed comment
+         |/*
+         |^""".stripMargin.replace("\n", EOL)
+    )(stat(
+      """|/*
+         | * foo
+         |""".stripMargin
+    ))
+  }
+
 }

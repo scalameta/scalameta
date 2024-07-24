@@ -13,9 +13,37 @@ class QuasiquoteSuite extends ParseSuite {
 
     test("single-line allow unicode escaping")(assertTree(term("\\u0061"))(tname("a")))
 
-    test("single-line disallow line breaks")(intercept[TokenizeException](term("foo + \n bar")))
+    test("single-line disallow line breaks")(
+      interceptMessage[TokenizeException](
+        """|<input>:1: error: line breaks are not allowed in single-line quasiquotes
+           |foo + 
+           |      ^""".stripMargin.lf2nl
+      )(term("foo + \n bar"))
+    )
 
-    test("single-line disallow double quotes")(intercept[TokenizeException](term("\"a\"")))
+    test("single-line disallow double quote strings")(
+      interceptMessage[TokenizeException](
+        """|<input>:1: error: double quotes are not allowed in single-line quasiquotes
+           |"a"
+           |^""".stripMargin.lf2nl
+      )(term("\"a\""))
+    )
+
+    test("single-line disallow double quote interpolations")(
+      interceptMessage[TokenizeException](
+        """|<input>:1: error: double quotes are not allowed in single-line quasiquotes
+           |s"a"
+           | ^""".stripMargin.lf2nl
+      )(term("s\"a\""))
+    )
+
+    test("single-line disallow char literal unquote")(
+      interceptMessage[TokenizeException](
+        """|<input>:1: error: can't unquote into character literals
+           | '$x' 
+           |  ^""".stripMargin.lf2nl
+      )(term(" '$x' "))
+    )
   }
 
   locally {
@@ -34,5 +62,29 @@ class QuasiquoteSuite extends ParseSuite {
     }
 
     test("multi-line allow double quotes")(assertTree(term("\"a\""))(str("a")))
+
+    test("multi-line disallow single-line unquote") {
+      interceptMessage[TokenizeException](
+        """|<input>:2: error: can't unquote into string literals
+           |" $x "
+           |  ^""".stripMargin.lf2nl
+      )(term(
+        """|
+           |" $x "
+           |""".stripMargin
+      ))
+    }
+
+    test("multi-line disallow multi-line unquote") {
+      interceptMessage[TokenizeException](
+        """|<input>:2: error: can't unquote into string literals
+           |QQQ $x QQQ
+           |    ^""".stripMargin.tq().lf2nl
+      )(term(
+        """|
+           |QQQ $x QQQ
+           |""".stripMargin.tq()
+      ))
+    }
   }
 }

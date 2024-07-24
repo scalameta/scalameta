@@ -4,6 +4,7 @@ package tokenizers
 import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 import scala.meta.dialects.Scala211
+import scala.meta.tests.parsers.MoreHelpers._
 import scala.meta.tokens.Token._
 
 class TokenizerSuite extends BaseTokenizerSuite {
@@ -119,7 +120,20 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("showCode with comments - tricky")(assertTokenizedAsSyntax("x ~/**/y", "x ~/**/y"))
+  test("showCode with comments - tricky") {
+    val code = "x ~/**/y"
+    val syntax = "x ~/**/y"
+    assertTokenizedAsSyntax(code, syntax)
+    val struct = """|BOF [0..0)
+                    |Ident(x) [0..1)
+                    |Space [1..2)
+                    |Ident(~) [2..3)
+                    |Comment() [3..7)
+                    |Ident(y) [7..8)
+                    |EOF [8..8)
+                    |""".stripMargin
+    assertTokenizedAsStructureLines(code, struct)
+  }
 
   test("showRaw without comments - easy") {
     assertTokenizedAsStructureLines(
@@ -960,6 +974,79 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
+  test("incomplete xml literal - 1") {
+    assertTokenizedAsStructureLines(
+      """|val a = 
+         |  <foo>bar</fo>""".stripMargin,
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(a) [4..5)
+         |Space [5..6)
+         |Equals [6..7)
+         |LF [8..9)
+         |MultiHS(2) [9..11)
+         |Xml.Start [11..11)
+         |Xml.Part(<foo>bar</fo>) [11..24)
+         |Xml.End [24..24)
+         |EOF [24..24)
+         |""".stripMargin.tq()
+    )
+  }
+
+  test("incomplete xml literal - 2") {
+    val code = """|object A {
+                  |  val a = <foo>bar
+                  |  val b = <baz qux="...">cde<?
+                  |""".stripMargin
+    interceptMessage[TokenizeException](
+      """|<input>:3: error: malformed xml literal, expected:
+         |Expected ("{{" | "}}" | "&" | "&#" | "&#x" | "{" | "<xml:unparsed" | "<![CDATA[" | "<!--" | "</"):3:29, found "<?\n"
+         |  val b = <baz qux="...">cde<?
+         |                            ^""".stripMargin.lf2nl
+    )(code.asInput.tokenize.get)
+  }
+
+  test("unsupported xml literal - 1 BOF") {
+    implicit val dialect = dialects.Scala213.withAllowXmlLiterals(false)
+    val code = "<foo>bar</foo>"
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: xml literals are not supported
+         |<foo>bar</foo>
+         |^""".stripMargin.lf2nl
+    )(dialect(code.asInput).tokenize.get)
+  }
+
+  test("unsupported xml literal - 2 after space") {
+    implicit val dialect = dialects.Scala213.withAllowXmlLiterals(false)
+    val code = "val a = <foo>bar</foo>"
+    interceptMessage[TokenizeException](
+      """|<input>:1: error: xml literals are not supported
+         |val a = <foo>bar</foo>
+         |        ^""".stripMargin.lf2nl
+    )(dialect(code.asInput).tokenize.get)
+  }
+
+  test("unsupported xml literal - 3 plus/no space") {
+    assertTokenizedAsStructureLines(
+      """|a+<foo>bar</foo>
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Ident(a) [0..1)
+         |Ident(+<) [1..3)
+         |Ident(foo) [3..6)
+         |Ident(>) [6..7)
+         |Ident(bar) [7..10)
+         |Ident(</) [10..12)
+         |Ident(foo) [12..15)
+         |Ident(>) [15..16)
+         |LF [16..17)
+         |EOF [17..17)
+         |""".stripMargin.tq(),
+      dialects.Scala213.withAllowXmlLiterals(false)
+    )
+  }
+
   test("parsed trees don't have BOF/EOF in their tokens") {
     val tree = "foo + bar".parse[Term].get
     assert(tree.pos != Position.None)
@@ -1778,6 +1865,153 @@ class TokenizerSuite extends BaseTokenizerSuite {
                     |EOF [84..84)
                     |""".stripMargin
     assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
+  }
+
+  test("code with non-matching braces 1") {
+    val code = """|object a {
+                  |  def foo = {
+                  |    val a = q"bar${qux}"
+                  |""".stripMargin
+    val struct = """|BOF [0..0)
+                    |KwObject [0..6)
+                    |Space [6..7)
+                    |Ident(a) [7..8)
+                    |Space [8..9)
+                    |LeftBrace [9..10)
+                    |LF [10..11)
+                    |MultiHS(2) [11..13)
+                    |KwDef [13..16)
+                    |Space [16..17)
+                    |Ident(foo) [17..20)
+                    |Space [20..21)
+                    |Equals [21..22)
+                    |Space [22..23)
+                    |LeftBrace [23..24)
+                    |LF [24..25)
+                    |MultiHS(4) [25..29)
+                    |KwVal [29..32)
+                    |Space [32..33)
+                    |Ident(a) [33..34)
+                    |Space [34..35)
+                    |Equals [35..36)
+                    |Space [36..37)
+                    |Interpolation.Id(q) [37..38)
+                    |Interpolation.Start(") [38..39)
+                    |Interpolation.Part(bar) [39..42)
+                    |Interpolation.SpliceStart [42..43)
+                    |LeftBrace [43..44)
+                    |Ident(qux) [44..47)
+                    |RightBrace [47..48)
+                    |Interpolation.SpliceEnd [48..48)
+                    |Interpolation.Part() [48..48)
+                    |Interpolation.End(") [48..49)
+                    |LF [49..50)
+                    |EOF [50..50)
+                    |""".stripMargin
+    assertTokenizedAsStructureLines(code, struct, dialects.Scala3)
+  }
+
+  test("code with non-matching braces 2") {
+    val code = """|object a {
+                  |  def foo = {
+                  |    val a = "b"
+                  |  }
+                  |  }
+                  |}
+                  |""".stripMargin
+    val struct = """|BOF [0..0)
+                    |KwObject [0..6)
+                    |Space [6..7)
+                    |Ident(a) [7..8)
+                    |Space [8..9)
+                    |LeftBrace [9..10)
+                    |LF [10..11)
+                    |MultiHS(2) [11..13)
+                    |KwDef [13..16)
+                    |Space [16..17)
+                    |Ident(foo) [17..20)
+                    |Space [20..21)
+                    |Equals [21..22)
+                    |Space [22..23)
+                    |LeftBrace [23..24)
+                    |LF [24..25)
+                    |MultiHS(4) [25..29)
+                    |KwVal [29..32)
+                    |Space [32..33)
+                    |Ident(a) [33..34)
+                    |Space [34..35)
+                    |Equals [35..36)
+                    |Space [36..37)
+                    |Constant.String(b) [37..40)
+                    |LF [40..41)
+                    |MultiHS(2) [41..43)
+                    |RightBrace [43..44)
+                    |LF [44..45)
+                    |MultiHS(2) [45..47)
+                    |RightBrace [47..48)
+                    |LF [48..49)
+                    |RightBrace [49..50)
+                    |LF [50..51)
+                    |EOF [51..51)
+                    |""".stripMargin
+    assertTokenizedAsStructureLines(code, struct, dialects.Scala3)
+  }
+
+  test("code with incomplete interpolation") {
+    val code = """|object a {
+                  |  def foo = s"b$"
+                  |}
+                  |""".stripMargin
+
+    // scala213
+    interceptMessage[TokenizeException](
+      """|<input>:2: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr, `$'_
+         |  def foo = s"b$"
+         |              ^""".stripMargin.lf2nl
+    )(tokenize(code, dialects.Scala213))
+
+    // scala3
+    val thrown = interceptMessage[TokenizeException](
+      """|<input>:2: error: unclosed string interpolation
+         |  def foo = s"b$"
+         |              ^""".stripMargin.lf2nl
+    )(tokenize(code, dialects.Scala3))
+  }
+
+  test("code with double-quote string within single-line quasiquotes") {
+    val code = " \"...\" "
+    val error = """|<input>:1: error: double quotes are not allowed in single-line quasiquotes
+                   | "..." 
+                   | ^""".stripMargin.lf2nl
+    interceptMessage[TokenizeException](error)(
+      tokenize(code, dialects.Scala213.unquoteTerm(multiline = false))
+    )
+  }
+
+  test("code with interpolation within single-line quasiquotes") {
+    val code = " s\"...\" "
+    val error = """|<input>:1: error: double quotes are not allowed in single-line quasiquotes
+                   | s"..." 
+                   |  ^""".stripMargin.lf2nl
+    interceptMessage[TokenizeException](error)(
+      tokenize(code, dialects.Scala213.unquoteTerm(multiline = false))
+    )
+  }
+
+  test("interpolator with $ character") {
+    val code = """s"$$$foo$$""""
+    val struct = """|BOF [0..0)
+                    |Interpolation.Id(s) [0..1)
+                    |Interpolation.Start(") [1..2)
+                    |Interpolation.Part($) [2..4)
+                    |Interpolation.SpliceStart [4..5)
+                    |Ident(foo) [5..8)
+                    |Interpolation.SpliceEnd [8..8)
+                    |Interpolation.Part($) [8..10)
+                    |Interpolation.End(") [10..11)
+                    |EOF [11..11) 
+                    |""".stripMargin.replace("\r", "")
+    assertTokenizedAsStructureLines(code, struct)
   }
 
 }
