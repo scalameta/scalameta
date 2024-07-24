@@ -1,7 +1,6 @@
 package scala.meta.tests
 package trees
 
-import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
 import scala.meta._
 import scala.meta.dialects.Scala211
@@ -89,7 +88,7 @@ class InvariantSuite extends TreeSuiteBase {
          |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also args.nonEmpty is false
          |where args = List()
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )(tuple)
   }
   test("nested Term.Tuple") {
@@ -99,7 +98,7 @@ class InvariantSuite extends TreeSuiteBase {
          |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
          |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
          |where args = List((()))
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )(tuple)
   }
 
@@ -111,7 +110,7 @@ class InvariantSuite extends TreeSuiteBase {
          |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also args.nonEmpty is false
          |where args = List()
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )(tuple)
   }
   test("nested Pat.Tuple") {
@@ -121,7 +120,7 @@ class InvariantSuite extends TreeSuiteBase {
          |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
          |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
          |where args = List((()))
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )(tuple)
   }
 
@@ -133,7 +132,7 @@ class InvariantSuite extends TreeSuiteBase {
          |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also args.nonEmpty is false
          |where args = List()
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )(tuple)
   }
   test("nested Type.Tuple") {
@@ -143,7 +142,7 @@ class InvariantSuite extends TreeSuiteBase {
          |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
          |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
          |where args = List((()))
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )(tuple)
   }
 

@@ -7,9 +7,7 @@ import scala.collection.mutable.ListBuffer
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
-import munit._
-
-class ReflectionSuite extends FunSuite {
+class ReflectionSuite extends TreeSuiteBase {
   object TreeReflection
       extends {
         val u: ru.type = ru
@@ -137,7 +135,7 @@ class ReflectionSuite extends FunSuite {
          |scala.meta.Type.Bounds
          |scala.meta.Type.FuncParamClause
          |scala.meta.Type.Name
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     )
   }
 }

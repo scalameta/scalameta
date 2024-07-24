@@ -1,7 +1,6 @@
 package scala.meta.tests
 package quasiquotes
 
-import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants.InvariantFailedException
 import scala.meta._
 import scala.meta.dialects.Scala211
@@ -272,7 +271,7 @@ class SuccessSuite extends TreeSuiteBase {
          |found that targClause.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also targClause.nonEmpty is false
          |where targClause = ''
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     interceptMessage[InvariantFailedException](error)(q"$foo[..$types]")
     interceptMessage[InvariantFailedException](error)(q"$foo[..$types]()")
   }
@@ -2184,14 +2183,14 @@ class SuccessSuite extends TreeSuiteBase {
       """|{
          |  class C
          |  class C
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
     assertEquals(
       q"{ $stat; $stat }".syntax,
       """|{
          |  class C
          |  class C
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
@@ -2210,7 +2209,7 @@ class SuccessSuite extends TreeSuiteBase {
          |  def foo = bar
          |  println("another stat")
          |  def baz: Unit = {}
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
@@ -2346,7 +2345,7 @@ class SuccessSuite extends TreeSuiteBase {
          |  x
          |  y
          |  z
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 

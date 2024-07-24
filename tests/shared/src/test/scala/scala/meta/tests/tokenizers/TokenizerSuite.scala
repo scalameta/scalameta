@@ -1,7 +1,6 @@
 package scala.meta.tests
 package tokenizers
 
-import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.tests.parsers.MoreHelpers._
@@ -1346,9 +1345,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   ).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala213: $value") {
-      interceptMessage[TokenizeException](error.replace("\n", EOL))(
-        dialects.Scala213(value).tokenize.get
-      )
+      interceptMessage[TokenizeException](error.lf2nl)(dialects.Scala213(value).tokenize.get)
     }
   }
 
@@ -1359,9 +1356,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        | ^""".stripMargin
   )).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala212: $value") {
-      interceptMessage[TokenizeException](error.replace("\n", EOL))(
-        dialects.Scala212(value).tokenize.get
-      )
+      interceptMessage[TokenizeException](error.lf2nl)(dialects.Scala212(value).tokenize.get)
     }
   }
 
@@ -1731,9 +1726,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   ).foreach { case (code, error) =>
     test(s"numeric literal fail scala213: $code") {
-      interceptMessage[TokenizeException](error.replace("\n", EOL))(
-        dialects.Scala213(code).tokenize.get
-      )
+      interceptMessage[TokenizeException](error.lf2nl)(dialects.Scala213(code).tokenize.get)
     }
   }
 
@@ -2010,7 +2003,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
                     |Interpolation.Part($) [8..10)
                     |Interpolation.End(") [10..11)
                     |EOF [11..11) 
-                    |""".stripMargin.replace("\r", "")
+                    |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
   }
 

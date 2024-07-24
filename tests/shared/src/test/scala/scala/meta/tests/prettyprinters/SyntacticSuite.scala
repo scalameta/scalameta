@@ -164,7 +164,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """|new {
          |  val x = 2
          |  val y = 3
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
     assertEquals(
       templStat(
@@ -178,7 +178,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """|new { self =>
          |  val x = 2
          |  val y = 3
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
     assertEquals(
       templStat(
@@ -192,7 +192,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """|new { self: Int =>
          |  val x = 2
          |  val y = 3
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
     assertEquals(templStat("class B { x: B => }").syntax, "class B { x: B => }")
   }
@@ -329,7 +329,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       templStat("x match { case (xs: List[Int]) :+ x => ??? }").syntax,
       """|x match {
          |  case (xs: List[Int]) :+ x => ???
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
@@ -339,7 +339,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       templStat("x match { case List(x, y) :: z => ??? }").syntax,
       """|x match {
          |  case List(x, y) :: z => ???
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
@@ -358,7 +358,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |    this(2)
          |    println("OBLIVION!!!")
          |  }
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
@@ -369,7 +369,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case y =>
          |    foo1
          |    foo2
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
@@ -411,7 +411,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           |when verifying java.lang.Double.isFinite(value)
           |found that java.lang.Double.isFinite(value) is false
           |where value = $what
-          |""".stripMargin.replace("\n", EOL)
+          |""".stripMargin.lf2nl
     )(Lit.Double(value))
     assertFiniteError(Double.NaN, "NaN")
     assertFiniteError(Double.PositiveInfinity, "Infinity")
@@ -426,7 +426,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           |when verifying java.lang.Float.isFinite(value)
           |found that java.lang.Float.isFinite(value) is false
           |where value = $what
-          |""".stripMargin.replace("\n", EOL)
+          |""".stripMargin.lf2nl
     )(Lit.Float(value))
     assertFiniteError(Float.NaN, "NaN")
     assertFiniteError(Float.PositiveInfinity, "Infinity")
@@ -524,7 +524,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         """.syntax,
       """|class A { class B }
          |          type C = A#B
-         |        """.stripMargin.replace("\n", EOL)
+         |        """.stripMargin.lf2nl
     )
     // With lambda trick
     assertNoDiff(
@@ -535,7 +535,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """|
          |      def foo[F[_]]: Unit = ???
          |      foo[({ type T[A] = Either[Int, A] })#T]
-         |        """.stripMargin.replace("\n", EOL)
+         |        """.stripMargin.lf2nl
     )
   }
 
@@ -715,7 +715,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |  private[D] val y = 2
          |  protected[this] val z = 3
          |  protected[D] val w = 4
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
@@ -824,7 +824,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |class C2
          |package baz2 {
          |  class D2
-         |}""".stripMargin.replace("\n", EOL)
+         |}""".stripMargin.lf2nl
     )
   }
 
@@ -881,7 +881,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       case2.toString,
       """|case List(x, y) =>
          |  println(x)
-         |  println(y)""".stripMargin.replace("\n", EOL)
+         |  println(y)""".stripMargin.lf2nl
     )
   }
 
@@ -936,7 +936,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     test(
       s"term interpolator braces: test syntax/parsing consistency: $codeInterp -> $termSyntaxInterp"
     ) {
-      def interp(str: String) = s"""s"${str.replace("\n", EOL)}""""
+      def interp(str: String) = s"""s"${str.lf2nl}""""
       val syntax = interp(termSyntaxInterp)
       assertEquals(super.templStat(interp(codeInterp)).reprint, syntax)
       assertEquals(super.templStat(syntax).reprint, syntax)
@@ -960,7 +960,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     test(
       s"pat interpolator braces: test syntax/parsing consistency: $codeInterp -> $patSyntaxInterp"
     ) {
-      def interp(str: String) = s"""s"${str.replace("\n", EOL)}""""
+      def interp(str: String) = s"""s"${str.lf2nl}""""
       val syntax = interp(patSyntaxInterp)
       assertEquals(super.pat(interp(codeInterp)).reprint, syntax)
       assertEquals(super.pat(syntax).reprint, syntax)
@@ -1585,7 +1585,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     val expr = "('\n')"
     val error = """|<input>:1: error: can't use unescaped LF in character literals
                    |('
-                   |  ^""".stripMargin.replace("\n", EOL)
+                   |  ^""".stripMargin.lf2nl
     interceptMessage[TokenizeException](error)(super.term(expr))
   }
 
@@ -1737,7 +1737,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           |  {
           |    e
           |  }
-          |}""".stripMargin.replace("\n", EOL)
+          |}""".stripMargin.lf2nl
     )
     assertEquals(
       blockStat("{if (a) while (b) for (c <- d) -e; {f}}").syntax,
@@ -1747,7 +1747,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
           |  {
           |    f
           |  }
-          |}""".stripMargin.replace("\n", EOL)
+          |}""".stripMargin.lf2nl
     )
   }
 

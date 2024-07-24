@@ -2,19 +2,18 @@ package scala.meta.tests
 package invariants
 
 import org.scalameta._
-import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
 
 import munit._
 
-class InvariantSuite extends FunSuite {
+class InvariantSuite extends TreeSuiteBase {
   test("more informative error messages") {
     interceptMessage[InvariantFailedException](
       """|invariant failed:
          |when verifying x.>(3)
          |found that x.>(3) is false
          |where x = 2
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     ) {
       val x = 2
       require(x > 3)
@@ -29,7 +28,7 @@ class InvariantSuite extends FunSuite {
          |where C = C(3)
          |where C.this.x = 3
          |where y = 2
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     ) {
       val y = 2
       case class C(x: Int) {
@@ -48,7 +47,7 @@ class InvariantSuite extends FunSuite {
       """|this code path should've been unreachable
          |where C.this.x = 3
          |where y = 2
-         |""".stripMargin.replace("\n", EOL)
+         |""".stripMargin.lf2nl
     ) {
       val y = 2
       case class C(x: Int) {

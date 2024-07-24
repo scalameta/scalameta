@@ -1,7 +1,6 @@
 package scala.meta.tests
 package prettyprinters
 
-import org.scalameta.internal.ScalaCompat.EOL
 import scala.meta._
 
 import java.io._
@@ -316,7 +315,7 @@ class PublicSuite extends TreeSuiteBase {
             ex.toString,
             """|<input>:1: error: `end of file` expected but `class` found
                |foo + class
-               |      ^""".stripMargin.replace("\n", EOL)
+               |      ^""".stripMargin.lf2nl
           )
           throw ex
       }
@@ -334,7 +333,7 @@ class PublicSuite extends TreeSuiteBase {
       parsed.toString,
       """|<input>:1: error: `end of file` expected but `class` found
          |foo + class
-         |      ^""".stripMargin.replace("\n", EOL)
+         |      ^""".stripMargin.lf2nl
     )
   }
 
@@ -372,7 +371,7 @@ class PublicSuite extends TreeSuiteBase {
     interceptMessage[TokenizeException](
       """|<input>:1: error: unclosed string literal
          |"c
-         |^""".stripMargin.replace("\n", EOL)
+         |^""".stripMargin.lf2nl
     )(""""c""".tokenize.get)
   }
 
@@ -382,7 +381,7 @@ class PublicSuite extends TreeSuiteBase {
           x.toString,
           """|<input>:1: error: unclosed string literal
              |"c
-             |^""".stripMargin.replace("\n", EOL)
+             |^""".stripMargin.lf2nl
         )
       case x => fail(s"tokenized is not an error: $x")
     }
