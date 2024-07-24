@@ -105,6 +105,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     val start = offset
     curr.token = token
     curr.strVal = new String(input.chars, start, endExclusive - start)
+    curr.endOffset = endExclusive
     reader.nextCharFrom(endExclusive)
   }
 
@@ -194,9 +195,14 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
     if (prev eq next) next.token = EMPTY
     if (next.token == EMPTY) {
       offset = begCharOffset
+      endOffset = -1
       fetchToken()
-      (if (next.token == EMPTY) curr else next).endOffset =
-        if (endCharOffset >= buf.length && ch == SU) buf.length else begCharOffset
+      def setEnd(tok: LegacyTokenData): Boolean = {
+        if (tok.endOffset >= tok.offset) return false
+        tok.endOffset = if (endCharOffset >= buf.length && ch == SU) buf.length else begCharOffset
+        true
+      }
+      setEnd(curr) || next.token == EMPTY || setEnd(next)
       prev = curr
     } else prev = next
     prev
@@ -514,6 +520,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
   private def getStringPart(multiLine: Boolean): Unit = {
     def identifier() = {
       do putCharAndNextRaw() while (isUnicodeIdentifierPart(ch))
+      next.endOffset = begCharOffset
       next.setIdentifier(getAndResetCBuf(), dialect) { x =>
         if (x.token != IDENTIFIER && x.token != THIS) syntaxError(
           "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected",
@@ -532,9 +539,11 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       getStringPart(multiLine)
     } else (ch: @switch) match {
       case '"' =>
-        if (multiLine) { if (!canFinishMultilineStringLit()) getStringPart(true) }
+        if (multiLine)
+          if (canFinishMultilineStringLit()) endOffset = begCharOffset else getStringPart(true)
         else {
           nextChar()
+          endOffset = begCharOffset
           finishStringLit()
         }
       case '\\' if !multiLine =>
@@ -586,7 +595,7 @@ class LegacyScanner(input: Input, dialect: Dialect)(implicit reporter: Reporter)
       case Some((end, isLastPart)) =>
         finishComposite(XMLLIT, end)
         if (isLastPart) {
-          curr.endOffset = end
+          next.endOffset = end
           next.token = XMLLITEND
         }
         true
