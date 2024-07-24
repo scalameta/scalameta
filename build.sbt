@@ -14,8 +14,6 @@ import complete.DefaultParsers._
 import munit.sbtmunit.BuildInfo.munitVersion
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
-lazy val LanguageVersions = LatestScalaVersions
-lazy val LanguageVersion = EarliestScala213
 def customVersion = sys.props.get("scalameta.version")
 def parseTagVersion: String = {
   import scala.sys.process._
@@ -152,7 +150,6 @@ lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
-  crossScalaVersions := LanguageVersions,
   mimaPreviousArtifacts := Set.empty,
   description := "Scalac 2.x launcher that generates SemanticDB on compile",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
@@ -164,7 +161,6 @@ lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
-  crossScalaVersions := LanguageVersions,
   mimaPreviousArtifacts := Set.empty,
   description := "Prints SemanticDB files",
   mainClass := Some("scala.meta.cli.Metap")
@@ -175,7 +171,6 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   sharedSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
-  crossScalaVersions := LanguageVersions,
   mimaPreviousArtifacts := Set.empty,
   description := "Generates SemanticDB files for a classpath",
   mainClass := Some("scala.meta.cli.Metacp")
@@ -193,7 +188,7 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
   enableMacros,
   buildInfoPackage := "scala.meta.internal",
   buildInfoKeys := Seq[BuildInfoKey](version),
-  crossScalaVersions := AllScalaVersions
+  crossScalaVersions := EarliestScalaVersions
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
 
@@ -201,7 +196,7 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   moduleName := "trees",
   sharedSettings,
   description := "Scalameta abstract syntax trees",
-  crossScalaVersions := AllScalaVersions,
+  crossScalaVersions := EarliestScalaVersions,
   // NOTE: uncomment this to update ast.md
   // scalacOptions += "-Xprint:typer",
   enableHardcoreMacros,
@@ -231,7 +226,7 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   sharedSettings,
   description := "Scalameta APIs for parsing and their baseline implementation",
   enableHardcoreMacros,
-  crossScalaVersions := AllScalaVersions,
+  crossScalaVersions := EarliestScalaVersions,
   mergedModule { base =>
     List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
   }
@@ -272,7 +267,7 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
   moduleName := "scalameta",
   sharedSettings,
   description := "Scalameta umbrella module that includes all public APIs",
-  crossScalaVersions := AllScalaVersions,
+  crossScalaVersions := EarliestScalaVersions,
   libraryDependencies ++= List("org.scala-lang" % "scalap" % scalaVersion.value),
   mergedModule(base => List(base / "scalameta" / "contrib"))
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
@@ -282,6 +277,7 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
 lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(
   description := "Sources to compile to build SemanticDB for tests.",
   sharedSettings,
+  crossScalaVersions := AllScalaVersions,
   nonPublishableSettings,
   // the sources in this project intentionally produce warnings to test the
   // diagnostics pipeline in semanticdb-scalac.
@@ -312,12 +308,17 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
   javacOptions += "-parameters"
 ).dependsOn(semanticdbIntegrationMacros, semanticdbScalacPlugin)
 
-lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-macros"))
-  .settings(sharedSettings, nonPublishableSettings, enableMacros)
+lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-macros")).settings(
+  sharedSettings,
+  crossScalaVersions := AllScalaVersions,
+  nonPublishableSettings,
+  enableMacros
+)
 
 lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).settings(
   moduleName := "testkit",
   sharedSettings,
+  crossScalaVersions := EarliestScalaVersions,
   hasLargeIntegrationTests,
   libraryDependencies += munitLibrary.value,
   testFrameworks := List(new TestFramework("munit.Framework")),
@@ -336,6 +337,7 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
 
 lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).configs(Slow, All).settings(
   sharedSettings,
+  crossScalaVersions := AllScalaVersions,
   testFrameworks := List(new TestFramework("munit.Framework")),
   Test / unmanagedSourceDirectories ++= {
     val base = (Compile / baseDirectory).value
@@ -396,6 +398,7 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
 lazy val communitytest = project.in(file("community-test")).settings(
   nonPublishableSettings,
   sharedSettings,
+  crossScalaVersions := LatestScalaVersions,
   libraryDependencies += munitLibrary.value,
   testFrameworks := List(new TestFramework("munit.Framework"))
 ).dependsOn(scalameta.jvm)
@@ -404,6 +407,7 @@ lazy val communitytest = project.in(file("community-test")).settings(
 lazy val bench = project.in(file("bench/suite")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
     sharedSettings,
+    crossScalaVersions := LatestScalaVersions,
     nonPublishableSettings,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
@@ -486,8 +490,7 @@ lazy val sharedSettings = Def.settings(
       if (isCI) dynVer else localSnapshotVersion // only for local publishing
     }
   },
-  scalaVersion := LanguageVersion,
-  crossScalaVersions := LanguageVersions,
+  scalaVersion := LatestScala213,
   organization := "org.scalameta",
   libraryDependencies ++= {
     if (isScala213.value) Nil
