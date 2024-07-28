@@ -1973,7 +1973,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         // In the running example, we're at `a + [b]` (infix).
         // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
         if (if (token.is[EOL]) nextIf(isExprIntro(peekToken, peekIndex))
-          else isExprIntro(token, tokenPos))
+          else isIdentOrExprIntro(token))
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
           getNextRhs(op, targs) // [a]

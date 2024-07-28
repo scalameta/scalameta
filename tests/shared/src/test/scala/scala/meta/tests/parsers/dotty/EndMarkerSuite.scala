@@ -373,20 +373,22 @@ class EndMarkerSuite extends BaseDottySuite {
                   |  def foo = bar == end ||
                   |    baz
                   |""".stripMargin
-    val layout = """|object A {
-                    |  def foo = bar.==
-                    |  end ||
-                    |  baz
-                    |}
-                    |""".stripMargin
+    val layout = "object A { def foo = bar == end || baz }"
     val tree = Defn.Object(
       Nil,
       tname("A"),
-      tpl(
-        Defn.Def(Nil, tname("foo"), Nil, None, Term.Select(tname("bar"), tname("=="))),
-        Term.EndMarker(tname("||")),
-        tname("baz")
-      )
+      tpl(Defn.Def(
+        Nil,
+        tname("foo"),
+        Nil,
+        None,
+        Term.ApplyInfix(
+          Term.ApplyInfix(tname("bar"), tname("=="), Nil, List(tname("end"))),
+          tname("||"),
+          Nil,
+          List(tname("baz"))
+        )
+      ))
     )
     runTestAssert[Stat](code, layout)(tree)
   }
