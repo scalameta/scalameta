@@ -91,13 +91,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     case _ => false
   }
 
-  private def isEndMarkerIntro(index: Int, fNextIndex: => Int) =
-    isEndMarkerIdentifier(tokens(index)) && {
-      val nextIndex = fNextIndex
-      isEndMarkerSpecifier(tokens(nextIndex)) && isFollowedByNL(nextIndex)
-    }
+  def isEndMarkerIntro(token: Token, fNextIndex: => Int) = isEndMarkerIdentifier(token) && {
+    val nextIndex = fNextIndex
+    isEndMarkerSpecifier(tokens(nextIndex)) && isFollowedByNL(nextIndex)
+  }
 
-  def isEndMarkerIntro(index: Int): Boolean = isEndMarkerIntro(index, getStrictNext(index))
+  def isEndMarkerIntro(index: Int): Boolean = isEndMarkerIntro(tokens(index), getStrictNext(index))
 
   def isExprIntro(token: Token, fIndex: => Int): Boolean = isExprIntroImpl(token) {
     val index = fIndex

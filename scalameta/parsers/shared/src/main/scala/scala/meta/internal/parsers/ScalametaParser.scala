@@ -451,9 +451,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   @inline
   private def acceptAfterOptNL[T <: Token: ClassTag]: Unit = acceptAfterOpt[T, AtEOL]
 
+  def isAtEndMarker(): Boolean = isEndMarkerIntro(currToken, peekIndex)
+
   def acceptStatSep(): Unit = currToken match {
     case _: AtEOL | _: Semicolon => next()
-    case _ if isEndMarkerIntro(currIndex) =>
+    case _ if isAtEndMarker() =>
     case t => syntaxErrorExpected[Semicolon](t)
   }
   def acceptStatSepOpt() = if (!StatSeqEnd(currToken)) acceptStatSep()
@@ -4065,7 +4067,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _: KwPackage =>
       packageOrPackageObjectDef(if (dialect.allowToplevelTerms) consumeStat else topStat)
     case _ if isDefIntro(currIndex) => nonLocalDefOrDcl(secondaryConstructorAllowed = true)
-    case _ if isEndMarkerIntro(currIndex) => endMarker()
+    case _ if isAtEndMarker() => endMarker()
     case _ if isIdentOrExprIntro(currToken) => stat(expr(location = NoStat, allowRepeated = true))
     case t: Ellipsis => ellipsis[Stat](t, 1)
   }
@@ -4131,7 +4133,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _: KwImport => importStmt()
     case _: KwExport => exportStmt()
     case _ if isTemplateIntro(currIndex) => topLevelTmplDef
-    case _ if isEndMarkerIntro(currIndex) => endMarker()
+    case _ if isAtEndMarker() => endMarker()
     case _ if dialect.allowToplevelStatements && isDefIntro(currIndex) => nonLocalDefOrDcl()
   }
 
@@ -4162,7 +4164,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ if isDefIntro(currIndex) => nonLocalDefOrDcl(enumCaseAllowed, secondaryConstructorAllowed)
     case t: Unquote => unquote[Stat](t)
     case t: Ellipsis => ellipsis[Stat](t, 1)
-    case _ if isEndMarkerIntro(currIndex) => endMarker()
+    case _ if isAtEndMarker() => endMarker()
     case _ if isIdentOrExprIntro(currToken) => expr(location = TemplateStat, allowRepeated = false)
   }
 
@@ -4239,7 +4241,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           acceptStatSepOpt()
           iter()
         }
-      case _ if isEndMarkerIntro(currIndex) =>
+      case _ if isAtEndMarker() =>
         stats += endMarker()
         iter()
       case _ if isIdentOrExprIntro(currToken) =>
