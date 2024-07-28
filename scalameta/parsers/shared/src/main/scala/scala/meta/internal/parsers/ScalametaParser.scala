@@ -125,7 +125,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val builder = List.newBuilder[Source]
 
     doWhile(builder += parseRuleAfterBOF(parseSourceImpl())) {
-      in.token match {
+      in.currToken match {
         case t: Token.EOF if t.end < input.chars.length =>
           in.next()
           accept[Token.At]
@@ -149,11 +149,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   var in: TokenIterator = LazyTokenIterator(scannerTokens)
 
   @inline
-  def tokenPos = in.tokenPos
+  def tokenPos = in.currIndex
   @inline
-  def prevTokenPos = in.prevTokenPos
+  def prevTokenPos = in.prevIndex
   @inline
-  def token = in.token
+  def token = in.currToken
   @inline
   def prevToken = in.prevToken
   @inline
@@ -2746,7 +2746,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def seqPatterns(): List[Pat] = seqOK.patterns()
   def argumentPattern(): Pat = seqOK.pattern()
   def argumentPatterns(): List[Pat] = inParens(if (token.is[RightParen]) Nil else seqPatterns())
-  def xmlLiteralPattern(): Pat = syntaxError("XML literals are not supported", at = in.token)
+  def xmlLiteralPattern(): Pat = syntaxError("XML literals are not supported", at = in.currToken)
   def patternTyp() = noSeq.patternTyp(allowInfix = true, allowImmediateTypevars = false)
   def patternTypeArgs() = noSeq.patternTypeArgs()
 

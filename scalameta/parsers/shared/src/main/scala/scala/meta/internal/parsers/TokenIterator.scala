@@ -8,11 +8,11 @@ trait TokenIterator {
   def fork: TokenIterator
 
   def prevToken: Token
-  def prevTokenPos: Int
+  def prevIndex: Int
   def previousIndentation: Int
 
-  def token: Token
-  def tokenPos: Int
+  def currToken: Token
+  def currIndex: Int
   def indenting: Boolean
 
   def peekToken: Token
