@@ -11,6 +11,19 @@ object TreeStructure {
   import Show.{repeat => r}
   import Show.{sequence => s}
 
+  private def anyStructure(x: Any): String = x match {
+    case el: String => DoubleQuotes(el)
+    case el: Tree => el.structure
+    case None => "None"
+    case Some(el) => "Some(" + anyStructure(el) + ")"
+    case el: List[_] => iterableStructure(el, "List")
+    case el: Seq[_] => iterableStructure(el, "Seq")
+    case el => el.toString
+  }
+
+  private def iterableStructure(xs: Iterable[_], cls: String): String =
+    if (xs.isEmpty) "Nil" else xs.map(anyStructure).mkString(s"$cls(", ", ", ")")
+
   def apply[T <: Tree]: Structure[T] = Structure {
     case _: Name.Anonymous => s(s"""Name.Anonymous()""")
     case _: Name.This => s(s"""Name.This()""")
@@ -19,21 +32,7 @@ object TreeStructure {
     case x => s(
         x.productPrefix,
         "(", {
-          def default = {
-            def anyStructure(x: Any): String = x match {
-              case el: String => DoubleQuotes(el)
-              case el: Tree => el.structure
-              case None => "None"
-              case Some(el) => "Some(" + anyStructure(el) + ")"
-              case el: List[_] => iterableStructure(el, "List")
-              case el: Seq[_] => iterableStructure(el, "Seq")
-              case el => el.toString
-            }
-            def iterableStructure(xs: Iterable[_], cls: String): String =
-              if (xs.isEmpty) "Nil" else xs.map(anyStructure).mkString(s"$cls(", ", ", ")")
-
-            r(x.productIterator.map(anyStructure).toList, ", ")
-          }
+          def default = r(x.productIterator.map(anyStructure).toList, ", ")
           x match {
             case _: Quasi => default
             case x: Lit.String => s(DoubleQuotes.orTriple(x.value))
