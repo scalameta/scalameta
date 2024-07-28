@@ -368,4 +368,29 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestAssert[Source](code, layout)(tree)
   }
 
+  test("def body contains end, but not end marker") {
+    val code = """|object A:
+                  |  def foo = bar == end ||
+                  |    baz
+                  |""".stripMargin
+    val layout = "object A { def foo = bar == end || baz }"
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Defn.Def(
+        Nil,
+        tname("foo"),
+        Nil,
+        None,
+        Term.ApplyInfix(
+          Term.ApplyInfix(tname("bar"), tname("=="), Nil, List(tname("end"))),
+          tname("||"),
+          Nil,
+          List(tname("baz"))
+        )
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
