@@ -310,11 +310,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   /* ------------- POSITION HANDLING ------------------------------------------- */
 
   case object AutoPos extends Pos {
-    def startTokenPos = currIndex
-    def endTokenPos = prevIndex
+    def begIndex = currIndex
+    def endIndex = prevIndex
   }
   case object EndPosPreOutdent extends EndPos {
-    def endTokenPos = if (at[Indentation.Outdent]) currIndex else prevIndex
+    def endIndex = if (at[Indentation.Outdent]) currIndex else prevIndex
   }
   implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
   implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
@@ -322,13 +322,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
 
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
-    atPos(start.startTokenPos, end)(body)
+    atPos(start.begIndex, end)(body)
   def atPosOpt[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
-    atPosOpt(start.startTokenPos, end)(body)
+    atPosOpt(start.begIndex, end)(body)
 
   @inline
   def atPos[T <: Tree](start: Int, end: EndPos)(body: T): T =
-    atPosWithBody(start, body, end.endTokenPos)
+    atPosWithBody(start, body, end.endIndex)
   def atPosOpt[T <: Tree](start: Int, end: EndPos)(body: T): T = body.origin match {
     case o: Origin.Parsed if o.source eq originSource => body
     case _ => atPos(start, end)(body)
@@ -358,11 +358,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
-    val startTokenPos = start.startTokenPos
+    val startTokenPos = start.begIndex
     body.map(atPos(startTokenPos, end))
   }
   def atPosTryOpt[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
-    val startTokenPos = start.startTokenPos
+    val startTokenPos = start.begIndex
     body.map(atPosOpt(startTokenPos, end))
   }
 
@@ -374,7 +374,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def autoEndPosOpt[T <: Tree](start: Int)(body: => T): T =
     atPosOpt(start = start, end = AutoPos)(body)
   @inline
-  def autoEndPos[T <: Tree](start: StartPos)(body: => T): T = autoEndPos(start.startTokenPos)(body)
+  def autoEndPos[T <: Tree](start: StartPos)(body: => T): T = autoEndPos(start.begIndex)(body)
   @inline
   def autoPrevPos[T <: Tree](body: => T) = autoEndPos(prevIndex)(body)
 
@@ -727,7 +727,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           val startPos = prevIndex
           next() // skip colon
           val mods = modsBuf.result()
-          val modPos = if (mods.isEmpty) startPos else mods.head.startTokenPos
+          val modPos = if (mods.isEmpty) startPos else mods.head.begIndex
           val name = atPos(startPos)(Type.Name(t.value))
           autoEndPos(modPos)(Type.TypedParam(name, typ(), mods))
         case soft.KwErased() if allowFunctionType =>
@@ -875,13 +875,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     @inline
     private def infixTypeRest(t: Type, inMatchType: Boolean = false): Type =
       if (dialect.useInfixTypePrecedence) infixTypeRestWithPrecedence(t, inMatchType = inMatchType)
-      else infixTypeRestWithMode(
-        t,
-        InfixMode.FirstOp,
-        t.startTokenPos,
-        identity,
-        inMatchType = inMatchType
-      )
+      else
+        infixTypeRestWithMode(t, InfixMode.FirstOp, t.begIndex, identity, inMatchType = inMatchType)
 
     @tailrec
     private final def infixTypeRestWithMode(
@@ -907,7 +902,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         else infixTypeRestWithMode(
           typ,
           InfixMode.RightOp,
-          typ.startTokenPos,
+          typ.begIndex,
           f.compose(mkOp),
           inMatchType = inMatchType
         )
@@ -1210,7 +1205,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val t1 = selector(t, startPos)
     if (at[Dot] && tryAhead[Ident]) selectors(t1, startPos) else t1
   }
-  private final def selectors(t: Term): Term.Ref = selectors(t, t.startTokenPos)
+  private final def selectors(t: Term): Term.Ref = selectors(t, t.begIndex)
 
   def mixinQualifier(): Name =
     if (acceptOpt[LeftBracket]) inBracketsAfterOpen {
@@ -1466,7 +1461,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           complexExpr.getOrElse {
             if (argsOrInitBody.isEmpty) newLinesOpt()
             simpleExpr -> argsOrInitBody.map { t =>
-              val startPos = t.startTokenPos
+              val startPos = t.begIndex
               val rest = simpleExprRest(t, canApply = true, startPos = startPos)
               val init = postfixExpr(startPos, rest, allowRepeated = false)
               exprOtherRest(startPos, init, NoStat, allowRepeated = false)
@@ -1712,7 +1707,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case _ => None
         }
       case t: Term.Placeholder => Some((copyPos(t)(Name.Placeholder()), Nil))
-      case t: Term.Eta => getMod(t.expr).map((atPos(t.endTokenPos)(Name.Placeholder()), _))
+      case t: Term.Eta => getMod(t.expr).map((atPos(t.endIndex)(Name.Placeholder()), _))
       case _ => None
     }
 
@@ -1942,7 +1937,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val ctx = termInfixContext
     val base = ctx.stack
 
-    def getLhsStartPos(lhs: ctx.Typ): Int = if (lhs eq rhs0) startPos else lhs.startTokenPos
+    def getLhsStartPos(lhs: ctx.Typ): Int = if (lhs eq rhs0) startPos else lhs.begIndex
 
     // Skip to later in the `postfixExpr` method to start mental debugging.
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
@@ -1958,7 +1953,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
       def getNextRhsWith(op: Term.Name, targs: Type.ArgClause, rhs: Term) = {
         val lhs = getPrevLhs(op)
-        val wrap = (lhs eq rhs0) && lhs.startTokenPos != startPos
+        val wrap = (lhs eq rhs0) && lhs.begIndex != startPos
         val lhsExt = if (wrap) atPosWithBody(startPos, Term.Tuple(lhs :: Nil), rhsEndK) else lhs
         ctx.push(ctx.UnfinishedInfix(lhsExt, op, targs))
         Right(rhs)
@@ -2286,7 +2281,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def getFewerBracesApplyOnColon(fun: Term, startPos: Int): Option[Term] = {
     val colonPos = currIndex
     getFewerBracesArgOnColon().map { arg =>
-      val endPos = AutoPos.endTokenPos
+      val endPos = AutoPos.endIndex
       val argClause = atPos(colonPos, endPos)(Term.ArgClause(arg :: Nil))
       val arguments = atPos(startPos, endPos)(Term.Apply(fun, argClause))
       simpleExprRest(arguments, canApply = true, startPos = startPos)
@@ -2384,8 +2379,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def blockOnIndent(keepBlock: Boolean = false): Term = autoPosOpt {
     indentedOnOpen(blockStatSeq() match {
-      case (t: Term) :: Nil
-          if !(keepBlock || isPrecededByDetachedComment(currIndex, t.endTokenPos)) => t
+      case (t: Term) :: Nil if !(keepBlock || isPrecededByDetachedComment(currIndex, t.endIndex)) =>
+        t
       case stats => toBlockRaw(stats)
     })
   }
@@ -2532,9 +2527,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         patternAlternatives(pat :: pats)
       } else if (pats.isEmpty) pat
       else {
-        val endPos = pat.endTokenPos
+        val endPos = pat.endIndex
         pats.foldLeft(pat) { case (rtAll, ltOne) =>
-          atPos(ltOne.startTokenPos, endPos)(Pat.Alternative(ltOne, rtAll))
+          atPos(ltOne.begIndex, endPos)(Pat.Alternative(ltOne, rtAll))
         }
       }
     }
@@ -3511,7 +3506,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val body: Stat = currToken match {
       case _: LeftBrace => blockOnBrace(getStats())
       case _: Indentation.Indent => autoPosOpt(indentedOnOpen(getStats() match {
-          case t :: Nil if !isPrecededByDetachedComment(currIndex, t.endTokenPos) => t
+          case t :: Nil if !isPrecededByDetachedComment(currIndex, t.endIndex) => t
           case stats => toBlockRaw(stats)
         }))
       case _ if isDefIntro(currIndex) => nonLocalDefOrDcl()
