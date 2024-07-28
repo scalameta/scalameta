@@ -196,7 +196,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def tryAheadNot[T: ClassTag]: Boolean = nextIf(!peekToken.is[T])
 
   private def unreachable(debuggees: Map[String, Any]): Nothing = UnreachableError.raise(debuggees)
-  private def unreachable(token: Token): Nothing = unreachable(Map("token" -> token))
+  private def unreachable(tok: Token): Nothing = unreachable(Map("token" -> tok))
   private def unreachable: Nothing = unreachable(Map.empty[String, Any])
 
   private def tryAhead(cond: => Boolean): Boolean = {
@@ -385,13 +385,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   final lazy val reporter = Reporter()
   import this.reporter._
 
-  implicit class XtensionToken(token: Token) {
-    def is[T: ClassTag] = classTag[T].runtimeClass.isAssignableFrom(token.getClass())
+  implicit class XtensionToken(tok: Token) {
+    def is[T: ClassTag] = classTag[T].runtimeClass.isAssignableFrom(tok.getClass())
   }
 
   private def syntaxErrorExpected[T <: Token: ClassTag]: Nothing = syntaxErrorExpected[T](currToken)
-  private def syntaxErrorExpected[T <: Token: ClassTag](token: Token): Nothing =
-    syntaxError(syntaxExpectedMessage[T](token), at = token)
+  private def syntaxErrorExpected[T <: Token: ClassTag](tok: Token): Nothing =
+    syntaxError(syntaxExpectedMessage[T](tok), at = tok)
   private def expectAt[T <: Token: ClassTag](tok: Token, msg: => String, exists: Boolean): Unit =
     if (tok.is[T] != exists) syntaxError(msg, at = tok)
 
@@ -523,20 +523,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def isStar(tok: Token): Boolean = Keywords.Star(tok)
 
   private trait MacroIdent {
-    protected def ident(token: Token): Option[String]
-    final def unapply(token: Token): Option[String] =
-      if (dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside()) ident(token) else None
+    protected def ident(tok: Token): Option[String]
+    final def unapply(tok: Token): Option[String] =
+      if (dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside()) ident(tok) else None
   }
 
   private object MacroSplicedIdent extends MacroIdent {
-    protected def ident(token: Token): Option[String] = token match {
+    protected def ident(tok: Token): Option[String] = tok match {
       case Keywords(value) if value.length > 1 && value.charAt(0) == '$' => Some(value.substring(1))
       case _ => None
     }
   }
 
   private object MacroQuotedIdent extends MacroIdent {
-    protected def ident(token: Token): Option[String] = token match {
+    protected def ident(tok: Token): Option[String] = tok match {
       case Constant.Symbol(value) => Some(value.name)
       case _ => None
     }
@@ -1226,7 +1226,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def numericLiteralMaybeWithUnaryAt(
-      token: NumericConstant[_],
+      tok: NumericConstant[_],
       unary: Unary.Numeric
   ): Either[Lit, Lit] = {
     def getBigInt(tok: NumericConstant[BigInt], dec: BigInt, hex: BigInt, typ: String) = {
@@ -1245,7 +1245,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val number = tok.value
       unary(number).fold[Either[Lit, Lit]](Left(f(number)))(x => Right(f(x)))
     }
-    token match {
+    tok match {
       case tok: Constant.Int =>
         Right(Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue))
       case tok: Constant.Long =>
@@ -1256,10 +1256,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  private def numericLiteralWithUnaryAt(token: NumericConstant[_], unary: Unary.Numeric): Lit =
-    numericLiteralMaybeWithUnaryAt(token, unary) match {
+  private def numericLiteralWithUnaryAt(tok: NumericConstant[_], unary: Unary.Numeric): Lit =
+    numericLiteralMaybeWithUnaryAt(tok, unary) match {
       case Right(x) => x
-      case _ => syntaxError(s"bad unary op `${unary.op}` for floating-point", at = token)
+      case _ => syntaxError(s"bad unary op `${unary.op}` for floating-point", at = tok)
     }
 
   def literal(): Lit = atCurPosNext(currToken match {
@@ -2629,10 +2629,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       loop(lhs)
     }
 
-    def badPattern3(token: Token): Nothing = {
+    def badPattern3(tok: Token): Nothing = {
       import patInfixContext._
-      def isComma = token.is[Comma]
-      def isDelimiter = token.isAny[RightParen, RightBrace]
+      def isComma = tok.is[Comma]
+      def isDelimiter = tok.isAny[RightParen, RightBrace]
       def isCommaOrDelimiter = isComma || isDelimiter
       val (isUnderscore, isStar) = stack match {
         case UnfinishedInfix(lhs, Term.Name("*")) :: _ => (lhs.is[Pat.Wildcard], true)
@@ -2649,7 +2649,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _ => null
       }
       val msg = if (subtext != null) s"$preamble $subtext" else "illegal start of simple pattern"
-      syntaxError(msg, at = token)
+      syntaxError(msg, at = tok)
     }
 
     def simplePattern(
@@ -4409,8 +4409,8 @@ object ScalametaParser {
       case "BOF" => "beginning of file"
       case other => other.toLowerCase().stripPrefix("kw")
     }
-  private def syntaxExpectedMessage[T <: Token: ClassTag](token: Token): String =
-    s"`${getTokenName[T]}` expected but `${token.name}` found"
+  private def syntaxExpectedMessage[T <: Token: ClassTag](tok: Token): String =
+    s"`${getTokenName[T]}` expected but `${tok.name}` found"
   private def syntaxNotExpectedMessage[T <: Token: ClassTag]: String =
     s"not expected `${getTokenName[T]}`"
 
