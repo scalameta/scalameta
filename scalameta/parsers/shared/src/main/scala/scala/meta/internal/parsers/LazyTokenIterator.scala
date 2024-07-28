@@ -48,11 +48,11 @@ private[parsers] class LazyTokenIterator private (
     case _ => 0
   }
 
-  override def prevTokenPos: Int = prev.pointPos
+  override def prevIndex: Int = prev.pointPos
   override def prevToken: Token = prev.token
 
-  override def tokenPos: Int = curr.pointPos
-  override def token: Token = curr.token
+  override def currIndex: Int = curr.pointPos
+  override def currToken: Token = curr.token
 
   override def fork: TokenIterator = new LazyTokenIterator(scannerTokens, prev, curr)
 
