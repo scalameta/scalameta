@@ -434,10 +434,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   @inline
   private def acceptIf(unapply: Token => Boolean): Boolean = nextIf(unapply(currToken))
 
-  private def acceptIfAfterOpt[A <: Token: ClassTag, B <: Token: ClassTag]: Boolean =
+  private def acceptIfAfterOpt[A <: Token: ClassTag](unapply: Token => Boolean): Boolean =
     if (at[A]) { next(); true }
-    else if (at[B] && peek[A]) { nextTwice(); true }
+    else if (unapply(currToken) && peek[A]) { nextTwice(); true }
     else false
+
+  private def acceptIfAfterOpt[A <: Token: ClassTag, B <: Token: ClassTag]: Boolean =
+    acceptIfAfterOpt[A](_.is[B])
 
   @inline
   private def acceptIfAfterOptNL[T <: Token: ClassTag]: Boolean = acceptIfAfterOpt[T, AtEOL]
@@ -453,10 +456,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def isAtEndMarker(): Boolean = isEndMarkerIntro(currToken, peekIndex)
 
-  def acceptStatSep(): Unit = currToken match {
-    case _: AtEOL | _: Semicolon => next()
-    case _ if isAtEndMarker() =>
-    case t => syntaxErrorExpected[Semicolon](t)
+  def acceptStatSep(): Unit = {
+    val ok = acceptIf(StatSep) || isAtEndMarker()
+    if (!ok) syntaxErrorExpected[Semicolon]
   }
   def acceptStatSepOpt() = if (!StatSeqEnd(currToken)) acceptStatSep()
 
@@ -1422,9 +1424,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
     accept[KwIf]
     val (cond, thenp) = condExprWithBody[KwThen]
-    if (acceptIfAfterOptNL[KwElse]) Term.If(cond, thenp, expr(), mods)
-    else if (at[Semicolon] && tryAhead[KwElse]) { next(); Term.If(cond, thenp, expr(), mods) }
-    else Term.If(cond, thenp, autoPos(Lit.Unit()), mods)
+    val elsep = if (acceptIfAfterOpt[KwElse](StatSep)) expr() else autoPos(Lit.Unit())
+    Term.If(cond, thenp, elsep, mods)
   }
 
   private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
@@ -4267,8 +4268,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val statpf = if (dialect.allowToplevelTerms) consumeStat else topStat
 
     @tailrec
-    def bracelessPackageStats(f: List[Stat] => List[Stat]): List[Stat] = currToken match {
-      case _: KwPackage if tryAheadNot[KwObject] =>
+    def bracelessPackageStats(f: List[Stat] => List[Stat]): List[Stat] =
+      if (at[KwPackage] && tryAheadNot[KwObject]) {
         val startPos = prevIndex
         val qid = qualId()
         def getPackage(stats: List[Stat]) = autoEndPos(startPos)(Pkg(qid, stats))
@@ -4282,9 +4283,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         if (nextIfColonIndent()) inPackageOnOpen[Indentation.Outdent]
         else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace]
         else bracelessPackageStats(x => f(List(getPackage(x))))
-      case _: AtEOL | _: Semicolon => next(); bracelessPackageStats(f)
-      case _ => f(statSeq(statpf))
-    }
+      } else if (acceptIf(StatSep)) bracelessPackageStats(f)
+      else f(statSeq(statpf))
 
     Source(bracelessPackageStats(identity))
   }
