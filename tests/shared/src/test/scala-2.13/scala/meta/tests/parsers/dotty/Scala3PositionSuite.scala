@@ -1450,6 +1450,97 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |<elsep>Lit.Unit     aaa@@</elsep>
        |<elsep>Lit.Unit @@</elsep>
        |""".stripMargin,
+    """|BOF [0..0)
+       |KwIf [0..2)
+       |Ident(a) [3..4)
+       |KwThen [5..9)
+       |Indentation.Indent [9..9)
+       |KwIf [12..14)
+       |Ident(aa) [15..17)
+       |KwThen [18..22)
+       |Indentation.Indent [22..22)
+       |Ident(aaa) [27..30)
+       |Indentation.Outdent [40..40)
+       |LF [40..41)
+       |KwIf [43..45)
+       |Ident(aa) [46..48)
+       |KwThen [49..53)
+       |Indentation.Indent [53..53)
+       |Ident(aaa) [58..61)
+       |Indentation.Outdent [61..61)
+       |Indentation.Outdent [61..61)
+       |EOF [62..62)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Term](
+    """|if (a)
+       |  b.c()
+       |    // c1
+       |    // c2
+       |""".stripMargin,
+    """|<thenp>Term.Block b.c()
+       |    // c1
+       |    // c2</thenp>
+       |<stats0>Term.Apply b.c()</stats0>
+       |<fun>Term.Select b.c</fun>
+       |<argClause>Term.ArgClause ()</argClause>
+       |<elsep>Lit.Unit @@</elsep>
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Stat](
+    """|def foo =
+       |  if (a)
+       |    b.c()
+       |      // c1
+       |      // c2
+       |  d.e
+       |""".stripMargin,
+    """|<body>Term.Block if (a)
+       |    b.c()
+       |      // c1
+       |      // c2
+       |  d.e</body>
+       |<stats0>Term.If if (a)
+       |    b.c()
+       |      // c1
+       |      // c2</stats0>
+       |<thenp>Term.Block b.c()
+       |      // c1
+       |      // c2</thenp>
+       |<stats0>Term.Apply b.c()</stats0>
+       |<fun>Term.Select b.c</fun>
+       |<argClause>Term.ArgClause ()</argClause>
+       |<elsep>Lit.Unit 
+       |      // c2</elsep>
+       |<stats1>Term.Select d.e</stats1>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwDef [0..3)
+       |Ident(foo) [4..7)
+       |Equals [8..9)
+       |Indentation.Indent [9..9)
+       |KwIf [12..14)
+       |LeftParen [15..16)
+       |Ident(a) [16..17)
+       |RightParen [17..18)
+       |Indentation.Indent [18..18)
+       |Ident(b) [23..24)
+       |Dot [24..25)
+       |Ident(c) [25..26)
+       |LeftParen [26..27)
+       |RightParen [27..28)
+       |Indentation.Outdent [52..52)
+       |LF [40..41)
+       |Ident(d) [55..56)
+       |Dot [56..57)
+       |Ident(e) [57..58)
+       |Indentation.Outdent [58..58)
+       |EOF [59..59)
+       |""".stripMargin,
     showFieldName = true
   )
 
