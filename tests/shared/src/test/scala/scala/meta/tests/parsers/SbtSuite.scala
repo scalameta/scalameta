@@ -63,21 +63,21 @@ class SbtSuite extends TreeSuiteBase {
       |          Term.Name("organization"),
       |          Term.Name(":="),
       |          Type.ArgClause(Nil),
-      |          Term.ArgClause(List(Lit.String("com.example")), None)
+      |          Term.ArgClause(List(Lit.String("com.example")))
       |        ),
       |        Term.ApplyInfix(
       |          Term.Name("version"),
       |          Term.Name(":="),
       |          Type.ArgClause(Nil),
-      |          Term.ArgClause(List(Lit.String("0.1.0")), None)
+      |          Term.ArgClause(List(Lit.String("0.1.0")))
       |        ),
       |        Term.ApplyInfix(
       |          Term.Name("scalaVersion"),
       |          Term.Name(":="),
       |          Type.ArgClause(Nil),
-      |          Term.ArgClause(List(Lit.String("2.11.7")), None)
+      |          Term.ArgClause(List(Lit.String("2.11.7")))
       |        )
-      |      ), None)
+      |      ))
       |    )
       |  ),
       |  Defn.Val(
@@ -92,19 +92,16 @@ class SbtSuite extends TreeSuiteBase {
       |              Term.Name("project"),
       |              Term.Name("in"),
       |              Type.ArgClause(Nil),
-      |              Term.ArgClause(
-      |                List(
-      |                  Term.Apply(
-      |                    Term.Name("file"),
-      |                    Term.ArgClause(List(Lit.String(".")), None)
-      |                  )
-      |                ),
-      |                None
+      |              Term.ArgClause(List(
+      |                Term.Apply(
+      |                  Term.Name("file"),
+      |                  Term.ArgClause(List(Lit.String(".")))
       |                )
+      |              ))
       |            ),
       |            Term.Name("settings")
       |          ),
-      |          Term.ArgClause(List(Term.Repeated(Term.Name("commonSettings"))), None)
+      |          Term.ArgClause(List(Term.Repeated(Term.Name("commonSettings"))))
       |        ),
       |        Term.Name("settings")
       |      ),
@@ -113,9 +110,9 @@ class SbtSuite extends TreeSuiteBase {
       |          Term.Name("name"),
       |          Term.Name(":="),
       |          Type.ArgClause(Nil),
-      |          Term.ArgClause(List(Lit.String("hello")), None)
+      |          Term.ArgClause(List(Lit.String("hello")))
       |        )
-      |      ), None)
+      |      ))
       |    )
       |  )
       |))

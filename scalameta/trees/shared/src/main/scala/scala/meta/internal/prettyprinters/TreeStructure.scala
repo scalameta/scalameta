@@ -43,6 +43,8 @@ object TreeStructure {
             case x: Lit.Float => s(asFloat(x.format, 'f'))
             case x: Lit.Long => s(x.value.toString + 'L')
             case x: Lit => s(x.value.toString)
+            case x: Term.ArgClause if x.mod.isEmpty => s(anyStructure(x.values))
+            case x: Term.ParamClause if x.mod.isEmpty => s(anyStructure(x.values))
             case _ => default
           }
         },

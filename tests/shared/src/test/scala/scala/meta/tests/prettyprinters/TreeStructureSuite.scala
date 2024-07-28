@@ -41,7 +41,7 @@ class TreeStructureSuite extends ParseSuite {
        |  Pat.Wildcard(),
        |  None,
        |  Term.Function(
-       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None)), None),
+       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None))),
        |    Lit.Boolean(false)
        |  ))
        |""".stripMargin
@@ -55,7 +55,7 @@ class TreeStructureSuite extends ParseSuite {
        |  Pat.Wildcard(),
        |  None,
        |  Term.Function(
-       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None)), None),
+       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None))),
        |    Term.Block(List(Lit.Boolean(false)))
        |  ))
        |""".stripMargin
@@ -71,7 +71,7 @@ class TreeStructureSuite extends ParseSuite {
        |  Pat.Wildcard(),
        |  None,
        |  Term.Function(
-       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None)), None),
+       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None))),
        |    Term.Block(List(Lit.Boolean(false), Term.Name("a")))
        |  ))""".stripMargin
   )
