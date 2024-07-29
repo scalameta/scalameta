@@ -3544,7 +3544,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
       warnProcedureDeprecation
       Defn.Def(mods, name, paramClauses, Some(autoPos(Type.Name("Unit"))), expr())
-    } else if (at[RightBrace] || at[Indentation.Outdent] || StatSep(currToken)) {
+    } else if (StatSeqEnd(currToken) || StatSep(currToken)) {
       val decltype = restype.getOrElse {
         warnProcedureDeprecation
         autoPos(Type.Name("Unit"))
@@ -3588,8 +3588,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       Defn.Type(mods, name, tparams, typeIndentedOpt(), bounds)
     } else currToken match {
       case _: Equals => next(); aliasType()
-      case _: Supertype | _: Subtype | _: Comma | _: RightBrace => abstractType()
-      case StatSep() | _: Indentation.Outdent => abstractType()
+      case _: Supertype | _: Subtype | _: Comma | StatSep() | StatSeqEnd() => abstractType()
       case _ => syntaxError("`=', `>:', or `<:' expected", at = currToken)
     }
   }
@@ -4166,7 +4165,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def refineStatSeq(): List[Stat] = listBy[Stat] { stats =>
     while (!StatSeqEnd(currToken)) {
       refineStat().foreach(stats += _)
-      if (currToken.isNot[RightBrace] && currToken.isNot[Indentation.Outdent]) acceptStatSep()
+      if (!StatSeqEnd(currToken)) acceptStatSep()
     }
   }
 
@@ -4205,7 +4204,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def blockStatSeq(allowRepeated: Boolean = false): List[Stat] = listBy[Stat] { stats =>
     def notCaseDefEnd(): Boolean = currToken match {
-      case _: RightBrace | _: RightParen | _: EOF | _: Indentation.Outdent => false
+      case _: RightParen | StatSeqEnd() => false
       case _: KwCase => !isCaseIntroOnKwCase()
       case _: Ellipsis => !peek[KwCase]
       case _ => true
