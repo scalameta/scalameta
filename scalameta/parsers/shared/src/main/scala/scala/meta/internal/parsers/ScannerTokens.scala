@@ -211,7 +211,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   object StatSep extends Function[Token, Boolean] {
     def apply(token: Token): Boolean = token match {
-      case _: Semicolon | _: AtEOLorF => true
+      case _: Semicolon | _: AtEOL => true
       case _ => false
     }
     def unapply(token: Token) = apply(token)
@@ -561,10 +561,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: KwExtends => getTemplateInherit(sepRegions)
       case _: Ident => curr.text match {
           case soft.KwDerives() => getTemplateInherit(sepRegions)
-          case soft.KwExtension()
-              if next.isAny[LeftParen, LeftBracket] &&
-                (StatSep(prevToken) || prevToken.is[Indentation] || prevToken.is[LeftBrace] ||
-                  prevToken.is[RightArrow]) => currRef(RegionExtensionMark :: sepRegions)
+          case soft.KwExtension() if (prevToken match {
+                case _: BOF | _: Indentation | _: LeftBrace | _: RightArrow | StatSep() => next
+                    .isAny[LeftParen, LeftBracket]
+                case _ => false
+              }) => currRef(RegionExtensionMark :: sepRegions)
           case _ => currRef(sepRegions)
         }
       case _ => currRef(sepRegions)
