@@ -1444,7 +1444,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    // c1</stats0>
        |<thenp>Term.Block aaa
        |    // c1</thenp>
-       |<elsep>Lit.Unit     // c1@@</elsep>
+       |<elsep>Lit.Unit   @@if aa then</elsep>
        |<stats1>Term.If if aa then
        |    aaa</stats1>
        |<elsep>Lit.Unit     aaa@@</elsep>
@@ -1461,7 +1461,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Indentation.Indent [22..22)
        |Ident(aaa) [27..30)
        |Indentation.Outdent [40..40)
-       |LF [40..41)
        |KwIf [43..45)
        |Ident(aa) [46..48)
        |KwThen [49..53)
@@ -1514,8 +1513,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |<stats0>Term.Apply b.c()</stats0>
        |<fun>Term.Select b.c</fun>
        |<argClause>Term.ArgClause ()</argClause>
-       |<elsep>Lit.Unit 
-       |      // c2</elsep>
+       |<elsep>Lit.Unit   @@d.e</elsep>
        |<stats1>Term.Select d.e</stats1>
        |""".stripMargin,
     """|BOF [0..0)
@@ -1534,7 +1532,6 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |LeftParen [26..27)
        |RightParen [27..28)
        |Indentation.Outdent [52..52)
-       |LF [40..41)
        |Ident(d) [55..56)
        |Dot [56..57)
        |Ident(e) [57..58)
