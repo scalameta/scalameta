@@ -457,7 +457,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def isAtEndMarker(): Boolean = isEndMarkerIntro(currToken, peekIndex)
 
   def acceptStatSep(): Unit = {
-    val ok = acceptIf(StatSep) || isAtEndMarker()
+    val ok = acceptIf(StatSep) || isAtEndMarker() ||
+      prev[Indentation.Outdent] && !at[Indentation.Outdent]
     if (!ok) syntaxErrorExpected[Semicolon]
   }
   def acceptStatSepOpt() = if (!StatSeqEnd(currToken)) acceptStatSep()
@@ -1997,6 +1998,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
       val resOpt = currToken match {
         case lf: InfixLF => getLeadingInfix(lf)(Term.Name.apply)(getNextRhs(emptyTypeArgs))
+        case _ if prev[Indentation.Outdent] => None
         case t: Unquote =>
           val op = unquote[Term.Name](t)
           Some(getPostfixOrNextRhs(op))

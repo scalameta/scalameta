@@ -115,7 +115,9 @@ class TypeSuite extends BaseDottySuite {
          | with
          |    type D <: Product
          |""".stripMargin,
-      "error: `;` expected but `with` found"
+      """|<input>:3: error: illegal start of definition `with`
+         | with
+         | ^""".stripMargin
     )
   }
 
