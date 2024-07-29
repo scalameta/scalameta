@@ -2905,6 +2905,65 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("fewer braces and leading infix 2") {
+    val code = """|object A:
+                  |  foo.map:
+                  |    bar
+                  |  + baz
+                  |""".stripMargin
+    val layout = """|object A {
+                    |  foo.map {
+                    |    bar
+                    |  } + baz
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Term.ApplyInfix(
+        Term.Apply(Term.Select(tname("foo"), tname("map")), List(blk(tname("bar")))),
+        tname("+"),
+        Nil,
+        List(tname("baz"))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("optional braces and leading infix 3") {
+    val code = """|object A:
+                  |  foo match
+                  |    case bar => bar * bar
+                  |  + baz
+                  |""".stripMargin
+    val layout = """|object A {
+                    |  (foo match {
+                    |    case bar =>
+                    |      bar * bar
+                    |  }) + baz
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("A"),
+      tpl(Term.ApplyInfix(
+        Term.Match(
+          tname("foo"),
+          List(Case(
+            Pat.Var(tname("bar")),
+            None,
+            Term.ApplyInfix(tname("bar"), tname("*"), Nil, List(tname("bar")))
+          )),
+          Nil
+        ),
+        tname("+"),
+        Nil,
+        List(tname("baz"))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("scala3 code using CRLF 2: for-yield without braces") {
     val code = """|object A:
                   |  for
