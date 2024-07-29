@@ -28,19 +28,24 @@ object Keywords {
     final def apply(token: Token): Option[A] = unapply(token)
   }
 
-  abstract class IsWithPred(isEnabled: Boolean, pred: String => Boolean) {
+  abstract class IsWithPred(isEnabled: Boolean, pred: String => Boolean)
+      extends Function[Token, Boolean] {
     private def checkEnabled(value: => String): Boolean = pred(value)
     private val check: (=> String) => Boolean = if (isEnabled) checkEnabled else _ => false
     @inline
     final def unapply(value: String): Boolean = check(value)
     @inline
-    final def unapply(token: Token.Ident): Boolean = check(token.text)
+    final def unapply(token: Token.Ident): Boolean = matches(token)
     @inline
-    final def unapply(token: Token): Boolean = identClass.isInstance(token) && check(token.text)
+    final def unapply(token: Token): Boolean = matches(token)
     @inline
-    final def apply(token: Token.Ident): Boolean = unapply(token)
+    final def apply(token: Token.Ident): Boolean = matches(token)
     @inline
-    final def apply(token: Token): Boolean = unapply(token)
+    final def apply(token: Token): Boolean = matches(token)
+    @inline
+    final def matches(token: Token.Ident): Boolean = check(token.text)
+    @inline
+    final def matches(token: Token): Boolean = identClass.isInstance(token) && check(token.text)
   }
 
   abstract class IsWithName(isEnabled: Boolean, val name: String)

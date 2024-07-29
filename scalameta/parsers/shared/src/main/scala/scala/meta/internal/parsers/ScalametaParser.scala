@@ -432,7 +432,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   /** If current token is T consume it. */
   @inline
-  private def acceptOpt(unapply: Token => Boolean): Boolean = nextIf(unapply(currToken))
+  private def acceptIf(unapply: Token => Boolean): Boolean = nextIf(unapply(currToken))
 
   private def acceptIfAfterOpt[A <: Token: ClassTag, B <: Token: ClassTag]: Boolean =
     if (at[A]) { next(); true }
@@ -896,7 +896,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val op = typeName()
         val leftAssoc = op.isLeftAssoc
         if (mode != InfixMode.FirstOp) checkAssoc(op, leftAssoc, mode == InfixMode.LeftOp)
-        newLineOptWhenFollowedBy(TypeIntro(_))
+        newLineOptWhenFollowedBy(TypeIntro)
         val typ = compoundType(inMatchType = inMatchType)
         def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
         if (leftAssoc)
@@ -917,7 +917,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       @inline
       def reduce(rhs: ctx.Typ, op: Option[ctx.Op]): ctx.Typ = ctx.reduceStack(base, rhs, rhs, op)
       def getNextRhs(op: ctx.Op, rhs: ctx.Typ): ctx.Typ = {
-        newLineOptWhenFollowedBy(TypeIntro(_))
+        newLineOptWhenFollowedBy(TypeIntro)
         ctx.push(ctx.UnfinishedInfix(reduce(rhs, Some(op)), op))
         compoundType(inMatchType = inMatchType)
       }
@@ -3220,11 +3220,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     sid match {
       case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isPath =>
         if (acceptOpt[Dot]) dotselectors
-        else if (acceptOpt(soft.KwAs(_))) Importer(sid, importeeRename(name(tn)) :: Nil)
+        else if (acceptIf(soft.KwAs)) Importer(sid, importeeRename(name(tn)) :: Nil)
         else if (Wildcard.isStar(tn.tokens.head))
           Importer(sid, copyPos(tn)(Importee.Wildcard()) :: Nil)
         else Importer(sid, copyPos(tn)(Importee.Name(name(tn))) :: Nil)
-      case tn: Term.Name if acceptOpt(soft.KwAs(_)) =>
+      case tn: Term.Name if acceptIf(soft.KwAs) =>
         Importer(autoPos(Term.Anonymous()), importeeRename(name(tn)) :: Nil)
       case _ =>
         accept[Dot]
@@ -3790,7 +3790,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def constrInternal(): (Init, List[Stat]) = {
     val init = initInsideConstructor()
-    val stats = if (acceptOpt(StatSep(_))) blockStatSeq() else Nil
+    val stats = if (acceptIf(StatSep)) blockStatSeq() else Nil
     (init, stats)
   }
 
@@ -4088,7 +4088,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     @tailrec
     def skipStatementSeparators(): Unit = {
       if (at[EOF]) return
-      if (!acceptOpt(StatSep(_))) syntaxErrorExpected[EOF]
+      if (!acceptIf(StatSep)) syntaxErrorExpected[EOF]
       skipStatementSeparators()
     }
     val maybeStat = consumeStat.lift(currToken)
