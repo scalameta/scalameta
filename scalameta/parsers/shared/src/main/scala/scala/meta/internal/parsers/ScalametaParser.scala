@@ -917,19 +917,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val base = ctx.stack
       @inline
       def reduce(rhs: ctx.Typ, op: Option[ctx.Op]): ctx.Typ = ctx.reduceStack(base, rhs, rhs, op)
-      def getNextRhs(op: ctx.Op, rhs: ctx.Typ): ctx.Typ = {
+      def getNextRhs(rhs: ctx.Typ)(op: ctx.Op): ctx.Typ = {
         newLineOptWhenFollowedBy(TypeIntro)
         ctx.push(ctx.UnfinishedInfix(reduce(rhs, Some(op)), op))
         compoundType(inMatchType = inMatchType)
       }
       @tailrec
-      def loop(rhs: ctx.Typ): ctx.Typ = currToken match {
-        case VarArgTypeParam() => reduce(rhs, None)
-        case _: Ident | _: Unquote => loop(getNextRhs(typeName(), rhs))
-        case _ => tryGetNextInfixOpIfLeading(Type.Name.apply) match {
-            case Some(op) => loop(getNextRhs(op, rhs))
-            case _ => reduce(rhs, None)
-          }
+      def loop(rhs: ctx.Typ): ctx.Typ = (currToken match {
+        case lf: InfixLF => getLeadingInfix(lf)(Type.Name.apply)(getNextRhs(rhs))
+        case VarArgTypeParam() => None
+        case _: Ident | _: Unquote => Some(getNextRhs(rhs)(typeName()))
+        case _ => None
+      }) match {
+        case Some(x) => loop(x)
+        case None => reduce(rhs, None)
       }
       loop(t)
     }
@@ -1912,18 +1913,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       at = at
     )
 
-  private def tryGetNextInfixOpIfLeading[A <: Name](f: String => A): Option[A] = currToken match {
-    case lf: InfixLF => peekToken match {
-        case opToken: Ident => tryAhead {
-            if (peek[Indentation]) None
-            else lf.invalid.fold(Some(atCurPos(next { newLineOpt(); f(opToken.value) })))(
-              syntaxError(_, at = opToken)
-            )
-          }
-        case _ => None
-      }
-    case _ => None
-  }
+  private def getLeadingInfix[A <: Name, B](lf: InfixLF)(f: String => A)(g: A => B): Option[B] =
+    peekToken match {
+      case op: Ident =>
+        def res = Some(g(atCurPos { next(); newLineOpt(); f(op.value) }))
+        tryAhead(if (peek[Indentation]) None else lf.invalid.fold(res)(syntaxError(_, at = op)))
+      case _ => None
+    }
 
   def postfixExpr(allowRepeated: Boolean): Term = {
     val startPos = currIndex
@@ -1950,7 +1946,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
       def getPrevLhs(op: Term.Name): Term = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
 
-      def getNextRhs(op: Term.Name, targs: Type.ArgClause) =
+      def getNextRhs(targs: Type.ArgClause)(op: Term.Name) =
         getNextRhsWith(op, targs, argumentExprsOrPrefixExpr(PostfixStat))
 
       def getNextRhsWith(op: Term.Name, targs: Type.ArgClause, rhs: Term) = {
@@ -1985,7 +1981,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           else isIdentOrExprIntro(currToken))
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
-          getNextRhs(op, targs) // [a]
+          getNextRhs(targs)(op) // [a]
         // afterwards, ctx.stack = List([a +])
         else {
           val argPos = currIndex
@@ -2000,6 +1996,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
 
       val resOpt = currToken match {
+        case lf: InfixLF => getLeadingInfix(lf)(Term.Name.apply)(getNextRhs(emptyTypeArgs))
         case t: Unquote =>
           val op = unquote[Term.Name](t)
           Some(getPostfixOrNextRhs(op))
@@ -2010,7 +2007,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           val op = atCurPosNext(Term.Name("match"))
           val lhs = getPrevLhs(op)
           Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
-        case _ => tryGetNextInfixOpIfLeading(Term.Name.apply).map(getNextRhs(_, emptyTypeArgs))
+        case _ => None
       }
       resOpt match {
         case Some(Left(x)) => x
