@@ -127,4 +127,35 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
     }
   }
 
+  protected def assertTokensAsStructureLines(tokens: Iterable[Token], expected: String)(implicit
+      loc: Location
+  ): Unit = assertNoDiff(TestHelpers.tokensAsStructureLines(tokens.iterator), expected)
+
+  protected def assertTokenizedAsStructureLines(code: String, expected: String, dialect: Dialect)(
+      implicit
+      loc: Location,
+      conv: TestHelpers.Tokenize
+  ): Unit = assertTokensAsStructureLines(conv(code)(dialect), expected)
+
+  protected def assertTokenizedAsStructureLines(code: String, expected: String)(implicit
+      loc: Location,
+      dialect: Dialect,
+      conv: TestHelpers.Tokenize
+  ): Unit = assertTokenizedAsStructureLines(code, expected, dialect)
+
+  def assertTokensAsSyntax(tokens: Iterable[Token], expected: String)(implicit
+      loc: Location
+  ): Unit = assertNoDiff(TestHelpers.tokensAsSyntax(tokens.iterator), expected)
+
+  def assertTokenizedAsSyntax(code: String, expected: String, dialect: Dialect)(implicit
+      loc: Location,
+      conv: TestHelpers.Tokenize
+  ): Unit = assertTokensAsSyntax(conv(code)(dialect), expected)
+
+  def assertTokenizedAsSyntax(code: String, expected: String)(implicit
+      loc: Location,
+      dialect: Dialect,
+      conv: TestHelpers.Tokenize
+  ): Unit = assertTokenizedAsSyntax(code, expected, dialect)
+
 }
