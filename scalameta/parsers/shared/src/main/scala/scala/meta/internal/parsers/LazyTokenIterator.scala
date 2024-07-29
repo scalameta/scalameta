@@ -24,6 +24,8 @@ private[parsers] class LazyTokenIterator private (
   @inline
   private def getNextTokenRef(): TokenRef = nextToken(curr)
 
+  override def hasCurr: Boolean = currToken ne null
+
   override def next(): Unit = {
     prev = curr
     // also adds to prev in case we are forked
