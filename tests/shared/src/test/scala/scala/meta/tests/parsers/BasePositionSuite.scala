@@ -49,9 +49,11 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
   def checkPositions[T <: Tree: Parse](
       code: TestOptions,
       expected: String,
+      expectedTokens: String = "",
       showFieldName: Boolean = false
   )(implicit loc: Location): Unit = test(code) {
     implicit val D = defaultDialect
+    if (expectedTokens.nonEmpty) assertTokenizedAsStructureLines(code.name, expectedTokens)
     val tree = code.name.parse[T]
       .fold(x => fail("parse failure", x.details), MoreHelpers.requireNonEmptyOrigin(_))
     val sb = new StringBuilder
