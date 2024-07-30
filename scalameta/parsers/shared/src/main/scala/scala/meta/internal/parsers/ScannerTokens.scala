@@ -58,15 +58,15 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   val soft = new SoftKeywords(dialect)
 
-  object TypeIntro {
-    def unapply(token: Token): Boolean = token match {
+  object TypeIntro extends Function[Token, Boolean] {
+    def apply(token: Token): Boolean = token match {
       case _: Ident | _: KwSuper | _: KwThis | _: LeftParen | _: At | _: Underscore | _: Unquote =>
         true
       case _: Literal => dialect.allowLiteralTypes
       case _ => false
     }
 
-    def apply(token: Token) = unapply(token)
+    def unapply(token: Token) = apply(token)
   }
 
   @inline
@@ -185,12 +185,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     case _ => false
   }
 
-  object StatSeqEnd {
-    def unapply(token: Token): Boolean = token match {
+  object StatSeqEnd extends Function[Token, Boolean] {
+    def apply(token: Token): Boolean = token match {
       case _: RightBrace | _: EOF | _: Indentation.Outdent => true
       case _ => false
     }
-    def apply(token: Token) = unapply(token)
+    def unapply(token: Token) = apply(token)
   }
 
   def mightStartStat(token: Token, closeDelimOK: Boolean): Boolean = token match {
@@ -209,12 +209,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     case _ => false
   }
 
-  object StatSep {
-    def apply(token: Token) = unapply(token)
-    def unapply(token: Token): Boolean = token match {
+  object StatSep extends Function[Token, Boolean] {
+    def apply(token: Token): Boolean = token match {
       case _: Semicolon | _: AtEOLorF => true
       case _ => false
     }
+    def unapply(token: Token) = apply(token)
   }
 
   object Wildcard {
