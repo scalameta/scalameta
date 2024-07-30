@@ -62,19 +62,19 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
       // the syntax "lazy" then it's trivially verified and excluded from the
       // output.
       case `tree` =>
-      case t @ Lit(value) if t.syntax == value.toString =>
-      case t @ Lit.Unit() if t.syntax == "()" => // This case is needed for Scala.js.
-      case t @ Name(value) if t.syntax == value =>
-      case t @ Importee.Name(Name(value)) if t.syntax == value =>
-      case t @ Pat.Var(Name(value)) if t.syntax == value =>
-      case t: Mod if s"Mod.${t.syntax.capitalize}" == t.productPrefix =>
-      case t: Type.Param if t.syntax == t.name.value =>
-      case t @ Term.Param(Nil, name, Some(tpe), _) if t.syntax == s"$name: $tpe" =>
-      case t @ Init(Type.Name(value), anon, Nil) if t.syntax == value =>
-      case t: Importee.Wildcard if t.syntax == "_" =>
-      case t: Pat.Wildcard if t.syntax == "_" =>
-      case t @ Term.ArgClause(arg :: Nil, None) if t.syntax == arg.syntax =>
-      case t @ Pat.ArgClause(arg :: Nil) if t.syntax == arg.syntax =>
+      case t: Lit if t.text == t.value.toString =>
+      case t: Lit.Unit if t.text == "()" => // This case is needed for Scala.js.
+      case t: Name if t.text == t.value =>
+      case t @ Importee.Name(Name(value)) if t.text == value =>
+      case t @ Pat.Var(Name(value)) if t.text == value =>
+      case t: Mod if s"Mod.${t.text.capitalize}" == t.productPrefix =>
+      case t: Type.Param if t.text == t.name.value =>
+      case t @ Term.Param(Nil, name, Some(tpe), _) if t.text == s"$name: $tpe" =>
+      case t @ Init(Type.Name(value), anon, Nil) if t.text == value =>
+      case t: Importee.Wildcard if t.text == "_" =>
+      case t: Pat.Wildcard if t.text == "_" =>
+      case t @ Term.ArgClause(arg :: Nil, None) if t.text == arg.text =>
+      case t @ Pat.ArgClause(arg :: Nil) if t.text == arg.text =>
       case t =>
         object IterableIndex {
           def unapply(obj: Any): Option[Int] = obj match {
@@ -92,7 +92,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
           else None
         nameOpt.foreach(x => sb.append('<').append(x).append('>'))
         sb.append(t.productPrefix).append(' ')
-        val syntax = t.syntax
+        val syntax = t.text
         if (syntax.isEmpty) {
           val (leading, trailing) = t.pos.lineContent.splitAt(t.pos.startColumn)
           sb.append(leading).append("@@").append(trailing)
