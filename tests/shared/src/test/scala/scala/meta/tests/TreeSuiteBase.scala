@@ -13,19 +13,19 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected def assertStruct(obtained: Tree, extraClue: String = "")(
       expected: String
-  )(implicit loc: munit.Location): Unit = {
+  )(implicit loc: Location): Unit = {
     def msg = TestHelpers.getMessageWithExtraClue("tree structure not equal", extraClue)
     assertNoDiff(obtained.structure, expected, msg)
   }
 
   protected def assertTree(obtained: Tree, extraClue: String = "")(expected: Tree)(implicit
-      loc: munit.Location
+      loc: Location
   ): Unit = assertTreeStruct(obtained, extraClue)(expected, expected.structure)
 
   protected def assertTreeStruct(
       obtained: Tree,
       extraClue: String = ""
-  )(expected: Tree, expectedStruct: String)(implicit loc: munit.Location): Unit = {
+  )(expected: Tree, expectedStruct: String)(implicit loc: Location): Unit = {
     assertStruct(obtained, extraClue)(expectedStruct)
     expected.origin match {
       case Origin.None =>
@@ -34,28 +34,26 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
     }
   }
 
-  protected def assertTrees(
-      obtained: Tree*
-  )(expected: Tree*)(implicit loc: munit.Location): Unit = {
+  protected def assertTrees(obtained: Tree*)(expected: Tree*)(implicit loc: Location): Unit = {
     assertEquals(obtained.length, expected.length)
     obtained.zip(expected).foreach { case (o, e) => assertTree(o)(e) }
   }
 
   protected def assertTree(
       obtained: Option[Tree]
-  )(expected: Option[Tree])(implicit loc: munit.Location): Unit = (obtained, expected) match {
+  )(expected: Option[Tree])(implicit loc: Location): Unit = (obtained, expected) match {
     case (Some(o), Some(e)) => assertTree(o)(e)
     case _ => assertEquals(obtained, expected)
   }
 
   protected def assertSyntax(obtained: Tree, syntax: String = null)(
       expected: Tree
-  )(implicit loc: munit.Location, dialect: Dialect): Unit =
+  )(implicit loc: Location, dialect: Dialect): Unit =
     assertSyntaxWithClue(obtained, syntax)(expected, expected.structure)
 
   protected def assertSyntaxWithClue(
       obtained: Tree
-  )(syntax: String)(clue: => Any)(implicit loc: munit.Location, dialect: Dialect): String = {
+  )(syntax: String)(clue: => Any)(implicit loc: Location, dialect: Dialect): String = {
     val reprinted = obtained.reprint
     if (syntax.nonEmpty) assertNoDiff(reprinted, syntax, clue)
     reprinted
@@ -64,12 +62,12 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   protected def assertSyntaxWithClue(
       obtained: Tree,
       syntax: String = null
-  )(expected: Tree, clue: => Any)(implicit loc: munit.Location, dialect: Dialect): Unit =
+  )(expected: Tree, clue: => Any)(implicit loc: Location, dialect: Dialect): Unit =
     assertSyntaxWithClue(obtained)(TestHelpers.getSyntax(expected.reprint, syntax))(clue)
 
   protected def checkTree(obtained: Tree, syntax: String = null)(
       expected: Tree
-  )(implicit loc: munit.Location, dialect: Dialect): Unit = {
+  )(implicit loc: Location, dialect: Dialect): Unit = {
     val expectedStruct = expected.structure
     assertTreeStruct(obtained)(expected, expectedStruct)
     assertSyntaxWithClue(obtained, syntax)(expected, expectedStruct)
@@ -77,21 +75,21 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected def checkTrees(
       obtained: Tree*
-  )(expected: Tree*)(implicit loc: munit.Location, dialect: Dialect): Unit = {
+  )(expected: Tree*)(implicit loc: Location, dialect: Dialect): Unit = {
     assertEquals(obtained.length, expected.length)
     obtained.zip(expected).foreach { case (o, e) => checkTree(o)(e) }
   }
 
   protected def checkTreesWithSyntax(
       obtained: Tree*
-  )(syntax: String*)(expected: Tree*)(implicit loc: munit.Location, dialect: Dialect): Unit = {
+  )(syntax: String*)(expected: Tree*)(implicit loc: Location, dialect: Dialect): Unit = {
     assertEquals(obtained.length, syntax.length)
     checkTreesWithSyntax(obtained.zip(syntax): _*)(expected: _*)
   }
 
   protected def checkTreesWithSyntax(
       obtained: (Tree, String)*
-  )(expected: Tree*)(implicit loc: munit.Location, dialect: Dialect): Unit = {
+  )(expected: Tree*)(implicit loc: Location, dialect: Dialect): Unit = {
     assertEquals(obtained.length, expected.length)
     obtained.zip(expected).foreach { case ((o, s), e) => checkTree(o, s)(e) }
   }
@@ -107,12 +105,11 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
     def nl2lf: String = if (ScalaCompat.EOL == "\n") value else value.replace(ScalaCompat.EOL, "\n")
   }
 
-  protected def assertOriginalSyntax(tree: Tree, original: String)(implicit
-      loc: munit.Location
-  ): Unit = assertNoDiff(tree.toString, original, tree.structure)
+  protected def assertOriginalSyntax(tree: Tree, original: String)(implicit loc: Location): Unit =
+    assertNoDiff(tree.toString, original, tree.structure)
 
   protected def assertWithOriginalSyntax(tree: Tree, original: String, reprinted: String)(implicit
-      loc: munit.Location,
+      loc: Location,
       dialect: Dialect
   ): Unit = {
     val struct = tree.structure
@@ -122,7 +119,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected def assertWithOriginalSyntax(
       trees: Tree*
-  )(original: String*)(reprinted: String*)(implicit loc: munit.Location, dialect: Dialect): Unit = {
+  )(original: String*)(reprinted: String*)(implicit loc: Location, dialect: Dialect): Unit = {
     assertEquals(trees.length, original.length)
     assertEquals(trees.length, reprinted.length)
     trees.zip(original).zip(reprinted).foreach { case ((t, o), r) =>
