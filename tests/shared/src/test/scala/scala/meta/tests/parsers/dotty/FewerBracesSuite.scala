@@ -529,7 +529,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |      y > 0
          |    (0)
          |""".stripMargin,
-      "error: `;` expected but `.` found"
+      """|<input>:3: error: illegal start of definition `.`
+         |    .filter: (y: Int) =>
+         |    ^""".stripMargin
     )
   }
 

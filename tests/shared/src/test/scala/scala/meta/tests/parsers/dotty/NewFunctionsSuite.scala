@@ -428,7 +428,7 @@ class NewFunctionsSuite extends BaseDottySuite {
          |  (e: Entry) 
          |=> e.Key
          |""".stripMargin,
-      """|error: `;` expected but `=>` found
+      """|<input>:3: error: illegal start of definition `=>`
          |=> e.Key
          |^""".stripMargin
     )
