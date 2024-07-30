@@ -460,6 +460,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
   def acceptStatSepOpt() = if (!StatSeqEnd(currToken)) acceptStatSep()
 
+  def skipAllStatSep(): Unit = while (StatSep(currToken)) next()
+
   /* ------------- MODIFIER VALIDATOR --------------------------------------- */
 
   def rejectMod[M <: Mod](mods: collection.Iterable[Mod], errorMsg: String)(implicit
@@ -816,10 +818,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           @tailrec
           def iter(): Unit = {
             buf += typeDefOrDcl(Nil)
-            if (StatSep(currToken)) {
-              next()
-              if (at[KwType]) iter()
-            }
+            if (acceptIf(StatSep) && at[KwType]) iter()
           }
           iter()
         }
@@ -1524,7 +1523,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: KwDo if dialect.allowDoWhile =>
         next()
         val body = expr()
-        while (StatSep(currToken)) next()
+        skipAllStatSep()
         accept[KwWhile]
         val cond = condExpr()
         Term.Do(body, cond)
@@ -2439,17 +2438,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def iter(): Unit = currToken match {
       case t: Ellipsis =>
         cases += ellipsis[Case](t, 1, accept[KwCase])
-        while (StatSep(currToken)) next()
+        skipAllStatSep()
         iter()
       case _: KwCase if isCaseIntroOnKwCase() =>
         next()
         currToken match {
           case t: Unquote =>
             cases += unquote[Case](t)
-            while (StatSep(currToken)) next()
+            skipAllStatSep()
           case _ =>
             cases += caseClause()
-            if (!at[EOF] && StatSep(currToken)) tryAhead(isCaseIntro())
+            if (StatSep(currToken)) tryAhead(isCaseIntro())
         }
         iter()
       case _ =>
@@ -4080,8 +4079,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def entrypointStat(): Stat = {
     @tailrec
-    def skipStatementSeparators(): Unit = {
-      if (at[EOF]) return
+    def skipStatementSeparators(): Unit = if (!at[EOF]) {
       if (!acceptIf(StatSep)) syntaxErrorExpected[EOF]
       skipStatementSeparators()
     }
