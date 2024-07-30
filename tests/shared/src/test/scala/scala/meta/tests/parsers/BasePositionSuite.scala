@@ -52,7 +52,8 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
       showFieldName: Boolean = false
   )(implicit loc: Location): Unit = test(code) {
     implicit val D = defaultDialect
-    val tree = MoreHelpers.requireNonEmptyOrigin(code.name.parse[T].get)
+    val tree = code.name.parse[T]
+      .fold(x => fail("parse failure", x.details), MoreHelpers.requireNonEmptyOrigin(_))
     val sb = new StringBuilder
     tree.traverse {
       // Reduce the expected output by ignoring lines that can be trivially
