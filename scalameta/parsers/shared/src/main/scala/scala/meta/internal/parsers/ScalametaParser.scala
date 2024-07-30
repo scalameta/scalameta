@@ -3523,11 +3523,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     rejectMod[Mod.Open](mods, Messages.InvalidOpen)
     if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     val name = termName()
-    def warnProcedureDeprecation = {
+
+    def procedureSyntaxDeclType: Type = {
       val hint = s"Convert procedure `$name` to method by adding `: Unit =`."
       if (dialect.allowProcedureSyntax)
         deprecationWarning(s"Procedure syntax is deprecated. $hint", at = name)
       else syntaxError(s"Procedure syntax is not supported. $hint", at = name)
+      autoPos(Type.Name("Unit"))
     }
 
     def nonInterleavedParamClauses = {
@@ -3540,23 +3542,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         memberParamClauseGroups(ownerIsType = false, ctxBoundsAllowed = true)
       else nonInterleavedParamClauses.toList
 
+    def defn(declType: Option[Type]) = Defn.Def(mods, name, paramClauses, declType, expr())
+
     val restype = ReturnTypeContext.within(typedOpt())
-    if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) {
-      warnProcedureDeprecation
-      Defn.Def(mods, name, paramClauses, Some(autoPos(Type.Name("Unit"))), expr())
-    } else if (StatSeqEnd(currToken) || StatSep(currToken)) {
-      val decltype = restype.getOrElse {
-        warnProcedureDeprecation
-        autoPos(Type.Name("Unit"))
-      }
-      Decl.Def(mods, name, paramClauses, decltype)
-    } else {
-      accept[Equals]
-      val isMacro = acceptOpt[KwMacro]
-      val rhs = expr()
-      if (isMacro) Defn.Macro(mods, name, paramClauses, restype, rhs)
-      else Defn.Def(mods, name, paramClauses, restype, rhs)
-    }
+    if (acceptOpt[Equals])
+      if (!acceptOpt[KwMacro]) defn(restype)
+      else Defn.Macro(mods, name, paramClauses, restype, expr())
+    else if (StatSeqEnd(currToken) || StatSep(currToken)) Decl
+      .Def(mods, name, paramClauses, restype.getOrElse(procedureSyntaxDeclType))
+    else if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) defn(Some(procedureSyntaxDeclType))
+    else syntaxErrorExpected[Equals]
   }
 
   def typeDefOrDcl(mods: List[Mod]): Stat.TypeDef = autoEndPos(mods) {
