@@ -61,7 +61,7 @@ object OccurrenceSuite {
         relpathstr
       )
       new TestCase(relpath.toURI(false).toString)(
-        expectpathOpt.toRight("// missing expect file\n").right.map { expectpath =>
+        expectpathOpt.toRight(s"// missing expect file: $relpathstr\n").right.map { expectpath =>
           val semanticdb = SemanticdbPaths.toSemanticdb(source.toRelative(sourceroot), targetroot)
           val textdocument = TextDocuments.parseFrom(semanticdb.readAllBytes).documents.head
           val obtained = OccurrenceSuite.printTextDocument(textdocument)
