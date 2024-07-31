@@ -1497,12 +1497,12 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    c1
        |  */ |
        |  boiling</stats0>
-       |<targClause>Type.ArgClause   freezing@@</targClause>
+       |<targClause>Type.ArgClause   @@/*</targClause>
        |""".stripMargin,
     """|BOF [0..0)
        |LeftBrace [0..1)
        |Ident(freezing) [4..12)
-       |InfixLF [12..13)
+       |InfixLF [23..37)
        |Ident(|) [38..39)
        |LF [39..40)
        |Ident(boiling) [42..49)
@@ -1531,12 +1531,12 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  */
        |  |
        |  boiling</stats0>
-       |<targClause>Type.ArgClause   freezing@@</targClause>
+       |<targClause>Type.ArgClause   */@@</targClause>
        |""".stripMargin,
     """|BOF [0..0)
        |LeftBrace [0..1)
        |Ident(freezing) [4..12)
-       |InfixLF [12..13)
+       |InfixLF [37..38)
        |Ident(|) [40..41)
        |LF [41..42)
        |Ident(boiling) [44..51)
