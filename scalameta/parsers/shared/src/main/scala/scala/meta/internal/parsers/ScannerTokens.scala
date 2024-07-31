@@ -659,7 +659,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ => None
         }
         val ok = eolPos >= 0 && mightStartStat(next, closeDelimOK = true) &&
-          (prevToken.is[Indentation.Outdent] || canEndStat(prev) || isEndMarker())
+          (canEndStat(prev) || isEndMarker())
         if (ok) strip(regions).map(rs => Right(lastWhitespaceToken(rs, lineIndent))) else None
       }
 
