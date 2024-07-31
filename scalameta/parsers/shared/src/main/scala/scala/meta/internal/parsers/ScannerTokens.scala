@@ -340,32 +340,27 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
     @tailrec
     def mkOutdentsOpt(
-        regions: List[SepRegion]
-    )(f: List[SepRegion] => OutdentInfo): Either[List[SepRegion], TokenRef] = {
-      def setLastRef(ref: TokenRef, xs: List[SepRegion]): Unit =
-        if (currNonTrivial) ref.next = currRef(xs)
-      @tailrec
-      def mkOutdents(ref: TokenRef, xs: List[SepRegion]): Unit = f(xs) match {
-        case null => setLastRef(ref, xs)
+        xs: List[SepRegion],
+        wasDone: Boolean = false,
+        head: TokenRef = null,
+        last: TokenRef = null
+    )(implicit f: List[SepRegion] => OutdentInfo): Either[List[SepRegion], TokenRef] =
+      if (!wasDone) f(xs) match {
+        case null => mkOutdentsOpt(xs, true, head, last)
         case OutdentInfo(outdent, rs, done) =>
-          val tr =
-            if (outdent ne null) {
-              ref.next = mkOutdentTo(outdent, rs)
-              ref.next
-            } else ref
-          if (done || (rs eq xs)) setLastRef(tr, rs) else mkOutdents(tr, rs)
-      }
-      f(regions) match {
-        case null => Left(regions)
-        case OutdentInfo(outdent, rs, done) =>
-          if (outdent eq null) if (done || (rs eq regions)) Left(rs) else mkOutdentsOpt(rs)(f)
+          val isDone = done || (rs eq xs)
+          if (outdent eq null) mkOutdentsOpt(rs, isDone, head, last)
           else {
-            val res = mkOutdentTo(outdent, rs)
-            if (!done) mkOutdents(res, rs)
-            Right(res)
+            val tr = mkOutdentTo(outdent, rs)
+            val newHead = if (head eq null) tr else { last.next = tr; head }
+            mkOutdentsOpt(rs, isDone, newHead, tr)
           }
       }
-    }
+      else if (head eq null) Left(xs)
+      else {
+        if (currNonTrivial) last.next = currRef(xs)
+        Right(head)
+      }
 
     def currRef(regions: List[SepRegion], next: TokenRef = null): TokenRef =
       TokenRef(regions, curr, currPos, next)
