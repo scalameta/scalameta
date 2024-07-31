@@ -320,6 +320,59 @@ class InfixSuite extends BaseDottySuite {
     )
   }
 
+  test("scala3 infix syntax 3.6 comment") {
+    val code = """|{
+                  |  freezing /*
+                  |    c1 */ // c2
+                  |  |
+                  |  boiling
+                  |}
+                  |""".stripMargin
+    val layout = """|{
+                    |  freezing | boiling
+                    |}
+                    |""".stripMargin
+    val tree = blk(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling"))))
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scala3 infix syntax 3.7 comment") {
+    val code = """|{
+                  |  freezing
+                  |  // c1
+                  |  /*
+                  |    c2
+                  |  */ |
+                  |  boiling
+                  |}
+                  |""".stripMargin
+    val layout = """|{
+                    |  freezing | boiling
+                    |}
+                    |""".stripMargin
+    val tree = blk(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling"))))
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
+  test("scala3 infix syntax 3.8 comment") {
+    val code = """|{
+                  |  freezing
+                  |  // c1
+                  |  /*
+                  |    c2
+                  |  */
+                  |  |
+                  |  boiling
+                  |}
+                  |""".stripMargin
+    val layout = """|{
+                    |  freezing | boiling
+                    |}
+                    |""".stripMargin
+    val tree = blk(Term.ApplyInfix(tname("freezing"), tname("|"), Nil, List(tname("boiling"))))
+    runTestAssert[Stat](code, Some(layout))(tree)
+  }
+
   test("scala3 infix syntax 4") {
     runTestAssert[Stat](
       """|{
