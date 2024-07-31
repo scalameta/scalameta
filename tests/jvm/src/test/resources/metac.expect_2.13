@@ -1,3 +1,87 @@
+semanticdb/integration/src/main/scala-2.13/example/LeadingInfix.scala
+---------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala-2.13/example/LeadingInfix.scala
+Text => non-empty
+Language => Scala
+Symbols => 11 entries
+Occurrences => 28 entries
+
+Symbols:
+example/LeadingInfixTest# => trait LeadingInfixTest extends AnyRef { +9 decls }
+  AnyRef => scala/AnyRef#
+example/LeadingInfixTest#`?=`(). => abstract method ?=(right: Any): Unit
+  right => example/LeadingInfixTest#`?=`().(right)
+  Any => scala/Any#
+  Unit => scala/Unit#
+example/LeadingInfixTest#`?=`().(right) => param right: Any
+  Any => scala/Any#
+example/LeadingInfixTest#arg(). => method arg: Int
+  Int => scala/Int#
+example/LeadingInfixTest#testAttachedMlcDetachedSlcOp(). => method testAttachedMlcDetachedSlcOp: Unit
+  Unit => scala/Unit#
+example/LeadingInfixTest#testAttachedSlcMlcAttachedOp(). => method testAttachedSlcMlcAttachedOp: Unit
+  Unit => scala/Unit#
+example/LeadingInfixTest#testDetachedMlcDetachedSlcOp(). => method testDetachedMlcDetachedSlcOp: Unit
+  Unit => scala/Unit#
+example/LeadingInfixTest#testDetachedSlcMlcAttachedOp(). => method testDetachedSlcMlcAttachedOp: Unit
+  Unit => scala/Unit#
+example/LeadingInfixTest#testDetachedSlcMlcDetachedOp(). => method testDetachedSlcMlcDetachedOp: Unit
+  Unit => scala/Unit#
+example/LeadingInfixTest#testNoComments(). => method testNoComments: Unit
+  Unit => scala/Unit#
+example/LeadingInfixTest#testNoLeadingInfix(). => method testNoLeadingInfix: Unit
+  Unit => scala/Unit#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:22): LeadingInfixTest <= example/LeadingInfixTest#
+[3:6..3:8): ?= <= example/LeadingInfixTest#`?=`().
+[3:9..3:14): right <= example/LeadingInfixTest#`?=`().(right)
+[3:16..3:19): Any => scala/Any#
+[3:22..3:26): Unit => scala/Unit#
+[4:6..4:9): arg <= example/LeadingInfixTest#arg().
+[6:6..6:24): testNoLeadingInfix <= example/LeadingInfixTest#testNoLeadingInfix().
+[7:9..7:11): ?= => example/LeadingInfixTest#`?=`().
+[7:13..7:16): arg => example/LeadingInfixTest#arg().
+[10:6..10:20): testNoComments <= example/LeadingInfixTest#testNoComments().
+[12:4..12:6): ?= => example/LeadingInfixTest#`?=`().
+[12:8..12:11): arg => example/LeadingInfixTest#arg().
+[15:6..15:34): testAttachedSlcMlcAttachedOp <= example/LeadingInfixTest#testAttachedSlcMlcAttachedOp().
+[20:4..20:6): ?= => example/LeadingInfixTest#`?=`().
+[20:8..20:11): arg => example/LeadingInfixTest#arg().
+[23:6..23:34): testDetachedSlcMlcAttachedOp <= example/LeadingInfixTest#testDetachedSlcMlcAttachedOp().
+[29:4..29:6): ?= => example/LeadingInfixTest#`?=`().
+[29:8..29:11): arg => example/LeadingInfixTest#arg().
+[32:6..32:34): testDetachedSlcMlcDetachedOp <= example/LeadingInfixTest#testDetachedSlcMlcDetachedOp().
+[38:4..38:6): ?= => example/LeadingInfixTest#`?=`().
+[38:8..38:11): arg => example/LeadingInfixTest#arg().
+[41:6..41:34): testAttachedMlcDetachedSlcOp <= example/LeadingInfixTest#testAttachedMlcDetachedSlcOp().
+[46:4..46:6): ?= => example/LeadingInfixTest#`?=`().
+[46:8..46:11): arg => example/LeadingInfixTest#arg().
+[49:6..49:34): testDetachedMlcDetachedSlcOp <= example/LeadingInfixTest#testDetachedMlcDetachedSlcOp().
+[55:4..55:6): ?= => example/LeadingInfixTest#`?=`().
+[55:8..55:11): arg => example/LeadingInfixTest#arg().
+semanticdb/integration/src/main/scala-2.13/example/LeadingInfix.scala
+---------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala-2.13/example/LeadingInfix.scala
+Text => empty
+Language => Scala
+Diagnostics => 6 entries
+
+Diagnostics:
+[11:4..11:8) [warning] a pure expression does nothing in statement position; multiline expressions might require enclosing parentheses
+[16:4..16:8) [warning] a pure expression does nothing in statement position; multiline expressions might require enclosing parentheses
+[24:4..24:8) [warning] a pure expression does nothing in statement position; multiline expressions might require enclosing parentheses
+[33:4..33:8) [warning] a pure expression does nothing in statement position; multiline expressions might require enclosing parentheses
+[42:4..42:8) [warning] a pure expression does nothing in statement position; multiline expressions might require enclosing parentheses
+[50:4..50:8) [warning] a pure expression does nothing in statement position; multiline expressions might require enclosing parentheses
+
 semanticdb/integration/src/main/scala/example/Access.scala
 ----------------------------------------------------------
 
