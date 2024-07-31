@@ -284,6 +284,13 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
   scalacOptions -= "-Xfatal-warnings",
   scalacOptions += "-deprecation",
   scalacOptions ++= {
+    if (scalaVersion.value >= "2.13.14") Seq(
+      // "-Xsource:3",
+      "-Xsource-features:leading-infix"
+    )
+    else Nil
+  },
+  scalacOptions ++= {
     val pluginJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
     val warnUnusedImports = if (isScala213.value) "-Wunused:imports" else "-Ywarn-unused-import"
     Seq(
