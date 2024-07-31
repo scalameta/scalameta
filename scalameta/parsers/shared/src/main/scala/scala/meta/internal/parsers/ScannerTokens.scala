@@ -607,6 +607,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegionsOrig)
       else nonTrivial(getNonTrivialRegions(sepRegionsOrig))
     else {
+      def eolRef(rs: List[SepRegion], out: Token, eolPos: Int) =
+        TokenRef(rs, out, eolPos, nextPos, eolPos, null)
       @tailrec
       def findFirstEOL(pos: Int): Int =
         if (pos > indentPos) -1 else if (tokens(pos).is[AtEOL]) pos else findFirstEOL(pos + 1)
@@ -624,8 +626,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       val eolPos = if (hasLF) findFirstEOL(prevPos + 1) else -1
       val multiEOL = eolPos >= 0 && hasBlank(eolPos)
 
-      def eolRef(rs: List[SepRegion], out: Token) = TokenRef(rs, out, eolPos, nextPos, eolPos, null)
-
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
         val addRegionLine = lineIndent >= 0 && findIndent(rs) < lineIndent
         val regions = if (addRegionLine) RegionLine(lineIndent) :: rs else rs
@@ -633,7 +633,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         val out =
           if (!multiEOL || token.is[MultiEOL]) token
           else LFLF(token.input, token.dialect, token.start, tokens(indentPos).end)
-        eolRef(regions, out)
+        eolRef(regions, out, eolPos)
       }
 
       def getIfCanProduceLF(regions: List[SepRegion], lineIndent: Int = -1) = {
@@ -673,9 +673,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
       def getInfixLFIfNeeded() = {
         def getInfixLF(invalid: Option[String]) = Some(Right {
-          val lf = tokens(eolPos)
+          val lf = tokens(indentPos)
           val out = InfixLF(lf.input, lf.dialect, lf.start, lf.end, invalid)
-          eolRef(sepRegionsOrig, out)
+          eolRef(sepRegionsOrig, out, indentPos)
         })
         isLeadingInfix match {
           case LeadingInfix.Yes => getInfixLF(None)

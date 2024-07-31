@@ -1453,4 +1453,98 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     showFieldName = true
   )
 
+  checkPositions[Term](
+    """|{
+       |  freezing /*
+       |    c1 */ // c2
+       |  |
+       |  boiling
+       |}
+       |""".stripMargin,
+    """|<stats0>Term.ApplyInfix freezing /*
+       |    c1 */ // c2
+       |  |
+       |  boiling</stats0>
+       |<targClause>Type.ArgClause   @@boiling</targClause>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |LeftBrace [0..1)
+       |Ident(freezing) [4..12)
+       |InfixLF [31..32)
+       |Ident(|) [34..35)
+       |LF [35..36)
+       |Ident(boiling) [38..45)
+       |LF [45..46)
+       |RightBrace [46..47)
+       |EOF [48..48)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Term](
+    """|{
+       |  freezing
+       |  // c1
+       |  /*
+       |    c1
+       |  */ |
+       |  boiling
+       |}
+       |""".stripMargin,
+    """|<stats0>Term.ApplyInfix freezing
+       |  // c1
+       |  /*
+       |    c1
+       |  */ |
+       |  boiling</stats0>
+       |<targClause>Type.ArgClause   @@boiling</targClause>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |LeftBrace [0..1)
+       |Ident(freezing) [4..12)
+       |InfixLF [23..37)
+       |Ident(|) [38..39)
+       |LF [39..40)
+       |Ident(boiling) [42..49)
+       |LF [49..50)
+       |RightBrace [50..51)
+       |EOF [52..52)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Term](
+    """|{
+       |  freezing
+       |  // c1
+       |  /*
+       |    c1
+       |  */
+       |  |
+       |  boiling
+       |}
+       |""".stripMargin,
+    """|<stats0>Term.ApplyInfix freezing
+       |  // c1
+       |  /*
+       |    c1
+       |  */
+       |  |
+       |  boiling</stats0>
+       |<targClause>Type.ArgClause   @@boiling</targClause>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |LeftBrace [0..1)
+       |Ident(freezing) [4..12)
+       |InfixLF [37..38)
+       |Ident(|) [40..41)
+       |LF [41..42)
+       |Ident(boiling) [44..51)
+       |LF [51..52)
+       |RightBrace [52..53)
+       |EOF [54..54)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
 }
