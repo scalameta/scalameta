@@ -1947,7 +1947,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
       def getPrevLhs(op: Term.Name): Term = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
 
-      def getNextRhs(targs: Type.ArgClause)(op: Term.Name) =
+      def getNextRhs(targs: => Type.ArgClause)(op: Term.Name) =
         getNextRhsWith(op, targs, argumentExprsOrPrefixExpr(PostfixStat))
 
       def getNextRhsWith(op: Term.Name, targs: Type.ArgClause, rhs: Term) = {

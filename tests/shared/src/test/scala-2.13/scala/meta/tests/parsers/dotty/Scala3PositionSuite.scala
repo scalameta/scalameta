@@ -1465,7 +1465,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    c1 */ // c2
        |  |
        |  boiling</stats0>
-       |<targClause>Type.ArgClause     c1 */ // c2@@</targClause>
+       |<targClause>Type.ArgClause   @@boiling</targClause>
        |""".stripMargin,
     """|BOF [0..0)
        |LeftBrace [0..1)
@@ -1497,7 +1497,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    c1
        |  */ |
        |  boiling</stats0>
-       |<targClause>Type.ArgClause   @@/*</targClause>
+       |<targClause>Type.ArgClause   @@boiling</targClause>
        |""".stripMargin,
     """|BOF [0..0)
        |LeftBrace [0..1)
@@ -1531,7 +1531,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  */
        |  |
        |  boiling</stats0>
-       |<targClause>Type.ArgClause   */@@</targClause>
+       |<targClause>Type.ArgClause   @@boiling</targClause>
        |""".stripMargin,
     """|BOF [0..0)
        |LeftBrace [0..1)
