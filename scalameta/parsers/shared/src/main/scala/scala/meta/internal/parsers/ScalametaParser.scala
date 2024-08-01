@@ -4277,10 +4277,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         def getPackage(stats: List[Stat]) = autoEndPos(startPos)(Pkg(qid, stats))
         def inPackageOnOpen[T <: Token: ClassTag] = f(listBy[Stat] { buf =>
           next()
-          buf += getPackage(statSeq(statpf))
-          acceptAfterOptNL[T]
-          if (!at[EOF]) acceptStatSep()
           statSeqBuf(buf, statpf)
+          val pkg = getPackage(buf.toList)
+          buf.clear()
+          buf += pkg
+          acceptAfterOptNL[T]
+          if (!at[EOF]) {
+            acceptStatSep()
+            statSeqBuf(buf, statpf)
+          }
         })
         if (nextIfColonIndent()) inPackageOnOpen[Indentation.Outdent]
         else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace]
