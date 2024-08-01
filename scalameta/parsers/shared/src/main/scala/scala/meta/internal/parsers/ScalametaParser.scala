@@ -456,14 +456,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def isAtEndMarker(): Boolean = isEndMarkerIntro(currToken, peekIndex)
 
-  def acceptStatSep(): Unit = {
-    val ok = acceptIf(StatSep) || isAtEndMarker() ||
+  @inline
+  def acceptIfStatSep(): Boolean = acceptIf(StatSep)
+
+  def acceptStatSep(): Boolean = {
+    val ok = acceptIfStatSep() || isAtEndMarker() ||
       prev[Indentation.Outdent] && !at[Indentation.Outdent]
     if (!ok) syntaxErrorExpected[Semicolon]
+    ok
   }
-  def acceptStatSepOpt() = if (!StatSeqEnd(currToken)) acceptStatSep()
+  def acceptStatSepOpt() = !StatSeqEnd(currToken) && acceptStatSep()
 
-  def skipAllStatSep(): Unit = while (StatSep(currToken)) next()
+  def skipAllStatSep(): Boolean = {
+    val ok = acceptIfStatSep()
+    while (acceptIfStatSep()) {}
+    ok
+  }
 
   /* ------------- MODIFIER VALIDATOR --------------------------------------- */
 
@@ -821,7 +829,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           @tailrec
           def iter(): Unit = {
             buf += typeDefOrDcl(Nil)
-            if (acceptIf(StatSep) && at[KwType]) iter()
+            if (acceptIfStatSep() && at[KwType]) iter()
           }
           iter()
         }
@@ -3783,7 +3791,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def constrInternal(): (Init, List[Stat]) = {
     val init = initInsideConstructor()
-    val stats = if (acceptIf(StatSep)) blockStatSeq() else Nil
+    val stats = if (acceptIfStatSep()) blockStatSeq() else Nil
     (init, stats)
   }
 
@@ -4102,8 +4110,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     while (!StatSeqEnd(currToken))
       if (statpfAdd(currToken)) acceptStatSepOpt()
-      else if (StatSep(currToken)) acceptStatSep()
-      else syntaxError(errorMsg + s" `${currToken.name}`", at = currToken)
+      else if (!acceptIfStatSep()) syntaxError(errorMsg + s" `${currToken.name}`", at = currToken)
 
     if (isIndented) accept[Indentation.Outdent]
     isIndented
@@ -4278,7 +4285,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         if (nextIfColonIndent()) inPackageOnOpen[Indentation.Outdent]
         else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace]
         else bracelessPackageStats(x => f(List(getPackage(x))))
-      } else if (acceptIf(StatSep)) bracelessPackageStats(f)
+      } else if (acceptIfStatSep()) bracelessPackageStats(f)
       else f(statSeq(statpf))
 
     Source(bracelessPackageStats(identity))
