@@ -3320,25 +3320,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       "lazy not allowed here. Only val/given can be lazy."
     )
     onlyAcceptMod[Mod.Opaque, KwType](mods, "opaque not allowed here. Only types can be opaque.")
+    def onlyInline() = mods match {
+      case (_: Mod.Inline) :: Nil => true
+      case _ => false
+    }
     currToken match {
       case _: KwVal | _: KwVar => patDefOrDcl(mods)
       case _: KwGiven => givenDecl(mods)
-      case _: KwDef =>
+      case t: KwDef =>
         if (!secondaryConstructorAllowed && peek[KwThis])
-          syntaxError("Illegal secondary constructor", at = currToken.pos)
+          syntaxError("Illegal secondary constructor", at = t)
         funDefOrDclOrExtensionOrSecondaryCtor(mods)
       case _: KwType => typeDefOrDcl(mods)
-      case _ if isKwExtension(currIndex) => extensionGroupDecl(mods)
-      case _: KwCase if dialect.allowEnums && enumCaseAllowed && peek[Ident] =>
+      case t: KwCase if dialect.allowEnums && peek[Ident] =>
+        if (!enumCaseAllowed) syntaxError("Enum cases are only allowed in enums", at = t)
         mods.find(mod => !mod.isAccessMod && !mod.is[Mod.Annot]) match {
           case Some(mod) => syntaxError("Only access modifiers allowed on enum case", at = mod.pos)
           case None => enumCaseDef(mods)
         }
-      case _: KwCase if dialect.allowEnums && peek[Ident] =>
-        syntaxError("Enum cases are only allowed in enums", at = currToken.pos)
-      case _: KwIf if mods.size == 1 && mods.head.is[Mod.Inline] => ifClause(mods)
-      case _ if isExprIntro(currToken, currIndex) && mods.size == 1 && mods.head.is[Mod.Inline] =>
-        inlineMatchClause(mods)
+      case _: KwIf if onlyInline() => ifClause(mods)
+      case _ if isExprIntro(currToken, currIndex) && onlyInline() => inlineMatchClause(mods)
+      case _ if isKwExtension(currIndex) => extensionGroupDecl(mods)
       case _ => tmplDef(mods)
     }
   }
