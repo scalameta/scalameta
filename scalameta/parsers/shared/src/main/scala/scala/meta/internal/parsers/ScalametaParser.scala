@@ -3349,7 +3349,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: KwIf if onlyInline() => ifClause(mods)
       case _ if isExprIntro(currToken, currIndex) && onlyInline() => inlineMatchClause(mods)
       case _ if isKwExtension(currIndex) => extensionGroupDecl(mods)
-      case _ => tmplDef(mods)
+      case _ => tmplDef(mods, okTopLevel = false)
     }
   }
 
@@ -3603,7 +3603,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     modifiersBuf(buf)
   })
 
-  def tmplDef(mods: List[Mod]): Stat = {
+  def tmplDef(mods: List[Mod], okTopLevel: Boolean = true): Stat = {
     if (!dialect.allowToplevelStatements) rejectMod[Mod.Lazy](mods, Messages.InvalidLazyClasses)
     currToken match {
       case _: KwTrait => traitDef(mods)
@@ -3613,7 +3613,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: KwObject => objectDef(mods)
       case _: KwCase if tryAhead[KwObject] => objectDef(mods :+ atPos(prevIndex)(Mod.Case()))
       case _: At => syntaxError("Annotations must precede keyword modifiers", at = currToken)
-      case _ if dialect.allowToplevelStatements && isDefIntro(currIndex) =>
+      case _ if okTopLevel && dialect.allowToplevelStatements && isDefIntro(currIndex) =>
         defOrDclOrSecondaryCtor(mods)
       case _ => syntaxError(s"expected start of definition", at = currToken)
     }
