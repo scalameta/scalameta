@@ -4078,14 +4078,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def entrypointStat(): Stat = {
-    @tailrec
-    def skipStatementSeparators(): Unit = if (!at[EOF]) {
-      if (!acceptIf(StatSep)) syntaxErrorExpected[EOF]
-      skipStatementSeparators()
-    }
-    val maybeStat = consumeStat.lift(currToken)
-    val stat = maybeStat.getOrElse(syntaxError("unexpected start of statement", at = currToken))
-    skipStatementSeparators()
+    val stat = consumeStat
+      .applyOrElse(currToken, (t: Token) => syntaxError("unexpected start of statement", at = t))
+    skipAllStatSep()
+    expect[EOF]
     stat
   }
 
