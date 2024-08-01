@@ -826,12 +826,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       // TypeBlock, https://dotty.epfl.ch/docs/internals/syntax.html#expressions-3
       if (dialect.allowQuotedTypeVariables && at[KwType]) autoPos {
         val typeDefs = listBy[Stat.TypeDef] { buf =>
-          @tailrec
-          def iter(): Unit = {
-            buf += typeDefOrDcl(Nil)
-            if (acceptIfStatSep() && at[KwType]) iter()
-          }
-          iter()
+          doWhile(buf += typeDefOrDcl(Nil))(acceptIfStatSep() && at[KwType])
         }
         Type.Block(typeDefs, typ())
       }
@@ -4160,26 +4155,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ if isIdentOrExprIntro(currToken) => expr(location = TemplateStat, allowRepeated = false)
   }
 
-  def refineStatSeq(): List[Stat] = listBy[Stat] { stats =>
-    while (!StatSeqEnd(currToken)) {
-      refineStat().foreach(stats += _)
-      if (!StatSeqEnd(currToken)) acceptStatSep()
-    }
-  }
-
-  def refineStat(): Option[Stat] = currToken match {
-    case t: Ellipsis => Some(ellipsis[Stat](t, 1))
-    case _ if isDclIntro(currIndex) =>
-      val stat = defOrDclOrSecondaryCtor(Nil)
-      if (stat.isRefineStat) Some(stat)
-      else syntaxError("is not a valid refinement declaration", at = stat)
-    case StatSep() => None
-    case _ if ReturnTypeContext.isInside() =>
-      syntaxError(
-        "illegal start of declaration (possible cause: missing `=' in front of current method body)",
-        at = currToken
+  private def refineStatSeq(): List[Stat] = listBy[Stat] { stats =>
+    def cond(tok: Token): Boolean = !StatSeqEnd(tok) && {
+      def fail(err: String) = syntaxError(err, at = tok)
+      if (tok.is[Ellipsis]) stats += ellipsis[Stat](tok.asInstanceOf[Ellipsis], 1)
+      else if (isDclIntro(currIndex)) {
+        val stat = defOrDclOrSecondaryCtor(Nil)
+        if (stat.isRefineStat) stats += stat else fail("is not a valid refinement declaration")
+      } else if (ReturnTypeContext.isInside()) fail(
+        "illegal start of declaration (possible cause: missing `=' in front of current method body)"
       )
-    case _ => syntaxError("illegal start of declaration", at = currToken)
+      else fail("illegal start of declaration")
+      acceptStatSepOpt()
+    }
+    doWhile(skipAllStatSep())(cond(currToken))
   }
 
   def localDef(implicitMod: Option[Mod.Implicit]): Stat = {
@@ -4207,50 +4196,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Ellipsis => !peek[KwCase]
       case _ => true
     }
-
-    @tailrec
-    def iter(): Unit = if (notCaseDefEnd()) currToken match {
-      case _: KwExport =>
-        stats += exportStmt()
-        acceptStatSepOpt()
-        iter()
-      case _: KwImport =>
-        stats += importStmt()
-        acceptStatSepOpt()
-        iter()
+    def cond(): Boolean = {
+      skipAllStatSep()
+      notCaseDefEnd()
+    }
+    def getStat(): Stat = currToken match {
+      case _: KwExport => exportStmt()
+      case _: KwImport => importStmt()
       case _: KwImplicit =>
         val implicitPos = currIndex
         next()
-        if (at[Ident] && !isSoftModifier(currIndex)) stats += implicitClosure(BlockStat)
-        else stats += localDef(Some(atPos(implicitPos)(Mod.Implicit())))
-        if (notCaseDefEnd()) {
-          acceptStatSepOpt()
-          iter()
-        }
-      case t if !isNonlocalModifier(t) && isDefIntro(currIndex) =>
-        stats += localDef(None)
-        if (notCaseDefEnd()) {
-          acceptStatSepOpt()
-          iter()
-        }
-      case _ if isAtEndMarker() =>
-        stats += endMarker()
-        iter()
+        if (at[Ident] && !isSoftModifier(currIndex)) implicitClosure(BlockStat)
+        else localDef(Some(atPos(implicitPos)(Mod.Implicit())))
+      case t if !isNonlocalModifier(t) && isDefIntro(currIndex) => localDef(None)
+      case _ if isAtEndMarker() => endMarker()
       case _ if isIdentOrExprIntro(currToken) =>
-        stats += stat(expr(location = BlockStat, allowRepeated = allowRepeated))
-        if (notCaseDefEnd()) {
-          acceptStatSep()
-          iter()
-        }
-      case StatSep() =>
-        next()
-        iter()
-      case t: Ellipsis =>
-        stats += ellipsis[Stat](t, 1)
-        iter()
+        stat(expr(location = BlockStat, allowRepeated = allowRepeated))
+      case t: Ellipsis => ellipsis[Stat](t, 1)
       case _ => syntaxError("illegal start of statement", at = currToken)
     }
-    iter()
+
+    if (cond()) doWhile(stats += getStat())(notCaseDefEnd() && { acceptStatSep(); cond() })
     if (allowRepeated && stats.length > 1) stats.foreach {
       case t: Term.Repeated => syntaxError("repeated argument not allowed here", at = t)
       case _ =>
