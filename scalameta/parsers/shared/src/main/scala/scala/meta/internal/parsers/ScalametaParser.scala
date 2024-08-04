@@ -2085,9 +2085,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Ident | _: KwThis | _: KwSuper | _: Unquote => Success(path().become[Term])
       case _: Underscore => Success(atCurPosNext(Term.Placeholder()))
       case _: LeftParen => Success(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated))
-      case _: LeftBrace =>
-        canApply = false
-        Success(blockExprOnBrace())
+      case _: LeftBrace => canApply = false; Success(blockExprOnBrace())
+      case _: Indentation.Indent => canApply = false; Success(blockExprOnIndent())
       case _: KwNew =>
         canApply = false
         Success(autoPos {
@@ -2099,7 +2098,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           }
         })
       case _: LeftBracket if dialect.allowPolymorphicFunctions => Success(polyFunction())
-      case _: Indentation.Indent => Success(blockExprOnIndent())
       case _ => Failure(ParseException(currToken.pos, "illegal start of simple expression"))
     }) match {
       case Success(x) => Success(simpleExprRest(x, canApply = canApply, startPos = startPos))

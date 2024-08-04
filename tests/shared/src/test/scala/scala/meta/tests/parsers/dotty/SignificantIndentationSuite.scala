@@ -3089,7 +3089,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  (baz, null)
                   |""".stripMargin
     val layout = """|def foo = {
-                    |  val baz = (if (qux) quux else fred)(baz, null)
+                    |  val baz = if (qux) quux else fred
+                    |  (baz, null)
                     |}
                     |""".stripMargin
     val tree = Defn.Def(
@@ -3097,15 +3098,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
       tname("foo"),
       Nil,
       None,
-      blk(Defn.Val(
-        Nil,
-        List(Pat.Var(tname("baz"))),
-        None,
-        Term.Apply(
-          Term.If(tname("qux"), tname("quux"), tname("fred"), Nil),
-          List(tname("baz"), Lit.Null())
-        )
-      ))
+      blk(
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("baz"))),
+          None,
+          Term.If(tname("qux"), tname("quux"), tname("fred"), Nil)
+        ),
+        Term.Tuple(List(tname("baz"), Lit.Null()))
+      )
     )
     runTestAssert[Stat](code, layout)(tree)
   }
