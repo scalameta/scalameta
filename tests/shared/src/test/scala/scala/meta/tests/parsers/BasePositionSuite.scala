@@ -64,8 +64,9 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
       // the syntax "lazy" then it's trivially verified and excluded from the
       // output.
       case `tree` =>
-      case t: Lit if t.text == t.value.toString =>
+      case t: Lit.Null if t.text == "null" =>
       case t: Lit.Unit if t.text == "()" => // This case is needed for Scala.js.
+      case t: Lit if t.value != null && t.text == t.value.toString =>
       case t: Name if t.text == t.value =>
       case t @ Importee.Name(Name(value)) if t.text == value =>
       case t @ Pat.Var(Name(value)) if t.text == value =>
