@@ -3081,4 +3081,34 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("args-like tuple after optional braces") {
+    val code = """|def foo =
+                  |  val baz =
+                  |    if (qux) quux
+                  |    else fred // not very, but a somewhat long comment
+                  |  (baz, null)
+                  |""".stripMargin
+    val layout = """|def foo = {
+                    |  val baz = if (qux) quux else fred
+                    |  (baz, null)
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      None,
+      blk(
+        Defn.Val(
+          Nil,
+          List(Pat.Var(tname("baz"))),
+          None,
+          Term.If(tname("qux"), tname("quux"), tname("fred"), Nil)
+        ),
+        Term.Tuple(List(tname("baz"), Lit.Null()))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
