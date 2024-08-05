@@ -600,8 +600,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       // to be ignored by Mima, use "internal"
       mstats1 += q"object internal { final val Latest = $latestTermName }"
 
-      mstats1 += q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +:
-          paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      mstats1 +=
+        q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
 
       val res = ListBuffer.empty[ImplDef]
 

@@ -1,7 +1,6 @@
 // NOTE: commented out in order to avoid scope pollution for typecheckError
 // package scala.meta.tests
 // package api
-
 import org.scalameta.tests._
 
 import munit._
