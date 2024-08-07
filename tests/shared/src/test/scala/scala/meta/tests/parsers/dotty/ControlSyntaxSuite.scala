@@ -526,6 +526,24 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))))
   }
 
+  test("catch after `end for` and `end match`") {
+    val code = """|object a:
+                  |   try
+                  |      for (i <- foo)
+                  |        foo
+                  |      end for
+                  |      foo match
+                  |         case foo =>
+                  |      end match
+                  |   catch
+                  |      case f =>
+                  |""".stripMargin
+    val error = """|<input>:9: error: `;` expected but `catch` found
+                   |   catch
+                   |   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("#3532 nested try-finally on same line") {
     val code = """|try try Right(f()) finally iter.close()
                   |finally arena.close()
