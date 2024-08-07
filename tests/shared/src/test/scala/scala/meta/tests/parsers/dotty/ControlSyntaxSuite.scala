@@ -526,6 +526,48 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))))
   }
 
+  test("catch after `end for` and `end match`") {
+    val code = """|object a:
+                  |   try
+                  |      for (i <- foo)
+                  |        foo
+                  |      end for
+                  |      foo match
+                  |         case foo =>
+                  |      end match
+                  |   catch
+                  |      case f =>
+                  |""".stripMargin
+    val layout = """|object a {
+                    |  try {
+                    |    for (i <- foo) foo
+                    |    end for
+                    |    foo match {
+                    |      case foo =>
+                    |    }
+                    |    end match
+                    |  } catch {
+                    |    case f =>
+                    |  }
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(Term.Try(
+        blk(
+          Term.For(List(Enumerator.Generator(Pat.Var(tname("i")), tname("foo"))), tname("foo")),
+          Term.EndMarker(tname("for")),
+          Term.Match(tname("foo"), List(Case(Pat.Var(tname("foo")), None, blk())), Nil),
+          Term.EndMarker(tname("match"))
+        ),
+        List(Case(Pat.Var(tname("f")), None, blk())),
+        None
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("#3532 nested try-finally on same line") {
     val code = """|try try Right(f()) finally iter.close()
                   |finally arena.close()
