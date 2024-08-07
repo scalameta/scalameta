@@ -453,7 +453,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
       case _: KwObject | _: KwClass | _: KwTrait | _: KwPackage | _: KwNew
           if dialect.allowSignificantIndentation => currRef(RegionTemplateMark :: sepRegions)
-      case _: KwTry => currRef(RegionTry :: dropRegionLine(sepRegions))
+      case _: KwTry if !isPrevEndMarker() => currRef(RegionTry :: dropRegionLine(sepRegions))
       case _: KwMatch if !isPrevEndMarker() => getCaseIntro(sepRegions)
       case _: KwCatch => getCaseIntro(dropWhile(sepRegions)(_ ne RegionTry))
       case _: KwCase if !next.isClassOrObject =>
@@ -520,8 +520,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             new RegionCaseBody(bodyIndent, curr) :: rs
           case _ => sepRegions
         })
-      case _: KwFor => currRef(RegionFor(next) :: sepRegions)
-      case _: KwWhile if dialect.allowQuietSyntax => currRef(RegionWhile(next) :: sepRegions)
+      case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
+      case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
+        currRef(RegionWhile(next) :: sepRegions)
       case _: KwIf if dialect.allowQuietSyntax =>
         currRef(dropRegionLine(sepRegions) match {
           case rs @ (_: RegionCaseExpr | _: RegionFor) :: _ => rs
