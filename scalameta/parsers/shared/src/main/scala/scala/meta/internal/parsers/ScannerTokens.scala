@@ -523,7 +523,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(RegionWhile(next) :: sepRegions)
-      case _: KwIf if dialect.allowQuietSyntax =>
+      case _: KwIf if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(dropRegionLine(sepRegions) match {
           case rs @ (_: RegionCaseExpr | _: RegionFor) :: _ => rs
           case rs @ (_: RegionDelim) :: (_: RegionFor) :: _ => rs
