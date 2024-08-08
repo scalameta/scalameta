@@ -313,9 +313,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def begIndex = currIndex
     def endIndex = prevIndex
   }
-  case object EndPosPreOutdent extends EndPos {
-    def endIndex = if (at[Indentation.Outdent]) currIndex else prevIndex
-  }
   implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
   implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(treeToTreePos)
@@ -2404,7 +2401,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def caseClause(forceSingleExpr: Boolean = false): Case = atPos(prevIndex, EndPosPreOutdent) {
+  def caseClause(forceSingleExpr: Boolean = false): Case = autoEndPos(prevIndex) {
     if (currToken.isNot[KwCase]) {
       def caseBody() = {
         accept[RightArrow]

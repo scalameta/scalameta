@@ -1661,8 +1661,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |<cases0>Case case foo1: Foo1 => foo1</cases0>
        |<pat>Pat.Typed foo1: Foo1</pat>
        |<cases1>Case case foo2: Foo2 =>
-       |       foo2 += " = "
-       |     // foo2</cases1>
+       |       foo2 += " = "</cases1>
        |<pat>Pat.Typed foo2: Foo2</pat>
        |<body>Term.ApplyInfix foo2 += " = "</body>
        |<targClause>Type.ArgClause        foo2 += @@" = "</targClause>
