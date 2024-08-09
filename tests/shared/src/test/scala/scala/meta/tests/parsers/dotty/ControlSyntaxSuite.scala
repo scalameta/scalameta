@@ -4108,4 +4108,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("indent in enumerator") {
+    val code = """|object a:
+                  |      val abstractTypeNames =
+                  |        for (
+                  |          parent <-
+                  |           parents;
+                  |          mbr <- parent.abstractTypeMembers if qualifies(mbr.symbol))
+                  |        yield mbr.name.asTypeName
+                  |""".stripMargin
+    val error = """|<input>:4: error: `)` expected but `<-` found
+                   |          parent <-
+                   |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
