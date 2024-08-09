@@ -4117,10 +4117,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |          mbr <- parent.abstractTypeMembers if qualifies(mbr.symbol))
                   |        yield mbr.name.asTypeName
                   |""".stripMargin
-    val error = """|<input>:4: error: `)` expected but `<-` found
-                   |          parent <-
-                   |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      "object a { val abstractTypeNames = for (parent <- parents; mbr <- parent.abstractTypeMembers; if qualifies(mbr.symbol)) yield mbr.name.asTypeName }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(Defn.Val(
+        Nil,
+        List(Pat.Var(tname("abstractTypeNames"))),
+        None,
+        Term.ForYield(
+          List(
+            Enumerator.Generator(Pat.Var(tname("parent")), tname("parents")),
+            Enumerator.Generator(
+              Pat.Var(tname("mbr")),
+              Term.Select(tname("parent"), tname("abstractTypeMembers"))
+            ),
+            Enumerator
+              .Guard(Term.Apply(tname("qualifies"), List(Term.Select(tname("mbr"), tname("symbol")))))
+          ),
+          Term.Select(Term.Select(tname("mbr"), tname("name")), tname("asTypeName"))
+        )
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

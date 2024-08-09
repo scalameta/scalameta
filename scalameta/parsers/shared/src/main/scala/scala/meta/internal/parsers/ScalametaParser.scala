@@ -456,9 +456,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   @inline
   def acceptIfStatSep(): Boolean = acceptIf(StatSep)
 
+  @inline
+  def isImplicitStatSep(): Boolean = prev[Indentation.Outdent]
+
   def acceptStatSep(): Boolean = {
-    val ok = acceptIfStatSep() || isAtEndMarker() ||
-      prev[Indentation.Outdent] && !at[Indentation.Outdent]
+    val ok = acceptIfStatSep() || isAtEndMarker() || isImplicitStatSep() && !at[Indentation.Outdent]
     if (!ok) syntaxErrorExpected[Semicolon]
     ok
   }
@@ -2463,10 +2465,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def enumeratorGuardOnIf() = autoPos(Enumerator.Guard(guardOnIf()))
 
   def enumerators(): List[Enumerator] = listBy[Enumerator] { enums =>
+    def notEnumsEnd(token: Token): Boolean = !token.isAny[Indentation.Outdent, KwDo, CloseDelim]
     doWhile {
       enums += enumerator(isFirst = enums.isEmpty)
       while (at[Token.KwIf]) enums += enumeratorGuardOnIf()
-    }(StatSep(currToken) && nextIf(!peekToken.isAny[Indentation.Outdent, KwDo, CloseDelim]))
+    } {
+      if (StatSep(currToken)) nextIf(notEnumsEnd(peekToken))
+      else isImplicitStatSep() && notEnumsEnd(currToken)
+    }
   }
 
   private def enumerator(isFirst: Boolean = false): Enumerator = currToken match {
