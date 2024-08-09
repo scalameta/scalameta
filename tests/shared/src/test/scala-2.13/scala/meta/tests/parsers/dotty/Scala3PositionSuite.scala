@@ -1635,4 +1635,139 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     showFieldName = true
   )
 
+  // comment at end of match but not before case outdent
+  checkPositions[Stat](
+    """|object a:
+       |  bar2 match
+       |     case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |     // foo2
+       |  end match
+       |""".stripMargin,
+    """|<templ>Template :
+       |  bar2 match
+       |     case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |     // foo2
+       |  end match</templ>
+       |<self>Self   @@bar2 match</self>
+       |<stats0>Term.Match bar2 match
+       |     case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |     // foo2</stats0>
+       |<cases0>Case case foo1: Foo1 => foo1</cases0>
+       |<pat>Pat.Typed foo1: Foo1</pat>
+       |<cases1>Case case foo2: Foo2 =>
+       |       foo2 += " = "</cases1>
+       |<pat>Pat.Typed foo2: Foo2</pat>
+       |<body>Term.ApplyInfix foo2 += " = "</body>
+       |<targClause>Type.ArgClause        foo2 += @@" = "</targClause>
+       |<values0>Lit.String " = "</values0>
+       |<stats1>Term.EndMarker end match</stats1>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(a) [7..8)
+       |Colon [8..9)
+       |Indentation.Indent [9..9)
+       |Ident(bar2) [12..16)
+       |KwMatch [17..22)
+       |Indentation.Indent [22..22)
+       |KwCase [28..32)
+       |Ident(foo1) [33..37)
+       |Colon [37..38)
+       |Ident(Foo1) [39..43)
+       |RightArrow [44..46)
+       |Ident(foo1) [47..51)
+       |LF [51..52)
+       |KwCase [57..61)
+       |Ident(foo2) [62..66)
+       |Colon [66..67)
+       |Ident(Foo2) [68..72)
+       |RightArrow [73..75)
+       |Indentation.Indent [75..75)
+       |Ident(foo2) [83..87)
+       |Ident(+=) [88..90)
+       |Constant.String( = ) [91..96)
+       |Indentation.Outdent [96..96)
+       |Indentation.Outdent [109..109)
+       |Ident(end) [112..115)
+       |KwMatch [116..121)
+       |Indentation.Outdent [121..121)
+       |EOF [122..122)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  // comment at end of match and also at end of case
+  checkPositions[Stat](
+    """|object a:
+       |  bar2 match
+       |     case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |       // foo2
+       |  end match
+       |""".stripMargin,
+    """|<templ>Template :
+       |  bar2 match
+       |     case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |       // foo2
+       |  end match</templ>
+       |<self>Self   @@bar2 match</self>
+       |<stats0>Term.Match bar2 match
+       |     case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |       // foo2</stats0>
+       |<cases0>Case case foo1: Foo1 => foo1</cases0>
+       |<pat>Pat.Typed foo1: Foo1</pat>
+       |<cases1>Case case foo2: Foo2 =>
+       |       foo2 += " = "
+       |       // foo2</cases1>
+       |<pat>Pat.Typed foo2: Foo2</pat>
+       |<body>Term.ApplyInfix foo2 += " = "</body>
+       |<targClause>Type.ArgClause        foo2 += @@" = "</targClause>
+       |<values0>Lit.String " = "</values0>
+       |<stats1>Term.EndMarker end match</stats1>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(a) [7..8)
+       |Colon [8..9)
+       |Indentation.Indent [9..9)
+       |Ident(bar2) [12..16)
+       |KwMatch [17..22)
+       |Indentation.Indent [22..22)
+       |KwCase [28..32)
+       |Ident(foo1) [33..37)
+       |Colon [37..38)
+       |Ident(Foo1) [39..43)
+       |RightArrow [44..46)
+       |Ident(foo1) [47..51)
+       |LF [51..52)
+       |KwCase [57..61)
+       |Ident(foo2) [62..66)
+       |Colon [66..67)
+       |Ident(Foo2) [68..72)
+       |RightArrow [73..75)
+       |Indentation.Indent [75..75)
+       |Ident(foo2) [83..87)
+       |Ident(+=) [88..90)
+       |Constant.String( = ) [91..96)
+       |Indentation.Outdent [111..111)
+       |Indentation.Outdent [111..111)
+       |Ident(end) [114..117)
+       |KwMatch [118..123)
+       |Indentation.Outdent [123..123)
+       |EOF [124..124)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
 }
