@@ -4143,4 +4143,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("terminate inline case on newline and same indent") {
+    val code = """|object a:
+                  |   try foo
+                  |   catch case ex => new Bar()
+                  |   private[io] def baz = qux
+                  |""".stripMargin
+    val error = """|<input>:4: error: illegal start of statement
+                   |   private[io] def baz = qux
+                   |   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
