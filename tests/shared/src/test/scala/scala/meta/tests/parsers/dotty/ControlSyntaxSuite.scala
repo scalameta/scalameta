@@ -4143,4 +4143,33 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("terminate inline case on newline and same indent") {
+    val code = """|object a:
+                  |   try foo
+                  |   catch case ex => new Bar()
+                  |   private[io] def baz = qux
+                  |""".stripMargin
+    val layout = """|object a {
+                    |  try foo catch {
+                    |    case ex =>
+                    |      new Bar()
+                    |  }
+                    |  private[io] def baz = qux
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.Try(
+          tname("foo"),
+          List(Case(Pat.Var(tname("ex")), None, Term.New(init("Bar", List(Nil))))),
+          None
+        ),
+        Defn.Def(List(Mod.Private(Name("io"))), tname("baz"), Nil, None, tname("qux"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
