@@ -632,7 +632,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         eolRef(regions, out, eolPos)
       }
 
-      def getIfCanProduceLF(regions: List[SepRegion], lineIndent: Int = -1) = {
+      def stripIfCanProduceLF(regions: List[SepRegion]) = {
         @inline
         def derives(token: Token) = soft.KwDerives(token)
         @inline
@@ -656,8 +656,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         }
         val ok = eolPos >= 0 && mightStartStat(next, closeDelimOK = true) &&
           (canEndStat(prev) || isEndMarker())
-        if (ok) strip(regions).map(rs => Right(lastWhitespaceToken(rs, lineIndent))) else None
+        if (ok) strip(regions) else None
       }
+
+      def getIfCanProduceLF(regions: List[SepRegion], lineIndent: Int = -1) =
+        stripIfCanProduceLF(regions).map(rs => Right(lastWhitespaceToken(rs, lineIndent)))
 
       // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change-1
       lazy val isLeadingInfix = sepRegionsOrig match {
@@ -842,14 +845,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             if (prevToken.is[Indentation]) _ => None
             else mkOutdentsT(_)(getIndentIfNeeded)((x, _) => Some(Right(x)))(getOutdentInfo)
 
-          def maybeWithLF(regions: List[SepRegion]) = {
-            val res = getIfCanProduceLF(regions, nextIndent)
-            if (res.isEmpty) sepRegionsOrig match {
-              case (ri: SepRegionIndented) :: _ if ri.indent < nextIndent =>
-                Some(Left(RegionLine(nextIndent) :: sepRegionsOrig))
-              case _ => res
-            }
-            else res
+          def onlyWithoutLF() = sepRegionsOrig match {
+            case (ri: SepRegionIndented) :: _ if ri.indent < nextIndent =>
+              Some(Left(RegionLine(nextIndent) :: sepRegionsOrig))
+            case _ => None
           }
 
           @tailrec
@@ -865,12 +864,17 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                   case rc: RegionControlMaybeCond if prev.is[RightParen] =>
                     if (next.is[Dot]) None
                     else rc.asBody() match {
-                      case Some(body) => maybeWithLF(body :: rs)
+                      case Some(body) => getIfCanProduceLF(body :: rs, nextIndent)
+                          .orElse(onlyWithoutLF())
                       case None => iter(rs)
                     }
                   case _ => iter(rs)
                 }
-              case rs => maybeWithLF(rs)
+              case rs => stripIfCanProduceLF(rs) match {
+                  case Some(xs) =>
+                    if (xs eq rs) Some(Right(lastWhitespaceToken(xs, nextIndent))) else iter(xs)
+                  case _ => onlyWithoutLF()
+                }
             }
             else res
           }

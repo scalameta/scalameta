@@ -4149,10 +4149,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |   catch case ex => new Bar()
                   |   private[io] def baz = qux
                   |""".stripMargin
-    val error = """|<input>:4: error: illegal start of statement
-                   |   private[io] def baz = qux
-                   |   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|object a {
+                    |  try foo catch {
+                    |    case ex =>
+                    |      new Bar()
+                    |  }
+                    |  private[io] def baz = qux
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Term.Try(
+          tname("foo"),
+          List(Case(Pat.Var(tname("ex")), None, Term.New(init("Bar", List(Nil))))),
+          None
+        ),
+        Defn.Def(List(Mod.Private(Name("io"))), tname("baz"), Nil, None, tname("qux"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
