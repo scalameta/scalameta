@@ -8,7 +8,6 @@ import scala.meta.tokenizers._
 import scala.meta.tokens._
 
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
 
 class ScalametaTokenizer(input: Input, dialect: Dialect) {
   import LegacyToken._
@@ -19,7 +18,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     val scanner = new LegacyScanner(input, dialect)
     scanner.initialize(bof = true)
 
-    val tokens = new java.util.ArrayList[Token]()
+    implicit val tokens = new java.util.ArrayList[Token]()
+    val whitespaceTokenizer: WhitespaceTokenizer = WhitespaceTokenizer(input, dialect)
+
     @inline
     def pushToken(token: Token): Unit = tokens.add(token)
     pushToken(new Token.BOF(input, dialect))
@@ -36,34 +37,16 @@ class ScalametaTokenizer(input: Input, dialect: Dialect) {
     def lastEmittedToken: Token = tokens.get(tokens.size() - 1)
     def isAtLineStart: Boolean = lastEmittedToken.isInstanceOf[Token.AtEOLorF]
 
-    val bufHS = new ListBuffer[Token.HSpace] // just horizontal tokens
-    val bufVS = new ListBuffer[Token.EOL] // consecutive EOL, without embedded horizontal space
-
-    def flushWS[A <: Token](buf: ListBuffer[A])(f: (Int, Int, List[A]) => Token.Whitespace): Unit =
-      buf.lastOption.foreach { last =>
-        if (buf.length == 1) pushToken(last)
-        else {
-          val res = buf.result()
-          pushToken(f(res.head.start, last.end, res))
-        }
-        buf.clear()
-      }
-    def flushHS(): Unit = flushWS(bufHS) { case (beg, end, res) =>
-      Token.MultiHS(input, dialect, beg, end, res)
-    }
-    def flushVS(): Unit = flushWS(bufVS) { case (beg, end, res) =>
-      Token.MultiNL(input, dialect, beg, end, res)
-    }
     @tailrec
     def emitTokenWhitespace(token: Token.Whitespace): Token = {
       token match {
-        case t: Token.HSpace => bufHS += t
-        case t: Token.EOL => bufVS += t; bufHS.clear() // simply ignore trailing space
+        case t: Token.HSpace => whitespaceTokenizer.pushHS(t)
+        case t: Token.EOL => whitespaceTokenizer.pushVS(t)
         case _ => unreachable
       }
       getToken(nextToken()) match {
         case nt: Token.Whitespace => emitTokenWhitespace(nt)
-        case nt => flushVS(); flushHS(); nt
+        case nt => whitespaceTokenizer.flush(); nt
       }
     }
     def emitTokenInterpolation(token: Token.Interpolation.Id) = {
