@@ -392,49 +392,58 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("42.type") {
-    intercept[ParseException](tpe("42")(dialects.Scala211))
+    intercept[ParseException] {
+      implicit val dialect: Dialect = dialects.Scala211
+      tpe("42")
+    }
 
-    assertTpe("42")(int(42))(dialects.Scala3)
-    assertTpe("-42")(int(-42))(dialects.Scala3)
-    assertTpe("42L")(Lit.Long(42L))(dialects.Scala3)
+    assertTpe("42")(int(42))
+    assertTpe("-42")(int(-42))
+    assertTpe("42L")(Lit.Long(42L))
     matchSubStructure[Type]("42.0f", { case Lit(42.0f) => () })
     matchSubStructure[Type]("-42.0f", { case Lit(-42.0f) => () })
     matchSubStructure[Type]("42.0d", { case Lit(42.0d) => () })
     matchSubStructure[Type]("-42.0d", { case Lit(-42.0d) => () })
-    assertTpe("\"42\"")(str("42"))(dialects.Scala3)
-    assertTpe("true")(bool(true))(dialects.Scala3)
-    assertTpe("false")(bool(false))(dialects.Scala3)
+    assertTpe("\"42\"")(str("42"))
+    assertTpe("true")(bool(true))
+    assertTpe("false")(bool(false))
 
-    val exceptionScala3 = intercept[ParseException](tpe("() => ()")(dialects.Scala3))
+    val exceptionScala3 = intercept[ParseException](tpe("() => ()"))
     assertNoDiff(exceptionScala3.shortMessage, "illegal literal type (), use Unit instead")
 
-    val exceptionScala2 = intercept[ParseException](tpe("() => ()")(dialects.Scala213))
+    val exceptionScala2 = intercept[ParseException] {
+      implicit val dialect: Dialect = dialects.Scala213
+      tpe("() => ()")
+    }
     assertNoDiff(exceptionScala2.shortMessage, "illegal literal type (), use Unit instead")
 
   }
 
   test("plus-minus-then-underscore-source3") {
+    implicit val dialect: Dialect = dialects.Scala213Source3
+    implicit val parser: (String, Dialect) => Type = parseType
     matchSubStructure(
       "+_ => Int",
       { case Type.Function(List(Type.Name("+_")), Type.Name("Int")) => () }
-    )(parseType, dialects.Scala213Source3, implicitly[Location])
-    assertTpe("Option[- _]")(Apply(pname("Option"), ArgClause(List(pname("-_")))))(
-      dialects.Scala213Source3
     )
+    assertTpe("Option[- _]")(Apply(pname("Option"), ArgClause(List(pname("-_")))))
   }
 
   test("[scala213] (x: Int, y)") {
-    val err = intercept[ParseException](tpe("(x: Int, y)")(dialects.Scala213))
+    implicit val dialect: Dialect = dialects.Scala213
+    val err = intercept[ParseException](tpe("(x: Int, y)"))
     assertNoDiff(err.shortMessage, "can't mix function type and dependent function type syntaxes")
   }
 
   test("[scala213] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ParseException](tpe("(x: Int, y: Int)(z: String)")(dialects.Scala213))
+    implicit val dialect: Dialect = dialects.Scala213
+    val err = intercept[ParseException](tpe("(x: Int, y: Int)(z: String)"))
     assertNoDiff(err.shortMessage, "dependent function types are not supported")
   }
 
   test("[scala3] (x: Int, y: Int)(z: String)") {
-    val err = intercept[ParseException](tpe("(x: Int, y: Int)(z: String)")(dialects.Scala3))
+    implicit val dialect: Dialect = dialects.Scala3
+    val err = intercept[ParseException](tpe("(x: Int, y: Int)(z: String)"))
     assertNoDiff(err.shortMessage, "can't have multiple parameter lists in function types")
   }
 

@@ -29,7 +29,7 @@ class XmlSuite extends ParseSuite {
   /** Default catch only ParseException */
   override def checkError(stat: String)(implicit dialect: Dialect): Unit =
     test(logger.revealWhitespace(stat).take(50)) {
-      val thrown = intercept[Exception](templStat(stat)(dialect))
+      val thrown = intercept[Exception](templStat(stat))
       assert(thrown.isInstanceOf[ParseException] || thrown.isInstanceOf[TokenizeException])
     }
 

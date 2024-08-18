@@ -1014,7 +1014,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: xml literals are not supported
          |<foo>bar</foo>
          |^""".stripMargin.lf2nl
-    )(code.asInput.parseRule(_.entrypointStat())(dialect))
+    )(code.asInput.parseRule(_.entrypointStat()))
   }
 
   test("unsupported xml literal - 2 after space") {
@@ -1024,7 +1024,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|<input>:1: error: xml literals are not supported
          |val a = <foo>bar</foo>
          |        ^""".stripMargin.lf2nl
-    )(code.asInput.parseRule(_.entrypointStat())(dialect))
+    )(code.asInput.parseRule(_.entrypointStat()))
   }
 
   test("unsupported xml literal - 3 plus/no space") {
@@ -1370,9 +1370,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   ).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala213: $value") {
-      interceptMessage[ParseException](error.lf2nl)(
-        value.parseRule(_.entrypointExpr())(dialects.Scala213)
-      )
+      implicit val dialect: Dialect = dialects.Scala213
+      interceptMessage[ParseException](error.lf2nl)(value.parseRule(_.entrypointExpr()))
     }
   }
 
@@ -1383,9 +1382,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
        | ^""".stripMargin
   )).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala212: $value") {
-      interceptMessage[ParseException](error.lf2nl)(
-        value.parseRule(_.entrypointExpr())(dialects.Scala212)
-      )
+      implicit val dialect: Dialect = dialects.Scala212
+      interceptMessage[ParseException](error.lf2nl)(value.parseRule(_.entrypointExpr()))
     }
   }
 
@@ -1768,9 +1766,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
     )
   ).foreach { case (code, error) =>
     test(s"numeric literal fail scala213: $code") {
-      interceptMessage[ParseException](error.lf2nl)(
-        code.parseRule(_.entrypointExpr())(dialects.Scala213)
-      )
+      implicit val dialect: Dialect = dialects.Scala213
+      interceptMessage[ParseException](error.lf2nl)(code.parseRule(_.entrypointExpr()))
     }
   }
 
@@ -1780,10 +1777,10 @@ class TokenizerSuite extends BaseTokenizerSuite {
     56375
   ).foreach { ch =>
     test(s"#3690 any character with char code $ch") {
+      implicit val dialect = dialects.Scala213
       tokenize(
         s"""|"${ch.toChar}"
-            |""".stripMargin,
-        dialects.Scala213
+            |""".stripMargin
       ) match {
         case Tokens(_: BOF, Constant.String(str), _: LF, _: EOF) =>
           assertEquals(str.length, 1)
@@ -1799,10 +1796,10 @@ class TokenizerSuite extends BaseTokenizerSuite {
     (0xdbff, 0xdfff)
   ).foreach { case (hi, lo) =>
     test(s"#3690 full-surrogate with char codes $hi and $lo") {
+      implicit val dialect = dialects.Scala213
       tokenize(
         s"""|"${hi.toChar}${lo.toChar}"
-            |""".stripMargin,
-        dialects.Scala213
+            |""".stripMargin
       ) match {
         case Tokens(_: BOF, Constant.String(str), _: LF, _: EOF) =>
           assertEquals(str, s"${hi.toChar}${lo.toChar}")
