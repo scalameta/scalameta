@@ -2,9 +2,11 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 class DeclSuite extends ParseSuite {
+
+  implicit val dialect: Dialect = dialects.Scala211
+
   test("val x: Int") {
     assertTree(templStat("val x: Int"))(Decl.Val(Nil, List(Pat.Var(tname("x"))), pname("Int")))
   }

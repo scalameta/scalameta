@@ -3,7 +3,6 @@ package parsers
 
 import scala.meta.Name.Anonymous
 import scala.meta.Name.Indeterminate
-import scala.meta.dialects.Scala211
 import scala.meta.parsers.ParseException
 import scala.meta.{Name => _, _}
 
@@ -13,6 +12,8 @@ class ImportSuite extends ParseSuite {
   import Term.Super
   import Term.This
   import Term.{Name => TermName}
+
+  implicit val dialect: Dialect = dialects.Scala211
 
   test("import foo.bar") {
     assertTree(templStat("import foo.bar"))(Import(

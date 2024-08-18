@@ -3,10 +3,11 @@ package parsers
 
 import org.scalameta.invariants.InvariantFailedException
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 class PatSuite extends ParseSuite {
   import Pat._
+
+  implicit val dialect: Dialect = dialects.Scala211
 
   private def assertPat(expr: String)(tree: Tree): Unit = assertTree(pat(expr))(tree)
 

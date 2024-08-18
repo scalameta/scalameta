@@ -5,7 +5,7 @@ import scala.meta._
 
 class VarargParameterSuite extends ParseSuite {
 
-  import scala.meta.dialects.Scala213
+  implicit val dialect: Dialect = dialects.Scala213
 
   test("vararg parameter single argument") {
     val obj = Defn.Def(

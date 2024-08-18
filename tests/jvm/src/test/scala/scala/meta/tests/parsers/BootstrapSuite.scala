@@ -2,7 +2,6 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 import scala.meta.tokens.Token._
 
 import java.io._

@@ -2,9 +2,11 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala213
 
 class DefnSuite extends ParseSuite {
+
+  implicit val dialect: Dialect = dialects.Scala213
+
   test("val x = 2") {
     assertTree(templStat("val x = 2"))(Defn.Val(Nil, Pat.Var(tname("x")) :: Nil, None, int(2)))
   }
@@ -345,7 +347,7 @@ class DefnSuite extends ParseSuite {
   }
 
   test("#3571 scala213source3") {
-    implicit val Scala213 = scala.meta.dialects.Scala213Source3
+    implicit val dialect = dialects.Scala213Source3
     val code = """|new A {
                   |  def b: C =
                   |    ???
@@ -361,7 +363,7 @@ class DefnSuite extends ParseSuite {
   }
 
   test("#3605 scala213source3") {
-    implicit val Scala213 = scala.meta.dialects.Scala213Source3
+    implicit val dialect = dialects.Scala213Source3
     val code = """|new A {
                   |  def b: C =
                   |    ???
@@ -378,7 +380,7 @@ class DefnSuite extends ParseSuite {
   }
 
   test("#3617 scala213source3") {
-    implicit val Scala213 = scala.meta.dialects.Scala213Source3
+    implicit val dialect = dialects.Scala213Source3
     val codeWithoutBlank = """|object Test {
                               |  def bar =
                               |    `f-oo`

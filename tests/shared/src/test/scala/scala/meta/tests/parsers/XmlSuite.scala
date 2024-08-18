@@ -2,9 +2,10 @@ package scala.meta.tests.parsers
 
 import org.scalameta.logger
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 class XmlSuite extends ParseSuite {
+
+  implicit val dialect: Dialect = dialects.Scala211
 
   def skip(original: String, expected: String): Unit =
     test(logger.revealWhitespace(original).ignore) {}
@@ -16,7 +17,6 @@ class XmlSuite extends ParseSuite {
     def tokenize(code: String): Tokens = {
       val convert = scala.meta.inputs.Input.stringToInput
       val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
-      val dialect = Scala211
       code.tokenize(convert, tokenize, dialect).get
     }
 

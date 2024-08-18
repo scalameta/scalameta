@@ -15,7 +15,7 @@ class PatSuite extends ParseSuite {
       tree: Tree
   )(implicit dialect: Dialect, loc: munit.Location): Unit = assertTree(patternTyp(expr))(tree)
 
-  import scala.meta.dialects.Scala3
+  implicit val dialect: Dialect = dialects.Scala3
 
   test("_")(assertPat("_")(Wildcard()))
 
@@ -38,14 +38,14 @@ class PatSuite extends ParseSuite {
   }
 
   test("_: F[_]") {
-    implicit val Scala3 = dialects.Scala3Future
+    implicit val dialect = dialects.Scala3Future
     assertPat("_: F[_]") {
       Typed(Wildcard(), Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
     }
   }
 
   test("_: F[_]") {
-    implicit val Scala3 = dialects.Scala31
+    implicit val dialect = dialects.Scala31
     assertPat("_: F[_]") {
       Pat.Typed(Pat.Wildcard(), Type.Apply(pname("F"), List(Type.Wildcard(Type.Bounds(None, None)))))
     }
@@ -53,7 +53,7 @@ class PatSuite extends ParseSuite {
 
   test("_: F[*]") {
     // might be deprecated later
-    implicit val Scala3: Dialect = scala.meta.dialects.Scala31
+    implicit val dialect: Dialect = dialects.Scala31
     assertPat("_: F[*]") {
       Typed(Wildcard(), Type.Apply(pname("F"), Type.AnonymousParam(None) :: Nil))
     }
@@ -193,7 +193,7 @@ class PatSuite extends ParseSuite {
   }
 
   test("a: _ scala31") {
-    implicit val Scala3 = dialects.Scala31
+    implicit val dialect = dialects.Scala31
     val err = intercept[InvariantFailedException](pat("a: _")).getMessage
     assert(err.contains("found that rhs match {"), err)
     assert(err.contains("} is false"), err)

@@ -1,10 +1,13 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.dialects.Scala211
+import scala.meta._
 import scala.meta.parsers.ParseException
 
 class UnclosedTokenSuite extends ParseSuite {
+
+  implicit val dialect: Dialect = dialects.Scala211
+
   test("unclosed-string-1") {
     interceptMessage[ParseException](
       """|<input>:1: error: unclosed single-line string interpolation

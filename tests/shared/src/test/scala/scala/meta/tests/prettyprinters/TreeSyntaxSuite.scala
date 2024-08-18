@@ -1,5 +1,6 @@
 package scala.meta.tests.prettyprinters
 
+import scala.meta._
 import scala.meta.internal.prettyprinters.TreeSyntax
 
 /**
@@ -9,7 +10,7 @@ import scala.meta.internal.prettyprinters.TreeSyntax
 
 class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
-  import scala.meta.dialects.Scala211
+  implicit val dialect: Dialect = dialects.Scala211
 
   private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String = null)(implicit
       loc: munit.Location

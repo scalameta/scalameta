@@ -2,9 +2,11 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 class Scala211Suite extends ParseSuite {
+
+  implicit val dialect: Dialect = dialects.Scala211
+
   test("case classes without a parameter list are not allowed") {
     def failWithMessage(code: String) = {
       val error = intercept[ParseException](templStat(code))

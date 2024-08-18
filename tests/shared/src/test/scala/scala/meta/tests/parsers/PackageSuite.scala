@@ -2,10 +2,11 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 class PackageSuite extends ParseSuite {
   import Defn.Class
+
+  implicit val dialect: Dialect = dialects.Scala211
 
   test("class C") {
     assertTree(source("class C")) {

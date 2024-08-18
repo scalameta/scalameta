@@ -1,7 +1,6 @@
 package scala.meta.tests.tokenizers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 import scala.meta.tests.TestHelpers
 import scala.meta.tests.TreeSuiteBase
 
@@ -9,7 +8,7 @@ import munit.Location
 
 abstract class BaseTokenizerSuite extends TreeSuiteBase {
 
-  def tokenize(code: String, dialect: Dialect = Scala211): Tokens = {
+  def tokenize(code: String, dialect: Dialect = dialects.Scala211): Tokens = {
     val convert = scala.meta.inputs.Input.stringToInput
     val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
 
@@ -21,16 +20,18 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
       tokenize(code, dialect)
   }
 
-  def assertTokens(code: String, dialect: Dialect = Scala211)(
+  def assertTokens(code: String, dialect: Dialect = dialects.Scala211)(
       expected: PartialFunction[Tokens, Unit]
   )(implicit location: munit.Location) = {
     val obtained = tokenize(code, dialect)
     expected.lift(obtained).getOrElse(fail("Got unexpected tokens: " + obtained))
   }
 
-  def assertLegacyScannedAsStringLines(code: String, expected: String, dialect: Dialect = Scala211)(
-      implicit loc: Location
-  ): Unit = {
+  def assertLegacyScannedAsStringLines(
+      code: String,
+      expected: String,
+      dialect: Dialect = dialects.Scala211
+  )(implicit loc: Location): Unit = {
     import scala.meta.internal.tokenizers._
     import scala.meta.tests.parsers.MoreHelpers._
 

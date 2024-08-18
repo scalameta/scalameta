@@ -3,12 +3,14 @@ package tokens
 
 import scala.meta.Token._
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 import munit._
 
 // NOTE: don't run anything, just make sure that stuff compiles
 class TokensSuite {
+
+  implicit val dialect: Dialect = dialects.Scala211
+
   def newToken: Token = ???
   val d: Tokens = ???
   val d1: Seq[Token] = d ++ d
@@ -43,10 +45,12 @@ class TokensSuite {
 }
 
 class TokensApiSuite extends FunSuite {
+
+  implicit val dialect: Dialect = dialects.Scala211
+
   def tokenize(code: String): Tokens = {
     val convert = scala.meta.inputs.Input.stringToInput
     val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
-    val dialect = Scala211
     code.tokenize(convert, tokenize, dialect).get
   }
 
