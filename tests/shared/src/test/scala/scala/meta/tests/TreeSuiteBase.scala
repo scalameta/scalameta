@@ -3,6 +3,7 @@ package scala.meta.tests
 import org.scalameta.internal.ScalaCompat
 import scala.meta._
 import scala.meta.tests.parsers.CommonTrees
+import scala.meta.tokenizers.Tokenize
 import scala.meta.trees.Origin
 
 import munit._
@@ -163,5 +164,8 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       dialect: Dialect,
       conv: TestHelpers.Tokenize
   ): Unit = assertTokenizedAsSyntax(code, expected, dialect)
+
+  protected def tokenize(code: String)(implicit dialect: Dialect): Tokens = Tokenize
+    .scalametaTokenize.apply(Input.String(code), dialect).get
 
 }
