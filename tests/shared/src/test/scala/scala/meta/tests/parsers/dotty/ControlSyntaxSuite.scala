@@ -3808,8 +3808,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  case _ => false
                     |}) last -= 1
                     |""".stripMargin
-    assertNoDiff(parseStat(code1, dialect).reprint, layout)
-    assertNoDiff(parseStat(code2, dialect).reprint, layout)
+    assertNoDiff(parseStat(code1).reprint, layout)
+    assertNoDiff(parseStat(code2).reprint, layout)
   }
 
   test("scalafmt #3790 case") {

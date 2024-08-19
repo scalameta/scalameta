@@ -611,7 +611,7 @@ class FewerBracesSuite extends BaseDottySuite {
                     |  }
                     |}
                     |""".stripMargin
-    assertNoDiff(parseStat(code, dialect).reprint, layout)
+    assertNoDiff(parseStat(code).reprint, layout)
   }
 
   test("#3319 lambda complex lhs") {
