@@ -5,32 +5,19 @@ import org.scalameta.logger
 import scala.meta._
 import scala.meta.internal.parsers._
 
+import scala.language.implicitConversions
+
 class ParseSuite extends TreeSuiteBase with CommonTrees {
   import MoreHelpers._
 
   val EOL = org.scalameta.internal.ScalaCompat.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
 
-  implicit def parseStat(code: String, dialect: Dialect): Stat = {
-    implicit val implicitDialect: Dialect = dialect
-    templStat(code)
-  }
-  implicit def parseSource(code: String, dialect: Dialect): Source = {
-    implicit val implicitDialect: Dialect = dialect
-    source(code)
-  }
-  implicit def parseType(code: String, dialect: Dialect): Type = {
-    implicit val implicitDialect: Dialect = dialect
-    tpe(code)
-  }
-  implicit def parsePat(code: String, dialect: Dialect): Pat = {
-    implicit val implicitDialect: Dialect = dialect
-    pat(code)
-  }
-  implicit def parseCaseTree(code: String, dialect: Dialect): Case = {
-    implicit val implicitDialect: Dialect = dialect
-    parseCase(code)
-  }
+  implicit def parseStat(code: String)(implicit dialect: Dialect): Stat = templStat(code)
+  implicit def parseSource(code: String)(implicit dialect: Dialect): Source = source(code)
+  implicit def parseType(code: String)(implicit dialect: Dialect): Type = tpe(code)
+  implicit def parsePat(code: String)(implicit dialect: Dialect): Pat = pat(code)
+  implicit def parseCaseTree(code: String)(implicit dialect: Dialect): Case = parseCase(code)
 
   // This should eventually be replaced by DiffAssertions.assertNoDiff
   def assertSameLines(actual: String, expected: String)(implicit loc: munit.Location) = {
@@ -88,12 +75,11 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     checkParsedTree(code, _.entrypointStat(), syntax)(tree)
 
   protected def runTestError[T <: Tree](code: String, expected: String)(implicit
-      parser: (String, Dialect) => T,
-      dialect: Dialect,
+      parser: String => T,
       loc: munit.Location
   ): Unit = {
     val error = intercept[inputs.InputException] {
-      val result = parser(code, dialect)
+      val result = parser(code)
       throw new ParseException(
         Position.None,
         s"Statement $code should not parse! Got result ${result.structure}"
@@ -106,8 +92,8 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   protected def matchSubStructure[T <: Tree](
       code: String,
       expected: PartialFunction[Tree, Unit]
-  )(implicit parser: (String, Dialect) => T, dialect: Dialect, loc: munit.Location): Unit = {
-    val obtained = parser(code, dialect)
+  )(implicit parser: String => T, loc: munit.Location): Unit = {
+    val obtained = parser(code)
     expected.lift(obtained).getOrElse(fail(s"Got unexpected tree: ${obtained.structure}"))
   }
 
@@ -119,7 +105,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
    */
   protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
       expected: Tree
-  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit =
+  )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit =
     runTestAssert[T](code, assertLayout.getOrElse(""))(expected)
 
   /**
@@ -145,7 +131,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
    */
   protected def runTestAssert[T <: Tree](code: String, assertLayout: String = null)(
       expected: Tree
-  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+  )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit = {
     val struct = expected.structure
     parseAndCheckTreeWithSyntaxAndStruct[T](code, assertLayout, struct, "Original").foreach {
       parseAndCheckTreeWithSyntaxAndStruct[T](_, assertLayout, struct, "Reprinted")
@@ -154,7 +140,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
 
   protected def parseAndCheckTree[T <: Tree](code: String, syntax: String = null)(
       expected: Tree
-  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit =
+  )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit =
     parseAndCheckTreeWithSyntaxAndStruct[T](code, syntax, expected.structure)
 
   private def parseAndCheckTreeWithSyntaxAndStructImpl[T <: Tree](
@@ -162,8 +148,8 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       syntax: String,
       struct: String,
       extraClue: String = ""
-  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): String = {
-    val obtained: T = parser(code, dialect)
+  )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): String = {
+    val obtained: T = parser(code)
     assertStruct(obtained, extraClue)(struct)
     assertSyntaxWithClue(obtained)(syntax)(
       TestHelpers.getMessageWithExtraClue("tree syntax not equal", extraClue) + "\n" + struct
@@ -175,11 +161,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       syntax: String,
       struct: String,
       extraClue: String = ""
-  )(implicit
-      loc: munit.Location,
-      parser: (String, Dialect) => T,
-      dialect: Dialect
-  ): Option[String] = {
+  )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Option[String] = {
     val codeLF = code.replaceAll("\\r+\\n", "\n")
     val expectedSyntax = TestHelpers.getSyntax(codeLF, syntax)
     val reprinted =
@@ -199,12 +181,12 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   protected def checkWithOriginalSyntax[T <: Tree](tree: T, originalOpt: String = null)(
       reprinted: String,
       reprintedFails: String = null
-  )(implicit loc: munit.Location, parser: (String, Dialect) => T, dialect: Dialect): Unit = {
+  )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit = {
     val original = Option(originalOpt).getOrElse(reprinted)
     assertOriginalSyntax(tree, original)
     if (reprintedFails ne null) {
       runTestError[T](reprinted, reprintedFails)
-      if (original != reprinted) checkTree(parser(original, dialect), reprinted)(tree)
+      if (original != reprinted) checkTree(parser(original), reprinted)(tree)
     } else runTestAssert[T](original, reprinted)(tree)
   }
 

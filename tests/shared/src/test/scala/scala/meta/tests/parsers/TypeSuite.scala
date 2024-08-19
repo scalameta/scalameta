@@ -142,7 +142,7 @@ class TypeSuite extends ParseSuite {
 
     def matchSubStructureTyp3(typ: String, func: PartialFunction[Tree, Unit])(implicit
         loc: munit.Location
-    ) = matchSubStructure[Type](typ, func)(parseType, dialects.Scala3, loc)
+    ) = matchSubStructure[Type](typ, func)(parseType, loc)
 
     assertTpe("42")(int(42))
     assertTpe("-42")(int(-42))

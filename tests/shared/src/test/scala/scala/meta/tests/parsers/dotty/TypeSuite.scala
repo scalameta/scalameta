@@ -421,7 +421,7 @@ class TypeSuite extends BaseDottySuite {
 
   test("plus-minus-then-underscore-source3") {
     implicit val dialect: Dialect = dialects.Scala213Source3
-    implicit val parser: (String, Dialect) => Type = parseType
+    implicit val parser: String => Type = parseType
     matchSubStructure(
       "+_ => Int",
       { case Type.Function(List(Type.Name("+_")), Type.Name("Int")) => () }

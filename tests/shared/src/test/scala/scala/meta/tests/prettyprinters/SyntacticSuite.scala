@@ -968,7 +968,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("interpolator braces for operator identifiers") {
-    implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
+    implicit val parseStat: String => Stat = super.templStat
     checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""", """s"${+++}bar"""")("s\"${\n  +++\n}bar\"")
     checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""", "s\"${+++}_bar\"")("s\"${\n  +++\n}_bar\"")
     checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""", """s"${+++}123"""")("s\"${\n  +++\n}123\"")
@@ -988,7 +988,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("interpolator braces for plain identifiers") {
-    implicit def parseStat(code: String, dialect: Dialect): Stat = super.templStat(code)(dialect)
+    implicit val parseStat: String => Stat = super.templStat
     checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""", """s"${foo}bar"""")("s\"${\n  foo\n}bar\"")
     checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""", "s\"${foo}_bar\"")("s\"${\n  foo\n}_bar\"")
     checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""", """s"${foo}123"""")("s\"${\n  foo\n}123\"")

@@ -327,9 +327,8 @@ class LitSuite extends ParseSuite {
     ("0b_0010_1010L", 42L)
   ).foreach { case (code, expected) =>
     test(s"numeric literal ok scala213: $code") {
-      parseStat(code, dialects.Scala213) match {
-        case lit: Lit => assertEquals(lit.value, expected)
-      }
+      implicit val dialect: Dialect = dialects.Scala213
+      parseStat(code) match { case lit: Lit => assertEquals(lit.value, expected) }
     }
   }
 

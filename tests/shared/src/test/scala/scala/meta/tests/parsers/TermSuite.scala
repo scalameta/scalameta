@@ -9,8 +9,7 @@ class TermSuite extends ParseSuite {
   import Term.{Name => _, _}
 
   implicit val dialect: Dialect = dialects.Scala211
-
-  implicit def parseTerm(code: String, dialect: Dialect): Term = term(code)(dialect)
+  implicit val parseTerm: String => Term = term(_)
 
   private def assertTerm(expr: String)(tree: Tree): Unit = assertTree(term(expr))(tree)
 

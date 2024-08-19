@@ -4,7 +4,7 @@ import scala.meta._
 
 class GivenUsingSuite extends BaseDottySuite {
 
-  implicit def parseBlock(code: String, dialect: Dialect): Stat = blockStat(code)(dialect)
+  implicit val parseBlock: String => Stat = blockStat(_)
 
   /**
    * For checking examples in repl declare:
