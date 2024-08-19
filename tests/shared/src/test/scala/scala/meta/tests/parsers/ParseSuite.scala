@@ -45,10 +45,10 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   def ammonite(code: String)(implicit dialect: Dialect) = code.asAmmoniteInput
     .parseRule(_.entryPointAmmonite())
 
-  def interceptParseErrors(stats: String*)(implicit loc: munit.Location) = stats
+  def interceptParseErrors(stats: String*)(implicit loc: munit.Location, dialect: Dialect) = stats
     .foreach(interceptParseError(_))
 
-  def interceptParseError(stat: String)(implicit loc: munit.Location): String =
+  def interceptParseError(stat: String)(implicit loc: munit.Location, dialect: Dialect): String =
     try intercept[parsers.ParseException](templStat(stat)).getMessage().nl2lf
     catch {
       case scala.util.control.NonFatal(t) =>
@@ -206,7 +206,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
 
   implicit val implicitTokenize: TestHelpers.Tokenize = new TestHelpers.Tokenize {
     override def apply(code: String)(implicit dialect: Dialect): Iterable[Token] =
-      scannerTokens(code)(dialect)
+      scannerTokens(code)
   }
 
 }
