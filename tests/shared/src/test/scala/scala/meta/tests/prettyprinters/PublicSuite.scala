@@ -369,6 +369,7 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.tokenizers.Tokenize.toString") {
     // n/a
   }
+  test("scala.meta.tokenizers.TokenizerOptions.toString") {}
 
   test("scala.meta.tokenizers.TokenizeException.toString") {}
 

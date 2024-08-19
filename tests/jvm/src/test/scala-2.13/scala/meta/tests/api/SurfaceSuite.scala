@@ -161,6 +161,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.tokenizers.Tokenized
          |scala.meta.tokenizers.Tokenized.Error *
          |scala.meta.tokenizers.Tokenized.Success *
+         |scala.meta.tokenizers.TokenizerOptions *
          |scala.meta.tokens
          |scala.meta.tokens.StringExtensions *
          |scala.meta.tokens.Token

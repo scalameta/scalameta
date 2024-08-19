@@ -2,6 +2,7 @@ package scala.meta.internal.tokenizers
 
 import scala.meta.Dialect
 import scala.meta.inputs._
+import scala.meta.tokenizers._
 import scala.meta.tokens._
 
 import scala.collection.mutable.ListBuffer
@@ -16,6 +17,7 @@ trait WhitespaceTokenizer {
 object WhitespaceTokenizer {
 
   def apply(input: Input, dialect: Dialect)(implicit
+      options: Option[TokenizerOptions],
       tokens: java.util.Collection[Token]
   ): WhitespaceTokenizer = new Grouping(input, dialect)
 

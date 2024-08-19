@@ -4,11 +4,14 @@ import org.scalameta.internal.ScalaCompat
 import scala.meta._
 import scala.meta.tests.parsers.CommonTrees
 import scala.meta.tokenizers.Tokenize
+import scala.meta.tokenizers.TokenizerOptions
 import scala.meta.trees.Origin
 
 import munit._
 
 abstract class TreeSuiteBase extends FunSuite with CommonTrees {
+
+  protected implicit def tokenizerOptions: Option[TokenizerOptions] = None
 
   def emptyArgClause = Seq.empty[Term.ArgClause]
 
