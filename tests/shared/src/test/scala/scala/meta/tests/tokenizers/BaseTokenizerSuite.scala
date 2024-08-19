@@ -8,22 +8,18 @@ import munit.Location
 
 abstract class BaseTokenizerSuite extends TreeSuiteBase {
 
-  def tokenize(code: String, dialect: Dialect = dialects.Scala211): Tokens = {
-    val convert = scala.meta.inputs.Input.stringToInput
-    val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
-
-    code.tokenize(convert, tokenize, dialect).get
-  }
+  def tokenize(code: String)(implicit dialect: Dialect): Tokens = tokenizers.Tokenize
+    .scalametaTokenize.apply(inputs.Input.stringToInput(code), dialect).get
 
   implicit def implicitTokenize: TestHelpers.Tokenize = new TestHelpers.Tokenize {
-    override def apply(code: String)(implicit dialect: Dialect): Iterable[Token] =
-      tokenize(code, dialect)
+    override def apply(code: String)(implicit dialect: Dialect): Iterable[Token] = tokenize(code)
   }
 
   def assertTokens(code: String, dialect: Dialect = dialects.Scala211)(
       expected: PartialFunction[Tokens, Unit]
   )(implicit location: munit.Location) = {
-    val obtained = tokenize(code, dialect)
+    implicit val implicitDialect = dialect
+    val obtained = tokenize(code)
     expected.lift(obtained).getOrElse(fail("Got unexpected tokens: " + obtained))
   }
 

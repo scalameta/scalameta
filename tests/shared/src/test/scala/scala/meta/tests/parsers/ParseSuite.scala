@@ -11,11 +11,26 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   val EOL = org.scalameta.internal.ScalaCompat.EOL
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""
 
-  implicit def parseStat(code: String, dialect: Dialect): Stat = templStat(code)(dialect)
-  implicit def parseSource(code: String, dialect: Dialect): Source = source(code)(dialect)
-  implicit def parseType(code: String, dialect: Dialect): Type = tpe(code)(dialect)
-  implicit def parsePat(code: String, dialect: Dialect): Pat = pat(code)(dialect)
-  implicit def parseCaseTree(code: String, dialect: Dialect): Case = parseCase(code)(dialect)
+  implicit def parseStat(code: String, dialect: Dialect): Stat = {
+    implicit val implicitDialect: Dialect = dialect
+    templStat(code)
+  }
+  implicit def parseSource(code: String, dialect: Dialect): Source = {
+    implicit val implicitDialect: Dialect = dialect
+    source(code)
+  }
+  implicit def parseType(code: String, dialect: Dialect): Type = {
+    implicit val implicitDialect: Dialect = dialect
+    tpe(code)
+  }
+  implicit def parsePat(code: String, dialect: Dialect): Pat = {
+    implicit val implicitDialect: Dialect = dialect
+    pat(code)
+  }
+  implicit def parseCaseTree(code: String, dialect: Dialect): Case = {
+    implicit val implicitDialect: Dialect = dialect
+    parseCase(code)
+  }
 
   // This should eventually be replaced by DiffAssertions.assertNoDiff
   def assertSameLines(actual: String, expected: String)(implicit loc: munit.Location) = {
@@ -95,13 +110,6 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     val obtained = parser(code, dialect)
     expected.lift(obtained).getOrElse(fail(s"Got unexpected tree: ${obtained.structure}"))
   }
-
-  protected def matchSubStructureWithDialect[T <: Tree](
-      code: String,
-      expected: PartialFunction[Tree, Unit],
-      dialect: Dialect
-  )(implicit parser: (String, Dialect) => T, loc: munit.Location): Unit =
-    matchSubStructure(code, expected)(parser, dialect, loc)
 
   /**
    * Check if code can be parsed to expected syntax tree.

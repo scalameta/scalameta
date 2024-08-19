@@ -4,7 +4,10 @@ import scala.meta._
 
 class ExtensionMethodsSuite extends BaseDottySuite {
 
-  implicit def parseBlock(code: String, dialect: Dialect): Stat = blockStat(code)(dialect)
+  implicit def parseBlock(code: String, dialect: Dialect): Stat = {
+    implicit val implicitDialect: Dialect = dialect
+    blockStat(code)
+  }
 
   private final val cparam = tparam("c", "Circle")
   private final val cparamss: List[List[Term.Param]] = List(List(cparam))

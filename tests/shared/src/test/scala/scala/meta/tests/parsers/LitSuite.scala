@@ -131,11 +131,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("binary literals") {
-    matchSubStructureWithDialect[Stat]("0b1", { case Lit(1) => () }, dialects.Scala213)
+    matchSubStructure[Stat]("0b1", { case Lit(1) => () })
 
-    matchSubStructureWithDialect[Stat]("0b_0010_1010", { case Lit(42) => () }, dialects.Scala213)
+    matchSubStructure[Stat]("0b_0010_1010", { case Lit(42) => () })
 
-    matchSubStructureWithDialect[Stat]("0B00101010L", { case Lit(42) => () }, dialects.Scala213)
+    matchSubStructure[Stat]("0B00101010L", { case Lit(42) => () })
 
   }
 

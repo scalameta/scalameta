@@ -118,25 +118,29 @@ class ImportSuite extends ParseSuite {
       List(Importee.GivenAll(), Importee.Wildcard())
     )))
 
-    val res212 = templStat("import a.b.c.{ given, _ }")(dialects.Scala212Source3)
+    assertTree {
+      implicit val dialect: Dialect = dialects.Scala212Source3
+      templStat("import a.b.c.{ given, _ }")
+    }(expected)
 
-    assertTree(res212)(expected)
-
-    val res213 = templStat("import a.b.c.{ given, _ }")(dialects.Scala213Source3)
-
-    assertTree(res213)(expected)
+    assertTree {
+      implicit val dialect: Dialect = dialects.Scala213Source3
+      templStat("import a.b.c.{ given, _ }")
+    }(expected)
 
     val expectedWithoutWildcard = Import(List(Importer(
       Term.Select(Term.Select(tname("a"), tname("b")), tname("c")),
       List(Importee.Name(Indeterminate("given")))
     )))
 
-    val res212NoWildcard = templStat("import a.b.c.{ given }")(dialects.Scala212Source3)
+    assertTree {
+      implicit val dialect: Dialect = dialects.Scala212Source3
+      templStat("import a.b.c.{ given }")
+    }(expectedWithoutWildcard)
 
-    assertTree(res212NoWildcard)(expectedWithoutWildcard)
-
-    val res213NoWildcard = templStat("import a.b.c.{ given }")(dialects.Scala213Source3)
-
-    assertTree(res213NoWildcard)(expectedWithoutWildcard)
+    assertTree {
+      implicit val dialect: Dialect = dialects.Scala213Source3
+      templStat("import a.b.c.{ given }")
+    }(expectedWithoutWildcard)
   }
 }
