@@ -2,12 +2,13 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 class TermSuite extends ParseSuite {
   import Name.Anonymous
   import Name.Indeterminate
   import Term.{Name => _, _}
+
+  implicit val dialect: Dialect = dialects.Scala211
 
   implicit def parseTerm(code: String, dialect: Dialect): Term = term(code)(dialect)
 

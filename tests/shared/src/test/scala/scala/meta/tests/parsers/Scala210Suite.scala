@@ -2,9 +2,11 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala210
 
 class Scala210Suite extends ParseSuite {
+
+  implicit val dialect: Dialect = dialects.Scala210
+
   test("$_") {
     val error = """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr
                    | val q"x + $_" = tree 

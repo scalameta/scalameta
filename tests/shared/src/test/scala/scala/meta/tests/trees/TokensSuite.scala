@@ -2,9 +2,11 @@ package scala.meta.tests
 package trees
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 class TokensSuite extends TreeSuiteBase {
+
+  implicit val dialect: Dialect = dialects.Scala211
+
   test("Tree.tokens: parsed, same dialect") {
     val tree = dialects.Scala211("foo + bar // baz").parse[Term].get
     assertEquals(tree.syntax, "foo + bar // baz")

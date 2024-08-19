@@ -2,12 +2,13 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
-import scala.meta.dialects.Scala211
 
 class TemplateSuite extends ParseSuite {
   import Defn.Class
   import Defn.Object
   import Defn.Trait
+
+  implicit val dialect: Dialect = dialects.Scala211
 
   test("trait T") {
     val tree = templStat("trait T")
