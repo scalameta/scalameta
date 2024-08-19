@@ -922,8 +922,8 @@ object ScannerTokens {
     object InvalidArg extends LeadingInfix
   }
 
-  def apply(input: Input)(implicit dialect: Dialect): ScannerTokens =
-    new ScannerTokens(input.tokenize.get)
+  def apply(input: Input)(implicit dialect: Dialect, tokenize: Tokenize): ScannerTokens =
+    new ScannerTokens(tokenize(input, dialect).get)
 
   private[parsers] case class OutdentInfo(
       outdent: SepRegionIndented,

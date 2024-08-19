@@ -64,16 +64,16 @@ trait InternalTree extends Product {
   }
 
   def tokenizeFor(dialect: Dialect): Tokens =
-    if (origin.dialectOpt.contains(dialect)) tokensOpt.get else tokenizeForDialect(dialect)
+    if (origin.dialectOpt.contains(dialect)) tokensOpt.get else retokenize(dialect)
 
   private def tokensOpt: Option[Tokens] = origin.tokensOpt.orElse(syntaxTokensOpt)
-  private lazy val syntaxTokensOpt: Option[Tokens] = origin.dialectOpt.map(tokenizeForDialect)
+  private lazy val syntaxTokensOpt: Option[Tokens] = origin.dialectOpt.map(retokenize(_))
 
-  private def tokenizeForDialect(dialect: Dialect): Tokens = this match {
+  private[meta] def retokenize(implicit dialect: Dialect): Tokens = this match {
     case Lit.String(value) =>
       val input = Input.VirtualFile("<InternalTrees.tokens>", value)
       Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
-    case _ => dialect(textAsInput(dialect)).tokenize.get
+    case _ => implicitly[Tokenize].apply(textAsInput, dialect).get
   }
 
   private[meta] def textAsInput(implicit dialect: Dialect): Input = Input
