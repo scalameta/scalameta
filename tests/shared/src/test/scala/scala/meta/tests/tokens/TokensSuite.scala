@@ -48,11 +48,8 @@ class TokensApiSuite extends FunSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
-  def tokenize(code: String): Tokens = {
-    val convert = scala.meta.inputs.Input.stringToInput
-    val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
-    code.tokenize(convert, tokenize, dialect).get
-  }
+  def tokenize(code: String): Tokens = tokenizers.Tokenize.scalametaTokenize
+    .apply(inputs.Input.String(code), dialect).get
 
   test("Maintains Tokens type when implementing collections API methods") {
     // Drop BOF and EOF to make tests more readable

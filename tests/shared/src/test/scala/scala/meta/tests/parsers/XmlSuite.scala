@@ -14,12 +14,6 @@ class XmlSuite extends ParseSuite {
     def tokensStructure(tokenized: Tokens): String = tokenized.map(_.structure)
       .mkString("", "\n", "\n")
 
-    def tokenize(code: String): Tokens = {
-      val convert = scala.meta.inputs.Input.stringToInput
-      val tokenize = scala.meta.tokenizers.Tokenize.scalametaTokenize
-      code.tokenize(convert, tokenize, dialect).get
-    }
-
     test(logger.revealWhitespace(original)) {
       val obtained = tokensStructure(tokenize(original))
       assertEquals(obtained, expected)

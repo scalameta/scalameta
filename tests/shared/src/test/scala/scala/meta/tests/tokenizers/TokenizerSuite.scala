@@ -1291,7 +1291,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
     "0x__123_456__789"
   ).foreach { value =>
     test(s"numeric literal separator ok scala213: $value") {
-      dialects.Scala213(value).tokenize.get // no exception
+      implicit val dialect: Dialect = dialects.Scala213
+      tokenize(value) // no exception
     }
   }
 
@@ -1388,8 +1389,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("numeric literal separator scala213: check positions") {
-    val intConstant = dialects.Scala213(" 1_000_000 ").tokenize.get(2)
-      .asInstanceOf[Token.Constant.Int]
+    implicit val dialect: Dialect = dialects.Scala213
+    val tokens = tokenize(" 1_000_000 ")
+    val intConstant = tokens(2).asInstanceOf[Token.Constant.Int]
     assertEquals(intConstant.pos.text, "1_000_000") // assert token position includes underscores
     assertEquals(intConstant.value, BigInt(1000000))
   }
@@ -1449,8 +1451,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   test("#3328") {
     val code = "val \\uD835\\uDF11: Double"
-    val res = dialects.Scala212(code).tokenize
-    assertEquals(res.get.toString, code)
+    implicit val dialect: Dialect = dialects.Scala212
+    assertEquals(tokenize(code).toString, code)
   }
 
   test("#3328 2") {
@@ -1471,8 +1473,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   test("#3402") {
     val code = "val MIN_HIGH_SURROGATE = '\\uD800'"
-    val res = dialects.Scala212(code).tokenize
-    assertEquals(res.get.toString, code)
+    implicit val dialect: Dialect = dialects.Scala212
+    assertEquals(tokenize(code).toString, code)
   }
 
   test("binary literals") {
@@ -1480,8 +1482,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
                   |val v2 = 0B_0010_1010
                   |val v3 = 0b_0010_1010L
                   |""".stripMargin
-    val res = dialects.Scala213(code).tokenize
-    assertEquals(res.get.toString, code)
+    implicit val dialect: Dialect = dialects.Scala213
+    assertEquals(tokenize(code).toString, code)
   }
 
   Seq(
