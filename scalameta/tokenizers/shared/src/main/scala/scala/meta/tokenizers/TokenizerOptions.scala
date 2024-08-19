@@ -4,6 +4,7 @@ import scala.util.DynamicVariable
 
 final class TokenizerOptions(
     // options which control how tokens are emitted
+    val groupWhitespace: Boolean = false
 )
 
 object TokenizerOptions {
