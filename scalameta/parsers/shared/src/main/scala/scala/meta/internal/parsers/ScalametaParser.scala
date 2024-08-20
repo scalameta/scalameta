@@ -2465,7 +2465,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def enumeratorGuardOnIf() = autoPos(Enumerator.Guard(guardOnIf()))
 
   def enumerators(): List[Enumerator] = listBy[Enumerator] { enums =>
-    def notEnumsEnd(token: Token): Boolean = !token.isAny[Indentation.Outdent, KwDo, CloseDelim]
+    def notEnumsEnd(token: Token): Boolean = token match {
+      case _: Indentation.Outdent | _: CloseDelim | _: KwDo | _: KwYield => false
+      case _ => true
+    }
     doWhile {
       enums += enumerator(isFirst = enums.isEmpty)
       while (at[Token.KwIf]) enums += enumeratorGuardOnIf()

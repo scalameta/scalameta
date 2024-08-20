@@ -4179,10 +4179,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  yield
                   |    foo
                   |""".stripMargin
-    val error = """|<input>:4: error: illegal start of simple pattern
-                   |  yield
-                   |  """.stripMargin
-    runTestError[Stat](code, error)
+    val layout = "object a { for (foo <- bar) yield foo }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(Term.ForYield(List(Enumerator.Generator(Pat.Var(tname("foo")), tname("bar"))), tname("foo")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
