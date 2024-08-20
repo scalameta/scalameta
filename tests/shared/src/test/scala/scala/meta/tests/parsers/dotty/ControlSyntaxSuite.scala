@@ -4172,4 +4172,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("break after <- in for-yield") {
+    val code = """|object a:
+                  |  for foo <-
+                  |    bar
+                  |  yield
+                  |    foo
+                  |""".stripMargin
+    val error = """|<input>:4: error: illegal start of simple pattern
+                   |  yield
+                   |  """.stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
