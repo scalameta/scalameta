@@ -3,6 +3,7 @@ package scala.meta.inputs
 import scala.meta.common._
 import scala.meta.internal._
 import scala.meta.io._
+import scala.meta.tokenizers.TokenizerOptions
 
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
@@ -11,6 +12,11 @@ import java.nio.{file => nio}
 sealed trait Input extends Product with Serializable with inputs.InternalInput {
   def chars: Array[Char]
   def text: String = new String(chars)
+
+  private[meta] def tokenizerOptions: Option[TokenizerOptions] = None
+  def withoutTokenizerOptions: Input = this
+  def withTokenizerOptions(implicit options: Option[TokenizerOptions]): Input = Input
+    .WithTokenizerOptions(this)
 }
 
 object Input {
@@ -25,6 +31,7 @@ object Input {
     val input: Input
     override def chars: Array[Char] = input.chars
     override def text: Predef.String = input.text
+    override private[meta] def tokenizerOptions: Option[TokenizerOptions] = input.tokenizerOptions
   }
 
   case object None extends Text {
@@ -109,6 +116,19 @@ object Input {
 
   final case class Ammonite(input: Input) extends Proxy {
     override def toString = s"Input.Ammonite($input)"
+  }
+
+  final case class WithTokenizerOptions private (input: Input)(options: TokenizerOptions)
+      extends Proxy {
+    override def toString = s"Input.WithTokenizerOptions($input, $tokenizerOptions)"
+    override private[meta] def tokenizerOptions = Some(options)
+    override def withoutTokenizerOptions: Input = input.withoutTokenizerOptions
+    override def withTokenizerOptions(implicit options: Option[TokenizerOptions]): Input = options
+      .fold(withoutTokenizerOptions)(x => if (x eq this.options) this else copy()(x))
+  }
+  object WithTokenizerOptions {
+    def apply(input: Input)(implicit options: Option[TokenizerOptions]): Input = options
+      .fold(input.withoutTokenizerOptions)(new WithTokenizerOptions(input)(_))
   }
 
   implicit val charsToInput: Convert[Array[Char], Input] =

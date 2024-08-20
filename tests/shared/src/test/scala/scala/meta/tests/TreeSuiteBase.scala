@@ -169,6 +169,6 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   ): Unit = assertTokenizedAsSyntax(code, expected, dialect)
 
   protected def tokenize(code: String)(implicit dialect: Dialect): Tokens = Tokenize
-    .scalametaTokenize.apply(Input.String(code), dialect).get
+    .scalametaTokenize.apply(Input.String(code).withTokenizerOptions, dialect).get
 
 }

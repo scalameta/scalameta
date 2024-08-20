@@ -121,6 +121,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.inputs.Input.String *
          |scala.meta.inputs.Input.Text *
          |scala.meta.inputs.Input.VirtualFile *
+         |scala.meta.inputs.Input.WithTokenizerOptions *
          |scala.meta.inputs.InputException *
          |scala.meta.inputs.InputRange *
          |scala.meta.inputs.Position

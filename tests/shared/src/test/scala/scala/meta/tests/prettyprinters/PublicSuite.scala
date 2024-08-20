@@ -203,6 +203,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.inputs.Input.Proxy.toString") {}
   test("scala.meta.inputs.Input.Text.toString") {}
+  test("scala.meta.inputs.Input.WithTokenizerOptions.toString") {}
 
   test("scala.meta.dialects.AllowEverything.toString") {
     // Satisfy surface suite.

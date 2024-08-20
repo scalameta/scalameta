@@ -9,6 +9,7 @@ import munit.TestOptions
 
 abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
   import scala.meta._
+  import scala.meta.tests.parsers.MoreHelpers._
 
   def checkPositions[T <: Tree: Parse](code: TestOptions)(implicit loc: Location): Unit =
     checkPositions[T](code, "")
@@ -54,7 +55,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
   )(implicit loc: Location): Unit = test(code) {
     implicit val D = defaultDialect
     if (expectedTokens.nonEmpty) assertTokenizedAsStructureLines(code.name, expectedTokens)
-    val tree = code.name.parse[T]
+    val tree = code.name.asInput.parse[T]
       .fold(x => fail("parse failure", x.details), MoreHelpers.requireNonEmptyOrigin(_))
     val sb = new StringBuilder
     tree.traverse {
