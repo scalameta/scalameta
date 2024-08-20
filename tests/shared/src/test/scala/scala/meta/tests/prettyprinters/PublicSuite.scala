@@ -201,6 +201,9 @@ class PublicSuite extends TreeSuiteBase {
     // covered below
   }
 
+  test("scala.meta.inputs.Input.Proxy.toString") {}
+  test("scala.meta.inputs.Input.Text.toString") {}
+
   test("scala.meta.dialects.AllowEverything.toString") {
     // Satisfy surface suite.
   }
