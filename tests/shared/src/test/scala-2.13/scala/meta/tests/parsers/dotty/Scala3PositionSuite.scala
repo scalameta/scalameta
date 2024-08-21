@@ -204,6 +204,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  case Char => String
        |  case Array[t] => t
        |}
+       |Type.CasesClause {
+       |  case Char => String
+       |  case Array[t] => t
+       |}
        |TypeCase case Char => String
        |TypeCase case Array[t] => t
        |Type.Apply Array[t]

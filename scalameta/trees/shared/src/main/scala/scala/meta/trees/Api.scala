@@ -67,6 +67,11 @@ private[meta] trait Api extends ApiLowPriority {
       dialect: Dialect
   ): List[Pat.ArgClause] = v.map(patValuesToArgClauseWithDialect)
 
+  implicit def typeCasesClauseToValues(v: Type.CasesClause): List[TypeCase] = v.cases
+  implicit def typeCaseValuesToCasesClauseWithDialect(v: List[TypeCase])(implicit
+      dialect: Dialect
+  ): Type.CasesClause = Type.CasesClause(v)
+
   implicit def casesClauseToValues(v: Term.CasesClause): List[Case] = v.cases
   implicit def caseValuesToCasesClauseWithDialect(v: List[Case])(implicit
       dialect: Dialect

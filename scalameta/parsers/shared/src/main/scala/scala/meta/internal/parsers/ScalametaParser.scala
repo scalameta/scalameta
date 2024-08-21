@@ -841,7 +841,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       ctor(funcParams, typeIndentedOpt())
     }
 
-    def typeCaseClauses(): List[TypeCase] = {
+    private def typeCaseClauses(): Type.CasesClause =
+      autoPos(typeCaseClausesList().reduceWith(Type.CasesClause.apply))
+
+    private def typeCaseClausesList(): List[TypeCase] = {
       def cases() = listBy[TypeCase] { allCases =>
         while (at[KwCase]) {
           allCases += typeCaseClause()
@@ -851,10 +854,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (acceptOpt[LeftBrace]) inBracesAfterOpen(cases())
       else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(cases())
       else syntaxError("Expected braces or indentation", at = currToken.pos)
-
     }
 
-    def typeCaseClause(): TypeCase = autoPos {
+    private def typeCaseClause(): TypeCase = autoPos {
       accept[KwCase]
       val pat = infixTypeOrTuple(inMatchType = true)
       accept[RightArrow]
