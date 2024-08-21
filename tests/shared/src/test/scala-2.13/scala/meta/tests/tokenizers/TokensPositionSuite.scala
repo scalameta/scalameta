@@ -480,6 +480,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Self class A { @@def this(a: A) = this() }
        |Ctor.Secondary def this(a: A) = this()
        |Term.ParamClause (a: A)
+       |Ctor.Block this()
        |Init this()
        |Type.Singleton this
        |Term.This this

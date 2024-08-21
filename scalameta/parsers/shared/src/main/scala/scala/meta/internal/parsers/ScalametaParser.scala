@@ -3783,17 +3783,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       paramss: Seq[Term.ParamClause]
   ): Ctor.Secondary = {
     val hasLeftBrace = isAfterOptNewLine[LeftBrace] || { accept[Equals]; at[LeftBrace] }
-    val (init, stats) =
+    val body = autoPos {
       if (hasLeftBrace) inBracesOnOpen(constrInternal())
       else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(constrInternal())
-      else (initInsideConstructor(), Nil)
-    Ctor.Secondary(mods, name, paramss, init, stats)
+      else Ctor.Block(initInsideConstructor(), Nil)
+    }
+    Ctor.Secondary(mods, name, paramss, body)
   }
 
-  def constrInternal(): (Init, List[Stat]) = {
+  def constrInternal(): Ctor.Block = {
     val init = initInsideConstructor()
     val stats = if (acceptIfStatSep()) blockStatSeq() else Nil
-    (init, stats)
+    Ctor.Block(init, stats)
   }
 
   def initInsideConstructor(): Init = {

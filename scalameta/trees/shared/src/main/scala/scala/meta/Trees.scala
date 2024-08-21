@@ -1096,17 +1096,29 @@ object Ctor {
     @replacedField("4.6.0")
     final def paramss: List[List[Term.Param]] = paramClauses.map(_.values).toList
   }
+
+  @ast
+  class Block(init: Init, stats: List[Stat]) extends Tree with Tree.WithStats {
+    checkFields(stats.forall(_.isBlockStat))
+  }
+  private[meta] object BlockCtor {
+    def apply(init: Init, stats: List[Stat]): Block = Block(init = init, stats = stats)
+  }
+
   @ast
   class Secondary(
       mods: List[Mod],
       name: Name,
       paramClauses: Seq[Term.ParamClause] @nonEmpty,
-      init: Init,
-      stats: List[Stat]
+      @replacesFields("4.9.9", BlockCtor)
+      body: Block
   ) extends Ctor with Stat with Stat.WithMods with Tree.WithParamClauses with Tree.WithStats {
-    checkFields(stats.forall(_.isBlockStat))
     @replacedField("4.6.0")
     final def paramss: List[List[Term.Param]] = paramClauses.map(_.values).toList
+    @replacedField("4.9.9", pos = 3)
+    final def init: Init = body.init
+    @replacedField("4.9.9", pos = 4)
+    final def stats: List[Stat] = body.stats
   }
 }
 

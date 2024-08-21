@@ -877,21 +877,10 @@ object TreeSyntax {
       case t: Ctor.Primary =>
         val paramClauses = r(t.paramClauses.map(printParams(_)))
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), paramClauses)
+      case t: Ctor.Block =>
+        if (t.stats.isEmpty) s(t.init) else s("{", i(t.init), "", t.stats, n("}"))
       case t: Ctor.Secondary =>
-        if (t.stats.isEmpty)
-          s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramClauses, " = ", t.init)
-        else s(
-          w(t.mods, " "),
-          kw("def"),
-          " ",
-          kw("this"),
-          t.paramClauses,
-          " {",
-          i(t.init),
-          "",
-          t.stats,
-          n("}")
-        )
+        s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramClauses, " = ", t.body)
 
       // Init
       case t: Init =>

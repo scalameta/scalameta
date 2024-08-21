@@ -290,7 +290,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(
       source("class C(x: Int) { def this() { this(2); println(\"OBLIVION!!!\") } }").reprint,
       """|class C(x: Int) {
-         |  def this() {
+         |  def this() = {
          |    this(2)
          |    println("OBLIVION!!!")
          |  }
