@@ -1542,7 +1542,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         syntaxError("do {...} while (...) syntax is no longer supported", at = currToken)
       case _: KwFor =>
         next()
-        val enums: List[Enumerator] =
+        def enumList =
           if (acceptOpt[LeftBrace]) inBracesAfterOpen(enumerators())
           else if (at[LeftParen]) {
             def parseInParens() = inParensOnOpen(enumerators())
@@ -1552,6 +1552,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             else parseInParens()
           } else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(enumerators())
           else enumerators()
+        val enums = autoPos(enumList.reduceWith(Term.EnumeratorsClause.apply))
 
         newLinesOpt()
         if (acceptOpt[KwDo]) Term.For(enums, expr())

@@ -69,6 +69,11 @@ object Tree extends InternalTreeXtensions {
     final def exprs: List[Tree] = enums
   }
   @branch
+  trait WithEnumeratorsClause extends Tree with WithEnums {
+    def enumsClause: Term.EnumeratorsClause
+    def enums: List[Enumerator] = enumsClause.enums
+  }
+  @branch
   trait WithParamClauses extends Tree {
     def paramClauses: Seq[Term.ParamClause]
   }
@@ -224,6 +229,10 @@ object Term {
   class ArgClause(values: List[Term], mod: Option[Mod.ArgsType] = None) extends Member.ArgClause
   @ast
   class CasesClause(cases: List[Case] @nonEmpty) extends Tree.WithCases
+  @ast
+  class EnumeratorsClause(enums: List[Enumerator] @nonEmpty) extends Tree.WithEnums {
+    checkFields(checkValidEnumerators(enums))
+  }
 
   @ast
   class This(qual: sm.Name) extends Term.Ref
@@ -399,14 +408,16 @@ object Term {
     override final def cond: Term = expr
   }
   @ast
-  class For(enums: List[Enumerator] @nonEmpty, body: Term)
-      extends Term with Tree.WithBody with Tree.WithEnums {
-    checkFields(checkValidEnumerators(enums))
+  class For(enumsClause: EnumeratorsClause, body: Term)
+      extends Term with Tree.WithBody with Tree.WithEnumeratorsClause {
+    @replacedField("4.9.9")
+    override final def enums: List[Enumerator] = enumsClause.enums
   }
   @ast
-  class ForYield(enums: List[Enumerator] @nonEmpty, body: Term)
-      extends Term with Tree.WithBody with Tree.WithEnums {
-    checkFields(checkValidEnumerators(enums))
+  class ForYield(enumsClause: EnumeratorsClause, body: Term)
+      extends Term with Tree.WithBody with Tree.WithEnumeratorsClause {
+    @replacedField("4.9.9")
+    override final def enums: List[Enumerator] = enumsClause.enums
   }
   @ast
   class New(init: Init) extends Term

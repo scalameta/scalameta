@@ -419,6 +419,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.ContextFunction
          |scala.meta.Term.Do
          |scala.meta.Term.EndMarker
+         |scala.meta.Term.EnumeratorsClause
          |scala.meta.Term.Eta
          |scala.meta.Term.For
          |scala.meta.Term.ForYield
@@ -459,6 +460,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Tree.WithCondOpt
          |scala.meta.Tree.WithDeclTpe
          |scala.meta.Tree.WithDeclTpeOpt
+         |scala.meta.Tree.WithEnumeratorsClause
          |scala.meta.Tree.WithEnums
          |scala.meta.Tree.WithExprs
          |scala.meta.Tree.WithParamClauseGroup
