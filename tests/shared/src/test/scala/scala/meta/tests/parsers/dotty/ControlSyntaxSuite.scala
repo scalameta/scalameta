@@ -4172,4 +4172,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("break after <- in for-yield") {
+    val code = """|object a:
+                  |  for foo <-
+                  |    bar
+                  |  yield
+                  |    foo
+                  |""".stripMargin
+    val layout = "object a { for (foo <- bar) yield foo }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(Term.ForYield(List(Enumerator.Generator(Pat.Var(tname("foo")), tname("bar"))), tname("foo")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
