@@ -400,7 +400,7 @@ object TreeSyntax {
       case t: Term.If => guessNeedsLineSep(if (guessHasElsep(t)) t.elsep else t.thenp)
       case t: Term.Try => t.finallyp match {
           case Some(x) => guessNeedsLineSep(x)
-          case _ => t.catchp.isEmpty && guessNeedsLineSep(t.expr)
+          case _ => t.catchClause.isEmpty && guessNeedsLineSep(t.expr)
         }
       case t: Term.TryWithHandler => guessNeedsLineSep(t.finallyp.getOrElse(t.catchp))
       case _ => false
@@ -528,13 +528,13 @@ object TreeSyntax {
           )
         )
       case t: Term.Match =>
-        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), " ", kw("match"), " {", t.cases, n("}")))
-      case t: Term.Try =>
+        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), " ", kw("match"), " ", t.casesClause))
+      case t: Term.TryClause =>
         val showExpr = p(Expr, t.expr)
         val needParensAroundExpr = t.expr match {
-          case e: Term.Try if e.finallyp.isEmpty =>
-            if (e.catchp.isEmpty) t.catchp.nonEmpty || t.finallyp.isDefined
-            else t.catchp.isEmpty && t.finallyp.isDefined
+          case e: Term.TryClause if e.finallyp.isEmpty =>
+            if (e.catchClause.isEmpty) t.catchClause.nonEmpty || t.finallyp.isDefined
+            else t.catchClause.isEmpty && t.finallyp.isDefined
           case _ => false
         }
         m(
@@ -543,21 +543,8 @@ object TreeSyntax {
             kw("try"),
             " ",
             if (needParensAroundExpr) s("(", i(showExpr), n(")")) else showExpr,
-            if (t.catchp.nonEmpty) s(" ", kw("catch"), " {", t.catchp, n("}")) else s(""),
-            t.finallyp.map(finallyp => s(" ", kw("finally"), " ", finallyp)).getOrElse(s())
-          )
-        )
-      case t: Term.TryWithHandler => m(
-          Expr1,
-          s(
-            kw("try"),
-            " ",
-            p(Expr, t.expr),
-            " ",
-            kw("catch"),
-            " ",
-            t.catchp,
-            t.finallyp.map(finallyp => s(" ", kw("finally"), " ", finallyp)).getOrElse(s())
+            t.catchClause.fold(s())(x => s(" ", kw("catch"), " ", x)),
+            t.finallyp.fold(s())(finallyp => s(" ", kw("finally"), " ", finallyp))
           )
         )
       case t: Term.FunctionTerm =>
@@ -972,25 +959,22 @@ object TreeSyntax {
       case t: Export => s(kw("export"), " ", r(t.importers, ", "))
 
       // Case
+      case t: Term.CasesClause => s("{", t.cases, n("}"))
       case t: Case =>
         val ppat = p(Pattern, t.pat)
-        val pcond = t.cond.map(cond => s(" ", kw("if"), " ", p(PostfixExpr, cond))).getOrElse(s())
-        val isOneLiner = {
-          def isOneLiner(t: Case) = t.stats match {
-            case Nil => true
-            case head :: Nil => head.is[Lit] || head.is[Term.Name]
-            case _ => false
-          }
-          t.parent match {
-            case Some(p: Term.Match) => p.cases.forall(isOneLiner)
-            case Some(p: Term.PartialFunction) => p.cases.forall(isOneLiner)
-            case _ => isOneLiner(t)
-          }
+        val pcond = t.cond.fold(s())(cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)))
+        def isOneLiner(t: Case) = t.stats match {
+          case Nil => true
+          case (_: Lit | _: Term.Name) :: Nil => true
+          case _ => false
         }
-        val pbody = (t.stats, isOneLiner) match {
-          case (Nil, true) => s("")
-          case (List(stat), true) => s(" ", stat)
-          case (stats, _) => s(stats)
+        def allOneLiner = t.parent match {
+          case Some(p: Term.CasesClause) => p.cases.forall(isOneLiner)
+          case _ => isOneLiner(t)
+        }
+        val pbody = t.stats match {
+          case stat :: Nil if allOneLiner => s(" ", stat)
+          case stats => s(stats)
         }
         s("case ", ppat, pcond, " ", kw("=>"), pbody)
 

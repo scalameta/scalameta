@@ -334,7 +334,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       val liftOrigin: Origin => ReflectTree =
         if (sourceName ne null) _ match {
           case Origin.Parsed(_, beg, end) => q"$OriginModule.Parsed($sourceName, $beg, $end)"
-          case x => unreachable(debug(x))
+          case x => unreachable(debug(x), "likely missing positions in the parser")
         }
         else {
           val dialectOnlyNameTree = q"$dialectOnlyName"
