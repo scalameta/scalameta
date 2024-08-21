@@ -3,6 +3,7 @@ package internal
 package prettyprinters
 
 import org.scalameta.adt._
+import org.scalameta.debug
 import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
 import org.scalameta.unreachable
@@ -14,6 +15,7 @@ import scala.meta.prettyprinters._
 import scala.meta.tokens.Token
 import scala.meta.trees.Origin
 
+import scala.annotation.tailrec
 import scala.reflect.ClassTag
 import scala.reflect.classTag
 
@@ -375,11 +377,13 @@ object TreeSyntax {
     def guessHasElsep(t: Term.If): Boolean =
       t.elsep match { case Lit.Unit() => false; case e => true }
     def guessHasBraces(t: Pkg): Boolean = {
-      def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
-        case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
-        case Some(source: Source) => source.stats.length == 1
+      @tailrec
+      def isOnlyChildOfOnlyChild(t: Tree): Boolean = t.parent match {
+        case Some(p: Stat.Clause) => p.stats.lengthCompare(1) == 0 && isOnlyChildOfOnlyChild(p)
+        case Some(p: Pkg) => isOnlyChildOfOnlyChild(p)
+        case Some(p: Source) => p.stats.lengthCompare(1) == 0
+        case Some(p) => unreachable(debug(p))
         case None => true
-        case _ => unreachable
       }
       !isOnlyChildOfOnlyChild(t)
     }
@@ -547,6 +551,7 @@ object TreeSyntax {
             t.finallyp.fold(s())(finallyp => s(" ", kw("finally"), " ", finallyp))
           )
         )
+      case t: Term.AnonymousFunction => s(t.body)
       case t: Term.FunctionTerm =>
         val arrow = t match {
           case _: Term.Function => "=>"
@@ -639,15 +644,10 @@ object TreeSyntax {
             p(InfixTyp("|"), t.rhs, right = true)
           )
         )
-      case t: Type.Refine => m(
-          RefineTyp,
-          t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")),
-          "{",
-          w(" ", r(t.stats, "; "), " ", t.stats.nonEmpty),
-          "}"
-        )
+      case t: Type.Refine =>
+        m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.statsClause)
       case t: Type.Existential =>
-        m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " { ", r(t.stats, "; "), " }"))
+        m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " ", t.statsClause))
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe))
       case t: Type.PolyFunction => m(Typ, t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe))
@@ -860,8 +860,9 @@ object TreeSyntax {
       case t: Defn.Macro =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = macro ", t.body)
       case t: Pkg =>
-        if (guessHasBraces(t)) s(kw("package"), " ", t.ref, " {", r(t.stats.map(i(_)), ""), n("}"))
-        else s(kw("package"), " ", t.ref, r(t.stats.map(n(_))))
+        val body =
+          if (guessHasBraces(t)) s(" ", t.statsClause) else r(t.statsClause.stats.map(n(_)))
+        s(kw("package"), " ", t.ref, body)
       case t: Pkg.Object => r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
         val paramClauses = r(t.paramClauses.map(printParams(_)))
@@ -880,7 +881,7 @@ object TreeSyntax {
 
       // Template
       case t: Template =>
-        val pearly = r(t.early, "{ ", "; ", " } with")
+        val pearly = w(o(t.earlyClause), " with")
         val pparents = r(t.inits, " with ")
         val derived = r(t.derives, "derives ", ", ", "")
         val ptype = t.parent match {
@@ -982,6 +983,7 @@ object TreeSyntax {
         s("case ", ppat, pcond, " ", kw("=>"), pbody)
 
       case t: TypeCase => s("case ", t.pat, " ", kw("=>"), " ", t.body)
+
       // Source
       case t: Source =>
         val shebang = t.origin.tokensOpt.flatMap { x =>
@@ -990,7 +992,8 @@ object TreeSyntax {
         }
         s(o(shebang, EOL), r(t.stats, EOL))
       case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
-      case t: Term.AnonymousFunction => s(t.body)
+
+      case t: Stat.Clause => if (t.stats.isEmpty) s("{}") else s("{", t.stats, n("}"))
     }
 
     private def givenName(name: meta.Name, pcGroup: Option[Member.ParamClauseGroup]): Show.Result =

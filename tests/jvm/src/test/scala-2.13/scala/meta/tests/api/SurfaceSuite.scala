@@ -397,6 +397,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Self
          |scala.meta.Source
          |scala.meta.Stat
+         |scala.meta.Stat.Clause
          |scala.meta.Stat.TypeDef
          |scala.meta.Stat.WithCtor
          |scala.meta.Stat.WithMods
@@ -469,6 +470,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Tree.WithParamClauses
          |scala.meta.Tree.WithPats
          |scala.meta.Tree.WithStats
+         |scala.meta.Tree.WithStatsClause
          |scala.meta.Tree.WithTParamClause
          |scala.meta.Type
          |scala.meta.Type.And

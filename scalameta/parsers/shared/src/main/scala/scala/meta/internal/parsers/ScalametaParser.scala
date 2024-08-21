@@ -815,7 +815,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       getAfterOptNewLine(currToken match {
         case _: RightArrow => Some(typeFuncOnArrow(startPos, t :: Nil, Type.Function(_, _)))
         case _: ContextArrow => Some(typeFuncOnArrow(startPos, t :: Nil, Type.ContextFunction(_, _)))
-        case _: KwForsome => next(); Some(Type.Existential(t, existentialStats()))
+        case _: KwForsome => Some(existentialTypeOnForSome(t))
         case _: KwMatch if dialect.allowTypeMatch => next(); Some(Type.Match(t, typeCaseClauses()))
         case _ => None
       }).getOrElse(t)
@@ -1123,7 +1123,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         if (allowInfix) {
           val t = if (at[LeftParen]) tupleInfixType() else compoundType()
           currToken match {
-            case _: KwForsome => next(); copyPos(t)(Type.Existential(t, existentialStats()))
+            case _: KwForsome => existentialTypeOnForSome(t)
             case _: Unquote | Keywords.NotPatAlt() => infixTypeRest(t)
             case _ => t
           }
@@ -2101,7 +2101,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           next()
           val tpl = template(OwnedByTrait)
           tpl.inits match {
-            case init :: Nil if !prev[RightBrace] && tpl.early.isEmpty && tpl.body.isEmpty =>
+            case init :: Nil if !prev[RightBrace] && tpl.earlyClause.isEmpty && tpl.body.isEmpty =>
               Term.New(init)
             case _ => Term.NewAnonymous(tpl)
           }
@@ -3478,7 +3478,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       body.selfOpt.foreach { s =>
         if (s.decltpe.nonEmpty) syntaxError("given cannot have a self type", at = s)
       }
-      val rhs = autoEndPos(decltype)(Template(Nil, inits, body, Nil))
+      val rhs = autoEndPos(decltype)(Template(None, inits, body, Nil))
       Defn.Given(mods, sigName, paramClauseGroup, rhs)
     } else sigName match {
       case name: Term.Name => Decl.Given(mods, name, paramClauseGroup, decltype)
@@ -3978,7 +3978,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def templateAfterExtends(
       owner: TemplateOwner,
       parents: List[Init] = Nil,
-      edefs: List[Stat] = Nil
+      edefs: Option[Stat.Clause] = None
   ): Template = {
     val derived = derivesClasses()
     val body = templateBodyOpt(owner)
@@ -3997,8 +3997,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         })
         next()
         val parents = templateParents(afterExtend)
-        templateAfterExtends(owner, parents, edefs)
-      } else Template(Nil, Nil, body, Nil)
+        val early = copyPos(body)(toStatsClauseRaw(edefs))
+        templateAfterExtends(owner, parents, Some(early))
+      } else Template(None, Nil, body, Nil)
     } else {
       val parents = if (at[Colon]) Nil else templateParents(afterExtend)
       templateAfterExtends(owner, parents)
@@ -4046,8 +4047,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
     else emptyTemplateBody()
 
+  private def toStatsClauseRaw(stats: List[Stat]): Stat.Clause = stats.reduceWith(Stat.Clause.apply)
+  private def toStatsClause(startPos: Int)(stats: List[Stat]): Stat.Clause =
+    autoEndPos(startPos)(toStatsClauseRaw(stats))
+  private def toStatsClause(stats: => List[Stat]): Stat.Clause = toStatsClause(currIndex)(stats)
+
   private def refineWith(innerType: Option[Type], stats: => List[Stat]) =
-    autoEndPos(innerType)(Type.Refine(innerType, stats))
+    autoEndPos(innerType)(Type.Refine(innerType, toStatsClause(stats)))
 
   private def refinement(innerType: Option[Type]): Option[Type] =
     if (!dialect.allowSignificantIndentation) refinementInBraces(innerType, -1)
@@ -4068,9 +4074,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     else refinementInBraces(Some(refineWith(innerType, inBraces(refineStatSeq()))), minIndent)
   }
 
-  def existentialStats(): List[Stat] = inBraces(refineStatSeq()).map {
-    case stat if stat.isExistentialStat => stat
-    case other => syntaxError("not a legal existential clause", at = other)
+  private def existentialTypeOnForSome(t: Type): Type.Existential = {
+    next()
+    val statsClause = toStatsClause {
+      val stats = inBraces(refineStatSeq())
+      stats.foreach { x =>
+        if (!x.isExistentialStat) syntaxError("not a legal existential clause", at = x)
+      }
+      stats
+    }
+    atPos(t, statsClause)(Type.Existential(t, statsClause))
   }
 
   /* -------- STATSEQS ------------------------------------------- */
@@ -4242,26 +4255,31 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     next()
     if (acceptOpt[KwObject]) Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
     else {
-      def packageBody =
+      def packageBody = toStatsClause(
         if (nextIfColonIndent()) indentedOnOpen(statSeq(statpf)) else inBracesOrNil(statSeq(statpf))
+      )
       Pkg(qualId(), packageBody)
     }
   }
 
   def source(): Source = autoPos {
-    if (acceptOpt[Shebang]) newLinesOpt()
+    acceptOpt[Shebang]
     val statpf = if (dialect.allowToplevelTerms) consumeStat else topStat
 
     @tailrec
-    def bracelessPackageStats(f: List[Stat] => List[Stat]): List[Stat] =
+    def bracelessPackageStats(f: List[Stat] => Source): Source = {
+      skipAllStatSep()
       if (at[KwPackage] && tryAheadNot[KwObject]) {
         val startPos = prevIndex
         val qid = qualId()
-        def getPackage(stats: List[Stat]) = autoEndPos(startPos)(Pkg(qid, stats))
+        def getPackage(pkgDelimPos: Int)(stats: => List[Stat]) =
+          autoEndPos(startPos)(Pkg(qid, toStatsClause(pkgDelimPos)(stats)))
         def inPackageOnOpen[T <: Token: ClassTag] = f(listBy[Stat] { buf =>
-          next()
-          statSeqBuf(buf, statpf)
-          val pkg = getPackage(buf.toList)
+          val pkg = getPackage(currIndex) {
+            next()
+            statSeqBuf(buf, statpf)
+            buf.toList
+          }
           buf.clear()
           buf += pkg
           acceptAfterOptNL[T]
@@ -4272,11 +4290,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         })
         if (nextIfColonIndent()) inPackageOnOpen[Indentation.Outdent]
         else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace]
-        else bracelessPackageStats(x => f(List(getPackage(x))))
-      } else if (acceptIfStatSep()) bracelessPackageStats(f)
-      else f(statSeq(statpf))
+        else {
+          val inPkgPos = currIndex
+          bracelessPackageStats(stats => f(getPackage(inPkgPos)(stats) :: Nil))
+        }
+      } else f(statSeq(statpf))
+    }
 
-    Source(bracelessPackageStats(identity))
+    bracelessPackageStats(Source.apply)
   }
 
   def entrypointSource(): Source = source()

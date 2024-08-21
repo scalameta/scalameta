@@ -203,17 +203,33 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("compound types") {
     assertEquals(tpe("Foo").reprint, "Foo")
     assertEquals(tpe("Foo {}").reprint, "Foo {}")
-    assertEquals(tpe("Foo { type T = Int }").reprint, "Foo { type T = Int }")
+    assertEquals(
+      tpe("Foo { type T = Int }").reprint,
+      """|Foo {
+         |  type T = Int
+         |}""".stripMargin.lf2nl
+    )
     assertEquals(
       tpe("Foo { type T = Int; type U <: String }").reprint,
-      "Foo { type T = Int; type U <: String }"
+      """|Foo {
+         |  type T = Int
+         |  type U <: String
+         |}""".stripMargin.lf2nl
     )
     assertEquals(tpe("Foo with Bar").reprint, "Foo with Bar")
     assertEquals(tpe("Foo with Bar {}").reprint, "Foo with Bar {}")
-    assertEquals(tpe("Foo with Bar { type T = Int }").reprint, "Foo with Bar { type T = Int }")
+    assertEquals(
+      tpe("Foo with Bar { type T = Int }").reprint,
+      """|Foo with Bar {
+         |  type T = Int
+         |}""".stripMargin.lf2nl
+    )
     assertEquals(
       tpe("Foo with Bar { type T = Int; type U <: String }").reprint,
-      "Foo with Bar { type T = Int; type U <: String }"
+      """|Foo with Bar {
+         |  type T = Int
+         |  type U <: String
+         |}""".stripMargin.lf2nl
     )
   }
 

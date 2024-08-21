@@ -964,7 +964,7 @@ class SuccessSuite extends TreeSuiteBase {
     val t"$tpe {..$stats}" = t"A with B with C { val a: A; val b: B }"
     assertEquals(tpe.toString, "Some(A with B with C)")
     assertTree(tpe)(Some(Type.With(Type.With(pname("A"), pname("B")), pname("C"))))
-    assertEquals(stats.toString, "List(val a: A, val b: B)")
+    assertEquals(stats.toString, "{ val a: A; val b: B }")
     assertTrees(stats: _*)(
       Decl.Val(Nil, List(Pat.Var(tname("a"))), pname("A")),
       Decl.Val(Nil, List(Pat.Var(tname("b"))), pname("B"))
@@ -986,7 +986,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 t\"tpe forSome { ..stats }\"") {
     val t"$tpe forSome { ..$stats }" = t"X forSome { val a: A; val b: B }"
     assertTree(tpe)(pname("X"))
-    assertEquals(stats.toString, "List(val a: A, val b: B)")
+    assertEquals(stats.toString, "{ val a: A; val b: B }")
     assertTrees(stats: _*)(
       Decl.Val(Nil, List(Pat.Var(tname("a"))), pname("A")),
       Decl.Val(Nil, List(Pat.Var(tname("b"))), pname("B"))
@@ -1670,11 +1670,11 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 q\"package ref { ..stats }\"") {
     val q"package $ref { ..$stats }" = q"package p { class A; object B }"
     assertTree(ref)(tname("p"))
-    assertEquals(stats.toString, "List(class A, object B)")
-    assertTrees(stats: _*)(
+    assertEquals(stats.toString, "{ class A; object B }")
+    assertTree(stats)(Stat.Clause(List(
       Defn.Class(Nil, pname("A"), Nil, ctor, tplNoBody()),
       Defn.Object(Nil, tname("B"), tplNoBody())
-    )
+    )))
   }
 
   test("2 q\"package ref { ..stats }\"") {
@@ -1858,11 +1858,11 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 template\"{ ..stats } with ..inits { self => ..stats }\"") {
     val template"{ ..$stats1 } with ..$inits { $self1 => ..$stats2 }" =
       template"{ val a = 2; val b = 2 } with T with U { self: Z => def m = 2; def n = 2 }"
-    assertEquals(stats1.toString, "List(val a = 2, val b = 2)")
-    assertTrees(stats1: _*)(
+    assertEquals(stats1.toString, "Some({ val a = 2; val b = 2 })")
+    assertTree(stats1)(Some(stats(
       Defn.Val(Nil, List(Pat.Var(tname("a"))), None, int(2)),
       Defn.Val(Nil, List(Pat.Var(tname("b"))), None, int(2))
-    )
+    )))
     assertEquals(inits.toString, "List(T, U)")
     assertTrees(inits: _*)(
       Init(pname("T"), anon, emptyArgClause),
@@ -2377,7 +2377,7 @@ class SuccessSuite extends TreeSuiteBase {
     val q"..$mods object $ename extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
       q"object X extends Y"
     assertEquals(mods, Nil)
-    assertEquals(earlydefns, Nil)
+    assertEquals(earlydefns, None)
     assertTrees(parents: _*)(Init(pname("Y"), anon, emptyArgClause))
     assertTree(self)(None)
     assertEquals(stats, Nil)
@@ -2387,7 +2387,7 @@ class SuccessSuite extends TreeSuiteBase {
     val q"..$mods object $ename extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
       q"object X extends Y { def foo }"
     assertEquals(mods, Nil)
-    assertEquals(earlydefns, Nil)
+    assertEquals(earlydefns, None)
     assertTrees(parents: _*)(Init(pname("Y"), anon, emptyArgClause))
     assertTree(self)(None)
     assertTrees(stats: _*)(Decl.Def(Nil, tname("foo"), Nil, Nil, pname("Unit")))

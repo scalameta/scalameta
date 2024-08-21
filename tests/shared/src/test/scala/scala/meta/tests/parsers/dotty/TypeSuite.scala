@@ -19,7 +19,10 @@ class TypeSuite extends BaseDottySuite {
       """|type A = AnyRef with
          |  type T>: Null
          |""".stripMargin,
-      assertLayout = Some("type A = AnyRef { type T >: Null }")
+      assertLayout = """|type A = AnyRef {
+                        |  type T >: Null
+                        |}
+                        |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("A"),
@@ -34,7 +37,10 @@ class TypeSuite extends BaseDottySuite {
       """|type A = AnyRef with Product with
          |  type T>: Null
          |""".stripMargin,
-      assertLayout = Some("type A = AnyRef with Product { type T >: Null }")
+      assertLayout = """|type A = AnyRef with Product {
+                        |  type T >: Null
+                        |}
+                        |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("A"),
@@ -54,7 +60,12 @@ class TypeSuite extends BaseDottySuite {
          |  with
          |    type D <: Product
          |""".stripMargin,
-      assertLayout = Some("type A = Product { type T >: Null { type D <: Product } }")
+      assertLayout = """|type A = Product {
+                        |  type T >: Null {
+                        |    type D <: Product
+                        |  }
+                        |}
+                        |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("A"),
@@ -84,7 +95,12 @@ class TypeSuite extends BaseDottySuite {
          |  type T>: Null:
          |    type D <: Product
          |""".stripMargin,
-      assertLayout = Some("type A = Product { type T >: Null { type D <: Product } }")
+      assertLayout = """|type A = Product {
+                        |  type T >: Null {
+                        |    type D <: Product
+                        |  }
+                        |}
+                        |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("A"),
@@ -140,7 +156,12 @@ class TypeSuite extends BaseDottySuite {
          |        type T>: Int
          |      }
          |""".stripMargin,
-      assertLayout = Some("type AA = String with Int { type T >: Null { type T >: Int } }")
+      assertLayout = """|type AA = String with Int {
+                        |  type T >: Null {
+                        |    type T >: Int
+                        |  }
+                        |}
+                        |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("AA"),
@@ -167,7 +188,12 @@ class TypeSuite extends BaseDottySuite {
          |    type T>: Null:
          |        type T>: Int
          |""".stripMargin,
-      assertLayout = Some("type AA = String with Int { type T >: Null { type T >: Int } }")
+      assertLayout = """|type AA = String with Int {
+                        |  type T >: Null {
+                        |    type T >: Int
+                        |  }
+                        |}
+                        |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("AA"),
@@ -200,7 +226,9 @@ class TypeSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|{
-           |  type AA = String with Int { type T >: Null }
+           |  type AA = String with Int {
+           |    type T >: Null
+           |  }
            |  {
            |    type T >: Int
            |  }
