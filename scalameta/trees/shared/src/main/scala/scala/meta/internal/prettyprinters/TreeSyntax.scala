@@ -18,6 +18,7 @@ import scala.reflect.ClassTag
 import scala.reflect.classTag
 
 object TreeSyntax {
+  import Show.alt
   import Show.{function => fn}
   import Show.{indent => i}
   import Show.{meta => m}
@@ -373,7 +374,6 @@ object TreeSyntax {
       t.expr match { case Lit.Unit() => false; case _ => true }
     def guessHasElsep(t: Term.If): Boolean =
       t.elsep match { case Lit.Unit() => false; case e => true }
-    def guessHasStats(t: Template): Boolean = t.stats.nonEmpty
     def guessHasBraces(t: Pkg): Boolean = {
       def isOnlyChildOfOnlyChild(t: Pkg): Boolean = t.parent match {
         case Some(pkg: Pkg) => isOnlyChildOfOnlyChild(pkg) && pkg.stats.length == 1
@@ -591,10 +591,7 @@ object TreeSyntax {
         m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
       case t: Term.EndMarker => s(kw("end"), " ", t.name.value)
-      case t: Term.NewAnonymous =>
-        val needsExplicitBraces = t.templ.early.isEmpty && t.templ.inits.lengthCompare(2) < 0 &&
-          t.templ.self.isEmpty && t.templ.stats.isEmpty
-        m(SimpleExpr, s(kw("new"), " ", t.templ), w(" {", "", "}", needsExplicitBraces))
+      case t: Term.NewAnonymous => m(SimpleExpr, s(kw("new"), " ", alt(t.templ, "{}")))
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
       case t: Term.Eta => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
       case t: Term.Repeated =>
@@ -896,23 +893,15 @@ object TreeSyntax {
 
       // Template
       case t: Template =>
-        val isSelfEmpty = t.self.isEmpty
         val pearly = r(t.early, "{ ", "; ", " } with")
         val pparents = r(t.inits, " with ")
         val derived = r(t.derives, "derives ", ", ", "")
-        val isGiven = t.parent.exists(_.is[Defn.Given])
-        val withGiven =
-          if (!isGiven) ""
-          else if (isSelfEmpty && t.stats.isEmpty)
-            // this could be just `()`, but it changes the tree
-            t.inits match {
-              case init :: Nil if init.argClauses.isEmpty => "with {}"
-              case _ => ""
-            }
-          else "with"
-        val noExtends = pparents.isEmpty && pearly.isEmpty || isGiven ||
-          t.parent.exists(_.is[Term.NewAnonymous])
-        val extendsKeyword = if (noExtends) "" else "extends"
+        val ptype = t.parent match {
+          case Some(_: Defn.Given) => Defn.Given
+          case Some(_: Term.NewAnonymous) => Term.NewAnonymous
+          case _ => null
+        }
+        def isGiven = ptype eq Defn.Given
         val pbody = t.stats match {
           case Nil => w("{ ", t.self, " }")
           case stat :: Nil =>
@@ -921,7 +910,15 @@ object TreeSyntax {
             else r(" ")("{", t.self, statStr, "}")
           case stats => s("{", w(" ", t.self), stats, n("}"))
         }
-        r(" ")(extendsKeyword, pearly, pparents, derived, withGiven, pbody)
+        val body =
+          if (pbody.isEmpty) t.inits match {
+            case x :: Nil if isGiven => o("with {}", x.argClauses.isEmpty)
+            case _ :: xs if xs.nonEmpty => s()
+            case _ => o("{}", (ptype eq Term.NewAnonymous) && pearly.isEmpty)
+          }
+          else w("with ", pbody, isGiven)
+        val noExtends = ptype != null || pparents.isEmpty && pearly.isEmpty
+        r(" ")(o("extends", !noExtends), pearly, pparents, derived, body)
 
       // Mod
       case Mod.Annot(init) => s(kw("@"), p(SimpleTyp, init.tpe), init.argClauses)
