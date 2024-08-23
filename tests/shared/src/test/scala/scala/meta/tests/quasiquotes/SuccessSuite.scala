@@ -809,14 +809,14 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(stats.toString, "List(val a = 2)")
     assertTrees(stats: _*)(Defn.Val(Nil, List(Pat.Var(tname("a"))), None, int(2)))
     assertTree(a)(Init(pname("A"), anon, emptyArgClause))
-    assertTree(self)(Self(tname("self"), None))
+    assertTree(self)(Some(Self(tname("self"), None)))
     assertEquals(statz.toString, "List(val b = 3)")
     assertTrees(statz: _*)(Defn.Val(Nil, List(Pat.Var(tname("b"))), None, int(3)))
   }
 
   test("3 q\"new { ..stat } with ..inits { self => ..stats }\"") {
     val q"new X with T { $self => def m = 42}" = q"new X with T { def m = 42 }"
-    assertTree(self)(Self(anon, None))
+    assertTree(self)(None)
   }
 
   test("4 q\"new { ..stat } with ..inits { self => ..stats }\"") {
@@ -1868,7 +1868,7 @@ class SuccessSuite extends TreeSuiteBase {
       Init(pname("T"), anon, emptyArgClause),
       Init(pname("U"), anon, emptyArgClause)
     )
-    assertTree(self1)(self("self", "Z"))
+    assertTree(self1)(Some(self("self", "Z")))
     assertEquals(stats2.toString, "List(def m = 2, def n = 2)")
     assertTrees(stats2: _*)(
       Defn.Def(Nil, tname("m"), Nil, Nil, None, int(2)),
@@ -2379,7 +2379,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods, Nil)
     assertEquals(earlydefns, Nil)
     assertTrees(parents: _*)(Init(pname("Y"), anon, emptyArgClause))
-    assertTree(self)(Self(anon, None))
+    assertTree(self)(None)
     assertEquals(stats, Nil)
   }
 
@@ -2389,7 +2389,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods, Nil)
     assertEquals(earlydefns, Nil)
     assertTrees(parents: _*)(Init(pname("Y"), anon, emptyArgClause))
-    assertTree(self)(Self(anon, None))
+    assertTree(self)(None)
     assertTrees(stats: _*)(Decl.Def(Nil, tname("foo"), Nil, Nil, pname("Unit")))
   }
 

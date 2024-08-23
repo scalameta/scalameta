@@ -889,14 +889,7 @@ object TreeSyntax {
           case _ => null
         }
         def isGiven = ptype eq Defn.Given
-        val pbody = t.stats match {
-          case Nil => w("{ ", t.self, " }")
-          case stat :: Nil =>
-            val statStr = s(stat).toString
-            if (statStr.contains(EOL)) s("{", w(" ", t.self), i(stat), n("}"))
-            else r(" ")("{", t.self, statStr, "}")
-          case stats => s("{", w(" ", t.self), stats, n("}"))
-        }
+        val pbody = s(t.body)
         val body =
           if (pbody.isEmpty) t.inits match {
             case x :: Nil if isGiven => o("with {}", x.argClauses.isEmpty)
@@ -906,6 +899,16 @@ object TreeSyntax {
           else w("with ", pbody, isGiven)
         val noExtends = ptype != null || pparents.isEmpty && pearly.isEmpty
         r(" ")(o("extends", !noExtends), pearly, pparents, derived, body)
+      case t: Template.Body =>
+        val self = o(t.selfOpt)
+        t.stats match {
+          case Nil => w("{ ", self, " }")
+          case stat :: Nil =>
+            val statStr = s(stat).toString
+            if (statStr.contains(EOL)) s("{", w(" ", self), i(stat), n("}"))
+            else r(" ")("{", self, statStr, "}")
+          case stats => s("{", w(" ", self), stats, n("}"))
+        }
 
       // Mod
       case Mod.Annot(init) => s(kw("@"), p(SimpleTyp, init.tpe), init.argClauses)
