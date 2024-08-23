@@ -15,42 +15,35 @@ private[meta] object Show {
     override def toString = {
       val sb = new StringBuilder
       var indentation = 0
-      def nl(res: Result) = {
+      def nl(obj: Result) = {
         sb.append(EOL)
         sb.append("  " * indentation)
-        loop(res)
+        loop(obj)
       }
-      def loop(result: Result): Unit = result match {
+      def loop(obj: Result): Unit = obj match {
         case None => // do nothing
-        case Str(value) => sb.append(value)
-        case Sequence(xs @ _*) => xs.foreach(loop)
-        case Repeat(head +: tail, sep) =>
+        case obj: Str => sb.append(obj.value)
+        case obj: Sequence => obj.xs.foreach(loop)
+        case obj: Repeat =>
+          val sep = obj.sep
           val sbLenInit = sb.length
-          var sbLen = sbLenInit
-          loop(head)
-          tail.foreach { x =>
-            if (sbLen != sb.length) {
-              sb.append(sep)
-              sbLen = sb.length
-            }
+          obj.xs.foreach { x =>
+            val sbLen = sb.length
             loop(x)
+            if (sbLen != sb.length) sb.append(sep)
           }
           val sbLenLast = sb.length
-          if (sbLenInit == sbLenLast) sb.setLength(sbLenInit)
-          else if (sbLen == sbLenLast) sb.setLength(sbLenLast - sep.length)
-        case _: Repeat => ()
-        case Indent(res) =>
-          indentation += 1
-          nl(res)
-          indentation -= 1
-        case Newline(res) => nl(res)
-        case Meta(_, res) => loop(res)
-        case Wrap(prefix, res, suffix) =>
-          sb.append(prefix)
+          if (sbLenInit != sbLenLast) sb.setLength(sbLenLast - sep.length)
+        case obj: Indent => indentation += 1; nl(obj.res); indentation -= 1
+        case obj: Newline => nl(obj.res)
+        case obj: Meta => loop(obj.res)
+        case obj: Wrap =>
+          val sbLenInit = sb.length
+          sb.append(obj.prefix)
           val sbLen = sb.length
-          loop(res)
-          if (sbLen != sb.length) sb.append(suffix) else sb.setLength(sbLen - prefix.length)
-        case Function(fn) => sb.append(fn(sb))
+          loop(obj.res)
+          if (sbLen != sb.length) sb.append(obj.suffix) else sb.setLength(sbLenInit)
+        case result: Function => loop(result.fn(sb))
       }
       loop(this)
       sb.toString
