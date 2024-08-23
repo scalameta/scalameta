@@ -12,6 +12,7 @@ trait Show[-T] {
 
 private[meta] object Show {
   sealed abstract class Result {
+    def desc: String
     override def toString = {
       val sb = new StringBuilder
       var indentation = 0
@@ -50,15 +51,34 @@ private[meta] object Show {
     }
     final def isEmpty: Boolean = this eq None
   }
-  final case object None extends Result
-  final case class Str(value: String) extends Result
-  final case class Sequence(xs: Result*) extends Result
-  final case class Repeat(xs: Seq[Result], sep: String) extends Result
-  final case class Indent(res: Result) extends Result
-  final case class Newline(res: Result) extends Result
-  final case class Meta(data: Any, res: Result) extends Result
-  final case class Wrap(prefix: String, res: Result, suffix: String) extends Result
-  final case class Function(fn: StringBuilder => Result) extends Result
+
+  final case object None extends Result {
+    override def desc: String = "None"
+  }
+  final case class Str(value: String) extends Result {
+    override def desc: String = s"Str($value)"
+  }
+  final case class Sequence(xs: Result*) extends Result {
+    override def desc: String = s"Sequence(#${xs.length})"
+  }
+  final case class Repeat(xs: Seq[Result], sep: String) extends Result {
+    override def desc: String = s"Repeat(#${xs.length}, s=$sep)"
+  }
+  final case class Indent(res: Result) extends Result {
+    override def desc: String = s"Indent(r=${res.desc})"
+  }
+  final case class Newline(res: Result) extends Result {
+    override def desc: String = s"Newline(r=${res.desc})"
+  }
+  final case class Meta(data: Any, res: Result) extends Result {
+    override def desc: String = s"Meta(d=$data, r=${res.desc})"
+  }
+  final case class Wrap(prefix: String, res: Result, suffix: String) extends Result {
+    override def desc: String = s"Wrap(p=$prefix, r=${res.desc}, s=$suffix)"
+  }
+  final case class Function(fn: StringBuilder => Result) extends Result {
+    override def desc: String = s"Function(...)"
+  }
 
   def apply[T](f: T => Result): Show[T] = new Show[T] {
     def apply(input: T): Result = f(input)
