@@ -280,16 +280,10 @@ class DefnSuite extends ParseSuite {
       Case(
         Pat.Extract(tname("Some"), List(Pat.Wildcard())),
         None,
-        Term.Block(List(
-          Defn.Class(
-            List(Mod.Case()),
-            pname("A6"),
-            Nil,
-            ctorp(List(tparam("a7", "A8"))),
-            EmptyTemplate()
-          ),
-          Defn.Object(Nil, tname("A9"), EmptyTemplate())
-        ))
+        blk(
+          Defn.Class(List(Mod.Case()), pname("A6"), Nil, ctorp(tparam("a7", "A8")), tplNoBody()),
+          Defn.Object(Nil, tname("A9"), tplNoBody())
+        )
       ) :: Nil,
       Nil
     )

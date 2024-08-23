@@ -159,8 +159,8 @@ class MinorDottySuite extends BaseDottySuite {
       Nil,
       pname("Foo"),
       Nil,
-      Ctor.Primary(Nil, anon, List(List(tparamval("foo", "Int")), List(tparam("bar", "Int")))),
-      EmptyTemplate()
+      ctorp(List(tparamval("foo", "Int")), List(tparam("bar", "Int"))),
+      tplNoBody()
     ))
   }
 
@@ -183,7 +183,7 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("trait-parameters-generic") {
     runTestAssert[Stat]("trait Foo[T](bar: T)")(
-      Defn.Trait(Nil, pname("Foo"), List(pparam("T")), ctorp(tparam("bar", "T")), EmptyTemplate())
+      Defn.Trait(Nil, pname("Foo"), List(pparam("T")), ctorp(tparam("bar", "T")), tplNoBody())
     )
   }
 
@@ -192,18 +192,18 @@ class MinorDottySuite extends BaseDottySuite {
       Nil,
       pname("Foo"),
       List(pparam(Nil, "T", vb = Nil, cb = List(pname("Eq")))),
-      EmptyCtor(),
-      EmptyTemplate()
+      ctor,
+      tplNoBody()
     ))
   }
 
   test("class-parameters-using") {
     runTestAssert[Stat]("trait A(using String)")(
-      Defn.Trait(Nil, pname("A"), Nil, ctorp(tparamUsing("", "String")), EmptyTemplate())
+      Defn.Trait(Nil, pname("A"), Nil, ctorp(tparamUsing("", "String")), tplNoBody())
     )
 
     runTestAssert[Stat]("class A(using String)")(
-      Defn.Class(Nil, pname("A"), Nil, ctorp(tparamUsing("", "String")), EmptyTemplate())
+      Defn.Class(Nil, pname("A"), Nil, ctorp(tparamUsing("", "String")), tplNoBody())
     )
 
     runTestAssert[Stat]("case class A(a: Int)(using b: String)")(Defn.Class(
@@ -211,7 +211,7 @@ class MinorDottySuite extends BaseDottySuite {
       pname("A"),
       Nil,
       ctorp(List(tparam("a", "Int")), List(tparamUsing("b", "String"))),
-      EmptyTemplate()
+      tplNoBody()
     ))
   }
 
@@ -219,7 +219,7 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat](
       "trait Foo extends A, B, C",
       assertLayout = Some("trait Foo extends A with B with C")
-    )(Defn.Trait(Nil, pname("Foo"), Nil, EmptyCtor(), tpl(List(init("A"), init("B"), init("C")), Nil)))
+    )(Defn.Trait(Nil, pname("Foo"), Nil, ctor, tplNoBody(init("A"), init("B"), init("C"))))
   }
 
   test("(new A(), new B())") {
@@ -250,20 +250,14 @@ class MinorDottySuite extends BaseDottySuite {
     )(Defn.Class(
       Nil,
       pname("A"),
-      Type.ParamClause(Nil),
+      Nil,
       EmptyCtor(),
-      tpl(
-        Init(
-          pname("B"),
-          anon,
-          List(
-            Term.ArgClause(List(tname("b")), Some(Mod.Using())),
-            Term.ArgClause(List(tname("c")), None),
-            Term.ArgClause(List(tname("d"), tname("e")), Some(Mod.Using()))
-          )
-        ) :: Nil,
-        Nil
-      )
+      tplNoBody(init(
+        "B",
+        Term.ArgClause(List(tname("b")), Some(Mod.Using())),
+        Term.ArgClause(List(tname("c")), None),
+        Term.ArgClause(List(tname("d"), tname("e")), Some(Mod.Using()))
+      ))
     ))
   }
 
@@ -345,7 +339,7 @@ class MinorDottySuite extends BaseDottySuite {
       pname("Foo"),
       Nil,
       ctorp(tparam("bars", Type.Repeated(Type.ByName(pname("Int"))))),
-      EmptyTemplate()
+      tplNoBody()
     ))
 
     runTestAssert[Stat]("def fx(x: => Int*): Int = 3")(Defn.Def(
@@ -541,8 +535,7 @@ class MinorDottySuite extends BaseDottySuite {
             None
           )
         ),
-        Defn
-          .Class(List(Mod.Private(anon), Mod.Abstract()), pname("X"), Nil, ctorp(Nil), EmptyTemplate())
+        Defn.Class(List(Mod.Private(anon), Mod.Abstract()), pname("X"), Nil, ctorp(), tplNoBody())
       )
     ))
   }
@@ -724,13 +717,7 @@ class MinorDottySuite extends BaseDottySuite {
         """|case class A(x: X)
            |""".stripMargin
       )
-    )(Defn.Class(
-      List(Mod.Case()),
-      pname("A"),
-      Nil,
-      Ctor.Primary(Nil, anon, List(List(tparam("x", "X")))),
-      EmptyTemplate()
-    ))
+    )(Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(tparam("x", "X")), tplNoBody()))
   }
 
   test("complex-interpolation") {
@@ -1112,7 +1099,7 @@ class MinorDottySuite extends BaseDottySuite {
         anon,
         List(List(tparam(List(Mod.Implicit()), "c", "C")))
       ),
-      EmptyTemplate()
+      tplNoBody()
     ))
   }
 
@@ -1123,7 +1110,7 @@ class MinorDottySuite extends BaseDottySuite {
         pname("Baz1"),
         Nil,
         Ctor.Primary(List(Mod.Annot(init("deprecated"))), anon, List(List(tparam("c", "C")))),
-        EmptyTemplate()
+        tplNoBody()
       )
     )
   }
@@ -1141,7 +1128,7 @@ class MinorDottySuite extends BaseDottySuite {
         anon,
         List(List(Term.Param(Nil, tname("c"), Some(pname("C")), Some(tname("some")))))
       ),
-      EmptyTemplate()
+      tplNoBody()
     ))
   }
 
@@ -1158,7 +1145,7 @@ class MinorDottySuite extends BaseDottySuite {
         anon,
         List(List(tparam("c", "C")))
       ),
-      EmptyTemplate()
+      tplNoBody()
     ))
   }
 

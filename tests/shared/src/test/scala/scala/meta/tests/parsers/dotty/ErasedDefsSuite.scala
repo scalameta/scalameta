@@ -77,9 +77,7 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("erased class") {
     val code = "erased class CanRead"
-    runTestAssert[Stat](code)(
-      Defn.Class(List(Mod.Erased()), pname("CanRead"), Nil, ctor, EmptyTemplate())
-    )
+    runTestAssert[Stat](code)(Defn.Class(List(Mod.Erased()), pname("CanRead"), Nil, ctor, tplNoBody()))
   }
 
   test("erased given") {

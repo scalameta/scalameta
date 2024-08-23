@@ -35,7 +35,7 @@ trait CommonTrees {
   }
 
   object EmptyTemplate {
-    def apply(): Template = Template(Nil, Nil, EmptySelf(), Nil)
+    def apply(): Template = tpl()
     def unapply(tree: Tree): Boolean = tree match {
       case Template(Nil, Nil, EmptySelf(), Nil) => true
       case _ => false
@@ -48,21 +48,36 @@ trait CommonTrees {
   final def ctorp(lp: Term.Param*): Ctor.Primary = ctorp(lp.toList)
   final def ctorp(lp: List[Term.Param], lps: List[Term.Param]*): Ctor.Primary = Ctor
     .Primary(Nil, anon, lp :: lps.toList)
+  final def ctorp(mod: Mod.ParamsType, lp: Term.Param*): Ctor.Primary = Ctor
+    .Primary(Nil, anon, Term.ParamClause(lp.toList, Option(mod)) :: Nil)
   final val slf = meta.Self(anon, None)
-  final def self(name: String, tpe: String = null) = meta.Self(tname(name), Option(tpe).map(pname))
+  final def self(name: String, tpe: Option[Type] = None): meta.Self = meta.Self(mname(name), tpe)
+  final def self(name: String, tpe: Type): meta.Self = self(name, Option(tpe))
+  final def self(name: String, tpe: String): meta.Self = self(name, Option(tpe).map(pname))
 
   final def tname(name: String): Term.Name = Term.Name(name)
-  final def tpl(inits: List[Init], stats: List[Stat]): Template = Template(Nil, inits, slf, stats)
-  final def tpl(stats: Stat*): Template = tpl(Nil, stats.toList)
-
-  final def tparam(mods: List[Mod], name: String, tpe: Option[Type] = None): Term.Param = {
-    val nameTree = name match {
-      case "" => anon
-      case "_" => phName
-      case _ => tname(name)
-    }
-    Term.Param(mods, nameTree, tpe, None)
+  final def mname(name: String): meta.Name = name match {
+    case "" => anon
+    case "_" => phName
+    case _ => tname(name)
   }
+
+  final def tplNoBody(inits: List[Init]): Template = Template(Nil, inits, slf, Nil)
+  final def tplNoBody(inits: Init*): Template = tplNoBody(inits.toList)
+
+  final def tpl(inits: List[Init], body: (meta.Self, List[Stat])): Template =
+    Template(Nil, inits, body._1, body._2)
+  final def tpl(inits: List[Init], stats: List[Stat]): Template = tpl(inits, tplBody(stats: _*))
+  final def tpl(stats: List[Stat]): Template = tpl(Nil, stats)
+  final def tpl(stats: Stat*): Template = tpl(stats.toList)
+
+  final def tplBody(self: meta.Self, stats: Stat*): (meta.Self, List[Stat]) = (self, stats.toList)
+  final def tplBody(name: String, stats: Stat*): (meta.Self, List[Stat]) =
+    tplBody(self(name), stats: _*)
+  final def tplBody(stats: Stat*): (meta.Self, List[Stat]) = tplBody(slf, stats: _*)
+
+  final def tparam(mods: List[Mod], name: String, tpe: Option[Type] = None): Term.Param = Term
+    .Param(mods, mname(name), tpe, None)
   final def tparam(name: String, tpe: Option[Type]): Term.Param = tparam(Nil, name, tpe)
   final def tparam(mods: List[Mod], name: String, tpe: Type): Term.Param =
     tparam(mods, name, Option(tpe))
@@ -116,6 +131,8 @@ trait CommonTrees {
   final def lit(v: Char) = Lit.Char(v)
   final def sym(v: String) = lit(Symbol(v))
   final def lit(v: Symbol) = Lit.Symbol(v)
+  final def init(name: String, arg: Term.ArgClause, args: Term.ArgClause*): Init =
+    init(name, arg :: args.toList)
   final def init(name: String, args: List[Term.ArgClause] = Nil): Init =
     Init(pname(name), anon, args)
   final def blk(stats: List[Stat]): Term.Block = Term.Block(stats)

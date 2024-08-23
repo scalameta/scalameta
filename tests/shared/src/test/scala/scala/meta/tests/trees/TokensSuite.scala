@@ -52,7 +52,7 @@ class TokensSuite extends TreeSuiteBase {
 
   test("Tree.tokens: empty") {
     val emptyTemplate = "class C".parse[Stat].get.children(3)
-    assertTree(emptyTemplate)(EmptyTemplate())
+    assertTree(emptyTemplate)(tplNoBody())
     assertEquals(emptyTemplate.tokens.structure, "Tokens()")
   }
 

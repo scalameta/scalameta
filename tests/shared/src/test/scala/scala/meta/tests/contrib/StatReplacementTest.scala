@@ -20,7 +20,7 @@ class StatReplacementTest extends FunSuite {
   test("Test replace empty class stats with Nil") {
     val newClass = q"class Foo".withStats(Nil)
     assertEquals(newClass.extract[Stat], Nil)
-    assert(newClass.isEqual(q"class Foo {}"))
+    assert(newClass.isEqual(q"class Foo"))
   }
 
   test("Test replace trait stats") {

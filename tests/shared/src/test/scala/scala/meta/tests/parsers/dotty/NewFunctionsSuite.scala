@@ -559,8 +559,8 @@ class NewFunctionsSuite extends BaseDottySuite {
             Type.Apply(pname("MonadCancel"), List(pname("G"), pname("Throwable")))
           ))
         )),
-        EmptyCtor(),
-        EmptyTemplate()
+        ctor,
+        tplNoBody()
       )
     )
   }

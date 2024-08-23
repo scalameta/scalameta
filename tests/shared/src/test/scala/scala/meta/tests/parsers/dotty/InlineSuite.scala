@@ -49,13 +49,9 @@ class InlineSuite extends BaseDottySuite {
     )
 
     // inline for class as ident
-    runTestAssert[Stat]("case class A(inline: Int)")(Defn.Class(
-      List(Mod.Case()),
-      pname("A"),
-      Nil,
-      Ctor.Primary(Nil, anon, List(List(tparam("inline", "Int")))),
-      EmptyTemplate()
-    ))
+    runTestAssert[Stat]("case class A(inline: Int)")(
+      Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(tparam("inline", "Int")), tplNoBody())
+    )
   }
 
   test("inline-def-object") {
@@ -110,12 +106,8 @@ class InlineSuite extends BaseDottySuite {
       List(Mod.Case()),
       pname("Y"),
       Nil,
-      Ctor.Primary(
-        Nil,
-        anon,
-        List(List(tparam(List(Mod.ValParam()), "inline", "String"), tparam("inline", "Int")))
-      ),
-      EmptyTemplate()
+      ctorp(tparam(List(Mod.ValParam()), "inline", "String"), tparam("inline", "Int")),
+      tplNoBody()
     ))
   }
 
@@ -344,7 +336,7 @@ class InlineSuite extends BaseDottySuite {
 
   test("transparent-trait") {
     runTestAssert[Stat]("transparent trait S")(
-      Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, EmptyCtor(), EmptyTemplate())
+      Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, ctor, tplNoBody())
     )
   }
 
@@ -354,7 +346,7 @@ class InlineSuite extends BaseDottySuite {
          |
          |trait S""".stripMargin,
       assertLayout = Some("transparent trait S")
-    )(Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, EmptyCtor(), EmptyTemplate()))
+    )(Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, ctor, tplNoBody()))
   }
 
   test("transparent-inline-with-constant") {
