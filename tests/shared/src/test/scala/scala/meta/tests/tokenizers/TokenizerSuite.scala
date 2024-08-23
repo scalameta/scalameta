@@ -1048,7 +1048,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("parsed trees don't have BOF/EOF in their tokens") {
-    val tree = "foo + bar".parse[Term].get
+    val tree = "foo + bar".asInput.parse[Term].get
     assert(tree.pos != Position.None)
     assertEquals(
       tree.tokens.structure,
@@ -1069,13 +1069,13 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Ident.value for normal") {
-    "foo".parse[Term].get.tokens match {
+    "foo".asInput.parse[Term].get.tokens match {
       case Tokens(bof, foo: Ident, eof) => assertEquals(foo.value, "foo")
     }
   }
 
   test("Ident.value for backquoted") {
-    "`foo`".parse[Term].get.tokens match {
+    "`foo`".asInput.parse[Term].get.tokens match {
       case Tokens(bof, foo: Ident, eof) =>
         assertEquals(foo.value, "foo")
         assertEquals(foo.syntax, "`foo`")

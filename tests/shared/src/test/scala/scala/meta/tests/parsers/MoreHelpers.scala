@@ -2,6 +2,7 @@ package scala.meta.tests.parsers
 
 import scala.meta._
 import scala.meta.internal.parsers._
+import scala.meta.tokenizers.TokenizerOptions
 import scala.meta.trees.Origin
 
 import munit._
@@ -19,11 +20,17 @@ object MoreHelpers {
     tree
   }
   implicit class XtensionCode(private val code: String) extends AnyVal {
-    def asInput: Input = Input.String(code)
-    def asAmmoniteInput: Input = Input.Ammonite(asInput)
-    def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = asInput
+    def asInput(implicit tokenizerOptions: Option[TokenizerOptions]): Input = Input.String(code)
+      .withTokenizerOptions(tokenizerOptions)
+    def asAmmoniteInput(implicit tokenizerOptions: Option[TokenizerOptions]): Input = Input
+      .Ammonite(asInput)
+    def applyRule[T <: Tree](
+        rule: ScalametaParser => T
+    )(implicit dialect: Dialect, tokenizerOptions: Option[TokenizerOptions]): T = asInput
       .applyRule(rule)
-    def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit dialect: Dialect): T = asInput
+    def parseRule[T <: Tree](
+        rule: ScalametaParser => T
+    )(implicit dialect: Dialect, tokenizerOptions: Option[TokenizerOptions]): T = asInput
       .parseRule(rule)
   }
   implicit class XtensionInput(private val input: Input) extends AnyVal {

@@ -291,8 +291,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Optio
 object ScalametaTokenizer {
   def toTokenize: Tokenize = new Tokenize {
     def apply(input: Input, dialect: Dialect): Tokenized = {
-      implicit val options: Option[TokenizerOptions] = None
-      val tokenizer = new ScalametaTokenizer(input, dialect)
+      implicit val options: Option[TokenizerOptions] = input.tokenizerOptions
+      val tokenizer = new ScalametaTokenizer(input.withoutTokenizerOptions, dialect)
       try Tokenized.Success(tokenizer.tokenize())
       catch {
         case details @ TokenizeException(pos, message) => Tokenized.Error(pos, message, details)
