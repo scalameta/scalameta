@@ -15,8 +15,10 @@ sealed trait Input extends Product with Serializable with inputs.InternalInput {
 
   private[meta] def tokenizerOptions: Option[TokenizerOptions] = None
   def withoutTokenizerOptions: Input = this
-  def withTokenizerOptions(implicit options: Option[TokenizerOptions]): Input = Input
-    .WithTokenizerOptions(this)
+  final def withTokenizerOptions(implicit options: Option[TokenizerOptions]): Input =
+    withTokenizerOptions(options.orNull)
+  def withTokenizerOptions(options: TokenizerOptions): Input =
+    if (options eq null) this else Input.WithTokenizerOptions(this, options)
 }
 
 object Input {
@@ -118,17 +120,13 @@ object Input {
     override def toString = s"Input.Ammonite($input)"
   }
 
-  final case class WithTokenizerOptions private (input: Input)(options: TokenizerOptions)
+  final case class WithTokenizerOptions private[meta] (input: Input, options: TokenizerOptions)
       extends Proxy {
     override def toString = s"Input.WithTokenizerOptions($input, $tokenizerOptions)"
     override private[meta] def tokenizerOptions = Some(options)
-    override def withoutTokenizerOptions: Input = input.withoutTokenizerOptions
-    override def withTokenizerOptions(implicit options: Option[TokenizerOptions]): Input = options
-      .fold(withoutTokenizerOptions)(x => if (x eq this.options) this else copy()(x))
-  }
-  object WithTokenizerOptions {
-    def apply(input: Input)(implicit options: Option[TokenizerOptions]): Input = options
-      .fold(input.withoutTokenizerOptions)(new WithTokenizerOptions(input)(_))
+    override def withoutTokenizerOptions: Input = input
+    override def withTokenizerOptions(options: TokenizerOptions): Input =
+      if (options eq this.options) this else if (options eq null) input else copy(options = options)
   }
 
   implicit val charsToInput: Convert[Array[Char], Input] =
