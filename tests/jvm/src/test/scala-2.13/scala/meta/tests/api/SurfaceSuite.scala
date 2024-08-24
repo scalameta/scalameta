@@ -275,6 +275,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Case
          |scala.meta.CaseTree
          |scala.meta.Ctor
+         |scala.meta.Ctor.Block
          |scala.meta.Ctor.Primary
          |scala.meta.Ctor.Secondary
          |scala.meta.Decl

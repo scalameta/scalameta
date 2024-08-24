@@ -416,7 +416,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |    otherStat
                   |""".stripMargin
     val output = """|class A {
-                    |  def this(msg: String) {
+                    |  def this(msg: String) = {
                     |    this(message, false)
                     |    otherStat
                     |  }
