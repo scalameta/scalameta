@@ -547,19 +547,13 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Defn.Class(
         Nil,
         pname("C"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          List(Term.ParamClause(
-            List(
-              tparam(List(Mod.Override(), Mod.Implicit(), Mod.ValParam()), "x", "Int"),
-              tparam(List(Mod.Final(), Mod.Implicit(), Mod.VarParam()), "y", "String")
-            ),
-            Some(Mod.Implicit())
-          ))
+        Nil,
+        ctorp(
+          Mod.Implicit(),
+          tparam(List(Mod.Override(), Mod.Implicit(), Mod.ValParam()), "x", "Int"),
+          tparam(List(Mod.Final(), Mod.Implicit(), Mod.VarParam()), "y", "String")
         ),
-        EmptyTemplate()
+        tplNoBody()
       )
     }
   }
@@ -572,19 +566,14 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Defn.Class(
         Nil,
         pname("C"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          Term.ParamClause(
-            tparam(List(Mod.Private(anon), Mod.Implicit(), Mod.ValParam()), "x", "Int") ::
-              tparam(List(Mod.Implicit(), Mod.Final(), Mod.ValParam()), "y", "String") ::
-              tparam(List(Mod.Protected(anon), Mod.Implicit(), Mod.VarParam()), "z", "Boolean") ::
-              Nil,
-            Some(Mod.Implicit())
-          ) :: Nil
+        Nil,
+        ctorp(
+          Mod.Implicit(),
+          tparam(List(Mod.Private(anon), Mod.Implicit(), Mod.ValParam()), "x", "Int"),
+          tparam(List(Mod.Implicit(), Mod.Final(), Mod.ValParam()), "y", "String"),
+          tparam(List(Mod.Protected(anon), Mod.Implicit(), Mod.VarParam()), "z", "Boolean")
         ),
-        EmptyTemplate()
+        tplNoBody()
       )
     }
   }
@@ -643,11 +632,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       List(Pkg(
         tname("foo"),
         List(
-          Defn.Class(Nil, pname("C"), Nil, Ctor.Primary(Nil, anon, Nil), EmptyTemplate()),
-          Pkg(
-            tname("baz"),
-            List(Defn.Class(Nil, pname("D"), Nil, Ctor.Primary(Nil, anon, Nil), EmptyTemplate()))
-          )
+          Defn.Class(Nil, pname("C"), Nil, ctor, tplNoBody()),
+          Pkg(tname("baz"), List(Defn.Class(Nil, pname("D"), Nil, ctor, tplNoBody())))
         )
       ))
     ))
@@ -664,21 +650,15 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Source(List(Pkg(
         tname("foo1"),
         List(
-          Defn.Class(Nil, pname("C1"), Nil, Ctor.Primary(Nil, anon, Nil), EmptyTemplate()),
-          Pkg(
-            tname("baz1"),
-            List(Defn.Class(Nil, pname("D1"), Nil, Ctor.Primary(Nil, anon, Nil), EmptyTemplate()))
-          )
+          Defn.Class(Nil, pname("C1"), Nil, ctor, tplNoBody()),
+          Pkg(tname("baz1"), List(Defn.Class(Nil, pname("D1"), Nil, ctor, tplNoBody())))
         )
       ))),
       Source(List(Pkg(
         tname("foo2"),
         List(
-          Defn.Class(Nil, pname("C2"), Nil, Ctor.Primary(Nil, anon, Nil), EmptyTemplate()),
-          Pkg(
-            tname("baz2"),
-            List(Defn.Class(Nil, pname("D2"), Nil, Ctor.Primary(Nil, anon, Nil), EmptyTemplate()))
-          )
+          Defn.Class(Nil, pname("C2"), Nil, ctor, tplNoBody()),
+          Pkg(tname("baz2"), List(Defn.Class(Nil, pname("D2"), Nil, ctor, tplNoBody())))
         )
       )))
     )))

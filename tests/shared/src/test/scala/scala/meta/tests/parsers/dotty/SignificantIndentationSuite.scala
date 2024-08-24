@@ -680,13 +680,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  B
          |""".stripMargin,
       assertLayout = Some("class A extends A with B")
-    )(Defn.Class(
-      Nil,
-      pname("A"),
-      Nil,
-      EmptyCtor(),
-      tpl(List(Init(pname("A"), anon, emptyArgClause), Init(pname("B"), anon, emptyArgClause)), Nil)
-    ))
+    )(Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody(init("A"), init("B"))))
   }
 
   test("nested-coloneol") {
@@ -1563,14 +1557,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )(Defn.Object(
       Nil,
       tname("ExampleThing"),
-      tpl(
-        Init(
-          pname("CompositeThing"),
-          anon,
-          List(List(str("One"), str("Two"), str("Three"), str("Four")))
-        ) :: Nil,
-        Nil
-      )
+      tplNoBody(init("CompositeThing", List(str("One"), str("Two"), str("Three"), str("Four"))))
     ))
   }
 
@@ -1751,9 +1738,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
       List(
         Pkg(
           Term.Select(tname("some"), tname("other")),
-          List(Defn.Class(Nil, pname("SomeOtherPackage"), Nil, EmptyCtor(), EmptyTemplate()))
+          List(Defn.Class(Nil, pname("SomeOtherPackage"), Nil, ctor, tplNoBody()))
         ),
-        Defn.Class(Nil, pname("BrokenLink"), Nil, EmptyCtor(), EmptyTemplate())
+        Defn.Class(Nil, pname("BrokenLink"), Nil, ctor, tplNoBody())
       )
     ))))
   }
@@ -1920,14 +1907,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
         pname("A1"),
         Nil,
         EmptyCtor(),
-        tpl(
+        tplNoBody(
           Init(
             Type
               .Select(Term.Select(tname("scala"), tname("annotation")), pname("StaticAnnotation")),
             anon,
             emptyArgClause
-          ) :: Nil,
-          Nil
+          ) :: Nil
         )
       ),
       Defn.Class(
@@ -1935,14 +1921,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
         pname("A2"),
         Nil,
         EmptyCtor(),
-        tpl(
+        tplNoBody(
           Init(
             Type
               .Select(Term.Select(tname("scala"), tname("annotation")), pname("StaticAnnotation")),
             anon,
             emptyArgClause
-          ) :: Nil,
-          Nil
+          ) :: Nil
         )
       ),
       Defn.Class(
@@ -1953,7 +1938,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         pname("B"),
         Nil,
         EmptyCtor(),
-        EmptyTemplate()
+        tplNoBody()
       )
     )))
   }
@@ -2136,11 +2121,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Case(
         Pat.Extract(tname("Some"), List(Pat.Wildcard())),
         None,
-        Term.Block(List(
-          Defn
-            .Class(List(Mod.Case()), pname("A6"), Nil, ctorp(tparam("a7", "A8")), EmptyTemplate()),
-          Defn.Object(Nil, tname("A9"), EmptyTemplate())
-        ))
+        blk(
+          Defn.Class(List(Mod.Case()), pname("A6"), Nil, ctorp(tparam("a7", "A8")), tplNoBody()),
+          Defn.Object(Nil, tname("A9"), tplNoBody())
+        )
       ) :: Nil,
       Nil
     )
@@ -2202,16 +2186,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
           tname("foo"),
           Nil,
           Some(pname("Bar")),
-          Term.Block(List(
-            Defn.Class(
-              List(Mod.Case()),
-              pname("Baz"),
-              Nil,
-              Ctor.Primary(Nil, anon, List(List(tparam("baz", "Int")))),
-              EmptyTemplate()
-            ),
-            Term.New(Init(pname("Baz"), anon, List(List(int(0)))))
-          ))
+          blk(
+            Defn
+              .Class(List(Mod.Case()), pname("Baz"), Nil, ctorp(tparam("baz", "Int")), tplNoBody()),
+            Term.New(init("Baz", List(int(0))))
+          )
         ))
       )
     }
@@ -2723,7 +2702,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       ctor,
       tpl(
-        Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(Nil), EmptyTemplate()),
+        Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(Nil), tplNoBody()),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
       )
@@ -2761,7 +2740,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       ctor,
       tpl(
-        Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(Nil), tpl(List(init("Bar")), Nil)),
+        Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(), tplNoBody(init("Bar"))),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo"))))),
         Term.Block(List(Term.ApplyType(tname("deriveEncoder"), List(pname("Foo")))))
       )

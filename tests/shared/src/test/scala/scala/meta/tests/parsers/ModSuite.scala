@@ -6,13 +6,13 @@ import scala.meta._
 class ModSuite extends ParseSuite {
   test("implicit") {
     assertTree(templStat("implicit object A"))(
-      Defn.Object(List(Mod.Implicit()), tname("A"), EmptyTemplate())
+      Defn.Object(List(Mod.Implicit()), tname("A"), tplNoBody())
     )
     assertTree(templStat("implicit class A"))(
-      Defn.Class(List(Mod.Implicit()), pname("A"), Nil, EmptyCtor(), EmptyTemplate())
+      Defn.Class(List(Mod.Implicit()), pname("A"), Nil, ctor, tplNoBody())
     )
     assertTree(templStat("implicit case object A"))(
-      Defn.Object(List(Mod.Implicit(), Mod.Case()), tname("A"), EmptyTemplate())
+      Defn.Object(List(Mod.Implicit(), Mod.Case()), tname("A"), tplNoBody())
     )
 
     assertTree(templStat("case class A(implicit val a: Int)")) {
@@ -20,31 +20,17 @@ class ModSuite extends ParseSuite {
         List(Mod.Case()),
         pname("A"),
         Nil,
-        Ctor.Primary(
-          Nil,
-          anon,
-          Term.ParamClause(
-            tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int") :: Nil,
-            Some(Mod.Implicit())
-          ) :: Nil
-        ),
-        EmptyTemplate()
+        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
+        tplNoBody()
       )
     }
     assertTree(templStat("case class A(implicit var a: Int)")) {
       Defn.Class(
         List(Mod.Case()),
         pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          Term.ParamClause(
-            tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int") :: Nil,
-            Some(Mod.Implicit())
-          ) :: Nil
-        ),
-        EmptyTemplate()
+        Nil,
+        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
+        tplNoBody()
       )
     }
 
@@ -126,13 +112,9 @@ class ModSuite extends ParseSuite {
       Defn.Class(
         List(Mod.Case()),
         pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          Term.ParamClause(tparam(List(Mod.Final(), Mod.ValParam()), "a", "Int") :: Nil) :: Nil
-        ),
-        EmptyTemplate()
+        Nil,
+        ctorp(tparam(List(Mod.Final(), Mod.ValParam()), "a", "Int")),
+        tplNoBody()
       )
     }
 
@@ -461,8 +443,8 @@ class ModSuite extends ParseSuite {
         List(Mod.Case()),
         pname("A"),
         pparam(List(Mod.Covariant()), "T") :: Nil,
-        Ctor.Primary(Nil, anon, List(tparam("t", "T")) :: Nil),
-        EmptyTemplate()
+        ctorp(tparam("t", "T")),
+        tplNoBody()
       )
     }
   }
@@ -473,8 +455,8 @@ class ModSuite extends ParseSuite {
         Nil,
         pname("A"),
         pparam(List(Mod.Covariant()), "T") :: Nil,
-        Ctor.Primary(Nil, anon, List(tparam("t", "T")) :: Nil),
-        EmptyTemplate()
+        ctorp(tparam("t", "T")),
+        tplNoBody()
       )
     }
   }
@@ -506,8 +488,8 @@ class ModSuite extends ParseSuite {
         List(Mod.Case()),
         pname("A"),
         pparam(List(Mod.Contravariant()), "T") :: Nil,
-        Ctor.Primary(Nil, anon, List(tparam("t", "T")) :: Nil),
-        EmptyTemplate()
+        ctorp(tparam("t", "T")),
+        tplNoBody()
       )
     }
   }
@@ -518,8 +500,8 @@ class ModSuite extends ParseSuite {
         Nil,
         pname("A"),
         pparam(List(Mod.Contravariant()), "T") :: Nil,
-        Ctor.Primary(Nil, anon, List(tparam("t", "T")) :: Nil),
-        EmptyTemplate()
+        ctorp(tparam("t", "T")),
+        tplNoBody()
       )
     }
   }
@@ -550,22 +532,16 @@ class ModSuite extends ParseSuite {
       Defn.Class(
         List(Mod.Case()),
         pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(Nil, anon, List(tparam(List(Mod.ValParam()), "a", "Int")) :: Nil),
-        EmptyTemplate()
+        Nil,
+        ctorp(tparam(List(Mod.ValParam()), "a", "Int")),
+        tplNoBody()
       )
     }
   }
 
   test("val param in class") {
     assertTree(templStat("class A(val a: Int)")) {
-      Defn.Class(
-        Nil,
-        pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(Nil, anon, List(tparam(List(Mod.ValParam()), "a", "Int")) :: Nil),
-        EmptyTemplate()
-      )
+      Defn.Class(Nil, pname("A"), Nil, ctorp(tparam(List(Mod.ValParam()), "a", "Int")), tplNoBody())
     }
   }
 
@@ -574,16 +550,9 @@ class ModSuite extends ParseSuite {
       Defn.Class(
         List(Mod.Case()),
         pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          Term.ParamClause(
-            tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int") :: Nil,
-            Some(Mod.Implicit())
-          ) :: Nil
-        ),
-        EmptyTemplate()
+        Nil,
+        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
+        tplNoBody()
       )
     }
   }
@@ -593,16 +562,9 @@ class ModSuite extends ParseSuite {
       Defn.Class(
         Nil,
         pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          Term.ParamClause(
-            tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int") :: Nil,
-            Some(Mod.Implicit())
-          ) :: Nil
-        ),
-        EmptyTemplate()
+        Nil,
+        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
+        tplNoBody()
       )
     }
   }
@@ -622,22 +584,16 @@ class ModSuite extends ParseSuite {
       Defn.Class(
         List(Mod.Case()),
         pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(Nil, anon, List(tparam(List(Mod.VarParam()), "a", "Int")) :: Nil),
-        EmptyTemplate()
+        Nil,
+        ctorp(tparam(List(Mod.VarParam()), "a", "Int")),
+        tplNoBody()
       )
     }
   }
 
   test("var param in class") {
     assertTree(templStat("class A(var a: Int)")) {
-      Defn.Class(
-        Nil,
-        pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(Nil, anon, List(tparam(List(Mod.VarParam()), "a", "Int")) :: Nil),
-        EmptyTemplate()
-      )
+      Defn.Class(Nil, pname("A"), Nil, ctorp(tparam(List(Mod.VarParam()), "a", "Int")), tplNoBody())
     }
   }
 
@@ -646,16 +602,9 @@ class ModSuite extends ParseSuite {
       Defn.Class(
         List(Mod.Case()),
         pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          Term.ParamClause(
-            tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int") :: Nil,
-            Some(Mod.Implicit())
-          ) :: Nil
-        ),
-        EmptyTemplate()
+        Nil,
+        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
+        tplNoBody()
       )
     }
   }
@@ -665,16 +614,9 @@ class ModSuite extends ParseSuite {
       Defn.Class(
         Nil,
         pname("A"),
-        Type.ParamClause(Nil),
-        Ctor.Primary(
-          Nil,
-          anon,
-          Term.ParamClause(
-            tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int") :: Nil,
-            Some(Mod.Implicit())
-          ) :: Nil
-        ),
-        EmptyTemplate()
+        Nil,
+        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
+        tplNoBody()
       )
     }
   }
@@ -859,12 +801,8 @@ class ModSuite extends ParseSuite {
       List(Mod.Case()),
       pname("Foo"),
       Nil,
-      Ctor.Primary(
-        Nil,
-        anon,
-        List(tparam(List(Mod.Private(Name("example"))), "field", "String") :: Nil)
-      ),
-      EmptyTemplate()
+      ctorp(tparam(List(Mod.Private(Name("example"))), "field", "String")),
+      tplNoBody()
     )
     assertTree(templStat(code))(expected)
   }

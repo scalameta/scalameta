@@ -1523,7 +1523,7 @@ class SuccessSuite extends TreeSuiteBase {
     checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause {
       List(tparam("x", "X"), tparam("y", "Y"))
     })
-    assertTree(template)(tpl(List(Init(pname("Y"), anon, emptyArgClause)), Nil))
+    assertTree(template)(tplNoBody(init("Y")))
   }
 
   test("2 q\"..mods class tname[..tparams] mod (...paramss) template\"") {
@@ -1570,7 +1570,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(name)(pname("Q"))
     assertEquals(tparams.toString, "[T, W]")
     assertTree(tparams)(Type.ParamClause(List(pparam("T"), pparam("W"))))
-    assertTree(template)(tpl(List(Init(pname("Y"), anon, emptyArgClause)), Nil))
+    assertTree(template)(tplNoBody(init("Y")))
   }
 
   test("2 q\"..mods trait tname[..tparams] template\"") {
@@ -1609,7 +1609,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(anon), Mod.Final())
     assertTree(name)(tname("Q"))
-    assertTree(template)(tpl(List(Init(pname("Y"), anon, emptyArgClause)), Nil))
+    assertTree(template)(tplNoBody(init("Y")))
   }
 
   test("2 q\"..mods object name template\"") {
@@ -1641,7 +1641,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 q\"package object name template\"") {
     val q"package object $name $template" = q"package object Q extends Y"
     assertTree(name)(tname("Q"))
-    assertTree(template)(tpl(List(Init(pname("Y"), anon, emptyArgClause)), Nil))
+    assertTree(template)(tplNoBody(init("Y")))
   }
 
   test("2 q\"package object name template\"") {
@@ -1672,8 +1672,8 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(ref)(tname("p"))
     assertEquals(stats.toString, "List(class A, object B)")
     assertTrees(stats: _*)(
-      Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), EmptyTemplate()),
-      Defn.Object(Nil, tname("B"), EmptyTemplate())
+      Defn.Class(Nil, pname("A"), Nil, ctor, tplNoBody()),
+      Defn.Object(Nil, tname("B"), tplNoBody())
     )
   }
 
@@ -1683,8 +1683,8 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"package $ref { ..$stats }")(Pkg(
       tname("p"),
       List(
-        Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), EmptyTemplate()),
-        Defn.Object(Nil, tname("B"), EmptyTemplate())
+        Defn.Class(Nil, pname("A"), Nil, ctor, tplNoBody()),
+        Defn.Object(Nil, tname("B"), tplNoBody())
       )
     ))
   }
@@ -1698,8 +1698,8 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"package $ref { ..$stats }")(Pkg(
       Term.Select(tname("p"), tname("a")),
       List(
-        Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), EmptyTemplate()),
-        Defn.Object(Nil, tname("B"), EmptyTemplate())
+        Defn.Class(Nil, pname("A"), Nil, ctor, tplNoBody()),
+        Defn.Object(Nil, tname("B"), tplNoBody())
       )
     ))
   }
@@ -2095,14 +2095,9 @@ class SuccessSuite extends TreeSuiteBase {
   test("3 source\"..stats\"") {
     val stats = List(q"class A { val x = 1 }", q"object B")
     assertTree(source"..$stats")(Source(List(
-      Defn.Class(
-        Nil,
-        pname("A"),
-        Nil,
-        EmptyCtor(),
-        tpl(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(1)))
-      ),
-      Defn.Object(Nil, tname("B"), EmptyTemplate())
+      Defn
+        .Class(Nil, pname("A"), Nil, ctor, tpl(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, int(1)))),
+      Defn.Object(Nil, tname("B"), tplNoBody())
     )))
   }
 
@@ -2357,7 +2352,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("#2841 empty") {
     val q"..$mods object $ename $template" = q"object X extends Y"
-    assertTree(template)(tpl(List(Init(pname("Y"), anon, emptyArgClause)), Nil))
+    assertTree(template)(tplNoBody(init("Y")))
     assertEquals(mods, Nil)
   }
 

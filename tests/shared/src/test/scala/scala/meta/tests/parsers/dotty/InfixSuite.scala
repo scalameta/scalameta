@@ -51,23 +51,15 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("infix-class") {
-    runTestAssert[Stat]("infix class A[B, C]")(Defn.Class(
-      List(Mod.Infix()),
-      pname("A"),
-      List(pparam("B"), pparam("C")),
-      EmptyCtor(),
-      EmptyTemplate()
-    ))
+    runTestAssert[Stat]("infix class A[B, C]")(
+      Defn.Class(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody())
+    )
   }
 
   test("infix-trait") {
-    runTestAssert[Stat]("infix trait A[B, C]")(Defn.Trait(
-      List(Mod.Infix()),
-      pname("A"),
-      List(pparam("B"), pparam("C")),
-      EmptyCtor(),
-      EmptyTemplate()
-    ))
+    runTestAssert[Stat]("infix trait A[B, C]")(
+      Defn.Trait(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody())
+    )
   }
 
   test("infix-identifier") {

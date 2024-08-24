@@ -3895,7 +3895,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           blk(
             Term.Apply(tname("println"), List(int(2))),
             Term.Tuple(List(int(3), int(4))),
-            Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(tparam("a", "Int")), tpl())
+            Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(tparam("a", "Int")), tplNoBody())
           )
         ) :: Nil,
         Nil
@@ -3936,7 +3936,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
           ) :: Nil,
           Nil
         ),
-        Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(List(tparam("a", "Int"))), tpl())
+        Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(tparam("a", "Int")), tplNoBody())
       )
     )
     runTestAssert[Stat](code, layout)(tree)

@@ -11,10 +11,12 @@ class TermSuite extends ParseSuite {
   implicit val dialect: Dialect = dialects.Scala211
   implicit val parseTerm: String => Term = term(_)
 
-  private def assertTerm(expr: String)(tree: Tree): Unit = assertTree(term(expr))(tree)
+  private def assertTerm(expr: String)(tree: Tree)(implicit loc: munit.Location): Unit =
+    assertTree(term(expr))(tree)
 
-  private def checkTerm(expr: String, syntax: String = null)(tree: Tree): Unit =
-    checkTree(term(expr), syntax)(tree)
+  private def checkTerm(expr: String, syntax: String = null)(tree: Tree)(implicit
+      loc: munit.Location
+  ): Unit = checkTree(term(expr), syntax)(tree)
 
   test("x")(assertTerm("x")(tname("x")))
 
@@ -361,7 +363,7 @@ class TermSuite extends ParseSuite {
 
   test("f _")(assertTerm("f _")(Eta(tname("f"))))
 
-  test("new {}")(assertTerm("new {}")(NewAnonymous(Template(Nil, Nil, EmptySelf(), Nil))))
+  test("new {}")(assertTerm("new {}")(NewAnonymous(tpl())))
 
   test("new { x }") {
     assertTerm("new { x }")(NewAnonymous(Template(Nil, Nil, EmptySelf(), List(tname("x")))))
@@ -375,11 +377,7 @@ class TermSuite extends ParseSuite {
     }
   }
 
-  test("new A {}") {
-    assertTerm("new A {}") {
-      NewAnonymous(Template(Nil, Init(pname("A"), anon, emptyArgClause) :: Nil, EmptySelf(), Nil))
-    }
-  }
+  test("new A {}")(assertTerm("new A {}")(NewAnonymous(tpl(init("A") :: Nil, Nil))))
 
   test("new A with B") {
     assertTerm("new A with B") {
@@ -444,13 +442,7 @@ class TermSuite extends ParseSuite {
 
   test("local class") {
     assertTerm("{ case class C(x: Int); }") {
-      Term.Block(List(Defn.Class(
-        List(Mod.Case()),
-        pname("C"),
-        Nil,
-        Ctor.Primary(Nil, anon, List(List(tparam("x", "Int")))),
-        EmptyTemplate()
-      )))
+      blk(Defn.Class(List(Mod.Case()), pname("C"), Nil, ctorp(tparam("x", "Int")), tplNoBody()))
     }
   }
 

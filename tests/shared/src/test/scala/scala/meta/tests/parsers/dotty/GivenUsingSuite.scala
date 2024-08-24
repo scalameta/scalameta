@@ -245,14 +245,14 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat](
       """|given C(1)
          |""".stripMargin
-    )(Defn.Given(Nil, anon, Nil, Nil, tpl(List(Init(pname("C"), anon, List(List(int(1))))), Nil)))
+    )(Defn.Given(Nil, anon, Nil, Nil, tplNoBody(init("C", List(List(int(1)))))))
   }
 
   test("given-empty-anon-empty-parens") {
     runTestAssert[Stat](
       """|given C()
          |""".stripMargin
-    )(Defn.Given(Nil, anon, Nil, Nil, tpl(List(Init(pname("C"), anon, List(List()))), Nil)))
+    )(Defn.Given(Nil, anon, Nil, Nil, tplNoBody(init("C", List(Nil)))))
   }
 
   test("given-empty-anon-no-parens") {
