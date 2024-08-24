@@ -37,6 +37,7 @@ package object inputs {
   implicit class XtensionInput(private val input: Input) extends AnyVal {
     def syntax: String = input match {
       case Input.None => "<none>"
+      case proxy: Input.Proxy => proxy.input.syntax
       case Input.File(path, _) => path.toString
       case Input.VirtualFile(path, _) => path
       case _ => "<input>"
