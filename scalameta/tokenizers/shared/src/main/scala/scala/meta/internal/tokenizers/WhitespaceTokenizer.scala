@@ -19,7 +19,14 @@ object WhitespaceTokenizer {
   def apply(input: Input, dialect: Dialect)(implicit
       options: Option[TokenizerOptions],
       tokens: java.util.Collection[Token]
-  ): WhitespaceTokenizer = new Grouping(input, dialect)
+  ): WhitespaceTokenizer =
+    if (options.exists(_.groupWhitespace)) new Grouping(input, dialect) else new Granular
+
+  class Granular(implicit tokens: java.util.Collection[Token]) extends WhitespaceTokenizer {
+    override def pushHS(token: Token.HSpace): Unit = tokens.add(token)
+    override def pushVS(token: Token.EOL): Unit = tokens.add(token)
+    override def flush(): Unit = {}
+  }
 
   class Grouping(input: Input, dialect: Dialect)(implicit tokens: java.util.Collection[Token])
       extends WhitespaceTokenizer {
