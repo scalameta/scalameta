@@ -39,12 +39,13 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Optio
 
     @tailrec
     def emitTokenWhitespace(token: Token.Whitespace): Token = {
+      val next = nextToken() // might output INVALID token for current whitespace
       token match {
         case t: Token.HSpace => whitespaceTokenizer.pushHS(t)
         case t: Token.EOL => whitespaceTokenizer.pushVS(t)
-        case _ => unreachable
+        case t => unreachable(debug(t), "not a whitespace token")
       }
-      getToken(nextToken()) match {
+      getToken(next) match {
         case nt: Token.Whitespace => emitTokenWhitespace(nt)
         case nt => whitespaceTokenizer.flush(); nt
       }
