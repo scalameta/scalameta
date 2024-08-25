@@ -481,6 +481,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Type.Block
          |scala.meta.Type.Bounds
          |scala.meta.Type.ByName
+         |scala.meta.Type.CasesClause
          |scala.meta.Type.ContextFunction
          |scala.meta.Type.Existential
          |scala.meta.Type.FuncParamClause

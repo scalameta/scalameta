@@ -458,6 +458,8 @@ object Type {
   trait Ref extends Type with sm.Ref
   @ast
   class ArgClause(values: List[Type]) extends Member.ArgClause
+  @ast
+  class CasesClause(cases: List[TypeCase] @nonEmpty) extends Tree.WithCases
 
   @ast
   class Name(value: String @nonEmpty) extends sm.Name with Type.Ref
@@ -643,7 +645,10 @@ object Type {
   class ParamClause(values: List[Param]) extends Member.ParamClause
 
   @ast
-  class Match(tpe: Type, cases: List[TypeCase] @nonEmpty) extends Type with Tree.WithCases
+  class Match(tpe: Type, casesClause: CasesClause) extends Type with Tree.WithCases {
+    @replacedField("4.9.9")
+    final def cases: List[TypeCase] = casesClause.cases
+  }
 
   @ast
   class Block(typeDefs: List[Stat.TypeDef], tpe: Type) extends Type
