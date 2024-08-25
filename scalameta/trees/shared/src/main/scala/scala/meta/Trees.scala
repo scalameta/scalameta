@@ -51,6 +51,11 @@ object Tree extends InternalTreeXtensions {
     final def exprs: List[Tree] = cases
   }
   @branch
+  trait WithCasesClause extends Tree with WithCases {
+    def casesClause: Term.CasesClause
+    def cases: List[Case] = casesClause.cases
+  }
+  @branch
   trait WithDeclTpe extends Tree {
     def decltpe: Type
   }
@@ -217,6 +222,8 @@ object Term {
   trait Ref extends Term with sm.Ref
   @ast
   class ArgClause(values: List[Term], mod: Option[Mod.ArgsType] = None) extends Member.ArgClause
+  @ast
+  class CasesClause(cases: List[Case] @nonEmpty) extends Tree.WithCases
 
   @ast
   class This(qual: sm.Name) extends Term.Ref
@@ -313,17 +320,33 @@ object Term {
   @ast
   class Match(
       expr: Term,
-      cases: List[Case] @nonEmpty,
+      casesClause: CasesClause,
       @newField("4.4.5")
       mods: List[Mod] = Nil
-  ) extends Term with Tree.WithCases
+  ) extends Term with Tree.WithCasesClause {
+    @replacedField("4.9.9")
+    override final def cases: List[Case] = casesClause.cases
+  }
+  @branch
+  trait TryClause extends Term {
+    def expr: Term
+    def catchClause: Option[Tree]
+    def finallyp: Option[Term]
+  }
   @ast
-  class Try(expr: Term, catchp: List[Case], finallyp: Option[Term])
-      extends Term with Tree.WithCases {
+  class Try(expr: Term, catchClause: Option[CasesClause], finallyp: Option[Term])
+      extends TryClause with Tree.WithCases {
+    @replacedField("4.9.9")
+    final def catchp: List[Case] = catchClause match {
+      case None => Nil
+      case Some(x) => x.cases
+    }
     override final def cases: List[CaseTree] = catchp
   }
   @ast
-  class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends Term
+  class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends TryClause {
+    final def catchClause = Some(catchp)
+  }
 
   @branch
   trait FunctionTerm extends Term with Member.Function {
@@ -363,7 +386,10 @@ object Term {
     override final def paramClause: Member.SyntaxValuesClause = tparamClause
   }
   @ast
-  class PartialFunction(cases: List[Case] @nonEmpty) extends Term with Tree.WithCases
+  class PartialFunction(casesClause: CasesClause @nonEmpty) extends Term with Tree.WithCasesClause {
+    @replacedField("4.9.9")
+    override final def cases: List[Case] = casesClause.cases
+  }
   @ast
   class While(expr: Term, body: Term) extends Term with Tree.WithCond with Tree.WithBody {
     override final def cond: Term = expr

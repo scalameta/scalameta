@@ -431,7 +431,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |  case x =>
                     |    xa
                     |    xb
-                    |  case y => yab
+                    |  case y =>
+                    |    yab
                     |  case z =>
                     |    za
                     |    zb
@@ -3120,7 +3121,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
         """|arg match {
            |  case arg: Showable =>
            |    try arg.show catch {
-           |      case ex: CyclicReference => "... (caught cyclic reference) ..."
+           |      case ex: CyclicReference =>
+           |        "... (caught cyclic reference) ..."
            |      case NonFatal(ex) if !ctx.mode.is(Mode.PrintShowExceptions) && !ctx.settings.YshowPrintErrors.value =>
            |        val msg = ex match {
            |          case te: TypeError =>

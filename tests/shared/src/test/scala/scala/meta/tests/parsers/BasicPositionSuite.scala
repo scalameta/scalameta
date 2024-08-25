@@ -620,6 +620,9 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |}
        |Term.ApplyInfix a + b
        |Type.ArgClause val foo = (a + @@b) match {
+       |Term.CasesClause {
+       |  case _ =>
+       |}
        |Case case _ =>
        |Term.Block @@}
        |""".stripMargin

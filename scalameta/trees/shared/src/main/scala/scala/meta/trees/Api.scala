@@ -23,6 +23,8 @@ private[meta] trait ApiLowPriority {
   implicit def patValuesToArgClause(v: List[Pat]): Pat.ArgClause = Pat.ArgClause(v)
   implicit def patListValuesToListArgClause(v: List[List[Pat]]): List[Pat.ArgClause] = v
     .map(patValuesToArgClause)
+
+  // XXX: do not add any additional conversions here, instead add with dialect in Api below
 }
 
 private[meta] trait Api extends ApiLowPriority {
@@ -64,6 +66,14 @@ private[meta] trait Api extends ApiLowPriority {
   implicit def patListValuesToListArgClauseWithDialect(v: List[List[Pat]])(implicit
       dialect: Dialect
   ): List[Pat.ArgClause] = v.map(patValuesToArgClauseWithDialect)
+
+  implicit def casesClauseToValues(v: Term.CasesClause): List[Case] = v.cases
+  implicit def caseValuesToCasesClauseWithDialect(v: List[Case])(implicit
+      dialect: Dialect
+  ): Term.CasesClause = Term.CasesClause(v)
+  implicit def caseValuesToOptionCasesClauseWithDialect(v: List[Case])(implicit
+      dialect: Dialect
+  ): Option[Term.CasesClause] = if (v.isEmpty) None else Some(Term.CasesClause(v))
 }
 
 private[meta] trait Aliases {

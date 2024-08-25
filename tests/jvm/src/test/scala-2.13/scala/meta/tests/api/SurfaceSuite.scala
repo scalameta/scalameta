@@ -415,6 +415,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.Ascribe
          |scala.meta.Term.Assign
          |scala.meta.Term.Block
+         |scala.meta.Term.CasesClause
          |scala.meta.Term.ContextFunction
          |scala.meta.Term.Do
          |scala.meta.Term.EndMarker
@@ -446,12 +447,14 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.This
          |scala.meta.Term.Throw
          |scala.meta.Term.Try
+         |scala.meta.Term.TryClause
          |scala.meta.Term.TryWithHandler
          |scala.meta.Term.Tuple
          |scala.meta.Term.While
          |scala.meta.Term.Xml
          |scala.meta.Tree.WithBody
          |scala.meta.Tree.WithCases
+         |scala.meta.Tree.WithCasesClause
          |scala.meta.Tree.WithCond
          |scala.meta.Tree.WithCondOpt
          |scala.meta.Tree.WithDeclTpe

@@ -246,7 +246,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|x match {
        |  case '{ a } => 1
        |}""".stripMargin,
-    """|Case case '{ a } => 1
+    """|Term.CasesClause {
+       |  case '{ a } => 1
+       |}
+       |Case case '{ a } => 1
        |Pat.Macro '{ a }
        |Term.QuotedMacroExpr '{ a }
        |Term.Block { a }
@@ -256,7 +259,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|x match {
        |  case List(xs*) => 1
        |}""".stripMargin,
-    """|Case case List(xs*) => 1
+    """|Term.CasesClause {
+       |  case List(xs*) => 1
+       |}
+       |Case case List(xs*) => 1
        |Pat.Extract List(xs*)
        |Pat.ArgClause (xs*)
        |Pat.Repeated xs*
@@ -289,11 +295,15 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   )
   checkPositions[Stat](
     """|inline def g: Any = inline x match {
-       |  case x: String => (x, x) 
+       |  case x: String => (x, x)
        |  case x: Double => x
        |}""".stripMargin,
     """|Term.Match inline x match {
-       |  case x: String => (x, x) 
+       |  case x: String => (x, x)
+       |  case x: Double => x
+       |}
+       |Term.CasesClause {
+       |  case x: String => (x, x)
        |  case x: Double => x
        |}
        |Case case x: String => (x, x)
@@ -406,6 +416,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |     catch
        |       case a =>
        |     finally bar
+       |Term.CasesClause case a =>
        |Case case a =>
        |Term.Block        case a =>@@
        |""".stripMargin
@@ -447,6 +458,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |         st1
        |         st2
        |     finally bar
+       |Term.CasesClause case a =>
+       |       case b =>
+       |         st1
+       |         st2
        |Case case a =>
        |Term.Block        @@case b =>
        |Case case b =>
@@ -470,6 +485,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin,
     """|Term.Block fx
        |  gx
+       |Term.CasesClause case aa =>
+       |  case bb =>
        |Case case aa =>
        |Term.Block   @@case bb =>
        |Case case bb =>
@@ -618,6 +635,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    buf
        |Term.Match inline erasedValue match
        |      case _: Enum      => xs
+       |      case _: Singleton => xs
+       |Term.CasesClause case _: Enum      => xs
        |      case _: Singleton => xs
        |Case case _: Enum      => xs
        |Pat.Typed _: Enum
@@ -949,6 +968,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Match (foo, bar) match
        |  case (false, false) => (baz, qux)
        |Term.Tuple (foo, bar)
+       |Term.CasesClause case (false, false) => (baz, qux)
        |Case case (false, false) => (baz, qux)
        |Pat.Tuple (false, false)
        |Term.Tuple (baz, qux)
@@ -963,6 +983,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Match (foo, bar) match
        |  case (false, false) => (baz, qux)
        |Term.Tuple (foo, bar)
+       |Term.CasesClause case (false, false) => (baz, qux)
        |Case case (false, false) => (baz, qux)
        |Pat.Tuple (false, false)
        |Term.Tuple (baz, qux)
@@ -979,6 +1000,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  case (true, false) => (baz, qux) // c1
        |  case (false, true) => (baz, qux)
        |Term.Tuple (foo, bar)
+       |Term.CasesClause case (true, false) => (baz, qux) // c1
+       |  case (false, true) => (baz, qux)
        |Case case (true, false) => (baz, qux)
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
@@ -997,6 +1020,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  case (true, false) => (baz, qux) // c1
        |  case (false, true) => (baz, qux)
        |Term.Tuple (foo, bar)
+       |Term.CasesClause case (true, false) => (baz, qux) // c1
+       |  case (false, true) => (baz, qux)
        |Case case (true, false) => (baz, qux)
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
@@ -1011,6 +1036,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  case (true, false) => (baz, qux) // c1
        |  case (false, true) => (baz, qux) // c2""".stripMargin,
     """|Term.Tuple (foo, bar)
+       |Term.CasesClause case (true, false) => (baz, qux) // c1
+       |  case (false, true) => (baz, qux)
        |Case case (true, false) => (baz, qux)
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
@@ -1025,6 +1052,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |case (true, false) => (baz, qux) // c1
        |case (false, true) => (baz, qux) // c2""".stripMargin,
     """|Term.Tuple (foo, bar)
+       |Term.CasesClause case (true, false) => (baz, qux) // c1
+       |case (false, true) => (baz, qux)
        |Case case (true, false) => (baz, qux)
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
@@ -1040,6 +1069,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |case (false, true) => (baz, qux) // c2
        |""".stripMargin,
     """|Term.Tuple (foo, bar)
+       |Term.CasesClause case (true, false) => (baz, qux) // c1
+       |case (false, true) => (baz, qux)
        |Case case (true, false) => (baz, qux)
        |Pat.Tuple (true, false)
        |Term.Tuple (baz, qux)
@@ -1658,6 +1689,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |     case foo2: Foo2 =>
        |       foo2 += " = "
        |     // foo2</stats0>
+       |<casesClause>Term.CasesClause case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |     // foo2</casesClause>
        |<cases0>Case case foo1: Foo1 => foo1</cases0>
        |<pat>Pat.Typed foo1: Foo1</pat>
        |<cases1>Case case foo2: Foo2 =>
@@ -1725,6 +1760,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |     case foo2: Foo2 =>
        |       foo2 += " = "
        |       // foo2</stats0>
+       |<casesClause>Term.CasesClause case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |       // foo2</casesClause>
        |<cases0>Case case foo1: Foo1 => foo1</cases0>
        |<pat>Pat.Typed foo1: Foo1</pat>
        |<cases1>Case case foo2: Foo2 =>

@@ -185,6 +185,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "(f)({ case a => a })",
     """|Term.ArgClause ({ case a => a })
        |Term.PartialFunction { case a => a }
+       |Term.CasesClause { case a => a }
        |Case case a => a
        |""".stripMargin
   )
@@ -305,7 +306,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "(a) match { case x => x }",
-    """|Case case x => x
+    """|Term.CasesClause { case x => x }
+       |Case case x => x
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -330,7 +332,8 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "{ case x => x; case y => y }",
-    """|Case case x => x;
+    """|Term.CasesClause { case x => x; case y => y }
+       |Case case x => x;
        |Case case y => y
        |""".stripMargin
   )
@@ -351,14 +354,16 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat]("throw (e)")
   checkPositions[Stat](
     "try (f) catch { case x => x; case y => y } finally { }",
-    """|Case case x => x;
+    """|Term.CasesClause { case x => x; case y => y }
+       |Case case x => x;
        |Case case y => y
        |Term.Block { }
        |""".stripMargin
   )
   checkPositions[Stat](
     "try (f) catch { case x => (x); case y => y } finally { }",
-    """|Case case x => (x);
+    """|Term.CasesClause { case x => (x); case y => y }
+       |Case case x => (x);
        |Case case y => y
        |Term.Block { }
        |""".stripMargin
@@ -784,6 +789,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Term.ApplyInfix a + b
        |Type.ArgClause ( (a + @@b), (a match { case foo => foo }) )
        |Term.Match a match { case foo => foo }
+       |Term.CasesClause { case foo => foo }
        |Case case foo => foo
        |""".stripMargin
   )
@@ -794,6 +800,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.ApplyInfix a + b
        |Type.ArgClause { ( (a + @@b), (a match { case foo => foo }) ) }
        |Term.Match a match { case foo => foo }
+       |Term.CasesClause { case foo => foo }
        |Case case foo => foo
        |""".stripMargin
   )
