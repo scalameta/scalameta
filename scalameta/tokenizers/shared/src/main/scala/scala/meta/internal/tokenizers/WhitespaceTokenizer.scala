@@ -17,10 +17,10 @@ trait WhitespaceTokenizer {
 object WhitespaceTokenizer {
 
   def apply(input: Input, dialect: Dialect)(implicit
-      options: Option[TokenizerOptions],
+      options: TokenizerOptions,
       tokens: java.util.Collection[Token]
   ): WhitespaceTokenizer =
-    if (options.exists(_.groupWhitespace)) new Grouping(input, dialect) else new Granular
+    if (options.groupWhitespace) new Grouping(input, dialect) else new Granular
 
   class Granular(implicit tokens: java.util.Collection[Token]) extends WhitespaceTokenizer {
     override def pushHS(token: Token.HSpace): Unit = tokens.add(token)

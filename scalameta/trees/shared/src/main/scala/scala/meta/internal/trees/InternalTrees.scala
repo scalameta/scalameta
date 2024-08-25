@@ -72,12 +72,12 @@ trait InternalTree extends Product {
   private[meta] def retokenize(implicit
       tokenize: Tokenize,
       dialect: Dialect,
-      tokenizerOptions: Option[TokenizerOptions]
+      tokenizerOptions: TokenizerOptions
   ): Tokens = retokenizeFor(dialect)
 
   private[meta] def retokenizeFor(
       dialect: Dialect
-  )(implicit tokenize: Tokenize, tokenizerOptions: Option[TokenizerOptions]): Tokens = this match {
+  )(implicit tokenize: Tokenize, tokenizerOptions: TokenizerOptions): Tokens = this match {
     case Lit.String(value) =>
       val input = Input.VirtualFile("<InternalTrees.tokens>", value)
       Tokens(Array(Constant.String(input, dialect, 0, value.length, value)))
@@ -86,7 +86,7 @@ trait InternalTree extends Product {
 
   private[meta] def textAsInput(implicit
       dialect: Dialect,
-      tokenizerOptions: Option[TokenizerOptions]
+      tokenizerOptions: TokenizerOptions
   ): Input = Input.VirtualFile("<InternalTrees.text>", printSyntaxFor(dialect))
     .withTokenizerOptions(tokenizerOptions)
 

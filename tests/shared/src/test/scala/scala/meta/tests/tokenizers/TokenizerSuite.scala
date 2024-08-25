@@ -9,8 +9,8 @@ import scala.meta.tokens.Token._
 class TokenizerSuite extends BaseTokenizerSuite {
 
   private implicit val dialect: Dialect = dialects.Scala211
-  override protected implicit def tokenizerOptions: Option[TokenizerOptions] =
-    Some(new TokenizerOptions(groupWhitespace = true))
+  override protected implicit def tokenizerOptions: TokenizerOptions =
+    new TokenizerOptions(groupWhitespace = true)
 
   test("showCode without comments - simple") {
     assertTokenizedAsSyntax("class C  {\t val x = 2}\n\n", "class C  {\t val x = 2}\n\n")
