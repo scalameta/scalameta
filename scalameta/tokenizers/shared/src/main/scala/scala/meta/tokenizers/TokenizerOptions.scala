@@ -9,7 +9,7 @@ final class TokenizerOptions(
 
 object TokenizerOptions {
   val default: TokenizerOptions = new TokenizerOptions()
-  val global: DynamicVariable[Option[TokenizerOptions]] = new DynamicVariable(None)
+  val global: DynamicVariable[TokenizerOptions] = new DynamicVariable(default)
 
-  implicit def implicitTokenizerOptions: Option[TokenizerOptions] = global.value
+  implicit def implicitTokenizerOptions: TokenizerOptions = global.value
 }

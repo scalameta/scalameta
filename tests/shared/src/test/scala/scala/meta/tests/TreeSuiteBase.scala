@@ -11,7 +11,7 @@ import munit._
 
 abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
-  protected implicit def tokenizerOptions: Option[TokenizerOptions] = None
+  protected implicit def tokenizerOptions: TokenizerOptions = TokenizerOptions.global.value
 
   def emptyArgClause = Seq.empty[Term.ArgClause]
 

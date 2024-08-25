@@ -13,11 +13,9 @@ sealed trait Input extends Product with Serializable with inputs.InternalInput {
   def chars: Array[Char]
   def text: String = new String(chars)
 
-  private[meta] def tokenizerOptions: Option[TokenizerOptions] = None
+  private[meta] def tokenizerOptions: TokenizerOptions = implicitly[TokenizerOptions]
   def withoutTokenizerOptions: Input = this
-  final def withTokenizerOptions(implicit options: Option[TokenizerOptions]): Input =
-    withTokenizerOptions(options.orNull)
-  def withTokenizerOptions(options: TokenizerOptions): Input =
+  def withTokenizerOptions(implicit options: TokenizerOptions): Input =
     if (options eq null) this else Input.WithTokenizerOptions(this, options)
 }
 
@@ -33,7 +31,7 @@ object Input {
     val input: Input
     override def chars: Array[Char] = input.chars
     override def text: Predef.String = input.text
-    override private[meta] def tokenizerOptions: Option[TokenizerOptions] = input.tokenizerOptions
+    override private[meta] def tokenizerOptions: TokenizerOptions = input.tokenizerOptions
   }
 
   case object None extends Text {
@@ -123,9 +121,9 @@ object Input {
   final case class WithTokenizerOptions private[meta] (input: Input, options: TokenizerOptions)
       extends Proxy {
     override def toString = s"Input.WithTokenizerOptions($input, $tokenizerOptions)"
-    override private[meta] def tokenizerOptions = Some(options)
+    override private[meta] def tokenizerOptions = options
     override def withoutTokenizerOptions: Input = input
-    override def withTokenizerOptions(options: TokenizerOptions): Input =
+    override def withTokenizerOptions(implicit options: TokenizerOptions): Input =
       if (options eq this.options) this else if (options eq null) input else copy(options = options)
   }
 
