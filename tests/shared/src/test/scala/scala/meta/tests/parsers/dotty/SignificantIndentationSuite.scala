@@ -534,7 +534,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
            |    type Node = Int
            |    val a: Int = 3
            |  }
-           |  val refinementTest: Graph { def x: Int }
+           |  val refinementTest: Graph {
+           |    def x: Int
+           |  }
            |}
            |""".stripMargin
       )

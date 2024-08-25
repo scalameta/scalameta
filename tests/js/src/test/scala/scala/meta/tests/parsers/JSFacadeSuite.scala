@@ -38,7 +38,6 @@ class JSFacadeSuite extends FunSuite {
         "templ" -> d(
           "type" -> "Template",
           "pos" -> pos(12, 83),
-          "early" -> a(),
           "inits" -> a(),
           "body" -> d(
             "type" -> "Template.Body",

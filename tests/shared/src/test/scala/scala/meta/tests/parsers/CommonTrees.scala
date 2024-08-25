@@ -138,4 +138,6 @@ trait CommonTrees {
   final def blk(stats: List[Stat]): Term.Block = Term.Block(stats)
   final def blk(stats: Stat*): Term.Block = blk(stats.toList)
 
+  final def stats(vals: Stat*): Stat.Clause = Stat.Clause(vals.toList)
+
 }

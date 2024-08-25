@@ -46,6 +46,11 @@ object Tree extends InternalTreeXtensions {
     final def exprs: List[Tree] = stats
   }
   @branch
+  trait WithStatsClause extends WithStats {
+    def statsClause: Stat.Clause
+    def stats: List[Stat] = statsClause.stats
+  }
+  @branch
   trait WithCases extends Tree with WithExprs {
     def cases: List[CaseTree]
     final def exprs: List[Tree] = cases
@@ -129,6 +134,11 @@ object Stat {
     def bounds: sm.Type.Bounds
   }
 
+  @ast
+  class Clause(stats: List[Stat]) extends Tree {
+    final def isEmpty: Boolean = stats.isEmpty
+    final def nonEmpty: Boolean = stats.nonEmpty
+  }
 }
 
 @branch
@@ -537,12 +547,17 @@ object Type {
   @deprecated("Or unused, replaced by ApplyInfix", "4.5.1") @ast
   class Or(lhs: Type, rhs: Type) extends Type
   @ast
-  class Refine(tpe: Option[Type], stats: List[Stat]) extends Type with Tree.WithStats {
-    checkFields(stats.forall(_.isRefineStat))
+  class Refine(tpe: Option[Type], statsClause: Stat.Clause) extends Type with Tree.WithStatsClause {
+    checkFields(statsClause.is[Stat.Clause.Quasi] || statsClause.stats.forall(_.isRefineStat))
+    @replacedField("4.9.9")
+    override final def stats: List[Stat] = statsClause.stats
   }
   @ast
-  class Existential(tpe: Type, stats: List[Stat] @nonEmpty) extends Type with Tree.WithStats {
-    checkFields(stats.forall(_.isExistentialStat))
+  class Existential(tpe: Type, statsClause: Stat.Clause @nonEmpty)
+      extends Type with Tree.WithStatsClause {
+    checkFields(statsClause.is[Stat.Clause.Quasi] || statsClause.stats.forall(_.isExistentialStat))
+    @replacedField("4.9.9")
+    override final def stats: List[Stat] = statsClause.stats
   }
   @ast
   class Annotate(tpe: Type, annots: List[Mod.Annot] @nonEmpty) extends Type
@@ -1111,12 +1126,15 @@ object Defn {
 }
 
 @ast
-class Pkg(ref: Term.Ref, stats: List[Stat]) extends Member.Term with Stat with Tree.WithStats {
+class Pkg(ref: Term.Ref, statsClause: Stat.Clause)
+    extends Member.Term with Stat with Tree.WithStatsClause {
   checkFields(ref.isQualId)
   def name: Term.Name = ref match {
     case name: Term.Name => name
     case Term.Select(_, name: Term.Name) => name
   }
+  @replacedField("4.9.9")
+  override final def stats: List[Stat] = statsClause.stats
 }
 object Pkg {
   @ast
@@ -1194,14 +1212,21 @@ object Template {
 
 @ast
 class Template(
-    early: List[Stat],
+    earlyClause: Option[Stat.Clause],
     inits: List[Init],
     @replacesFields("4.9.9", Template.BodyCtor)
     body: Template.Body,
     @newField("4.4.0")
     derives: List[Type] = Nil
 ) extends Tree with Tree.WithStats {
-  checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
+  checkFields(inits.isEmpty || earlyClause.forall { x =>
+    x.is[Stat.Clause.Quasi] || x.stats.forall(_.isEarlyStat)
+  })
+  @replacedField("4.9.9")
+  final def early: List[Stat] = earlyClause match {
+    case None => Nil
+    case Some(x) => x.stats
+  }
   @replacedField("4.9.9", pos = 2)
   final def self: Self = Template.self(body)
   @replacedField("4.9.9", pos = 3)

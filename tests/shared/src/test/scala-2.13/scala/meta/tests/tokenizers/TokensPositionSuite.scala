@@ -93,18 +93,25 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Type]("A & B")
   checkPositions[Type](
     "A { def f: B }",
-    """|Decl.Def def f: B
+    """|Stat.Clause { def f: B }
+       |Decl.Def def f: B
        |""".stripMargin
   )
-  checkPositions[Type]("A{}")
+  checkPositions[Type](
+    "A{}",
+    """|Stat.Clause {}
+       |""".stripMargin
+  )
   checkPositions[Type](
     "{ def f: B }",
-    """|Decl.Def def f: B
+    """|Stat.Clause { def f: B }
+       |Decl.Def def f: B
        |""".stripMargin
   )
   checkPositions[Type](
     "A forSome { type T }",
-    """|Decl.Type type T
+    """|Stat.Clause { type T }
+       |Decl.Type type T
        |Type.ParamClause A forSome { type T @@}
        |Type.Bounds A forSome { type T @@}
        |""".stripMargin
@@ -425,12 +432,14 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Source](
     "package a",
     """|Pkg package a
+       |Stat.Clause package a@@
        |""".stripMargin
   )
   checkPositions[Source](
     "package a.b",
     """|Pkg package a.b
        |Term.Select a.b
+       |Stat.Clause package a.b@@
        |""".stripMargin
   )
 
@@ -675,6 +684,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "new { val a = 1 } with A {}",
     """|Template { val a = 1 } with A {}
+       |Stat.Clause { val a = 1 }
        |Defn.Val val a = 1
        |Template.Body {}
        |""".stripMargin

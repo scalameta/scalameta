@@ -966,7 +966,11 @@ class MinorDottySuite extends BaseDottySuite {
       """|val x: (C { type U = T } { type T = String }) # U 
          |""".stripMargin,
       assertLayout = Some(
-        """|val x: ((C { type U = T }) { type T = String })#U
+        """|val x: ((C {
+           |  type U = T
+           |}) {
+           |  type T = String
+           |})#U
            |""".stripMargin
       )
     )(Decl.Val(

@@ -1161,9 +1161,11 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Type.Project (C { type U = T } { type T = String }) # U
        |Type.Refine C { type U = T } { type T = String }
        |Type.Refine C { type U = T }
+       |Stat.Clause { type U = T }
        |Defn.Type type U = T
        |Type.ParamClause val x: (C { type U @@= T } { type T = String }) # U
        |Type.Bounds val x: (C { type U = @@T } { type T = String }) # U
+       |Stat.Clause { type T = String }
        |Defn.Type type T = String
        |Type.ParamClause val x: (C { type U = T } { type T @@= String }) # U
        |Type.Bounds val x: (C { type U = T } { type T = @@String }) # U
@@ -1177,6 +1179,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Type.ParamClause type A @@= AnyRef with
        |Type.Refine AnyRef with
        |  type T>: Null
+       |Stat.Clause type T>: Null
        |Decl.Type type T>: Null
        |Type.ParamClause   type T@@>: Null
        |Type.Bounds >: Null
