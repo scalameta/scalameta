@@ -15,7 +15,7 @@ object Mima {
         (ref.fullName, ref.isPublic && ref.scopedPrivateSuff.isEmpty)
       case problem: MemberProblem =>
         val ref = problem.ref
-        val accessible = !ref.nonAccessible && ref.scopedPrivatePrefix.isEmpty &&
+        val accessible = ScalametaMimaUtils.isPublic(ref) &&
           (ref.fullName match {
             case "scala.meta.Dialect.this" =>
               // exclude ctor with the longest method signature (aka, primary)
