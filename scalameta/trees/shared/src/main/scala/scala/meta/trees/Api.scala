@@ -74,6 +74,11 @@ private[meta] trait Api extends ApiLowPriority {
   implicit def caseValuesToOptionCasesClauseWithDialect(v: List[Case])(implicit
       dialect: Dialect
   ): Option[Term.CasesClause] = if (v.isEmpty) None else Some(Term.CasesClause(v))
+
+  implicit def enumsClauseToValues(v: Term.EnumeratorsClause): List[Enumerator] = v.enums
+  implicit def enumValuesToEnumsClauseWithDialect(v: List[Enumerator])(implicit
+      dialect: Dialect
+  ): Term.EnumeratorsClause = Term.EnumeratorsClause(v)
 }
 
 private[meta] trait Aliases {

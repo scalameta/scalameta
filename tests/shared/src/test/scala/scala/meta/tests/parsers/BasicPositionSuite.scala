@@ -605,7 +605,11 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |  c = (d)
        |} yield c
        |""".stripMargin,
-    """|Enumerator.Generator a <- (b)
+    """|Term.EnumeratorsClause {
+       |  a <- (b)
+       |  c = (d)
+       |}
+       |Enumerator.Generator a <- (b)
        |Enumerator.Val c = (d)
        |""".stripMargin
   )

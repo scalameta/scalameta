@@ -214,7 +214,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|for case a: TP <- iter if cnd do
        |  echo""".stripMargin,
-    """|Enumerator.CaseGenerator case a: TP <- iter
+    """|Term.EnumeratorsClause case a: TP <- iter if cnd
+       |Enumerator.CaseGenerator case a: TP <- iter
        |Pat.Typed a: TP
        |Enumerator.Guard if cnd
        |""".stripMargin

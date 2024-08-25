@@ -265,12 +265,14 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat]("(f) _")
   checkPositions[Stat](
     "for { x <- xs } (f)",
-    """|Enumerator.Generator x <- xs
+    """|Term.EnumeratorsClause { x <- xs }
+       |Enumerator.Generator x <- xs
        |""".stripMargin
   )
   checkPositions[Stat](
     "for { x <- xs } yield (f)",
-    """|Enumerator.Generator x <- xs
+    """|Term.EnumeratorsClause { x <- xs }
+       |Enumerator.Generator x <- xs
        |""".stripMargin
   )
   checkPositions[Stat](
