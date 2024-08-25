@@ -366,16 +366,17 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         """
       params.foreach(p => internalBody += storeField(p))
       internalBody += q"node"
-      val applyParams = params.map(asValDefn)
-      val applyParamDecls = applyParams.map(asValDecl)
+      val applyParamDefns = params.map(asValDefn)
+      val applyParamDecls = params.map(asValDecl)
       val bparamDecls = privateApplyParams.map(asValDecl)
       val fullApplyParamDecls = bparamDecls ++ applyParamDecls
       val fullInternalArgs = privateApplyParams.map(getParamArg) ++ internalArgs
+      val bparamRhsInternalArgs = privateApplyParams.map(p => p.rhs) ++ internalArgs
       if (isTopLevel) {
         mstats1 +=
           q"""
-            def apply(..$applyParams): $iname = {
-              $mname.apply(..${privateApplyParams.map(p => p.rhs) ++ internalArgs})
+            def apply(..$applyParamDefns): $iname = {
+              $mname.apply(..$bparamRhsInternalArgs)
             }
           """
         mstats1 +=
@@ -388,8 +389,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       } else {
         mstats1 +=
           q"""
-            def apply(..$applyParams)(implicit dialect: $DialectClass): $iname = {
-              $mname.apply(..${privateApplyParams.map(p => p.rhs) ++ internalArgs})
+            def apply(..$applyParamDefns)(implicit dialect: $DialectClass): $iname = {
+              $mname.apply(..$bparamRhsInternalArgs)
             }
           """
         mstats1 +=
@@ -403,7 +404,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         mstats1LowPriority +=
           q"""
             @$deprecatedSince_4_9_0 def apply(..$applyParamDecls): $iname = {
-              $mname.apply(..${privateApplyParams.map(p => p.rhs) ++ internalArgs})
+              $mname.apply(..$bparamRhsInternalArgs)
             }
           """
         mstats1LowPriority +=
@@ -425,7 +426,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         """
       mstatsLatest +=
         q"""
-          @$InlineAnnotation def apply(..$applyParams)(implicit dialect: $DialectClass): $iname =
+          @$InlineAnnotation def apply(..$applyParamDefns)(implicit dialect: $DialectClass): $iname =
             $mname.apply(..$internalArgs)
         """
       mstatsLatestLowPriority +=
@@ -446,32 +447,33 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           decl.foreach(applyParamsBuilder += _)
           defn.foreach(applyBodyBuilder += _)
         }
-        val params = positionVersionedParams(applyParamsBuilder.result())
+        val paramDecls = positionVersionedParams(applyParamsBuilder.result())
         val applyBody = applyBodyBuilder.result()
         val applyCall = q"$mname.apply(..$internalArgs)"
-        val fullParams = bparamDecls ++ params
+        val fullParamDecls = bparamDecls ++ paramDecls
+        val fullParamDeclNames = fullParamDecls.map(_.name)
         verMstats.lowPrio +=
           q"""
-            @$deprecatedSince_4_9_0 def apply(..$fullParams): $iname = {
-              $mname.apply(..${fullParams.map(_.name)})
+            @$deprecatedSince_4_9_0 def apply(..$fullParamDecls): $iname = {
+              $mname.apply(..$fullParamDeclNames)
             }
           """
         verMstats.primary +=
           q"""
-            def apply(..$fullParams)(implicit dialect: $DialectClass): $iname = {
-              $mname.apply(..${fullParams.map(_.name)})
+            def apply(..$fullParamDecls)(implicit dialect: $DialectClass): $iname = {
+              $mname.apply(..$fullParamDeclNames)
             }
           """
         verMstats.lowPrio +=
           q"""
-            @$deprecatedSince_4_9_0 def apply(..$params): $iname = {
+            @$deprecatedSince_4_9_0 def apply(..$paramDecls): $iname = {
               ..$applyBody
               $applyCall
             }
           """
         verMstats.primary +=
           q"""
-            def apply(..$params)(implicit dialect: $DialectClass): $iname = {
+            def apply(..$paramDecls)(implicit dialect: $DialectClass): $iname = {
               ..$applyBody
               $applyCall
             }
@@ -479,14 +481,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         if (isTopLevel) {
           mstats1 +=
             q"""
-              def apply(..$fullParams): $iname = {
+              def apply(..$fullParamDecls): $iname = {
                 ..$applyBody
                 $mname.apply(..$fullInternalArgs)
               }
             """
           mstats1 +=
             q"""
-              @${getDeprecatedAnno(v)} def apply(..$params): $iname = {
+              @${getDeprecatedAnno(v)} def apply(..$paramDecls): $iname = {
                 ..$applyBody
                 $applyCall
               }
@@ -495,28 +497,28 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         } else {
           mstats1LowPriority +=
             q"""
-              @$deprecatedSince_4_9_0 def apply(..$fullParams): $iname = {
+              @$deprecatedSince_4_9_0 def apply(..$fullParamDecls): $iname = {
                 ..$applyBody
                 $mname.apply(..$fullInternalArgs)
               }
             """
           mstats1LowPriority +=
             q"""
-              @${getDeprecatedAnno(v)} def apply(..$params): $iname = {
+              @${getDeprecatedAnno(v)} def apply(..$paramDecls): $iname = {
                 ..$applyBody
                 $applyCall
               }
             """
           mstats1 +=
             q"""
-              def apply(..$fullParams)(implicit dialect: $DialectClass): $iname = {
+              def apply(..$fullParamDecls)(implicit dialect: $DialectClass): $iname = {
                 ..$applyBody
                 $mname.apply(..$fullInternalArgs)
               }
             """
           mstats1 +=
             q"""
-              @${getDeprecatedAnno(v)} def apply(..$params)(implicit dialect: $DialectClass): $iname = {
+              @${getDeprecatedAnno(v)} def apply(..$paramDecls)(implicit dialect: $DialectClass): $iname = {
                 ..$applyBody
                 $applyCall
               }
