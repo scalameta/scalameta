@@ -236,8 +236,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               .forall(x => defaultCopyParamNames.contains(x.name.toString))
 
             // add full copy without defaults
-            val fullCopyParamsNoDefaults = params.map(asValDecl)
-            if (!allInDefaults(fullCopyParamsNoDefaults)) addCopy(fullCopyParamsNoDefaults)
+            if (!allInDefaults(params)) addCopy(params.map(asValDecl))
             // add secondary copy
             paramsVersions.foreach { version =>
               val copyParams = paramsForVersion(version)
