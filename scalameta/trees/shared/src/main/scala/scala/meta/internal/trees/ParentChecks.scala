@@ -99,8 +99,8 @@ object ParentChecks {
   def Init(tree: Init, parent: Tree, destination: String): Boolean = tree.tpe.is[Type.Singleton] ==>
     (parent.is[Ctor.Block] && destination == "init")
 
-  def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = parent.is[Template] &&
-    parent.parent.forall(_.is[Defn.Enum])
+  def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = parent.is[Template.Body] &&
+    parent.parent.forall(_.parent.forall(_.is[Defn.Enum]))
 
   def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = parent.is[Type] ||
     parent.is[Defn.Type] || parent.is[Type.Bounds] || parent.is[Term.ApplyType] ||

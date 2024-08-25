@@ -7,6 +7,9 @@ import scala.meta.contrib._
 import munit.FunSuite
 
 class AssociatedCommentsTest extends FunSuite {
+
+  import AssociatedCommentsTest._
+
   test("leading") {
     val input: Source = """|import a.b
                            |/** leading docstring */
@@ -94,7 +97,7 @@ class AssociatedCommentsTest extends FunSuite {
                    |""".stripMargin.parse[Source].get
 
     val defnObject = input.find(_.is[Defn.Object]).get
-    val template = input.find(_.is[Template]).get // overlaps with `object`
+    val template = getTemplate(input).body // overlaps with `object`
 
     assertExpectations(input)(trailing =
       Map(defnObject -> Set("// trailing"), template -> Set("// trailing"))
@@ -107,11 +110,15 @@ class AssociatedCommentsTest extends FunSuite {
                    |""".stripMargin.parse[Source].get
 
     val defnClass = input.find(_.is[Defn.Class]).get
-    val template = input.find(_.is[Template]).get // overlaps with `class`
+    val template = getTemplate(input) // overlaps with `class`
 
     val expectedComments = Set("/** trailing 1 */", "/* trailing 2 */", "// trailing 3")
     assertExpectations(input)(trailing =
-      Map(defnClass -> expectedComments, template -> expectedComments)
+      Map(
+        defnClass -> expectedComments,
+        template -> expectedComments,
+        template.body -> expectedComments
+      )
     )
   }
 
@@ -123,11 +130,15 @@ class AssociatedCommentsTest extends FunSuite {
                    |""".stripMargin.parse[Source].get
 
     val defnTrait = input.find(_.is[Defn.Trait]).get
-    val template = input.find(_.is[Template]).get // overlaps with `trait`
+    val template = getTemplate(input) // overlaps with `trait`
 
     val expectedComments = Set("/** trailing 1 */", "/* trailing 2 */", "// trailing 3")
     assertExpectations(input)(trailing =
-      Map(defnTrait -> expectedComments, template -> expectedComments)
+      Map(
+        defnTrait -> expectedComments,
+        template -> expectedComments,
+        template.body -> expectedComments
+      )
     )
   }
 
@@ -225,4 +236,8 @@ class AssociatedCommentsTest extends FunSuite {
       )
     }
   }
+}
+
+object AssociatedCommentsTest {
+  def getTemplate(src: Source): Template = src.collectFirst { case x: Template => x }.get
 }

@@ -321,7 +321,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "new (A){}",
     """|Template (A){}
        |Init (A)
-       |Self new (A){@@}
+       |Template.Body {}
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -484,7 +484,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause class A @@{ def this(a: A) = this() }
        |Ctor.Primary class A @@{ def this(a: A) = this() }
        |Template { def this(a: A) = this() }
-       |Self class A { @@def this(a: A) = this() }
+       |Template.Body { def this(a: A) = this() }
        |Ctor.Secondary def this(a: A) = this()
        |Term.ParamClause (a: A)
        |Ctor.Block this()
@@ -501,7 +501,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Ctor.Primary private (b: B)
        |Term.ParamClause (b: B)
        |Template class A private (b: B)@@
-       |Self class A private (b: B)@@
+       |Template.Body class A private (b: B)@@
        |""".stripMargin
   )
 
@@ -563,14 +563,14 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause sealed trait a@@
        |Ctor.Primary sealed trait a@@
        |Template sealed trait a@@
-       |Self sealed trait a@@
+       |Template.Body sealed trait a@@
        |""".stripMargin
   )
   checkPositions[Stat]("override def f = 1")
   checkPositions[Stat](
     "case object B",
     """|Template case object B@@
-       |Self case object B@@
+       |Template.Body case object B@@
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -578,7 +578,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause abstract class A@@
        |Ctor.Primary abstract class A@@
        |Template abstract class A@@
-       |Self abstract class A@@
+       |Template.Body abstract class A@@
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -590,7 +590,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.Bounds class A[+ T@@]
        |Ctor.Primary class A[+ T]@@
        |Template class A[+ T]@@
-       |Self class A[+ T]@@
+       |Template.Body class A[+ T]@@
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -602,7 +602,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.Bounds class A[- T@@]
        |Ctor.Primary class A[- T]@@
        |Template class A[- T]@@
-       |Self class A[- T]@@
+       |Template.Body class A[- T]@@
        |""".stripMargin
   )
   checkPositions[Stat]("lazy val a = 1")
@@ -614,7 +614,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.Param val b: B
        |Mod.ValParam val
        |Template class A(val b: B)@@
-       |Self class A(val b: B)@@
+       |Template.Body class A(val b: B)@@
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -625,7 +625,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.Param var b: B
        |Mod.VarParam var
        |Template class A(var b: B)@@
-       |Self class A(var b: B)@@
+       |Template.Body class A(var b: B)@@
        |""".stripMargin
   )
 
@@ -634,6 +634,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause trait A @@{ self: B => }
        |Ctor.Primary trait A @@{ self: B => }
        |Template { self: B => }
+       |Template.Body { self: B => }
        |Self self: B =>
        |""".stripMargin
   )
@@ -642,6 +643,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause trait A @@{ _: B => }
        |Ctor.Primary trait A @@{ _: B => }
        |Template { _: B => }
+       |Template.Body { _: B => }
        |Self _: B =>
        |""".stripMargin
   )
@@ -650,6 +652,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause trait A @@{ self => }
        |Ctor.Primary trait A @@{ self => }
        |Template { self => }
+       |Template.Body { self => }
        |Self self =>
        |""".stripMargin
   )
@@ -658,6 +661,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause trait A @@{ this: B => }
        |Ctor.Primary trait A @@{ this: B => }
        |Template { this: B => }
+       |Template.Body { this: B => }
        |Self this: B =>
        |""".stripMargin
   )
@@ -665,14 +669,14 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "new A {}",
     """|Template A {}
-       |Self new A {@@}
+       |Template.Body {}
        |""".stripMargin
   )
   checkPositions[Stat](
     "new { val a = 1 } with A {}",
     """|Template { val a = 1 } with A {}
        |Defn.Val val a = 1
-       |Self new { val a = 1 } with A {@@}
+       |Template.Body {}
        |""".stripMargin
   )
 
@@ -711,6 +715,11 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |
        |  def foo: Boolean = true
        |}
+       |Template.Body {
+       |  self: X with B with C =>
+       |
+       |  def foo: Boolean = true
+       |}
        |Self self: X with B with C =>
        |Type.With X with B with C
        |Type.With X with B
@@ -733,6 +742,12 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |  def foo: Boolean = true // c2
        |  // c3
        |}
+       |Template.Body {
+       |  self: X with B with C => // c1
+       |
+       |  def foo: Boolean = true // c2
+       |  // c3
+       |}
        |Self self: X with B with C =>
        |Type.With X with B with C
        |Type.With X with B
@@ -748,7 +763,9 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Template {
        |  private [this] def foo: Int = ???
        |}
-       |Self   @@private [this] def foo: Int = ???
+       |Template.Body {
+       |  private [this] def foo: Int = ???
+       |}
        |Defn.Def private [this] def foo: Int = ???
        |Mod.Private private [this]
        |Term.This this

@@ -28,7 +28,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Type.ParamClause open trait a@@
        |Ctor.Primary open trait a@@
        |Template open trait a@@
-       |Self open trait a@@
+       |Template.Body open trait a@@
        |""".stripMargin
   )
 
@@ -95,7 +95,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Ctor.Primary (e: T)
        |Term.ParamClause (e: T)
        |Template extends A with B { case Monday, Tuesday }
-       |Self enum Day[T](e: T) extends A with B { @@case Monday, Tuesday }
+       |Template.Body { case Monday, Tuesday }
        |Defn.RepeatedEnumCase case Monday, Tuesday
        |""".stripMargin
   )
@@ -107,7 +107,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Ctor.Primary (e: T)
        |Term.ParamClause (e: T)
        |Template extends A with B { val Monday = 42 }
-       |Self class Day[T](e: T) extends A with B { @@val Monday = 42 }
+       |Template.Body { val Monday = 42 }
        |Defn.Val val Monday = 42
        |""".stripMargin
   )
@@ -120,7 +120,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Init Eq[Int]
        |Type.Apply Eq[Int]
        |Type.ArgClause [Int]
-       |Self inline given intOrd: Ord[Int] with Eq[Int] with { @@def f(): Int = 1 }
+       |Template.Body { def f(): Int = 1 }
        |Defn.Def def f(): Int = 1
        |Member.ParamClauseGroup ()
        |Type.ParamClause inline given intOrd: Ord[Int] with Eq[Int] with { def f@@(): Int = 1 }
@@ -134,7 +134,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Template {
        |  inline given intOrd: Ord[Int]
        |}
-       |Self   @@inline given intOrd: Ord[Int]
+       |Template.Body {
+       |  inline given intOrd: Ord[Int]
+       |}
        |Decl.Given inline given intOrd: Ord[Int]
        |Type.Apply Ord[Int]
        |Type.ArgClause [Int]
@@ -147,7 +149,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Template {
        |  given intOrd: Ord[Int] = intOrd
        |}
-       |Self   @@given intOrd: Ord[Int] = intOrd
+       |Template.Body {
+       |  given intOrd: Ord[Int] = intOrd
+       |}
        |Defn.GivenAlias given intOrd: Ord[Int] = intOrd
        |Type.Apply Ord[Int]
        |Type.ArgClause [Int]
@@ -160,7 +164,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Template {
        |  export a.b
        |}
-       |Self   @@export a.b
+       |Template.Body {
+       |  export a.b
+       |}
        |Export export a.b
        |Importer a.b
        |""".stripMargin
@@ -325,7 +331,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.Bounds class Alpha[T@@] derives Gamma[T], Beta[T]
        |Ctor.Primary class Alpha[T] @@derives Gamma[T], Beta[T]
        |Template derives Gamma[T], Beta[T]
-       |Self class Alpha[T] derives Gamma[T], Beta[T]@@
+       |Template.Body class Alpha[T] derives Gamma[T], Beta[T]@@
        |Type.Apply Gamma[T]
        |Type.ArgClause [T]
        |Type.Apply Beta[T]
@@ -349,7 +355,14 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  import A.b.`*`
        |  import a.b.C as _
        |}
-       |Self   @@import scala as s
+       |Template.Body {
+       |  import scala as s
+       |  import a.b.C as D
+       |  import a.*
+       |  import a.{no as _, *}
+       |  import A.b.`*`
+       |  import a.b.C as _
+       |}
        |Import import scala as s
        |Importer scala as s
        |Importee.Rename scala as s
@@ -388,7 +401,10 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    42
        |  def b: String =
        |    "b"
-       |Self   @@def a: Int =
+       |Template.Body def a: Int =
+       |    42
+       |  def b: String =
+       |    "b"
        |Defn.Def def a: Int =
        |    42
        |Defn.Def def b: String =
@@ -411,7 +427,11 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |     catch
        |       case a =>
        |     finally bar
-       |Self    @@def foo =
+       |Template.Body def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |     finally bar
        |Defn.Def def foo =
        |     try foo
        |     catch
@@ -447,7 +467,14 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |         st1
        |         st2
        |     finally bar
-       |Self    @@def foo =
+       |Template.Body def foo =
+       |     try foo
+       |     catch
+       |       case a =>
+       |       case b =>
+       |         st1
+       |         st2
+       |     finally bar
        |Defn.Def def foo =
        |     try foo
        |     catch
@@ -509,7 +536,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Template :
        |  
        |  private given x: X = ???
-       |Self   @@private given x: X = ???
+       |Template.Body private given x: X = ???
        |Defn.GivenAlias private given x: X = ???
        |""".stripMargin
   )
@@ -687,7 +714,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  if cond then
        |    gx
        |    fx
-       |Self   @@if cond then
+       |Template.Body if cond then
+       |    gx
+       |    fx
        |Term.If if cond then
        |    gx
        |    fx
@@ -715,7 +744,13 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Self   @@val a = 
+       |Template.Body val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |      // c2
        |Defn.Val val a = 
        |    if cond then
        |      fx
@@ -754,7 +789,13 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Self   @@val a =
+       |Template.Body val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    // c2
        |Defn.Val val a =
        |    if cond then
        |      fx
@@ -797,7 +838,13 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Self   @@val a = 
+       |Template.Body val a = 
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |      // c2
        |Defn.Val val a = 
        |    if cond then
        |      fx
@@ -837,7 +884,13 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Self   @@val a =
+       |Template.Body val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    // c2
        |Defn.Val val a =
        |    if cond then
        |      fx
@@ -880,7 +933,15 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      gx
        |    // c2
        |}
-       |Self   @@val a =
+       |Template.Body {
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    // c2
+       |}
        |Defn.Val val a =
        |    if cond then
        |      fx
@@ -921,7 +982,14 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    /* c2 */}
-       |Self   @@val a =
+       |Template.Body {
+       |  val a =
+       |    if cond then
+       |      fx
+       |      // c1
+       |    else
+       |      gx
+       |    /* c2 */}
        |Defn.Val val a =
        |    if cond then
        |      fx
@@ -956,13 +1024,15 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    case object Private
        |        extends ClassificationValue
        |        with ConstantText
-       |Self     @@case object Private
+       |Template.Body case object Private
+       |        extends ClassificationValue
+       |        with ConstantText
        |Defn.Object case object Private
        |        extends ClassificationValue
        |        with ConstantText
        |Template extends ClassificationValue
        |        with ConstantText
-       |Self         with ConstantText@@
+       |Template.Body         with ConstantText@@
        |""".stripMargin
   )
 
@@ -1688,7 +1758,12 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |       foo2 += " = "
        |     // foo2
        |  end match</templ>
-       |<self>Self   @@bar2 match</self>
+       |<body>Template.Body bar2 match
+       |     case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |     // foo2
+       |  end match</body>
        |<stats0>Term.Match bar2 match
        |     case foo1: Foo1 => foo1
        |     case foo2: Foo2 =>
@@ -1759,7 +1834,12 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |       foo2 += " = "
        |       // foo2
        |  end match</templ>
-       |<self>Self   @@bar2 match</self>
+       |<body>Template.Body bar2 match
+       |     case foo1: Foo1 => foo1
+       |     case foo2: Foo2 =>
+       |       foo2 += " = "
+       |       // foo2
+       |  end match</body>
        |<stats0>Term.Match bar2 match
        |     case foo1: Foo1 => foo1
        |     case foo2: Foo2 =>

@@ -62,19 +62,19 @@ trait CommonTrees {
     case _ => tname(name)
   }
 
-  final def tplNoBody(inits: List[Init]): Template = Template(Nil, inits, slf, Nil)
+  final def tplNoBody(inits: List[Init]): Template = Template(Nil, inits, tplBody())
   final def tplNoBody(inits: Init*): Template = tplNoBody(inits.toList)
 
-  final def tpl(inits: List[Init], body: (meta.Self, List[Stat])): Template =
-    Template(Nil, inits, body._1, body._2)
+  final def tpl(inits: List[Init], body: Template.Body): Template = Template(Nil, inits, body)
   final def tpl(inits: List[Init], stats: List[Stat]): Template = tpl(inits, tplBody(stats: _*))
   final def tpl(stats: List[Stat]): Template = tpl(Nil, stats)
   final def tpl(stats: Stat*): Template = tpl(stats.toList)
 
-  final def tplBody(self: meta.Self, stats: Stat*): (meta.Self, List[Stat]) = (self, stats.toList)
-  final def tplBody(name: String, stats: Stat*): (meta.Self, List[Stat]) =
-    tplBody(self(name), stats: _*)
-  final def tplBody(stats: Stat*): (meta.Self, List[Stat]) = tplBody(slf, stats: _*)
+  final def tplBody(selfOpt: Option[meta.Self], stats: Stat*): Template.Body = Template
+    .Body(selfOpt, stats.toList)
+  final def tplBody(self: meta.Self, stats: Stat*): Template.Body = tplBody(Option(self), stats: _*)
+  final def tplBody(name: String, stats: Stat*): Template.Body = tplBody(Some(self(name)), stats: _*)
+  final def tplBody(stats: Stat*): Template.Body = tplBody(None, stats: _*)
 
   final def tparam(mods: List[Mod], name: String, tpe: Option[Type] = None): Term.Param = Term
     .Param(mods, mname(name), tpe, None)

@@ -51,8 +51,7 @@ class TraverserSuite extends TreeSuiteBase {
          |x
          |x
          |{         def bar(x: x) = ???       }
-         |
-         |
+         |{         def bar(x: x) = ???       }
          |def bar(x: x) = ???
          |bar
          |(x: x)

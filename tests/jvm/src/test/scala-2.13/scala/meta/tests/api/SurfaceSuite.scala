@@ -402,6 +402,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Stat.WithMods
          |scala.meta.Stat.WithTemplate
          |scala.meta.Template
+         |scala.meta.Template.Body
          |scala.meta.Term
          |scala.meta.Term.Annotate
          |scala.meta.Term.Anonymous

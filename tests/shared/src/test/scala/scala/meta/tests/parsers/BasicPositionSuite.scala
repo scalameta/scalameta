@@ -582,7 +582,9 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Template {
        |  (try foo finally bar)
        |}
-       |Self   @@(try foo finally bar)
+       |Template.Body {
+       |  (try foo finally bar)
+       |}
        |Term.Try try foo finally bar
        |""".stripMargin
   )

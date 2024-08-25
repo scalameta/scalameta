@@ -1179,17 +1179,33 @@ class Self(name: Name, decltpe: Option[Type]) extends Member with Tree.WithDeclT
   final def isEmpty: Boolean = isNameAnonymous && decltpe.isEmpty
 }
 
+object Template {
+  @ast
+  class Body(selfOpt: Option[Self], stats: List[Stat]) extends Tree with Tree.WithStats {
+    checkFields(stats.forall(_.isTemplateStat))
+    final def isEmpty: Boolean = stats.isEmpty && selfOpt.isEmpty
+  }
+  private[meta] object BodyCtor {
+    def apply(self: Self, stats: List[Stat]): Body =
+      Body(selfOpt = if (self.isEmpty) None else Some(self), stats = stats)
+  }
+  private[meta] def self(body: Body): Self = body.selfOpt.getOrElse(Self(Name.Anonymous(), None))
+}
+
 @ast
 class Template(
     early: List[Stat],
     inits: List[Init],
-    self: Self,
-    stats: List[Stat],
+    @replacesFields("4.9.9", Template.BodyCtor)
+    body: Template.Body,
     @newField("4.4.0")
     derives: List[Type] = Nil
 ) extends Tree with Tree.WithStats {
   checkFields(early.forall(_.isEarlyStat && inits.nonEmpty))
-  checkFields(stats.forall(_.isTemplateStat))
+  @replacedField("4.9.9", pos = 2)
+  final def self: Self = Template.self(body)
+  @replacedField("4.9.9", pos = 3)
+  final def stats: List[Stat] = body.stats
 }
 
 @branch

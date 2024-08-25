@@ -2099,10 +2099,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         canApply = false
         Success(autoPos {
           next()
-          template(OwnedByTrait) match {
-            case Template.Initial(Nil, init :: Nil, Self(_: Name.Anonymous, None), Nil)
-                if !prev[RightBrace] => Term.New(init)
-            case other => Term.NewAnonymous(other)
+          val tpl = template(OwnedByTrait)
+          tpl.inits match {
+            case init :: Nil if !prev[RightBrace] && tpl.early.isEmpty && tpl.body.isEmpty =>
+              Term.New(init)
+            case _ => Term.NewAnonymous(tpl)
           }
         })
       case _: LeftBracket if dialect.allowPolymorphicFunctions => Success(polyFunction())
@@ -3466,20 +3467,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (acceptOpt[Equals]) Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, expr())
     else if (currToken.isAny[KwWith, LeftParen]) {
       val inits = parents()
-      val (slf, stats) = {
-        if (inits.size > 1 && currToken.isNot[KwWith])
-          syntaxError("expected 'with' <body>", at = currToken.pos)
-
-        val needsBody = acceptOpt[KwWith]
-
-        if (isAfterOptNewLine[LeftBrace]) inBracesOnOpen(templateStatSeq())
-        else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(templateStatSeq())
-        else if (needsBody) syntaxError("expected '{' or indentation", at = currToken.pos)
-        else (selfEmpty(), Nil)
+      val needsBody = acceptOpt[KwWith]
+      if (!needsBody && inits.lengthCompare(1) > 0)
+        syntaxError("expected 'with' <body>", at = prevToken)
+      val body =
+        if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(OwnedByGiven)
+        else if (at[Indentation.Indent]) templateBodyOnIndent(OwnedByGiven)
+        else if (needsBody) syntaxError("expected '{' or indentation", at = currToken)
+        else emptyTemplateBody()
+      body.selfOpt.foreach { s =>
+        if (s.decltpe.nonEmpty) syntaxError("given cannot have a self type", at = s)
       }
-      val rhs =
-        if (slf.decltpe.nonEmpty) syntaxError("given cannot have a self type", at = slf.pos)
-        else autoEndPos(decltype)(Template(Nil, inits, slf, stats, Nil))
+      val rhs = autoEndPos(decltype)(Template(Nil, inits, body, Nil))
       Defn.Given(mods, sigName, paramClauseGroup, rhs)
     } else sigName match {
       case name: Term.Name => Decl.Given(mods, name, paramClauseGroup, decltype)
@@ -3882,11 +3881,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def entrypointSelf(): Self = self(quasiquote = false)
 
-  private def selfEmpty(): Self = {
-    val name = anonNameEmpty()
-    copyPos(name)(Self(name, None))
-  }
-
   private def self(quasiquote: Boolean): Self = selfEither(quasiquote)
     .fold(syntaxError(_, currToken), identity)
 
@@ -3950,6 +3944,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = false
     override final def isSecondaryCtorAllowed: Boolean = false
   }
+  object OwnedByGiven extends TemplateOwner {
+    override final def isEnumCaseAllowed: Boolean = false
+    override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = false
+    override final def isSecondaryCtorAllowed: Boolean = false
+  }
 
   def init() = currToken match {
     case t: Ellipsis => ellipsis[Init](t, 1)
@@ -3982,20 +3981,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       edefs: List[Stat] = Nil
   ): Template = {
     val derived = derivesClasses()
-    val (self, body) = templateBodyOpt(owner)
-    Template(edefs, parents, self, body, derived)
+    val body = templateBodyOpt(owner)
+    Template(edefs, parents, body, derived)
   }
 
   def template(owner: TemplateOwner, afterExtend: Boolean = false): Template = autoPos {
     if (isAfterOptNewLine[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
-      val (self, body) = templateBody(owner)
-      if (at[KwWith] && self.isEmpty) {
-        val edefs = body.map(ensureEarlyDef)
+      val body = templateBodyOnLeftBrace(owner)
+      if (at[KwWith] && body.selfOpt.isEmpty) {
+        val edefs = body.stats
+        edefs.foreach(_ match {
+          case _: Quasi | _: Defn.Val | _: Defn.Var | _: Defn.Type =>
+          case other => syntaxError("not a valid early definition", at = other)
+        })
         next()
         val parents = templateParents(afterExtend)
         templateAfterExtends(owner, parents, edefs)
-      } else Template(Nil, Nil, self, body, Nil)
+      } else Template(Nil, Nil, body, Nil)
     } else {
       val parents = if (at[Colon]) Nil else templateParents(afterExtend)
       templateAfterExtends(owner, parents)
@@ -4005,14 +4008,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def quasiquoteTemplate(): Template = entrypointTemplate()
 
   def entrypointTemplate(): Template = autoPos(template(OwnedByClass))
-
-  def ensureEarlyDef(tree: Stat): Stat = tree match {
-    case q: Quasi => q
-    case v: Defn.Val => v
-    case v: Defn.Var => v
-    case t: Defn.Type => t
-    case other => syntaxError("not a valid early definition", at = other)
-  }
 
   def templateOpt(owner: TemplateOwner): Template = autoPos {
     if (at[Unquote] &&
@@ -4027,22 +4022,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   @inline
-  private def templateBody(owner: TemplateOwner): (Self, List[Stat]) =
-    inBraces(templateStatSeq(owner))
+  private def emptyTemplateBody(): Template.Body = autoPos(Template.Body(None, Nil))
 
-  def templateBodyOpt(owner: TemplateOwner): (Self, List[Stat]) =
-    if (isAfterOptNewLine[LeftBrace]) templateBody(owner)
+  @inline
+  private def templateBodyOnLeftBrace(owner: TemplateOwner): Template.Body =
+    autoPos(inBracesOnOpen(templateStatSeq(owner)))
+
+  @inline
+  private def templateBodyOnIndent(owner: TemplateOwner): Template.Body =
+    autoPos(indentedOnOpen(templateStatSeq(owner)))
+
+  def templateBodyOpt(owner: TemplateOwner): Template.Body =
+    if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(owner)
     else if (at[Colon] && peekToken.isAny[Indentation, EOL]) {
       next()
       expect[Indentation.Indent]("expected template body")
-      indentedOnOpen(templateStatSeq(owner))
+      templateBodyOnIndent(owner)
     } else if (at[LeftParen])
       if (owner.isPrimaryCtorAllowed) syntaxError("unexpected opening parenthesis", at = currToken)
       else {
         val what = owner.getClass.getSimpleName.stripPrefix("OwnedBy")
         syntaxError(s"$what may not have parameters", at = currToken)
       }
-    else (selfEmpty(), Nil)
+    else emptyTemplateBody()
 
   private def refineWith(innerType: Option[Type], stats: => List[Stat]) =
     autoEndPos(innerType)(Type.Refine(innerType, stats))
@@ -4143,22 +4145,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ if dialect.allowToplevelStatements && isDefIntro(currIndex) => nonLocalDefOrDcl()
   }
 
-  @inline
-  private def templateStatSeq(owner: TemplateOwner): (Self, List[Stat]) =
-    templateStatSeq(owner.isEnumCaseAllowed, owner.isSecondaryCtorAllowed)
-
-  private def templateStatSeq(
-      enumCaseAllowed: Boolean = false,
-      secondaryConstructorAllowed: Boolean = false
-  ): (Self, List[Stat]) = {
+  private def templateStatSeq(owner: TemplateOwner): Template.Body = {
+    val enumCaseAllowed = owner.isEnumCaseAllowed
+    val secondaryConstructorAllowed = owner.isSecondaryCtorAllowed
     val selfTreeOpt = tryParse(selfEither().right.toOption)
-    val selfTree = selfTreeOpt.getOrElse(selfEmpty())
     val stats = listBy[Stat] { buf =>
       def getStats() = statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
       val wasIndented = getStats() // some stats could be indented relative to self-type
       if (wasIndented && selfTreeOpt.isDefined) getStats() // and the rest might not be
     }
-    (selfTree, stats)
+    Template.Body(selfTreeOpt, stats)
   }
 
   def templateStat(
