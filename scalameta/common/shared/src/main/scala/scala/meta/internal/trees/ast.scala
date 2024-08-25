@@ -241,7 +241,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             paramsVersions.foreach { version =>
               val copyParams = paramsForVersion(version)
               if (copyParams.length != defaultCopyParams.length || !allInDefaults(copyParams))
-                addCopy(copyParams, getDeprecatedAnno(version))
+                addCopy(copyParams.map(asValDecl), getDeprecatedAnno(version))
             }
           }
       }
@@ -447,9 +447,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           decl.foreach(applyParamsBuilder += _)
           defn.foreach(applyBodyBuilder += _)
         }
-        val paramDecls = positionVersionedParams(applyParamsBuilder.result())
+        val paramDefns = positionVersionedParams(applyParamsBuilder.result())
         val applyBody = applyBodyBuilder.result()
         val applyCall = q"$mname.apply(..$internalArgs)"
+        val paramDecls = paramDefns.map(asValDecl)
         val fullParamDecls = bparamDecls ++ paramDecls
         val fullParamDeclNames = fullParamDecls.map(_.name)
         verMstats.lowPrio +=
@@ -473,7 +474,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           """
         verMstats.primary +=
           q"""
-            def apply(..$paramDecls)(implicit dialect: $DialectClass): $iname = {
+            def apply(..$paramDefns)(implicit dialect: $DialectClass): $iname = {
               ..$applyBody
               $applyCall
             }
@@ -704,7 +705,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       else replaced.find(x => checkVersion(x.version)).map { rfield =>
         val decls = rfield.oldDefs.map { case (oldDef, pos) => asValDecl(oldDef) -> pos }
         (decls, Some(rfield.newValDefn))
-      }.getOrElse((asValDecl(param) -> -1 :: Nil, None))
+      }.getOrElse((asValDefn(param) -> -1 :: Nil, None))
     }
     def getDefaultCopyDef(): List[(ValOrDefDef, Int)] = replaced.headOption.map(_.oldDefs)
       .getOrElse((param, -1) :: Nil)
