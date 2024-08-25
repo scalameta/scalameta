@@ -20,17 +20,6 @@ class ShowMacros(val c: Context) {
     }
   }
 
-  def sequence(xs: c.Tree*) = {
-    val results = mkResults(xs)
-    if (xs.isEmpty) q"$ShowObj.None"
-    else if (xs.length == 1) results.head
-    else q"$ShowObj.Sequence(..$results)"
-  }
-
-  def meta(data: c.Tree, xs: c.Tree*) = {
-    val results = mkResults(xs)
-    if (xs.isEmpty) q"$ShowObj.None"
-    else if (xs.length == 1) q"$ShowObj.Meta($data, ${results.head})"
-    else q"$ShowObj.Meta($data, $ShowObj.Sequence(..$results))"
-  }
+  def sequence(xs: c.Tree*) = q"$ShowObj.mkseq(..${mkResults(xs)})"
+  def meta(data: c.Tree, xs: c.Tree*) = q"$ShowObj.meta($data, ${sequence(xs: _*)})"
 }

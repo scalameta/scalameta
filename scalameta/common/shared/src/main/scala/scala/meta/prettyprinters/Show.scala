@@ -64,9 +64,15 @@ private[meta] object Show {
     def apply(input: T): Result = f(input)
   }
 
+  def mkseq(xs: Result*): Result = xs.filter(_ ne None) match {
+    case Seq() => None
+    case Seq(head) => head
+    case res => Sequence(res: _*)
+  }
   def sequence[T](xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.sequence
 
-  def indent[T](x: T)(implicit show: Show[T]): Result = Indent(show(x))
+  def indent(res: Result): Result = if (res eq None) None else Indent(res)
+  def indent[T](x: T)(implicit show: Show[T]): Result = indent(show(x))
 
   def repeat[T](xs: Seq[T], sep: String = "")(implicit show: Show[T]): Result =
     repeat(sep)(xs.map(show(_)): _*)
@@ -82,35 +88,41 @@ private[meta] object Show {
   def repeat(prefix: String, sep: String, suffix: String)(xs: Result*): Result =
     wrap(prefix, repeat(sep)(xs: _*), suffix)
 
-  def newline[T](x: T)(implicit show: Show[T]): Result = Newline(show(x))
+  def newline(res: Result): Result = if (res eq None) None else Newline(res)
+  def newline[T](x: T)(implicit show: Show[T]): Result = newline(show(x))
 
+  def meta(data: Any, res: Result): Result = if (res eq None) None else Meta(data, res)
   def meta[T](data: Any, xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.meta
 
   // wrap if non-empty
   def wrap[T](x: T, suffix: String)(implicit show: Show[T]): Result = wrap("", x, suffix)
   def wrap[T](prefix: String, x: T)(implicit show: Show[T]): Result = wrap(prefix, x, "")
-  def wrap[T](prefix: String, x: T, suffix: String)(implicit show: Show[T]): Result = {
-    val result = show(x)
-    if (result eq None) result else Wrap(prefix, result, suffix)
-  }
+  def wrap[T](prefix: => String, x: T, suffix: => String)(implicit show: Show[T]): Result =
+    wrap(prefix, show(x), suffix)
+  def wrap(prefix: => String, res: Result, suffix: => String): Result =
+    if (res eq None) None else Wrap(prefix, res, suffix)
 
-  // wrap if cond
-  def wrap[T](x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result =
+  // wrap if cond, even if value ends up being none
+  def wrap[T](x: T, suffix: => String, cond: Boolean)(implicit show: Show[T]): Result =
     wrap("", x, suffix, cond)
-  def wrap[T](prefix: String, x: T, cond: Boolean)(implicit show: Show[T]): Result =
+  def wrap[T](prefix: => String, x: T, cond: Boolean)(implicit show: Show[T]): Result =
     wrap(prefix, x, "", cond)
-  def wrap[T](prefix: String, x: T, suffix: String, cond: Boolean)(implicit show: Show[T]): Result = {
-    val result = show(x)
-    if (!cond || (result eq None)) result else Sequence(prefix, result, suffix)
-  }
+  def wrap[T](prefix: => String, x: T, suffix: => String, cond: Boolean)(implicit
+      show: Show[T]
+  ): Result = if (!cond) x else mkseq(prefix, x, suffix)
 
+  def opt[T](x: => T, cond: Boolean)(implicit show: Show[T]): Result = if (cond) x else None
   def opt[T](x: Option[T])(implicit show: Show[T]): Result = x.fold[Result](None)(show(_))
-  def opt[T](x: Option[T], suffix: Result)(implicit show: Show[T]): Result = x
-    .fold[Result](None)(x => Sequence(show(x), suffix))
-  def opt[T](prefix: Result, x: Option[T])(implicit show: Show[T]): Result = x
-    .fold[Result](None)(x => Sequence(prefix, show(x)))
-  def opt[T](prefix: Result, x: Option[T], suffix: Result)(implicit show: Show[T]): Result = x
-    .fold[Result](None)(x => Sequence(prefix, show(x), suffix))
+  def opt[T](x: Option[T], suffix: => Result)(implicit show: Show[T]): Result = x
+    .fold[Result](None)(x => mkseq(x, suffix))
+  def opt[T](prefix: => Result, x: Option[T])(implicit show: Show[T]): Result = x
+    .fold[Result](None)(x => mkseq(prefix, x))
+  def opt[T](prefix: => Result, x: Option[T], suffix: => Result)(implicit show: Show[T]): Result = x
+    .fold[Result](None)(x => mkseq(prefix, x, suffix))
+
+  def alt(a: Result, b: => Result): Result = if (a ne None) a else b
+  def alt[A, B](a: A, b: => B)(implicit showA: Show[A], showB: Show[B]): Result =
+    alt(showA(a), showB(b))
 
   def function(fn: StringBuilder => Result): Result = Function(fn)
 

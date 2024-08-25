@@ -224,8 +224,13 @@ object TreeSyntax {
         }
       }
       s(t) match {
-        case Show.Meta(ig: SyntacticGroup, res) if force || groupNeedsParens(og, ig) =>
-          s("(", res, ")")
+        case x: Show.Meta =>
+          val needParens = force ||
+            (x.data match {
+              case ig: SyntacticGroup => groupNeedsParens(og, ig)
+              case _ => false
+            })
+          w("(", x.res, ")", needParens)
         case res => res
       }
     }
