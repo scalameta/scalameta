@@ -11,6 +11,7 @@ import scala.meta.tokens._
 trait Origin extends Optional {
   def position: Position
   def dialectOpt: Option[Dialect]
+  private[meta] def inputOpt: Option[Input]
   private[meta] def textOpt: Option[String]
   private[meta] def tokensOpt: Option[Tokens]
 }
@@ -20,6 +21,7 @@ object Origin {
   object None extends Origin {
     val position: Position = Position.None
     val dialectOpt: Option[Dialect] = scala.None
+    private[meta] val inputOpt: Option[Input] = scala.None
     private[meta] val textOpt: Option[String] = scala.None
     private[meta] val tokensOpt: Option[Tokens] = scala.None
   }
@@ -38,6 +40,7 @@ object Origin {
     }
 
     def dialectOpt: Option[Dialect] = Some(dialect)
+    private[meta] def inputOpt: Option[Input] = Some(input)
     private[meta] def textOpt: Option[String] = Some(text)
     private[meta] def tokensOpt: Option[Tokens] = Some(tokens)
 
@@ -60,6 +63,7 @@ object Origin {
   class DialectOnly(dialect: Dialect) extends Origin {
     val position: Position = Position.None
     def dialectOpt: Option[Dialect] = Some(dialect)
+    private[meta] val inputOpt: Option[Input] = scala.None
     private[meta] val textOpt: Option[String] = scala.None
     private[meta] val tokensOpt: Option[Tokens] = scala.None
   }
