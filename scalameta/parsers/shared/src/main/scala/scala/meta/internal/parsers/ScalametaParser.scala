@@ -3467,17 +3467,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (acceptOpt[Equals]) Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, expr())
     else if (currToken.isAny[KwWith, LeftParen]) {
       val inits = parents()
-      val needsBody = acceptOpt[KwWith]
-      if (!needsBody && inits.lengthCompare(1) > 0)
-        syntaxError("expected 'with' <body>", at = prevToken)
       val body =
-        if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(OwnedByGiven)
-        else if (at[Indentation.Indent]) templateBodyOnIndent(OwnedByGiven)
-        else if (needsBody) syntaxError("expected '{' or indentation", at = currToken)
-        else emptyTemplateBody()
-      body.selfOpt.foreach { s =>
-        if (s.decltpe.nonEmpty) syntaxError("given cannot have a self type", at = s)
-      }
+        if (acceptOpt[KwWith])
+          if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(OwnedByGiven)
+          else if (at[Indentation.Indent])
+            autoEndPos(prevIndex)(templateBodyOnIndentRaw(OwnedByGiven))
+          else syntaxError("expected '{' or indentation", at = currToken)
+        else {
+          if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
+          emptyTemplateBody()
+        }
       val rhs = autoEndPos(decltype)(Template(None, inits, body, Nil))
       Defn.Given(mods, sigName, paramClauseGroup, rhs)
     } else sigName match {
@@ -4030,16 +4029,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     autoPos(inBracesOnOpen(templateStatSeq(owner)))
 
   @inline
-  private def templateBodyOnIndent(owner: TemplateOwner): Template.Body =
-    autoPos(indentedOnOpen(templateStatSeq(owner)))
+  private def templateBodyOnIndentRaw(owner: TemplateOwner): Template.Body =
+    indentedOnOpen(templateStatSeq(owner))
 
   def templateBodyOpt(owner: TemplateOwner): Template.Body =
     if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(owner)
-    else if (at[Colon] && peekToken.isAny[Indentation, EOL]) {
+    else if (at[Colon] && peekToken.isAny[Indentation, EOL]) autoPos {
       next()
       expect[Indentation.Indent]("expected template body")
-      templateBodyOnIndent(owner)
-    } else if (at[LeftParen])
+      templateBodyOnIndentRaw(owner)
+    }
+    else if (at[LeftParen])
       if (owner.isPrimaryCtorAllowed) syntaxError("unexpected opening parenthesis", at = currToken)
       else {
         val what = owner.getClass.getSimpleName.stripPrefix("OwnedBy")
@@ -4162,6 +4162,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val enumCaseAllowed = owner.isEnumCaseAllowed
     val secondaryConstructorAllowed = owner.isSecondaryCtorAllowed
     val selfTreeOpt = tryParse(selfEither().right.toOption)
+    if (owner eq OwnedByGiven) selfTreeOpt.foreach(_.decltpe.foreach { x =>
+      syntaxError("given cannot have a self type", at = x)
+    })
     val stats = listBy[Stat] { buf =>
       def getStats() = statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
       val wasIndented = getStats() // some stats could be indented relative to self-type
@@ -4274,22 +4277,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val qid = qualId()
         def getPackage(pkgDelimPos: Int)(stats: => List[Stat]) =
           autoEndPos(startPos)(Pkg(qid, toStatsClause(pkgDelimPos)(stats)))
-        def inPackageOnOpen[T <: Token: ClassTag] = f(listBy[Stat] { buf =>
-          val pkg = getPackage(currIndex) {
+        def inPackageOnOpen[T <: Token: ClassTag](pkgDelimPos: Int) = f(listBy[Stat] { buf =>
+          val pkg = getPackage(pkgDelimPos) {
             next()
             statSeqBuf(buf, statpf)
+            acceptAfterOptNL[T]
             buf.toList
           }
           buf.clear()
           buf += pkg
-          acceptAfterOptNL[T]
           if (!at[EOF]) {
             acceptStatSep()
             statSeqBuf(buf, statpf)
           }
         })
-        if (nextIfColonIndent()) inPackageOnOpen[Indentation.Outdent]
-        else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace]
+        if (nextIfColonIndent()) inPackageOnOpen[Indentation.Outdent](prevIndex)
+        else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace](currIndex)
         else {
           val inPkgPos = currIndex
           bracelessPackageStats(stats => f(getPackage(inPkgPos)(stats) :: Nil))
