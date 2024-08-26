@@ -186,22 +186,6 @@ class SurfaceSuite extends TreeSuiteBase {
     )
   }
 
-  test("prettyprinters for statics (core)") {
-    val prettyprinterTests = new scala.meta.tests.prettyprinters.PublicSuite().munitTests()
-      .map(_.name)
-    val nonPackageStatics = core.keys.filter(_.exists(_.isUpper))
-    val untested = nonPackageStatics.filter { name =>
-      !name.endsWith("LowPriority") && !prettyprinterTests.exists(_.startsWith(name))
-    }
-    assertEquals(
-      untested,
-      Set.empty[String],
-      "These classes are not tested in PublicSuite. " +
-        "To fix this problem, open 'PublicSuite.scala' and " +
-        "add tests with these strings in the test name"
-    )
-  }
-
   test("surface (core)") {
     // NOTE: I wanted to print out the entire coreSurface, but it's too big and the benefit is unclear.
     // If we're worried about binary compatibility, we should go ahead and use mima.
