@@ -128,6 +128,33 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
   checkPositions[Stat](
+    """|given intOrd: Ord[Int] with Eq[Int] with
+       |  // c1
+       |  def f(): Int = 1
+       |  // c2
+       |""".stripMargin,
+    """|<templ>Template Ord[Int] with Eq[Int] with
+       |  // c1
+       |  def f(): Int = 1
+       |  // c2</templ>
+       |<inits0>Init Ord[Int]</inits0>
+       |<tpe>Type.Apply Ord[Int]</tpe>
+       |<argClause>Type.ArgClause [Int]</argClause>
+       |<inits1>Init Eq[Int]</inits1>
+       |<tpe>Type.Apply Eq[Int]</tpe>
+       |<argClause>Type.ArgClause [Int]</argClause>
+       |<body>Template.Body with
+       |  // c1
+       |  def f(): Int = 1
+       |  // c2</body>
+       |<stats0>Defn.Def def f(): Int = 1</stats0>
+       |<paramClauseGroups0>Member.ParamClauseGroup ()</paramClauseGroups0>
+       |<tparamClause>Type.ParamClause   def f@@(): Int = 1</tparamClause>
+       |<paramClauses0>Term.ParamClause ()</paramClauses0>
+       |""".stripMargin,
+    showFieldName = true
+  )
+  checkPositions[Stat](
     """|object A{
        |  inline given intOrd: Ord[Int]
        |}""".stripMargin,
@@ -401,7 +428,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    42
        |  def b: String =
        |    "b"
-       |Template.Body def a: Int =
+       |Template.Body :
+       |  def a: Int =
        |    42
        |  def b: String =
        |    "b"
@@ -427,7 +455,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |     catch
        |       case a =>
        |     finally bar
-       |Template.Body def foo =
+       |Template.Body :
+       |   def foo =
        |     try foo
        |     catch
        |       case a =>
@@ -467,7 +496,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |         st1
        |         st2
        |     finally bar
-       |Template.Body def foo =
+       |Template.Body :
+       |   def foo =
        |     try foo
        |     catch
        |       case a =>
@@ -536,7 +566,9 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Template :
        |  
        |  private given x: X = ???
-       |Template.Body private given x: X = ???
+       |Template.Body :
+       |  
+       |  private given x: X = ???
        |Defn.GivenAlias private given x: X = ???
        |""".stripMargin
   )
@@ -714,7 +746,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  if cond then
        |    gx
        |    fx
-       |Template.Body if cond then
+       |Template.Body :
+       |  if cond then
        |    gx
        |    fx
        |Term.If if cond then
@@ -744,7 +777,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Template.Body val a = 
+       |Template.Body :
+       |  val a = 
        |    if cond then
        |      fx
        |      // c1
@@ -789,7 +823,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Template.Body val a =
+       |Template.Body :
+       |  val a =
        |    if cond then
        |      fx
        |      // c1
@@ -838,7 +873,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |      // c2
-       |Template.Body val a = 
+       |Template.Body :
+       |  val a = 
        |    if cond then
        |      fx
        |      // c1
@@ -884,7 +920,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    else
        |      gx
        |    // c2
-       |Template.Body val a =
+       |Template.Body :
+       |  val a =
        |    if cond then
        |      fx
        |      // c1
@@ -1024,7 +1061,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |    case object Private
        |        extends ClassificationValue
        |        with ConstantText
-       |Template.Body case object Private
+       |Template.Body :
+       |    case object Private
        |        extends ClassificationValue
        |        with ConstantText
        |Defn.Object case object Private
@@ -1761,7 +1799,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |       foo2 += " = "
        |     // foo2
        |  end match</templ>
-       |<body>Template.Body bar2 match
+       |<body>Template.Body :
+       |  bar2 match
        |     case foo1: Foo1 => foo1
        |     case foo2: Foo2 =>
        |       foo2 += " = "
@@ -1837,7 +1876,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |       foo2 += " = "
        |       // foo2
        |  end match</templ>
-       |<body>Template.Body bar2 match
+       |<body>Template.Body :
+       |  bar2 match
        |     case foo1: Foo1 => foo1
        |     case foo2: Foo2 =>
        |       foo2 += " = "
@@ -1893,6 +1933,85 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |KwMatch [118..123)
        |Indentation.Outdent [123..123)
        |EOF [124..124)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Source](
+    """|package foo
+       |// c1
+       |
+       |package bar:
+       |  // c2
+       |  class Baz
+       |  // c3
+       |""".stripMargin,
+    """|<stats0>Pkg package foo
+       |// c1
+       |
+       |package bar:
+       |  // c2
+       |  class Baz
+       |  // c3</stats0>
+       |<statsClause>Stat.Clause package bar:
+       |  // c2
+       |  class Baz
+       |  // c3</statsClause>
+       |<stats0>Pkg package bar:
+       |  // c2
+       |  class Baz
+       |  // c3</stats0>
+       |<statsClause>Stat.Clause :
+       |  // c2
+       |  class Baz
+       |  // c3</statsClause>
+       |<stats0>Defn.Class class Baz</stats0>
+       |<tparamClause>Type.ParamClause   // c3@@</tparamClause>
+       |<ctor>Ctor.Primary   // c3@@</ctor>
+       |<templ>Template   // c3@@</templ>
+       |<body>Template.Body   // c3@@</body>
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Source](
+    """|package foo
+       |// c1
+       |
+       |package bar {
+       |  // c2
+       |  class Baz
+       |  // c3
+       |}
+       |""".stripMargin,
+    """|<stats0>Pkg package foo
+       |// c1
+       |
+       |package bar {
+       |  // c2
+       |  class Baz
+       |  // c3
+       |}</stats0>
+       |<statsClause>Stat.Clause package bar {
+       |  // c2
+       |  class Baz
+       |  // c3
+       |}</statsClause>
+       |<stats0>Pkg package bar {
+       |  // c2
+       |  class Baz
+       |  // c3
+       |}</stats0>
+       |<statsClause>Stat.Clause {
+       |  // c2
+       |  class Baz
+       |  // c3
+       |}</statsClause>
+       |<stats0>Defn.Class class Baz</stats0>
+       |<tparamClause>Type.ParamClause   class Baz@@</tparamClause>
+       |<ctor>Ctor.Primary   class Baz@@</ctor>
+       |<templ>Template   class Baz@@</templ>
+       |<body>Template.Body   class Baz@@</body>
        |""".stripMargin,
     showFieldName = true
   )
