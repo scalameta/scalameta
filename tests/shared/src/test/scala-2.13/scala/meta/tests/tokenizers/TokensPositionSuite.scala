@@ -192,7 +192,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "(f)({ case a => a })",
     """|Term.ArgClause ({ case a => a })
        |Term.PartialFunction { case a => a }
-       |Term.CasesClause { case a => a }
        |Case case a => a
        |""".stripMargin
   )
@@ -341,8 +340,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   )
   checkPositions[Stat](
     "{ case x => x; case y => y }",
-    """|Term.CasesClause { case x => x; case y => y }
-       |Case case x => x;
+    """|Case case x => x;
        |Case case y => y
        |""".stripMargin
   )
