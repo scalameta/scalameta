@@ -7,9 +7,6 @@ import java.io._
 import java.nio.charset.Charset
 
 class PublicSuite extends TreeSuiteBase {
-  test("scala.meta.Dialect.toString") {
-    // covered below
-  }
 
   test("scala.meta.Tree.toString (manual)") {
     val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
@@ -54,42 +51,6 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.Tree.syntax (quasiquoted)") {
     val tree = q"foo + bar // baz"
     assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
-  }
-
-  test("scala.meta.classifiers.Classifiable.toString") {
-    // n/a
-  }
-
-  test("scala.meta.classifiers.Classifier.toString") {
-    // n/a
-  }
-
-  test("scala.meta.cli.Metac.toString") {
-    // n/a
-  }
-
-  test("scala.meta.cli.Metacp.toString") {
-    // n/a
-  }
-
-  test("scala.meta.cli.Metai.toString") {
-    // n/a
-  }
-
-  test("scala.meta.cli.Metap.toString") {
-    // n/a
-  }
-
-  test("scala.meta.cli.Reporter.toString") {
-    // n/a
-  }
-
-  test("scala.meta.common.Convert.toString") {
-    // n/a
-  }
-
-  test("scala.meta.common.Optional.toString") {
-    // n/a
   }
 
   test("scala.meta.dialects.Scala3.toString") {
@@ -194,25 +155,6 @@ class PublicSuite extends TreeSuiteBase {
     assertNoDiff(scala.meta.dialects.ParadiseTypelevel212.toString, "ParadiseTypelevel212")
   }
 
-  test("scala.meta.inputs.InputException") {}
-  test("scala.meta.inputs.InputRange") {}
-
-  test("scala.meta.inputs.Input.toString") {
-    // covered below
-  }
-
-  test("scala.meta.inputs.Input.Proxy.toString") {}
-  test("scala.meta.inputs.Input.Text.toString") {}
-  test("scala.meta.inputs.Input.WithTokenizerOptions.toString") {}
-
-  test("scala.meta.dialects.AllowEverything.toString") {
-    // Satisfy surface suite.
-  }
-
-  test("scala.meta.Member.Case.toString") {
-    // Satisfy surface suite.
-  }
-
   test("scala.meta.inputs.Input.None.toString")(assertEquals(Input.None.toString, "Input.None"))
 
   test("scala.meta.inputs.Input.File.toString") {
@@ -264,10 +206,6 @@ class PublicSuite extends TreeSuiteBase {
     assertEquals(input.toString, s"""Input.Ammonite(Input.None)""")
   }
 
-  test("scala.meta.inputs.Position.toString") {
-    // covered below
-  }
-
   test("scala.meta.inputs.Position.None.toString") {
     assertEquals(Position.None.toString, "Position.None")
   }
@@ -276,38 +214,6 @@ class PublicSuite extends TreeSuiteBase {
     val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
     lhs.pos match { case _: Position.Range => ; case _ => }
     assertEquals(lhs.pos.toString, """[0..3) in Input.String("foo + bar")""")
-  }
-
-  test("scala.meta.io.AbsolutePath.toString") {
-    // NOTE: come up with a platform-independent test
-  }
-
-  test("scala.meta.io.Classpath.toString") {
-    // NOTE: come up with a platform-independent test
-  }
-
-  test("scala.meta.io.RelativePath.toString") {
-    // NOTE: come up with a platform-independent test
-  }
-
-  val untestedClasses = List(
-    "scala.meta.metap.Format.Proto",
-    "scala.meta.metac.Settings",
-    "scala.meta.metap.Settings",
-    "scala.meta.metacp.Result",
-    "scala.meta.metap.Format.Compact",
-    "scala.meta.tokens.Token.Indentation",
-    "scala.meta.metap.Format",
-    "scala.meta.metacp.Settings",
-    "scala.meta.metap.Format.Detailed",
-    "scala.meta.tokens.Token.Unquote",
-    "scala.meta.tokens.Token.LFLF",
-    "scala.meta.tokens.Token.Ellipsis"
-  )
-  untestedClasses.foreach { name =>
-    test(name + ".toString") {
-      // n/a
-    }
   }
 
   test("scala.meta.parsers.ParseException.toString") {
@@ -326,10 +232,6 @@ class PublicSuite extends TreeSuiteBase {
     }
   }
 
-  test("scala.meta.parsers.Parsed.toString") {
-    // covered below
-  }
-
   test("scala.meta.parsers.Parsed.Error.toString") {
     val parsed = "foo + class".parse[Term]
     parsed match { case _: Parsed.Error => ; case _ => }
@@ -346,35 +248,6 @@ class PublicSuite extends TreeSuiteBase {
     parsed match { case _: Parsed.Success[_] => ; case _ => }
     assertEquals(parsed.toString, "foo + bar")
   }
-
-  test("scala.meta.prettyprinters.Show.toString") {
-    // n/a
-  }
-
-  test("scala.meta.prettyprinters.Structure.toString") {
-    // n/a
-  }
-
-  test("scala.meta.prettyprinters.Syntax.toString") {
-    // n/a
-  }
-
-  test("scala.meta.quasiquotes.Lift.toString") {
-    // n/a
-  }
-
-  test("scala.meta.quasiquotes.Unlift.toString") {
-    // n/a
-  }
-
-  test("scala.meta.tokenizers.Tokenize.toString") {
-    // n/a
-  }
-  test("scala.meta.tokenizers.TokenizerOptions.toString") {}
-
-  test("scala.meta.tokenizers.TokenizeException.toString") {}
-
-  test("scala.meta.tokenizers.Tokenized.Error.toString") {}
 
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
     val tokenized = "foo + bar".tokenize
@@ -415,34 +288,6 @@ class PublicSuite extends TreeSuiteBase {
     assertEquals(tokens.syntax, "foo + bar")
   }
 
-  test("scala.meta.tokens.Token.Interpolation.toString") {
-    // n/a
-  }
-
-  test("scala.meta.tokens.Token.Xml.toString") {
-    // n/a
-  }
-
-  test("scala.meta.transversers.SimpleTraverser.toString") {
-    // n/a
-  }
-
-  test("scala.meta.transversers.Transformer.toString") {
-    // n/a
-  }
-
-  test("scala.meta.transversers.Traverser.toString") {
-    // n/a
-  }
-
-  test("scala.meta.XtensionDialectTokenSyntax") {}
-  test("scala.meta.XtensionDialectApply") {}
-  test("scala.meta.XtensionDialectTreeSyntax") {}
-  test("scala.meta.XtensionDialectTokensSyntax") {}
-  test("scala.meta.XtensionTree") {}
-  test("scala.meta.XtensionTreeT") {}
-
-  test("scala.meta.tokens.TokenExtensions") {}
   test("scala.meta.tokens.StringExtensions") {
     import scala.meta.tokens.StringExtensions
     assert(!"foo".isBackquoted)
@@ -456,14 +301,5 @@ class PublicSuite extends TreeSuiteBase {
     assert("foo_+".isIdentSymbolicInfixOperator)
     assert("+".isIdentSymbolicInfixOperator)
   }
-
-  test("scala.meta.trees.Origin") {}
-  test("scala.meta.trees.Origin.DialectOnly") {}
-  test("scala.meta.trees.Origin.None") {}
-  test("scala.meta.trees.Origin.Parsed") {}
-  test("scala.meta.trees.Origin.ParsedSource") {}
-
-  test("scala.meta.trees.Error") {}
-  test("scala.meta.trees.Error.MissingDialectException") {}
 
 }
