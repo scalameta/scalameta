@@ -18,7 +18,7 @@ class SurfaceSuite extends TreeSuiteBase {
       with scala.meta.internal.tokens.Reflection
   import CoreReflection._
 
-  lazy val reflectedTrees = {
+  private lazy val reflectedTrees = {
     val root = symbolOf[scala.meta.Tree].asRoot
     val all = List(root) ++ root.allBranches ++ root.allLeafs
     all.map(_.sym.fullName).toSet
@@ -30,8 +30,8 @@ class SurfaceSuite extends TreeSuiteBase {
     val sym = x.sym
     if (f(sym)) Some(sym.fullName) else None
   }
-  lazy val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
-  def lsp4s(symbol: String): Boolean = {
+  private lazy val wildcardImportStatics = explore.wildcardImportStatics("scala.meta")
+  private def lsp4s(symbol: String): Boolean = {
     val fullName = symbol.stripPrefix("* ")
     // We ignore the symbols from scalameta/lsp4s that are transitively brought
     // in via the bloop-frontend dependency in testsJVM.
@@ -41,23 +41,17 @@ class SurfaceSuite extends TreeSuiteBase {
       name == AstNamerMacros.initialName || name.startsWith(AstNamerMacros.afterNamePrefix)
     }
   }
-  lazy val allStatics = explore.allStatics("scala.meta").filterNot(lsp4s)
-  lazy val trees = wildcardImportStatics
+  private lazy val trees = wildcardImportStatics
     .filter(s => s != "scala.meta.Tree" && reflectedTrees(s.stripSuffix(".Api")))
   private lazy val tokenRoot = symbolOf[scala.meta.tokens.Token].asRoot
-  lazy val tokens = filterFullNames(tokenRoot.allLeafs, isPublic).sorted
-  lazy val core = allStatics.diff(trees).diff(tokens)
+  private lazy val tokens = filterFullNames(tokenRoot.allLeafs, isPublic).sorted
+  private lazy val core = explore.allStatics("scala.meta").filterNot(lsp4s).diff(trees).diff(tokens)
     .diff(filterFullNames(tokenRoot.allLeafs, isPrivateWithin))
     .diff(filterFullNames(tokenRoot.allBranches, x => isPrivateWithin(x) || isPublic(x)))
     .map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
-  lazy val extensionSurface = explore.extensionSurface("scala.meta").filterNot(lsp4s)
-  lazy val coreSurface = {
-    val surfaceTypes = tokens ++ trees
-    extensionSurface.filter(entry => !surfaceTypes.exists(entry.startsWith))
-  }
 
   test("statics (core)") {
-    val diagnostic = core.keys.toList.sorted.filter(!_.endsWith("LowPriority")).map { fullName =>
+    val diagnostic = core.keys.toList.filter(!_.endsWith("LowPriority")).sorted.map { fullName =>
       val suffix = if (core(fullName)) "" else " *"
       s"$fullName$suffix"
     }.mkString(EOL)
@@ -192,8 +186,11 @@ class SurfaceSuite extends TreeSuiteBase {
     // However, extension methods are few enough to digest and interesting enough to warrant printing out.
 
     // println(coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL))
+    val surfaceTypes = tokens ++ trees
+    val obtained = explore.extensionSurface("scala.meta")
+      .filter(x => x.startsWith("*") && !lsp4s(x) && !surfaceTypes.exists(x.startsWith))
     assertNoDiff(
-      coreSurface.filter(_.startsWith("*")).sorted.mkString(EOL),
+      obtained.sorted.mkString(EOL),
       """|
          |* (scala.meta.Dialect, scala.meta.Tree).equals(Any): Boolean
          |* (scala.meta.Dialect, scala.meta.Tree).hashCode(): Int
@@ -252,9 +249,9 @@ class SurfaceSuite extends TreeSuiteBase {
 
   test("statics (trees)") {
     // println(trees.toList.sorted.mkString(EOL))
-    val obtained = trees.filterNot(_.endsWith("Quasi")).sorted.mkString(EOL)
+    val obtained = trees.filterNot(_.endsWith("Quasi"))
     assertNoDiff(
-      obtained,
+      obtained.sorted.mkString(EOL),
       """|
          |scala.meta.Case
          |scala.meta.CaseTree
