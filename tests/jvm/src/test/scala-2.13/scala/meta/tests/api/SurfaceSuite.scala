@@ -210,6 +210,16 @@ class SurfaceSuite extends TreeSuiteBase {
          |* A.equals(Any): Boolean
          |* A.hashCode(): Int
          |* A.maybeParse(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).is(implicit XtensionOptionClassifiable.this.C[U]): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionOptionClassifiable.this.C[U1], XtensionOptionClassifiable.this.C[U2]): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionOptionClassifiable.this.C[U1], XtensionOptionClassifiable.this.C[U2], XtensionOptionClassifiable.this.C[U3]): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionOptionClassifiable.this.C[U1], XtensionOptionClassifiable.this.C[U2], XtensionOptionClassifiable.this.C[U3], XtensionOptionClassifiable.this.C[U4]): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAnyOf(XtensionOptionClassifiable.this.C[_]*): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAnyOfOpt(XtensionOptionClassifiable.this.C[_]*): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAnyOpt(implicit XtensionOptionClassifiable.this.C[U1], XtensionOptionClassifiable.this.C[U2]): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAnyOpt(implicit XtensionOptionClassifiable.this.C[U1], XtensionOptionClassifiable.this.C[U2], XtensionOptionClassifiable.this.C[U3]): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAnyOpt(implicit XtensionOptionClassifiable.this.C[U1], XtensionOptionClassifiable.this.C[U2], XtensionOptionClassifiable.this.C[U3], XtensionOptionClassifiable.this.C[U4]): Boolean
+         |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isOpt(implicit XtensionOptionClassifiable.this.C[U]): Boolean
          |* String.equals(Any): Boolean
          |* String.hashCode(): Int
          |* String.isBackquoted: Boolean
@@ -218,6 +228,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2]): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3]): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3], XtensionClassifiable.this.C[U4]): Boolean
+         |* T(implicit scala.meta.classifiers.Classifiable[T]).isAnyOf(XtensionClassifiable.this.C[_]*): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit XtensionClassifiable.this.C[U]): Boolean
          |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
          |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String

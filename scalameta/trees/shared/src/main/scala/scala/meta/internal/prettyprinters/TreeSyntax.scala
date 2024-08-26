@@ -592,7 +592,7 @@ object TreeSyntax {
       case t: Term.Param =>
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
         printParam(t)
-      case t: Term.ParamClause => printParams(t, needParens = !t.parent.exists(_.is[Term]))
+      case t: Term.ParamClause => printParams(t, needParens = !t.parent.is[Term])
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -656,15 +656,14 @@ object TreeSyntax {
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
         val useStar = dialect.allowStarAsTypePlaceholder &&
-          t.origin.tokensOpt.exists(!_.lastOption.exists(_.is[Token.Underscore]))
+          t.origin.tokensOpt.exists(!_.lastOption.is[Token.Underscore])
         val ph = if (useStar) "*" else "_"
         m(SimpleTyp, o(t.variant), ph)
       case t: Type.Wildcard =>
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
          */
-        def questionMarkUsed = t.origin.tokensOpt
-          .exists(!_.headOption.exists(_.is[Token.Underscore]))
+        def questionMarkUsed = t.origin.tokensOpt.exists(!_.headOption.is[Token.Underscore])
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_")), t.bounds)

@@ -2952,7 +2952,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   @tailrec
   private def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = params match {
     case p :: tail if tail.nonEmpty =>
-      if (!p.is[Term.Param.Quasi] && p.decltpe.exists(_.is[Type.Repeated]))
+      if (!p.is[Term.Param.Quasi] && p.decltpe.is[Type.Repeated])
         syntaxError("*-parameter must come last", p)
       onlyLastParameterCanBeRepeated(tail)
     case _ =>
@@ -2984,7 +2984,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         // can't have consecutive type clauses (so params must be present)
         // also, only the very last param may contain implicit
         val ok = group.is[Quasi] || group.paramClauses.lastOption.exists { x =>
-          x.is[Quasi] || !x.mod.exists(_.is[Mod.Implicit])
+          x.is[Quasi] || !x.mod.is[Mod.Implicit]
         }
         if (ok) iter()
       case _ =>
@@ -3105,7 +3105,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case t: Ellipsis => Some(ellipsis[Term.Param](t, 1))
         case _ => None
       }).getOrElse {
-        val anonymousUsing = mod.exists(_.is[Mod.Using]) && !peek[Colon]
+        val anonymousUsing = mod.is[Mod.Using] && !peek[Colon]
         val name = if (anonymousUsing) anonNameEmpty() else termName().become[Name]
         name match {
           case q: Quasi if endParamQuasi => q.become[Term.Param]

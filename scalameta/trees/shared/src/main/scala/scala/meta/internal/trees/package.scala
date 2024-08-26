@@ -228,17 +228,17 @@ package object trees {
     var hadImplicit = false
     !paramClauses.exists { pc =>
       hadImplicit || !pc.is[Quasi] && {
-        hadImplicit = pc.mod.exists(_.is[Mod.Implicit])
+        hadImplicit = pc.mod.is[Mod.Implicit]
         var hadRepeated = false
         pc.values.exists { v =>
           try hadRepeated
-          finally hadRepeated = !v.is[Quasi] && v.decltpe.exists(_.is[Type.Repeated])
+          finally hadRepeated = !v.is[Quasi] && v.decltpe.is[Type.Repeated]
         }
       }
     }
   }
 
   private[meta] def checkValidEnumerators(enums: List[Enumerator]): Boolean =
-    !enums.headOption.forall(_.is[Enumerator.Guard])
+    !enums.headOption.isOpt[Enumerator.Guard]
 
 }

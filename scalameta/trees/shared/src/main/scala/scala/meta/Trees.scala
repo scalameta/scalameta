@@ -391,7 +391,7 @@ object Term {
         param.is[Param.Quasi] || param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty
       } && {
         params.exists(_.is[Param.Quasi]) ||
-        paramClause.mod.exists(_.is[Mod.Implicit]) ==> (params.lengthCompare(1) == 0)
+        paramClause.mod.is[Mod.Implicit] ==> (params.lengthCompare(1) == 0)
       }
     })
   }
