@@ -343,6 +343,62 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expectation)
   }
 
+  test("markdown code span 1") {
+    val result = parseString(
+      s"""
+          /**   foo `` bar ` ` baz ``, and
+            *   qux `quux xyzzy`
+            */
+       """.stripMargin
+    )
+
+    val expectation = Some(Scaladoc(Seq(Paragraph(Seq(Text(Seq(
+      Word("foo"),
+      MdCodeSpan(" bar ` ` baz ", "``", ","),
+      Word("and"),
+      Word("qux"),
+      MdCodeSpan("quux xyzzy", "`", "")
+    )))))))
+
+    assertEquals(result, expectation)
+  }
+
+  test("pseudo-markdown code span within list") {
+    val result = parseString(
+      s"""
+          /**   - foo `bar
+            *   - baz qux`
+            */
+       """.stripMargin
+    )
+
+    val expectation = Some(Scaladoc(Seq(Paragraph(Seq(ListBlock(
+      "-",
+      Seq(
+        ListItem(Text(Seq(Word("foo"), Word("`bar"))), Nil),
+        ListItem(Text(Seq(Word("baz"), Word("qux`"))), Nil)
+      )
+    ))))))
+
+    assertEquals(result, expectation)
+  }
+
+  test("markdown code span vs code block") {
+    val result = parseString(
+      s"""
+          /**   ``` foo ` ` bar ```
+            *   ```foo
+            *   ```
+            */
+       """.stripMargin
+    )
+
+    val expectation = Some(Scaladoc(Seq(Paragraph(
+      Seq(Text(Seq(MdCodeSpan(" foo ` ` bar ", "```", ""))), MdCodeBlock(Seq("foo"), Nil, "```"))
+    ))))
+    assertEquals(result, expectation)
+  }
+
   test("headings") {
     val level1HeadingBody = "Level 1"
     val level2HeadingBody = "Level 2"

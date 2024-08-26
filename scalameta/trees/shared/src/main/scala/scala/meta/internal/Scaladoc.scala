@@ -47,6 +47,11 @@ object Scaladoc {
     override def syntax: String = s"{{{$code}}}$punct"
   }
 
+  /** A markdown code span, an embedded code expression */
+  final case class MdCodeSpan(code: String, fence: String, punct: String = "") extends TextPart {
+    override def syntax: String = s"$fence$code$fence$punct"
+  }
+
   /** Represents an enclosed tagged documentation remark */
   final case class EnclosedJavaTag(tag: String, desc: Seq[String] = Nil) extends TextPart {
     override def syntax: String = (tag +: desc).mkString("{", " ", "}")

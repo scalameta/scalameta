@@ -93,6 +93,15 @@ object ScaladocParser {
     }
   }
 
+  private def mdCodeSpanParser[$: P]: P[MdCodeSpan] = P {
+    val tick = "`"
+    tick.rep(1).!.flatMap { fence =>
+      def end = fence ~ !tick
+      def expr = (!end ~ !nl ~ AnyChar).rep.! ~ end ~ punctParser.!
+      expr.map { case (code, punct) => MdCodeSpan(code, fence, punct) }
+    }
+  }
+
   private def headingParser[$: P]: P[Heading] = P {
     // heading delimiter
     hspaces0 ~ CharsWhileIn("=", 1).!.flatMap { delim =>
@@ -125,7 +134,8 @@ object ScaladocParser {
 
   private def textParser[$: P](indent: Int, mdOffset: Int = 0): P[Text] = P {
     def end = P(nl ~/ nextPartParser(indent, mdOffset))
-    def part: P[TextPart] = P(codeExprParser | linkParser | enclosedJavaTagParser | wordParser)
+    def part: P[TextPart] =
+      P(codeExprParser | mdCodeSpanParser | linkParser | enclosedJavaTagParser | wordParser)
     def sep = P(!end ~ nl.? ~ hspaces0)
     hspaces0 ~ part.rep(1, sep = sep).map(x => Text(x))
   }
