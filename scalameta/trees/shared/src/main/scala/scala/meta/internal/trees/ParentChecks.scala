@@ -89,7 +89,7 @@ object ParentChecks {
       case Some(tree: Type) => loop(tree.parent)
       case Some(tree: Type.ArgClause) => loop(tree.parent)
       case Some(_: Pat.Typed) => true
-      case Some(tree: Term.ApplyType) => tree.parent.forall(_.is[Pat.Extract])
+      case Some(tree: Term.ApplyType) => tree.parent.isOpt[Pat.Extract]
       case Some(_) => false
       case None => true
     }
@@ -100,7 +100,7 @@ object ParentChecks {
     (parent.is[Ctor.Block] && destination == "init")
 
   def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = parent.is[Template.Body] &&
-    parent.parent.forall(_.parent.forall(_.is[Defn.Enum]))
+    parent.parent.forall(_.parent.isOpt[Defn.Enum])
 
   def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = parent.is[Type] ||
     parent.is[Defn.Type] || parent.is[Type.Bounds] || parent.is[Term.ApplyType] ||
