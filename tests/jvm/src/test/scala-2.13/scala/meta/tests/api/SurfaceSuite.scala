@@ -61,6 +61,8 @@ class SurfaceSuite extends TreeSuiteBase {
       """|
          |scala.meta.Dialect
          |scala.meta.Tree
+         |scala.meta.Tree.ImplicitOptionTree
+         |scala.meta.Tree.ImplicitTree
          |scala.meta.XtensionDialectApply
          |scala.meta.XtensionDialectTokenSyntax
          |scala.meta.XtensionDialectTokensSyntax
@@ -207,9 +209,14 @@ class SurfaceSuite extends TreeSuiteBase {
          |* (scala.meta.Dialect, scala.meta.tokens.Tokens).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
          |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
          |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
+         |* A.ancestor(Int): Option[scala.meta.Tree]
          |* A.equals(Any): Boolean
          |* A.hashCode(): Int
          |* A.maybeParse(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
+         |* Option[A].ancestor(Int): Option[scala.meta.Tree]
+         |* Option[A].equals(Any): Boolean
+         |* Option[A].hashCode(): Int
+         |* Option[A].parent: Option[scala.meta.Tree]
          |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).is(implicit XtensionOptionClassifiable.this.C[U]): Boolean
          |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionOptionClassifiable.this.C[U1], XtensionOptionClassifiable.this.C[U2]): Boolean
          |* Option[T](implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionOptionClassifiable.this.C[U1], XtensionOptionClassifiable.this.C[U2], XtensionOptionClassifiable.this.C[U3]): Boolean

@@ -105,7 +105,7 @@ trait TextDocumentOps {
           }
           private def indexWithin(mname: m.Name.Indeterminate): Unit = {
             todo += mname
-            val mencl = mname.parent.flatMap(_.parent).get
+            val mencl = mname.parent.parent.get
             mencl match {
               case mencl: m.Ctor.Primary =>
                 val menclName = mencl.parent.get.asInstanceOf[m.Member].name
