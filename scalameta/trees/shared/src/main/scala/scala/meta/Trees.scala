@@ -9,6 +9,7 @@ import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.trees._
 
+import scala.annotation.tailrec
 import scala.{meta => sm}
 
 @root
@@ -22,6 +23,22 @@ trait Tree extends InternalTree {
 }
 
 object Tree extends InternalTreeXtensions {
+  @tailrec
+  /** 0th ancestor is the parent */
+  private def ancestorImpl(level: Int)(obj: Tree): Option[Tree] = obj.parent match {
+    case Some(p) if level > 0 => ancestorImpl(level - 1)(p)
+    case pOpt => pOpt
+  }
+
+  implicit class ImplicitTree[A <: Tree](private val obj: A) extends AnyVal {
+    def ancestor(level: Int): Option[Tree] = ancestorImpl(level)(obj)
+  }
+
+  implicit class ImplicitOptionTree[A <: Tree](private val obj: Option[A]) extends AnyVal {
+    def parent: Option[Tree] = obj.flatMap(_.parent)
+    def ancestor(level: Int): Option[Tree] = obj.flatMap(ancestorImpl(level))
+  }
+
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
   implicit def showStructure[T <: Tree]: Structure[T] = internal.prettyprinters.TreeStructure
     .apply[T]
