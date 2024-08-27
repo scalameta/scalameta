@@ -1953,18 +1953,18 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  // c2
        |  class Baz
        |  // c3</stats0>
-       |<statsClause>Stat.Clause package bar:
+       |<body>Pkg.Body package bar:
        |  // c2
        |  class Baz
-       |  // c3</statsClause>
+       |  // c3</body>
        |<stats0>Pkg package bar:
        |  // c2
        |  class Baz
        |  // c3</stats0>
-       |<statsClause>Stat.Clause :
+       |<body>Pkg.Body :
        |  // c2
        |  class Baz
-       |  // c3</statsClause>
+       |  // c3</body>
        |<stats0>Defn.Class class Baz</stats0>
        |<tparamClause>Type.ParamClause   // c3@@</tparamClause>
        |<ctor>Ctor.Primary   // c3@@</ctor>
@@ -1992,21 +1992,21 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  class Baz
        |  // c3
        |}</stats0>
-       |<statsClause>Stat.Clause package bar {
+       |<body>Pkg.Body package bar {
        |  // c2
        |  class Baz
        |  // c3
-       |}</statsClause>
+       |}</body>
        |<stats0>Pkg package bar {
        |  // c2
        |  class Baz
        |  // c3
        |}</stats0>
-       |<statsClause>Stat.Clause {
+       |<body>Pkg.Body {
        |  // c2
        |  class Baz
        |  // c3
-       |}</statsClause>
+       |}</body>
        |<stats0>Defn.Class class Baz</stats0>
        |<tparamClause>Type.ParamClause   class Baz@@</tparamClause>
        |<ctor>Ctor.Primary   class Baz@@</ctor>

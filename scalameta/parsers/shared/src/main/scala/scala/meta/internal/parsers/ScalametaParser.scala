@@ -4253,11 +4253,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
+  private def toPkgBody(startPos: Int)(stats: List[Stat]): Pkg.Body =
+    autoEndPos(startPos)(stats.reduceWith(Pkg.Body.apply))
+
   private def packageOrPackageObjectDef(statpf: PartialFunction[Token, Stat]): Stat = autoPos {
     next()
     if (acceptOpt[KwObject]) Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
     else {
-      def packageBody = toStatsClause(
+      def packageBody = toPkgBody(currIndex)(
         if (nextIfColonIndent()) indentedOnOpen(statSeq(statpf)) else inBracesOrNil(statSeq(statpf))
       )
       Pkg(qualId(), packageBody)
@@ -4275,7 +4278,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val startPos = prevIndex
         val qid = qualId()
         def getPackage(pkgDelimPos: Int)(stats: => List[Stat]) =
-          autoEndPos(startPos)(Pkg(qid, toStatsClause(pkgDelimPos)(stats)))
+          autoEndPos(startPos)(Pkg(qid, toPkgBody(pkgDelimPos)(stats)))
         def inPackageOnOpen[T <: Token: ClassTag](pkgDelimPos: Int) = f(listBy[Stat] { buf =>
           val pkg = getPackage(pkgDelimPos) {
             next()
