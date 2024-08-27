@@ -60,13 +60,15 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
           pushPart(beg)
           pushToken(Token.Interpolation.SpliceStart(input, dialect, dollarOffset, dollarOffset + 1))
           val splice = nextToken()
-          if (splice.token != STRINGPART) {
-            pushToken(getToken(splice))
-            if (splice.token == LBRACE) loop(braceBalance = 1)
-            val end = nextToken()
-            pushToken(Token.Interpolation.SpliceEnd(input, dialect, end.offset, end.offset))
-            emitContents(end)
-          } else emitContents(splice)
+          val end =
+            if (splice.token == STRINGPART) splice
+            else {
+              pushToken(getToken(splice))
+              if (splice.token == LBRACE) loop(braceBalance = 1)
+              nextToken()
+            }
+          pushToken(Token.Interpolation.SpliceEnd(input, dialect, end.offset, end.offset))
+          emitContents(end)
         } else beg
 
       // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
@@ -279,7 +281,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
 
       case EOF => new Token.EOF(input, dialect)
       case SHEBANG => new Token.Shebang(input, dialect, curr.offset, curr.endOffset, curr.strVal)
-      case _ => getInvalid(curr, curr.strVal)
+      case INVALID => getInvalid(curr, curr.strVal)
+      case _ => getInvalid(curr, s"Unexpected token id ${curr.token}, contents:\n" + curr.strVal)
     }
   }
 

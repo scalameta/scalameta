@@ -2122,6 +2122,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Interpolation.Part(|Available languages (default = ) [5..37)
          |Interpolation.SpliceStart [37..38)
          |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [38..38)
+         |Interpolation.SpliceEnd [38..38)
          |Interpolation.Part():\nverilog - Verilog or SystemVerilog dialects\nvhdl    - VHDL dialects\n\nAvailable Verilog/SystemVerilog dialects (default = ) [38..162)
          |Interpolation.SpliceStart [162..163)
          |Ident(defaultDialect) [163..177)
