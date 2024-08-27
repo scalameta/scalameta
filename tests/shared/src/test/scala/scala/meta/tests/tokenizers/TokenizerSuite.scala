@@ -2114,27 +2114,25 @@ class TokenizerSuite extends BaseTokenizerSuite {
                   |'''.stripMargin
                   |""".stripMargin.replace("'''", "\"\"\"")
 
-    val struct = """|BOF [0..0)
-                    |LF [0..1)
-                    |Interpolation.Id(s) [1..2)
-                    |Interpolation.Start(''') [2..5)
-                    |Interpolation.Part(|Available languages (default = ) [5..37)
-                    |Interpolation.SpliceStart [37..38)
-                    |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [38..38)
-                    |Invalid():
-                    |verilog - Verilog or SystemVerilog dialects
-                    |vhdl    - VHDL dialects
-                    |
-                    |Available Verilog/SystemVerilog dialects (default = ) [38..162)
-                    |Interpolation.SpliceEnd [163..163)
-                    |Interpolation.Part(defaultDialect) [163..177)
-                    |Interpolation.End() [177..177)
-                    |Constant.String():\nv2001   - Verilog 2001\nsv2005  - \n) [177..214)
-                    |Dot [217..218)
-                    |Ident(stripMargin) [218..229)
-                    |LF [229..230)
-                    |EOF [230..230)
-                    |""".stripMargin.replace("'''", "\"\"\"").nl2lf
+    val struct =
+      """|BOF [0..0)
+         |LF [0..1)
+         |Interpolation.Id(s) [1..2)
+         |Interpolation.Start(''') [2..5)
+         |Interpolation.Part(|Available languages (default = ) [5..37)
+         |Interpolation.SpliceStart [37..38)
+         |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [38..38)
+         |Interpolation.Part():\nverilog - Verilog or SystemVerilog dialects\nvhdl    - VHDL dialects\n\nAvailable Verilog/SystemVerilog dialects (default = ) [38..162)
+         |Interpolation.SpliceStart [162..163)
+         |Ident(defaultDialect) [163..177)
+         |Interpolation.SpliceEnd [177..177)
+         |Interpolation.Part():\nv2001   - Verilog 2001\nsv2005  - \n) [177..214)
+         |Interpolation.End(''') [214..217)
+         |Dot [217..218)
+         |Ident(stripMargin) [218..229)
+         |LF [229..230)
+         |EOF [230..230)
+         |""".stripMargin.replace("'''", "\"\"\"").nl2lf
     assertTokenizedAsStructureLines(code, struct)
   }
 

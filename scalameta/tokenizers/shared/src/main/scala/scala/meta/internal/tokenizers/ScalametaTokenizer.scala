@@ -60,11 +60,13 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
           pushPart(beg)
           pushToken(Token.Interpolation.SpliceStart(input, dialect, dollarOffset, dollarOffset + 1))
           val splice = nextToken()
-          pushToken(getToken(splice))
-          if (splice.token == LBRACE) loop(braceBalance = 1)
-          val end = nextToken()
-          pushToken(Token.Interpolation.SpliceEnd(input, dialect, end.offset, end.offset))
-          emitContents(end)
+          if (splice.token != STRINGPART) {
+            pushToken(getToken(splice))
+            if (splice.token == LBRACE) loop(braceBalance = 1)
+            val end = nextToken()
+            pushToken(Token.Interpolation.SpliceEnd(input, dialect, end.offset, end.offset))
+            emitContents(end)
+          } else emitContents(splice)
         } else beg
 
       // NOTE: before emitStart, curr is the first token that follows INTERPOLATIONID
