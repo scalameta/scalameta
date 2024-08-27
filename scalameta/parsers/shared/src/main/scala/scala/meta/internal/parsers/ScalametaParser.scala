@@ -1419,10 +1419,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def matchClause(t: Term, startPos: Int) = {
     val cases = autoPos {
-      if (acceptOpt[Indentation.Indent]) indentedAfterOpen(caseClauses())
+      if (acceptOpt[Indentation.Indent]) indentedAfterOpen(casesClause())
       else {
         accept[LeftBrace]
-        inBracesAfterOpen(caseClauses())
+        inBracesAfterOpen(casesClause())
       }
     }
     autoEndPos(startPos)(Term.Match(t, cases, Nil))
@@ -1514,7 +1514,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             f: (=> Either[Term, Term.CasesClause]) => Either[Term, Term.CasesClause]
         ): Term = {
           val catchPos = currIndex
-          f(caseClausesIfAny().toRight(blockRaw())).fold(
+          f(casesClauseIfAny().toRight(blockRaw())).fold(
             x => tryWithHandler(autoEndPos(catchPos)(x)),
             x => tryWithCases(Some(autoEndPos(catchPos)(x)))
           )
@@ -2378,13 +2378,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Ellipsis => ahead(peek[KwCase])
       case _ => false
     }
-    if (isPartial) {
-      val casesClause = autoPos(next {
-        try caseClauses()
-        finally acceptAfterOptNL[T]
-      })
-      copyPos(casesClause)(Term.PartialFunction(casesClause))
-    } else orElse
+    if (isPartial) autoPos(next {
+      try Term.PartialFunction(caseClauses())
+      finally acceptAfterOptNL[T]
+    })
+    else orElse
   }
 
   private def blockRaw(allowRepeated: Boolean = false): Term.Block =
@@ -2444,10 +2442,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def toCasesClause(cases: List[Case]): Term.CasesClause = cases.reduceWith(Term.CasesClause.apply)
+  def casesClause(): Term.CasesClause = casesClauseIfAny().getOrElse(syntaxErrorExpected[KwCase])
+  def casesClauseIfAny(): Option[Term.CasesClause] = caseClausesIfAny().map(toCasesClause)
 
-  def caseClauses(): Term.CasesClause = caseClausesIfAny().getOrElse(syntaxErrorExpected[KwCase])
-
-  def caseClausesIfAny(): Option[Term.CasesClause] = {
+  def caseClauses(): List[Case] = caseClausesIfAny().getOrElse(syntaxErrorExpected[KwCase])
+  def caseClausesIfAny(): Option[List[Case]] = {
     val cases = new ListBuffer[Case]
     @tailrec
     def iter(): Unit = currToken match {
@@ -2469,7 +2468,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ =>
     }
     iter()
-    if (cases.isEmpty) None else Some(toCasesClause(cases.toList))
+    if (cases.isEmpty) None else Some(cases.toList)
   }
 
   private def guardOnIf(): Term = {

@@ -422,10 +422,7 @@ object Term {
     override final def paramClause: Member.SyntaxValuesClause = tparamClause
   }
   @ast
-  class PartialFunction(casesClause: CasesClause @nonEmpty) extends Term with Tree.WithCasesClause {
-    @replacedField("4.9.9")
-    override final def cases: List[Case] = casesClause.cases
-  }
+  class PartialFunction(cases: List[Case] @nonEmpty) extends Term with Tree.WithCases
   @ast
   class While(expr: Term, body: Term) extends Term with Tree.WithCond with Tree.WithBody {
     override final def cond: Term = expr
