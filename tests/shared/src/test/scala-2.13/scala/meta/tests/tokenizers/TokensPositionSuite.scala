@@ -430,14 +430,14 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Source](
     "package a",
     """|Pkg package a
-       |Stat.Clause package a@@
+       |Pkg.Body package a@@
        |""".stripMargin
   )
   checkPositions[Source](
     "package a.b",
     """|Pkg package a.b
        |Term.Select a.b
-       |Stat.Clause package a.b@@
+       |Pkg.Body package a.b@@
        |""".stripMargin
   )
 

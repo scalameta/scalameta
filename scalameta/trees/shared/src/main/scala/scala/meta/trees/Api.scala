@@ -92,6 +92,10 @@ private[meta] trait Api extends ApiLowPriority {
   implicit def statValuesToOptionStatClauseWithDialect(v: List[Stat])(implicit
       dialect: Dialect
   ): Option[Stat.Clause] = if (v.isEmpty) None else Some(Stat.Clause(v))
+
+  implicit def pkgBodyToValues(v: Pkg.Body): List[Stat] = v.stats
+  implicit def statValuesToPkgBodyWithDialect(v: List[Stat])(implicit dialect: Dialect): Pkg.Body =
+    Pkg.Body(v)
 }
 
 private[meta] trait Aliases {

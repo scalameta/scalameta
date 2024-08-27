@@ -391,6 +391,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Pat.Wildcard
          |scala.meta.Pat.Xml
          |scala.meta.Pkg
+         |scala.meta.Pkg.Body
          |scala.meta.Pkg.Object
          |scala.meta.Ref
          |scala.meta.Self

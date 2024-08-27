@@ -1140,21 +1140,25 @@ object Defn {
 }
 
 @ast
-class Pkg(ref: Term.Ref, statsClause: Stat.Clause)
-    extends Member.Term with Stat with Tree.WithStatsClause {
+class Pkg(ref: Term.Ref, body: Pkg.Body) extends Member.Term with Stat with Tree.WithStats {
   checkFields(ref.isQualId)
   def name: Term.Name = ref match {
     case name: Term.Name => name
     case Term.Select(_, name: Term.Name) => name
   }
   @replacedField("4.9.9")
-  override final def stats: List[Stat] = statsClause.stats
+  override final def stats: List[Stat] = body.stats
 }
 object Pkg {
   @ast
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
       extends Member.Term with Stat with Stat.WithMods with Stat.WithTemplate {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
+  }
+  @ast
+  class Body(stats: List[Stat]) extends Tree with Tree.WithStats {
+    final def isEmpty: Boolean = stats.isEmpty
+    final def nonEmpty: Boolean = stats.nonEmpty
   }
 }
 

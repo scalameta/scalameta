@@ -379,7 +379,7 @@ object TreeSyntax {
     def guessHasBraces(t: Pkg): Boolean = {
       @tailrec
       def isOnlyChildOfOnlyChild(t: Tree): Boolean = t.parent match {
-        case Some(p: Stat.Clause) => p.stats.lengthCompare(1) == 0 && isOnlyChildOfOnlyChild(p)
+        case Some(p: Pkg.Body) => p.stats.lengthCompare(1) == 0 && isOnlyChildOfOnlyChild(p)
         case Some(p: Pkg) => isOnlyChildOfOnlyChild(p)
         case Some(p: Source) => p.stats.lengthCompare(1) == 0
         case Some(p) => unreachable(debug(p))
@@ -858,9 +858,9 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = macro ", t.body)
+      case t: Pkg.Body => if (t.stats.isEmpty) s("{}") else s("{", t.stats, n("}"))
       case t: Pkg =>
-        val body =
-          if (guessHasBraces(t)) s(" ", t.statsClause) else r(t.statsClause.stats.map(n(_)))
+        val body = if (guessHasBraces(t)) s(" ", t.body) else r(t.body.stats.map(n(_)))
         s(kw("package"), " ", t.ref, body)
       case t: Pkg.Object => r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>

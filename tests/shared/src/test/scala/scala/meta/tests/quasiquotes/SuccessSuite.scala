@@ -1671,7 +1671,7 @@ class SuccessSuite extends TreeSuiteBase {
     val q"package $ref { ..$stats }" = q"package p { class A; object B }"
     assertTree(ref)(tname("p"))
     assertEquals(stats.toString, "{ class A; object B }")
-    assertTree(stats)(Stat.Clause(List(
+    assertTree(stats)(Pkg.Body(List(
       Defn.Class(Nil, pname("A"), Nil, ctor, tplNoBody()),
       Defn.Object(Nil, tname("B"), tplNoBody())
     )))
