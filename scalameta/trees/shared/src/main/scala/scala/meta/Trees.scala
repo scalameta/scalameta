@@ -46,6 +46,18 @@ object Tree extends InternalTreeXtensions {
     .TreeSyntax.apply[T](dialect)
 
   @branch
+  /** brace- or indent-delimited container of statements */
+  trait Block extends Tree {
+    def stats: List[Tree]
+  }
+
+  @branch
+  trait CasesBlock extends Block {
+    def cases: List[CaseTree]
+    final def stats: List[Tree] = cases
+  }
+
+  @branch
   trait WithBody extends Tree {
     def body: Tree
   }
@@ -63,20 +75,21 @@ object Tree extends InternalTreeXtensions {
     final def exprs: List[Tree] = stats
   }
   @branch
-  trait WithStatsClause extends WithStats {
-    def statsClause: Stat.Clause
-    def stats: List[Stat] = statsClause.stats
+  trait WithStatsBlock extends WithStats with WithBody {
+    def body: Stat.Block
+    def stats: List[Stat] = body.stats
   }
   @branch
-  trait WithCases extends Tree with WithExprs {
+  trait WithCases extends WithExprs {
     def cases: List[CaseTree]
     final def exprs: List[Tree] = cases
   }
   @branch
-  trait WithCasesClause extends Tree with WithCases {
-    def casesClause: Term.CasesClause
-    def cases: List[Case] = casesClause.cases
+  trait WithCasesBlock extends WithCases {
+    def casesBlock: CasesBlock
+    def cases: List[CaseTree] = casesBlock.cases
   }
+
   @branch
   trait WithDeclTpe extends Tree {
     def decltpe: Type
@@ -91,9 +104,9 @@ object Tree extends InternalTreeXtensions {
     final def exprs: List[Tree] = enums
   }
   @branch
-  trait WithEnumeratorsClause extends Tree with WithEnums {
-    def enumsClause: Term.EnumeratorsClause
-    def enums: List[Enumerator] = enumsClause.enums
+  trait WithEnumeratorsBlock extends Tree with WithEnums {
+    def enumsBlock: Term.EnumeratorsBlock
+    def enums: List[Enumerator] = enumsBlock.enums
   }
   @branch
   trait WithParamClauses extends Tree {
@@ -152,8 +165,7 @@ object Stat {
   }
 
   @ast
-  class Clause(stats: List[Stat]) extends Tree {
-    final def isEmpty: Boolean = stats.isEmpty
+  class Block(stats: List[Stat]) extends Tree.Block {
     final def nonEmpty: Boolean = stats.nonEmpty
   }
 }
@@ -255,10 +267,11 @@ object Term {
   @ast
   class ArgClause(values: List[Term], mod: Option[Mod.ArgsType] = None) extends Member.ArgClause
   @ast
-  class CasesClause(cases: List[Case] @nonEmpty) extends Tree.WithCases
+  class CasesBlock(cases: List[Case] @nonEmpty) extends Tree.CasesBlock
   @ast
-  class EnumeratorsClause(enums: List[Enumerator] @nonEmpty) extends Tree.WithEnums {
+  class EnumeratorsBlock(enums: List[Enumerator] @nonEmpty) extends Tree.Block {
     checkFields(checkValidEnumerators(enums))
+    final def stats: List[Tree] = enums
   }
 
   @ast
@@ -332,7 +345,7 @@ object Term {
     checkFields(ParentChecks.MemberTuple(args))
   }
   @ast
-  class Block(stats: List[Stat]) extends Term with Tree.WithStats {
+  class Block(stats: List[Stat]) extends Term with Tree.Block with Tree.WithStats {
     checkParent(ParentChecks.TermBlock)
   }
   @ast
@@ -356,12 +369,12 @@ object Term {
   @ast
   class Match(
       expr: Term,
-      casesClause: CasesClause,
+      casesBlock: CasesBlock,
       @newField("4.4.5")
       mods: List[Mod] = Nil
-  ) extends Term with Tree.WithCasesClause {
+  ) extends Term with Tree.WithCasesBlock {
     @replacedField("4.9.9")
-    override final def cases: List[Case] = casesClause.cases
+    override final def cases: List[Case] = casesBlock.cases
   }
   @branch
   trait TryClause extends Term {
@@ -370,14 +383,14 @@ object Term {
     def finallyp: Option[Term]
   }
   @ast
-  class Try(expr: Term, catchClause: Option[CasesClause], finallyp: Option[Term])
+  class Try(expr: Term, catchClause: Option[CasesBlock], finallyp: Option[Term])
       extends TryClause with Tree.WithCases {
     @replacedField("4.9.9")
     final def catchp: List[Case] = catchClause match {
       case None => Nil
       case Some(x) => x.cases
     }
-    override final def cases: List[CaseTree] = catchp
+    override final def cases: List[Case] = catchp
   }
   @ast
   class TryWithHandler(expr: Term, catchp: Term, finallyp: Option[Term]) extends TryClause {
@@ -422,7 +435,8 @@ object Term {
     override final def paramClause: Member.SyntaxValuesClause = tparamClause
   }
   @ast
-  class PartialFunction(cases: List[Case] @nonEmpty) extends Term with Tree.WithCases
+  class PartialFunction(cases: List[Case] @nonEmpty)
+      extends Term with Tree.WithCases with Tree.CasesBlock
   @ast
   class While(expr: Term, body: Term) extends Term with Tree.WithCond with Tree.WithBody {
     override final def cond: Term = expr
@@ -431,17 +445,20 @@ object Term {
   class Do(body: Term, expr: Term) extends Term with Tree.WithBody with Tree.WithCond {
     override final def cond: Term = expr
   }
-  @ast
-  class For(enumsClause: EnumeratorsClause, body: Term)
-      extends Term with Tree.WithBody with Tree.WithEnumeratorsClause {
-    @replacedField("4.9.9")
-    override final def enums: List[Enumerator] = enumsClause.enums
+  @branch
+  trait ForClause extends Term with Tree.WithEnumeratorsBlock with Tree.WithBody {
+    def enumsBlock: Term.EnumeratorsBlock
+    def body: Tree
   }
   @ast
-  class ForYield(enumsClause: EnumeratorsClause, body: Term)
-      extends Term with Tree.WithBody with Tree.WithEnumeratorsClause {
+  class For(enumsBlock: EnumeratorsBlock, body: Term) extends ForClause {
     @replacedField("4.9.9")
-    override final def enums: List[Enumerator] = enumsClause.enums
+    override final def enums: List[Enumerator] = enumsBlock.enums
+  }
+  @ast
+  class ForYield(enumsBlock: EnumeratorsBlock, body: Term) extends ForClause {
+    @replacedField("4.9.9")
+    override final def enums: List[Enumerator] = enumsBlock.enums
   }
   @ast
   class New(init: Init) extends Term
@@ -483,7 +500,7 @@ object Type {
   @ast
   class ArgClause(values: List[Type]) extends Member.ArgClause
   @ast
-  class CasesClause(cases: List[TypeCase] @nonEmpty) extends Tree.WithCases
+  class CasesBlock(cases: List[TypeCase] @nonEmpty) extends Tree.CasesBlock
 
   @ast
   class Name(value: String @nonEmpty) extends sm.Name with Type.Ref
@@ -561,17 +578,16 @@ object Type {
   @deprecated("Or unused, replaced by ApplyInfix", "4.5.1") @ast
   class Or(lhs: Type, rhs: Type) extends Type
   @ast
-  class Refine(tpe: Option[Type], statsClause: Stat.Clause) extends Type with Tree.WithStatsClause {
-    checkFields(statsClause.is[Stat.Clause.Quasi] || statsClause.stats.forall(_.isRefineStat))
+  class Refine(tpe: Option[Type], body: Stat.Block) extends Type with Tree.WithStatsBlock {
+    checkFields(body.is[Stat.Block.Quasi] || body.stats.forall(_.isRefineStat))
     @replacedField("4.9.9")
-    override final def stats: List[Stat] = statsClause.stats
+    override final def stats: List[Stat] = body.stats
   }
   @ast
-  class Existential(tpe: Type, statsClause: Stat.Clause @nonEmpty)
-      extends Type with Tree.WithStatsClause {
-    checkFields(statsClause.is[Stat.Clause.Quasi] || statsClause.stats.forall(_.isExistentialStat))
+  class Existential(tpe: Type, body: Stat.Block @nonEmpty) extends Type with Tree.WithStatsBlock {
+    checkFields(body.is[Stat.Block.Quasi] || body.stats.forall(_.isExistentialStat))
     @replacedField("4.9.9")
-    override final def stats: List[Stat] = statsClause.stats
+    override final def stats: List[Stat] = body.stats
   }
   @ast
   class Annotate(tpe: Type, annots: List[Mod.Annot] @nonEmpty) extends Type
@@ -674,13 +690,15 @@ object Type {
   class ParamClause(values: List[Param]) extends Member.ParamClause
 
   @ast
-  class Match(tpe: Type, casesClause: CasesClause) extends Type with Tree.WithCases {
+  class Match(tpe: Type, casesBlock: CasesBlock) extends Type with Tree.WithCasesBlock {
     @replacedField("4.9.9")
-    final def cases: List[TypeCase] = casesClause.cases
+    override final def cases: List[TypeCase] = casesBlock.cases
   }
 
   @ast
-  class Block(typeDefs: List[Stat.TypeDef], tpe: Type) extends Type
+  class Block(typeDefs: List[Stat.TypeDef], tpe: Type) extends Type with Tree.Block {
+    final def stats: List[Tree] = typeDefs
+  }
 
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
@@ -1156,10 +1174,7 @@ object Pkg {
     checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
   }
   @ast
-  class Body(stats: List[Stat]) extends Tree with Tree.WithStats {
-    final def isEmpty: Boolean = stats.isEmpty
-    final def nonEmpty: Boolean = stats.nonEmpty
-  }
+  class Body(stats: List[Stat]) extends Tree.Block
 }
 
 // NOTE: The names of Ctor.Primary and Ctor.Secondary here is always Name.Anonymous.
@@ -1176,7 +1191,7 @@ object Ctor {
   }
 
   @ast
-  class Block(init: Init, stats: List[Stat]) extends Tree with Tree.WithStats {
+  class Block(init: Init, stats: List[Stat]) extends Tree.Block {
     checkFields(stats.forall(_.isBlockStat))
   }
   private[meta] object BlockCtor {
@@ -1217,7 +1232,7 @@ class Self(name: Name, decltpe: Option[Type]) extends Member with Tree.WithDeclT
 
 object Template {
   @ast
-  class Body(selfOpt: Option[Self], stats: List[Stat]) extends Tree with Tree.WithStats {
+  class Body(selfOpt: Option[Self], stats: List[Stat]) extends Tree.Block {
     checkFields(stats.forall(_.isTemplateStat))
     final def isEmpty: Boolean = stats.isEmpty && selfOpt.isEmpty
   }
@@ -1230,7 +1245,7 @@ object Template {
 
 @ast
 class Template(
-    earlyClause: Option[Stat.Clause],
+    earlyClause: Option[Stat.Block],
     inits: List[Init],
     @replacesFields("4.9.9", Template.BodyCtor)
     body: Template.Body,
@@ -1238,7 +1253,7 @@ class Template(
     derives: List[Type] = Nil
 ) extends Tree with Tree.WithStats {
   checkFields(inits.isEmpty || earlyClause.forall { x =>
-    x.is[Stat.Clause.Quasi] || x.stats.forall(_.isEarlyStat)
+    x.is[Stat.Block.Quasi] || x.stats.forall(_.isEarlyStat)
   })
   @replacedField("4.9.9")
   final def early: List[Stat] = earlyClause match {
@@ -1386,7 +1401,7 @@ class Case(pat: Pat, cond: Option[Term], body: Term)
 class TypeCase(pat: Type, body: Type) extends CaseTree
 
 @ast
-class Source(stats: List[Stat]) extends Tree with Tree.WithStats {
+class Source(stats: List[Stat]) extends Tree with Tree.WithStats with Tree.Block {
   // NOTE: This validation has been removed to allow dialects with top-level terms.
   // Ideally, we should push the validation into a dialect-specific prettyprinter when #220 is fixed.
   // checkFields(stats.forall(_.isTopLevelStat))

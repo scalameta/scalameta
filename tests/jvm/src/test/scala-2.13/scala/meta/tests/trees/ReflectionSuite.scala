@@ -24,7 +24,7 @@ class ReflectionSuite extends TreeSuiteBase {
     val sym = symbolOf[scala.meta.Tree]
     assert(sym.isRoot)
     val root = sym.asRoot
-    assertEquals((root.allBranches.length, root.allLeafs.length), (60, 434))
+    assertEquals((root.allBranches.length, root.allLeafs.length), (63, 437))
   }
 
   test("If") {
@@ -109,8 +109,8 @@ class ReflectionSuite extends TreeSuiteBase {
          |Option[scala.meta.Mod.ParamsType]
          |Option[scala.meta.Mod.Variant]
          |Option[scala.meta.Self]
-         |Option[scala.meta.Stat.Clause]
-         |Option[scala.meta.Term.CasesClause]
+         |Option[scala.meta.Stat.Block]
+         |Option[scala.meta.Term.CasesBlock]
          |Option[scala.meta.Term]
          |Option[scala.meta.Type]
          |Seq[scala.meta.Term.ArgClause]
@@ -128,20 +128,20 @@ class ReflectionSuite extends TreeSuiteBase {
          |scala.meta.Pkg.Body
          |scala.meta.Ref
          |scala.meta.Stat
-         |scala.meta.Stat.Clause
+         |scala.meta.Stat.Block
          |scala.meta.Template
          |scala.meta.Template.Body
          |scala.meta.Term
          |scala.meta.Term.ArgClause
-         |scala.meta.Term.CasesClause
-         |scala.meta.Term.EnumeratorsClause
+         |scala.meta.Term.CasesBlock
+         |scala.meta.Term.EnumeratorsBlock
          |scala.meta.Term.Name
          |scala.meta.Term.ParamClause
          |scala.meta.Term.Ref
          |scala.meta.Type
          |scala.meta.Type.ArgClause
          |scala.meta.Type.Bounds
-         |scala.meta.Type.CasesClause
+         |scala.meta.Type.CasesBlock
          |scala.meta.Type.FuncParamClause
          |scala.meta.Type.Name
          |""".stripMargin.lf2nl

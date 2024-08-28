@@ -397,7 +397,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Self
          |scala.meta.Source
          |scala.meta.Stat
-         |scala.meta.Stat.Clause
+         |scala.meta.Stat.Block
          |scala.meta.Stat.TypeDef
          |scala.meta.Stat.WithCtor
          |scala.meta.Stat.WithMods
@@ -417,13 +417,14 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.Ascribe
          |scala.meta.Term.Assign
          |scala.meta.Term.Block
-         |scala.meta.Term.CasesClause
+         |scala.meta.Term.CasesBlock
          |scala.meta.Term.ContextFunction
          |scala.meta.Term.Do
          |scala.meta.Term.EndMarker
-         |scala.meta.Term.EnumeratorsClause
+         |scala.meta.Term.EnumeratorsBlock
          |scala.meta.Term.Eta
          |scala.meta.Term.For
+         |scala.meta.Term.ForClause
          |scala.meta.Term.ForYield
          |scala.meta.Term.Function
          |scala.meta.Term.FunctionTerm
@@ -455,14 +456,16 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.Tuple
          |scala.meta.Term.While
          |scala.meta.Term.Xml
+         |scala.meta.Tree.Block
+         |scala.meta.Tree.CasesBlock
          |scala.meta.Tree.WithBody
          |scala.meta.Tree.WithCases
-         |scala.meta.Tree.WithCasesClause
+         |scala.meta.Tree.WithCasesBlock
          |scala.meta.Tree.WithCond
          |scala.meta.Tree.WithCondOpt
          |scala.meta.Tree.WithDeclTpe
          |scala.meta.Tree.WithDeclTpeOpt
-         |scala.meta.Tree.WithEnumeratorsClause
+         |scala.meta.Tree.WithEnumeratorsBlock
          |scala.meta.Tree.WithEnums
          |scala.meta.Tree.WithExprs
          |scala.meta.Tree.WithParamClauseGroup
@@ -470,7 +473,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Tree.WithParamClauses
          |scala.meta.Tree.WithPats
          |scala.meta.Tree.WithStats
-         |scala.meta.Tree.WithStatsClause
+         |scala.meta.Tree.WithStatsBlock
          |scala.meta.Tree.WithTParamClause
          |scala.meta.Type
          |scala.meta.Type.And
@@ -484,7 +487,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Type.Block
          |scala.meta.Type.Bounds
          |scala.meta.Type.ByName
-         |scala.meta.Type.CasesClause
+         |scala.meta.Type.CasesBlock
          |scala.meta.Type.ContextFunction
          |scala.meta.Type.Existential
          |scala.meta.Type.FuncParamClause

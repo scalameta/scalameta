@@ -532,7 +532,7 @@ object TreeSyntax {
           )
         )
       case t: Term.Match =>
-        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), " ", kw("match"), " ", t.casesClause))
+        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), " ", kw("match"), " ", t.casesBlock))
       case t: Term.TryClause =>
         val showExpr = p(Expr, t.expr)
         val needParensAroundExpr = t.expr match {
@@ -645,9 +645,8 @@ object TreeSyntax {
           )
         )
       case t: Type.Refine =>
-        m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.statsClause)
-      case t: Type.Existential =>
-        m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " ", t.statsClause))
+        m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.body)
+      case t: Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " ", t.body))
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe))
       case t: Type.PolyFunction => m(Typ, t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe))
@@ -962,7 +961,7 @@ object TreeSyntax {
       case t: Export => s(kw("export"), " ", r(t.importers, ", "))
 
       // Case
-      case t: Term.CasesClause => s("{", t.cases, n("}"))
+      case t: Term.CasesBlock => s("{", t.cases, n("}"))
       case t: Case =>
         val ppat = p(Pattern, t.pat)
         val pcond = t.cond.fold(s())(cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)))
@@ -972,7 +971,7 @@ object TreeSyntax {
           case _ => false
         }
         def allOneLiner = t.parent match {
-          case Some(p: Term.CasesClause) => p.cases.forall(isOneLiner)
+          case Some(p: Term.CasesBlock) => p.cases.forall(isOneLiner)
           case _ => isOneLiner(t)
         }
         val pbody = t.stats match {
@@ -992,7 +991,7 @@ object TreeSyntax {
         s(o(shebang, EOL), r(t.stats, EOL))
       case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
 
-      case t: Stat.Clause => if (t.stats.isEmpty) s("{}") else s("{", t.stats, n("}"))
+      case t: Stat.Block => if (t.stats.isEmpty) s("{}") else s("{", t.stats, n("}"))
     }
 
     private def givenName(name: meta.Name, pcGroup: Option[Member.ParamClauseGroup]): Show.Result =

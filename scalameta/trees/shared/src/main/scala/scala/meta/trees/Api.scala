@@ -67,31 +67,31 @@ private[meta] trait Api extends ApiLowPriority {
       dialect: Dialect
   ): List[Pat.ArgClause] = v.map(patValuesToArgClauseWithDialect)
 
-  implicit def typeCasesClauseToValues(v: Type.CasesClause): List[TypeCase] = v.cases
-  implicit def typeCaseValuesToCasesClauseWithDialect(v: List[TypeCase])(implicit
+  implicit def typeCasesBlockToValues(v: Type.CasesBlock): List[TypeCase] = v.cases
+  implicit def typeCaseValuesToCasesBlockWithDialect(v: List[TypeCase])(implicit
       dialect: Dialect
-  ): Type.CasesClause = Type.CasesClause(v)
+  ): Type.CasesBlock = Type.CasesBlock(v)
 
-  implicit def casesClauseToValues(v: Term.CasesClause): List[Case] = v.cases
-  implicit def caseValuesToCasesClauseWithDialect(v: List[Case])(implicit
+  implicit def casesBlockToValues(v: Term.CasesBlock): List[Case] = v.cases
+  implicit def caseValuesToCasesBlockWithDialect(v: List[Case])(implicit
       dialect: Dialect
-  ): Term.CasesClause = Term.CasesClause(v)
-  implicit def caseValuesToOptionCasesClauseWithDialect(v: List[Case])(implicit
+  ): Term.CasesBlock = Term.CasesBlock(v)
+  implicit def caseValuesToOptionCasesBlockWithDialect(v: List[Case])(implicit
       dialect: Dialect
-  ): Option[Term.CasesClause] = if (v.isEmpty) None else Some(Term.CasesClause(v))
+  ): Option[Term.CasesBlock] = if (v.isEmpty) None else Some(Term.CasesBlock(v))
 
-  implicit def enumsClauseToValues(v: Term.EnumeratorsClause): List[Enumerator] = v.enums
-  implicit def enumValuesToEnumsClauseWithDialect(v: List[Enumerator])(implicit
+  implicit def enumsBlockToValues(v: Term.EnumeratorsBlock): List[Enumerator] = v.enums
+  implicit def enumValuesToEnumsBlockWithDialect(v: List[Enumerator])(implicit
       dialect: Dialect
-  ): Term.EnumeratorsClause = Term.EnumeratorsClause(v)
+  ): Term.EnumeratorsBlock = Term.EnumeratorsBlock(v)
 
-  implicit def statsClauseToValues(v: Stat.Clause): List[Stat] = v.stats
-  implicit def statValuesToStatClauseWithDialect(v: List[Stat])(implicit
+  implicit def statsBlockToValues(v: Stat.Block): List[Stat] = v.stats
+  implicit def statValuesToStatBlockWithDialect(v: List[Stat])(implicit
       dialect: Dialect
-  ): Stat.Clause = Stat.Clause(v)
-  implicit def statValuesToOptionStatClauseWithDialect(v: List[Stat])(implicit
+  ): Stat.Block = Stat.Block(v)
+  implicit def statValuesToOptionStatBlockWithDialect(v: List[Stat])(implicit
       dialect: Dialect
-  ): Option[Stat.Clause] = if (v.isEmpty) None else Some(Stat.Clause(v))
+  ): Option[Stat.Block] = if (v.isEmpty) None else Some(Stat.Block(v))
 
   implicit def pkgBodyToValues(v: Pkg.Body): List[Stat] = v.stats
   implicit def statValuesToPkgBodyWithDialect(v: List[Stat])(implicit dialect: Dialect): Pkg.Body =
