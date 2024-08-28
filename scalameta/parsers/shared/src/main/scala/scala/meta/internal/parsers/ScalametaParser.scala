@@ -841,27 +841,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       ctor(funcParams, typeIndentedOpt())
     }
 
-    private def typeCaseClauses(): Type.CasesClause =
-      autoPos(typeCaseClausesList().reduceWith(Type.CasesClause.apply))
-
-    private def typeCaseClausesList(): List[TypeCase] = {
+    private def typeCaseClauses(): Type.CasesClause = autoPos {
       def cases() = listBy[TypeCase] { allCases =>
         while (at[KwCase]) {
-          allCases += typeCaseClause()
+          allCases += autoPos {
+            next()
+            val pat = infixTypeOrTuple(inMatchType = true)
+            accept[RightArrow]
+            TypeCase(pat, typeIndentedOpt())
+          }
           newLinesOpt()
         }
       }
-      if (acceptOpt[LeftBrace]) inBracesAfterOpen(cases())
-      else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(cases())
-      else syntaxError("Expected braces or indentation", at = currToken.pos)
-    }
-
-    private def typeCaseClause(): TypeCase = autoPos {
-      accept[KwCase]
-      val pat = infixTypeOrTuple(inMatchType = true)
-      accept[RightArrow]
-      val tpe = typeIndentedOpt()
-      TypeCase(pat, tpe)
+      (if (at[Indentation.Indent]) indentedOnOpen(cases()) else inBraces(cases()))
+        .reduceWith(Type.CasesClause.apply)
     }
 
     def quasiquoteType(): Type = entrypointType()
@@ -1419,11 +1412,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def matchClause(t: Term, startPos: Int) = {
     val cases = autoPos {
-      if (acceptOpt[Indentation.Indent]) indentedAfterOpen(casesClause())
-      else {
-        accept[LeftBrace]
-        inBracesAfterOpen(casesClause())
-      }
+      if (at[Indentation.Indent]) indentedOnOpen(casesClause()) else inBraces(casesClause())
     }
     autoEndPos(startPos)(Term.Match(t, cases, Nil))
   }
