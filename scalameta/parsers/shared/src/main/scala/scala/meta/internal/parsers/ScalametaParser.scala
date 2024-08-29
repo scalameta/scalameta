@@ -3458,8 +3458,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val body =
         if (acceptOpt[KwWith])
           if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(OwnedByGiven)
-          else if (at[Indentation.Indent])
-            autoEndPos(prevIndex)(templateBodyOnIndentRaw(OwnedByGiven))
+          else if (at[Indentation.Indent]) autoPos(templateBodyOnIndentRaw(OwnedByGiven))
           else syntaxError("expected '{' or indentation", at = currToken)
         else {
           if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
@@ -4038,17 +4037,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def toStatsBlockRaw(stats: List[Stat]): Stat.Block = stats.reduceWith(Stat.Block.apply)
   private def toStatsBlock(startPos: Int)(stats: List[Stat]): Stat.Block =
     autoEndPos(startPos)(toStatsBlockRaw(stats))
-  private def toStatsBlock(stats: => List[Stat]): Stat.Block = toStatsBlock(currIndex)(stats)
 
-  private def refineWith(innerType: Option[Type], stats: => List[Stat]) =
-    autoEndPos(innerType)(Type.Refine(innerType, toStatsBlock(stats)))
+  private def refineWith(innerType: Option[Type], statsPos: Int, stats: => List[Stat]) =
+    autoEndPos(innerType)(Type.Refine(innerType, toStatsBlock(statsPos)(stats)))
 
-  private def refinement(innerType: Option[Type]): Option[Type] =
-    if (!dialect.allowSignificantIndentation) refinementInBraces(innerType, -1)
-    else if (!currToken.isAny[Colon, KwWith])
-      refinementInBraces(innerType, in.previousIndentation + 1)
-    else if (tryAhead[Indentation.Indent]) Some(refineWith(innerType, indented(refineStatSeq())))
-    else innerType
+  private def refinement(innerType: Option[Type]): Option[Type] = {
+    def maybeRefineIndented(startPos: => Int) =
+      if (!tryAhead[Indentation.Indent]) innerType
+      else Some(refineWith(innerType, startPos, indented(refineStatSeq())))
+    currToken match {
+      case _ if !dialect.allowSignificantIndentation => refinementInBraces(innerType, -1)
+      case _: Colon => maybeRefineIndented(prevIndex)
+      case _: KwWith => maybeRefineIndented(currIndex)
+      case _ => refinementInBraces(innerType, in.previousIndentation + 1)
+    }
+  }
 
   @tailrec
   private def refinementInBraces(innerType: Option[Type], minIndent: Int): Option[Type] = {
@@ -4059,12 +4062,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ => true
     }
     if (notRefined) innerType
-    else refinementInBraces(Some(refineWith(innerType, inBraces(refineStatSeq()))), minIndent)
+    else refinementInBraces(
+      Some(refineWith(innerType, currIndex, inBraces(refineStatSeq()))),
+      minIndent
+    )
   }
 
   private def existentialTypeOnForSome(t: Type): Type.Existential = {
     next()
-    val statsClause = toStatsBlock {
+    val statsClause = toStatsBlock(currIndex) {
       val stats = inBraces(refineStatSeq())
       stats.foreach { x =>
         if (!x.isExistentialStat) syntaxError("not a legal existential clause", at = x)

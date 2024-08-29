@@ -143,9 +143,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |<inits1>Init Eq[Int]</inits1>
        |<tpe>Type.Apply Eq[Int]</tpe>
        |<argClause>Type.ArgClause [Int]</argClause>
-       |<body>Template.Body with
-       |  // c1
-       |  def f(): Int = 1
+       |<body>Template.Body def f(): Int = 1
        |  // c2</body>
        |<stats0>Defn.Def def f(): Int = 1</stats0>
        |<paramClauseGroups0>Member.ParamClauseGroup ()</paramClauseGroups0>
@@ -1232,7 +1230,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     """|Type.ParamClause type A @@= AnyRef:
        |Type.Refine AnyRef:
        |  type T>: Null
-       |Stat.Block type T>: Null
+       |Stat.Block :
+       |  type T>: Null
        |Decl.Type type T>: Null
        |Type.ParamClause   type T@@>: Null
        |Type.Bounds >: Null
