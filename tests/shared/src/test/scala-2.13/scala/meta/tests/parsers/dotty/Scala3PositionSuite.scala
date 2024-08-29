@@ -1225,6 +1225,21 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin
   )
 
+  checkPositions[Stat](
+    """|type A = AnyRef:
+       |  type T>: Null
+       |""".stripMargin,
+    """|Type.ParamClause type A @@= AnyRef:
+       |Type.Refine AnyRef:
+       |  type T>: Null
+       |Stat.Block type T>: Null
+       |Decl.Type type T>: Null
+       |Type.ParamClause   type T@@>: Null
+       |Type.Bounds >: Null
+       |Type.Bounds type A = @@AnyRef:
+       |""".stripMargin
+  )
+
   checkPositions[Type](
     """|(x: X, y: Y) => Z
        |""".stripMargin,
