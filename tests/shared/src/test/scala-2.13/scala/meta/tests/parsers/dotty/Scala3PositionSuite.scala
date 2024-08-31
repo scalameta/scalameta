@@ -2030,4 +2030,243 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     showFieldName = true
   )
 
+  checkPositions[Source](
+    """|object a:
+       |   try baz
+       |   catch case ex: Baz => foo
+       |
+       |   // comment
+       |   val qux = quux
+       |""".stripMargin,
+    """|<stats0>Defn.Object object a:
+       |   try baz
+       |   catch case ex: Baz => foo
+       |
+       |   // comment
+       |   val qux = quux</stats0>
+       |<templ>Template :
+       |   try baz
+       |   catch case ex: Baz => foo
+       |
+       |   // comment
+       |   val qux = quux</templ>
+       |<body>Template.Body :
+       |   try baz
+       |   catch case ex: Baz => foo
+       |
+       |   // comment
+       |   val qux = quux</body>
+       |<stats0>Term.Try try baz
+       |   catch case ex: Baz => foo</stats0>
+       |<catchClause>Term.CasesBlock case ex: Baz => foo</catchClause>
+       |<cases0>Case case ex: Baz => foo</cases0>
+       |<pat>Pat.Typed ex: Baz</pat>
+       |<stats1>Defn.Val val qux = quux</stats1>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(a) [7..8)
+       |Colon [8..9)
+       |Indentation.Indent [9..9)
+       |KwTry [13..16)
+       |Ident(baz) [17..20)
+       |KwCatch [24..29)
+       |Indentation.Indent [30..30)
+       |KwCase [30..34)
+       |Ident(ex) [35..37)
+       |Colon [37..38)
+       |Ident(Baz) [39..42)
+       |RightArrow [43..45)
+       |Ident(foo) [46..49)
+       |Indentation.Outdent [50..50)
+       |KwVal [68..71)
+       |Ident(qux) [72..75)
+       |Equals [76..77)
+       |Ident(quux) [78..82)
+       |Indentation.Outdent [82..82)
+       |EOF [83..83)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Stat](
+    """|extension (a: Int)
+       |
+       |
+       |    /** */
+       |
+       |
+       |    def double = a * 2
+       |
+       |    /** */
+       |""".stripMargin,
+    """|<paramClauseGroup>Member.ParamClauseGroup (a: Int)</paramClauseGroup>
+       |<tparamClause>Type.ParamClause extension @@(a: Int)</tparamClause>
+       |<paramClauses0>Term.ParamClause (a: Int)</paramClauses0>
+       |<body>Term.Block def double = a * 2
+       |
+       |    /** */</body>
+       |<stats0>Defn.Def def double = a * 2</stats0>
+       |<body>Term.ApplyInfix a * 2</body>
+       |<targClause>Type.ArgClause     def double = a * @@2</targClause>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Ident(extension) [0..9)
+       |LeftParen [10..11)
+       |Ident(a) [11..12)
+       |Colon [12..13)
+       |Ident(Int) [14..17)
+       |RightParen [17..18)
+       |Indentation.Indent [33..33)
+       |KwDef [38..41)
+       |Ident(double) [42..48)
+       |Equals [49..50)
+       |Ident(a) [51..52)
+       |Ident(*) [53..54)
+       |Constant.Int(2) [55..56)
+       |Indentation.Outdent [68..68)
+       |EOF [69..69)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Stat](
+    """|try foo
+       |catch
+       |case _ =>
+       |    try bar finally qux
+       |    try bar catch baz finally qux
+       |    try bar catch case _ => baz finally qux
+       |case xyz =>
+       |""".stripMargin,
+    """|<catchClause>Term.CasesBlock case _ =>
+       |    try bar finally qux
+       |    try bar catch baz finally qux
+       |    try bar catch case _ => baz finally qux
+       |case xyz =></catchClause>
+       |<cases0>Case case _ =>
+       |    try bar finally qux
+       |    try bar catch baz finally qux
+       |    try bar catch case _ => baz finally qux</cases0>
+       |<body>Term.Block try bar finally qux
+       |    try bar catch baz finally qux
+       |    try bar catch case _ => baz finally qux</body>
+       |<stats0>Term.Try try bar finally qux</stats0>
+       |<stats1>Term.TryWithHandler try bar catch baz finally qux</stats1>
+       |<stats2>Term.Try try bar catch case _ => baz finally qux</stats2>
+       |<catchClause>Term.CasesBlock case _ => baz</catchClause>
+       |<cases0>Case case _ => baz</cases0>
+       |<cases1>Case case xyz =></cases1>
+       |<body>Term.Block case xyz =>@@</body>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwTry [0..3)
+       |Ident(foo) [4..7)
+       |KwCatch [8..13)
+       |Indentation.Indent [13..13)
+       |KwCase [14..18)
+       |Underscore [19..20)
+       |RightArrow [21..23)
+       |Indentation.Indent [23..23)
+       |KwTry [28..31)
+       |Ident(bar) [32..35)
+       |KwFinally [36..43)
+       |Ident(qux) [44..47)
+       |LF [47..48)
+       |KwTry [52..55)
+       |Ident(bar) [56..59)
+       |KwCatch [60..65)
+       |Ident(baz) [66..69)
+       |KwFinally [70..77)
+       |Ident(qux) [78..81)
+       |LF [81..82)
+       |KwTry [86..89)
+       |Ident(bar) [90..93)
+       |KwCatch [94..99)
+       |Indentation.Indent [100..100)
+       |KwCase [100..104)
+       |Underscore [105..106)
+       |RightArrow [107..109)
+       |Ident(baz) [110..113)
+       |Indentation.Outdent [110..110)
+       |KwFinally [114..121)
+       |Ident(qux) [122..125)
+       |Indentation.Outdent [125..125)
+       |LF [125..126)
+       |KwCase [126..130)
+       |Ident(xyz) [131..134)
+       |RightArrow [135..137)
+       |Indentation.Outdent [137..137)
+       |EOF [138..138)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Stat](
+    """|try foo
+       |catch
+       |case _ =>
+       |    try bar finally qux
+       |    try bar catch baz finally qux
+       |    try bar catch case _ => baz finally qux
+       |finally xyz
+       |""".stripMargin,
+    """|<catchClause>Term.CasesBlock case _ =>
+       |    try bar finally qux
+       |    try bar catch baz finally qux
+       |    try bar catch case _ => baz finally qux</catchClause>
+       |<cases0>Case case _ =>
+       |    try bar finally qux
+       |    try bar catch baz finally qux
+       |    try bar catch case _ => baz finally qux</cases0>
+       |<body>Term.Block try bar finally qux
+       |    try bar catch baz finally qux
+       |    try bar catch case _ => baz finally qux</body>
+       |<stats0>Term.Try try bar finally qux</stats0>
+       |<stats1>Term.TryWithHandler try bar catch baz finally qux</stats1>
+       |<stats2>Term.Try try bar catch case _ => baz finally qux</stats2>
+       |<catchClause>Term.CasesBlock case _ => baz</catchClause>
+       |<cases0>Case case _ => baz</cases0>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwTry [0..3)
+       |Ident(foo) [4..7)
+       |KwCatch [8..13)
+       |Indentation.Indent [13..13)
+       |KwCase [14..18)
+       |Underscore [19..20)
+       |RightArrow [21..23)
+       |Indentation.Indent [23..23)
+       |KwTry [28..31)
+       |Ident(bar) [32..35)
+       |KwFinally [36..43)
+       |Ident(qux) [44..47)
+       |LF [47..48)
+       |KwTry [52..55)
+       |Ident(bar) [56..59)
+       |KwCatch [60..65)
+       |Ident(baz) [66..69)
+       |KwFinally [70..77)
+       |Ident(qux) [78..81)
+       |LF [81..82)
+       |KwTry [86..89)
+       |Ident(bar) [90..93)
+       |KwCatch [94..99)
+       |Indentation.Indent [100..100)
+       |KwCase [100..104)
+       |Underscore [105..106)
+       |RightArrow [107..109)
+       |Ident(baz) [110..113)
+       |Indentation.Outdent [110..110)
+       |KwFinally [114..121)
+       |Ident(qux) [122..125)
+       |Indentation.Outdent [125..125)
+       |Indentation.Outdent [125..125)
+       |KwFinally [126..133)
+       |Ident(xyz) [134..137)
+       |EOF [138..138)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
 }

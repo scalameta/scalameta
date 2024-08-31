@@ -265,14 +265,20 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     new Indentation.Outdent(token.input, token.dialect, token.start, token.start)
   }
 
-  private[parsers] def findOutdentPos(prevPos: Int, currPos: Int, outdent: Int): Int = {
+  private[parsers] def findOutdentPos(
+      prevPos: Int,
+      currPos: Int,
+      outdent: Int,
+      noBlank: Boolean
+  ): Int = {
     @tailrec
-    def iter(i: Int, pos: Int, indent: Int): Int =
+    def iter(i: Int, pos: Int, indent: Int, hadEol: Boolean = false): Int =
       if (i >= currPos) if (pos < currPos) pos else currPos - 1
       else tokens(i) match {
-        case _: AtEOL => iter(i + 1, i, 0)
-        case t: HSpace if indent >= 0 => iter(i + 1, pos, indent + t.len)
-        case _: Whitespace => iter(i + 1, pos, indent)
+        case _: MultiNL if noBlank => i
+        case _: AtEOL => if (noBlank && hadEol) i else iter(i + 1, i, 0, true)
+        case t: HSpace if indent >= 0 => iter(i + 1, pos, indent + t.len, hadEol)
+        case _: Whitespace => iter(i + 1, pos, indent, hadEol)
         case _: Comment if indent < 0 || outdent <= indent => iter(i + 1, i + 1, -1)
         case _ => pos
       }
@@ -332,7 +338,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
     def mkOutdentAt(outdent: Int, regions: List[SepRegion]) = {
       val maxPointPos = if (nextPos < 0 || currNonTrivial) currPos else nextPos
-      val pointPos = findOutdentPos(prevPos, maxPointPos, outdent)
+      val pointPos = findOutdentPos(prevPos, maxPointPos, outdent, outdent <= findIndent(regions))
       val (nextPrevPos, nextCurrPos) =
         if (pointPos > currPos) (currPos, pointPos) else (prevPos, currPos)
       TokenRef(regions, mkOutdentToken(pointPos), nextPrevPos, nextCurrPos, pointPos)

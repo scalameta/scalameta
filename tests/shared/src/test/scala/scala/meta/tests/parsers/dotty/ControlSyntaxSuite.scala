@@ -3709,7 +3709,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))
   }
 
-  test("single-line try within catch case, then another case") {
+  test("single-line try within catch case, then finally") {
     val code = """|try foo
                   |catch
                   |case _ =>
