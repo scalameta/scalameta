@@ -90,6 +90,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
           if (showFieldName) t.parent.flatMap { p =>
             p.productFields.iterator.zip(p.productIterator).collectFirst {
               case (name, `t`) => name
+              case (name, Some(`t`)) => name
               case (name, IterableIndex(idx)) => s"$name$idx"
             }
           }.orElse(Some("?"))
