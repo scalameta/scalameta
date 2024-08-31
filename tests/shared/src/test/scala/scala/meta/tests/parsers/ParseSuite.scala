@@ -150,10 +150,11 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       extraClue: String = ""
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): String = {
     val obtained: T = parser(code)
-    assertStruct(obtained, extraClue)(struct)
-    assertSyntaxWithClue(obtained)(syntax)(
+    val reprinted = assertSyntaxWithClue(obtained)(syntax)(
       TestHelpers.getMessageWithExtraClue("tree syntax not equal", extraClue) + "\n" + struct
     )
+    assertStruct(obtained, extraClue)(struct)
+    reprinted
   }
 
   protected def parseAndCheckTreeWithSyntaxAndStruct[T <: Tree](
