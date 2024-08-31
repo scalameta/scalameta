@@ -2165,15 +2165,21 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      try
        |        val bar = baz
        |      catch case ex => qux
-       |        // c1</cases0>
+       |        // c1
+       |
+       |      // c2</cases0>
        |<body>Term.Try try
        |        val bar = baz
        |      catch case ex => qux
-       |        // c1</body>
+       |        // c1
+       |
+       |      // c2</body>
        |<expr>Term.Block val bar = baz</expr>
        |<stats0>Defn.Val val bar = baz</stats0>
        |<catchClause>Term.CasesBlock case ex => qux
-       |        // c1</catchClause>
+       |        // c1
+       |
+       |      // c2</catchClause>
        |<cases0>Case case ex => qux</cases0>
        |""".stripMargin,
     """|BOF [0..0)
@@ -2200,7 +2206,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Ident(ex) [90..92)
        |RightArrow [93..95)
        |Ident(qux) [96..99)
-       |Indentation.Outdent [114..114)
+       |Indentation.Outdent [127..127)
        |RightBrace [140..141)
        |Indentation.Outdent [141..141)
        |EOF [142..142)
