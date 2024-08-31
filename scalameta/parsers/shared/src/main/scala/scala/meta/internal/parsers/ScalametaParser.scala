@@ -841,7 +841,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       ctor(funcParams, typeIndentedOpt())
     }
 
-    private def typeCaseClauses(): Type.CasesClause = autoPos {
+    private def typeCaseClauses(): Type.CasesBlock = autoPos {
       def cases() = listBy[TypeCase] { allCases =>
         while (at[KwCase]) {
           allCases += autoPos {
@@ -854,7 +854,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         }
       }
       (if (at[Indentation.Indent]) indentedOnOpen(cases()) else inBraces(cases()))
-        .reduceWith(Type.CasesClause.apply)
+        .reduceWith(Type.CasesBlock.apply)
     }
 
     def quasiquoteType(): Type = entrypointType()
@@ -1412,7 +1412,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def matchClause(t: Term, startPos: Int) = {
     val cases = autoPos {
-      if (at[Indentation.Indent]) indentedOnOpen(casesClause()) else inBraces(casesClause())
+      if (at[Indentation.Indent]) indentedOnOpen(casesBlock()) else inBraces(casesBlock())
     }
     autoEndPos(startPos)(Term.Match(t, cases, Nil))
   }
@@ -1497,13 +1497,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
         def finallyopt = if (acceptIfAfterOptNL[KwFinally]) Some(expr()) else None
 
-        def tryWithCases(cases: Option[Term.CasesClause]) = Term.Try(body, cases, finallyopt)
+        def tryWithCases(cases: Option[Term.CasesBlock]) = Term.Try(body, cases, finallyopt)
         def tryWithHandler(handler: Term) = Term.TryWithHandler(body, handler, finallyopt)
         def tryInDelims(
-            f: (=> Either[Term, Term.CasesClause]) => Either[Term, Term.CasesClause]
+            f: (=> Either[Term, Term.CasesBlock]) => Either[Term, Term.CasesBlock]
         ): Term = {
           val catchPos = currIndex
-          f(casesClauseIfAny().toRight(blockRaw())).fold(
+          f(casesBlockIfAny().toRight(blockRaw())).fold(
             x => tryWithHandler(autoEndPos(catchPos)(x)),
             x => tryWithCases(Some(autoEndPos(catchPos)(x)))
           )
@@ -1511,7 +1511,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
         if (acceptIfAfterOptNL[KwCatch]) currToken match {
           case _: KwCase =>
-            tryWithCases(Some(autoPos { next(); toCasesClause(caseClause(true) :: Nil) }))
+            tryWithCases(Some(autoPos { next(); toCasesBlock(caseClause(true) :: Nil) }))
           case _: Indentation.Indent => tryInDelims(indentedOnOpen)
           case _: LeftBrace => tryInDelims(inBracesOnOpen)
           case _ => tryWithHandler(expr())
@@ -1543,7 +1543,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             else parseInParens()
           } else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(enumerators())
           else enumerators()
-        val enums = autoPos(enumList.reduceWith(Term.EnumeratorsClause.apply))
+        val enums = autoPos(enumList.reduceWith(Term.EnumeratorsBlock.apply))
 
         newLinesOpt()
         if (acceptOpt[KwDo]) Term.For(enums, expr())
@@ -2430,9 +2430,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     caseClause()
   }
 
-  def toCasesClause(cases: List[Case]): Term.CasesClause = cases.reduceWith(Term.CasesClause.apply)
-  def casesClause(): Term.CasesClause = casesClauseIfAny().getOrElse(syntaxErrorExpected[KwCase])
-  def casesClauseIfAny(): Option[Term.CasesClause] = caseClausesIfAny().map(toCasesClause)
+  def toCasesBlock(cases: List[Case]): Term.CasesBlock = cases.reduceWith(Term.CasesBlock.apply)
+  def casesBlock(): Term.CasesBlock = casesBlockIfAny().getOrElse(syntaxErrorExpected[KwCase])
+  def casesBlockIfAny(): Option[Term.CasesBlock] = caseClausesIfAny().map(toCasesBlock)
 
   def caseClauses(): List[Case] = caseClausesIfAny().getOrElse(syntaxErrorExpected[KwCase])
   def caseClausesIfAny(): Option[List[Case]] = {
@@ -3965,7 +3965,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def templateAfterExtends(
       owner: TemplateOwner,
       parents: List[Init] = Nil,
-      edefs: Option[Stat.Clause] = None
+      edefs: Option[Stat.Block] = None
   ): Template = {
     val derived = derivesClasses()
     val body = templateBodyOpt(owner)
@@ -3984,7 +3984,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         })
         next()
         val parents = templateParents(afterExtend)
-        val early = copyPos(body)(toStatsClauseRaw(edefs))
+        val early = copyPos(body)(toStatsBlockRaw(edefs))
         templateAfterExtends(owner, parents, Some(early))
       } else Template(None, Nil, body, Nil)
     } else {
@@ -4035,13 +4035,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
     else emptyTemplateBody()
 
-  private def toStatsClauseRaw(stats: List[Stat]): Stat.Clause = stats.reduceWith(Stat.Clause.apply)
-  private def toStatsClause(startPos: Int)(stats: List[Stat]): Stat.Clause =
-    autoEndPos(startPos)(toStatsClauseRaw(stats))
-  private def toStatsClause(stats: => List[Stat]): Stat.Clause = toStatsClause(currIndex)(stats)
+  private def toStatsBlockRaw(stats: List[Stat]): Stat.Block = stats.reduceWith(Stat.Block.apply)
+  private def toStatsBlock(startPos: Int)(stats: List[Stat]): Stat.Block =
+    autoEndPos(startPos)(toStatsBlockRaw(stats))
+  private def toStatsBlock(stats: => List[Stat]): Stat.Block = toStatsBlock(currIndex)(stats)
 
   private def refineWith(innerType: Option[Type], stats: => List[Stat]) =
-    autoEndPos(innerType)(Type.Refine(innerType, toStatsClause(stats)))
+    autoEndPos(innerType)(Type.Refine(innerType, toStatsBlock(stats)))
 
   private def refinement(innerType: Option[Type]): Option[Type] =
     if (!dialect.allowSignificantIndentation) refinementInBraces(innerType, -1)
@@ -4064,7 +4064,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def existentialTypeOnForSome(t: Type): Type.Existential = {
     next()
-    val statsClause = toStatsClause {
+    val statsClause = toStatsBlock {
       val stats = inBraces(refineStatSeq())
       stats.foreach { x =>
         if (!x.isExistentialStat) syntaxError("not a legal existential clause", at = x)

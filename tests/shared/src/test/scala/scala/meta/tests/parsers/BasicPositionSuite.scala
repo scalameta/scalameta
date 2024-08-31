@@ -607,7 +607,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |  c = (d)
        |} yield c
        |""".stripMargin,
-    """|Term.EnumeratorsClause {
+    """|Term.EnumeratorsBlock {
        |  a <- (b)
        |  c = (d)
        |}
@@ -626,7 +626,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |}
        |Term.ApplyInfix a + b
        |Type.ArgClause val foo = (a + @@b) match {
-       |Term.CasesClause {
+       |Term.CasesBlock {
        |  case _ =>
        |}
        |Case case _ =>
