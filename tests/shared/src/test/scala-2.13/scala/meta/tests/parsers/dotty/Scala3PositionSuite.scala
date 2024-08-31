@@ -2089,6 +2089,648 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     showFieldName = true
   )
 
+  checkPositions[Source](
+    """|object a:
+       |  foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch case ex => qux
+       |        // c1
+       |
+       |      // c2
+       |
+       |    // c3
+       |  }
+       |""".stripMargin,
+    """|<stats0>Defn.Object object a:
+       |  foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch case ex => qux
+       |        // c1
+       |
+       |      // c2
+       |
+       |    // c3
+       |  }</stats0>
+       |<templ>Template :
+       |  foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch case ex => qux
+       |        // c1
+       |
+       |      // c2
+       |
+       |    // c3
+       |  }</templ>
+       |<body>Template.Body :
+       |  foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch case ex => qux
+       |        // c1
+       |
+       |      // c2
+       |
+       |    // c3
+       |  }</body>
+       |<stats0>Term.Match foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch case ex => qux
+       |        // c1
+       |
+       |      // c2
+       |
+       |    // c3
+       |  }</stats0>
+       |<casesBlock>Term.CasesBlock {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch case ex => qux
+       |        // c1
+       |
+       |      // c2
+       |
+       |    // c3
+       |  }</casesBlock>
+       |<cases0>Case case null =>
+       |      try
+       |        val bar = baz
+       |      catch case ex => qux
+       |        // c1
+       |
+       |      // c2</cases0>
+       |<body>Term.Try try
+       |        val bar = baz
+       |      catch case ex => qux
+       |        // c1
+       |
+       |      // c2</body>
+       |<expr>Term.Block val bar = baz</expr>
+       |<stats0>Defn.Val val bar = baz</stats0>
+       |<catchClause>Term.CasesBlock case ex => qux
+       |        // c1
+       |
+       |      // c2</catchClause>
+       |<cases0>Case case ex => qux</cases0>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(a) [7..8)
+       |Colon [8..9)
+       |Indentation.Indent [9..9)
+       |Ident(foo) [12..15)
+       |KwMatch [16..21)
+       |LeftBrace [22..23)
+       |KwCase [28..32)
+       |KwNull [33..37)
+       |RightArrow [38..40)
+       |KwTry [47..50)
+       |Indentation.Indent [50..50)
+       |KwVal [59..62)
+       |Ident(bar) [63..66)
+       |Equals [67..68)
+       |Ident(baz) [69..72)
+       |Indentation.Outdent [72..72)
+       |KwCatch [79..84)
+       |Indentation.Indent [85..85)
+       |KwCase [85..89)
+       |Ident(ex) [90..92)
+       |RightArrow [93..95)
+       |Ident(qux) [96..99)
+       |Indentation.Outdent [127..127)
+       |RightBrace [140..141)
+       |Indentation.Outdent [141..141)
+       |EOF [142..142)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Source](
+    """|object a:
+       |  foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |  }
+       |""".stripMargin,
+    """|<stats0>Defn.Object object a:
+       |  foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |  }</stats0>
+       |<templ>Template :
+       |  foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |  }</templ>
+       |<body>Template.Body :
+       |  foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |  }</body>
+       |<stats0>Term.Match foo match {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |  }</stats0>
+       |<casesBlock>Term.CasesBlock {
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |  }</casesBlock>
+       |<cases0>Case case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2</cases0>
+       |<body>Term.Try try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2</body>
+       |<expr>Term.Block val bar = baz</expr>
+       |<stats0>Defn.Val val bar = baz</stats0>
+       |<catchClause>Term.CasesBlock case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2</catchClause>
+       |<cases0>Case case ex =>
+       |          qux
+       |
+       |          // c1</cases0>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(a) [7..8)
+       |Colon [8..9)
+       |Indentation.Indent [9..9)
+       |Ident(foo) [12..15)
+       |KwMatch [16..21)
+       |LeftBrace [22..23)
+       |KwCase [28..32)
+       |KwNull [33..37)
+       |RightArrow [38..40)
+       |KwTry [47..50)
+       |Indentation.Indent [50..50)
+       |KwVal [59..62)
+       |Ident(bar) [63..66)
+       |Equals [67..68)
+       |Ident(baz) [69..72)
+       |Indentation.Outdent [72..72)
+       |KwCatch [79..84)
+       |Indentation.Indent [84..84)
+       |KwCase [93..97)
+       |Ident(ex) [98..100)
+       |RightArrow [101..103)
+       |Indentation.Indent [103..103)
+       |Ident(qux) [114..117)
+       |Indentation.Outdent [135..135)
+       |Indentation.Outdent [150..150)
+       |RightBrace [176..177)
+       |Indentation.Outdent [177..177)
+       |EOF [178..178)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Source](
+    """|object a {
+       |  foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |
+       |  // c5
+       |}
+       |""".stripMargin,
+    """|<stats0>Defn.Object object a {
+       |  foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |
+       |  // c5
+       |}</stats0>
+       |<templ>Template {
+       |  foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |
+       |  // c5
+       |}</templ>
+       |<body>Template.Body {
+       |  foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |
+       |  // c5
+       |}</body>
+       |<stats0>Term.Match foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4</stats0>
+       |<casesBlock>Term.CasesBlock case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4</casesBlock>
+       |<cases0>Case case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3</cases0>
+       |<body>Term.Try try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2</body>
+       |<expr>Term.Block val bar = baz</expr>
+       |<stats0>Defn.Val val bar = baz</stats0>
+       |<catchClause>Term.CasesBlock case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2</catchClause>
+       |<cases0>Case case ex =>
+       |          qux
+       |
+       |          // c1</cases0>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(a) [7..8)
+       |LeftBrace [9..10)
+       |Ident(foo) [13..16)
+       |KwMatch [17..22)
+       |Indentation.Indent [22..22)
+       |KwCase [27..31)
+       |KwNull [32..36)
+       |RightArrow [37..39)
+       |Indentation.Indent [39..39)
+       |KwTry [46..49)
+       |Indentation.Indent [49..49)
+       |KwVal [58..61)
+       |Ident(bar) [62..65)
+       |Equals [66..67)
+       |Ident(baz) [68..71)
+       |Indentation.Outdent [71..71)
+       |KwCatch [78..83)
+       |Indentation.Indent [83..83)
+       |KwCase [92..96)
+       |Ident(ex) [97..99)
+       |RightArrow [100..102)
+       |Indentation.Indent [102..102)
+       |Ident(qux) [113..116)
+       |Indentation.Outdent [134..134)
+       |Indentation.Outdent [149..149)
+       |Indentation.Outdent [162..162)
+       |Indentation.Outdent [173..173)
+       |RightBrace [182..183)
+       |EOF [184..184)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Source](
+    """|object a:
+       |  foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |
+       |  // c5
+       |""".stripMargin,
+    """|<stats0>Defn.Object object a:
+       |  foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |
+       |  // c5</stats0>
+       |<templ>Template :
+       |  foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |
+       |  // c5</templ>
+       |<body>Template.Body :
+       |  foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4
+       |
+       |  // c5</body>
+       |<stats0>Term.Match foo match
+       |    case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4</stats0>
+       |<casesBlock>Term.CasesBlock case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3
+       |
+       |    // c4</casesBlock>
+       |<cases0>Case case null =>
+       |      try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2
+       |
+       |      // c3</cases0>
+       |<body>Term.Try try
+       |        val bar = baz
+       |      catch
+       |        case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2</body>
+       |<expr>Term.Block val bar = baz</expr>
+       |<stats0>Defn.Val val bar = baz</stats0>
+       |<catchClause>Term.CasesBlock case ex =>
+       |          qux
+       |
+       |          // c1
+       |
+       |        // c2</catchClause>
+       |<cases0>Case case ex =>
+       |          qux
+       |
+       |          // c1</cases0>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(a) [7..8)
+       |Colon [8..9)
+       |Indentation.Indent [9..9)
+       |Ident(foo) [12..15)
+       |KwMatch [16..21)
+       |Indentation.Indent [21..21)
+       |KwCase [26..30)
+       |KwNull [31..35)
+       |RightArrow [36..38)
+       |Indentation.Indent [38..38)
+       |KwTry [45..48)
+       |Indentation.Indent [48..48)
+       |KwVal [57..60)
+       |Ident(bar) [61..64)
+       |Equals [65..66)
+       |Ident(baz) [67..70)
+       |Indentation.Outdent [70..70)
+       |KwCatch [77..82)
+       |Indentation.Indent [82..82)
+       |KwCase [91..95)
+       |Ident(ex) [96..98)
+       |RightArrow [99..101)
+       |Indentation.Indent [101..101)
+       |Ident(qux) [112..115)
+       |Indentation.Outdent [133..133)
+       |Indentation.Outdent [148..148)
+       |Indentation.Outdent [161..161)
+       |Indentation.Outdent [172..172)
+       |Indentation.Outdent [180..180)
+       |EOF [181..181)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
   checkPositions[Stat](
     """|extension (a: Int)
        |
