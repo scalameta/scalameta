@@ -2043,12 +2043,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |   // comment
        |   val qux = quux</body>
        |<stats0>Term.Try try baz
-       |   catch case ex: Baz => foo
-       |
-       |   // comment</stats0>
-       |<catchClause>Term.CasesBlock case ex: Baz => foo
-       |
-       |   // comment</catchClause>
+       |   catch case ex: Baz => foo</stats0>
+       |<catchClause>Term.CasesBlock case ex: Baz => foo</catchClause>
        |<cases0>Case case ex: Baz => foo</cases0>
        |<pat>Pat.Typed ex: Baz</pat>
        |<stats1>Defn.Val val qux = quux</stats1>
@@ -2068,7 +2064,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Ident(Baz) [39..42)
        |RightArrow [43..45)
        |Ident(foo) [46..49)
-       |Indentation.Outdent [64..64)
+       |Indentation.Outdent [50..50)
        |KwVal [68..71)
        |Ident(qux) [72..75)
        |Equals [76..77)
