@@ -2125,17 +2125,11 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |}</body>
        |<stats0>Defn.Def def foo = try
        |    bar
-       |  catch case baz => qux
-       |
-       |  /** c1 */</stats0>
+       |  catch case baz => qux</stats0>
        |<body>Term.Try try
        |    bar
-       |  catch case baz => qux
-       |
-       |  /** c1 */</body>
-       |<catchClause>Term.CasesBlock case baz => qux
-       |
-       |  /** c1 */</catchClause>
+       |  catch case baz => qux</body>
+       |<catchClause>Term.CasesBlock case baz => qux</catchClause>
        |<cases0>Case case baz => qux</cases0>
        |<stats1>Defn.Def def quux = ???</stats1>
        |""".stripMargin,
@@ -2156,7 +2150,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Ident(baz) [48..51)
        |RightArrow [52..54)
        |Ident(qux) [55..58)
-       |Indentation.Outdent [71..71)
+       |Indentation.Outdent [59..59)
        |KwDef [74..77)
        |Ident(quux) [78..82)
        |Equals [83..84)
@@ -2244,21 +2238,15 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      try
        |        val bar = baz
        |      catch case ex => qux
-       |        // c1
-       |
-       |      // c2</cases0>
+       |        // c1</cases0>
        |<body>Term.Try try
        |        val bar = baz
        |      catch case ex => qux
-       |        // c1
-       |
-       |      // c2</body>
+       |        // c1</body>
        |<expr>Term.Block val bar = baz</expr>
        |<stats0>Defn.Val val bar = baz</stats0>
        |<catchClause>Term.CasesBlock case ex => qux
-       |        // c1
-       |
-       |      // c2</catchClause>
+       |        // c1</catchClause>
        |<cases0>Case case ex => qux</cases0>
        |""".stripMargin,
     """|BOF [0..0)
@@ -2285,7 +2273,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Ident(ex) [90..92)
        |RightArrow [93..95)
        |Ident(qux) [96..99)
-       |Indentation.Outdent [127..127)
+       |Indentation.Outdent [114..114)
        |RightBrace [140..141)
        |Indentation.Outdent [141..141)
        |EOF [142..142)
