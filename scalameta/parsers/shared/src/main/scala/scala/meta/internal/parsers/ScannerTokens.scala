@@ -632,7 +632,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       val multiEOL = eolPos >= 0 && hasBlank(eolPos)
 
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
-        val addRegionLine = lineIndent >= 0 && findIndent(rs) < lineIndent
+        val addRegionLine = lineIndent >= 0 && isIndented(rs, lineIndent)
         val regions = if (addRegionLine) RegionLine(lineIndent) :: rs else rs
         val token = tokens(eolPos)
         val out =
@@ -743,7 +743,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                   // then  [else]  [do]  catch  [finally]  [yield]  match
                   case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                   // exclude leading infix op
-                  case _ => findIndent(rs) >= nextIndent || isLeadingInfix != LeadingInfix.Yes
+                  case _ => !isIndented(rs, nextIndent) || isLeadingInfix != LeadingInfix.Yes
                 }) => OutdentInfo(r, rs)
             case _ => null
           }
@@ -763,8 +763,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            * level.
            */
           def getIndentIfNeeded(sepRegions: List[SepRegion]) = {
-            def getPrevIndent() = findIndent(sepRegions)
-            def exceedsIndent = nextIndent > getPrevIndent()
+            def exceedsIndent = isIndented(sepRegions, nextIndent)
             def emitIndentWith(ri: SepRegionIndented, rs: List[SepRegion], next: TokenRef = null) =
               Some(Right(mkIndent(prevPos, indentPos, ri :: rs, next)))
             def emitIndent(regions: List[SepRegion], next: TokenRef = null) =
@@ -975,6 +974,10 @@ object ScannerTokens {
 
   private def findIndent(sepRegions: List[SepRegion]): Int = sepRegions.find(_.indent >= 0)
     .fold(0)(_.indent)
+
+  @inline
+  private def isIndented(sepRegions: List[SepRegion], curIndent: Int): Boolean =
+    findIndent(sepRegions) < curIndent
 
   @tailrec
   private def inParens(regions: List[SepRegion]): Boolean = regions.nonEmpty &&
