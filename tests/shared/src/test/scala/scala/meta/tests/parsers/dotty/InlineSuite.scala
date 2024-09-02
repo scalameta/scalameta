@@ -340,6 +340,12 @@ class InlineSuite extends BaseDottySuite {
     )
   }
 
+  test("transparent-class") {
+    runTestAssert[Stat]("transparent class S")(
+      Defn.Class(List(Mod.Transparent()), pname("S"), Nil, ctor, tplNoBody())
+    )
+  }
+
   test("transparent-trait-newlines") {
     runTestAssert[Stat](
       """|transparent 
