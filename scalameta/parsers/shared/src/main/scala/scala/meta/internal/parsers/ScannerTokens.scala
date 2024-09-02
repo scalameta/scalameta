@@ -123,7 +123,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
 
     tokens(index).text match {
-      case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.is[KwTrait])
+      case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.isAny[KwTrait, KwClass])
       case soft.KwOpaque() => nextIsDclIntroOrModifierOr(_ => false)
       case soft.KwInline() => nextIsDclIntroOrModifierOr(matchesAfterInlineMatchMod)
       case soft.KwOpen() | soft.KwInfix() | soft.KwErased() => isDefIntro(getNextIndex(index))
