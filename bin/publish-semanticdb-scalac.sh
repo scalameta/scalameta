@@ -5,5 +5,5 @@ version=$1
 
 sbt \
   "set every version := \"$version\"" \
-  ++2.12.7 semanticdbScalacPlugin/publishSigned semanticdbScalacCore/publishSigned  \
+  ++2.12.7 semanticdbScalacPlugin/publishSigned semanticdbScalacCore/publishSigned semanticdbShared/publishSigned \
   sonatypeReleaseAll
