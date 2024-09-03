@@ -269,17 +269,18 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       prevPos: Int,
       currPos: Int,
       outdent: Int,
-      noBlank: Boolean
+      okBlank: Boolean
   ): Int = {
     @tailrec
-    def iter(i: Int, pos: Int, indent: Int, hadEol: Boolean = false): Int =
+    def iter(i: Int, pos: Int, indent: Int, numEOL: Int = 0): Int =
       if (i >= currPos) if (pos < currPos) pos else currPos - 1
       else tokens(i) match {
-        case _: MultiNL if noBlank => i
-        case _: AtEOL => if (noBlank && hadEol) i else iter(i + 1, i, 0, true)
-        case t: HSpace if indent >= 0 => iter(i + 1, pos, indent + t.len, hadEol)
-        case _: Whitespace => iter(i + 1, pos, indent, hadEol)
-        case _: Comment if indent < 0 || outdent <= indent => iter(i + 1, i + 1, -1)
+        case t: AtEOL => iter(i + 1, i, 0, numEOL + t.newlines)
+        case t: HSpace if indent >= 0 => iter(i + 1, pos, indent + t.len, numEOL)
+        case _: Whitespace => iter(i + 1, pos, indent, numEOL)
+        case _: Comment
+            if indent < 0 || outdent < indent || outdent == indent && (okBlank || numEOL < 2) =>
+          iter(i + 1, i + 1, -1)
         case _ => pos
       }
 
@@ -338,10 +339,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
     def mkOutdentAt(outdent: Int, regions: List[SepRegion]) = {
       val maxPointPos = if (nextPos < 0 || currNonTrivial) currPos else nextPos
-      val noBlank = regions.find(_.isInstanceOf[RegionDelim]).exists { sr =>
-        sr.isIndented && outdent <= sr.indent
-      }
-      val pointPos = findOutdentPos(prevPos, maxPointPos, outdent, noBlank)
+      val pointPos = findOutdentPos(prevPos, maxPointPos, outdent, isIndented(regions, outdent))
       val (nextPrevPos, nextCurrPos) =
         if (pointPos > currPos) (currPos, pointPos) else (prevPos, currPos)
       TokenRef(regions, mkOutdentToken(pointPos), nextPrevPos, nextCurrPos, pointPos)
@@ -632,7 +630,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       val multiEOL = eolPos >= 0 && hasBlank(eolPos)
 
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
-        val addRegionLine = lineIndent >= 0 && findIndent(rs) < lineIndent
+        val addRegionLine = lineIndent >= 0 && isIndented(rs, lineIndent)
         val regions = if (addRegionLine) RegionLine(lineIndent) :: rs else rs
         val token = tokens(eolPos)
         val out =
@@ -743,7 +741,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                   // then  [else]  [do]  catch  [finally]  [yield]  match
                   case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                   // exclude leading infix op
-                  case _ => findIndent(rs) >= nextIndent || isLeadingInfix != LeadingInfix.Yes
+                  case _ => !isIndented(rs, nextIndent) || isLeadingInfix != LeadingInfix.Yes
                 }) => OutdentInfo(r, rs)
             case _ => null
           }
@@ -763,8 +761,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            * level.
            */
           def getIndentIfNeeded(sepRegions: List[SepRegion]) = {
-            def getPrevIndent() = findIndent(sepRegions)
-            def exceedsIndent = nextIndent > getPrevIndent()
+            def exceedsIndent = isIndented(sepRegions, nextIndent)
             def emitIndentWith(ri: SepRegionIndented, rs: List[SepRegion], next: TokenRef = null) =
               Some(Right(mkIndent(prevPos, indentPos, ri :: rs, next)))
             def emitIndent(regions: List[SepRegion], next: TokenRef = null) =
@@ -975,6 +972,10 @@ object ScannerTokens {
 
   private def findIndent(sepRegions: List[SepRegion]): Int = sepRegions.find(_.indent >= 0)
     .fold(0)(_.indent)
+
+  @inline
+  private def isIndented(sepRegions: List[SepRegion], curIndent: Int): Boolean =
+    findIndent(sepRegions) < curIndent
 
   @tailrec
   private def inParens(regions: List[SepRegion]): Boolean = regions.nonEmpty &&

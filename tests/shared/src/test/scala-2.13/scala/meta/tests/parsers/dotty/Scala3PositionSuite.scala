@@ -2090,6 +2090,79 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   )
 
   checkPositions[Source](
+    """|object a {
+       |  def foo = try
+       |    bar
+       |  catch case baz => qux
+       |
+       |  /** c1 */
+       |  def quux = ???
+       |}
+       |""".stripMargin,
+    """|<stats0>Defn.Object object a {
+       |  def foo = try
+       |    bar
+       |  catch case baz => qux
+       |
+       |  /** c1 */
+       |  def quux = ???
+       |}</stats0>
+       |<templ>Template {
+       |  def foo = try
+       |    bar
+       |  catch case baz => qux
+       |
+       |  /** c1 */
+       |  def quux = ???
+       |}</templ>
+       |<body>Template.Body {
+       |  def foo = try
+       |    bar
+       |  catch case baz => qux
+       |
+       |  /** c1 */
+       |  def quux = ???
+       |}</body>
+       |<stats0>Defn.Def def foo = try
+       |    bar
+       |  catch case baz => qux</stats0>
+       |<body>Term.Try try
+       |    bar
+       |  catch case baz => qux</body>
+       |<catchClause>Term.CasesBlock case baz => qux</catchClause>
+       |<cases0>Case case baz => qux</cases0>
+       |<stats1>Defn.Def def quux = ???</stats1>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(a) [7..8)
+       |LeftBrace [9..10)
+       |KwDef [13..16)
+       |Ident(foo) [17..20)
+       |Equals [21..22)
+       |KwTry [23..26)
+       |Indentation.Indent [26..26)
+       |Ident(bar) [31..34)
+       |Indentation.Outdent [34..34)
+       |KwCatch [37..42)
+       |Indentation.Indent [43..43)
+       |KwCase [43..47)
+       |Ident(baz) [48..51)
+       |RightArrow [52..54)
+       |Ident(qux) [55..58)
+       |Indentation.Outdent [59..59)
+       |KwDef [74..77)
+       |Ident(quux) [78..82)
+       |Equals [83..84)
+       |Ident(???) [85..88)
+       |LF [88..89)
+       |RightBrace [89..90)
+       |EOF [91..91)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
+  checkPositions[Source](
     """|object a:
        |  foo match {
        |    case null =>
@@ -2165,21 +2238,15 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |      try
        |        val bar = baz
        |      catch case ex => qux
-       |        // c1
-       |
-       |      // c2</cases0>
+       |        // c1</cases0>
        |<body>Term.Try try
        |        val bar = baz
        |      catch case ex => qux
-       |        // c1
-       |
-       |      // c2</body>
+       |        // c1</body>
        |<expr>Term.Block val bar = baz</expr>
        |<stats0>Defn.Val val bar = baz</stats0>
        |<catchClause>Term.CasesBlock case ex => qux
-       |        // c1
-       |
-       |      // c2</catchClause>
+       |        // c1</catchClause>
        |<cases0>Case case ex => qux</cases0>
        |""".stripMargin,
     """|BOF [0..0)
@@ -2206,7 +2273,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Ident(ex) [90..92)
        |RightArrow [93..95)
        |Ident(qux) [96..99)
-       |Indentation.Outdent [127..127)
+       |Indentation.Outdent [114..114)
        |RightBrace [140..141)
        |Indentation.Outdent [141..141)
        |EOF [142..142)
