@@ -82,17 +82,7 @@ class Source3Suite extends FunSuite {
        |""".stripMargin,
     expected,
     compat = List(
-      ScalaVersion.Full("2.12.14") ->
-        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      ScalaVersion.Full("2.12.15") ->
-        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      ScalaVersion.Full("2.12.16") ->
-        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      ScalaVersion.Full("2.12.17") ->
-        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      ScalaVersion.Full("2.12.18") ->
-        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
-      ScalaVersion.Full("2.12.19") ->
+      ScalaVersion.Scala212 ->
         expected.replace("scala/package.List.", "scala/collection/immutable/List.")
     )
   )
