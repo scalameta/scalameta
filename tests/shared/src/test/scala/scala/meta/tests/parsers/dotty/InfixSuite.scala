@@ -697,4 +697,100 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#3948 1") {
+    val code = """|object Hello {
+                  |  buffer
+                  |    += new Object()
+                  |    += new Object
+                  |}
+                  |""".stripMargin
+    val tokenized = """|BOF [0..0)
+                       |KwObject [0..6)
+                       |Ident(Hello) [7..12)
+                       |LeftBrace [13..14)
+                       |Ident(buffer) [17..23)
+                       |InfixLF [23..24)
+                       |Ident(+=) [28..30)
+                       |KwNew [31..34)
+                       |Ident(Object) [35..41)
+                       |LeftParen [41..42)
+                       |RightParen [42..43)
+                       |LF [43..44)
+                       |Ident(+=) [48..50)
+                       |KwNew [51..54)
+                       |Ident(Object) [55..61)
+                       |LF [61..62)
+                       |RightBrace [62..63)
+                       |EOF [64..64)
+                       |""".stripMargin
+    assertTokenizedAsStructureLines(code, tokenized)
+    val error = """|<input>:4: error: `;` expected but `new` found
+                   |    += new Object
+                   |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3948 2") {
+    val code = """|object Hello {
+                  |  buffer
+                  |    += new Object() with Foo {
+                  |      def toString() = "foo"
+                  |    }
+                  |    += new Object
+                  |}
+                  |""".stripMargin
+    val tokenized = """|BOF [0..0)
+                       |KwObject [0..6)
+                       |Ident(Hello) [7..12)
+                       |LeftBrace [13..14)
+                       |Ident(buffer) [17..23)
+                       |InfixLF [23..24)
+                       |Ident(+=) [28..30)
+                       |KwNew [31..34)
+                       |Ident(Object) [35..41)
+                       |LeftParen [41..42)
+                       |RightParen [42..43)
+                       |KwWith [44..48)
+                       |Ident(Foo) [49..52)
+                       |LeftBrace [53..54)
+                       |KwDef [61..64)
+                       |Ident(toString) [65..73)
+                       |LeftParen [73..74)
+                       |RightParen [74..75)
+                       |Equals [76..77)
+                       |Constant.String(foo) [78..83)
+                       |LF [83..84)
+                       |RightBrace [88..89)
+                       |InfixLF [89..90)
+                       |Ident(+=) [94..96)
+                       |KwNew [97..100)
+                       |Ident(Object) [101..107)
+                       |LF [107..108)
+                       |RightBrace [108..109)
+                       |EOF [110..110)
+                       |""".stripMargin
+    assertTokenizedAsStructureLines(code, tokenized)
+    val layout =
+      """object Hello { buffer += (new Object() with Foo { def toString() = "foo" }) += (new Object) }"""
+    val tree = Defn.Object(
+      Nil,
+      tname("Hello"),
+      tpl(Term.ApplyInfix(
+        Term.ApplyInfix(
+          tname("buffer"),
+          tname("+="),
+          Nil,
+          List(Term.NewAnonymous(tpl(
+            List(init("Object", List(Nil)), init("Foo")),
+            List(Defn.Def(Nil, tname("toString"), Nil, List(Nil), None, lit("foo")))
+          )))
+        ),
+        tname("+="),
+        Nil,
+        List(Term.New(init("Object")))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
