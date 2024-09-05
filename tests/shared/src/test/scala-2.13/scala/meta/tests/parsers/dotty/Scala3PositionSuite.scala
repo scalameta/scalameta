@@ -2978,4 +2978,55 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     showFieldName = true
   )
 
+  checkPositions[Stat](
+    """|object Hello {
+       |  buffer
+       |    += new Object()
+       |    += new Object
+       |}
+       |""".stripMargin,
+    """|<templ>Template {
+       |  buffer
+       |    += new Object()
+       |    += new Object
+       |}</templ>
+       |<body>Template.Body {
+       |  buffer
+       |    += new Object()
+       |    += new Object
+       |}</body>
+       |<stats0>Term.ApplyInfix buffer
+       |    += new Object()
+       |    += new Object</stats0>
+       |<lhs>Term.ApplyInfix buffer
+       |    += new Object()</lhs>
+       |<targClause>Type.ArgClause     += @@new Object()</targClause>
+       |<values0>Term.New new Object()</values0>
+       |<init>Init Object()</init>
+       |<argClauses0>Term.ArgClause ()</argClauses0>
+       |<targClause>Type.ArgClause     += @@new Object</targClause>
+       |<values0>Term.New new Object</values0>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Ident(Hello) [7..12)
+       |LeftBrace [13..14)
+       |Ident(buffer) [17..23)
+       |InfixLF [23..24)
+       |Ident(+=) [28..30)
+       |KwNew [31..34)
+       |Ident(Object) [35..41)
+       |LeftParen [41..42)
+       |RightParen [42..43)
+       |InfixLF [43..44)
+       |Ident(+=) [48..50)
+       |KwNew [51..54)
+       |Ident(Object) [55..61)
+       |LF [61..62)
+       |RightBrace [62..63)
+       |EOF [64..64)
+       |""".stripMargin,
+    showFieldName = true
+  )
+
 }

@@ -715,7 +715,7 @@ class InfixSuite extends BaseDottySuite {
                        |Ident(Object) [35..41)
                        |LeftParen [41..42)
                        |RightParen [42..43)
-                       |LF [43..44)
+                       |InfixLF [43..44)
                        |Ident(+=) [48..50)
                        |KwNew [51..54)
                        |Ident(Object) [55..61)
@@ -724,10 +724,19 @@ class InfixSuite extends BaseDottySuite {
                        |EOF [64..64)
                        |""".stripMargin
     assertTokenizedAsStructureLines(code, tokenized)
-    val error = """|<input>:4: error: `;` expected but `new` found
-                   |    += new Object
-                   |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "object Hello { buffer += (new Object()) += (new Object) }"
+    val tree = Defn.Object(
+      Nil,
+      tname("Hello"),
+      tpl(Term.ApplyInfix(
+        Term
+          .ApplyInfix(tname("buffer"), tname("+="), Nil, List(Term.New(init("Object", List(Nil))))),
+        tname("+="),
+        Nil,
+        List(Term.New(init("Object")))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3948 2") {
