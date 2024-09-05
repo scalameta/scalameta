@@ -47,7 +47,7 @@ case object RegionDefType extends RegionDefDecl
 sealed trait RegionTemplateDecl extends RegionNonDelimNonIndented
 
 /** the initial part of declaration, before the template */
-case object RegionTemplateMark extends RegionTemplateDecl
+case object RegionTemplateMark extends RegionTemplateDecl with CanProduceLF
 
 /** the initial part of the template, containing any inherit clauses */
 case object RegionTemplateInherit extends RegionTemplateDecl
