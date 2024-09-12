@@ -126,7 +126,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.isAny[KwTrait, KwClass])
       case soft.KwOpaque() => nextIsDclIntroOrModifierOr(_ => false)
       case soft.KwInline() => nextIsDclIntroOrModifierOr(matchesAfterInlineMatchMod)
-      case soft.KwOpen() | soft.KwInfix() | soft.KwErased() => isDefIntro(getNextIndex(index))
+      case soft.KwOpen() | soft.KwInfix() | soft.KwErased() | soft.KwTracked() => isDefIntro(getNextIndex(index))
       case _ => false
     }
   }

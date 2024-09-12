@@ -1330,6 +1330,8 @@ object Mod {
   class Transparent() extends Mod
   @ast
   class Erased() extends Mod
+  @ast
+  class Tracked() extends Mod
 }
 
 @branch

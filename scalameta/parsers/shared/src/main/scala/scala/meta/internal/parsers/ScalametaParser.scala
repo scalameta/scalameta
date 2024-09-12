@@ -2807,6 +2807,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case soft.KwOpaque() => atCurPosNext(Mod.Opaque())
           case soft.KwTransparent() => atCurPosNext(Mod.Transparent())
           case soft.KwErased() => atCurPosNext(Mod.Erased())
+          case soft.KwTracked() => atCurPosNext(Mod.Tracked())
           case n =>
             val local = if (isLocal) "local " else ""
             syntaxError(s"${local}modifier expected but $n found", at = currToken)
@@ -3086,6 +3087,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ => if (hasExplicitMods) syntaxErrorExpected[KwVal]; None
     }
     varOrVarParamMod.foreach(mods += _)
+    if (!mods.has[Mod.ValParam] && !mods.has[Mod.VarParam])
+      rejectMod[Mod.Tracked](mods, "`tracked' modifier can only be used val/var parameters in classes")
 
     def endParamQuasi = currToken.isAny[RightParen, Comma]
     mods.headOption.collect { case q: Mod.Quasi if endParamQuasi => q.become[Term.Param] }

@@ -920,6 +920,7 @@ object TreeSyntax {
       case _: Mod.Opaque => kw("opaque")
       case _: Mod.Using => kw("using")
       case _: Mod.Erased => kw("erased")
+      case _: Mod.Tracked => kw("tracked")
       case _: Mod.Transparent => kw("transparent")
       case _: Mod.Override => kw("override")
       case _: Mod.Case => kw("case")
