@@ -4190,4 +4190,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("outdent inlinw try-finally opt-braces") {
+    val code = """|object a:
+                  |  def foo =
+                  |      try bar &&
+                  |          baz
+                  |      finally qux
+                  |""".stripMargin
+    val error = """|<input>:6: error: `outdent` expected but `end of file` found
+                   |
+                   |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("outdent inlinw try-finally in braces") {
+    val code = """|object a:
+                  |  def foo = {
+                  |      try bar &&
+                  |          baz
+                  |      finally qux
+                  |  }
+                  |""".stripMargin
+    val error = """|<input>:7: error: `outdent` expected but `end of file` found
+                   |
+                   |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
