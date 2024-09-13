@@ -74,24 +74,24 @@ class ModSuite extends ParseSuite {
     assertTree(templStat("implicit var a: Int")) {
       Decl.Var(List(Mod.Implicit()), List(Pat.Var(tname("a"))), pname("Int"))
     }
-
-    interceptParseErrors(
-      "implicit implicit var a: Int",
-      "implicit implicit val a: Int",
-      "implicit implicit var a: Int = 1",
-      "implicit implicit val a: Int = 1",
-      "implicit implicit class A",
-      "implicit implicit object A",
-      "implicit implicit trait A",
-      "implicit implicit case class A(a: Int)",
-      "implicit implicit type A",
-      "implicit implicit type A = Int",
-      "implicit trait A",
-      "implicit type A",
-      "implicit type A = Int",
-      "implicit case class A(a: Int)"
-    )
   }
+
+  testParseErrors(
+    "implicit implicit var a: Int",
+    "implicit implicit val a: Int",
+    "implicit implicit var a: Int = 1",
+    "implicit implicit val a: Int = 1",
+    "implicit implicit class A",
+    "implicit implicit object A",
+    "implicit implicit trait A",
+    "implicit implicit case class A(a: Int)",
+    "implicit implicit type A",
+    "implicit implicit type A = Int",
+    "implicit trait A",
+    "implicit type A",
+    "implicit type A = Int",
+    "implicit case class A(a: Int)"
+  )
 
   test("final") {
     matchSubStructure[Stat]("final object A", { case Defn.Object(List(Mod.Final()), _, _) => () })
@@ -141,21 +141,21 @@ class ModSuite extends ParseSuite {
       "final type A = Int",
       { case Defn.Type(List(Mod.Final()), _, _, _) => () }
     )
-
-    interceptParseErrors(
-      "final final var a: Int",
-      "final final val a: Int",
-      "final final var a: Int = 1",
-      "final final val a: Int = 1",
-      "final final class A",
-      "final final object A",
-      "final final trait A",
-      "final final case class A(a: Int)",
-      "final final type A",
-      "final trait A",
-      "def foo(final val a: Int): Int = a"
-    )
   }
+
+  testParseErrors(
+    "final final var a: Int",
+    "final final val a: Int",
+    "final final var a: Int = 1",
+    "final final val a: Int = 1",
+    "final final class A",
+    "final final object A",
+    "final final trait A",
+    "final final case class A(a: Int)",
+    "final final type A",
+    "final abstract trait A",
+    "def foo(final val a: Int): Int = a"
+  )
 
   test("sealed") {
     matchSubStructure[Stat](
@@ -177,30 +177,30 @@ class ModSuite extends ParseSuite {
       "sealed case class A(a: Int)",
       { case Defn.Class(List(Mod.Sealed(), Mod.Case()), _, _, _, _) => () }
     )
-
-    interceptParseErrors(
-      "sealed sealed var a: Int",
-      "sealed sealed val a: Int",
-      "sealed sealed var a: Int = 1",
-      "sealed sealed val a: Int = 1",
-      "sealed sealed class A",
-      "sealed sealed object A",
-      "sealed sealed trait A",
-      "sealed sealed case class A(a: Int)",
-      "sealed sealed type A",
-      "sealed object A",
-      "sealed case object A",
-      "sealed def foo(a: Int): Int = a",
-      "sealed val a: Int = 1",
-      "sealed val a: Int",
-      "sealed var a: Int = 1",
-      "sealed var a: Int",
-      "sealed type A",
-      "sealed type A = Int",
-      "def foo(sealed val a: Int): Int = a",
-      "class A(sealed val a: Int)"
-    )
   }
+
+  testParseErrors(
+    "sealed sealed var a: Int",
+    "sealed sealed val a: Int",
+    "sealed sealed var a: Int = 1",
+    "sealed sealed val a: Int = 1",
+    "sealed sealed class A",
+    "sealed sealed object A",
+    "sealed sealed trait A",
+    "sealed sealed case class A(a: Int)",
+    "sealed sealed type A",
+    "sealed object A",
+    "sealed case object A",
+    "sealed def foo(a: Int): Int = a",
+    "sealed val a: Int = 1",
+    "sealed val a: Int",
+    "sealed var a: Int = 1",
+    "sealed var a: Int",
+    "sealed type A",
+    "sealed type A = Int",
+    "def foo(sealed val a: Int): Int = a",
+    "class A(sealed val a: Int)"
+  )
 
   test("override") {
     matchSubStructure[Stat](
@@ -252,21 +252,21 @@ class ModSuite extends ParseSuite {
       "override type A",
       { case Decl.Type(List(Mod.Override()), _, _, _) => () }
     )
-
-    interceptParseErrors(
-      "override override var a: Int",
-      "override override val a: Int",
-      "override override var a: Int = 1",
-      "override override val a: Int = 1",
-      "override override class A",
-      "override override object A",
-      "override override trait A",
-      "override override case class A(a: Int)",
-      "override override type A",
-      "def foo(override val a: Int): Int = a",
-      "override trait A"
-    )
   }
+
+  testParseErrors(
+    "override override var a: Int",
+    "override override val a: Int",
+    "override override var a: Int = 1",
+    "override override val a: Int = 1",
+    "override override class A",
+    "override override object A",
+    "override override trait A",
+    "override override case class A(a: Int)",
+    "override override type A",
+    "def foo(override val a: Int): Int = a",
+    "override trait A"
+  )
 
   test("case") {
     matchSubStructure[Stat]("case object A", { case Defn.Object(List(Mod.Case()), _, _) => () })
@@ -275,28 +275,29 @@ class ModSuite extends ParseSuite {
       "case class A(a: Int)",
       { case Defn.Class(List(Mod.Case()), _, _, _, _) => () }
     )
-    interceptParseErrors(
-      "case case var a: Int",
-      "case case val a: Int",
-      "case case var a: Int = 1",
-      "case case val a: Int = 1",
-      "case case class A",
-      "case case object A",
-      "case case trait A",
-      "case case case class A(a: Int)",
-      "case case type A",
-      "case val a: Int",
-      "case var a: Int",
-      "case val a: Int = 1",
-      "case var a: Int = 1",
-      "case def foo(a: Int): Int",
-      "case type A",
-      "case type A = Int",
-      "def foo(case val a: Int): Int = a",
-      "case def foo(val a: Int): Int = a",
-      "class A(case a: Int)"
-    )
   }
+
+  testParseErrors(
+    "case case var a: Int",
+    "case case val a: Int",
+    "case case var a: Int = 1",
+    "case case val a: Int = 1",
+    "case case class A",
+    "case case object A",
+    "case case trait A",
+    "case case case class A(a: Int)",
+    "case case type A",
+    "case val a: Int",
+    "case var a: Int",
+    "case val a: Int = 1",
+    "case var a: Int = 1",
+    "case def foo(a: Int): Int",
+    "case type A",
+    "case type A = Int",
+    "def foo(case val a: Int): Int = a",
+    "case def foo(val a: Int): Int = a",
+    "class A(case a: Int)"
+  )
 
   test("abstract") {
     matchSubStructure[Stat](
@@ -313,63 +314,63 @@ class ModSuite extends ParseSuite {
       "abstract case class A(a: Int)",
       { case Defn.Class(List(Mod.Abstract(), Mod.Case()), _, _, _, _) => () }
     )
-
-    interceptParseErrors(
-      "abstract abstract var a: Int",
-      "abstract abstract val a: Int",
-      "abstract abstract var a: Int = 1",
-      "abstract abstract val a: Int = 1",
-      "abstract abstract class A",
-      "abstract abstract object A",
-      "abstract abstract trait A",
-      "abstract abstract case class A(a: Int)",
-      "abstract abstract type A",
-      "abstract val a: Int",
-      "abstract var a: Int",
-      "abstract val a: Int = 1",
-      "abstract var a: Int = 1",
-      "abstract def foo(a: Int): Int",
-      "abstract type A",
-      "abstract type A = Int",
-      "class A(abstract val a: Int)",
-      "def foo(abstract val a: Int): Int = a",
-      "abstract def foo(val a: Int): Int = a",
-      "abstract case object A",
-      "abstract object A"
-    )
   }
+
+  testParseErrors(
+    "abstract abstract var a: Int",
+    "abstract abstract val a: Int",
+    "abstract abstract var a: Int = 1",
+    "abstract abstract val a: Int = 1",
+    "abstract abstract class A",
+    "abstract abstract object A",
+    "abstract abstract trait A",
+    "abstract abstract case class A(a: Int)",
+    "abstract abstract type A",
+    "abstract val a: Int",
+    "abstract var a: Int",
+    "abstract val a: Int = 1",
+    "abstract var a: Int = 1",
+    "abstract def foo(a: Int): Int",
+    "abstract type A",
+    "abstract type A = Int",
+    "class A(abstract val a: Int)",
+    "def foo(abstract val a: Int): Int = a",
+    "abstract def foo(val a: Int): Int = a",
+    "abstract case object A",
+    "abstract object A"
+  )
 
   test("lazy") {
     matchSubStructure[Stat](
       "lazy val a: Int = 1",
       { case Defn.Val(List(Mod.Lazy()), _, _, _) => () }
     )
-
-    interceptParseErrors(
-      "lazy lazy var a: Int",
-      "lazy lazy val a: Int",
-      "lazy lazy var a: Int = 1",
-      "lazy lazy val a: Int = 1",
-      "lazy lazy class A",
-      "lazy lazy object A",
-      "lazy lazy trait A",
-      "lazy lazy case class A(a: Int)",
-      "lazy lazy type A",
-      "lazy val a: Int",
-      "lazy var a: Int",
-      "lazy var a: Int = 1",
-      "lazy def foo(a: Int): Int",
-      "lazy type A",
-      "lazy type A = Int",
-      "def foo(lazy val a: Int): Int = a",
-      "class A(lazy val a: Int)",
-      "lazy def foo(val a: Int): Int = a",
-      "lazy case object A",
-      "lazy case class A(a: Int)",
-      "lazy class A",
-      "lazy object A"
-    )
   }
+
+  testParseErrors(
+    "lazy lazy var a: Int",
+    "lazy lazy val a: Int",
+    "lazy lazy var a: Int = 1",
+    "lazy lazy val a: Int = 1",
+    "lazy lazy class A",
+    "lazy lazy object A",
+    "lazy lazy trait A",
+    "lazy lazy case class A(a: Int)",
+    "lazy lazy type A",
+    "lazy val a: Int",
+    "lazy var a: Int",
+    "lazy var a: Int = 1",
+    "lazy def foo(a: Int): Int",
+    "lazy type A",
+    "lazy type A = Int",
+    "def foo(lazy val a: Int): Int = a",
+    "class A(lazy val a: Int)",
+    "lazy def foo(val a: Int): Int = a",
+    "lazy case object A",
+    "lazy case class A(a: Int)",
+    "lazy class A",
+    "lazy object A"
+  )
 
   test("abstract override") {
     /* Non-trait members modified by `abstract override` receive a typechecking error */
@@ -422,20 +423,20 @@ class ModSuite extends ParseSuite {
       "abstract override type A",
       { case Decl.Type(List(Mod.Abstract(), Mod.Override()), _, _, _) => () }
     )
-
-    interceptParseErrors(
-      "abstract override abstract override var a: Int",
-      "abstract override abstract override val a: Int",
-      "abstract override abstract override var a: Int = 1",
-      "abstract override abstract override val a: Int = 1",
-      "abstract override abstract override class A",
-      "abstract override abstract override object A",
-      "abstract override abstract override trait A",
-      "abstract override abstract override case class A(a: Int)",
-      "abstract override abstract override type A",
-      "def foo(abstract override val a: Int): Int = a"
-    )
   }
+
+  testParseErrors(
+    "abstract override abstract override var a: Int",
+    "abstract override abstract override val a: Int",
+    "abstract override abstract override var a: Int = 1",
+    "abstract override abstract override val a: Int = 1",
+    "abstract override abstract override class A",
+    "abstract override abstract override object A",
+    "abstract override abstract override trait A",
+    "abstract override abstract override case class A(a: Int)",
+    "abstract override abstract override type A",
+    "def foo(abstract override val a: Int): Int = a"
+  )
 
   test("covariant in case class") {
     assertTree(templStat("case class A[+T](t: T)")) {
@@ -640,43 +641,29 @@ class ModSuite extends ParseSuite {
       "final abstract case class A(a: Int)",
       { case Defn.Class(List(Mod.Final(), Mod.Abstract(), Mod.Case()), _, _, _, _) => () }
     )
-
-    interceptParseErrors(
-      "final abstract trait A",
-      // Abstract should be inferred
-      "final trait A"
-    )
   }
 
-  test("final and sealed") {
-    // Only check these because sealed can only be used for classes
-    interceptParseErrors(
-      "final sealed class A(a: Int)",
-      "final sealed case class A(a: Int)",
-      "final sealed trait A"
-    )
-  }
+  // Only check these because sealed can only be used for classes
+  testParseErrors("final sealed class A(a: Int)", "final sealed case class A(a: Int)")
 
-  test("invalid private and protected") {
-    interceptParseErrors(
-      "private private class A",
-      "private private[foo] class A",
-      "private protected class A",
-      // "private protected[foo] class A", /* see the test below */
-      "private[foo] private class A",
-      "private[foo] private[foo] class A",
-      // "private[foo] protected class A", /* see the test below */
-      "private[foo] protected[foo] class A",
-      "protected private class A",
-      // "protected private[foo] class A", /* see the test below */
-      "protected protected class A",
-      "protected protected[foo] class A",
-      // "protected[foo] private class A", /* see the test below */
-      "protected[foo] private[foo] class A",
-      "protected[foo] protected class A",
-      "protected[foo] protected[foo] class A"
-    )
-  }
+  testParseErrors(
+    "private private class A",
+    "private private[foo] class A",
+    "private protected class A",
+    // "private protected[foo] class A", /* see the test below */
+    "private[foo] private class A",
+    "private[foo] private[foo] class A",
+    // "private[foo] protected class A", /* see the test below */
+    "private[foo] protected[foo] class A",
+    "protected private class A",
+    // "protected private[foo] class A", /* see the test below */
+    "protected protected class A",
+    "protected protected[foo] class A",
+    // "protected[foo] private class A", /* see the test below */
+    "protected[foo] private[foo] class A",
+    "protected[foo] protected class A",
+    "protected[foo] protected[foo] class A"
+  )
 
   test("not really invalid private and protected") {
     // NOTE: Surprisingly, the code below is valid Scala.

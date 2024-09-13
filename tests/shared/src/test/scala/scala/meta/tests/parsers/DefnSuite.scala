@@ -395,11 +395,8 @@ class DefnSuite extends ParseSuite {
 
   test("final trait") {
     val code = "final trait Singleton extends Any"
-    val error =
-      """|<input>:1: error: illegal combination of modifiers: final and trait for: trait Singleton
-         |final trait Singleton extends Any
-         |^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Defn.Trait(List(Mod.Final()), pname("Singleton"), Nil, ctor, tplNoBody(init("Any")))
+    runTestAssert[Stat](code)(tree)
   }
 
 }
