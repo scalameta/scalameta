@@ -782,9 +782,9 @@ class ControlSyntaxSuite extends BaseDottySuite {
                   |  finally iter.close()
                   |finally arena.close()
                   |""".stripMargin
-    val error = """|<input>:5: error: `;` expected but `finally` found
-                   |finally arena.close()
-                   |^""".stripMargin
+    val error = """|<input>:4: error: `;` expected but `finally` found
+                   |  finally iter.close()
+                   |  ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -4186,6 +4186,64 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Nil,
       tname("a"),
       tpl(Term.ForYield(List(Enumerator.Generator(Pat.Var(tname("foo")), tname("bar"))), tname("foo")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("outdent inlinw try-finally opt-braces") {
+    val code = """|object a:
+                  |  def foo =
+                  |      try bar &&
+                  |          baz
+                  |      finally qux
+                  |""".stripMargin
+    val layout = "object a { def foo = try bar && baz finally qux }"
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(Defn.Def(
+        Nil,
+        tname("foo"),
+        Nil,
+        None,
+        Term.Try(
+          Term.ApplyInfix(tname("bar"), tname("&&"), Nil, List(tname("baz"))),
+          None,
+          Some(tname("qux"))
+        )
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("outdent inlinw try-finally in braces") {
+    val code = """|object a:
+                  |  def foo = {
+                  |      try bar &&
+                  |          baz
+                  |      finally qux
+                  |  }
+                  |""".stripMargin
+    val layout = """|object a {
+                    |  def foo = {
+                    |    try bar && baz finally qux
+                    |  }
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(Defn.Def(
+        Nil,
+        tname("foo"),
+        Nil,
+        None,
+        blk(Term.Try(
+          Term.ApplyInfix(tname("bar"), tname("&&"), Nil, List(tname("baz"))),
+          None,
+          Some(tname("qux"))
+        ))
+      ))
     )
     runTestAssert[Stat](code, layout)(tree)
   }
