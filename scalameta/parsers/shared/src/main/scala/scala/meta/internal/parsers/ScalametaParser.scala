@@ -3620,15 +3620,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def traitDef(mods: List[Mod]): Defn.Trait = {
-    val assumedAbstract = atCurPos(Mod.Abstract())
-    // Add `abstract` to traits for error reporting
-    val fullMods = mods :+ assumedAbstract
     next()
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
     rejectMod[Mod.Override](mods, Messages.InvalidOverrideTrait)
     val traitName = typeName()
     val culprit = s"trait $traitName"
-    rejectModCombination[Mod.Final, Mod.Abstract](fullMods, Some(culprit))
+    rejectModCombination[Mod.Final, Mod.Abstract](mods, Some(culprit))
     rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
     rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
     Defn.Trait(

@@ -393,4 +393,10 @@ class DefnSuite extends ParseSuite {
     runTestAssert[Stat](codeWithBlank, layout)(tree)
   }
 
+  test("final trait") {
+    val code = "final trait Singleton extends Any"
+    val tree = Defn.Trait(List(Mod.Final()), pname("Singleton"), Nil, ctor, tplNoBody(init("Any")))
+    runTestAssert[Stat](code)(tree)
+  }
+
 }
