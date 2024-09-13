@@ -2906,6 +2906,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Unquote if continueLoop =>
       case _: AtEOL if !isLocal => next(); loop
       case _: Unquote | _: Ellipsis => appendMod; loop
+      case _: KwCase if peekToken.isAny[KwObject, KwClass] => buf += atCurPosNext(Mod.Case())
       case _ if isModifier(currIndex) => appendMod; loop
       case _ =>
     }
@@ -3609,9 +3610,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: KwTrait => traitDef(mods)
       case _: KwEnum => enumDef(mods)
       case _: KwClass => classDef(mods)
-      case _: KwCase if tryAhead[KwClass] => classDef(mods :+ atPos(prevIndex)(Mod.Case()))
       case _: KwObject => objectDef(mods)
-      case _: KwCase if tryAhead[KwObject] => objectDef(mods :+ atPos(prevIndex)(Mod.Case()))
       case _: At => syntaxError("Annotations must precede keyword modifiers", at = currToken)
       case _ if okTopLevel && dialect.allowToplevelStatements && isDefIntro(currIndex) =>
         defOrDclOrSecondaryCtor(mods)
