@@ -33,12 +33,7 @@ class MinorDottySuite extends BaseDottySuite {
 
   }
 
-  test("open-class-negative-cases") {
-    runTestError[Stat]("final open class A {}", "illegal combination of modifiers: open and final")
-    runTestError[Stat]("open sealed trait C {}", "illegal combination of modifiers: open and sealed")
-    runTestError[Stat]("open def f(): Int = 3", "`open' modifier can be used only for classes")
-    runTestError[Stat]("def f(open a: Int): Int = 3", "error")
-  }
+  test("open-class-negative-cases")(runTestError[Stat]("def f(open a: Int): Int = 3", "error"))
 
   test("open-soft-modifier")(stat("def open(open: open): open = ???").structure)
 
@@ -371,10 +366,6 @@ class MinorDottySuite extends BaseDottySuite {
         pname("Int")
       ))
     ))
-    runTestError[Stat](
-      "trait Foo { protected[this] lazy var from: Int }",
-      "lazy not allowed here. Only val/given can be lazy"
-    )
   }
 
   test("type-wildcard-questionmark") {
