@@ -373,6 +373,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   @inline
   def autoEndPos[T <: Tree](start: StartPos)(body: => T): T = autoEndPos(start.begIndex)(body)
   @inline
+  def autoEndPosOpt[T <: Tree](start: StartPos)(body: => T): T = autoEndPosOpt(start.begIndex)(body)
+  @inline
   def autoPrevPos[T <: Tree](body: => T) = autoEndPos(prevIndex)(body)
 
   def autoPosTry[T <: Tree](body: => Try[T]): Try[T] = atPosTry(start = AutoPos, end = AutoPos)(body)
@@ -3601,7 +3603,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     modifiersBuf(buf)
   })
 
-  def tmplDef(mods: List[Mod], okTopLevel: Boolean = true): Stat = {
+  private def tmplDef(mods: List[Mod], okTopLevel: Boolean = true): Stat = autoEndPosOpt(mods) {
     if (!dialect.allowToplevelStatements) rejectMod[Mod.Lazy](mods, Messages.InvalidLazyClasses)
     currToken match {
       case _: KwTrait => traitDef(mods)
@@ -3617,11 +3619,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def traitDef(mods: List[Mod]): Defn.Trait = autoEndPos(mods) {
+  private def traitDef(mods: List[Mod]): Defn.Trait = {
     val assumedAbstract = atCurPos(Mod.Abstract())
     // Add `abstract` to traits for error reporting
     val fullMods = mods :+ assumedAbstract
-    accept[KwTrait]
+    next()
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
     val traitName = typeName()
     val culprit = s"trait $traitName"
@@ -3642,8 +3644,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     )
   }
 
-  def classDef(mods: List[Mod]): Defn.Class = autoEndPos(mods) {
-    accept[KwClass]
+  def classDef(mods: List[Mod]): Defn.Class = {
+    next()
 
     val className = typeName()
     def culprit = Some(s"class $className")
@@ -3669,8 +3671,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   // EnumDef           ::=  id ClassConstr InheritClauses EnumBody
-  def enumDef(mods: List[Mod]): Defn.Enum = autoEndPos(mods) {
-    accept[KwEnum]
+  private def enumDef(mods: List[Mod]): Defn.Enum = {
+    next()
 
     val enumName = typeName()
     val culprit = s"enum $enumName"
@@ -3720,8 +3722,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     Defn.EnumCase(mods, name, tparams, ctor, inits)
   }
 
-  def objectDef(mods: List[Mod]): Defn.Object = autoEndPos(mods) {
-    accept[KwObject]
+  def objectDef(mods: List[Mod]): Defn.Object = {
+    next()
     val objectName = termName()
     val culprit = s"object $objectName"
     if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
