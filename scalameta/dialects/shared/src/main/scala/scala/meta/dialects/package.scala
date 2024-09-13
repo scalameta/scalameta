@@ -110,6 +110,7 @@ package object dialects {
 
   implicit val Scala3Future: Dialect = Scala3.withAllowUnderscoreAsTypePlaceholder(true)
     .withAllowBinaryLiterals(true)
+    .withAllowTrackedParameters(true)
 
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty: Dialect = Scala3

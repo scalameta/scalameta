@@ -362,6 +362,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Mod.Protected
          |scala.meta.Mod.Sealed
          |scala.meta.Mod.Super
+         |scala.meta.Mod.Tracked
          |scala.meta.Mod.Transparent
          |scala.meta.Mod.Using
          |scala.meta.Mod.ValParam

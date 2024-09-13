@@ -3087,8 +3087,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ => if (hasExplicitMods) syntaxErrorExpected[KwVal]; None
     }
     varOrVarParamMod.foreach(mods += _)
-    if (!mods.has[Mod.ValParam] && !mods.has[Mod.VarParam])
-      rejectMod[Mod.Tracked](mods, "`tracked' modifier can only be used val/var parameters in classes")
 
     def endParamQuasi = currToken.isAny[RightParen, Comma]
     mods.headOption.collect { case q: Mod.Quasi if endParamQuasi => q.become[Term.Param] }

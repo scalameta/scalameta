@@ -3,6 +3,10 @@ package scala.meta.tests.parsers.dotty
 import scala.meta._
 
 class LanguageExtensionsSuite extends BaseDottySuite {
+
+  override protected implicit val dialect: Dialect =
+    dialects.Scala3.withAllowTrackedParameters(true)
+
   test("tracked modifier for val param of class") {
     val code = """|class Vec(tracked val size: Int)""".stripMargin
     val tree = Defn.Class(

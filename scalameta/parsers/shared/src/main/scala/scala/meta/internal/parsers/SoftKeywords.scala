@@ -18,7 +18,7 @@ class SoftKeywords(dialect: Dialect) {
   object KwInfix extends IsWithName(dialect.allowInfixMods, "infix")
   object KwExtension extends IsWithName(dialect.allowExtensionMethods, "extension")
   object KwErased extends IsWithName(dialect.allowErasedDefs, "erased")
-  object KwTracked extends IsWithName(true, "tracked")
+  object KwTracked extends IsWithName(dialect.allowTrackedParameters, "tracked")
 
   object StarSplice extends IsWithName(dialect.allowPostfixStarVarargSplices, "*")
   object StarAsTypePlaceholder
