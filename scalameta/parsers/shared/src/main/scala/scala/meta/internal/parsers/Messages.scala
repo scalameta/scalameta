@@ -27,6 +27,7 @@ object Messages {
   val InvalidImplicit =
     "`implicit' modifier can be used only for values, variables, methods and classes"
   val InvalidImplicitTrait = "traits cannot be implicit"
+  val InvalidOverrideTrait = "`override` can't be used with traits"
   val InvalidAbstract = "`abstract' modifier can be used only for classes"
   val InvalidLazyClasses = "classes cannot be lazy"
 }

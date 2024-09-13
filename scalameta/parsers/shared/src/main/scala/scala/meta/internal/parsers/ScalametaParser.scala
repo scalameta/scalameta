@@ -3623,10 +3623,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val fullMods = mods :+ assumedAbstract
     accept[KwTrait]
     rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
+    rejectMod[Mod.Override](mods, Messages.InvalidOverrideTrait)
     val traitName = typeName()
     val culprit = s"trait $traitName"
     rejectModCombination[Mod.Final, Mod.Abstract](fullMods, Some(culprit))
-    rejectModCombination[Mod.Override, Mod.Abstract](fullMods, Some(culprit))
     rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
     rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
     Defn.Trait(
@@ -3727,7 +3727,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
-    rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
     Defn.Object(mods, objectName, templateOpt(OwnedByObject))
   }
 
