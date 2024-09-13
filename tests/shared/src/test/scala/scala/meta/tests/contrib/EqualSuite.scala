@@ -14,12 +14,12 @@ class EqualSuite extends FunSuite {
   val e: Defn.Class = q"class Foo { val x = 2 }"
 
   test("syntactic") {
-    assert(!a.isEqual[Syntactically](b))
+    assert(a.isEqual[Syntactically](b))
     assert(b.isEqual[Syntactically](c))
-    assert(!e.contains[Syntactically](a))
+    assert(e.contains[Syntactically](a))
     assert(e.contains[Syntactically](b))
     assert(!e.contains[Structurally](d))
-    assert(Set[Syntactically[Tree]](a, b, c, d).size == 3)
+    assertEquals(Set[Syntactically[Tree]](a, b, c, d).size, 2)
   }
 
   test("structural") {

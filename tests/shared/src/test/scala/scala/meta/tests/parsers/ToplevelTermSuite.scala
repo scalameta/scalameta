@@ -3,7 +3,7 @@ package scala.meta.tests.parsers
 import scala.meta._
 import scala.meta.tests.TreeSuiteBase
 
-class ToplevelTermSuite extends TreeSuiteBase {
+class ToplevelTermSuite extends ParseSuite {
   implicit val dialect: Dialect = dialects.Scala3.withAllowToplevelTerms(true)
   test("allowToplevelTerms simple") {
 
@@ -11,15 +11,13 @@ class ToplevelTermSuite extends TreeSuiteBase {
                          |foo(x)
                          |""".stripMargin
 
-    val tree = sourceString.parse[Source].get
-
-    assertEquals(tree.syntax, sourceString)
-    val expected = Source(List(
+    val tree = Source(List(
       Defn
         .Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
       Term.Apply(tname("foo"), List(tname("x")))
     ))
-    assertTree(tree)(expected)
+
+    runTestAssert[Source](sourceString)(tree)
   }
 
   test("allowToplevelTerms and allowPackageStatementsWithToplevelTerms with package") {
@@ -29,10 +27,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
                          |foo(x)
                          |""".stripMargin
 
-    val tree = sourceString.parse[Source].get
-
-    assertEquals(tree.syntax, sourceString)
-    val expected = Source(List(Pkg(
+    val tree = Source(List(Pkg(
       tname("bar"),
       List(
         Defn
@@ -40,7 +35,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
         Term.Apply(tname("foo"), List(tname("x")))
       )
     )))
-    assertTree(tree)(expected)
+    runTestAssert[Source](sourceString)(tree)
   }
 
   test("allowToplevelTerms and allowPackageStatementsWithToplevelTerms no package") {
@@ -48,15 +43,12 @@ class ToplevelTermSuite extends TreeSuiteBase {
                          |foo(x)
                          |""".stripMargin
 
-    val tree = sourceString.parse[Source].get
-
-    assertEquals(tree.syntax, sourceString)
-    val expected = Source(List(
+    val tree = Source(List(
       Defn
         .Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
       Term.Apply(tname("foo"), List(tname("x")))
     ))
-    assertTree(tree)(expected)
+    runTestAssert[Source](sourceString)(tree)
   }
 
 }

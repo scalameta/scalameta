@@ -25,7 +25,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.toString (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assertEquals(tree.toString, "foo + bar // baz")
+    assertEquals(tree.toString, "foo + bar")
   }
 
   test("scala.meta.Tree.structure (parsed)") {
@@ -35,12 +35,12 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.syntax (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
+    assertWithOriginalSyntax(tree, "foo + bar", "foo + bar")
   }
 
   test("scala.meta.Tree.toString (quasiquotes)") {
     val tree = q"foo + bar // baz"
-    assertEquals(tree.toString, "foo + bar // baz")
+    assertEquals(tree.toString, "foo + bar")
   }
 
   test("scala.meta.Tree.structure (quasiquoted)") {
@@ -50,7 +50,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.syntax (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
+    assertWithOriginalSyntax(tree, "foo + bar", "foo + bar")
   }
 
   test("scala.meta.dialects.Scala3.toString") {

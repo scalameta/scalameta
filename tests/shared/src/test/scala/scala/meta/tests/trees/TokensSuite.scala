@@ -9,14 +9,41 @@ class TokensSuite extends TreeSuiteBase {
 
   test("Tree.tokens: parsed, same dialect") {
     val tree = dialects.Scala211("foo + bar // baz").parse[Term].get
-    assertEquals(tree.syntax, "foo + bar // baz")
-    assertEquals(tree.tokens.syntax, "foo + bar // baz")
+    assertEquals(tree.syntax, "foo + bar")
+    assertEquals(tree.tokens.syntax, "foo + bar")
   }
 
   test("Tree.tokens: parsed, different dialect") {
     val tree = dialects.Scala210("foo + bar // baz").parse[Term].get
     assertEquals(tree.syntax, "foo + bar")
-    assertEquals(tree.tokens.syntax, "foo + bar // baz")
+    assertEquals(tree.tokens.syntax, "foo + bar")
+  }
+
+  test("Tree.tokens: parsed, infix within block") {
+    val tree = dialects.Scala211(
+      """|{
+         |  foo + bar // baz
+         |} // qux
+         |""".stripMargin
+    ).parse[Term].get
+    assertEquals(
+      tree.syntax,
+      """|{
+         |  foo + bar // baz
+         |}""".stripMargin
+    )
+    assertEquals(
+      tree.tokens.syntax,
+      """|{
+         |  foo + bar // baz
+         |}""".stripMargin
+    )
+    tree match {
+      case Term.Block(term :: Nil) =>
+        assertEquals(term.syntax, "foo + bar")
+        assertEquals(term.tokens.syntax, "foo + bar")
+      case _ =>
+    }
   }
 
   test("Tree.tokens: manual") {

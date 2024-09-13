@@ -54,13 +54,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def parseRuleAfterBOF[T <: Tree](rule: => T): T = {
-    val start = prevIndex
+    val bofIndex = prevIndex
+    val begIndex = currIndex
     val t = rule
-    // NOTE: can't have prevTokenPos here
-    // because we need to subsume all the trailing trivia
-    val end = currIndex
+    val endIndex = prevIndex
+    val eofIndex = currIndex
     accept[EOF]
-    atPos(start, end)(t)
+    if (t.is[Source]) atPos(bofIndex, eofIndex)(t) else atPos(begIndex, endIndex)(t)
   }
 
   // Entry points for Parse[T]

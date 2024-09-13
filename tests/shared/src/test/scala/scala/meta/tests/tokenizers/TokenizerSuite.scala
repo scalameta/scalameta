@@ -1055,7 +1055,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(tree.pos != Position.None)
     assertEquals(
       tree.tokens.structure,
-      "Tokens(BOF [0..0), Ident(foo) [0..3), Space [3..4), Ident(+) [4..5), Space [5..6), Ident(bar) [6..9), EOF [9..9))"
+      "Tokens(Ident(foo) [0..3), Space [3..4), Ident(+) [4..5), Space [5..6), Ident(bar) [6..9))"
     )
   }
 
@@ -1073,13 +1073,13 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
   test("Ident.value for normal") {
     "foo".asInput.parse[Term].get.tokens match {
-      case Tokens(bof, foo: Ident, eof) => assertEquals(foo.value, "foo")
+      case Tokens(foo: Ident) => assertEquals(foo.value, "foo")
     }
   }
 
   test("Ident.value for backquoted") {
     "`foo`".asInput.parse[Term].get.tokens match {
-      case Tokens(bof, foo: Ident, eof) =>
+      case Tokens(foo: Ident) =>
         assertEquals(foo.value, "foo")
         assertEquals(foo.syntax, "`foo`")
     }
