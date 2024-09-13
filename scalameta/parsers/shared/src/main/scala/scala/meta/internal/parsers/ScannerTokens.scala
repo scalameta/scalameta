@@ -657,7 +657,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionTemplateInherit :: xs =>
             if (blankBraceOr(!derives(next) && !derives(prev))) strip(xs) else None
           case RegionTry :: xs
-              if !next.isAny[KwCatch, KwFinally] && isLeadingInfix != LeadingInfix.Yes => strip(xs)
+              if !next.isAny[KwCatch, KwFinally] && canBeLeadingInfix != LeadingInfix.Yes => strip(xs)
           case Nil | (_: CanProduceLF) :: _ => Some(rs)
           case _ => None
         }
@@ -670,20 +670,23 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         stripIfCanProduceLF(regions).map(rs => Right(lastWhitespaceToken(rs, lineIndent)))
 
       // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change-1
-      lazy val isLeadingInfix = sepRegionsOrig match {
-        case Nil | (_: CanProduceLF) :: _
-            if !multiEOL && eolPos >= 0 && dialect.allowInfixOperatorAfterNL &&
-              next.isSymbolicInfixOperator => isLeadingInfixArg(nextPos + 1, nextIndent)
+      def isLeadingInfix(regions: List[SepRegion]) = regions match {
+        case Nil | (_: CanProduceLF) :: _ => canBeLeadingInfix
         case _ => LeadingInfix.No
       }
 
-      def getInfixLFIfNeeded() = {
+      lazy val canBeLeadingInfix =
+        if (!multiEOL && eolPos >= 0 && dialect.allowInfixOperatorAfterNL &&
+          next.isSymbolicInfixOperator) isLeadingInfixArg(nextPos + 1, nextIndent)
+        else LeadingInfix.No
+
+      def getInfixLFIfNeeded(regions: List[SepRegion]) = {
         def getInfixLF(invalid: Option[String]) = Some(Right {
           val lf = tokens(indentPos)
           val out = InfixLF(lf.input, lf.dialect, lf.start, lf.end, invalid)
           eolRef(sepRegionsOrig, out, indentPos)
         })
-        isLeadingInfix match {
+        isLeadingInfix(regions) match {
           case LeadingInfix.Yes => getInfixLF(None)
           case LeadingInfix.InvalidArg if (sepRegionsOrig match {
                 // see in `ieLeadingInfix` above, `x` is guaranteed to be CanProduceLF
@@ -696,7 +699,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
       val resOpt =
         if (!hasLF) None
-        else if (!dialect.allowSignificantIndentation) getInfixLFIfNeeded()
+        else if (!dialect.allowSignificantIndentation) getInfixLFIfNeeded(sepRegionsOrig)
           .orElse(getIfCanProduceLF(sepRegionsOrig))
         else {
           def noOutdent(sepRegions: List[SepRegion]) = sepRegions.find(_.isIndented)
@@ -741,7 +744,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                   // then  [else]  [do]  catch  [finally]  [yield]  match
                   case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                   // exclude leading infix op
-                  case _ => !isIndented(rs, nextIndent) || isLeadingInfix != LeadingInfix.Yes
+                  case _ => !isIndented(rs, nextIndent) || canBeLeadingInfix != LeadingInfix.Yes
                 }) => OutdentInfo(r, rs)
             case _ => null
           }
@@ -826,7 +829,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     if (ko) None else emitIndent(rs)
                   case (x: RegionControlMaybeCond) :: rs if prev.is[RightParen] =>
                     val ko = next.is[Dot] || !x.isNotTerminatingTokenIfOptional(next) ||
-                      isLeadingInfix == LeadingInfix.Yes
+                      canBeLeadingInfix == LeadingInfix.Yes
                     if (ko) None else emitIndent(x.asBody().fold(rs)(_ :: rs))
                   case (x: RegionControlMaybeCond) :: rs if x.isControlKeyword(prev) =>
                     emitIndent(x.asCond() :: rs)
@@ -859,8 +862,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
           @tailrec
           def iter(regions: List[SepRegion]): Option[Either[List[SepRegion], TokenRef]] = {
-            val res = regionsToRes(regions)
-              .orElse(if (regions ne sepRegionsOrig) None else getInfixLFIfNeeded())
+            val res = regionsToRes(regions).orElse(getInfixLFIfNeeded(regions))
             if (res.isEmpty) regions match {
               case Nil if prev.is[BOF] => Some(Left(RegionLine(nextIndent) :: Nil))
               case (r: RegionLine) :: rs if r.indent >= nextIndent => iter(rs)
