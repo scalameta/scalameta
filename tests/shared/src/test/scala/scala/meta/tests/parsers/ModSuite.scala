@@ -76,23 +76,6 @@ class ModSuite extends ParseSuite {
     }
   }
 
-  testParseErrors(
-    "implicit implicit var a: Int",
-    "implicit implicit val a: Int",
-    "implicit implicit var a: Int = 1",
-    "implicit implicit val a: Int = 1",
-    "implicit implicit class A",
-    "implicit implicit object A",
-    "implicit implicit trait A",
-    "implicit implicit case class A(a: Int)",
-    "implicit implicit type A",
-    "implicit implicit type A = Int",
-    "implicit trait A",
-    "implicit type A",
-    "implicit type A = Int",
-    "implicit case class A(a: Int)"
-  )
-
   test("final") {
     matchSubStructure[Stat]("final object A", { case Defn.Object(List(Mod.Final()), _, _) => () })
     matchSubStructure[Stat](
@@ -143,19 +126,7 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  testParseErrors(
-    "final final var a: Int",
-    "final final val a: Int",
-    "final final var a: Int = 1",
-    "final final val a: Int = 1",
-    "final final class A",
-    "final final object A",
-    "final final trait A",
-    "final final case class A(a: Int)",
-    "final final type A",
-    "final abstract trait A",
-    "def foo(final val a: Int): Int = a"
-  )
+  testParseErrors("def foo(final val a: Int): Int = a")
 
   test("sealed") {
     matchSubStructure[Stat](
@@ -179,28 +150,7 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  testParseErrors(
-    "sealed sealed var a: Int",
-    "sealed sealed val a: Int",
-    "sealed sealed var a: Int = 1",
-    "sealed sealed val a: Int = 1",
-    "sealed sealed class A",
-    "sealed sealed object A",
-    "sealed sealed trait A",
-    "sealed sealed case class A(a: Int)",
-    "sealed sealed type A",
-    "sealed object A",
-    "sealed case object A",
-    "sealed def foo(a: Int): Int = a",
-    "sealed val a: Int = 1",
-    "sealed val a: Int",
-    "sealed var a: Int = 1",
-    "sealed var a: Int",
-    "sealed type A",
-    "sealed type A = Int",
-    "def foo(sealed val a: Int): Int = a",
-    "class A(sealed val a: Int)"
-  )
+  testParseErrors("def foo(sealed val a: Int): Int = a")
 
   test("override") {
     matchSubStructure[Stat](
@@ -254,19 +204,7 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  testParseErrors(
-    "override override var a: Int",
-    "override override val a: Int",
-    "override override var a: Int = 1",
-    "override override val a: Int = 1",
-    "override override class A",
-    "override override object A",
-    "override override trait A",
-    "override override case class A(a: Int)",
-    "override override type A",
-    "def foo(override val a: Int): Int = a",
-    "override trait A"
-  )
+  testParseErrors("def foo(override val a: Int): Int = a")
 
   test("case") {
     matchSubStructure[Stat]("case object A", { case Defn.Object(List(Mod.Case()), _, _) => () })
@@ -316,29 +254,7 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  testParseErrors(
-    "abstract abstract var a: Int",
-    "abstract abstract val a: Int",
-    "abstract abstract var a: Int = 1",
-    "abstract abstract val a: Int = 1",
-    "abstract abstract class A",
-    "abstract abstract object A",
-    "abstract abstract trait A",
-    "abstract abstract case class A(a: Int)",
-    "abstract abstract type A",
-    "abstract val a: Int",
-    "abstract var a: Int",
-    "abstract val a: Int = 1",
-    "abstract var a: Int = 1",
-    "abstract def foo(a: Int): Int",
-    "abstract type A",
-    "abstract type A = Int",
-    "class A(abstract val a: Int)",
-    "def foo(abstract val a: Int): Int = a",
-    "abstract def foo(val a: Int): Int = a",
-    "abstract case object A",
-    "abstract object A"
-  )
+  testParseErrors("def foo(abstract val a: Int): Int = a", "abstract def foo(val a: Int): Int = a")
 
   test("lazy") {
     matchSubStructure[Stat](
@@ -347,30 +263,7 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  testParseErrors(
-    "lazy lazy var a: Int",
-    "lazy lazy val a: Int",
-    "lazy lazy var a: Int = 1",
-    "lazy lazy val a: Int = 1",
-    "lazy lazy class A",
-    "lazy lazy object A",
-    "lazy lazy trait A",
-    "lazy lazy case class A(a: Int)",
-    "lazy lazy type A",
-    "lazy val a: Int",
-    "lazy var a: Int",
-    "lazy var a: Int = 1",
-    "lazy def foo(a: Int): Int",
-    "lazy type A",
-    "lazy type A = Int",
-    "def foo(lazy val a: Int): Int = a",
-    "class A(lazy val a: Int)",
-    "lazy def foo(val a: Int): Int = a",
-    "lazy case object A",
-    "lazy case class A(a: Int)",
-    "lazy class A",
-    "lazy object A"
-  )
+  testParseErrors("def foo(lazy val a: Int): Int = a", "lazy def foo(val a: Int): Int = a")
 
   test("abstract override") {
     /* Non-trait members modified by `abstract override` receive a typechecking error */
@@ -425,18 +318,7 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  testParseErrors(
-    "abstract override abstract override var a: Int",
-    "abstract override abstract override val a: Int",
-    "abstract override abstract override var a: Int = 1",
-    "abstract override abstract override val a: Int = 1",
-    "abstract override abstract override class A",
-    "abstract override abstract override object A",
-    "abstract override abstract override trait A",
-    "abstract override abstract override case class A(a: Int)",
-    "abstract override abstract override type A",
-    "def foo(abstract override val a: Int): Int = a"
-  )
+  testParseErrors("def foo(abstract override val a: Int): Int = a")
 
   test("covariant in case class") {
     assertTree(templStat("case class A[+T](t: T)")) {
@@ -643,28 +525,6 @@ class ModSuite extends ParseSuite {
     )
   }
 
-  // Only check these because sealed can only be used for classes
-  testParseErrors("final sealed class A(a: Int)", "final sealed case class A(a: Int)")
-
-  testParseErrors(
-    "private private class A",
-    "private private[foo] class A",
-    "private protected class A",
-    // "private protected[foo] class A", /* see the test below */
-    "private[foo] private class A",
-    "private[foo] private[foo] class A",
-    // "private[foo] protected class A", /* see the test below */
-    "private[foo] protected[foo] class A",
-    "protected private class A",
-    // "protected private[foo] class A", /* see the test below */
-    "protected protected class A",
-    "protected protected[foo] class A",
-    // "protected[foo] private class A", /* see the test below */
-    "protected[foo] private[foo] class A",
-    "protected[foo] protected class A",
-    "protected[foo] protected[foo] class A"
-  )
-
   test("not really invalid private and protected") {
     // NOTE: Surprisingly, the code below is valid Scala.
     matchSubStructure[Stat](
@@ -740,14 +600,6 @@ class ModSuite extends ParseSuite {
     val expected = s"""|error: repeated modifier
                        |class A(implicit implicit val b: B)
                        |                 ^""".stripMargin
-    assert(actual.contains(expected), actual)
-  }
-
-  test("repeated parameter modifier on second parameter") {
-    val actual = interceptParseError("class A(implicit b: B, implicit implicit val c: C)")
-    val expected = s"""|error: repeated modifier
-                       |class A(implicit b: B, implicit implicit val c: C)
-                       |                                ^""".stripMargin
     assert(actual.contains(expected), actual)
   }
 

@@ -474,71 +474,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     ok
   }
 
-  /* ------------- MODIFIER VALIDATOR --------------------------------------- */
-
-  def rejectMod[M <: Mod](mods: collection.Iterable[Mod], errorMsg: String)(implicit
-      tag: ClassTag[M]
-  ) = mods.first[M].foreach(m => syntaxError(errorMsg, at = m))
-
-  def rejectModCombination[M1 <: Mod: ClassTag, M2 <: Mod: ClassTag](
-      mods: collection.Iterable[Mod],
-      culpritOpt: => Option[String] = None
-  ) = mods.first[M2].foreach(rejectModWith[M1](_, mods, culpritOpt))
-
-  def rejectModWith[M <: Mod: ClassTag](
-      m2: Mod,
-      mods: collection.Iterable[Mod],
-      culpritOpt: => Option[String] = None
-  ) = mods.first[M].foreach { m =>
-    val errorMsg = Messages.IllegalCombinationModifiers(m, m2)
-    val forCulprit = culpritOpt.fold("")(formatCulprit)
-    val enrichedErrorMsg = errorMsg + forCulprit
-    syntaxError(enrichedErrorMsg, at = m)
-  }
-
-  private def formatCulprit(culprit: String): String = s" for: $culprit"
-
-  def onlyAllowedMods[M1 <: Mod, M2 <: Mod](mods: List[Mod], culprit: String)(implicit
-      classifier1: Classifier[Mod, M1],
-      classifier2: Classifier[Mod, M2]
-  ): Unit = onlyAllowedMods(mods, List(classifier1.apply, classifier2.apply), culprit)
-
-  def onlyAllowedMods(mods: List[Mod], matchers: List[Mod => Boolean], culprit: String): Unit = mods
-    .foreach {
-      case m if matchers.exists(f => f(m)) =>
-      case m => syntaxError(s" Invalid modifier $m${formatCulprit(culprit)}", at = m)
-    }
-
-  def summonClassifierFunc[A, B](implicit v: Classifier[A, B]): A => Boolean = v.apply
-
-  def onlyAcceptMod[M <: Mod: ClassTag, T](mods: List[Mod], errorMsg: String)(implicit
-      classifier: TokenClassifier[T]
-  ) = onlyAcceptMod[M](classifier.apply)(mods)(errorMsg)
-
-  def onlyAcceptMod[M <: Mod: ClassTag](ok: Token => Boolean)(mods: List[Mod])(errorMsg: String) =
-    if (!ok(currToken)) mods.first[M].foreach(m => syntaxError(errorMsg, at = m))
-
-  class InvalidModCombination[M1 <: Mod, M2 <: Mod](m1: M1, m2: M2) {
-    def errorMessage: String = Messages.IllegalCombinationModifiers(m1, m2)
-  }
-
-  private implicit val InvalidOpenFinal: InvalidModCombination[Mod.Open, Mod.Final] =
-    new InvalidModCombination(Mod.Open(), Mod.Final())
-  private implicit val InvalidOpenSealed: InvalidModCombination[Mod.Open, Mod.Sealed] =
-    new InvalidModCombination(Mod.Open(), Mod.Sealed())
-  private implicit val InvalidCaseImplicit: InvalidModCombination[Mod.Case, Mod.Implicit] =
-    new InvalidModCombination(Mod.Case(), Mod.Implicit())
-  private implicit val InvalidFinalAbstract: InvalidModCombination[Mod.Final, Mod.Abstract] =
-    new InvalidModCombination(Mod.Final(), Mod.Abstract())
-  private implicit val InvalidFinalSealed: InvalidModCombination[Mod.Final, Mod.Sealed] =
-    new InvalidModCombination(Mod.Final(), Mod.Sealed())
-  private implicit val InvalidOverrideAbstract: InvalidModCombination[Mod.Override, Mod.Abstract] =
-    new InvalidModCombination(Mod.Override(), Mod.Abstract())
-  private implicit val InvalidPrivateProtected: InvalidModCombination[Mod.Private, Mod.Protected] =
-    new InvalidModCombination(Mod.Private(Name.Anonymous()), Mod.Protected(Name.Anonymous()))
-  private implicit val InvalidProtectedPrivate: InvalidModCombination[Mod.Protected, Mod.Private] =
-    new InvalidModCombination(Mod.Protected(Name.Anonymous()), Mod.Private(Name.Anonymous()))
-
   /* -------------- TOKEN CLASSES ------------------------------------------- */
 
   @inline
@@ -2882,15 +2817,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val mods = buf.view.drop(buf.length)
     def appendMod: Unit = {
       val mod = modifier(isLocal)
-      if (!mod.is[Mod.Quasi]) {
-        if (mods.exists(_.productPrefix == mod.productPrefix))
-          syntaxError("repeated modifier", at = mod)
-        if (mods.exists(_.isNakedAccessMod) && mod.isNakedAccessMod)
-          if (mod.is[Mod.Protected]) rejectModWith[Mod.Private](mod, mods)
-          else if (mod.is[Mod.Private]) rejectModWith[Mod.Protected](mod, mods)
-        if (mods.exists(_.isQualifiedAccessMod) && mod.isQualifiedAccessMod)
-          syntaxError("duplicate private/protected qualifier", at = mod)
-      }
       buf += mod
     }
     // the only things that can come after $mod or $mods are either keywords or names; the former is easy,
@@ -3045,14 +2971,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   ): Term.Param = autoPos {
     val mods = new ListBuffer[Mod]
     annotsBuf(mods, skipNewLines = false)
-    rejectMod[Mod.Open](mods, "Open modifier only applied to classes")
     val numAnnots = mods.length
-    if (ownerIsType) {
-      modifiersBuf(mods, isParams = true)
-      rejectMod[Mod.Lazy](mods, "`lazy' modifier not allowed here, use call-by-name")
-      rejectMod[Mod.Sealed](mods, "`sealed' modifier can be used only for classes")
-      if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
-    } else {
+    if (ownerIsType) modifiersBuf(mods, isParams = true)
+    else {
       @tailrec
       def otherMods(): Unit = if (peekToken.isNot[Colon]) {
         val mod = currToken.text match {
@@ -3329,10 +3250,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       enumCaseAllowed: Boolean = false,
       secondaryConstructorAllowed: Boolean = false
   ): Stat = {
-    onlyAcceptMod[Mod.Lazy](_.isAny[KwVal, KwGiven])(mods)(
-      "lazy not allowed here. Only val/given can be lazy."
-    )
-    onlyAcceptMod[Mod.Opaque, KwType](mods, "opaque not allowed here. Only types can be opaque.")
     def onlyInline() = mods match {
       case (_: Mod.Inline) :: Nil => true
       case _ => false
@@ -3369,8 +3286,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def patDefOrDcl(mods: List[Mod]): Stat = autoEndPos(mods) {
     val isVal = at[KwVal]
-    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     next()
     val lhs: List[Pat] = commaSeparated(noSeq.pattern2()).map {
       case name: Term.Name => copyPos(name)(Pat.Var(name))
@@ -3384,8 +3299,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         syntaxError("unbound placeholder parameter", at = currToken)
       if (isVal) Defn.Val(mods, lhs, tpOpt, rhs) else Defn.Var(mods, lhs, tpOpt, rhs)
     } else {
-      if (isVal && !dialect.allowLazyValAbstractValues)
-        rejectMod[Mod.Lazy](mods, "lazy values may not be abstract")
       lhs.foreach { x =>
         if (!x.is[Quasi] && !x.is[Pat.Var])
           syntaxError("pattern definition may not be abstract", at = x)
@@ -3529,9 +3442,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def funDefRest(mods: List[Mod]): Stat = autoEndPos(mods) {
     accept[KwDef]
-    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    rejectMod[Mod.Open](mods, Messages.InvalidOpen)
-    if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     val name = termName()
 
     def procedureSyntaxDeclType: Type = {
@@ -3566,9 +3476,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def typeDefOrDcl(mods: List[Mod]): Stat.TypeDef = autoEndPos(mods) {
     accept[KwType]
-    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    rejectMod[Mod.Implicit](mods, Messages.InvalidImplicit)
-    if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
@@ -3605,7 +3512,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   })
 
   private def tmplDef(mods: List[Mod], okTopLevel: Boolean = true): Stat = autoEndPosOpt(mods) {
-    if (!dialect.allowToplevelStatements) rejectMod[Mod.Lazy](mods, Messages.InvalidLazyClasses)
     currToken match {
       case _: KwTrait => traitDef(mods)
       case _: KwEnum => enumDef(mods)
@@ -3620,13 +3526,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def traitDef(mods: List[Mod]): Defn.Trait = {
     next()
-    rejectMod[Mod.Implicit](mods, Messages.InvalidImplicitTrait)
-    rejectMod[Mod.Override](mods, Messages.InvalidOverrideTrait)
     val traitName = typeName()
-    val culprit = s"trait $traitName"
-    rejectModCombination[Mod.Final, Mod.Abstract](mods, Some(culprit))
-    rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
-    rejectModCombination[Mod.Open, Mod.Sealed](mods, Some(culprit))
     Defn.Trait(
       mods,
       traitName,
@@ -3645,10 +3545,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     val className = typeName()
     def culprit = Some(s"class $className")
-    rejectModCombination[Mod.Final, Mod.Sealed](mods, culprit)
-    rejectModCombination[Mod.Open, Mod.Final](mods, culprit)
-    rejectModCombination[Mod.Open, Mod.Sealed](mods, culprit)
-    rejectModCombination[Mod.Case, Mod.Implicit](mods, culprit)
     val typeParams = typeParamClauseOpt(
       ownerIsType = true,
       ctxBoundsAllowed = true,
@@ -3669,20 +3565,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   // EnumDef           ::=  id ClassConstr InheritClauses EnumBody
   private def enumDef(mods: List[Mod]): Defn.Enum = {
     next()
-
     val enumName = typeName()
-    val culprit = s"enum $enumName"
-
-    onlyAllowedMods(
-      mods,
-      List(
-        summonClassifierFunc[Mod, Mod.Private],
-        summonClassifierFunc[Mod, Mod.Protected],
-        summonClassifierFunc[Mod, Mod.Annot]
-      ),
-      culprit
-    )
-
     val typeParams = typeParamClauseOpt(
       ownerIsType = true,
       ctxBoundsAllowed = true,
@@ -3722,9 +3605,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     next()
     val objectName = termName()
     val culprit = s"object $objectName"
-    if (!mods.has[Mod.Override]) rejectMod[Mod.Abstract](mods, Messages.InvalidAbstract)
-    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
-    rejectModCombination[Mod.Open, Mod.Final](mods, Some(culprit))
     Defn.Object(mods, objectName, templateOpt(OwnedByObject))
   }
 
@@ -3744,7 +3624,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def secondaryCtor(mods: List[Mod]): Ctor.Secondary = autoEndPos(mods) {
     accept[KwDef]
-    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     expect[KwThis]
     val name = nameThis()
     if (currToken.isNot[LeftParen])
@@ -3760,7 +3639,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       annotsBuf(buf, skipNewLines = true)
       modifiersBuf(buf)
     }
-    rejectMod[Mod.Sealed](mods, Messages.InvalidSealed)
     accept[KwDef]
     val beforeThisPos = prevIndex
     val thisPos = currIndex
