@@ -338,6 +338,20 @@ class XmlSuite extends ParseSuite {
   checkError("<a>}{</a>")
   // checkError("<a></b>") // FIXME: Should not parse
 
+  test("SeqWildcard with trailing NL") {
+    val code = """|def foo =
+                  |  e match {
+                  |    case <title>{
+                  |      _*
+                  |    }</title> =>
+                  |  }
+                  |""".stripMargin
+    val error = """|<input>:4: error: illegal start of simple pattern
+                   |      _*
+                   |        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   // FIXME These should not parse: we need to differentiate between expression and pattern position
   // checkError("""e match { case <a b="foo"/> => () }""" )
   // checkError("e match { case <xml:unparsed><</xml:unparsed> => () }")
