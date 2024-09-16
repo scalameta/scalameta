@@ -439,10 +439,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   @inline
   private def acceptIf(unapply: Token => Boolean): Boolean = nextIf(unapply(currToken))
 
-  private def acceptIfAfterOpt[A <: Token: ClassTag](unapply: Token => Boolean): Boolean =
-    if (at[A]) { next(); true }
-    else if (unapply(currToken) && peek[A]) { nextTwice(); true }
+  private def acceptIfAfterOpt(unapplyA: Token => Boolean, unapplyB: Token => Boolean): Boolean =
+    if (unapplyA(currToken)) { next(); true }
+    else if (unapplyB(currToken) && unapplyA(peekToken)) { nextTwice(); true }
     else false
+
+  private def acceptIfAfterOpt[A <: Token: ClassTag](unapply: Token => Boolean): Boolean =
+    acceptIfAfterOpt(_.is[A], unapply)
 
   private def acceptIfAfterOpt[A <: Token: ClassTag, B <: Token: ClassTag]: Boolean =
     acceptIfAfterOpt[A](_.is[B])
