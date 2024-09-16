@@ -320,12 +320,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
     atPos(start.begIndex, end)(body)
+  def atPosIf[T <: Tree](start: StartPos, end: EndPos)(body: => Option[T]): Option[T] =
+    atPosIf(start.begIndex, end)(body)
   def atPosOpt[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
     atPosOpt(start.begIndex, end)(body)
 
   @inline
   def atPos[T <: Tree](start: Int, end: EndPos)(body: T): T =
     atPosWithBody(start, body, end.endIndex)
+  def atPosIf[T <: Tree](start: Int, end: EndPos)(body: Option[T]): Option[T] = body
+    .map(atPos(start, end))
   def atPosOpt[T <: Tree](start: Int, end: EndPos)(body: T): T = body.origin match {
     case o: Origin.Parsed if o.source eq originSource => body
     case _ => atPos(start, end)(body)
@@ -364,6 +368,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def autoPos[T <: Tree](body: => T): T = atPos(start = AutoPos, end = AutoPos)(body)
+  def autoPosIf[T <: Tree](body: => Option[T]): Option[T] =
+    atPosIf(start = AutoPos, end = AutoPos)(body)
   def autoPosOpt[T <: Tree](body: => T): T = atPosOpt(start = AutoPos, end = AutoPos)(body)
   @inline
   def autoEndPos[T <: Tree](start: Int)(body: => T): T = atPos(start = start, end = AutoPos)(body)
