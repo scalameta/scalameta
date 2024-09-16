@@ -2505,14 +2505,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def unquotePattern(): Pat = dropAnyBraces(pattern())
 
-    private def isArglistEnd(t: Token): Boolean = t.isAny[RightParen, RightBrace, EOF]
-
     private def getSeqWildcard(isEnabled: Boolean, elseF: => Pat, mapF: Pat => Pat = identity) =
-      if (isEnabled && isSequenceOK && at[Underscore] && isStar(peekToken)) {
-        val startPos = currIndex
-        if (tryAhead(next(isArglistEnd(currToken)))) mapF(autoEndPos(startPos)(Pat.SeqWildcard()))
-        else elseF
-      } else elseF
+      if (isEnabled && at[Underscore]) autoPosIf(getSeqWildcardAtUnderscore()).fold(elseF)(mapF)
+      else elseF
+
+    private def getSeqWildcardAtUnderscore() =
+      if (isSequenceOK && isStar(peekToken)) tryParse {
+        nextTwice() // skip underscore and star
+        val isArgListEnd = currToken.isAny[RightParen, RightBrace, EOF]
+        if (isArgListEnd) Some(Pat.SeqWildcard()) else None
+      }
+      else None
 
     def pattern1(isForComprehension: Boolean = false): Pat = {
       val p = pattern2(isForComprehension)
@@ -2647,10 +2650,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
                 ))
             }
           }
-        case _: Underscore =>
-          next()
-          if (isSequenceOK && isStar && nextIf(isArglistEnd(peekToken))) Pat.SeqWildcard()
-          else Pat.Wildcard()
+        case _: Underscore => getSeqWildcardAtUnderscore().getOrElse(next(Pat.Wildcard()))
         case _: Literal => literal()
         case _: Interpolation.Id => interpolatePat()
         case _: Xml.Start => xmlPat()
