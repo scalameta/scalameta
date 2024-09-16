@@ -320,12 +320,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
     atPos(start.begIndex, end)(body)
+  def atPosIf[T <: Tree](start: StartPos, end: EndPos)(body: => Option[T]): Option[T] =
+    atPosIf(start.begIndex, end)(body)
   def atPosOpt[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
     atPosOpt(start.begIndex, end)(body)
 
   @inline
   def atPos[T <: Tree](start: Int, end: EndPos)(body: T): T =
     atPosWithBody(start, body, end.endIndex)
+  def atPosIf[T <: Tree](start: Int, end: EndPos)(body: Option[T]): Option[T] = body
+    .map(atPos(start, end))
   def atPosOpt[T <: Tree](start: Int, end: EndPos)(body: T): T = body.origin match {
     case o: Origin.Parsed if o.source eq originSource => body
     case _ => atPos(start, end)(body)
@@ -364,6 +368,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def autoPos[T <: Tree](body: => T): T = atPos(start = AutoPos, end = AutoPos)(body)
+  def autoPosIf[T <: Tree](body: => Option[T]): Option[T] =
+    atPosIf(start = AutoPos, end = AutoPos)(body)
   def autoPosOpt[T <: Tree](body: => T): T = atPosOpt(start = AutoPos, end = AutoPos)(body)
   @inline
   def autoEndPos[T <: Tree](start: Int)(body: => T): T = atPos(start = start, end = AutoPos)(body)
@@ -2499,14 +2505,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def unquotePattern(): Pat = dropAnyBraces(pattern())
 
-    private def isArglistEnd(t: Token): Boolean = t.isAny[RightParen, RightBrace, EOF]
-
     private def getSeqWildcard(isEnabled: Boolean, elseF: => Pat, mapF: Pat => Pat = identity) =
-      if (isEnabled && isSequenceOK && at[Underscore] && isStar(peekToken)) {
-        val startPos = currIndex
-        if (tryAhead(next(isArglistEnd(currToken)))) mapF(autoEndPos(startPos)(Pat.SeqWildcard()))
-        else elseF
-      } else elseF
+      if (isEnabled && at[Underscore]) autoPosIf(getSeqWildcardAtUnderscore()).fold(elseF)(mapF)
+      else elseF
+
+    private def getSeqWildcardAtUnderscore() =
+      if (isSequenceOK && isStar(peekToken)) tryParse {
+        nextTwice() // skip underscore and star
+        newLinesOpt()
+        val isArgListEnd = currToken.isAny[RightParen, RightBrace, EOF]
+        if (isArgListEnd) Some(Pat.SeqWildcard()) else None
+      }
+      else None
 
     def pattern1(isForComprehension: Boolean = false): Pat = {
       val p = pattern2(isForComprehension)
@@ -2641,10 +2651,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
                 ))
             }
           }
-        case _: Underscore =>
-          next()
-          if (isSequenceOK && isStar && nextIf(isArglistEnd(peekToken))) Pat.SeqWildcard()
-          else Pat.Wildcard()
+        case _: Underscore => getSeqWildcardAtUnderscore().getOrElse(next(Pat.Wildcard()))
         case _: Literal => literal()
         case _: Interpolation.Id => interpolatePat()
         case _: Xml.Start => xmlPat()
