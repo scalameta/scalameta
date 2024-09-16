@@ -1,9 +1,13 @@
 package org.scalameta
 
-class FileLine(val file: sourcecode.File, val line: sourcecode.Line) {
+class FileLine(val file: sourcecode.File, val line: sourcecode.Line) extends Ordered[FileLine] {
   override def toString: String = {
     val shortFilename = file.value.replaceAll("(.*/|\\.scala)", "")
     Console.GREEN + s"$shortFilename:${line.value}" + Console.RESET
+  }
+  override def compare(that: FileLine): Int = {
+    val cmp = this.file.value.compareTo(that.file.value)
+    if (cmp != 0) cmp else this.line.value.compare(that.line.value)
   }
 }
 
