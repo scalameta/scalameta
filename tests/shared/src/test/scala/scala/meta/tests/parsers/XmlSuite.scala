@@ -346,10 +346,24 @@ class XmlSuite extends ParseSuite {
                   |    }</title> =>
                   |  }
                   |""".stripMargin
-    val error = """|<input>:4: error: illegal start of simple pattern
-                   |      _*
-                   |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|def foo = e match {
+                    |  case <title>{_*}</title> =>
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      None,
+      Term.Match(
+        tname("e"),
+        List(
+          Case(Pat.Xml(List(lit("<title>"), lit("</title>")), List(Pat.SeqWildcard())), None, blk())
+        ),
+        Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // FIXME These should not parse: we need to differentiate between expression and pattern position

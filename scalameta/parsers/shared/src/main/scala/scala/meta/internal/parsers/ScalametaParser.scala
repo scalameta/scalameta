@@ -2512,6 +2512,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     private def getSeqWildcardAtUnderscore() =
       if (isSequenceOK && isStar(peekToken)) tryParse {
         nextTwice() // skip underscore and star
+        newLinesOpt()
         val isArgListEnd = currToken.isAny[RightParen, RightBrace, EOF]
         if (isArgListEnd) Some(Pat.SeqWildcard()) else None
       }
