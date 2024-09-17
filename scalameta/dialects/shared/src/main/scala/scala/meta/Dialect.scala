@@ -736,7 +736,8 @@ final class Dialect private[meta] (
       this.allowInfixOperatorAfterNL == allowInfixOperatorAfterNL &&
       this.allowParamClauseInterleaving == allowParamClauseInterleaving &&
       this.allowQuietSyntax == allowQuietSyntax && // separated from "significant indentation"
-      this.allowFewerBraces == allowFewerBraces && this.allowBinaryLiterals == allowBinaryLiterals &&
+      this.allowFewerBraces == allowFewerBraces &&
+      this.allowBinaryLiterals == allowBinaryLiterals &&
       this.allowTrackedParameters == allowTrackedParameters
 
   @inline
