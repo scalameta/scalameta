@@ -106,10 +106,12 @@ package object dialects {
 
   implicit val Scala34: Dialect = Scala33.withAllowQuotedTypeVariables(true)
 
-  implicit val Scala3: Dialect = Scala34
+  implicit val Scala35: Dialect = Scala34.withAllowBinaryLiterals(true)
+
+  implicit val Scala3: Dialect = Scala35
 
   implicit val Scala3Future: Dialect = Scala3.withAllowUnderscoreAsTypePlaceholder(true)
-    .withAllowBinaryLiterals(true).withAllowTrackedParameters(true)
+    .withAllowTrackedParameters(true)
 
   @deprecated("Use Scala3 instead", "4.4.2")
   implicit val Dotty: Dialect = Scala3
