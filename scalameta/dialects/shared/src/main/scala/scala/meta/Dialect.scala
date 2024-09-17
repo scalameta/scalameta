@@ -161,7 +161,9 @@ final class Dialect private[meta] (
     // https://docs.scala-lang.org/scala3/reference/other-new-features/control-syntax.html
     val allowQuietSyntax: Boolean,
     // Are binary literals allowed? SIP-42.
-    val allowBinaryLiterals: Boolean
+    val allowBinaryLiterals: Boolean,
+    // Are tracked parameters allowed? docs: https://dotty.epfl.ch/docs/reference/experimental/modularity.html
+    val allowTrackedParameters: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -256,7 +258,8 @@ final class Dialect private[meta] (
     allowParamClauseInterleaving = false,
     allowFewerBraces = false,
     allowQuietSyntax = false,
-    allowBinaryLiterals = false
+    allowBinaryLiterals = false,
+    allowTrackedParameters = false
     // NOTE(olafur): declare the default value for new fields above this comment.
   )
 
@@ -393,6 +396,9 @@ final class Dialect private[meta] (
   def withAllowBinaryLiterals(newValue: Boolean): Dialect =
     privateCopy(allowBinaryLiterals = newValue)
 
+  def withAllowTrackedParameters(newValue: Boolean): Dialect =
+    privateCopy(allowTrackedParameters = newValue)
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -458,7 +464,8 @@ final class Dialect private[meta] (
       allowParamClauseInterleaving: Boolean = this.allowParamClauseInterleaving,
       allowFewerBraces: Boolean = this.allowFewerBraces,
       allowQuietSyntax: Boolean = this.allowQuietSyntax,
-      allowBinaryLiterals: Boolean = this.allowBinaryLiterals
+      allowBinaryLiterals: Boolean = this.allowBinaryLiterals,
+      allowTrackedParameters: Boolean = this.allowTrackedParameters
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     val notForUnquote = unquoteType eq UnquoteType.None
@@ -521,7 +528,8 @@ final class Dialect private[meta] (
       allowParamClauseInterleaving = allowParamClauseInterleaving,
       allowFewerBraces = allowFewerBraces,
       allowQuietSyntax = allowQuietSyntax,
-      allowBinaryLiterals = allowBinaryLiterals
+      allowBinaryLiterals = allowBinaryLiterals,
+      allowTrackedParameters = allowTrackedParameters
     )
     if (equivalent) return this // RETURN!
     new Dialect(
@@ -587,6 +595,7 @@ final class Dialect private[meta] (
       allowFewerBraces = allowFewerBraces,
       allowQuietSyntax = allowQuietSyntax,
       allowBinaryLiterals = allowBinaryLiterals,
+      allowTrackedParameters = allowTrackedParameters,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
       unquoteParentDialect = if (notForUnquote) null else this
@@ -674,7 +683,8 @@ final class Dialect private[meta] (
       allowParamClauseInterleaving: Boolean,
       allowFewerBraces: Boolean,
       allowQuietSyntax: Boolean,
-      allowBinaryLiterals: Boolean
+      allowBinaryLiterals: Boolean,
+      allowTrackedParameters: Boolean
   ): Boolean =
     // do not include deprecated values in this comparison
     this.allowAtForExtractorVarargs == allowAtForExtractorVarargs &&
@@ -726,7 +736,9 @@ final class Dialect private[meta] (
       this.allowInfixOperatorAfterNL == allowInfixOperatorAfterNL &&
       this.allowParamClauseInterleaving == allowParamClauseInterleaving &&
       this.allowQuietSyntax == allowQuietSyntax && // separated from "significant indentation"
-      this.allowFewerBraces == allowFewerBraces && this.allowBinaryLiterals == allowBinaryLiterals
+      this.allowFewerBraces == allowFewerBraces &&
+      this.allowBinaryLiterals == allowBinaryLiterals &&
+      this.allowTrackedParameters == allowTrackedParameters
 
   @inline
   private def isEquivalentToInternal(that: Dialect): Boolean = (this eq that) ||
@@ -789,7 +801,8 @@ final class Dialect private[meta] (
       allowParamClauseInterleaving = that.allowParamClauseInterleaving,
       allowFewerBraces = that.allowFewerBraces,
       allowQuietSyntax = that.allowQuietSyntax,
-      allowBinaryLiterals = that.allowBinaryLiterals
+      allowBinaryLiterals = that.allowBinaryLiterals,
+      allowTrackedParameters = that.allowTrackedParameters
     )
 
   @deprecated("Use withX method instead", "4.3.11")

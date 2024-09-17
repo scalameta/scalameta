@@ -2754,6 +2754,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case soft.KwOpaque() => atCurPosNext(Mod.Opaque())
           case soft.KwTransparent() => atCurPosNext(Mod.Transparent())
           case soft.KwErased() => atCurPosNext(Mod.Erased())
+          case soft.KwTracked() => atCurPosNext(Mod.Tracked())
           case n =>
             val local = if (isLocal) "local " else ""
             syntaxError(s"${local}modifier expected but $n found", at = currToken)
