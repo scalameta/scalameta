@@ -15,7 +15,7 @@ class SbtSuite extends TreeSuiteBase {
   test("\"...\".parse[Stat]")(intercept[ParseException](simpleBuildSyntax.parse[Stat].get))
 
   test("source\"...\"") {
-    val tree = source"""
+    val tree = """
       lazy val commonSettings = Seq(
         organization := "com.example",
         version := "0.1.0",
@@ -27,7 +27,7 @@ class SbtSuite extends TreeSuiteBase {
         settings(
           name := "hello"
         )
-    """
+    """.parse[Source].get
     assertStruct(tree)(simpleBuildStructure)
     assertSyntaxWithClue(tree)(expectedSyntax)(simpleBuildStructure)
   }

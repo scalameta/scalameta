@@ -2,6 +2,8 @@ package scala.meta.tests
 
 import scala.meta.Dialect
 import scala.meta.Token
+import scala.meta.XtensionStructure
+import scala.meta.XtensionSyntax
 
 object TestHelpers {
 

@@ -12,8 +12,9 @@ class TreeOpsSuite extends FunSuite {
   test("testForeach") {
     var obtained = List.empty[String]
     a.foreach(x => obtained = x.structure :: obtained)
-    assert(
-      obtained == List(
+    assertEquals(
+      obtained,
+      List(
         "Lit.Int(2)",
         "Term.Name(\"x\")",
         "Pat.Var(Term.Name(\"x\"))",
