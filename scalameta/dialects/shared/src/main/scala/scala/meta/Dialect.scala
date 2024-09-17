@@ -917,6 +917,7 @@ object Dialect extends InternalDialect {
     Scala32,
     Scala33,
     Scala34,
+    Scala35,
     Paradise211,
     Paradise212,
     ParadiseTypelevel211,
