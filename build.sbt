@@ -14,7 +14,7 @@ import complete.DefaultParsers._
 import munit.sbtmunit.BuildInfo.munitVersion
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
-def customVersion = sys.props.get("scalameta.version")
+def customVersion = Option("4.9.9") // sys.props.get("scalameta.version")
 def parseTagVersion: String = {
   import scala.sys.process._
   // drop `v` prefix
