@@ -5,6 +5,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref, 'semanticdb') }}
     steps:
       - uses: actions/setup-node@v4
         with:
