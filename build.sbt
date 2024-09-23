@@ -311,6 +311,7 @@ lazy val semanticdbIntegration = project
     // the sources in this project intentionally produce warnings to test the
     // diagnostics pipeline in semanticdb-scalac.
     scalacOptions -= "-Xfatal-warnings",
+    scalacOptions -= "-Wconf:cat=deprecation:is",
     scalacOptions += "-deprecation",
     scalacOptions ++= {
       val pluginJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath

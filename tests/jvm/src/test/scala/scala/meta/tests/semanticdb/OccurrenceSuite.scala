@@ -18,15 +18,9 @@ import scala.meta.tests.{BuildInfo, Utils}
 class OccurrenceSuite extends FunSuite {
 
   private def testBody(body: OccurrenceSuite.TestBody): Unit = {
-    val expectedCompat = if (ScalaVersion.atLeast212_14) {
-      body.expected
-    } else {
-      // Predef.type etc. was fixed in 2.12.14
-      body.expected
-        .replace("Predef/*=>scala.Predef.*/.type", "Predef.type")
-        .replace("x/*=>types.Test.C#x.*/.type", "x.type")
-        .replace("p/*=>types.Test.C#p.*/.x/*=>types.P#x.*/.type", "p.x.type")
-    }
+    val expectedCompat =
+      if (ScalaVersion.atLeast213_15) body.expected
+      else body.expected.replace("  } yield a/*=>local13*/", "  } yield a/*=>local11*/")
     assertNoDiff(body.obtained, expectedCompat)
   }
 

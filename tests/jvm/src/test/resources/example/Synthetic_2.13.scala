@@ -42,6 +42,6 @@ class Synthetic/*<=example.Synthetic#*/ {
     a/*<=local11*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(1)
     b/*<=local12*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(2)
     if a/*=>local11*/ </*=>scala.Int#`<`(+3).*/ b/*=>local12*/
-  } yield a/*=>local11*/
+  } yield a/*=>local13*/
 
 }

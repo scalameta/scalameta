@@ -1645,11 +1645,6 @@ Synthetics:
       a,
       b
     ) == (1, 2))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(b) => orig(List((a, b))).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(local7) => orig((
-      a,
-      b,
-      c,
-      d
-    ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]({(local8) => orig((
       c,
       d
     ) <- List((a, b))
@@ -1658,8 +1653,7 @@ Synthetics:
       b,
       c,
       d
-    ) == (1, 2, 3, 4)
-    e = (
+    ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]({(local8) => orig(e = (
       a,
       b,
       c,
@@ -3867,7 +3861,7 @@ Language => Scala
 Diagnostics => 1 entries
 
 Diagnostics:
-[5:2..5:21) [warning] a pure expression does nothing in statement position; multiline expressions may require enclosing parentheses
+[5:2..5:21) [warning] a pure expression does nothing in statement position
 
 semanticdb/integration/src/main/scala/example/Synthetic.scala
 -------------------------------------------------------------
@@ -4128,7 +4122,7 @@ Occurrences:
 [43:7..43:8): a => local11
 [43:9..43:10): < => scala/Int#`<`(+3).
 [43:11..43:12): b => local12
-[44:10..44:11): a => local11
+[44:10..44:11): a => local13
 
 Synthetics:
 [3:2..3:6): List => *.apply[Int]
