@@ -8,6 +8,7 @@ import scala.tools.nsc.reporters.StoreReporter
 
 class SemanticdbReporter(underlying: FilteringReporter)
     extends StoreReporter(SemanticdbReporter.defaultSettings(underlying.settings)) {
+
   override def doReport(
       pos: Position,
       msg: String,
@@ -17,10 +18,8 @@ class SemanticdbReporter(underlying: FilteringReporter)
     super.doReport(pos, msg, severity, actions)
     underlying.doReport(pos, msg, severity, actions)
   }
-
   // overriding increment is enough so make sure that error/warning
   // counts are the same as in underlying reporter
-
   override def increment(severity: Severity): Unit = {
     super.increment(severity)
     underlying.increment(severity)

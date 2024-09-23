@@ -282,6 +282,7 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
   // the sources in this project intentionally produce warnings to test the
   // diagnostics pipeline in semanticdb-scalac.
   scalacOptions -= "-Xfatal-warnings",
+  scalacOptions -= "-Wconf:cat=deprecation:is",
   scalacOptions += "-deprecation",
   scalacOptions ++= {
     if (scalaVersion.value >= "2.13.14") Seq(
