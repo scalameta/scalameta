@@ -448,7 +448,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           } else if (isSpecial(ch)) {
             putCharAndNext()
             getOperatorRest()
-          } else reportIllegalCharacter()
+          } else {
+            reportIllegalCharacter()
+            nextChar()
+          }
         fetchOther()
     }
   }
