@@ -2136,5 +2136,24 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |""".stripMargin.replace("'''", "\"\"\"").nl2lf
     assertTokenizedAsStructureLines(code, struct)
   }
+  test("unexpected-character") {
+    val code = """|
+                  |val 。 = 123
+                  |
+                  |""".stripMargin.replace("'''", "\"\"\"")
+
+    val struct = s"""|BOF [0..0)
+                     |LF [0..1)
+                     |KwVal [1..4)
+                     |Invalid(illegal character '\\u3002') [5..6)
+                     |MultiHS(3) [4..7)
+                     |Equals [7..8)
+                     |Space [8..9)
+                     |Constant.Int(123) [9..12)
+                     |MultiNL(2) [12..14)
+                     |EOF [14..14)
+                     |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
 
 }
