@@ -7,6 +7,7 @@ private[meta] trait Api {
 
 private[meta] trait Aliases {
   type Token = scala.meta.tokens.Token
+  @deprecated("Use scala.meta.tokens.Token, this alias contains only a subset", "4.10.2")
   object Token {
     type Ident = scala.meta.tokens.Token.Ident
     val Ident = scala.meta.tokens.Token.Ident
