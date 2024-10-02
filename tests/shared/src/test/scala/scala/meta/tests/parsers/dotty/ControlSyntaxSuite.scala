@@ -4295,10 +4295,23 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
 
-    val error = """|<input>:9: error: `}` expected but `<-` found
-                   |  _ <- d
-                   |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|for (_ <- if (a) {
+                    |  b
+                    |} else {
+                    |  c
+                    |}; _ <- d) yield e
+                    |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(
+        Enumerator.Generator(
+          Pat.Wildcard(),
+          Term.If(tname("a"), Term.Block(List(tname("b"))), Term.Block(List(tname("c"))), Nil)
+        ),
+        Enumerator.Generator(Pat.Wildcard(), tname("d"))
+      )),
+      tname("e")
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3979 w/ granular whitespace") {
@@ -4347,10 +4360,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
 
-    val error = """|<input>:9: error: `}` expected but `<-` found
-                   |  _ <- d
-                   |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|for (_ <- if (a) {
+                    |  b
+                    |} else {
+                    |  c
+                    |}; _ <- d) yield e
+                    |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(
+        Enumerator
+          .Generator(Pat.Wildcard(), Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
+        Enumerator.Generator(Pat.Wildcard(), tname("d"))
+      )),
+      tname("e")
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
