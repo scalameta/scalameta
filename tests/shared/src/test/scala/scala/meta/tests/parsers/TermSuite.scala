@@ -2,6 +2,7 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
+import scala.meta.tokenizers.TokenizerOptions
 
 class TermSuite extends ParseSuite {
   import Name.Anonymous
@@ -1453,6 +1454,70 @@ class TermSuite extends ParseSuite {
         { case x: Member.Infix if x.isAssignment == isAssignment => }
       )
     }
+  }
+
+  test("#3979 w/ grouped whitespace") {
+    implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = true)
+
+    val code = """|for {
+                  |  _ <-
+                  |    if (a) {
+                  |      b
+                  |    } else {
+                  |      c
+                  |    }
+                  |
+                  |  _ <- d
+                  |} yield e
+                  |""".stripMargin
+    val layout = """|for (_ <- if (a) {
+                    |  b
+                    |} else {
+                    |  c
+                    |}; _ <- d) yield e
+                    |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(
+        Enumerator.Generator(
+          Pat.Wildcard(),
+          Term.If(tname("a"), Term.Block(List(tname("b"))), Term.Block(List(tname("c"))), Nil)
+        ),
+        Enumerator.Generator(Pat.Wildcard(), tname("d"))
+      )),
+      tname("e")
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3979 w/ granular whitespace") {
+    implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = false)
+
+    val code = """|for {
+                  |  _ <-
+                  |    if (a) {
+                  |      b
+                  |    } else {
+                  |      c
+                  |    }
+                  |
+                  |  _ <- d
+                  |} yield e
+                  |""".stripMargin
+    val layout = """|for (_ <- if (a) {
+                    |  b
+                    |} else {
+                    |  c
+                    |}; _ <- d) yield e
+                    |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(
+        Enumerator
+          .Generator(Pat.Wildcard(), Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
+        Enumerator.Generator(Pat.Wildcard(), tname("d"))
+      )),
+      tname("e")
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

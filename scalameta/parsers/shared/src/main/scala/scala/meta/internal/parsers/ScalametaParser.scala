@@ -2119,7 +2119,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply => getFewerBracesApplyOnColon(t, startPos).getOrElse(t)
-      case _: Underscore =>
+      case _: Underscore if canApply =>
         next()
         addPos(Term.Eta(t))
       case _ => t
