@@ -103,13 +103,16 @@ class ImportSuite extends ParseSuite {
     assertTree(templStat("import foo.{bar, baz => _, _}"))(Import(
       Importer(
         TermName("foo"),
-        (Name(Indeterminate("bar"))) :: Unimport(Indeterminate("baz")) :: Wildcard() :: Nil
+        Name(Indeterminate("bar")) :: Unimport(Indeterminate("baz")) :: Wildcard() :: Nil
       ) :: Nil
     ))
   }
 
   test("import a.b.{ _, c => _ }") {
-    intercept[ParseException](templStat("import a.b.{ _, c => _ }"))
+    // invalid but we don't check anymore
+    assertTree(templStat("import a.b.{ _, c => _ }"))(Import(List(
+      Importer(Term.Select(tname("a"), tname("b")), List(Wildcard(), Unimport(Indeterminate("c"))))
+    )))
   }
 
   test("source3-given-import") {

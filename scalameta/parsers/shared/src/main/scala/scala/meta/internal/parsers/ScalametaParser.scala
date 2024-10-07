@@ -3185,22 +3185,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (!acceptOpt[LeftBrace]) List(importWildcardOrName())
     else {
       val importees = inBracesAfterOpen(commaSeparated(importee()))
-
-      def lastIsGiven = importees.last.isAny[Importee.Given, Importee.GivenAll]
-      val imp = if (importees.nonEmpty && lastIsGiven) importees.init else importees
-      if (imp.nonEmpty) imp.init.foreach {
-        case importee: Importee.Wildcard =>
-          syntaxError("Wildcard import must be in the last position", importee.pos)
-
-        case _ => ()
-      }
-      def importeesHaveWildcard = importees.exists {
-        case _: Importee.Wildcard => true
-        case _ => false
-      }
       if (dialect.allowGivenImports) importees.map {
-        case importee @ Importee.Name(nm) if nm.value == "given" && importeesHaveWildcard =>
-          copyPos(importee.name)(Importee.GivenAll())
+        case Importee.Name(nm) if nm.value == "given" && importees.exists {
+              case _: Importee.Wildcard => true
+              case _ => false
+            } => copyPos(nm)(Importee.GivenAll())
         case i => i
       }
       else importees
