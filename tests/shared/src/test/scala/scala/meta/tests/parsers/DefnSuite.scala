@@ -399,4 +399,57 @@ class DefnSuite extends ParseSuite {
     runTestAssert[Stat](code)(tree)
   }
 
+  test("#4133 intellij ScalaImportTypeFix.scala") {
+    val code =
+      """|private def hasApplyMethod(`class`: PsiClass): Boolean = `class` match {
+         |  case `object`: ScObject => `object`.allFunctionsByName(ScFunction.CommonNames.Apply).nonEmpty
+         |  case `class` @ ScClass(`type`) => isCaseOrInScala3File(`class`) // SCL-19992, SCL-21187
+         |  case _ => false
+         |} 
+         |""".stripMargin
+    val layout = """|private def hasApplyMethod(`class`: PsiClass): Boolean = `class` match {
+                    |  case `object`: ScObject =>
+                    |    `object`.allFunctionsByName(ScFunction.CommonNames.Apply).nonEmpty
+                    |  case `class` @ ScClass(`type`) =>
+                    |    isCaseOrInScala3File(`class`)
+                    |  case _ =>
+                    |    false
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Def(
+      List(Mod.Private(anon)),
+      tname("hasApplyMethod"),
+      Nil,
+      List(List(tparam("class", "PsiClass"))),
+      Some(pname("Boolean")),
+      Term.Match(
+        tname("class"),
+        List(
+          Case(
+            Pat.Typed(Pat.Var(tname("object")), pname("ScObject")),
+            None,
+            Term.Select(
+              Term.Apply(
+                Term.Select(tname("object"), tname("allFunctionsByName")),
+                List(
+                  Term
+                    .Select(Term.Select(tname("ScFunction"), tname("CommonNames")), tname("Apply"))
+                )
+              ),
+              tname("nonEmpty")
+            )
+          ),
+          Case(
+            Pat.Bind(Pat.Var(tname("class")), Pat.Extract(tname("ScClass"), List(tname("type")))),
+            None,
+            Term.Apply(tname("isCaseOrInScala3File"), List(tname("class")))
+          ),
+          Case(Pat.Wildcard(), None, lit(false))
+        ),
+        Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
