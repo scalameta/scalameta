@@ -19,7 +19,7 @@ trait SemanticdbPipeline extends SemanticdbOps {
     def isIgnored: Boolean = {
       val matchesExtension = {
         val fileName = unit.source.file.name
-        fileName.endsWith(".scala") || fileName.endsWith(".sc") || fileName.endsWith(".java")
+        fileName.endsWith(".scala") || fileName.endsWith(".sc") || fileName.endsWith(".mill") || fileName.endsWith(".java")
       }
       val matchesFilter = Option(unit.source.file).flatMap(f => Option(f.file))
         .map(f => config.fileFilter.matches(f.getAbsolutePath)).getOrElse(true)
