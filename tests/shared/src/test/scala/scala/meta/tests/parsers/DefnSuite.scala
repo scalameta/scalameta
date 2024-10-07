@@ -399,4 +399,19 @@ class DefnSuite extends ParseSuite {
     runTestAssert[Stat](code)(tree)
   }
 
+  test("#4133 intellij ScalaImportTypeFix.scala") {
+    val code =
+      """|private def hasApplyMethod(`class`: PsiClass): Boolean = `class` match {
+         |  case `object`: ScObject => `object`.allFunctionsByName(ScFunction.CommonNames.Apply).nonEmpty
+         |  case `class` @ ScClass(`type`) => isCaseOrInScala3File(`class`) // SCL-19992, SCL-21187
+         |  case _ => false
+         |} 
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `=>` expected but `:` found
+         |  case `object`: ScObject => `object`.allFunctionsByName(ScFunction.CommonNames.Apply).nonEmpty
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
