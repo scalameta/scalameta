@@ -407,11 +407,49 @@ class DefnSuite extends ParseSuite {
          |  case _ => false
          |} 
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `=>` expected but `:` found
-         |  case `object`: ScObject => `object`.allFunctionsByName(ScFunction.CommonNames.Apply).nonEmpty
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|private def hasApplyMethod(`class`: PsiClass): Boolean = `class` match {
+                    |  case `object`: ScObject =>
+                    |    `object`.allFunctionsByName(ScFunction.CommonNames.Apply).nonEmpty
+                    |  case `class` @ ScClass(`type`) =>
+                    |    isCaseOrInScala3File(`class`)
+                    |  case _ =>
+                    |    false
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Def(
+      List(Mod.Private(anon)),
+      tname("hasApplyMethod"),
+      Nil,
+      List(List(tparam("class", "PsiClass"))),
+      Some(pname("Boolean")),
+      Term.Match(
+        tname("class"),
+        List(
+          Case(
+            Pat.Typed(Pat.Var(tname("object")), pname("ScObject")),
+            None,
+            Term.Select(
+              Term.Apply(
+                Term.Select(tname("object"), tname("allFunctionsByName")),
+                List(
+                  Term
+                    .Select(Term.Select(tname("ScFunction"), tname("CommonNames")), tname("Apply"))
+                )
+              ),
+              tname("nonEmpty")
+            )
+          ),
+          Case(
+            Pat.Bind(Pat.Var(tname("class")), Pat.Extract(tname("ScClass"), List(tname("type")))),
+            None,
+            Term.Apply(tname("isCaseOrInScala3File"), List(tname("class")))
+          ),
+          Case(Pat.Wildcard(), None, lit(false))
+        ),
+        Nil
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

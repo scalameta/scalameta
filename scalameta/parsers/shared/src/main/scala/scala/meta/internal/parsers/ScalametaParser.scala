@@ -2639,7 +2639,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               case name: Term.Name.Quasi => name.become[Pat]
               case name: Term.Name =>
                 if (soft.StarSplice(currToken) && tryAheadNot[Ident]) Pat.Repeated(name)
-                else if ((!sidToken.isBackquoted || isForComprehension) && {
+                else if (if (!isForComprehension && sidToken.isBackquoted) currToken.isAny[Colon, At]
+                  else {
                     val first = name.value.head
                     first == '_' || Character.getType(first) == Character.LOWERCASE_LETTER ||
                     dialect.allowUpperCasePatternVarBinding && at[At]
