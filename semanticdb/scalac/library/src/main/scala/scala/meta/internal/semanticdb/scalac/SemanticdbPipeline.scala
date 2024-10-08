@@ -19,10 +19,14 @@ trait SemanticdbPipeline extends SemanticdbOps {
     def isIgnored: Boolean = {
       val matchesExtension = {
         val fileName = unit.source.file.name
-        fileName.endsWith(".scala") || fileName.endsWith(".sc") || fileName.endsWith(".mill") || fileName.endsWith(".java")
+        val lastDotIndex = fileName.lastIndexOf('.')
+        lastDotIndex > 0 && {
+          val ext = fileName.substring(lastDotIndex + 1)
+          SemanticdbPipeline.supportedExtensions.contains(ext)
+        }
       }
-      val matchesFilter = Option(unit.source.file).flatMap(f => Option(f.file))
-        .map(f => config.fileFilter.matches(f.getAbsolutePath)).getOrElse(true)
+      val matchesFilter = Option(unit.source.file)
+        .forall(f => Option(f.file).forall(f => config.fileFilter.matches(f.getAbsolutePath)))
       !matchesExtension || !matchesFilter
     }
   }
@@ -41,6 +45,10 @@ trait SemanticdbPipeline extends SemanticdbOps {
         case Info => global.reporter.info(g.NoPosition, msg, force = true)
         case Ignore => // do nothing.
       }
+  }
+
+  object SemanticdbPipeline {
+    val supportedExtensions = Set("scala", "java", "sc", "mill")
   }
 
   object SemanticdbTyperComponent extends PluginComponent {
