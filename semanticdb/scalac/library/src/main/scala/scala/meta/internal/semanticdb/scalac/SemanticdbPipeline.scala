@@ -25,7 +25,7 @@ trait SemanticdbPipeline extends SemanticdbOps {
           SemanticdbPipeline.supportedExtensions.contains(ext)
         }
       }
-      val matchesFilter = Option(unit.source.file)
+      def matchesFilter = Option(unit.source.file)
         .forall(f => Option(f.file).forall(f => config.fileFilter.matches(f.getAbsolutePath)))
       !matchesExtension || !matchesFilter
     }
