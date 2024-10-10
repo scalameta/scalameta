@@ -8,48 +8,51 @@ import scala.meta.prettyprinters._
 import scala.annotation.tailrec
 
 object TreeStructure {
+  import Show.{indent => i}
+  import Show.{newline => n}
   import Show.{repeat => r}
   import Show.{sequence => s}
 
-  private def anyStructure(x: Any): String = x match {
-    case el: String => DoubleQuotes(el)
-    case el: Tree => el.structure
-    case None => "None"
-    case Some(el) => "Some(" + anyStructure(el) + ")"
+  def apply[T <: Tree]: Structure[T] = Structure(anyTree)
+
+  private def anyStructure(x: Any): Show.Result = x match {
+    case el: String => s(DoubleQuotes(el))
+    case el: Tree => anyTree(el)
+    case None => s("None")
+    case Some(el) => s("Some(", i(anyStructure(el)), n(")"))
     case el: List[_] => iterableStructure(el, "List")
     case el: Seq[_] => iterableStructure(el, "Seq")
-    case el => el.toString
+    case el => s(el.toString)
   }
 
-  private def iterableStructure(xs: Iterable[_], cls: String): String =
-    if (xs.isEmpty) "Nil" else xs.map(anyStructure).mkString(s"$cls(", ", ", ")")
+  private def iterableStructure(xs: Seq[_], cls: String): Show.Result =
+    if (xs.isEmpty) s("Nil") else s(s"$cls(", r(xs.map(x => i(anyStructure(x))), ","), n(")"))
 
-  def apply[T <: Tree]: Structure[T] = Structure {
+  private def anyTree(tree: Tree) = tree match {
     case _: Name.Anonymous => s(s"""Name.Anonymous()""")
     case _: Name.This => s(s"""Name.This()""")
     case _: Name.Placeholder => s(s"""Name.Placeholder()""")
     case Name.Indeterminate(value) => s("Name(", DoubleQuotes(value), ")")
-    case x => s(
-        x.productPrefix,
-        "(", {
-          def default = r(x.productIterator.map(anyStructure).toList, ", ")
-          x match {
-            case _: Quasi => default
-            case x: Lit.String => s(DoubleQuotes.orTriple(x.value))
-            case x: Lit.Char => s(s"'${x.value}'")
-            case x: Lit.Symbol => s(s"""Symbol("${x.value.name}")""")
-            case _: Lit.Unit | _: Lit.Null => s()
-            case x: Lit.Double => s(asFloat(x.format, 'd'))
-            case x: Lit.Float => s(asFloat(x.format, 'f'))
-            case x: Lit.Long => s(x.value.toString + 'L')
-            case x: Lit => s(x.value.toString)
-            case x: Term.ArgClause if x.mod.isEmpty => s(anyStructure(x.values))
-            case x: Term.ParamClause if x.mod.isEmpty => s(anyStructure(x.values))
-            case _ => default
-          }
-        },
-        ")"
-      )
+    case x =>
+      val args: List[Show.Result] = {
+        def default = x.productIterator.map(anyStructure).toList
+        x match {
+          case _: Quasi => default
+          case x: Lit.String => DoubleQuotes.orTriple(x.value) :: Nil
+          case x: Lit.Char => s"'${x.value}'" :: Nil
+          case x: Lit.Symbol => s"""Symbol("${x.value.name}")""" :: Nil
+          case _: Lit.Unit | _: Lit.Null => Nil
+          case x: Lit.Double => asFloat(x.format, 'd') :: Nil
+          case x: Lit.Float => asFloat(x.format, 'f') :: Nil
+          case x: Lit.Long => x.value.toString + 'L' :: Nil
+          case x: Lit => x.value.toString :: Nil
+          case x: Term.ArgClause if x.mod.isEmpty => anyStructure(x.values) :: Nil
+          case x: Term.ParamClause if x.mod.isEmpty => anyStructure(x.values) :: Nil
+          case _ => default
+        }
+      }
+      if (args.lengthCompare(1) > 0) s(x.productPrefix, "(", r(args.map(i), ","), n(")"))
+      else s(x.productPrefix, "(", r(args), ")")
   }
 
   private def asFloat(value: String, suffix: Char): String = {

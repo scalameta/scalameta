@@ -8,14 +8,8 @@ import munit.Location
 
 class TreeStructureSuite extends ParseSuite {
 
-  def assertStructure(tree: Tree)(expected: String)(implicit loc: Location): Unit = test(
-    logger.revealWhitespace(tree.syntax)
-  ) {
-    assertNoDiff(
-      tree.structure,
-      expected.stripMargin.replaceAll("[,]\n *", ", ").replaceAll("\n *", "")
-    )
-  }
+  def assertStructure(tree: Tree)(expected: String)(implicit loc: Location): Unit =
+    test(logger.revealWhitespace(tree.syntax))(assertNoDiff(tree.structure, expected))
 
   assertStructure(Lit.Unit())("Lit.Unit()")
   assertStructure(Lit.Float(".0f"))("Lit.Float(0f)")
@@ -36,28 +30,44 @@ class TreeStructureSuite extends ParseSuite {
   assertStructure(sym("a"))("""Lit.Symbol(Symbol("a"))""")
 
   assertStructure(Case(Pat.Wildcard(), None, Term.Function(List(tparam("")), bool(false))))(
-    """|
-       |Case(
+    """|Case(
        |  Pat.Wildcard(),
        |  None,
        |  Term.Function(
-       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None))),
+       |    Term.ParamClause(List(
+       |      Term.Param(
+       |        Nil,
+       |        Name.Anonymous(),
+       |        None,
+       |        None
+       |      )
+       |    )),
        |    Lit.Boolean(false)
-       |  ))
+       |  )
+       |)
        |""".stripMargin
   )
 
   assertStructure(
     Case(Pat.Wildcard(), None, Term.Function(List(tparam("")), Term.Block(List(bool(false)))))
   )(
-    """|
-       |Case(
+    """|Case(
        |  Pat.Wildcard(),
        |  None,
        |  Term.Function(
-       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None))),
-       |    Term.Block(List(Lit.Boolean(false)))
-       |  ))
+       |    Term.ParamClause(List(
+       |      Term.Param(
+       |        Nil,
+       |        Name.Anonymous(),
+       |        None,
+       |        None
+       |      )
+       |    )),
+       |    Term.Block(List(
+       |      Lit.Boolean(false)
+       |    ))
+       |  )
+       |)
        |""".stripMargin
   )
 
@@ -66,14 +76,25 @@ class TreeStructureSuite extends ParseSuite {
     None,
     Term.Function(List(tparam("")), Term.Block(List(bool(false), tname("a"))))
   ))(
-    """|
-       |Case(
+    """|Case(
        |  Pat.Wildcard(),
        |  None,
        |  Term.Function(
-       |    Term.ParamClause(List(Term.Param(Nil, Name.Anonymous(), None, None))),
-       |    Term.Block(List(Lit.Boolean(false), Term.Name("a")))
-       |  ))""".stripMargin
+       |    Term.ParamClause(List(
+       |      Term.Param(
+       |        Nil,
+       |        Name.Anonymous(),
+       |        None,
+       |        None
+       |      )
+       |    )),
+       |    Term.Block(List(
+       |      Lit.Boolean(false),
+       |      Term.Name("a")
+       |    ))
+       |  )
+       |)
+       |""".stripMargin
   )
 
 }
