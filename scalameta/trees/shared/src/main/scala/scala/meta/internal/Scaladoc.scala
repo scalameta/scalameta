@@ -103,11 +103,20 @@ object Scaladoc {
 
   /* List blocks */
 
+  sealed abstract class ListType
+  object ListType {
+    type Base = ListType
+    case object Bullet extends Base
+    case object Decimal extends Base
+    case object Roman extends Base
+    case object Alpha extends Base
+  }
+
   /** Represents a list item */
-  final case class ListItem(text: Text, terms: Seq[Term] = Nil)
+  final case class ListItem(prefix: String, text: Text, terms: Seq[Term] = Nil)
 
   /** Represents a list block */
-  final case class ListBlock(prefix: String, items: Seq[ListItem]) extends Term
+  final case class ListBlock(listType: ListType, items: Seq[ListItem]) extends Term
 
   /* Tags */
 
