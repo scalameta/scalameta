@@ -36,7 +36,17 @@ object ScaladocParser {
   private def labelParser[$: P]: P[Unit] = (!space ~ AnyChar).rep(1)
   private def wordParser[$: P]: P[Word] = P(labelParser.!.map(Word.apply))
 
-  private def listPrefix[$: P] = "-" | CharIn("1aiI") ~ "."
+  private def listPrefixDash[$: P] = P("-")
+  private def listPrefixDecimal[$: P] = // works 1-99, standard really only covers 1
+    CharIn("1-9") ~ CharIn("0-9").? ~ "."
+  private def listPrefixAlpha[$: P] = // works 'a-z', standard really only covers 'a'
+    CharIn("a-z") ~ "."
+  private def listPrefixRoman[$: P] = { // works 1-10, standard really only covers 1
+    def pat1to10(one: String, fiveTen: => P[Unit]) = one ~ (one ~ one.? | fiveTen).? | fiveTen
+    pat1to10(one = "i", fiveTen = CharIn("vx")) | pat1to10(one = "I", fiveTen = CharIn("VX"))
+  } ~ "."
+  private def listPrefix[$: P] =
+    P(listPrefixDash | listPrefixDecimal | listPrefixRoman | listPrefixAlpha)
 
   private def escape[$: P] = P("\\")
   private def tableDelim[$: P] = P("+" ~ ("-".rep ~ "+").rep(1))
@@ -180,14 +190,27 @@ object ScaladocParser {
     def listMarker = hspacesMinWithLen(indent + 1) ~ listPrefix.! ~ hspacesMinWithLen(1)
     listMarker.flatMap { case (listIndent, prefix, ws) =>
       val mdOffset = listIndent + prefix.length + ws
-      def sep = nl ~ hspace.rep(exactly = listIndent) ~ prefix ~ hspaces1
-      listItemParser(listIndent, mdOffset).rep(1, sep = sep).map(x => ListBlock(prefix, x))
+      val listType = prefix(0) match {
+        case '-' => ListType.Bullet
+        case 'i' | 'I' => ListType.Roman
+        case x => if (Character.isDigit(x)) ListType.Decimal else ListType.Alpha
+      }
+      def patPrefix = listType match {
+        case ListType.Bullet => listPrefixDash
+        case ListType.Roman => listPrefixRoman
+        case ListType.Decimal => listPrefixDecimal
+        case ListType.Alpha => listPrefixAlpha
+      }
+      def sep = nl ~ nl.? ~ hspace.rep(exactly = listIndent) ~ patPrefix.! ~ hspaces1
+      def items = listItemParser(listIndent, mdOffset, prefix) ~
+        sep.flatMap(listItemParser(listIndent, mdOffset, _)).rep
+      items.map { case (x, xs) => ListBlock(listType, x +: xs) }
     }
   }
 
-  private def listItemParser[$: P](indent: Int, mdOffset: Int) = P {
+  private def listItemParser[$: P](indent: Int, mdOffset: Int, prefix: String) = P {
     (textParser(indent, mdOffset) ~ embeddedTermsParser(indent, mdOffset)).map { case (x, terms) =>
-      ListItem(x, terms)
+      ListItem(prefix, x, terms)
     }
   }
 
