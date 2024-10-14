@@ -1,6 +1,8 @@
 package org.scalameta
 package os
 
+import sbt.io.IO
+
 import java.io._
 
 import scala.compat.Platform.EOL

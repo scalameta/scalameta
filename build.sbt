@@ -1,6 +1,8 @@
 import org.scalameta.build.Versions._
 import org.scalameta.build._
 
+import sbt.io.IO
+
 import java.io._
 
 import scala.xml.transform.RewriteRule
