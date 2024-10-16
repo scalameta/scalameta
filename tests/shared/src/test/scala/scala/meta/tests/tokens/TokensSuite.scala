@@ -154,15 +154,35 @@ class TokensApiSuite extends FunSuite {
   }
 
   test("Tokens.span/spanRight") {
+    def notIdent(t: Token): Boolean = t.name != "identifier"
+
     val tokens = tokenize("val foo = 0")
-    val (beforeL, afterL) = tokens.span(_.name != "identifier")
-    val (beforeR, afterR) = tokens.spanRight(_.name != "identifier")
+    val (beforeL, afterL) = tokens.span(notIdent)
+    val (beforeR, afterR) = tokens.spanRight(notIdent)
 
     assertEquals(afterL.head.text, "foo")
     assertEquals(beforeR.last.text, "foo")
 
     assertEquals(afterL.tail, afterR)
     assertEquals(beforeL, beforeR.dropRight(1))
+
+    val beforeLlen = beforeL.length
+    val beforeLbeg = tokens.length - beforeLlen
+    assertEquals(beforeL.rskipWideIf(notIdent, beforeLbeg, -1), beforeLlen)
+    assertEquals(beforeL.getWideOpt(beforeLlen).orNull, afterL.head)
+
+    val afterLlen = afterL.length
+    val afterLbeg = afterLlen - tokens.length
+    assertEquals(afterL.skipWideIf(notIdent, afterLbeg, tokens.length), 0)
+
+    val beforeRlen = beforeR.length
+    val beforeRbeg = tokens.length - beforeRlen
+    assertEquals(beforeR.rskipWideIf(notIdent, beforeRbeg, -1), beforeRlen - 1)
+
+    val afterRlen = afterR.length
+    val afterRbeg = afterRlen - tokens.length
+    assertEquals(afterR.skipWideIf(notIdent, afterRbeg, tokens.length), -1)
+    assertEquals(afterR.getWideOpt(-1).orNull, afterL.head)
   }
 
 }
