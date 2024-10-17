@@ -736,7 +736,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
 
     private def typeLambdaOrPoly(): Type = {
-      val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+      val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens)
       newLineOpt()
       currToken match {
         case _: TypeLambdaArrow => next(); Type.Lambda(quants, typeIndentedOpt())
@@ -2050,7 +2050,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def polyFunction() = autoPos {
-    val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+    val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens)
     accept[RightArrow]
     val term = expr()
     Term.PolyFunction(quants, term)
@@ -3114,18 +3114,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         name match {
           case q: Quasi if endTparamQuasi => q.become[Type.Param]
           case _ =>
-            val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+            val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens)
             val tbounds = typeBounds()
             val vbounds = new ListBuffer[Type]
             val cbounds = new ListBuffer[Type]
             if (ctxBoundsAllowed) {
               @inline
-              def getBound(): Type = {
-                next()
-                currToken match {
-                  case t: Ellipsis => ellipsis[Type](t, 1)
-                  case _ => typ()
-                }
+              def getBound(allowBoundsAlias: Boolean = false): Type = currToken match {
+                case t: Ellipsis => ellipsis[Type](t, 1)
+                case _ => contextBoundOrAlias(allowBoundsAlias)
               }
               if (at[Viewbound]) {
                 if (!dialect.allowViewBounds) {
@@ -3134,12 +3131,33 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
                     "use `def f[A](a: A)(implicit ev: A => Int)`."
                   syntaxError(s"View bounds are not supported. $msg", at = currToken)
                 }
-                doWhile(vbounds += getBound())(at[Viewbound])
+                doWhile(vbounds += getBound())(acceptOpt[Viewbound])
               }
-              while (at[Colon]) cbounds += getBound()
+              def addContextBound() = cbounds += getBound(allowBoundsAlias = true)
+              currToken match {
+                case _: Colon =>
+                  accept[Colon]
+                  currToken match {
+                    case _: LeftBrace if dialect.allowImprovedBoundsAndGivens =>
+                      accept[LeftBrace]
+                      doWhile(addContextBound())(acceptOpt[Comma])
+                      accept[RightBrace]
+                    case _ => doWhile(addContextBound())(acceptOpt[Colon])
+                  }
+                case _ =>
+              }
             }
             Type.Param(mods, name, tparams, tbounds, vbounds.toList, cbounds.toList)
         }
+    }
+  }
+
+  def contextBoundOrAlias(allowBoundsAlias: Boolean) = {
+    val tpe = typ()
+    tpe match {
+      case Type.ApplyInfix(nm: Type.Name, Type.Name("as"), alias: Type.Name)
+          if allowBoundsAlias && dialect.allowImprovedBoundsAndGivens => Type.BoundsAlias(alias, nm)
+      case _ => tpe
     }
   }
 

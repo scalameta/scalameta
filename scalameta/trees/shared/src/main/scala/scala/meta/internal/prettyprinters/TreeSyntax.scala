@@ -689,6 +689,7 @@ object TreeSyntax {
       case t: Type.FunctionArg => m(ParamTyp, w(t.mods, " "), p(Typ, t.tpe))
       case t: Type.TypedParam => m(SimpleTyp, w(t.mods, " "), s(t.name.value), ": ", p(Typ, t.typ))
       case t: Type.ParamClause => r(t.values, "[", ", ", "]")
+      case t: Type.BoundsAlias => m(SimpleTyp, s(t.bounds, " ", "as", " ", t.name))
       case t: Type.Param =>
         def isVariant(m: Mod) = m.is[Mod.Variant]
         val mods = t.mods.filterNot(isVariant)
