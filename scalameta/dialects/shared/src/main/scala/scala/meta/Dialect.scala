@@ -537,7 +537,7 @@ final class Dialect private[meta] (
       allowQuietSyntax = allowQuietSyntax,
       allowBinaryLiterals = allowBinaryLiterals,
       allowTrackedParameters = allowTrackedParameters,
-      allowImprovedBoundsAndGivens = allowImprovedBoundsAndGivens,
+      allowImprovedBoundsAndGivens = allowImprovedBoundsAndGivens
     )
     if (equivalent) return this // RETURN!
     new Dialect(
