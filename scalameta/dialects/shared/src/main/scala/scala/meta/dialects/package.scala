@@ -108,7 +108,9 @@ package object dialects {
 
   implicit val Scala35: Dialect = Scala34.withAllowBinaryLiterals(true)
 
-  implicit val Scala3: Dialect = Scala35
+  implicit val Scala36: Dialect = Scala35.withAllowImprovedBoundsAndGivens(true)
+
+  implicit val Scala3: Dialect = Scala36
 
   implicit val Scala3Future: Dialect = Scala3.withAllowUnderscoreAsTypePlaceholder(true)
     .withAllowTrackedParameters(true)
