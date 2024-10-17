@@ -2470,6 +2470,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   trait SeqContextSensitive extends PatternContextSensitive {
     // is a sequence pattern _* allowed?
     def isSequenceOK: Boolean
+    def isNamedTupleOk: Boolean = false
 
     def patterns(): List[Pat] = commaSeparated(pattern())
 
@@ -2636,6 +2637,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               syntaxError(s"pattern must be a value or have parens: $sid$x", at = currToken)
             }
             sid match {
+              case name: Term.Name if isNamedTupleOk && acceptOpt[Equals] =>
+                Pat.Assign(name, noSeqWithNamed.pattern())
               case name: Term.Name.Quasi => name.become[Pat]
               case name: Term.Name =>
                 if (soft.StarSplice(currToken) && tryAheadNot[Ident]) Pat.Repeated(name)
@@ -2661,7 +2664,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _: Xml.Start => xmlPat()
         case _: LeftParen =>
           val lpPos = currIndex
-          val patterns = inParensOnOpenOr(noSeq.patterns())(Nil)
+          val patterns = inParensOnOpenOr(noSeqWithNamed.patterns())(Nil)
           makeTuple(lpPos, patterns, Lit.Unit(), Pat.Tuple.apply) {
             case t if !isRhs => Right(t)
             case t @ Pat.Tuple(_ :: Nil) => Right(t)
@@ -2688,6 +2691,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   /** The implementation for parsing inside of patterns at points where sequences are disallowed. */
   object noSeq extends SeqContextSensitive {
     val isSequenceOK = false
+  }
+
+  /* In addition to above named tuple patterns are allowed*/
+  object noSeqWithNamed extends SeqContextSensitive {
+    val isSequenceOK = false
+    override def isNamedTupleOk: Boolean = true
   }
 
   /**

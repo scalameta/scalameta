@@ -344,6 +344,7 @@ object TreeSyntax {
           case p: Pat.Tuple => true
           case p: Pat.Extract => false
           case p: Pat.ExtractInfix => p.lhs eq t
+          case p: Pat.Assign => false
           case p: Pat.Interpolate => p.args.contains(t)
           case p: Pat.Typed => unreachable
           case p: Pat => unreachable
@@ -706,6 +707,7 @@ object TreeSyntax {
       // Pat
       case t: Pat.Var => m(SimplePattern, printMaybeBackquoted(t.name))
       case _: Pat.Wildcard => m(SimplePattern, kw("_"))
+      case a: Pat.Assign => m(SimplePattern, s(a.name, " ", kw("="), " ", a.rhs))
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
       case t: Pat.Repeated => m(SimplePattern, t.name, kw("*"))
       case pat: Pat.Given => m(AnyPattern3, s(kw("given"), " ", p(RefineTyp, pat.tpe)))
