@@ -537,7 +537,7 @@ final class Dialect private[meta] (
       allowQuietSyntax = allowQuietSyntax,
       allowBinaryLiterals = allowBinaryLiterals,
       allowTrackedParameters = allowTrackedParameters,
-      allowImprovedBoundsAndGivens = allowImprovedBoundsAndGivens,
+      allowImprovedBoundsAndGivens = allowImprovedBoundsAndGivens
     )
     if (equivalent) return this // RETURN!
     new Dialect(
@@ -930,6 +930,7 @@ object Dialect extends InternalDialect {
     Scala33,
     Scala34,
     Scala35,
+    Scala36,
     Paradise211,
     Paradise212,
     ParadiseTypelevel211,

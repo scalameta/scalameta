@@ -736,7 +736,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
 
     private def typeLambdaOrPoly(): Type = {
-      val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens)
+      val quants = typeParamClauseOpt(
+        ownerIsType = true,
+        ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens
+      )
       newLineOpt()
       currToken match {
         case _: TypeLambdaArrow => next(); Type.Lambda(quants, typeIndentedOpt())
@@ -2050,7 +2053,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def polyFunction() = autoPos {
-    val quants = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens)
+    val quants =
+      typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens)
     accept[RightArrow]
     val term = expr()
     Term.PolyFunction(quants, term)
@@ -3114,7 +3118,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         name match {
           case q: Quasi if endTparamQuasi => q.become[Type.Param]
           case _ =>
-            val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens)
+            val tparams = typeParamClauseOpt(
+              ownerIsType = true,
+              ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens
+            )
             val tbounds = typeBounds()
             val vbounds = new ListBuffer[Type]
             val cbounds = new ListBuffer[Type]
@@ -3124,7 +3131,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
                 case t: Ellipsis => ellipsis[Type](t, 1)
                 case _ => contextBoundOrAlias(allowBoundsAlias)
               }
-              if (at[Viewbound]) {
+              if (acceptOpt[Viewbound]) {
                 if (!dialect.allowViewBounds) {
                   val msg = "Use an implicit parameter instead.\n" +
                     "Example: Instead of `def f[A <% Int](a: A)` " +
