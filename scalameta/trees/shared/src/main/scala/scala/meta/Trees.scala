@@ -766,6 +766,10 @@ object Pat {
     })
   }
   @ast
+  class Assign(name: Term.Name, rhs: Pat) extends Pat with Tree.WithBody {
+    override def body: Tree = rhs
+  }
+  @ast
   class Macro(body: Term) extends Pat with Tree.WithBody {
     checkFields(body.is[Term.QuotedMacroExpr] || body.is[Term.QuotedMacroType])
   }
