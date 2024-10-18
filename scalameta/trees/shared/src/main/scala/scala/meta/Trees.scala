@@ -501,7 +501,6 @@ object Type {
   class ArgClause(values: List[Type]) extends Member.ArgClause
   @ast
   class CasesBlock(cases: List[TypeCase] @nonEmpty) extends Tree.CasesBlock
-
   @ast
   class Name(value: String @nonEmpty) extends sm.Name with Type.Ref
   @ast
@@ -636,6 +635,8 @@ object Type {
   }
   @ast
   class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
+  @ast
+  class BoundsAlias(name: Type.Name, bounds: Type) extends Type.Ref
   @ast
   class ByName(tpe: Type) extends Type {
     checkParent(ParentChecks.TypeByName)
