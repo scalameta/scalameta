@@ -738,7 +738,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     private def typeLambdaOrPoly(): Type = {
       val quants = typeParamClauseOpt(
         ownerIsType = true,
-        ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens
+        ctxBoundsAllowed = dialect.allowImprovedTypeClassesSyntax
       )
       newLineOpt()
       currToken match {
@@ -2053,8 +2053,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def polyFunction() = autoPos {
-    val quants =
-      typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens)
+    val quants = typeParamClauseOpt(
+      ownerIsType = true,
+      ctxBoundsAllowed = dialect.allowImprovedTypeClassesSyntax
+    )
     accept[RightArrow]
     val term = expr()
     Term.PolyFunction(quants, term)
@@ -3120,38 +3122,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case _ =>
             val tparams = typeParamClauseOpt(
               ownerIsType = true,
-              ctxBoundsAllowed = dialect.allowImprovedBoundsAndGivens
+              ctxBoundsAllowed = dialect.allowImprovedTypeClassesSyntax
             )
             val tbounds = typeBounds()
             val vbounds = new ListBuffer[Type]
             val cbounds = new ListBuffer[Type]
             if (ctxBoundsAllowed) {
               @inline
-              def getBound(allowBoundsAlias: Boolean = false): Type = currToken match {
+              def getBound(allowAlias: Boolean): Type = currToken match {
                 case t: Ellipsis => ellipsis[Type](t, 1)
-                case _ => contextBoundOrAlias(allowBoundsAlias)
+                case _ => contextBoundOrAlias(allowAlias)
               }
-              if (acceptOpt[Viewbound]) {
-                if (!dialect.allowViewBounds) {
-                  val msg = "Use an implicit parameter instead.\n" +
-                    "Example: Instead of `def f[A <% Int](a: A)` " +
-                    "use `def f[A](a: A)(implicit ev: A => Int)`."
-                  syntaxError(s"View bounds are not supported. $msg", at = currToken)
-                }
-                doWhile(vbounds += getBound())(acceptOpt[Viewbound])
-              }
-              def addContextBound() = cbounds += getBound(allowBoundsAlias = true)
-              currToken match {
-                case _: Colon =>
-                  accept[Colon]
-                  currToken match {
-                    case _: LeftBrace if dialect.allowImprovedBoundsAndGivens =>
-                      accept[LeftBrace]
-                      doWhile(addContextBound())(acceptOpt[Comma])
-                      accept[RightBrace]
-                    case _ => doWhile(addContextBound())(acceptOpt[Colon])
-                  }
-                case _ =>
+              if (acceptOpt[Viewbound])
+                doWhile(vbounds += getBound(allowAlias = false))(acceptOpt[Viewbound])
+              if (acceptOpt[Colon]) {
+                def addContextBounds[T: ClassTag]: Unit =
+                  doWhile(cbounds += getBound(allowAlias = true))(acceptOpt[T])
+                if (acceptOpt[LeftBrace]) inBracesAfterOpen(addContextBounds[Comma])
+                else addContextBounds[Colon]
               }
             }
             Type.Param(mods, name, tparams, tbounds, vbounds.toList, cbounds.toList)
@@ -3159,13 +3147,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def contextBoundOrAlias(allowBoundsAlias: Boolean) = {
-    val tpe = typ()
-    tpe match {
-      case Type.ApplyInfix(nm: Type.Name, Type.Name("as"), alias: Type.Name)
-          if allowBoundsAlias && dialect.allowImprovedBoundsAndGivens => Type.BoundsAlias(alias, nm)
-      case _ => tpe
-    }
+  def contextBoundOrAlias(allowAlias: Boolean) = typ() match {
+    case Type.ApplyInfix(nm: Type.Name, Type.Name("as"), alias: Type.Name)
+        if allowAlias && dialect.allowImprovedTypeClassesSyntax => Type.BoundsAlias(alias, nm)
+    case tpe => tpe
   }
 
   def quasiquoteTypeParam(): Type.Param = entrypointTypeParam()

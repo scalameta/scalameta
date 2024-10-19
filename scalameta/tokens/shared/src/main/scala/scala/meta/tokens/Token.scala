@@ -176,9 +176,7 @@ object Token {
   @fixed(":")
   class Colon extends SymbolicKeyword
   @fixed("<%")
-  class Viewbound extends SymbolicKeyword {
-    require(dialect.allowViewBounds, s"$dialect doesn't support view bounds")
-  }
+  class Viewbound extends SymbolicKeyword
   @freeform("<-")
   class LeftArrow extends SymbolicKeyword
   @fixed("<:")

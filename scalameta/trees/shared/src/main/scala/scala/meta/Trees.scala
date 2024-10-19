@@ -501,6 +501,7 @@ object Type {
   class ArgClause(values: List[Type]) extends Member.ArgClause
   @ast
   class CasesBlock(cases: List[TypeCase] @nonEmpty) extends Tree.CasesBlock
+
   @ast
   class Name(value: String @nonEmpty) extends sm.Name with Type.Ref
   @ast

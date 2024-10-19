@@ -696,11 +696,7 @@ object TreeSyntax {
         require(t.mods.length - mods.length <= 1)
         val variance = o(t.mods.find(isVariant))
         val tbounds = s(t.tbounds)
-        val vbounds = {
-          if (t.vbounds.nonEmpty && !dialect.allowViewBounds)
-            throw new UnsupportedOperationException(s"$dialect doesn't support view bounds")
-          r(t.vbounds.map(s(" ", kw("<%"), " ", _)))
-        }
+        val vbounds = r(t.vbounds.map(s(" ", kw("<%"), " ", _)))
         val cbounds = r(t.cbounds.map(s(kw(":"), " ", _)))
         s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
       case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)
