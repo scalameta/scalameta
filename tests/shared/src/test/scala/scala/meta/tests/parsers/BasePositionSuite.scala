@@ -51,6 +51,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
       code: TestOptions,
       expected: String,
       expectedTokens: String = "",
+      showPosition: Boolean = false,
       showFieldName: Boolean = false
   )(implicit loc: Location): Unit = test(code) {
     implicit val D = defaultDialect
@@ -103,6 +104,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
           sb.append(leading).append("@@").append(trailing)
         } else sb.append(syntax)
         nameOpt.foreach(x => sb.append("</").append(x).append('>'))
+        if (showPosition) sb.append(' ').append(t.pos.desc)
         sb.append('\n')
     }
     val obtained = sb.result()
