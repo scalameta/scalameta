@@ -31,6 +31,7 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
           cache: 'sbt'
+      - uses: sbt/setup-sbt@v1
       - name: Publish
         run: |
           COMMAND="ci-release"
