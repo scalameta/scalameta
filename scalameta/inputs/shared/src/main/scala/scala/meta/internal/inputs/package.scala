@@ -5,6 +5,26 @@ import scala.meta.inputs._
 
 package object inputs {
 
+  implicit class XtensionInputRange(private val obj: InputRange) extends AnyVal {
+    def desc: String = obj match {
+      case Position.None => "<none>"
+      case x =>
+        val text = x.text.trim
+        val excerpt =
+          if (text.isEmpty) text
+          else {
+            val nl = text.indexOf('\n')
+            val prefix = if (x.text.head <= ' ') "..." else ""
+            val suffix = if (x.text.last <= ' ' || nl >= 0) "..." else ""
+            val slice = if (nl < 0) text else text.substring(0, nl)
+            s"$prefix$slice$suffix"
+          }
+        val (lsep, rsep) =
+          if (text.isEmpty || text.head != ':' && text.last != ':') (':', ':') else ('<', '>')
+        s"[${x.start}$lsep$excerpt$rsep${x.end})"
+    }
+  }
+
   implicit class XtensionPosition(private val pos: Position) extends AnyVal {
     def lineContent: String = {
       val input = pos.input

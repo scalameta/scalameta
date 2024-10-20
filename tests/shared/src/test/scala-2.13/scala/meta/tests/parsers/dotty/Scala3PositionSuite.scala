@@ -2989,23 +2989,23 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |  buffer
        |    += new Object()
        |    += new Object
-       |}</templ>
+       |}</templ> [13:{...:63)
        |<body>Template.Body {
        |  buffer
        |    += new Object()
        |    += new Object
-       |}</body>
+       |}</body> [13:{...:63)
        |<stats0>Term.ApplyInfix buffer
        |    += new Object()
-       |    += new Object</stats0>
+       |    += new Object</stats0> [17:buffer...:61)
        |<lhs>Term.ApplyInfix buffer
-       |    += new Object()</lhs>
-       |<targClause>Type.ArgClause     += @@new Object()</targClause>
-       |<values0>Term.New new Object()</values0>
-       |<init>Init Object()</init>
-       |<argClauses0>Term.ArgClause ()</argClauses0>
-       |<targClause>Type.ArgClause     += @@new Object</targClause>
-       |<values0>Term.New new Object</values0>
+       |    += new Object()</lhs> [17:buffer...:43)
+       |<targClause>Type.ArgClause     += @@new Object()</targClause> [31::31)
+       |<values0>Term.New new Object()</values0> [31:new Object():43)
+       |<init>Init Object()</init> [35:Object():43)
+       |<argClauses0>Term.ArgClause ()</argClauses0> [41:():43)
+       |<targClause>Type.ArgClause     += @@new Object</targClause> [51::51)
+       |<values0>Term.New new Object</values0> [51:new Object:61)
        |""".stripMargin,
     """|BOF [0..0)
        |KwObject [0..6)
@@ -3026,6 +3026,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |RightBrace [62..63)
        |EOF [64..64)
        |""".stripMargin,
+    showPosition = true,
     showFieldName = true
   )
 
