@@ -689,17 +689,14 @@ object TreeSyntax {
       case t: Type.FunctionArg => m(ParamTyp, w(t.mods, " "), p(Typ, t.tpe))
       case t: Type.TypedParam => m(SimpleTyp, w(t.mods, " "), s(t.name.value), ": ", p(Typ, t.typ))
       case t: Type.ParamClause => r(t.values, "[", ", ", "]")
+      case t: Type.BoundsAlias => m(SimpleTyp, s(t.bounds, " ", "as", " ", t.name))
       case t: Type.Param =>
         def isVariant(m: Mod) = m.is[Mod.Variant]
         val mods = t.mods.filterNot(isVariant)
         require(t.mods.length - mods.length <= 1)
         val variance = o(t.mods.find(isVariant))
         val tbounds = s(t.tbounds)
-        val vbounds = {
-          if (t.vbounds.nonEmpty && !dialect.allowViewBounds)
-            throw new UnsupportedOperationException(s"$dialect doesn't support view bounds")
-          r(t.vbounds.map(s(" ", kw("<%"), " ", _)))
-        }
+        val vbounds = r(t.vbounds.map(s(" ", kw("<%"), " ", _)))
         val cbounds = r(t.cbounds.map(s(kw(":"), " ", _)))
         s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
       case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)

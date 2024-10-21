@@ -82,7 +82,6 @@ package object dialects {
     .withAllowPostfixStarVarargSplices(true).withAllowEnums(true)
     .withAllowImplicitByNameParameters(true).withAllowInlineMods(true).withAllowLiteralTypes(true)
     .withAllowTrailingCommas(true).withAllowTraitParameters(true).withAllowTypeLambdas(true)
-    .withAllowViewBounds(false) // View bounds have been removed in Dotty
     .withAllowGivenUsing(true).withAllowExtensionMethods(true).withAllowOpenClass(true)
     .withAllowSpliceAndQuote(true).withAllowToplevelStatements(true).withAllowOpaqueTypes(true)
     .withAllowExportClause(true).withAllowCommaSeparatedExtend(true).withAllowEndMarker(true)
@@ -108,7 +107,9 @@ package object dialects {
 
   implicit val Scala35: Dialect = Scala34.withAllowBinaryLiterals(true)
 
-  implicit val Scala3: Dialect = Scala35
+  implicit val Scala36: Dialect = Scala35.withAllowImprovedTypeClassesSyntax(true)
+
+  implicit val Scala3: Dialect = Scala36
 
   implicit val Scala3Future: Dialect = Scala3.withAllowUnderscoreAsTypePlaceholder(true)
     .withAllowTrackedParameters(true)
