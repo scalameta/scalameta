@@ -133,27 +133,33 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
-    assertStruct(q"val x = 1f")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
-    )
-    assertStruct(q"val x = 1F")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Float(1f))"""
-    )
+    val expected = """|Defn.Val(
+                      |  Nil,
+                      |  List(
+                      |    Pat.Var(Term.Name("x"))
+                      |  ),
+                      |  None,
+                      |  Lit.Float(1f)
+                      |)
+                      |""".stripMargin
+    assertStruct(q"val x = 1f")(expected)
+    assertStruct(q"val x = 1F")(expected)
   }
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
-    assertStruct(q"val x = 1d")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
-    )
-    assertStruct(q"val x = 1D")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
-    )
-    assertStruct(q"val x = 1.0")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
-    )
-    assertStruct(q"val x = 1.0d")(
-      """Defn.Val(Nil, List(Pat.Var(Term.Name("x"))), None, Lit.Double(1d))"""
-    )
+    val expected = """|Defn.Val(
+                      |  Nil,
+                      |  List(
+                      |    Pat.Var(Term.Name("x"))
+                      |  ),
+                      |  None,
+                      |  Lit.Double(1d)
+                      |)
+                      |""".stripMargin
+    assertStruct(q"val x = 1d")(expected)
+    assertStruct(q"val x = 1D")(expected)
+    assertStruct(q"val x = 1.0")(expected)
+    assertStruct(q"val x = 1.0d")(expected)
   }
 
   test("#931 val `a b` = 2") {
