@@ -3114,8 +3114,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               case t: Ellipsis => ellipsis[Type](t, 1)
               case _ => contextBoundOrAlias(allowAlias)
             }
-            if (acceptOpt[Viewbound])
-              doWhile(vbounds += getBound(allowAlias = false))(acceptOpt[Viewbound])
+            while (acceptOpt[Viewbound]) vbounds += getBound(allowAlias = false)
             if (acceptOpt[Colon]) {
               def addContextBounds[T: ClassTag]: Unit = doWhile(
                 cbounds += getBound(allowAlias = dialect.allowImprovedTypeClassesSyntax)

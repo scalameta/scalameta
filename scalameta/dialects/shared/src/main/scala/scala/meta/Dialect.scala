@@ -165,7 +165,7 @@ final class Dialect private[meta] (
     val allowBinaryLiterals: Boolean,
     // Are tracked parameters allowed? docs: https://dotty.epfl.ch/docs/reference/experimental/modularity.html
     val allowTrackedParameters: Boolean,
-    // https://github.com/scala/improvement-proposals/pull/81/files
+    // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html?
     val allowImprovedTypeClassesSyntax: Boolean
 ) extends Product with Serializable {
 
