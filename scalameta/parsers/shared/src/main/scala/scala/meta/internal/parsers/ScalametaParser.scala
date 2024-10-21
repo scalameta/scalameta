@@ -736,10 +736,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
 
     private def typeLambdaOrPoly(): Type = {
-      val quants = typeParamClauseOpt(
-        ownerIsType = true,
-        ctxBoundsAllowed = dialect.allowImprovedTypeClassesSyntax
-      )
+      val quants = typeParamClauseOpt(ownerIsType = true)
       newLineOpt()
       currToken match {
         case _: TypeLambdaArrow => next(); Type.Lambda(quants, typeIndentedOpt())
@@ -2053,10 +2050,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def polyFunction() = autoPos {
-    val quants = typeParamClauseOpt(
-      ownerIsType = true,
-      ctxBoundsAllowed = dialect.allowImprovedTypeClassesSyntax
-    )
+    val quants = typeParamClauseOpt(ownerIsType = true)
     accept[RightArrow]
     val term = expr()
     Term.PolyFunction(quants, term)
@@ -2902,39 +2896,37 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ =>
   }
 
-  def memberParamClauseGroups(
-      ownerIsType: Boolean,
-      ctxBoundsAllowed: Boolean
-  ): List[Member.ParamClauseGroup] = listBy[Member.ParamClauseGroup] { groups =>
-    @tailrec
-    def iter(): Unit = getAfterOptNewLine(currToken match {
-      case _: LeftParen =>
-        val tparams = emptyTypeParams
-        Some(autoPos {
-          termParamClausesOnParen(ownerIsType, ellipsisMaxRank = 3) match {
-            case (x: Quasi) :: Nil if x.rank == 2 => reellipsis[Member.ParamClauseGroup](x, 1)
-            case x => Member.ParamClauseGroup(tparams, x)
+  def memberParamClauseGroups(ownerIsType: Boolean): List[Member.ParamClauseGroup] =
+    listBy[Member.ParamClauseGroup] { groups =>
+      @tailrec
+      def iter(): Unit = getAfterOptNewLine(currToken match {
+        case _: LeftParen =>
+          val tparams = emptyTypeParams
+          Some(autoPos {
+            termParamClausesOnParen(ownerIsType, ellipsisMaxRank = 3) match {
+              case (x: Quasi) :: Nil if x.rank == 2 => reellipsis[Member.ParamClauseGroup](x, 1)
+              case x => Member.ParamClauseGroup(tparams, x)
+            }
+          })
+        case _: LeftBracket => Some(autoPos {
+            val tparamClause = typeParamClauseOnBracket(ownerIsType)
+            val paramClauses = termParamClauses(ownerIsType)
+            Member.ParamClauseGroup(tparamClause, paramClauses)
+          })
+        case _ => None
+      }) match {
+        case Some(group) =>
+          groups += group
+          // can't have consecutive type clauses (so params must be present)
+          // also, only the very last param may contain implicit
+          val ok = group.is[Quasi] || group.paramClauses.lastOption.exists { x =>
+            x.is[Quasi] || !x.mod.is[Mod.Implicit]
           }
-        })
-      case _: LeftBracket => Some(autoPos {
-          val tparamClause = typeParamClauseOnBracket(ownerIsType, ctxBoundsAllowed)
-          val paramClauses = termParamClauses(ownerIsType)
-          Member.ParamClauseGroup(tparamClause, paramClauses)
-        })
-      case _ => None
-    }) match {
-      case Some(group) =>
-        groups += group
-        // can't have consecutive type clauses (so params must be present)
-        // also, only the very last param may contain implicit
-        val ok = group.is[Quasi] || group.paramClauses.lastOption.exists { x =>
-          x.is[Quasi] || !x.mod.is[Mod.Implicit]
-        }
-        if (ok) iter()
-      case _ =>
+          if (ok) iter()
+        case _ =>
+      }
+      iter()
     }
-    iter()
-  }
 
   def termParamClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[Term.ParamClause] =
     if (!isAfterOptNewLine[LeftParen]) Nil else termParamClausesOnParen(ownerIsType, ownerIsCase)
@@ -3081,26 +3073,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def typeParamClauseOpt(
       ownerIsType: Boolean,
-      ctxBoundsAllowed: Boolean,
       allowUnderscore: Boolean = true
   ): Type.ParamClause =
     if (!isAfterOptNewLine[LeftBracket]) emptyTypeParams
-    else typeParamClauseOnBracket(ownerIsType, ctxBoundsAllowed, allowUnderscore)
+    else typeParamClauseOnBracket(ownerIsType, allowUnderscore)
 
   private def typeParamClauseOnBracket(
       ownerIsType: Boolean,
-      ctxBoundsAllowed: Boolean,
       allowUnderscore: Boolean = true
   ): Type.ParamClause = TypeBracketsContext.within(autoPos(inBrackets(
-    commaSeparated(typeParam(ownerIsType, ctxBoundsAllowed, allowUnderscore))
-      .reduceWith(Type.ParamClause.apply)
+    commaSeparated(typeParam(ownerIsType, allowUnderscore)).reduceWith(Type.ParamClause.apply)
   )))
 
-  def typeParam(
-      ownerIsType: Boolean,
-      ctxBoundsAllowed: Boolean,
-      allowUnderscore: Boolean = true
-  ): Type.Param = autoPos {
+  def typeParam(ownerIsType: Boolean, allowUnderscore: Boolean = true): Type.Param = autoPos {
     val mods: List[Mod] = listBy[Mod] { buf =>
       annotsBuf(buf, skipNewLines = false)
       if (ownerIsType) tparamModifiers(buf)
@@ -3120,28 +3105,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         name match {
           case q: Quasi if endTparamQuasi => q.become[Type.Param]
           case _ =>
-            val tparams = typeParamClauseOpt(
-              ownerIsType = true,
-              ctxBoundsAllowed = dialect.allowImprovedTypeClassesSyntax
-            )
+            val tparams = typeParamClauseOpt(ownerIsType = true)
             val tbounds = typeBounds()
             val vbounds = new ListBuffer[Type]
             val cbounds = new ListBuffer[Type]
-            if (ctxBoundsAllowed) {
-              @inline
-              def getBound(allowAlias: Boolean): Type = currToken match {
-                case t: Ellipsis => ellipsis[Type](t, 1)
-                case _ => contextBoundOrAlias(allowAlias)
-              }
-              if (acceptOpt[Viewbound])
-                doWhile(vbounds += getBound(allowAlias = false))(acceptOpt[Viewbound])
-              if (acceptOpt[Colon]) {
-                def addContextBounds[T: ClassTag]: Unit =
-                  doWhile(cbounds += getBound(allowAlias = true))(acceptOpt[T])
-                if (acceptOpt[LeftBrace]) inBracesAfterOpen(addContextBounds[Comma])
-                else addContextBounds[Colon]
-              }
+            @inline
+            def getBound(allowAlias: Boolean): Type = currToken match {
+              case t: Ellipsis => ellipsis[Type](t, 1)
+              case _ => contextBoundOrAlias(allowAlias)
             }
+            if (acceptOpt[Viewbound])
+              doWhile(vbounds += getBound(allowAlias = false))(acceptOpt[Viewbound])
+            if (acceptOpt[Colon]) {
+              def addContextBounds[T: ClassTag]: Unit = doWhile(
+                cbounds += getBound(allowAlias = dialect.allowImprovedTypeClassesSyntax)
+              )(acceptOpt[T])
+              if (acceptOpt[LeftBrace]) inBracesAfterOpen(addContextBounds[Comma])
+              else addContextBounds[Colon]
+            }
+
             Type.Param(mods, name, tparams, tbounds, vbounds.toList, cbounds.toList)
         }
     }
@@ -3155,7 +3137,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def quasiquoteTypeParam(): Type.Param = entrypointTypeParam()
 
-  def entrypointTypeParam(): Type.Param = typeParam(ownerIsType = true, ctxBoundsAllowed = true)
+  def entrypointTypeParam(): Type.Param = typeParam(ownerIsType = true)
 
   def typeBounds() = autoPos(Type.Bounds(bound[Supertype], bound[Subtype]))
 
@@ -3356,11 +3338,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case t: Ident => termName(t)
           case _ => anonNameEmpty()
         }
-        val tparams = typeParamClauseOpt(
-          ownerIsType = false,
-          ctxBoundsAllowed = true,
-          allowUnderscore = dialect.allowTypeParamUnderscore
-        )
+        val tparams =
+          typeParamClauseOpt(ownerIsType = false, allowUnderscore = dialect.allowTypeParamUnderscore)
         val uparamss =
           if (at[LeftParen] && soft.KwUsing(peekToken)) termParamClausesOnParen(ownerIsType = false)
           else Nil
@@ -3417,11 +3396,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = autoEndPos(mods) {
     next() // 'extension'
 
-    val tparams = typeParamClauseOpt(
-      ownerIsType = false,
-      ctxBoundsAllowed = true,
-      allowUnderscore = dialect.allowTypeParamUnderscore
-    )
+    val tparams =
+      typeParamClauseOpt(ownerIsType = false, allowUnderscore = dialect.allowTypeParamUnderscore)
 
     newLineOptWhenFollowedBy[LeftParen]
 
@@ -3473,13 +3449,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
 
     def nonInterleavedParamClauses = {
-      val tparams = typeParamClauseOpt(ownerIsType = false, ctxBoundsAllowed = true)
+      val tparams = typeParamClauseOpt(ownerIsType = false)
       val paramss = termParamClauses(ownerIsType = false)
       getParamClauseGroup(tparams, paramss)
     }
     val paramClauses: List[Member.ParamClauseGroup] =
-      if (dialect.allowParamClauseInterleaving)
-        memberParamClauseGroups(ownerIsType = false, ctxBoundsAllowed = true)
+      if (dialect.allowParamClauseInterleaving) memberParamClauseGroups(ownerIsType = false)
       else nonInterleavedParamClauses.toList
 
     def defn(declType: Option[Type]) = Defn.Def(mods, name, paramClauses, declType, expr())
@@ -3498,7 +3473,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     accept[KwType]
     newLinesOpt()
     val name = typeName()
-    val tparams = typeParamClauseOpt(ownerIsType = true, ctxBoundsAllowed = false)
+    val tparams = typeParamClauseOpt(ownerIsType = true)
 
     def aliasType() = {
       // empty bounds also need to have origin
@@ -3550,11 +3525,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     Defn.Trait(
       mods,
       traitName,
-      typeParamClauseOpt(
-        ownerIsType = true,
-        ctxBoundsAllowed = dialect.allowTraitParameters,
-        allowUnderscore = dialect.allowTypeParamUnderscore
-      ),
+      typeParamClauseOpt(ownerIsType = true, allowUnderscore = dialect.allowTypeParamUnderscore),
       primaryCtor(OwnedByTrait),
       templateOpt(OwnedByTrait)
     )
@@ -3565,11 +3536,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     val className = typeName()
     def culprit = Some(s"class $className")
-    val typeParams = typeParamClauseOpt(
-      ownerIsType = true,
-      ctxBoundsAllowed = true,
-      allowUnderscore = dialect.allowTypeParamUnderscore
-    )
+    val typeParams =
+      typeParamClauseOpt(ownerIsType = true, allowUnderscore = dialect.allowTypeParamUnderscore)
     val ctor = primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass)
 
     if (!dialect.allowCaseClassWithoutParameterList && mods.has[Mod.Case] &&
@@ -3586,11 +3554,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def enumDef(mods: List[Mod]): Defn.Enum = {
     next()
     val enumName = typeName()
-    val typeParams = typeParamClauseOpt(
-      ownerIsType = true,
-      ctxBoundsAllowed = true,
-      allowUnderscore = dialect.allowTypeParamUnderscore
-    )
+    val typeParams =
+      typeParamClauseOpt(ownerIsType = true, allowUnderscore = dialect.allowTypeParamUnderscore)
     val ctor = primaryCtor(OwnedByEnum)
     val tmpl = templateOpt(OwnedByEnum)
     Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
@@ -3611,11 +3576,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def enumSingleCaseDef(mods: List[Mod]): Defn.EnumCase = {
     val name = termName()
-    val tparams = typeParamClauseOpt(
-      ownerIsType = true,
-      ctxBoundsAllowed = true,
-      allowUnderscore = dialect.allowTypeParamUnderscore
-    )
+    val tparams =
+      typeParamClauseOpt(ownerIsType = true, allowUnderscore = dialect.allowTypeParamUnderscore)
     val ctor = primaryCtor(OwnedByEnum)
     val inits = if (acceptOpt[KwExtends]) templateParents(afterExtend = true) else List()
     Defn.EnumCase(mods, name, tparams, ctor, inits)
