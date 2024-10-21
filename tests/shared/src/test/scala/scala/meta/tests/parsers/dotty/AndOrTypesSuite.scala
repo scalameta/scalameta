@@ -5,17 +5,6 @@ import scala.meta._
 class AndOrTypesSuite extends BaseDottySuite {
   import Type._
 
-  /**
-   * All examples based on dotty documentation:
-   *   - [[https://dotty.epfl.ch/docs/reference/new-types/intersection-types.html]]
-   *   - [[https://dotty.epfl.ch/docs/reference/new-types/union-types.html]]
-   */
-  test("view bounds not allowed") {
-    interceptMessage[IllegalArgumentException](
-      "requirement failed: Scala35 doesn't support view bounds"
-    )(dialects.Scala3("{ def foo[T <% Int](t: T) = ??? }").parse[Term].get)
-  }
-
   test("A with B")(runTestAssert[Type]("A with B", None)(With(pname("A"), pname("B"))))
 
   test("A & B & C") {

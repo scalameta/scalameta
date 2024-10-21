@@ -52,6 +52,7 @@ final class Dialect private[meta] (
     // Are view bounds supported by this dialect?
     // def f[A <% Int](a: A)
     // Removed in Dotty.
+    @deprecated("allowViewBounds unneeded, it was only used for an error", ">4.10.2")
     val allowViewBounds: Boolean,
     // Are XML literals supported by this dialect?
     // We plan to deprecate XML literal syntax, and some dialects
@@ -163,7 +164,9 @@ final class Dialect private[meta] (
     // Are binary literals allowed? SIP-42.
     val allowBinaryLiterals: Boolean,
     // Are tracked parameters allowed? docs: https://dotty.epfl.ch/docs/reference/experimental/modularity.html
-    val allowTrackedParameters: Boolean
+    val allowTrackedParameters: Boolean,
+    // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html?
+    val allowImprovedTypeClassesSyntax: Boolean
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -191,7 +194,7 @@ final class Dialect private[meta] (
       allowTrailingCommas: Boolean,
       allowTraitParameters: Boolean,
       allowTypeLambdas: Boolean,
-      allowViewBounds: Boolean,
+      allowViewBounds: Boolean, // unused
       allowXmlLiterals: Boolean,
       toplevelSeparator: String // unused
   ) = this(
@@ -212,7 +215,7 @@ final class Dialect private[meta] (
     allowTrailingCommas = allowTrailingCommas,
     allowTraitParameters = allowTraitParameters,
     allowTypeLambdas = allowTypeLambdas,
-    allowViewBounds = allowViewBounds,
+    allowViewBounds = true,
     allowXmlLiterals = allowXmlLiterals,
     toplevelSeparator = "", // unused
     allowNumericLiteralUnderscoreSeparators = false,
@@ -259,7 +262,8 @@ final class Dialect private[meta] (
     allowFewerBraces = false,
     allowQuietSyntax = false,
     allowBinaryLiterals = false,
-    allowTrackedParameters = false
+    allowTrackedParameters = false,
+    allowImprovedTypeClassesSyntax = false
     // NOTE(olafur): declare the default value for new fields above this comment.
   )
 
@@ -296,7 +300,8 @@ final class Dialect private[meta] (
   def withAllowTraitParameters(newValue: Boolean): Dialect =
     privateCopy(allowTraitParameters = newValue)
   def withAllowTypeLambdas(newValue: Boolean): Dialect = privateCopy(allowTypeLambdas = newValue)
-  def withAllowViewBounds(newValue: Boolean): Dialect = privateCopy(allowViewBounds = newValue)
+  @deprecated("allowViewBounds unneeded, it was only used for an error", ">4.10.2")
+  def withAllowViewBounds(newValue: Boolean): Dialect = this
   def withAllowXmlLiterals(newValue: Boolean): Dialect = privateCopy(allowXmlLiterals = newValue)
   @deprecated("toplevelSeparator has never been used", ">4.4.35")
   def withToplevelSeparator(newValue: String): Dialect = this
@@ -399,6 +404,9 @@ final class Dialect private[meta] (
   def withAllowTrackedParameters(newValue: Boolean): Dialect =
     privateCopy(allowTrackedParameters = newValue)
 
+  def withAllowImprovedTypeClassesSyntax(newValue: Boolean): Dialect =
+    privateCopy(allowImprovedTypeClassesSyntax = newValue)
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -418,7 +426,6 @@ final class Dialect private[meta] (
       allowTrailingCommas: Boolean = this.allowTrailingCommas,
       allowTraitParameters: Boolean = this.allowTraitParameters,
       allowTypeLambdas: Boolean = this.allowTypeLambdas,
-      allowViewBounds: Boolean = this.allowViewBounds,
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
       allowNumericLiteralUnderscoreSeparators: Boolean =
         this.allowNumericLiteralUnderscoreSeparators,
@@ -465,7 +472,8 @@ final class Dialect private[meta] (
       allowFewerBraces: Boolean = this.allowFewerBraces,
       allowQuietSyntax: Boolean = this.allowQuietSyntax,
       allowBinaryLiterals: Boolean = this.allowBinaryLiterals,
-      allowTrackedParameters: Boolean = this.allowTrackedParameters
+      allowTrackedParameters: Boolean = this.allowTrackedParameters,
+      allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
     val notForUnquote = unquoteType eq UnquoteType.None
@@ -483,7 +491,6 @@ final class Dialect private[meta] (
       allowTrailingCommas = allowTrailingCommas,
       allowTraitParameters = allowTraitParameters,
       allowTypeLambdas = allowTypeLambdas,
-      allowViewBounds = allowViewBounds,
       allowXmlLiterals = allowXmlLiterals,
       allowNumericLiteralUnderscoreSeparators = allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr = allowTryWithAnyExpr,
@@ -529,7 +536,8 @@ final class Dialect private[meta] (
       allowFewerBraces = allowFewerBraces,
       allowQuietSyntax = allowQuietSyntax,
       allowBinaryLiterals = allowBinaryLiterals,
-      allowTrackedParameters = allowTrackedParameters
+      allowTrackedParameters = allowTrackedParameters,
+      allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax
     )
     if (equivalent) return this // RETURN!
     new Dialect(
@@ -548,7 +556,7 @@ final class Dialect private[meta] (
       allowTrailingCommas = allowTrailingCommas,
       allowTraitParameters = allowTraitParameters,
       allowTypeLambdas = allowTypeLambdas,
-      allowViewBounds = allowViewBounds,
+      allowViewBounds = true,
       allowXmlLiterals = allowXmlLiterals,
       toplevelSeparator = "", // unused
       allowNumericLiteralUnderscoreSeparators = allowNumericLiteralUnderscoreSeparators,
@@ -596,6 +604,7 @@ final class Dialect private[meta] (
       allowQuietSyntax = allowQuietSyntax,
       allowBinaryLiterals = allowBinaryLiterals,
       allowTrackedParameters = allowTrackedParameters,
+      allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
       unquoteParentDialect = if (notForUnquote) null else this
@@ -638,7 +647,6 @@ final class Dialect private[meta] (
       allowTrailingCommas: Boolean,
       allowTraitParameters: Boolean,
       allowTypeLambdas: Boolean,
-      allowViewBounds: Boolean,
       allowXmlLiterals: Boolean,
       allowNumericLiteralUnderscoreSeparators: Boolean,
       allowTryWithAnyExpr: Boolean,
@@ -684,7 +692,8 @@ final class Dialect private[meta] (
       allowFewerBraces: Boolean,
       allowQuietSyntax: Boolean,
       allowBinaryLiterals: Boolean,
-      allowTrackedParameters: Boolean
+      allowTrackedParameters: Boolean,
+      allowImprovedTypeClassesSyntax: Boolean
   ): Boolean =
     // do not include deprecated values in this comparison
     this.allowAtForExtractorVarargs == allowAtForExtractorVarargs &&
@@ -698,8 +707,7 @@ final class Dialect private[meta] (
       this.allowToplevelTerms == allowToplevelTerms &&
       this.allowTrailingCommas == allowTrailingCommas &&
       this.allowTraitParameters == allowTraitParameters &&
-      this.allowTypeLambdas == allowTypeLambdas && this.allowViewBounds == allowViewBounds &&
-      this.allowXmlLiterals == allowXmlLiterals &&
+      this.allowTypeLambdas == allowTypeLambdas && this.allowXmlLiterals == allowXmlLiterals &&
       this.allowNumericLiteralUnderscoreSeparators == allowNumericLiteralUnderscoreSeparators &&
       this.allowTryWithAnyExpr == allowTryWithAnyExpr && this.allowGivenUsing == allowGivenUsing &&
       this.allowErasedDefs == allowErasedDefs &&
@@ -738,7 +746,8 @@ final class Dialect private[meta] (
       this.allowQuietSyntax == allowQuietSyntax && // separated from "significant indentation"
       this.allowFewerBraces == allowFewerBraces &&
       this.allowBinaryLiterals == allowBinaryLiterals &&
-      this.allowTrackedParameters == allowTrackedParameters
+      this.allowTrackedParameters == allowTrackedParameters &&
+      this.allowImprovedTypeClassesSyntax == allowImprovedTypeClassesSyntax
 
   @inline
   private def isEquivalentToInternal(that: Dialect): Boolean = (this eq that) ||
@@ -756,7 +765,6 @@ final class Dialect private[meta] (
       allowTrailingCommas = that.allowTrailingCommas,
       allowTraitParameters = that.allowTraitParameters,
       allowTypeLambdas = that.allowTypeLambdas,
-      allowViewBounds = that.allowViewBounds,
       allowXmlLiterals = that.allowXmlLiterals,
       allowNumericLiteralUnderscoreSeparators = that.allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr = that.allowTryWithAnyExpr,
@@ -802,7 +810,8 @@ final class Dialect private[meta] (
       allowFewerBraces = that.allowFewerBraces,
       allowQuietSyntax = that.allowQuietSyntax,
       allowBinaryLiterals = that.allowBinaryLiterals,
-      allowTrackedParameters = that.allowTrackedParameters
+      allowTrackedParameters = that.allowTrackedParameters,
+      allowImprovedTypeClassesSyntax = that.allowImprovedTypeClassesSyntax
     )
 
   @deprecated("Use withX method instead", "4.3.11")
@@ -825,7 +834,7 @@ final class Dialect private[meta] (
       allowTrailingCommas: Boolean = this.allowTrailingCommas,
       allowTraitParameters: Boolean = this.allowTraitParameters,
       allowTypeLambdas: Boolean = this.allowTypeLambdas,
-      allowViewBounds: Boolean = this.allowViewBounds,
+      allowViewBounds: Boolean = true, // unused
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
       toplevelSeparator: String = "" // unused
   ): Dialect = privateCopy(
@@ -843,7 +852,6 @@ final class Dialect private[meta] (
     allowTrailingCommas = allowTrailingCommas,
     allowTraitParameters = allowTraitParameters,
     allowTypeLambdas = allowTypeLambdas,
-    allowViewBounds = allowViewBounds,
     allowXmlLiterals = allowXmlLiterals
   )
 
@@ -884,6 +892,7 @@ object Dialect extends InternalDialect {
       allowTrailingCommas: Boolean,
       allowTraitParameters: Boolean,
       allowTypeLambdas: Boolean,
+      @deprecated("allowViewBounds unneeded, it was only used for an error", ">4.10.2")
       allowViewBounds: Boolean,
       allowXmlLiterals: Boolean,
       @deprecated("toplevelSeparator has never been used", ">4.4.35")
@@ -904,7 +913,7 @@ object Dialect extends InternalDialect {
     allowTrailingCommas = allowTrailingCommas,
     allowTraitParameters = allowTraitParameters,
     allowTypeLambdas = allowTypeLambdas,
-    allowViewBounds = allowViewBounds,
+    allowViewBounds = true, // unused
     allowXmlLiterals = allowXmlLiterals,
     toplevelSeparator = "" // unused
   )
@@ -918,6 +927,7 @@ object Dialect extends InternalDialect {
     Scala33,
     Scala34,
     Scala35,
+    Scala36,
     Paradise211,
     Paradise212,
     ParadiseTypelevel211,

@@ -637,6 +637,8 @@ object Type {
   @ast
   class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
   @ast
+  class BoundsAlias(name: Type.Name, bounds: Type) extends Type.Ref
+  @ast
   class ByName(tpe: Type) extends Type {
     checkParent(ParentChecks.TypeByName)
   }
