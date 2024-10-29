@@ -31,6 +31,41 @@ class NamedTuplesSuite extends BaseDottySuite {
     )))
 
   }
+  test("simple-named-type-assign") {
+    runTestAssert[Stat]("type T = (a: Int, b: String)")(Defn.Type(
+      Nil,
+      Type.Name("T"),
+      Type.ParamClause(Nil),
+      Type.Tuple(List(
+        Type.TypedParam(Type.Name("a"), Type.Name("Int"), Nil),
+        Type.TypedParam(Type.Name("b"), Type.Name("String"), Nil)
+      )),
+      Type.Bounds(None, None)
+    ))
+
+  }
+
+  test("named-tuple-summon") {
+    val code = """|val y = summon[Tuple2[Int, String] <:< (x: Int, y: String)]
+                  |""".stripMargin
+    runTestAssert[Stat](code)(Defn.Val(
+      Nil,
+      List(Pat.Var(Term.Name("y"))),
+      None,
+      Term.ApplyType(
+        Term.Name("summon"),
+        Type.ArgClause(List(Type.ApplyInfix(
+          Type
+            .Apply(Type.Name("Tuple2"), Type.ArgClause(List(Type.Name("Int"), Type.Name("String")))),
+          Type.Name("<:<"),
+          Type.Tuple(List(
+            Type.TypedParam(Type.Name("x"), Type.Name("Int"), Nil),
+            Type.TypedParam(Type.Name("y"), Type.Name("String"), Nil)
+          ))
+        )))
+      )
+    ))
+  }
 
   test("complex-named-type") {
     runTestAssert[Type]("(a: Int, b: String, c: (a: Int, d: Double))")(Type.Tuple(List(

@@ -663,7 +663,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
    * context or not. Formerly, this was threaded through numerous methods as boolean isPattern.
    */
   trait PatternContextSensitive {
-    private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPosOpt {
+
+    private def tupleInfixType(
+        allowFunctionType: Boolean = true,
+        allowMoreThanTuple: Boolean = true
+    ): Type = autoPosOpt {
       // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
       var hasParams = false
@@ -727,11 +731,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case _ => false
         }.foreach(t => syntaxError(s"'${t.productPrefix}' type not allowed here", at = t))
         val simple = simpleTypeRest(makeTupleType(openParenPos, ts), openParenPos)
-        val compound = compoundTypeRest(annotTypeRest(simple, openParenPos), openParenPos)
-        infixTypeRest(compound) match {
-          case `compound` => compound
-          case t => autoEndPos(openParenPos)(t)
-        }
+        if (allowMoreThanTuple) {
+          val annotType = annotTypeRest(simple, openParenPos)
+          val compound = compoundTypeRest(annotType, openParenPos)
+
+          infixTypeRest(compound) match {
+            case `compound` => compound
+            case t => autoEndPos(openParenPos)(t)
+          }
+        } else simple
+
       }
     }
 
@@ -824,7 +833,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (dialect.useInfixTypePrecedence) infixTypeRestWithPrecedence(t, inMatchType = inMatchType)
       else
         infixTypeRestWithMode(t, InfixMode.FirstOp, t.begIndex, identity, inMatchType = inMatchType)
-
     @tailrec
     private final def infixTypeRestWithMode(
         t: Type,
@@ -943,7 +951,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       val res = currToken match {
         case _: Ident if peek[Dot] => pathSimpleType()
-        case _: LeftParen => makeTupleType(startPos, inParensOnOpen(types()))
+        case _: LeftParen => tupleInfixType(allowFunctionType = false, allowMoreThanTuple = false)
         case MacroSplicedIdent(ident) => Type.Macro(macroSplicedIdent(ident))
         case _: MacroSplice => Type.Macro(macroSplice())
         case _: Underscore if inMatchType => next(); Type.PatWildcard()

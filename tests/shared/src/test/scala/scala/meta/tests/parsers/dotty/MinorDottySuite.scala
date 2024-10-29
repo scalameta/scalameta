@@ -1081,6 +1081,33 @@ class MinorDottySuite extends BaseDottySuite {
     )))
   }
 
+  test("annots") {
+    runTestAssert[Stat]("def aa(@(transient @param) tracker: MapOutputTrackerMaster = null) = ???")(
+      Defn.Def(
+        Nil,
+        Term.Name("aa"),
+        List(Member.ParamClauseGroup(
+          Type.ParamClause(Nil),
+          List(Term.ParamClause(List(Term.Param(
+            List(Mod.Annot(Init(
+              Type.Annotate(
+                Type.Name("transient"),
+                List(Mod.Annot(Init(Type.Name("param"), Name.Anonymous(), Nil)))
+              ),
+              Name.Anonymous(),
+              Nil
+            ))),
+            Term.Name("tracker"),
+            Some(Type.Name("MapOutputTrackerMaster")),
+            Some(Lit.Null())
+          ))))
+        )),
+        None,
+        Term.Name("???")
+      )
+    )
+  }
+
   test("class Baz1 @deprecated(implicit c: C)") {
     runTestAssert[Stat](
       "class Baz1 @deprecated(implicit c: C)",
