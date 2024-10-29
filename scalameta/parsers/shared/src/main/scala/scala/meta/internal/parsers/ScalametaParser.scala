@@ -664,9 +664,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
    */
   trait PatternContextSensitive {
 
-    private def tupleInfixType(
+    private def tupleType(
         allowFunctionType: Boolean = true,
-        allowMoreThanTuple: Boolean = true
+        typeRest: (Type, Int) => Type = (tp, _) => tp
     ): Type = autoPosOpt {
       // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
@@ -719,30 +719,34 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         syntaxError(message, at = currToken)
       }
 
-      def maybeFunc = getAfterOptNewLine(currToken match {
-        case _: RightArrow => Some(typeFuncOnArrow(openParenPos, ts, Type.Function(_, _)))
-        case _: ContextArrow => Some(typeFuncOnArrow(openParenPos, ts, Type.ContextFunction(_, _)))
-        case _ => None
-      })
-      (if (allowFunctionType) maybeFunc else None).getOrElse {
-        ts.find {
-          case _: Type.ByName | _: Type.Repeated => true
-          case t: Type.FunctionParamOrArg => t.mods.nonEmpty
-          case _ => false
-        }.foreach(t => syntaxError(s"'${t.productPrefix}' type not allowed here", at = t))
+      val maybeFunc =
+        if (allowFunctionType) getAfterOptNewLine(currToken match {
+          case _: RightArrow => Some(typeFuncOnArrow(openParenPos, ts, Type.Function(_, _)))
+          case _: ContextArrow =>
+            Some(typeFuncOnArrow(openParenPos, ts, Type.ContextFunction(_, _)))
+          case _ => None
+        })
+        else None
+
+      maybeFunc.getOrElse {
         val simple = simpleTypeRest(makeTupleType(openParenPos, ts), openParenPos)
-        if (allowMoreThanTuple) {
-          val annotType = annotTypeRest(simple, openParenPos)
-          val compound = compoundTypeRest(annotType, openParenPos)
-
-          infixTypeRest(compound) match {
-            case `compound` => compound
-            case t => autoEndPos(openParenPos)(t)
-          }
-        } else simple
-
+        typeRest(simple, openParenPos)
       }
     }
+
+    private def tupleInfixType(allowFunctionType: Boolean = true) = tupleType(
+      allowFunctionType,
+      { (simple, openParenPos) =>
+        val annotType = annotTypeRest(simple, openParenPos)
+        val compound = compoundTypeRest(annotType, openParenPos)
+
+        infixTypeRest(compound) match {
+          case `compound` => compound
+          case t => autoEndPos(openParenPos)(t)
+        }
+
+      }
+    )
 
     private def typeLambdaOrPoly(): Type = {
       val quants = typeParamClauseOpt(ownerIsType = true)
@@ -833,6 +837,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (dialect.useInfixTypePrecedence) infixTypeRestWithPrecedence(t, inMatchType = inMatchType)
       else
         infixTypeRestWithMode(t, InfixMode.FirstOp, t.begIndex, identity, inMatchType = inMatchType)
+
     @tailrec
     private final def infixTypeRestWithMode(
         t: Type,
@@ -951,7 +956,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       val res = currToken match {
         case _: Ident if peek[Dot] => pathSimpleType()
-        case _: LeftParen => tupleInfixType(allowFunctionType = false, allowMoreThanTuple = false)
+        case _: LeftParen => tupleType(allowFunctionType = false)
         case MacroSplicedIdent(ident) => Type.Macro(macroSplicedIdent(ident))
         case _: MacroSplice => Type.Macro(macroSplice())
         case _: Underscore if inMatchType => next(); Type.PatWildcard()
