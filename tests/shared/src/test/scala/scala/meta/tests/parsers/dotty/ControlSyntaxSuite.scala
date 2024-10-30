@@ -4284,6 +4284,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |LF [54..55)
                     |RightBrace [59..60)
                     |Indentation.Outdent [61..61)
+                    |LFLF [61..62)
                     |Underscore [64..65)
                     |LeftArrow [66..68)
                     |Ident(d) [69..70)
@@ -4349,6 +4350,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |LF [54..55)
                     |RightBrace [59..60)
                     |Indentation.Outdent [61..61)
+                    |LFLF [61..62)
                     |Underscore [64..65)
                     |LeftArrow [66..68)
                     |Ident(d) [69..70)
@@ -4404,6 +4406,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |Indentation.Indent [33..33)
                     |Ident(???) [40..43)
                     |Indentation.Outdent [44..44)
+                    |LFLF [44..45)
                     |Underscore [49..50)
                     |LeftArrow [51..53)
                     |Ident(Option) [54..60)
@@ -4418,10 +4421,24 @@ class ControlSyntaxSuite extends BaseDottySuite {
                     |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
 
-    val error = """|<input>:5: error: `outdent` expected but `<-` found
-                   |    _ <- Option(43)
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|for (_ <- Option(42).map {
+                    |  _ => ???
+                    |}; _ <- Option(43)) yield ()
+                    |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(
+        Enumerator.Generator(
+          Pat.Wildcard(),
+          Term.Apply(
+            Term.Select(Term.Apply(tname("Option"), List(lit(42))), tname("map")),
+            List(blk(Term.Function(List(tparam("_")), tname("???"))))
+          )
+        ),
+        Enumerator.Generator(Pat.Wildcard(), Term.Apply(tname("Option"), List(lit(43))))
+      )),
+      Lit.Unit()
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
