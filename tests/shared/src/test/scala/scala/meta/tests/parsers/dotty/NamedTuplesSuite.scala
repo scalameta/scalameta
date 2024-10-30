@@ -45,10 +45,22 @@ class NamedTuplesSuite extends BaseDottySuite {
   test("named-tuple-summon") {
     val code = """|val y = summon[Tuple2[Int, String] <:< (x: Int, y: String)]
                   |""".stripMargin
-    val error = """|<input>:1: error: `)` expected but `:` found
-                   |val y = summon[Tuple2[Int, String] <:< (x: Int, y: String)]
-                   |                                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    runTestAssert[Stat](code)(Defn.Val(
+      Nil,
+      List(Pat.Var(tname("y"))),
+      None,
+      Term.ApplyType(
+        tname("summon"),
+        List(Type.ApplyInfix(
+          Type.Apply(pname("Tuple2"), List(pname("Int"), pname("String"))),
+          pname("<:<"),
+          Type.Tuple(List(
+            Type.TypedParam(pname("x"), pname("Int"), Nil),
+            Type.TypedParam(pname("y"), pname("String"), Nil)
+          ))
+        ))
+      )
+    ))
   }
 
   test("complex-named-type") {
