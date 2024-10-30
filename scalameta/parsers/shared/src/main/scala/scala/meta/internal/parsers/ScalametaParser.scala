@@ -666,24 +666,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPosOpt {
       // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
-      var hasParams = false
       var hasImplicits = false
-      var hasTypes = false
 
       @tailrec
       def paramOrType(modsBuf: mutable.Builder[Mod, List[Mod]]): Type = currToken match {
-        case t: Ellipsis => ellipsis[Type](t)
-        case t: Unquote => unquote[Type](t)
         case _: KwImplicit if !hasImplicits && allowFunctionType =>
           next()
           hasImplicits = true
           paramOrType(modsBuf)
         case t: Ident if tryAhead[Colon] =>
-          if (hasTypes) syntaxError(
-            "can't mix function type and dependent function type syntaxes",
-            at = currToken
-          )
-          hasParams = true
           val startPos = prevIndex
           next() // skip colon
           val mods = modsBuf.result()
@@ -694,11 +685,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case soft.KwErased() if allowFunctionType =>
           paramOrType(modsBuf += atCurPosNext(Mod.Erased()))
         case _ =>
-          if (hasParams) syntaxError(
-            "can't mix function type and dependent function type syntaxes",
-            at = currToken
-          )
-          hasTypes = true
           val mods = modsBuf.result()
           val tpe = maybeParamType(allowFunctionType)
           if (mods.isEmpty) tpe else autoEndPos(mods.head)(Type.FunctionArg(mods, tpe))
@@ -709,6 +695,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       // NOTE: can't have this, because otherwise we run into #312
       // newLineOptWhenFollowedBy[LeftParen]
 
+      var hasTypes = false
+      var hasParams = false
+      ts.foreach {
+        case _: Quasi =>
+        case _: Type.TypedParam => hasParams = true
+        case _ => hasTypes = true
+      }
+      if (hasTypes && hasParams)
+        syntaxError("can't mix function type and dependent function type syntaxes", at = currToken)
       if (hasParams && !dialect.allowDependentFunctionTypes)
         syntaxError("dependent function types are not supported", at = currToken)
       if (!hasTypes && !hasImplicits && at[LeftParen]) {
