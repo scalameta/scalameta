@@ -4377,4 +4377,51 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4008") {
+    val code = """|for
+                  |    _ <- Option(42).map: _ =>
+                  |      ???
+                  |
+                  |    _ <- Option(43)
+                  |yield ()
+                  |
+                  |""".stripMargin
+
+    val struct = """|BOF [0..0)
+                    |KwFor [0..3)
+                    |Indentation.Indent [3..3)
+                    |Underscore [8..9)
+                    |LeftArrow [10..12)
+                    |Ident(Option) [13..19)
+                    |LeftParen [19..20)
+                    |Constant.Int(42) [20..22)
+                    |RightParen [22..23)
+                    |Dot [23..24)
+                    |Ident(map) [24..27)
+                    |Colon [27..28)
+                    |Underscore [29..30)
+                    |RightArrow [31..33)
+                    |Indentation.Indent [33..33)
+                    |Ident(???) [40..43)
+                    |Indentation.Outdent [44..44)
+                    |Underscore [49..50)
+                    |LeftArrow [51..53)
+                    |Ident(Option) [54..60)
+                    |LeftParen [60..61)
+                    |Constant.Int(43) [61..63)
+                    |RightParen [63..64)
+                    |Indentation.Outdent [64..64)
+                    |KwYield [65..70)
+                    |LeftParen [71..72)
+                    |RightParen [72..73)
+                    |EOF [75..75)
+                    |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+
+    val error = """|<input>:5: error: `outdent` expected but `<-` found
+                   |    _ <- Option(43)
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
