@@ -674,7 +674,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def paramOrType(modsBuf: mutable.Builder[Mod, List[Mod]]): Type = currToken match {
         case t: Ellipsis => ellipsis[Type](t)
         case t: Unquote => unquote[Type](t)
-        case _: KwImplicit if !hasImplicits =>
+        case _: KwImplicit if !hasImplicits && allowFunctionType =>
           next()
           hasImplicits = true
           paramOrType(modsBuf)
@@ -689,7 +689,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           val mods = modsBuf.result()
           val modPos = if (mods.isEmpty) startPos else mods.head.begIndex
           val name = atPos(startPos)(Type.Name(t.value))
-          autoEndPos(modPos)(Type.TypedParam(name, typ(), mods))
+          val tpe = maybeParamType(allowFunctionType)
+          autoEndPos(modPos)(Type.TypedParam(name, tpe, mods))
         case soft.KwErased() if allowFunctionType =>
           paramOrType(modsBuf += atCurPosNext(Mod.Erased()))
         case _ =>
@@ -699,7 +700,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           )
           hasTypes = true
           val mods = modsBuf.result()
-          val tpe = paramType()
+          val tpe = maybeParamType(allowFunctionType)
           if (mods.isEmpty) tpe else autoEndPos(mods.head)(Type.FunctionArg(mods, tpe))
       }
 
@@ -721,11 +722,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _ => None
       })
       (if (allowFunctionType) maybeFunc else None).getOrElse {
-        ts.find {
-          case _: Type.ByName | _: Type.Repeated => true
-          case t: Type.FunctionParamOrArg => t.mods.nonEmpty
-          case _ => false
-        }.foreach(t => syntaxError(s"'${t.productPrefix}' type not allowed here", at = t))
         val simple = simpleTypeRest(makeTupleType(openParenPos, ts), openParenPos)
         val compound = compoundTypeRest(annotTypeRest(simple, openParenPos), openParenPos)
         infixTypeRest(compound) match {
@@ -766,6 +762,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _ => None
       }).getOrElse(t)
     }
+
+    def paramType(): Type = autoPosOpt(currToken match {
+      case _: RightArrow =>
+        val t = autoPos {
+          next()
+          Type.ByName(typ())
+        }
+        if (isStar && dialect.allowByNameRepeatedParameters) {
+          next()
+          Type.Repeated(t)
+        } else t
+      case _ =>
+        val t = typ()
+        if (!isStar) t
+        else {
+          next()
+          Type.Repeated(t)
+        }
+    })
+
+    private def maybeParamType(allowFunctionType: Boolean): Type =
+      if (allowFunctionType) paramType() else typ()
 
     def typeBlock(): Type =
       // TypeBlock, https://dotty.epfl.ch/docs/internals/syntax.html#expressions-3
@@ -2704,6 +2722,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
    * initiated from non-pattern context.
    */
   def typ() = outPattern.typ()
+  def paramType() = outPattern.paramType()
   private def typeBlock() = outPattern.typeBlock()
   def typeIndentedOpt() = outPattern.typeIndentedOpt()
   def quasiquoteType() = outPattern.quasiquoteType()
@@ -2965,25 +2984,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       while (isAfterOptNewLine[LeftParen] && !hadModImplicit) paramss += paramClause(false)
     }
   }
-
-  def paramType(): Type = autoPosOpt(currToken match {
-    case _: RightArrow =>
-      val t = autoPos {
-        next()
-        Type.ByName(typ())
-      }
-      if (isStar && dialect.allowByNameRepeatedParameters) {
-        next()
-        Type.Repeated(t)
-      } else t
-    case _ =>
-      val t = typ()
-      if (!isStar) t
-      else {
-        next()
-        Type.Repeated(t)
-      }
-  })
 
   def termParam(ownerIsCase: Boolean, ownerIsType: Boolean, mod: Option[Mod.ParamsType] = None)(
       paramIdx: Int
