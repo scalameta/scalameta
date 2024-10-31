@@ -668,27 +668,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
       var hasImplicits = false
 
-      @tailrec
-      def paramOrType(modsBuf: mutable.Builder[Mod, List[Mod]]): Type = currToken match {
+      def modOrType(modsBuf: mutable.Builder[Mod, List[Mod]]): Type = currToken match {
         case _: KwImplicit if !hasImplicits && allowFunctionType =>
           next()
           hasImplicits = true
-          paramOrType(modsBuf)
-        case t: Ident if tryAhead[Colon] =>
-          val startPos = prevIndex
-          next() // skip colon
-          val mods = modsBuf.result()
-          val modPos = if (mods.isEmpty) startPos else mods.head.begIndex
-          val name = atPos(startPos)(Type.Name(t.value))
-          val tpe = maybeParamType(allowFunctionType)
-          autoEndPos(modPos)(Type.TypedParam(name, tpe, mods))
+          null
         case soft.KwErased() if allowFunctionType =>
-          paramOrType(modsBuf += atCurPosNext(Mod.Erased()))
+          modsBuf += atCurPosNext(Mod.Erased())
+          null
         case _ =>
           val mods = modsBuf.result()
           val tpe = maybeParamType(allowFunctionType)
           if (mods.isEmpty) tpe else autoEndPos(mods.head)(Type.FunctionArg(mods, tpe))
       }
+
+      @tailrec
+      def paramOrType(modsBuf: mutable.Builder[Mod, List[Mod]]): Type =
+        namedTypeOpt(modsBuf.result(), allowFunctionType = allowFunctionType) match {
+          case Some(x) => x
+          case None =>
+            val x = modOrType(modsBuf)
+            if (x ne null) x else paramOrType(modsBuf)
+        }
 
       val openParenPos = currIndex
       val ts = inParensOr(commaSeparated(paramOrType(List.newBuilder[Mod])))(Nil)
@@ -779,6 +780,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     private def maybeParamType(allowFunctionType: Boolean): Type =
       if (allowFunctionType) paramType() else typ()
+
+    private def namedTypeOpt(
+        fmods: => List[Mod],
+        allowFunctionType: Boolean
+    ): Option[Type.TypedParam] = currToken match {
+      case t: Ident if peek[Colon] =>
+        val startPos = currIndex
+        nextTwice() // skip ident and colon
+        val mods = fmods
+        val modPos = if (mods.isEmpty) startPos else mods.head.begIndex
+        val name = atPos(startPos)(Type.Name(t.value))
+        val tpe = maybeParamType(allowFunctionType)
+        Some(autoEndPos(modPos)(Type.TypedParam(name, tpe, mods)))
+      case _ => None
+    }
 
     def typeBlock(): Type =
       // TypeBlock, https://dotty.epfl.ch/docs/internals/syntax.html#expressions-3
@@ -998,7 +1014,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ => t
     }
 
-    def types(): List[Type] = commaSeparated(typ())
+    def types(): List[Type] =
+      commaSeparated(namedTypeOpt(Nil, allowFunctionType = false).getOrElse(typ()))
 
     def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Type = {
       def setPos(outerTpe: Type)(innerTpe: Type): Type =
