@@ -351,34 +351,49 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         xs: List[SepRegion],
         wasDone: Boolean = false,
         head: TokenRef = null,
-        last: TokenRef = null
+        last: TokenRef = null,
+        multiEOL: Boolean = false
     )(implicit f: List[SepRegion] => OutdentInfo): Either[List[SepRegion], (TokenRef, TokenRef)] =
       if (!wasDone) f(xs) match {
-        case null => mkOutdentsOpt(xs, true, head, last)
+        case null => mkOutdentsOpt(xs, true, head, last, multiEOL)
         case OutdentInfo(outdent, rs, done) =>
           val isDone = done || (rs eq xs)
-          if (outdent eq null) mkOutdentsOpt(rs, isDone, head, last)
+          if (outdent eq null) mkOutdentsOpt(rs, isDone, head, last, multiEOL)
           else {
             val tr = mkOutdentTo(outdent, rs)
             val newHead = if (head eq null) tr else { last.next = tr; head }
-            mkOutdentsOpt(rs, isDone, newHead, tr)
+            mkOutdentsOpt(rs, isDone, newHead, tr, multiEOL)
           }
       }
       else if (head eq null) Left(xs)
       else {
         if (currNonTrivial) last.next = currRef(xs)
+        else if (multiEOL) last.next = eofRefAt(xs, last.pointPos, multiEOL = true)
         Right((head, last))
       }
 
-    def mkOutdentsT[A](xs: List[SepRegion])(lt: List[SepRegion] => A)(
+    def mkOutdentsT[A](xs: List[SepRegion], multiEOL: Boolean = false)(lt: List[SepRegion] => A)(
         rt: (TokenRef, TokenRef) => A
-    )(implicit f: List[SepRegion] => OutdentInfo): A = mkOutdentsOpt(xs).fold(lt, rt.tupled)
+    )(implicit f: List[SepRegion] => OutdentInfo): A = mkOutdentsOpt(xs, multiEOL = multiEOL)
+      .fold(lt, rt.tupled)
 
-    def mkOutdents(xs: List[SepRegion])(implicit f: List[SepRegion] => OutdentInfo): TokenRef =
-      mkOutdentsT(xs)(currRef(_))((x, _) => x)
+    def mkOutdents(xs: List[SepRegion], multiEOL: Boolean = false)(implicit
+        f: List[SepRegion] => OutdentInfo
+    ): TokenRef = mkOutdentsT(xs, multiEOL)(currRef)((x, _) => x)
 
-    def currRef(regions: List[SepRegion], next: TokenRef = null): TokenRef =
+    def currRef(regions: List[SepRegion]): TokenRef = currAndNextRef(regions, null)
+    def currAndNextRef(regions: List[SepRegion], next: TokenRef): TokenRef =
       TokenRef(regions, curr, currPos, next)
+
+    def eolRefFor(rs: List[SepRegion], out: Token, eolPos: Int) =
+      TokenRef(rs, out, eolPos, nextPos, eolPos, null)
+    def eofRefAt(rs: List[SepRegion], eolPos: Int, multiEOL: Boolean): TokenRef = {
+      val token = tokens(eolPos)
+      val out =
+        if (!multiEOL || token.is[MultiEOL]) token
+        else LFLF(token.input, token.dialect, token.start, tokens(indentPos).end)
+      eolRefFor(rs, out, eolPos)
+    }
 
     def outdentThenCurrRef(
         ri: RegionIndent,
@@ -411,7 +426,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             if dialect.allowSignificantIndentation && curr.pos.endLine == next.pos.startLine =>
           val regions = markRegions()
           val nextRegions = RegionIndent(findIndent(sepRegions)) :: regions
-          currRef(regions, mkIndent(currPos, nextPos, nextRegions))
+          currAndNextRef(regions, mkIndent(currPos, nextPos, nextRegions))
         case _: KwCase | _: LeftBrace => currRef(markRegions())
         case _ => currRef(sepRegions)
       }
@@ -611,8 +626,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       if (isTrailingComma) nextToken(curr, currPos, currPos + 1, sepRegionsOrig)
       else nonTrivial(getNonTrivialRegions(sepRegionsOrig))
     else {
-      def eolRef(rs: List[SepRegion], out: Token, eolPos: Int) =
-        TokenRef(rs, out, eolPos, nextPos, eolPos, null)
       @tailrec
       def findFirstEOL(pos: Int): Int =
         if (pos > indentPos) -1 else if (tokens(pos).is[AtEOL]) pos else findFirstEOL(pos + 1)
@@ -633,11 +646,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
         val addRegionLine = lineIndent >= 0 && isIndented(rs, lineIndent)
         val regions = if (addRegionLine) RegionLine(lineIndent) :: rs else rs
-        val token = tokens(eolPos)
-        val out =
-          if (!multiEOL || token.is[MultiEOL]) token
-          else LFLF(token.input, token.dialect, token.start, tokens(indentPos).end)
-        eolRef(regions, out, eolPos)
+        eofRefAt(regions, eolPos, multiEOL)
       }
 
       def stripIfCanProduceLF(regions: List[SepRegion]) = {
@@ -686,7 +695,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         def getInfixLF(invalid: Option[String]) = Some(Right {
           val lf = tokens(indentPos)
           val out = InfixLF(lf.input, lf.dialect, lf.start, lf.end, invalid)
-          eolRef(sepRegionsOrig, out, indentPos)
+          eolRefFor(sepRegionsOrig, out, indentPos)
         })
         isLeadingInfix(regions) match {
           case LeadingInfix.Yes => getInfixLF(None)
@@ -854,7 +863,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
           val regionsToRes: List[SepRegion] => Option[Either[List[SepRegion], TokenRef]] =
             if (prevToken.is[Indentation]) _ => None
-            else mkOutdentsT(_)(getIndentIfNeeded)((x, _) => Some(Right(x)))(getOutdentInfo)
+            else
+              mkOutdentsT(_, multiEOL)(getIndentIfNeeded)((x, _) => Some(Right(x)))(getOutdentInfo)
 
           def onlyWithoutLF() = sepRegionsOrig match {
             case (ri: SepRegionIndented) :: _ if ri.indent < nextIndent =>
