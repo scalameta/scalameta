@@ -524,7 +524,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ => null
         }
       case _: LeftBracket => currRef(RegionBracket :: sepRegions)
-      case _: RightBracket => currRef(dropUntil(sepRegions)(_ eq RegionBracket))
+      case _: RightBracket => mkOutdents(sepRegions) {
+          case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
+          case RegionBracket :: rs => OutdentInfo(null, rs, done = true)
+          case _ :: rs => OutdentInfo(null, rs)
+          case _ => null
+        }
       case _: LeftParen => currRef(RegionParen :: sepRegions)
       case _: RightParen => mkOutdents(sepRegions) {
           case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)

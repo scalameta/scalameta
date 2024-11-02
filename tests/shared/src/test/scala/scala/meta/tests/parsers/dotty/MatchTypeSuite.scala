@@ -242,10 +242,25 @@ class MatchTypeSuite extends BaseDottySuite {
     val code = """|type T1 = A[[T] =>> T match
                   |    case _ => Int]
                   |""".stripMargin
-    val error = """|<input>:2: error: `outdent` expected but `]` found
-                   |    case _ => Int]
-                   |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|type T1 = A[[T] =>> T match {
+                    |  case _ => Int
+                    |}]
+                    |""".stripMargin
+    val tree = Defn.Type(
+      Nil,
+      pname("T1"),
+      Nil,
+      Type.Apply(
+        pname("A"),
+        List(Type.Lambda(
+          List(pparam("T")),
+          Type.Match(pname("T"), List(TypeCase(Type.PatWildcard(), pname("Int"))))
+        ))
+      ),
+      noBounds
+    )
+
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
