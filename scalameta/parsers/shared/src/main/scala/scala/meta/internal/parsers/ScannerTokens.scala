@@ -174,9 +174,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   def isModifier(index: Int): Boolean = tokens(index).is[ModifierKeyword] || isSoftModifier(index)
 
-  object NonParamsModifier {
-    def unapply(token: Token): Boolean = token.text match {
-      case soft.KwOpen() | soft.KwOpaque() | soft.KwTransparent() | soft.KwInfix() => true
+  object ParamsModifier {
+    def unapply(token: Token): Boolean = matches(token.text)
+    def matches(text: String): Boolean = text match {
+      case soft.KwInline() | soft.KwErased() | soft.KwTracked() => true
       case _ => false
     }
   }

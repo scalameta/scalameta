@@ -2866,7 +2866,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       isLocal: Boolean = false,
       isParams: Boolean = false
   ): Unit = {
-    val mods = buf.view.drop(buf.length)
     def appendMod: Unit = {
       val mod = modifier(isLocal)
       buf += mod
@@ -2880,12 +2879,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
     @tailrec
     def loop: Unit = currToken match {
-      case NonParamsModifier() if isParams =>
       case _: Unquote if continueLoop =>
       case _: AtEOL if !isLocal => next(); loop
       case _: Unquote | _: Ellipsis => appendMod; loop
       case _: KwCase if peekToken.isAny[KwObject, KwClass] => buf += atCurPosNext(Mod.Case())
-      case _ if isModifier(currIndex) => appendMod; loop
+      case _: ModifierKeyword => appendMod; loop
+      case t: Ident if {
+            if (isParams) !peek[Colon] && ParamsModifier.matches(t.value)
+            else isSoftModifier(currIndex)
+          } => appendMod; loop
       case _ =>
     }
     loop
@@ -3020,7 +3022,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       otherMods()
     }
     val hasExplicitMods = mods.view.drop(numAnnots).exists {
-      case _: Mod.Quasi => false
+      case _: Mod.Quasi | _: Mod.Erased => false
       case m: Mod.Private => m.within.is[Name.Anonymous]
       case m: Mod.Protected => m.within.is[Name.Anonymous]
       case _ => true
@@ -3546,7 +3548,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     next()
 
     val className = typeName()
-    def culprit = Some(s"class $className")
     val typeParams =
       typeParamClauseOpt(ownerIsType = true, allowUnderscore = dialect.allowTypeParamUnderscore)
     val ctor = primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass)
@@ -3597,7 +3598,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def objectDef(mods: List[Mod]): Defn.Object = {
     next()
     val objectName = termName()
-    val culprit = s"object $objectName"
     Defn.Object(mods, objectName, templateOpt(OwnedByObject))
   }
 
@@ -3610,7 +3610,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         ctorModifiers(buf)
       }
       val name = anonNameEmpty()
-      val paramss = termParamClauses(ownerIsType = true, owner == OwnedByCaseClass)
+      val paramss = termParamClauses(ownerIsType = true, ownerIsCase = owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
     } else Ctor.Primary(Nil, anonNameEmpty(), Seq.empty[Term.ParamClause])
   }

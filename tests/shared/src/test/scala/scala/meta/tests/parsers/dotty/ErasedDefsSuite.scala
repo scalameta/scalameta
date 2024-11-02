@@ -12,10 +12,15 @@ class ErasedDefsSuite extends BaseDottySuite {
 
   test("class with erased params") {
     val code = "class ClassWithErasedEv(erased ev: Ev, x: Int) {}"
-    val error = """|<input>:1: error: `:` expected but `identifier` found
-                   |class ClassWithErasedEv(erased ev: Ev, x: Int) {}
-                   |                               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "class ClassWithErasedEv(erased ev: Ev, x: Int)"
+    val tree = Defn.Class(
+      Nil,
+      pname("ClassWithErasedEv"),
+      Nil,
+      ctorp(tparam(List(Mod.Erased()), "ev", "Ev"), tparam("x", "Int")),
+      tplNoBody()
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("def with erased params") {
