@@ -7,7 +7,16 @@ class ErasedDefsSuite extends BaseDottySuite {
   /**
    * All examples based on dotty documentation:
    *   - [[https://dotty.epfl.ch/docs/reference/experimental/erased-defs.html]]
+   *   - [[https://dotty.epfl.ch/docs/reference/experimental/erased-defs-spec.html]]
    */
+
+  test("class with erased params") {
+    val code = "class ClassWithErasedEv(erased ev: Ev, x: Int) {}"
+    val error = """|<input>:1: error: `:` expected but `identifier` found
+                   |class ClassWithErasedEv(erased ev: Ev, x: Int) {}
+                   |                               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
 
   test("def with erased params") {
     val code = "def methodWithErasedEv(erased ev: Ev, x: Int): Int = x + 2"
