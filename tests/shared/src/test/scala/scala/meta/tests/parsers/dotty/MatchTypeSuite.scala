@@ -237,4 +237,15 @@ class MatchTypeSuite extends BaseDottySuite {
       ))
     ))
   }
+
+  test("#4015") {
+    val code = """|type T1 = A[[T] =>> T match
+                  |    case _ => Int]
+                  |""".stripMargin
+    val error = """|<input>:2: error: `outdent` expected but `]` found
+                   |    case _ => Int]
+                   |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
