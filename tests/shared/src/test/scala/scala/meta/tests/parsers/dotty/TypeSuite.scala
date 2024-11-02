@@ -574,4 +574,12 @@ class TypeSuite extends BaseDottySuite {
 
   test("#3672 [scala3] ***")(runTestAssert[Type]("***")(pname("***")))
 
+  test("#3998") {
+    val code = "val xs1 = construct[Coll = List, Elem = Int](1, 2, 3)"
+    val error = """|<input>:1: error: `]` expected but `=` found
+                   |val xs1 = construct[Coll = List, Elem = Int](1, 2, 3)
+                   |                         ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
