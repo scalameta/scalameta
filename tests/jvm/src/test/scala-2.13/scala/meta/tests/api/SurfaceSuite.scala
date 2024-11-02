@@ -488,6 +488,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Type.Apply
          |scala.meta.Type.ApplyInfix
          |scala.meta.Type.ArgClause
+         |scala.meta.Type.Assign
          |scala.meta.Type.Block
          |scala.meta.Type.Bounds
          |scala.meta.Type.BoundsAlias

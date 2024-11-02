@@ -576,10 +576,19 @@ class TypeSuite extends BaseDottySuite {
 
   test("#3998") {
     val code = "val xs1 = construct[Coll = List, Elem = Int](1, 2, 3)"
-    val error = """|<input>:1: error: `]` expected but `=` found
-                   |val xs1 = construct[Coll = List, Elem = Int](1, 2, 3)
-                   |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Defn.Val(
+      Nil,
+      List(Pat.Var(tname("xs1"))),
+      None,
+      Term.Apply(
+        Term.ApplyType(
+          tname("construct"),
+          List(Type.Assign(pname("Coll"), pname("List")), Type.Assign(pname("Elem"), pname("Int")))
+        ),
+        List(lit(1), lit(2), lit(3))
+      )
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
 }

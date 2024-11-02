@@ -676,6 +676,11 @@ object Type {
   }
 
   @ast
+  class Assign(name: Name, rhs: Type) extends Type with Tree.WithBody {
+    override def body: Tree = rhs
+  }
+
+  @ast
   class Param(
       mods: List[Mod],
       name: meta.Name,

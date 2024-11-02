@@ -836,8 +836,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def entrypointType(): Type = paramType()
 
-    def typeArgs(): Type.ArgClause = TypeBracketsContext
-      .within(autoPos(inBrackets(types()).reduceWith(Type.ArgClause.apply)))
+    private def typeArg(): Type = currToken match {
+      case t: Ident if peek[Equals] =>
+        val startPos = currIndex
+        nextTwice() // skip ident and equals
+        val name = atPos(startPos)(Type.Name(t.value))
+        autoEndPos(startPos)(Type.Assign(name, typ()))
+      case _ => typ()
+    }
+
+    def typeArgsInBrackets(): Type.ArgClause = TypeBracketsContext
+      .within(autoPos(inBrackets(commaSeparated(typeArg())).reduceWith(Type.ArgClause.apply)))
 
     def infixTypeOrTuple(inMatchType: Boolean = false): Type =
       if (at[LeftParen]) tupleInfixType(allowFunctionType = !inMatchType)
@@ -972,7 +981,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       val res = currToken match {
         case _: Ident if peek[Dot] => pathSimpleType()
-        case _: LeftParen => makeTupleType(startPos, inParensOnOpen(types()))
+        case _: LeftParen => makeTupleType(startPos, typesInParens())
         case MacroSplicedIdent(ident) => Type.Macro(macroSplicedIdent(ident))
         case _: MacroSplice => Type.Macro(macroSplice())
         case _: Underscore if inMatchType => next(); Type.PatWildcard()
@@ -1010,12 +1019,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         next()
         simpleTypeRest(autoEndPos(startPos)(Type.Project(t, typeName())), startPos)
       case _: LeftBracket =>
-        simpleTypeRest(autoEndPos(startPos)(Type.Apply(t, typeArgs())), startPos)
+        simpleTypeRest(autoEndPos(startPos)(Type.Apply(t, typeArgsInBrackets())), startPos)
       case _ => t
     }
 
-    def types(): List[Type] =
-      commaSeparated(namedTypeOpt(Nil, allowFunctionType = false).getOrElse(typ()))
+    def typesInParens(): List[Type] =
+      inParensOnOpen(commaSeparated(namedTypeOpt(Nil, allowFunctionType = false).getOrElse(typ())))
 
     def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Type = {
       def setPos(outerTpe: Type)(innerTpe: Type): Type =
@@ -2741,7 +2750,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def entrypointType() = outPattern.entrypointType()
   def startInfixType() = outPattern.infixType()
   def startModType() = outPattern.annotType()
-  def exprTypeArgs() = outPattern.typeArgs()
+  def exprTypeArgs() = outPattern.typeArgsInBrackets()
   def exprSimpleType() = outPattern.simpleType()
 
   /** Default entry points into some pattern contexts. */
