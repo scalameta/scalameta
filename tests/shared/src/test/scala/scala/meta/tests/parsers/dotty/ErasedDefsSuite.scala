@@ -7,7 +7,21 @@ class ErasedDefsSuite extends BaseDottySuite {
   /**
    * All examples based on dotty documentation:
    *   - [[https://dotty.epfl.ch/docs/reference/experimental/erased-defs.html]]
+   *   - [[https://dotty.epfl.ch/docs/reference/experimental/erased-defs-spec.html]]
    */
+
+  test("class with erased params") {
+    val code = "class ClassWithErasedEv(erased ev: Ev, x: Int) {}"
+    val layout = "class ClassWithErasedEv(erased ev: Ev, x: Int)"
+    val tree = Defn.Class(
+      Nil,
+      pname("ClassWithErasedEv"),
+      Nil,
+      ctorp(tparam(List(Mod.Erased()), "ev", "Ev"), tparam("x", "Int")),
+      tplNoBody()
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
 
   test("def with erased params") {
     val code = "def methodWithErasedEv(erased ev: Ev, x: Int): Int = x + 2"
