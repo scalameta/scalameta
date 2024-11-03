@@ -237,4 +237,30 @@ class MatchTypeSuite extends BaseDottySuite {
       ))
     ))
   }
+
+  test("#4015") {
+    val code = """|type T1 = A[[T] =>> T match
+                  |    case _ => Int]
+                  |""".stripMargin
+    val layout = """|type T1 = A[[T] =>> T match {
+                    |  case _ => Int
+                    |}]
+                    |""".stripMargin
+    val tree = Defn.Type(
+      Nil,
+      pname("T1"),
+      Nil,
+      Type.Apply(
+        pname("A"),
+        List(Type.Lambda(
+          List(pparam("T")),
+          Type.Match(pname("T"), List(TypeCase(Type.PatWildcard(), pname("Int"))))
+        ))
+      ),
+      noBounds
+    )
+
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
