@@ -574,6 +574,39 @@ class TypeSuite extends BaseDottySuite {
 
   test("#3672 [scala3] ***")(runTestAssert[Type]("***")(pname("***")))
 
+  // https://www.scala-lang.org/api/3.3.3/docs/docs/reference/experimental/into-modifier.html
+  test("#3995 into type") {
+    val code = "def ++ (elems: into IterableOnce[A]): List[A]"
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |def ++ (elems: into IterableOnce[A]): List[A]
+                   |                                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3995 into by-name type") {
+    val code = "def ++ (elems: => into IterableOnce[A]): List[A]"
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |def ++ (elems: => into IterableOnce[A]): List[A]
+                   |                                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3995 into func type") {
+    val code = "def flatMap[B](f: into A => IterableOnce[B]): List[B]"
+    val error = """|<input>:1: error: `identifier` expected but `=>` found
+                   |def flatMap[B](f: into A => IterableOnce[B]): List[B]
+                   |                         ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3995 into vararg type") {
+    val code = "def concatAll(xss: into IterableOnce[Char]*): List[Char]"
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |def concatAll(xss: into IterableOnce[Char]*): List[Char]
+                   |                                    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("#3998") {
     val code = "val xs1 = construct[Coll = List, Elem = Int](1, 2, 3)"
     val tree = Defn.Val(
