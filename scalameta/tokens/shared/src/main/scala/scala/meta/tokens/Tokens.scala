@@ -9,6 +9,7 @@ import scala.meta.internal.prettyprinters._
 import scala.meta.prettyprinters._
 
 import scala.collection.immutable
+import scala.reflect.ClassTag
 
 // WONTFIX: https://github.com/scalameta/scalameta/issues/385
 // WONTFIX: https://github.com/scalameta/scalameta/issues/150
@@ -49,6 +50,20 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
     new Tokens(tokens, lo, len)
   }
 
+  def arraySlice(from: Int, until: Int): Array[Token] = {
+    val lo = 0.max(from.min(length))
+    val len = 0.max(until.min(length) - lo)
+    val dst = new Array[Token](len)
+    System.arraycopy(tokens, lo, dst, 0, len)
+    dst
+  }
+
+  override def toArray[B >: Token: ClassTag]: Array[B] = {
+    val dst = new Array[B](length)
+    System.arraycopy(tokens, start, dst, 0, length)
+    dst
+  }
+
   /* Both head and headOption need to be implemented here due to
    * binary incompatibility caused by
    * https://github.com/scala/scala/commit/b20dd00b11f06c14c823d277cdfb58043a2586fc
@@ -85,7 +100,8 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
 
   def skipWideIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
     val beg = start + rangeBeg
-    if (beg < 0) rangeBeg else skipIfFull(p, beg, tokens.length.min(start + rangeEnd))
+    // rangeEnd + start could overflow, so let's first truncate it
+    if (beg < 0) rangeBeg else skipIfFull(p, beg, start + rangeEnd.min(tokens.length - start))
   }
 
   private def skipIfFull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
@@ -107,7 +123,8 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
 
   def rskipWideIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
     val beg = start + rangeBeg
-    if (beg >= tokens.length) rangeBeg else rskipIfFull(p, beg, (start + rangeEnd).max(-1))
+    // rangeEnd + start could overflow; compare it to (-start -1), and ~start is exactly that
+    if (beg >= tokens.length) rangeBeg else rskipIfFull(p, beg, start + rangeEnd.max(~start))
   }
 
   private def rskipIfFull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
