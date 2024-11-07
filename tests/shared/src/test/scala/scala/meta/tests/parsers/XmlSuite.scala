@@ -36,6 +36,61 @@ class XmlSuite extends ParseSuite {
        |EOF [14..14)
        |""".stripMargin
   )
+
+  checkToken(
+    """|Seq(
+       |  <tr>{serviceQuantiles}</tr>
+       |  <tr>{gcQuantiles}</tr>,
+       |)""".stripMargin,
+    """|BOF [0..0)
+       |Ident(Seq) [0..3)
+       |LeftParen [3..4)
+       |LF [4..5)
+       |Space [5..6)
+       |Space [6..7)
+       |Xml.Start [7..7)
+       |Xml.Part(<tr>) [7..11)
+       |Xml.SpliceStart [11..11)
+       |LeftBrace [11..12)
+       |Ident(serviceQuantiles) [12..28)
+       |RightBrace [28..29)
+       |Xml.SpliceEnd [29..29)
+       |Xml.Part(</tr>\n  <tr>) [29..41)
+       |Xml.SpliceStart [41..41)
+       |LeftBrace [41..42)
+       |Ident(gcQuantiles) [42..53)
+       |RightBrace [53..54)
+       |Xml.SpliceEnd [54..54)
+       |Xml.Part(</tr>) [54..59)
+       |Xml.End [59..59)
+       |Comma [59..60)
+       |LF [60..61)
+       |RightParen [61..62)
+       |EOF [62..62)
+       |""".stripMargin
+  )
+
+  checkToken(
+    "<a><b/>{ns @ _*}</a>",
+    """|BOF [0..0)
+       |Xml.Start [0..0)
+       |Xml.Part(<a><b/>) [0..7)
+       |Xml.SpliceStart [7..7)
+       |LeftBrace [7..8)
+       |Ident(ns) [8..10)
+       |Space [10..11)
+       |At [11..12)
+       |Space [12..13)
+       |Underscore [13..14)
+       |Ident(*) [14..15)
+       |RightBrace [15..16)
+       |Xml.SpliceEnd [16..16)
+       |Xml.Part(</a>) [16..20)
+       |Xml.End [20..20)
+       |EOF [20..20)
+       |""".stripMargin
+  )
+
   checkToken(
     "<foo>{bar}</foo> ",
     """|BOF [0..0)
@@ -320,22 +375,24 @@ class XmlSuite extends ParseSuite {
   // checkOK("""<a b="&a:;"/>""") // FIXME
   // checkOK("e match { case <a>&</a> => () }") // FIXME
 
-  checkError("<a:/>")
-  checkError("""<a b:="Hello"/>""")
-  checkError("<a>&b:;</a>")
-  checkError("<a>&:b;</a>")
-  checkError("<a><a:/>")
   checkError("<a>")
-  checkError("<!--->")
-  checkError("<!-- >")
-  checkError("<!-- ->")
   checkError("<![CDATA[]]>]]>")
-  checkError("<a></ a>")
-  checkError("<a></\na>")
   checkError("e match { case <a>{}</a> => ??? }")
-  checkError("<a>}</a>")
   checkError("<a>{</a>")
   checkError("<a>}{</a>")
+
+  // These require validating Xml, which we don't want to do
+  // checkError("<!--->")
+  // checkError("<!-- >")
+  // checkError("<!-- ->")
+  // checkError("<a:/>")
+  // checkError("""<a b:="Hello"/>""")
+  // checkError("<a>&b:;</a>")
+  // checkError("<a>&:b;</a>")
+  // checkError("<a><a:/>")
+  // checkError("<a></ a>")
+  // checkError("<a></\na>")
+  // checkError("<a>}</a>")
   // checkError("<a></b>") // FIXME: Should not parse
 
   test("SeqWildcard with trailing NL") {

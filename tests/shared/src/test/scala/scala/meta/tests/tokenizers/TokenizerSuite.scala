@@ -1003,10 +1003,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
                   |  val b = <baz qux="...">cde<?
                   |""".stripMargin
     interceptMessage[ParseException](
-      """|<input>:3: error: malformed xml literal, expected:
-         |Expected ("{{" | "}}" | "&" | "&#" | "&#x" | "{" | "<xml:unparsed" | "<![CDATA[" | "<!--" | "</"):3:29, found "<?\n"
-         |  val b = <baz qux="...">cde<?
-         |                            ^""".stripMargin.lf2nl
+      """|<input>:4: error: malformed xml literal: No end tag found
+         |
+         |^""".stripMargin.lf2nl
     )(code.asInput.parseRule(_.entrypointStat()))
   }
 
