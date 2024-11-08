@@ -366,7 +366,8 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).configs(Slow, 
     "io.get-coursier" %% "coursier" % coursierVersion
   },
   dependencyOverrides += {
-    val scalaXmlVersion = if (isScala211.value) "1.3.1" else "2.3.0"
+    val scalaXmlVersion =
+      if (isScala211.value) "1.3.1" else if (scalaVersion.value == "2.13.12") "2.2.0" else "2.3.0"
     "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
   },
   // Needed because some tests rely on the --usejavacp option
