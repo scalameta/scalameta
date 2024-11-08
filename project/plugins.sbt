@@ -6,7 +6,7 @@ addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.7")
 
-addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.12.0")
+addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.0")
 
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.7")
 
