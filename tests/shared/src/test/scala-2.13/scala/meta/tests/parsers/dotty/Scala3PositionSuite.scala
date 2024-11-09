@@ -1253,8 +1253,8 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |""".stripMargin,
     """|Type.FuncParamClause (X*, => Y*)
        |Type.Repeated X*
-       |Type.Repeated => Y*
-       |Type.ByName => Y
+       |Type.ByName => Y*
+       |Type.Repeated Y*
        |""".stripMargin
   )
 
