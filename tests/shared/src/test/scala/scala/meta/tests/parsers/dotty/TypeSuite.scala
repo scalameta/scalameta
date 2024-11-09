@@ -577,34 +577,76 @@ class TypeSuite extends BaseDottySuite {
   // https://www.scala-lang.org/api/3.3.3/docs/docs/reference/experimental/into-modifier.html
   test("#3995 into type") {
     val code = "def ++ (elems: into IterableOnce[A]): List[A]"
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |def ++ (elems: into IterableOnce[A]): List[A]
-                   |                                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def ++(elems: into IterableOnce[A]): List[A]"
+    val tree = Decl.Def(
+      Nil,
+      tname("++"),
+      Nil,
+      List(List(tparam(
+        "elems",
+        Some(Type.FunctionArg(List(Mod.Into()), Type.Apply(pname("IterableOnce"), List(pname("A")))))
+      ))),
+      Type.Apply(pname("List"), List(pname("A")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3995 into by-name type") {
     val code = "def ++ (elems: => into IterableOnce[A]): List[A]"
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |def ++ (elems: => into IterableOnce[A]): List[A]
-                   |                                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def ++(elems: => (into IterableOnce[A])): List[A]"
+    val tree = Decl.Def(
+      Nil,
+      tname("++"),
+      Nil,
+      List(List(tparam(
+        "elems",
+        Some(Type.ByName(
+          Type.FunctionArg(List(Mod.Into()), Type.Apply(pname("IterableOnce"), List(pname("A"))))
+        ))
+      ))),
+      Type.Apply(pname("List"), List(pname("A")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3995 into func type") {
     val code = "def flatMap[B](f: into A => IterableOnce[B]): List[B]"
-    val error = """|<input>:1: error: `identifier` expected but `=>` found
-                   |def flatMap[B](f: into A => IterableOnce[B]): List[B]
-                   |                         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Decl.Def(
+      Nil,
+      tname("flatMap"),
+      List(pparam("B")),
+      List(List(tparam(
+        "f",
+        Some(Type.FunctionArg(
+          List(Mod.Into()),
+          Type.Function(
+            Type.FuncParamClause(List(pname("A"))),
+            Type.Apply(pname("IterableOnce"), List(pname("B")))
+          )
+        ))
+      ))),
+      Type.Apply(pname("List"), List(pname("B")))
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
   test("#3995 into vararg type") {
     val code = "def concatAll(xss: into IterableOnce[Char]*): List[Char]"
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |def concatAll(xss: into IterableOnce[Char]*): List[Char]
-                   |                                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def concatAll(xss: into (IterableOnce[Char]*)): List[Char]"
+    val tree = Decl.Def(
+      Nil,
+      tname("concatAll"),
+      Nil,
+      List(List(tparam(
+        "xss",
+        Some(Type.FunctionArg(
+          List(Mod.Into()),
+          Type.Repeated(Type.Apply(pname("IterableOnce"), List(pname("Char"))))
+        ))
+      ))),
+      Type.Apply(pname("List"), List(pname("Char")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3998") {

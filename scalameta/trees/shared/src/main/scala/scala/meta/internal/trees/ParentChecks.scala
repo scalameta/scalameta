@@ -43,6 +43,7 @@ object ParentChecks {
     case _: Type.FuncParamClause => true
     case _: Type.ByName => !tree.is[Type.ByName] && destination == "tpe"
     case _: Type.Repeated => !tree.is[Type.Repeated] && destination == "tpe"
+    case _: Type.FunctionArg => !tree.is[Type.FunctionArg] && destination == "tpe"
     case _ => false
   }
 

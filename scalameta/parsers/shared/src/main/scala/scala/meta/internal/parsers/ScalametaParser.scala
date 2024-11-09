@@ -768,7 +768,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       } else t
     }
 
-    private def paramValueType(allowRepeated: Boolean): Type = exactParamType(allowRepeated)
+    private def paramValueType(allowRepeated: Boolean): Type =
+      if (soft.KwInto.matches(currToken)) {
+        val startPos = currIndex
+        val mod = atPos(startPos)(Mod.Into())
+        next()
+        autoEndPos(startPos)(Type.FunctionArg(mod :: Nil, exactParamType(allowRepeated)))
+      } else exactParamType(allowRepeated)
 
     def paramType(): Type = currToken match {
       case _: RightArrow => autoPos {
