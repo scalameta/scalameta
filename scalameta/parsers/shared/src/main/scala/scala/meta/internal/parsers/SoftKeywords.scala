@@ -2,6 +2,7 @@ package scala.meta.internal.parsers
 
 import scala.meta.Dialect
 import scala.meta.Mod
+import scala.meta.tokens.Token
 
 class SoftKeywords(dialect: Dialect) {
 
@@ -20,6 +21,9 @@ class SoftKeywords(dialect: Dialect) {
   object KwErased extends IsWithName(dialect.allowErasedDefs, "erased")
   object KwTracked extends IsWithName(dialect.allowTrackedParameters, "tracked")
   object KwInto extends IsWithName(dialect.allowParameterTypeConversions, "into")
+  object KwPureFunctionArrow extends IsWithName(dialect.allowPureFunctions, Token.pureFunctionArrow)
+  object KwPureContextFunctionArrow
+      extends IsWithName(dialect.allowPureFunctions, Token.pureContextFunctionArrow)
 
   object StarSplice extends IsWithName(dialect.allowPostfixStarVarargSplices, "*")
   object StarAsTypePlaceholder

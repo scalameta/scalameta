@@ -341,4 +341,8 @@ object Token {
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
   implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax
     .apply[T](dialect)
+
+  val pureFunctionArrow = "->"
+  val pureContextFunctionArrow = "?->"
+
 }
