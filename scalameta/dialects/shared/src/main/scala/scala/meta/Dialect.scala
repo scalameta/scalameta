@@ -169,6 +169,8 @@ final class Dialect private[meta] (
     val allowParameterTypeConversions: Boolean,
     // https://dotty.epfl.ch/docs/reference/experimental/purefuns.html
     val allowPureFunctions: Boolean,
+    // https://dotty.epfl.ch/docs/reference/experimental/cc.html
+    val allowCaptureChecking: Boolean,
     // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html?
     val allowImprovedTypeClassesSyntax: Boolean
 ) extends Product with Serializable {
@@ -269,6 +271,7 @@ final class Dialect private[meta] (
     allowTrackedParameters = false,
     allowParameterTypeConversions = false,
     allowPureFunctions = false,
+    allowCaptureChecking = false,
     allowImprovedTypeClassesSyntax = false
     // NOTE(olafur): declare the default value for new fields above this comment.
   )
@@ -415,6 +418,9 @@ final class Dialect private[meta] (
 
   def withAllowPureFunctions(newValue: Boolean): Dialect = privateCopy(allowPureFunctions = newValue)
 
+  def withAllowCaptureChecking(newValue: Boolean): Dialect =
+    privateCopy(allowCaptureChecking = newValue)
+
   def withAllowImprovedTypeClassesSyntax(newValue: Boolean): Dialect =
     privateCopy(allowImprovedTypeClassesSyntax = newValue)
 
@@ -486,6 +492,7 @@ final class Dialect private[meta] (
       allowTrackedParameters: Boolean = this.allowTrackedParameters,
       allowParameterTypeConversions: Boolean = this.allowParameterTypeConversions,
       allowPureFunctions: Boolean = this.allowPureFunctions,
+      allowCaptureChecking: Boolean = this.allowCaptureChecking,
       allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
@@ -552,6 +559,7 @@ final class Dialect private[meta] (
       allowTrackedParameters = allowTrackedParameters,
       allowParameterTypeConversions = allowParameterTypeConversions,
       allowPureFunctions = allowPureFunctions,
+      allowCaptureChecking = allowCaptureChecking,
       allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax
     )
     if (equivalent) return this // RETURN!
@@ -621,6 +629,7 @@ final class Dialect private[meta] (
       allowTrackedParameters = allowTrackedParameters,
       allowParameterTypeConversions = allowParameterTypeConversions,
       allowPureFunctions = allowPureFunctions,
+      allowCaptureChecking = allowCaptureChecking,
       allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
@@ -712,6 +721,7 @@ final class Dialect private[meta] (
       allowTrackedParameters: Boolean,
       allowParameterTypeConversions: Boolean,
       allowPureFunctions: Boolean,
+      allowCaptureChecking: Boolean,
       allowImprovedTypeClassesSyntax: Boolean
   ): Boolean =
     // do not include deprecated values in this comparison
@@ -768,6 +778,7 @@ final class Dialect private[meta] (
       this.allowTrackedParameters == allowTrackedParameters &&
       this.allowParameterTypeConversions == allowParameterTypeConversions &&
       this.allowPureFunctions == allowPureFunctions &&
+      this.allowCaptureChecking == allowCaptureChecking &&
       this.allowImprovedTypeClassesSyntax == allowImprovedTypeClassesSyntax
 
   @inline
@@ -834,6 +845,7 @@ final class Dialect private[meta] (
       allowTrackedParameters = that.allowTrackedParameters,
       allowParameterTypeConversions = that.allowParameterTypeConversions,
       allowPureFunctions = that.allowPureFunctions,
+      allowCaptureChecking = that.allowCaptureChecking,
       allowImprovedTypeClassesSyntax = that.allowImprovedTypeClassesSyntax
     )
 
