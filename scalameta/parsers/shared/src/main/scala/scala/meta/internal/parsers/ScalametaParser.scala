@@ -759,24 +759,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }).getOrElse(t)
     }
 
-    def paramType(): Type = autoPosOpt(currToken match {
-      case _: RightArrow =>
-        val t = autoPos {
+    private def exactParamType(allowRepeated: Boolean): Type = {
+      val startPos = currIndex
+      val t = typ()
+      if (allowRepeated && isStar) {
+        next()
+        autoEndPos(startPos)(Type.Repeated(t))
+      } else t
+    }
+
+    private def paramValueType(allowRepeated: Boolean): Type =
+      if (soft.KwInto.matches(currToken)) {
+        val startPos = currIndex
+        val mod = atPos(startPos)(Mod.Into())
+        next()
+        autoEndPos(startPos)(Type.FunctionArg(mod :: Nil, exactParamType(allowRepeated)))
+      } else exactParamType(allowRepeated)
+
+    def paramType(): Type = currToken match {
+      case _: RightArrow => autoPos {
           next()
-          Type.ByName(typ())
+          Type.ByName(paramValueType(allowRepeated = dialect.allowByNameRepeatedParameters))
         }
-        if (isStar && dialect.allowByNameRepeatedParameters) {
-          next()
-          Type.Repeated(t)
-        } else t
-      case _ =>
-        val t = typ()
-        if (!isStar) t
-        else {
-          next()
-          Type.Repeated(t)
-        }
-    })
+      case _ => paramValueType(allowRepeated = true)
+    }
 
     private def maybeParamType(allowFunctionType: Boolean): Type =
       if (allowFunctionType) paramType() else typ()

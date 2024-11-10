@@ -101,7 +101,7 @@ package object dialects {
   implicit val Scala32: Dialect = Scala31
 
   implicit val Scala33: Dialect = Scala32.withAllowFewerBraces(true)
-    .withAllowParamClauseInterleaving(true)
+    .withAllowParamClauseInterleaving(true).withAllowParameterTypeConversions(true)
 
   implicit val Scala34: Dialect = Scala33.withAllowQuotedTypeVariables(true)
 

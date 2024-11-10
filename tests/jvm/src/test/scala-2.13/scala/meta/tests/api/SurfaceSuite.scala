@@ -355,6 +355,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Mod.Implicit
          |scala.meta.Mod.Infix
          |scala.meta.Mod.Inline
+         |scala.meta.Mod.Into
          |scala.meta.Mod.Lazy
          |scala.meta.Mod.Opaque
          |scala.meta.Mod.Open

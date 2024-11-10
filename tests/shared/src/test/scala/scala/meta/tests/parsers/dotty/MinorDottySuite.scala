@@ -329,19 +329,19 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("repeated-byname-class-parameter") {
-    runTestAssert[Stat]("class Foo(bars: => Int*)")(Defn.Class(
+    runTestAssert[Stat]("class Foo(bars: => Int*)", "class Foo(bars: => (Int*))")(Defn.Class(
       Nil,
       pname("Foo"),
       Nil,
-      ctorp(tparam("bars", Type.Repeated(Type.ByName(pname("Int"))))),
+      ctorp(tparam("bars", Type.ByName(Type.Repeated(pname("Int"))))),
       tplNoBody()
     ))
 
-    runTestAssert[Stat]("def fx(x: => Int*): Int = 3")(Defn.Def(
+    runTestAssert[Stat]("def fx(x: => Int*): Int = 3", "def fx(x: => (Int*)): Int = 3")(Defn.Def(
       Nil,
       tname("fx"),
       Nil,
-      List(List(tparam("x", Type.Repeated(Type.ByName(pname("Int")))))),
+      List(List(tparam("x", Type.ByName(Type.Repeated(pname("Int")))))),
       Some(pname("Int")),
       int(3)
     ))

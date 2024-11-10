@@ -1343,6 +1343,8 @@ object Mod {
   class Erased() extends Mod
   @ast
   class Tracked() extends Mod
+  @ast
+  class Into() extends Mod
 }
 
 @branch
