@@ -656,4 +656,158 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Type](code, layout)(tree)
   }
 
+  // https://dotty.epfl.ch/docs/reference/experimental/purefuns.html
+  // https://dotty.epfl.ch/docs/reference/experimental/cc.html#function-types-1
+
+  test("#3996 pure functions: precedence 1") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "A -> B -> C -> D"
+    val layout = "A -> B -> C -> D"
+    val tree = pinfix(pinfix(pinfix("A", "->", "B"), "->", "C"), "->", "D")
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure functions: precedence 2") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "(A -> B) -> (C -> D)"
+    val layout = "A -> B -> (C -> D)"
+    val tree = pinfix(pinfix("A", "->", "B"), "->", pinfix("C", "->", "D"))
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure functions: precedence 3") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "A -> (B -> C) -> D"
+    val layout = "A -> (B -> C) -> D"
+    val tree = pinfix(pinfix("A", "->", pinfix("B", "->", "C")), "->", "D")
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure functions: precedence 4") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "(A -> (B -> C)) -> D"
+    val layout = "A -> (B -> C) -> D"
+    val tree = pinfix(pinfix("A", "->", pinfix("B", "->", "C")), "->", "D")
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure functions: precedence 5") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "A -> ((B -> C) -> D)"
+    val layout = "A -> (B -> C -> D)"
+    val tree = pinfix("A", "->", pinfix(pinfix("B", "->", "C"), "->", "D"))
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure context functions: precedence 1") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "A ?-> B ?-> C ?-> D"
+    val layout = "A ?-> B ?-> C ?-> D"
+    val tree = pinfix(pinfix(pinfix("A", "?->", "B"), "?->", "C"), "?->", "D")
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure context functions: precedence 2") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "(A ?-> B) ?-> (C ?-> D)"
+    val layout = "A ?-> B ?-> (C ?-> D)"
+    val tree = pinfix(pinfix("A", "?->", "B"), "?->", pinfix("C", "?->", "D"))
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure context functions: precedence 3") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "A ?-> (B ?-> C) ?-> D"
+    val layout = "A ?-> (B ?-> C) ?-> D"
+    val tree = pinfix(pinfix("A", "?->", pinfix("B", "?->", "C")), "?->", "D")
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure context functions: precedence 4") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "(A ?-> (B ?-> C)) ?-> D"
+    val layout = "A ?-> (B ?-> C) ?-> D"
+    val tree = pinfix(pinfix("A", "?->", pinfix("B", "?->", "C")), "?->", "D")
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure context functions: precedence 5") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "A ?-> ((B ?-> C) ?-> D)"
+    val layout = "A ?-> (B ?-> C ?-> D)"
+    val tree = pinfix("A", "?->", pinfix(pinfix("B", "?->", "C"), "?->", "D"))
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 pure functions: 1") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "val func: A -> B = foo"
+    val layout = "val func: A -> B = foo"
+    val tree = Defn.Val(Nil, List(Pat.Var("func")), Some(pinfix("A", "->", "B")), "foo")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 pure functions: 2") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def func(f: A -> B): Unit"
+    val layout = "def func(f: A -> B): Unit"
+    val tree = Decl.Def(Nil, "func", Nil, List(List(tparam("f", pinfix("A", "->", "B")))), "Unit")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 pure functions: 3") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def map[T <: (A -> B)](f: T): A -> B = ???"
+    val layout = "def map[T <: A -> B](f: T): A -> B = ???"
+    val tree = Defn.Def(
+      Nil,
+      "map",
+      List(pparam("T", hiBound(pinfix("A", "->", "B")))),
+      List(List(tparam("f", "T"))),
+      Some(pinfix("A", "->", "B")),
+      "???"
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 pure context functions: 1") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "val func: A ?-> B = foo"
+    val layout = "val func: A ?-> B = foo"
+    val tree = Defn.Val(Nil, List(Pat.Var("func")), Some(pinfix("A", "?->", "B")), "foo")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 pure context functions: 2") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def func(f: A ?-> B): Unit"
+    val layout = "def func(f: A ?-> B): Unit"
+    val tree = Decl.Def(Nil, "func", Nil, List(List(tparam("f", pinfix("A", "?->", "B")))), "Unit")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 pure context functions: 3") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def map[T <: (A ?-> B)](f: T): A ?-> B = ???"
+    val layout = "def map[T <: A ?-> B](f: T): A ?-> B = ???"
+    val tree = Defn.Def(
+      Nil,
+      "map",
+      List(pparam("T", hiBound(pinfix("A", "?->", "B")))),
+      List(List(tparam("f", "T"))),
+      Some(pinfix("A", "?->", "B")),
+      "???"
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 pure by-name: 1") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def func(f: -> B): Unit"
+    val error = """|<input>:1: error: `identifier` expected but `)` found
+                   |def func(f: -> B): Unit
+                   |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
