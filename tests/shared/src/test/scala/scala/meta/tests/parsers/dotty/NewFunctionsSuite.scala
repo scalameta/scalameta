@@ -586,4 +586,74 @@ class NewFunctionsSuite extends BaseDottySuite {
     ))
   }
 
+  test("#3996 functions: precedence 1") {
+    val code = "A => B => C => D"
+    val layout = "A => B => C => D"
+    val tree = pfunc(List("A"), pfunc(List("B"), pfunc(List("C"), "D")))
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 functions: precedence 2") {
+    val code = "(A => B) => (C => D)"
+    val layout = "(A => B) => C => D"
+    val tree = pfunc(List(pfunc(List("A"), "B")), pfunc(List("C"), "D"))
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 functions: precedence 3") {
+    val code = "A => (B => C) => D"
+    val layout = "A => (B => C) => D"
+    val tree = pfunc(List("A"), pfunc(List(pfunc(List("B"), "C")), "D"))
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 functions: precedence 4") {
+    val code = "(A => (B => C)) => D"
+    val layout = "(A => B => C) => D"
+    val tree = pfunc(List(pfunc(List("A"), pfunc(List("B"), "C"))), "D")
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 functions: precedence 5") {
+    val code = "A => ((B => C) => D)"
+    val layout = "A => (B => C) => D"
+    val tree = pfunc(List("A"), pfunc(List(pfunc(List("B"), "C")), "D"))
+    runTestAssert[Type](code, layout)(tree)
+  }
+
+  test("#3996 context functions: precedence 1") {
+    val code = "A ?=> B ?=> C ?=> D"
+    val layout = "A ?=> B ?=> C ?=> D"
+    val tree = pctxfunc(List("A"), pctxfunc(List("B"), pctxfunc(List("C"), "D")))
+    parseAndCheckTree[Type](code, layout)(tree)
+  }
+
+  test("#3996 context functions: precedence 2") {
+    val code = "(A ?=> B) ?=> (C ?=> D)"
+    val layout = "A ?=> B ?=> C ?=> D"
+    val tree = pctxfunc(List(pctxfunc(List("A"), "B")), pctxfunc(List("C"), "D"))
+    parseAndCheckTree[Type](code, layout)(tree)
+  }
+
+  test("#3996 context functions: precedence 3") {
+    val code = "A ?=> (B ?=> C) ?=> D"
+    val layout = "A ?=> B ?=> C ?=> D"
+    val tree = pctxfunc(List("A"), pctxfunc(List(pctxfunc(List("B"), "C")), "D"))
+    parseAndCheckTree[Type](code, layout)(tree)
+  }
+
+  test("#3996 context functions: precedence 4") {
+    val code = "(A ?=> (B ?=> C)) ?=> D"
+    val layout = "A ?=> B ?=> C ?=> D"
+    val tree = pctxfunc(List(pctxfunc(List("A"), pctxfunc(List("B"), "C"))), "D")
+    parseAndCheckTree[Type](code, layout)(tree)
+  }
+
+  test("#3996 context functions: precedence 5") {
+    val code = "A ?=> ((B ?=> C) ?=> D)"
+    val layout = "A ?=> B ?=> C ?=> D"
+    val tree = pctxfunc(List("A"), pctxfunc(List(pctxfunc(List("B"), "C")), "D"))
+    parseAndCheckTree[Type](code, layout)(tree)
+  }
+
 }
