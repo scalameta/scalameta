@@ -615,14 +615,16 @@ object TreeSyntax {
         )
       case t: Type.FuncParamClause => t.values match {
           case arg :: Nil if (arg match {
-                case _: Type.Tuple | _: Type.ByName | _: Type.FunctionParamOrArg |
-                    _: Type.FunctionType | _: Type.PolyFunction => false
+                case _: Type.Tuple | _: Type.ByNameType | _: Type.FunctionParamOrArg |
+                    _: Type.ParamFunctionType | _: Type.PolyFunction => false
                 case _ => true
               }) => s(arg)
           case args => s("(", r(args, ", "), ")")
         }
       case t: Type.Function => printFunctionType(t, "=>")
       case t: Type.ContextFunction => printFunctionType(t, "?=>")
+      case t: Type.PureFunction => printFunctionType(t, Token.pureFunctionArrow)
+      case t: Type.PureContextFunction => printFunctionType(t, Token.pureContextFunctionArrow)
       case t: Type.Tuple => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
       case t: Type.With => m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
       case t: Type.And => m(
@@ -685,6 +687,7 @@ object TreeSyntax {
           case _ => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
         }
       case t: Type.ByName => printByNameType(t, "=>")
+      case t: Type.PureByName => printByNameType(t, Token.pureFunctionArrow)
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
       case t: Type.FunctionArg => m(ParamTyp, w(t.mods, " "), p(Typ, t.tpe))
       case t: Type.TypedParam => m(SimpleTyp, w(t.mods, " "), s(t.name.value), ": ", p(Typ, t.typ))
@@ -1059,10 +1062,10 @@ object TreeSyntax {
     private def printFunctionLikeType(t: Type, params: Show.Result, arrow: String): Show.Result =
       m(Typ, s(w(params, " "), kw(arrow), " ", p(Typ, t)))
 
-    private def printFunctionType(t: Type.FunctionType, arrow: String): Show.Result =
+    private def printFunctionType(t: Type.ParamFunctionType, arrow: String): Show.Result =
       printFunctionLikeType(t.res, s(t.paramClause), arrow)
 
-    private def printByNameType(t: Type.ByName, arrow: String): Show.Result =
+    private def printByNameType(t: Type.ByNameType, arrow: String): Show.Result =
       printFunctionLikeType(t.tpe, s(), arrow)
 
     private def printMaybeBackquoted(name: Name) = printBackquoted(name, guessIsBackquoted(name))
