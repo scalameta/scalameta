@@ -704,6 +704,10 @@ object TreeSyntax {
         val cbounds = r(t.cbounds.map(s(kw(":"), " ", _)))
         s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
       case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)
+      case t: Type.Capturing => t.tpe match {
+          case tpe: Type.FunctionLikeType => s(tpe)
+          case tpe => s(tpe, printCaps(t.caps, "^"))
+        }
 
       // Pat
       case t: Pat.Var => m(SimplePattern, printMaybeBackquoted(t.name))
@@ -1059,14 +1063,26 @@ object TreeSyntax {
       builder.result()
     }
 
-    private def printFunctionLikeType(t: Type, params: Show.Result, arrow: String): Show.Result =
-      m(Typ, s(w(params, " "), kw(arrow), " ", p(Typ, t)))
+    private def printCaps(captures: List[Term.Ref], prefix: String = ""): Show.Result =
+      s(prefix, w("{", r(captures, ", "), "}"))
+
+    private def printFunctionLikeType(
+        t: Type.FunctionLikeType,
+        params: Show.Result,
+        arrow: String
+    ): Show.Result = {
+      val caps = t.parent match {
+        case Some(p: Type.Capturing) => printCaps(p.caps)
+        case _ => Show.None
+      }
+      m(Typ, s(w(params, " "), kw(arrow), caps, " ", p(Typ, t.res)))
+    }
 
     private def printFunctionType(t: Type.ParamFunctionType, arrow: String): Show.Result =
-      printFunctionLikeType(t.res, s(t.paramClause), arrow)
+      printFunctionLikeType(t, s(t.paramClause), arrow)
 
     private def printByNameType(t: Type.ByNameType, arrow: String): Show.Result =
-      printFunctionLikeType(t.tpe, s(), arrow)
+      printFunctionLikeType(t, s(), arrow)
 
     private def printMaybeBackquoted(name: Name) = printBackquoted(name, guessIsBackquoted(name))
     private def printBackquoted(name: Name, isBackquoted: Boolean) =
