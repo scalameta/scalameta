@@ -511,6 +511,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private object InfixTypeIdent {
     def unapply(tok: Token.Ident): Boolean = tok.text match {
+      case soft.KwPureFunctionArrow() => false
+      case soft.KwPureContextFunctionArrow() => false
       case "*" => // we assume that this is a type specification for a vararg parameter
         peekToken match {
           case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => false
@@ -773,6 +775,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         paramValueType(allowRepeated = dialect.allowByNameRepeatedParameters)
       currToken match {
         case _: RightArrow => autoPos { next(); Type.ByName(byNameParamValueType) }
+        case soft.KwPureFunctionArrow() =>
+          val startPos = currIndex
+          next()
+          autoEndPos(startPos)(Type.PureByName(byNameParamValueType))
         case _ => paramValueType(allowRepeated = true)
       }
     }
@@ -817,6 +823,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       currToken match {
         case _: RightArrow => Some(typeFuncOnArrow(paramPos, params)(Type.Function(_, _)))
         case _: ContextArrow => Some(typeFuncOnArrow(paramPos, params)(Type.ContextFunction(_, _)))
+        case t: Ident => t.text match {
+            case soft.KwPureFunctionArrow() =>
+              Some(typeFuncOnArrow(paramPos, params)(Type.PureFunction(_, _)))
+            case soft.KwPureContextFunctionArrow() =>
+              Some(typeFuncOnArrow(paramPos, params)(Type.PureContextFunction(_, _)))
+            case _ => None
+          }
         case _ => None
       }
 
@@ -1058,8 +1071,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           Type.Apply(copyType(t.tpe), args1)
         case Type.ApplyInfix(lhs, op, rhs) => Type.ApplyInfix(copyType(lhs), op, copyType(rhs))
         case t: Type.ByName => convertByName(t)(Type.ByName(_))
+        case t: Type.PureByName => convertByName(t)(Type.PureByName(_))
         case t: Type.Function => convertFunc(t)(Type.Function(_, _))
+        case t: Type.PureFunction => convertFunc(t)(Type.PureFunction(_, _))
         case t: Type.ContextFunction => convertFunc(t)(Type.ContextFunction(_, _))
+        case t: Type.PureContextFunction => convertFunc(t)(Type.PureContextFunction(_, _))
         case t: Type.PolyFunction => Type.PolyFunction(t.tparamClause, copyType(t.tpe))
         case Type.Tuple(elements) => Type.Tuple(elements.map(convertType))
         case Type.With(lhs, rhs) => Type.With(copyType(lhs), copyType(rhs))

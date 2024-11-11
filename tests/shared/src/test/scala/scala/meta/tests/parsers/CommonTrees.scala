@@ -125,6 +125,9 @@ trait CommonTrees {
   final def pfunc(param: List[Type], res: Type): Type.Function = Type.Function(param, res)
   final def pctxfunc(param: List[Type], res: Type): Type.ContextFunction = Type
     .ContextFunction(param, res)
+  final def purefunc(param: List[Type], res: Type): Type.PureFunction = Type.PureFunction(param, res)
+  final def purectxfunc(param: List[Type], res: Type): Type.PureContextFunction = Type
+    .PureContextFunction(param, res)
 
   final val noBounds = Type.Bounds(None, None)
   final def loBound(bound: Type): Type.Bounds = Type.Bounds(Some(bound), None)
