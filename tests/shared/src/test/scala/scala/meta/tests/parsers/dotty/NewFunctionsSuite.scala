@@ -802,12 +802,30 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#3996 pure context functions: 4") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def map[T <: (A ?->{a, c} B)](f: T): A ?-> B = ???"
+    val error = """|<input>:1: error: illegal start of declaration
+                   |def map[T <: (A ?->{a, c} B)](f: T): A ?-> B = ???
+                   |                    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("#3996 pure by-name: 1") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def func(f: -> B): Unit"
     val layout = "def func(f: -> B): Unit"
     val tree = Decl.Def(Nil, "func", Nil, List(List(tparam("f", Type.PureByName("B")))), "Unit")
     runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 pure by-name: 2 with capturing") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def func(f: ->{a, b, c} B): Unit"
+    val error = """|<input>:1: error: illegal start of declaration
+                   |def func(f: ->{a, b, c} B): Unit
+                   |               ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
 }

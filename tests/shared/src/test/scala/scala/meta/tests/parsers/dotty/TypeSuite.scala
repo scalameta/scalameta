@@ -666,4 +666,42 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
 
+  // https://dotty.epfl.ch/docs/reference/experimental/cc.html
+
+  test("#3996 capture checking: 1") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "class Logger(fs: FileSystem^)"
+    val error = """|<input>:1: error: `identifier` expected but `)` found
+                   |class Logger(fs: FileSystem^)
+                   |                            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3996 capture checking: 2") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "val l: Logger^{fs} = Logger(fs)"
+    val error = """|<input>:1: error: illegal start of declaration
+                   |val l: Logger^{fs} = Logger(fs)
+                   |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3996 capture checking: 3") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def tail: LazyList[A]^{this}"
+    val error = """|<input>:1: error: illegal start of declaration (possible cause: missing `=' in front of current method body)
+                   |def tail: LazyList[A]^{this}
+                   |                       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3996 capture checking: 3") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)"
+    val error = """|<input>:1: error: illegal start of declaration (possible cause: missing `=' in front of current method body)
+                   |def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)
+                   |                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
