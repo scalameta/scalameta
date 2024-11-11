@@ -692,29 +692,36 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         }
 
       val openParenPos = currIndex
-      val ts = inParensOr(commaSeparated(paramOrType(List.newBuilder[Mod])))(Nil)
       // NOTE: can't have this, because otherwise we run into #312
       // newLineOptWhenFollowedBy[LeftParen]
 
-      var hasTypes = false
-      var hasParams = false
-      ts.foreach {
-        case _: Quasi =>
-        case _: Type.TypedParam => hasParams = true
-        case _ => hasTypes = true
-      }
-      if (hasTypes && hasParams)
-        syntaxError("can't mix function type and dependent function type syntaxes", at = currToken)
-      if (hasParams && !dialect.allowDependentFunctionTypes)
-        syntaxError("dependent function types are not supported", at = currToken)
-      if (!hasTypes && !hasImplicits && at[LeftParen]) {
-        val message = "can't have multiple parameter lists in function types"
-        syntaxError(message, at = currToken)
+      def makeTuple(ts: List[Type]) = makeTupleType(openParenPos, ts)
+
+      val ts = {
+        val ts = inParensOr(commaSeparated(paramOrType(List.newBuilder[Mod])))(Nil)
+
+        var hasTypes = false
+        var hasParams = false
+        ts.foreach {
+          case _: Quasi =>
+          case _: Type.TypedParam => hasParams = true
+          case _ => hasTypes = true
+        }
+        if (hasTypes && hasParams)
+          syntaxError("can't mix function type and dependent function type syntaxes", at = currToken)
+        if (hasParams && !dialect.allowDependentFunctionTypes)
+          syntaxError("dependent function types are not supported", at = currToken)
+        if (!hasTypes && !hasImplicits && at[LeftParen]) {
+          val message = "can't have multiple parameter lists in function types"
+          syntaxError(message, at = currToken)
+        }
+
+        ts
       }
 
       def maybeFunc = getAfterOptNewLine(typeFuncOnArrowOpt(openParenPos, ts))
       (if (allowFunctionType) maybeFunc else None).getOrElse {
-        val simple = simpleTypeRest(makeTupleType(openParenPos, ts), openParenPos)
+        val simple = simpleTypeRest(makeTuple(ts), openParenPos)
         val compound = compoundTypeRest(annotTypeRest(simple, openParenPos), openParenPos)
         infixTypeRest(compound) match {
           case `compound` => compound
