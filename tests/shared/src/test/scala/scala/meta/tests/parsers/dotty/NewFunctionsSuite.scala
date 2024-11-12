@@ -805,10 +805,16 @@ class NewFunctionsSuite extends BaseDottySuite {
   test("#3996 pure context functions: 4") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def map[T <: (A ?->{a, c} B)](f: T): A ?-> B = ???"
-    val error = """|<input>:1: error: illegal start of declaration
-                   |def map[T <: (A ?->{a, c} B)](f: T): A ?-> B = ???
-                   |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def map[T <: A ?->{a, c} B](f: T): A ?-> B = ???"
+    val tree = Defn.Def(
+      Nil,
+      "map",
+      List(pparam("T", hiBound(Type.Capturing(purectxfunc(List("A"), "B"), List("a", "c"))))),
+      List(List(tparam("f", "T"))),
+      Some(purectxfunc(List("A"), "B")),
+      "???"
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3996 pure by-name: 1") {
@@ -822,10 +828,15 @@ class NewFunctionsSuite extends BaseDottySuite {
   test("#3996 pure by-name: 2 with capturing") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def func(f: ->{a, b, c} B): Unit"
-    val error = """|<input>:1: error: illegal start of declaration
-                   |def func(f: ->{a, b, c} B): Unit
-                   |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def func(f: ->{a, b, c} B): Unit"
+    val tree = Decl.Def(
+      Nil,
+      "func",
+      Nil,
+      List(List(tparam("f", Type.Capturing(Type.PureByName("B"), List("a", "b", "c"))))),
+      "Unit"
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

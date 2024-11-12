@@ -671,37 +671,58 @@ class TypeSuite extends BaseDottySuite {
   test("#3996 capture checking: 1") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "class Logger(fs: FileSystem^)"
-    val error = """|<input>:1: error: `identifier` expected but `)` found
-                   |class Logger(fs: FileSystem^)
-                   |                            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "class Logger(fs: FileSystem^)"
+    val tree = Defn.Class(
+      Nil,
+      pname("Logger"),
+      Nil,
+      ctorp(tparam("fs", Type.Capturing("FileSystem", Nil))),
+      tplNoBody()
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3996 capture checking: 2") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "val l: Logger^{fs} = Logger(fs)"
-    val error = """|<input>:1: error: illegal start of declaration
-                   |val l: Logger^{fs} = Logger(fs)
-                   |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "val l: Logger^{fs} = Logger(fs)"
+    val tree = Defn.Val(
+      Nil,
+      List(Pat.Var("l")),
+      Some(Type.Capturing("Logger", List("fs"))),
+      Term.Apply("Logger", List("fs"))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3996 capture checking: 3") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def tail: LazyList[A]^{this}"
-    val error = """|<input>:1: error: illegal start of declaration (possible cause: missing `=' in front of current method body)
-                   |def tail: LazyList[A]^{this}
-                   |                       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def tail: LazyList[A]^{this}"
+    val tree = Decl
+      .Def(Nil, "tail", Nil, Type.Capturing(Type.Apply("LazyList", List("A")), List(Term.This(anon))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3996 capture checking: 3") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)"
-    val error = """|<input>:1: error: illegal start of declaration (possible cause: missing `=' in front of current method body)
-                   |def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)
-                   |                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)"
+    val tree = Defn.Def(
+      Nil,
+      "p",
+      Nil,
+      Some(Type.Apply(
+        pname("Pair"),
+        List(
+          Type.Capturing(purefunc(List("Int"), "String"), List("ct")),
+          Type.Capturing("Logger", List("fs"))
+        )
+      )),
+      Term.Apply("Pair", List("x", "y"))
+    )
+
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
