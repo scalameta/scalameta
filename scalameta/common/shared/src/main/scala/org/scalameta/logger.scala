@@ -9,6 +9,12 @@ class FileLine(val file: sourcecode.File, val line: sourcecode.Line) extends Ord
     val cmp = this.file.value.compareTo(that.file.value)
     if (cmp != 0) cmp else this.line.value.compare(that.line.value)
   }
+  override def equals(obj: Any): Boolean = obj match {
+    case that: FileLine => (that eq this) ||
+      line.value == that.line.value && file.value == that.file.value
+    case _ => false
+  }
+  override def hashCode(): Int = file.value.## ^ line.value.##
 }
 
 object FileLine {
