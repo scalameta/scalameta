@@ -146,7 +146,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
 
     // EXPERIMENT: Workaround mechanism for getting type declarations from unapply pattern.
     // Only works for `val q"${: T}" = (...)`, does nothing for pattern matching cases.
-    // Even then, it stops working if macro entry method is a transparent inline method (which we want to have). 
+    // Even then, it stops working if macro entry method is a transparent inline method
+    // (which we want to have, so for now it's turned off). 
     val argTypes: Option[List[TypeRepr]] = None
       // try
       //   Symbol.spliceOwner.owner.owner.owner.tree match
@@ -242,7 +243,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
           case Some(otherTree) =>
             if mode.isTerm then Apply(TypeApply(Select.unique('{scala.Some}.asTerm, "apply"), List(TypeTree.of[T])), List(liftTree(otherTree).asInstanceOf[Term]))
             else 
-              Unapply(TypeApply(Select.unique(Ref(Symbol.classSymbol("scala.Some").companionModule), "unapply"), List(TypeTree.of[T])), Nil, List(liftTree(otherTree)))
+              TypedOrTest(Unapply(TypeApply(Select.unique(Ref(Symbol.classSymbol("scala.Some").companionModule), "unapply"), List(TypeTree.of[T])), Nil, List(liftTree(otherTree))), TypeTree.of[Some[T]])
 
           case None =>
             '{scala.None}.asTerm match
@@ -289,7 +290,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
                 val otherTree = liftTree(other)
                 val tree =
                   if mode.isTerm then Apply(TypeApply(Select.unique(acc.get.asInstanceOf[Term], ":+"), List(TypeTree.of[T])), List(otherTree.asInstanceOf[Term]))
-                  else Unapply(TypeApply(Select.unique('{:+}.asTerm, "unapply"), List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])), Nil, List(acc.get, otherTree))
+                  else TypedOrTest(Unapply(TypeApply(Select.unique('{:+}.asTerm, "unapply"), List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])), Nil, List(acc.get, otherTree)), TypeTree.of[List[Any]])
                 loop(rest, Some(tree), Nil)
               }
             case _ =>
@@ -299,7 +300,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
                 if mode.isTerm then
                   Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[T]), args.asInstanceOf[List[Term]])
                 else
-                  Unapply(TypeApply(Select.unique('{List}.asTerm, "unapplySeq"), List(TypeTree.of[T])), Nil, args)
+                  TypedOrTest(Unapply(TypeApply(Select.unique('{List}.asTerm, "unapplySeq"), List(TypeTree.of[T])), Nil, args), TypeTree.of[List[T]])
               }
               else acc.get
           }
@@ -314,7 +315,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
             if mode.isTerm then
               Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[Any]), args.asInstanceOf[List[Term]])
             else 
-              Unapply(TypeApply(Select.unique('{List}.asTerm, "unapplySeq"), List(TypeTree.of[Any])), Nil, args)
+              TypedOrTest(Unapply(TypeApply(Select.unique('{List}.asTerm, "unapplySeq"), List(TypeTree.of[Any])), Nil, args), TypeTree.of[List[Any]])
           } else if (tripleDotQuasis.length == 1) {
             if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
             else
