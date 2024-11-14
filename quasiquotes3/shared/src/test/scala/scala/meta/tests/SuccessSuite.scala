@@ -762,13 +762,13 @@ class Success extends TreeSuiteBase {
     )
   }
 
-  // test("1 val q\"(..q, y: Y, e) => r\" = q\"(x: X, y: Y, z: Z) => 1\"") { // TODO crash owner erasure
-  //   val q"(..$q, y: Y, $e) => $r" = q"(x: X, y: Y, z: Z) => 1"
-  //   assertEquals(q.toString, "List(x: X)")
-  //   assertTrees(q)(Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None))
-  //   assertTree(e)(Term.Param(Nil, Term.Name("z"), Some(Type.Name("Z")), None))
-  //   assertTree(r)(Lit.Int(1))
-  // }
+  test("1 val q\"(..q, y: Y, e) => r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
+    val q"(..$q, y: Y, $e) => $r" = q"(x: X, y: Y, z: Z) => 1"
+    assertEquals(q.toString, "List(x: X)")
+    assertTrees(q)(Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None))
+    assertTree(e)(Term.Param(Nil, Term.Name("z"), Some(Type.Name("Z")), None))
+    assertTree(r)(Lit.Int(1))
+  }
 
   test("2 val q\"(..q, y: Y, e) => r\" = q\"(x: X, y: Y, z: Z) => 1\"") {
     val q = List(param"x: X")
@@ -2778,49 +2778,49 @@ class Success extends TreeSuiteBase {
     )
   }
 
-  // test("#468 - function parameter list I") { // TODO owner crash
-  //   val q"def foo(${param: Tree}): Int = a" = q"def foo(a: Int): Int = a"
-  //   assertEquals(param.syntax, "a: Int")
-  // }
+  test("#468 - function parameter list I") {
+    val q"def foo(${param: Tree}): Int = a" = q"def foo(a: Int): Int = a"
+    assertEquals(param.syntax, "a: Int")
+  }
 
-  // test("#468 - function parameter list II") { // TODO owner crash
-  //   val q"def foo(${param: Tree}, ..${params: List[Tree]}): Int = a" = q"def foo(a: Int, b: Int, c: Int): Int = a"
-  //   assertEquals(param.syntax, "a: Int")
-  //   assertEquals(params.map(_.syntax), List("b: Int", "c: Int"))
-  // }
+  test("#468 - function parameter list II") {
+    val q"def foo(${param: Tree}, ..${params: List[Tree]}): Int = a" = q"def foo(a: Int, b: Int, c: Int): Int = a"
+    assertEquals(param.syntax, "a: Int")
+    assertEquals(params.map(_.syntax), List("b: Int", "c: Int"))
+  }
 
-  // test("#468 - function parameter list III") { // TODO owner crash
-  //   val q"def foo(..${params: Term.ParamClause}): Int = a" = q"def foo(a: Int, b: String): Int = a"
-  //   checkTreesWithSyntax(params)("(a: Int, b: String)")(Term.ParamClause {
-  //     List(
-  //       Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
-  //       Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
-  //     )
-  //   })
-  // }
+  test("#468 - function parameter list III") {
+    val q"def foo(..${params: Term.ParamClause}): Int = a" = q"def foo(a: Int, b: String): Int = a"
+    checkTreesWithSyntax(params)("(a: Int, b: String)")(Term.ParamClause {
+      List(
+        Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None),
+        Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)
+      )
+    })
+  }
 
-  // test("#468 - function parameter list IV") { // TODO owner crash
-  //   val q"def foo(...${paramss: List[Tree]}): Int = a" = q"def foo(a: Int)(b: String): Int = a"
-  //   assertEquals(paramss.length, 2)
-  //   checkTreesWithSyntax(paramss: _*)("(a: Int)", "(b: String)")(
-  //     Term.ParamClause(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
-  //     Term.ParamClause(List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)))
-  //   )
-  // }
+  test("#468 - function parameter list IV") {
+    val q"def foo(...${paramss: List[Tree]}): Int = a" = q"def foo(a: Int)(b: String): Int = a"
+    assertEquals(paramss.length, 2)
+    checkTreesWithSyntax(paramss: _*)("(a: Int)", "(b: String)")(
+      Term.ParamClause(List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))),
+      Term.ParamClause(List(Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None)))
+    )
+  }
 
-  // test("#468 - function parameter list V") { // TODO owner crash
-  //   val q"def foo(...${paramss: List[Tree]})(..$params)($param): Int = a" =
-  //     q"def foo(a: Int)(b: String)(c: Long): Int = a"
-  //   checkTreesWithSyntax(paramss: _*)("(a: Int)")(Term.ParamClause {
-  //     List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))
-  //   })
-  //   checkTree(params, "(b: String)") {
-  //     Term.ParamClause(Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None) :: Nil)
-  //   }
-  //   checkTree(param, "c: Long") {
-  //     Term.Param(Nil, Term.Name("c"), Some(Type.Name("Long")), None)
-  //   }
-  // }
+  test("#468 - function parameter list V") {
+    val q"def foo(...${paramss: List[Tree]})(..$params)($param): Int = a" =
+      q"def foo(a: Int)(b: String)(c: Long): Int = a"
+    checkTreesWithSyntax(paramss: _*)("(a: Int)")(Term.ParamClause {
+      List(Term.Param(Nil, Term.Name("a"), Some(Type.Name("Int")), None))
+    })
+    checkTree(params, "(b: String)") {
+      Term.ParamClause(Term.Param(Nil, Term.Name("b"), Some(Type.Name("String")), None) :: Nil)
+    }
+    checkTree(param, "c: Long") {
+      Term.Param(Nil, Term.Name("c"), Some(Type.Name("Long")), None)
+    }
+  }
 
   test("#230 - tparam extensions I") {
     val tparam = tparam"@foo ${Mod.Covariant()} T"
