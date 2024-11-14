@@ -494,12 +494,14 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Type.Bounds
          |scala.meta.Type.BoundsAlias
          |scala.meta.Type.ByName
+         |scala.meta.Type.ByNameType
          |scala.meta.Type.CasesBlock
          |scala.meta.Type.ContextFunction
          |scala.meta.Type.Existential
          |scala.meta.Type.FuncParamClause
          |scala.meta.Type.Function
          |scala.meta.Type.FunctionArg
+         |scala.meta.Type.FunctionLikeType
          |scala.meta.Type.FunctionParamOrArg
          |scala.meta.Type.FunctionType
          |scala.meta.Type.ImplicitFunction
@@ -511,11 +513,16 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Type.Or
          |scala.meta.Type.Param
          |scala.meta.Type.ParamClause
+         |scala.meta.Type.ParamFunctionType
          |scala.meta.Type.PatWildcard
          |scala.meta.Type.Placeholder
          |scala.meta.Type.Placeholder.Impl
          |scala.meta.Type.PolyFunction
          |scala.meta.Type.Project
+         |scala.meta.Type.PureByName
+         |scala.meta.Type.PureContextFunction
+         |scala.meta.Type.PureFunction
+         |scala.meta.Type.PureFunctionType
          |scala.meta.Type.Ref
          |scala.meta.Type.Refine
          |scala.meta.Type.Repeated

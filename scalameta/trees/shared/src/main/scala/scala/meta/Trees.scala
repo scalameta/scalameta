@@ -529,14 +529,37 @@ object Type {
 
   @ast
   class FuncParamClause(values: List[Type]) extends Tree with Member.SyntaxValuesClause
+
   @branch
-  trait FunctionType extends Type with Member.Function {
+  trait FunctionLikeType extends Type {
+    def res: Type
+  }
+
+  @branch
+  trait ParamFunctionType extends FunctionLikeType with Member.Function {
+    def paramClause: FuncParamClause
+    def res: Type
+    override def body: Tree = res
+  }
+
+  @branch
+  trait PureFunctionType extends ParamFunctionType {
+    def paramClause: FuncParamClause
+    def res: Type
+  }
+  @ast
+  class PureFunction(paramClause: FuncParamClause, res: Type) extends PureFunctionType
+  @ast
+  class PureContextFunction(paramClause: FuncParamClause, res: Type) extends PureFunctionType
+
+  @branch
+  trait FunctionType extends ParamFunctionType {
     def paramClause: FuncParamClause
     @deprecated("Please use paramClause instead", "4.6.0")
     def params: List[Type]
     def res: Type
-    override def body: Tree = res
   }
+
   @ast
   class Function(
       @replacesFields("4.6.0", FuncParamClause)
@@ -546,6 +569,7 @@ object Type {
     @replacedField("4.6.0")
     override final def params: List[Type] = paramClause.values
   }
+
   @ast
   class PolyFunction(tparamClause: ParamClause, tpe: Type)
       extends Type with Tree.WithTParamClause with Member.Function {
@@ -554,6 +578,7 @@ object Type {
     override final def paramClause: Member.SyntaxValuesClause = tparamClause
     override final def body: Tree = tpe
   }
+
   @ast
   class ContextFunction(
       @replacesFields("4.6.0", FuncParamClause)
@@ -563,6 +588,7 @@ object Type {
     @replacedField("4.6.0")
     override final def params: List[Type] = paramClause.values
   }
+
   @ast @deprecated("Implicit functions are not supported in any dialect")
   class ImplicitFunction(params: List[Type], res: Type) extends Type
   @ast
@@ -638,10 +664,21 @@ object Type {
   class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
   @ast
   class BoundsAlias(name: Type.Name, bounds: Type) extends Type.Ref
+
+  @branch
+  trait ByNameType extends FunctionLikeType {
+    def tpe: Type
+    override def res: Type = tpe
+  }
   @ast
-  class ByName(tpe: Type) extends Type {
+  class ByName(tpe: Type) extends ByNameType {
     checkParent(ParentChecks.TypeByName)
   }
+  @ast
+  class PureByName(tpe: Type) extends ByNameType {
+    checkParent(ParentChecks.TypeByName)
+  }
+
   @ast
   class Repeated(tpe: Type) extends Type {
     checkParent(ParentChecks.TypeRepeated)

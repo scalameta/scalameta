@@ -167,6 +167,8 @@ final class Dialect private[meta] (
     val allowTrackedParameters: Boolean,
     // https://www.scala-lang.org/api/3.3.3/docs/docs/reference/experimental/into-modifier.html
     val allowParameterTypeConversions: Boolean,
+    // https://dotty.epfl.ch/docs/reference/experimental/purefuns.html
+    val allowPureFunctions: Boolean,
     // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html?
     val allowImprovedTypeClassesSyntax: Boolean
 ) extends Product with Serializable {
@@ -266,6 +268,7 @@ final class Dialect private[meta] (
     allowBinaryLiterals = false,
     allowTrackedParameters = false,
     allowParameterTypeConversions = false,
+    allowPureFunctions = false,
     allowImprovedTypeClassesSyntax = false
     // NOTE(olafur): declare the default value for new fields above this comment.
   )
@@ -410,6 +413,8 @@ final class Dialect private[meta] (
   def withAllowParameterTypeConversions(newValue: Boolean): Dialect =
     privateCopy(allowParameterTypeConversions = newValue)
 
+  def withAllowPureFunctions(newValue: Boolean): Dialect = privateCopy(allowPureFunctions = newValue)
+
   def withAllowImprovedTypeClassesSyntax(newValue: Boolean): Dialect =
     privateCopy(allowImprovedTypeClassesSyntax = newValue)
 
@@ -480,6 +485,7 @@ final class Dialect private[meta] (
       allowBinaryLiterals: Boolean = this.allowBinaryLiterals,
       allowTrackedParameters: Boolean = this.allowTrackedParameters,
       allowParameterTypeConversions: Boolean = this.allowParameterTypeConversions,
+      allowPureFunctions: Boolean = this.allowPureFunctions,
       allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
@@ -545,6 +551,7 @@ final class Dialect private[meta] (
       allowBinaryLiterals = allowBinaryLiterals,
       allowTrackedParameters = allowTrackedParameters,
       allowParameterTypeConversions = allowParameterTypeConversions,
+      allowPureFunctions = allowPureFunctions,
       allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax
     )
     if (equivalent) return this // RETURN!
@@ -613,6 +620,7 @@ final class Dialect private[meta] (
       allowBinaryLiterals = allowBinaryLiterals,
       allowTrackedParameters = allowTrackedParameters,
       allowParameterTypeConversions = allowParameterTypeConversions,
+      allowPureFunctions = allowPureFunctions,
       allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
@@ -703,6 +711,7 @@ final class Dialect private[meta] (
       allowBinaryLiterals: Boolean,
       allowTrackedParameters: Boolean,
       allowParameterTypeConversions: Boolean,
+      allowPureFunctions: Boolean,
       allowImprovedTypeClassesSyntax: Boolean
   ): Boolean =
     // do not include deprecated values in this comparison
@@ -758,6 +767,7 @@ final class Dialect private[meta] (
       this.allowBinaryLiterals == allowBinaryLiterals &&
       this.allowTrackedParameters == allowTrackedParameters &&
       this.allowParameterTypeConversions == allowParameterTypeConversions &&
+      this.allowPureFunctions == allowPureFunctions &&
       this.allowImprovedTypeClassesSyntax == allowImprovedTypeClassesSyntax
 
   @inline
@@ -823,6 +833,7 @@ final class Dialect private[meta] (
       allowBinaryLiterals = that.allowBinaryLiterals,
       allowTrackedParameters = that.allowTrackedParameters,
       allowParameterTypeConversions = that.allowParameterTypeConversions,
+      allowPureFunctions = that.allowPureFunctions,
       allowImprovedTypeClassesSyntax = that.allowImprovedTypeClassesSyntax
     )
 

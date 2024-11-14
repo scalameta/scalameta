@@ -509,16 +509,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  private object VarArgTypeParam {
-    // we assume that this is a type specification for a vararg parameter
-    private def check(tok: Token): Boolean = peekToken match {
-      case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => tok.text == "*"
-      case _ => false
-    }
-    @inline
-    def unapply(tok: Token.Ident): Boolean = check(tok)
-    object Non {
-      def unapply(tok: Token.Ident): Boolean = !check(tok)
+  private object InfixTypeIdent {
+    def unapply(tok: Token.Ident): Boolean = tok.text match {
+      case soft.KwPureFunctionArrow() => false
+      case soft.KwPureContextFunctionArrow() => false
+      case "*" => // we assume that this is a type specification for a vararg parameter
+        peekToken match {
+          case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => false
+          case _ => true
+        }
+      case _ => true
     }
   }
 
@@ -712,11 +712,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         syntaxError(message, at = currToken)
       }
 
-      def maybeFunc = getAfterOptNewLine(currToken match {
-        case _: RightArrow => Some(typeFuncOnArrow(openParenPos, ts, Type.Function(_, _)))
-        case _: ContextArrow => Some(typeFuncOnArrow(openParenPos, ts, Type.ContextFunction(_, _)))
-        case _ => None
-      })
+      def maybeFunc = getAfterOptNewLine(typeFuncOnArrowOpt(openParenPos, ts))
       (if (allowFunctionType) maybeFunc else None).getOrElse {
         val simple = simpleTypeRest(makeTupleType(openParenPos, ts), openParenPos)
         val compound = compoundTypeRest(annotTypeRest(simple, openParenPos), openParenPos)
@@ -751,11 +747,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         if (at[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly() else infixTypeOrTuple()
 
       getAfterOptNewLine(currToken match {
-        case _: RightArrow => Some(typeFuncOnArrow(startPos, t :: Nil, Type.Function(_, _)))
-        case _: ContextArrow => Some(typeFuncOnArrow(startPos, t :: Nil, Type.ContextFunction(_, _)))
         case _: KwForsome => Some(existentialTypeOnForSome(t))
         case _: KwMatch if dialect.allowTypeMatch => next(); Some(Type.Match(t, typeCaseClauses()))
-        case _ => None
+        case _ => typeFuncOnArrowOpt(startPos, t :: Nil)
       }).getOrElse(t)
     }
 
@@ -776,12 +770,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         autoEndPos(startPos)(Type.FunctionArg(mod :: Nil, exactParamType(allowRepeated)))
       } else exactParamType(allowRepeated)
 
-    def paramType(): Type = currToken match {
-      case _: RightArrow => autoPos {
+    def paramType(): Type = {
+      def byNameParamValueType =
+        paramValueType(allowRepeated = dialect.allowByNameRepeatedParameters)
+      currToken match {
+        case _: RightArrow => autoPos { next(); Type.ByName(byNameParamValueType) }
+        case soft.KwPureFunctionArrow() =>
+          val startPos = currIndex
           next()
-          Type.ByName(paramValueType(allowRepeated = dialect.allowByNameRepeatedParameters))
-        }
-      case _ => paramValueType(allowRepeated = true)
+          autoEndPos(startPos)(Type.PureByName(byNameParamValueType))
+        case _ => paramValueType(allowRepeated = true)
+      }
     }
 
     private def maybeParamType(allowFunctionType: Boolean): Type =
@@ -812,15 +811,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       else typ()
 
-    private def typeFuncOnArrow(
-        paramPos: Int,
-        params: List[Type],
-        ctor: (Type.FuncParamClause, Type) => Type.FunctionType
-    ): Type.FunctionType = {
+    private def typeFuncOnArrow(paramPos: Int, params: List[Type])(
+        ctor: (Type.FuncParamClause, Type) => Type
+    ): Type = {
       val funcParams = autoEndPos(paramPos)(params.reduceWith(Type.FuncParamClause.apply))
       next()
       ctor(funcParams, typeIndentedOpt())
     }
+
+    private def typeFuncOnArrowOpt(paramPos: Int, params: List[Type]): Option[Type] =
+      currToken match {
+        case _: RightArrow => Some(typeFuncOnArrow(paramPos, params)(Type.Function(_, _)))
+        case _: ContextArrow => Some(typeFuncOnArrow(paramPos, params)(Type.ContextFunction(_, _)))
+        case t: Ident => t.text match {
+            case soft.KwPureFunctionArrow() =>
+              Some(typeFuncOnArrow(paramPos, params)(Type.PureFunction(_, _)))
+            case soft.KwPureContextFunctionArrow() =>
+              Some(typeFuncOnArrow(paramPos, params)(Type.PureContextFunction(_, _)))
+            case _ => None
+          }
+        case _ => None
+      }
 
     private def typeCaseClauses(): Type.CasesBlock = autoPos {
       def cases() = listBy[TypeCase] { allCases =>
@@ -878,7 +889,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         inMatchType: Boolean = false
     ): Type = {
       val ok = currToken match {
-        case _: Unquote | VarArgTypeParam.Non() => true
+        case _: Unquote | InfixTypeIdent() => true
         case _ => false
       }
       if (ok) {
@@ -913,8 +924,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       @tailrec
       def loop(rhs: ctx.Typ): ctx.Typ = (currToken match {
         case lf: InfixLF => getLeadingInfix(lf)(Type.Name.apply)(getNextRhs(rhs))
-        case VarArgTypeParam() => None
-        case _: Ident | _: Unquote => Some(getNextRhs(rhs)(typeName()))
+        case _: Unquote | InfixTypeIdent() => Some(getNextRhs(rhs)(typeName()))
         case _ => None
       }) match {
         case Some(x) => loop(x)
@@ -1036,71 +1046,47 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def setPos(outerTpe: Type)(innerTpe: Type): Type =
         if (innerTpe eq outerTpe) outerTpe else copyPos(outerTpe)(innerTpe)
 
-      def convertFuncParamClause(tree: Type.FuncParamClause): Type.FuncParamClause = tree match {
+      def copyType(t: Type): Type = loop(t, convertTypevars = false)
+      def convertType(t: Type): Type = loop(t, convertTypevars = true)
+      def convertFuncParamClause(t: Type.FuncParamClause): Type.FuncParamClause = t match {
         case t: Quasi => t
-        case t: Type.FuncParamClause =>
-          copyPos(t)(Type.FuncParamClause(t.values.map(loop(_, convertTypevars = true))))
+        case t => copyPos(t)(Type.FuncParamClause(t.values.map(convertType)))
       }
+      def convertFunc[A <: Type.ParamFunctionType](t: A)(f: (Type.FuncParamClause, Type) => A): A =
+        f(convertFuncParamClause(t.paramClause), copyType(t.res))
+      def convertByName[A <: Type.ByNameType](t: A)(f: Type => A): A = f(copyType(t.tpe))
 
       def loop(outerTpe: Type, convertTypevars: Boolean): Type = setPos(outerTpe)(outerTpe match {
         case q: Quasi => q
         case tpe @ Type.Name(value) if convertTypevars && value(0).isLower => Type.Var(tpe)
         case tpe: Type.Name => tpe
         case tpe: Type.Select => tpe
-        case Type.Project(qual, name) =>
-          val qual1 = loop(qual, convertTypevars = false)
-          val name1 = name
-          Type.Project(qual1, name1)
+        case Type.Project(qual, name) => Type.Project(copyType(qual), name)
         case tpe: Type.Singleton => tpe
         case t: Type.Apply =>
-          val underlying1 = loop(t.tpe, convertTypevars = false)
           val args1 = t.argClause match {
             case q: Type.ArgClause.Quasi => q
-            case x: Type.ArgClause =>
-              copyPos(x)(Type.ArgClause(x.values.map(loop(_, convertTypevars = true))))
+            case x: Type.ArgClause => copyPos(x)(Type.ArgClause(x.values.map(convertType)))
           }
-          Type.Apply(underlying1, args1)
-        case Type.ApplyInfix(lhs, op, rhs) =>
-          val lhs1 = loop(lhs, convertTypevars = false)
-          val op1 = op
-          val rhs1 = loop(rhs, convertTypevars = false)
-          Type.ApplyInfix(lhs1, op1, rhs1)
-        case t: Type.ContextFunction =>
-          val params1 = convertFuncParamClause(t.paramClause)
-          val res1 = loop(t.res, convertTypevars = false)
-          Type.ContextFunction(params1, res1)
-        case t: Type.Function =>
-          val params1 = convertFuncParamClause(t.paramClause)
-          val res1 = loop(t.res, convertTypevars = false)
-          Type.Function(params1, res1)
-        case t: Type.PolyFunction =>
-          val res1 = loop(t.tpe, convertTypevars = false)
-          Type.PolyFunction(t.tparamClause, res1)
-        case Type.Tuple(elements) =>
-          val elements1 = elements.map(loop(_, convertTypevars = true))
-          Type.Tuple(elements1)
-        case Type.With(lhs, rhs) =>
-          val lhs1 = loop(lhs, convertTypevars = false)
-          val rhs1 = loop(rhs, convertTypevars = false)
-          Type.With(lhs1, rhs1)
-        case Type.Refine(tpe, stats) =>
-          val tpe1 = tpe.map(loop(_, convertTypevars = false))
-          val stats1 = stats
-          Type.Refine(tpe1, stats1)
-        case Type.Existential(underlying, stats) =>
-          val underlying1 = loop(underlying, convertTypevars = false)
-          val stats1 = stats
-          Type.Existential(underlying1, stats1)
-        case Type.Annotate(underlying, annots) =>
-          val underlying1 = loop(underlying, convertTypevars = false)
-          val annots1 = annots
-          Type.Annotate(underlying1, annots1)
+          Type.Apply(copyType(t.tpe), args1)
+        case Type.ApplyInfix(lhs, op, rhs) => Type.ApplyInfix(copyType(lhs), op, copyType(rhs))
+        case t: Type.ByName => convertByName(t)(Type.ByName(_))
+        case t: Type.PureByName => convertByName(t)(Type.PureByName(_))
+        case t: Type.Function => convertFunc(t)(Type.Function(_, _))
+        case t: Type.PureFunction => convertFunc(t)(Type.PureFunction(_, _))
+        case t: Type.ContextFunction => convertFunc(t)(Type.ContextFunction(_, _))
+        case t: Type.PureContextFunction => convertFunc(t)(Type.PureContextFunction(_, _))
+        case t: Type.PolyFunction => Type.PolyFunction(t.tparamClause, copyType(t.tpe))
+        case Type.Tuple(elements) => Type.Tuple(elements.map(convertType))
+        case Type.With(lhs, rhs) => Type.With(copyType(lhs), copyType(rhs))
+        case Type.Refine(tpe, stats) => Type.Refine(tpe.map(copyType), stats)
+        case Type.Existential(underlying, stats) => Type.Existential(copyType(underlying), stats)
+        case Type.Annotate(underlying, annots) => Type.Annotate(copyType(underlying), annots)
         case t: Type.Wildcard => Type.Wildcard(t.bounds)
-        case t: Type.AnonymousLambda => Type.AnonymousLambda(loop(t.tpe, convertTypevars = false))
+        case t: Type.AnonymousLambda => Type.AnonymousLambda(copyType(t.tpe))
         case t: Type.AnonymousParam => Type.AnonymousParam(t.variant)
-        case t: Type.Placeholder =>
-          val bounds1 = t.bounds
-          Type.Placeholder(bounds1)
+        case t: Type.Placeholder => Type.Placeholder(t.bounds)
+        case t: Type.Block => Type.Block(t.typeDefs, copyType(t.tpe))
         case tpe: Lit => tpe
       })
       val t: Type = PatternTypeContext.within {
