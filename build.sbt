@@ -241,7 +241,7 @@ lazy val quasiquotes3 = crossProject(JVMPlatform)
   .settings(
     // sharedSettings,
     scalaVersion := "3.3.1",
-    // scalacOptions += "-Xcheck-macros",
+    scalacOptions += "-Xcheck-macros",
     description := "Scalameta APIs for parsing and their baseline implementation",
     libraryDependencies ++= Seq(
       "org.scalameta" %%% "munit" % munitVersion

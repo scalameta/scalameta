@@ -30,9 +30,11 @@ trait ExprLifts(using override val internalQuotes: Quotes)(isPatternMode: Boolea
   def makeByMode[T](expr: Expr[T], args: Tree*): Tree =
     val term = expr.asTerm match
       case Inlined(_, _, inlined) => inlined
-    expr.asTerm.tpe.asType match
+    def resType(x: TypeRepr) = x match
+      case MethodType(_, _, res) => res 
+    resType(expr.asTerm.tpe.memberType(Select.unique(expr.asTerm, "apply").symbol)).asType match
       case '[t] =>
-        if isPatternMode then Unapply(Select.unique(term, "unapply"), Nil, args.toList)
+        if isPatternMode then TypedOrTest(Unapply(Select.unique(term, "unapply"), Nil, args.toList), TypeTree.of[t])
         else Select.overloaded(term, "apply", Nil, args.toList.asInstanceOf[List[Term]])
 
   def term[T <: MetaTree](tree: T): Tree = liftableSubTree0(tree)
