@@ -57,7 +57,7 @@ private[meta] trait Api {
     def source: QuasiquoteUnapply = ???
   
   extension (inline sc: QuasiquoteUnapply)
-    transparent inline def unapplySeq(scrutinee: Any): Option[Seq[Any]] =
+    transparent inline def unapply(scrutinee: Any): Any =
       ${ ReificationMacros.unapplyImpl('sc, 'scrutinee) }
 
 
