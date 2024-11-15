@@ -41,6 +41,7 @@ object ParentChecks {
   private def typeArgument(tree: Type, parent: Tree, destination: String): Boolean = parent match {
     case _: Term.Param => destination == "decltpe"
     case _: Type.FuncParamClause => true
+    case _: Type.Capturing => true
     case _: Type.ByNameType => !tree.is[Type.ByNameType] && destination == "tpe"
     case _: Type.Repeated => !tree.is[Type.Repeated] && destination == "tpe"
     case _: Type.FunctionArg => !tree.is[Type.FunctionArg] && destination == "tpe"

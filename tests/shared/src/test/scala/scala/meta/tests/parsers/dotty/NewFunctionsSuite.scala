@@ -802,11 +802,40 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#3996 pure context functions: 4") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def map[T <: (A ?->{a, c} B)](f: T): A ?-> B = ???"
+    val layout = "def map[T <: A ?->{a, c} B](f: T): A ?-> B = ???"
+    val tree = Defn.Def(
+      Nil,
+      "map",
+      List(pparam("T", hiBound(Type.Capturing(purectxfunc(List("A"), "B"), List("a", "c"))))),
+      List(List(tparam("f", "T"))),
+      Some(purectxfunc(List("A"), "B")),
+      "???"
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("#3996 pure by-name: 1") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def func(f: -> B): Unit"
     val layout = "def func(f: -> B): Unit"
     val tree = Decl.Def(Nil, "func", Nil, List(List(tparam("f", Type.PureByName("B")))), "Unit")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 pure by-name: 2 with capturing") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def func(f: ->{a, b, c} B): Unit"
+    val layout = "def func(f: ->{a, b, c} B): Unit"
+    val tree = Decl.Def(
+      Nil,
+      "func",
+      Nil,
+      List(List(tparam("f", Type.Capturing(Type.PureByName("B"), List("a", "b", "c"))))),
+      "Unit"
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 

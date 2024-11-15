@@ -692,29 +692,36 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         }
 
       val openParenPos = currIndex
-      val ts = inParensOr(commaSeparated(paramOrType(List.newBuilder[Mod])))(Nil)
       // NOTE: can't have this, because otherwise we run into #312
       // newLineOptWhenFollowedBy[LeftParen]
 
-      var hasTypes = false
-      var hasParams = false
-      ts.foreach {
-        case _: Quasi =>
-        case _: Type.TypedParam => hasParams = true
-        case _ => hasTypes = true
-      }
-      if (hasTypes && hasParams)
-        syntaxError("can't mix function type and dependent function type syntaxes", at = currToken)
-      if (hasParams && !dialect.allowDependentFunctionTypes)
-        syntaxError("dependent function types are not supported", at = currToken)
-      if (!hasTypes && !hasImplicits && at[LeftParen]) {
-        val message = "can't have multiple parameter lists in function types"
-        syntaxError(message, at = currToken)
+      def makeTuple(ts: List[Type]) = makeTupleType(openParenPos, ts)
+
+      val ts = {
+        val ts = inParensOr(commaSeparated(paramOrType(List.newBuilder[Mod])))(Nil)
+
+        var hasTypes = false
+        var hasParams = false
+        ts.foreach {
+          case _: Quasi =>
+          case _: Type.TypedParam => hasParams = true
+          case _ => hasTypes = true
+        }
+        if (hasTypes && hasParams)
+          syntaxError("can't mix function type and dependent function type syntaxes", at = currToken)
+        if (hasParams && !dialect.allowDependentFunctionTypes)
+          syntaxError("dependent function types are not supported", at = currToken)
+        if (!hasTypes && !hasImplicits && at[LeftParen]) {
+          val message = "can't have multiple parameter lists in function types"
+          syntaxError(message, at = currToken)
+        }
+
+        withTypeCapturesOpt(openParenPos, needCaret = true)(makeTuple(ts)).fold(ts)(_ :: Nil)
       }
 
       def maybeFunc = getAfterOptNewLine(typeFuncOnArrowOpt(openParenPos, ts))
       (if (allowFunctionType) maybeFunc else None).getOrElse {
-        val simple = simpleTypeRest(makeTupleType(openParenPos, ts), openParenPos)
+        val simple = simpleTypeRest(makeTuple(ts), openParenPos)
         val compound = compoundTypeRest(annotTypeRest(simple, openParenPos), openParenPos)
         infixTypeRest(compound) match {
           case `compound` => compound
@@ -778,7 +785,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case soft.KwPureFunctionArrow() =>
           val startPos = currIndex
           next()
-          autoEndPos(startPos)(Type.PureByName(byNameParamValueType))
+          withTypeCaptures(startPos)(autoEndPos(startPos)(Type.PureByName(byNameParamValueType)))
         case _ => paramValueType(allowRepeated = true)
       }
     }
@@ -811,12 +818,36 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       else typ()
 
-    private def typeFuncOnArrow(paramPos: Int, params: List[Type])(
+    private def typeCaptures(needCaret: Boolean, allowCaptures: Boolean): Option[List[Term.Ref]] =
+      if (allowCaptures && dialect.allowCaptureChecking) {
+        def captures(): Option[List[Term.Ref]] = Some(commaSeparated(path()))
+        if (needCaret) currToken match {
+          case Token.Ident("^") => next(); inBracesOr(captures())(Some(Nil))
+          case _ => None
+        }
+        else inBracesOr(captures())(None)
+      } else None
+
+    private def withTypeCapturesOpt(startPos: Int, needCaret: Boolean, allowCaptures: Boolean = true)(
+        capturedType: => Type
+    ): Option[Type] = typeCaptures(needCaret = needCaret, allowCaptures = allowCaptures)
+      .map(captures => autoEndPos(startPos)(Type.Capturing(capturedType, captures)))
+
+    private def withTypeCaptures(
+        startPos: Int,
+        needCaret: Boolean = false,
+        allowCaptures: Boolean = true
+    )(capturedType: => Type): Type =
+      withTypeCapturesOpt(startPos, needCaret = needCaret, allowCaptures = allowCaptures)(
+        capturedType
+      ).getOrElse(capturedType)
+
+    private def typeFuncOnArrow(paramPos: Int, params: List[Type], allowCaptures: Boolean = false)(
         ctor: (Type.FuncParamClause, Type) => Type
     ): Type = {
       val funcParams = autoEndPos(paramPos)(params.reduceWith(Type.FuncParamClause.apply))
       next()
-      ctor(funcParams, typeIndentedOpt())
+      withTypeCaptures(paramPos, allowCaptures = allowCaptures)(ctor(funcParams, typeIndentedOpt()))
     }
 
     private def typeFuncOnArrowOpt(paramPos: Int, params: List[Type]): Option[Type] =
@@ -825,9 +856,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _: ContextArrow => Some(typeFuncOnArrow(paramPos, params)(Type.ContextFunction(_, _)))
         case t: Ident => t.text match {
             case soft.KwPureFunctionArrow() =>
-              Some(typeFuncOnArrow(paramPos, params)(Type.PureFunction(_, _)))
+              Some(typeFuncOnArrow(paramPos, params, allowCaptures = true)(Type.PureFunction(_, _)))
             case soft.KwPureContextFunctionArrow() =>
-              Some(typeFuncOnArrow(paramPos, params)(Type.PureContextFunction(_, _)))
+              Some(typeFuncOnArrow(paramPos, params, allowCaptures = true)(Type.PureContextFunction(_, _)))
             case _ => None
           }
         case _ => None
@@ -1026,7 +1057,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           }
         case _ => pathSimpleType()
       }
-      simpleTypeRest(autoEndPosOpt(startPos)(res), startPos)
+      val rest = simpleTypeRest(autoEndPosOpt(startPos)(res), startPos)
+      withTypeCaptures(startPos, needCaret = true)(rest)
     }
 
     @tailrec
@@ -1087,6 +1119,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case t: Type.AnonymousParam => Type.AnonymousParam(t.variant)
         case t: Type.Placeholder => Type.Placeholder(t.bounds)
         case t: Type.Block => Type.Block(t.typeDefs, copyType(t.tpe))
+        case t: Type.Capturing => Type.Capturing(convertType(t.tpe), t.caps)
         case tpe: Lit => tpe
       })
       val t: Type = PatternTypeContext.within {

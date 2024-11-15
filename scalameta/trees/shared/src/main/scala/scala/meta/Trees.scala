@@ -744,6 +744,12 @@ object Type {
     final def stats: List[Tree] = typeDefs
   }
 
+  @ast
+  class Capturing(
+      tpe: Type,
+      caps: List[Term.Ref] // [cap]tures or [cap]abilities
+  ) extends Type
+
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
 }

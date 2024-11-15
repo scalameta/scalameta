@@ -666,4 +666,63 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
 
+  // https://dotty.epfl.ch/docs/reference/experimental/cc.html
+
+  test("#3996 capture checking: 1") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "class Logger(fs: FileSystem^)"
+    val layout = "class Logger(fs: FileSystem^)"
+    val tree = Defn.Class(
+      Nil,
+      pname("Logger"),
+      Nil,
+      ctorp(tparam("fs", Type.Capturing("FileSystem", Nil))),
+      tplNoBody()
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 capture checking: 2") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "val l: Logger^{fs} = Logger(fs)"
+    val layout = "val l: Logger^{fs} = Logger(fs)"
+    val tree = Defn.Val(
+      Nil,
+      List(Pat.Var("l")),
+      Some(Type.Capturing("Logger", List("fs"))),
+      Term.Apply("Logger", List("fs"))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 capture checking: 3") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def tail: LazyList[A]^{this}"
+    val layout = "def tail: LazyList[A]^{this}"
+    val tree = Decl
+      .Def(Nil, "tail", Nil, Type.Capturing(Type.Apply("LazyList", List("A")), List(Term.This(anon))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 capture checking: 3") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)"
+    val layout = "def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)"
+    val tree = Defn.Def(
+      Nil,
+      "p",
+      Nil,
+      Some(Type.Apply(
+        pname("Pair"),
+        List(
+          Type.Capturing(purefunc(List("Int"), "String"), List("ct")),
+          Type.Capturing("Logger", List("fs"))
+        )
+      )),
+      Term.Apply("Pair", List("x", "y"))
+    )
+
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
