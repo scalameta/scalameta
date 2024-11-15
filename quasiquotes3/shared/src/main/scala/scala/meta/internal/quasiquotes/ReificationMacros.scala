@@ -50,7 +50,7 @@ object ReificationMacros {
   def sourceImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Source] = 
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Source).asExprOf[scala.meta.Source]
 
-  def unapplyImpl(using Quotes)(scCallExpr: Expr[QuasiquoteUnapply], scrutineeExpr: Expr[Any]): Expr[Option[Seq[Any]]] =
+  def unapplyImpl(using Quotes)(scCallExpr: Expr[QuasiquoteUnapply], scrutineeExpr: Expr[Any]): Expr[Any] =
     val (stringContext, quasiquoteType) = scCallExpr match
       case '{ ($sc: StringContext).q } => (sc, QuasiquoteType.Term)
       case '{ ($sc: StringContext).param } => (sc, QuasiquoteType.TermParam)
@@ -90,9 +90,9 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
 
   lazy val ListClass = TypeRepr.of[scala.List]
 
-  def expandUnapply(strCtx: Expr[StringContext], unapplySelector: Expr[Any], qType: QuasiquoteType): Expr[Option[Seq[Any]]] = {
+  def expandUnapply(strCtx: Expr[StringContext], unapplySelector: Expr[Any], qType: QuasiquoteType): Expr[Any] = {
     val mode = extractModePattern(strCtx, unapplySelector)
-    expand(strCtx, qType, mode).asExprOf[Option[Seq[Any]]]
+    expand(strCtx, qType, mode)
   }
 
   def expandApply(strCtx: Expr[StringContext], args: Expr[Seq[Any]], qType: QuasiquoteType): Expr[Any] = {
@@ -306,27 +306,27 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
           }
         loop(trees, None, Nil)
       }
-        def liftTreess(treess: List[List[MetaTree]]): Tree = {
-          val tripleDotQuasis = treess.flatten.collect {
-            case quasi: Quasi if quasi.rank == 2 => quasi
-          }
-          if (tripleDotQuasis.isEmpty) {
-            val args = treess.map(liftTrees)
-            if mode.isTerm then
-              Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[Any]), args.asInstanceOf[List[Term]])
-            else 
-              TypedOrTest(Unapply(TypeApply(Select.unique('{List}.asTerm, "unapplySeq"), List(TypeTree.of[Any])), Nil, args), TypeTree.of[List[Any]])
-          } else if (tripleDotQuasis.length == 1) {
-            if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
-            else
-              report.errorAndAbort(
-                "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
-                  "See https://github.com/scalameta/scalameta/issues/406 for details."
-              )
-          } else {
-            report.errorAndAbort(Messages.QuasiquoteAdjacentEllipsesInPattern(2))
-          }
+      def liftTreess(treess: List[List[MetaTree]]): Tree = {
+        val tripleDotQuasis = treess.flatten.collect {
+          case quasi: Quasi if quasi.rank == 2 => quasi
         }
+        if (tripleDotQuasis.isEmpty) {
+          val args = treess.map(liftTrees)
+          if mode.isTerm then
+            Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[Any]), args.asInstanceOf[List[Term]])
+          else 
+            TypedOrTest(Unapply(TypeApply(Select.unique('{List}.asTerm, "unapplySeq"), List(TypeTree.of[Any])), Nil, args), TypeTree.of[List[Any]])
+        } else if (tripleDotQuasis.length == 1) {
+          if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
+          else
+            report.errorAndAbort(
+              "implementation restriction: can't mix ...$ with anything else in parameter lists." + EOL +
+                "See https://github.com/scalameta/scalameta/issues/406 for details."
+            )
+        } else {
+          report.errorAndAbort(Messages.QuasiquoteAdjacentEllipsesInPattern(2))
+        }
+      }
       def liftQuasi0(quasi: Quasi, optional: Boolean = false): Tree = {
         try {
           pendingQuasis.push(quasi)
@@ -472,43 +472,59 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
           case AppliedType(tpe, content) if tpe =:= TypeRepr.of[Option] => content
         }
         val lst = Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[Option[Any]]), args).asExprOf[List[Option[Any]]]
-        val returned = Select.overloaded('{List}.asTerm, "apply", List(TypeRepr.of[Any]), args.map(arg => '{${arg.asExprOf[Option[Any]]}.get}.asTerm)).asExpr
 
-        //// TODO: for now making this produces compiler crashes, but ideally we would want to return a Tuple from transparent inline def unapply 
-        //// (instead of returning Seq[Any] from inline def unapplySeq, like we do now). Ths would make the unapply calls correctly typed
-        //// (instead of always resolving to Any). 
-        // val n = args.length
-        // val returned = Select.overloaded(Ref(Symbol.classSymbol("scala.Tuple" + n).companionModule), "apply", argsContents, args.map(arg => '{${arg.asExprOf[Option[Any]]}.get}.asTerm)).asExpr
+        val n = args.length
+        val (returned, isBooleanExtractor) = 
+          if (n == 0) {
+            // boolean extractor
+            ('{true}, true)
+          } else if (n == 1) {
+            // returning Tuple1 requires us to manually unapply later, so we return the raw value
+            ('{${args.head.asExprOf[Option[Any]]}.get}, false)
+          } else {
+            (Select.overloaded(Ref(Symbol.classSymbol("scala.Tuple" + n).companionModule), "apply", argsContents, args.map(arg => '{${arg.asExprOf[Option[Any]]}.get}.asTerm)).asExpr, false)
+          }
         returned.asTerm.tpe.asType match
           case '[t] =>
-            def thenp(inputExpr: Expr[Any])(using Quotes) =
+            def thenp(inputExpr: Expr[Any])(using Quotes) = {
               import quotes.reflect._
-              if (holes.isEmpty) then '{Some(List[Any]())}
+              if (isBooleanExtractor) then '{true}
               else
                 '{
                   val tpl = $lst
                   if tpl.toList.forall(_.asInstanceOf[Option[Any]].isDefined) then Some(${returned.asExprOf[t]})
                   else None
                 }
-            def elsep(using Quotes) ='{scala.None}
+            }
+            def elsep(using Quotes) = 
+              if (isBooleanExtractor) '{false}
+              else '{scala.None}
             
-            def matchp(input: Expr[Any])(using Quotes) = 
-              Match(
+            def matchp(input: Expr[Any])(using Quotes) = {
+              val matchTerm = Match(
                 input.asTerm,
                 List(
                   CaseDef(pattern, None, thenp(input).asTerm),
                   CaseDef(Wildcard(), None, elsep.asTerm)
                 )
-              ).asExprOf[Option[t]]
+              )
+              if (isBooleanExtractor) matchTerm.asExprOf[Boolean]
+              else matchTerm.asExprOf[Option[t]]
+            }
 
-            val internalResult ='{ ${matchp(unapplySelector)}.asInstanceOf[Option[t]] }
+            val internalResult =
+              if (isBooleanExtractor) {
+                '{ ${matchp(unapplySelector)}.asInstanceOf[Boolean] }
+              } else {
+                '{ ${matchp(unapplySelector)}.asInstanceOf[Option[t]] }
+              }
             
             if (sys.props("quasiquote.debug") != null) {
               println(internalResult)
               // println(showRaw(internalResult))
             }
 
-            internalResult.asExprOf[Option[Seq[Any]]]
+            internalResult
 
     }
   }
