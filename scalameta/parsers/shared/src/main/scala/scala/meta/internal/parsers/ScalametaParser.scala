@@ -285,6 +285,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     acceptAfterOptNL[Indentation.Outdent]
     body
   }
+  private def indentedOr[T](body: => T)(orElse: => T): T =
+    if (acceptOpt[Indentation.Indent]) indentedAfterOpen(body) else orElse
+  @inline
+  private def maybeIndented[T](body: => T): T = indentedOr(body)(body)
 
   @inline
   final def inBracesOrNil[T](body: => List[T]): List[T] = inBracesOr(body)(Nil)
@@ -745,8 +749,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
     }
 
-    def typeIndentedOpt(): Type =
-      if (acceptOpt[Indentation.Indent]) indentedAfterOpen(typ()) else typ()
+    def typeIndentedOpt(): Type = maybeIndented(typ())
 
     def typ(): Type = autoPosOpt {
       val startPos = currIndex
@@ -1551,8 +1554,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               // Dotty retry in case of `for (a,b) <- list1.zip(list2) yield (a, b)`
               tryParse(Try(parseInParens()).toOption).getOrElse(enumerators())
             else parseInParens()
-          } else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(enumerators())
-          else enumerators()
+          } else maybeIndented(enumerators())
         val enums = autoPos(enumList.reduceWith(Term.EnumeratorsBlock.apply))
 
         newLinesOpt()
@@ -2423,9 +2425,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case List(term: Term) => term
           case other => autoEndPos(start)(Term.Block(other))
         }
-        if (acceptOpt[Indentation.Indent]) indentedAfterOpen(parseStatSeq())
-        else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
-        else parseStatSeq()
+        indentedOr(parseStatSeq()) {
+          if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false) else parseStatSeq()
+        }
       }
       @inline
       def guard(): Option[Term] = if (at[KwIf]) Some(guardOnIf()) else None
@@ -3686,8 +3688,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val hasLeftBrace = isAfterOptNewLine[LeftBrace] || { accept[Equals]; at[LeftBrace] }
     val body = autoPos {
       if (hasLeftBrace) inBracesOnOpen(constrInternal())
-      else if (acceptOpt[Indentation.Indent]) indentedAfterOpen(constrInternal())
-      else Ctor.Block(initInsideConstructor(), Nil)
+      else indentedOr(constrInternal())(Ctor.Block(initInsideConstructor(), Nil))
     }
     Ctor.Secondary(mods, name, paramss, body)
   }
