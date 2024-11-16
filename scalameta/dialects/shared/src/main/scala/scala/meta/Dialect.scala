@@ -165,7 +165,7 @@ final class Dialect private[meta] (
     val allowBinaryLiterals: Boolean,
     // Are tracked parameters allowed? docs: https://dotty.epfl.ch/docs/reference/experimental/modularity.html
     val allowTrackedParameters: Boolean,
-    // https://www.scala-lang.org/api/3.3.3/docs/docs/reference/experimental/into-modifier.html
+    // https://dotty.epfl.ch/docs/reference/experimental/into-modifier.html
     val allowParameterTypeConversions: Boolean,
     // https://dotty.epfl.ch/docs/reference/experimental/purefuns.html
     val allowPureFunctions: Boolean,

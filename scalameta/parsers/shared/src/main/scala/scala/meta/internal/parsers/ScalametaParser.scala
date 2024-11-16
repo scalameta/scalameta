@@ -751,7 +751,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def typeIndentedOpt(): Type = maybeIndented(typ())
 
-    def typ(): Type = autoPosOpt {
+    def typ(inParam: Boolean = false): Type = autoPosOpt {
       val startPos = currIndex
       val t: Type =
         if (at[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly() else infixTypeOrTuple()
@@ -759,26 +759,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       getAfterOptNewLine(currToken match {
         case _: KwForsome => Some(existentialTypeOnForSome(t))
         case _: KwMatch if dialect.allowTypeMatch => next(); Some(Type.Match(t, typeCaseClauses()))
-        case _ => typeFuncOnArrowOpt(startPos, t :: Nil)
+        case _ => typeFuncOnArrowOpt(startPos, t :: Nil, inParam = inParam)
       }).getOrElse(t)
     }
 
-    private def exactParamType(allowRepeated: Boolean): Type = {
+    private def paramValueType(allowRepeated: Boolean = false): Type = {
       val startPos = currIndex
-      val t = typ()
-      if (allowRepeated && isStar) {
+      def withRepeated(t: Type) =
+        if (allowRepeated && isStar) { next(); autoEndPos(startPos)(Type.Repeated(t)) }
+        else t
+      def atInto() = {
+        val intoPos = currIndex
+        val mod = atPos(intoPos)(Mod.Into())
         next()
-        autoEndPos(startPos)(Type.Repeated(t))
-      } else t
+        autoEndPos(intoPos)(Type.FunctionArg(mod :: Nil, typ(inParam = true)))
+      }
+      currToken match {
+        case soft.KwInto() => atInto()
+        case _: LeftParen if nextIf(soft.KwInto.matches(peekToken)) =>
+          withRepeated(inParensAfterOpen(atInto()))
+        case _ => withRepeated(typ(inParam = true))
+      }
     }
-
-    private def paramValueType(allowRepeated: Boolean): Type =
-      if (soft.KwInto.matches(currToken)) {
-        val startPos = currIndex
-        val mod = atPos(startPos)(Mod.Into())
-        next()
-        autoEndPos(startPos)(Type.FunctionArg(mod :: Nil, exactParamType(allowRepeated)))
-      } else exactParamType(allowRepeated)
 
     def paramType(): Type = {
       def byNameParamValueType =
@@ -845,27 +847,37 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         capturedType
       ).getOrElse(capturedType)
 
-    private def typeFuncOnArrow(paramPos: Int, params: List[Type], allowCaptures: Boolean = false)(
-        ctor: (Type.FuncParamClause, Type) => Type
-    ): Type = {
+    private def typeFuncOnArrow(
+        paramPos: Int,
+        params: List[Type],
+        allowCaptures: Boolean = false,
+        inParam: Boolean = false
+    )(ctor: (Type.FuncParamClause, Type) => Type): Type = {
       val funcParams = autoEndPos(paramPos)(params.reduceWith(Type.FuncParamClause.apply))
       next()
-      withTypeCaptures(paramPos, allowCaptures = allowCaptures)(ctor(funcParams, typeIndentedOpt()))
+      withTypeCaptures(paramPos, allowCaptures = allowCaptures) {
+        ctor(funcParams, maybeIndented(if (inParam) paramValueType() else typ()))
+      }
     }
 
-    private def typeFuncOnArrowOpt(paramPos: Int, params: List[Type]): Option[Type] =
+    private def typeFuncOnArrowOpt(
+        paramPos: Int,
+        params: List[Type],
+        inParam: Boolean = false
+    ): Option[Type] = {
+      def func(caps: Boolean = true)(ctor: (Type.FuncParamClause, Type) => Type): Option[Type] =
+        Some(typeFuncOnArrow(paramPos, params, inParam = inParam, allowCaptures = caps)(ctor))
       currToken match {
-        case _: RightArrow => Some(typeFuncOnArrow(paramPos, params)(Type.Function(_, _)))
-        case _: ContextArrow => Some(typeFuncOnArrow(paramPos, params)(Type.ContextFunction(_, _)))
+        case _: RightArrow => func(caps = false)(Type.Function(_, _))
+        case _: ContextArrow => func(caps = false)(Type.ContextFunction(_, _))
         case t: Ident => t.text match {
-            case soft.KwPureFunctionArrow() =>
-              Some(typeFuncOnArrow(paramPos, params, allowCaptures = true)(Type.PureFunction(_, _)))
-            case soft.KwPureContextFunctionArrow() =>
-              Some(typeFuncOnArrow(paramPos, params, allowCaptures = true)(Type.PureContextFunction(_, _)))
+            case soft.KwPureFunctionArrow() => func()(Type.PureFunction(_, _))
+            case soft.KwPureContextFunctionArrow() => func()(Type.PureContextFunction(_, _))
             case _ => None
           }
         case _ => None
       }
+    }
 
     private def typeCaseClauses(): Type.CasesBlock = autoPos {
       def cases() = listBy[TypeCase] { allCases =>

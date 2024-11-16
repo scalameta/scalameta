@@ -574,8 +574,10 @@ class TypeSuite extends BaseDottySuite {
 
   test("#3672 [scala3] ***")(runTestAssert[Type]("***")(pname("***")))
 
-  // https://www.scala-lang.org/api/3.3.3/docs/docs/reference/experimental/into-modifier.html
+  // https://dotty.epfl.ch/docs/reference/experimental/into-modifier.html
+
   test("#3995 into type") {
+    implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def ++ (elems: into IterableOnce[A]): List[A]"
     val layout = "def ++(elems: into IterableOnce[A]): List[A]"
     val tree = Decl.Def(
@@ -592,6 +594,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("#3995 into by-name type") {
+    implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def ++ (elems: => into IterableOnce[A]): List[A]"
     val layout = "def ++(elems: => (into IterableOnce[A])): List[A]"
     val tree = Decl.Def(
@@ -610,6 +613,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("#3995 into func type") {
+    implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def flatMap[B](f: into A => IterableOnce[B]): List[B]"
     val tree = Decl.Def(
       Nil,
@@ -630,21 +634,48 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
 
-  test("#3995 into vararg type") {
-    val code = "def concatAll(xss: into IterableOnce[Char]*): List[Char]"
-    val layout = "def concatAll(xss: into (IterableOnce[Char]*)): List[Char]"
+  test("#3995 into func arg type") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def flatMap[B](f: A => into IterableOnce[B]): List[B]"
+    val layout = "def flatMap[B](f: A => (into IterableOnce[B])): List[B]"
     val tree = Decl.Def(
       Nil,
-      tname("concatAll"),
+      tname("flatMap"),
+      List(pparam("B")),
+      List(List(tparam(
+        "f",
+        Some(Type.Function(
+          List("A"),
+          Type.FunctionArg(List(Mod.Into()), Type.Apply("IterableOnce", List("B")))
+        ))
+      ))),
+      Type.Apply(pname("List"), List(pname("B")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3995 into vararg type without parens (wrong)") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def concatAll(xss: into IterableOnce[Char]*): List[Char]"
+    val error = """|<input>:1: error: `)` expected but `identifier` found
+                   |def concatAll(xss: into IterableOnce[Char]*): List[Char]
+                   |                                          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#3995 into vararg type with parens (correct)") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def concatAll(xss: (into IterableOnce[Char])*): List[Char]"
+    val layout = "def concatAll(xss: (into IterableOnce[Char])*): List[Char]"
+    val tree = Decl.Def(
+      Nil,
+      "concatAll",
       Nil,
       List(List(tparam(
         "xss",
-        Some(Type.FunctionArg(
-          List(Mod.Into()),
-          Type.Repeated(Type.Apply(pname("IterableOnce"), List(pname("Char"))))
-        ))
+        Some(Type.Repeated(Type.FunctionArg(List(Mod.Into()), Type.Apply("IterableOnce", List("Char")))))
       ))),
-      Type.Apply(pname("List"), List(pname("Char")))
+      Type.Apply("List", List("Char"))
     )
     runTestAssert[Stat](code, layout)(tree)
   }
