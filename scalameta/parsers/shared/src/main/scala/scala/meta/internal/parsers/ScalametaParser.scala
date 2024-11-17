@@ -408,26 +408,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def syntaxErrorExpected[T <: Token: ClassTag]: Nothing = syntaxErrorExpected[T](currToken)
   private def syntaxErrorExpected[T <: Token: ClassTag](tok: Token): Nothing =
     syntaxError(syntaxExpectedMessage[T](tok), at = tok)
-  private def expectAt[T <: Token: ClassTag](tok: Token, msg: => String, exists: Boolean): Unit =
-    if (tok.is[T] != exists) syntaxError(msg, at = tok)
+  private def expectAt[T <: Token: ClassTag](
+      tok: Token,
+      exists: Boolean
+  )(msg: => String, prefix: => String): Unit = if (tok.is[T] != exists)
+    syntaxError(Option(prefix).filter(_.nonEmpty).fold(msg)(p => s"$p: $msg"), at = tok)
 
   @inline
-  private def expectAt[T <: Token: ClassTag](tok: Token): Unit =
-    expectAt[T](tok, syntaxExpectedMessage[T](tok), exists = true)
+  private def expectAt[T <: Token: ClassTag](tok: Token, prefix: => String = ""): Unit =
+    expectAt[T](tok, exists = true)(msg = syntaxExpectedMessage[T](tok), prefix = prefix)
   @inline
   private def expect[T <: Token: ClassTag]: Unit = expectAt[T](currToken)
   @inline
-  private def expect[T <: Token: ClassTag](msg: => String): Unit =
-    expectAt[T](currToken, msg, exists = true)
+  private def expect[T <: Token: ClassTag](prefix: => String): Unit =
+    expectAt[T](currToken, prefix = prefix)
 
   @inline
-  private def expectNotAt[T <: Token: ClassTag](tok: Token): Unit =
-    expectAt[T](tok, syntaxNotExpectedMessage[T], exists = false)
+  private def expectNotAt[T <: Token: ClassTag](tok: Token, prefix: => String = ""): Unit =
+    expectAt[T](tok, exists = false)(msg = syntaxNotExpectedMessage[T], prefix = prefix)
   @inline
   private def expectNot[T <: Token: ClassTag]: Unit = expectNotAt[T](currToken)
   @inline
-  private def expectNot[T <: Token: ClassTag](msg: => String): Unit =
-    expectAt[T](currToken, msg, exists = false)
+  private def expectNot[T <: Token: ClassTag](prefix: => String): Unit =
+    expectNotAt[T](currToken, prefix = prefix)
 
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Token: ClassTag]: Unit = {
@@ -2427,7 +2430,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def caseClause(forceSingleExpr: Boolean = false): Case = {
-    expectNot[KwCase]("Unexpected `case`")
+    expectNot[KwCase]
     autoEndPos(prevIndex) {
       def caseBody() = {
         accept[RightArrow]
@@ -3938,7 +3941,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(owner)
     else if (at[Colon] && peekToken.isAny[Indentation, EOL]) autoPos {
       next()
-      expect[Indentation.Indent]("expected template body")
+      expect[Indentation.Indent]("template body")
       templateBodyOnIndentRaw(owner)
     }
     else if (at[LeftParen])
@@ -4290,8 +4293,10 @@ object ScalametaParser {
   private val bigIntMaxLong = BigInt(Long.MaxValue) + 1
   private val bigIntMaxULong = bigIntMaxLong << 1
 
-  private def getTokenName[T <: Token: ClassTag]: String =
-    classTag[T].runtimeClass.getSimpleName match {
+  private def getTokenName[T <: Token: ClassTag]: String = {
+    val name = classTag[T].runtimeClass.getName
+    val simplerName = name.substring(name.lastIndexOf('.') + 1)
+    simplerName.stripPrefix("Token$").replace('$', '.') match {
       case "Semicolon" => ";"
       case "Hash" => "#"
       case "Colon" => ":"
@@ -4318,8 +4323,11 @@ object ScalametaParser {
       case "Ident" => "identifier"
       case "EOF" => "end of file"
       case "BOF" => "beginning of file"
-      case other => other.toLowerCase().stripPrefix("kw")
+      case other =>
+        val kw = other.stripPrefix("Kw").stripPrefix("Indentation.")
+        if (kw eq other) kw else kw.toLowerCase
     }
+  }
   private def syntaxExpectedMessage[T <: Token: ClassTag](tok: Token): String =
     s"`${getTokenName[T]}` expected but `${tok.name}` found"
   private def syntaxNotExpectedMessage[T <: Token: ClassTag]: String =

@@ -268,7 +268,7 @@ class EndMarkerSuite extends BaseDottySuite {
          |  end Bar
          |end Foo
          |""".stripMargin,
-      """|<input>:2: error: expected template body
+      """|<input>:2: error: template body: `indent` expected but `\n` found
          |  trait Baz:
          |            ^""".stripMargin
     )
@@ -280,7 +280,7 @@ class EndMarkerSuite extends BaseDottySuite {
          |  trait Bar:
          |end Foo
          |""".stripMargin,
-      """|<input>:2: error: expected template body
+      """|<input>:2: error: template body: `indent` expected but `outdent` found
          |  trait Bar:
          |            ^""".stripMargin
     )
@@ -290,7 +290,7 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestError[Source](
       """|trait Foo:
          |""".stripMargin,
-      """|<input>:1: error: expected template body
+      """|<input>:1: error: template body: `indent` expected but `\n` found
          |trait Foo:
          |          ^""".stripMargin
     )
