@@ -3093,20 +3093,40 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("case at same indent as line containing match, then template") {
-    val code =
-      """|object Definitions:
-         |  def foo = bar
-         |    .baz match
-         |    case none => false
-         |
-         |  class Qux:
-         |    self =>
-         |  end Qux
-         |""".stripMargin
-    val error = """|<input>:6: error: expected template body
-                   |  class Qux:
-                   |            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val code = """|object Definitions:
+                  |  def foo = bar
+                  |    .baz match
+                  |    case none => false
+                  |
+                  |  class Qux:
+                  |    self =>
+                  |  end Qux
+                  |""".stripMargin
+    val layout = """|object Definitions {
+                    |  def foo = bar.baz match {
+                    |    case none => false
+                    |  }
+                    |  class Qux { self => }
+                    |  end Qux
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      "Definitions",
+      tpl(
+        Defn.Def(
+          Nil,
+          "foo",
+          Nil,
+          Nil,
+          None,
+          Term.Match(Term.Select("bar", "baz"), List(Case(Pat.Var("none"), None, lit(false))), Nil)
+        ),
+        Defn.Class(Nil, pname("Qux"), Nil, ctor, tpl(Nil, tplBody("self"))),
+        Term.EndMarker("Qux")
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
