@@ -134,7 +134,7 @@ class PatSuite extends ParseSuite {
 
   test("a :: ()") {
     assertPat("a :: ()")(ExtractInfix(Var(tname("a")), tname("::"), Nil))
-    val error = """|<input>:1: error: infix patterns cannot have type arguments
+    val error = """|<input>:1: error: infix patterns cannot have type arguments: not expected `[`
                    |a ::[T] ()
                    |    ^""".stripMargin
     runTestError[Pat]("a ::[T] ()", error)

@@ -301,7 +301,7 @@ class TermSuite extends ParseSuite {
 
   test("1 match { case case 1 if true => }") {
     val intercepted = intercept[ParseException](term("1 match { case case 1 if true => }"))
-    assertNoDiff(intercepted.shortMessage, "Unexpected `case`")
+    assertNoDiff(intercepted.shortMessage, "not expected `case`")
   }
 
   test("try 1")(assertTerm("try 1")(Try(int(1), Nil, None)))
