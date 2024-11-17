@@ -96,8 +96,9 @@ trait CommonTrees {
   final def tparamInline(name: String, tpe: String) = tparam(List(Mod.Inline()), name, tpe)
   final def tparamUsing(name: String, tpe: String) = tparam(List(Mod.Using()), name, tpe)
 
-  final def tinfix(lt: Term, op: Term.Name, rt: List[Term], ta: List[Type] = Nil): Term.ApplyInfix =
-    Term.ApplyInfix(lt, op, ta, rt)
+  final def tinfix(lt: Term, op: Term.Name, ta: List[Type], rt: Term*): Term.ApplyInfix = Term
+    .ApplyInfix(lt, op, ta, rt.toList)
+  final def tinfix(lt: Term, op: Term.Name, rt: Term*): Term.ApplyInfix = tinfix(lt, op, Nil, rt: _*)
 
   final def pname(name: String): Type.Name = Type.Name(name)
   implicit def implicitStringToType(obj: String): Type.Name = pname(obj)
@@ -129,12 +130,19 @@ trait CommonTrees {
   final def purectxfunc(param: List[Type], res: Type): Type.PureContextFunction = Type
     .PureContextFunction(param, res)
 
+  final def patvar(name: Term.Name): Pat.Var = Pat.Var(name)
+  implicit def implicitStringToPatVar(obj: String): Pat.Var = patvar(obj)
+
+  final def patinfix(lt: Pat, op: Term.Name, rt: Pat*): Pat.ExtractInfix = Pat
+    .ExtractInfix(lt, op, rt.toList)
+
   final val noBounds = Type.Bounds(None, None)
   final def loBound(bound: Type): Type.Bounds = Type.Bounds(Some(bound), None)
   final def hiBound(bound: Type): Type.Bounds = Type.Bounds(None, Some(bound))
   final def bounds(lo: Type.Name = null, hi: Type.Name = null): Type.Bounds = Type
     .Bounds(Option(lo), Option(hi))
 
+  final def lit() = Lit.Unit()
   final def bool(v: Boolean) = Lit.Boolean(v)
   final def lit(v: Boolean) = Lit.Boolean(v)
   final def int(v: Int) = Lit.Int(v)

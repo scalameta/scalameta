@@ -118,12 +118,51 @@ class PatSuite extends ParseSuite {
     assertPat("a :: b")(ExtractInfix(Var(tname("a")), tname("::"), Var(tname("b")) :: Nil))
   }
 
-  test("a :: ()") {
-    assertPat("a :: ()")(ExtractInfix(Var(tname("a")), tname("::"), Nil))
+  test("a ::[T] ()") {
     val error = """|<input>:1: error: infix patterns cannot have type arguments: not expected `[`
                    |a ::[T] ()
                    |    ^""".stripMargin
     runTestError[Pat]("a ::[T] ()", error)
+  }
+
+  test("a :: () [scala211]") {
+    implicit val dialect: Dialect = dialects.Scala211
+    runTestAssert[Pat]("a :: ()")(patinfix("a", "::"))
+  }
+
+  test("a :: () [scala212]") {
+    implicit val dialect: Dialect = dialects.Scala212
+    runTestAssert[Pat]("a :: ()")(patinfix("a", "::"))
+  }
+
+  test("a :: () [scala213]") {
+    implicit val dialect: Dialect = dialects.Scala213
+    runTestAssert[Pat]("a :: ()")(patinfix("a", "::"))
+  }
+
+  test("a :: () [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    runTestAssert[Pat]("a :: ()")(patinfix("a", "::"))
+  }
+
+  test("a :: (()) [scala211]") {
+    implicit val dialect: Dialect = dialects.Scala211
+    parseAndCheckTree[Pat]("a :: (())", "a :: ()")(patinfix("a", "::", lit()))
+  }
+
+  test("a :: (()) [scala212]") {
+    implicit val dialect: Dialect = dialects.Scala212
+    parseAndCheckTree[Pat]("a :: (())", "a :: ()")(patinfix("a", "::", lit()))
+  }
+
+  test("a :: (()) [scala213]") {
+    implicit val dialect: Dialect = dialects.Scala213
+    parseAndCheckTree[Pat]("a :: (())", "a :: ()")(patinfix("a", "::", lit()))
+  }
+
+  test("a :: (()) [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    parseAndCheckTree[Pat]("a :: (())", "a :: ()")(patinfix("a", "::", lit()))
   }
 
   test("1 | 2 | 3") {

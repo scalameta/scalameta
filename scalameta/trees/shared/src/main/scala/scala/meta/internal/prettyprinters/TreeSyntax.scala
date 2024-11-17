@@ -731,19 +731,13 @@ object TreeSyntax {
       case t: Pat.Tuple => m(SimplePattern, s("(", r(t.args, ", "), ")"))
       case t: Pat.ArgClause => m(SimplePattern, s("(", r(t.values, ", "), ")"))
       case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
-      case t: Pat.ExtractInfix => m(
-          Pattern3(t.op.value),
-          s(
-            p(Pattern3(t.op.value), t.lhs, left = true),
-            " ",
-            t.op,
-            " ",
-            t.argClause match {
-              case Pat.ArgClause(pat :: Nil) => s(p(Pattern3(t.op.value), pat, right = true))
-              case pats => s(pats)
-            }
-          )
-        )
+      case t: Pat.ExtractInfix =>
+        val pop = Pattern3(t.op.value)
+        val rhs = t.argClause match {
+          case Pat.ArgClause(pat :: Nil) => s(p(pop, pat, right = true))
+          case pats => s(pats)
+        }
+        m(pop, s(p(pop, t.lhs, left = true), " ", t.op, " ", rhs))
       case t: Pat.Interpolate =>
         /** @see LegacyScanner.getStringPart, when ch == '$' */
         def needBraces(id: String): Boolean = !Character.isUnicodeIdentifierStart(id.head)
