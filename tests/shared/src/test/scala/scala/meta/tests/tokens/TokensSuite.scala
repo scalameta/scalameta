@@ -183,6 +183,15 @@ class TokensApiSuite extends FunSuite {
     val afterRbeg = afterRlen - tokens.length
     assertEquals(afterR.skipWideIf(notIdent, afterRbeg, tokens.length), -1)
     assertEquals(afterR.getWideOpt(-1).orNull, afterL.head)
+
+    var lastidx = -1
+    tokens.foreachWithIndex { (t, i) =>
+      assertEquals(lastidx, i - 1)
+      lastidx = i
+      if (i == 1) assertEquals(t.text, "val")
+      else if (i == 3) assertEquals(t.text, "foo")
+      else if (i == 5) assertEquals(t.text, "=")
+    }
   }
 
 }

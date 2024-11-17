@@ -159,6 +159,24 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
     val idx = segmentLength(p)
     if (idx < length) Some(get(idx)) else None
   }
+
+  def foreachWithIndex(f: (Token, Int) => Unit): Unit = {
+    var idx = 0
+    while (idx < length) {
+      f(get(idx), idx)
+      idx += 1
+    }
+  }
+
+  def foreachWithIndex(f: (Token, Int) => Unit, beg: Int, end: Int): Unit = {
+    var idx = beg
+    val stop = end.min(length)
+    while (idx < stop) {
+      f(get(idx), idx)
+      idx += 1
+    }
+  }
+
 }
 
 object Tokens {
