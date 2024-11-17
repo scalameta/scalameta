@@ -740,7 +740,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               if (nextIndent > r.indent) null
               else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
               else if (nextIndent < r.indent || rc.arrow.ne(prev) && (!next.is[KwCase]) ||
-                getNextToken(nextPos).isClassOrObject) OutdentInfo(r, rs)
+                getNextToken(nextPos).isClassOrObject) OutdentInfo(r, dropRegionLine(nextIndent, rs))
               else null
             case (r: RegionIndent) :: (rs @ RegionTry :: xs) =>
               if (nextIndent < r.indent || nextIndent == r.indent && next.isAny[KwCatch, KwFinally]) {
@@ -887,11 +887,10 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               case (r: RegionControl) :: rs
                   if !r.isControlKeyword(prev) && r.isNotTerminatingTokenIfOptional(next) =>
                 r match {
-                  case rc: RegionControlMaybeCond if prev.is[RightParen] =>
+                  case r: RegionControlMaybeCond if prev.is[RightParen] =>
                     if (next.is[Dot]) None
-                    else rc.asBody() match {
-                      case Some(body) => getIfCanProduceLF(body :: rs, nextIndent)
-                          .orElse(onlyWithoutLF())
+                    else r.asBody() match {
+                      case Some(x) => getIfCanProduceLF(x :: rs, nextIndent).orElse(onlyWithoutLF())
                       case None => iter(rs)
                     }
                   case _ => iter(rs)
@@ -989,6 +988,13 @@ object ScannerTokens {
     case (_: RegionLine) :: rs => dropRegionLine(rs)
     case _ => regions
   }
+
+  @tailrec
+  private def dropRegionLine(indent: Int, regions: List[SepRegion]): List[SepRegion] =
+    regions match {
+      case (r: RegionLine) :: rs if r.indent >= indent => dropRegionLine(indent, rs)
+      case _ => regions
+    }
 
   private def findIndent(sepRegions: List[SepRegion]): Int = sepRegions.find(_.indent >= 0)
     .fold(0)(_.indent)
