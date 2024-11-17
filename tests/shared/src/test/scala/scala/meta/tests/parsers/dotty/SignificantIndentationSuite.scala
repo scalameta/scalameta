@@ -3092,4 +3092,21 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("case at same indent as line containing match, then template") {
+    val code =
+      """|object Definitions:
+         |  def foo = bar
+         |    .baz match
+         |    case none => false
+         |
+         |  class Qux:
+         |    self =>
+         |  end Qux
+         |""".stripMargin
+    val error = """|<input>:6: error: expected template body
+                   |  class Qux:
+                   |            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
