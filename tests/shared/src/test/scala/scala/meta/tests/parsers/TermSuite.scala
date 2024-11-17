@@ -104,12 +104,12 @@ class TermSuite extends ParseSuite {
 
   test("a + () [scala213]") {
     implicit val dialect: Dialect = dialects.Scala213
-    runTestAssert[Term]("a + ()")(tinfix("a", "+"))
+    runTestAssert[Term]("a + ()", "a + (())")(tinfix("a", "+", lit()))
   }
 
   test("a + () [scala3]") {
     implicit val dialect: Dialect = dialects.Scala3
-    runTestAssert[Term]("a + ()")(tinfix("a", "+"))
+    runTestAssert[Term]("a + ()", "a + (())")(tinfix("a", "+", lit()))
   }
 
   test("a + (()) [scala211]") {

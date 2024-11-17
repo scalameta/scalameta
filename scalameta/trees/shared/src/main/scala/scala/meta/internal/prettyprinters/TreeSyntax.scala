@@ -734,7 +734,7 @@ object TreeSyntax {
       case t: Pat.ExtractInfix =>
         val pop = Pattern3(t.op.value)
         val rhs = t.argClause match {
-          case Pat.ArgClause(pat :: Nil) => s(p(pop, pat, right = true))
+          case Pat.ArgClause(pat :: Nil) if !pat.is[Lit.Unit] => s(p(pop, pat, right = true))
           case pats => s(pats)
         }
         m(pop, s(p(pop, t.lhs, left = true), " ", t.op, " ", rhs))

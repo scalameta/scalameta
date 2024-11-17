@@ -39,7 +39,7 @@ package object dialects {
 
   implicit val Scala213: Dialect = Scala212.withAllowImplicitByNameParameters(true)
     .withAllowLiteralTypes(true).withAllowNumericLiteralUnderscoreSeparators(true)
-    .withAllowTryWithAnyExpr(true).withAllowBinaryLiterals(true)
+    .withAllowTryWithAnyExpr(true).withAllowBinaryLiterals(true).withAllowEmptyInfixArgs(false)
 
   /**
    * Dialect starting with Scala 2.13.6 for `-Xsource:3` option

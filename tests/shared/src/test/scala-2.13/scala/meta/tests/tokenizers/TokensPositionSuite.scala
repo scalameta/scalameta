@@ -46,7 +46,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
     "case x `.y` () =>",
     """|Pat.ExtractInfix x `.y` ()
        |Term.Name `.y`
-       |Pat.ArgClause ()
        |Term.Block case x `.y` () =>@@
        |""".stripMargin
   )
@@ -240,7 +239,6 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Stat](
     "a f ()",
     """|Type.ArgClause a f @@()
-       |Term.ArgClause ()
        |""".stripMargin
   )
   checkPositions[Stat](

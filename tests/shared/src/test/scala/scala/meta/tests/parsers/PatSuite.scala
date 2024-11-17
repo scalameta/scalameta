@@ -137,32 +137,32 @@ class PatSuite extends ParseSuite {
 
   test("a :: () [scala213]") {
     implicit val dialect: Dialect = dialects.Scala213
-    runTestAssert[Pat]("a :: ()")(patinfix("a", "::"))
+    runTestAssert[Pat]("a :: ()", "a :: (())")(patinfix("a", "::", lit()))
   }
 
   test("a :: () [scala3]") {
     implicit val dialect: Dialect = dialects.Scala3
-    runTestAssert[Pat]("a :: ()")(patinfix("a", "::"))
+    runTestAssert[Pat]("a :: ()", "a :: (())")(patinfix("a", "::", lit()))
   }
 
   test("a :: (()) [scala211]") {
     implicit val dialect: Dialect = dialects.Scala211
-    parseAndCheckTree[Pat]("a :: (())", "a :: ()")(patinfix("a", "::", lit()))
+    runTestAssert[Pat]("a :: (())")(patinfix("a", "::", lit()))
   }
 
   test("a :: (()) [scala212]") {
     implicit val dialect: Dialect = dialects.Scala212
-    parseAndCheckTree[Pat]("a :: (())", "a :: ()")(patinfix("a", "::", lit()))
+    runTestAssert[Pat]("a :: (())")(patinfix("a", "::", lit()))
   }
 
   test("a :: (()) [scala213]") {
     implicit val dialect: Dialect = dialects.Scala213
-    parseAndCheckTree[Pat]("a :: (())", "a :: ()")(patinfix("a", "::", lit()))
+    runTestAssert[Pat]("a :: (())")(patinfix("a", "::", lit()))
   }
 
   test("a :: (()) [scala3]") {
     implicit val dialect: Dialect = dialects.Scala3
-    parseAndCheckTree[Pat]("a :: (())", "a :: ()")(patinfix("a", "::", lit()))
+    runTestAssert[Pat]("a :: (())")(patinfix("a", "::", lit()))
   }
 
   test("1 | 2 | 3") {
