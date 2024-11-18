@@ -48,7 +48,6 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
   checkPositions[Term](
     "a f ()",
     """|Type.ArgClause a f @@()
-       |Term.ArgClause ()
        |""".stripMargin
   )
 

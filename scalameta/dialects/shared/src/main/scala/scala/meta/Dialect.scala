@@ -22,6 +22,11 @@ final class Dialect private[meta] (
     val allowCaseClassWithoutParameterList: Boolean,
     // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
     val allowColonForExtractorVarargs: Boolean,
+    // treatment of "a b ()" changed from 2.12 (empty args, aka "nullary") to 2.13 (a Unit arg)
+    val allowEmptyInfixArgs: Boolean,
+
+    // *** scala3 flags below ***
+
     // Are enums allowed?
     // They are in Dotty, but not in Scala 2.13 or older.
     val allowEnums: Boolean,
@@ -210,6 +215,7 @@ final class Dialect private[meta] (
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
     allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
     allowColonForExtractorVarargs = allowColonForExtractorVarargs,
+    allowEmptyInfixArgs = true,
     allowEnums = allowEnums,
     allowImplicitByNameParameters = allowImplicitByNameParameters,
     allowInlineIdents = allowInlineIdents,
@@ -290,6 +296,9 @@ final class Dialect private[meta] (
     privateCopy(allowCaseClassWithoutParameterList = newValue)
   def withAllowColonForExtractorVarargs(newValue: Boolean): Dialect =
     privateCopy(allowColonForExtractorVarargs = newValue)
+  def withAllowEmptyInfixArgs(newValue: Boolean): Dialect =
+    privateCopy(allowEmptyInfixArgs = newValue)
+
   def withAllowEnums(newValue: Boolean): Dialect = privateCopy(allowEnums = newValue)
   def withAllowImplicitByNameParameters(newValue: Boolean): Dialect =
     privateCopy(allowImplicitByNameParameters = newValue)
@@ -433,6 +442,7 @@ final class Dialect private[meta] (
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs: Boolean = this.allowColonForExtractorVarargs,
+      allowEmptyInfixArgs: Boolean = this.allowEmptyInfixArgs,
       allowEnums: Boolean = this.allowEnums,
       allowImplicitByNameParameters: Boolean = this.allowImplicitByNameParameters,
       allowInlineIdents: Boolean = this.allowInlineIdents,
@@ -501,6 +511,7 @@ final class Dialect private[meta] (
       allowAtForExtractorVarargs = allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs = allowColonForExtractorVarargs,
+      allowEmptyInfixArgs = allowEmptyInfixArgs,
       allowEnums = allowEnums,
       allowImplicitByNameParameters = allowImplicitByNameParameters,
       allowInlineIdents = allowInlineIdents,
@@ -568,6 +579,7 @@ final class Dialect private[meta] (
       allowAtForExtractorVarargs = allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs = allowColonForExtractorVarargs,
+      allowEmptyInfixArgs = allowEmptyInfixArgs,
       allowEnums = allowEnums,
       allowImplicitByNameParameters = allowImplicitByNameParameters,
       allowInlineIdents = allowInlineIdents,
@@ -663,6 +675,7 @@ final class Dialect private[meta] (
       allowAtForExtractorVarargs: Boolean,
       allowCaseClassWithoutParameterList: Boolean,
       allowColonForExtractorVarargs: Boolean,
+      allowEmptyInfixArgs: Boolean,
       allowEnums: Boolean,
       allowImplicitByNameParameters: Boolean,
       allowInlineIdents: Boolean,
@@ -728,7 +741,7 @@ final class Dialect private[meta] (
     this.allowAtForExtractorVarargs == allowAtForExtractorVarargs &&
       this.allowCaseClassWithoutParameterList == allowCaseClassWithoutParameterList &&
       this.allowColonForExtractorVarargs == allowColonForExtractorVarargs &&
-      this.allowEnums == allowEnums &&
+      this.allowEmptyInfixArgs == allowEmptyInfixArgs && this.allowEnums == allowEnums &&
       this.allowImplicitByNameParameters == allowImplicitByNameParameters &&
       this.allowInlineIdents == allowInlineIdents && this.allowInlineMods == allowInlineMods &&
       this.allowLiteralTypes == allowLiteralTypes &&
@@ -787,6 +800,7 @@ final class Dialect private[meta] (
       allowAtForExtractorVarargs = that.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = that.allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs = that.allowColonForExtractorVarargs,
+      allowEmptyInfixArgs = that.allowEmptyInfixArgs,
       allowEnums = that.allowEnums,
       allowImplicitByNameParameters = that.allowImplicitByNameParameters,
       allowInlineIdents = that.allowInlineIdents,

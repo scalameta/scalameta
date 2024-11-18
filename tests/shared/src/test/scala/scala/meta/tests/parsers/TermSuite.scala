@@ -4,13 +4,15 @@ package parsers
 import scala.meta._
 import scala.meta.tokenizers.TokenizerOptions
 
+import scala.language.implicitConversions
+
 class TermSuite extends ParseSuite {
   import Name.Anonymous
   import Name.Indeterminate
   import Term.{Name => _, _}
 
   implicit val dialect: Dialect = dialects.Scala211
-  implicit val parseTerm: String => Term = term(_)
+  implicit def parseTerm(code: String)(implicit dialect: Dialect): Term = term(code)
 
   private def assertTerm(expr: String)(tree: Tree)(implicit loc: munit.Location): Unit =
     assertTree(term(expr))(tree)
@@ -90,7 +92,45 @@ class TermSuite extends ParseSuite {
     }
   }
 
-  test("a + ()")(assertTerm("a + ()")(ApplyInfix(tname("a"), tname("+"), Nil, Nil)))
+  test("a + () [scala211]") {
+    implicit val dialect: Dialect = dialects.Scala211
+    runTestAssert[Term]("a + ()")(tinfix("a", "+"))
+  }
+
+  test("a + () [scala212]") {
+    implicit val dialect: Dialect = dialects.Scala212
+    runTestAssert[Term]("a + ()")(tinfix("a", "+"))
+  }
+
+  test("a + () [scala213]") {
+    implicit val dialect: Dialect = dialects.Scala213
+    runTestAssert[Term]("a + ()", "a + (())")(tinfix("a", "+", lit()))
+  }
+
+  test("a + () [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    runTestAssert[Term]("a + ()", "a + (())")(tinfix("a", "+", lit()))
+  }
+
+  test("a + (()) [scala211]") {
+    implicit val dialect: Dialect = dialects.Scala211
+    runTestAssert[Term]("a + (())")(tinfix("a", "+", lit()))
+  }
+
+  test("a + (()) [scala212]") {
+    implicit val dialect: Dialect = dialects.Scala212
+    runTestAssert[Term]("a + (())")(tinfix("a", "+", lit()))
+  }
+
+  test("a + (()) [scala213]") {
+    implicit val dialect: Dialect = dialects.Scala213
+    runTestAssert[Term]("a + (())")(tinfix("a", "+", lit()))
+  }
+
+  test("a + (()) [scala3]") {
+    implicit val dialect: Dialect = dialects.Scala3
+    runTestAssert[Term]("a + (())")(tinfix("a", "+", lit()))
+  }
 
   test("a + b")(assertTerm("a + b")(ApplyInfix(tname("a"), tname("+"), Nil, tname("b") :: Nil)))
 

@@ -1875,7 +1875,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def toArgClause(rhs: Typ): Term.ArgClause = copyPos(rhs)(
       (rhs match {
-        case _: Lit.Unit => Nil
+        case _: Lit.Unit if dialect.allowEmptyInfixArgs => Nil
         case t: Term.Tuple => t.args
         case _ => rhs :: Nil
       }).reduceWith(Term.ArgClause(_))
@@ -1910,7 +1910,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       val args = copyPos(rhs)(
         (rhs match {
-          case _: Lit.Unit => Nil
+          case _: Lit.Unit if dialect.allowEmptyInfixArgs => Nil
           case t: Pat.Tuple => t.args
           case _ => rhs :: Nil
         }).reduceWith(Pat.ArgClause.apply)
