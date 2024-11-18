@@ -17,14 +17,15 @@ features, check out [the specification](specification.html).
 
 ## Installation
 
-This guide covers several non-standard command-line tools: `metac` and `metap`.
+This guide covers several non-standard command-line tools:
+[`metac`](#metac) and [`metap`](#metap).
 First, install the `coursier` command-line tool by following the
 [instructions here](https://get-coursier.io/docs/cli-installation). Next, use
 coursier to install metac and metap.
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.scalameta/scalameta_2.12)
 
-```
+```shell
 cs install metac metap
 ```
 
@@ -170,7 +171,7 @@ The `semanticdb-scalac` compiler plugin injects itself immediately after the
 `typer` phase of the Scala compiler and then harvests and dumps semantic
 information from Scalac in SemanticDB format.
 
-```
+```shell
 scalac -Xplugin:path/to.jar -Yrangepos [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
 ```
 
@@ -333,7 +334,9 @@ and produces `*.semanticdb` files instead of `*.class` files. It supports the
 same command-line arguments as `scalac`, including the compiler plugin options
 [described above](#scalac-compiler-plugin).
 
-```
+```shell
+# downloads CLI tool based on org.scalameta.metac, version @VERSION@
+cs install metac # if necessary
 metac [<pluginOption> ...] [<scalacOption> ...] [<sourceFile> ...]
 ```
 
@@ -362,8 +365,8 @@ to
 Using this library, one can model SemanticDB entities as Scala case classes and
 serialize/deserialize them into bytes and streams.
 
-```
-libraryDependencies += "org.scalameta" %% "semanticdb" % "@VERSION@"
+```scala
+libraryDependencies += "org.scalameta" %% "semanticdb-shared" % "@VERSION@"
 ```
 
 Caveats:
@@ -388,7 +391,9 @@ Metap is a command-line tool that takes a list of paths and then prettyprints
 all .semanticdb files that it finds in these paths. Advanced options control
 prettyprinting format.
 
-```
+```shell
+# downloads CLI tool based on org.scalameta.semanticdb-metap, version @VERSION@
+cs install metap # if necessary
 metap [options] <classpath>
 ```
 
