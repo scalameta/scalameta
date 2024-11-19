@@ -256,14 +256,92 @@ class InfixSuite extends BaseDottySuite {
          |    | boiling
          |}
          |""".stripMargin,
-      Some(
-        """|{
-           |  freezing
-           |  |.boiling
-           |}
-           |""".stripMargin
-      )
-    )(Term.Block(List(tname("freezing"), Term.Select(tname("|"), tname("boiling")))))
+      """|{
+         |  freezing
+         |  |.boiling
+         |}
+         |""".stripMargin
+    )(blk("freezing", tselect("|", "boiling")))
+  }
+
+  test("scala3 infix syntax 3.2.1") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |
+         |    `|` boiling
+         |}
+         |""".stripMargin,
+      """|{
+         |  freezing
+         |  |.boiling
+         |}
+         |""".stripMargin
+    )(blk("freezing", tselect("|", "boiling")))
+  }
+
+  test("scala3 infix syntax 3.2.2") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |
+         |    | !
+         |}
+         |""".stripMargin,
+      """|{
+         |  freezing
+         |  |.!
+         |}
+         |""".stripMargin
+    )(blk("freezing", tselect("|", "!")))
+  }
+
+  test("scala3 infix syntax 3.2.3") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |
+         |    `|` !
+         |}
+         |""".stripMargin,
+      """|{
+         |  freezing
+         |  |.!
+         |}
+         |""".stripMargin
+    )(blk("freezing", tselect("|", "!")))
+  }
+
+  test("scala3 infix syntax 3.2.4") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |
+         |    | |
+         |}
+         |""".stripMargin,
+      """|{
+         |  freezing
+         |  |.|
+         |}
+         |""".stripMargin
+    )(blk("freezing", tselect("|", "|")))
+  }
+
+  test("scala3 infix syntax 3.2.5") {
+    runTestAssert[Stat](
+      """|{
+         |  freezing
+         |
+         |    `|` |
+         |}
+         |""".stripMargin,
+      """|{
+         |  freezing
+         |  |.|
+         |}
+         |""".stripMargin
+    )(blk("freezing", tselect("|", "|")))
   }
 
   test("scala3 infix syntax 3.3") {
