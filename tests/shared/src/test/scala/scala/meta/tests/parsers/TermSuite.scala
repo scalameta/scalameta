@@ -27,7 +27,7 @@ class TermSuite extends ParseSuite {
 
   test("a.b.c")(assertTerm("a.b.c")(Select(Select(tname("a"), tname("b")), tname("c"))))
 
-  test("a.b c")(assertTerm("a.b c")(tselect(tselect("a", "b"), "c")))
+  test("a.b c")(assertTerm("a.b c")(tpostfix(tselect("a", "b"), "c")))
 
   test("foo.this")(assertTerm("foo.this")(This(Indeterminate("foo"))))
 
@@ -603,9 +603,9 @@ class TermSuite extends ParseSuite {
     }
   }
 
-  test("(a + b) c")(assertTerm("(a + b) c")(tselect(tinfix("a", "+", "b"), "c")))
+  test("(a + b) c")(assertTerm("(a + b) c")(tpostfix(tinfix("a", "+", "b"), "c")))
 
-  test("a + b c")(assertTerm("a + b c")(tselect(tinfix("a", "+", "b"), "c")))
+  test("a + b c")(assertTerm("a + b c")(tpostfix(tinfix("a", "+", "b"), "c")))
 
   test("disallow parse[Stat] on statseqs")(intercept[ParseException](stat("hello; world")))
 

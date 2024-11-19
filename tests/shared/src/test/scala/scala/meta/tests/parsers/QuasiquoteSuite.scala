@@ -7,7 +7,7 @@ class QuasiquoteSuite extends ParseSuite {
   locally {
     implicit val dialect = dialects.Scala211.unquoteTerm(multiline = false)
 
-    test("single-line disallow normal escaping")(assertTree(term("\\n"))(tselect("\\", "n")))
+    test("single-line disallow normal escaping")(assertTree(term("\\n"))(tpostfix("\\", "n")))
 
     test("single-line allow unicode escaping")(assertTree(term("\\u0061"))(tname("a")))
 
@@ -47,7 +47,7 @@ class QuasiquoteSuite extends ParseSuite {
   locally {
     implicit val dialect = dialects.Scala211.unquoteTerm(multiline = true)
 
-    test("multi-line disallow do normal escaping")(assertTree(term("\\n"))(tselect("\\", "n")))
+    test("multi-line disallow do normal escaping")(assertTree(term("\\n"))(tpostfix("\\", "n")))
 
     test("multi-line allow unicode escaping")(assertTree(term("\\u0061"))(tname("a")))
 

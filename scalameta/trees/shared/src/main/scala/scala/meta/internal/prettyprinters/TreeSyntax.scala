@@ -12,7 +12,7 @@ import scala.meta.inputs.Position
 import scala.meta.internal.tokens.Chars._
 import scala.meta.internal.trees.{branch => _, root => _, _}
 import scala.meta.prettyprinters._
-import scala.meta.tokens.Token
+import scala.meta.tokens._
 import scala.meta.trees.Origin
 
 import scala.annotation.tailrec
@@ -190,6 +190,7 @@ object TreeSyntax {
         seq += "-*" -> Seq(classTag[Type.ArgClause])
         seq += "+*" -> Seq(classTag[Type.ArgClause])
       }
+      seq += "*" -> Seq(classTag[Term.SelectPostfix])
 
       if (dialect.allowQuestionMarkAsTypeWildcard) seq += "?" -> Seq(classTag[Type.ArgClause])
 
@@ -334,7 +335,7 @@ object TreeSyntax {
         val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
         val thisLocationAlsoAcceptsPatVars = p match {
           case p: Term.Name => unreachable
-          case p: Term.Select => false
+          case _: Term.SelectLike => false
           case p: Pat.Wildcard => unreachable
           case p: Pat.Var => false
           case p: Pat.Repeated => false
@@ -372,7 +373,6 @@ object TreeSyntax {
       }
       cantBeWrittenWithoutBackquotes(t) || t.parent.exists(isAmbiguousInParent(t, _))
     }
-    def guessIsPostfix(t: Term.Select): Boolean = false
     def guessHasExpr(t: Term.Return): Boolean =
       t.expr match { case Lit.Unit() => false; case _ => true }
     def guessHasElsep(t: Term.If): Boolean =
@@ -436,12 +436,16 @@ object TreeSyntax {
       case t: Term.This => m(Path, w(t.qual, "."), kw("this"))
       case t: Term.Super => m(Path, s(w(t.thisp, "."), kw("super"), w("[", t.superp, "]")))
       case t: Term.Name => m(Path, printMaybeBackquoted(t))
-      case t: Term.Select =>
-        val qualExpr = t.qual match {
-          case q: Term.New if q.init.argClauses.isEmpty => w("(", q, ")")
-          case q => p(SimpleExpr, q)
+      case t: Term.Select => printSelect(t, ".")
+      case t: Term.SelectPostfix =>
+        val (sep, backquoteExpr) = t.qual match {
+          case q: Term.Name // if it looks like a leading infix, don't use space
+              if dialect.allowInfixOperatorAfterNL &&
+                q.value.isIdentSymbolicNonBackquotedInfixOperator =>
+            "" -> t.name.value.isIdentSymbolicNonBackquotedInfixOperator
+          case _ => " " -> false
         }
-        m(Path, s(qualExpr, if (guessIsPostfix(t)) " " else ".", t.name))
+        printSelect(t, sep, bqExpr = backquoteExpr)
       case t: Term.Interpolate =>
         /** @see LegacyScanner.getStringPart, when ch == '$' */
         def needBraces(id: String, nextPart: String): Boolean =
@@ -1078,9 +1082,22 @@ object TreeSyntax {
     private def printByNameType(t: Type.ByNameType, arrow: String): Show.Result =
       printFunctionLikeType(t, s(), arrow)
 
-    private def printMaybeBackquoted(name: Name) = printBackquoted(name, guessIsBackquoted(name))
+    private def printMaybeBackquoted(name: Name, backquote: Boolean = false) =
+      printBackquoted(name, backquote || guessIsBackquoted(name))
     private def printBackquoted(name: Name, isBackquoted: Boolean) =
       w("`", name.value, "`", isBackquoted)
+
+    private def printSelectLhs(expr: Term, backquote: Boolean = false) = expr match {
+      case t: Term.New if t.init.argClauses.isEmpty => w("(", t, ")")
+      case t: Term.Name if backquote => printBackquoted(t, isBackquoted = true)
+      case t => p(SimpleExpr, t)
+    }
+
+    private def printSelect(t: Term.SelectLike, sep: String, bqExpr: Boolean = false) = {
+      val expr = printSelectLhs(t.qual, backquote = bqExpr)
+      val name = printMaybeBackquoted(t.name)
+      m(Path, s(expr, sep, name))
+    }
 
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 

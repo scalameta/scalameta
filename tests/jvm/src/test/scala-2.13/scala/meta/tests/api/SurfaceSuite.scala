@@ -233,6 +233,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |* String.hashCode(): Int
          |* String.isBackquoted: Boolean
          |* String.isIdentSymbolicInfixOperator: Boolean
+         |* String.isIdentSymbolicNonBackquotedInfixOperator: Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit XtensionClassifiable.this.C[U]): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2]): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3]): Boolean
@@ -450,6 +451,8 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.Repeated
          |scala.meta.Term.Return
          |scala.meta.Term.Select
+         |scala.meta.Term.SelectLike
+         |scala.meta.Term.SelectPostfix
          |scala.meta.Term.SplicedMacroExpr
          |scala.meta.Term.SplicedMacroPat
          |scala.meta.Term.Super

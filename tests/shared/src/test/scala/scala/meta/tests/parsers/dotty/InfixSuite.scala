@@ -258,10 +258,10 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       """|{
          |  freezing
-         |  |.boiling
+         |  |boiling
          |}
          |""".stripMargin
-    )(blk("freezing", tselect("|", "boiling")))
+    )(blk("freezing", tpostfix("|", "boiling")))
   }
 
   test("scala3 infix syntax 3.2.1") {
@@ -274,10 +274,10 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       """|{
          |  freezing
-         |  |.boiling
+         |  |boiling
          |}
          |""".stripMargin
-    )(blk("freezing", tselect("|", "boiling")))
+    )(blk("freezing", tpostfix("|", "boiling")))
   }
 
   test("scala3 infix syntax 3.2.2") {
@@ -290,10 +290,10 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       """|{
          |  freezing
-         |  |.!
+         |  `|`!
          |}
          |""".stripMargin
-    )(blk("freezing", tselect("|", "!")))
+    )(blk("freezing", tpostfix("|", "!")))
   }
 
   test("scala3 infix syntax 3.2.3") {
@@ -306,10 +306,10 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       """|{
          |  freezing
-         |  |.!
+         |  `|`!
          |}
          |""".stripMargin
-    )(blk("freezing", tselect("|", "!")))
+    )(blk("freezing", tpostfix("|", "!")))
   }
 
   test("scala3 infix syntax 3.2.4") {
@@ -322,10 +322,10 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       """|{
          |  freezing
-         |  |.|
+         |  `|`|
          |}
          |""".stripMargin
-    )(blk("freezing", tselect("|", "|")))
+    )(blk("freezing", tpostfix("|", "|")))
   }
 
   test("scala3 infix syntax 3.2.5") {
@@ -338,10 +338,10 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       """|{
          |  freezing
-         |  |.|
+         |  `|`|
          |}
          |""".stripMargin
-    )(blk("freezing", tselect("|", "|")))
+    )(blk("freezing", tpostfix("|", "|")))
   }
 
   test("scala3 infix syntax 3.3") {

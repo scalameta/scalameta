@@ -648,9 +648,9 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("vararg-wildcard-like-postfix-star") {
     val codeOriginal = "val lst = List(0, arr`*`)"
-    val codeObtained = "val lst = List(0, arr.*)"
+    val codeObtained = "val lst = List(0, arr `*`)"
     runTestAssert[Stat](codeOriginal, codeObtained)(
-      Defn.Val(Nil, List(patvar("lst")), None, tapply("List", lit(0), tselect("arr", "*")))
+      Defn.Val(Nil, List(patvar("lst")), None, tapply("List", lit(0), tpostfix("arr", "*")))
     )
   }
 

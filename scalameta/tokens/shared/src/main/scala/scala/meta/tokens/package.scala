@@ -20,7 +20,7 @@ package object tokens extends tokens.Api {
 
     def isBackquoted: Boolean = value.startsWith("`") && value.endsWith("`")
 
-    def isIdentSymbolicInfixOperator: Boolean = isBackquoted || {
+    def isIdentSymbolicNonBackquotedInfixOperator: Boolean = {
       @tailrec
       def iter(idx: Int, nonEmpty: Boolean): Boolean = {
         val ch = value(idx)
@@ -31,6 +31,9 @@ package object tokens extends tokens.Api {
       val len = value.length
       len == 0 || iter(len - 1, false)
     }
+
+    def isIdentSymbolicInfixOperator: Boolean = isBackquoted ||
+      isIdentSymbolicNonBackquotedInfixOperator
   }
 
 }
