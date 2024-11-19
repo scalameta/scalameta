@@ -70,6 +70,8 @@ object Token {
   @branch
   trait SymbolicKeyword extends Symbolic
   @branch
+  trait FunctionArrow extends SymbolicKeyword
+  @branch
   trait Punct extends Symbolic
   @branch
   trait OpenDelim extends Punct
@@ -184,7 +186,7 @@ object Token {
   @fixed("=")
   class Equals extends SymbolicKeyword
   @freeform("=>")
-  class RightArrow extends SymbolicKeyword
+  class RightArrow extends FunctionArrow
   @fixed(">:")
   class Supertype extends SymbolicKeyword
   @fixed("@")
@@ -194,7 +196,7 @@ object Token {
   @fixed("=>>")
   class TypeLambdaArrow extends SymbolicKeyword
   @fixed("?=>")
-  class ContextArrow extends SymbolicKeyword
+  class ContextArrow extends FunctionArrow
   @fixed("'")
   class MacroQuote extends SymbolicKeyword
   @fixed("$")

@@ -1635,8 +1635,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val res: Term = iter(prefix)
 
     // Note the absense of `else if` here!!
-    val contextFunction = at[ContextArrow]
-    if (contextFunction || at[RightArrow])
+    if (at[FunctionArrow])
       // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
       // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
       //
@@ -1668,6 +1667,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         isNameAllowed = location != TemplateStat,
         isParamAllowed = location.funcParamOK || tokens(startPos).is[LeftParen] && prev[RightParen]
       ).fold(res) { pc =>
+        val contextFunction = at[ContextArrow]
         val params = addPos(pc)
         next()
         val trm = termFunctionBody(location)
@@ -2294,8 +2294,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
 
     paramClauseOpt.flatMap { params =>
-      val contextFunction = at[ContextArrow]
-      if ((contextFunction || at[RightArrow]) && nextIfIndentAhead()) Some {
+      if (at[FunctionArrow] && nextIfIndentAhead()) Some {
+        val contextFunction = prev[ContextArrow]
         val trm = blockExprOnIndent()
         autoEndPos(paramPos) {
           if (contextFunction) Term.ContextFunction(params, trm) else Term.Function(params, trm)
