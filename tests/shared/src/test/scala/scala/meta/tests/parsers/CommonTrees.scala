@@ -105,6 +105,10 @@ trait CommonTrees {
   final def tmatch(lt: Term, cases: Case*): Term.Match = Term.Match(lt, cases.toList)
   final def tselectmatch(lt: Term, cases: Case*): Term.SelectMatch = Term
     .SelectMatch(lt, cases.toList)
+  final def tfunc(body: Term, params: Term.Param*): Term.Function = Term
+    .Function(params.toList, body)
+  final def tctxfunc(body: Term, params: Term.Param*): Term.ContextFunction = Term
+    .ContextFunction(params.toList, body)
 
   final def pname(name: String): Type.Name = Type.Name(name)
   implicit def implicitStringToType(obj: String): Type.Name = pname(obj)

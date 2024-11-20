@@ -2172,18 +2172,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def addPos(body: Term): Term = autoEndPos(startPos)(body)
     currToken match {
       case _: AtEOL if (peekToken match {
+            case _: Dot => true
             case _: LeftBrace if canApply => isIndentingOrEOL(true)
             case _: LeftParen if canApply => isIndentingOrEOL(false)
             case _ => false
           }) => next(); simpleExprRest(t, canApply, startPos)
       case _: Dot =>
         next()
-        if (dialect.allowMatchAsOperator && acceptOpt[KwMatch]) {
-          val clause = matchClause(t, startPos, isSelect = true)
-          // needed if match uses significant identation
-          newLineOptWhenFollowedBy[Dot]
-          simpleExprRest(clause, canApply = false, startPos = startPos)
-        } else simpleExprRest(selector(t, startPos), canApply = true, startPos = startPos)
+        val isMatch = dialect.allowMatchAsOperator && acceptOpt[KwMatch]
+        val clause =
+          if (isMatch) matchClause(t, startPos, isSelect = true) else selector(t, startPos)
+        simpleExprRest(clause, canApply = !isMatch, startPos = startPos)
       case _: LeftBracket =>
         @tailrec
         def isOk(tree: Tree): Boolean = tree match {

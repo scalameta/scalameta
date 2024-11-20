@@ -2554,10 +2554,17 @@ class FewerBracesSuite extends BaseDottySuite {
                   |  .fn2:
                   |    _ => "FOO2"
                   |""".stripMargin
-    val error = """|<input>:5: error: illegal start of definition `.`
-                   |  .fn2:
-                   |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|arg.fn1 {
+                    |  _ => "FOO1"
+                    |}.fn2 {
+                    |  _ => "FOO2"
+                    |}
+                    |""".stripMargin
+    val tree = tapply(
+      tselect(tapply(tselect("arg", "fn1"), blk(tfunc(lit("FOO1"), tparam("_")))), "fn2"),
+      blk(tfunc(lit("FOO2"), tparam("_")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
