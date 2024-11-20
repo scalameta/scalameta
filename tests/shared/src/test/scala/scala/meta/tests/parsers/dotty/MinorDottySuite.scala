@@ -647,13 +647,11 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("vararg-wildcard-like-postfix-star") {
-    val tree = Defn.Val(
-      Nil,
-      List(Pat.Var(tname("lst"))),
-      None,
-      Term.Apply(tname("List"), List(lit(0), Term.Select(tname("arr"), tname("*"))))
+    val codeOriginal = "val lst = List(0, arr`*`)"
+    val codeObtained = "val lst = List(0, arr `*`)"
+    runTestAssert[Stat](codeOriginal, codeObtained)(
+      Defn.Val(Nil, List(patvar("lst")), None, tapply("List", lit(0), tpostfix("arr", "*")))
     )
-    runTestAssert[Stat]("val lst = List(0, arr`*`)", "val lst = List(0, arr.*)")(tree)
   }
 
   test("non-vararg-infix-star") {

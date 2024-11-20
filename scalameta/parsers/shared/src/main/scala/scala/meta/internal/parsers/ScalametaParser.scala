@@ -1702,7 +1702,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     @tailrec
     def getMod(t: Tree, mods: List[Mod] = Nil): Option[List[Mod]] = t match {
       case t: Term.Name => getModFromName(t).map(_ :: mods)
-      case t: Term.Select => getModFromName(t.name) match {
+      case t: Term.SelectPostfix => getModFromName(t.name) match {
           case Some(mod) => getMod(t.qual, mod :: mods)
           case _ => None
         }
@@ -1723,7 +1723,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def getNameAndMod(t: Tree): Option[(Name, List[Mod])] = t match {
       case t: Name => Some((t, Nil))
       case t: Quasi => Some((t.become[Term.Name], Nil))
-      case t: Term.Select => getMod(t.qual).map((t.name, _))
+      case t: Term.SelectPostfix => getMod(t.qual).map((t.name, _))
       case t: Term.ApplyInfix => t.argClause.values match {
           case arg :: Nil if t.targClause.values.isEmpty =>
             for {
@@ -1991,7 +1991,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         if (targs.nonEmpty)
           syntaxError("type application is not allowed for postfix operators", at = currToken)
         val finQual = getPrevLhs(op)
-        val term: Term = atPos(getLhsStartPos(finQual), op)(Term.Select(finQual, op))
+        val term: Term = atPos(getLhsStartPos(finQual), op)(Term.SelectPostfix(finQual, op))
         Left(term)
       }
 

@@ -99,6 +99,9 @@ trait CommonTrees {
   final def tinfix(lt: Term, op: Term.Name, ta: List[Type], rt: Term*): Term.ApplyInfix = Term
     .ApplyInfix(lt, op, ta, rt.toList)
   final def tinfix(lt: Term, op: Term.Name, rt: Term*): Term.ApplyInfix = tinfix(lt, op, Nil, rt: _*)
+  final def tpostfix(lt: Term, op: Term.Name): Term.SelectPostfix = Term.SelectPostfix(lt, op)
+  final def tselect(lt: Term, op: Term.Name): Term.Select = Term.Select(lt, op)
+  final def tapply(fun: Term, args: Term*): Term.Apply = Term.Apply(fun, args.toList)
 
   final def pname(name: String): Type.Name = Type.Name(name)
   implicit def implicitStringToType(obj: String): Type.Name = pname(obj)

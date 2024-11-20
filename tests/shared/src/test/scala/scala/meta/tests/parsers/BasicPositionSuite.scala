@@ -233,10 +233,10 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """(a (b (c d) b) a)""",
     """|Term.Apply a (b (c d) b)
        |Term.ArgClause (b (c d) b)
-       |Term.Select b (c d) b
+       |Term.SelectPostfix b (c d) b
        |Term.Apply b (c d)
        |Term.ArgClause (c d)
-       |Term.Select c d
+       |Term.SelectPostfix c d
        |""".stripMargin
   )
 
@@ -247,7 +247,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Term.ApplyInfix b + (c d)
        |Type.ArgClause (a + (b + @@(c d)))
        |Term.ArgClause (c d)
-       |Term.Select c d
+       |Term.SelectPostfix c d
        |""".stripMargin
   )
 
@@ -256,14 +256,14 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Term.ArgClause (b (c d))
        |Term.Apply b (c d)
        |Term.ArgClause (c d)
-       |Term.Select c d
+       |Term.SelectPostfix c d
        |""".stripMargin
   )
 
   checkPositions[Stat](
     """(((c d) b) a)""",
-    """|Term.Select (c d) b
-       |Term.Select c d
+    """|Term.SelectPostfix (c d) b
+       |Term.SelectPostfix c d
        |""".stripMargin
   )
 

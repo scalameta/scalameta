@@ -285,8 +285,15 @@ object Term {
     def value = ""
     checkParent(ParentChecks.AnonymousImport)
   }
+  @branch
+  trait SelectLike extends Term.Ref with Pat {
+    def qual: Term
+    def name: Term.Name
+  }
   @ast
-  class Select(qual: Term, name: Term.Name) extends Term.Ref with Pat
+  class Select(qual: Term, name: Term.Name) extends SelectLike
+  @ast
+  class SelectPostfix(qual: Term, name: Term.Name) extends SelectLike
   @ast
   class Interpolate(prefix: Name, parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
     checkFields(parts.length == args.length + 1)
