@@ -241,7 +241,7 @@ lazy val quasiquotes3 = crossProject(JVMPlatform)
   .settings(
     // sharedSettings,
     scalaVersion := "3.3.4",
-    scalacOptions += "-Xcheck-macros",
+    scalacOptions ++= Seq("-Xcheck-macros"),
     Test / scalacOptions ++= Seq("-Wconf:msg=pattern binding uses refutable extractor:s"),
     description := "Scalameta APIs for parsing and their baseline implementation",
     libraryDependencies ++= Seq(
