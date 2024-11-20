@@ -373,16 +373,26 @@ object Term {
   class SplicedMacroExpr(body: Term) extends Term
   @ast
   class SplicedMacroPat(pat: Pat) extends Term
+
+  @branch
+  trait MatchLike extends Term with Tree.WithCasesBlock {
+    def expr: Term
+    def casesBlock: CasesBlock
+    def mods: List[Mod]
+  }
+
   @ast
   class Match(
       expr: Term,
       casesBlock: CasesBlock,
       @newField("4.4.5")
       mods: List[Mod] = Nil
-  ) extends Term with Tree.WithCasesBlock {
+  ) extends MatchLike {
     @replacedField("4.9.9")
     override final def cases: List[Case] = casesBlock.cases
   }
+  @ast
+  class SelectMatch(expr: Term, casesBlock: CasesBlock, mods: List[Mod] = Nil) extends MatchLike
   @branch
   trait TryClause extends Term {
     def expr: Term

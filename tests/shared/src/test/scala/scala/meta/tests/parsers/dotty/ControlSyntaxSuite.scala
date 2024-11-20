@@ -2473,10 +2473,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("match-dot") {
     val expected = Term.If(
-      Term.Match(
-        tname("xs"),
-        List(Case(tname("Nil"), None, bool(false)), Case(Pat.Wildcard(), None, bool(true)))
-      ),
+      tselectmatch("xs", Case("Nil", None, bool(false)), Case(Pat.Wildcard(), None, bool(true))),
       str("nonempty"),
       str("empty")
     )
@@ -2488,29 +2485,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |then "nonempty"
          |else "empty"
          |""".stripMargin,
-      Some(
-        """|if (xs match {
-           |  case Nil => false
-           |  case _ => true
-           |}) "nonempty" else "empty"
-           |""".stripMargin
-      )
-    )(expected)
-
-    runTestAssert[Stat](
-      """|if xs.match
+      """|if (xs.match {
          |  case Nil => false
          |  case _ => true
-         |then "nonempty"
-         |else "empty"
-         |""".stripMargin,
-      assertLayout = Some(
-        """|if (xs match {
-           |  case Nil => false
-           |  case _ => true
-           |}) "nonempty" else "empty"
-           |""".stripMargin
-      )
+         |}) "nonempty" else "empty"
+         |""".stripMargin
     )(expected)
   }
 
@@ -2521,16 +2500,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Nil,
       List(List(tparam("x", "Int"))),
       Some(pname("String")),
-      Term.Apply(
-        Term.Select(
-          Term.Match(
-            tname("x"),
-            List(Case(int(1), None, str("1")), Case(Pat.Wildcard(), None, str("ERR")))
-          ),
-          tname("trim")
-        ),
-        Nil
-      )
+      tapply(tselect(
+        tselectmatch("x", Case(int(1), None, str("1")), Case(Pat.Wildcard(), None, str("ERR"))),
+        tname("trim")
+      ))
     )
 
     runTestAssert[Stat](
@@ -2540,31 +2513,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |     case _ => "ERR"
          |   }.trim()
          |""".stripMargin,
-      Some(
-        """|def mtch(x: Int): String = (x match {
-           |  case 1 => "1"
-           |  case _ => "ERR"
-           |}).trim()
-           |""".stripMargin
-      )
+      """|def mtch(x: Int): String = x.match {
+         |  case 1 => "1"
+         |  case _ => "ERR"
+         |}.trim()
+         |""".stripMargin
     )(expected)
-
-    runTestAssert[Stat](
-      """|def mtch(x: Int): String =
-         |   x.match
-         |     case 1 => "1"
-         |     case _ => "ERR"
-         |   .trim()
-         |""".stripMargin,
-      assertLayout = Some(
-        """|def mtch(x: Int): String = (x match {
-           |  case 1 => "1"
-           |  case _ => "ERR"
-           |}).trim()
-           |""".stripMargin
-      )
-    )(expected)
-
   }
 
   test("catch-case-in-paren") {
@@ -3796,23 +3750,30 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))
   }
 
-  test("while cond uses match") {
-    val code1 = """|if sArr(last) == ')' then
-                   |  while (sArr(last): @switch).match
-                   |    case _ => false
-                   |  do last -= 1
-                   |""".stripMargin
-    val code2 = """|if sArr(last) == ')' then
-                   |  while (sArr(last): @switch) match
-                   |    case _ => false
-                   |  do last -= 1
-                   |""".stripMargin
+  test("while cond uses match with dot") {
+    val code = """|if sArr(last) == ')' then
+                  |  while (sArr(last): @switch).match
+                  |    case _ => false
+                  |  do last -= 1
+                  |""".stripMargin
+    val layout = """|if (sArr(last) == ')') while ((sArr(last): @switch).match {
+                    |  case _ => false
+                    |}) last -= 1
+                    |""".stripMargin
+    assertNoDiff(parseStat(code).reprint, layout)
+  }
+
+  test("while cond uses match without dot") {
+    val code = """|if sArr(last) == ')' then
+                  |  while (sArr(last): @switch) match
+                  |    case _ => false
+                  |  do last -= 1
+                  |""".stripMargin
     val layout = """|if (sArr(last) == ')') while ((sArr(last): @switch) match {
                     |  case _ => false
                     |}) last -= 1
                     |""".stripMargin
-    assertNoDiff(parseStat(code1).reprint, layout)
-    assertNoDiff(parseStat(code2).reprint, layout)
+    assertNoDiff(parseStat(code).reprint, layout)
   }
 
   test("scalafmt #3790 case") {

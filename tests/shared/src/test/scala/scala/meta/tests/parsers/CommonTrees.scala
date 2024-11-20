@@ -102,6 +102,9 @@ trait CommonTrees {
   final def tpostfix(lt: Term, op: Term.Name): Term.SelectPostfix = Term.SelectPostfix(lt, op)
   final def tselect(lt: Term, op: Term.Name): Term.Select = Term.Select(lt, op)
   final def tapply(fun: Term, args: Term*): Term.Apply = Term.Apply(fun, args.toList)
+  final def tmatch(lt: Term, cases: Case*): Term.Match = Term.Match(lt, cases.toList)
+  final def tselectmatch(lt: Term, cases: Case*): Term.SelectMatch = Term
+    .SelectMatch(lt, cases.toList)
 
   final def pname(name: String): Type.Name = Type.Name(name)
   implicit def implicitStringToType(obj: String): Type.Name = pname(obj)
