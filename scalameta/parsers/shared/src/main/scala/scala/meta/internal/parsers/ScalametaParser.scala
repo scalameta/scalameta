@@ -1373,15 +1373,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   @inline
   def newLinesOpt(): Unit = if (at[AtEOL]) next()
 
-  def newLineOptWhenFollowedBy(unapply: Token => Boolean): Unit = at[EOL] &&
-    tryAhead(unapply(currToken))
+  def nextIfPair[A: ClassTag, B: ClassTag]: Boolean = at[A] && tryAhead[B]
+  def nextIfPair[A: ClassTag](pred: Token => Boolean): Boolean = at[A] && tryAhead(pred(currToken))
 
-  def newLineOptWhenFollowedBy[T: ClassTag]: Unit = at[EOL] && tryAhead[T]
+  def newLineOptWhenFollowedBy(pred: Token => Boolean): Boolean = nextIfPair[EOL](pred)
+  def newLineOptWhenFollowedBy[T: ClassTag]: Boolean = nextIfPair[EOL, T]
 
-  def newLineOptWhenFollowedBySignificantIndentationAnd(cond: Token => Boolean): Boolean =
-    nextIf(in.indenting && cond(peekToken))
+  def isIndentingOrEOL(nonOptBracesOK: Boolean): Boolean =
+    if (dialect.allowSignificantIndentation) in.indenting else nonOptBracesOK && at[EOL]
 
-  def isAfterOptNewLine[T: ClassTag]: Boolean = if (at[EOL]) tryAhead[T] else at[T]
+  def isAfterOpt[A: ClassTag, B: ClassTag]: Boolean = if (at[B]) tryAhead[A] else at[A]
+  def isAfterOptNewLine[T: ClassTag]: Boolean = isAfterOpt[T, EOL]
 
   def isAfterOptNewLine(body: Token => Boolean): Boolean =
     if (at[EOL]) tryAhead(body(currToken)) else body(currToken)
@@ -2168,11 +2170,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
     @inline
     def addPos(body: Term): Term = autoEndPos(startPos)(body)
-    if (canApply)
-      if (dialect.allowSignificantIndentation)
-        newLineOptWhenFollowedBySignificantIndentationAnd(_.isAny[LeftBrace, LeftParen])
-      else newLineOptWhenFollowedBy[LeftBrace]
     currToken match {
+      case _: AtEOL if (peekToken match {
+            case _: LeftBrace if canApply => isIndentingOrEOL(true)
+            case _: LeftParen if canApply => isIndentingOrEOL(false)
+            case _ => false
+          }) => next(); simpleExprRest(t, canApply, startPos)
       case _: Dot =>
         next()
         if (dialect.allowMatchAsOperator && acceptOpt[KwMatch]) {
@@ -3741,10 +3744,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       allowTypeSingleton: Boolean = true
   ): Init = autoPosOpt {
     def isPendingArglist(t: Token) = t.is[LeftParen] || (t.is[LeftBrace] && allowBraces)
-    def newlineOpt() =
-      if (dialect.allowSignificantIndentation)
-        newLineOptWhenFollowedBySignificantIndentationAnd(_.isAny[LeftBrace, LeftParen])
-      else if (allowBraces) newLineOptWhenFollowedBy[LeftBrace]
+    def newlineOpt() = nextIf {
+      at[AtEOL] &&
+      (peekToken match {
+        case _: LeftParen => isIndentingOrEOL(false)
+        case _: LeftBrace => isIndentingOrEOL(allowBraces)
+        case _ => false
+      })
+    }
     currToken match {
       case t: Unquote if !isPendingArglist(peekToken) => unquote[Init](t)
       case _ =>
