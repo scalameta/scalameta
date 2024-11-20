@@ -536,7 +536,11 @@ object TreeSyntax {
             if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()
           )
         )
-      case t: Term.Match =>
+      case t: Term.SelectMatch if dialect.allowMatchAsOperator =>
+        val mods = t.mods
+        val pref = if (mods.isEmpty) Path else Expr1
+        m(pref, s(w(mods, " "), printSelectLhs(t.expr), ".", kw("match"), " ", t.casesBlock))
+      case t: Term.MatchLike =>
         m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), " ", kw("match"), " ", t.casesBlock))
       case t: Term.TryClause =>
         val showExpr = p(Expr, t.expr)

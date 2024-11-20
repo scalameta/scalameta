@@ -437,6 +437,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.If
          |scala.meta.Term.Interpolate
          |scala.meta.Term.Match
+         |scala.meta.Term.MatchLike
          |scala.meta.Term.Name
          |scala.meta.Term.New
          |scala.meta.Term.NewAnonymous
@@ -452,6 +453,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.Return
          |scala.meta.Term.Select
          |scala.meta.Term.SelectLike
+         |scala.meta.Term.SelectMatch
          |scala.meta.Term.SelectPostfix
          |scala.meta.Term.SplicedMacroExpr
          |scala.meta.Term.SplicedMacroPat

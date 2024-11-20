@@ -1438,11 +1438,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case other => syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
     }
 
-  private def matchClause(t: Term, startPos: Int) = {
+  private def matchClause(t: Term, startPos: Int, isSelect: Boolean = false) = {
     val cases = autoPos {
       if (at[Indentation.Indent]) indentedOnOpen(casesBlock()) else inBraces(casesBlock())
     }
-    autoEndPos(startPos)(Term.Match(t, cases, Nil))
+    autoEndPos(startPos)(if (isSelect) Term.SelectMatch(t, cases) else Term.Match(t, cases))
   }
 
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
@@ -2176,7 +2176,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Dot =>
         next()
         if (dialect.allowMatchAsOperator && acceptOpt[KwMatch]) {
-          val clause = matchClause(t, startPos)
+          val clause = matchClause(t, startPos, isSelect = true)
           // needed if match uses significant identation
           newLineOptWhenFollowedBy[Dot]
           simpleExprRest(clause, canApply = false, startPos = startPos)

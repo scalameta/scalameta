@@ -3026,18 +3026,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  .qux
                   |""".stripMargin
     val layout = """|object A {
-                    |  (foo match {
+                    |  foo.match {
                     |    case bar => baz
-                    |  }).qux
+                    |  }.qux
                     |}
                     |""".stripMargin
     val tree = Defn.Object(
       Nil,
-      tname("A"),
-      tpl(Term.Select(
-        Term.Match(tname("foo"), List(Case(Pat.Var(tname("bar")), None, tname("baz"))), Nil),
-        tname("qux")
-      ))
+      "A",
+      tpl(tselect(tselectmatch("foo", Case(patvar("bar"), None, "baz")), tname("qux")))
     )
     runTestAssert[Stat](code, layout)(tree)
   }
