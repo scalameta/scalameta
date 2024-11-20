@@ -2546,4 +2546,25 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4042") {
+    val code = """|arg
+                  |  .fn1:
+                  |    _ => "FOO1"
+                  |
+                  |  .fn2:
+                  |    _ => "FOO2"
+                  |""".stripMargin
+    val layout = """|arg.fn1 {
+                    |  _ => "FOO1"
+                    |}.fn2 {
+                    |  _ => "FOO2"
+                    |}
+                    |""".stripMargin
+    val tree = tapply(
+      tselect(tapply(tselect("arg", "fn1"), blk(tfunc(lit("FOO1"), tparam("_")))), "fn2"),
+      blk(tfunc(lit("FOO2"), tparam("_")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
