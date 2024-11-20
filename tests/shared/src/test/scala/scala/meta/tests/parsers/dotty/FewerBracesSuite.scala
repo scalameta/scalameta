@@ -2546,4 +2546,18 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4042") {
+    val code = """|arg
+                  |  .fn1:
+                  |    _ => "FOO1"
+                  |
+                  |  .fn2:
+                  |    _ => "FOO2"
+                  |""".stripMargin
+    val error = """|<input>:5: error: illegal start of definition `.`
+                   |  .fn2:
+                   |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
