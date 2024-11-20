@@ -21,6 +21,7 @@ import scala.language.implicitConversions
 import scala.collection.mutable
 import scala.compat.Platform.EOL
 import scala.quoted._
+import scala.meta.trees.Origin
 
 object ReificationMacros {
   def termImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) =
@@ -79,6 +80,10 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
   private sealed trait Mode {
     def isTerm: Boolean = this.isInstanceOf[Mode.Term]
     def isPattern: Boolean = this.isInstanceOf[Mode.Pattern]
+    def hasHoles: Boolean = this match
+      case Mode.Term(_, holes) => !holes.isEmpty
+      case Mode.Pattern(_, holes, _) => !holes.isEmpty
+    
     def multiline: Boolean
   }
   private object Mode {
@@ -102,10 +107,10 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
 
   private def expand(strCtx: Expr[StringContext], qType: QuasiquoteType, mode: Mode) = {
     val input = metaInput()
-    val dialect = instantiateDialect(mode)
+    val (dialect, dialectExpr) = instantiateDialect(mode)
     val parser = instantiateParser(qType)
     val skeleton = parseSkeleton(parser, input, dialect)
-    reifySkeleton(skeleton, mode, qType)
+    reifySkeleton(skeleton, mode, qType, dialectExpr, input)
   }
 
   private def metaInput() = {
@@ -172,7 +177,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
     Mode.Pattern(isMultiline(), List.range(0, parts.length - 1).map(mkHole(_)), selectorExpr)
   }
 
-  private def instantiateDialect(mode: Mode): Dialect = {
+  private def instantiateDialect(mode: Mode): (Dialect, Expr[Dialect]) = {
+    val dialectExpr = Expr.summon[scala.meta.Dialect]
     // NOTE: We want to have a higher-order way to abstract over differences in dialects
     // and we're using implicits for that (implicits are values => values are higher-order => good).
     //
@@ -192,8 +198,6 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
           else Dialect.standards.get(sym.name)
         } else None
       }
-
-      val dialectExpr = Expr.summon[scala.meta.Dialect]
       val standardDialectSingleton = dialectExpr.flatMap(expr => instantiateStandardDialect(expr.asTerm.tpe.termSymbol))
 
       standardDialectSingleton
@@ -205,8 +209,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
           report.errorAndAbort(message)
         })
     }
-    if (mode.isTerm) dialects.QuasiquoteTerm(underlyingDialect, mode.multiline)
-    else dialects.QuasiquotePat(underlyingDialect, mode.multiline)
+    (if (mode.isTerm) underlyingDialect.unquoteTerm(mode.multiline)
+    else underlyingDialect.unquotePat(mode.multiline), dialectExpr.get)
   }
   private def instantiateParser(qType: QuasiquoteType): MetaParser = {
     val parserModule = Symbol.classSymbol(qType.parserClass())
@@ -230,9 +234,21 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
       case ParseException(pos, message) => report.errorAndAbort(message)
     }
   }
-  private def reifySkeleton(meta: MetaTree, mode: Mode, qType: QuasiquoteType): Expr[Any] = {
+  private def reifySkeleton(meta: MetaTree, mode: Mode, qType: QuasiquoteType, dialectExpr: Expr[Dialect], input: Input): Expr[Any] = {
     val pendingQuasis = mutable.Stack[Quasi]()
-    object Internal extends InternalTrait with ExprLifts(using quotes)(mode.isPattern) {
+
+    val useParsedSource = !mode.hasHoles // otherwise, syntax will not make much sense
+    val vDef =
+      if (useParsedSource)
+        '{new Origin.ParsedSource(scala.meta.inputs.Input.String(${Expr(input.text.replace("$$", "$"))}))}
+      else
+        '{scala.compiletime.summonInline[Origin.DialectOnly]}
+
+    val (valDef, originRef) = 
+      val sym = Symbol.newVal(Symbol.spliceOwner, "origin", if (useParsedSource) TypeRepr.of[Origin.ParsedSource] else TypeRepr.of[Origin.DialectOnly], Flags.EmptyFlags, Symbol.noSymbol)
+      (ValDef(sym, Some(vDef.asTerm.changeOwner(sym))), Ref(sym))
+
+    object Internal extends InternalTrait with ExprLifts(using quotes)(mode.isPattern, dialectExpr) {
       import internalQuotes.reflect._
       def liftTree(tree: MetaTree): internalQuotes.reflect.Tree = {
         this.liftableSubTree0(tree).asInstanceOf[internalQuotes.reflect.Tree]
@@ -241,10 +257,10 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
         maybeTree match {
           case Some(tree: Quasi) => liftQuasi0(tree, optional = true)
           case Some(otherTree) =>
-            if mode.isTerm then Apply(TypeApply(Select.unique('{scala.Some}.asTerm, "apply"), List(TypeTree.of[T])), List(liftTree(otherTree).asInstanceOf[Term]))
+            if mode.isTerm then 
+              Apply(TypeApply(Select.unique('{scala.Some}.asTerm, "apply"), List(TypeTree.of[T])), List(liftTree(otherTree).asInstanceOf[Term]))
             else 
               TypedOrTest(Unapply(TypeApply(Select.unique(Ref(Symbol.classSymbol("scala.Some").companionModule), "unapply"), List(TypeTree.of[T])), Nil, List(liftTree(otherTree))), TypeTree.of[Some[T]])
-
           case None =>
             '{scala.None}.asTerm match
               case Inlined(_, _, none) => none
@@ -371,6 +387,14 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
         }
       }
 
+      def liftOrigin(origin: Origin): internalQuotes.reflect.Tree = {
+        if (useParsedSource) origin match {
+          case Origin.Parsed(_, beg, end) => '{Origin.Parsed(${originRef.asExprOf[Origin.ParsedSource]}, ${Expr(beg)}, ${Expr(end)})}.asTerm
+          case x => report.errorAndAbort("likely missing positions in the parser")
+        }
+        else originRef.asInstanceOf[internalQuotes.reflect.Tree]
+      }
+
       // Depending on pattern types, this is able to cause some custom errors to be thrown
       // We cannot obtain the types of the pattern in Scala 3 for now
       protected def unquotesName(q: scala.meta.internal.trees.Quasi): Boolean = {
@@ -460,7 +484,13 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
             case QuasiquoteType.Importee => TypeRepr.of[scala.meta.Importee]
             case QuasiquoteType.Source => TypeRepr.of[scala.meta.Source]
         resType.asType match
-          case '[t] => '{scala.meta.internal.quasiquotes.Unlift[t]($internalResult)}
+          case '[t] => 
+            Block(
+              List(valDef),
+              '{
+                scala.meta.internal.quasiquotes.Unlift[t]($internalResult)
+              }.asTerm
+            ).asExprOf[t]
   
       case Mode.Pattern(_, holes, unapplySelector) =>
         import Internal.internalQuotes.reflect._
@@ -514,9 +544,19 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
 
             val internalResult =
               if (isBooleanExtractor) {
-                '{ ${matchp(unapplySelector)}.asInstanceOf[Boolean] }
+                Block(
+                  List(valDef.asInstanceOf[Internal.internalQuotes.reflect.Statement]),
+                  '{ 
+                    ${matchp(unapplySelector)}.asInstanceOf[Boolean]
+                  }.asTerm
+                ).asExprOf[Boolean]
               } else {
-                '{ ${matchp(unapplySelector)}.asInstanceOf[Option[t]] }
+                Block(
+                  List(valDef.asInstanceOf[Internal.internalQuotes.reflect.Statement]),
+                  '{
+                    ${matchp(unapplySelector)}.asInstanceOf[Option[t]]
+                  }.asTerm
+                ).asExprOf[Option[t]]
               }
             
             if (sys.props("quasiquote.debug") != null) {
