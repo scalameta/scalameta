@@ -24,6 +24,11 @@ class SoftKeywords(dialect: Dialect) {
   object KwPureFunctionArrow extends IsWithName(dialect.allowPureFunctions, Token.pureFunctionArrow)
   object KwPureContextFunctionArrow
       extends IsWithName(dialect.allowPureFunctions, Token.pureContextFunctionArrow)
+  object KwPureFunctionLikeArrow
+      extends IsWithPred(
+        dialect.allowPureFunctions,
+        x => x == Token.pureFunctionArrow || x == Token.pureContextFunctionArrow
+      )
 
   object StarSplice extends IsWithName(dialect.allowPostfixStarVarargSplices, "*")
   object StarAsTypePlaceholder
