@@ -518,8 +518,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private object InfixTypeIdent {
     def unapply(tok: Token.Ident): Boolean = tok.text match {
-      case soft.KwPureFunctionArrow() => false
-      case soft.KwPureContextFunctionArrow() => false
+      case soft.KwPureFunctionLikeArrow() => false
       case "*" => // we assume that this is a type specification for a vararg parameter
         peekToken match {
           case _: RightParen | _: Comma | _: Equals | _: RightBrace | _: EOF => false
