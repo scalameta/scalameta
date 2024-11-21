@@ -136,6 +136,10 @@ object Tree extends InternalTreeXtensions {
     def cond: Option[Term]
   }
 
+  @branch
+  trait Repeated extends Tree {
+    def body: Tree
+  }
 }
 
 @branch
@@ -486,8 +490,9 @@ object Term {
   @ast
   class Eta(expr: Term) extends Term
   @ast
-  class Repeated(expr: Term) extends Term {
+  class Repeated(expr: Term) extends Term with Tree.Repeated {
     checkParent(ParentChecks.TermRepeated)
+    final def body: Term = expr
   }
   @ast
   class Param(mods: List[Mod], name: meta.Name, decltpe: Option[Type], default: Option[Term])
@@ -697,8 +702,9 @@ object Type {
   }
 
   @ast
-  class Repeated(tpe: Type) extends Type {
+  class Repeated(tpe: Type) extends Type with Tree.Repeated {
     checkParent(ParentChecks.TypeRepeated)
+    final def body: Type = tpe
   }
   @ast
   class Var(name: Name) extends Type with Member.Type {
@@ -804,7 +810,9 @@ object Pat {
     override final def pats: List[Pat] = args
   }
   @ast
-  class Repeated(name: Term.Name) extends Pat
+  class Repeated(name: Term.Name) extends Pat with Tree.Repeated {
+    final def body: Term.Name = name
+  }
   @ast
   class Extract(fun: Term, argClause: ArgClause) extends Pat with Member.Apply {
     @replacedField("4.6.0")

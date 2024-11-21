@@ -468,6 +468,7 @@ class SurfaceSuite extends TreeSuiteBase {
          |scala.meta.Term.Xml
          |scala.meta.Tree.Block
          |scala.meta.Tree.CasesBlock
+         |scala.meta.Tree.Repeated
          |scala.meta.Tree.WithBody
          |scala.meta.Tree.WithCases
          |scala.meta.Tree.WithCasesBlock
