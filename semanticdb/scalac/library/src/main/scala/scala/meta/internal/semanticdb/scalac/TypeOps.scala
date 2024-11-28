@@ -71,6 +71,7 @@ trait TypeOps {
          */
         case g.WildcardType => s.NoType
         case _: g.BoundedWildcardType => s.NoType
+        case _: g.ClassInfoType => s.NoType
         case gother => sys.error(s"unsupported type $gother: ${g.showRaw(gother)}")
       }
       loop(gtpe)
