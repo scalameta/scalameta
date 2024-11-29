@@ -1,6 +1,7 @@
 package scala.meta.tests.tokenizers
 
 import scala.meta._
+import scala.meta.tests.BuildInfo.scalaVersion
 import scala.meta.tests.parsers.MoreHelpers._
 import scala.meta.tokenizers.TokenizerOptions
 import scala.meta.tokens.Token._
@@ -1506,7 +1507,20 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("#3328 2") {
-    assertTokenizedAsStructureLines(
+    if (scalaVersion.startsWith("3")) assertTokenizedAsStructureLines(
+      "val \uD835\uDF11: Double",
+      """
+        |BOF [0..0)
+        |KwVal [0..3)
+        |Space [3..4)
+        |Ident(𝜑) [4..6)
+        |Colon [6..7)
+        |Space [7..8)
+        |Ident(Double) [8..14)
+        |EOF [14..14)
+        |""".stripMargin
+    )
+    else assertTokenizedAsStructureLines(
       "val \uD835\uDF11: Double",
       """
         |BOF [0..0)

@@ -7,12 +7,14 @@ import scala.meta.tests.parsers.ParseSuite
 
 class ChildrenSuite extends ParseSuite {
   test("Template.children") {
-    val tree = stat("""
+    val tree = stat(
+      """
       class Foo {
         import bar.baz.one
         import bar.baz.two
       }
-    """)
+    """
+    )
     assertEquals(tree.children.length, 4)
     assertEquals(tree.children(0).productPrefix, "Type.Name")
     assertEquals(tree.children(1).productPrefix, "Type.ParamClause")

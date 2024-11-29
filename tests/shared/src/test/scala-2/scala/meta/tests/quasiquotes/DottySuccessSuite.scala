@@ -15,9 +15,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     checkTree(tpes, "(x: X, y: Y)")(Type.FuncParamClause(List(tpeX, tpeY)))
     checkTree(tpe, "Z")(Type.Name("Z"))
 
-    checkTree(t"(..${tpes.values}) => $tpe", "(x: X, y: Y) => Z")(
-      Type.Function(tpes, tpe)
-    )
+    checkTree(t"(..${tpes.values}) => $tpe", "(x: X, y: Y) => Z")(Type.Function(tpes, tpe))
   }
 
   private final val cparam = tparam("c", "Circle")
@@ -80,8 +78,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
 
-    val q"extension [..$tparams](..$params) { ..$stats }" =
-      q"""extension (c: Circle) {
+    val q"extension [..$tparams](..$params) { ..$stats }" = q"""extension (c: Circle) {
               def crc: Int = 2
             }"""
 
@@ -98,8 +95,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
 
-    val q"extension [..$tparams](..$params) { ..$stats }" =
-      q"""extension [A](c: Circle) {
+    val q"extension [..$tparams](..$params) { ..$stats }" = q"""extension [A](c: Circle) {
               def crc: Int = 2
             }"""
 
@@ -116,8 +112,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
 
-    val q"extension [..$tparams]($param) { ..$stats }" =
-      q"""extension (c: Circle) {
+    val q"extension [..$tparams]($param) { ..$stats }" = q"""extension (c: Circle) {
               def crb: Int = 1
               def crc: Int = 2
             }"""
@@ -136,8 +131,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
 
-    val q"extension [..$tparams]($param) { ..$stats }" =
-      q"""extension [A, B, C](c: Circle) {
+    val q"extension [..$tparams]($param) { ..$stats }" = q"""extension [A, B, C](c: Circle) {
               def crb: Int = 1
               def crc: Int = 2
             }"""
@@ -154,53 +148,41 @@ class DottySuccessSuite extends TreeSuiteBase {
 
   test("single ..., without tparams") {
     val q"..$mods def $name(...$paramss): $tpe" = q"def f(x: Int)(y: Int): Unit"
-    val paramsExpected =
-      Term.ParamClause(
-        Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil,
-        None
-      ) :: Term.ParamClause(
-        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None) :: Nil,
-        None
-      ) :: Nil
+    val paramsExpected = Term
+      .ParamClause(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil, None) ::
+      Term
+        .ParamClause(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None) :: Nil, None) ::
+      Nil
 
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "(y: Int)")(paramsExpected: _*)
-    assertTree(q"..$mods def $name(...$paramss): $tpe")(
-      Decl.Def(
-        Nil,
-        Term.Name("f"),
-        Member.ParamClauseGroup(Nil, paramsExpected) :: Nil,
-        Type.Name("Unit")
-      )
-    )
+    assertTree(q"..$mods def $name(...$paramss): $tpe")(Decl.Def(
+      Nil,
+      Term.Name("f"),
+      Member.ParamClauseGroup(Nil, paramsExpected) :: Nil,
+      Type.Name("Unit")
+    ))
   }
 
   test("single ..., with tparams") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpe" = q"def f[A, B](x: Int)(y: Int): Unit"
-    val tparamsExpected = Type.ParamClause(
-      List(
-        Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
-        Type.Param(Nil, Type.Name("B"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-      )
-    )
-    val paramsExpected =
-      Term.ParamClause(
-        Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil,
-        None
-      ) :: Term.ParamClause(
-        Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None) :: Nil,
-        None
-      ) :: Nil
+    val tparamsExpected = Type.ParamClause(List(
+      Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
+      Type.Param(Nil, Type.Name("B"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
+    ))
+    val paramsExpected = Term
+      .ParamClause(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil, None) ::
+      Term
+        .ParamClause(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None) :: Nil, None) ::
+      Nil
 
     checkTree(tparams, "[A, B]")(tparamsExpected)
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "(y: Int)")(paramsExpected: _*)
-    assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")(
-      Decl.Def(
-        Nil,
-        Term.Name("f"),
-        Member.ParamClauseGroup(tparamsExpected, paramsExpected) :: Nil,
-        Type.Name("Unit")
-      )
-    )
+    assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")(Decl.Def(
+      Nil,
+      Term.Name("f"),
+      Member.ParamClauseGroup(tparamsExpected, paramsExpected) :: Nil,
+      Type.Name("Unit")
+    ))
   }
 
   test("single ...., with tparams") {
@@ -208,22 +190,16 @@ class DottySuccessSuite extends TreeSuiteBase {
     val q"..$mods def $name(....$paramss): $tpe" = q"def f(x: Int)[A](y: Int)[B]: Unit"
     val pcGroups = Member.ParamClauseGroup(
       Nil,
-      Term.ParamClause(
-        List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)),
-        None
-      ) :: Nil
+      Term.ParamClause(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)), None) ::
+        Nil
     ) :: Member.ParamClauseGroup(
-      Type.ParamClause(
-        Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
-      ),
-      Term.ParamClause(
-        List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)),
-        None
-      ) :: Nil
+      Type
+        .ParamClause(Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil),
+      Term.ParamClause(List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)), None) ::
+        Nil
     ) :: Member.ParamClauseGroup(
-      Type.ParamClause(
-        Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil
-      ),
+      Type
+        .ParamClause(Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil),
       Nil
     ) :: Nil
 

@@ -490,7 +490,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     ok
   }
 
-/* -------------- TOKEN CLASSES ------------------------------------------- */
+  /* -------------- TOKEN CLASSES ------------------------------------------- */
 
   @inline
   def isStar: Boolean = isStar(currToken)

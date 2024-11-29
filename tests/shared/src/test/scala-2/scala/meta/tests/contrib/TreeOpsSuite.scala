@@ -20,7 +20,14 @@ class TreeOpsSuite extends TreeSuiteBase {
         "Lit.Int(2)",
         "Term.Name(\"x\")",
         "Pat.Var(Term.Name(\"x\"))",
-        "Defn.Val(Nil, List(Pat.Var(Term.Name(\"x\"))), None, Lit.Int(2))"
+        """|Defn.Val(
+           |  Nil,
+           |  List(
+           |    Pat.Var(Term.Name("x"))
+           |  ),
+           |  None,
+           |  Lit.Int(2)
+           |)""".stripMargin.lf2nl
       )
     )
   }

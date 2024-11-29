@@ -1,8 +1,9 @@
 package scala.meta.tests.classifiers
 
-import scala.meta.internal.classifiers._
-import scala.meta.classifiers._
 import org.scalameta.tests.typecheckError
+import scala.meta.classifiers._
+import scala.meta.internal.classifiers._
+
 import munit.FunSuite
 
 trait Unclassifiable

@@ -1,12 +1,12 @@
 package scala.meta.tests.parsers
 
 import scala.meta._
+import scala.meta.contrib.TreeOps
 import scala.meta.internal.parsers._
 import scala.meta.tokenizers.TokenizerOptions
 import scala.meta.trees.Origin
 
 import munit._
-import scala.meta.contrib.TreeOps
 
 object MoreHelpers {
   def requireNonEmptyOrigin(tree: Tree): tree.type = {

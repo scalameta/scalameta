@@ -35,11 +35,12 @@ object TreeOps {
     traverser(tree)
     result
   }
-  
-  def foreach(tree: Tree)(f: Tree => Unit): Unit ={
+
+  def foreach(tree: Tree)(f: Tree => Unit): Unit = {
     object traverser extends SimpleTraverser {
       override def apply(t: Tree): Unit = {
         f(t)
+        super.apply(t)
       }
     }
     traverser(tree)

@@ -1,9 +1,10 @@
 package scala.meta.contrib.equality
 
 import scala.meta.Tree
-import meta.XtensionStructure
 
 import scala.language.implicitConversions
+
+import meta.XtensionStructure
 
 /**
  * Represents structural equality between trees

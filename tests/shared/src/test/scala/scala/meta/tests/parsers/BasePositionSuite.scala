@@ -9,8 +9,8 @@ import munit.TestOptions
 
 abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
   import scala.meta._
-  import scala.meta.tests.parsers.MoreHelpers._
   import scala.meta.contrib.TreeOps
+  import scala.meta.tests.parsers.MoreHelpers._
 
   def checkPositions[T <: Tree: Parse](code: TestOptions)(implicit loc: Location): Unit =
     checkPositions[T](code, "")

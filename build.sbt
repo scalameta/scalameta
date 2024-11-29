@@ -411,7 +411,7 @@ lazy val testSettings = Def.settings(
     "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value
   ),
   buildInfoPackage := "scala.meta.tests",
-  libraryDependencies += munitLibrary.value,
+  libraryDependencies += munitLibrary.value
 )
 
 lazy val communitytest = project.in(file("community-test")).settings(
@@ -420,7 +420,7 @@ lazy val communitytest = project.in(file("community-test")).settings(
   crossScalaVersions := LatestScalaVersions,
   libraryDependencies += munitLibrary.value,
   testFrameworks := List(new TestFramework("munit.Framework"))
-).dependsOn(testsSemanticdb)
+).dependsOn(tests.jvm)
 
 /* ======================== BENCHES ======================== */
 lazy val bench = project.in(file("bench/suite")).enablePlugins(BuildInfoPlugin)
@@ -442,7 +442,7 @@ lazy val bench = project.in(file("bench/suite")).enablePlugins(BuildInfoPlugin)
       buf += s"semanticdbScalacJar=$semanticdbScalacJar"
       (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
     }.evaluated
-  ).dependsOn(tests.jvm)
+  ).dependsOn(testsSemanticdb)
 
 // ==========================================
 // Settings

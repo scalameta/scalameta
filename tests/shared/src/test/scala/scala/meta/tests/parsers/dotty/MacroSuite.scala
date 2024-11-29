@@ -87,7 +87,7 @@ class MacroSuite extends BaseDottySuite {
   test("macro-quote-expr: x match { case 'c => 1 }") {
     val layoutMatchSimple = "x match {\n  case 'c => 1\n}"
     runTestAssert[Stat]("x match { case 'c => 1 }", assertLayout = Some(layoutMatchSimple))(
-      Term.Match(tname("x"), List(Case(Lit.Symbol( Symbol("c")), None, int(1))), Nil)
+      Term.Match(tname("x"), List(Case(Lit.Symbol(Symbol("c")), None, int(1))), Nil)
     )
   }
 
