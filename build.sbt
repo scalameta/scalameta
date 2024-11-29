@@ -41,7 +41,7 @@ addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
 commands += Command.command("ci-windows") { s =>
-  "testsJVM/all:testOnly -- --exclude-tags=SkipWindows" :: s
+  "testsJVM/testOnly" :: "testsSemanticdb/test" :: s
 }
 commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s)
 commands += Command.command("download-scala-library") { s =>
@@ -82,6 +82,7 @@ Global / resolvers +=
 val commonJsSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
   scalaVersion := LatestScala213,
+  bspEnabled := false,
   scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
   scalacOptions ++= {
     if (isSnapshot.value) Seq.empty
@@ -96,6 +97,7 @@ val commonJsSettings = Seq(
 lazy val nativeSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
   scalaVersion := LatestScala213,
+  bspEnabled := false,
   nativeConfig ~= { _.withMode(scalanative.build.Mode.releaseFast) }
 )
 
@@ -228,7 +230,6 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   description := "Scalameta APIs for parsing and their baseline implementation",
   enableHardcoreMacros,
   crossScalaVersions := EarliestScalaVersions :+ Scala3Version,
-  libraryDependencies ++= List("com.lihaoyi" %%% "fastparse" % fastparseVersion.value),
   mergedModule { base =>
     List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
   }
@@ -348,18 +349,47 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0"
 ).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
-lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).configs(Slow, All).settings(
+lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings)
+  .jvmSettings(
+    crossScalaVersions := AllScalaVersions :+ Scala3Version,
+    dependencyOverrides += {
+      val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
+      "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
+    }
+  )
+  .jsSettings(commonJsSettings, scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
+  .nativeSettings(
+    nativeSettings,
+    nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) }
+  ).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
+
+lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
+  crossScalaVersions := List(LatestScala213),
+  testSettings,
+  Test / fullClasspath := {
+    val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
+      .getAbsolutePath
+    sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
+    (Test / fullClasspath).value
+  },
+  // Needed because some tests rely on the --usejavacp option
+  Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+).dependsOn(
+  scalameta.jvm,
+  testkit.jvm,
+  semanticdbMetac,
+  semanticdbMetacp,
+  semanticdbMetap,
+  semanticdbIntegration
+).enablePlugins(BuildInfoPlugin)
+
+lazy val testSettings = Def.settings(
   sharedSettings,
-  crossScalaVersions := AllScalaVersions :+ Scala3Version,
   testFrameworks := List(new TestFramework("munit.Framework")),
   Test / unmanagedSourceDirectories ++= {
     val base = (Compile / baseDirectory).value
     List(base / "src" / "test" / ("scala-" + scalaVersion.value))
   },
-  nonPublishableSettings,
-  description := "Tests for scalameta APIs",
-  exposePaths("tests", Test)
-).settings(testSettings: _*).jvmSettings(
   libraryDependencies += {
     val coursierVersion =
       if (isScala211.value) "2.0.0-RC5-6"
@@ -368,32 +398,8 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).configs(Slow, 
       else "2.1.10"
     ("io.get-coursier" %% "coursier" % coursierVersion).cross(CrossVersion.for3Use2_13)
   },
-  dependencyOverrides += {
-    val scalaXmlVersion =
-      if (isScala211.value) "1.3.1" else if (scalaVersion.value == "2.13.12") "2.2.0" else "2.3.0"
-    "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
-  },
-  // Needed because some tests rely on the --usejavacp option
-  Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
-).jvmConfigure(_.dependsOn(semanticdbMetac, semanticdbMetacp, semanticdbMetap, semanticdbIntegration)) // TODO separate tests
-  .jsSettings(commonJsSettings, scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
-  .nativeSettings(
-    nativeSettings,
-    nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) }
-  ).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
-
-lazy val testsSemanticdb = project.in(file("tests-semanticdb"))
-
-lazy val testSettings: List[Def.SettingsDefinition] = List(
-  Test / fullClasspath := {
-    if (isScala3.value) (Test / fullClasspath).value
-    else {
-      val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
-        .getAbsolutePath
-      sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
-      (Test / fullClasspath).value
-    }
-  },
+  nonPublishableSettings,
+  exposePaths("tests", Test),
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
     scalaBinaryVersion,
@@ -406,12 +412,6 @@ lazy val testSettings: List[Def.SettingsDefinition] = List(
   ),
   buildInfoPackage := "scala.meta.tests",
   libraryDependencies += munitLibrary.value,
-  Test / testOptions += Tests.Argument("--exclude-tags=Slow"),
-  inConfig(Slow)(Defaults.testTasks),
-  inConfig(All)(Defaults.testTasks),
-  All / testOptions := Nil,
-  Slow / testOptions -= Tests.Argument("--exclude-tags=Slow"),
-  Slow / testOptions += Tests.Argument("--include-tags=Slow")
 )
 
 lazy val communitytest = project.in(file("community-test")).settings(
@@ -420,7 +420,7 @@ lazy val communitytest = project.in(file("community-test")).settings(
   crossScalaVersions := LatestScalaVersions,
   libraryDependencies += munitLibrary.value,
   testFrameworks := List(new TestFramework("munit.Framework"))
-).dependsOn(scalameta.jvm)
+).dependsOn(testsSemanticdb)
 
 /* ======================== BENCHES ======================== */
 lazy val bench = project.in(file("bench/suite")).enablePlugins(BuildInfoPlugin)
@@ -513,7 +513,6 @@ lazy val sharedSettings = Def.settings(
   },
   scalaVersion := LatestScala213,
   organization := "org.scalameta",
-  lihaoyiExclusions,
   libraryDependencies ++= {
     if (isScala213.value || isScala3.value) Nil
     else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
@@ -710,21 +709,6 @@ lazy val nonPublishableSettings = Seq(
 )
 
 def compatibilityPolicyViolation(ticket: String) = Seq(mimaPreviousArtifacts := Set.empty)
-
-def lihaoyiExclusions = Seq(excludeDependencies ++= {
-  if (isScala3.value) Seq(
-    ExclusionRule("com.lihaoyi", s"fastparse_2.13"),
-    ExclusionRule("com.lihaoyi", s"geny_2.13"),
-    ExclusionRule("com.lihaoyi", s"sourcecode_2.13")
-  )
-  else Seq(
-    // ExclusionRule("org.scalameta", s"scalameta_3"),
-    // ExclusionRule("org.scalameta", s"parser_3"),
-    ExclusionRule("com.lihaoyi", s"fastparse_3"),
-    ExclusionRule("com.lihaoyi", s"geny_3"),
-    ExclusionRule("com.lihaoyi", s"sourcecode_3")
-  )
-})
 
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,

@@ -26,9 +26,8 @@ PB.protocExecutable := file("/path/to/protoc")
 
 The exact test command to run tests depends on what you are working on:
 
-- `testsJVM/test`: run fast unit tests for both syntactic and semantic APIs.
-- `testsJVM/slow:test`: run slow integration tests for semantic APIs.
-- `testsJVM/all:test`: run all tests, both fast and slow.
+- `testsJVM/test`: run all parser tests
+- `testsSemanticdb/test`: run integration tests for semantic APIs.
 
 Tips to make your edit/test/debug workflow as productive as possible:
 

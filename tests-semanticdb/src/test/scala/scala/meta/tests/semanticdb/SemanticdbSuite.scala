@@ -1,32 +1,30 @@
 package scala.meta.tests
 package semanticdb
 
+import munit._
 import org.scalameta.internal.ScalaCompat.EOL
+
+import java.io.File
+import java.io.PrintWriter
 import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb.scalac.CommandLineParser
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io._
-import scala.meta.tests.SkipWindows
-
-import java.io.File
-import java.io.PrintWriter
-
 import scala.reflect.io._
 import scala.tools.nsc.CompilerCommand
 import scala.tools.nsc.Global
 import scala.tools.nsc.Settings
 import scala.tools.nsc.reporters.StoreReporter
+import scala.util.Properties
 import scala.{meta => m}
-
-import munit._
 
 abstract class SemanticdbSuite extends FunSuite {
   self =>
   private def test(code: String)(fn: => Unit): Unit = {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
-    super.test(name.tag(SkipWindows))(fn)
+    else if (!Properties.isWin) super.test(name)(fn)
   }
 
   def yMacroAnnotations: String =

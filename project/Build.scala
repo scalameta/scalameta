@@ -57,9 +57,5 @@ object Build extends AutoPlugin {
       def scalametaBenches = List("ScalametaBaseline")
     }
 
-    // https://stackoverflow.com/questions/41229451/how-to-disable-slow-tagged-scalatests-by-default-allow-execution-with-option
-    lazy val Fast = config("fast").extend(Test)
-    lazy val Slow = config("slow").extend(Test)
-    lazy val All = config("all").extend(Test)
   }
 }

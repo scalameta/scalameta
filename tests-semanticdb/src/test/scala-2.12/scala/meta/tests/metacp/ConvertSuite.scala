@@ -24,7 +24,7 @@ class ConvertSuite extends FunSuite {
     assert(output.isSuccess)
   }
   private def checkConversionSucceeds(library: Library): Unit =
-    test(library.name.tag(Slow))(runConversion(library.name, library.classpath()))
+    test(library.name)(runConversion(library.name, library.classpath()))
 
   Libraries.suite.foreach(checkConversionSucceeds)
 }

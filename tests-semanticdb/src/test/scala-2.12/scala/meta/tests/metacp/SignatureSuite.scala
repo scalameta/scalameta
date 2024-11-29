@@ -6,7 +6,6 @@ import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.io.AbsolutePath
 import scala.meta.testkit._
-import scala.meta.tests.Slow
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.FileVisitResult
@@ -34,7 +33,7 @@ class SignatureSuite extends FunSuite {
 
   // Validates that all signatures of the classfiles in the given
   // library pass assertSignatureRoundtrip
-  def checkSignatureRoundtrip(library: Library): Unit = test(library.name.tag(Slow)) {
+  def checkSignatureRoundtrip(library: Library): Unit = test(library.name) {
     val failingSignatures = ArrayBuffer.empty[String]
     library.classpath().visit { root =>
       new java.nio.file.SimpleFileVisitor[Path] {

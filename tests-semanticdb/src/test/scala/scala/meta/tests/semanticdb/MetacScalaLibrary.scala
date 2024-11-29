@@ -5,8 +5,6 @@ import scala.meta.internal.io.FileIO
 import scala.meta.io.AbsolutePath
 import scala.meta.metac._
 import scala.meta.tests.BuildInfo
-import scala.meta.tests.SkipWindows
-import scala.meta.tests.Slow
 
 import java.io.File
 import java.net.URLClassLoader
@@ -14,6 +12,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 import scala.concurrent.duration
+import scala.util.Properties
 
 import munit.FunSuite
 
@@ -21,7 +20,7 @@ class MetacScalaLibrary extends FunSuite {
 
   override val munitTimeout = new duration.FiniteDuration(3, duration.MINUTES)
 
-  test("compile scala-library".tag(Slow).tag(SkipWindows)) {
+  if (!Properties.isWin) test("compile scala-library") {
     val exit = MetacScalaLibrary.process(Array())
     require(exit == 0, "failed to compile scala-library")
   }
