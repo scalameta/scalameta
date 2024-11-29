@@ -20,6 +20,7 @@ class BootstrapSuite extends ParseSuite {
       val name = dir.getName
       if (dir.isDirectory && name == "target" || name == "community-projects") return
       def bootstrapTest(src: File): Unit = test("tokenize " + src.getAbsolutePath) {
+        implicit val dialect: Dialect = dialects.Scala33
         val tokens = src.tokenize.get
         val content = new String(Files.readAllBytes(src.toPath), StandardCharsets.UTF_8)
         // check #1: everything's covered
