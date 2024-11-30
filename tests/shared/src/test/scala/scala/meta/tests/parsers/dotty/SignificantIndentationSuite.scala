@@ -666,7 +666,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |def fa: Int = 1
          |def fb: Int = 2
          |""".stripMargin,
-      "expected '{' or indentation"
+      """|<input>:2: error: `identifier` expected but `def` found
+         |def fa: Int = 1
+         |^""".stripMargin
     )
 
     runTestError[Stat](
