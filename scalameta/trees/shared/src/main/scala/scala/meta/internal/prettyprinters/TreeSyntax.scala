@@ -816,7 +816,8 @@ object TreeSyntax {
       case t: Decl.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, kw(": "), t.decltpe)
       case t: Decl.Given =>
-        s(w(t.mods, " "), kw("given "), t.name, o(t.paramClauseGroup), kw(": "), t.decltpe)
+        val sig = givenSig(t.name, t.paramClauseGroups)
+        r(" ")(t.mods, sig, p(AnnotTyp, t.decltpe))
       case t: Defn.Val =>
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
       case t: Defn.Var =>
@@ -849,10 +850,11 @@ object TreeSyntax {
         else throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
 
       case t: Defn.GivenAlias =>
-        val name = givenName(t.name, t.paramClauseGroup)
-        r(" ")(t.mods, kw("given"), name, p(SimpleTyp, t.decltpe), kw("="), t.body)
+        val sig = givenSig(t.name, t.paramClauseGroups)
+        r(" ")(t.mods, sig, p(AnnotTyp, t.decltpe), kw("="), t.body)
       case t: Defn.Given =>
-        r(" ")(t.mods, kw("given"), givenName(t.name, t.paramClauseGroup), t.templ)
+        val sig = givenSig(t.name, t.paramClauseGroups)
+        r(" ")(t.mods, sig, t.templ)
 
       case t: Defn.Enum => r(" ")(t.mods, kw("enum"), s(t.name, t.tparamClause, t.ctor), t.templ)
       case t: Defn.RepeatedEnumCase => s(w(t.mods, " "), kw("case"), " ", r(t.cases, ", "))
@@ -892,7 +894,11 @@ object TreeSyntax {
         val pparents = r(t.inits, " with ")
         val derived = r(t.derives, "derives ", ", ", "")
         val ptype = t.parent match {
-          case Some(_: Defn.Given) => Defn.Given
+          case Some(p: Defn.Given) =>
+            val isNew = givenSigUsesNewSyntax(p.paramClauseGroups)(!t.body.origin.tokensOpt.forall {
+              _.rfindWideNot(_.is[Token.Trivia], -1).is[Token.KwWith] // still old syntax
+            })
+            if (isNew) Decl.Given else Defn.Given
           case Some(_: Term.NewAnonymous) => Term.NewAnonymous
           case _ => null
         }
@@ -1005,8 +1011,27 @@ object TreeSyntax {
       case t: Stat.Block => if (t.stats.isEmpty) s("{}") else s("{", t.stats, n("}"))
     }
 
-    private def givenName(name: meta.Name, pcGroup: Option[Member.ParamClauseGroup]): Show.Result =
-      w(s(name, o(pcGroup)), ":")
+    private def givenCond(pcg: Member.ParamClauseGroup): Show.Result = {
+      val clauses = pcg.paramClauses.map(x => s("(", r(x.values.map(printParam(_)), ", "), ")"))
+      r("", " => ", " =>")(s(pcg.tparamClause) +: clauses: _*)
+    }
+
+    private def givenSigUsesNewSyntax(
+        pcgs: List[Member.ParamClauseGroup]
+    )(ifEmpty: => Boolean): Boolean = dialect.allowImprovedTypeClassesSyntax &&
+      (pcgs match {
+        case Nil => ifEmpty
+        case pcg :: Nil => val pcs = pcg.paramClauses; pcs.nonEmpty && pcs.forall(_.mod.isEmpty)
+        case _ => true
+      })
+
+    private def givenSig(name: meta.Name, pcgs: List[Member.ParamClauseGroup]): Show.Result = {
+      val useNewSyntax = givenSigUsesNewSyntax(pcgs)(ifEmpty = true)
+      val kwGiven = kw("given")
+      def oldSyntax = s(kwGiven, w(" ", s(name, o(pcgs.headOption)), ":"))
+      def newSyntax = r(" ")(kwGiven, w(name, ":"), r(pcgs.map(givenCond)))
+      s(if (useNewSyntax) newSyntax else oldSyntax)
+    }
 
     // Multiples and optionals
     private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =
