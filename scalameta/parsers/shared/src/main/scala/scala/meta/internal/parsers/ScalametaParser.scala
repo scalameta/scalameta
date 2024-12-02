@@ -3476,12 +3476,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
     }.getOrElse((anonNameEmpty(), None))
 
+    val initPos = currIndex
     val decltype = refinement(None).getOrElse(startModType())
 
     def getDefnGiven() = {
-      val inits = templateParentsWithFirst(allowComma = false, allowWithBody = true)(
-        autoEndPos(decltype)(initRest(decltype, allowArgss = true, allowTypeSingleton = false))
-      )
+      val headInit =
+        if (!at[LeftParen]) initImpl(initPos, decltype, allowSingleton = false)(Nil)
+        else initRestAt(initPos, decltype)(allowArgss = true, allowSingleton = false)
+      val inits = templateParentsWithFirst(allowComma = false, allowWithBody = true)(headInit)
       val body =
         if (acceptOpt[KwWith])
           if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(OwnedByGiven)
@@ -3489,7 +3491,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           else syntaxError("expected '{' or indentation", at = currToken)
         else if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
         else emptyTemplateBody()
-      val rhs = autoEndPos(decltype)(Template(None, inits, body, Nil))
+      val rhs = autoEndPos(initPos)(Template(None, inits, body, Nil))
       Defn.Given(mods, sigName, paramClauseGroup, rhs)
     }
     currToken match {
@@ -3758,54 +3760,61 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ => initInsideTemplate()
   }
 
+  private def initImpl(startPos: StartPos, tpe: Type, allowSingleton: Boolean)(
+      argss: => List[Term.ArgClause]
+  ): Init = {
+    if (!allowSingleton && tpe.is[Type.Singleton])
+      syntaxError(s"class type required but $tpe found", at = tpe)
+    autoEndPos(startPos)(Init(tpe, anonNameEmpty(), argss))
+  }
+
+  def initRestAt(startPos: StartPos, tpe: Type)(
+      allowArgss: Boolean,
+      insidePrimaryCtorAnnot: Boolean = false,
+      allowBraces: Boolean = false,
+      allowSingleton: Boolean = true
+  ): Init = {
+    def getArgss = listBy[Term.ArgClause] { argss =>
+      def allowParens: Boolean = peekToken match {
+        case _ if !insidePrimaryCtorAnnot => true
+        // explained here:
+        // https://github.com/lampepfl/dotty/blob/675ae0c6440d5527150d650ad45d20fda5e03e69/compiler/src/dotty/tools/dotc/parsing/Parsers.scala#L2581
+        case _: RightParen => argss.isEmpty
+        case _: Ident => !ahead(peek[Colon])
+        case _: At => false
+        case _ => !isModifier(peekIndex)
+      }
+      def maybeBody() = {
+        if (at[AtEOL]) nextIf(peekToken match {
+          case _: LeftParen => isIndentingOrEOL(false)
+          case _: LeftBrace => isIndentingOrEOL(allowBraces)
+          case _ => false
+        })
+        currToken match {
+          case _: LeftParen if allowParens => argss += getArgClauseOnParen(); true
+          case _: LeftBrace if allowBraces => argss += getArgClauseOnBrace(); true
+          case _ => false
+        }
+      }
+      if (maybeBody() && allowArgss) while (maybeBody()) {}
+    }
+    initImpl(startPos, tpe, allowSingleton = allowSingleton)(getArgss)
+  }
+
   def initRest(
       typeParser: => Type,
       allowArgss: Boolean,
       insidePrimaryCtorAnnot: Boolean = false,
       allowBraces: Boolean = false,
       allowTypeSingleton: Boolean = true
-  ): Init = autoPosOpt {
-    def isPendingArglist(t: Token) = t.is[LeftParen] || (t.is[LeftBrace] && allowBraces)
-    def newlineOpt() = nextIf {
-      at[AtEOL] &&
-      (peekToken match {
-        case _: LeftParen => isIndentingOrEOL(false)
-        case _: LeftBrace => isIndentingOrEOL(allowBraces)
-        case _ => false
-      })
-    }
-    currToken match {
-      case t: Unquote if !isPendingArglist(peekToken) => unquote[Init](t)
-      case _ =>
-        val tpe = typeParser
-        if (!allowTypeSingleton && tpe.is[Type.Singleton])
-          syntaxError(s"class type required but $tpe found", at = tpe.pos)
-        val name = anonNameEmpty()
-        val argss = listBy[Term.ArgClause] { argss =>
-          def isLegalAnnotArg(): Boolean = peekToken match {
-            // explained here:
-            // https://github.com/lampepfl/dotty/blob/675ae0c6440d5527150d650ad45d20fda5e03e69/compiler/src/dotty/tools/dotc/parsing/Parsers.scala#L2581
-            case _: RightParen => argss.isEmpty
-            case _: Ident => !ahead(peek[Colon])
-            case _: At => false
-            case _ => !isModifier(peekIndex)
-          }
-          def maybeBody() = {
-            newlineOpt()
-            currToken match {
-              case _: LeftParen if !insidePrimaryCtorAnnot || isLegalAnnotArg() =>
-                argss += getArgClauseOnParen()
-                true
-              case _: LeftBrace if allowBraces =>
-                argss += getArgClauseOnBrace()
-                true
-              case _ => false
-            }
-          }
-          if (maybeBody() && allowArgss) while (maybeBody()) {}
-        }
-        Init(tpe, name, argss)
-    }
+  ): Init = currToken match {
+    case t: Unquote if !(peek[LeftParen] || (allowBraces && peek[LeftBrace])) => unquote[Init](t)
+    case _ => initRestAt(currIndex, typeParser)(
+        allowArgss = allowArgss,
+        insidePrimaryCtorAnnot = insidePrimaryCtorAnnot,
+        allowBraces = allowBraces,
+        allowSingleton = allowTypeSingleton
+      )
   }
 
   /* ---------- SELFS --------------------------------------------- */
