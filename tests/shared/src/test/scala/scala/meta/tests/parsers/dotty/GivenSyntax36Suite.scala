@@ -37,7 +37,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       Type.Name("A"),
       Type.ParamClause(Nil),
-      Ctor.Primary(Nil, Name.Anonymous(), Nil),
+      Ctor.Primary(Nil, Name.Anonymous(), Seq.empty[Term.ParamClause]),
       Template(
         None,
         Nil,
@@ -76,7 +76,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       Type.Name("A"),
       Type.ParamClause(Nil),
-      Ctor.Primary(Nil, Name.Anonymous(), Nil),
+      Ctor.Primary(Nil, Name.Anonymous(), Seq.empty[Term.ParamClause]),
       Template(
         None,
         Nil,
@@ -126,7 +126,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       Type.Name("Sorted"),
       Type.ParamClause(Nil),
-      Ctor.Primary(Nil, Name.Anonymous(), Nil),
+      Ctor.Primary(Nil, Name.Anonymous(), Seq.empty[Term.ParamClause]),
       Template(
         None,
         Nil,
@@ -248,7 +248,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
         List(Init(
           Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("Int")))),
           Name.Anonymous(),
-          Nil
+          Seq.empty[Term.ArgClause]
         )),
         body,
         Nil
@@ -264,7 +264,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
         Type.ArgClause(List(Type.Apply(Type.Name("List"), Type.ArgClause(List(Type.Name("A"))))))
       ),
       Name.Anonymous(),
-      Nil
+      Seq.empty[Term.ArgClause]
     )),
     Template.Body(
       None,
@@ -470,7 +470,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
         List(Init(
           Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("Int")))),
           Name.Anonymous(),
-          Nil
+          Seq.empty[Term.ArgClause]
         )),
         body,
         Nil

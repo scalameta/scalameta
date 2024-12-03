@@ -26,7 +26,6 @@ package object meta
     with trees.Api
     with trees.Aliases {
 
-  type XtensionParsersDialectApply // shadow conflicting implicit class
   type XtensionTokenizersDialectApply // shadow conflicting implicit class
   implicit class XtensionDialectApply(private val dialect: scala.meta.Dialect) extends AnyVal {
     def apply[T](inputLike: T)(implicit

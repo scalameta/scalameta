@@ -121,7 +121,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def parseAmmonite(): MultiSource = parseRule(entryPointAmmonite())
 
   def entryPointAmmonite(): MultiSource = {
-    require(input.isInstanceOf[Input.Ammonite])
+    assert(input.isInstanceOf[Input.Ammonite], s"Expected Input.Ammonite, not ${input.getClass}")
     val builder = List.newBuilder[Source]
 
     doWhile(builder += parseRuleAfterBOF(parseSourceImpl())) {
@@ -567,7 +567,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
 
   private def unquote[T <: Tree: AstInfo](unquote: Unquote): T with Quasi = {
-    require(unquote.input.chars(unquote.start + 1) != '$')
+    assert(unquote.input.chars(unquote.start + 1) != '$', "Expected unquote to start with $")
     val unquoteDialect = dialect.unquoteParentDialect
     if (null eq unquoteDialect) syntaxError(s"$dialect doesn't support unquotes", at = unquote)
     // NOTE: I considered having Input.Slice produce absolute positions from the get-go,

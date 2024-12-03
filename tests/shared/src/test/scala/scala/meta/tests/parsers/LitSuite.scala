@@ -69,7 +69,7 @@ class LitSuite extends ParseSuite {
 
   test("\"foo\"")(assertTree(term("\"foo\""))(str("foo")))
 
-  test("'foo'")(assertTree(term("'foo"))(Lit.Symbol('foo)))
+  test("'foo'")(assertTree(term("'foo"))(Lit.Symbol(Symbol("foo"))))
 
   test("null")(assertTree(term("null"))(Lit.Null()))
 
