@@ -2136,6 +2136,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |""".stripMargin.replace("'''", "\"\"\"").nl2lf
     assertTokenizedAsStructureLines(code, struct)
   }
+
   test("unexpected-character") {
     val code = """|
                   |val 。 = 123
@@ -2145,7 +2146,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val struct = s"""|BOF [0..0)
                      |LF [0..1)
                      |KwVal [1..4)
-                     |Invalid(illegal character '\\u3002') [5..6)
+                     |Invalid(illegal unicode codepoint: 0x3002) [5..6)
                      |MultiHS(3) [4..7)
                      |Equals [7..8)
                      |Space [8..9)
