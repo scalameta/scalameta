@@ -30,32 +30,29 @@ class ConfigSuite extends FunSuite {
       input: String,
       fn: s.TextDocument => Unit,
       targetroot: AbsolutePath = generateTargetroot()
-  ): Unit =
-    // each test case takes ~1-2 seconds to run so they're modestly fast but still
-    // ~100x slower than regular unit test.
-    test(name) {
-      val sourceroot = StringFS.fromString(input)
-      val (metacIsSuccess, metacOut, metacErr) = CliTestUtils.withReporter { reporter =>
-        val settings = metac.Settings().withScalacArgs(
-          scalacArgs ++ List(
-            "-d",
-            targetroot.toString,
-            "-P:semanticdb:sourceroot:" + sourceroot.toString,
-            "-cp",
-            Library.scalaLibrary.classpath().syntax,
-            sourceroot.resolve(A).toString
-          )
+  ): Unit = test(name) {
+    val sourceroot = StringFS.fromString(input)
+    val (metacIsSuccess, metacOut, metacErr) = CliTestUtils.withReporter { reporter =>
+      val settings = metac.Settings().withScalacArgs(
+        scalacArgs ++ List(
+          "-d",
+          targetroot.toString,
+          "-P:semanticdb:sourceroot:" + sourceroot.toString,
+          "-cp",
+          Library.scalaLibrary.classpath().syntax,
+          sourceroot.resolve(A).toString
         )
-        Metac.process(settings, reporter)
-      }
-      assert(metacIsSuccess, metacErr)
-      assert(metacOut.isEmpty)
-      assert(metacErr.isEmpty)
-      val semanticdbPath = SemanticdbPaths.toSemanticdb(A, targetroot)
-      val docs = s.TextDocuments.parseFrom(semanticdbPath.readAllBytes)
-      assertEquals(docs.documents.length, 1, docs.toProtoString)
-      fn(docs.documents.head)
+      )
+      Metac.process(settings, reporter)
     }
+    assert(metacIsSuccess, metacErr)
+    assert(metacOut.isEmpty)
+    assert(metacErr.isEmpty)
+    val semanticdbPath = SemanticdbPaths.toSemanticdb(A, targetroot)
+    val docs = s.TextDocuments.parseFrom(semanticdbPath.readAllBytes)
+    assertEquals(docs.documents.length, 1, docs.toProtoString)
+    fn(docs.documents.head)
+  }
 
   check(
     "symbols:local-only",

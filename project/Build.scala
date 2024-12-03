@@ -56,6 +56,5 @@ object Build extends AutoPlugin {
       def scalacBenches = Nil
       def scalametaBenches = List("ScalametaBaseline")
     }
-
   }
 }
