@@ -3,7 +3,6 @@ package scala.meta.tests.metacp
 import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp.Settings
-import scala.meta.tests.Slow
 import scala.meta.tests._
 import scala.meta.tests.cli.CliTestUtils
 
@@ -19,7 +18,7 @@ class MetacpErrorSuite extends FunSuite {
   tmp.toFile.deleteOnExit()
   private val settings = Settings().withOut(tmp).withIncludeJdk(true)
 
-  test("missing symbol 1".tag(Slow)) {
+  test("missing symbol 1") {
     val (result, out, err) = CliTestUtils.withReporter { reporter =>
       val scalametaSettings = settings.withClasspath(
         Library(

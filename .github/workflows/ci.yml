@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         command:
-          - "++2.13.15; download-scala-library; testsJVM/slow:test"
+          - "++2.13.15; download-scala-library; testsSemanticdb/test"
           - "communitytest/test"
           - "mima"
     steps:
@@ -53,7 +53,11 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
-      - run: sbt ++${{ matrix.scala }} tests${{ matrix.type }}/test
+      - name: Test Parser on ${{ matrix.scala }} using ${{ matrix.type }}
+        run: sbt ++${{ matrix.scala }} tests${{ matrix.type }}/test
+      - name: Test Semanticdb on ${{ matrix.scala }}
+        if: matrix.type == 'JVM'
+        run: sbt ++${{ matrix.scala }} testsSemanticdb/test
   testOlderScalaOnJVM:
     runs-on: ubuntu-latest
     strategy:
@@ -78,14 +82,21 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
-      - run: sbt '++${{ matrix.scala }}!; testsJVM/test'
+      - name: Test Parser on ${{ matrix.scala }}
+        run: sbt '++${{ matrix.scala }}!; testsJVM/test'
+      - name: Test Semanticdb on ${{ matrix.scala }}
+        run: sbt ++${{ matrix.scala }} testsSemanticdb/test
   windows:
     name: Windows tests
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: olafurpg/setup-scala@v14
-      - run: sbtx ci-windows
+      - name: Test Parser on Windows
+        run: sbtx testsJVM/test
+        shell: bash
+      - name: Test Semanticdb on Windows
+        run: sbtx testsSemanticdb/test
         shell: bash
   checks:
     name: Scalafmt
