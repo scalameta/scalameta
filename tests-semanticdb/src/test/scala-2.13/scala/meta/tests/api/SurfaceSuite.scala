@@ -79,6 +79,11 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.classifiers
          |scala.meta.classifiers.Classifiable *
          |scala.meta.classifiers.Classifier
+         |scala.meta.cli
+         |scala.meta.cli.Metac *
+         |scala.meta.cli.Metacp *
+         |scala.meta.cli.Metap *
+         |scala.meta.cli.Reporter *
          |scala.meta.common
          |scala.meta.common.Convert *
          |scala.meta.common.Optional *
@@ -132,6 +137,17 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.io.AbsolutePath
          |scala.meta.io.Classpath
          |scala.meta.io.RelativePath
+         |scala.meta.metac
+         |scala.meta.metac.Settings *
+         |scala.meta.metacp
+         |scala.meta.metacp.Result *
+         |scala.meta.metacp.Settings *
+         |scala.meta.metap
+         |scala.meta.metap.Format *
+         |scala.meta.metap.Format.Compact *
+         |scala.meta.metap.Format.Detailed *
+         |scala.meta.metap.Format.Proto *
+         |scala.meta.metap.Settings *
          |scala.meta.parsers
          |scala.meta.parsers.Parse *
          |scala.meta.parsers.ParseException

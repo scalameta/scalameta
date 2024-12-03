@@ -40,9 +40,6 @@ enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
-commands += Command.command("ci-windows") { s =>
-  "testsJVM/testOnly" :: "testsSemanticdb/test" :: s
-}
 commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s)
 commands += Command.command("download-scala-library") { s =>
   val out = file("target/scala-library")
@@ -118,6 +115,7 @@ lazy val semanticdbShared = project.in(file("semanticdb/semanticdb")).settings(
   moduleName := "semanticdb-shared",
   sharedSettings,
   publishJVMSettings,
+  libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
   crossScalaVersions := EarliestScalaVersions,
   protobufSettings,
   mimaPreviousArtifacts := Set.empty,
@@ -196,12 +194,6 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
 
-def fastparseVersion = Def.setting(
-  if (isScala211.value) "3.0.2"
-  else if (VersionNumber(scalaVersion.value).matchesSemVer(SemanticSelector("<2.13.14"))) "3.1.0"
-  else "3.1.1"
-)
-
 lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
   moduleName := "trees",
   sharedSettings,
@@ -210,7 +202,14 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   // NOTE: uncomment this to update ast.md
   // scalacOptions += "-Xprint:typer",
   enableHardcoreMacros,
-  libraryDependencies ++= List("com.lihaoyi" %%% "fastparse" % fastparseVersion.value),
+  libraryDependencies ++= {
+    val fastparseVersion =
+      if (isScala211.value) "3.0.2"
+      else if (VersionNumber(scalaVersion.value).matchesSemVer(SemanticSelector("<2.13.14")))
+        "3.1.0"
+      else "3.1.1"
+    List("com.lihaoyi" %%% "fastparse" % fastparseVersion),
+  },
   mergedModule { base =>
     val scalameta = base / "scalameta"
     List(
@@ -352,6 +351,9 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
 lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings)
   .jvmSettings(
     crossScalaVersions := AllScalaVersions :+ Scala3Version,
+    libraryDependencies ++= {
+      if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil
+    },
     dependencyOverrides += {
       val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
       "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
