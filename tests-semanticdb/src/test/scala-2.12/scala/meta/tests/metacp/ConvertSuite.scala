@@ -4,12 +4,18 @@ import scala.meta.cli._
 import scala.meta.io._
 import scala.meta.metacp._
 import scala.meta.tests._
+import scala.meta.tests.semanticdb.ScalaVersion
 
 import java.nio.file._
+
+import scala.concurrent.duration
 
 import munit.FunSuite
 
 class ConvertSuite extends FunSuite {
+
+  override val munitTimeout = new duration.FiniteDuration(3, duration.MINUTES)
+
   val tmp = AbsolutePath(Files.createTempDirectory("metacp"))
   tmp.toFile.deleteOnExit()
 
@@ -24,7 +30,7 @@ class ConvertSuite extends FunSuite {
     assert(output.isSuccess)
   }
   private def checkConversionSucceeds(library: Library): Unit =
-    test(library.name.tag(Slow))(runConversion(library.name, library.classpath()))
+    test(library.name)(runConversion(library.name, library.classpath()))
 
   Libraries.suite.foreach(checkConversionSucceeds)
 }

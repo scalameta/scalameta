@@ -8,7 +8,9 @@ import scala.meta.internal.trees.AstNamerMacros
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
 
-class SurfaceSuite extends TreeSuiteBase {
+import munit.FunSuite
+
+class SurfaceSuite extends FunSuite {
   object CoreReflection
       extends {
         val u: ru.type = ru
@@ -18,6 +20,10 @@ class SurfaceSuite extends TreeSuiteBase {
       with scala.meta.internal.tokens.Reflection
   import CoreReflection._
 
+  private val EOL = System.lineSeparator
+  protected implicit class ImplicitString(value: String) {
+    def lf2nl: String = if (EOL == "\n") value else value.replace("\n", EOL)
+  }
   private lazy val reflectedTrees = {
     val root = symbolOf[scala.meta.Tree].asRoot
     val all = List(root) ++ root.allBranches ++ root.allLeafs

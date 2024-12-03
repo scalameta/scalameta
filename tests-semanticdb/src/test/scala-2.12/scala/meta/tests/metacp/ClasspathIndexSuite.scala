@@ -54,7 +54,7 @@ class ClasspathIndexSuite extends FunSuite {
   }
 
   test("ignore classpath entry for files that are not jar/zip") {
-    val classpath = Classpath(Paths.get(getClass().getResource("/unicode.txt").toURI()))
+    val classpath = Classpath(Paths.get(getClass().getResource("/metac.index").toURI()))
     val index = ClasspathIndex(classpath)
   }
 }
