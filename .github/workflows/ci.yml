@@ -53,8 +53,10 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
-      - run: sbt ++${{ matrix.scala }} tests${{ matrix.type }}/test
-      - if: matrix.type == 'JVM'
+      - name: Test Parser on ${{ matrix.scala }} using ${{ matrix.type }}
+        run: sbt ++${{ matrix.scala }} tests${{ matrix.type }}/test
+      - name: Test Semanticdb on ${{ matrix.scala }}
+        if: matrix.type == 'JVM'
         run: sbt ++${{ matrix.scala }} testsSemanticdb/test
   testOlderScalaOnJVM:
     runs-on: ubuntu-latest
@@ -90,7 +92,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: olafurpg/setup-scala@v14
-      - run: sbtx "testsJVM/test; testsSemanticdb/test"
+      - name: Test Parser on Windows
+        run: sbtx testsJVM/test
+        shell: bash
+      - name: Test Semanticdb on Windows
+        run: sbtx testsSemanticdb/test
         shell: bash
   checks:
     name: Scalafmt
