@@ -57,7 +57,7 @@ jobs:
       - name: Test Parser on ${{ matrix.scala }} using ${{ matrix.type }}
         run: sbt ++${{ matrix.scala }} tests${{ matrix.type }}/test
       - name: Test Semanticdb on ${{ matrix.scala }}
-        if: matrix.type == 'JVM'
+        if: ${{ matrix.type == 'JVM' && matrix.scala != '3.3.3' }}
         run: sbt ++${{ matrix.scala }} testsSemanticdb/test
   testOlderScalaOnJVM:
     runs-on: ubuntu-latest

@@ -5,15 +5,17 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 import scala.meta.tests.parsers.ParseSuite
 
+import munit._
+
 class ChildrenSuite extends ParseSuite {
   test("Template.children") {
     val tree = stat(
-      """
-      class Foo {
-        import bar.baz.one
-        import bar.baz.two
-      }
-    """
+      """|
+         |class Foo {
+         |  import bar.baz.one
+         |  import bar.baz.two
+         |}
+         |""".stripMargin
     )
     assertEquals(tree.children.length, 4)
     assertEquals(tree.children(0).productPrefix, "Type.Name")
