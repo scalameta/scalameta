@@ -82,6 +82,7 @@ Global / resolvers +=
 val commonJsSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
   scalaVersion := LatestScala213,
+  bspEnabled := false,
   scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
   scalacOptions ++= {
     if (isSnapshot.value) Seq.empty
@@ -96,6 +97,7 @@ val commonJsSettings = Seq(
 lazy val nativeSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
   scalaVersion := LatestScala213,
+  bspEnabled := false,
   nativeConfig ~= { _.withMode(scalanative.build.Mode.releaseFast) }
 )
 
