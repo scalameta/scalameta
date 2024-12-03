@@ -8,8 +8,8 @@ import munit._
 
 class TreeSuite extends FunSuite {
   test("Name.unapply") {
-    assert(Name.unapply(q"a").contains("a"))
-    assert(Name.unapply(t"a").contains("a"))
+    assert(Name.unapply(Term.Name("a")).contains("a"))
+    assert(Name.unapply(Type.Name("a")).contains("a"))
   }
 
   Seq(("+", Unary.Plus), ("-", Unary.Minus), ("~", Unary.Tilde), ("!", Unary.Not)).foreach {
