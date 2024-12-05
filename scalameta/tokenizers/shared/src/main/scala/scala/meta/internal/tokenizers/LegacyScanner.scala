@@ -234,7 +234,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
     @inline
     def reportIllegalCharacter(): Unit = curr
-      .setInvalidToken(s"illegal character '\\u${"%04x".format(ch)}'")
+      .setInvalidToken("illegal unicode codepoint: 0x" + ch.toHexString)
 
     (ch: @switch) match {
       case ' ' =>
