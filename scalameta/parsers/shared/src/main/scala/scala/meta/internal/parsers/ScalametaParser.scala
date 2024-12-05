@@ -2840,33 +2840,32 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  private def modifier(isLocal: Boolean): Mod = {
-    val mod = currToken match {
-      case t: Unquote => unquote[Mod](t)
-      case t: Ellipsis => ellipsis[Mod](t, 1)
-      case _: KwAbstract => atCurPosNext(Mod.Abstract())
-      case _: KwFinal => atCurPosNext(Mod.Final())
-      case _: KwSealed => atCurPosNext(Mod.Sealed())
-      case _: KwImplicit => atCurPosNext(Mod.Implicit())
-      case _: KwLazy => atCurPosNext(Mod.Lazy())
-      case _: KwOverride if !isLocal => atCurPosNext(Mod.Override())
-      case _: KwPrivate if !isLocal => privateModifier()
-      case _: KwProtected if !isLocal => protectedModifier()
-      case _ => currToken.text match {
-          case soft.KwInline() => atCurPosNext(Mod.Inline())
-          case soft.KwInfix() => atCurPosNext(Mod.Infix())
-          case soft.KwOpen() if !isLocal => atCurPosNext(Mod.Open())
-          case soft.KwOpaque() => atCurPosNext(Mod.Opaque())
-          case soft.KwTransparent() => atCurPosNext(Mod.Transparent())
-          case soft.KwErased() => atCurPosNext(Mod.Erased())
-          case soft.KwTracked() => atCurPosNext(Mod.Tracked())
-          case n =>
-            val local = if (isLocal) "local " else ""
-            syntaxError(s"${local}modifier expected but $n found", at = currToken)
-        }
-    }
-    newLinesOpt()
-    mod
+  private def badModifier(tok: Token, isLocal: Boolean): Nothing = {
+    val local = if (isLocal) "local " else ""
+    syntaxError(s"${local}modifier expected but ${tok.text} found", at = tok)
+  }
+
+  private def modifier(tok: ModifierKeyword, isLocal: Boolean): Mod = tok match {
+    case _: KwAbstract => atCurPosNext(Mod.Abstract())
+    case _: KwFinal => atCurPosNext(Mod.Final())
+    case _: KwSealed => atCurPosNext(Mod.Sealed())
+    case _: KwImplicit => atCurPosNext(Mod.Implicit())
+    case _: KwLazy => atCurPosNext(Mod.Lazy())
+    case _: KwOverride if !isLocal => atCurPosNext(Mod.Override())
+    case _: KwPrivate if !isLocal => privateModifier()
+    case _: KwProtected if !isLocal => protectedModifier()
+    case _ => badModifier(tok, isLocal)
+  }
+
+  private def modifier(tok: Ident, isLocal: Boolean): Mod = tok.text match {
+    case soft.KwInline() => atCurPosNext(Mod.Inline())
+    case soft.KwInfix() => atCurPosNext(Mod.Infix())
+    case soft.KwOpen() if !isLocal => atCurPosNext(Mod.Open())
+    case soft.KwOpaque() => atCurPosNext(Mod.Opaque())
+    case soft.KwTransparent() => atCurPosNext(Mod.Transparent())
+    case soft.KwErased() => atCurPosNext(Mod.Erased())
+    case soft.KwTracked() => atCurPosNext(Mod.Tracked())
+    case _ => badModifier(tok, isLocal)
   }
 
   def quasiquoteModifier(): Mod = entrypointModifier()
@@ -2930,10 +2929,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       isLocal: Boolean = false,
       isParams: Boolean = false
   ): Unit = {
-    def appendMod: Unit = {
-      val mod = modifier(isLocal)
-      buf += mod
-    }
+    def append(mod: Mod): Unit = { buf += mod; newLinesOpt() }
     // the only things that can come after $mod or $mods are either keywords or names; the former is easy,
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
     def continueLoop = peekToken match {
@@ -2943,15 +2939,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
     @tailrec
     def loop: Unit = currToken match {
-      case _: Unquote if continueLoop =>
       case _: AtEOL if !isLocal => next(); loop
-      case _: Unquote | _: Ellipsis => appendMod; loop
+      case t: Unquote => if (!continueLoop) { append(unquote[Mod](t)); loop }
+      case t: Ellipsis => append(ellipsis[Mod](t, 1)); loop
       case _: KwCase if peek[KwObject, KwClass] => buf += atCurPosNext(Mod.Case())
-      case _: ModifierKeyword => appendMod; loop
+      case t: ModifierKeyword => append(modifier(t, isLocal)); loop
       case t: Ident if {
             if (isParams) !peek[Colon] && ParamsModifier.matches(t.value)
             else isSoftModifier(currIndex)
-          } => appendMod; loop
+          } => append(modifier(t, isLocal)); loop
       case _ =>
     }
     loop
@@ -3067,24 +3063,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       paramIdx: Int
   ): Term.Param = autoPos {
     val mods = new ListBuffer[Mod]
+    def appendMod(mod: Mod) = { mods += atCurPosNext(mod); true }
     annotsBuf(mods, skipNewLines = false)
     val numAnnots = mods.length
     if (ownerIsType) modifiersBuf(mods, isParams = true)
-    else {
-      @tailrec
-      def otherMods(): Unit = if (peekToken.isNot[Colon]) {
-        val mod = currToken.text match {
-          case soft.KwInline() => Mod.Inline()
-          case soft.KwErased() => Mod.Erased()
-          case _ => null
-        }
-        if (mod ne null) {
-          mods += atCurPosNext(mod)
-          otherMods()
-        }
-      }
-      otherMods()
-    }
+    else while (currToken match {
+        case t: Ident if !peek[Colon] =>
+          t.text match {
+            case soft.KwInline() => appendMod(Mod.Inline())
+            case soft.KwErased() => appendMod(Mod.Erased())
+            case _ => false
+          }
+        case _ => false
+      }) {}
     val hasExplicitMods = mods.view.drop(numAnnots).exists {
       case _: Mod.Quasi | _: Mod.Erased => false
       case m: Mod.Private => m.within.is[Name.Anonymous]
