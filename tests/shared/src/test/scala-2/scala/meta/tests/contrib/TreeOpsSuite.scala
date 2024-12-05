@@ -12,14 +12,11 @@ class TreeOpsSuite extends TreeSuiteBase {
   val a: Defn.Val = q"val x = 2"
 
   test("testForeach") {
-    var obtained = List.empty[String]
-    a.foreach(x => obtained = x.structure :: obtained)
+    val obtained = new ListBuffer[String]
+    a.foreach(x => obtained.append(x.structure))
     assertEquals(
-      obtained,
+      obtained.result(),
       List(
-        "Lit.Int(2)",
-        "Term.Name(\"x\")",
-        "Pat.Var(Term.Name(\"x\"))",
         """|Defn.Val(
            |  Nil,
            |  List(
@@ -27,7 +24,10 @@ class TreeOpsSuite extends TreeSuiteBase {
            |  ),
            |  None,
            |  Lit.Int(2)
-           |)""".stripMargin.lf2nl
+           |)""".stripMargin.lf2nl,
+        """Pat.Var(Term.Name("x"))""",
+        """Term.Name("x")""",
+        """Lit.Int(2)"""
       )
     )
   }
