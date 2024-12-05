@@ -588,27 +588,24 @@ class ModSuite extends ParseSuite {
   test("Annotation after modifier")(interceptParseError("implicit @foo def foo(a: Int): Int"))
 
   test("missing val after parameter modifier") {
-    val actual = interceptParseError("class A(implicit b: B, implicit c: C)")
     val expected = s"""|error: `val` expected but `identifier` found
                        |class A(implicit b: B, implicit c: C)
                        |                                ^""".stripMargin
-    assert(actual.contains(expected), actual)
+    runTestError[Stat]("class A(implicit b: B, implicit c: C)", expected)
   }
 
   test("repeated parameter modifier on first parameter") {
-    val actual = interceptParseError("class A(implicit implicit val b: B)")
     val expected = s"""|error: repeated modifier
                        |class A(implicit implicit val b: B)
                        |                 ^""".stripMargin
-    assert(actual.contains(expected), actual)
+    runTestError[Stat]("class A(implicit implicit val b: B)", expected)
   }
 
   test("by-name parameter: class with val") {
-    val actual = interceptParseError("class A(val b: => B)")
     val expected = s"""|error: `val' parameters may not be call-by-name
                        |class A(val b: => B)
-                       |            ^""".stripMargin
-    assert(actual.contains(expected), actual)
+                       |               ^""".stripMargin
+    runTestError[Stat]("class A(val b: => B)", expected)
   }
 
   test("by-name parameter: class with private[this] val") {
@@ -619,19 +616,17 @@ class ModSuite extends ParseSuite {
   }
 
   test("by-name parameter: case class with val") {
-    val actual = interceptParseError("case class A(val b: => B)")
     val expected = s"""|error: `val' parameters may not be call-by-name
                        |case class A(val b: => B)
-                       |                 ^""".stripMargin
-    assert(actual.contains(expected), actual)
+                       |                    ^""".stripMargin
+    runTestError[Stat]("case class A(val b: => B)", expected)
   }
 
   test("by-name parameter: class with implicit val") {
-    val actual = interceptParseError("class A(implicit val b: => B)")
     val expected = s"""|error: `val' parameters may not be call-by-name
                        |class A(implicit val b: => B)
-                       |                     ^""".stripMargin
-    assert(actual.contains(expected), actual)
+                       |                        ^""".stripMargin
+    runTestError[Stat]("class A(implicit val b: => B)", expected)
   }
 
   test("#3122 missing val after package-private modifier") {

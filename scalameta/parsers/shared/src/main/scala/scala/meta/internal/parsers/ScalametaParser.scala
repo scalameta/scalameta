@@ -3117,10 +3117,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         onlyLastParameterCanBeRepeated(x)
         toParamClause(mod)(x)
       }
-    def parseParams(mod: Option[Mod.ParamsType] = None, ownerIsTypeOverride: => Boolean = false) = {
+    def parseParams(
+        mod: Option[Mod.ParamsType] = None,
+        anonNameOK: Boolean = false,
+        ownerIsTypeOverride: => Boolean = false
+    ) = {
       val params = commaSeparatedWithIndex(termParam(
         ownerIsCase = ownerIsCase,
         ownerIsType = ownerIsType || ownerIsTypeOverride,
+        allowAnonName = anonNameOK,
         mod = mod
       ))
       reduceParams(params, mod)
@@ -3133,6 +3138,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         t.text match {
           case soft.KwUsing() => parseParams(
               mod = Some(atCurPosNext(Mod.Using())),
+              anonNameOK = true,
               ownerIsTypeOverride = ExtensionSigContext.isInside()
             )
           case _ => parseParams()
@@ -3141,9 +3147,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     })(Term.ParamClause(Nil))
   }
 
-  def termParam(ownerIsCase: Boolean, ownerIsType: Boolean, mod: Option[Mod.ParamsType] = None)(
-      paramIdx: Int
-  ): Term.Param = autoPos {
+  def termParam(
+      ownerIsCase: Boolean,
+      ownerIsType: Boolean,
+      mod: Option[Mod.ParamsType] = None,
+      allowAnonName: Boolean = false
+  )(paramIdx: Int): Term.Param = autoPos {
     val mods = new ListBuffer[Mod]
     def appendMod(mod: Mod) = { mods += atCurPosNext(mod); true }
     annotsBuf(mods, skipNewLines = false)
@@ -3182,43 +3191,45 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     varOrVarParamMod.foreach(mods += _)
 
     def endParamQuasi = at[RightParen, Comma]
+    def checkByNameParamType(tpt: Type): Unit = {
+      def mayNotBeByName(mod: Mod) =
+        syntaxError(s"`$mod' parameters may not be call-by-name", at = tpt)
+      val notLocalToThis: Boolean = ownerIsType && (ownerIsCase || varOrVarParamMod.nonEmpty) &&
+        mods.forall { case Mod.Private(_: Term.This) => false; case _ => true }
+      val badMod =
+        if (notLocalToThis) varOrVarParamMod
+        else if (dialect.allowImplicitByNameParameters) None
+        else mod.filter(_.is[Mod.Implicit])
+      badMod.foreach(mayNotBeByName)
+    }
+    def getParamType: Type = paramType() match {
+      case tpt: Type.ByName => checkByNameParamType(tpt); tpt
+      case tpt => tpt
+    }
+    def getParam(name: Name, tpt: Option[Type]) = {
+      val default = if (acceptOpt[Equals]) Some(expr()) else None
+      Term.Param(mods.toList, name, tpt, default)
+    }
+
     mods.headOption.collect { case q: Mod.Quasi if endParamQuasi => q.become[Term.Param] }
-      .orElse(currToken match {
-        case t: Ellipsis => Some(ellipsis[Term.Param](t, 1))
-        case _ => None
-      }).getOrElse {
-        val anonymousUsing = mod.is[Mod.Using] && !peek[Colon]
-        val name = if (anonymousUsing) anonName() else termName().become[Name]
-        name match {
-          case q: Quasi if endParamQuasi => q.become[Term.Param]
-          case _ =>
-            val tpt =
-              if (!at[Colon] && name.is[Name.Quasi]) None
-              else {
-                if (!anonymousUsing) accept[Colon]
-                val tpt = paramType()
-                if (tpt.is[Type.ByName]) {
-                  def mayNotBeByName(mod: Mod) =
-                    syntaxError(s"`$mod' parameters may not be call-by-name", at = name)
-                  val isLocalToThis: Boolean = (!ownerIsCase && varOrVarParamMod.isEmpty) ||
-                    mods.exists { case Mod.Private(_: Term.This) => true; case _ => false }
-                  val badMod =
-                    if (ownerIsType && !isLocalToThis) varOrVarParamMod
-                    else if (dialect.allowImplicitByNameParameters) None
-                    else mod.filter(_.is[Mod.Implicit])
-                  badMod.foreach(mayNotBeByName)
-                }
-                Some(tpt)
-              }
-            val default = if (acceptOpt[Equals]) Some(expr()) else None
-            Term.Param(mods.toList, name, tpt, default)
-        }
-      }
+      .getOrElse(currToken match {
+        case t: Ellipsis => ellipsis[Term.Param](t, 1)
+        case _ if !peek[Colon] && allowAnonName => getParam(anonName(), Some(getParamType))
+        case t: Unquote =>
+          val name = unquote[Name](t)
+          if (endParamQuasi) name.become[Term.Param]
+          else getParam(name, if (acceptOpt[Colon]) Some(getParamType) else None)
+        case t: Ident =>
+          val name = atCurPosNext(Term.Name(t.value))
+          accept[Colon]
+          getParam(name, Some(getParamType))
+        case _ => syntaxErrorExpected[Ident]
+      })
   }
 
   def quasiquoteTermParam(): Term.Param = entrypointTermParam()
 
-  def entrypointTermParam(): Term.Param = termParam(ownerIsCase = false, ownerIsType = true)(0)
+  def entrypointTermParam(): Term.Param = termParam(ownerIsCase = false, ownerIsType = true)(-1)
 
   private def emptyTypeParamsRaw: Type.ParamClause = Type.ParamClause(Nil)
   private def emptyTypeParams: Type.ParamClause = atCurPosEmpty(emptyTypeParamsRaw)

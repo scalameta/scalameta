@@ -203,6 +203,10 @@ object Name {
     def value = "_"
     checkParent(ParentChecks.NamePlaceholder)
   }
+
+  implicit class ImplicitName(private val name: Name) extends AnyVal {
+    final def isAnonymous: Boolean = name.is[Name.Anonymous]
+  }
 }
 
 @branch
@@ -857,7 +861,7 @@ object Pat {
 @branch
 trait Member extends Tree {
   def name: Name
-  final def isNameAnonymous: Boolean = name.is[Name.Anonymous]
+  final def isNameAnonymous: Boolean = name.isAnonymous
 }
 object Member {
   @branch

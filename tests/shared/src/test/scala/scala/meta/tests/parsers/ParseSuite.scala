@@ -47,8 +47,8 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   def testParseErrors(stats: String*)(implicit loc: munit.Location, dialect: Dialect) = stats
     .foreach(x => test(x)(interceptParseError(x)))
 
-  def interceptParseError(stat: String)(implicit loc: munit.Location, dialect: Dialect): String =
-    try intercept[parsers.ParseException](templStat(stat)).getMessage().nl2lf
+  def interceptParseError(stat: String)(implicit loc: munit.Location, dialect: Dialect): Unit =
+    try intercept[parsers.ParseException](templStat(stat))
     catch {
       case scala.util.control.NonFatal(t) =>
         val msg = "no exception was thrown"
