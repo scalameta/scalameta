@@ -583,7 +583,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       quasi[T](ell.rank, tree)
     }
 
-  private def unquote[T <: Tree: AstInfo](unquote: Unquote): T with Quasi = {
+  private def unquote[T <: Tree: AstInfo](unquote: Token): T with Quasi = {
     assert(unquote.input.chars(unquote.start + 1) != '$', "Expected unquote to start with $")
     val unquoteDialect = dialect.unquoteParentDialect
     if (null eq unquoteDialect) syntaxError(s"$dialect doesn't support unquotes", at = unquote)
@@ -603,7 +603,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def unquote[T <: Tree: AstInfo]: T with Quasi = currToken match {
     case t: Unquote => unquote[T](t)
-    case _ => unreachable(currToken)
+    case t => unreachable(t)
+  }
+
+  def unquoteOpt[T <: Tree: AstInfo]: Option[T with Quasi] = currToken match {
+    case t: Unquote => Some(unquote[T](t))
+    case _ => None
+  }
+
+  def unquoteOpt[T <: Tree: AstInfo](pred: => Boolean): Option[T with Quasi] = currToken match {
+    case t: Unquote if pred => Some(unquote[T](t))
+    case _ => None
   }
 
   final def tokenSeparated[Sep: ClassTag, T <: Tree: AstInfo: ClassTag](
@@ -2504,14 +2514,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         iter()
       case _: KwCase if isCaseIntroOnKwCase() =>
         next()
-        currToken match {
-          case t: Unquote =>
-            cases += unquote[Case](t)
-            skipAllStatSep()
-          case _ =>
-            cases += caseClause()
-            if (StatSep(currToken)) tryAhead(isCaseIntro())
-        }
+        val quasiCase = unquoteOpt[Case]
+        cases += quasiCase.getOrElse(caseClause())
+        if (quasiCase.nonEmpty) skipAllStatSep()
+        else if (StatSep(currToken)) tryAhead(isCaseIntro())
         iter()
       case _ =>
     }
@@ -2983,13 +2989,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   ): Unit = while (currToken match {
       case _: At =>
         next()
-        annots +=
-          (currToken match {
-            case t: Unquote => unquote[Mod.Annot](t)
-            case _ => autoEndPos(prevIndex) {
-                Mod.Annot(initRest(exprSimpleType(), allowArgss, insidePrimaryCtorAnnot))
-              }
-          })
+        annots += unquoteOpt[Mod.Annot].getOrElse(autoEndPos(prevIndex) {
+          Mod.Annot(initRest(exprSimpleType(), allowArgss, insidePrimaryCtorAnnot))
+        })
         true
       case t: Ellipsis if peek[At] =>
         annots += ellipsis[Mod.Annot](t, 1, next())
@@ -3825,14 +3827,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       insidePrimaryCtorAnnot: Boolean = false,
       allowBraces: Boolean = false,
       allowTypeSingleton: Boolean = true
-  ): Init = currToken match {
-    case t: Unquote if !(peek[LeftParen] || (allowBraces && peek[LeftBrace])) => unquote[Init](t)
-    case _ => initRestAt(currIndex, typeParser)(
-        allowArgss = allowArgss,
-        insidePrimaryCtorAnnot = insidePrimaryCtorAnnot,
-        allowBraces = allowBraces,
-        allowSingleton = allowTypeSingleton
-      )
+  ): Init = unquoteOpt[Init](!(peek[LeftParen] || (allowBraces && peek[LeftBrace]))).getOrElse {
+    initRestAt(currIndex, typeParser)(
+      allowArgss = allowArgss,
+      insidePrimaryCtorAnnot = insidePrimaryCtorAnnot,
+      allowBraces = allowBraces,
+      allowSingleton = allowTypeSingleton
+    )
   }
 
   /* ---------- SELFS --------------------------------------------- */
@@ -3980,15 +3981,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def entrypointTemplate(): Template = autoPos(template(OwnedByClass))
 
   def templateOpt(owner: TemplateOwner): Template = autoPos {
-    if (at[Unquote] &&
-      (peekToken match {
-        case _: Dot | _: Hash | _: At | _: Ellipsis | _: LeftParen | _: LeftBracket | _: LeftBrace |
-            _: KwWith => false
-        case _ => true
-      })) unquote[Template](currToken.asInstanceOf[Unquote])
-    else if (acceptOpt[KwExtends] || (owner eq OwnedByTrait) && acceptOpt[Subtype])
-      template(owner, afterExtend = true)
-    else templateAfterExtends(owner)
+    unquoteOpt[Template](peekToken match {
+      case _: Dot | _: Hash | _: At | _: Ellipsis | _: LeftParen | _: LeftBracket | _: LeftBrace |
+          _: KwWith => false
+      case _ => true
+    }).getOrElse {
+      val onExtends = acceptOpt[KwExtends] || (owner eq OwnedByTrait) && acceptOpt[Subtype]
+      if (onExtends) template(owner, afterExtend = true) else templateAfterExtends(owner)
+    }
   }
 
   @inline
