@@ -38,21 +38,6 @@ class PublicSuite extends TreeSuiteBase {
     assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
   }
 
-  test("scala.meta.Tree.toString (quasiquotes)") {
-    val tree = q"foo + bar // baz"
-    assertEquals(tree.toString, "foo + bar // baz")
-  }
-
-  test("scala.meta.Tree.structure (quasiquoted)") {
-    val tree = q"foo + bar // baz"
-    assertTree(tree)(Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar"))))
-  }
-
-  test("scala.meta.Tree.syntax (quasiquoted)") {
-    val tree = q"foo + bar // baz"
-    assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
-  }
-
   test("scala.meta.dialects.Scala3.toString") {
     assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala36")
   }
@@ -219,9 +204,10 @@ class PublicSuite extends TreeSuiteBase {
   }
 
   test("scala.meta.inputs.Position.Range.toString") {
-    val Term.ApplyInfix(lhs, _, _, _) = "foo + bar".parse[Term].get
-    lhs.pos match { case _: Position.Range => ; case _ => }
-    assertEquals(lhs.pos.toString, """[0..3) in Input.String("foo + bar")""")
+    "foo + bar".parse[Term].get match {
+      case Term.ApplyInfix(lhs, _, _, _) =>
+        assertEquals(lhs.pos.toString, """[0..3) in Input.String("foo + bar")""")
+    }
   }
 
   test("scala.meta.parsers.ParseException.toString") {

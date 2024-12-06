@@ -1,4 +1,4 @@
-package scala.meta.testkit
+package scala.meta.tests.testkit
 
 import java.io.File
 

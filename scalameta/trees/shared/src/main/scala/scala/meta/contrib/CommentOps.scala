@@ -15,12 +15,13 @@ object CommentOps {
 
   @inline
   def isScaladoc(c: Comment): Boolean = {
-    val rawSyntax: String = c.syntax.trim
+    val rawSyntax: String = c.text.trim()
     rawSyntax.startsWith("/**") && rawSyntax.endsWith("*/")
   }
 
   def content(c: Comment): Option[String] = {
-    val rawSyntax: String = c.syntax.trim
+    val rawSyntax: String = c.text.trim()
+
     if (isScaladoc(c)) {
       val content = dropRightWhile(rawSyntax, scaladocBorderSymbols).dropWhile(scaladocBorderSymbols)
 

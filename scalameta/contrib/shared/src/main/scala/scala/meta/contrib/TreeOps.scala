@@ -3,12 +3,15 @@ package contrib
 
 import scala.meta.contrib.equality.Equal
 import scala.meta.contrib.equality.TreeEquality
-import scala.meta.transversers.SimpleTraverser
 
 import scala.annotation.tailrec
 import scala.language.higherKinds
 
 object TreeOps {
+
+  class SimpleTraverser {
+    def apply(tree: Tree): Unit = tree.children.foreach(apply)
+  }
 
   def contains[F[x <: Tree] <: TreeEquality[x]](
       tree: Tree
@@ -33,13 +36,33 @@ object TreeOps {
     result
   }
 
-  def foreach(tree: Tree)(f: Tree => Unit): Unit = tree.traverse { case t => f(t) }
+  def foreach(tree: Tree)(f: Tree => Unit): Unit = {
+    object traverser extends SimpleTraverser {
+      override def apply(t: Tree): Unit = {
+        f(t)
+        super.apply(t)
+      }
+    }
+    traverser(tree)
+  }
 
   def descendants(tree: Tree): List[Tree] = {
     val builder = List.newBuilder[Tree]
     object traverser extends SimpleTraverser {
       override def apply(t: Tree): Unit = {
         if (t ne tree) builder += t
+        super.apply(t)
+      }
+    }
+    traverser(tree)
+    builder.result()
+  }
+
+  def collect[B](tree: Tree)(pf: PartialFunction[Tree, B]): List[B] = {
+    val builder = List.newBuilder[B]
+    object traverser extends SimpleTraverser {
+      override def apply(t: Tree): Unit = {
+        if (pf.isDefinedAt(t)) builder += pf(t)
         super.apply(t)
       }
     }

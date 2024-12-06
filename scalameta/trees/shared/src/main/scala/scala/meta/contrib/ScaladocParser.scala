@@ -32,7 +32,7 @@ object ScaladocParser {
           List(value)
     }.getOrElse(Nil)
 
-    comment.content.map(parseRec)
+    CommentOps.content(comment).map(parseRec)
   }
 
   private[this] def generateHeadingParser[$: P](headingType: Heading): P[DocToken] = {

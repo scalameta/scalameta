@@ -81,9 +81,8 @@ class LitSuite extends ParseSuite {
   }
 
   test("#344") {
-    val minusOne = term("1 + -1").collect { case Term.ApplyInfix(_, _, _, List(minusOne)) =>
-      minusOne
-    }.head
+    val minusOne =
+      term("1 + -1") match { case Term.ApplyInfix(_, _, _, List(minusOne)) => minusOne }
     assertEquals(minusOne.tokens.structure, "Tokens(Ident(-) [4..5), Constant.Int(1) [5..6))")
   }
 

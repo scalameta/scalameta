@@ -8,8 +8,19 @@ import scala.meta.trees.Origin
 import munit._
 
 object MoreHelpers {
+
+  def collect[B](tree: Tree)(pf: PartialFunction[Tree, B]): List[B] = {
+    val builder = List.newBuilder[B]
+    def loop(t: Tree): Unit = {
+      builder ++= pf.lift(t)
+      t.children.foreach(loop)
+    }
+    loop(tree)
+    builder.result()
+  }
+
   def requireNonEmptyOrigin(tree: Tree): tree.type = {
-    val missingOrigin = tree.collect { case t if t.origin == Origin.None => t }
+    val missingOrigin = collect(tree) { case t if t.origin == Origin.None => t }
     Assertions.assertEquals(
       missingOrigin.map(_.structure),
       Nil,

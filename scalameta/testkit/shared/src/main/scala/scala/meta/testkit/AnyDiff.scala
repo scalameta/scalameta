@@ -1,6 +1,7 @@
 package scala.meta.testkit
 
 import scala.meta.Tree
+import scala.meta._
 
 /** Helper class to create textual diff between two objects */
 case class AnyDiff(a: Any, b: Any) extends Exception {

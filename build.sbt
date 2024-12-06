@@ -115,6 +115,7 @@ lazy val semanticdbShared = project.in(file("semanticdb/semanticdb")).settings(
   moduleName := "semanticdb-shared",
   sharedSettings,
   publishJVMSettings,
+  libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
   crossScalaVersions := EarliestScalaVersions,
   protobufSettings,
   mimaPreviousArtifacts := Set.empty,
@@ -227,7 +228,7 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   sharedSettings,
   description := "Scalameta APIs for parsing and their baseline implementation",
   enableHardcoreMacros,
-  crossScalaVersions := EarliestScalaVersions,
+  crossScalaVersions := AllScalaBinaryVersions,
   mergedModule { base =>
     List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
   }
@@ -247,30 +248,34 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
     npmPackageREADME := Some(file("README.npm.md"))
   ).nativeSettings(nativeSettings).dependsOn(trees)
 
-def mergedModule(projects: File => List[File]): List[Setting[_]] = List(
-  Compile / unmanagedSourceDirectories ++= {
-    val base = (ThisBuild / baseDirectory).value
-    val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
-    val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
-    val platform = if (isJS) "js" else if (isNative) "native" else "jvm"
-    val scalaBinary = "scala-" + scalaBinaryVersion.value
-    projects(base).flatMap { project =>
-      List(
-        project / "shared" / "src" / "main" / scalaBinary,
-        project / "shared" / "src" / "main" / "scala",
-        project / platform / "src" / "main" / "scala"
-      )
-    }
+def mergedModule(
+    projects: File => List[File],
+    projects3: File => List[File] = _ => Nil
+): List[Setting[_]] = List(Compile / unmanagedSourceDirectories ++= {
+  val base = (ThisBuild / baseDirectory).value
+  val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
+  val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
+  val platform = if (isJS) "js" else if (isNative) "native" else "jvm"
+  val scalaBinary = "scala-" + scalaBinaryVersion.value
+  val allProjects = if (isScala3.value) projects3(base) else projects(base)
+  allProjects.flatMap { project =>
+    List(
+      project / "shared" / "src" / "main" / scalaBinary,
+      project / "shared" / "src" / "main" / "scala",
+      project / platform / "src" / "main" / "scala"
+    )
   }
-)
+})
 
 lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta")).settings(
   moduleName := "scalameta",
   sharedSettings,
   description := "Scalameta umbrella module that includes all public APIs",
-  crossScalaVersions := EarliestScalaVersions,
-  libraryDependencies ++= List("org.scala-lang" % "scalap" % scalaVersion.value),
-  mergedModule(base => List(base / "scalameta" / "contrib"))
+  crossScalaVersions := AllScalaBinaryVersions,
+  mergedModule(
+    base => List(base / "scalameta" / "contrib"),
+    base => List(base / "scalameta" / "contrib")
+  )
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(parsers)
 
@@ -278,7 +283,7 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
 lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(
   description := "Sources to compile to build SemanticDB for tests.",
   sharedSettings,
-  crossScalaVersions := AllScalaVersions,
+  crossScalaVersions := AllScala2Versions,
   nonPublishableSettings,
   // the sources in this project intentionally produce warnings to test the
   // diagnostics pipeline in semanticdb-scalac.
@@ -319,7 +324,7 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
 
 lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-macros")).settings(
   sharedSettings,
-  crossScalaVersions := AllScalaVersions,
+  crossScalaVersions := AllScala2Versions,
   nonPublishableSettings,
   enableMacros
 )
@@ -327,29 +332,31 @@ lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-m
 lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).settings(
   moduleName := "testkit",
   sharedSettings,
-  crossScalaVersions := EarliestScalaVersions,
+  crossScalaVersions := AllScalaBinaryVersions,
   hasLargeIntegrationTests,
   libraryDependencies += munitLibrary.value,
   testFrameworks := List(new TestFramework("munit.Framework")),
   description := "Testing utilities for scalameta APIs"
-).dependsOn(scalameta).configureCross(crossPlatformPublishSettings).jvmSettings(
-  libraryDependencies ++= {
-    if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
-    else Nil
-  },
-  libraryDependencies ++= List(
-    // These are used to download and extract a corpus tar.gz
-    "org.rauschig" % "jarchivelib" % "1.2.0",
-    "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test
-  )
-).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
+).dependsOn(scalameta).configureCross(crossPlatformPublishSettings)
+  .jvmSettings(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0")
+  .jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
 lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings)
   .jvmSettings(
     crossScalaVersions := AllScalaVersions,
+    libraryDependencies ++= {
+      if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil
+    },
     dependencyOverrides += {
       val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
       "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
+    },
+    libraryDependencies ++= {
+      if (isScala213.value) List(
+        "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+        "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4" % Test
+      )
+      else Nil
     }
   )
   .jsSettings(commonJsSettings, scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
@@ -359,7 +366,7 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testS
   ).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
 
 lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
-  crossScalaVersions := AllScalaVersions,
+  crossScalaVersions := AllScala2Versions,
   testSettings,
   Test / fullClasspath := {
     val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
@@ -446,6 +453,7 @@ lazy val bench = project.in(file("bench/suite")).enablePlugins(BuildInfoPlugin)
 def isScalaBinaryVersion(version: String) = Def.setting(scalaBinaryVersion.value == version)
 lazy val isScala211 = isScalaBinaryVersion("2.11")
 lazy val isScala213 = isScalaBinaryVersion("2.13")
+lazy val isScala3 = isScalaBinaryVersion("3")
 
 lazy val munitLibrary = Def.setting {
   val munitV =
@@ -466,7 +474,7 @@ lazy val sharedSettings = Def.settings(
   scalaVersion := LatestScala213,
   organization := "org.scalameta",
   libraryDependencies ++= {
-    if (isScala213.value) Nil
+    if (isScala213.value || isScala3.value) Nil
     else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
   },
   scalacOptions ++= { if (isScala213.value) List("-Ymacro-annotations") else Nil },
@@ -664,7 +672,7 @@ def compatibilityPolicyViolation(ticket: String) = Seq(mimaPreviousArtifacts := 
 
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
-  crossScalaVersions := AllScalaVersions,
+  crossScalaVersions := AllScala2Versions,
   Compile / unmanagedSourceDirectories += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
@@ -719,11 +727,14 @@ lazy val enableMacros = macroDependencies(hardcore = false)
 lazy val enableHardcoreMacros = macroDependencies(hardcore = true)
 
 def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
-  val scalaReflect = Seq("org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided")
-  val scalaCompiler =
-    if (hardcore) Seq("org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided")
-    else Nil
-  scalaReflect ++ scalaCompiler
+  if (isScala3.value) Nil
+  else {
+    val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
+    val scalaCompiler =
+      if (hardcore) List("org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided")
+      else Nil
+    scalaReflect :: scalaCompiler
+  }
 }
 
 lazy val docs = project.in(file("scalameta-docs")).settings(

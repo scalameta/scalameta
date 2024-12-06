@@ -11,6 +11,7 @@ import munit._
 
 abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
+  protected val EOL = org.scalameta.internal.ScalaCompat.EOL
   protected implicit def tokenizerOptions: TokenizerOptions = TokenizerOptions.global.value
 
   def emptyArgClause = Seq.empty[Term.ArgClause]

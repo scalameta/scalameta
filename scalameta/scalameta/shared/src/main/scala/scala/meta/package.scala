@@ -11,8 +11,6 @@ package object meta
     with parsers.Aliases
     with prettyprinters.Api
     with prettyprinters.Aliases
-    with quasiquotes.Api
-    with quasiquotes.Aliases
     with io.Api
     with io.Aliases
     with inputs.Api
@@ -21,12 +19,10 @@ package object meta
     with tokenizers.Aliases
     with tokens.Api
     with tokens.Aliases
-    with transversers.Api
-    with transversers.Aliases
     with trees.Api
-    with trees.Aliases {
+    with trees.Aliases
+    with VersionSpecificApis {
 
-  type XtensionTokenizersDialectApply // shadow conflicting implicit class
   implicit class XtensionDialectApply(private val dialect: scala.meta.Dialect) extends AnyVal {
     def apply[T](inputLike: T)(implicit
         convert: scala.meta.common.Convert[T, scala.meta.inputs.Input]

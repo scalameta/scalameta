@@ -2,6 +2,7 @@ package scala.meta.tests
 package parsers
 
 import scala.meta._
+import scala.meta.internal.trees.XtensionTreesName
 import scala.meta.tokenizers.TokenizerOptions
 
 import scala.language.implicitConversions
