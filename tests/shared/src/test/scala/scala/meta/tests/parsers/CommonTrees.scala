@@ -5,7 +5,19 @@ import scala.meta._
 
 import scala.language.implicitConversions
 
-trait CommonTrees {
+object CommonTrees {
+  trait LowPriorityDefinitions {
+
+    final def tname(name: String): Term.Name = Term.Name(name)
+    implicit def implicitStringToTerm(obj: String): Term.Name = tname(obj)
+
+    final def pname(name: String): Type.Name = Type.Name(name)
+    implicit def implicitStringToType(obj: String): Type.Name = pname(obj)
+
+  }
+}
+
+trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   object Nothing {
     def unapply(tree: Tree): Boolean = tree match {
       case Type.Name("Nothing") => true
@@ -56,8 +68,6 @@ trait CommonTrees {
   final def self(name: String, tpe: Option[Type] = None): meta.Self = meta.Self(mname(name), tpe)
   final def self(name: String, tpe: Type): meta.Self = self(name, Option(tpe))
 
-  final def tname(name: String): Term.Name = Term.Name(name)
-  implicit def implicitStringToTerm(obj: String): Term.Name = tname(obj)
   implicit def implicitStringsToTerms(obj: List[String]): List[Term.Name] = obj.map(tname)
   implicit def implicitStringToTermOpt(obj: Option[String]): Option[Term.Name] = obj.map(tname)
 
@@ -92,9 +102,9 @@ trait CommonTrees {
   final def tparam(name: String, tpe: Type): Term.Param = tparam(Nil, name, tpe)
   final def tparam(name: String): Term.Param = tparam(Nil, name)
 
-  final def tparamval(name: String, tpe: String) = tparam(List(Mod.ValParam()), name, tpe)
-  final def tparamInline(name: String, tpe: String) = tparam(List(Mod.Inline()), name, tpe)
-  final def tparamUsing(name: String, tpe: String) = tparam(List(Mod.Using()), name, tpe)
+  final def tparamval(name: String, tpe: Type) = tparam(List(Mod.ValParam()), name, tpe)
+  final def tparamInline(name: String, tpe: Type) = tparam(List(Mod.Inline()), name, tpe)
+  final def tparamUsing(name: String, tpe: Type) = tparam(List(Mod.Using()), name, tpe)
 
   final def tinfix(lt: Term, op: Term.Name, ta: List[Type], rt: Term*): Term.ApplyInfix = Term
     .ApplyInfix(lt, op, ta, rt.toList)
@@ -102,6 +112,7 @@ trait CommonTrees {
   final def tpostfix(lt: Term, op: Term.Name): Term.SelectPostfix = Term.SelectPostfix(lt, op)
   final def tselect(lt: Term, op: Term.Name): Term.Select = Term.Select(lt, op)
   final def tapply(fun: Term, args: Term*): Term.Apply = Term.Apply(fun, args.toList)
+  final def tapplytype(fun: Term, args: Type*) = Term.ApplyType(fun, args.toList)
   final def tmatch(lt: Term, cases: Case*): Term.Match = Term.Match(lt, cases.toList)
   final def tselectmatch(lt: Term, cases: Case*): Term.SelectMatch = Term
     .SelectMatch(lt, cases.toList)
@@ -109,9 +120,8 @@ trait CommonTrees {
     .Function(params.toList, body)
   final def tctxfunc(body: Term, params: Term.Param*): Term.ContextFunction = Term
     .ContextFunction(params.toList, body)
+  final def tpolyfunc(body: Term, params: Type.Param*) = Term.PolyFunction(params.toList, body)
 
-  final def pname(name: String): Type.Name = Type.Name(name)
-  implicit def implicitStringToType(obj: String): Type.Name = pname(obj)
   implicit def implicitStringsToTypes(obj: List[String]): List[Type.Name] = obj.map(pname)
   implicit def implicitStringToTypeOpt(obj: Option[String]): Option[Type.Name] = obj.map(pname)
 
@@ -133,12 +143,14 @@ trait CommonTrees {
   }
 
   final def pinfix(lt: Type, op: Type.Name, rt: Type): Type.ApplyInfix = Type.ApplyInfix(lt, op, rt)
+  final def papply(tpe: Type, args: Type*): Type.Apply = Type.Apply(tpe, args.toList)
   final def pfunc(param: List[Type], res: Type): Type.Function = Type.Function(param, res)
   final def pctxfunc(param: List[Type], res: Type): Type.ContextFunction = Type
     .ContextFunction(param, res)
   final def purefunc(param: List[Type], res: Type): Type.PureFunction = Type.PureFunction(param, res)
   final def purectxfunc(param: List[Type], res: Type): Type.PureContextFunction = Type
     .PureContextFunction(param, res)
+  final def ppolyfunc(body: Type, params: Type.Param*) = Type.PolyFunction(params.toList, body)
 
   final def patvar(name: Term.Name): Pat.Var = Pat.Var(name)
   implicit def implicitStringToPatVar(obj: String): Pat.Var = patvar(obj)
@@ -167,9 +179,8 @@ trait CommonTrees {
   final def lit(v: Char) = Lit.Char(v)
   final def sym(v: String) = lit(Symbol(v))
   final def lit(v: Symbol) = Lit.Symbol(v)
-  final def init(name: Type.Name, arg: Term.ArgClause, args: Term.ArgClause*): Init =
-    init(name, arg :: args.toList)
-  final def init(name: Type.Name, args: List[Term.ArgClause] = Nil): Init = Init(name, anon, args)
+  final def init(tpe: Type, args: Term.ArgClause*): Init = init(tpe, args.toList)
+  final def init(tpe: Type, args: List[Term.ArgClause] = Nil): Init = Init(tpe, anon, args)
   final def blk(stats: List[Stat]): Term.Block = Term.Block(stats)
   final def blk(stats: Stat*): Term.Block = blk(stats.toList)
 
