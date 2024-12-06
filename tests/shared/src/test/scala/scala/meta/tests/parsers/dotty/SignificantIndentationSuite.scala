@@ -660,7 +660,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("given-block-indent-edge-cases") {
+  test("given-block-indent-edge-cases: `with` and no-indent") {
     runTestError[Stat](
       """|given intOrd: Ord[Int] with
          |def fa: Int = 1
@@ -670,7 +670,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |def fa: Int = 1
          |^""".stripMargin
     )
+  }
 
+  test("given-block-indent-edge-cases: coloneol") {
     runTestError[Stat](
       """|given intOrd: Ord[Int]:
          |  def fa: Int = 1
@@ -678,7 +680,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin,
       "`;` expected but `:` found"
     )
+  }
 
+  test("given-block-indent-edge-cases: `with` another parent type") {
     runTestAssert[Stat](
       """|class A extends A with 
          |  B

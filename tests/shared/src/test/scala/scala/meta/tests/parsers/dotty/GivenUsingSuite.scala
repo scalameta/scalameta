@@ -548,6 +548,24 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestError("given ordered(using Ord[String]): Ord[Int] with Eq[Int]", "expected 'with' <body>")
   }
 
+  test("given without sig and type in parens looking like a param clause") {
+    val code = """|given (using[String]) with Eq[Int] with {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val layout = "given using[String] with Eq[Int] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      None,
+      tpl(
+        List(init(papply("using", "String")), init(papply("Eq", "Int"))),
+        List(Defn.Def(Nil, "foo", Nil, None, "???"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   // ---------------------------------
   // USING
   // ---------------------------------
