@@ -104,12 +104,14 @@ object ParentChecks {
   def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = parent.is[Template.Body] &&
     parent.parent.parent.isOpt[Defn.Enum]
 
-  def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = parent.is[Type] ||
-    parent.is[Defn.Type] || parent.is[Type.Bounds] || parent.is[Term.ApplyType] ||
-    parent.is[Type.Param] || parent.is[Type.ArgClause]
+  def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = parent match {
+    case _: Type | _: Defn.Type | _: Type.Bounds | _: Term.ApplyType | _: Type.Param | _: Term.Param |
+        _: Type.ArgClause | _: Decl.Given | _: Defn.Given | _: Defn.GivenAlias => true
+    case _ => false
+  }
 
-  def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = parent.is[Type] ||
-    parent.is[Defn.Type]
+  def TypeMethod(tree: Type.Method, parent: Tree, destination: String): Boolean = parent
+    .isAny[Type, Defn.Type]
 
   def TermBlock(tree: Term.Block, parent: Tree, dest: String): Boolean = tree.stats.forall {
     case _: Decl => true

@@ -314,4 +314,375 @@ class GivenSyntax36Suite extends BaseDottySuite {
   test("given-abstract-named") {
     runTestAssert[Stat]("given context: Context")(Decl.Given(Nil, "context", None, "Context"))
   }
+
+  // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html#7-cleanup-of-given-syntax
+
+  // Simple typeclass
+  test("Simple anonymous typeclass, coloneol") {
+    val code = """|given Ord[Int]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `indent` found
+                   |given Ord[Int]:
+                   |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Simple anonymous typeclass, braces") {
+    val code = """|given Ord[Int] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
+                   |given Ord[Int] {
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Simple named typeclass, coloneol") {
+    val code = """|given ord: Ord[Int]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `:` found
+                   |given ord: Ord[Int]:
+                   |                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Simple named typeclass, braces") {
+    val code = """|given ord: Ord[Int] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `{` found
+                   |given ord: Ord[Int] {
+                   |                    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  // Parameterized typeclass with context bound
+  test("Parameterized anonymous typeclass with context bound, coloneol") {
+    val code = """|given [A : Ord] => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given [A : Ord] => Ord[List[A]]:
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized anonymous typeclass with context bound, braces") {
+    val code = """|given [A : Ord] => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given [A : Ord] => Ord[List[A]] {
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized named typeclass with context bound, coloneol") {
+    val code = """|given ord: [A : Ord] => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A : Ord] => Ord[List[A]]:
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized named typeclass with context bound, braces") {
+    val code = """|given ord: [A : Ord] => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A : Ord] => Ord[List[A]] {
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  // Parameterized typeclass with context bound
+  test("Parameterized anonymous typeclass with context bound, coloneol") {
+    val code = """|given [A : Ord] => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given [A : Ord] => Ord[List[A]]:
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized anonymous typeclass with context bound, braces") {
+    val code = """|given [A : Ord] => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given [A : Ord] => Ord[List[A]] {
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized named typeclass with context bound, coloneol") {
+    val code = """|given ord: [A : Ord] => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A : Ord] => Ord[List[A]]:
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized named typeclass with context bound, braces") {
+    val code = """|given ord: [A : Ord] => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A : Ord] => Ord[List[A]] {
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  // Parameterized typeclass with named context parameter
+  test("Parameterized anonymous typeclass with named context parameter, coloneol") {
+    val code = """|given [A] => (ord: Ord[A]) => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given [A] => (ord: Ord[A]) => Ord[List[A]]:
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized anonymous typeclass with named context parameter, braces") {
+    val code = """|given [A] => (ord: Ord[A]) => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given [A] => (ord: Ord[A]) => Ord[List[A]] {
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized named typeclass with named context parameter, coloneol") {
+    val code = """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A] => (ord: Ord[A]) => Ord[List[A]]:
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized named typeclass with named context parameter, braces") {
+    val code = """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A] => (ord: Ord[A]) => Ord[List[A]] {
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  // Parameterized typeclass with anonymous context parameter
+  test("Parameterized anonymous typeclass with anonymous context parameter, coloneol") {
+    val code = """|given [A] => (Ord[A]) => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given [A] => (Ord[A]) => Ord[List[A]]:
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized anonymous typeclass with anonymous context parameter, braces") {
+    val code = """|given [A] => (Ord[A]) => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given [A] => (Ord[A]) => Ord[List[A]] {
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized named typeclass with anonymous context parameter, coloneol") {
+    val code = """|given ord: [A] => (Ord[A]) => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A] => (Ord[A]) => Ord[List[A]]:
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("Parameterized named typeclass with anonymous context parameter, braces") {
+    val code = """|given ord: [A] => (Ord[A]) => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A] => (Ord[A]) => Ord[List[A]] {
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  // extra new syntax tests: functions
+
+  test("context a lambda function, coloneol") {
+    val code = """|given ord: ([A] =>> Ord[A]) => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `=>` found
+                   |given ord: ([A] =>> Ord[A]) => Ord[List[A]]:
+                   |                            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("context a lambda function, braces") {
+    val code = """|given ord: ([A] =>> Ord[A]) => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `=>` found
+                   |given ord: ([A] =>> Ord[A]) => Ord[List[A]] {
+                   |                            ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("context a poly function, coloneol") {
+    val code = """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `=>` found
+                   |given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]]:
+                   |                                             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("context a poly function, braces") {
+    val code = """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `=>` found
+                   |given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] {
+                   |                                             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("given type a function, coloneol") {
+    val code = """|given ord: [A] => (Ord[A] => Ord[List[A]]):
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A] => (Ord[A] => Ord[List[A]]):
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("given type a function, braces") {
+    val code = """|given ord: [A] => (Ord[A] => Ord[List[A]]) {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `[` found
+                   |given ord: [A] => (Ord[A] => Ord[List[A]]) {
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  // extra new syntax tests: param clause first
+
+  test("named, param clause first, coloneol") {
+    val code = """|given ord: (a: A) => Ord[A] => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `=>` found
+                   |given ord: (a: A) => Ord[A] => Ord[List[A]]:
+                   |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("named, param clause first, braces") {
+    val code = """|given ord: (a: A) => Ord[A] => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `=>` found
+                   |given ord: (a: A) => Ord[A] => Ord[List[A]] {
+                   |                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("anonymous, param clause first, coloneol") {
+    val code = """|given (a: A) => Ord[A] => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
+                   |given (a: A) => Ord[A] => Ord[List[A]]:
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("anonymous, param clause first, braces") {
+    val code = """|given (a: A) => Ord[A] => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
+                   |given (a: A) => Ord[A] => Ord[List[A]] {
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  // extra new syntax tests: func arg types
+
+  test("named, func arg types, coloneol") {
+    val code = """|given ord: (A) => Ord[A] => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `=>` found
+                   |given ord: (A) => Ord[A] => Ord[List[A]]:
+                   |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("named, func arg types, braces") {
+    val code = """|given ord: (A) => Ord[A] => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: `;` expected but `=>` found
+                   |given ord: (A) => Ord[A] => Ord[List[A]] {
+                   |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("anonymous, func arg types, coloneol") {
+    val code = """|given (A) => Ord[A] => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
+                   |given (A) => Ord[A] => Ord[List[A]]:
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("anonymous, func arg types, braces") {
+    val code = """|given (A) => Ord[A] => Ord[List[A]] {
+                  |  def foo = ???
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
+                   |given (A) => Ord[A] => Ord[List[A]] {
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
