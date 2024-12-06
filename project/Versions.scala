@@ -12,8 +12,10 @@ object Versions {
   val EarliestScala211 = Scala211Versions.last
   val EarliestScala212 = Scala212Versions.last
   val EarliestScala213 = Scala213Versions.last
-  val AllScalaVersions = Scala213Versions ++ Scala212Versions ++ Scala211Versions
+  val AllScala2Versions = Scala213Versions ++ Scala212Versions ++ Scala211Versions
+  val AllScalaVersions = AllScala2Versions :+ Scala3Version
   val EarliestScalaVersions = Seq(EarliestScala213, EarliestScala212, EarliestScala211)
+  val AllScalaBinaryVersions = EarliestScalaVersions :+ Scala3Version
   val LatestScalaVersions = Seq(LatestScala213, LatestScala212, LatestScala211)
 
   // returns versions from newest to oldest

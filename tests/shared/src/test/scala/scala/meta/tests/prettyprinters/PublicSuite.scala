@@ -206,7 +206,6 @@ class PublicSuite extends TreeSuiteBase {
   test("scala.meta.inputs.Position.Range.toString") {
     "foo + bar".parse[Term].get match {
       case Term.ApplyInfix(lhs, _, _, _) =>
-        lhs.pos match { case _: Position.Range => ; case _ => }
         assertEquals(lhs.pos.toString, """[0..3) in Input.String("foo + bar")""")
     }
   }
