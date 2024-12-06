@@ -482,9 +482,9 @@ lazy val sharedSettings = Def.settings(
     if (isScala213.value) List("-Xfatal-warnings", "-Wconf:cat=deprecation:is") else Nil
   },
   scalacOptions ++= Seq("-feature", "-unchecked"),
-  Compile / doc / scalacOptions ++= Seq("-skip-packages", ""),
-  Compile / doc / scalacOptions ++= Seq("-implicits", "-implicits-hide:."),
-  Compile / doc / scalacOptions ++= Seq("-groups"),
+  Compile / doc / scalacOptions ++= {
+    if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups")
+  },
   Test / parallelExecution := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
