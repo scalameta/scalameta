@@ -337,13 +337,9 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   libraryDependencies += munitLibrary.value,
   testFrameworks := List(new TestFramework("munit.Framework")),
   description := "Testing utilities for scalameta APIs"
-).dependsOn(scalameta).configureCross(crossPlatformPublishSettings).jvmSettings(
-  libraryDependencies ++= {
-    if (isScala213.value) List("org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4")
-    else Nil
-  },
-  libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0"
-).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
+).dependsOn(scalameta).configureCross(crossPlatformPublishSettings)
+  .jvmSettings(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0")
+  .jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
 lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings)
   .jvmSettings(
@@ -354,6 +350,13 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testS
     dependencyOverrides += {
       val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
       "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
+    },
+    libraryDependencies ++= {
+      if (isScala213.value) List(
+        "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+        "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4" % Test
+      )
+      else Nil
     }
   )
   .jsSettings(commonJsSettings, scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
