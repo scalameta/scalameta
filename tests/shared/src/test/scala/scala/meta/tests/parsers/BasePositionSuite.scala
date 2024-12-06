@@ -9,7 +9,6 @@ import munit.TestOptions
 
 abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
   import scala.meta._
-  import scala.meta.contrib.TreeOps
   import scala.meta.tests.parsers.MoreHelpers._
 
   def checkPositions[T <: Tree: Parse](code: TestOptions)(implicit loc: Location): Unit =
@@ -60,7 +59,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
     val tree = code.name.asInput.parse[T]
       .fold(x => fail("parse failure", x.details), MoreHelpers.requireNonEmptyOrigin(_))
     val sb = new StringBuilder
-    TreeOps.collect(tree) {
+    collect(tree) {
       // Reduce the expected output by ignoring lines that can be trivially
       // verified. A line can be trivially verified when you can re-print the
       // `.syntax` without using tokens. For example, if a Mod.Lazy tree has
