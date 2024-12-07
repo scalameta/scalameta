@@ -3492,33 +3492,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
    */
   private def givenDecl(mods: List[Mod]): Stat = autoEndPos(mods) {
     accept[KwGiven]
-    val (sigName, paramClauseGroup) = tryParse {
-      Try {
-        val name: meta.Name = currToken match {
-          case t: Ident => termName(t)
-          case _ => anonName()
-        }
-        val pcg = memberParamClauseGroup(
-          isFirst = true,
-          ownerIsType = false,
-          allowUnderscore = dialect.allowTypeParamUnderscore
-        )
-        if (acceptOpt[Colon]) Some((name, pcg)) else None
-      }.getOrElse {
+    val sig = givenSig()
 
-        /**
-         * We are first trying to parse non-anonymous given, which
-         *   - requires `:` for type, if none is found it means it's anonymous
-         *   - might fail in cases that anonymous type looks like type param
-         *     {{{given Conversion[AppliedName, Expr.Apply[Id]] = ???}}} This will fail because type
-         *     params cannot have `.`
-         */
-        None
-      }
-    }.getOrElse((anonName(), None))
-
-    val initPos = currIndex
-    val decltype = refinement(None).getOrElse(startModType())
+    val initPos = sig.declPos.getOrElse(sig.declType.fold(currIndex)(_.begIndex))
+    val decltype = sig.declType.getOrElse(refinement(None).getOrElse(startModType()))
 
     def getDefnGiven() = {
       val headInit =
@@ -3533,16 +3510,85 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         else if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
         else emptyTemplateBody()
       val rhs = autoEndPos(initPos)(Template(None, inits, body, Nil))
-      Defn.Given(mods, sigName, paramClauseGroup, rhs)
+      Defn.Given(mods, sig.name, sig.pcg, rhs)
     }
     currToken match {
-      case _: Equals => next(); Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, expr())
+      case _: Equals => next(); Defn.GivenAlias(mods, sig.name, sig.pcg, decltype, expr())
       case _: KwWith | _: LeftParen => getDefnGiven()
-      case _ => sigName match {
-          case n: Term.Name => Decl.Given(mods, n, paramClauseGroup, decltype)
+      case _ => sig.name match {
+          case n: Term.Name => Decl.Given(mods, n, sig.pcg, decltype)
           case n => syntaxError("abstract givens cannot be anonymous", at = n)
         }
     }
+  }
+
+  /**
+   * We are first trying to parse non-anonymous given, which
+   *   - requires `:` for type, if none is found it means it's anonymous
+   *   - might fail in cases that anonymous type looks like type param
+   *     {{{given Conversion[AppliedName, Expr.Apply[Id]] = ???}}}
+   *
+   * This will fail because type params cannot have `.`
+   */
+  private def givenSig(): GivenSig = tryParse(GivenSigContext.within {
+    val ident = currToken.as[Ident]
+    if (ident ne null) { // possibly named typeclass
+      val identPos = currIndex
+      def name = atPos(identPos)(Term.Name(ident.value))
+      if (tryAhead[Colon])
+        if (!tryAheadNot[Indentation.Indent]) None
+        // TODO: check for new syntax
+        else Some(GivenSig(name))
+      else if (tryAhead[LeftBracket]) givenSigOnBracket(name) // only with old syntax
+      else if (tryAhead[LeftParen]) givenSigOnParen(name) // only with old syntax
+      else if (tryAhead[EOL])
+        if (tryAhead[LeftBracket]) givenSigOnBracket(name) // only with old syntax
+        else if (tryAhead[LeftParen]) givenSigOnParen(name) // only with old syntax
+        else None
+      else None
+    } else // anonymous typeclass or start of decltype
+    if (isAfterOptNewLine[LeftBracket]) givenSigOnBracket(anonName())
+    else if (isAfterOptNewLine[LeftParen]) Try(givenSigOnParen(anonName())).getOrElse(None)
+    else None
+  }).getOrElse(GivenSig(anonName()))
+
+  private def givenOldSyntaxColon(): Boolean = at[Colon] && tryAheadNot[Indentation.Indent]
+
+  private def givenSigOnBracket(name: Name): Option[GivenSig] = Try(memberParamClauseGroupOnBracket(
+    ownerIsType = false,
+    allowUnderscore = dialect.allowTypeParamUnderscore
+  )).toOption.flatMap { pcg =>
+    if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
+    else if (pcg.paramClauses.nonEmpty) None // too hard to convert to init, re-parse
+    else if (!name.isAnonymous) {
+      val typeName = copyPos(name)(Type.Name(name.value))
+      val tpe = convertNameTypeParamClauseToType(typeName, pcg.tparamClause)
+      Some(GivenSig(anonNameAt(name), declType = Some(tpe)))
+    } else None
+  }
+
+  private def givenSigOnParen(name: Name): Option[GivenSig] = {
+    // under the new syntax, this is possible only with anonymous name
+    val useNewSyntax = dialect.allowImprovedTypeClassesSyntax && name.isAnonymous
+    if (!useNewSyntax && !soft.KwUsing(peekToken)) None
+    else {
+      val pcg = memberParamClauseGroupOnParen(ownerIsType = false)
+      if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
+      // TODO: check for new syntax
+      else None
+    }
+  }
+
+  private def convertTypeParamToType(param: Type.Param): Type = param.becomeOr[Type] { x =>
+    convertNameTypeParamClauseToType(copyPos(x.name)(Type.Name(x.name.value)), param.tparamClause)
+  }
+
+  private def convertNameTypeParamClauseToType(name: Type.Name, tpc: Type.ParamClause) = tpc match {
+    case q: Quasi => atPos(name, q)(Type.Apply(name, q.become[Type.ArgClause]))
+    case x if x.nonEmpty =>
+      val args = x.values.map(tp => convertTypeParamToType(tp))
+      atPos(name, x)(Type.Apply(name, copyPos(x)(Type.ArgClause(args))))
+    case _ => name
   }
 
   def funDefOrDclOrExtensionOrSecondaryCtor(mods: List[Mod]): Stat =
@@ -4423,6 +4469,13 @@ object ScalametaParser {
   private object TParamVariant {
     def unapply(ident: Token.Ident): Option[Mod.Variant] = TParamVariantStr.unapply(ident.text)
   }
+
+  private case class GivenSig(
+      name: Name,
+      pcg: List[Member.ParamClauseGroup] = Nil,
+      declType: Option[Type] = None,
+      declPos: Option[Int] = None
+  )
 
 }
 
