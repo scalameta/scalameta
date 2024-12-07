@@ -42,6 +42,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private object TypeBracketsContext extends NestedContext
   private object PatternTypeContext extends NestedContext
   private object ExtensionSigContext extends NestedContext
+  private object GivenSigContext extends NestedContext
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -3122,10 +3123,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         anonNameOK: Boolean = false,
         ownerIsTypeOverride: => Boolean = false
     ) = {
+      val allowAnonName = anonNameOK || GivenSigContext.isInside()
       val params = commaSeparatedWithIndex(termParam(
         ownerIsCase = ownerIsCase,
         ownerIsType = ownerIsType || ownerIsTypeOverride,
-        allowAnonName = anonNameOK,
+        allowAnonName = allowAnonName,
         mod = mod
       ))
       reduceParams(params, mod)
@@ -3214,7 +3216,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     mods.headOption.collect { case q: Mod.Quasi if endParamQuasi => q.become[Term.Param] }
       .getOrElse(currToken match {
         case t: Ellipsis => ellipsis[Term.Param](t, 1)
-        case _ if !peek[Colon] && allowAnonName => getParam(anonName(), Some(getParamType))
+        case _ if !peek[Colon] && (allowAnonName || GivenSigContext.isInside()) =>
+          getParam(anonName(), Some(getParamType))
         case t: Unquote =>
           val name = unquote[Name](t)
           if (endParamQuasi) name.become[Term.Param]
