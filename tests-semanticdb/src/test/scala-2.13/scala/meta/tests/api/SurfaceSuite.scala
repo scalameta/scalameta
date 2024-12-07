@@ -66,6 +66,7 @@ class SurfaceSuite extends FunSuite {
       diagnostic,
       """|
          |scala.meta.Dialect
+         |scala.meta.Name.ImplicitName
          |scala.meta.Tree
          |scala.meta.Tree.ImplicitOptionTree
          |scala.meta.Tree.ImplicitTree
@@ -259,6 +260,9 @@ class SurfaceSuite extends FunSuite {
          |* scala.meta.Dialect.apply(scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens)
          |* scala.meta.Dialect.equals(Any): Boolean
          |* scala.meta.Dialect.hashCode(): Int
+         |* scala.meta.Name.equals(Any): Boolean
+         |* scala.meta.Name.hashCode(): Int
+         |* scala.meta.Name.isAnonymous: Boolean
          |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
          |* scala.meta.Tree.equals(Any): Boolean
          |* scala.meta.Tree.hashCode(): Int
