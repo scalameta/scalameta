@@ -1110,7 +1110,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
         case Unary.Numeric(unary) if dialect.allowLiteralTypes && tryAhead[NumericConstant[_]] =>
-          numericLiteral(prevIndex, unary)
+          autoEndPos(prevIndex)(numericLiteral(unary))
         case t: Token.Ident if !inMatchType =>
           t.text match {
             case soft.QuestionMarkAsTypeWildcard() => wildcardType()
@@ -1304,10 +1304,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (acceptOpt[Dot]) selectors(name) else name
   }
 
-  private def numericLiteral(startPos: Int, unary: Unary.Numeric): Lit = {
+  private def numericLiteral(unary: Unary.Numeric): Lit = {
     val number = currToken.asInstanceOf[NumericConstant[_]]
     next()
-    autoEndPos(startPos)(numericLiteralWithUnaryAt(number, unary))
+    numericLiteralWithUnaryAt(number, unary)
   }
 
   private def numericLiteralMaybeWithUnaryAt(
@@ -1337,7 +1337,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         Right(Lit.Long(getBigInt(tok, bigIntMaxLong, bigIntMaxULong, "Long").longValue))
       case tok: Constant.Float => getBigDecimal(tok, Lit.Float.apply)
       case tok: Constant.Double => getBigDecimal(tok, Lit.Double.apply)
-      case t => unreachable(t)
     }
   }
 
@@ -2749,13 +2748,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     ): Pat = {
       val startPos = currIndex
       autoEndPos(startPos)(currToken match {
+        case Unary.Numeric(unary) if tryAhead[NumericConstant[_]] => numericLiteral(unary)
         case sidToken @ (_: Ident | _: KwThis | _: Unquote) =>
           val sid = stableId()
-          (currToken, sidToken) match {
-            case (_: NumericConstant[_], Unary.Numeric(unary)) if prevIndex == startPos =>
-              return numericLiteral(startPos, unary)
-            case _ =>
-          }
           val targs = if (at[LeftBracket]) Some(super.patternTypeArgs()) else None
           if (at[LeftParen]) {
             val ref = sid.become[Term]
@@ -3870,30 +3865,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def self(quasiquote: Boolean): Self = selfEither(quasiquote)
     .fold(syntaxError(_, currToken), identity)
 
-  private def selfEitherImpl(): Either[String, Self] = {
-    val name = currToken match {
-      case t: Ident => termName(t)
-      case _: KwThis => nameThis()
-      case _: Underscore => namePlaceholder()
-      case t: Unquote =>
-        if (peek[Colon]) unquote[Name.Quasi](t) else return Right(unquote[Self.Quasi](t))
-      case _ => return Left("expected identifier, `this' or unquote")
-    }
-    // possible fewer braces after colon
-    if (!peek[Indentation, EOL]) Right(Self(name, getDeclTpeOpt(fullTypeOK = false)))
-    else if (!at[Colon]) Right(Self(name, None))
-    else Left("missing type after self")
-  }
-
   private def selfEither(quasiquote: Boolean = false): Either[String, Self] = {
     val startPos = currIndex
-    selfEitherImpl().right.map { self =>
-      currToken match {
-        case _: RightArrow => next()
-        case _: EOF if quasiquote =>
-        case _ => return Left("expected `=>`")
-      }
-      autoEndPos(startPos)(self)
+    def withSelf(self: => Self) = Either
+      .cond(acceptOpt[RightArrow] || quasiquote && at[EOF], self, "expected `=>`")
+    def withDeclTpe(name: Name, declTpe: Option[Type]) =
+      withSelf(autoEndPos(startPos)(Self(name, declTpe)))
+    def withName(name: Name) = // possible fewer braces after colon
+      if (!peek[Indentation, EOL]) withDeclTpe(name, getDeclTpeOpt(fullTypeOK = false))
+      else if (!at[Colon]) withDeclTpe(name, None)
+      else Left("missing type after self")
+    currToken match {
+      case t: Ident => withName(termName(t))
+      case _: KwThis => withName(nameThis())
+      case _: Underscore => withName(namePlaceholder())
+      case t: Unquote =>
+        val self = unquote[Self](t)
+        if (at[Colon]) withName(self.become[Name]) else withSelf(self)
+      case _ => Left("expected identifier, `this' or unquote")
     }
   }
 

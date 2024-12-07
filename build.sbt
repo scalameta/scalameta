@@ -454,6 +454,7 @@ def isScalaBinaryVersion(version: String) = Def.setting(scalaBinaryVersion.value
 lazy val isScala211 = isScalaBinaryVersion("2.11")
 lazy val isScala213 = isScalaBinaryVersion("2.13")
 lazy val isScala3 = isScalaBinaryVersion("3")
+def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
 
 lazy val munitLibrary = Def.setting {
   val munitV =
@@ -474,13 +475,13 @@ lazy val sharedSettings = Def.settings(
   scalaVersion := LatestScala213,
   organization := "org.scalameta",
   libraryDependencies ++= {
-    if (isScala213.value || isScala3.value) Nil
+    if (isScala213or3.value) Nil
     else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
   },
   scalacOptions ++= { if (isScala213.value) List("-Ymacro-annotations") else Nil },
-  scalacOptions ++= {
-    if (isScala213.value) List("-Xfatal-warnings", "-Wconf:cat=deprecation:is") else Nil
-  },
+  scalacOptions ++= { if (isScala213or3.value) List("-Xfatal-warnings") else Nil },
+  scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
+  scalacOptions ++= { if (isScala3.value) List("-Wconf:cat=deprecation:silent") else Nil },
   scalacOptions ++= Seq("-feature", "-unchecked"),
   Compile / doc / scalacOptions ++= {
     if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups")
