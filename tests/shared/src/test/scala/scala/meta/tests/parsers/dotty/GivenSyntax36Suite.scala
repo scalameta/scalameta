@@ -9,20 +9,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |""".stripMargin
     runTestAssert[Stat](code)(Defn.Def(
       Nil,
-      Term.Name("reduce"),
-      List(Member.ParamClauseGroup(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("A"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          List(Type.BoundsAlias(Type.Name("mm"), Type.Name("Monoid")))
-        ))),
-        List(Term.ParamClause(List(Term.Param(Nil, Term.Name("xs"), Some(Type.Name("A")), None))))
-      )),
-      Some(Type.Name("A")),
-      Term.Name("???")
+      "reduce",
+      List(pparam(Nil, "A", cb = List(Type.BoundsAlias("mm", "Monoid")))),
+      List(List(tparam("xs", "A"))),
+      Some("A"),
+      "???"
     ))
   }
 
@@ -35,36 +26,16 @@ class GivenSyntax36Suite extends BaseDottySuite {
       assertLayout = Some("trait A { def showMax[X: Ordering: Show](x: X, y: X): String }")
     )(Defn.Trait(
       Nil,
-      Type.Name("A"),
-      Type.ParamClause(Nil),
-      Ctor.Primary(Nil, Name.Anonymous(), Seq.empty[Term.ParamClause]),
-      Template(
-        None,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Decl.Def(
         Nil,
-        Template.Body(
-          None,
-          List(Decl.Def(
-            Nil,
-            Term.Name("showMax"),
-            List(Member.ParamClauseGroup(
-              Type.ParamClause(List(Type.Param(
-                Nil,
-                Type.Name("X"),
-                Type.ParamClause(Nil),
-                Type.Bounds(None, None),
-                Nil,
-                List(Type.Name("Ordering"), Type.Name("Show"))
-              ))),
-              List(Term.ParamClause(List(
-                Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-                Term.Param(Nil, Term.Name("y"), Some(Type.Name("X")), None)
-              )))
-            )),
-            Type.Name("String")
-          ))
-        ),
-        Nil
-      )
+        "showMax",
+        List(pparam(Nil, "X", cb = List("Ordering", "Show"))),
+        List(List(tparam("x", "X"), tparam("y", "X"))),
+        "String"
+      ))
     ))
   }
   test("agregate-bounds-named") {
@@ -74,39 +45,20 @@ class GivenSyntax36Suite extends BaseDottySuite {
         Some("trait A { def showMax[X: Ordering as ordering: Show as show](x: X, y: X): String }")
     )(Defn.Trait(
       Nil,
-      Type.Name("A"),
-      Type.ParamClause(Nil),
-      Ctor.Primary(Nil, Name.Anonymous(), Seq.empty[Term.ParamClause]),
-      Template(
-        None,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Decl.Def(
         Nil,
-        Template.Body(
-          None,
-          List(Decl.Def(
-            Nil,
-            Term.Name("showMax"),
-            List(Member.ParamClauseGroup(
-              Type.ParamClause(List(Type.Param(
-                Nil,
-                Type.Name("X"),
-                Type.ParamClause(Nil),
-                Type.Bounds(None, None),
-                Nil,
-                List(
-                  Type.BoundsAlias(Type.Name("ordering"), Type.Name("Ordering")),
-                  Type.BoundsAlias(Type.Name("show"), Type.Name("Show"))
-                )
-              ))),
-              List(Term.ParamClause(List(
-                Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-                Term.Param(Nil, Term.Name("y"), Some(Type.Name("X")), None)
-              )))
-            )),
-            Type.Name("String")
-          ))
-        ),
-        Nil
-      )
+        "showMax",
+        List(pparam(
+          Nil,
+          "X",
+          cb = List(Type.BoundsAlias("ordering", "Ordering"), Type.BoundsAlias("show", "Show"))
+        )),
+        List(List(tparam("x", "X"), tparam("y", "X"))),
+        "String"
+      ))
     ))
   }
   test("deferred") {
@@ -124,26 +76,13 @@ class GivenSyntax36Suite extends BaseDottySuite {
       )
     )(Defn.Trait(
       Nil,
-      Type.Name("Sorted"),
-      Type.ParamClause(Nil),
-      Ctor.Primary(Nil, Name.Anonymous(), Seq.empty[Term.ParamClause]),
-      Template(
-        None,
-        Nil,
-        Template.Body(
-          None,
-          List(
-            Decl.Type(Nil, Type.Name("Element"), Type.ParamClause(Nil), Type.Bounds(None, None)),
-            Defn.GivenAlias(
-              Nil,
-              Name.Anonymous(),
-              None,
-              Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("Element")))),
-              Term.Select(Term.Name("compiletime"), Term.Name("deferred"))
-            )
-          )
-        ),
-        Nil
+      pname("Sorted"),
+      Nil,
+      ctor,
+      tpl(
+        Decl.Type(Nil, pname("Element"), Nil, noBounds),
+        Defn
+          .GivenAlias(Nil, anon, None, papply("Ord", "Element"), tselect("compiletime", "deferred"))
       )
     ))
   }
@@ -154,26 +93,13 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |""".stripMargin
     )(Defn.Type(
       Nil,
-      Type.Name("Comparer"),
-      Type.ParamClause(Nil),
-      Type.PolyFunction(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("X"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          List(Type.Name("Ord"))
-        ))),
-        Type.Function(
-          Type.FuncParamClause(List(
-            Type.TypedParam(Type.Name("x"), Type.Name("X"), Nil),
-            Type.TypedParam(Type.Name("y"), Type.Name("X"), Nil)
-          )),
-          Type.Name("Boolean")
-        )
+      pname("Comparer"),
+      Nil,
+      ppolyfunc(
+        pfunc(List(Type.TypedParam("x", "X", Nil), Type.TypedParam("y", "X", Nil)), "Boolean"),
+        pparam(Nil, "X", cb = List("Ord"))
       ),
-      Type.Bounds(None, None)
+      noBounds
     ))
   }
 
@@ -186,51 +112,21 @@ class GivenSyntax36Suite extends BaseDottySuite {
         Some("val less: Comparer = [X: Ord as ord] => (x: X, y: X) => ord.compare(x, y) < 0")
     )(Defn.Val(
       Nil,
-      List(Pat.Var(Term.Name("less"))),
-      Some(Type.Name("Comparer")),
+      List(patvar("less")),
+      Some("Comparer"),
       Term.PolyFunction(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("X"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          List(Type.BoundsAlias(Type.Name("ord"), Type.Name("Ord")))
-        ))),
-        Term.Function(
-          Term.ParamClause(List(
-            Term.Param(Nil, Term.Name("x"), Some(Type.Name("X")), None),
-            Term.Param(Nil, Term.Name("y"), Some(Type.Name("X")), None)
-          )),
-          Term.ApplyInfix(
-            Term.Apply(
-              Term.Select(Term.Name("ord"), Term.Name("compare")),
-              Term.ArgClause(List(Term.Name("x"), Term.Name("y")))
-            ),
-            Term.Name("<"),
-            Type.ArgClause(Nil),
-            Term.ArgClause(List(Lit.Int(0)))
-          )
+        List(pparam(Nil, "X", cb = List(Type.BoundsAlias("ord", "Ord")))),
+        tfunc(
+          tinfix(tapply(tselect("ord", "compare"), "x", "y"), "<", lit(0)),
+          tparam("x", "X"),
+          tparam("y", "X")
         )
       )
     ))
   }
 
-  val body = Template.Body(
-    None,
-    List(Defn.Def(
-      Nil,
-      Term.Name("compare"),
-      List(Member.ParamClauseGroup(
-        Type.ParamClause(Nil),
-        List(Term.ParamClause(List(
-          Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None),
-          Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)
-        )))
-      )),
-      None,
-      Term.Name("???")
-    ))
+  val body = tplBody(
+    Defn.Def(Nil, "compare", Nil, List(List(tparam("x", "Int"), tparam("y", "Int"))), None, "???")
   )
 
   test("given") {
@@ -239,60 +135,19 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |   def compare(x: Int, y: Int) = ???
          |""".stripMargin,
       assertLayout = Some("given Ord[Int] with { def compare(x: Int, y: Int) = ??? }")
-    )(Defn.Given(
-      Nil,
-      Name.Anonymous(),
-      None,
-      Template(
-        None,
-        List(Init(
-          Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("Int")))),
-          Name.Anonymous(),
-          Seq.empty[Term.ArgClause]
-        )),
-        body,
-        Nil
-      )
-    ))
+    )(Defn.Given(Nil, anon, None, tpl(List(init(papply("Ord", "Int"))), body)))
   }
 
-  val bodyBounds = Template(
-    None,
-    List(Init(
-      Type.Apply(
-        Type.Name("Ord"),
-        Type.ArgClause(List(Type.Apply(Type.Name("List"), Type.ArgClause(List(Type.Name("A"))))))
-      ),
-      Name.Anonymous(),
-      Seq.empty[Term.ArgClause]
-    )),
-    Template.Body(
+  val bodyBounds = tpl(
+    List(init(papply("Ord", papply("List", "A")))),
+    List(Defn.Def(
+      Nil,
+      "compare",
+      Nil,
+      List(List(tparam("x", papply("List", "A")), tparam("y", papply("List", "A")))),
       None,
-      List(Defn.Def(
-        Nil,
-        Term.Name("compare"),
-        List(Member.ParamClauseGroup(
-          Type.ParamClause(Nil),
-          List(Term.ParamClause(List(
-            Term.Param(
-              Nil,
-              Term.Name("x"),
-              Some(Type.Apply(Type.Name("List"), Type.ArgClause(List(Type.Name("A"))))),
-              None
-            ),
-            Term.Param(
-              Nil,
-              Term.Name("y"),
-              Some(Type.Apply(Type.Name("List"), Type.ArgClause(List(Type.Name("A"))))),
-              None
-            )
-          )))
-        )),
-        None,
-        Term.Name("???")
-      ))
-    ),
-    Nil
+      "???"
+    ))
   )
 
   test("given-context") {
@@ -302,22 +157,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout =
         Some("given [A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
-    )(Defn.Given(
-      Nil,
-      Name.Anonymous(),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("A"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          List(Type.Name("Ord"))
-        ))),
-        Nil
-      )),
-      bodyBounds
-    ))
+    )(Defn.Given(Nil, anon, List(pparam(Nil, "A", cb = List("Ord"))), Nil, bodyBounds))
   }
 
   test("given-context-using") {
@@ -330,21 +170,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
       )
     )(Defn.Given(
       Nil,
-      Name.Anonymous(),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(
-          Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-        )),
-        List(Term.ParamClause(
-          List(Term.Param(
-            List(Mod.Using()),
-            Name.Anonymous(),
-            Some(Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("A"))))),
-            None
-          )),
-          Some(Mod.Using())
-        ))
-      )),
+      anon,
+      List(pparam("A")),
+      List(List(tparamUsing("", papply("Ord", "A")))),
       bodyBounds
     ))
   }
@@ -358,101 +186,44 @@ class GivenSyntax36Suite extends BaseDottySuite {
         Some("given [A](using ord: Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
     )(Defn.Given(
       Nil,
-      Name.Anonymous(),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(
-          Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-        )),
-        List(Term.ParamClause(
-          List(Term.Param(
-            List(Mod.Using()),
-            Term.Name("ord"),
-            Some(Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("A"))))),
-            None
-          )),
-          Some(Mod.Using())
-        ))
-      )),
+      anon,
+      List(pparam("A")),
+      List(List(tparamUsing("ord", papply("Ord", "A")))),
       bodyBounds
     ))
   }
   test("given-simple-alias") {
-    runTestAssert[Stat]("given Ord[Int] = IntOrd()")(Defn.GivenAlias(
-      Nil,
-      Name.Anonymous(),
-      None,
-      Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("Int")))),
-      Term.Apply(Term.Name("IntOrd"), Term.ArgClause(Nil))
-    ))
+    runTestAssert[Stat]("given Ord[Int] = IntOrd()")(
+      Defn.GivenAlias(Nil, anon, None, papply("Ord", "Int"), tapply("IntOrd"))
+    )
   }
 
   test("given-alias-context-bound") {
     runTestAssert[Stat]("given [A: Ord]: Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
-      Name.Anonymous(),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("A"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          List(Type.Name("Ord"))
-        ))),
-        Nil
-      )),
-      Type.Apply(
-        Type.Name("Ord"),
-        Type.ArgClause(List(Type.Apply(Type.Name("List"), Type.ArgClause(List(Type.Name("A"))))))
-      ),
-      Term.ApplyType(Term.Name("ListOrd"), Type.ArgClause(List(Type.Name("A"))))
+      anon,
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      papply("Ord", papply("List", "A")),
+      tapplytype("ListOrd", "A")
     ))
   }
 
   test("given-alias-context-param") {
     runTestAssert[Stat]("given [A](using Ord[A]): Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
-      Name.Anonymous(),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(
-          Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-        )),
-        List(Term.ParamClause(
-          List(Term.Param(
-            List(Mod.Using()),
-            Name.Anonymous(),
-            Some(Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("A"))))),
-            None
-          )),
-          Some(Mod.Using())
-        ))
-      )),
-      Type.Apply(
-        Type.Name("Ord"),
-        Type.ArgClause(List(Type.Apply(Type.Name("List"), Type.ArgClause(List(Type.Name("A"))))))
-      ),
-      Term.ApplyType(Term.Name("ListOrd"), Type.ArgClause(List(Type.Name("A"))))
+      anon,
+      List(pparam("A")),
+      List(List(tparamUsing("", papply("Ord", "A")))),
+      papply("Ord", papply("List", "A")),
+      tapplytype("ListOrd", "A")
     ))
   }
 
   test("given-by-name") {
-    runTestAssert[Stat]("given [DummySoItsByName]: Context = curCtx")(Defn.GivenAlias(
-      Nil,
-      Name.Anonymous(),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("DummySoItsByName"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          Nil
-        ))),
-        Nil
-      )),
-      Type.Name("Context"),
-      Term.Name("curCtx")
-    ))
+    runTestAssert[Stat]("given [DummySoItsByName]: Context = curCtx")(
+      Defn.GivenAlias(Nil, anon, List(pparam("DummySoItsByName")), Nil, "Context", "curCtx")
+    )
   }
 
   test("given-named") {
@@ -461,21 +232,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |   def compare(x: Int, y: Int) = ???
          |""".stripMargin,
       assertLayout = Some("given intOrd: Ord[Int] with { def compare(x: Int, y: Int) = ??? }")
-    )(Defn.Given(
-      Nil,
-      Term.Name("intOrd"),
-      None,
-      Template(
-        None,
-        List(Init(
-          Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("Int")))),
-          Name.Anonymous(),
-          Seq.empty[Term.ArgClause]
-        )),
-        body,
-        Nil
-      )
-    ))
+    )(Defn.Given(Nil, "intOrd", None, tpl(List(init(papply("Ord", "Int"))), body)))
   }
 
   test("given-context-named") {
@@ -486,22 +243,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       assertLayout = Some(
         "given listOrd[A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }"
       )
-    )(Defn.Given(
-      Nil,
-      Term.Name("listOrd"),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("A"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          List(Type.Name("Ord"))
-        ))),
-        Nil
-      )),
-      bodyBounds
-    ))
+    )(Defn.Given(Nil, "listOrd", List(pparam(Nil, "A", cb = List("Ord"))), Nil, bodyBounds))
   }
 
   test("given-context-using") {
@@ -513,21 +255,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
         Some("given listOrd[A](using Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
     )(Defn.Given(
       Nil,
-      Term.Name("listOrd"),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(
-          Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-        )),
-        List(Term.ParamClause(
-          List(Term.Param(
-            List(Mod.Using()),
-            Name.Anonymous(),
-            Some(Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("A"))))),
-            None
-          )),
-          Some(Mod.Using())
-        ))
-      )),
+      "listOrd",
+      List(pparam("A")),
+      List(List(tparamUsing("", papply("Ord", "A")))),
       bodyBounds
     ))
   }
@@ -541,106 +271,47 @@ class GivenSyntax36Suite extends BaseDottySuite {
         Some("given listOrd[A](using ord: Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
     )(Defn.Given(
       Nil,
-      Term.Name("listOrd"),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(
-          Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-        )),
-        List(Term.ParamClause(
-          List(Term.Param(
-            List(Mod.Using()),
-            Term.Name("ord"),
-            Some(Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("A"))))),
-            None
-          )),
-          Some(Mod.Using())
-        ))
-      )),
+      "listOrd",
+      List(pparam("A")),
+      List(List(tparamUsing("ord", papply("Ord", "A")))),
       bodyBounds
     ))
   }
 
   test("given-simple-alias-named") {
-    runTestAssert[Stat]("given intOrd: Ord[Int] = IntOrd()")(Defn.GivenAlias(
-      Nil,
-      Term.Name("intOrd"),
-      None,
-      Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("Int")))),
-      Term.Apply(Term.Name("IntOrd"), Term.ArgClause(Nil))
-    ))
+    runTestAssert[Stat]("given intOrd: Ord[Int] = IntOrd()")(
+      Defn.GivenAlias(Nil, "intOrd", None, papply("Ord", "Int"), tapply("IntOrd"))
+    )
   }
 
   test("given-alias-context-bound-named") {
     runTestAssert[Stat]("given listOrd[A: Ord]: Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
-      Term.Name("listOrd"),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("A"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          List(Type.Name("Ord"))
-        ))),
-        Nil
-      )),
-      Type.Apply(
-        Type.Name("Ord"),
-        Type.ArgClause(List(Type.Apply(Type.Name("List"), Type.ArgClause(List(Type.Name("A"))))))
-      ),
-      Term.ApplyType(Term.Name("ListOrd"), Type.ArgClause(List(Type.Name("A"))))
+      "listOrd",
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      papply("Ord", papply("List", "A")),
+      tapplytype("ListOrd", "A")
     ))
   }
 
   test("given-alias-context-param-named") {
     runTestAssert[Stat]("given listOrd[A](using Ord[A]): Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
-      Term.Name("listOrd"),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(
-          Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-        )),
-        List(Term.ParamClause(
-          List(Term.Param(
-            List(Mod.Using()),
-            Name.Anonymous(),
-            Some(Type.Apply(Type.Name("Ord"), Type.ArgClause(List(Type.Name("A"))))),
-            None
-          )),
-          Some(Mod.Using())
-        ))
-      )),
-      Type.Apply(
-        Type.Name("Ord"),
-        Type.ArgClause(List(Type.Apply(Type.Name("List"), Type.ArgClause(List(Type.Name("A"))))))
-      ),
-      Term.ApplyType(Term.Name("ListOrd"), Type.ArgClause(List(Type.Name("A"))))
+      "listOrd",
+      List(pparam("A")),
+      List(List(tparamUsing("", papply("Ord", "A")))),
+      papply("Ord", papply("List", "A")),
+      tapplytype("ListOrd", "A")
     ))
   }
 
   test("given-by-name-named") {
-    runTestAssert[Stat]("given context[DummySoItsByName]: Context = curCtx")(Defn.GivenAlias(
-      Nil,
-      Term.Name("context"),
-      Some(Member.ParamClauseGroup(
-        Type.ParamClause(List(Type.Param(
-          Nil,
-          Type.Name("DummySoItsByName"),
-          Type.ParamClause(Nil),
-          Type.Bounds(None, None),
-          Nil,
-          Nil
-        ))),
-        Nil
-      )),
-      Type.Name("Context"),
-      Term.Name("curCtx")
-    ))
+    runTestAssert[Stat]("given context[DummySoItsByName]: Context = curCtx")(
+      Defn.GivenAlias(Nil, "context", List(pparam("DummySoItsByName")), Nil, "Context", "curCtx")
+    )
   }
   test("given-abstract-named") {
-    runTestAssert[Stat]("given context: Context")(
-      Decl.Given(Nil, Term.Name("context"), None, Type.Name("Context"))
-    )
+    runTestAssert[Stat]("given context: Context")(Decl.Given(Nil, "context", None, "Context"))
   }
 }
