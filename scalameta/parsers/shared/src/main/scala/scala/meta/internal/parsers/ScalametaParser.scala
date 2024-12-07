@@ -345,6 +345,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     try atCurPos(body)
     finally next()
 
+  def atPosEmpty[T <: Tree](pos: Int)(body: => T): T = atPosWithBody(pos, body, pos - 1)
+  def atPosEmpty[T <: Tree](pos: StartPos)(body: => T): T = atPosEmpty(pos.begIndex)(body)
+  def atCurPosEmpty[T <: Tree](body: => T): T = atPosEmpty(currIndex)(body)
+  def atCurPosEmptyNext[T <: Tree](body: => T): T =
+    try atCurPosEmpty(body)
+    finally next()
+
   private val originSource = new Origin.ParsedSource(input)
 
   def atPosWithBody[T <: Tree](startPos: Int, body: T, endPos: Int): T = {
@@ -1210,12 +1217,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def termName(t: Ident): Term.Name = identName(t, Term.Name.apply)
   private def typeName(t: Ident): Type.Name = identName(t, Type.Name.apply)
   @inline
-  private def anonNameEmpty(): Name.Anonymous = autoPos(Name.Anonymous())
+  private def anonNameRaw(): Name.Anonymous = Name.Anonymous()
+  @inline
+  private def anonName(): Name.Anonymous = atCurPosEmpty(anonNameRaw())
+  @inline
+  private def anonNameAt(pos: StartPos): Name.Anonymous = atPosEmpty(pos)(anonNameRaw())
   @inline
   private def nameThis(): Name.This = atCurPosNext(Name.This())
   @inline
   private def namePlaceholder(): Name.Placeholder = atCurPosNext(Name.Placeholder())
-  private def anonThis(): Term.This = atCurPosNext(Term.This(anonNameEmpty()))
+  private def anonThis(): Term.This = atCurPosNext(Term.This(anonName()))
 
   def path(thisOK: Boolean = true): Term.Ref = {
     val startsAtBof = prev[BOF]
@@ -1243,7 +1254,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
     }
     def getAnonQual(): Name =
-      try anonNameEmpty()
+      try anonName()
       finally next()
     def getQual(name: Term.Name): Name = {
       next()
@@ -1273,7 +1284,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (acceptOpt[LeftBracket]) inBracketsAfterOpen {
       typeName().becomeOr[Name](x => copyPos(x)(Name.Indeterminate(x.value)))
     }
-    else anonNameEmpty()
+    else anonName()
 
   def stableId(): Term.Ref = path(thisOK = false)
 
@@ -1482,7 +1493,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
     accept[KwIf]
     val (cond, thenp) = condExprWithBody[KwThen]
-    val elsep = if (acceptIfAfterOpt[KwElse](StatSep)) expr() else autoPos(Lit.Unit())
+    val elsep = if (acceptIfAfterOpt[KwElse](StatSep)) expr() else atCurPosEmpty(Lit.Unit())
     Term.If(cond, thenp, elsep, mods)
   }
 
@@ -1613,7 +1624,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: KwReturn =>
         next()
         if (isExprIntro(currToken, currIndex)) Term.Return(expr())
-        else Term.Return(autoPos(Lit.Unit()))
+        else Term.Return(atCurPosEmpty(Lit.Unit()))
       case _: KwThrow =>
         next()
         Term.Throw(expr())
@@ -2029,7 +2040,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         Left(term)
       }
 
-      def emptyTypeArgs = autoPos(Type.ArgClause(Nil))
+      def emptyTypeArgs = atCurPosEmpty(Type.ArgClause(Nil))
 
       def getPostfixOrNextRhs(op: Term.Name): Either[Term, Term] = {
         // Infix chain continues.
@@ -2848,7 +2859,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def accessModifier(mod: Ref => Mod): Mod = autoPos {
     next()
-    if (!acceptOpt[LeftBracket]) mod(anonNameEmpty())
+    if (!acceptOpt[LeftBracket]) mod(anonName())
     else {
       val result = mod {
         if (at[KwThis]) anonThis()
@@ -3175,7 +3186,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _ => None
       }).getOrElse {
         val anonymousUsing = mod.is[Mod.Using] && !peek[Colon]
-        val name = if (anonymousUsing) anonNameEmpty() else termName().become[Name]
+        val name = if (anonymousUsing) anonName() else termName().become[Name]
         name match {
           case q: Quasi if endParamQuasi => q.become[Term.Param]
           case _ =>
@@ -3207,7 +3218,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def entrypointTermParam(): Term.Param = termParam(ownerIsCase = false, ownerIsType = true)(0)
 
-  private def emptyTypeParams: Type.ParamClause = autoPos(Type.ParamClause(Nil))
+  private def emptyTypeParamsRaw: Type.ParamClause = Type.ParamClause(Nil)
+  private def emptyTypeParams: Type.ParamClause = atCurPosEmpty(emptyTypeParamsRaw)
 
   private def typeParamClauseOpt(
       ownerIsType: Boolean,
@@ -3308,7 +3320,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           Importer(sid, copyPos(tn)(Importee.Wildcard()) :: Nil)
         else Importer(sid, copyPos(tn)(Importee.Name(name(tn))) :: Nil)
       case tn: Term.Name if acceptIf(soft.KwAs) =>
-        Importer(autoPos(Term.Anonymous()), importeeRename(name(tn)) :: Nil)
+        Importer(atCurPosEmpty(Term.Anonymous()), importeeRename(name(tn)) :: Nil)
       case _ =>
         accept[Dot]
         dotselectors
@@ -3473,7 +3485,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       Try {
         val name: meta.Name = currToken match {
           case t: Ident => termName(t)
-          case _ => anonNameEmpty()
+          case _ => anonName()
         }
         val pcg = memberParamClauseGroup(
           isFirst = true,
@@ -3492,7 +3504,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
          */
         None
       }
-    }.getOrElse((anonNameEmpty(), None))
+    }.getOrElse((anonName(), None))
 
     val initPos = currIndex
     val decltype = refinement(None).getOrElse(startModType())
@@ -3561,7 +3573,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (dialect.allowProcedureSyntax)
         deprecationWarning(s"Procedure syntax is deprecated. $hint", at = name)
       else syntaxError(s"Procedure syntax is not supported. $hint", at = name)
-      autoPos(Type.Name("Unit"))
+      atCurPosEmpty(Type.Name("Unit"))
     }
 
     val paramClauses: List[Member.ParamClauseGroup] =
@@ -3588,7 +3600,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def aliasType() = {
       // empty bounds also need to have origin
-      val emptyBounds = autoPos(Type.Bounds(None, None))
+      val emptyBounds = atCurPosEmpty(Type.Bounds(None, None))
       Defn.Type(mods, name, tparams, typeIndentedOpt(), emptyBounds)
     }
 
@@ -3707,10 +3719,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         annotsBuf(buf, skipNewLines = false, allowArgss = false, insidePrimaryCtorAnnot = true)
         ctorModifiers(buf)
       }
-      val name = anonNameEmpty()
+      val name = anonName()
       val paramss = termParamClauses(ownerIsType = true, ownerIsCase = owner == OwnedByCaseClass)
       Ctor.Primary(mods, name, paramss)
-    } else Ctor.Primary(Nil, anonNameEmpty(), Seq.empty[Term.ParamClause])
+    } else Ctor.Primary(Nil, anonName(), Seq.empty[Term.ParamClause])
   }
 
   def secondaryCtor(mods: List[Mod]): Ctor.Secondary = autoEndPos(mods) {
@@ -3729,12 +3741,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       modifiersBuf(buf)
     }
     accept[KwDef]
-    val beforeThisPos = prevIndex
     val thisPos = currIndex
     accept[KwThis]
     val paramss = termParamClauses(ownerIsType = true)
     newLineOptWhenFollowedBy[LeftBrace]
-    if (at[EOF]) Ctor.Primary(mods, atPos(thisPos, beforeThisPos)(Name.Anonymous()), paramss)
+    if (at[EOF]) Ctor.Primary(mods, anonNameAt(thisPos), paramss)
     else secondaryCtorRest(mods, atPos(thisPos)(Name.This()), paramss)
   }
 
@@ -3783,7 +3794,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   ): Init = {
     if (!allowSingleton && tpe.is[Type.Singleton])
       syntaxError(s"class type required but $tpe found", at = tpe)
-    autoEndPos(startPos)(Init(tpe, anonNameEmpty(), argss))
+    autoEndPos(startPos)(Init(tpe, anonName(), argss))
   }
 
   def initRestAt(startPos: StartPos, tpe: Type)(
@@ -3992,7 +4003,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   @inline
-  private def emptyTemplateBody(): Template.Body = autoPos(Template.Body(None, Nil))
+  private def emptyTemplateBody(): Template.Body = atCurPosEmpty(Template.Body(None, Nil))
 
   @inline
   private def templateBodyOnLeftBrace(owner: TemplateOwner): Template.Body =
