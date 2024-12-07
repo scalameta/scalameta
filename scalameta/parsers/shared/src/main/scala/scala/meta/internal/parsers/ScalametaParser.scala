@@ -3487,31 +3487,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     val decltype = refinement(None).getOrElse(startModType())
 
-    def parents() = {
-      val parents = ListBuffer[Init](
+    def getDefnGiven() = {
+      val inits = templateParentsWithFirst(allowComma = false, allowWithBody = true)(
         autoEndPos(decltype)(initRest(decltype, allowArgss = true, allowTypeSingleton = false))
       )
-      while (at[KwWith] && tryAhead[Ident]) parents += init()
-      parents.toList
-    }
-
-    if (acceptOpt[Equals]) Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, expr())
-    else if (currToken.isAny[KwWith, LeftParen]) {
-      val inits = parents()
       val body =
         if (acceptOpt[KwWith])
           if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(OwnedByGiven)
           else if (at[Indentation.Indent]) autoPos(templateBodyOnIndentRaw(OwnedByGiven))
           else syntaxError("expected '{' or indentation", at = currToken)
-        else {
-          if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
-          emptyTemplateBody()
-        }
+        else if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
+        else emptyTemplateBody()
       val rhs = autoEndPos(decltype)(Template(None, inits, body, Nil))
       Defn.Given(mods, sigName, paramClauseGroup, rhs)
-    } else sigName match {
-      case name: Term.Name => Decl.Given(mods, name, paramClauseGroup, decltype)
-      case _ => syntaxError("abstract givens cannot be anonymous", at = sigName.pos)
+    }
+    currToken match {
+      case _: Equals => next(); Defn.GivenAlias(mods, sigName, paramClauseGroup, decltype, expr())
+      case _: KwWith | _: LeftParen => getDefnGiven()
+      case _ => sigName match {
+          case n: Term.Name => Decl.Given(mods, n, paramClauseGroup, decltype)
+          case n => syntaxError("abstract givens cannot be anonymous", at = n)
+        }
     }
   }
 
@@ -3901,11 +3897,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ => initInsideTemplate()
   }
 
-  def templateParents(afterExtend: Boolean = false): List[Init] = {
-    val isSeparator: Token => Boolean =
-      if (afterExtend && dialect.allowCommaSeparatedExtend) _.isAny[KwWith, Comma] else _.is[KwWith]
-    listBy[Init](x => doWhile(x += init())(nextIf(isSeparator(currToken))))
+  def templateParentsWithFirst(allowComma: Boolean, allowWithBody: Boolean = false)(
+      first: Init
+  ): List[Init] = {
+    def impl(isSeparator: => Boolean) =
+      if (!isSeparator) None
+      else Some(listBy[Init] { x => x += first; doWhile { next(); x += init() }(isSeparator) })
+    // whitespace includes Indent and AtEOL
+    (if (allowWithBody) impl(at[KwWith] && !peek[Whitespace, LeftBrace]) else impl(at[KwWith]))
+      .orElse(if (allowComma && dialect.allowCommaSeparatedExtend) impl(at[Comma]) else None)
+      .getOrElse(first :: Nil)
   }
+
+  def templateParents(afterExtend: Boolean = false): List[Init] =
+    templateParentsWithFirst(allowComma = afterExtend)(init())
 
   def derivesClasses(): List[Type] =
     if (atOrPeekAfterEOL(soft.KwDerives(_))) {
