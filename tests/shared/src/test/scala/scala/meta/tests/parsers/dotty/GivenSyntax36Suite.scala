@@ -322,9 +322,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given Ord[Int]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `indent` found
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
                    |given Ord[Int]:
-                   |               ^""".stripMargin
+                   |      ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
