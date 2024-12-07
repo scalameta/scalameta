@@ -323,8 +323,10 @@ class MinorDottySuite extends BaseDottySuite {
     runTestError[Stat]("enum X[T]{ case A[_] extends X[Int] }", "identifier expected")
     runTestError[Stat]("extension [_](x: Int) def inc: Int = x + 1", "identifier expected")
     runTestError[Stat](
-      "given [_](using Ord[T]): Ord[List[T]]{}",
-      "`identifier` expected but `[` found"
+      "given [_](using Ord[T]): Ord[List[T]] with {}",
+      """|<input>:1: error: `identifier` expected but `[` found
+         |given [_](using Ord[T]): Ord[List[T]] with {}
+         |      ^""".stripMargin
     )
   }
 

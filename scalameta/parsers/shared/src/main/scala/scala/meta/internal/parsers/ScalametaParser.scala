@@ -41,6 +41,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private object ReturnTypeContext extends NestedContext
   private object TypeBracketsContext extends NestedContext
   private object PatternTypeContext extends NestedContext
+  private object ExtensionSigContext extends NestedContext
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -2993,36 +2994,65 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ =>
   }
 
+  private def memberParamClauseGroupOnParen(
+      ownerIsType: Boolean,
+      ownerIsCase: Boolean = false
+  ): Member.ParamClauseGroup = {
+    val tparams = emptyTypeParams
+    autoPos(
+      termParamClausesOnParen(ownerIsType, ownerIsCase = ownerIsCase, ellipsisMaxRank = 3) match {
+        case (x: Quasi) :: Nil if x.rank == 2 => reellipsis[Member.ParamClauseGroup](x, 1)
+        case x => Member.ParamClauseGroup(tparams, x)
+      }
+    )
+  }
+
+  private def memberParamClauseGroupOnBracket(
+      ownerIsType: Boolean,
+      ownerIsCase: Boolean = false,
+      allowUnderscore: Boolean = true
+  ): Member.ParamClauseGroup = autoPos {
+    val tparamClause = typeParamClauseOnBracket(ownerIsType, allowUnderscore = allowUnderscore)
+    val paramClauses = termParamClauses(ownerIsType, ownerIsCase = ownerIsCase)
+    Member.ParamClauseGroup(tparamClause, paramClauses)
+  }
+
+  def memberParamClauseGroup(
+      isFirst: Boolean,
+      ownerIsType: Boolean,
+      ownerIsCase: Boolean = false,
+      allowUnderscore: Boolean = true
+  ): Option[Member.ParamClauseGroup] = {
+    def onFirstParen = Some(memberParamClauseGroupOnParen(ownerIsType, ownerIsCase = ownerIsCase))
+    def onBracket = Some(memberParamClauseGroupOnBracket(
+      ownerIsType,
+      ownerIsCase = ownerIsCase && isFirst,
+      allowUnderscore = allowUnderscore
+    ))
+    currToken match {
+      case _: LeftParen if isFirst => onFirstParen
+      case _: LeftBracket => onBracket
+      case _: EOL => peekToken match {
+          case _: LeftParen if isFirst => next(); onFirstParen
+          case _: LeftBracket => next(); onBracket
+          case _ => None
+        }
+      case _ => None
+    }
+  }
+
   def memberParamClauseGroups(ownerIsType: Boolean): List[Member.ParamClauseGroup] =
-    listBy[Member.ParamClauseGroup] { groups =>
-      @tailrec
-      def iter(): Unit = getAfterOptNewLine(currToken match {
-        case _: LeftParen =>
-          val tparams = emptyTypeParams
-          Some(autoPos {
-            termParamClausesOnParen(ownerIsType, ellipsisMaxRank = 3) match {
-              case (x: Quasi) :: Nil if x.rank == 2 => reellipsis[Member.ParamClauseGroup](x, 1)
-              case x => Member.ParamClauseGroup(tparams, x)
-            }
-          })
-        case _: LeftBracket => Some(autoPos {
-            val tparamClause = typeParamClauseOnBracket(ownerIsType)
-            val paramClauses = termParamClauses(ownerIsType)
-            Member.ParamClauseGroup(tparamClause, paramClauses)
-          })
-        case _ => None
-      }) match {
-        case Some(group) =>
-          groups += group
+    listBy[Member.ParamClauseGroup] { buf =>
+      while ({
+        val pcgOpt = memberParamClauseGroup(isFirst = buf.isEmpty, ownerIsType = ownerIsType)
+        pcgOpt.exists { pcg =>
+          buf += pcg
           // can't have consecutive type clauses (so params must be present)
           // also, only the very last param may contain implicit
-          val ok = group.is[Quasi] || group.paramClauses.lastOption.exists { x =>
-            x.is[Quasi] || !x.mod.is[Mod.Implicit]
-          }
-          if (ok) iter()
-        case _ =>
-      }
-      iter()
+          pcg.is[Quasi] ||
+          pcg.paramClauses.lastOption.exists(pc => pc.is[Quasi] || !pc.mod.is[Mod.Implicit])
+        }
+      }) {}
     }
 
   def termParamClauses(ownerIsType: Boolean, ownerIsCase: Boolean = false): List[Term.ParamClause] =
@@ -3031,36 +3061,57 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def termParamClausesOnParen(
       ownerIsType: Boolean,
       ownerIsCase: Boolean = false,
+      first: Option[Term.ParamClause] = None,
       ellipsisMaxRank: Int = 2
-  ): List[Term.ParamClause] = {
-    var hadModImplicit = false
-    def paramClause(first: Boolean) = autoPos(
-      inParensOnOpenOr {
-        def reduceParams(params: List[Term.Param], mod: Option[Mod.ParamsType] = None) = params
-          .reduceWith { x =>
-            onlyLastParameterCanBeRepeated(x)
-            toParamClause(mod)(x)
-          }
-        def parseParams(mod: Option[Mod.ParamsType] = None) = reduceParams(
-          commaSeparatedWithIndex(termParam(ownerIsCase && first, ownerIsType, mod = mod)),
-          mod
-        )
-        currToken match {
-          case t @ Ellipsis(rank) if rank >= 2 && rank <= ellipsisMaxRank =>
-            reduceParams(List(ellipsis[Term.Param](t)))
-          case _: KwImplicit =>
-            hadModImplicit = true
-            parseParams(Some(atCurPosNext(Mod.Implicit())))
-          case soft.KwUsing() => parseParams(Some(atCurPosNext(Mod.Using())))
+  ): List[Term.ParamClause] = listBy[Term.ParamClause] { paramss =>
+    first.foreach(paramss += _)
+    while ({
+      val clause = termParamClauseOnParen(
+        ownerIsType = ownerIsType,
+        ownerIsCase = ownerIsCase && paramss.isEmpty,
+        ellipsisMaxRank = ellipsisMaxRank
+      )
+      paramss += clause
+      val hasModImplicit = clause match {
+        case _: Quasi => false
+        case x => x.mod.exists(_.is[Mod.Implicit])
+      }
+      !hasModImplicit && isAfterOptNewLine[LeftParen]
+    }) {}
+  }
+
+  private def termParamClauseOnParen(
+      ownerIsType: Boolean,
+      ownerIsCase: Boolean = false,
+      ellipsisMaxRank: Int = 2
+  ): Term.ParamClause = autoPos {
+    def reduceParams(params: List[Term.Param], mod: Option[Mod.ParamsType] = None) = params
+      .reduceWith { x =>
+        onlyLastParameterCanBeRepeated(x)
+        toParamClause(mod)(x)
+      }
+    def parseParams(mod: Option[Mod.ParamsType] = None, ownerIsTypeOverride: => Boolean = false) = {
+      val params = commaSeparatedWithIndex(termParam(
+        ownerIsCase = ownerIsCase,
+        ownerIsType = ownerIsType || ownerIsTypeOverride,
+        mod = mod
+      ))
+      reduceParams(params, mod)
+    }
+    inParensOnOpenOr(currToken match {
+      case t @ Ellipsis(rank) if rank >= 2 && rank <= ellipsisMaxRank =>
+        reduceParams(List(ellipsis[Term.Param](t)))
+      case _: KwImplicit => parseParams(Some(atCurPosNext(Mod.Implicit())))
+      case t: Ident if !peek[Colon] =>
+        t.text match {
+          case soft.KwUsing() => parseParams(
+              mod = Some(atCurPosNext(Mod.Using())),
+              ownerIsTypeOverride = ExtensionSigContext.isInside()
+            )
           case _ => parseParams()
         }
-      }(Term.ParamClause(Nil))
-    )
-
-    listBy[Term.ParamClause] { paramss =>
-      paramss += paramClause(true)
-      while (isAfterOptNewLine[LeftParen] && !hadModImplicit) paramss += paramClause(false)
-    }
+      case _ => parseParams()
+    })(Term.ParamClause(Nil))
   }
 
   def termParam(ownerIsCase: Boolean, ownerIsType: Boolean, mod: Option[Mod.ParamsType] = None)(
@@ -3415,12 +3466,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case t: Ident => termName(t)
           case _ => anonNameEmpty()
         }
-        val tparams =
-          typeParamClauseOpt(ownerIsType = false, allowUnderscore = dialect.allowTypeParamUnderscore)
-        val uparamss =
-          if (at[LeftParen] && soft.KwUsing(peekToken)) termParamClausesOnParen(ownerIsType = false)
-          else Nil
-        if (acceptOpt[Colon]) Some((name, getParamClauseGroup(tparams, uparamss))) else None
+        val pcg = memberParamClauseGroup(
+          isFirst = true,
+          ownerIsType = false,
+          allowUnderscore = dialect.allowTypeParamUnderscore
+        )
+        if (acceptOpt[Colon]) Some((name, pcg)) else None
       }.getOrElse {
 
         /**
@@ -3473,31 +3524,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = autoEndPos(mods) {
     next() // 'extension'
 
-    val tparams =
-      typeParamClauseOpt(ownerIsType = false, allowUnderscore = dialect.allowTypeParamUnderscore)
+    val pcg = ExtensionSigContext.within(memberParamClauseGroup(
+      isFirst = true,
+      ownerIsType = false,
+      allowUnderscore = dialect.allowTypeParamUnderscore
+    ))
 
-    newLineOptWhenFollowedBy[LeftParen]
-
-    val paramss = ListBuffer[Term.ParamClause]()
-
-    def collectUparams(): Unit =
-      while (isAfterOptNewLine[LeftParen] && nextIf(soft.KwUsing(peekToken))) paramss += autoPrevPos {
-        val mod = Some(atCurPos(Mod.Using()))
-        inParensOnOpen(commaSeparatedWithIndex {
-          termParam(ownerIsCase = false, ownerIsType = true, mod = mod)
-        }).reduceWith(toParamClause(mod))
-      }
-
-    collectUparams()
-
-    paramss += autoPos(
-      inParens(List(currToken match {
-        case t @ Ellipsis(2) => ellipsis[Term.Param](t)
-        case _ => termParam(ownerIsCase = false, ownerIsType = false)(0)
-      })).reduceWith(toParamClause(None))
-    )
-
-    collectUparams()
     newLinesOpt()
 
     def getStats() = statSeq(templateStat())
@@ -3510,7 +3542,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ if isDefIntro(currIndex) => nonLocalDefOrDcl()
       case _ => syntaxError("Extension without extension method", currToken)
     }
-    Defn.ExtensionGroup(getParamClauseGroup(tparams, paramss.toList), body)
+    Defn.ExtensionGroup(pcg, body)
   }
 
   def funDefRest(mods: List[Mod]): Stat = autoEndPos(mods) {
@@ -3525,14 +3557,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       autoPos(Type.Name("Unit"))
     }
 
-    def nonInterleavedParamClauses = {
-      val tparams = typeParamClauseOpt(ownerIsType = false)
-      val paramss = termParamClauses(ownerIsType = false)
-      getParamClauseGroup(tparams, paramss)
-    }
     val paramClauses: List[Member.ParamClauseGroup] =
       if (dialect.allowParamClauseInterleaving) memberParamClauseGroups(ownerIsType = false)
-      else nonInterleavedParamClauses.toList
+      else memberParamClauseGroup(isFirst = true, ownerIsType = false).toList
 
     def defn(declType: Option[Type]) = Defn.Def(mods, name, paramClauses, declType, expr())
 
