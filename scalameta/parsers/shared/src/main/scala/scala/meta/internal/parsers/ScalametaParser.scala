@@ -935,24 +935,33 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       else infixType(inMatchType = inMatchType)
 
     @inline
-    def infixType(inMatchType: Boolean = false): Type = maybeAnonymousLambda(
-      infixTypeRest(compoundType(inMatchType = inMatchType), inMatchType = inMatchType)
-    )
+    def infixType(inMatchType: Boolean = false, inGivenSig: Boolean = false): Type =
+      maybeAnonymousLambda(infixTypeRest(
+        compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig),
+        inMatchType = inMatchType,
+        inGivenSig = inGivenSig
+      ))
 
     @inline
-    private def infixTypeRest(t: Type, inMatchType: Boolean = false): Type =
-      if (dialect.useInfixTypePrecedence) infixTypeRestWithPrecedence(t, inMatchType = inMatchType)
-      else
-        infixTypeRestWithMode(t, InfixMode.FirstOp, t.begIndex, identity, inMatchType = inMatchType)
+    private def infixTypeRest(
+        t: Type,
+        inMatchType: Boolean = false,
+        inGivenSig: Boolean = false
+    ): Type =
+      if (dialect.useInfixTypePrecedence)
+        infixTypeRestWithPrecedence(t, inMatchType = inMatchType, inGivenSig = inGivenSig)
+      else infixTypeRestWithMode(t, identity, inMatchType = inMatchType, inGivenSig = inGivenSig)(
+        InfixMode.FirstOp,
+        t.begIndex
+      )
 
     @tailrec
     private final def infixTypeRestWithMode(
         t: Type,
-        mode: InfixMode.Value,
-        startPos: Int,
         f: Type => Type,
-        inMatchType: Boolean = false
-    ): Type = {
+        inMatchType: Boolean = false,
+        inGivenSig: Boolean = false
+    )(mode: InfixMode.Value, startPos: Int): Type = {
       val ok = currToken match {
         case _: Unquote | InfixTypeIdent() => true
         case _ => false
@@ -962,21 +971,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val leftAssoc = op.isLeftAssoc
         if (mode != InfixMode.FirstOp) checkAssoc(op, leftAssoc, mode == InfixMode.LeftOp)
         newLineOptWhenFollowedBy(TypeIntro)
-        val typ = compoundType(inMatchType = inMatchType)
+        val typ = compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig)
         def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
-        if (leftAssoc)
-          infixTypeRestWithMode(mkOp(typ), InfixMode.LeftOp, startPos, f, inMatchType = inMatchType)
+        if (leftAssoc) infixTypeRestWithMode(
+          mkOp(typ),
+          f,
+          inMatchType = inMatchType,
+          inGivenSig = inGivenSig
+        )(InfixMode.LeftOp, startPos)
         else infixTypeRestWithMode(
           typ,
-          InfixMode.RightOp,
-          typ.begIndex,
           f.compose(mkOp),
-          inMatchType = inMatchType
-        )
+          inMatchType = inMatchType,
+          inGivenSig = inGivenSig
+        )(InfixMode.RightOp, typ.begIndex)
       } else f(t)
     }
 
-    private final def infixTypeRestWithPrecedence(t: Type, inMatchType: Boolean = false): Type = {
+    private final def infixTypeRestWithPrecedence(
+        t: Type,
+        inMatchType: Boolean = false,
+        inGivenSig: Boolean = false
+    ): Type = {
       val ctx = TypeInfixContext
       val base = ctx.stack
       @inline
@@ -984,7 +1000,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def getNextRhs(rhs: ctx.Typ)(op: ctx.Op): ctx.Typ = {
         newLineOptWhenFollowedBy(TypeIntro)
         ctx.push(ctx.UnfinishedInfix(reduce(rhs, Some(op)), op))
-        compoundType(inMatchType = inMatchType)
+        compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig)
       }
       @tailrec
       def loop(rhs: ctx.Typ): ctx.Typ = (currToken match {
@@ -998,10 +1014,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       loop(t)
     }
 
-    def compoundType(inMatchType: Boolean = false): Type = refinement(innerType = None).getOrElse {
-      val startPos = currIndex
-      compoundTypeRest(annotType(startPos, inMatchType = inMatchType), startPos)
-    }
+    def compoundType(inMatchType: Boolean = false, inGivenSig: Boolean = false): Type =
+      refinement(innerType = None).getOrElse {
+        val startPos = currIndex
+        val annot = annotType(startPos, inMatchType = inMatchType)
+        if (inGivenSig) annot else compoundTypeRest(annot, startPos)
+      }
 
     def compoundTypeRest(typ: Type, startPos: Int): Type = {
       @tailrec
@@ -2804,7 +2822,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def typeIndentedOpt() = outPattern.typeIndentedOpt()
   def quasiquoteType() = outPattern.quasiquoteType()
   def entrypointType() = outPattern.entrypointType()
-  def startInfixType() = outPattern.infixType()
+  def startInfixType(inGivenSig: Boolean = false) = outPattern.infixType(inGivenSig = inGivenSig)
   def startModType() = outPattern.annotType()
   def exprTypeArgs() = outPattern.typeArgsInBrackets()
   def exprSimpleType() = outPattern.simpleType()
