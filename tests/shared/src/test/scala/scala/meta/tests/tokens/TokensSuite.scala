@@ -172,6 +172,7 @@ class TokensApiSuite extends FunSuite {
     val beforeLbeg = tokens.length - beforeLlen
     assertEquals(beforeL.rskipWideIf(notIdent, beforeLbeg, -1), beforeLlen)
     assertEquals(beforeL.getWideOpt(beforeLlen).orNull, afterL.head)
+    assertEquals(beforeL.rfindWideNot(notIdent, beforeLbeg, -1), Some(afterL.head))
 
     val afterLlen = afterL.length
     val afterLbeg = afterLlen - tokens.length
@@ -185,6 +186,7 @@ class TokensApiSuite extends FunSuite {
     val afterRbeg = afterRlen - tokens.length
     assertEquals(afterR.skipWideIf(notIdent, afterRbeg, tokens.length), -1)
     assertEquals(afterR.getWideOpt(-1).orNull, afterL.head)
+    assertEquals(afterR.findWideNot(notIdent, afterRbeg), Some(afterL.head))
 
     var lastidx = -1
     tokens.foreachWithIndex { (t, i) =>

@@ -38,6 +38,8 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
     else throw new NoSuchElementException(s"token $idx out of $length")
   def end: Int = start + length // for MIMA compat
 
+  def getOpt(idx: Int): Option[Token] = if (idx >= 0 && idx < length) Some(get(idx)) else None
+
   /** get element in full Tokens relative to start of this slice */
   def getWideOpt(idx: Int): Option[Token] = {
     val wideIdx = start + idx
@@ -86,7 +88,41 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
   @inline
   def skipIf(p: Token => Boolean, rangeBeg: Int): Int = skipIf(p, rangeBeg, length)
   @inline
+  def skipWideIf(p: Token => Boolean, rangeBeg: Int): Int = skipWideIf(p, rangeBeg, Int.MaxValue)
+  @inline
   def rskipIf(p: Token => Boolean, rangeBeg: Int): Int = rskipIf(p, rangeBeg, -1)
+  @inline
+  def rskipWideIf(p: Token => Boolean, rangeBeg: Int): Int = rskipWideIf(p, rangeBeg, Int.MinValue)
+
+  @inline
+  def findNot(p: Token => Boolean, rangeBeg: Int): Option[Token] = findNot(p, rangeBeg, Int.MaxValue)
+  @inline
+  def rfindNot(p: Token => Boolean, rangeBeg: Int): Option[Token] =
+    rfindNot(p, rangeBeg, Int.MinValue)
+
+  @inline
+  def findWideNot(p: Token => Boolean, rangeBeg: Int): Option[Token] =
+    findWideNot(p, rangeBeg, Int.MaxValue)
+  @inline
+  def rfindWideNot(p: Token => Boolean, rangeBeg: Int): Option[Token] =
+    rfindWideNot(p, rangeBeg, Int.MinValue)
+
+  /**
+   * Find token not satisfying a given predicate.
+   * @param rangeBeg
+   *   first index to check
+   * @param rangeEnd
+   *   first index not to check
+   */
+  def findNot(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Option[Token] =
+    getOpt(skipIf(p, rangeBeg, rangeEnd))
+  def rfindNot(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Option[Token] =
+    getOpt(rskipIf(p, rangeBeg, rangeEnd))
+
+  def findWideNot(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Option[Token] =
+    getWideOpt(skipWideIf(p, rangeBeg, rangeEnd))
+  def rfindWideNot(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Option[Token] =
+    getWideOpt(rskipWideIf(p, rangeBeg, rangeEnd))
 
   /**
    * Skip tokens satisfying a given predicate.
@@ -96,15 +132,15 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
    *   first index not to check
    */
   def skipIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int =
-    if (rangeBeg < 0) rangeBeg else skipIfFull(p, start + rangeBeg, start + rangeEnd.min(length))
+    if (rangeBeg < 0) rangeBeg else skipFullIf(p, start + rangeBeg, start + rangeEnd.min(length))
 
   def skipWideIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
     val beg = start + rangeBeg
     // rangeEnd + start could overflow, so let's first truncate it
-    if (beg < 0) rangeBeg else skipIfFull(p, beg, start + rangeEnd.min(tokens.length - start))
+    if (beg < 0) rangeBeg else skipFullIf(p, beg, start + rangeEnd.min(tokens.length - start))
   }
 
-  private def skipIfFull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
+  private def skipFullIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
     var i = rangeBeg
     while (i < rangeEnd && p(tokens(i))) i += 1
     i - start
@@ -119,15 +155,15 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
    */
   def rskipIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int =
     if (rangeBeg >= length || rangeBeg <= rangeEnd) rangeBeg
-    else rskipIfFull(p, start + rangeBeg, start + rangeEnd.max(-1))
+    else rskipFullIf(p, start + rangeBeg, start + rangeEnd.max(-1))
 
   def rskipWideIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
     val beg = start + rangeBeg
     // rangeEnd + start could overflow; compare it to (-start -1), and ~start is exactly that
-    if (beg >= tokens.length) rangeBeg else rskipIfFull(p, beg, start + rangeEnd.max(~start))
+    if (beg >= tokens.length) rangeBeg else rskipFullIf(p, beg, start + rangeEnd.max(~start))
   }
 
-  private def rskipIfFull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
+  private def rskipFullIf(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Int = {
     var i = rangeBeg
     while (i > rangeEnd && p(tokens(i))) i -= 1
     i - start
