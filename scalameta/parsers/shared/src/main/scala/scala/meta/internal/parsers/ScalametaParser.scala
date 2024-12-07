@@ -396,12 +396,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   implicit class XtensionToken(tok: Token) {
     def is[T: ClassTag] = classTag[T].runtimeClass.isAssignableFrom(tok.getClass())
+    def as[T <: AnyRef: ClassTag]: T = (if (is[T]) tok else null).asInstanceOf[T]
+
+    def isAny[A: ClassTag, B: ClassTag] = is[A] || is[B]
+    def isAny[A: ClassTag, B: ClassTag, C: ClassTag] = is[A] || is[B] || is[C]
   }
 
   @inline
   private def at[T: ClassTag]: Boolean = currToken.is[T]
   @inline
+  private def at[A: ClassTag, B: ClassTag]: Boolean = currToken.isAny[A, B]
+  @inline
+  private def at[A: ClassTag, B: ClassTag, C: ClassTag]: Boolean = currToken.isAny[A, B, C]
+  @inline
   private def peek[T: ClassTag]: Boolean = peekToken.is[T]
+  @inline
+  private def peek[A: ClassTag, B: ClassTag]: Boolean = peekToken.isAny[A, B]
   @inline
   private def prev[T: ClassTag]: Boolean = prevToken.is[T]
 
@@ -435,12 +445,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   /** Consume one token of the specified type, or signal an error if it is not there. */
   def accept[T <: Token: ClassTag]: Unit = {
     expect[T]
-    if (currToken.isNot[EOF]) next()
+    if (!at[EOF]) next()
   }
 
   /** If current token is T consume it. */
   @inline
   private def acceptOpt[T: ClassTag]: Boolean = nextIf(at[T])
+
+  private def acceptAs[T <: AnyRef: ClassTag]: T = {
+    val res = currToken.as[T]
+    if (res ne null) next()
+    res
+  }
 
   /** If current token is T consume it. */
   @inline
@@ -1025,7 +1041,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         .AnonymousParam(modOpt.map(v => atPos(startPos)(v)))
       def pathSimpleType(): Type = {
         val ref = path()
-        if (currToken.isNot[Dot]) ref match {
+        if (acceptOpt[Dot]) {
+          accept[KwType]
+          Type.Singleton(ref.become[Term.Ref])
+        } else ref match {
           case q: Quasi => q.become[Type]
           case Term.Select(qual: Term.Quasi, name: Term.Name.Quasi) =>
             val newQual = qual.become[Term.Ref]
@@ -1037,11 +1056,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case name: Term.Name => Type.Name(name.value)
           case _ => syntaxError("identifier expected", at = ref)
         }
-        else {
-          next()
-          accept[KwType]
-          Type.Singleton(ref.become[Term.Ref])
-        }
       }
       val res = currToken match {
         case _: Ident if peek[Dot] => pathSimpleType()
@@ -1052,7 +1066,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _: Underscore
             if dialect.allowUnderscoreAsTypePlaceholder ||
               dialect.allowTypeLambdas && !PatternTypeContext.isInside() &&
-              TypeBracketsContext.isDeeper(1) && !peekToken.isAny[Supertype, Subtype] =>
+              TypeBracketsContext.isDeeper(1) && !peek[Supertype, Subtype] =>
           next(); Type.AnonymousParam(None)
         case _: Underscore => wildcardType()
         case _: Literal =>
@@ -1384,8 +1398,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def isAfterOpt[A: ClassTag, B: ClassTag]: Boolean = if (at[B]) tryAhead[A] else at[A]
   def isAfterOptNewLine[T: ClassTag]: Boolean = isAfterOpt[T, EOL]
 
-  def isAfterOptNewLine(body: Token => Boolean): Boolean =
-    if (at[EOL]) tryAhead(body(currToken)) else body(currToken)
+  def atOrPeekAfterEOL(body: Token => Boolean): Boolean =
+    if (at[EOL]) nextIf(body(peekToken)) else body(currToken)
 
   def getAfterOptNewLine[A](body: => Option[A]): Option[A] = if (at[EOL]) tryAhead(body) else body
 
@@ -2201,9 +2215,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply => getFewerBracesApplyOnColon(t, startPos).getOrElse(t)
-      case _: Underscore if canApply =>
-        next()
-        addPos(Term.Eta(t))
+      case _: Underscore if canApply => next(); addPos(Term.Eta(t))
       case _ => t
     }
   }
@@ -2318,7 +2330,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def argumentExprsOrPrefixExpr(location: Location): Term = {
     val isBrace = at[LeftBrace]
-    if (!isBrace && currToken.isNot[LeftParen]) prefixExpr(allowRepeated = false)
+    if (!isBrace && !at[LeftParen]) prefixExpr(allowRepeated = false)
     else {
       def findRep(args: List[Term]): Option[Term.Repeated] = args.collectFirst {
         case Term.Assign(_, rep: Term.Repeated) => rep
@@ -2512,7 +2524,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def enumerator(isFirst: Boolean = false): Enumerator = currToken match {
     case _: KwIf if !isFirst => enumeratorGuardOnIf()
     case t: Ellipsis => ellipsis[Enumerator](t, 1)
-    case t: Unquote if !peekToken.isAny[Equals, LeftArrow] => unquote[Enumerator](t) // support for q"for ($enum1; ..$enums; $enum2)"
+    case t: Unquote if !peek[Equals, LeftArrow] => unquote[Enumerator](t) // support for q"for ($enum1; ..$enums; $enum2)"
     case _ => generator()
   }
 
@@ -2599,7 +2611,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (isSequenceOK && isStar(peekToken)) tryParse {
         nextTwice() // skip underscore and star
         newLinesOpt()
-        val isArgListEnd = currToken.isAny[RightParen, RightBrace, EOF]
+        val isArgListEnd = at[RightParen, RightBrace, EOF]
         if (isArgListEnd) Some(Pat.SeqWildcard()) else None
       }
       else None
@@ -2610,7 +2622,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def typed() = Pat
         .Typed(p, super.patternTyp(allowInfix = false, allowImmediateTypevars = false))
       val pat = p match {
-        case _ if currToken.isNot[Colon] => p
+        case _ if !at[Colon] => p
         case _: Quasi =>
           next()
           typed()
@@ -2633,7 +2645,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def pattern2(isForComprehension: Boolean = false): Pat = {
       val p = pattern3(isForComprehension)
       val pat = p match {
-        case _ if currToken.isNot[At] => p
+        case _ if !at[At] => p
         case _: Quasi =>
           next()
           Pat.Bind(p, pattern3())
@@ -2724,7 +2736,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               case name: Term.Name.Quasi => name.become[Pat]
               case name: Term.Name =>
                 if (soft.StarSplice(currToken) && tryAheadNot[Ident]) Pat.Repeated(name)
-                else if (if (!isForComprehension && sidToken.isBackquoted) currToken.isAny[Colon, At]
+                else if (if (!isForComprehension && sidToken.isBackquoted) at[Colon, At]
                   else {
                     val first = name.value.head
                     first == '_' || Character.getType(first) == Character.LOWERCASE_LETTER ||
@@ -2907,7 +2919,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def tparamModifiers(buf: ListBuffer[Mod]): Unit = currToken match {
-    case t: Unquote => if (peekToken.isAny[Ident, Unquote]) buf += unquote[Mod](t)
+    case t: Unquote => if (peek[Ident, Unquote]) buf += unquote[Mod](t)
     case t: Ellipsis => buf += ellipsis[Mod](t, 1)
     case TParamVariant(mod) => buf += atCurPosNext(mod)
     case _ =>
@@ -2934,7 +2946,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Unquote if continueLoop =>
       case _: AtEOL if !isLocal => next(); loop
       case _: Unquote | _: Ellipsis => appendMod; loop
-      case _: KwCase if peekToken.isAny[KwObject, KwClass] => buf += atCurPosNext(Mod.Case())
+      case _: KwCase if peek[KwObject, KwClass] => buf += atCurPosNext(Mod.Case())
       case _: ModifierKeyword => appendMod; loop
       case t: Ident if {
             if (isParams) !peek[Colon] && ParamsModifier.matches(t.value)
@@ -3096,7 +3108,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
     varOrVarParamMod.foreach(mods += _)
 
-    def endParamQuasi = currToken.isAny[RightParen, Comma]
+    def endParamQuasi = at[RightParen, Comma]
     mods.headOption.collect { case q: Mod.Quasi if endParamQuasi => q.become[Term.Param] }
       .orElse(currToken match {
         case t: Ellipsis => Some(ellipsis[Term.Param](t, 1))
@@ -3108,7 +3120,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case q: Quasi if endParamQuasi => q.become[Term.Param]
           case _ =>
             val tpt =
-              if (currToken.isNot[Colon] && name.is[Name.Quasi]) None
+              if (!at[Colon] && name.is[Name.Quasi]) None
               else {
                 if (!anonymousUsing) accept[Colon]
                 val tpt = paramType()
@@ -3120,7 +3132,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
                   val badMod =
                     if (ownerIsType && !isLocalToThis) varOrVarParamMod
                     else if (dialect.allowImplicitByNameParameters) None
-                    else mod.find(_.is[Mod.Implicit])
+                    else mod.filter(_.is[Mod.Implicit])
                   badMod.foreach(mayNotBeByName)
                 }
                 Some(tpt)
@@ -3156,7 +3168,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       annotsBuf(buf, skipNewLines = false)
       if (ownerIsType) tparamModifiers(buf)
     }
-    def endTparamQuasi = currToken.isAny[RightBracket, Comma]
+    def endTparamQuasi = at[RightBracket, Comma]
     mods.headOption match {
       case Some(q: Mod.Quasi) if endTparamQuasi => q.become[Type.Param]
       case _ =>
@@ -3453,7 +3465,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def funDefOrDclOrExtensionOrSecondaryCtor(mods: List[Mod]): Stat =
-    if (peekToken.isNot[KwThis]) funDefRest(mods) else secondaryCtor(mods)
+    if (peek[KwThis]) secondaryCtor(mods) else funDefRest(mods)
 
   // TmplDef           ::= ‘extension’ [DefTypeParamClause] ‘(’ DefParam ‘)’ {UsingParamClause} ExtMethods
   // ExtMethods        ::=  ExtMethod | [nl] ‘{’ ExtMethod {semi ExtMethod ‘}’
@@ -3671,11 +3683,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     accept[KwDef]
     expect[KwThis]
     val name = nameThis()
-    if (currToken.isNot[LeftParen])
-      syntaxError("auxiliary constructor needs non-implicit parameter list", at = currToken.pos)
-    else {
-      val paramss = termParamClauses(ownerIsType = true)
-      secondaryCtorRest(mods, name, paramss)
+    currToken match {
+      case _: LeftParen => secondaryCtorRest(mods, name, termParamClausesOnParen(ownerIsType = true))
+      case t => syntaxError("auxiliary constructor needs non-implicit parameter list", at = t)
     }
   }
 
@@ -3803,7 +3813,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ => return Left("expected identifier, `this' or unquote")
     }
     // possible fewer braces after colon
-    if (!peekToken.isAny[Indentation, EOL]) Right(Self(name, getDeclTpeOpt(fullTypeOK = false)))
+    if (!peek[Indentation, EOL]) Right(Self(name, getDeclTpeOpt(fullTypeOK = false)))
     else if (!at[Colon]) Right(Self(name, None))
     else Left("missing type after self")
   }
@@ -3871,7 +3881,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   def derivesClasses(): List[Type] =
-    if (isAfterOptNewLine(soft.KwDerives(_))) {
+    if (atOrPeekAfterEOL(soft.KwDerives(_))) {
       next()
       newLineOpt()
       val deriving = ListBuffer[Type]()
@@ -3944,7 +3954,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def templateBodyOpt(owner: TemplateOwner): Template.Body =
     if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(owner)
-    else if (at[Colon] && peekToken.isAny[Indentation, EOL]) autoPos {
+    else if (at[Colon] && peek[Indentation, EOL]) autoPos {
       next()
       expect[Indentation.Indent]("template body")
       templateBodyOnIndentRaw(owner)
