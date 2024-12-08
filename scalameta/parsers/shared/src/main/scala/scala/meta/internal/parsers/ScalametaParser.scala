@@ -3488,17 +3488,42 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   /**
+   * @param oldOrNewSyntax
+   *   new only if positive, old only if negative, either if zero
+   *
    * ```scala
-   * Given             ::= 'given' GivenDef
-   * GivenDef          ::=  [GivenSig] (Type [‘=’ Expr] | StructuralInstance)
-   * GivenSig          ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘:’
-   * StructuralInstance ::=  ConstrApp {‘with’ ConstrApp} ‘with’ TemplateBody
+   * Given             ::= 'given' (GivenDef | OldGivenDef)
+   * GivenDef          ::=  [id ':'] GivenSig
+   * GivenSig          ::=  GivenImpl
+   *                     |  '(' ')' '=>' GivenImpl
+   *                     |  GivenConditional '=>' GivenSig
+   * GivenImpl         ::=  GivenType ([‘=’ Expr] | TemplateBody)
+   *                     |  ConstrApps TemplateBody
+   * GivenConditional  ::=  DefTypeParamClause
+   *                     |  DefTermParamClause
+   *                     |  '(' FunArgTypes ')'
+   *                     |  GivenType
+   * GivenType         ::=  AnnotType1 {id [nl] AnnotType1}
+   *
+   * -- syntax up to Scala 3.5, to be deprecated in the future
+   * OldGivenDef       ::=  [OldGivenSig] (AnnotType [‘=’ Expr] | StructuralInstance)
+   *   -- one of `id`, `DefTypeParamClause`, `UsingParamClause` must be present
+   * OldGivenSig       ::=  [id] [DefTypeParamClause] {UsingParamClause} ‘:’
+   * StructuralInstance ::=  ConstrApp {‘with’ ConstrApp} [‘with’ WithTemplateBody]
+   *
+   * -- for reference
+   * ConstrApps        ::=  ConstrApp ({‘,’ ConstrApp} | {‘with’ ConstrApp})
+   * ConstrApp         ::=  SimpleType {Annotation} {ParArgumentExprs}
+   * TemplateBody      ::=  :<<< [SelfType] TemplateStat {semi TemplateStat} >>>
+   * WithTemplateBody  ::=  <<< [SelfType] TemplateStat {semi TemplateStat} >>>
    * ```
    */
   private def givenDecl(mods: List[Mod]): Stat = autoEndPos(mods) {
     accept[KwGiven]
     val sig = givenSig()
 
+    val newSyntaxOK = dialect.allowImprovedTypeClassesSyntax
+    val usedNewSyntax = newSyntaxOK && !prev[Colon]
     val initPos = sig.declPos.getOrElse(sig.declType.fold(currIndex)(_.begIndex))
     val decltype = sig.declType.getOrElse(refinement(None).getOrElse(startModType()))
 
@@ -3506,12 +3531,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val headInit =
         if (!at[LeftParen]) initImpl(initPos, decltype, allowSingleton = false)(Nil)
         else initRestAt(initPos, decltype)(allowArgss = true, allowSingleton = false)
-      val inits = templateParentsWithFirst(allowComma = false, allowWithBody = true)(headInit)
+      val inits = templateParentsWithFirst(allowComma = newSyntaxOK, allowWithBody = true)(headInit)
       val body =
         if (acceptOpt[KwWith])
           if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(OwnedByGiven)
           else if (at[Indentation.Indent]) autoPos(templateBodyOnIndentRaw(OwnedByGiven))
           else syntaxError("expected '{' or indentation", at = currToken)
+        else if (usedNewSyntax) templateBodyOpt(OwnedByGiven)
         else if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
         else emptyTemplateBody()
       val rhs = autoEndPos(initPos)(Template(None, inits, body, Nil))
@@ -3520,6 +3546,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     currToken match {
       case _: Equals => next(); Defn.GivenAlias(mods, sig.name, sig.pcg, decltype, expr())
       case _: KwWith | _: LeftParen => getDefnGiven()
+      case _: Comma | _: LeftBrace | _: Colon if newSyntaxOK => getDefnGiven()
       case _ => sig.name match {
           case n: Term.Name => Decl.Given(mods, n, sig.pcg, decltype)
           case n => syntaxError("abstract givens cannot be anonymous", at = n)
@@ -3537,12 +3564,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
    */
   private def givenSig(): GivenSig = tryParse(GivenSigContext.within {
     val ident = currToken.as[Ident]
+    def newSyntax = dialect.allowImprovedTypeClassesSyntax
     if (ident ne null) { // possibly named typeclass
       val identPos = currIndex
       def name = atPos(identPos)(Term.Name(ident.value))
+      def anon = anonNameAt(identPos)
       if (tryAhead[Colon])
         if (!tryAheadNot[Indentation.Indent]) None
-        // TODO: check for new syntax
+        else if (newSyntax) givenSigAfterColon(name)
         else Some(GivenSig(name))
       else if (tryAhead[LeftBracket]) givenSigOnBracket(name) // only with old syntax
       else if (tryAhead[LeftParen]) givenSigOnParen(name) // only with old syntax
@@ -3550,6 +3579,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         if (tryAhead[LeftBracket]) givenSigOnBracket(name) // only with old syntax
         else if (tryAhead[LeftParen]) givenSigOnParen(name) // only with old syntax
         else None
+      else if (newSyntax)
+        if (!tryAhead[RightArrow]) givenSigOther(anon) // only with old syntax
+        else givenSigOnArrow(anon, atPos(identPos)(Type.Name(ident.value)))
       else None
     } else // anonymous typeclass or start of decltype
     if (isAfterOptNewLine[LeftBracket]) givenSigOnBracket(anonName())
@@ -3558,6 +3590,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }).getOrElse(GivenSig(anonName()))
 
   private def givenOldSyntaxColon(): Boolean = at[Colon] && tryAheadNot[Indentation.Indent]
+
+  private def givenTypeParamClause(): Type.ParamClause =
+    typeParamClauseOnBracket(ownerIsType = false, allowUnderscore = dialect.allowTypeParamUnderscore)
+
+  private def givenTermParamClause(): Term.ParamClause = termParamClauseOnParen(ownerIsType = false)
 
   private def givenSigOnBracket(name: Name): Option[GivenSig] = Try(memberParamClauseGroupOnBracket(
     ownerIsType = false,
@@ -3569,7 +3606,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val typeName = copyPos(name)(Type.Name(name.value))
       val tpe = convertNameTypeParamClauseToType(typeName, pcg.tparamClause)
       Some(GivenSig(anonNameAt(name), declType = Some(tpe)))
-    } else None
+    } else if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
+      givenSigAfterArrow(name, pcg.tparamClause)
+    else None
   }
 
   private def givenSigOnParen(name: Name): Option[GivenSig] = {
@@ -3579,8 +3618,89 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     else {
       val pcg = memberParamClauseGroupOnParen(ownerIsType = false)
       if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
-      // TODO: check for new syntax
-      else None
+      else pcg.paramClauses match {
+        case Seq(pc) if useNewSyntax && acceptOpt[RightArrow] =>
+          givenSigAfterArrow(name, pcg.tparamClause, pc)
+        case _ => None // too hard to convert to init, re-parse
+      }
+    }
+  }
+
+  private def givenSigAfterColon(name: Name): Option[GivenSig] =
+    if (isAfterOptNewLine[LeftParen]) {
+      val pc = givenTermParamClause()
+      if (acceptOpt[RightArrow]) givenSigAfterArrow(name, pc)
+      else Some(GivenSig(name, declType = Some(convertTermParamClauseToType(pc))))
+    } else if (isAfterOptNewLine[LeftBracket]) {
+      val tpc = givenTypeParamClause()
+      accept[RightArrow]
+      givenSigAfterArrow(name, tpc)
+    } else givenSigOther(name)
+
+  // with old syntax deprecated, fold into `givenSigAfterColon`
+  private def givenSigOther(name: => Name): Option[GivenSig] = {
+    val startPos = currIndex
+    val tpe = startInfixType(inGivenSig = true)
+    if (at[RightArrow]) givenSigOnArrow(name, tpe)
+    else Some(GivenSig(name, declType = Some(tpe), declPos = Some(startPos)))
+  }
+
+  private def givenSigOnArrow(name: Name, tpe: Type): Option[GivenSig] = {
+    next()
+    givenSigAfterArrow(name, convertTypeToTermParamClause(tpe))
+  }
+
+  private def givenSigAfterArrow(name: Name, pc: Term.ParamClause): Option[GivenSig] =
+    givenSigAfterArrow(name, atPosEmpty(pc)(emptyTypeParamsRaw), pc)
+
+  private def givenSigAfterArrow(
+      name: Name,
+      tpc: Type.ParamClause,
+      pc: Term.ParamClause = null
+  ): Option[GivenSig] = {
+    val pcbuf = new ListBuffer[Term.ParamClause]
+    if (pc ne null) pcbuf += pc
+    implicit val pcgbuf = new ListBuffer[Member.ParamClauseGroup]
+    givenSigAfterArrow(name, tpc, pcbuf)
+  }
+
+  @tailrec
+  private def givenSigAfterArrow(
+      name: Name,
+      tpc: Type.ParamClause,
+      pcbuf: ListBuffer[Term.ParamClause]
+  )(implicit pcgbuf: ListBuffer[Member.ParamClauseGroup]): Option[GivenSig] = {
+    def flushPcBuf(): Unit = {
+      getParamClauseGroup(tpc, pcbuf.toList).foreach(pcgbuf += _)
+      pcbuf.clear()
+    }
+    if (pcbuf.lastOption.exists(!_.nonEmpty)) { // empty clause ends `GivenConditional`
+      flushPcBuf()
+      Some(GivenSig(name, pcgbuf.toList))
+    } else if (isAfterOptNewLine[LeftParen]) {
+      val pc = givenTermParamClause()
+      if (acceptOpt[RightArrow]) {
+        pcbuf += pc
+        givenSigAfterArrow(name, tpc, pcbuf)
+      } else {
+        flushPcBuf()
+        Some(GivenSig(name, pcgbuf.toList, Some(convertTermParamClauseToType(pc))))
+      }
+    } else if (isAfterOptNewLine[LeftBracket]) {
+      flushPcBuf()
+      val tpc = givenTypeParamClause()
+      accept[RightArrow]
+      givenSigAfterArrow(name, tpc, pcbuf)
+    } else {
+      val startPos = currIndex
+      val tpe = startInfixType(inGivenSig = true)
+      if (acceptOpt[RightArrow]) {
+        pcbuf += convertTypeToTermParamClause(tpe)
+        givenSigAfterArrow(name, tpc, pcbuf)
+      } else {
+        flushPcBuf()
+        Some(GivenSig(name, pcgbuf.toList, declType = Some(tpe), declPos = Some(startPos)))
+      }
     }
   }
 
@@ -3594,6 +3714,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val args = x.values.map(tp => convertTypeParamToType(tp))
       atPos(name, x)(Type.Apply(name, copyPos(x)(Type.ArgClause(args))))
     case _ => name
+  }
+
+  private def convertTermParamToType(param: Term.Param): Type = param.becomeOr[Type] { x =>
+    def name = copyPos(x.name)(Type.Name(x.name.value))
+    x.decltpe.fold[Type](name) { tpe =>
+      if (x.mods.isEmpty && x.name.isAnonymous) tpe
+      else copyPos(x)(Type.TypedParam(name, tpe, x.mods))
+    }
+  }
+
+  private def convertTermParamClauseToType(pc: Term.ParamClause) = pc.becomeOr[Type] { x =>
+    x.values match {
+      case Nil => copyPos(x)(Lit.Unit())
+      case v :: Nil => convertTermParamToType(v)
+      case vs => copyPos(x)(Type.Tuple(vs.map(convertTermParamToType)))
+    }
+  }
+
+  private def convertTypeToTermParamClause(tpe: Type) = tpe.becomeOr[Term.ParamClause] { x =>
+    copyPos(x)(Term.ParamClause(copyPos(x)(Term.Param(Nil, anonNameAt(x), Some(x), None)) :: Nil))
   }
 
   def funDefOrDclOrExtensionOrSecondaryCtor(mods: List[Mod]): Stat =

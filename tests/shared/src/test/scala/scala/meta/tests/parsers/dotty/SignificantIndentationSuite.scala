@@ -673,6 +673,32 @@ class SignificantIndentationSuite extends BaseDottySuite {
   }
 
   test("given-block-indent-edge-cases: coloneol") {
+    runTestAssert[Stat](
+      """|given intOrd: Ord[Int]:
+         |  def fa: Int = 1
+         |  def fb: Int = 2
+         |""".stripMargin,
+      """|given intOrd: Ord[Int] {
+         |  def fa: Int = 1
+         |  def fb: Int = 2
+         |}
+         |""".stripMargin
+    )(Defn.Given(
+      Nil,
+      "intOrd",
+      Nil,
+      tpl(
+        List(init(papply("Ord", "Int"))),
+        List(
+          Defn.Def(Nil, "fa", Nil, Some("Int"), lit(1)),
+          Defn.Def(Nil, "fb", Nil, Some("Int"), lit(2))
+        )
+      )
+    ))
+  }
+
+  test("given-block-indent-edge-cases: coloneol [scala35]") {
+    implicit val dialect: Dialect = dialects.Scala35
     runTestError[Stat](
       """|given intOrd: Ord[Int]:
          |  def fa: Int = 1
