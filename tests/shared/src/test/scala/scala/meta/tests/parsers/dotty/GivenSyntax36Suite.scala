@@ -322,10 +322,14 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given Ord[Int]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: abstract givens cannot be anonymous
-                   |given Ord[Int]:
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given Ord[Int] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Simple anonymous typeclass, braces") {
@@ -333,20 +337,28 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: abstract givens cannot be anonymous
-                   |given Ord[Int] {
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given Ord[Int] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Simple named typeclass, coloneol") {
     val code = """|given ord: Ord[Int]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `:` found
-                   |given ord: Ord[Int]:
-                   |                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: Ord[Int] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Simple named typeclass, braces") {
@@ -354,10 +366,14 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `{` found
-                   |given ord: Ord[Int] {
-                   |                    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: Ord[Int] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // Parameterized typeclass with context bound
@@ -365,10 +381,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given [A : Ord] => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given [A : Ord] => Ord[List[A]]:
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given [A: Ord]: Ord[List[A]] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized anonymous typeclass with context bound, braces") {
@@ -376,20 +397,30 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given [A : Ord] => Ord[List[A]] {
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given [A: Ord]: Ord[List[A]] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized named typeclass with context bound, coloneol") {
     val code = """|given ord: [A : Ord] => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A : Ord] => Ord[List[A]]:
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord[A: Ord]: Ord[List[A]] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      tname("ord"),
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized named typeclass with context bound, braces") {
@@ -397,10 +428,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A : Ord] => Ord[List[A]] {
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord[A: Ord]: Ord[List[A]] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      tname("ord"),
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // Parameterized typeclass with context bound
@@ -408,10 +444,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given [A : Ord] => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given [A : Ord] => Ord[List[A]]:
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given [A: Ord]: Ord[List[A]] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized anonymous typeclass with context bound, braces") {
@@ -419,20 +460,30 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given [A : Ord] => Ord[List[A]] {
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given [A: Ord]: Ord[List[A]] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized named typeclass with context bound, coloneol") {
     val code = """|given ord: [A : Ord] => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A : Ord] => Ord[List[A]]:
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord[A: Ord]: Ord[List[A]] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      tname("ord"),
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized named typeclass with context bound, braces") {
@@ -440,10 +491,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A : Ord] => Ord[List[A]] {
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord[A: Ord]: Ord[List[A]] with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      tname("ord"),
+      List(pparam(Nil, "A", cb = List("Ord"))),
+      Nil,
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // Parameterized typeclass with named context parameter
@@ -451,10 +507,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given [A] => (ord: Ord[A]) => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given [A] => (ord: Ord[A]) => Ord[List[A]]:
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given [A] => (ord: Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      List(pparam("A")),
+      List(List(tparam("ord", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized anonymous typeclass with named context parameter, braces") {
@@ -462,20 +523,30 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given [A] => (ord: Ord[A]) => Ord[List[A]] {
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given [A] => (ord: Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      List(pparam("A")),
+      List(List(tparam("ord", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized named typeclass with named context parameter, coloneol") {
     val code = """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A] => (ord: Ord[A]) => Ord[List[A]]:
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: [A] => (ord: Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      tname("ord"),
+      List(pparam("A")),
+      List(List(tparam("ord", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized named typeclass with named context parameter, braces") {
@@ -483,10 +554,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A] => (ord: Ord[A]) => Ord[List[A]] {
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: [A] => (ord: Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      tname("ord"),
+      List(pparam("A")),
+      List(List(tparam("ord", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // Parameterized typeclass with anonymous context parameter
@@ -494,10 +570,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given [A] => (Ord[A]) => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given [A] => (Ord[A]) => Ord[List[A]]:
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given [A] => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      List(pparam("A")),
+      List(List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized anonymous typeclass with anonymous context parameter, braces") {
@@ -505,20 +586,30 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given [A] => (Ord[A]) => Ord[List[A]] {
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given [A] => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      List(pparam("A")),
+      List(List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized named typeclass with anonymous context parameter, coloneol") {
     val code = """|given ord: [A] => (Ord[A]) => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A] => (Ord[A]) => Ord[List[A]]:
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: [A] => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      tname("ord"),
+      List(pparam("A")),
+      List(List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("Parameterized named typeclass with anonymous context parameter, braces") {
@@ -526,10 +617,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A] => (Ord[A]) => Ord[List[A]] {
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: [A] => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      tname("ord"),
+      List(pparam("A")),
+      List(List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // extra new syntax tests: functions
@@ -538,10 +634,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given ord: ([A] =>> Ord[A]) => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `=>` found
-                   |given ord: ([A] =>> Ord[A]) => Ord[List[A]]:
-                   |                            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: ([A] =>> Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      List(List(tparam("", Type.Lambda(List(pparam("A")), papply("Ord", "A"))))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("context a lambda function, braces") {
@@ -549,20 +650,33 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `=>` found
-                   |given ord: ([A] =>> Ord[A]) => Ord[List[A]] {
-                   |                            ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: ([A] =>> Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      List(List(tparam("", Type.Lambda(List(pparam(Nil, "A")), papply("Ord", "A"))))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("context a poly function, coloneol") {
     val code = """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `=>` found
-                   |given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]]:
-                   |                                             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: ([A] => Ord[A] => Ord[List[A]]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      List(List(tparam(
+        "",
+        ppolyfunc(pfunc(papply("Ord", papply("List", "A")), papply("Ord", "A")), pparam(Nil, "A"))
+      ))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("context a poly function, braces") {
@@ -570,20 +684,36 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `=>` found
-                   |given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] {
-                   |                                             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: ([A] => Ord[A] => Ord[List[A]]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      List(List(tparam(
+        "",
+        ppolyfunc(pfunc(papply("Ord", papply("List", "A")), papply("Ord", "A")), pparam(Nil, "A"))
+      ))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("given type a function, coloneol") {
     val code = """|given ord: [A] => (Ord[A] => Ord[List[A]]):
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A] => (Ord[A] => Ord[List[A]]):
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord[A]: (Ord[A] => Ord[List[A]]) with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      List(pparam(Nil, "A")),
+      Nil,
+      tpl(
+        List(init(pfunc(papply("Ord", papply("List", "A")), papply("Ord", "A")))),
+        List(Defn.Def(Nil, "foo", Nil, None, "???"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("given type a function, braces") {
@@ -591,10 +721,18 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `[` found
-                   |given ord: [A] => (Ord[A] => Ord[List[A]]) {
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord[A]: (Ord[A] => Ord[List[A]]) with { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      List(pparam(Nil, "A")),
+      Nil,
+      tpl(
+        List(init(pfunc(papply("Ord", papply("List", "A")), papply("Ord", "A")))),
+        List(Defn.Def(Nil, "foo", Nil, None, "???"))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // extra new syntax tests: param clause first
@@ -603,10 +741,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given ord: (a: A) => Ord[A] => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `=>` found
-                   |given ord: (a: A) => Ord[A] => Ord[List[A]]:
-                   |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: (a: A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      List(List(tparam("a", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("named, param clause first, braces") {
@@ -614,20 +757,30 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `=>` found
-                   |given ord: (a: A) => Ord[A] => Ord[List[A]] {
-                   |                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: (a: A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      List(List(tparam("a", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("anonymous, param clause first, coloneol") {
     val code = """|given (a: A) => Ord[A] => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: abstract givens cannot be anonymous
-                   |given (a: A) => Ord[A] => Ord[List[A]]:
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given (a: A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      List(List(tparam("a", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("anonymous, param clause first, braces") {
@@ -635,10 +788,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: abstract givens cannot be anonymous
-                   |given (a: A) => Ord[A] => Ord[List[A]] {
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given (a: A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      List(List(tparam("a", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   // extra new syntax tests: func arg types
@@ -647,10 +805,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code = """|given ord: (A) => Ord[A] => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `=>` found
-                   |given ord: (A) => Ord[A] => Ord[List[A]]:
-                   |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("named, func arg types, braces") {
@@ -658,20 +821,30 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: `;` expected but `=>` found
-                   |given ord: (A) => Ord[A] => Ord[List[A]] {
-                   |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given ord: (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      "ord",
+      Nil,
+      List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("anonymous, func arg types, coloneol") {
     val code = """|given (A) => Ord[A] => Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: abstract givens cannot be anonymous
-                   |given (A) => Ord[A] => Ord[List[A]]:
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("anonymous, func arg types, braces") {
@@ -679,10 +852,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  def foo = ???
                   |}
                   |""".stripMargin
-    val error = """|<input>:1: error: abstract givens cannot be anonymous
-                   |given (A) => Ord[A] => Ord[List[A]] {
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
