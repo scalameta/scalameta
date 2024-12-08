@@ -924,11 +924,11 @@ object Member {
       else Some(ParamClauseGroup(tparamClause = tparams, paramClauses = paramss))
   }
 
-  private[meta] object ParamClauseGroupCtorGiven {
+  private[meta] object ParamClauseGroupsCtorGiven {
     def apply(
         tparams: List[sm.Type.Param],
         sparams: List[List[sm.Term.Param]]
-    ): Option[ParamClauseGroup] = ParamClauseGroupCtor(tparams, sparams)
+    ): List[Member.ParamClauseGroup] = ParamClauseGroupsCtor(tparams, sparams)
   }
 
   private[meta] object ParamClauseGroupsCtor {
@@ -1018,8 +1018,9 @@ object Decl {
   class Given(
       mods: List[Mod],
       name: Term.Name,
-      @replacesFields("4.6.0", Member.ParamClauseGroupCtorGiven)
-      paramClauseGroup: Option[Member.ParamClauseGroup],
+      @replacesFields("4.6.0", Member.ParamClauseGroupsCtorGiven)
+      @replacesFields("4.12.0", Member.ParamClauseGroupsCtor)
+      paramClauseGroups: List[Member.ParamClauseGroup],
       decltpe: sm.Type
   ) extends Decl
       with Member.Term
@@ -1027,9 +1028,11 @@ object Decl {
       with Tree.WithParamClauseGroup
       with Tree.WithDeclTpe {
     @replacedField("4.6.0", pos = 2)
-    final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroups)
     @replacedField("4.6.0", pos = 3)
-    final def sparams: List[List[Term.Param]] = Member.ParamClauseGroup.toParamss(paramClauseGroup)
+    final def sparams: List[List[Term.Param]] = Member.ParamClauseGroup.toParamss(paramClauseGroups)
+    @replacedField("4.12.0")
+    final def paramClauseGroup: Option[Member.ParamClauseGroup] = paramClauseGroups.headOption
   }
 }
 
@@ -1066,15 +1069,18 @@ object Defn {
   @ast
   class Given(
       mods: List[Mod],
-      name: scala.meta.Name,
-      @replacesFields("4.6.0", Member.ParamClauseGroupCtorGiven)
-      paramClauseGroup: Option[Member.ParamClauseGroup],
+      name: Name,
+      @replacesFields("4.6.0", Member.ParamClauseGroupsCtorGiven)
+      @replacesFields("4.12.0", Member.ParamClauseGroupsCtor)
+      paramClauseGroups: List[Member.ParamClauseGroup],
       templ: Template
   ) extends Defn with Stat.WithMods with Tree.WithParamClauseGroup with Stat.WithTemplate {
     @replacedField("4.6.0", pos = 2)
-    final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroups)
     @replacedField("4.6.0", pos = 3)
-    final def sparams: List[List[Term.Param]] = Member.ParamClauseGroup.toParamss(paramClauseGroup)
+    final def sparams: List[List[Term.Param]] = Member.ParamClauseGroup.toParamss(paramClauseGroups)
+    @replacedField("4.12.0")
+    final def paramClauseGroup: Option[Member.ParamClauseGroup] = paramClauseGroups.headOption
   }
   @ast
   class Enum(
@@ -1111,9 +1117,10 @@ object Defn {
   @ast
   class GivenAlias(
       mods: List[Mod],
-      name: scala.meta.Name,
-      @replacesFields("4.6.0", Member.ParamClauseGroupCtorGiven)
-      paramClauseGroup: Option[Member.ParamClauseGroup],
+      name: Name,
+      @replacesFields("4.6.0", Member.ParamClauseGroupsCtorGiven)
+      @replacesFields("4.12.0", Member.ParamClauseGroupsCtor)
+      paramClauseGroups: List[Member.ParamClauseGroup],
       decltpe: sm.Type,
       body: Term
   ) extends Defn
@@ -1122,9 +1129,11 @@ object Defn {
       with Tree.WithBody
       with Tree.WithDeclTpe {
     @replacedField("4.6.0", pos = 2)
-    final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroup)
+    final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroups)
     @replacedField("4.6.0", pos = 3)
-    final def sparams: List[List[Term.Param]] = Member.ParamClauseGroup.toParamss(paramClauseGroup)
+    final def sparams: List[List[Term.Param]] = Member.ParamClauseGroup.toParamss(paramClauseGroups)
+    @replacedField("4.12.0")
+    final def paramClauseGroup: Option[Member.ParamClauseGroup] = paramClauseGroups.headOption
   }
   @ast
   class ExtensionGroup(

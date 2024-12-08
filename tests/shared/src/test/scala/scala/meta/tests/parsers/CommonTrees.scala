@@ -145,11 +145,16 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def pinfix(lt: Type, op: Type.Name, rt: Type): Type.ApplyInfix = Type.ApplyInfix(lt, op, rt)
   final def papply(tpe: Type, args: Type*): Type.Apply = Type.Apply(tpe, args.toList)
   final def pfunc(param: List[Type], res: Type): Type.Function = Type.Function(param, res)
+  final def pfunc(res: Type, param: Type*): Type.Function = pfunc(param.toList, res)
   final def pctxfunc(param: List[Type], res: Type): Type.ContextFunction = Type
     .ContextFunction(param, res)
+  final def pctxfunc(res: Type, param: Type*): Type.ContextFunction = pctxfunc(param.toList, res)
   final def purefunc(param: List[Type], res: Type): Type.PureFunction = Type.PureFunction(param, res)
+  final def purefunc(res: Type, param: Type*): Type.PureFunction = purefunc(param.toList, res)
   final def purectxfunc(param: List[Type], res: Type): Type.PureContextFunction = Type
     .PureContextFunction(param, res)
+  final def purectxfunc(res: Type, param: Type*): Type.PureContextFunction =
+    purectxfunc(param.toList, res)
   final def ppolyfunc(body: Type, params: Type.Param*) = Type.PolyFunction(params.toList, body)
 
   final def patvar(name: Term.Name): Pat.Var = Pat.Var(name)
