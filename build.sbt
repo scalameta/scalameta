@@ -457,11 +457,14 @@ lazy val isScala3 = isScalaBinaryVersion("3")
 def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
 
 lazy val munitLibrary = Def.setting {
+  // TODO: this is getting ridiculous; any way to fix dependency on munit's
+  // scala version upgrades, specifically for 2.13 (and not 2.12 or earlier)?
   val munitV =
     if (isScala211.value) "0.7.29"
     else if (scalaVersion.value == "2.13.11") "1.0.0-M10"
     else if (scalaVersion.value == "2.13.12") "1.0.0-M11"
     else if (scalaVersion.value == "2.13.13") "1.0.0"
+    else if (scalaVersion.value == "2.13.14") "1.0.2"
     else munitVersion
   "org.scalameta" %%% "munit" % munitV
 }
