@@ -396,7 +396,7 @@ lazy val testSettings = Def.settings(
     val coursierVersion =
       if (isScala211.value) "2.0.0-RC5-6"
       else if (scalaVersion.value == "2.13.11") "2.1.8"
-      else if (scalaVersion.value == "2.13.12") "2.1.9"
+      else if (scalaVersion.value == "2.13.15") "2.1.9"
       else "2.1.10"
     ("io.get-coursier" %% "coursier" % coursierVersion).cross(CrossVersion.for3Use2_13)
   },
@@ -460,7 +460,7 @@ lazy val munitLibrary = Def.setting {
   val munitV =
     if (isScala211.value) "0.7.29"
     else if (scalaVersion.value == "2.13.11") "1.0.0-M10"
-    else if (scalaVersion.value == "2.13.12") "1.0.0-M11"
+    else if (scalaVersion.value == "2.13.15") "1.0.0-M11"
     else if (scalaVersion.value == "2.13.13") "1.0.0"
     else munitVersion
   "org.scalameta" %%% "munit" % munitV
@@ -545,7 +545,7 @@ lazy val protobufSettings = Def.settings(
       if (isScala211.value) "0.9.8"
       // for SIP-51, freeze version to the latest ScalaPB built against the earliest Scala 2.13.x version we support
       else if (EarliestScala213 == "2.13.11") "0.11.13"
-      else if (EarliestScala213 == "2.13.12" || scalaVersion.value == "2.13.13") "0.11.15"
+      else if (EarliestScala213 == "2.13.15" || scalaVersion.value == "2.13.13") "0.11.15"
       else scalapb.compiler.Version.scalapbVersion
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
