@@ -24,8 +24,8 @@ import scala.quoted._
 import scala.meta.trees.Origin
 
 object ReificationMacros {
-  def termImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) =
-    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Term).asExprOf[scala.meta.Tree]
+  def statImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) =
+    new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Stat).asExprOf[scala.meta.Tree]
   def termParamImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.TermParam).asExprOf[scala.meta.Term.Param]
   def typeImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) = 
@@ -53,7 +53,7 @@ object ReificationMacros {
 
   def unapplyImpl(using Quotes)(scCallExpr: Expr[QuasiquoteUnapply], scrutineeExpr: Expr[Any]): Expr[Any] =
     val (stringContext, quasiquoteType) = scCallExpr match
-      case '{ ($sc: StringContext).q } => (sc, QuasiquoteType.Term)
+      case '{ ($sc: StringContext).q } => (sc, QuasiquoteType.Stat)
       case '{ ($sc: StringContext).param } => (sc, QuasiquoteType.TermParam)
       case '{ ($sc: StringContext).t } => (sc, QuasiquoteType.Type)
       case '{ ($sc: StringContext).tparam } => (sc, QuasiquoteType.TypeParam)
@@ -468,7 +468,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
         }
         val resType =
           qType match
-            case QuasiquoteType.Term => TypeRepr.of[scala.meta.Tree]
+            case QuasiquoteType.Stat => TypeRepr.of[scala.meta.Tree]
             case QuasiquoteType.TermParam => TypeRepr.of[scala.meta.Term.Param]
             case QuasiquoteType.Type => TypeRepr.of[scala.meta.Type]
             case QuasiquoteType.TypeParam => TypeRepr.of[scala.meta.Type.Param]

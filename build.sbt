@@ -264,7 +264,12 @@ def mergedModule(
       project / "shared" / "src" / "main" / scalaBinary,
       project / "shared" / "src" / "main" / "scala",
       project / platform / "src" / "main" / "scala"
-    )
+    ) ++ {
+      if (scalaBinaryVersion.value.startsWith("2"))
+        List(project / "shared" / "src" / "main" / "scala-2")
+      else
+        Nil
+    }
   }
 })
 

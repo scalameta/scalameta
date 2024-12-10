@@ -13,7 +13,7 @@ import scala.collection.mutable
 import scala.annotation.tailrec
 import scala.meta.trees.Origin
 
-// uses holes in implementation, for which we do not have access here, so we implement those elsewhere
+// Uses holes in implementation, for which we do not have access here, so we implement those elsewhere
 trait InternalTrait(using val internalQuotes: Quotes) {
   def liftTree(tree: MetaTree): internalQuotes.reflect.Tree
   def liftOptionTree[T: Type](maybeTree: Option[MetaTree]): internalQuotes.reflect.Tree

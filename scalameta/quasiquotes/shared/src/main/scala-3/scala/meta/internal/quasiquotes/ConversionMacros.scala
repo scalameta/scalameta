@@ -32,7 +32,7 @@ object ConversionMacros {
   def unliftUnapplyImpl[O: Type](using Quotes)(inside: Expr[Any]) = new ConversionMacros(using quotes).unliftUnapply[O](inside)
 }
 
-class ConversionMacros(using val topLevelQuotes: Quotes) {//extends AstReflection {
+class ConversionMacros(using val topLevelQuotes: Quotes) {
   import topLevelQuotes.reflect._
   import scala.meta.quasiquotes.{Lift, Unlift}
 

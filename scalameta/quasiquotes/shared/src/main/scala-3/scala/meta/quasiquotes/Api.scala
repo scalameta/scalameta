@@ -12,7 +12,7 @@ private[meta] trait Api {
 
   // apply methods
   extension (inline sc: StringContext) {
-    transparent inline def q(inline args: Any*): Tree = ${ ReificationMacros.termImpl('sc, 'args) }
+    transparent inline def q(inline args: Any*): Tree = ${ ReificationMacros.statImpl('sc, 'args) }
     transparent inline def param(inline args: Any*): Term.Param = ${ ReificationMacros.termParamImpl('sc, 'args) }
     transparent inline def t(inline args: Any*): Type = ${ ReificationMacros.typeImpl('sc, 'args) }
     transparent inline def tparam(inline args: Any*): Type.Param = ${ ReificationMacros.typeParamImpl('sc, 'args) }
@@ -57,134 +57,60 @@ private[meta] trait Api {
     def source: QuasiquoteUnapply = ???
   
   extension (inline sc: QuasiquoteUnapply)
-    transparent inline def unapply(scrutinee: Any): Any =
-      ${ ReificationMacros.unapplyImpl('sc, 'scrutinee) }
-
+    transparent inline def unapply(scrutinee: Any): Any = ${ ReificationMacros.unapplyImpl('sc, 'scrutinee) }
 
   // parsers
-  object XTensionQuasiquoteTerm {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Ctor]]
-      parse(input, dialect)
-    }.orElse{
-      val parse = implicitly[Parse[Stat]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+  object XTensionQuasiquoteStat {
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Ctor, Stat]
   }
   object XTensionQuasiquoteTermParam {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Term.Param]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Term.Param]
   }
   object XTensionQuasiquoteType {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Type]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Type]
   }
   object XTensionQuasiquoteTypeParam {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Type.Param]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Type.Param]
   }
   object XTensionQuasiquoteCaseOrPattern {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Case]]
-      parse(input, dialect)
-    }.orElse{
-      val parse = implicitly[Parse[Pat]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Case, Pat]
   }
   object XTensionQuasiquoteInit {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Init]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Init]
   }
   object XTensionQuasiquoteSelf {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Self]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Self]
   }
   object XTensionQuasiquoteTemplate {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Template]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Template]
   }
   object XTensionQuasiquoteMod {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Mod]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Mod]
   }
   object XTensionQuasiquoteEnumerator {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Enumerator]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Enumerator]
   }
   object XTensionQuasiquoteImporter {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Importer]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Importer]
   }
   object XTensionQuasiquoteImportee {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Importee]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Importee]
   }
   object XTensionQuasiquoteSource {
-    private[meta] def parse(input: scala.meta.inputs.Input, dialect: scala.meta.Dialect) = {
-      val parse = implicitly[Parse[Source]]
-      parse(input, dialect)
-    } match {
-      case x: scala.meta.parsers.Parsed.Success[_] => x.tree
-      case x: scala.meta.parsers.Parsed.Error => throw x.details
-    }
+    private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Source]
   }
+}
+
+private[meta] object Api {
+  def parse[A <: Tree](implicit input: inputs.Input, dialect: Dialect, parser: Parse[A]) =
+    parser(input, dialect)
+
+  def parseAny[A <: Tree, B <: Tree](
+      implicit input: inputs.Input, dialect: Dialect, parserA: Parse[A], parserB: Parse[B]
+    ) = parse[A].orElse(parse[B]).get
+  
+  def parseAny[A <: Tree](implicit input: inputs.Input, dialect: Dialect, parser: Parse[A]) =
+    parse[A].get
 }
 
 private[meta] trait Aliases {

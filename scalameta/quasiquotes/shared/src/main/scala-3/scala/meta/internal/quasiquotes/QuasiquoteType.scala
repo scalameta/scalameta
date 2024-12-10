@@ -1,7 +1,7 @@
 package scala.meta
 
 private[meta] enum QuasiquoteType:
-  case Term // q""
+  case Stat // q""
   case TermParam // param""
   case Type // t""
   case TypeParam // tparam""
