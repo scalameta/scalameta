@@ -179,17 +179,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
 
   private def instantiateDialect(mode: Mode): (Dialect, Expr[Dialect]) = {
     val dialectExpr = Expr.summon[scala.meta.Dialect]
-    // NOTE: We want to have a higher-order way to abstract over differences in dialects
-    // and we're using implicits for that (implicits are values => values are higher-order => good).
-    //
-    // However, quasiquotes use macros, and macros are first-order, so we have a problem here.
-    // Concretely, here we need to convert an implicit argument to a macro (the `dialectTree` tree)
-    // into an instance of `Dialect` that we'll pass to the parser.
-    //
-    // For now I'll just prohibit quasiquotes for situations when `dialectTree` doesn't point to one of the predefined dialects.
-    // A natural extension to this would be to allow any static value, not just predefined dialects.
-    // Furthermore, we could further relax this restriction by doing parsing for a superset of all dialects and then
-    // delaying validation of resulting ASTs until runtime.
+    // For now only a predefined set of dialects is supported.
+    // See comment in the scala 2 counterpart file.
     val underlyingDialect = {
       def instantiateStandardDialect(sym: Symbol): Option[Dialect] = {
         val dialectsSym = Symbol.classSymbol("scala.meta.dialects.package$").companionModule
@@ -198,16 +189,24 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
           else Dialect.standards.get(sym.name)
         } else None
       }
-      val standardDialectSingleton = dialectExpr.flatMap(expr => instantiateStandardDialect(expr.asTerm.tpe.termSymbol))
 
-      standardDialectSingleton
-        .getOrElse({
-          val suggestion =
-            s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
-          val message =
-            s"${dialectExpr.get.show} of type ${dialectExpr.get.asTerm.tpe.show} is not supported by quasiquotes ($suggestion)"
-          report.errorAndAbort(message)
-        })
+      // allow `scala.meta.dialects.Scala211`
+      val standardDialectReference = dialectExpr.flatMap(expr => instantiateStandardDialect(expr.asTerm.tpe.termSymbol))
+
+      // allow `scala.meta.dialects.current`
+      def standardDialectSingleton = dialectExpr.flatMap { _.asTerm.tpe match
+        case termRef @ TermRef(prefix, _) => // TermRef(scala.meta.Dialect, method current)
+          instantiateStandardDialect(prefix.memberType(termRef.termSymbol).termSymbol)
+        case _ => None
+      }
+
+      standardDialectReference.orElse(standardDialectSingleton).getOrElse {
+        val suggestion =
+          s"to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.${Dialect.current}"
+        val message =
+          s"${dialectExpr.get.show} of type ${dialectExpr.get.asTerm.tpe.show} is not supported by quasiquotes ($suggestion)"
+        report.errorAndAbort(message)
+      }
     }
     (if (mode.isTerm) underlyingDialect.unquoteTerm(mode.multiline)
     else underlyingDialect.unquotePat(mode.multiline), dialectExpr.get)
@@ -277,6 +276,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
                   loop(
                     rest,
                     prefix.foldRight(acc)((curr, acc) => {
+                      // Note copied from the Scala 2 counterpart file.
                       // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
                       // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
                       // Neither can we do q"${liftQuasi(quasi)}.+:(${liftTree(curr)})",
@@ -359,6 +359,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
                 inferredPt.asType match
                   case '[t] => '{scala.meta.internal.quasiquotes.Lift[t](${quasi.termHole.arg.asExpr})}.asTerm
               case Mode.Pattern(_, _, _) =>
+                // Note copied from the Scala 2 counterpart file.
                 // NOTE: Here, we would like to say q"$InternalUnlift[$inferredPt](${quasi.hole.arg})".
                 // Unfortunately, the way how patterns work prevents us from having it this easy:
                 // 1) unapplications can't have explicitly specified type arguments
@@ -398,8 +399,6 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
       // Depending on pattern types, this is able to cause some custom errors to be thrown
       // We cannot obtain the types of the pattern in Scala 3 for now
       protected def unquotesName(q: scala.meta.internal.trees.Quasi): Boolean = {
-        // val tpe = q.hole.arg.tpe // works for TermMode
-        // tpe != (null) && tpe <:< (TypeRepr.of[scala.meta.Term.Name])
         false
       }
     }
@@ -466,7 +465,6 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
         val internalResult = Internal.liftTree(meta).asInstanceOf[Term].asExpr
         if (sys.props("quasiquote.debug") != null) {
           println(internalResult)
-          // println(showRaw(internalResult))
         }
         val resType =
           qType match
@@ -509,7 +507,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
             // boolean extractor
             ('{true}, true)
           } else if (n == 1) {
-            // returning Tuple1 requires us to manually unapply later, so we return the raw value
+            // returning Tuple1 requires us to manually unapply later, so we return the raw value instead
             ('{${args.head.asExprOf[Option[Any]]}.get}, false)
           } else {
             (Select.overloaded(Ref(Symbol.classSymbol("scala.Tuple" + n).companionModule), "apply", argsContents, args.map(arg => '{${arg.asExprOf[Option[Any]]}.get}.asTerm)).asExpr, false)
@@ -561,7 +559,6 @@ class ReificationMacros(using val topLevelQuotes: Quotes) { rei =>
             
             if (sys.props("quasiquote.debug") != null) {
               println(internalResult)
-              // println(showRaw(internalResult))
             }
 
             internalResult

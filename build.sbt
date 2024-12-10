@@ -223,41 +223,16 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
 
-lazy val parsersExtra = crossProject(JVMPlatform)
-  .in(file("parsersExtra"))
-  .settings(
-    sharedSettings,
-    description := "todo",
-    mergedModule({ base =>
-      List(
-        base / "scalameta" / "parsers",
-      )
-    })
-  )
-  .dependsOn(trees)
-
-lazy val quasiquotes3 = crossProject(JVMPlatform)
-  .in(file("quasiquotes3"))
-  .settings(
-    // sharedSettings,
-    scalaVersion := "3.3.4",
-    scalacOptions ++= Seq("-Xcheck-macros"),
-    Test / scalacOptions ++= Seq("-Wconf:msg=pattern binding uses refutable extractor:s"),
-    description := "Scalameta APIs for parsing and their baseline implementation",
-    libraryDependencies ++= Seq(
-      "org.scalameta" %%% "munit" % munitVersion
-    )
-  ).dependsOn(parsersExtra)
-
 lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).settings(
   moduleName := "parsers",
   sharedSettings,
   description := "Scalameta APIs for parsing and their baseline implementation",
   enableHardcoreMacros,
   crossScalaVersions := AllScalaBinaryVersions,
-  mergedModule { base =>
-    List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
-  }
+  mergedModule( 
+    base => List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers"),
+    base => List(base / "scalameta" / "quasiquotes")
+  )
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
     commonJsSettings,
@@ -382,6 +357,10 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testS
         "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
         "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0" % Test
       )
+      else Nil
+    },
+    scalacOptions ++= {
+      if (isScala3.value) List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
       else Nil
     }
   )

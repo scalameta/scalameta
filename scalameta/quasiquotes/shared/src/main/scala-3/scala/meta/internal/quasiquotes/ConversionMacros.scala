@@ -7,12 +7,14 @@ import scala.language.experimental.macros
 import scala.quoted._
 import scala.meta.internal.trees.{Reflection => AstReflection}
 
+// Note copied from the Scala 2 counterpart file.
 // NOTE: we don't have the signature as [O, I] to keep symmetry with Unlift
 object Lift {
   transparent inline def apply[I](inline outside: Any): I = ${ConversionMacros.liftApplyImpl[I]('outside)}
   transparent inline def unapply[I](inline outside: Any): Option[I] = ${ConversionMacros.liftUnapplyImpl[I]('outside)}
 }
 
+// Note copied from the Scala 2 counterpart file.
 // NOTE: here we can't have the signature be [I, O], because we never know I
 // in the case of Unlift.apply, we've just assembled the reified result and don't know its type yet
 // in the case of Unlift.unapply, we only know the expected type of the unquote, not its actual type
@@ -32,7 +34,6 @@ object ConversionMacros {
 
 class ConversionMacros(using val topLevelQuotes: Quotes) {//extends AstReflection {
   import topLevelQuotes.reflect._
-  // val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
   import scala.meta.quasiquotes.{Lift, Unlift}
 
   private def typeMismatchMessage(found: TypeRepr, req: TypeRepr): String = {
@@ -58,6 +59,7 @@ class ConversionMacros(using val topLevelQuotes: Quotes) {//extends AstReflectio
   }
 
   def liftUnapply[I: Type](outside: Expr[Any]): Expr[Option[I]] = {
+    // Note copied from the Scala 2 counterpart file.
     // NOTE: Here's an interesting idea that I'd like to explore.
     // How about we allow things like `42 match { case q"$x" => x }`?
     // For that to work, we just need to wrap the reification result into `Lift.unapply`!
@@ -65,6 +67,7 @@ class ConversionMacros(using val topLevelQuotes: Quotes) {//extends AstReflectio
   }
 
   def unliftApply[O: Type](inside: Expr[Any]): Expr[O] = {
+    // Note copied from the Scala 2 counterpart file.
     // NOTE: here we just disregard the expected outside type, because I can't find uses for it
     // duality is a fun thing, but it looks like here it just led me into a dead-end
     inside.asExprOf[O]
