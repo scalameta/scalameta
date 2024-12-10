@@ -229,9 +229,10 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   description := "Scalameta APIs for parsing and their baseline implementation",
   enableHardcoreMacros,
   crossScalaVersions := AllScalaBinaryVersions,
-  mergedModule { base =>
-    List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
-  }
+  mergedModule( 
+    base => List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers"),
+    base => List(base / "scalameta" / "quasiquotes")
+  )
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
     commonJsSettings,
@@ -263,7 +264,12 @@ def mergedModule(
       project / "shared" / "src" / "main" / scalaBinary,
       project / "shared" / "src" / "main" / "scala",
       project / platform / "src" / "main" / "scala"
-    )
+    ) ++ {
+      if (scalaBinaryVersion.value.startsWith("2"))
+        List(project / "shared" / "src" / "main" / "scala-2")
+      else
+        Nil
+    }
   }
 })
 
@@ -356,6 +362,10 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testS
         "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
         "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4" % Test
       )
+      else Nil
+    },
+    scalacOptions ++= {
+      if (isScala3.value) List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
       else Nil
     }
   )
