@@ -1513,7 +1513,9 @@ package internal.trees {
     def rank: Int
     def tree: Tree
     def pt: Class[_]
-    def become[T <: Tree: AstInfo]: T with Quasi
+    def become[T <: Tree: AstInfo]: T
+    // `become` should be returning `T with Quasi`,
+    // workaround for https://github.com/scala/scala3/issues/22177
   }
 
   @registry

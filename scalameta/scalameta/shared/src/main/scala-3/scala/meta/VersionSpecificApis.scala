@@ -1,3 +1,3 @@
 package scala.meta
 
-trait VersionSpecificApis
+trait VersionSpecificApis extends quasiquotes.Api with quasiquotes.Aliases
