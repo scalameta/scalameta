@@ -4518,7 +4518,7 @@ object ScalametaParser {
     astInfo.quasi(rank, tree)
 
   private def reellipsis[T <: Tree: AstInfo](q: Quasi, rank: Int): T = {
-    val became = q.become[T]
+    val became = q.become[T].asInstanceOf[T with Quasi]
     if (became.rank != rank) copyPos(became)(quasi[T](rank, became.tree)) else became
   }
 
