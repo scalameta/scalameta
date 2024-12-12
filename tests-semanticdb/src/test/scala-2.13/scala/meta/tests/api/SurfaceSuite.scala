@@ -415,6 +415,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Source
          |scala.meta.Stat
          |scala.meta.Stat.Block
+         |scala.meta.Stat.GivenLike
          |scala.meta.Stat.TypeDef
          |scala.meta.Stat.WithCtor
          |scala.meta.Stat.WithMods

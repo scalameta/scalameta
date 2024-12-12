@@ -172,6 +172,13 @@ object Stat {
   class Block(stats: List[Stat]) extends Tree.Block {
     final def nonEmpty: Boolean = stats.nonEmpty
   }
+
+  @branch
+  trait GivenLike extends Stat with Stat.WithMods with Tree.WithParamClauseGroups {
+    def mods: List[Mod]
+    def name: Name
+    def paramClauseGroups: List[Member.ParamClauseGroup]
+  }
 }
 
 @branch
@@ -1023,8 +1030,8 @@ object Decl {
       paramClauseGroups: List[Member.ParamClauseGroup],
       decltpe: sm.Type
   ) extends Decl
+      with Stat.GivenLike
       with Member.Term
-      with Stat.WithMods
       with Tree.WithParamClauseGroup
       with Tree.WithDeclTpe {
     @replacedField("4.6.0", pos = 2)
@@ -1074,7 +1081,7 @@ object Defn {
       @replacesFields("4.12.0", Member.ParamClauseGroupsCtor)
       paramClauseGroups: List[Member.ParamClauseGroup],
       templ: Template
-  ) extends Defn with Stat.WithMods with Tree.WithParamClauseGroup with Stat.WithTemplate {
+  ) extends Defn with Stat.GivenLike with Tree.WithParamClauseGroup with Stat.WithTemplate {
     @replacedField("4.6.0", pos = 2)
     final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroups)
     @replacedField("4.6.0", pos = 3)
@@ -1124,7 +1131,7 @@ object Defn {
       decltpe: sm.Type,
       body: Term
   ) extends Defn
-      with Stat.WithMods
+      with Stat.GivenLike
       with Tree.WithParamClauseGroup
       with Tree.WithBody
       with Tree.WithDeclTpe {
