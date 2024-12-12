@@ -476,6 +476,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           }
         } else currRef(sepRegions)
       case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
+      case _: KwGiven if !prevToken.is[Dot] => currRef(new RegionGivenDecl(curr) :: sepRegions)
+      case _: KwWith => currRef(dropRegionLine(sepRegions) match {
+          case (_: RegionGivenDecl) :: rs => rs
+          case _ => sepRegions
+        })
       case _: KwObject | _: KwClass | _: KwTrait | _: KwPackage | _: KwNew
           if dialect.allowSignificantIndentation => currRef(RegionTemplateMark :: sepRegions)
       case _: KwTry if !isPrevEndMarker() => currRef(RegionTry :: dropRegionLine(sepRegions))
@@ -510,6 +515,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         }
       case _: LeftBrace =>
         val lbRegions = sepRegions match {
+          case (r: RegionGivenDecl) :: rs if r.kw ne prevToken => RegionTemplateBody :: rs
           case RegionTemplateMark :: rs => RegionTemplateBody :: rs
           case RegionTemplateInherit :: rs if !prev.is[KwExtends] => RegionTemplateBody :: rs
           case _ => sepRegions
@@ -583,7 +589,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ => currRef(sepRegions)
         }
       case _: Equals => sepRegions match {
-          case (_: RegionDefDecl) :: rs => currRef(rs)
+          case (_: RegionDefDecl | _: RegionGivenDecl) :: rs => currRef(rs)
           case _ => currRef(sepRegions)
         }
       case _: KwExtends => getTemplateInherit(sepRegions)
@@ -823,6 +829,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                   case _ if !exceedsIndent =>
                     if (!couldBeFewerBraces()) None
                     else Some(Right(lastWhitespaceToken(sepRegions, nextIndent)))
+                  case (_: RegionGivenDecl) :: rs => emitIndent(RegionTemplateBody :: rs)
                   case _ => next match {
                       // RefineDcl
                       case _: KwVal | _: KwDef | _: KwType | _: Semicolon => emitIndent(sepRegions)
@@ -833,6 +840,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 }
               case _ if !exceedsIndent => None
               case _: RightArrow => dropRegionLine(sepRegions) match {
+                  case (_: RegionGivenDecl) :: _ => None
                   case (rc: RegionCaseBody) :: (_: RegionBrace) :: _ if rc.arrow eq prev => None
                   case _ if isEndMarkerIntro(nextPos) => None
                   case _ => emitIndent(sepRegions)

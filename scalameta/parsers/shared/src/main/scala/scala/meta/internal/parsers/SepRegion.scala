@@ -52,6 +52,9 @@ case object RegionTemplateMark extends RegionTemplateDecl with CanProduceLF
 /** the initial part of the template, containing any inherit clauses */
 case object RegionTemplateInherit extends RegionTemplateDecl
 
+// the initial part of a given declaration or definition, before `=` or template
+final class RegionGivenDecl(val kw: Token) extends RegionNonDelimNonIndented with CanProduceLF
+
 /**
  * this marks the template body (or constructs which look like a template body, such as extensions).
  * for instance, helps override handling of `case` designed for catch/match/partial function but
