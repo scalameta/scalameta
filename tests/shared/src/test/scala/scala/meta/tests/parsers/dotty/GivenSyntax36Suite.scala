@@ -863,4 +863,91 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("breaks after arrow 1") {
+    val code = """|given (A) =>
+                  |  Ord[A] =>
+                  |  Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
+                   |given (A) =>
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("breaks after arrow 2") {
+    val code = """|given (a: A =>
+                  |  Ord[A]) => Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val layout = "given (a: A => Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      List(List(tparam("a", pfunc(papply("Ord", "A"), "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("breaks after arrow 3") {
+    val code = """|given (a: A =>
+                  |  Ord[A]) =>
+                  |  Ord[List[A]]:
+                  |  def foo = ???
+                  |""".stripMargin
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
+                   |given (a: A =>
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("import given is not a given") {
+    val code = """|object a:
+                  |  import scala.util.chaining.given
+                  |  import scala.util.control.{ControlThrowable, NonFatal}
+                  |""".stripMargin
+    val layout = """|object a {
+                    |  import scala.util.chaining.given
+                    |  import scala.util.control.{ ControlThrowable, NonFatal }
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      "a",
+      tpl(
+        Import(
+          List(Importer(tselect(tselect("scala", "util"), "chaining"), List(Importee.GivenAll())))
+        ),
+        Import(List(Importer(
+          tselect(tselect("scala", "util"), "control"),
+          List(Importee.Name(Name("ControlThrowable")), Importee.Name(Name("NonFatal")))
+        )))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("given decl") {
+    val code = """|object a:
+                  |  given TreeMethods: TreeMethods
+                  |  trait TreeMethods {}
+                  |""".stripMargin
+    val layout = """|object a {
+                    |  given TreeMethods: TreeMethods
+                    |  trait TreeMethods
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      "a",
+      tpl(
+        Decl.Given(Nil, "TreeMethods", Nil, "TreeMethods"),
+        Defn.Trait(Nil, pname("TreeMethods"), Nil, ctor, tplNoBody())
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
