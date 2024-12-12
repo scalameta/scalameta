@@ -3037,4 +3037,217 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
     showFieldName = true
   )
 
+  // given 3.6+
+  checkPositions[Stat](
+    """|given Ord[Int]:
+       |  def foo = ???
+       |""".stripMargin,
+    """|Template Ord[Int]:
+       |  def foo = ???
+       |Init Ord[Int]
+       |Type.Apply Ord[Int]
+       |Type.ArgClause [Int]
+       |Template.Body :
+       |  def foo = ???
+       |Defn.Def def foo = ???
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given Ord[Int] {
+       |  def foo = ???
+       |}
+       |""".stripMargin,
+    """|Template Ord[Int] {
+       |  def foo = ???
+       |}
+       |Init Ord[Int]
+       |Type.Apply Ord[Int]
+       |Type.ArgClause [Int]
+       |Template.Body {
+       |  def foo = ???
+       |}
+       |Defn.Def def foo = ???
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given ord: Ord[Int] = ???
+       |""".stripMargin,
+    """|Type.Apply Ord[Int]
+       |Type.ArgClause [Int]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given [A : Ord] => Ord[List[A]] = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup [A : Ord]
+       |Type.ParamClause [A : Ord]
+       |Type.Param A : Ord
+       |Type.ParamClause given [A @@: Ord] => Ord[List[A]] = ???
+       |Type.Bounds given [A @@: Ord] => Ord[List[A]] = ???
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given ord: [A : Ord] => Ord[List[A]] = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup [A : Ord]
+       |Type.ParamClause [A : Ord]
+       |Type.Param A : Ord
+       |Type.ParamClause given ord: [A @@: Ord] => Ord[List[A]] = ???
+       |Type.Bounds given ord: [A @@: Ord] => Ord[List[A]] = ???
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given [A] => (ord: Ord[A]) => Ord[List[A]] = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup [A] => (ord: Ord[A])
+       |Type.ParamClause [A]
+       |Type.ParamClause given [A@@] => (ord: Ord[A]) => Ord[List[A]] = ???
+       |Type.Bounds given [A@@] => (ord: Ord[A]) => Ord[List[A]] = ???
+       |Term.ParamClause (ord: Ord[A])
+       |Type.Apply Ord[A]
+       |Type.ArgClause [A]
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]] = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup [A] => (ord: Ord[A])
+       |Type.ParamClause [A]
+       |Type.ParamClause given ord: [A@@] => (ord: Ord[A]) => Ord[List[A]] = ???
+       |Type.Bounds given ord: [A@@] => (ord: Ord[A]) => Ord[List[A]] = ???
+       |Term.ParamClause (ord: Ord[A])
+       |Type.Apply Ord[A]
+       |Type.ArgClause [A]
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given ord: ([A] =>> Ord[A]) => Ord[List[A]] = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup ([A] =>> Ord[A])
+       |Type.ParamClause given ord: @@([A] =>> Ord[A]) => Ord[List[A]] = ???
+       |Term.ParamClause ([A] =>> Ord[A])
+       |Term.Param [A] =>> Ord[A]
+       |Type.Lambda [A] =>> Ord[A]
+       |Type.ParamClause [A]
+       |Type.ParamClause given ord: ([A@@] =>> Ord[A]) => Ord[List[A]] = ???
+       |Type.Bounds given ord: ([A@@] =>> Ord[A]) => Ord[List[A]] = ???
+       |Type.Apply Ord[A]
+       |Type.ArgClause [A]
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup ([A] => (Ord[A]) => Ord[List[A]])
+       |Type.ParamClause given ord: @@([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] = ???
+       |Term.ParamClause ([A] => (Ord[A]) => Ord[List[A]])
+       |Term.Param [A] => (Ord[A]) => Ord[List[A]]
+       |Type.PolyFunction [A] => (Ord[A]) => Ord[List[A]]
+       |Type.ParamClause [A]
+       |Type.ParamClause given ord: ([A@@] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] = ???
+       |Type.Bounds given ord: ([A@@] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] = ???
+       |Type.Function (Ord[A]) => Ord[List[A]]
+       |Type.FuncParamClause (Ord[A])
+       |Type.Apply Ord[A]
+       |Type.ArgClause [A]
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given ord: [A] => (Ord[A] => Ord[List[A]]) = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup [A]
+       |Type.ParamClause [A]
+       |Type.ParamClause given ord: [A@@] => (Ord[A] => Ord[List[A]]) = ???
+       |Type.Bounds given ord: [A@@] => (Ord[A] => Ord[List[A]]) = ???
+       |Type.Function Ord[A] => Ord[List[A]]
+       |Type.FuncParamClause Ord[A]
+       |Type.Apply Ord[A]
+       |Type.ArgClause [A]
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given ord: (a: A) => Ord[A] => Ord[List[A]] = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup (a: A) => Ord[A]
+       |Type.ParamClause given ord: @@(a: A) => Ord[A] => Ord[List[A]] = ???
+       |Term.ParamClause (a: A)
+       |Term.ParamClause Ord[A]
+       |Term.Param Ord[A]
+       |Type.Apply Ord[A]
+       |Type.ArgClause [A]
+       |Type.Apply Ord[List[A]]
+       |Type.ArgClause [List[A]]
+       |Type.Apply List[A]
+       |Type.ArgClause [A]
+       |""".stripMargin
+  )
+
+  checkPositions[Stat](
+    """|given ord: [A] => (A) => Ord[A] => [B <: A] => (a: A, b: B) => Ord[List[B]] = ???
+       |""".stripMargin,
+    """|Member.ParamClauseGroup [A] => (A) => Ord[A]
+       |Type.ParamClause [A]
+       |Type.ParamClause given ord: [A@@] => (A) => Ord[A] => [B <: A] => (a: A, b: B) => Ord[List[B]] = ???
+       |Type.Bounds given ord: [A@@] => (A) => Ord[A] => [B <: A] => (a: A, b: B) => Ord[List[B]] = ???
+       |Term.ParamClause (A)
+       |Term.Param A
+       |Term.ParamClause Ord[A]
+       |Term.Param Ord[A]
+       |Type.Apply Ord[A]
+       |Type.ArgClause [A]
+       |Member.ParamClauseGroup [B <: A] => (a: A, b: B)
+       |Type.ParamClause [B <: A]
+       |Type.Param B <: A
+       |Type.ParamClause given ord: [A] => (A) => Ord[A] => [B @@<: A] => (a: A, b: B) => Ord[List[B]] = ???
+       |Type.Bounds <: A
+       |Term.ParamClause (a: A, b: B)
+       |Type.Apply Ord[List[B]]
+       |Type.ArgClause [List[B]]
+       |Type.Apply List[B]
+       |Type.ArgClause [B]
+       |""".stripMargin
+  )
+
 }
