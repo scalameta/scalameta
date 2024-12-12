@@ -3082,7 +3082,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given [A : Ord] => Ord[List[A]] = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup [A : Ord]
+    """|Member.ParamClauseGroup [A : Ord] =>
        |Type.ParamClause [A : Ord]
        |Type.Param A : Ord
        |Type.ParamClause given [A @@: Ord] => Ord[List[A]] = ???
@@ -3097,7 +3097,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given ord: [A : Ord] => Ord[List[A]] = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup [A : Ord]
+    """|Member.ParamClauseGroup [A : Ord] =>
        |Type.ParamClause [A : Ord]
        |Type.Param A : Ord
        |Type.ParamClause given ord: [A @@: Ord] => Ord[List[A]] = ???
@@ -3112,7 +3112,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given [A] => (ord: Ord[A]) => Ord[List[A]] = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup [A] => (ord: Ord[A])
+    """|Member.ParamClauseGroup [A] => (ord: Ord[A]) =>
        |Type.ParamClause [A]
        |Type.ParamClause given [A@@] => (ord: Ord[A]) => Ord[List[A]] = ???
        |Type.Bounds given [A@@] => (ord: Ord[A]) => Ord[List[A]] = ???
@@ -3129,7 +3129,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]] = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup [A] => (ord: Ord[A])
+    """|Member.ParamClauseGroup [A] => (ord: Ord[A]) =>
        |Type.ParamClause [A]
        |Type.ParamClause given ord: [A@@] => (ord: Ord[A]) => Ord[List[A]] = ???
        |Type.Bounds given ord: [A@@] => (ord: Ord[A]) => Ord[List[A]] = ???
@@ -3146,7 +3146,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given ord: ([A] =>> Ord[A]) => Ord[List[A]] = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup ([A] =>> Ord[A])
+    """|Member.ParamClauseGroup ([A] =>> Ord[A]) =>
        |Type.ParamClause given ord: @@([A] =>> Ord[A]) => Ord[List[A]] = ???
        |Term.ParamClause ([A] =>> Ord[A])
        |Term.Param [A] =>> Ord[A]
@@ -3166,7 +3166,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup ([A] => (Ord[A]) => Ord[List[A]])
+    """|Member.ParamClauseGroup ([A] => (Ord[A]) => Ord[List[A]]) =>
        |Type.ParamClause given ord: @@([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] = ???
        |Term.ParamClause ([A] => (Ord[A]) => Ord[List[A]])
        |Term.Param [A] => (Ord[A]) => Ord[List[A]]
@@ -3192,7 +3192,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given ord: [A] => (Ord[A] => Ord[List[A]]) = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup [A]
+    """|Member.ParamClauseGroup [A] =>
        |Type.ParamClause [A]
        |Type.ParamClause given ord: [A@@] => (Ord[A] => Ord[List[A]]) = ???
        |Type.Bounds given ord: [A@@] => (Ord[A] => Ord[List[A]]) = ???
@@ -3210,7 +3210,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given ord: (a: A) => Ord[A] => Ord[List[A]] = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup (a: A) => Ord[A]
+    """|Member.ParamClauseGroup (a: A) => Ord[A] =>
        |Type.ParamClause given ord: @@(a: A) => Ord[A] => Ord[List[A]] = ???
        |Term.ParamClause (a: A)
        |Term.ParamClause Ord[A]
@@ -3227,7 +3227,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
   checkPositions[Stat](
     """|given ord: [A] => (A) => Ord[A] => [B <: A] => (a: A, b: B) => Ord[List[B]] = ???
        |""".stripMargin,
-    """|Member.ParamClauseGroup [A] => (A) => Ord[A]
+    """|Member.ParamClauseGroup [A] => (A) => Ord[A] =>
        |Type.ParamClause [A]
        |Type.ParamClause given ord: [A@@] => (A) => Ord[A] => [B <: A] => (a: A, b: B) => Ord[List[B]] = ???
        |Type.Bounds given ord: [A@@] => (A) => Ord[A] => [B <: A] => (a: A, b: B) => Ord[List[B]] = ???
@@ -3237,7 +3237,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Term.Param Ord[A]
        |Type.Apply Ord[A]
        |Type.ArgClause [A]
-       |Member.ParamClauseGroup [B <: A] => (a: A, b: B)
+       |Member.ParamClauseGroup [B <: A] => (a: A, b: B) =>
        |Type.ParamClause [B <: A]
        |Type.Param B <: A
        |Type.ParamClause given ord: [A] => (A) => Ord[A] => [B @@<: A] => (a: A, b: B) => Ord[List[B]] = ???

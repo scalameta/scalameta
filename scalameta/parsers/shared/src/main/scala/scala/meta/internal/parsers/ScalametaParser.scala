@@ -3471,17 +3471,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  private def getParamClauseGroup(
-      tparamClause: Type.ParamClause,
-      paramClauses: List[Term.ParamClause]
-  ): Option[Member.ParamClauseGroup] = {
-    def pcGroup = Member.ParamClauseGroup(tparamClause, paramClauses)
-    if (paramClauses.nonEmpty) Some(atPos(tparamClause, paramClauses.last)(pcGroup))
-    else if (tparamClause.is[Quasi] || tparamClause.values.nonEmpty)
-      Some(copyPos(tparamClause)(pcGroup))
-    else None
-  }
-
   /**
    * @param oldOrNewSyntax
    *   new only if positive, old only if negative, either if zero
@@ -3665,8 +3654,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       tpc: Type.ParamClause,
       pcbuf: ListBuffer[Term.ParamClause]
   )(implicit pcgbuf: ListBuffer[Member.ParamClauseGroup]): Option[GivenSig] = {
+    val arrowPos = prevIndex
     def flushPcBuf(): Unit = {
-      getParamClauseGroup(tpc, pcbuf.toList).foreach(pcgbuf += _)
+      val ok = pcbuf.nonEmpty || tpc.is[Quasi] || tpc.nonEmpty
+      if (ok) pcgbuf += atPos(tpc, arrowPos)(Member.ParamClauseGroup(tpc, pcbuf.toList))
       pcbuf.clear()
     }
     if (pcbuf.lastOption.exists(!_.nonEmpty)) { // empty clause ends `GivenConditional`
