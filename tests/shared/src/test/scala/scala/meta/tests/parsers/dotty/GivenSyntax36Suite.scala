@@ -869,10 +869,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: abstract givens cannot be anonymous
-                   |given (A) =>
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("breaks after arrow 2") {
@@ -897,10 +902,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
                   |  Ord[List[A]]:
                   |  def foo = ???
                   |""".stripMargin
-    val error = """|<input>:1: error: abstract givens cannot be anonymous
-                   |given (a: A =>
-                   |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given (a: A => Ord[A]) => Ord[List[A]] { def foo = ??? }"
+    val tree = Defn.Given(
+      Nil,
+      anon,
+      Nil,
+      List(List(tparam("a", pfunc(papply("Ord", "A"), "A")))),
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("import given is not a given") {
