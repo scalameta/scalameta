@@ -178,6 +178,20 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   mainClass := Some("scala.meta.cli.Metacp")
 ).dependsOn(semanticdbScalacCore)
 
+/* ============== CODEGEN FOR SCALA 3 QUASIQUOTES ============= */
+lazy val exprLiftsMacro = project.in(file("exprLifts/macro")).settings( 
+  crossScalaVersions := List(LatestScala213),
+  scalaVersion := LatestScala213,
+  enableMacros,
+  nonPublishableSettings
+).dependsOn(trees.jvm, common.jvm)
+
+lazy val exprLiftsCodeGen = project.in(file("exprLifts/impl")).settings(
+  crossScalaVersions := List(LatestScala213),
+  scalaVersion := LatestScala213,
+  nonPublishableSettings
+).dependsOn(exprLiftsMacro)
+
 /* ======================== SCALAMETA ======================== */
 lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
   moduleName := "common",
@@ -232,7 +246,16 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   mergedModule(
     base => List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers"),
     base => List(base / "scalameta" / "quasiquotes")
-  )
+  ),
+  Compile / sourceGenerators += Def.taskDyn {
+    val outFile = (Compile / sourceManaged).value / "generated" / "ExprLifts.scala"
+    Def.task {
+      (run in exprLiftsCodeGen in Compile)
+        .toTask(" " + outFile.getAbsolutePath)
+        .value
+      Seq(outFile)
+    }
+  }.taskValue
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
     commonJsSettings,
