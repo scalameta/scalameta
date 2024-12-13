@@ -61,9 +61,10 @@ trait Reflection {
     def asField: Field = new Field(sym)
   }
 
-  protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] =
+  protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] = {
     if (sym.isSealed) sym.knownDirectSubclasses.toList.sortBy(_.fullName)
     else sys.error(s"failed to figure out direct subclasses for ${sym.fullName}")
+  }
 
   private implicit class PrivateXtensionAdtSymbol(sym: Symbol) {
     private def ensureModule(sym: Symbol): Symbol =
