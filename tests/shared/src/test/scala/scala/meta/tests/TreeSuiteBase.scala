@@ -51,6 +51,11 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
     case _ => assertEquals(obtained, expected)
   }
 
+  protected def assertSyntax(
+      syntax: String
+  )(obtained: Tree)(implicit loc: Location, dialect: Dialect): Unit =
+    assertSyntaxWithClue(obtained)(syntax)(obtained.structure)
+
   protected def assertSyntax(obtained: Tree, syntax: String = null)(
       expected: Tree
   )(implicit loc: Location, dialect: Dialect): Unit =
