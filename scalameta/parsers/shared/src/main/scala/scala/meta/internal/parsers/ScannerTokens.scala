@@ -331,8 +331,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     val next = if (nextPos >= 0) tokens(nextPos) else null
     lazy val (nextIndent, indentPos) = countIndentAndNewlineIndex(nextPos)
 
+    // relax requirement that close delim is on separate line
     def isTrailingComma: Boolean = dialect.allowTrailingCommas && curr.is[Comma] &&
-      next.is[CloseDelim] && next.pos.startLine > curr.pos.endLine
+      next.is[CloseDelim] // && next.pos.startLine > curr.pos.endLine
 
     def mkIndent(pos: Int, pointPos: Int, rs: List[SepRegion], next: TokenRef = null): TokenRef =
       TokenRef(rs, mkIndentToken(pointPos), pos, nextPos, pointPos, next)

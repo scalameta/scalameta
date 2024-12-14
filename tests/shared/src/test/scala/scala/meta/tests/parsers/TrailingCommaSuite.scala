@@ -7,44 +7,48 @@ class TrailingCommaSuite extends ParseSuite {
   implicit val Scala2122: Dialect = scala.meta.dialects.Scala212.copy(allowTrailingCommas = true)
 
   // Negative tests
-  checkError("""trait ArgumentExprs1 { f(23, "bar", )(Ev0, Ev1) }""")
-  checkError("""trait ArgumentExprs2 { f(23, "bar")(Ev0, Ev1, ) }""")
-  checkError("""trait ArgumentExprs3 { new C(23, "bar", )(Ev0, Ev1) }""")
-  checkError("""trait ArgumentExprs4 { new C(23, "bar")(Ev0, Ev1, ) }""")
-  checkError("""trait SimpleExpr { (23, "bar", ) }""")
-  checkError("""trait TypeArgs { def f: C[Int, String, ] }""")
-  checkError("""trait TypeParamClause { type C[A, B, ] }""")
-  checkError("""trait FunTypeParamClause { def f[A, B, ] }""")
-  checkError("""trait SimpleType { def f: (Int, String, ) }""")
-  checkError("""trait FunctionArgTypes { def f: (Int, String, ) => Boolean }""")
-  checkError("""trait SimplePattern { val (foo, bar, ) = null: Any }""")
-  checkError("""trait ImportSelectors { import foo.{ Ev0, Ev1, } }""")
-  checkError("""trait Import { import foo.Ev0, foo.Ev1, }""")
+  checkOK("""trait ArgumentExprs1 { f(23, "bar", )(Ev0, Ev1) }""")
+  checkOK("""trait ArgumentExprs2 { f(23, "bar")(Ev0, Ev1, ) }""")
+  checkOK("""trait ArgumentExprs3 { new C(23, "bar", )(Ev0, Ev1) }""")
+  checkOK("""trait ArgumentExprs4 { new C(23, "bar")(Ev0, Ev1, ) }""")
+  checkOK("""trait SimpleExpr { (23, "bar", ) }""")
+  checkOK("""trait TypeArgs { def f: C[Int, String, ] }""")
+  checkOK("""trait TypeParamClause { type C[A, B, ] }""")
+  checkOK("""trait FunTypeParamClause { def f[A, B, ] }""")
+  checkOK("""trait SimpleType { def f: (Int, String, ) }""")
+  checkOK("""trait FunctionArgTypes { def f: (Int, String, ) => Boolean }""")
+  checkOK("""trait SimplePattern { val (foo, bar, ) = null: Any }""")
+  checkOK("""trait ImportSelectors { import foo.{ Ev0, Ev1, } }""")
+  checkOK("""trait Import { import foo.Ev0, foo.Ev1, }""")
   checkError("""trait ValDcl { val foo, bar, = 23 }""")
   checkError("""trait VarDcl { var foo, bar, = 23 }""")
   checkError("""trait VarDef { var foo, bar, = _ }""")
   checkError("""trait PatDef { val Foo(foo), Bar(bar), = bippy }""")
-  checkError("""trait SimpleExpr2 { (23, ) }""")
-  checkError("""trait SimpleType2 { def f: (Int, ) }""")
-  checkError(
+  checkOK("""trait SimpleExpr2 { (23, ) }""")
+  checkOK("""trait SimpleType2 { def f: (Int, ) }""", "trait SimpleType2 { def f: Int }")
+  checkOK(
     """|trait Params1 {
        |  def f(foo: Int, bar: String, )(implicit ev0: Ev0, ev1: Ev1, ) = 1
-       |}""".stripMargin
+       |}""".stripMargin,
+    "trait Params1 { def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1 }"
   )
-  checkError(
+  checkOK(
     """|trait Params2 {
        |  def f(foo: Int, bar: String, )(implicit ev0: Ev0, ev1: Ev1, ) = 1
-       ||}""".stripMargin
+       |}""".stripMargin,
+    "trait Params2 { def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1 }"
   )
-  checkError(
+  checkOK(
     """|trait ClassParams1 {
        |  final class C(foo: Int, bar: String, )(implicit ev0: Ev0, ev1: Ev1)
-       |  }""".stripMargin
+       |  }""".stripMargin,
+    "trait ClassParams1 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }"
   )
-  checkError(
+  checkOK(
     """|trait ClassParams2 {
        |  final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1, )
-       |}""".stripMargin
+       |}""".stripMargin,
+    "trait ClassParams2 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }"
   )
   // Positive tests
   checkOK(
