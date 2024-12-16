@@ -315,7 +315,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
       (ValDef(sym, Some(vDef.asTerm.changeOwner(sym))), Ref(sym))
 
     object Internal
-        extends InternalTrait with ExprLifts(using quotes)(mode.isPattern, dialectExpr) {
+        extends TreeLiftsTrait with TreeLifts(using quotes)(mode.isPattern, dialectExpr) {
       import internalQuotes.reflect._
       def liftTree(tree: MetaTree): internalQuotes.reflect.Tree = this.liftableSubTree0(tree)
         .asInstanceOf[internalQuotes.reflect.Tree]
