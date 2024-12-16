@@ -179,18 +179,18 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
 ).dependsOn(semanticdbScalacCore)
 
 /* ============== CODEGEN FOR SCALA 3 QUASIQUOTES ============= */
-lazy val exprLiftsMacro = project.in(file("exprLifts/macro")).settings( 
+lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).settings(
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
   enableMacros,
   nonPublishableSettings
 ).dependsOn(trees.jvm, common.jvm)
 
-lazy val exprLiftsCodeGen = project.in(file("exprLifts/impl")).settings(
+lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).settings(
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
   nonPublishableSettings
-).dependsOn(exprLiftsMacro)
+).dependsOn(scala3TreeLiftsMacro)
 
 /* ======================== SCALAMETA ======================== */
 lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
@@ -248,12 +248,12 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
     base => List(base / "scalameta" / "quasiquotes")
   ),
   Compile / sourceGenerators += Def.taskDyn {
-    val outFile = (Compile / sourceManaged).value / "generated" / "ExprLifts.scala"
+    val outFile = (Compile / sourceManaged).value / "generated" / "TreeLifts.scala"
     Def.task {
-      (run in exprLiftsCodeGen in Compile)
-        .toTask(" " + outFile.getAbsolutePath)
-        .value
-      Seq(outFile)
+      if (scalaVersion.value.startsWith("3")) {
+        (Compile / (scala3TreeLiftsCodeGen / run)).toTask(" " + outFile.getAbsolutePath).value
+        Seq(outFile)
+      } else Seq()
     }
   }.taskValue
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)

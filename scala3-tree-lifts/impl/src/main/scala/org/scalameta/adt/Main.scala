@@ -1,8 +1,9 @@
 package org.scalameta.adt
 
+import scala.meta.{Tree => MetaTree}
+
 import java.io.File
 import java.nio.file.Files
-import scala.meta.{Tree => MetaTree}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -11,15 +12,10 @@ object Main {
       case path :: Nil if path.endsWith(".scala") =>
         val jfile = new File(path)
         jfile.getParentFile.mkdirs()
-        Files.write(
-          jfile.toPath,
-          generateLifts().getBytes()
-        )
+        Files.write(jfile.toPath, generateLifts().getBytes())
+      case _ => throw new Exception("File path argument expected.")
     }
   }
 
-  def generateLifts(): String = {
-    ExprLiftsGenerate.materializeAst[MetaTree](false).mkString("")
-  }
+  def generateLifts(): String = TreeLiftsGenerate.materializeAst[MetaTree](false)
 }
-
