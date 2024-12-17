@@ -54,7 +54,7 @@ commands += Command.command("save-expect") { s =>
   List(LatestScala212, LatestScala213).foldLeft(s) { case (s, version) =>
     s"++$version" :: "semanticdbScalacPlugin/compile" :: "semanticdbIntegration/clean" ::
       "semanticdbIntegration/compile" ::
-      "testsJVM/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
+      "testsSemanticdb/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
   }
 }
 commands += Command.command("save-manifest") { s =>
@@ -408,6 +408,7 @@ lazy val testSettings = Def.settings(
     "latestScala212Version" -> LatestScala212,
     "latestScala213Version" -> LatestScala213,
     "databaseSourcepath" -> (ThisBuild / baseDirectory).value.getAbsolutePath,
+    "resourcesDirectory" -> (Test / resourceDirectory).value.getAbsolutePath,
     "commonJVMClassDirectory" -> (common.jvm / Compile / classDirectory).value.getAbsolutePath,
     "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
     "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value
