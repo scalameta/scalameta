@@ -2,6 +2,7 @@ package scala.meta.tests
 
 import scala.meta.io.AbsolutePath
 
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -9,8 +10,10 @@ import scala.annotation.tailrec
 
 object Utils {
 
-  def getResourceOpt(file: String): Option[Path] = Option(getClass.getResource("/" + file))
-    .map(x => Paths.get(x.toURI))
+  def getResourceOpt(file: String): Option[Path] = {
+    val path = Paths.get(BuildInfo.resourcesDirectory).resolve(file)
+    if (Files.exists(path)) Some(path) else None
+  }
 
   def getAbsResourceOpt(file: String): Option[AbsolutePath] = getResourceOpt(file)
     .map(AbsolutePath.apply).filter(_.isFile)
