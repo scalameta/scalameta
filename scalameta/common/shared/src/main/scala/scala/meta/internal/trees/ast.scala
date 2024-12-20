@@ -565,7 +565,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       // step 15: finish codegen for Quasi
       if (isQuasi) stats1 +=
         q"""
-          def become[T <: $TreeClass](implicit ev: $AstInfoClass[T]): T with $QuasiClass = {
+          def become[T <: $TreeClass](implicit ev: $AstInfoClass[T]): T = {
             (this match {
               case $mname(0, tree) =>
                 ev.quasi(0, tree)

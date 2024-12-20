@@ -29,7 +29,7 @@ class RegistryMacros(val c: Context) extends AstReflection with MacroHelpers {
       ) = mdef
       val enclosingUnit = c.asInstanceOf[{ def enclosingUnit: { def body: Tree } }].enclosingUnit
         .body
-      val anns1 = anns :+ q"new $AstMetadataModule.registry(${enclosingUnit.detectAst})"
+      val anns1 = anns :+ q"new $AstMetadataModule.registry(..${enclosingUnit.detectAst})"
       ModuleDef(Modifiers(flags, privateWithin, anns1), name, Template(parents, self, stats))
     }
   })
