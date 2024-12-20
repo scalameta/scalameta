@@ -57,7 +57,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
           |    @tailrec() def checkNoTripleDots(fn: scala.meta.Term, arg: scala.meta.internal.trees.Quasi): Unit = fn match {
           |      case (t @ (_: scala.meta.Term.Apply)) => ApplyToTripleDots.unapply(t) match {
           |        case scala.None => checkNoTripleDots(t.fun, arg)
-          |        case _ => ???//c.abort(arg.pos, _root_.scala.meta.internal.parsers.Messages.QuasiquoteAdjacentEllipsesInPattern(arg.rank))
+          |        case _ => report.errorAndAbort("rank mismatch when unquoting")
           |      }
           |      case _ => () // do nothing
           |    }
