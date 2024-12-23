@@ -111,7 +111,6 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
 
   import topLevelQuotes.reflect._
   type MetaParser = (Input, Dialect) => MetaTree
-  lazy val RootPackage = topLevelQuotes.reflect.Symbol.classSymbol("_root_")
 
   private sealed trait Mode {
     def isTerm: Boolean = this.isInstanceOf[Mode.Term]
@@ -166,19 +165,21 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
   }
 
   private def metaInput() = {
+    def throwError = // should never be reached
+      throw new Exception("Source file contents could not be read while expanding quasiquote")
     val pos = Position.ofMacroExpansion
     val reflectInput = pos.sourceFile
-    val content = new String(reflectInput.content.get)
+    val content = new String(reflectInput.content.getOrElse(throwError))
     val start = {
-      var i = 0
-      while (content(pos.start + i) != '"') i += 1 // skip method name
-      while (content(pos.start + i) == '"') i += 1 // skip quotations
-      pos.start + i
+      var i = pos.start
+      while (content(i) != '"') i += 1 // skip method name
+      while (content(i) == '"') i += 1 // skip quotations
+      i
     }
     val end = {
-      var i = 0
-      while (content(pos.end - 1 - i) == '"') i += 1 // skip quotations
-      pos.end - i
+      var i = pos.end - 1
+      while (content(i) == '"') i -= 1 // skip quotations
+      i + 1
     }
     val metaInput = Input.VirtualFile(reflectInput.path, content)
     Input.Slice(metaInput, start, end)
@@ -281,10 +282,12 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
       catch { case ex: java.lang.reflect.InvocationTargetException => throw ex.getTargetException }
   }
   private def parseSkeleton(parser: MetaParser, input: Input, dialect: Dialect): MetaTree =
+    def convertPosition(pos: scala.meta.inputs.Position): Position =
+      Position(Position.ofMacroExpansion.sourceFile, pos.start, pos.end)
     try parser(input, dialect)
     catch {
-      case TokenizeException(pos, message) => report.errorAndAbort(message)
-      case ParseException(pos, message) => report.errorAndAbort(message)
+      case TokenizeException(pos, message) => report.errorAndAbort(message, convertPosition(pos))
+      case ParseException(pos, message) => report.errorAndAbort(message, convertPosition(pos))
     }
   private def reifySkeleton(
       meta: MetaTree,
@@ -331,10 +334,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
             else
               TypedOrTest(
                 Unapply(
-                  TypeApply(
-                    Select.unique(Ref(Symbol.classSymbol("scala.Some").companionModule), "unapply"),
-                    List(TypeTree.of[T])
-                  ),
+                  TypeApply(Select.unique(Ref(defn.SomeModule), "unapply"), List(TypeTree.of[T])),
                   Nil,
                   List(liftTree(otherTree))
                 ),
@@ -348,11 +348,10 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
         def loop(trees: Seq[MetaTree], acc: Option[Tree], prefix: List[MetaTree]): Tree =
           trees match {
             case (quasi: Quasi) +: rest if quasi.rank == 1 =>
-              if (acc.isEmpty)
-                if (prefix.isEmpty) loop(rest, Some(liftQuasi0(quasi)), Nil)
-                else loop(
-                  rest,
-                  prefix.foldRight(acc) { (curr, acc) =>
+              acc match {
+                case None if prefix.isEmpty => loop(rest, Some(liftQuasi0(quasi)), Nil)
+                case None =>
+                  val acc = prefix.foldRight(Option.empty[Tree]) { (curr, acc) =>
                     // Note copied from the Scala 2 counterpart file.
                     // NOTE: We cannot do just q"${liftTree(curr)} +: ${liftQuasi(quasi)}"
                     // because that creates a synthetic temp variable that doesn't make any sense in a pattern.
@@ -362,7 +361,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
                     // because would violate evaluation order guarantees that we must keep.
                     val currElement = liftTree(curr)
                     val alreadyLiftedList = acc.getOrElse(liftQuasi(quasi))
-                    val tree =
+                    Some(
                       if (mode.isTerm) Apply(
                         TypeApply(
                           Select.unique(alreadyLiftedList.asInstanceOf[Term], "+:"),
@@ -378,47 +377,44 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
                         Nil,
                         List(currElement, alreadyLiftedList)
                       )
-                    Some(tree)
-                  },
-                  Nil
-                )
-              else {
-                Predef.require(prefix.isEmpty && debug(trees, acc, prefix))
-                if mode.isTerm then
+                    )
+                  }
+                  loop(rest, acc, Nil)
+                case Some(x: Term) if mode.isTerm =>
+                  Predef.require(prefix.isEmpty && debug(trees, acc, prefix))
                   val tree = Apply(
-                    TypeApply(Select.unique(acc.get.asInstanceOf[Term], "++"), List(TypeTree.of[T])),
+                    TypeApply(Select.unique(x, "++"), List(TypeTree.of[T])),
                     List(liftQuasi(quasi).asInstanceOf[Term])
                   )
                   loop(rest, Some(tree), Nil)
-                else report.errorAndAbort(Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
+                case _ => report
+                    .errorAndAbort(Messages.QuasiquoteAdjacentEllipsesInPattern(quasi.rank))
               }
-            case other +: rest =>
-              if (acc.isEmpty) loop(rest, acc, prefix :+ other)
-              else {
-                Predef.require(prefix.isEmpty && debug(trees, acc, prefix))
-                val otherTree = liftTree(other)
-                val tree =
-                  if mode.isTerm then
-                    Apply(
-                      TypeApply(Select.unique(acc.get.asInstanceOf[Term], ":+"), List(TypeTree.of[T])),
-                      List(otherTree.asInstanceOf[Term])
-                    )
-                  else
-                    TypedOrTest(
-                      Unapply(
-                        TypeApply(
-                          Select.unique('{ :+ }.asTerm, "unapply"),
-                          List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])
+            case other +: rest => acc match
+                case None => loop(rest, acc, prefix :+ other)
+                case Some(x) =>
+                  Predef.require(prefix.isEmpty && debug(trees, acc, prefix))
+                  val otherTree = liftTree(other)
+                  val tree =
+                    if mode.isTerm then
+                      Apply(
+                        TypeApply(Select.unique(x.asInstanceOf[Term], ":+"), List(TypeTree.of[T])),
+                        List(otherTree.asInstanceOf[Term])
+                      )
+                    else
+                      TypedOrTest(
+                        Unapply(
+                          TypeApply(
+                            Select.unique('{ :+ }.asTerm, "unapply"),
+                            List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])
+                          ),
+                          Nil,
+                          List(x, otherTree)
                         ),
-                        Nil,
-                        List(acc.get, otherTree)
-                      ),
-                      TypeTree.of[List[Any]]
-                    )
-                loop(rest, Some(tree), Nil)
-              }
-            case _ =>
-              if (acc.isEmpty) {
+                        TypeTree.of[List[Any]]
+                      )
+                  loop(rest, Some(tree), Nil)
+            case _ => acc.getOrElse {
                 val args = prefix.map(liftTree(_)).toList
                 val targs = List(TypeTree.of[T])
                 if mode.isTerm then
@@ -437,7 +433,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
                     ),
                     TypeTree.of[List[T]]
                   )
-              } else acc.get
+              }
           }
         loop(trees, None, Nil)
       }
@@ -634,7 +630,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
             ('{ ${ args.head.asExprOf[Option[Any]] }.get }, false)
           else (
             Select.overloaded(
-              Ref(Symbol.classSymbol("scala.Tuple" + n).companionModule),
+              Ref(defn.TupleClass(n).companionModule),
               "apply",
               argsContents,
               args.map(arg => '{ ${ arg.asExprOf[Option[Any]] }.get }.asTerm)

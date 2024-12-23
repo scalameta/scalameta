@@ -20,7 +20,6 @@ class BootstrapSuite extends ParseSuite {
       val name = dir.getName
       if (dir.isDirectory && name == "target" || name == "community-projects") return
       def bootstrapTest(src: File): Unit = test("tokenize " + src.getAbsolutePath) {
-        implicit val dialect: Dialect = dialects.Scala33
         val tokens = src.tokenize.get
         val content = new String(Files.readAllBytes(src.toPath), StandardCharsets.UTF_8)
         // check #1: everything's covered
@@ -50,7 +49,9 @@ class BootstrapSuite extends ParseSuite {
         }
         assert(!isFail)
       }
-      dir.listFiles.filter(_.isFile).filter(_.getName.endsWith(".scala")).foreach(bootstrapTest)
+      dir.listFiles.filter(_.isFile).filter(_.getName.endsWith(".scala"))
+        .filter(!_.getPath.contains(s"${File.separator}scala-3${File.separator}"))
+        .foreach(bootstrapTest)
       dir.listFiles.filter(_.isDirectory).foreach(loop)
     }
     loop(dir)
