@@ -128,9 +128,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
       val body = customWrapper(adt, defName, localName, defaultBody).getOrElse(defaultBody)
       s"def $defName($localName: ${adt.tpe}) = $body"
     }
-    val clauses = adts.zip(defNames).map { case (adt, name) =>
-      s"case (y @ (_: ${adt.tpe})) => $name(y.asInstanceOf[${adt.tpe}])"
-    }
+    val clauses = adts.zip(defNames).map { case (adt, name) => s"case y : ${adt.tpe} => $name(y)" }
 
     val retStr =
       s"""|
@@ -162,7 +160,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
           |  def liftableSubTree0[T <: MetaTree](y: T)(using Quotes): Tree = {
           |    y match {
           |      ${clauses.mkString("\n      ")}
-          |      case _ => sys.error("none of leafs matched " + (y.getClass))
+          |      case _ => sys.error("none of leafs matched " + (y.getClass.getSimpleName))
           |    }
           |  }
           |}
