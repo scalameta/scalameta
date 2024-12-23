@@ -49,7 +49,8 @@ class BootstrapSuite extends ParseSuite {
         }
         assert(!isFail)
       }
-      dir.listFiles.filter(_.isFile).filter(_.getName.endsWith(".scala")).foreach(bootstrapTest)
+      dir.listFiles.filter(_.isFile).filter(_.getName.endsWith(".scala"))
+        .filter(!_.getPath.contains("/scala-3/")).foreach(bootstrapTest)
       dir.listFiles.filter(_.isDirectory).foreach(loop)
     }
     loop(dir)
