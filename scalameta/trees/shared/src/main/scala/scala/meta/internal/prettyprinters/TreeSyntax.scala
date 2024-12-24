@@ -895,22 +895,25 @@ object TreeSyntax {
         val derived = r(t.derives, "derives ", ", ", "")
         val ptype = t.parent match {
           case Some(p: Defn.Given) =>
-            val isNew = givenSigUsesNewSyntax(p.paramClauseGroups)(!t.body.origin.tokensOpt.forall {
-              _.rfindWideNot(_.is[Token.Trivia], -1).is[Token.KwWith] // still old syntax
-            })
+            val isNew = givenSigUsesNewSyntax(p.paramClauseGroups) {
+              t.inits.forall(_.argClauses.isEmpty) && !t.body.origin.tokensOpt.forall {
+                _.rfindWideNot(_.is[Token.Trivia], -1).is[Token.KwWith] // still old syntax
+              }
+            }
             if (isNew) Decl.Given else Defn.Given
           case Some(_: Term.NewAnonymous) => Term.NewAnonymous
           case _ => null
         }
-        def isGiven = ptype eq Defn.Given
+        def isOldGiven = ptype eq Defn.Given
+        def isNewGiven = ptype eq Decl.Given
         val pbody = s(t.body)
         val body =
           if (pbody.isEmpty) t.inits match {
-            case x :: Nil if isGiven => o("with {}", x.argClauses.isEmpty)
+            case x :: Nil if isOldGiven => o("with {}", x.argClauses.isEmpty)
             case _ :: xs if xs.nonEmpty => s()
-            case _ => o("{}", (ptype eq Term.NewAnonymous) && pearly.isEmpty)
+            case _ => o("{}", (ptype eq Term.NewAnonymous) && pearly.isEmpty || isNewGiven)
           }
-          else w("with ", pbody, isGiven)
+          else w("with ", pbody, isOldGiven)
         val noExtends = ptype != null || pparents.isEmpty && pearly.isEmpty
         r(" ")(o("extends", !noExtends), pearly, pparents, derived, body)
       case t: Template.Body =>
