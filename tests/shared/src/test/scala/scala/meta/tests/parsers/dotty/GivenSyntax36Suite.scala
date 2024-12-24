@@ -960,4 +960,12 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4091 given") {
+    val code = "given List[Int] => Object {}"
+    val error = """|<input>:1: error: abstract givens cannot be anonymous
+                   |given List[Int] => Object {}
+                   |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
