@@ -3557,10 +3557,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         if (!tryAheadNot[Indentation.Indent]) None
         else if (newSyntax) givenSigAfterColon(name)
         else Some(GivenSig(name))
-      else if (tryAhead[LeftBracket]) givenSigOnBracket(name) // only with old syntax
+      else if (tryAhead[LeftBracket]) givenSigOnBracket(name)
       else if (tryAhead[LeftParen]) givenSigOnParen(name) // only with old syntax
       else if (tryAhead[EOL])
-        if (tryAhead[LeftBracket]) givenSigOnBracket(name) // only with old syntax
+        if (tryAhead[LeftBracket]) givenSigOnBracket(name)
         else if (tryAhead[LeftParen]) givenSigOnParen(name) // only with old syntax
         else None
       else if (newSyntax)
@@ -3589,7 +3589,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     else if (!name.isAnonymous) {
       val typeName = copyPos(name)(Type.Name(name.value))
       val tpe = convertNameTypeParamClauseToType(typeName, pcg.tparamClause)
-      Some(GivenSig(anonNameAt(name), declType = Some(tpe)))
+      val anon = anonNameAt(name)
+      if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
+        givenSigAfterArrow(anon, convertTypeToTermParamClause(tpe))
+      else Some(GivenSig(anon, declType = Some(tpe)))
     } else if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
       givenSigAfterArrow(name, pcg.tparamClause)
     else None
