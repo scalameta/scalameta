@@ -799,7 +799,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             $ctor(${oldDef.name})
            """
       def bodyForMultipleOldDefs = {
-        if (ctor eq null) c.abort(newVal.pos, s"${newVal.name} must define a ctor")
+        if (ctor eq null) c.abort(newVal.pos, s"${newVal.name} must define a ctor for ver=$version")
         val names = oldDefs.map { case (oldDef, _) =>
           val name = q"${oldDef.name}"
           val arg = AssignOrNamedArg(name, name)
@@ -859,11 +859,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     private def getNewField(oldDef: ValOrDefDef): String = {
       @tailrec
       def iter(tree: Tree): Option[String] = tree match {
-        case Select(Ident(TermName(newField)), _: TermName) => Some(newField)
-        case Apply(_, Ident(TermName(newField)) :: Nil) => Some(newField)
-        case Match(Ident(TermName(newField)), _) => Some(newField)
+        case Ident(TermName(newField)) => Some(newField)
+        case Match(x, _) => iter(x)
         case Select(x, _) => iter(x)
         case Apply(x, (_: Function) :: Nil) => iter(x)
+        case Apply(_, x :: Nil) => iter(x)
         case _ => None
       }
       iter(oldDef.rhs).getOrElse(
