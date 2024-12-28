@@ -697,4 +697,24 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("scala36 type member context bounds 1") {
+    val code = """|trait Foo:
+                  |  type Key : cats.Show
+                  |""".stripMargin
+    val error = """|<input>:2: error: `;` expected but `:` found
+                   |  type Key : cats.Show
+                   |           ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scala36 type member context bounds 2") {
+    val code = """|trait Foo:
+                  |  type Value : {cats.Show, cats.Traverse}
+                  |""".stripMargin
+    val error = """|<input>:2: error: `;` expected but `:` found
+                   |  type Value : {cats.Show, cats.Traverse}
+                   |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
