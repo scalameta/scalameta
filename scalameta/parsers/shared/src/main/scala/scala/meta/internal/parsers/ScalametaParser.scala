@@ -3270,15 +3270,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             val tbounds = typeBounds()
             val vbounds = new ListBuffer[Type]
             val cbounds = new ListBuffer[Type]
-            @inline
-            def getBound(allowAlias: Boolean): Type = currToken match {
-              case t: Ellipsis => ellipsis[Type](t, 1)
-              case _ => contextBoundOrAlias(allowAlias)
-            }
-            while (acceptOpt[Viewbound]) vbounds += getBound(allowAlias = false)
+            while (acceptOpt[Viewbound]) vbounds += contextBoundOrAlias(allowAlias = false)
             if (acceptOpt[Colon]) {
               def addContextBounds[T: ClassTag]: Unit = doWhile(
-                cbounds += getBound(allowAlias = dialect.allowImprovedTypeClassesSyntax)
+                cbounds += contextBoundOrAlias(allowAlias = dialect.allowImprovedTypeClassesSyntax)
               )(acceptOpt[T])
               if (acceptOpt[LeftBrace]) inBracesAfterOpen(addContextBounds[Comma])
               else addContextBounds[Colon]
@@ -3289,10 +3284,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def contextBoundOrAlias(allowAlias: Boolean) = typ() match {
-    case Type.ApplyInfix(nm: Type.Name, Type.Name("as"), alias: Type.Name)
-        if allowAlias && dialect.allowImprovedTypeClassesSyntax => Type.BoundsAlias(alias, nm)
-    case tpe => tpe
+  def contextBoundOrAlias(allowAlias: Boolean) = currToken match {
+    case t: Ellipsis => ellipsis[Type](t, 1)
+    case _ => typ() match {
+        case Type.ApplyInfix(nm: Type.Name, Type.Name("as"), alias: Type.Name) if allowAlias =>
+          Type.BoundsAlias(alias, nm)
+        case tpe => tpe
+      }
   }
 
   def quasiquoteTypeParam(): Type.Param = entrypointTypeParam()
