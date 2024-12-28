@@ -709,7 +709,7 @@ object TreeSyntax {
         val variance = o(t.mods.find(isVariant))
         val tbounds = s(t.tbounds)
         val vbounds = r(t.vbounds.map(s(" ", kw("<%"), " ", _)))
-        val cbounds = r(t.cbounds.map(s(kw(":"), " ", _)))
+        val cbounds = printContextBounds(t.cbounds)
         s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
       case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)
       case t: Type.Capturing => t.tpe match {
@@ -1110,6 +1110,16 @@ object TreeSyntax {
 
     private def printFunctionType(t: Type.ParamFunctionType, arrow: String): Show.Result =
       printFunctionLikeType(t, s(t.paramClause), arrow)
+
+    private def printContextBounds(cbounds: List[Type] = Nil): Show.Result = cbounds match {
+      case Nil => s()
+      case head :: Nil => s(kw(": "), head)
+      case cbs @ x :: _
+          if dialect.allowImprovedTypeClassesSyntax &&
+            x.origin.tokensOpt.exists(_.rfindWideNot(_.is[Token.Trivia], -1).is[Token.LeftBrace]) =>
+        s(kw(": "), "{", r(cbs, ", "), "}")
+      case cbs => s(kw(": "), r(cbs, ": "))
+    }
 
     private def printByNameType(t: Type.ByNameType, arrow: String): Show.Result =
       printFunctionLikeType(t, s(), arrow)
