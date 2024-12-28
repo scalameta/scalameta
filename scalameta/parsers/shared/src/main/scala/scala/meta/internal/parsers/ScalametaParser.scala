@@ -3788,30 +3788,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     newLinesOpt()
     val name = typeName()
     val tparams = typeParamClauseOpt(ownerIsType = true)
-
-    def aliasType() = {
-      // empty bounds also need to have origin
-      val emptyBounds = atCurPosEmpty(Type.Bounds(None, None))
-      Defn.Type(mods, name, tparams, typeIndentedOpt(), emptyBounds)
-    }
-
-    def abstractType() = {
-      val bounds = typeBounds()
-      if (acceptOpt[Equals]) {
-        val tpe = typeIndentedOpt()
-        if (tpe.is[Type.Match]) Defn.Type(mods, name, tparams, tpe, bounds)
-        else syntaxError("cannot combine bound and alias", at = tpe.pos)
-      } else Decl.Type(mods, name, tparams, bounds)
-    }
-    if (mods.exists(_.is[Mod.Opaque])) {
-      val bounds = typeBounds()
-      accept[Equals]
-      Defn.Type(mods, name, tparams, typeIndentedOpt(), bounds)
-    } else currToken match {
-      case _: Equals => next(); aliasType()
-      case _: Supertype | _: Subtype | _: Comma | StatSep() | StatSeqEnd() => abstractType()
-      case _ => syntaxError("`=', `>:', or `<:' expected", at = currToken)
-    }
+    val bounds = typeBounds()
+    if (acceptOpt[Equals]) Defn.Type(mods, name, tparams, typeIndentedOpt(), bounds)
+    else Decl.Type(mods, name, tparams, bounds)
   }
 
   /** Hook for IDE, for top-level classes/objects. */

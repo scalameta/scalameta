@@ -455,7 +455,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """type foo = (a -> b)""",
     """|Type.ParamClause type foo @@= (a -> b)
        |Type.ApplyInfix a -> b
-       |Type.Bounds type foo = @@(a -> b)
+       |Type.Bounds type foo @@= (a -> b)
        |""".stripMargin
   )
 
@@ -464,7 +464,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause type foo @@= (a -> b) -> c
        |Type.ApplyInfix (a -> b) -> c
        |Type.ApplyInfix a -> b
-       |Type.Bounds type foo = @@(a -> b) -> c
+       |Type.Bounds type foo @@= (a -> b) -> c
        |""".stripMargin
   )
 
@@ -472,7 +472,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """type foo = (a :+ b)""",
     """|Type.ParamClause type foo @@= (a :+ b)
        |Type.ApplyInfix a :+ b
-       |Type.Bounds type foo = @@(a :+ b)
+       |Type.Bounds type foo @@= (a :+ b)
        |""".stripMargin
   )
 
@@ -481,7 +481,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause type foo @@= (a :+ b) :+ c
        |Type.ApplyInfix (a :+ b) :+ c
        |Type.ApplyInfix a :+ b
-       |Type.Bounds type foo = @@(a :+ b) :+ c
+       |Type.Bounds type foo @@= (a :+ b) :+ c
        |""".stripMargin
   )
 
@@ -489,7 +489,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """type foo = (a +: b)""",
     """|Type.ParamClause type foo @@= (a +: b)
        |Type.ApplyInfix a +: b
-       |Type.Bounds type foo = @@(a +: b)
+       |Type.Bounds type foo @@= (a +: b)
        |""".stripMargin
   )
 
@@ -498,7 +498,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """|Type.ParamClause type foo @@= (a +: b) +: c
        |Type.ApplyInfix (a +: b) +: c
        |Type.ApplyInfix a +: b
-       |Type.Bounds type foo = @@(a +: b) +: c
+       |Type.Bounds type foo @@= (a +: b) +: c
        |""".stripMargin
   )
 
@@ -506,7 +506,7 @@ class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
     """type foo = (a, b)""",
     """|Type.ParamClause type foo @@= (a, b)
        |Type.Tuple (a, b)
-       |Type.Bounds type foo = @@(a, b)
+       |Type.Bounds type foo @@= (a, b)
        |""".stripMargin
   )
 

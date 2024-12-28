@@ -243,7 +243,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |TypeCase case Array[t] => t
        |Type.Apply Array[t]
        |Type.ArgClause [t]
-       |Type.Bounds type T = @@A match {
+       |Type.Bounds type T @@= A match {
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -326,7 +326,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.ArgClause [T]
        |Type.Apply Option[T]
        |Type.ArgClause [T]
-       |Type.Bounds type F0 = @@[T] => List[T] ?=> Option[T]
+       |Type.Bounds type F0 @@= [T] => List[T] ?=> Option[T]
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -1200,11 +1200,11 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Stat.Block { type U = T }
        |Defn.Type type U = T
        |Type.ParamClause val x: (C { type U @@= T } { type T = String }) # U
-       |Type.Bounds val x: (C { type U = @@T } { type T = String }) # U
+       |Type.Bounds val x: (C { type U @@= T } { type T = String }) # U
        |Stat.Block { type T = String }
        |Defn.Type type T = String
        |Type.ParamClause val x: (C { type U = T } { type T @@= String }) # U
-       |Type.Bounds val x: (C { type U = T } { type T = @@String }) # U
+       |Type.Bounds val x: (C { type U = T } { type T @@= String }) # U
        |""".stripMargin
   )
 
@@ -1219,7 +1219,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Decl.Type type T>: Null
        |Type.ParamClause   type T@@>: Null
        |Type.Bounds >: Null
-       |Type.Bounds type A = @@AnyRef with
+       |Type.Bounds type A @@= AnyRef with
        |""".stripMargin
   )
 
@@ -1235,7 +1235,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Decl.Type type T>: Null
        |Type.ParamClause   type T@@>: Null
        |Type.Bounds >: Null
-       |Type.Bounds type A = @@AnyRef:
+       |Type.Bounds type A @@= AnyRef:
        |""".stripMargin
   )
 
