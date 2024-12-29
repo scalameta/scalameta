@@ -690,11 +690,19 @@ object Type {
   @ast
   class AnonymousParam(variant: Option[Mod.Variant]) extends Placeholder {
     @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
-    override final def bounds: Bounds = Bounds(None, None)
+    override final def bounds: Bounds = Bounds.empty
     override def copy(bounds: Bounds): Placeholder = Placeholder(bounds)
   }
   @ast
-  class Bounds(lo: Option[Type], hi: Option[Type]) extends Tree
+  class Bounds(
+      lo: Option[Type],
+      hi: Option[Type],
+      @newField("4.12.3")
+      context: List[sm.Type] = Nil
+  ) extends Tree
+  object Bounds {
+    val empty: Bounds = Bounds(None, None)
+  }
   @ast
   class BoundsAlias(name: Type.Name, bounds: Type) extends Type.Ref
 
@@ -751,17 +759,27 @@ object Type {
     override def body: Tree = rhs
   }
 
+  object ParamBoundsCtor {
+    def apply(tbounds: Bounds, cbounds: List[Type]): Bounds = tbounds
+      .copy(context = tbounds.context ++ cbounds)
+  }
+
   @ast
   class Param(
       mods: List[Mod],
       name: meta.Name,
       tparamClause: ParamClause,
-      tbounds: Type.Bounds,
-      vbounds: List[Type],
-      cbounds: List[Type]
+      @replacesFields("4.12.3", ParamBoundsCtor)
+      bounds: Bounds,
+      vbounds: List[Type]
   ) extends Member.Param with Tree.WithTParamClause {
     @replacedField("4.6.0")
     final def tparams: List[Param] = tparamClause.values
+
+    @replacedField("4.12.3", pos = 3)
+    final def tbounds: Type.Bounds = bounds
+    @replacedField("4.12.3", pos = 5)
+    final def cbounds: List[Type] = bounds.context
   }
 
   @ast
@@ -1211,7 +1229,7 @@ object Defn {
       tparamClause: sm.Type.ParamClause,
       body: sm.Type,
       @newField("4.4.0")
-      bounds: sm.Type.Bounds = sm.Type.Bounds(None, None)
+      bounds: sm.Type.Bounds = sm.Type.Bounds.empty
   ) extends Defn with Stat.TypeDef with Tree.WithBody {
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values

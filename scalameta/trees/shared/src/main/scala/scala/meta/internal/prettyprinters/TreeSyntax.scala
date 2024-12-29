@@ -686,10 +686,7 @@ object TreeSyntax {
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
-      case t: Type.Bounds => s(
-          t.lo.map(lo => s(" ", kw(">:"), " ", p(Typ, lo))).getOrElse(s()),
-          t.hi.map(hi => s(" ", kw("<:"), " ", p(Typ, hi))).getOrElse(s())
-        )
+      case t: Type.Bounds => printBounds(t)
       case t: Type.Repeated => t.tpe match {
           case tByName: Type.ByName => m(ParamTyp, s(kw("=>"), " ", p(Typ, tByName.tpe), kw("*")))
           case _ => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
@@ -707,10 +704,8 @@ object TreeSyntax {
         val mods = t.mods.filterNot(isVariant)
         require(t.mods.length - mods.length <= 1)
         val variance = o(t.mods.find(isVariant))
-        val tbounds = s(t.tbounds)
-        val vbounds = r(t.vbounds.map(s(" ", kw("<%"), " ", _)))
-        val cbounds = printContextBounds(t.cbounds)
-        s(w(mods, " "), variance, t.name, t.tparamClause, tbounds, vbounds, cbounds)
+        val bounds = printBounds(t.bounds, t.vbounds)
+        s(w(mods, " "), variance, t.name, t.tparamClause, bounds)
       case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)
       case t: Type.Capturing => t.tpe match {
           case tpe: Type.FunctionLikeType => s(tpe)
@@ -1119,6 +1114,14 @@ object TreeSyntax {
             x.origin.tokensOpt.exists(_.rfindWideNot(_.is[Token.Trivia], -1).is[Token.LeftBrace]) =>
         s(kw(": "), "{", r(cbs, ", "), "}")
       case cbs => s(kw(": "), r(cbs, ": "))
+    }
+
+    private def printBounds(bounds: Type.Bounds, vbounds: List[Type] = Nil): Show.Result = {
+      val lo = o(bounds.lo.map(x => s(" ", kw(">:"), " ", p(Typ, x))))
+      val hi = o(bounds.hi.map(x => s(" ", kw("<:"), " ", p(Typ, x))))
+      val vb = r(vbounds.map(s(" ", kw("<%"), " ", _)))
+      val cb = printContextBounds(bounds.context)
+      s(lo, hi, vb, cb)
     }
 
     private def printByNameType(t: Type.ByNameType, arrow: String): Show.Result =

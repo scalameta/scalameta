@@ -10,7 +10,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat](code)(Defn.Def(
       Nil,
       "reduce",
-      List(pparam(Nil, "A", cb = List(Type.BoundsAlias("mm", "Monoid")))),
+      List(pparam("A", bounds(cb = List(Type.BoundsAlias("mm", "Monoid"))))),
       List(List(tparam("xs", "A"))),
       Some("A"),
       "???"
@@ -30,7 +30,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tpl(Decl.Def(
         Nil,
         "showMax",
-        List(pparam(Nil, "X", cb = List("Ordering", "Show"))),
+        List(pparam("X", bounds(cb = List("Ordering", "Show")))),
         List(List(tparam("x", "X"), tparam("y", "X"))),
         "String"
       ))
@@ -51,9 +51,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
         Nil,
         "showMax",
         List(pparam(
-          Nil,
           "X",
-          cb = List(Type.BoundsAlias("ordering", "Ordering"), Type.BoundsAlias("show", "Show"))
+          bounds(cb = List(Type.BoundsAlias("ordering", "Ordering"), Type.BoundsAlias("show", "Show")))
         )),
         List(List(tparam("x", "X"), tparam("y", "X"))),
         "String"
@@ -94,7 +93,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       pname("Comparer"),
       Nil,
-      ppolyfunc(pparam(Nil, "X", cb = List("Ord")))(
+      ppolyfunc(pparam("X", bounds(cb = List("Ord"))))(
         pfunc(Type.TypedParam("x", "X", Nil), Type.TypedParam("y", "X", Nil))("Boolean")
       ),
       noBounds
@@ -112,7 +111,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       List(patvar("less")),
       Some("Comparer"),
-      tpolyfunc(pparam(Nil, "X", cb = List(Type.BoundsAlias("ord", "Ord"))))(
+      tpolyfunc(pparam("X", bounds(cb = List(Type.BoundsAlias("ord", "Ord")))))(
         tfunc(tparam("x", "X"), tparam("y", "X"))(
           tinfix(tapply(tselect("ord", "compare"), "x", "y"), "<", lit(0))
         )
@@ -152,7 +151,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout =
         Some("given [A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
-    )(Defn.Given(Nil, anon, List(pparam(Nil, "A", cb = List("Ord"))), Nil, bodyBounds))
+    )(Defn.Given(Nil, anon, List(pparam("A", bounds(cb = List("Ord")))), Nil, bodyBounds))
   }
 
   test("given-context-using") {
@@ -197,7 +196,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat]("given [A: Ord]: Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
       anon,
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       papply("Ord", papply("List", "A")),
       tapplytype("ListOrd", "A")
@@ -238,7 +237,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       assertLayout = Some(
         "given listOrd[A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }"
       )
-    )(Defn.Given(Nil, "listOrd", List(pparam(Nil, "A", cb = List("Ord"))), Nil, bodyBounds))
+    )(Defn.Given(Nil, "listOrd", List(pparam("A", bounds(cb = List("Ord")))), Nil, bodyBounds))
   }
 
   test("given-context-using") {
@@ -283,7 +282,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat]("given listOrd[A: Ord]: Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
       "listOrd",
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       papply("Ord", papply("List", "A")),
       tapplytype("ListOrd", "A")
@@ -380,7 +379,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val tree = Defn.Given(
       Nil,
       anon,
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -396,7 +395,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val tree = Defn.Given(
       Nil,
       anon,
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -411,7 +410,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val tree = Defn.Given(
       Nil,
       tname("ord"),
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -427,7 +426,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val tree = Defn.Given(
       Nil,
       tname("ord"),
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -443,7 +442,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val tree = Defn.Given(
       Nil,
       anon,
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -459,7 +458,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val tree = Defn.Given(
       Nil,
       anon,
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -474,7 +473,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val tree = Defn.Given(
       Nil,
       tname("ord"),
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -490,7 +489,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val tree = Defn.Given(
       Nil,
       tname("ord"),
-      List(pparam(Nil, "A", cb = List("Ord"))),
+      List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )

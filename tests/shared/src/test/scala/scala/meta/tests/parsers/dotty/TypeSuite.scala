@@ -701,20 +701,37 @@ class TypeSuite extends BaseDottySuite {
     val code = """|trait Foo:
                   |  type Key : cats.Show
                   |""".stripMargin
-    val error = """|<input>:2: error: `;` expected but `:` found
-                   |  type Key : cats.Show
-                   |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "trait Foo { type Key: cats.Show }"
+    val tree = Defn.Trait(
+      Nil,
+      pname("Foo"),
+      Nil,
+      ctor,
+      tpl(Decl.Type(Nil, pname("Key"), Nil, bounds(cb = List(pselect("cats", "Show")))))
+    )
+
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scala36 type member context bounds 2") {
     val code = """|trait Foo:
                   |  type Value : {cats.Show, cats.Traverse}
                   |""".stripMargin
-    val error = """|<input>:2: error: `;` expected but `:` found
-                   |  type Value : {cats.Show, cats.Traverse}
-                   |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "trait Foo { type Value: {cats.Show, cats.Traverse} }"
+    val tree = Defn.Trait(
+      Nil,
+      pname("Foo"),
+      Nil,
+      ctor,
+      tpl(Decl.Type(
+        Nil,
+        pname("Value"),
+        Nil,
+        bounds(cb = List(pselect("cats", "Show"), pselect("cats", "Traverse")))
+      ))
+    )
+
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

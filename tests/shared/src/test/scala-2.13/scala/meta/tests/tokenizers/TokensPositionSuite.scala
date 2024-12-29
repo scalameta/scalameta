@@ -159,7 +159,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.ParamClause [A: B]
        |Type.Param A: B
        |Type.ParamClause def f[A@@: B]: C
-       |Type.Bounds def f[A@@: B]: C
+       |Type.Bounds : B
        |""".stripMargin
   )
   checkPositions[Stat](
@@ -168,7 +168,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.ParamClause [A : B : C]
        |Type.Param A : B : C
        |Type.ParamClause def f[A @@: B : C]: D
-       |Type.Bounds def f[A @@: B : C]: D
+       |Type.Bounds : B : C
        |""".stripMargin
   )
 

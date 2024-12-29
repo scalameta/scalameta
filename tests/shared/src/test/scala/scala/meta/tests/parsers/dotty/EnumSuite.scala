@@ -278,7 +278,7 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("case-generic") {
-    val generic = pparam(Nil, "X", vb = Nil, cb = List(pname("Ord")))
+    val generic = pparam("X", bounds(cb = List(pname("Ord"))))
     runTestAssert[Stat]("enum E { case A[X: Ord]() }")(
       enumWithCase("E", Defn.EnumCase(Nil, tname("A"), List(generic), ctorp(Nil), Nil))
     )

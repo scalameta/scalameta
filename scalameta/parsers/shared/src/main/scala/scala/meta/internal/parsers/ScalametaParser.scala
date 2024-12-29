@@ -3267,19 +3267,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case q: Quasi if endTparamQuasi => q.become[Type.Param]
           case _ =>
             val tparams = typeParamClauseOpt(ownerIsType = true)
-            val tbounds = typeBounds()
-            val vbounds = new ListBuffer[Type]
-            val cbounds = new ListBuffer[Type]
-            while (acceptOpt[Viewbound]) vbounds += contextBoundOrAlias(allowAlias = false)
-            if (acceptOpt[Colon]) {
-              def addContextBounds[T: ClassTag]: Unit = doWhile(
-                cbounds += contextBoundOrAlias(allowAlias = dialect.allowImprovedTypeClassesSyntax)
-              )(acceptOpt[T])
-              if (acceptOpt[LeftBrace]) inBracesAfterOpen(addContextBounds[Comma])
-              else addContextBounds[Colon]
-            }
-
-            Type.Param(mods, name, tparams, tbounds, vbounds.toList, cbounds.toList)
+            val (bounds, vbounds) = typeBoundsWithOptViewBounds(allowViewBounds = true)
+            Type.Param(mods, name, tparams, bounds, vbounds)
         }
     }
   }
@@ -3297,7 +3286,31 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def entrypointTypeParam(): Type.Param = typeParam(ownerIsType = true)
 
-  def typeBounds() = autoPos(Type.Bounds(bound[Supertype], bound[Subtype]))
+  def typeBounds() = typeBoundsWithOptViewBounds(allowViewBounds = false)._1
+
+  private def typeBoundsWithOptViewBounds(allowViewBounds: Boolean) = {
+    val startPos = currIndex
+    val loBound = bound[Supertype]
+    val hiBound = bound[Subtype]
+    val midEndPos = prevIndex
+    val vbounds =
+      if (allowViewBounds) listBy[Type] { buf =>
+        while (acceptOpt[Viewbound]) buf += contextBoundOrAlias(allowAlias = false)
+      }
+      else Nil
+    val cbounds =
+      if (acceptOpt[Colon]) listBy[Type] { buf =>
+        def addContextBounds[T: ClassTag]: Unit = doWhile(
+          buf += contextBoundOrAlias(allowAlias = dialect.allowImprovedTypeClassesSyntax)
+        )(acceptOpt[T])
+        if (acceptOpt[LeftBrace]) inBracesAfterOpen(addContextBounds[Comma])
+        else addContextBounds[Colon]
+      }
+      else Nil
+    val endPos = if (cbounds.isEmpty) midEndPos else prevIndex
+    val bounds = atPos(startPos, endPos)(Type.Bounds(loBound, hiBound, cbounds))
+    (bounds, vbounds)
+  }
 
   def bound[T: ClassTag]: Option[Type] = if (acceptOpt[T]) Some(typ()) else None
 

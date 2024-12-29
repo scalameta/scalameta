@@ -452,10 +452,12 @@ class NewFunctionsSuite extends BaseDottySuite {
           Nil,
           "F",
           List(pparam("_")),
-          cb = List(Type.Lambda(
-            List(pparam(Nil, "G", List(pparam("_")))),
-            papply("MonadCancel", "G", "Throwable")
-          ))
+          bounds(cb =
+            List(Type.Lambda(
+              List(pparam(Nil, "G", List(pparam("_")))),
+              papply("MonadCancel", "G", "Throwable")
+            ))
+          )
         )),
         ctor,
         tplNoBody()
