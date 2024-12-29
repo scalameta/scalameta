@@ -15,22 +15,15 @@ class StructureSuite extends ParseSuite {
     assertNoDiff(obtained, expected.structure)
   }
 
-  checkStructure[Case](
-    "case _ => _ => false",
-    Case(Pat.Wildcard(), None, Term.Function(List(tparam("_")), bool(false)))
-  )
+  checkStructure[Case]("case _ => _ => false", Case(patwildcard, None, tfunc(tparam("_"))(bool(false))))
 
   checkStructure[Case](
     "case _ => _ => {false}",
-    Case(Pat.Wildcard(), None, Term.Function(List(tparam("_")), Term.Block(List(bool(false)))))
+    Case(patwildcard, None, tfunc(tparam("_"))(blk(bool(false))))
   )
 
   checkStructure[Case](
     "case _ => _ => false; a",
-    Case(
-      Pat.Wildcard(),
-      None,
-      Term.Function(List(tparam("_")), Term.Block(List(bool(false), tname("a"))))
-    )
+    Case(patwildcard, None, tfunc(tparam("_"))(blk(bool(false), tname("a"))))
   )
 }

@@ -76,12 +76,9 @@ class TypeSuite extends BaseDottySuite {
           Nil,
           pname("T"),
           Nil,
-          Type.Bounds(
-            Some(
-              Type
-                .Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
-            ),
-            None
+          bounds(lo =
+            Type
+              .Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
           )
         ))
       ),
@@ -111,12 +108,9 @@ class TypeSuite extends BaseDottySuite {
           Nil,
           pname("T"),
           Nil,
-          Type.Bounds(
-            Some(
-              Type
-                .Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
-            ),
-            None
+          bounds(lo =
+            Type
+              .Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
           )
         ))
       ),
@@ -145,7 +139,7 @@ class TypeSuite extends BaseDottySuite {
          |  type T>: Null
          |""".stripMargin,
       assertLayout = Some("type A = Product")
-    )(Defn.Type(Nil, pname("A"), Nil, pname("Product"), Type.Bounds(None, None)))
+    )(Defn.Type(Nil, pname("A"), Nil, pname("Product"), noBounds))
   }
 
   test("with-followed-by-brace-indent") {
@@ -204,9 +198,8 @@ class TypeSuite extends BaseDottySuite {
           Nil,
           pname("T"),
           Nil,
-          Type.Bounds(
-            Some(Type.Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("T"), Nil, loBound("Int"))))),
-            None
+          bounds(lo =
+            Type.Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("T"), Nil, loBound("Int"))))
           )
         ))
       ),
@@ -235,7 +228,7 @@ class TypeSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Term.Block(List(
+    )(blk(
       Defn.Type(
         Nil,
         pname("AA"),
@@ -246,8 +239,8 @@ class TypeSuite extends BaseDottySuite {
         ),
         noBounds
       ),
-      Term.Block(Decl.Type(Nil, pname("T"), Nil, loBound("Int")) :: Nil)
-    )))
+      blk(Decl.Type(Nil, pname("T"), Nil, loBound("Int")))
+    ))
   }
 
   test("T")(assertTpe("T")(TypeName("T")))
@@ -263,34 +256,24 @@ class TypeSuite extends BaseDottySuite {
   test("A * B")(assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B"))))
 
   test("A * B + C") {
-    assertTpe("A * B + C") {
-      Type.ApplyInfix(Type.ApplyInfix(pname("A"), pname("*"), pname("B")), pname("+"), pname("C"))
-    }
+    assertTpe("A * B + C")(pinfix(pinfix("A", "*", pname("B")), "+", pname("C")))
   }
 
-  test("A + B * C") {
-    assertTpe("A + B * C") {
-      Type.ApplyInfix(pname("A"), pname("+"), Type.ApplyInfix(pname("B"), pname("*"), pname("C")))
-    }
-  }
+  test("A + B * C")(assertTpe("A + B * C")(pinfix("A", "+", pinfix("B", "*", pname("C")))))
 
   test("A * B + C / D") {
     assertTpe("A * B + C / D") {
-      Type.ApplyInfix(
-        Type.ApplyInfix(pname("A"), pname("*"), pname("B")),
-        pname("+"),
-        Type.ApplyInfix(pname("C"), pname("/"), pname("D"))
-      )
+      pinfix(pinfix("A", "*", pname("B")), "+", pinfix("C", "/", pname("D")))
     }
   }
 
-  test("f.T")(assertTpe("f.T")(Select(TermName("f"), TypeName("T"))))
+  test("f.T")(assertTpe("f.T")(pselect("f", "T")))
 
   test("f.type")(assertTpe("f.type")(Singleton(TermName("f"))))
 
   test("super.T")(assertTpe("super.T")(Select(Super(Anonymous(), Anonymous()), TypeName("T"))))
 
-  test("this.T")(assertTpe("this.T")(Select(Term.This(Anonymous()), TypeName("T"))))
+  test("this.T")(assertTpe("this.T")(pselect(Term.This(Anonymous()), "T")))
 
   test("(A, B)")(assertTpe("(A, B)")(Tuple(TypeName("A") :: TypeName("B") :: Nil)))
 
@@ -298,11 +281,7 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("(A, B) => C")(Function(TypeName("A") :: TypeName("B") :: Nil, TypeName("C")))
   }
 
-  test("T @foo") {
-    assertTpe("T @foo")(
-      Annotate(TypeName("T"), Mod.Annot(Init(pname("foo"), anon, emptyArgClause)) :: Nil)
-    )
-  }
+  test("T @foo")(assertTpe("T @foo")(Annotate(TypeName("T"), Mod.Annot(init("foo")) :: Nil)))
 
   test("A with B")(assertTpe("A with B")(With(TypeName("A"), TypeName("B"))))
 
@@ -320,9 +299,9 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("A { def x: Int; val y: B; type C }") {
       Refine(
         Some(TypeName("A")),
-        Decl.Def(Nil, TermName("x"), Type.ParamClause(Nil), Nil, TypeName("Int")) ::
-          Decl.Val(Nil, List(Pat.Var(TermName("y"))), TypeName("B")) ::
-          Decl.Type(Nil, TypeName("C"), Type.ParamClause(Nil), Type.Bounds(None, None)) :: Nil
+        Decl.Def(Nil, TermName("x"), Nil, Nil, TypeName("Int")) ::
+          Decl.Val(Nil, List(patvar("y")), TypeName("B")) ::
+          Decl.Type(Nil, TypeName("C"), Nil, noBounds) :: Nil
       )
     }
   }
@@ -403,16 +382,15 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("F[T] forSome { type T }") {
       Existential(
         Apply(TypeName("F"), TypeName("T") :: Nil),
-        Decl.Type(Nil, TypeName("T"), Type.ParamClause(Nil), Type.Bounds(None, None)) :: Nil
+        Decl.Type(Nil, TypeName("T"), Nil, noBounds) :: Nil
       )
     }
   }
 
   test("a.T forSome { val a: A }") {
-    assertTpe("a.T forSome { val a: A }")(Existential(
-      Select(TermName("a"), TypeName("T")),
-      Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil
-    ))
+    assertTpe("a.T forSome { val a: A }")(
+      Existential(pselect("a", "T"), Decl.Val(Nil, patvar("a") :: Nil, TypeName("A")) :: Nil)
+    )
   }
 
   test("A | B is not a special type") {
@@ -427,7 +405,7 @@ class TypeSuite extends BaseDottySuite {
 
     assertTpe("42")(int(42))
     assertTpe("-42")(int(-42))
-    assertTpe("42L")(Lit.Long(42L))
+    assertTpe("42L")(lit(42L))
     matchSubStructure[Type]("42.0f", { case Lit(42.0f) => () })
     matchSubStructure[Type]("-42.0f", { case Lit(-42.0f) => () })
     matchSubStructure[Type]("42.0d", { case Lit(42.0d) => () })
@@ -454,7 +432,7 @@ class TypeSuite extends BaseDottySuite {
       "+_ => Int",
       { case Type.Function(List(Type.Name("+_")), Type.Name("Int")) => () }
     )
-    assertTpe("Option[- _]")(Apply(pname("Option"), ArgClause(List(pname("-_")))))
+    assertTpe("Option[- _]")(papply(pname("Option"), pname("-_")))
   }
 
   test("[scala213] (x: Int, y)") {
@@ -480,19 +458,13 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat]("def foo[A <: C[_]] = bar.baz[_, F[_]]")(Defn.Def(
       Nil,
       tname("foo"),
-      pparam(
-        Nil,
-        "A",
-        hiBound(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
-      ) :: Nil,
+      pparam("A", hiBound(Type.AnonymousLambda(papply("C", Type.AnonymousParam(None))))) :: Nil,
       Nil,
       None,
-      Term.ApplyType(
-        Term.Select(tname("bar"), tname("baz")),
-        List(
-          Type.Wildcard(noBounds),
-          Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
-        )
+      tapplytype(
+        tselect("bar", "baz"),
+        pwildcard,
+        Type.AnonymousLambda(papply("F", Type.AnonymousParam(None)))
       )
     ))
   }
@@ -502,40 +474,30 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat]("def foo[A <: C[_]] = bar.baz[_, F[_]]")(Defn.Def(
       Nil,
       tname("foo"),
-      pparam(
-        Nil,
-        "A",
-        hiBound(Type.AnonymousLambda(Type.Apply(pname("C"), List(Type.AnonymousParam(None)))))
-      ) :: Nil,
+      pparam("A", hiBound(Type.AnonymousLambda(papply("C", Type.AnonymousParam(None))))) :: Nil,
       Nil,
       None,
-      Term.ApplyType(
-        Term.Select(tname("bar"), tname("baz")),
-        List(
-          Type.AnonymousParam(None),
-          Type.AnonymousLambda(Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
-        )
+      tapplytype(
+        tselect("bar", "baz"),
+        Type.AnonymousParam(None),
+        Type.AnonymousLambda(papply("F", Type.AnonymousParam(None)))
       )
     ))
   }
 
   test("#3162 [scala30] higher-kinded is not wildcard 2") {
     implicit val dialect: Dialect = dialects.Scala30
-    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(Term.ApplyType(
-      Term.Select(tname("gr"), tname("pure")),
-      Type.AnonymousLambda(
-        Type.Apply(pname("Resource"), List(pname("F"), Type.AnonymousParam(None)))
-      ) :: Nil
+    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(tapplytype(
+      tselect("gr", "pure"),
+      Type.AnonymousLambda(papply("Resource", "F", Type.AnonymousParam(None)))
     ))
   }
 
   test("#3162 [scala3+] higher-kinded is not wildcard 2") {
     implicit val dialect: Dialect = dialects.Scala3.withAllowUnderscoreAsTypePlaceholder(true)
-    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(Term.ApplyType(
-      Term.Select(tname("gr"), tname("pure")),
-      Type.AnonymousLambda(
-        Type.Apply(pname("Resource"), List(pname("F"), Type.AnonymousParam(None)))
-      ) :: Nil
+    runTestAssert[Stat]("gr.pure[Resource[F, _]]")(tapplytype(
+      tselect("gr", "pure"),
+      Type.AnonymousLambda(papply("Resource", "F", Type.AnonymousParam(None)))
     ))
   }
 
@@ -552,13 +514,8 @@ class TypeSuite extends BaseDottySuite {
       anon,
       None,
       tpl(
-        Init(
-          Type.Apply(
-            pname("Conversion"),
-            List(Type.Singleton(tname("*")), Type.Apply(pname("List"), List(Type.Singleton(tname("*")))))
-          ),
-          anon,
-          emptyArgClause
+        init(
+          papply("Conversion", Type.Singleton(tname("*")), papply("List", Type.Singleton(tname("*"))))
         ) :: Nil,
         List(Defn.Def(
           Nil,
@@ -566,7 +523,7 @@ class TypeSuite extends BaseDottySuite {
           Nil,
           List(List(tparam("ast", Type.Singleton(tname("*"))))),
           None,
-          Term.ApplyInfix(tname("ast"), tname("::"), Nil, List(tname("Nil")))
+          tinfix(tname("ast"), "::", tname("Nil"))
         ))
       )
     ))
@@ -584,11 +541,10 @@ class TypeSuite extends BaseDottySuite {
       Nil,
       tname("++"),
       Nil,
-      List(List(tparam(
-        "elems",
-        Some(Type.FunctionArg(List(Mod.Into()), Type.Apply(pname("IterableOnce"), List(pname("A")))))
-      ))),
-      Type.Apply(pname("List"), List(pname("A")))
+      List(
+        List(tparam("elems", Some(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "A")))))
+      ),
+      papply("List", "A")
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -603,11 +559,9 @@ class TypeSuite extends BaseDottySuite {
       Nil,
       List(List(tparam(
         "elems",
-        Some(Type.ByName(
-          Type.FunctionArg(List(Mod.Into()), Type.Apply(pname("IterableOnce"), List(pname("A"))))
-        ))
+        Some(Type.ByName(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "A"))))
       ))),
-      Type.Apply(pname("List"), List(pname("A")))
+      papply("List", "A")
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -621,15 +575,9 @@ class TypeSuite extends BaseDottySuite {
       List(pparam("B")),
       List(List(tparam(
         "f",
-        Some(Type.FunctionArg(
-          List(Mod.Into()),
-          Type.Function(
-            Type.FuncParamClause(List(pname("A"))),
-            Type.Apply(pname("IterableOnce"), List(pname("B")))
-          )
-        ))
+        Some(Type.FunctionArg(List(Mod.Into()), pfunc(pname("A"))(papply("IterableOnce", "B"))))
       ))),
-      Type.Apply(pname("List"), List(pname("B")))
+      papply("List", "B")
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -642,14 +590,10 @@ class TypeSuite extends BaseDottySuite {
       Nil,
       tname("flatMap"),
       List(pparam("B")),
-      List(List(tparam(
-        "f",
-        Some(Type.Function(
-          List("A"),
-          Type.FunctionArg(List(Mod.Into()), Type.Apply("IterableOnce", List("B")))
-        ))
-      ))),
-      Type.Apply(pname("List"), List(pname("B")))
+      List(List(
+        tparam("f", Some(pfunc("A")(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "B")))))
+      )),
+      papply("List", "B")
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -673,9 +617,9 @@ class TypeSuite extends BaseDottySuite {
       Nil,
       List(List(tparam(
         "xss",
-        Some(Type.Repeated(Type.FunctionArg(List(Mod.Into()), Type.Apply("IterableOnce", List("Char")))))
+        Some(Type.Repeated(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "Char"))))
       ))),
-      Type.Apply("List", List("Char"))
+      papply("List", "Char")
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -684,14 +628,17 @@ class TypeSuite extends BaseDottySuite {
     val code = "val xs1 = construct[Coll = List, Elem = Int](1, 2, 3)"
     val tree = Defn.Val(
       Nil,
-      List(Pat.Var(tname("xs1"))),
+      List(patvar("xs1")),
       None,
-      Term.Apply(
-        Term.ApplyType(
+      tapply(
+        tapplytype(
           tname("construct"),
-          List(Type.Assign(pname("Coll"), pname("List")), Type.Assign(pname("Elem"), pname("Int")))
+          Type.Assign(pname("Coll"), pname("List")),
+          Type.Assign(pname("Elem"), pname("Int"))
         ),
-        List(lit(1), lit(2), lit(3))
+        lit(1),
+        lit(2),
+        lit(3)
       )
     )
     runTestAssert[Stat](code)(tree)
@@ -717,12 +664,8 @@ class TypeSuite extends BaseDottySuite {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "val l: Logger^{fs} = Logger(fs)"
     val layout = "val l: Logger^{fs} = Logger(fs)"
-    val tree = Defn.Val(
-      Nil,
-      List(Pat.Var("l")),
-      Some(Type.Capturing("Logger", List("fs"))),
-      Term.Apply("Logger", List("fs"))
-    )
+    val tree = Defn
+      .Val(Nil, List(patvar("l")), Some(Type.Capturing("Logger", List("fs"))), tapply("Logger", "fs"))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -731,7 +674,7 @@ class TypeSuite extends BaseDottySuite {
     val code = "def tail: LazyList[A]^{this}"
     val layout = "def tail: LazyList[A]^{this}"
     val tree = Decl
-      .Def(Nil, "tail", Nil, Type.Capturing(Type.Apply("LazyList", List("A")), List(Term.This(anon))))
+      .Def(Nil, "tail", Nil, Type.Capturing(papply("LazyList", "A"), List(Term.This(anon))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -743,14 +686,12 @@ class TypeSuite extends BaseDottySuite {
       Nil,
       "p",
       Nil,
-      Some(Type.Apply(
-        pname("Pair"),
-        List(
-          Type.Capturing(purefunc(List("Int"), "String"), List("ct")),
-          Type.Capturing("Logger", List("fs"))
-        )
+      Some(papply(
+        "Pair",
+        Type.Capturing(purefunc("Int")("String"), List("ct")),
+        Type.Capturing("Logger", List("fs"))
       )),
-      Term.Apply("Pair", List("x", "y"))
+      tapply("Pair", "x", "y")
     )
 
     runTestAssert[Stat](code, layout)(tree)

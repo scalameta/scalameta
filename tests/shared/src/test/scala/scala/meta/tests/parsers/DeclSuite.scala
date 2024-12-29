@@ -8,49 +8,35 @@ class DeclSuite extends ParseSuite {
   implicit val dialect: Dialect = dialects.Scala211
 
   test("val x: Int") {
-    assertTree(templStat("val x: Int"))(Decl.Val(Nil, List(Pat.Var(tname("x"))), pname("Int")))
+    assertTree(templStat("val x: Int"))(Decl.Val(Nil, List(patvar("x")), pname("Int")))
   }
 
   test("var x: Int") {
-    assertTree(templStat("var x: Int"))(Decl.Var(Nil, List(Pat.Var(tname("x"))), pname("Int")))
+    assertTree(templStat("var x: Int"))(Decl.Var(Nil, List(patvar("x")), pname("Int")))
   }
 
   test("val x, y: Int") {
-    assertTree(templStat("val x, y: Int"))(
-      Decl.Val(Nil, List(Pat.Var(tname("x")), Pat.Var(tname("y"))), pname("Int"))
-    )
-    assertTree(templStat("var x, y: Int"))(
-      Decl.Var(Nil, List(Pat.Var(tname("x")), Pat.Var(tname("y"))), pname("Int"))
-    )
+    assertTree(templStat("val x, y: Int"))(Decl.Val(Nil, List(patvar("x"), patvar("y")), pname("Int")))
+    assertTree(templStat("var x, y: Int"))(Decl.Var(Nil, List(patvar("x"), patvar("y")), pname("Int")))
   }
 
   test("var x, y: Int") {
-    assertTree(templStat("var x, y: Int"))(
-      Decl.Var(Nil, List(Pat.Var(tname("x")), Pat.Var(tname("y"))), pname("Int"))
-    )
+    assertTree(templStat("var x, y: Int"))(Decl.Var(Nil, List(patvar("x"), patvar("y")), pname("Int")))
   }
 
-  test("type T") {
-    assertTree(templStat("type T")) {
-      Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), Type.Bounds(None, None))
-    }
-  }
+  test("type T")(assertTree(templStat("type T"))(Decl.Type(Nil, pname("T"), Nil, noBounds)))
 
   test("type T <: hi") {
-    assertTree(templStat("type T <: hi")) {
-      Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), hiBound("hi"))
-    }
+    assertTree(templStat("type T <: hi"))(Decl.Type(Nil, pname("T"), Nil, hiBound("hi")))
   }
 
   test("type T >: lo") {
-    assertTree(templStat("type T >: lo")) {
-      Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), loBound("lo"))
-    }
+    assertTree(templStat("type T >: lo"))(Decl.Type(Nil, pname("T"), Nil, loBound("lo")))
   }
 
   test("type T >: lo <: hi") {
     assertTree(templStat("type T >: lo <: hi")) {
-      Decl.Type(Nil, pname("T"), Type.ParamClause(Nil), bounds("lo", "hi"))
+      Decl.Type(Nil, pname("T"), Nil, bounds("lo", "hi"))
     }
   }
 
@@ -78,20 +64,12 @@ class DeclSuite extends ParseSuite {
   }
 
   test("def f") {
-    assertTree(templStat("def f")) {
-      Decl.Def(Nil, tname("f"), Type.ParamClause(Nil), Nil, pname("Unit"))
-    }
+    assertTree(templStat("def f"))(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Unit")))
   }
 
   test("def f(x: Int)") {
     assertTree(templStat("def f(x: Int)")) {
-      Decl.Def(
-        Nil,
-        tname("f"),
-        Type.ParamClause(Nil),
-        (tparam("x", "Int") :: Nil) :: Nil,
-        pname("Unit")
-      )
+      Decl.Def(Nil, tname("f"), Nil, (tparam("x", "Int") :: Nil) :: Nil, pname("Unit"))
     }
   }
 
@@ -100,7 +78,7 @@ class DeclSuite extends ParseSuite {
       Decl.Def(
         Nil,
         tname("f"),
-        Type.ParamClause(Nil),
+        Nil,
         (tparam("x", Type.Repeated(pname("Int"))) :: Nil) :: Nil,
         pname("Unit")
       )
@@ -112,7 +90,7 @@ class DeclSuite extends ParseSuite {
       Decl.Def(
         Nil,
         tname("f"),
-        Type.ParamClause(Nil),
+        Nil,
         (tparam("x", Type.ByName(pname("Int"))) :: Nil) :: Nil,
         pname("Unit")
       )
@@ -132,9 +110,7 @@ class DeclSuite extends ParseSuite {
   }
 
   test("def f: X") {
-    assertTree(templStat("def f: X")) {
-      Decl.Def(Nil, tname("f"), Type.ParamClause(Nil), Nil, pname("X"))
-    }
+    assertTree(templStat("def f: X"))(Decl.Def(Nil, tname("f"), Nil, Nil, pname("X")))
   }
 
   test("def f[T]: T") {

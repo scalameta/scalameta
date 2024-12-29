@@ -5,132 +5,84 @@ import scala.meta._
 import scala.meta.parsers.ParseException
 
 class TypeSuite extends ParseSuite {
-  import Name.Anonymous
-  import Term.{Name => TermName}
-  import Type.{Name => TypeName, _}
+  import Type.{Name => _, _}
 
   private def assertTpe(expr: String)(tree: => Tree)(implicit dialect: Dialect): Unit =
     assertTree(tpe(expr))(tree)
 
-  test("T")(assertTpe("T")(TypeName("T")))
+  test("T")(assertTpe("T")(pname("T")))
 
-  test("F[T]")(assertTpe("F[T]")(Apply(TypeName("F"), ArgClause(TypeName("T") :: Nil))))
+  test("F[T]")(assertTpe("F[T]")(papply("F", "T")))
 
-  test("F#T")(assertTpe("F#T")(Project(TypeName("F"), TypeName("T"))))
+  test("F#T")(assertTpe("F#T")(Project("F", "T")))
 
-  test("A \\/ B") {
-    assertTpe("A \\/ B")(ApplyInfix(TypeName("A"), TypeName("\\/"), TypeName("B")))
-  }
+  test("A \\/ B")(assertTpe("A \\/ B")(pinfix("A", "\\/", "B")))
 
-  test("A * B")(assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B"))))
+  test("A * B")(assertTpe("A * B")(pinfix("A", "*", "B")))
 
-  test("A * B + C") {
-    assertTpe("A * B + C") {
-      Type.ApplyInfix(Type.ApplyInfix(pname("A"), pname("*"), pname("B")), pname("+"), pname("C"))
-    }
-  }
+  test("A * B + C")(assertTpe("A * B + C")(pinfix(pinfix("A", "*", "B"), "+", "C")))
 
-  test("A + B * C") {
-    assertTpe("A + B * C") {
-      Type.ApplyInfix(Type.ApplyInfix(pname("A"), pname("+"), pname("B")), pname("*"), pname("C"))
-    }
-  }
+  test("A + B * C")(assertTpe("A + B * C")(pinfix(pinfix("A", "+", "B"), "*", "C")))
 
   test("A * B + C / D") {
-    assertTpe("A * B + C / D") {
-      Type.ApplyInfix(
-        Type
-          .ApplyInfix(Type.ApplyInfix(pname("A"), pname("*"), pname("B")), pname("+"), pname("C")),
-        pname("/"),
-        pname("D")
-      )
-    }
+    assertTpe("A * B + C / D")(pinfix(pinfix(pinfix("A", "*", "B"), "+", "C"), "/", "D"))
   }
 
-  test("f.T")(assertTpe("f.T")(Type.Select(tname("f"), pname("T"))))
+  test("f.T")(assertTpe("f.T")(pselect("f", "T")))
 
-  test("f.type")(assertTpe("f.type")(Type.Singleton(tname("f"))))
+  test("f.type")(assertTpe("f.type")(Type.Singleton("f")))
 
-  test("super.T") {
-    assertTpe("super.T")(Type.Select(Term.Super(Anonymous(), Anonymous()), pname("T")))
-  }
+  test("super.T")(assertTpe("super.T")(pselect(Term.Super(anon, anon), "T")))
 
-  test("this.T")(assertTpe("this.T")(Type.Select(Term.This(Anonymous()), pname("T"))))
+  test("this.T")(assertTpe("this.T")(pselect(Term.This(anon), "T")))
 
   test("(A, B)")(assertTpe("(A, B)")(Type.Tuple(pname("A") :: pname("B") :: Nil)))
 
-  test("(A, B) => C") {
-    assertTpe("(A, B) => C")(Type.Function(pname("A") :: pname("B") :: Nil, pname("C")))
-  }
+  test("(A, B) => C")(assertTpe("(A, B) => C")(pfunc("A", "B")("C")))
 
-  test("T @foo") {
-    assertTpe("T @foo") {
-      Type.Annotate(pname("T"), Mod.Annot(Init(pname("foo"), anon, emptyArgClause)) :: Nil)
-    }
-  }
+  test("T @foo")(assertTpe("T @foo")(Type.Annotate("T", Mod.Annot(init("foo")) :: Nil)))
 
-  test("A with B")(assertTpe("A with B")(Type.With(pname("A"), pname("B"))))
+  test("A with B")(assertTpe("A with B")(Type.With("A", "B")))
 
-  test("A & B is not a special type") {
-    assertTpe("A & B")(Type.ApplyInfix(pname("A"), pname("&"), pname("B")))
-  }
+  test("A & B is not a special type")(assertTpe("A & B")(pinfix("A", "&", "B")))
 
-  test("A with B {}") {
-    assertTpe("A with B {}")(Type.Refine(Some(Type.With(pname("A"), pname("B"))), Nil))
-  }
+  test("A with B {}")(assertTpe("A with B {}")(Type.Refine(Some(Type.With("A", "B")), Nil)))
 
   test("{}")(assertTpe("{}")(Type.Refine(None, Nil)))
 
   test("A { def x: A; val y: B; type C }") {
     assertTpe("A { def x: Int; val y: B; type C }") {
       Refine(
-        Some(TypeName("A")),
-        Decl.Def(Nil, TermName("x"), Type.ParamClause(Nil), Nil, TypeName("Int")) ::
-          Decl.Val(Nil, List(Pat.Var(TermName("y"))), TypeName("B")) ::
-          Decl.Type(Nil, TypeName("C"), Type.ParamClause(Nil), Type.Bounds(None, None)) :: Nil
+        Some(pname("A")),
+        Decl.Def(Nil, "x", Nil, Nil, "Int") :: Decl.Val(Nil, List(patvar("y")), "B") ::
+          Decl.Type(Nil, pname("C"), Nil, noBounds) :: Nil
       )
     }
   }
 
   test("F[_ >: lo <: hi]") {
-    assertTpe("F[_ >: lo <: hi]") {
-      Apply(TypeName("F"), List(Wildcard(Bounds(Some(TypeName("lo")), Some(TypeName("hi"))))))
-    }
+    assertTpe("F[_ >: lo <: hi]")(papply("F", Wildcard(bounds("lo", "hi"))))
   }
 
-  test("F[_ >: lo") {
-    assertTpe("F[_ >: lo]") {
-      Apply(TypeName("F"), List(Wildcard(Bounds(Some(TypeName("lo")), None))))
-    }
-  }
+  test("F[_ >: lo")(assertTpe("F[_ >: lo]")(papply("F", Wildcard(bounds(lo = "lo")))))
 
-  test("F[_ <: hi]") {
-    assertTpe("F[_ <: hi]") {
-      Apply(TypeName("F"), List(Wildcard(Bounds(None, Some(TypeName("hi"))))))
-    }
-  }
+  test("F[_ <: hi]")(assertTpe("F[_ <: hi]")(papply("F", Wildcard(bounds(hi = "hi")))))
 
-  test("F[_]")(assertTpe("F[_]")(Apply(TypeName("F"), List(Wildcard(Bounds(None, None))))))
+  test("F[_]")(assertTpe("F[_]")(papply("F", Wildcard(noBounds))))
 
   test("F[T] forSome { type T }") {
     assertTpe("F[T] forSome { type T }") {
-      Existential(
-        Apply(TypeName("F"), TypeName("T") :: Nil),
-        Decl.Type(Nil, TypeName("T"), Type.ParamClause(Nil), Type.Bounds(None, None)) :: Nil
-      )
+      Existential(papply("F", "T"), Decl.Type(Nil, pname("T"), Nil, noBounds) :: Nil)
     }
   }
 
   test("a.T forSome { val a: A }") {
-    assertTpe("a.T forSome { val a: A }")(Existential(
-      Select(TermName("a"), TypeName("T")),
-      Decl.Val(Nil, Pat.Var(TermName("a")) :: Nil, TypeName("A")) :: Nil
-    ))
+    assertTpe("a.T forSome { val a: A }")(
+      Existential(pselect("a", "T"), Decl.Val(Nil, patvar("a") :: Nil, "A") :: Nil)
+    )
   }
 
-  test("A | B is not a special type") {
-    assertTpe("A | B")(ApplyInfix(TypeName("A"), TypeName("|"), TypeName("B")))
-  }
+  test("A | B is not a special type")(assertTpe("A | B")(pinfix("A", "|", "B")))
 
   test("42.type") {
     intercept[ParseException] {
@@ -146,7 +98,7 @@ class TypeSuite extends ParseSuite {
 
     assertTpe("42")(int(42))
     assertTpe("-42")(int(-42))
-    assertTpe("42L")(Lit.Long(42L))
+    assertTpe("42L")(lit(42L))
     matchSubStructureTyp3("42.0f", { case Lit(42.0f) => () })
     matchSubStructureTyp3("-42.0f", { case Lit(-42.0f) => () })
     matchSubStructureTyp3("42.0d", { case Lit(42.0d) => () })
@@ -165,8 +117,8 @@ class TypeSuite extends ParseSuite {
 
   test("plus-minus-then-underscore-source3") {
     implicit val dialect = dialects.Scala213Source3
-    assertTpe("+_ => Int")(Type.Function(List(pname("+_")), pname("Int")))
-    assertTpe("Option[- _]")(Apply(pname("Option"), ArgClause(List(pname("-_")))))
+    assertTpe("+_ => Int")(pfunc("+_")("Int"))
+    assertTpe("Option[- _]")(papply("Option", "-_"))
   }
 
   test("[scala213] (x: Int, y)") {

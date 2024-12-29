@@ -11,18 +11,14 @@ class LanguageExtensionsSuite extends BaseDottySuite {
     val tree = Defn.Class(
       Nil,
       Type.Name("Vec"),
-      Type.ParamClause(Nil),
-      Ctor.Primary(
-        Nil,
-        Name.Anonymous(),
-        List(Term.ParamClause(List(Term.Param(
-          List(Mod.Tracked(), Mod.ValParam()),
-          Term.Name("size"),
-          Some(Type.Name("Int")),
-          None
-        ))))
-      ),
-      Template(None, Nil, Template.Body(None, Nil), Nil)
+      Nil,
+      ctorp(Term.Param(
+        List(Mod.Tracked(), Mod.ValParam()),
+        Term.Name("size"),
+        Some(Type.Name("Int")),
+        None
+      )),
+      tplNoBody()
     )
     runTestAssert[Stat](code)(tree)
   }

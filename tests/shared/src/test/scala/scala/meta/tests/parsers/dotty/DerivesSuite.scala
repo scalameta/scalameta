@@ -50,11 +50,7 @@ class DerivesSuite extends BaseDottySuite {
           Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
           Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
         ),
-        List(
-          pname("Eq"),
-          Type.Select(Term.Select(tname("scala"), tname("derives")), pname("Ordering")),
-          pname("Show")
-        )
+        List(pname("Eq"), pselect("scala", "derives", "Ordering"), pname("Show"))
       )
     ))
 
@@ -128,10 +124,7 @@ class DerivesSuite extends BaseDottySuite {
         Nil,
         slf,
         List(Defn.Def(Nil, tname("a"), Nil, Nil, None, tname("???"))),
-        List(
-          Type.Apply(pname("Alpha"), List(pname("T"))),
-          Type.Apply(pname("Epsilon"), List(pname("T")))
-        )
+        List(papply("Alpha", "T"), papply("Epsilon", "T"))
       )
     )
     runTestAssert[Stat](
@@ -168,10 +161,7 @@ class DerivesSuite extends BaseDottySuite {
         Nil,
         slf,
         List(Defn.Def(Nil, tname("a"), Nil, Nil, None, tname("???"))),
-        List(
-          Type.Apply(pname("Alpha"), List(pname("T"))),
-          Type.Apply(pname("Epsilon"), List(pname("T")))
-        )
+        List(papply("Alpha", "T"), papply("Epsilon", "T"))
       )
     )
     runTestAssert[Stat](
@@ -211,10 +201,10 @@ class DerivesSuite extends BaseDottySuite {
       ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
-        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause)),
+        List(init(papply("Alpha", "T"))),
         slf,
         List(Defn.Def(Nil, tname("a"), Nil, None, tname("???"))),
-        List(Type.Apply(pname("Epsilon"), List(pname("T"))))
+        List(papply("Epsilon", "T"))
       )
     )
     runTestAssert[Stat](
@@ -256,10 +246,10 @@ class DerivesSuite extends BaseDottySuite {
       ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
-        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause)),
+        List(init(papply("Alpha", "T"))),
         slf,
-        List(Term.Apply(tname("require"), List(bool(true)))),
-        List(Type.Apply(pname("Epsilon"), List(pname("T"))))
+        List(tapply(tname("require"), bool(true))),
+        List(papply("Epsilon", "T"))
       )
     )
     runTestAssert[Stat](
@@ -301,12 +291,9 @@ class DerivesSuite extends BaseDottySuite {
       ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
-        List(
-          Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause),
-          Init(Type.Apply(pname("Epsilon"), List(pname("T"))), anon, emptyArgClause)
-        ),
+        List(init(papply("Alpha", "T")), init(papply("Epsilon", "T"))),
         slf,
-        List(Term.Apply(tname("require"), List(bool(true)))),
+        List(tapply(tname("require"), bool(true))),
         Nil
       )
     )
@@ -349,9 +336,9 @@ class DerivesSuite extends BaseDottySuite {
       ctorp(tparam("a", "Int"), tparam("b", "Int")),
       Template(
         Nil,
-        List(Init(Type.Apply(pname("Alpha"), List(pname("T"))), anon, emptyArgClause)),
+        List(init(papply("Alpha", "T"))),
         slf,
-        List(Term.Apply(tname("require"), List(bool(true)))),
+        List(tapply(tname("require"), bool(true))),
         Nil
       )
     )
@@ -397,7 +384,7 @@ class DerivesSuite extends BaseDottySuite {
         slf,
         List(
           Defn.Def(Nil, tname("derives"), Nil, List(Nil), None, tname("???")),
-          Term.Apply(tname("derives"), Nil)
+          tapply(tname("derives"))
         ),
         Nil
       )

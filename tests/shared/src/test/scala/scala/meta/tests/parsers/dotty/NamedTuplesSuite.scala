@@ -47,18 +47,18 @@ class NamedTuplesSuite extends BaseDottySuite {
                   |""".stripMargin
     runTestAssert[Stat](code)(Defn.Val(
       Nil,
-      List(Pat.Var(tname("y"))),
+      List(patvar("y")),
       None,
-      Term.ApplyType(
+      tapplytype(
         tname("summon"),
-        List(Type.ApplyInfix(
-          Type.Apply(pname("Tuple2"), List(pname("Int"), pname("String"))),
-          pname("<:<"),
+        pinfix(
+          papply("Tuple2", "Int", "String"),
+          "<:<",
           Type.Tuple(List(
             Type.TypedParam(pname("x"), pname("Int"), Nil),
             Type.TypedParam(pname("y"), pname("String"), Nil)
           ))
-        ))
+        )
       )
     ))
   }
@@ -85,14 +85,13 @@ class NamedTuplesSuite extends BaseDottySuite {
          |  case (a = 123, b = "123") =>
          |}
          |""".stripMargin
-    )(Term.Match(
+    )(tmatch(
       tname("a"),
-      List(Case(
+      Case(
         Pat.Tuple(List(Pat.Assign(tname("a"), lit(123)), Pat.Assign(tname("b"), lit("123")))),
         None,
-        blk(Nil)
-      )),
-      Nil
+        blk()
+      )
     ))
   }
 
@@ -102,9 +101,9 @@ class NamedTuplesSuite extends BaseDottySuite {
          |  case (a = 123, b = (c = "123", d = 123)) =>
          |}
          |""".stripMargin
-    )(Term.Match(
+    )(tmatch(
       tname("a"),
-      List(Case(
+      Case(
         Pat.Tuple(List(
           Pat.Assign(tname("a"), lit(123)),
           Pat.Assign(
@@ -113,9 +112,8 @@ class NamedTuplesSuite extends BaseDottySuite {
           )
         )),
         None,
-        blk(Nil)
-      )),
-      Nil
+        blk()
+      )
     ))
   }
 }

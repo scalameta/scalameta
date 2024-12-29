@@ -31,7 +31,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(List(tparam(List(Mod.Erased()), "ev", "Ev"), tparam("x", "Int"))),
       Some(pname("Int")),
-      Term.ApplyInfix(tname("x"), tname("+"), Nil, List(int(2)))
+      tinfix(tname("x"), "+", int(2))
     ))
   }
 
@@ -39,23 +39,16 @@ class ErasedDefsSuite extends BaseDottySuite {
     val code = "val lambdaWithErasedEv: (erased Ev, Int) => Int = (erased ev, x) => x + 2"
     runTestAssert[Stat](code)(Defn.Val(
       Nil,
-      List(Pat.Var(tname("lambdaWithErasedEv"))),
-      Some(Type.Function(
-        List(Type.FunctionArg(List(Mod.Erased()), pname("Ev")), pname("Int")),
-        pname("Int")
-      )),
-      Term.Function(
-        List(tparam(List(Mod.Erased()), "ev"), tparam("x")),
-        Term.ApplyInfix(tname("x"), tname("+"), Nil, List(int(2)))
-      )
+      List(patvar("lambdaWithErasedEv")),
+      Some(pfunc(Type.FunctionArg(List(Mod.Erased()), pname("Ev")), pname("Int"))(pname("Int"))),
+      tfunc(tparam(List(Mod.Erased()), "ev"), tparam("x"))(tinfix(tname("x"), "+", int(2)))
     ))
   }
 
   test("erased val") {
     val code = "erased val erasedEvidence: Ev = null"
     runTestAssert[Stat](code)(
-      Defn
-        .Val(List(Mod.Erased()), List(Pat.Var(tname("erasedEvidence"))), Some(pname("Ev")), Lit.Null())
+      Defn.Val(List(Mod.Erased()), List(patvar("erasedEvidence")), Some(pname("Ev")), Lit.Null())
     )
   }
 
@@ -77,15 +70,9 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       tname("turnedOn"),
       Nil,
-      List(
-        tparam(
-          List(Mod.Erased(), Mod.Using()),
-          "ev",
-          Type.Apply(pname("IsOff"), List(pname("S")))
-        ) :: Nil
-      ),
-      Some(Type.Apply(pname("Machine"), List(pname("On")))),
-      Term.New(Init(Type.Apply(pname("Machine"), List(pname("On"))), anon, emptyArgClause))
+      List(tparam(List(Mod.Erased(), Mod.Using()), "ev", papply("IsOff", "S")) :: Nil),
+      Some(papply("Machine", "On")),
+      Term.New(init(papply("Machine", "On")))
     ))
   }
 
@@ -100,8 +87,8 @@ class ErasedDefsSuite extends BaseDottySuite {
       List(Mod.Erased()),
       anon,
       None,
-      Type.Apply(pname("IsEmpty"), List(pname("Empty"))),
-      Term.New(Init(Type.Apply(pname("IsEmpty"), List(pname("Empty"))), anon, emptyArgClause))
+      papply("IsEmpty", "Empty"),
+      Term.New(init(papply("IsEmpty", "Empty")))
     ))
   }
 
@@ -109,11 +96,9 @@ class ErasedDefsSuite extends BaseDottySuite {
     val code = """|List(1, 2, 3).map {
                   |  (using erased i: Int) => i
                   |}""".stripMargin
-    runTestAssert[Stat](code)(Term.Apply(
-      Term.Select(Term.Apply(tname("List"), List(int(1), int(2), int(3))), tname("map")),
-      Term.Block(
-        Term.Function(List(tparam(List(Mod.Using(), Mod.Erased()), "i", "Int")), tname("i")) :: Nil
-      ) :: Nil
+    runTestAssert[Stat](code)(tapply(
+      tselect(tapply(tname("List"), int(1), int(2), int(3)), "map"),
+      blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "i", "Int"))(tname("i")))
     ))
   }
 
@@ -121,12 +106,9 @@ class ErasedDefsSuite extends BaseDottySuite {
     val code = "val fun = (using erased ctx: Context) => ctx.open"
     runTestAssert[Stat](code)(Defn.Val(
       Nil,
-      List(Pat.Var(tname("fun"))),
+      List(patvar("fun")),
       None,
-      Term.Function(
-        List(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context")),
-        Term.Select(tname("ctx"), tname("open"))
-      )
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context"))(tselect("ctx", "open"))
     ))
   }
 
@@ -134,12 +116,9 @@ class ErasedDefsSuite extends BaseDottySuite {
     val code = "val fun = (using erased ctx) => ctx.open"
     runTestAssert[Stat](code)(Defn.Val(
       Nil,
-      List(Pat.Var(tname("fun"))),
+      List(patvar("fun")),
       None,
-      Term.Function(
-        List(tparam(List(Mod.Using(), Mod.Erased()), "ctx")),
-        Term.Select(tname("ctx"), tname("open"))
-      )
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx"))(tselect("ctx", "open"))
     ))
   }
 
@@ -147,12 +126,9 @@ class ErasedDefsSuite extends BaseDottySuite {
     val code = "val fun = (using erased _: Context) => ctx.open"
     runTestAssert[Stat](code)(Defn.Val(
       Nil,
-      List(Pat.Var(tname("fun"))),
+      List(patvar("fun")),
       None,
-      Term.Function(
-        List(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context")),
-        Term.Select(tname("ctx"), tname("open"))
-      )
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context"))(tselect("ctx", "open"))
     ))
   }
 
@@ -161,12 +137,9 @@ class ErasedDefsSuite extends BaseDottySuite {
                   |  (using erased ctx: Context) => 3
                   |}
                   |""".stripMargin
-    runTestAssert[Stat](code)(Term.Apply(
+    runTestAssert[Stat](code)(tapply(
       tname("LazyBody"),
-      Term.Block(
-        Term.Function(List(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context")), int(3)) ::
-          Nil
-      ) :: Nil
+      blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context"))(int(3)))
     ))
   }
 
@@ -174,11 +147,8 @@ class ErasedDefsSuite extends BaseDottySuite {
     val code = "val extractor: (erased e: Entry) => e.Key = extractKey"
     runTestAssert[Stat](code)(Defn.Val(
       Nil,
-      List(Pat.Var(tname("extractor"))),
-      Some(Type.Function(
-        List(Type.TypedParam(pname("e"), pname("Entry"), List(Mod.Erased()))),
-        Type.Select(tname("e"), pname("Key"))
-      )),
+      List(patvar("extractor")),
+      Some(pfunc(Type.TypedParam(pname("e"), pname("Entry"), List(Mod.Erased())))(pselect("e", "Key"))),
       tname("extractKey")
     ))
   }

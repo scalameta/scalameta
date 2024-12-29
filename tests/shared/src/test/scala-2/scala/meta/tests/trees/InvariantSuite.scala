@@ -8,13 +8,8 @@ import scala.meta.dialects.Scala211
 class InvariantSuite extends TreeSuiteBase {
   test("secondary constructors in templates") {
     val primaryCtor = EmptyCtor()
-    val secondaryCtor = Ctor.Secondary(
-      Nil,
-      anon,
-      List(List()),
-      Init(Type.Singleton(Term.This(anon)), anon, emptyArgClause),
-      Nil
-    )
+    val secondaryCtor = Ctor
+      .Secondary(Nil, anon, List(List()), init(Type.Singleton(Term.This(anon))), Nil)
     val template = tpl(secondaryCtor)
     Defn.Class(Nil, pname("test"), Nil, primaryCtor, template)
     intercept[InvariantFailedException] {
@@ -25,8 +20,8 @@ class InvariantSuite extends TreeSuiteBase {
   }
 
   test("Lit.Float/Double") {
-    intercept[NumberFormatException](Lit.Float("a"))
-    intercept[NumberFormatException](Lit.Double("a"))
+    intercept[NumberFormatException](flt("a"))
+    intercept[NumberFormatException](dbl("a"))
   }
 
   test("Term.Repeated") {

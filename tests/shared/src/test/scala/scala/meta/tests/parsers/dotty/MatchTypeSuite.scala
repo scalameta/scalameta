@@ -19,10 +19,7 @@ class MatchTypeSuite extends BaseDottySuite {
       List(pparam("X")),
       Type.Match(
         pname("X"),
-        List(
-          TypeCase(pname("String"), pname("Char")),
-          TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
-        )
+        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t")))
       )
     ))
   }
@@ -48,10 +45,7 @@ class MatchTypeSuite extends BaseDottySuite {
       List(pparam("X")),
       Type.Match(
         pname("X"),
-        List(
-          TypeCase(pname("String"), pname("Char")),
-          TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
-        )
+        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t")))
       )
     ))
   }
@@ -66,12 +60,7 @@ class MatchTypeSuite extends BaseDottySuite {
       Nil,
       pname("Head"),
       List(pparam("X", hiBound("Tuple"))),
-      Type.Match(
-        pname("X"),
-        List(
-          TypeCase(Type.Tuple(List(pname("x1"), Type.Wildcard(Type.Bounds(None, None)))), pname("x1"))
-        )
-      )
+      Type.Match(pname("X"), List(TypeCase(Type.Tuple(List(pname("x1"), pwildcard)), pname("x1"))))
     ))
   }
 
@@ -90,10 +79,7 @@ class MatchTypeSuite extends BaseDottySuite {
         pname("X"),
         List(
           TypeCase(pname("Unit"), int(0)),
-          TypeCase(
-            Type.ApplyInfix(pname("x"), pname("*:"), pname("xs")),
-            Type.Apply(pname("S"), List(Type.Apply(pname("Len"), List(pname("xs")))))
-          )
+          TypeCase(pinfix("x", "*:", pname("xs")), papply("S", papply("Len", "xs")))
         )
       ),
       hiBound("Int")
@@ -115,14 +101,7 @@ class MatchTypeSuite extends BaseDottySuite {
         pname("X"),
         List(
           TypeCase(pname("Unit"), pname("Y")),
-          TypeCase(
-            Type.ApplyInfix(pname("x1"), pname("*:"), pname("xs1")),
-            Type.ApplyInfix(
-              pname("x1"),
-              pname("*:"),
-              Type.Apply(pname("Concat"), List(pname("xs1"), pname("Y")))
-            )
-          )
+          TypeCase(pinfix("x1", "*:", pname("xs1")), pinfix("x1", "*:", papply("Concat", "xs1", "Y")))
         )
       ),
       hiBound("Tuple")
@@ -149,10 +128,7 @@ class MatchTypeSuite extends BaseDottySuite {
       List(pparam("X")),
       Type.Match(
         pname("X"),
-        List(
-          TypeCase(pname("String"), pname("Char")),
-          TypeCase(Type.Apply(pname("Array"), List(pname("t"))), pname("t"))
-        )
+        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t")))
       )
     ))
   }
@@ -221,14 +197,8 @@ class MatchTypeSuite extends BaseDottySuite {
         Type.Match(
           pname("L"),
           List(
-            TypeCase(
-              Type.AnonymousLambda(Type.Apply(pname("Foo"), List(Type.AnonymousParam(None)))),
-              pname("L")
-            ),
-            TypeCase(
-              Type.Apply(pname("Bar"), List(Type.Wildcard(Type.Bounds(None, None)))),
-              pname("L")
-            ),
+            TypeCase(Type.AnonymousLambda(papply("Foo", Type.AnonymousParam(None))), pname("L")),
+            TypeCase(papply("Bar", pwildcard), pname("L")),
             TypeCase(Type.PatWildcard(), pname("R")),
             TypeCase(pname("?"), pname("L"))
           )
@@ -250,12 +220,10 @@ class MatchTypeSuite extends BaseDottySuite {
       Nil,
       pname("T1"),
       Nil,
-      Type.Apply(
-        pname("A"),
-        List(Type.Lambda(
-          List(pparam("T")),
-          Type.Match(pname("T"), List(TypeCase(Type.PatWildcard(), pname("Int"))))
-        ))
+      papply(
+        "A",
+        Type
+          .Lambda(List(pparam("T")), Type.Match(pname("T"), List(TypeCase(Type.PatWildcard(), "Int"))))
       ),
       noBounds
     )

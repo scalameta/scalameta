@@ -94,9 +94,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       pname("Comparer"),
       Nil,
-      ppolyfunc(
-        pfunc(List(Type.TypedParam("x", "X", Nil), Type.TypedParam("y", "X", Nil)), "Boolean"),
-        pparam(Nil, "X", cb = List("Ord"))
+      ppolyfunc(pparam(Nil, "X", cb = List("Ord")))(
+        pfunc(Type.TypedParam("x", "X", Nil), Type.TypedParam("y", "X", Nil))("Boolean")
       ),
       noBounds
     ))
@@ -113,12 +112,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       List(patvar("less")),
       Some("Comparer"),
-      Term.PolyFunction(
-        List(pparam(Nil, "X", cb = List(Type.BoundsAlias("ord", "Ord")))),
-        tfunc(
-          tinfix(tapply(tselect("ord", "compare"), "x", "y"), "<", lit(0)),
-          tparam("x", "X"),
-          tparam("y", "X")
+      tpolyfunc(pparam(Nil, "X", cb = List(Type.BoundsAlias("ord", "Ord"))))(
+        tfunc(tparam("x", "X"), tparam("y", "X"))(
+          tinfix(tapply(tselect("ord", "compare"), "x", "y"), "<", lit(0))
         )
       )
     ))
@@ -671,7 +667,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       List(List(tparam(
         "",
-        ppolyfunc(pfunc(papply("Ord", papply("List", "A")), papply("Ord", "A")), pparam(Nil, "A"))
+        ppolyfunc(pparam(Nil, "A"))(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A"))))
       ))),
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -690,7 +686,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       List(List(tparam(
         "",
-        ppolyfunc(pfunc(papply("Ord", papply("List", "A")), papply("Ord", "A")), pparam(Nil, "A"))
+        ppolyfunc(pparam(Nil, "A"))(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A"))))
       ))),
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
@@ -708,7 +704,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       List(pparam(Nil, "A")),
       Nil,
       tpl(
-        List(init(pfunc(papply("Ord", papply("List", "A")), papply("Ord", "A")))),
+        List(init(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A"))))),
         List(Defn.Def(Nil, "foo", Nil, None, "???"))
       )
     )
@@ -727,7 +723,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       List(pparam(Nil, "A")),
       Nil,
       tpl(
-        List(init(pfunc(papply("Ord", papply("List", "A")), papply("Ord", "A")))),
+        List(init(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A"))))),
         List(Defn.Def(Nil, "foo", Nil, None, "???"))
       )
     )
@@ -889,7 +885,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       anon,
       Nil,
-      List(List(tparam("a", pfunc(papply("Ord", "A"), "A")))),
+      List(List(tparam("a", pfunc("A")(papply("Ord", "A"))))),
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -906,7 +902,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       anon,
       Nil,
-      List(List(tparam("a", pfunc(papply("Ord", "A"), "A")))),
+      List(List(tparam("a", pfunc("A")(papply("Ord", "A"))))),
       tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -926,11 +922,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       "a",
       tpl(
-        Import(
-          List(Importer(tselect(tselect("scala", "util"), "chaining"), List(Importee.GivenAll())))
-        ),
+        Import(List(Importer(tselect("scala", "util", "chaining"), List(Importee.GivenAll())))),
         Import(List(Importer(
-          tselect(tselect("scala", "util"), "control"),
+          tselect("scala", "util", "control"),
           List(Importee.Name(Name("ControlThrowable")), Importee.Name(Name("NonFatal")))
         )))
       )

@@ -14,20 +14,13 @@ class InterleavedDefnSuite extends BaseDottySuite {
 
   test("def x[A <: B] = 2") {
     checkTree(templStat("def x[A <: B] = 2")) {
-      Defn.Def(Nil, tname("x"), pparam(Nil, "A", hiBound("B")) :: Nil, Nil, None, int(2))
+      Defn.Def(Nil, tname("x"), pparam("A", hiBound("B")) :: Nil, Nil, None, int(2))
     }
   }
 
   test("def x[A: B] = 2") {
     checkTree(templStat("def x[A: B] = 2")) {
-      Defn.Def(
-        Nil,
-        tname("x"),
-        pparam(Nil, "A", vb = Nil, cb = pname("B") :: Nil) :: Nil,
-        Nil,
-        None,
-        int(2)
-      )
+      Defn.Def(Nil, tname("x"), pparam(Nil, "A", cb = pname("B") :: Nil) :: Nil, Nil, None, int(2))
     }
   }
 
@@ -39,7 +32,7 @@ class InterleavedDefnSuite extends BaseDottySuite {
         Nil,
         List(tparam("a", "Int") :: Nil, tparam(Mod.Implicit() :: Nil, "b", "Int") :: Nil),
         None,
-        Term.ApplyInfix(tname("a"), tname("+"), Nil, tname("b") :: Nil)
+        tinfix(tname("a"), "+", tname("b"))
       )
     }
   }
@@ -78,24 +71,18 @@ class InterleavedDefnSuite extends BaseDottySuite {
       tname("f"),
       Nil,
       None,
-      Term.Block(List(Term.Function(
-        List(tparam("n", "Int")),
-        Term.Apply(
-          Term.Select(
-            Term.Block(List(Term.ForYield(
-              List(Enumerator.Generator(
-                Pat.Wildcard(),
-                Term.Apply(
-                  Term.Select(Term.Select(tname("scala"), tname("util")), tname("Success")),
-                  List(int(123))
-                )
-              )),
-              int(42)
-            ))),
-            tname("recover")
-          ),
-          List(tname("???"))
-        )
+      blk(tfunc(tparam("n", "Int"))(tapply(
+        tselect(
+          blk(Term.ForYield(
+            List(
+              Enumerator
+                .Generator(patwildcard, tapply(tselect("scala", "util", "Success"), int(123)))
+            ),
+            int(42)
+          )),
+          "recover"
+        ),
+        tname("???")
       )))
     ))
   }
@@ -115,13 +102,8 @@ class InterleavedDefnSuite extends BaseDottySuite {
         Nil,
         tname("f"),
         List(
-          Member.ParamClauseGroup(
-            Type.ParamClause(pparam("A") :: Nil),
-            Term
-              .ParamClause(List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A")))), None) ::
-              Nil
-          ),
-          Member.ParamClauseGroup(Type.ParamClause(pparam("B") :: Nil), Nil)
+          pcg(List(pparam("A")), List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A"))))),
+          pcg(List(pparam("B")))
         ),
         Some(pname("B")),
         tname("???")
@@ -143,25 +125,9 @@ class InterleavedDefnSuite extends BaseDottySuite {
       Defn.Def(
         Nil,
         tname("f"),
-        List(
-          Member.ParamClauseGroup(
-            Type.ParamClause(pparam("A") :: Nil),
-            Term
-              .ParamClause(List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A")))), None) ::
-              Nil
-          ),
-          Member.ParamClauseGroup(
-            Type.ParamClause(pparam("B") :: Nil),
-            Term
-              .ParamClause(List(tparam("b", "B"), tparam("bs", Type.Repeated(pname("B")))), None) ::
-              Nil
-          ),
-          Member.ParamClauseGroup(
-            Type.ParamClause(pparam("C") :: Nil),
-            Term.ParamClause(List(tparam(List(Mod.Implicit()), "c", "C")), Some(Mod.Implicit())) ::
-              Nil
-          )
-        ),
+        pcg(List(pparam("A")), List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A"))))) ::
+          pcg(List(pparam("B")), List(tparam("b", "B"), tparam("bs", Type.Repeated(pname("B"))))) ::
+          pcg(List(pparam("C")), List(tparam(List(Mod.Implicit()), "c", "C"))) :: Nil,
         Some(pname("B")),
         tname("???")
       )

@@ -17,7 +17,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
     val expected = Source(List(
       Defn
         .Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
-      Term.Apply(tname("foo"), List(tname("x")))
+      tapply(tname("foo"), tname("x"))
     ))
     assertTree(tree)(expected)
   }
@@ -37,7 +37,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
       List(
         Defn
           .Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
-        Term.Apply(tname("foo"), List(tname("x")))
+        tapply(tname("foo"), tname("x"))
       )
     )))
     assertTree(tree)(expected)
@@ -54,7 +54,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
     val expected = Source(List(
       Defn
         .Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
-      Term.Apply(tname("foo"), List(tname("x")))
+      tapply(tname("foo"), tname("x"))
     ))
     assertTree(tree)(expected)
   }

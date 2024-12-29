@@ -181,26 +181,23 @@ class XmlSuite extends ParseSuite {
       blk(
         Defn.Val(
           Nil,
-          List(Pat.Var(tname("x"))),
+          List(patvar("x")),
           None,
           Term.Xml(
             List(str("<div href="), str(">Hello "), str("</div>")),
-            List(
-              blk(Term.ApplyInfix(str("/"), tname("+"), Nil, List(tname("url")))),
-              blk(tname("name"))
-            )
+            List(blk(tinfix(str("/"), "+", tname("url"))), blk(tname("name")))
           )
         ),
         Defn.Val(
           Nil,
-          List(Pat.Var(tname("noSemicolon"))),
+          List(patvar("noSemicolon")),
           None,
           Term.Xml(
             List(str("<h1>"), str("</h1>")),
-            blk(Term.ApplyInfix(tname("msg"), tname("infix"), Nil, List(tname("upper")))) :: Nil
+            blk(tinfix(tname("msg"), "infix", tname("upper"))) :: Nil
           )
         ),
-        Defn.Val(Nil, List(Pat.Var(tname("y"))), None, int(2))
+        Defn.Val(Nil, List(patvar("y")), None, int(2))
       )
     }
   }
@@ -355,12 +352,9 @@ class XmlSuite extends ParseSuite {
       tname("foo"),
       Nil,
       None,
-      Term.Match(
+      tmatch(
         tname("e"),
-        List(
-          Case(Pat.Xml(List(lit("<title>"), lit("</title>")), List(Pat.SeqWildcard())), None, blk())
-        ),
-        Nil
+        Case(Pat.Xml(List(lit("<title>"), lit("</title>")), List(Pat.SeqWildcard())), None, blk())
       )
     )
     runTestAssert[Stat](code, layout)(tree)

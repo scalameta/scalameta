@@ -29,10 +29,7 @@ class PackageSuite extends ParseSuite {
   test("package foo.bar; class C") {
     assertTree(source("package foo.bar; class C")) {
       Source(
-        Pkg(
-          Term.Select(tname("foo"), tname("bar")),
-          Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil
-        ) :: Nil
+        Pkg(tselect("foo", "bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil
       )
     }
 
@@ -41,10 +38,7 @@ class PackageSuite extends ParseSuite {
   test("package foo.bar { class C }") {
     assertTree(source("package foo.bar { class C }")) {
       Source(
-        Pkg(
-          Term.Select(tname("foo"), tname("bar")),
-          Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil
-        ) :: Nil
+        Pkg(tselect("foo", "bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil
       )
     }
 

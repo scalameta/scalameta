@@ -26,28 +26,21 @@ class AndOrTypesSuite extends BaseDottySuite {
       pname("Unit")
     ))
 
-    runTestAssert[Stat]("val either: Password | UserName")(Decl.Val(
-      Nil,
-      List(Pat.Var(tname("either"))),
-      ApplyInfix(pname("Password"), pname("|"), pname("UserName"))
-    ))
+    runTestAssert[Stat]("val either: Password | UserName")(
+      Decl
+        .Val(Nil, List(patvar("either")), ApplyInfix(pname("Password"), pname("|"), pname("UserName")))
+    )
   }
 
   test("andtype-example") {
-    runTestAssert[Stat]("val x: Reset & Ord[Int]")(Decl.Val(
-      Nil,
-      List(Pat.Var(tname("x"))),
-      ApplyInfix(pname("Reset"), pname("&"), Type.Apply(pname("Ord"), List(pname("Int"))))
-    ))
+    runTestAssert[Stat]("val x: Reset & Ord[Int]")(
+      Decl.Val(Nil, List(patvar("x")), ApplyInfix(pname("Reset"), pname("&"), papply("Ord", "Int")))
+    )
     runTestAssert[Stat]("def fx(a: List[A & B]): Unit")(Decl.Def(
       Nil,
       tname("fx"),
       Nil,
-      List(List(tparam(
-        Nil,
-        "a",
-        Type.Apply(pname("List"), List(ApplyInfix(pname("A"), pname("&"), pname("B"))))
-      ))),
+      List(List(tparam(Nil, "a", papply("List", pinfix("A", "&", "B"))))),
       pname("Unit")
     ))
   }
@@ -61,17 +54,13 @@ class AndOrTypesSuite extends BaseDottySuite {
         Nil,
         pname("AllTraits"),
         Nil,
-        Type.ApplyInfix(
-          Type.ApplyInfix(
-            Type.ApplyInfix(
-              Type.ApplyInfix(pname("Trait1"), pname("&"), pname("Trait2")),
-              pname("&"),
-              pname("Trait3")
-            ),
-            pname("&"),
+        pinfix(
+          pinfix(
+            pinfix(pinfix("Trait1", "&", pname("Trait2")), "&", pname("Trait3")),
+            "&",
             pname("Trait4")
           ),
-          pname("&"),
+          "&",
           pname("Trait5")
         ),
         noBounds

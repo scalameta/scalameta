@@ -1107,7 +1107,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("synthetic trees don't have BOF/EOF in their tokens") {
-    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
+    val tree = tinfix(tname("foo"), "+", tname("bar"))
     assertEquals(tree.pos, Position.None)
     val tokens = tree.retokenize
     val tokensStructure = tokens.structure

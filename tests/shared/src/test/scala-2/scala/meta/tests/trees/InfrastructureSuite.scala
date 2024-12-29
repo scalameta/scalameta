@@ -23,7 +23,7 @@ class InfrastructureSuite extends TreeSuiteBase {
 
   test("copy parent") {
     val tree = "foo.bar".parse[Term].get
-    assertTree(tree)(Term.Select(Term.Name("foo"), Term.Name("bar")))
+    assertTree(tree)(tselect("foo", "bar"))
     val x1 = tree.asInstanceOf[Term.Select].name
     val x2 = x1.copy()
     assert(x1.parent.nonEmpty)

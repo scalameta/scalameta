@@ -9,17 +9,12 @@ import java.nio.charset.Charset
 class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.toString (manual)") {
-    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
+    val tree = tinfix(tname("foo"), "+", tname("bar"))
     assertEquals(tree.toString, "foo + bar")
   }
 
-  test("scala.meta.Tree.structure (manual)") {
-    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
-    assertTree(tree)(Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar"))))
-  }
-
   test("scala.meta.Tree.syntax") {
-    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
+    val tree = tinfix(tname("foo"), "+", tname("bar"))
     assertWithOriginalSyntax(tree, "foo + bar", "foo + bar")
   }
 
@@ -30,7 +25,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.structure (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assertTree(tree)(Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar"))))
+    assertTree(tree)(tinfix(tname("foo"), "+", tname("bar")))
   }
 
   test("scala.meta.Tree.syntax (parsed)") {

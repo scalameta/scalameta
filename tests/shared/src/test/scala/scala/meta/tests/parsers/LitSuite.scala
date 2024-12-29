@@ -33,9 +33,9 @@ class LitSuite extends ParseSuite {
     )(term("-2147483649"))
   }
 
-  test("42L")(assertTree(term("42L"))(Lit.Long(42L)))
+  test("42L")(assertTree(term("42L"))(lit(42L)))
 
-  test("2147483648L")(assertTree(term("2147483648L"))(Lit.Long(2147483648L)))
+  test("2147483648L")(assertTree(term("2147483648L"))(lit(2147483648L)))
 
   test("9223372036854775808L") {
     interceptMessage[ParseException](
@@ -46,11 +46,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("9223372036854775807L") {
-    assertTree(term("9223372036854775807L"))(Lit.Long(9223372036854775807L))
+    assertTree(term("9223372036854775807L"))(lit(9223372036854775807L))
   }
 
   test("-9223372036854775808L") {
-    assertTree(term("-9223372036854775808L"))(Lit.Long(-9223372036854775808L))
+    assertTree(term("-9223372036854775808L"))(lit(-9223372036854775808L))
   }
 
   test("-9223372036854775809L") {
@@ -65,7 +65,7 @@ class LitSuite extends ParseSuite {
 
   test("42.0f")(matchSubStructure[Stat]("42.42f", { case Lit(42.42f) => () }))
 
-  test("'c'")(assertTree(term("'c'"))(Lit.Char('c')))
+  test("'c'")(assertTree(term("'c'"))(lit('c')))
 
   test("\"foo\"")(assertTree(term("\"foo\""))(str("foo")))
 
@@ -86,7 +86,7 @@ class LitSuite extends ParseSuite {
     assertEquals(minusOne.tokens.structure, "Tokens(Ident(-) [4..5), Constant.Int(1) [5..6))")
   }
 
-  test("#342")(assertTree(term("""( 50).toString"""))(Term.Select(int(50), tname("toString"))))
+  test("#342")(assertTree(term("""( 50).toString"""))(tselect(int(50), "toString")))
 
   test("#360") {
     val result = """ "sobaka """.parse[Stat]
@@ -187,8 +187,8 @@ class LitSuite extends ParseSuite {
   }
 
   test("0xffffffffffffffffL") {
-    assertTree(term("0xffffffffffffffffL"))(Lit.Long(-1L))
-    assertTree(term("-0xffffffffffffffffL"))(Lit.Long(1L))
+    assertTree(term("0xffffffffffffffffL"))(lit(-1L))
+    assertTree(term("-0xffffffffffffffffL"))(lit(1L))
   }
 
   test("0xffffffffffffffff0L") {
@@ -206,61 +206,61 @@ class LitSuite extends ParseSuite {
 
   test("unary: +1") {
     runTestAssert[Stat]("+1", "1")(lit(1))
-    val tree = Term.Apply(lit(1), List(lit(0)))
+    val tree = tapply(lit(1), lit(0))
     runTestAssert[Stat]("+1(0)", "1(0)")(tree)
   }
 
   test("unary: -1") {
     runTestAssert[Stat]("-1")(lit(-1))
-    val tree = Term.Apply(lit(-1), List(lit(0)))
+    val tree = tapply(lit(-1), lit(0))
     runTestAssert[Stat]("-1(0)")(tree)
   }
 
   test("unary: ~1") {
     runTestAssert[Stat]("~1", "-2")(lit(-2))
-    val tree = Term.Apply(lit(-2), List(lit(0)))
+    val tree = tapply(lit(-2), lit(0))
     runTestAssert[Stat]("~1(0)", "-2(0)")(tree)
   }
 
   test("unary: !1") {
     runTestAssert[Stat]("!1")(Term.ApplyUnary(tname("!"), lit(1)))
-    val tree = Term.ApplyUnary(tname("!"), Term.Apply(lit(1), List(lit(0))))
+    val tree = Term.ApplyUnary(tname("!"), tapply(lit(1), lit(0)))
     runTestAssert[Stat]("!1(0)")(tree)
   }
 
   test("unary: +1.0") {
     runTestAssert[Stat]("+1.0", "1.0d")(lit(1d))
-    val tree = Term.Apply(lit(1d), List(lit(0)))
+    val tree = tapply(lit(1d), lit(0))
     runTestAssert[Stat]("+1.0(0)", "1.0d(0)")(tree)
   }
 
   test("unary: -1.0") {
     runTestAssert[Stat]("-1.0", "-1.0d")(lit(-1d))
-    val tree = Term.Apply(lit(-1d), List(lit(0)))
+    val tree = tapply(lit(-1d), lit(0))
     runTestAssert[Stat]("-1.0(0)", "-1.0d(0)")(tree)
   }
 
   test("unary: ~1.0") {
     val tree = Term.ApplyUnary(tname("~"), lit(1d))
     runTestAssert[Stat]("~1.0", "~1.0d")(tree)
-    runTestAssert[Stat]("~1.0(0)", "(~1.0d)(0)")(Term.Apply(tree, List(lit(0))))
+    runTestAssert[Stat]("~1.0(0)", "(~1.0d)(0)")(tapply(tree, lit(0)))
   }
 
   test("unary: !1.0") {
     runTestAssert[Stat]("!1.0", "!1.0d")(Term.ApplyUnary(tname("!"), lit(1d)))
-    val tree = Term.ApplyUnary(tname("!"), Term.Apply(lit(1d), List(lit(0))))
+    val tree = Term.ApplyUnary(tname("!"), tapply(lit(1d), lit(0)))
     runTestAssert[Stat]("!1.0(0)", "!1.0d(0)")(tree)
   }
 
   test("unary: !true") {
     runTestAssert[Stat]("!true", "false")(lit(false))
-    val tree = Term.Apply(lit(false), List(lit(0)))
+    val tree = tapply(lit(false), lit(0))
     runTestAssert[Stat]("!true(0)", "false(0)")(tree)
   }
 
   test("unary: !false") {
     runTestAssert[Stat]("!false", "true")(lit(true))
-    val tree = Term.Apply(lit(true), List(lit(0)))
+    val tree = tapply(lit(true), lit(0))
     runTestAssert[Stat]("!false(0)", "true(0)")(tree)
   }
 
@@ -273,14 +273,10 @@ class LitSuite extends ParseSuite {
                     |  a shouldBe b
                     |}
                     |""".stripMargin
-    val tree = Term.ApplyInfix(
+    val tree = tinfix(
       tname("behavior"),
-      tname("of"),
-      Nil,
-      Term.Apply(
-        tname("something"),
-        blk(Term.ApplyInfix(tname("a"), tname("shouldBe"), Nil, List(tname("b")))) :: Nil
-      ) :: Nil
+      "of",
+      tapply(tname("something"), blk(tinfix(tname("a"), "shouldBe", tname("b"))))
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -290,14 +286,10 @@ class LitSuite extends ParseSuite {
                   |  a shouldBe b
                   |}
                   |""".stripMargin
-    val tree = Term.ApplyInfix(
+    val tree = tinfix(
       tname("behavior"),
-      tname("of"),
-      Nil,
-      Term.Apply(
-        str("..."),
-        blk(Term.ApplyInfix(tname("a"), tname("shouldBe"), Nil, List(tname("b")))) :: Nil
-      ) :: Nil
+      "of",
+      tapply(str("..."), blk(tinfix(tname("a"), "shouldBe", tname("b"))))
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -332,10 +324,10 @@ class LitSuite extends ParseSuite {
   }
 
   Seq(
-    ("0.f", Term.Select(lit(0), tname("f"))),
-    ("1.0 + 2.0f", Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))),
-    ("1d + 2f", Term.ApplyInfix(lit(1d), tname("+"), Nil, List(lit(2f)))),
-    ("0b01.toString", Term.Select(lit(1), tname("toString")))
+    ("0.f", tselect(lit(0), "f")),
+    ("1.0 + 2.0f", tinfix(lit(1d), "+", lit(2f))),
+    ("1d + 2f", tinfix(lit(1d), "+", lit(2f))),
+    ("0b01.toString", tselect(lit(1), "toString"))
   ).foreach { case (code, tree: Tree) =>
     test(s"expr with numeric literal ok scala213: $code")(runTestAssert[Stat](code, None)(tree))
   }
