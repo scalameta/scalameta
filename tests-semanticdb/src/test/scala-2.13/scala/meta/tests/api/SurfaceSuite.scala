@@ -70,6 +70,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Tree
          |scala.meta.Tree.ImplicitOptionTree
          |scala.meta.Tree.ImplicitTree
+         |scala.meta.Type.ParamBoundsCtor
          |scala.meta.VersionSpecificApis
          |scala.meta.XtensionDialectApply
          |scala.meta.XtensionDialectTokenSyntax

@@ -20,7 +20,7 @@ class InterleavedDefnSuite extends BaseDottySuite {
 
   test("def x[A: B] = 2") {
     checkTree(templStat("def x[A: B] = 2")) {
-      Defn.Def(Nil, tname("x"), pparam(Nil, "A", cb = pname("B") :: Nil) :: Nil, Nil, None, int(2))
+      Defn.Def(Nil, tname("x"), List(pparam("A", bounds(cb = List(pname("B"))))), Nil, None, int(2))
     }
   }
 

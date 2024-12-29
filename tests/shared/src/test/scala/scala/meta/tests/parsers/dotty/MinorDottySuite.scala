@@ -171,13 +171,10 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("trait-parameters-context-bounds") {
-    runTestAssert[Stat]("trait Foo[T: Eq]")(Defn.Trait(
-      Nil,
-      pname("Foo"),
-      List(pparam(Nil, "T", vb = Nil, cb = List(pname("Eq")))),
-      ctor,
-      tplNoBody()
-    ))
+    runTestAssert[Stat]("trait Foo[T: Eq]")(
+      Defn
+        .Trait(Nil, pname("Foo"), List(pparam("T", bounds(cb = List(pname("Eq"))))), ctor, tplNoBody())
+    )
   }
 
   test("class-parameters-using") {

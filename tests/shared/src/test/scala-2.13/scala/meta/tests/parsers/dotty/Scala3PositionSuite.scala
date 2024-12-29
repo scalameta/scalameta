@@ -3086,7 +3086,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.ParamClause [A : Ord]
        |Type.Param A : Ord
        |Type.ParamClause given [A @@: Ord] => Ord[List[A]] = ???
-       |Type.Bounds given [A @@: Ord] => Ord[List[A]] = ???
+       |Type.Bounds : Ord
        |Type.Apply Ord[List[A]]
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
@@ -3101,7 +3101,7 @@ class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
        |Type.ParamClause [A : Ord]
        |Type.Param A : Ord
        |Type.ParamClause given ord: [A @@: Ord] => Ord[List[A]] = ???
-       |Type.Bounds given ord: [A @@: Ord] => Ord[List[A]] = ???
+       |Type.Bounds : Ord
        |Type.Apply Ord[List[A]]
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
