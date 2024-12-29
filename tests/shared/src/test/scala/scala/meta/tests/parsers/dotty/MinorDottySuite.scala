@@ -58,13 +58,11 @@ class MinorDottySuite extends BaseDottySuite {
       List(Mod.Case()),
       pname("OHLCPrice"),
       Nil,
-      Ctor.Primary(Nil, anon, List(List(tparam(List(Mod.ValParam()), "open", "Int")))),
+      ctorp(tparam(List(Mod.ValParam()), "open", "Int")),
       tpl(
-        Defn
-          .Val(Nil, List(Pat.Var(tname("price"))), None, Term.Apply(tname("OHLCPrice"), List(int(1)))),
-        Defn
-          .Val(Nil, List(Pat.Var(tname("price1"))), None, Term.Select(tname("price"), tname("open"))),
-        Defn.Val(Nil, List(Pat.Var(tname("price2"))), None, int(1))
+        Defn.Val(Nil, List(patvar("price")), None, tapply(tname("OHLCPrice"), int(1))),
+        Defn.Val(Nil, List(patvar("price1")), None, tselect("price", "open")),
+        Defn.Val(Nil, List(patvar("price2")), None, int(1))
       )
     ))))
   }
@@ -76,7 +74,7 @@ class MinorDottySuite extends BaseDottySuite {
       Nil,
       List(List()),
       Some(pname("Unit")),
-      Term.Block(List(tname("start"), Term.Apply(tname("open"), List(tname("p"))), tname("end")))
+      blk(tname("start"), tapply(tname("open"), tname("p")), tname("end"))
     ))
   }
 
@@ -101,7 +99,7 @@ class MinorDottySuite extends BaseDottySuite {
       pname("F"),
       Nil,
       pname("AB"),
-      Type.Bounds(None, Some(Type.ApplyInfix(pname("A"), pname("&"), pname("B"))))
+      bounds(hi = pinfix("A", "&", pname("B")))
     ))
   }
 
@@ -130,22 +128,12 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat]("object X { private opaque type T = List[Int] }")(Defn.Object(
       Nil,
       tname("X"),
-      tpl(Defn.Type(
-        List(Mod.Private(anon), Mod.Opaque()),
-        pname("T"),
-        Nil,
-        Type.Apply(pname("List"), List(pname("Int")))
-      ))
+      tpl(Defn.Type(List(Mod.Private(anon), Mod.Opaque()), pname("T"), Nil, papply("List", "Int")))
     ))
     runTestAssert[Stat]("object X { opaque private type T = List[Int] }")(Defn.Object(
       Nil,
       tname("X"),
-      tpl(Defn.Type(
-        List(Mod.Opaque(), Mod.Private(anon)),
-        pname("T"),
-        Nil,
-        Type.Apply(pname("List"), List(pname("Int")))
-      ))
+      tpl(Defn.Type(List(Mod.Opaque(), Mod.Private(anon)), pname("T"), Nil, papply("List", "Int")))
     ))
   }
 
@@ -218,22 +206,18 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("(new A(), new B())") {
-    runTestAssert[Stat]("(new A(), new B())")(Term.Tuple(List(
-      Term.New(Init(pname("A"), anon, List(List()))),
-      Term.New(Init(pname("B"), anon, List(List())))
-    )))
+    runTestAssert[Stat]("(new A(), new B())")(Term.Tuple(
+      List(Term.New(init("A", Nil)), Term.New(init("B", Nil)))
+    ))
   }
 
   test("new A(using b)(c)(using d, e)") {
     runTestAssert[Stat]("new A(using b)(c)(using d, e)", Some("new A(using b)(c)(using d, e)"))(
-      Term.New(Init(
+      Term.New(init(
         pname("A"),
-        anon,
-        List(
-          Term.ArgClause(List(tname("b")), Some(Mod.Using())),
-          Term.ArgClause(List(tname("c")), None),
-          Term.ArgClause(List(tname("d"), tname("e")), Some(Mod.Using()))
-        )
+        Term.ArgClause(List(tname("b")), Some(Mod.Using())),
+        Term.ArgClause(List(tname("c")), None),
+        Term.ArgClause(List(tname("d"), tname("e")), Some(Mod.Using()))
       ))
     )
   }
@@ -260,16 +244,13 @@ class MinorDottySuite extends BaseDottySuite {
   test("super-trait")(runTestError[Stat]("super trait Foo", "`.` expected but `trait` found"))
 
   test("question-type") {
-    runTestAssert[Stat]("val stat: Tree[? >: Untyped]")(Decl.Val(
-      Nil,
-      List(Pat.Var(tname("stat"))),
-      Type.Apply(pname("Tree"), List(Type.Wildcard(loBound("Untyped"))))
-    ))
+    runTestAssert[Stat]("val stat: Tree[? >: Untyped]")(
+      Decl.Val(Nil, List(patvar("stat")), papply("Tree", pwildcard(loBound("Untyped"))))
+    )
   }
 
   test("question-type-like") {
-    val treeWithoutBounds = Decl
-      .Val(Nil, List(Pat.Var(tname("stat"))), Type.Apply(pname("Tree"), List(pname("?"))))
+    val treeWithoutBounds = Decl.Val(Nil, List(patvar("stat")), papply("Tree", pname("?")))
     runTestAssert[Stat]("val stat: Tree[`?`]")(treeWithoutBounds)
     val errorWithBounds = """|<input>:1: error: `]` expected but `>:` found
                              |val stat: Tree[`?` >: Untyped]
@@ -279,7 +260,7 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("lazy-val-toplevel") {
     runTestAssert[Source]("lazy val x = 3")(Source(
-      List(Defn.Val(List(Mod.Lazy()), List(Pat.Var(tname("x"))), None, int(3)))
+      List(Defn.Val(List(Mod.Lazy()), List(patvar("x")), None, int(3)))
     ))
   }
 
@@ -309,9 +290,9 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         tname("X"),
         tpl(
-          Term.Apply(tname("println"), List(str("hello"))),
+          tapply(tname("println"), str("hello")),
           tname("???"),
-          Term.Match(tname("???"), List(Case(int(0), None, int(1))), Nil)
+          tmatch(tname("???"), Case(int(0), None, int(1)))
         )
       ) :: Nil
     ))
@@ -362,29 +343,24 @@ class MinorDottySuite extends BaseDottySuite {
       pname("Foo"),
       Nil,
       EmptyCtor(),
-      tpl(Decl.Val(
-        List(Mod.Protected(Term.This(anon)), Mod.Lazy()),
-        List(Pat.Var(tname("from"))),
-        pname("Int")
-      ))
+      tpl(
+        Decl
+          .Val(List(Mod.Protected(Term.This(anon)), Mod.Lazy()), List(patvar("from")), pname("Int"))
+      )
     ))
   }
 
   test("type-wildcard-questionmark") {
-    runTestAssert[Stat]("val x: List[?] = List(1)")(Defn.Val(
-      Nil,
-      List(Pat.Var(tname("x"))),
-      Some(Type.Apply(pname("List"), List(Type.Wildcard(Type.Bounds(None, None))))),
-      Term.Apply(tname("List"), List(int(1)))
-    ))
+    runTestAssert[Stat]("val x: List[?] = List(1)")(
+      Defn
+        .Val(Nil, List(patvar("x")), Some(papply("List", pwildcard)), tapply(tname("List"), int(1)))
+    )
 
     runTestAssert[Stat]("def x(a: List[?]): Unit = ()")(Defn.Def(
       Nil,
       tname("x"),
       Nil,
-      List(List(
-        tparam(Nil, "a", Type.Apply(pname("List"), List(Type.Wildcard(Type.Bounds(None, None)))))
-      )),
+      List(List(tparam(Nil, "a", papply("List", pwildcard)))),
       Some(pname("Unit")),
       Lit.Unit()
     ))
@@ -399,27 +375,21 @@ class MinorDottySuite extends BaseDottySuite {
   test("unchecked-annotation") {
     runTestAssert[Stat]("val a :: Nil:  @unchecked = args")(Defn.Val(
       Nil,
-      List(Pat.ExtractInfix(Pat.Var(tname("a")), tname("::"), List(tname("Nil")))),
-      Some(Type.Annotate(
-        Type.AnonymousName(),
-        List(Mod.Annot(Init(pname("unchecked"), anon, emptyArgClause)))
-      )),
+      List(patinfix(patvar("a"), "::", tname("Nil"))),
+      Some(Type.Annotate(Type.AnonymousName(), List(Mod.Annot(init("unchecked"))))),
       tname("args")
     ))
 
     runTestAssert[Stat]("val x:  @annotation.switch = 2")(Defn.Val(
       Nil,
-      List(Pat.Var(tname("x"))),
-      Some(Type.Annotate(
-        Type.AnonymousName(),
-        List(Mod.Annot(Init(Type.Select(tname("annotation"), pname("switch")), anon, emptyArgClause)))
-      )),
+      List(patvar("x")),
+      Some(Type.Annotate(Type.AnonymousName(), List(Mod.Annot(init(pselect("annotation", "switch")))))),
       int(2)
     ))
   }
 
   val patternBinding = Term
-    .Match(int(1), List(Case(Pat.Bind(Pat.Var(tname("intValue")), int(1)), None, Term.Block(Nil))))
+    .Match(int(1), List(Case(Pat.Bind(patvar("intValue"), int(1)), None, blk())))
 
   test("comment-after-coloneol") {
     val expected = "trait X { def x(): String }"
@@ -444,12 +414,7 @@ class MinorDottySuite extends BaseDottySuite {
          |  Set[Elem]
          |""".stripMargin,
       assertLayout = Some(expected)
-    )(Defn.Type(
-      List(Mod.Opaque()),
-      pname("LinearSet"),
-      List(pparam("Elem")),
-      Type.Apply(pname("Set"), List(pname("Elem")))
-    ))
+    )(Defn.Type(List(Mod.Opaque()), pname("LinearSet"), List(pparam("Elem")), papply("Set", "Elem")))
   }
 
   test("opaque-soft-keyword") {
@@ -473,12 +438,7 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat](
       """val Private @ _ = flags()
         |""".stripMargin
-    )(Defn.Val(
-      Nil,
-      List(Pat.Bind(Pat.Var(tname("Private")), Pat.Wildcard())),
-      None,
-      Term.Apply(tname("flags"), Nil)
-    ))
+    )(Defn.Val(Nil, List(Pat.Bind(patvar("Private"), patwildcard)), None, tapply(tname("flags"))))
   }
 
   test("capital-var-pattern-case") {
@@ -487,10 +447,7 @@ class MinorDottySuite extends BaseDottySuite {
          |  case Pattern @ _ =>
          |}
          |""".stripMargin
-    )(Term.Match(
-      Term.Apply(tname("flags"), Nil),
-      List(Case(Pat.Bind(Pat.Var(tname("Pattern")), Pat.Wildcard()), None, Term.Block(Nil)))
-    ))
+    )(tmatch(tapply(tname("flags")), Case(Pat.Bind(patvar("Pattern"), patwildcard), None, blk())))
   }
 
   test("catch-end-def") {
@@ -522,11 +479,8 @@ class MinorDottySuite extends BaseDottySuite {
           Nil,
           Nil,
           None,
-          Term.Try(
-            Term.Apply(tname("action"), Nil),
-            List(Case(Pat.Var(tname("ex")), None, Term.Apply(tname("err"), Nil))),
-            None
-          )
+          Term
+            .Try(tapply(tname("action")), List(Case(patvar("ex"), None, tapply(tname("err")))), None)
         ),
         Defn.Class(List(Mod.Private(anon), Mod.Abstract()), pname("X"), Nil, ctorp(), tplNoBody())
       )
@@ -539,14 +493,7 @@ class MinorDottySuite extends BaseDottySuite {
          |  type T
          |}
          |""".stripMargin
-    )(Defn.Def(
-      Nil,
-      tname("hello"),
-      Nil,
-      Nil,
-      None,
-      Term.Block(List(Decl.Type(Nil, pname("T"), Nil, Type.Bounds(None, None))))
-    ))
+    )(Defn.Def(Nil, tname("hello"), Nil, Nil, None, blk(Decl.Type(Nil, pname("T"), Nil, noBounds))))
   }
 
   test("operator-next-line") {
@@ -556,18 +503,12 @@ class MinorDottySuite extends BaseDottySuite {
       assertLayout = Some("""val all = "-siteroot" +: "../docs" +: "-project" +: Nil""")
     )(Defn.Val(
       Nil,
-      List(Pat.Var(tname("all"))),
+      List(patvar("all")),
       None,
-      Term.ApplyInfix(
+      tinfix(
         str("-siteroot"),
-        tname("+:"),
-        Nil,
-        List(Term.ApplyInfix(
-          str("../docs"),
-          tname("+:"),
-          Nil,
-          List(Term.ApplyInfix(str("-project"), tname("+:"), Nil, List(tname("Nil"))))
-        ))
+        "+:",
+        tinfix(str("../docs"), "+:", tinfix(str("-project"), "+:", tname("Nil")))
       )
     ))
   }
@@ -585,16 +526,10 @@ class MinorDottySuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.ApplyInfix(
+      tinfix(
         str("-siteroot"),
-        tname("+:"),
-        Nil,
-        List(Term.ApplyInfix(
-          str("../docs"),
-          tname("+:"),
-          Nil,
-          List(Term.ApplyInfix(str("-project"), tname("+:"), Nil, List(tname("Nil"))))
-        ))
+        "+:",
+        tinfix(str("../docs"), "+:", tinfix(str("-project"), "+:", tname("Nil")))
       )
     ))
   }
@@ -609,13 +544,9 @@ class MinorDottySuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Term.Match(
+    )(tmatch(
       tname("a"),
-      List(Case(
-        Pat.Extract(tname("List"), List(Pat.Bind(Pat.Var(tname("xs")), Pat.SeqWildcard()))),
-        None,
-        Term.Block(Nil)
-      ))
+      Case(Pat.Extract(tname("List"), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard()))), None, blk())
     ))
   }
 
@@ -629,23 +560,17 @@ class MinorDottySuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Term.Match(
+    )(tmatch(
       tname("a"),
-      List(Case(
-        Pat.Extract(tname("List"), List(Pat.Bind(Pat.Var(tname("xs")), Pat.SeqWildcard()))),
-        None,
-        Term.Block(Nil)
-      ))
+      Case(Pat.Extract(tname("List"), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard()))), None, blk())
     ))
   }
 
   test("vararg-wildcard-postfix-star") {
-    runTestAssert[Stat]("val lst = List(0, arr*)")(Defn.Val(
-      Nil,
-      List(Pat.Var(tname("lst"))),
-      None,
-      Term.Apply(tname("List"), List(int(0), Term.Repeated(tname("arr"))))
-    ))
+    runTestAssert[Stat]("val lst = List(0, arr*)")(
+      Defn
+        .Val(Nil, List(patvar("lst")), None, tapply(tname("List"), int(0), Term.Repeated(tname("arr"))))
+    )
   }
 
   test("vararg-wildcard-like-postfix-star") {
@@ -659,12 +584,9 @@ class MinorDottySuite extends BaseDottySuite {
   test("non-vararg-infix-star") {
     runTestAssert[Stat]("val lst = List(0, a * b)")(Defn.Val(
       Nil,
-      List(Pat.Var(tname("lst"))),
+      List(patvar("lst")),
       None,
-      Term.Apply(
-        tname("List"),
-        List(int(0), Term.ApplyInfix(tname("a"), tname("*"), Nil, List(tname("b"))))
-      )
+      tapply(tname("List"), int(0), tinfix(tname("a"), "*", tname("b")))
     ))
   }
 
@@ -678,11 +600,7 @@ class MinorDottySuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Term.Match(
-      tname("a"),
-      List(Case(Pat.Extract(tname("List"), List(Pat.Repeated(tname("xs")))), None, Term.Block(Nil))),
-      Nil
-    ))
+    )(tmatch(tname("a"), Case(Pat.Extract(tname("List"), List(Pat.Repeated(tname("xs")))), None, blk())))
   }
 
   test("vararg-wildcard-like-postfix-start-pat") {
@@ -723,10 +641,9 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )(Defn.Val(
       Nil,
-      List(Pat.Var(tname("base"))),
+      List(patvar("base")),
       None,
-      Term
-        .ApplyInfix(str(""), tname("++"), Nil, List(Term.Interpolate(tname("s"), List(str("")), Nil)))
+      tinfix(str(""), "++", Term.Interpolate(tname("s"), List(str("")), Nil))
     ))
   }
 
@@ -748,17 +665,16 @@ class MinorDottySuite extends BaseDottySuite {
       Nil,
       List(List(tparam("t", Type.Tuple(List(pname("String"), pname("String")))))),
       Some(pname("String")),
-      Term.Match(
+      tmatch(
         tname("t"),
-        List(Case(
+        Case(
           Pat.Typed(
-            Pat.Tuple(List(Pat.Var(tname("m")), Pat.Wildcard())),
+            Pat.Tuple(List(patvar("m"), patwildcard)),
             Type.Tuple(List(pname("String"), pname("String")))
           ),
           None,
           tname("m")
-        )),
-        Nil
+        )
       )
     ))
   }
@@ -778,17 +694,14 @@ class MinorDottySuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Term.Match(
+    )(tmatch(
       tname("s"),
-      List(
-        Case(
-          Pat.Typed(Pat.Extract(tname("re"), List(Pat.Var(tname("v")))), pname("String")),
-          None,
-          Term.Select(tname("v"), tname("toDouble"))
-        ),
-        Case(Pat.Var(tname("other")), None, tname("o"))
+      Case(
+        Pat.Typed(Pat.Extract(tname("re"), List(patvar("v"))), pname("String")),
+        None,
+        tselect("v", "toDouble")
       ),
-      Nil
+      Case(patvar("other"), None, tname("o"))
     ))
   }
 
@@ -796,12 +709,7 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat](
       """|val x * y = v
          |""".stripMargin
-    )(Defn.Val(
-      Nil,
-      List(Pat.ExtractInfix(Pat.Var(tname("x")), tname("*"), List(Pat.Var(tname("y"))))),
-      None,
-      tname("v")
-    ))
+    )(Defn.Val(Nil, List(patinfix(patvar("x"), "*", patvar("y"))), None, tname("v")))
   }
 
   test("typed-typed-pattern") {
@@ -819,17 +727,14 @@ class MinorDottySuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Term.Match(
+    )(tmatch(
       tname("s"),
-      List(
-        Case(
-          Pat.Typed(Pat.Typed(Pat.Var(tname("v")), pname("String")), pname("String")),
-          None,
-          Term.Select(tname("v"), tname("toDouble"))
-        ),
-        Case(Pat.Var(tname("other")), None, tname("o"))
+      Case(
+        Pat.Typed(Pat.Typed(patvar("v"), pname("String")), pname("String")),
+        None,
+        tselect("v", "toDouble")
       ),
-      Nil
+      Case(patvar("other"), None, tname("o"))
     ))
   }
 
@@ -870,16 +775,11 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )(Defn.Val(
       Nil,
-      List(Pat.Var(tname("f"))),
-      Some(Type.Function(
-        List(pname("String")),
-        Type.Apply(pname("PartialFunction"), List(pname("String"), pname("Int")))
-      )),
-      Term.Function(
-        List(tparam("s")),
-        Term
-          .PartialFunction(List(Case(str("Hello"), None, int(5)), Case(str("Goodbye"), None, int(0))))
-      )
+      List(patvar("f")),
+      Some(pfunc(pname("String"))(papply("PartialFunction", "String", "Int"))),
+      tfunc(tparam("s"))(Term.PartialFunction(
+        List(Case(str("Hello"), None, int(5)), Case(str("Goodbye"), None, int(0)))
+      ))
     ))
   }
 
@@ -907,23 +807,17 @@ class MinorDottySuite extends BaseDottySuite {
           Nil,
           pname("X"),
           Nil,
-          Type.Function(List(Type.AnonymousParam(Some(Mod.Covariant()))), pname("Int")),
+          pfunc(Type.AnonymousParam(Some(Mod.Covariant())))(pname("Int")),
           noBounds
         ),
         Defn.Type(
           Nil,
           pname("Y"),
           Nil,
-          Type.Function(List(Type.AnonymousParam(Some(Mod.Contravariant()))), pname("Int")),
+          pfunc(Type.AnonymousParam(Some(Mod.Contravariant())))(pname("Int")),
           noBounds
         ),
-        Defn.Type(
-          Nil,
-          pname("Z"),
-          Nil,
-          Type.Function(List(Type.AnonymousParam(None)), pname("Int")),
-          noBounds
-        )
+        Defn.Type(Nil, pname("Z"), Nil, pfunc(Type.AnonymousParam(None))(pname("Int")), noBounds)
       )
     ))
   }
@@ -942,13 +836,7 @@ class MinorDottySuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.ApplyType(
-        Term.Apply(
-          Term.Select(str(""), tname("foo2")),
-          Term.ArgClause(List(tname("foo")), Some(Mod.Using()))
-        ),
-        List(pname("Any"))
-      )
+      tapplytype(tapplyUsing(tselect(str(""), "foo2"), tname("foo")), pname("Any"))
     ))
   }
 
@@ -966,14 +854,14 @@ class MinorDottySuite extends BaseDottySuite {
       )
     )(Decl.Val(
       Nil,
-      List(Pat.Var(tname("x"))),
+      List(patvar("x")),
       Type.Project(
         Type.Refine(
-          Some(Type.Refine(
-            Some(pname("C")),
-            List(Defn.Type(Nil, pname("U"), Nil, pname("T"), Type.Bounds(None, None)))
-          )),
-          List(Defn.Type(Nil, pname("T"), Nil, pname("String"), Type.Bounds(None, None)))
+          Some(
+            Type
+              .Refine(Some(pname("C")), List(Defn.Type(Nil, pname("U"), Nil, pname("T"), noBounds)))
+          ),
+          List(Defn.Type(Nil, pname("T"), Nil, pname("String"), noBounds))
         ),
         pname("U")
       )
@@ -986,17 +874,9 @@ class MinorDottySuite extends BaseDottySuite {
          |  case x2: ([V] => () => Int) => ???
          |}
          |""".stripMargin
-    )(Term.Match(
+    )(tmatch(
       tname("???"),
-      List(Case(
-        Pat.Typed(
-          Pat.Var(tname("x2")),
-          Type.PolyFunction(List(pparam("V")), Type.Function(Nil, pname("Int")))
-        ),
-        None,
-        tname("???")
-      )),
-      Nil
+      Case(Pat.Typed(patvar("x2"), ppolyfunc(pparam("V"))(pfunc()(pname("Int")))), None, tname("???"))
     ))
   }
 
@@ -1020,13 +900,7 @@ class MinorDottySuite extends BaseDottySuite {
     )(Source(List(
       Import(
         Importer(
-          Term.Select(
-            Term.Select(
-              Term.Select(Term.Select(tname("_root_com"), tname("olegych")), tname("scastie")),
-              tname("api")
-            ),
-            tname("runtime")
-          ),
+          tselect("_root_com", "olegych", "scastie", "api", "runtime"),
           List(Importee.Wildcard())
         ) :: Nil
       ),
@@ -1034,12 +908,10 @@ class MinorDottySuite extends BaseDottySuite {
         Nil,
         tname("Playground"),
         tpl(
-          List(Init(pname("ScastieApp"), anon, emptyArgClause)),
-          List(Term.Apply(
-            Term.Select(Term.Apply(tname("List"), List(int(1), int(2), int(3))), tname("map")),
-            Term.Block(
-              Term.Function(tparam(List(Mod.Using()), "i", "Int") :: Nil, tname("i")) :: Nil
-            ) :: Nil
+          List(init("ScastieApp")),
+          List(tapply(
+            tselect(tapply(tname("List"), int(1), int(2), int(3)), "map"),
+            blk(tfunc(tparam(List(Mod.Using()), "i", "Int"))(tname("i")))
           ))
         )
       )
@@ -1058,25 +930,18 @@ class MinorDottySuite extends BaseDottySuite {
       tname("generate"),
       List(pparam("T")),
       List(List(tparam("value", "T"))),
-      Some(Type.Apply(pname("Clue"), List(pname("T")))),
-      Term.Select(tname("MacroCompatScala2"), tname("clueImpl"))
+      Some(papply("Clue", "T")),
+      tselect("MacroCompatScala2", "clueImpl")
     ))
   }
 
   test("kleisli") {
     runTestAssert[Stat]("new (Kleisli[F, Span[F], *] ~> F) {}")(Term.NewAnonymous(tpl(
-      Init(
-        Type.AnonymousLambda(Type.ApplyInfix(
-          Type.Apply(
-            pname("Kleisli"),
-            List(pname("F"), Type.Apply(pname("Span"), List(pname("F"))), Type.AnonymousParam(None))
-          ),
-          pname("~>"),
-          pname("F")
-        )),
-        anon,
-        emptyArgClause
-      ) :: Nil,
+      init(Type.AnonymousLambda(pinfix(
+        papply("Kleisli", "F", papply("Span", "F"), Type.AnonymousParam(None)),
+        "~>",
+        pname("F")
+      ))) :: Nil,
       Nil
     )))
   }
@@ -1136,7 +1001,7 @@ class MinorDottySuite extends BaseDottySuite {
       pname("Baz1"),
       Nil,
       Ctor.Primary(
-        List(Mod.Annot(Init(pname("deprecated"), anon, List(List(tname("foo")))))),
+        List(Mod.Annot(init("deprecated", List(tname("foo"))))),
         anon,
         List(List(tparam("c", "C")))
       ),
@@ -1151,16 +1016,12 @@ class MinorDottySuite extends BaseDottySuite {
     val layout = """|(underlyingStableClassRef(mbr.info.loBound): @unchecked) match {
                     |  case ref: TypeRef =>
                     |}""".stripMargin
-    runTestAssert[Stat](code, Some(layout))(Term.Match(
+    runTestAssert[Stat](code, Some(layout))(tmatch(
       Term.Annotate(
-        Term.Apply(
-          tname("underlyingStableClassRef"),
-          List(Term.Select(Term.Select(tname("mbr"), tname("info")), tname("loBound")))
-        ),
-        List(Mod.Annot(Init(pname("unchecked"), anon, emptyArgClause)))
+        tapply(tname("underlyingStableClassRef"), tselect("mbr", "info", "loBound")),
+        List(Mod.Annot(init("unchecked")))
       ),
-      List(Case(Pat.Typed(Pat.Var(tname("ref")), pname("TypeRef")), None, Term.Block(Nil))),
-      Nil
+      Case(Pat.Typed(patvar("ref"), pname("TypeRef")), None, blk())
     ))
   }
 
@@ -1171,18 +1032,9 @@ class MinorDottySuite extends BaseDottySuite {
                     |  case arr: Array[Array[_]] =>
                     |}
                     |""".stripMargin
-    runTestAssert[Stat](code, Some(layout))(Term.Match(
+    runTestAssert[Stat](code, Some(layout))(tmatch(
       tname("obj"),
-      Case(
-        Pat.Typed(
-          Pat.Var(tname("arr")),
-          Type
-            .Apply(pname("Array"), List(Type.Apply(pname("Array"), List(Type.Wildcard(noBounds)))))
-        ),
-        None,
-        Term.Block(Nil)
-      ) :: Nil,
-      Nil
+      Case(Pat.Typed(patvar("arr"), papply(pname("Array"), papply("Array", pwildcard))), None, blk())
     ))
   }
 
@@ -1202,29 +1054,18 @@ class MinorDottySuite extends BaseDottySuite {
          |  return
          |})
          |""".stripMargin
-    val tree = Term.Apply(
-      Term.Select(tname("sc"), tname("submitJob")),
-      List(
-        tname("rdd"),
-        Term.Function(
-          List(tparam("iter", Type.Apply(pname("Iterator"), List(pname("Int"))))),
-          Term.Select(tname("iter"), tname("toArray"))
-        ),
-        Term.Apply(
-          Term.Select(tname("partitions"), tname("getOrElse")),
-          List(Term.Select(Term.Select(tname("rdd"), tname("partitions")), tname("indices")))
-        ),
-        Term.Ascribe(
-          Term.PartialFunction(List(
-            Case(Pat.Tuple(List(Pat.Wildcard(), Pat.Wildcard())), None, Term.Return(Lit.Unit()))
-          )),
-          Type.Function(
-            List(pname("Int"), Type.Apply(pname("Array"), List(pname("Int")))),
-            pname("Unit")
-          )
-        ),
-        Term.Block(List(Term.Return(Lit.Unit())))
-      )
+    val tree = tapply(
+      tselect("sc", "submitJob"),
+      tname("rdd"),
+      tfunc(tparam("iter", papply("Iterator", "Int")))(tselect("iter", "toArray")),
+      tapply(tselect("partitions", "getOrElse"), tselect("rdd", "partitions", "indices")),
+      Term.Ascribe(
+        Term.PartialFunction(List(
+          Case(Pat.Tuple(List(patwildcard, patwildcard)), None, Term.Return(Lit.Unit()))
+        )),
+        pfunc(pname("Int"), papply("Array", "Int"))(pname("Unit"))
+      ),
+      blk(Term.Return(Lit.Unit()))
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }

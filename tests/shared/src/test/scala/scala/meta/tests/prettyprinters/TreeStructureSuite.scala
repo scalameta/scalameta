@@ -12,15 +12,15 @@ class TreeStructureSuite extends ParseSuite {
     test(logger.revealWhitespace(tree.syntax))(assertNoDiff(tree.structure, expected))
 
   assertStructure(Lit.Unit())("Lit.Unit()")
-  assertStructure(Lit.Float(".0f"))("Lit.Float(0f)")
-  assertStructure(Lit.Float("0.00f"))("Lit.Float(0f)")
-  assertStructure(Lit.Float("1230f"))("Lit.Float(1230f)")
-  assertStructure(Lit.Float("12.30f"))("Lit.Float(12.3f)")
-  assertStructure(Lit.Double(".0d"))("Lit.Double(0d)")
-  assertStructure(Lit.Double("0.00d"))("Lit.Double(0d)")
-  assertStructure(Lit.Double("1230d"))("Lit.Double(1230d)")
-  assertStructure(Lit.Double("12.30d"))("Lit.Double(12.3d)")
-  assertStructure(Lit.Long(1230))("Lit.Long(1230L)")
+  assertStructure(flt(".0f"))("Lit.Float(0f)")
+  assertStructure(flt("0.00f"))("Lit.Float(0f)")
+  assertStructure(flt("1230f"))("Lit.Float(1230f)")
+  assertStructure(flt("12.30f"))("Lit.Float(12.3f)")
+  assertStructure(dbl(".0d"))("Lit.Double(0d)")
+  assertStructure(dbl("0.00d"))("Lit.Double(0d)")
+  assertStructure(dbl("1230d"))("Lit.Double(1230d)")
+  assertStructure(dbl("12.30d"))("Lit.Double(12.3d)")
+  assertStructure(lit(1230L))("Lit.Long(1230L)")
   assertStructure(int(1230))("Lit.Int(1230)")
   assertStructure(Lit.Null())("Lit.Null()")
   assertStructure(bool(false))("Lit.Boolean(false)")
@@ -29,7 +29,7 @@ class TreeStructureSuite extends ParseSuite {
   assertStructure(lit('a'))("Lit.Char('a')")
   assertStructure(sym("a"))("""Lit.Symbol(Symbol("a"))""")
 
-  assertStructure(Case(Pat.Wildcard(), None, Term.Function(List(tparam("")), bool(false))))(
+  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(bool(false))))(
     """|Case(
        |  Pat.Wildcard(),
        |  None,
@@ -48,9 +48,7 @@ class TreeStructureSuite extends ParseSuite {
        |""".stripMargin
   )
 
-  assertStructure(
-    Case(Pat.Wildcard(), None, Term.Function(List(tparam("")), Term.Block(List(bool(false)))))
-  )(
+  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(blk(bool(false)))))(
     """|Case(
        |  Pat.Wildcard(),
        |  None,
@@ -71,11 +69,7 @@ class TreeStructureSuite extends ParseSuite {
        |""".stripMargin
   )
 
-  assertStructure(Case(
-    Pat.Wildcard(),
-    None,
-    Term.Function(List(tparam("")), Term.Block(List(bool(false), tname("a"))))
-  ))(
+  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(blk(bool(false), tname("a")))))(
     """|Case(
        |  Pat.Wildcard(),
        |  None,

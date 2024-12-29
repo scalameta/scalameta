@@ -15,7 +15,7 @@ class PublicScala2Suite extends TreeSuiteBase {
 
   test("scala.meta.Tree.structure (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assertTree(tree)(Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar"))))
+    assertTree(tree)(tinfix(tname("foo"), "+", tname("bar")))
   }
 
   test("scala.meta.Tree.syntax (quasiquoted)") {

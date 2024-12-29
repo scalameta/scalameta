@@ -78,7 +78,7 @@ class EnumSuite extends BaseDottySuite {
       pname("Color"),
       Nil,
       EmptyCtor(),
-      tpl(Defn.Val(Nil, List(Pat.Var(tname("PI"))), None, int(314)))
+      tpl(Defn.Val(Nil, List(patvar("PI")), None, int(314)))
     ))
   }
 
@@ -100,7 +100,7 @@ class EnumSuite extends BaseDottySuite {
         Nil,
         ctor,
         tpl(
-          Defn.Val(Nil, List(Pat.Var(tname("PI"))), None, int(3)),
+          Defn.Val(Nil, List(patvar("PI")), None, int(3)),
           Defn.Def(Nil, tname("r"), Nil, Nil, Some(pname("Int")), int(4)),
           Defn.EnumCase(Nil, tname("R"), Nil, ctor, Nil)
         )
@@ -111,7 +111,7 @@ class EnumSuite extends BaseDottySuite {
   test("enum-parse-option") {
     val typeParam = pparam(List(Mod.Covariant()), "T")
     val xparam = List(tparam("x", "T"))
-    def ext(tp: String) = Init(Type.Apply(pname("Option"), List(pname(tp))), anon, emptyArgClause)
+    def ext(tp: String) = init(papply("Option", tp))
 
     {
       val opt = """|
@@ -169,7 +169,7 @@ class EnumSuite extends BaseDottySuite {
       ctor,
       tpl(
         Defn.EnumCase(Nil, tname("R"), Nil, ctor, Nil),
-        Term.Match(tname("v"), List(unap(1), unap(2))),
+        tmatch(tname("v"), unap(1), unap(2)),
         Defn.EnumCase(Nil, tname("G"), Nil, ctor, Nil)
       )
     ))
@@ -189,13 +189,9 @@ class EnumSuite extends BaseDottySuite {
                  |  }
                  |  case G
                  |}""".stripMargin
-    val cmatch = Term.Match(
+    val cmatch = tmatch(
       tname("v"),
-      List(Case(
-        Pat.Alternative(Lit.Char('a'), Pat.Alternative(Lit.Char('c'), Lit.Char('e'))),
-        None,
-        str("OK")
-      ))
+      Case(Pat.Alternative(lit('a'), Pat.Alternative(lit('c'), lit('e'))), None, str("OK"))
     )
     runTestAssert[Stat](code, assertLayout = None)(
       Defn.Enum(Nil, pname("X"), Nil, ctor, tpl(rcase, cmatch, gcase))
@@ -212,14 +208,8 @@ class EnumSuite extends BaseDottySuite {
                  |  }
                  |  case G
                  |}""".stripMargin
-    val cmatch = Term.Match(
-      tname("v"),
-      List(Case(
-        Pat.Var(tname("x")),
-        Some(Term.ApplyInfix(tname("x"), tname(">"), Nil, List(int(3)))),
-        str("OK")
-      ))
-    )
+    val cmatch = Term
+      .Match(tname("v"), List(Case(patvar("x"), Some(tinfix(tname("x"), ">", int(3))), str("OK"))))
     runTestAssert[Stat](code, assertLayout = None)(
       Defn.Enum(Nil, pname("X"), Nil, ctor, tpl(rcase, cmatch, gcase))
     )
@@ -238,10 +228,10 @@ class EnumSuite extends BaseDottySuite {
                  |}""".stripMargin
 
     val tryCatch = Term.Try(
-      Term.Apply(tname("a"), Nil),
+      tapply(tname("a")),
       List(
-        Case(Pat.Alternative(Lit.Char('a'), Lit.Char('e')), None, str("Recovered")),
-        Case(Lit.Char('c'), None, str("ERROR"))
+        Case(Pat.Alternative(lit('a'), lit('e')), None, str("Recovered")),
+        Case(lit('c'), None, str("ERROR"))
       ),
       None
     )
@@ -278,7 +268,7 @@ class EnumSuite extends BaseDottySuite {
     runTestAssert[Stat]("enum Option { @deprecated case Some(x: Int) }")(enumWithCase(
       "Option",
       Defn.EnumCase(
-        List(Mod.Annot(Init(pname("deprecated"), anon, emptyArgClause))),
+        List(Mod.Annot(init("deprecated"))),
         tname("Some"),
         Nil,
         ctorp(tparam("x", "Int")),
@@ -298,42 +288,33 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("case-extends") {
-    val init = Init(Type.Apply(pname("Option"), List(pname("Nothing"))), anon, emptyArgClause)
-    runTestAssert[Stat]("enum Option { case None extends Option[Nothing] }")(
-      enumWithCase("Option", Defn.EnumCase(Nil, tname("None"), Nil, ctor, List(init)))
-    )
+    runTestAssert[Stat]("enum Option { case None extends Option[Nothing] }")(enumWithCase(
+      "Option",
+      Defn.EnumCase(Nil, tname("None"), Nil, ctor, List(init(papply("Option", "Nothing"))))
+    ))
   }
 
   test("case-extends-argument") {
-    val init = Init(pname("Color"), anon, List(List(int(65280))))
     runTestAssert[Stat]("enum Color { case Red extends Color(65280) }")(enumWithCase(
       "Color",
-      Defn.EnumCase(
-        Nil,
-        tname("Red"),
-        Nil,
-        EmptyCtor(),
-        List(Init(pname("Color"), anon, List(List(int(65280)))))
-      )
+      Defn.EnumCase(Nil, tname("Red"), Nil, EmptyCtor(), List(init("Color", List(int(65280)))))
     ))
   }
 
   test("case-extends-argument-generic") {
-    val init = Init(pname("Color"), anon, List(List(int(65280))))
     runTestAssert[Stat]("enum Color { case Red[T](a: Int) extends Color(65280) }")(enumWithCase(
       "Color",
       Defn.EnumCase(
         Nil,
         tname("Red"),
         List(pparam("T")),
-        Ctor.Primary(Nil, anon, List(List(tparam("a", "Int")))),
-        List(Init(pname("Color"), anon, List(List(int(65280)))))
+        ctorp(List(tparam("a", "Int"))),
+        List(init("Color", List(int(65280))))
       )
     ))
   }
 
   test("enum-case-toplevel") {
-    val init = Init(pname("Color"), anon, List(List(int(65280))))
     runTestError[Stat](
       """|class A { 
          |  case Red[T](a: Int) extends Color(65280) 
@@ -359,7 +340,7 @@ class EnumSuite extends BaseDottySuite {
                   |""".stripMargin
     val expected = "@annot enum A { case B, C }"
     runTestAssert[Stat](code, assertLayout = Some(expected))(Defn.Enum(
-      List(Mod.Annot(Init(pname("annot"), anon, emptyArgClause))),
+      List(Mod.Annot(init("annot"))),
       pname("A"),
       Nil,
       EmptyCtor(),
@@ -378,27 +359,10 @@ class EnumSuite extends BaseDottySuite {
       pname("A"),
       Nil,
       EmptyCtor(),
-      Template(
-        Nil,
-        Nil,
+      tpl(
         self("self"),
-        List(
-          Defn.EnumCase(
-            Nil,
-            tname("B"),
-            Nil,
-            Ctor.Primary(Nil, anon, List(List(tparam("v", "Int")))),
-            Nil
-          ),
-          Defn.EnumCase(
-            Nil,
-            tname("C"),
-            Nil,
-            Ctor.Primary(Nil, anon, List(List(tparam("v", "String")))),
-            Nil
-          )
-        ),
-        Nil
+        Defn.EnumCase(Nil, tname("B"), Nil, ctorp(List(tparam("v", "Int"))), Nil),
+        Defn.EnumCase(Nil, tname("C"), Nil, ctorp(List(tparam("v", "String"))), Nil)
       )
     ))
   }
@@ -420,28 +384,11 @@ class EnumSuite extends BaseDottySuite {
       pname("A"),
       Nil,
       EmptyCtor(),
-      Template(
-        Nil,
-        Nil,
+      tpl(
         self("self"),
-        List(
-          Defn.EnumCase(
-            Nil,
-            tname("B"),
-            Nil,
-            Ctor.Primary(Nil, anon, List(List(tparam("v", "Int")))),
-            Nil
-          ),
-          Defn.EnumCase(
-            Nil,
-            tname("C"),
-            Nil,
-            Ctor.Primary(Nil, anon, List(List(tparam("v", "String")))),
-            Nil
-          ),
-          Defn.Def(Nil, tname("fx"), Nil, Nil, Some(pname("Int")), int(4))
-        ),
-        Nil
+        Defn.EnumCase(Nil, tname("B"), Nil, ctorp(tparam("v", "Int")), Nil),
+        Defn.EnumCase(Nil, tname("C"), Nil, ctorp(tparam("v", "String")), Nil),
+        Defn.Def(Nil, tname("fx"), Nil, Nil, Some(pname("Int")), int(4))
       )
     ))
   }
@@ -464,17 +411,7 @@ class EnumSuite extends BaseDottySuite {
       tname("Main"),
       tpl(
         enumWithCase("A", Defn.RepeatedEnumCase(Nil, List(tname("B"), tname("C")))),
-        Defn.Object(
-          Nil,
-          tname("X"),
-          Template(
-            Nil,
-            Nil,
-            Self(anon, None),
-            List(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, str("x"))),
-            Nil
-          )
-        )
+        Defn.Object(Nil, tname("X"), tpl(Defn.Val(Nil, List(patvar("x")), None, str("x"))))
       )
     ))
   }
@@ -502,13 +439,7 @@ class EnumSuite extends BaseDottySuite {
           pname("A"),
           Nil,
           EmptyCtor(),
-          Template(
-            Nil,
-            Nil,
-            Self(tname("kind"), None),
-            List(Defn.RepeatedEnumCase(Nil, List(tname("B"), tname("C")))),
-            Nil
-          )
+          tpl(self("kind"), Defn.RepeatedEnumCase(Nil, List(tname("B"), tname("C"))))
         ),
         Term.EndMarker(tname("A"))
       )
@@ -537,22 +468,12 @@ class EnumSuite extends BaseDottySuite {
       EmptyCtor(),
       tpl(
         Defn.EnumCase(Nil, tname("Hmm"), Nil, EmptyCtor(), Nil),
-        Defn.Val(
-          Nil,
-          List(Pat.Var(tname("a"))),
-          None,
-          Term
-            .Function(Nil, Term.Block(List(Term.Apply(tname("fx"), Nil), Term.Apply(tname("gx"), Nil))))
-        )
+        Defn
+          .Val(Nil, List(patvar("a")), None, tfunc()(blk(tapply(tname("fx")), tapply(tname("gx")))))
       )
     ))
   }
 
-  private def enumWithCase(name: String, enumCase: Stat) = Defn.Enum(
-    Nil,
-    pname(name),
-    Nil,
-    EmptyCtor(),
-    Template(Nil, Nil, Self(anon, None), List(enumCase), Nil)
-  )
+  private def enumWithCase(name: String, enumCase: Stat) = Defn
+    .Enum(Nil, pname(name), Nil, EmptyCtor(), tpl(enumCase))
 }

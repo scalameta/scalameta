@@ -38,11 +38,8 @@ class ModSuite extends ParseSuite {
       Defn.Def(
         Nil,
         tname("foo"),
-        Member.ParamClauseGroup(
-          Type.ParamClause(Nil),
-          Term.ParamClause(List(tparam(List(Mod.Implicit()), "a", "Int")), Some(Mod.Implicit())) ::
-            Nil
-        ) :: Nil,
+        Nil,
+        List(List(tparam(List(Mod.Implicit()), "a", "Int"))),
         Some(pname("Int")),
         tname("a")
       )
@@ -52,27 +49,28 @@ class ModSuite extends ParseSuite {
       Defn.Def(
         List(Mod.Implicit()),
         tname("foo"),
-        Member.ParamClauseGroup(Type.ParamClause(Nil), List(tparam("a", "Int")) :: Nil) :: Nil,
+        Nil,
+        List(List(tparam("a", "Int"))),
         Some(pname("Int")),
         tname("a")
       )
     }
 
     assertTree(templStat("implicit val a: Int = 1")) {
-      Defn.Val(List(Mod.Implicit()), List(Pat.Var(tname("a"))), Some(pname("Int")), int(1))
+      Defn.Val(List(Mod.Implicit()), List(patvar("a")), Some(pname("Int")), int(1))
     }
 
     assertTree(templStat("implicit val a: Int")) {
-      Decl.Val(List(Mod.Implicit()), List(Pat.Var(tname("a"))), pname("Int"))
+      Decl.Val(List(Mod.Implicit()), List(patvar("a")), pname("Int"))
     }
 
     assertTree(templStat("implicit var a: Int = 1")) {
-      Defn.Var(List(Mod.Implicit()), List(Pat.Var(tname("a"))), Some(pname("Int")), Some(int(1)))
+      Defn.Var(List(Mod.Implicit()), List(patvar("a")), Some(pname("Int")), Some(int(1)))
 
     }
 
     assertTree(templStat("implicit var a: Int")) {
-      Decl.Var(List(Mod.Implicit()), List(Pat.Var(tname("a"))), pname("Int"))
+      Decl.Var(List(Mod.Implicit()), List(patvar("a")), pname("Int"))
     }
   }
 
@@ -350,7 +348,7 @@ class ModSuite extends ParseSuite {
         Nil,
         pname("A"),
         pparam(List(Mod.Covariant()), "T") :: Nil,
-        Type.Apply(pname("B"), List(pname("T"))),
+        papply("B", pname("T")),
         noBounds
       )
     }
@@ -402,7 +400,7 @@ class ModSuite extends ParseSuite {
         Nil,
         pname("A"),
         pparam(List(Mod.Contravariant()), "T") :: Nil,
-        Type.Apply(pname("B"), List(pname("T"))),
+        papply("B", "T"),
         noBounds
       )
     }

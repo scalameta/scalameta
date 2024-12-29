@@ -279,79 +279,57 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1843 anonymous functions 1") {
-    checkTree(q"list foo (_ fun (_.bar))")(Term.ApplyInfix(
+    checkTree(q"list foo (_ fun (_.bar))")(tinfix(
       tname("list"),
-      tname("foo"),
-      Nil,
-      List(Term.AnonymousFunction(Term.ApplyInfix(
-        Term.Placeholder(),
-        tname("fun"),
-        Nil,
-        List(Term.AnonymousFunction(Term.Select(Term.Placeholder(), tname("bar"))))
-      )))
+      "foo",
+      Term.AnonymousFunction(
+        tinfix(Term.Placeholder(), "fun", Term.AnonymousFunction(tselect(Term.Placeholder(), "bar")))
+      )
     ))
   }
 
   test("#1843 anonymous functions 2") {
-    checkTree(q"list foo (_ fun _.bar)")(Term.ApplyInfix(
+    checkTree(q"list foo (_ fun _.bar)")(tinfix(
       tname("list"),
-      tname("foo"),
-      Nil,
-      List(Term.AnonymousFunction(Term.ApplyInfix(
-        Term.Placeholder(),
-        tname("fun"),
-        Nil,
-        List(Term.Select(Term.Placeholder(), tname("bar")))
-      )))
+      "foo",
+      Term.AnonymousFunction(tinfix(Term.Placeholder(), "fun", tselect(Term.Placeholder(), "bar")))
     ))
   }
 
   test("#2717 anonymous function with unary") {
     checkTree(q"xs span { !separates(_) }") {
-      Term.ApplyInfix(
+      tinfix(
         tname("xs"),
-        tname("span"),
-        Nil,
-        List(Term.Block(List(Term.AnonymousFunction(
-          Term.ApplyUnary(tname("!"), Term.Apply(tname("separates"), List(Term.Placeholder())))
-        ))))
+        "span",
+        blk(Term.AnonymousFunction(
+          Term.ApplyUnary(tname("!"), tapply(tname("separates"), Term.Placeholder()))
+        ))
       )
     }
   }
 
   test("anonymous function with new") {
     checkTree(q"foo map (new foo(_))") {
-      Term.ApplyInfix(
-        tname("foo"),
-        tname("map"),
-        Nil,
-        List(Term.AnonymousFunction(Term.New(Init(pname("foo"), anon, List(List(Term.Placeholder()))))))
-      )
+      tinfix(tname("foo"), "map", Term.AnonymousFunction(Term.New(init("foo", List(Term.Placeholder())))))
     }
   }
 
   test("anonymous function with select") {
     checkTree(q"foo map (foo(_).bar)") {
-      Term.ApplyInfix(
+      tinfix(
         tname("foo"),
-        tname("map"),
-        Nil,
-        List(Term.AnonymousFunction(
-          Term.Select(Term.Apply(tname("foo"), List(Term.Placeholder())), tname("bar"))
-        ))
+        "map",
+        Term.AnonymousFunction(tselect(tapply(tname("foo"), Term.Placeholder()), "bar"))
       )
     }
   }
 
   test("anonymous function with apply type") {
     checkTree(q"foo map (_.foo[A])") {
-      Term.ApplyInfix(
+      tinfix(
         tname("foo"),
-        tname("map"),
-        Nil,
-        List(Term.AnonymousFunction(
-          Term.ApplyType(Term.Select(Term.Placeholder(), tname("foo")), List(pname("A")))
-        ))
+        "map",
+        Term.AnonymousFunction(tapplytype(tselect(Term.Placeholder(), "foo"), pname("A")))
       )
     }
   }
@@ -370,7 +348,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("#1596") {
     val tree: Term.Xml = q"<h1>a{b}</h1>"
-    checkTree(tree)(Term.Xml(List(str("<h1>a"), str("</h1>")), Term.Block(List(tname("b"))) :: Nil))
+    checkTree(tree)(Term.Xml(List(str("<h1>a"), str("</h1>")), blk(tname("b")) :: Nil))
     val Term.Xml(part1 :: part2 :: Nil, arg1 :: Nil) = tree
 
     assertEquals(part1.tokens.structure, """Tokens(Xml.Part(<h1>a) [0..5))""")
@@ -401,17 +379,12 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             () == () == ()
             (()) == (()) == (())
           }"""
-    )(Term.Block(List(
-      Term.ApplyInfix(Lit.Unit(), tname("=="), Nil, Nil),
-      Term.ApplyInfix(Lit.Unit(), tname("=="), Nil, List(Lit.Unit())),
-      Term.ApplyInfix(Term.ApplyInfix(Lit.Unit(), tname("=="), Nil, Nil), tname("=="), Nil, Nil),
-      Term.ApplyInfix(
-        Term.ApplyInfix(Lit.Unit(), tname("=="), Nil, List(Lit.Unit())),
-        tname("=="),
-        Nil,
-        List(Lit.Unit())
-      )
-    )))
+    )(blk(
+      tinfix(Lit.Unit(), "=="),
+      tinfix(Lit.Unit(), "==", Lit.Unit()),
+      tinfix(tinfix(Lit.Unit(), "=="), "=="),
+      tinfix(tinfix(Lit.Unit(), "==", Lit.Unit()), "==", Lit.Unit())
+    ))
   }
 
   test("#2708 term rassoc") {
@@ -422,22 +395,12 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             () :: () :: ()
             (()) :: (()) :: (())
           }"""
-    )(Term.Block(List(
-      Term.ApplyInfix(Lit.Unit(), tname("::"), Nil, Nil),
-      Term.ApplyInfix(Lit.Unit(), tname("::"), Nil, List(Lit.Unit())),
-      Term.ApplyInfix(
-        Lit.Unit(),
-        tname("::"),
-        Nil,
-        List(Term.ApplyInfix(Lit.Unit(), tname("::"), Nil, Nil))
-      ),
-      Term.ApplyInfix(
-        Lit.Unit(),
-        tname("::"),
-        Nil,
-        List(Term.ApplyInfix(Lit.Unit(), tname("::"), Nil, List(Lit.Unit())))
-      )
-    )))
+    )(blk(
+      tinfix(Lit.Unit(), "::"),
+      tinfix(Lit.Unit(), "::", Lit.Unit()),
+      tinfix(Lit.Unit(), "::", tinfix(Lit.Unit(), "::")),
+      tinfix(Lit.Unit(), "::", tinfix(Lit.Unit(), "::", Lit.Unit()))
+    ))
   }
 
   test("#2708 pat lassoc") {
@@ -448,27 +411,12 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             case () == () == () =>
             case (()) == (()) == (()) =>
           }"""
-    )(Term.Match(
+    )(tmatch(
       tname("foo"),
-      List(
-        Case(Pat.ExtractInfix(Lit.Unit(), tname("=="), Nil), None, Term.Block(Nil)),
-        Case(Pat.ExtractInfix(Lit.Unit(), tname("=="), List(Lit.Unit())), None, Term.Block(Nil)),
-        Case(
-          Pat.ExtractInfix(Pat.ExtractInfix(Lit.Unit(), tname("=="), Nil), tname("=="), Nil),
-          None,
-          Term.Block(Nil)
-        ),
-        Case(
-          Pat.ExtractInfix(
-            Pat.ExtractInfix(Lit.Unit(), tname("=="), List(Lit.Unit())),
-            tname("=="),
-            List(Lit.Unit())
-          ),
-          None,
-          Term.Block(Nil)
-        )
-      ),
-      Nil
+      Case(patinfix(Lit.Unit(), "=="), None, blk()),
+      Case(patinfix(Lit.Unit(), "==", Lit.Unit()), None, blk()),
+      Case(patinfix(patinfix(Lit.Unit(), "=="), "=="), None, blk()),
+      Case(patinfix(patinfix(Lit.Unit(), "==", Lit.Unit()), "==", Lit.Unit()), None, blk())
     ))
   }
 
@@ -480,78 +428,36 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             case () :: () :: () =>
             case (()) :: (()) :: (()) =>
           }"""
-    )(Term.Match(
+    )(tmatch(
       tname("foo"),
-      List(
-        Case(Pat.ExtractInfix(Lit.Unit(), tname("::"), Nil), None, Term.Block(Nil)),
-        Case(Pat.ExtractInfix(Lit.Unit(), tname("::"), List(Lit.Unit())), None, Term.Block(Nil)),
-        Case(
-          Pat.ExtractInfix(
-            Lit.Unit(),
-            tname("::"),
-            List(Pat.ExtractInfix(Lit.Unit(), tname("::"), Nil))
-          ),
-          None,
-          Term.Block(Nil)
-        ),
-        Case(
-          Pat.ExtractInfix(
-            Lit.Unit(),
-            tname("::"),
-            List(Pat.ExtractInfix(Lit.Unit(), tname("::"), List(Lit.Unit())))
-          ),
-          None,
-          Term.Block(Nil)
-        )
-      ),
-      Nil
+      Case(patinfix(Lit.Unit(), "::"), None, blk()),
+      Case(patinfix(Lit.Unit(), "::", Lit.Unit()), None, blk()),
+      Case(patinfix(Lit.Unit(), "::", patinfix(Lit.Unit(), "::")), None, blk()),
+      Case(patinfix(Lit.Unit(), "::", patinfix(Lit.Unit(), "::", Lit.Unit())), None, blk())
     ))
   }
 
   test("pat infix: _ op (a | b)") {
     checkTree(p"_ op (a | b)", "_ op (a | b)") {
-      Pat.ExtractInfix(
-        Pat.Wildcard(),
-        tname("op"),
-        List(Pat.Alternative(Pat.Var(tname("a")), Pat.Var(tname("b"))))
-      )
+      patinfix(patwildcard, "op", Pat.Alternative(patvar("a"), patvar("b")))
     }
   }
 
   test("pat infix: _ * (a + b)") {
     checkTree(p"_ * (a + b)", "_ * (a + b)") {
-      Pat.ExtractInfix(
-        Pat.Wildcard(),
-        tname("*"),
-        List(Pat.ExtractInfix(Pat.Var(tname("a")), tname("+"), List(Pat.Var(tname("b")))))
-      )
+      patinfix(patwildcard, "*", patinfix(patvar("a"), "+", patvar("b")))
     }
   }
 
   test("term infix: _ * (a + b)") {
     checkTree(q"_ * (a + b)", "_ * (a + b)") {
-      Term.AnonymousFunction(Term.ApplyInfix(
-        Term.Placeholder(),
-        tname("*"),
-        Nil,
-        List(Term.ApplyInfix(tname("a"), tname("+"), Nil, List(tname("b"))))
-      ))
+      Term.AnonymousFunction(tinfix(Term.Placeholder(), "*", tinfix(tname("a"), "+", tname("b"))))
     }
   }
 
   test("term infix: 1 + (2 / 3) * 4") {
     checkTree(q"1 + (2 / 3) * 4", "1 + 2 / 3 * 4") {
-      Term.ApplyInfix(
-        int(1),
-        tname("+"),
-        Nil,
-        List(Term.ApplyInfix(
-          Term.ApplyInfix(int(2), tname("/"), Nil, List(int(3))),
-          tname("*"),
-          Nil,
-          List(int(4))
-        ))
-      )
+      tinfix(int(1), "+", tinfix(tinfix(int(2), "/", int(3)), "*", int(4)))
     }
   }
 
@@ -561,19 +467,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """|1 + {
          |  2 / 3
          |} * 4""".stripMargin
-    ) {
-      Term.ApplyInfix(
-        int(1),
-        tname("+"),
-        Nil,
-        List(Term.ApplyInfix(
-          Term.Block(List(Term.ApplyInfix(int(2), tname("/"), Nil, List(int(3))))),
-          tname("*"),
-          Nil,
-          List(int(4))
-        ))
-      )
-    }
+    )(tinfix(int(1), "+", tinfix(blk(tinfix(int(2), "/", int(3))), "*", int(4))))
   }
 
   test("term infix: { 2 / 3 } + 4") {
@@ -582,24 +476,15 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """|{
          |  2 / 3
          |} + 4""".stripMargin
-    ) {
-      Term.ApplyInfix(
-        Term.Block(List(Term.ApplyInfix(int(2), tname("/"), Nil, List(int(3))))),
-        tname("+"),
-        Nil,
-        List(int(4))
-      )
-    }
+    )(tinfix(blk(tinfix(int(2), "/", int(3))), "+", int(4)))
   }
 
   test("term anon func: foo.bar(_: Int, _: String)") {
     checkTree(q"foo.bar(_: Int, _: String)", "foo.bar(_: Int, _: String)") {
-      Term.AnonymousFunction(Term.Apply(
-        Term.Select(tname("foo"), tname("bar")),
-        List(
-          Term.Ascribe(Term.Placeholder(), pname("Int")),
-          Term.Ascribe(Term.Placeholder(), pname("String"))
-        )
+      Term.AnonymousFunction(tapply(
+        tselect("foo", "bar"),
+        Term.Ascribe(Term.Placeholder(), pname("Int")),
+        Term.Ascribe(Term.Placeholder(), pname("String"))
       ))
     }
   }

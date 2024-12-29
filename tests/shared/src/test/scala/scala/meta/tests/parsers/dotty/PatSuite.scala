@@ -31,83 +31,52 @@ class PatSuite extends ParseSuite {
 
   test("_: t")(assertPat("_: t")(Typed(Wildcard(), pname("t"))))
 
-  test("_: F[t]") {
-    assertPat("_: F[t]") {
-      Typed(Wildcard(), Type.Apply(pname("F"), Type.ArgClause(List(Type.Var(pname("t"))))))
-    }
-  }
+  test("_: F[t]")(assertPat("_: F[t]")(Typed(patwildcard, papply("F", Type.Var("t")))))
 
   test("_: F[_]") {
     implicit val dialect = dialects.Scala3Future
-    assertPat("_: F[_]") {
-      Typed(Wildcard(), Type.Apply(pname("F"), List(Type.AnonymousParam(None))))
-    }
+    assertPat("_: F[_]")(Typed(Wildcard(), papply("F", Type.AnonymousParam(None))))
   }
 
   test("_: F[_]") {
     implicit val dialect = dialects.Scala31
-    assertPat("_: F[_]") {
-      Pat.Typed(Pat.Wildcard(), Type.Apply(pname("F"), List(Type.Wildcard(Type.Bounds(None, None)))))
-    }
+    assertPat("_: F[_]")(Pat.Typed(patwildcard, papply("F", pwildcard)))
   }
 
   test("_: F[*]") {
     // might be deprecated later
     implicit val dialect: Dialect = dialects.Scala31
-    assertPat("_: F[*]") {
-      Typed(Wildcard(), Type.Apply(pname("F"), Type.AnonymousParam(None) :: Nil))
-    }
+    assertPat("_: F[*]")(Typed(Wildcard(), papply("F", Type.AnonymousParam(None))))
   }
 
-  test("patTyp: t Map u") {
-    assertPatTyp("t Map u")(Type.ApplyInfix(pname("t"), pname("Map"), pname("u")))
-  }
+  test("patTyp: t Map u")(assertPatTyp("t Map u")(pinfix("t", "Map", pname("u"))))
 
   test("patTyp: t & u | v") {
-    assertPatTyp("t & u | v") {
-      Type.ApplyInfix(Type.ApplyInfix(pname("t"), pname("&"), pname("u")), pname("|"), pname("v"))
-    }
+    assertPatTyp("t & u | v")(pinfix(pinfix("t", "&", pname("u")), "|", pname("v")))
   }
 
   test("patTyp: t * u + v") {
-    assertPatTyp("t * u + v") {
-      Type.ApplyInfix(Type.ApplyInfix(pname("t"), pname("*"), pname("u")), pname("+"), pname("v"))
-    }
+    assertPatTyp("t * u + v")(pinfix(pinfix("t", "*", pname("u")), "+", pname("v")))
   }
 
   test("patTyp: t * u + v / w") {
     assertPatTyp("t * u + v / w") {
-      Type.ApplyInfix(
-        Type.ApplyInfix(pname("t"), pname("*"), pname("u")),
-        pname("+"),
-        Type.ApplyInfix(pname("v"), pname("/"), pname("w"))
-      )
+      pinfix(pinfix("t", "*", pname("u")), "+", pinfix("v", "/", pname("w")))
     }
   }
 
   test("patTyp: t + u * v") {
-    assertPatTyp("t + u * v") {
-      Type.ApplyInfix(pname("t"), pname("+"), Type.ApplyInfix(pname("u"), pname("*"), pname("v")))
-    }
+    assertPatTyp("t + u * v")(pinfix("t", "+", pinfix("u", "*", pname("v"))))
   }
 
   test("pat: F[t & u | v]()") {
     assertPat("F[t & u | v]()") {
-      Pat.Extract(
-        Term.ApplyType(
-          tname("F"),
-          List(
-            Type
-              .ApplyInfix(Type.ApplyInfix(pname("t"), pname("&"), pname("u")), pname("|"), pname("v"))
-          )
-        ),
-        Nil
-      )
+      Pat.Extract(tapplytype(tname("F"), pinfix(pinfix("t", "&", pname("u")), "|", pname("v"))), Nil)
     }
   }
 
   test("_: (t Map u)") {
-    assertPat("_: (t Map u)")(Typed(Wildcard(), Type.ApplyInfix(pname("t"), pname("Map"), pname("u"))))
+    assertPat("_: (t Map u)")(Typed(Wildcard(), pinfix("t", "Map", pname("u"))))
   }
 
   test("_: T Map U")(intercept[ParseException](pat("_: T Map U")))
@@ -116,7 +85,7 @@ class PatSuite extends ParseSuite {
 
   test("x@(__ : Y)") {
 
-    assertPat("x@(__ : Y)")(Pat.Bind(Pat.Var(tname("x")), Pat.Typed(Pat.Var(tname("__")), pname("Y"))))
+    assertPat("x@(__ : Y)")(Pat.Bind(patvar("x"), Pat.Typed(patvar("__"), pname("Y"))))
   }
 
   test("foo(x)")(assertPat("foo(x)")(Extract(tname("foo"), Var(tname("x")) :: Nil)))
@@ -127,10 +96,7 @@ class PatSuite extends ParseSuite {
     assertPat("foo(x @ _*)")(Extract(tname("foo"), Bind(Var(tname("x")), SeqWildcard()) :: Nil))
   }
 
-  test("a :: b") {
-    assertPat("a :: b")(ExtractInfix(Var(tname("a")), tname("::"), Var(tname("b")) :: Nil))
-
-  }
+  test("a :: b")(assertPat("a :: b")(patinfix(Var(tname("a")), "::", Var(tname("b")))))
 
   test("a ::[T] ()") {
     // the "a :: ()" case is tested in parsers/PatSuite, with other dialects
@@ -143,7 +109,7 @@ class PatSuite extends ParseSuite {
   test("1 | 2 | 3") {
     assertPat("1 | 2")(Alternative(int(1), int(2)))
     assertPat("1 | 2 | 3")(Alternative(int(1), Alternative(int(2), int(3))))
-    runTestAssert[Pat]("1 `|` 2")(ExtractInfix(lit(1), tname("|"), List(lit(2))))
+    runTestAssert[Pat]("1 `|` 2")(patinfix(lit(1), "|", lit(2)))
   }
 
   test("()")(assertPat("()")(Lit.Unit()))
@@ -168,7 +134,7 @@ class PatSuite extends ParseSuite {
 
   test("$_") {
     assertPat(""" q"x + $_" """)(
-      Pat.Interpolate(tname("q"), List(str("x + "), str("")), List(Pat.Wildcard()))
+      Pat.Interpolate(tname("q"), List(str("x + "), str("")), List(patwildcard))
     )
   }
 

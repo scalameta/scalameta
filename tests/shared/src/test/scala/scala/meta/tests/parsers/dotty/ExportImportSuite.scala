@@ -6,7 +6,7 @@ class ExportImportSuite extends BaseDottySuite {
 
   test("export-single") {
     runTestAssert[Stat]("export A.b.c")(Export(
-      List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Name(Name("c")))))
+      List(Importer(tselect("A", "b"), List(Importee.Name(Name("c")))))
     ))
   }
 
@@ -15,10 +15,9 @@ class ExportImportSuite extends BaseDottySuite {
       """|package a
          |export A.b.c
          |""".stripMargin
-    )(Source(List(Pkg(
-      tname("a"),
-      List(Export(List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Name(Name("c")))))))
-    ))))
+    )(Source(List(
+      Pkg(tname("a"), List(Export(List(Importer(tselect("A", "b"), List(Importee.Name(Name("c"))))))))
+    )))
   }
 
   test("export-given") {
@@ -64,9 +63,9 @@ class ExportImportSuite extends BaseDottySuite {
   }
 
   test("rename-as") {
-    runTestAssert[Stat]("import a.b.C as D")(Import(List(
-      Importer(Term.Select(tname("a"), tname("b")), List(Importee.Rename(Name("C"), Name("D"))))
-    )))
+    runTestAssert[Stat]("import a.b.C as D")(Import(
+      List(Importer(tselect("a", "b"), List(Importee.Rename(Name("C"), Name("D")))))
+    ))
   }
 
   test("rename-as-simple") {
@@ -89,19 +88,19 @@ class ExportImportSuite extends BaseDottySuite {
 
   test("unimport-as") {
     runTestAssert[Stat]("import a.b.C as _")(Import(
-      List(Importer(Term.Select(tname("a"), tname("b")), List(Importee.Unimport(Name("C")))))
+      List(Importer(tselect("a", "b"), List(Importee.Unimport(Name("C")))))
     ))
   }
 
   test("import-wildcard") {
     runTestAssert[Stat]("import A.b.*")(Import(
-      List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Wildcard())))
+      List(Importer(tselect("A", "b"), List(Importee.Wildcard())))
     ))
   }
 
   test("import-wildcard-backquoted") {
     runTestAssert[Stat]("import A.b.`*`")(Import(
-      List(Importer(Term.Select(tname("A"), tname("b")), List(Importee.Name(Name("*")))))
+      List(Importer(tselect("A", "b"), List(Importee.Name(Name("*")))))
     ))
   }
 

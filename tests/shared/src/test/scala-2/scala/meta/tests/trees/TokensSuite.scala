@@ -21,7 +21,7 @@ class TokensSuite extends TreeSuiteBase {
 
   test("Tree.tokens: manual") {
     val dialect = implicitly[Dialect]
-    val tree = Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
+    val tree = tinfix(tname("foo"), "+", tname("bar"))
     assertEquals(tree.text, "foo + bar")
     assertEquals(tree.printSyntaxFor(dialect), "foo + bar")
     assertEquals(tree.syntax, "foo + bar")

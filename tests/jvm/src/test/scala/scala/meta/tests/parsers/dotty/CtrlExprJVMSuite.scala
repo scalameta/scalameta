@@ -20,8 +20,8 @@ class CtrlExprJVMSuite extends BaseDottySuite {
                    |""".stripMargin
 
     def generateIfsTree(num: Int): Term.If = {
-      val inner = if (num <= 1) Nil else List(generateIfsTree(num - 1))
-      Term.If(Term.ApplyInfix(lit(1), tname(">="), Nil, List(lit(10))), blk(inner), Lit.Unit(), Nil)
+      val inner = if (num <= 1) blk() else blk(generateIfsTree(num - 1))
+      Term.If(Term.ApplyInfix(lit(1), tname(">="), Nil, List(lit(10))), inner, Lit.Unit(), Nil)
     }
     val tree = Source(List(Defn.Object(
       Nil,

@@ -45,7 +45,7 @@ class InlineSuite extends BaseDottySuite {
 
     // as ident and modifier
     runTestAssert[Stat]("inline val inline = false")(
-      Defn.Val(List(Mod.Inline()), List(Pat.Var(tname("inline"))), None, bool(false))
+      Defn.Val(List(Mod.Inline()), List(patvar("inline")), None, bool(false))
     )
 
     // inline for class as ident
@@ -115,7 +115,7 @@ class InlineSuite extends BaseDottySuite {
 
     runTestAssert[Stat]("inline")(tname("inline"))
 
-    runTestAssert[Stat]("`inline`()")(Term.Apply(tname("inline"), Nil))
+    runTestAssert[Stat]("`inline`()")(tapply(tname("inline")))
 
     runTestError[Stat]("inline()", "`inline` must be followed by an `if` or a `match`")
 
@@ -125,8 +125,7 @@ class InlineSuite extends BaseDottySuite {
     )
 
     runTestAssert[Stat]("object X { `inline` + 3 }")(
-      Defn
-        .Object(Nil, tname("X"), tpl(Term.ApplyInfix(tname("inline"), tname("+"), Nil, List(int(3)))))
+      Defn.Object(Nil, tname("X"), tpl(tinfix(tname("inline"), "+", int(3))))
     )
   }
 
@@ -143,17 +142,10 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       Some(pname("Any")),
-      Term.Match(
+      tmatch(Mod.Inline())(
         tname("x"),
-        List(
-          Case(
-            Pat.Typed(Pat.Var(tname("x")), pname("String")),
-            None,
-            Term.Tuple(List(tname("x"), tname("x")))
-          ),
-          Case(Pat.Typed(Pat.Var(tname("x")), pname("Double")), None, tname("x"))
-        ),
-        List(Mod.Inline())
+        Case(Pat.Typed(patvar("x"), pname("String")), None, Term.Tuple(List(tname("x"), tname("x")))),
+        Case(Pat.Typed(patvar("x"), pname("Double")), None, tname("x"))
       )
     ))
   }
@@ -170,7 +162,7 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.Match(tname("x"), List(Case(Pat.Var(tname("x")), None, tname("x"))), List(Mod.Inline()))
+      tmatch(Mod.Inline())(tname("x"), Case(patvar("x"), None, tname("x")))
     ))
   }
 
@@ -186,11 +178,7 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.Match(
-        Term.Block(List(tname("x"))),
-        List(Case(Pat.Var(tname("x")), None, tname("x"))),
-        List(Mod.Inline())
-      )
+      tmatch(Mod.Inline())(blk(tname("x")), Case(patvar("x"), None, tname("x")))
     ))
   }
 
@@ -208,9 +196,7 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.Block(List(
-        Term.Match(tname("x"), List(Case(Pat.Var(tname("x")), None, tname("x"))), List(Mod.Inline()))
-      ))
+      blk(tmatch(Mod.Inline())(tname("x"), Case(patvar("x"), None, tname("x"))))
     ))
   }
 
@@ -228,9 +214,7 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.Block(List(
-        Term.Match(tname("x"), List(Case(Pat.Var(tname("x")), None, tname("x"))), List(Mod.Inline()))
-      ))
+      blk(tmatch(Mod.Inline())(tname("x"), Case(patvar("x"), None, tname("x"))))
     ))
   }
 
@@ -248,11 +232,7 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.Block(List(Term.Match(
-        Term.Block(List(tname("x"))),
-        List(Case(Pat.Var(tname("x")), None, tname("x"))),
-        List(Mod.Inline())
-      )))
+      blk(tmatch(Mod.Inline())(blk(tname("x")), Case(patvar("x"), None, tname("x"))))
     ))
   }
 
@@ -270,11 +250,7 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.Block(List(Term.Match(
-        Term.New(Init(pname("X"), anon, emptyArgClause)),
-        List(Case(Pat.Var(tname("x")), None, tname("x"))),
-        List(Mod.Inline())
-      )))
+      blk(tmatch(Mod.Inline())(Term.New(init("X")), Case(patvar("x"), None, tname("x"))))
     ))
   }
 
@@ -325,12 +301,7 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       List(List(tparam("b", "Boolean"))),
       Some(pname("A")),
-      Term.If(
-        tname("b"),
-        Term.New(Init(pname("A"), anon, emptyArgClause)),
-        Term.New(Init(pname("B"), anon, emptyArgClause)),
-        Nil
-      )
+      Term.If(tname("b"), Term.New(init("A")), Term.New(init("B")), Nil)
     ))
   }
 
@@ -378,18 +349,16 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       Some(pname("String")),
-      Term.Match(
+      tmatch(Mod.Inline())(
         int(10),
-        List(Case(
-          Pat.Wildcard(),
+        Case(
+          patwildcard,
           None,
-          Term.Match(
+          tmatch(Mod.Inline())(
             str("foo"),
-            List(Case(Pat.Typed(Pat.Var(tname("x")), pname("String")), None, tname("x"))),
-            List(Mod.Inline())
+            Case(Pat.Typed(patvar("x"), pname("String")), None, tname("x"))
           )
-        )),
-        List(Mod.Inline())
+        )
       )
     ))
   }
@@ -415,13 +384,10 @@ class InlineSuite extends BaseDottySuite {
       Nil,
       Nil,
       None,
-      Term.Match(
+      tmatch(Mod.Inline())(
         Term.This(anon),
-        List(
-          Case(tname("Zero"), None, Lit.Unit()),
-          Case(Pat.Extract(tname("Succ"), List(Pat.Var(tname("p")))), None, Lit.Unit())
-        ),
-        List(Mod.Inline())
+        Case(tname("Zero"), None, Lit.Unit()),
+        Case(Pat.Extract(tname("Succ"), List(patvar("p"))), None, Lit.Unit())
       )
     ))
   }
@@ -438,13 +404,10 @@ class InlineSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Term.ApplyInfix(
+    )(tinfix(
       str("static meta"),
-      tname("-"),
-      Nil,
-      List(Term.Block(List(
-        Defn.Def(List(Mod.Implicit(), Mod.Inline()), tname("qm"), Nil, Nil, None, tname("???"))
-      )))
+      "-",
+      blk(Defn.Def(List(Mod.Implicit(), Mod.Inline()), tname("qm"), Nil, Nil, None, tname("???")))
     ))
   }
 }

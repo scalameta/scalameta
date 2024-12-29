@@ -52,9 +52,7 @@ class QuasiquoteSuite extends ParseSuite {
     test("multi-line allow unicode escaping")(assertTree(term("\\u0061"))(tname("a")))
 
     test("multi-line allow line breaks") {
-      assertTree(term("foo + \n bar"))(
-        Term.ApplyInfix(tname("foo"), tname("+"), Nil, List(tname("bar")))
-      )
+      assertTree(term("foo + \n bar"))(tinfix(tname("foo"), "+", tname("bar")))
     }
 
     test("multi-line allow double quotes")(assertTree(term("\"a\""))(str("a")))

@@ -15,7 +15,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     checkTree(tpes, "(x: X, y: Y)")(Type.FuncParamClause(List(tpeX, tpeY)))
     checkTree(tpe, "Z")(Type.Name("Z"))
 
-    checkTree(t"(..${tpes.values}) => $tpe", "(x: X, y: Y) => Z")(Type.Function(tpes, tpe))
+    checkTree(t"(..${tpes.values}) => $tpe", "(x: X, y: Y) => Z")(pfunc(tpes, tpe))
   }
 
   private final val cparam = tparam("c", "Circle")
@@ -34,12 +34,12 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertEquals(paramss.length, 3)
     assertTrees(paramss(0): _*)(cparam)
     assertTrees(paramss(1): _*)(
-      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
-      Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+      tparam(List(Mod.Using()), "", "Context"),
+      tparam(List(Mod.Using()), "x", "Int")
     )
     assertTrees(paramss(2): _*)(
-      Term.Param(List(Mod.Using()), Term.Name("y"), Some(Type.Name("String")), None),
-      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
+      tparam(List(Mod.Using()), "y", "String"),
+      tparam(List(Mod.Using()), "", "File")
     )
 
     assertTrees(stats: _*)(
@@ -61,12 +61,12 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertEquals(paramss.length, 3)
     assertTrees(paramss(0): _*)(cparam)
     assertTrees(paramss(1): _*)(
-      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("Context")), None),
-      Term.Param(List(Mod.Using()), Term.Name("x"), Some(Type.Name("Int")), None)
+      tparam(List(Mod.Using()), "", "Context"),
+      tparam(List(Mod.Using()), "x", "Int")
     )
     assertTrees(paramss(2): _*)(
-      Term.Param(List(Mod.Using()), Term.Name("y"), Some(Type.Name("String")), None),
-      Term.Param(List(Mod.Using()), Name(""), Some(Type.Name("File")), None)
+      tparam(List(Mod.Using()), "y", "String"),
+      tparam(List(Mod.Using()), "", "File")
     )
 
     assertTrees(stats: _*)(
@@ -148,60 +148,32 @@ class DottySuccessSuite extends TreeSuiteBase {
 
   test("single ..., without tparams") {
     val q"..$mods def $name(...$paramss): $tpe" = q"def f(x: Int)(y: Int): Unit"
-    val paramsExpected = Term
-      .ParamClause(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil, None) ::
-      Term
-        .ParamClause(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None) :: Nil, None) ::
-      Nil
+    val paramsExpected = tpc(tparam("x", "Int")) :: tpc(tparam("y", "Int")) :: Nil
 
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "(y: Int)")(paramsExpected: _*)
-    assertTree(q"..$mods def $name(...$paramss): $tpe")(Decl.Def(
-      Nil,
-      Term.Name("f"),
-      Member.ParamClauseGroup(Nil, paramsExpected) :: Nil,
-      Type.Name("Unit")
-    ))
+    assertTree(q"..$mods def $name(...$paramss): $tpe")(
+      Decl.Def(Nil, Term.Name("f"), pcg(paramsExpected: _*) :: Nil, Type.Name("Unit"))
+    )
   }
 
   test("single ..., with tparams") {
     val q"..$mods def $name[..$tparams](...$paramss): $tpe" = q"def f[A, B](x: Int)(y: Int): Unit"
-    val tparamsExpected = Type.ParamClause(List(
-      Type.Param(Nil, Type.Name("A"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil),
-      Type.Param(Nil, Type.Name("B"), Type.ParamClause(Nil), Type.Bounds(None, None), Nil, Nil)
-    ))
-    val paramsExpected = Term
-      .ParamClause(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None) :: Nil, None) ::
-      Term
-        .ParamClause(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None) :: Nil, None) ::
-      Nil
+    val tparamsExpected = ppc(pparam("A"), pparam("B"))
+    val paramsExpected = tpc(tparam("x", "Int")) :: tpc(tparam("y", "Int")) :: Nil
 
     checkTree(tparams, "[A, B]")(tparamsExpected)
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "(y: Int)")(paramsExpected: _*)
-    assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")(Decl.Def(
-      Nil,
-      Term.Name("f"),
-      Member.ParamClauseGroup(tparamsExpected, paramsExpected) :: Nil,
-      Type.Name("Unit")
-    ))
+    assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")(
+      Decl
+        .Def(Nil, Term.Name("f"), pcg(tparamsExpected, paramsExpected: _*) :: Nil, Type.Name("Unit"))
+    )
   }
 
   test("single ...., with tparams") {
     import dialects.Scala3
     val q"..$mods def $name(....$paramss): $tpe" = q"def f(x: Int)[A](y: Int)[B]: Unit"
-    val pcGroups = Member.ParamClauseGroup(
-      Nil,
-      Term.ParamClause(List(Term.Param(Nil, Term.Name("x"), Some(Type.Name("Int")), None)), None) ::
-        Nil
-    ) :: Member.ParamClauseGroup(
-      Type
-        .ParamClause(Type.Param(Nil, Type.Name("A"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil),
-      Term.ParamClause(List(Term.Param(Nil, Term.Name("y"), Some(Type.Name("Int")), None)), None) ::
-        Nil
-    ) :: Member.ParamClauseGroup(
-      Type
-        .ParamClause(Type.Param(Nil, Type.Name("B"), Nil, Type.Bounds(None, None), Nil, Nil) :: Nil),
-      Nil
-    ) :: Nil
+    val pcGroups = pcg(List(tparam("x", "Int"))) ::
+      pcg(List(pparam("A")), List(tparam("y", "Int"))) :: pcg(List(pparam("B"))) :: Nil
 
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "[A](y: Int)", "[B]")(pcGroups: _*)
     assertTree(q"..$mods def $name(....$paramss): $tpe")(

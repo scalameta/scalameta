@@ -65,8 +65,8 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def ctorp(mod: Mod.ParamsType, lp: Term.Param*): Ctor.Primary = Ctor
     .Primary(Nil, anon, Term.ParamClause(lp.toList, Option(mod)) :: Nil)
   final val slf = meta.Self(anon, None)
-  final def self(name: String, tpe: Option[Type] = None): meta.Self = meta.Self(mname(name), tpe)
-  final def self(name: String, tpe: Type): meta.Self = self(name, Option(tpe))
+  final def self(name: meta.Name, tpe: Option[Type] = None): meta.Self = meta.Self(name, tpe)
+  final def self(name: meta.Name, tpe: Type): meta.Self = self(name, Option(tpe))
 
   implicit def implicitStringsToTerms(obj: List[String]): List[Term.Name] = obj.map(tname)
   implicit def implicitStringToTermOpt(obj: Option[String]): Option[Term.Name] = obj.map(tname)
@@ -85,8 +85,12 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
 
   final def tpl(inits: List[Init], body: Template.Body): Template = Template(Nil, inits, body)
   final def tpl(inits: List[Init], stats: List[Stat]): Template = tpl(inits, tplBody(stats: _*))
+  final def tpl(inits: List[Init], self: meta.Self, stats: Stat*): Template =
+    tpl(inits, tplBody(self, stats: _*))
   final def tpl(stats: List[Stat]): Template = tpl(Nil, stats)
   final def tpl(stats: Stat*): Template = tpl(stats.toList)
+  final def tpl(body: Template.Body): Template = tpl(Nil, body)
+  final def tpl(self: meta.Self, stats: Stat*): Template = tpl(Nil, self, stats: _*)
 
   final def tplBody(selfOpt: Option[meta.Self], stats: Stat*): Template.Body = Template
     .Body(selfOpt, stats.toList)
@@ -106,30 +110,36 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def tparamInline(name: String, tpe: Type) = tparam(List(Mod.Inline()), name, tpe)
   final def tparamUsing(name: String, tpe: Type) = tparam(List(Mod.Using()), name, tpe)
 
-  final def tinfix(lt: Term, op: Term.Name, ta: List[Type], rt: Term*): Term.ApplyInfix = Term
-    .ApplyInfix(lt, op, ta, rt.toList)
-  final def tinfix(lt: Term, op: Term.Name, rt: Term*): Term.ApplyInfix = tinfix(lt, op, Nil, rt: _*)
-  final def tpostfix(lt: Term, op: Term.Name): Term.SelectPostfix = Term.SelectPostfix(lt, op)
-  final def tselect(lt: Term, op: Term.Name): Term.Select = Term.Select(lt, op)
+  final def tinfix(lt: Term, op: String, ta: List[Type], rt: Term*): Term.ApplyInfix = Term
+    .ApplyInfix(lt, tname(op), ta, rt.toList)
+  final def tinfix(lt: Term, op: String, rt: Term*): Term.ApplyInfix = tinfix(lt, op, Nil, rt: _*)
+  final def tpostfix(lt: Term, op: String): Term.SelectPostfix = Term.SelectPostfix(lt, op)
+  final def tselect(lt: Term, op: String, ops: String*): Term.Select = ops
+    .foldLeft(Term.Select(lt, op)) { case (res, op) => Term.Select(res, op) }
   final def tapply(fun: Term, args: Term*): Term.Apply = Term.Apply(fun, args.toList)
+  final def tapplyUsing(fun: Term, args: Term*): Term.Apply = Term
+    .Apply(fun, Term.ArgClause(args.toList, Some(Mod.Using())))
   final def tapplytype(fun: Term, args: Type*) = Term.ApplyType(fun, args.toList)
-  final def tmatch(lt: Term, cases: Case*): Term.Match = Term.Match(lt, cases.toList)
+  final def tmatch(mods: Mod*)(lt: Term, cases: Case*): Term.Match = Term
+    .Match(lt, cases.toList, mods.toList)
+  final def tmatch(lt: Term, cases: Case*): Term.Match = tmatch()(lt, cases: _*)
   final def tselectmatch(lt: Term, cases: Case*): Term.SelectMatch = Term
     .SelectMatch(lt, cases.toList)
-  final def tfunc(body: Term, params: Term.Param*): Term.Function = Term
+  final def tfunc(params: Term.Param*)(body: Term): Term.Function = Term
     .Function(params.toList, body)
-  final def tctxfunc(body: Term, params: Term.Param*): Term.ContextFunction = Term
+  final def tctxfunc(params: Term.Param*)(body: Term): Term.ContextFunction = Term
     .ContextFunction(params.toList, body)
-  final def tpolyfunc(body: Term, params: Type.Param*) = Term.PolyFunction(params.toList, body)
+  final def tpolyfunc(params: Type.Param*)(body: Term) = Term.PolyFunction(params.toList, body)
 
   implicit def implicitStringsToTypes(obj: List[String]): List[Type.Name] = obj.map(pname)
   implicit def implicitStringToTypeOpt(obj: Option[String]): Option[Type.Name] = obj.map(pname)
 
   final def pparam(s: String): Type.Param = pparam(s, noBounds)
-  final def pparam(s: String, bounds: Type.Bounds): Type.Param = pparam(Nil, s, bounds)
+  final def pparam(s: String, bounds: Type.Bounds): Type.Param = pparam(Nil, s, bounds = bounds)
   final def pparam(
       mods: List[Mod],
       s: String,
+      params: List[Type.Param] = Nil,
       bounds: Type.Bounds = noBounds,
       vb: List[Type] = Nil,
       cb: List[Type] = Nil
@@ -139,35 +149,53 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
       case "_" => phName
       case _ => pname(s)
     }
-    Type.Param(mods, nameTree, Nil, bounds, vb, cb)
+    Type.Param(mods, nameTree, params, bounds, vb, cb)
   }
 
-  final def pinfix(lt: Type, op: Type.Name, rt: Type): Type.ApplyInfix = Type.ApplyInfix(lt, op, rt)
+  final def pinfix(lt: Type, op: String, rt: Type): Type.ApplyInfix = Type.ApplyInfix(lt, op, rt)
+  final def pselect(lt: Term.Ref, op: String, ops: String*): Type.Select = ops match {
+    case Seq() => Type.Select(lt, op)
+    case ops :+ last => Type.Select(tselect(lt, op, ops: _*), last)
+  }
   final def papply(tpe: Type, args: Type*): Type.Apply = Type.Apply(tpe, args.toList)
-  final def pfunc(param: List[Type], res: Type): Type.Function = Type.Function(param, res)
-  final def pfunc(res: Type, param: Type*): Type.Function = pfunc(param.toList, res)
-  final def pctxfunc(param: List[Type], res: Type): Type.ContextFunction = Type
-    .ContextFunction(param, res)
-  final def pctxfunc(res: Type, param: Type*): Type.ContextFunction = pctxfunc(param.toList, res)
-  final def purefunc(param: List[Type], res: Type): Type.PureFunction = Type.PureFunction(param, res)
-  final def purefunc(res: Type, param: Type*): Type.PureFunction = purefunc(param.toList, res)
-  final def purectxfunc(param: List[Type], res: Type): Type.PureContextFunction = Type
-    .PureContextFunction(param, res)
-  final def purectxfunc(res: Type, param: Type*): Type.PureContextFunction =
-    purectxfunc(param.toList, res)
-  final def ppolyfunc(body: Type, params: Type.Param*) = Type.PolyFunction(params.toList, body)
+  final def pfunc(params: Type.FuncParamClause, res: Type): Type.Function = Type
+    .Function(params, res)
+  final def pfunc(param: Type*)(res: Type): Type.Function = pfunc(param.toList, res)
+  final def pctxfunc(param: Type*)(res: Type): Type.ContextFunction = Type
+    .ContextFunction(param.toList, res)
+  final def purefunc(param: Type*)(res: Type): Type.PureFunction = Type
+    .PureFunction(param.toList, res)
+  final def purectxfunc(param: Type*)(res: Type): Type.PureContextFunction = Type
+    .PureContextFunction(param.toList, res)
+  final def ppolyfunc(params: Type.Param*)(body: Type) = Type.PolyFunction(params.toList, body)
 
-  final def patvar(name: Term.Name): Pat.Var = Pat.Var(name)
+  final def tpc(tp: Term.Param*): Term.ParamClause = tpc(null, tp: _*)
+  final def tpc(mod: Mod.ParamsType, tp: Term.Param*): Term.ParamClause = Term
+    .ParamClause(tp.toList, Option(mod))
+  final val noTpc = tpc()
+
+  final def ppc(tp: Type.Param*): Type.ParamClause = Type.ParamClause(tp.toList)
+  final val noPpc = ppc()
+
+  final def pcg(tp: Type.ParamClause, pp: Term.ParamClause*): Member.ParamClauseGroup = Member
+    .ParamClauseGroup(tp, pp.toList)
+  final def pcg(pp: Term.ParamClause*): Member.ParamClauseGroup = pcg(Type.ParamClause(Nil), pp: _*)
+
+  final def patvar(name: String): Pat.Var = Pat.Var(name)
   implicit def implicitStringToPatVar(obj: String): Pat.Var = patvar(obj)
 
-  final def patinfix(lt: Pat, op: Term.Name, rt: Pat*): Pat.ExtractInfix = Pat
-    .ExtractInfix(lt, op, rt.toList)
+  final def patinfix(lt: Pat, op: String, rt: Pat*): Pat.ExtractInfix = Pat
+    .ExtractInfix(lt, tname(op), rt.toList)
+  final val patwildcard = Pat.Wildcard()
 
   final val noBounds = Type.Bounds(None, None)
   final def loBound(bound: Type): Type.Bounds = Type.Bounds(Some(bound), None)
   final def hiBound(bound: Type): Type.Bounds = Type.Bounds(None, Some(bound))
-  final def bounds(lo: Type.Name = null, hi: Type.Name = null): Type.Bounds = Type
+  final def bounds(lo: Type = null, hi: Type = null): Type.Bounds = Type
     .Bounds(Option(lo), Option(hi))
+
+  final def pwildcard(bounds: Type.Bounds): Type.Wildcard = Type.Wildcard(bounds)
+  final val pwildcard: Type.Wildcard = pwildcard(noBounds)
 
   final def lit() = Lit.Unit()
   final def bool(v: Boolean) = Lit.Boolean(v)
@@ -184,10 +212,8 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def lit(v: Char) = Lit.Char(v)
   final def sym(v: String) = lit(Symbol(v))
   final def lit(v: Symbol) = Lit.Symbol(v)
-  final def init(tpe: Type, args: Term.ArgClause*): Init = init(tpe, args.toList)
-  final def init(tpe: Type, args: List[Term.ArgClause] = Nil): Init = Init(tpe, anon, args)
-  final def blk(stats: List[Stat]): Term.Block = Term.Block(stats)
-  final def blk(stats: Stat*): Term.Block = blk(stats.toList)
+  final def init(tpe: Type, args: Term.ArgClause*): Init = Init(tpe, anon, args.toList)
+  final def blk(stats: Stat*): Term.Block = Term.Block(stats.toList)
 
   final def stats(vals: Stat*): Stat.Block = Stat.Block(vals.toList)
 

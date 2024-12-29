@@ -71,11 +71,8 @@ class InterleavedDeclSuite extends BaseDottySuite {
       Decl.Def(
         Nil,
         tname("f"),
-        Member.ParamClauseGroup(
-          Type.ParamClause(pparam("A") :: Nil),
-          Term.ParamClause(List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A")))), None) ::
-            Nil
-        ) :: Member.ParamClauseGroup(Type.ParamClause(pparam("B") :: Nil), Nil) :: Nil,
+        pcg(List(pparam("A")), List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A"))))) ::
+          pcg(List(pparam("B"))) :: Nil,
         pname("B")
       )
     }
@@ -95,19 +92,9 @@ class InterleavedDeclSuite extends BaseDottySuite {
       Decl.Def(
         Nil,
         tname("f"),
-        Member.ParamClauseGroup(
-          Type.ParamClause(pparam("A") :: Nil),
-          Term.ParamClause(List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A")))), None) ::
-            Nil
-        ) :: Member.ParamClauseGroup(
-          Type.ParamClause(pparam("B") :: Nil),
-          Term.ParamClause(List(tparam("b", "B"), tparam("bs", Type.Repeated(pname("B")))), None) ::
-            Nil
-        ) :: Member.ParamClauseGroup(
-          Type.ParamClause(pparam("C") :: Nil),
-          Term.ParamClause(List(tparam(List(Mod.Implicit()), "c", "C")), Some(Mod.Implicit())) ::
-            Nil
-        ) :: Nil,
+        pcg(List(pparam("A")), List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A"))))) ::
+          pcg(List(pparam("B")), List(tparam("b", "B"), tparam("bs", Type.Repeated(pname("B"))))) ::
+          pcg(List(pparam("C")), List(tparam(List(Mod.Implicit()), "c", "C"))) :: Nil,
         pname("B")
       )
     }

@@ -23,7 +23,7 @@ class ImportSuite extends ParseSuite {
 
   test("import foo.bar.baz") {
     assertTree(templStat("import foo.bar.baz"))(Import(
-      Importer(Select(TermName("foo"), TermName("bar")), Name(Indeterminate("baz")) :: Nil) :: Nil
+      Importer(tselect("foo", "bar"), Name(Indeterminate("baz")) :: Nil) :: Nil
     ))
   }
 
@@ -44,7 +44,7 @@ class ImportSuite extends ParseSuite {
 
   test("import foo.bar._") {
     assertTree(templStat("import foo.bar._"))(Import(
-      Importer(Select(TermName("foo"), TermName("bar")), Wildcard() :: Nil) :: Nil
+      Importer(tselect("foo", "bar"), Wildcard() :: Nil) :: Nil
     ))
   }
 
@@ -110,16 +110,14 @@ class ImportSuite extends ParseSuite {
 
   test("import a.b.{ _, c => _ }") {
     // invalid but we don't check anymore
-    assertTree(templStat("import a.b.{ _, c => _ }"))(Import(List(
-      Importer(Term.Select(tname("a"), tname("b")), List(Wildcard(), Unimport(Indeterminate("c"))))
-    )))
+    assertTree(templStat("import a.b.{ _, c => _ }"))(Import(
+      List(Importer(tselect("a", "b"), List(Wildcard(), Unimport(Indeterminate("c")))))
+    ))
   }
 
   test("source3-given-import") {
-    val expected = Import(List(Importer(
-      Term.Select(Term.Select(tname("a"), tname("b")), tname("c")),
-      List(Importee.GivenAll(), Importee.Wildcard())
-    )))
+    val expected =
+      Import(List(Importer(tselect("a", "b", "c"), List(Importee.GivenAll(), Importee.Wildcard()))))
 
     assertTree {
       implicit val dialect: Dialect = dialects.Scala212Source3
@@ -131,10 +129,8 @@ class ImportSuite extends ParseSuite {
       templStat("import a.b.c.{ given, _ }")
     }(expected)
 
-    val expectedWithoutWildcard = Import(List(Importer(
-      Term.Select(Term.Select(tname("a"), tname("b")), tname("c")),
-      List(Importee.Name(Indeterminate("given")))
-    )))
+    val expectedWithoutWildcard =
+      Import(List(Importer(tselect("a", "b", "c"), List(Importee.Name(Indeterminate("given"))))))
 
     assertTree {
       implicit val dialect: Dialect = dialects.Scala212Source3
