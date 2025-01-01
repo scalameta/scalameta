@@ -233,11 +233,9 @@ trait SymbolOps {
   }
 
   private var nextId = 0
-  private def freshSymbol(): String = {
-    val result = Symbols.Local(nextId.toString)
-    nextId += 1
-    result
-  }
+  private def freshSymbol(): String =
+    try Symbols.Local(nextId)
+    finally nextId += 1
 
   lazy val hardlinks = new HashSet[String]
   private def registerHardlink(sym: Symbol): Unit = hardlinks.add(sym.ssym)
