@@ -11,23 +11,18 @@ import java.util.HashMap
 import java.util.HashSet
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolOps {
   _: Scalacp =>
-  lazy val symbolCache = new HashMap[Symbol, String]
+  lazy val symbolCache = new mutable.HashMap[Symbol, String]
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
     def toSemantic: String = {
       def uncached(sym: Symbol): String =
         if (sym.isSemanticdbGlobal) Symbols.Global(sym.owner, sym.descriptor) else freshSymbol()
-      val ssym = symbolCache.get(sym)
-      if (ssym != null) ssym
-      else {
-        val ssym = uncached(sym)
-        symbolCache.put(sym, ssym)
-        ssym
-      }
+      symbolCache.getOrElseUpdate(sym, uncached(sym))
     }
   }
 

@@ -10,6 +10,7 @@ import scala.meta.internal.{semanticdb => s}
 import java.util.HashMap
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile}
 import scala.reflect.internal.util.{SourceFile => GSourceFile}
 import scala.reflect.internal.{Flags => gf}
@@ -19,7 +20,7 @@ import scala.{meta => m}
 trait SymbolOps {
   self: SemanticdbOps =>
 
-  lazy val symbolCache = new HashMap[g.Symbol, String]
+  lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: String = {
       def uncached(sym: g.Symbol): String = {
@@ -40,20 +41,15 @@ trait SymbolOps {
           else d.Term(sym.symbolName)
         Symbols.Global(owner, desc)
       }
-      val msym = symbolCache.get(sym)
-      if (msym != null) msym
-      else {
-        val msym =
-          try uncached(sym)
-          catch {
-            case NonFatal(e) if isInteractiveCompiler =>
-              // happens regularly for broken code with the pc, see
-              // https://github.com/scalameta/scalameta/issues/1194
-              Symbols.None
-          }
-        symbolCache.put(sym, msym)
-        msym
-      }
+      def defaultValue =
+        try uncached(sym)
+        catch {
+          case NonFatal(e) if isInteractiveCompiler =>
+            // happens regularly for broken code with the pc, see
+            // https://github.com/scalameta/scalameta/issues/1194
+            Symbols.None
+        }
+      symbolCache.getOrElseUpdate(sym, defaultValue)
     }
   }
 
@@ -216,31 +212,23 @@ trait SymbolOps {
       !sym.isStatic
   }
 
-  lazy val idCache = new HashMap[String, Int]
-  lazy val pointsCache = new HashMap[Int, g.Symbol]
+  lazy val idCache = new mutable.HashMap[String, Int]
+  lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
     @tailrec
-    def loop(sym: g.Symbol): GSourceFile =
-      if (sym.pos.source != GNoSourceFile) sym.pos.source
-      else if (sym == g.NoSymbol) GNoSourceFile
-      else loop(sym.owner)
-    val minput = loop(sym).toInput
+    def loop(sym: g.Symbol): m.Input = sym.pos.source match {
+      case GNoSourceFile => if (sym == g.NoSymbol) m.Input.None else loop(sym.owner)
+      case src => src.toInput
+    }
+    val minput = loop(sym)
     if (minput == m.Input.None) Symbols.None
     else {
-      val hasPosition = sym.pos != null && sym.pos.isDefined
-      val conflict = if (hasPosition) pointsCache.get(sym.pos.point) else null
-      if (conflict != null && sym.name == conflict.name)
-        // Use conflicting symbol instead of this local symbol.
-        // This can happen for example in for comprehensions when the same binder
-        // results in multiple parameter symbols for each flatMap/withFilter/map/foreach.
-        conflict.toSemantic
-      else {
-        if (hasPosition) pointsCache.put(sym.pos.point, sym)
-        val key = minput.text
-        val id = idCache.get(key)
-        idCache.put(key, id + 1)
-        Symbols.Local(id)
-      }
+      val conflict = if (sym.pos.isDefined) pointsCache.getOrElseUpdate(sym.pos.point, sym) else sym
+      // Use conflicting symbol instead of this local symbol.
+      // This can happen for example in for comprehensions when the same binder
+      // results in multiple parameter symbols for each flatMap/withFilter/map/foreach.
+      if (conflict != sym && conflict.name == sym.name) conflict.toSemantic
+      else Symbols.Local(idCache.updateWithRemap(minput.text)(_.fold(0)(_ + 1)))
     }
   }
 }
