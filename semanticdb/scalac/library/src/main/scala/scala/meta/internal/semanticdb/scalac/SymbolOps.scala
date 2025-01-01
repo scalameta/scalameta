@@ -236,9 +236,10 @@ trait SymbolOps {
         conflict.toSemantic
       else {
         if (hasPosition) pointsCache.put(sym.pos.point, sym)
-        val id = idCache.get(minput.syntax)
-        idCache.put(minput.syntax, id + 1)
-        Symbols.Local(id.toString)
+        val key = minput.text
+        val id = idCache.get(key)
+        idCache.put(key, id + 1)
+        Symbols.Local(id)
       }
     }
   }

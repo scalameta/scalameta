@@ -13,9 +13,7 @@ object Scala {
     val EmptyPackage: String = "_empty_/"
     def Global(owner: String, desc: Descriptor): String =
       if (owner != RootPackage) owner + desc.toString else desc.toString
-    def Local(suffix: String): String =
-      if (suffix.indexOf("/") == -1 && suffix.indexOf(";") == -1) "local" + suffix
-      else throw new IllegalArgumentException(suffix)
+    def Local(id: Int): String = "local" + id.toString
     def Multi(symbols: List[String]): String = symbols.distinct match {
       case List(symbol) => symbol
       case symbols =>
