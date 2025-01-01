@@ -217,7 +217,7 @@ trait SymbolOps {
   }
 
   lazy val idCache = new HashMap[String, Int]
-  lazy val pointsCache = new HashMap[Int, g.Symbol]
+  lazy val pointsCache = new HashMap[g.Name, g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
     @tailrec
     def loop(sym: g.Symbol): GSourceFile =
@@ -227,15 +227,13 @@ trait SymbolOps {
     val minput = loop(sym).toInput
     if (minput == m.Input.None) Symbols.None
     else {
-      val hasPosition = sym.pos != null && sym.pos.isDefined
-      val conflict = if (hasPosition) pointsCache.get(sym.pos.point) else null
-      if (conflict != null && sym.name == conflict.name)
-        // Use conflicting symbol instead of this local symbol.
-        // This can happen for example in for comprehensions when the same binder
-        // results in multiple parameter symbols for each flatMap/withFilter/map/foreach.
-        conflict.toSemantic
+      // Use conflicting symbol instead of this local symbol.
+      // This can happen for example in for comprehensions when the same binder
+      // results in multiple parameter symbols for each flatMap/withFilter/map/foreach.
+      val conflict = pointsCache.get(sym.name)
+      if ((conflict ne null) && (conflict ne sym)) conflict.toSemantic
       else {
-        if (hasPosition) pointsCache.put(sym.pos.point, sym)
+        pointsCache.put(sym.name, sym)
         val key = minput.text
         val id = idCache.get(key)
         idCache.put(key, id + 1)
