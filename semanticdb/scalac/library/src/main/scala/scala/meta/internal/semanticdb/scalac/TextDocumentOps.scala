@@ -522,9 +522,12 @@ trait TextDocumentOps {
               case AnnotatedOf(original) => traverse(original)
               case SelfTypeOf(original) => traverse(original)
               case SelectOf(original) => traverse(original)
-              case g.Function(params, body) if params.forall { param =>
-                    param.symbol.isSynthetic || param.name.decoded.startsWith("x$")
-                  } => traverse(body)
+              case gtree: g.Function =>
+                gtree.vparams.foreach { p =>
+                  val skip = p.symbol.isSynthetic || p.name.decoded.startsWith("x$")
+                  if (!skip) traverse(p)
+                }
+                traverse(gtree.body)
               case gtree: g.TypeTree if gtree.original != null => traverse(gtree.original)
               case gtree: g.TypeTreeWithDeferredRefCheck => traverse(gtree.check())
 

@@ -20,12 +20,8 @@ import munit.FunSuite
 
 class OccurrenceSuite extends FunSuite {
 
-  private def testBody(body: OccurrenceSuite.TestBody): Unit = {
-    val expectedCompat =
-      if (ScalaVersion.atLeast213_15) body.expected
-      else body.expected.replace("  } yield a/*=>local13*/", "  } yield a/*=>local11*/")
-    assertNoDiff(body.obtained, expectedCompat)
-  }
+  private def testBody(body: OccurrenceSuite.TestBody): Unit =
+    assertNoDiff(body.obtained, body.expected)
 
   ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212 || ScalaVersion.is213) {
     OccurrenceSuite.testCases.foreach(t => test(t.name)(t.body.fold(fail(_), testBody)))
