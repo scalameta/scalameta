@@ -23,10 +23,10 @@ import munit._
 
 abstract class SemanticdbSuite extends FunSuite {
   self =>
-  private def test(code: String)(fn: => Unit): Unit = {
+  private def test(code: String)(fn: => Unit): Unit = if (!Properties.isWin) {
     var name = code.trim.replace(EOL, " ")
     if (name.length > 50) name = name.take(50) + "..."
-    else if (!Properties.isWin) super.test(name)(fn)
+    super.test(name)(fn)
   }
 
   def yMacroAnnotations: String =
