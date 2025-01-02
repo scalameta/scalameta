@@ -4207,7 +4207,7 @@ Occurrences:
 [43:7..43:8): a => local11
 [43:9..43:10): < => scala/Int#`<`(+3).
 [43:11..43:12): b => local12
-[44:10..44:11): a => local13
+[44:10..44:11): a => local11
 
 Synthetics:
 [3:2..3:6): List => *.apply[Int]
