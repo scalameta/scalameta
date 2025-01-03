@@ -281,9 +281,7 @@ trait TextDocumentOps {
             (gtree match {
               case gtree: g.Template => gtree.body.iterator.map(_.symbol)
                   .find(x => x != null && x.isPrimaryConstructor).orElse(Some(g.NoSymbol))
-              case gtree: g.DefDef =>
-                val gsym = gtree.symbol
-                if (gsym.isConstructor) Some(gsym) else None
+              case gtree: g.DefDef => if (gsym.isConstructor) Some(gsym) else None
               case _ => None
             }).foreach(success(mctordefs.get(gstart), _))
 
@@ -303,7 +301,7 @@ trait TextDocumentOps {
 
             gtree match {
               case gtree: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
-              case gtree: g.MemberDef if gtree.symbol.isSynthetic || gtree.symbol.isArtifact =>
+              case gtree: g.MemberDef if gsym.isSynthetic || gsym.isArtifact =>
                 if (!gsym.isSemanticdbLocal && !gsym.isUseless)
                   symbols(gsym.toSemantic) = gsym.toSymbolInformation(SymlinkChildren)
               case gtree: g.PackageDef =>
@@ -315,7 +313,6 @@ trait TextDocumentOps {
                 tryMstart(gpoint + 7)
                 tryMstart(gpoint)
               case gtree: g.ValDef =>
-                val gsym = gtree.symbol
                 if (!gsym.isMethod && gsym.getterIn(gsym.owner) != g.NoSymbol) {
                   // FIXME: https://github.com/scalameta/scalameta/issues/1538
                   // Skip the field definition in favor of the associated getter.
