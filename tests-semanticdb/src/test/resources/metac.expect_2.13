@@ -90,8 +90,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala-2.13/example/SingleAbstractMethod.scala
 Text => non-empty
 Language => Scala
-Symbols => 11 entries
-Occurrences => 27 entries
+Symbols => 14 entries
+Occurrences => 30 entries
 
 Symbols:
 example/SingleAbstractMethod# => class SingleAbstractMethod extends AnyRef { +4 decls }
@@ -115,9 +115,18 @@ example/SingleAbstractMethod#withSAM(). => method withSAM(a: SAM): Int
   Int => scala/Int#
 example/SingleAbstractMethod#withSAM().(a) => param a: SAM
   SAM => example/SingleAbstractMethod#SAM#
-local0 => param x: Int
+local0 => class $anon extends Object with SAM { +1 decls }
+  Object => java/lang/Object#
+  SAM => example/SingleAbstractMethod#SAM#
+local2 => class $anon extends Object with SAM { +1 decls }
+  Object => java/lang/Object#
+  SAM => example/SingleAbstractMethod#SAM#
+local3 => param x: Int
   Int => scala/Int#
-local1 => param y: Int
+local4 => class $anon extends Object with SAM { +1 decls }
+  Object => java/lang/Object#
+  SAM => example/SingleAbstractMethod#SAM#
+local5 => param y: Int
   Int => scala/Int#
 
 Occurrences:
@@ -135,11 +144,13 @@ Occurrences:
 [7:24..7:25): a => example/SingleAbstractMethod#withSAM().(a)
 [7:26..7:29): foo => example/SingleAbstractMethod#SAM#foo().
 [9:2..9:9): withSAM => example/SingleAbstractMethod#withSAM().
+[9:10..9:15): _ + 1 <= local0
 [9:12..9:13): + => scala/Int#`+`(+4).
 [10:2..10:9): withSAM => example/SingleAbstractMethod#withSAM().
-[10:11..10:12): x <= local0
+[10:10..10:27): (x: Int) => x - 1 <= local2
+[10:11..10:12): x <= local3
 [10:14..10:17): Int => scala/Int#
-[10:22..10:23): x => local0
+[10:22..10:23): x => local3
 [10:24..10:25): - => scala/Int#`-`(+3).
 [12:6..12:13): funcSAM <= example/SingleAbstractMethod#funcSAM().
 [12:14..12:15): y <= example/SingleAbstractMethod#funcSAM().(y)
@@ -148,6 +159,7 @@ Occurrences:
 [12:26..12:27): * => scala/Int#`*`(+3).
 [13:2..13:9): withSAM => example/SingleAbstractMethod#withSAM().
 [13:10..13:17): funcSAM => example/SingleAbstractMethod#funcSAM().
+[13:10..13:17): funcSAM <= local4
 
 semanticdb/integration/src/main/scala/example/Access.scala
 ----------------------------------------------------------
