@@ -82,6 +82,73 @@ Diagnostics:
 [42:4..42:8) [warning] a pure expression does nothing in statement position; multiline expressions might require enclosing parentheses
 [50:4..50:8) [warning] a pure expression does nothing in statement position; multiline expressions might require enclosing parentheses
 
+semanticdb/integration/src/main/scala-2.13/example/SingleAbstractMethod.scala
+-----------------------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala-2.13/example/SingleAbstractMethod.scala
+Text => non-empty
+Language => Scala
+Symbols => 11 entries
+Occurrences => 27 entries
+
+Symbols:
+example/SingleAbstractMethod# => class SingleAbstractMethod extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/SingleAbstractMethod#SAM# => trait SAM extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/SingleAbstractMethod#SAM#foo(). => abstract method foo(a: Int): Int
+  a => example/SingleAbstractMethod#SAM#foo().(a)
+  Int => scala/Int#
+example/SingleAbstractMethod#SAM#foo().(a) => param a: Int
+  Int => scala/Int#
+example/SingleAbstractMethod#`<init>`(). => primary ctor <init>()
+example/SingleAbstractMethod#funcSAM(). => method funcSAM(y: Int): Int
+  y => example/SingleAbstractMethod#funcSAM().(y)
+  Int => scala/Int#
+example/SingleAbstractMethod#funcSAM().(y) => param y: Int
+  Int => scala/Int#
+example/SingleAbstractMethod#withSAM(). => method withSAM(a: SAM): Int
+  a => example/SingleAbstractMethod#withSAM().(a)
+  SAM => example/SingleAbstractMethod#SAM#
+  Int => scala/Int#
+example/SingleAbstractMethod#withSAM().(a) => param a: SAM
+  SAM => example/SingleAbstractMethod#SAM#
+local0 => param x: Int
+  Int => scala/Int#
+local1 => param y: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:6..2:26): SingleAbstractMethod <= example/SingleAbstractMethod#
+[2:27..2:27):  <= example/SingleAbstractMethod#`<init>`().
+[4:8..4:11): SAM <= example/SingleAbstractMethod#SAM#
+[5:8..5:11): foo <= example/SingleAbstractMethod#SAM#foo().
+[5:12..5:13): a <= example/SingleAbstractMethod#SAM#foo().(a)
+[5:15..5:18): Int => scala/Int#
+[5:21..5:24): Int => scala/Int#
+[7:6..7:13): withSAM <= example/SingleAbstractMethod#withSAM().
+[7:14..7:15): a <= example/SingleAbstractMethod#withSAM().(a)
+[7:17..7:20): SAM => example/SingleAbstractMethod#SAM#
+[7:24..7:25): a => example/SingleAbstractMethod#withSAM().(a)
+[7:26..7:29): foo => example/SingleAbstractMethod#SAM#foo().
+[9:2..9:9): withSAM => example/SingleAbstractMethod#withSAM().
+[9:12..9:13): + => scala/Int#`+`(+4).
+[10:2..10:9): withSAM => example/SingleAbstractMethod#withSAM().
+[10:11..10:12): x <= local0
+[10:14..10:17): Int => scala/Int#
+[10:22..10:23): x => local0
+[10:24..10:25): - => scala/Int#`-`(+3).
+[12:6..12:13): funcSAM <= example/SingleAbstractMethod#funcSAM().
+[12:14..12:15): y <= example/SingleAbstractMethod#funcSAM().(y)
+[12:17..12:20): Int => scala/Int#
+[12:24..12:25): y => example/SingleAbstractMethod#funcSAM().(y)
+[12:26..12:27): * => scala/Int#`*`(+3).
+[13:2..13:9): withSAM => example/SingleAbstractMethod#withSAM().
+[13:10..13:17): funcSAM => example/SingleAbstractMethod#funcSAM().
+
 semanticdb/integration/src/main/scala/example/Access.scala
 ----------------------------------------------------------
 

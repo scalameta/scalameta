@@ -2926,6 +2926,39 @@ example/NamedArguments#User.unapply().(x$0) => param x$0: User
   User => example/NamedArguments#User#
 example/NamedArguments#`<init>`(). => primary ctor <init>()
 
+example/SingleAbstractMethod.class
+----------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/SingleAbstractMethod.class
+Text => empty
+Language => Scala
+Symbols => 9 entries
+
+Symbols:
+example/SingleAbstractMethod# => class SingleAbstractMethod extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+example/SingleAbstractMethod#SAM# => trait SAM extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/SingleAbstractMethod#SAM#foo(). => abstract method foo(a: Int): Int
+  a => example/SingleAbstractMethod#SAM#foo().(a)
+  Int => scala/Int#
+example/SingleAbstractMethod#SAM#foo().(a) => param a: Int
+  Int => scala/Int#
+example/SingleAbstractMethod#`<init>`(). => primary ctor <init>()
+example/SingleAbstractMethod#funcSAM(). => method funcSAM(y: Int): Int
+  y => example/SingleAbstractMethod#funcSAM().(y)
+  Int => scala/Int#
+example/SingleAbstractMethod#funcSAM().(y) => param y: Int
+  Int => scala/Int#
+example/SingleAbstractMethod#withSAM(). => method withSAM(a: SAM): Int
+  a => example/SingleAbstractMethod#withSAM().(a)
+  SAM => example/SingleAbstractMethod#SAM#
+  Int => scala/Int#
+example/SingleAbstractMethod#withSAM().(a) => param a: SAM
+  SAM => example/SingleAbstractMethod#SAM#
+
 example/StructuralTypes.class
 -----------------------------
 
