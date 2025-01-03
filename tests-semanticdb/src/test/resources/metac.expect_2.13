@@ -3046,7 +3046,7 @@ Occurrences:
 [16:29..16:32): ??? => scala/Predef.`???`().
 [17:6..17:9): m7a <= example/Methods#m7a().
 [17:10..17:11): U <= example/Methods#m7a().[U]
-[17:13..17:21): Ordering => example/Methods#m7a().(evidence$1)
+[17:13..17:21): Ordering => scala/math/Ordering#
 [17:23..17:24): c <= example/Methods#m7a().(c)
 [17:26..17:33): Methods => example/Methods#
 [17:34..17:35): T => example/Methods#[T]
