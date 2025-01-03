@@ -116,4 +116,36 @@ class NamedTuplesSuite extends BaseDottySuite {
       )
     ))
   }
+
+  test("extractor-named-pattern") {
+    runTestAssert[Stat](
+      """|a match {
+         |  case Foo(name = nme, id = 123) =>
+         |}
+         |""".stripMargin
+    )(tmatch(
+      "a",
+      Case(
+        Pat.Extract("Foo", List(Pat.Assign("name", patvar("nme")), Pat.Assign("id", lit(123)))),
+        None,
+        blk()
+      )
+    ))
+  }
+
+  test("extractor-mixed-pattern") {
+    runTestAssert[Stat](
+      """|a match {
+         |  case Foo(x = y, z, rest*) =>
+         |}
+         |""".stripMargin
+    )(tmatch(
+      "a",
+      Case(
+        Pat.Extract("Foo", List(Pat.Assign("x", patvar("y")), patvar("z"), Pat.Repeated("rest"))),
+        None,
+        blk()
+      )
+    ))
+  }
 }
