@@ -122,10 +122,15 @@ class NamedTuplesSuite extends BaseDottySuite {
                   |  case Foo(name = nme, id = 123) =>
                   |}
                   |""".stripMargin
-    val error = """|<input>:2: error: `)` expected but `=` found
-                   |  case Foo(name = nme, id = 123) =>
-                   |                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = tmatch(
+      "a",
+      Case(
+        patextract(tname("Foo"), Pat.Assign("name", patvar("nme")), Pat.Assign("id", lit(123))),
+        None,
+        blk()
+      )
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
   test("extractor with named fields: some, with varargs") {
@@ -133,18 +138,26 @@ class NamedTuplesSuite extends BaseDottySuite {
                   |  case Foo(x = y, z, rest*) =>
                   |}
                   |""".stripMargin
-    val error = """|<input>:2: error: `)` expected but `=` found
-                   |  case Foo(x = y, z, rest*) =>
-                   |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = tmatch(
+      "a",
+      Case(
+        patextract(tname("Foo"), Pat.Assign("x", patvar("y")), patvar("z"), Pat.Repeated("rest")),
+        None,
+        blk()
+      )
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
   test("extractor with named fields: assignment") {
     val code = """val Foo(name = name, id = id) = Foo(name = "123", id = 456)"""
-    val error = """|<input>:1: error: `)` expected but `=` found
-                   |val Foo(name = name, id = id) = Foo(name = "123", id = 456)
-                   |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Defn.Val(
+      Nil,
+      List(patextract("Foo", Pat.Assign("name", patvar("name")), Pat.Assign("id", patvar("id")))),
+      None,
+      tapply("Foo", Term.Assign("name", lit("123")), Term.Assign("id", lit(456)))
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
   test("extractor with named fields: case clause only") {

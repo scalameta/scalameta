@@ -2820,6 +2820,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   /* In addition to above named tuple patterns are allowed*/
+  object seqOKWithNamed extends SeqContextSensitive {
+    val isSequenceOK = true
+    override val isNamedTupleOk: Boolean = true
+  }
+
   object noSeqWithNamed extends SeqContextSensitive {
     val isSequenceOK = false
     override def isNamedTupleOk: Boolean = true
@@ -2846,7 +2851,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def entrypointPattern(): Pat = seqOK.entrypointPattern()
   def unquotePattern(): Pat = noSeq.unquotePattern()
   def unquoteSeqPattern(): Pat = seqOK.unquotePattern()
-  def seqPatterns(): List[Pat] = seqOK.patterns()
+  def seqPatterns(): List[Pat] = seqOKWithNamed.patterns()
   def argumentPattern(): Pat = seqOK.pattern()
   def argumentPatterns(): List[Pat] = inParens(if (at[RightParen]) Nil else seqPatterns())
   def xmlLiteralPattern(): Pat = syntaxError("XML literals are not supported", at = currToken)
