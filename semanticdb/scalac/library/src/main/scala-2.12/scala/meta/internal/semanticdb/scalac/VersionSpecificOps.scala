@@ -16,4 +16,7 @@ trait VersionSpecificOps {
       .get[g.analyzer.NamedApplyInfo].map(Some(_))
   }
 
+  def getSyntheticSAMClass(gt: g.Function): Option[g.Symbol] = gt.attachments
+    .get[global.SAMFunction].map(_.synthCls)
+
 }
