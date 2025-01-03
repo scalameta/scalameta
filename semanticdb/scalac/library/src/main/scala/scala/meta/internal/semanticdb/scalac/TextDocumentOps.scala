@@ -325,6 +325,11 @@ trait TextDocumentOps {
                   tryMstart(gstart)
                   tryMstart(gpoint)
                 }
+                // Map Defn.Val position of val pattern with single binder to the position
+                // of the single binder. For example, map `val Foo(x) = ..` to the position of `x`.
+                // checked above, under MemberDef, that it's not isSynthetic anymore
+                if (gpos.isRange) msinglevalpats.get(gstart)
+                  .foreach(addOccurrence(_, gsym, isDef = true))
               case gtree: g.MemberDef => tryMstart(gpoint)
               case gtree: g.DefTree => tryMstart(gpoint)
               case gtree: g.This
@@ -497,6 +502,12 @@ trait TextDocumentOps {
             }
           }
 
+          private def processMemberDef(gtree: g.MemberDef) = {
+            val gsym = gtree.symbol
+            if (gsym != null) gsym.annotations.foreach(ann => traverse(ann.original))
+            tryFindMtree(gtree)
+          }
+
           override def traverse(gtree: g.Tree): Unit = if (isVisited.add(gtree)) {
             gtree.attachments.all.foreach {
               case att: g.analyzer.MacroExpansionAttachment => traverse(att.expandee)
@@ -522,12 +533,7 @@ trait TextDocumentOps {
               case AnnotatedOf(original) => traverse(original)
               case SelfTypeOf(original) => traverse(original)
               case SelectOf(original) => traverse(original)
-              case gtree: g.Function =>
-                gtree.vparams.foreach { p =>
-                  val skip = p.symbol.isSynthetic || p.name.decoded.startsWith("x$")
-                  if (!skip) traverse(p)
-                }
-                traverse(gtree.body)
+
               case gtree: g.TypeTree if gtree.original != null => traverse(gtree.original)
               case gtree: g.TypeTreeWithDeferredRefCheck => traverse(gtree.check())
 
@@ -552,22 +558,13 @@ trait TextDocumentOps {
                   case _ =>
                 }
 
-              case gtree: g.MemberDef =>
-                val gsym = gtree.symbol
-                tryFindMtree(gtree)
-                if (gsym != null) {
-                  gsym.annotations.foreach(ann => traverse(ann.original))
-                  // Map Defn.Val position of val pattern with single binder to the position
-                  // of the single binder. For example, map `val Foo(x) = ..` to the position of `x`.
-                  if (!gsym.isSynthetic) {
-                    val gpos = gtree.pos
-                    if (gpos != null && gpos.isRange) msinglevalpats.get(gpos.start)
-                      .foreach { mpos =>
-                        occurrences(mpos) = gsym.toSemantic
-                        binders += mpos
-                      }
-                  }
+              case t: g.Function =>
+                t.vparams.foreach { p =>
+                  if (!(p.symbol.isSynthetic || p.name.decoded.startsWith("x$"))) traverse(p)
                 }
+                traverse(t.body)
+                tryFindMtree(t)
+              case t: g.MemberDef => processMemberDef(t)
               case _: g.Apply | _: g.TypeApply =>
                 tryFindSynthetic(gtree)
                 val gpos = gtree.pos
