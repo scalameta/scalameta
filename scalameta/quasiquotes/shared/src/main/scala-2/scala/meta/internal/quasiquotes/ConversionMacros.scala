@@ -54,7 +54,7 @@ class ConversionMacros(val c: Context) extends AstReflection {
     // NOTE: Here's an interesting idea that I'd like to explore.
     // How about we allow things like `42 match { case q"$x" => x }`?
     // For that to work, we just need to wrap the reification result into `Lift.unapply`!
-    ???
+    throw new Exception("This method should be unreachable")
 
   def unliftApply[O](inside: c.Tree)(implicit O: c.WeakTypeTag[O]): c.Tree =
     // NOTE: here we just disregard the expected outside type, because I can't find uses for it
