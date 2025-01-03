@@ -23,4 +23,8 @@ trait VersionSpecificOps {
         )) Some(None)
       else None
   }
+
+  // TODO: move the other specializations back to TextDocumentOps when 2.11 is retired
+  def getSyntheticSAMClass(gt: g.Function): Option[g.Symbol] = None
+
 }

@@ -46,6 +46,7 @@ trait TextDocumentOps {
     def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
       pointsCache.clear()
       val occurrences = emptyOccurrenceMap()
+      val samoccurrences = emptyOccurrenceMap()
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ListBuffer[s.Synthetic]()
       // macro expandees can have cycles, keep tracks of visited nodes.
@@ -63,6 +64,7 @@ trait TextDocumentOps {
       val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
       val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
       val msupers = mutable.Map.empty[Int, m.Term.Super] // end offset
+      val mfuncs = mutable.Map.empty[Int, m.Position] // start offset of a function
 
       // Occurrences for names in val patterns, like `val (a, b) =`. Unlike the `occurrences` map, val pattern
       // occurrences uses "last occurrence wins" instead of "first occurrences wins" when disambiguating between
@@ -76,6 +78,29 @@ trait TextDocumentOps {
         if (ssym != Symbols.None) occurrences.update(mpos, (ssym, role))
       def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
         addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
+
+      def addSamOccurrence(gt: g.Function) = getSyntheticSAMClass(gt).foreach { sam =>
+        val gpos = gt.pos
+        val gsym = gt.symbol
+        def atPos(mpos: m.Position): Unit = gsym.toSemantic match {
+          case Symbols.None =>
+          case ssym =>
+            samoccurrences.update(mpos, (ssym, Role.DEFINITION))
+            if (!shouldNotSaveSymbol(gsym) && !shouldNotSaveSemanticSymbol(ssym)) {
+              saveSymbolDo(sam)
+              saveSymbolFromSemantic(gsym.setInfo(sam.tpe), ssym)
+            }
+        }
+        if (gpos.isDefined && (gsym ne null)) {
+          val gstart = gpos.start
+          mfuncs.get(gstart).fold {
+            mstarts.get(gstart).foreach { name =>
+              val mpos = name.pos
+              if (mpos.end == gpos.end) atPos(mpos)
+            }
+          }(atPos)
+        }
+      }
 
       def addPatOccurrenceFromSemantic(mpos: m.Position, ssym: String): Unit =
         if (ssym != Symbols.None) mpatoccurrences.update(mpos, (ssym, Role.DEFINITION))
@@ -175,6 +200,8 @@ trait TextDocumentOps {
               case mtree: m.Init => indexArgNames(mtree); mctorrefs(mtree.pos.start) = mtree.name
               case _: m.Name.Anonymous | _: m.Name.Placeholder | _: m.Name.This =>
               case mtree: m.Name => indexName(mtree)
+              case mtree @ (_: m.Term.FunctionTerm | _: m.Term.AnonymousFunction) =>
+                val mpos = mtree.pos; mfuncs.update(mpos.start, mpos)
               case mtree: m.Tree.WithPats => mtree.pats match {
                   case (_: m.Pat.Var) :: Nil =>
                   case pats => indexPats(pats)
@@ -576,6 +603,7 @@ trait TextDocumentOps {
                 }
 
               case t: g.Function =>
+                addSamOccurrence(t)
                 t.vparams.foreach { p =>
                   if (!(p.symbol.isSynthetic || p.name.decoded.startsWith("x$"))) traverse(p)
                 }
@@ -665,7 +693,7 @@ trait TextDocumentOps {
       val finalOccurrences = {
         val buf = List.newBuilder[s.SymbolOccurrence]
         for {
-          map <- Iterator(occurrences, mpatoccurrences)
+          map <- Iterator(occurrences, mpatoccurrences, samoccurrences)
           (pos, (sym, role)) <- map
           flatSym <- sym.asMulti
         } buf += s.SymbolOccurrence(Some(pos.toRange), flatSym, role)
