@@ -561,6 +561,10 @@ trait TextDocumentOps {
                 }
                 traverse(t.body)
                 tryFindMtree(t)
+              case t: g.ValDef =>
+                val gsym = t.symbol
+                if (gsym != null && gsym.isSynthetic) traverse(t.tpt)
+                processMemberDef(t)
               case t: g.MemberDef => processMemberDef(t)
               case _: g.Apply | _: g.TypeApply =>
                 tryFindSynthetic(gtree)
