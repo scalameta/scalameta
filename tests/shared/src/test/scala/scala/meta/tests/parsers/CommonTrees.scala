@@ -185,6 +185,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
 
   final def patinfix(lt: Pat, op: String, rt: Pat*): Pat.ExtractInfix = Pat
     .ExtractInfix(lt, tname(op), rt.toList)
+  final def patextract(fun: Term, args: Pat*) = Pat.Extract(fun, args.toList)
   final val patwildcard = Pat.Wildcard()
 
   final val noBounds = Type.Bounds.empty
