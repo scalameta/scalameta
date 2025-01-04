@@ -644,6 +644,104 @@ example/Issue2144.Test.`<init>$default$3`().
 -              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
+========================================
+example/Issue2882.FooFailure#canEqual().
+========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
+==============================================
+example/Issue2882.FooFailure#copy$default$1().
+==============================================
+--- metac
++++ metacp
+         annotations {
+           tpe {
+-            type_ref {
+-              prefix {
+-              symbol: "scala/annotation/unchecked/uncheckedVariance#"
+
+
+======================================
+example/Issue2882.FooFailure#equals().
+======================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+========================================
+example/Issue2882.FooFailure#hashCode().
+========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+============================================
+example/Issue2882.FooFailure#productArity().
+============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+==============================================
+example/Issue2882.FooFailure#productElement().
+==============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+===============================================
+example/Issue2882.FooFailure#productIterator().
+===============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+=============================================
+example/Issue2882.FooFailure#productPrefix().
+=============================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+=====================================
+example/Issue2882.FooFailure.apply().
+=====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#apply()."
+
+
+========================================
+example/Issue2882.FooFailure.toString().
+========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Function1#toString()."
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
 =========================
 example/Methods#m13().(x)
 =========================
