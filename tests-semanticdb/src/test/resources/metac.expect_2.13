@@ -4161,7 +4161,7 @@ Occurrences:
 [26:29..26:32): Int => scala/Int#
 [29:8..29:9): J <= example/Synthetic#J#
 [29:10..29:11): T <= example/Synthetic#J#[T]
-[29:13..29:21): Manifest => scala/AnyRef#
+[29:13..29:21): Manifest => scala/Predef.Manifest#
 [29:29..29:32): arr <= example/Synthetic#J#arr.
 [29:35..29:40): Array => scala/Array.
 [29:41..29:46): empty => scala/Array.empty().

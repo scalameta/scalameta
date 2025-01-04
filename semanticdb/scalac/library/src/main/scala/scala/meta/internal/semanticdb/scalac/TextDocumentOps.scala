@@ -619,6 +619,14 @@ trait TextDocumentOps {
                   case _ =>
                 }
                 traverse(gblock.expr)
+              case t: g.Template =>
+                // context bounds could be moved into body
+                t.body.foreach {
+                  case s: g.ValDef =>
+                    if (s.symbol.hasAllFlags(Flags.IMPLICIT | Flags.SYNTHETIC)) traverse(s.tpt)
+                  case _ =>
+                }
+                tryFindMtree(t)
               case _ => tryFindMtree(gtree)
             }
             super.traverse(gtree)
