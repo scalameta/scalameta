@@ -49,8 +49,8 @@ object Test/*<=types.Test.*/ {
     val thisType2/*<=types.Test.C#thisType2.*/: C/*=>types.Test.C#*/.this.type = ???/*=>scala.Predef.`???`().*/
 
     val superType1/*<=types.Test.C#superType1.*/ = super.m/*=>types.Test.M#m().*/
-    val superType2/*<=types.Test.C#superType2.*/ = super[M/*=>types.Test.C#*/].m/*=>types.Test.M#m().*/
-    val superType3/*<=types.Test.C#superType3.*/ = C/*=>types.Test.C#*/.super[M/*=>types.Test.C#*/].m/*=>types.Test.M#m().*/
+    val superType2/*<=types.Test.C#superType2.*/ = super[M ].m/*=>types.Test.M#m().*/
+    val superType3/*<=types.Test.C#superType3.*/ = C/*=>types.Test.C#*/.super[M ].m/*=>types.Test.M#m().*/
 
     val compoundType1/*<=types.Test.C#compoundType1.*/: { def k/*<=local0*/: Int/*=>scala.Int#*/ } = ???/*=>scala.Predef.`???`().*/
     val compoundType2/*<=types.Test.C#compoundType2.*/: M/*=>types.Test.M#*/ with N/*=>types.Test.N#*/ = ???/*=>scala.Predef.`???`().*/

@@ -49,8 +49,8 @@ object Test {
     val thisType2: C.this.type = ???
 
     val superType1 = super.m
-    val superType2 = super[M].m
-    val superType3 = C.super[M].m
+    val superType2 = super[M ].m
+    val superType3 = C.super[M ].m
 
     val compoundType1: { def k: Int } = ???
     val compoundType2: M with N = ???

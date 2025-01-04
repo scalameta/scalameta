@@ -2512,6 +2512,115 @@ Occurrences:
 [3:19..3:20): a => example/Issue2144.Test#`<init>`().(a)
 [3:29..3:30): c => example/Issue2144.Test#`<init>`().(c)
 
+semanticdb/integration/src/main/scala/example/Issue2882.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue2882.scala
+Text => non-empty
+Language => Scala
+Symbols => 28 entries
+Occurrences => 10 entries
+Synthetics => 1 entries
+
+Symbols:
+example/Issue2882. => final object Issue2882 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2882.FooFailure# => case class FooFailure extends Exception with Product with Serializable { +12 decls }
+  Exception => scala/package.Exception#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+example/Issue2882.FooFailure#`<init>`(). => primary ctor <init>(val msg: String)
+  msg => example/Issue2882.FooFailure#`<init>`().(msg)
+  String => scala/Predef.String#
+example/Issue2882.FooFailure#`<init>`().(msg) => val param msg: String
+  String => scala/Predef.String#
+example/Issue2882.FooFailure#canEqual(). => method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+  x$1 => example/Issue2882.FooFailure#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Issue2882.FooFailure#canEqual().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/Issue2882.FooFailure#copy$default$1(). => method copy$default$1: String @uncheckedVariance
+  String => scala/Predef.String#
+  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+example/Issue2882.FooFailure#copy(). => method copy(msg: String): FooFailure
+  msg => example/Issue2882.FooFailure#copy().(msg)
+  String => scala/Predef.String#
+  FooFailure => example/Issue2882.FooFailure#
+example/Issue2882.FooFailure#copy().(msg) => default param msg: String
+  String => scala/Predef.String#
+example/Issue2882.FooFailure#equals(). => method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+  x$1 => example/Issue2882.FooFailure#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Issue2882.FooFailure#equals().(x$1) => param x$1: Any
+  Any => scala/Any#
+example/Issue2882.FooFailure#hashCode(). => method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
+  Int => scala/Int#
+example/Issue2882.FooFailure#msg. => val method msg: String
+  String => scala/Predef.String#
+example/Issue2882.FooFailure#productArity(). => method productArity: Int <: scala/Product#productArity().
+  Int => scala/Int#
+example/Issue2882.FooFailure#productElement(). => method productElement(x$1: Int): Any <: scala/Product#productElement().
+  x$1 => example/Issue2882.FooFailure#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/Issue2882.FooFailure#productElement().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Issue2882.FooFailure#productElementName(). => method productElementName(x$1: Int): String <: scala/Product#productElementName().
+  x$1 => example/Issue2882.FooFailure#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+example/Issue2882.FooFailure#productElementName().(x$1) => param x$1: Int
+  Int => scala/Int#
+example/Issue2882.FooFailure#productIterator(). => method productIterator: Iterator[Any] <: scala/Product#productIterator().
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/Issue2882.FooFailure#productPrefix(). => method productPrefix: String <: scala/Product#productPrefix().
+  String => java/lang/String#
+example/Issue2882.FooFailure. => final object FooFailure extends AbstractFunction1[String, FooFailure] with Serializable { +4 decls }
+  AbstractFunction1 => scala/runtime/AbstractFunction1#
+  String => scala/Predef.String#
+  FooFailure => example/Issue2882.FooFailure#
+  Serializable => java/io/Serializable#
+example/Issue2882.FooFailure.apply(). => method apply(msg: String): FooFailure <: scala/Function1#apply().
+  msg => example/Issue2882.FooFailure.apply().(msg)
+  String => scala/Predef.String#
+  FooFailure => example/Issue2882.FooFailure#
+example/Issue2882.FooFailure.apply().(msg) => param msg: String
+  String => scala/Predef.String#
+example/Issue2882.FooFailure.toString(). => final method toString(): String <: scala/Function1#toString()., java/lang/Object#toString()., scala/Any#toString().
+  String => java/lang/String#
+example/Issue2882.FooFailure.unapply(). => method unapply(x$0: FooFailure): Option[String]
+  x$0 => example/Issue2882.FooFailure.unapply().(x$0)
+  FooFailure => example/Issue2882.FooFailure#
+  Option => scala/Option#
+  String => scala/Predef.String#
+example/Issue2882.FooFailure.unapply().(x$0) => param x$0: FooFailure
+  FooFailure => example/Issue2882.FooFailure#
+example/Issue2882.FooFailure.writeReplace(). => private method writeReplace(): Object
+  Object => java/lang/Object#
+local0 => val local FooFailure$1: FooFailure
+  FooFailure => example/Issue2882.FooFailure#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:16): Issue2882 <= example/Issue2882.
+[4:13..4:23): FooFailure <= example/Issue2882.FooFailure#
+[4:23..4:23):  <= example/Issue2882.FooFailure#`<init>`().
+[4:24..4:27): msg <= example/Issue2882.FooFailure#msg.
+[4:29..4:35): String => scala/Predef.String#
+[5:12..5:21): Exception => scala/package.Exception#
+[5:21..5:21):  => java/lang/Exception#`<init>`(+1).
+[5:22..5:23): s => scala/StringContext#s().
+[5:32..5:35): msg => example/Issue2882.FooFailure#
+
+Synthetics:
+[5:22..5:22):  => *.apply
+  apply => scala/StringContext.apply().
+
 semanticdb/integration/src/main/scala/example/Issue5939Metals.scala
 -------------------------------------------------------------------
 
@@ -4504,7 +4613,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 145 entries
-Occurrences => 265 entries
+Occurrences => 263 entries
 Diagnostics => 1 entries
 
 Symbols:
@@ -4942,12 +5051,10 @@ Occurrences:
 [50:8..50:18): superType1 <= types/Test.C#superType1.
 [50:27..50:28): m => types/Test.M#m().
 [51:8..51:18): superType2 <= types/Test.C#superType2.
-[51:27..51:28): M => types/Test.C#
-[51:30..51:31): m => types/Test.M#m().
+[51:31..51:32): m => types/Test.M#m().
 [52:8..52:18): superType3 <= types/Test.C#superType3.
 [52:21..52:22): C => types/Test.C#
-[52:29..52:30): M => types/Test.C#
-[52:32..52:33): m => types/Test.M#m().
+[52:33..52:34): m => types/Test.M#m().
 [54:8..54:21): compoundType1 <= types/Test.C#compoundType1.
 [54:29..54:30): k <= local0
 [54:32..54:35): Int => scala/Int#
