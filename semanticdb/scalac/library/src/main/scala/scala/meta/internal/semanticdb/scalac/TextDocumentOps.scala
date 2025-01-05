@@ -62,6 +62,7 @@ trait TextDocumentOps {
       val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
       val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
       val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
+      val msupers = mutable.Map.empty[Int, m.Term.Super] // end offset
 
       // Occurrences for names in val patterns, like `val (a, b) =`. Unlike the `occurrences` map, val pattern
       // occurrences uses "last occurrence wins" instead of "first occurrences wins" when disambiguating between
@@ -145,6 +146,7 @@ trait TextDocumentOps {
               case m.Mod.WithWithin(mname: m.Name.Indeterminate) => indexWithin(mname)
               // NOTE: ignore mrename for now, we may decide to make it a binder
               case m.Importee.Rename(mname, _) => indexName(mname); return
+              case mtree: m.Term.Super => msupers.update(mtree.pos.end, mtree)
               case mtree: m.Ctor => mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
               case mtree: m.Init => indexArgNames(mtree); mctorrefs(mtree.pos.start) = mtree.name
@@ -332,7 +334,14 @@ trait TextDocumentOps {
               case gtree: g.This
                   if mstarts.get(gpoint).exists(name => gsym.nameString == name.value) =>
                 tryMstart(gpoint)
-              case gtree: g.Super => tryMend(gend - 1)
+              case t: g.Super => msupers.get(gend).foreach { mtree =>
+                  success(mtree.thisp, gsym)
+                  // now find the super parent
+                  val parent = t.mix
+                  val parents = gsym.asClass.info.parents.map(_.typeSymbol)
+                  (if (parent.isEmpty) parents.headOption else parents.find(_.name == parent))
+                    .foreach(success(mtree.superp, _))
+                }
               case gtree: g.Select if gtree.symbol == g.definitions.NilModule =>
                 // NOTE: List() gets desugared into mkAttributedRef(NilModule)
                 tryMstart(gstart)

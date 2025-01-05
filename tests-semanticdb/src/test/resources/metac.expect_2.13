@@ -2615,7 +2615,7 @@ Occurrences:
 [5:12..5:21): Exception => scala/package.Exception#
 [5:21..5:21):  => java/lang/Exception#`<init>`(+1).
 [5:22..5:23): s => scala/StringContext#s().
-[5:32..5:35): msg => example/Issue2882.FooFailure#
+[5:32..5:35): msg => example/Issue2882.FooFailure#`<init>`().(msg)
 
 Synthetics:
 [5:22..5:22):  => *.apply
@@ -4613,7 +4613,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 145 entries
-Occurrences => 263 entries
+Occurrences => 268 entries
 Diagnostics => 1 entries
 
 Symbols:
@@ -5049,11 +5049,16 @@ Occurrences:
 [48:19..48:20): C => types/Test.C#
 [48:33..48:36): ??? => scala/Predef.`???`().
 [50:8..50:18): superType1 <= types/Test.C#superType1.
+[50:21..50:21):  => types/Test.C#
+[50:26..50:26):  => types/Test.M#
 [50:27..50:28): m => types/Test.M#m().
 [51:8..51:18): superType2 <= types/Test.C#superType2.
+[51:21..51:21):  => types/Test.C#
+[51:27..51:28): M => types/Test.M#
 [51:31..51:32): m => types/Test.M#m().
 [52:8..52:18): superType3 <= types/Test.C#superType3.
 [52:21..52:22): C => types/Test.C#
+[52:29..52:30): M => types/Test.M#
 [52:33..52:34): m => types/Test.M#m().
 [54:8..54:21): compoundType1 <= types/Test.C#compoundType1.
 [54:29..54:30): k <= local0
