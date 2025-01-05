@@ -2050,6 +2050,31 @@ example/Issue2040.Prettifier. => final object Prettifier extends AnyRef { +1 dec
 example/Issue2040.Prettifier.default. => implicit val method default: Prettifier
   Prettifier => example/Issue2040.Prettifier#
 
+example/Issue2112.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue2112.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+example/Issue2112. => final object Issue2112 extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2112.foo(). => method foo(myNumber: Int): List[Int]
+  myNumber => example/Issue2112.foo().(myNumber)
+  Int => scala/Int#
+  List => scala/collection/immutable/List#
+example/Issue2112.foo().(myNumber) => param myNumber: Int
+  Int => scala/Int#
+example/Issue2112.myList. => val method myList: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+example/Issue2112.myNumber. => val method myNumber: Int
+  Int => scala/Int#
+
 example/Issue2116.class
 -----------------------
 
