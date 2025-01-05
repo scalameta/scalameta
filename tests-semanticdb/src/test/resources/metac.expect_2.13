@@ -2288,6 +2288,82 @@ Synthetics:
   convertToAnyShouldWrapper => example/Issue2040.BarSpec#convertToAnyShouldWrapper().
   default => example/Issue2040.Prettifier.default.
 
+semanticdb/integration/src/main/scala/example/Issue2112.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue2112.scala
+Text => non-empty
+Language => Scala
+Symbols => 9 entries
+Occurrences => 22 entries
+Synthetics => 7 entries
+
+Symbols:
+example/Issue2112. => final object Issue2112 extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Issue2112.foo(). => method foo(myNumber: Int): List[Int]
+  myNumber => example/Issue2112.foo().(myNumber)
+  Int => scala/Int#
+  List => scala/collection/immutable/List#
+example/Issue2112.foo().(myNumber) => param myNumber: Int
+  Int => scala/Int#
+example/Issue2112.myList. => val method myList: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+example/Issue2112.myNumber. => val method myNumber: Int
+  Int => scala/Int#
+local0 => final val local rassoc$1: Int
+  Int => scala/Int#
+local1 => final val local rassoc$3: Int
+  Int => scala/Int#
+local2 => final val local rassoc$4: Int
+  Int => scala/Int#
+local3 => final val local rassoc$6: Int
+  Int => scala/Int#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:16): Issue2112 <= example/Issue2112.
+[3:6..3:14): myNumber <= example/Issue2112.myNumber.
+[4:6..4:12): myList <= example/Issue2112.myList.
+[4:15..4:19): List => scala/package.List.
+[5:2..5:10): myNumber => local0
+[5:11..5:13): :: => scala/collection/immutable/List#`::`().
+[5:14..5:20): myList => example/Issue2112.myList.
+[6:2..6:10): myNumber => local1
+[6:11..6:13): :: => scala/collection/immutable/List#`::`().
+[6:16..6:18): :: => scala/collection/immutable/List#`::`().
+[6:19..6:22): Nil => scala/package.Nil.
+[8:6..8:9): foo <= example/Issue2112.foo().
+[8:10..8:18): myNumber <= example/Issue2112.foo().(myNumber)
+[8:20..8:23): Int => scala/Int#
+[9:4..9:12): myNumber => local2
+[9:13..9:15): :: => scala/collection/immutable/List#`::`().
+[9:16..9:22): myList => example/Issue2112.myList.
+[10:4..10:12): myNumber => local3
+[10:13..10:15): :: => scala/collection/immutable/List#`::`().
+[10:18..10:20): :: => scala/collection/immutable/List#`::`().
+[10:21..10:24): Nil => scala/package.Nil.
+
+Synthetics:
+[4:15..4:19): List => *.apply[Int]
+  apply => scala/collection/IterableFactory#apply().
+  Int => scala/Int#
+[5:11..5:20): :: myList => *[Int]
+  Int => scala/Int#
+[6:11..6:22): :: 5 :: Nil => *[Int]
+  Int => scala/Int#
+[6:16..6:22): :: Nil => *[Int]
+  Int => scala/Int#
+[9:13..9:22): :: myList => *[Int]
+  Int => scala/Int#
+[10:13..10:24): :: 5 :: Nil => *[Int]
+  Int => scala/Int#
+[10:18..10:24): :: Nil => *[Int]
+  Int => scala/Int#
+
 semanticdb/integration/src/main/scala/example/Issue2116.scala
 -------------------------------------------------------------
 
