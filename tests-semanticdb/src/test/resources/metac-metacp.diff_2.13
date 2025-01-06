@@ -667,6 +667,16 @@ example/InstrumentTyper#existential().
                      display_name: "T"
 
 
+======================
+example/Issue1872.x$1.
+======================
+--- metac
++++ metacp
+ access {
+-  public_access {
++  private_this_access {
+
+
 ====================================
 example/Issue2116#check$default$1().
 ====================================

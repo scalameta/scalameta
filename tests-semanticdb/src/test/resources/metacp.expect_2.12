@@ -1980,6 +1980,47 @@ example/Issue1854#map. => val method map: Map[String, String]
   Map => scala/collection/mutable/Map#
   String => scala/Predef.String#
 
+example/Issue1872.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1872.class
+Text => empty
+Language => Scala
+Symbols => 12 entries
+
+Symbols:
+example/Issue1872. => final object Issue1872 extends AnyRef { +11 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1872.a1_1. => val method a1_1: Int
+  Int => scala/Int#
+example/Issue1872.a2_1. => val method a2_1: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+example/Issue1872.a2_2. => val method a2_2: Int
+  Int => scala/Int#
+example/Issue1872.a3_1. => val method a3_1: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+example/Issue1872.a3_2. => val method a3_2: Int
+  Int => scala/Int#
+example/Issue1872.a3_3. => val method a3_3: Int
+  Int => scala/Int#
+example/Issue1872.b2_1. => val method b2_1: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+example/Issue1872.b2_2. => val method b2_2: Int
+  Int => scala/Int#
+example/Issue1872.c2_1. => val method c2_1: List[Int]
+  List => scala/collection/immutable/List#
+  Int => scala/Int#
+example/Issue1872.c2_2. => val method c2_2: Int
+  Int => scala/Int#
+example/Issue1872.x$1. => private[this] val method x$1: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+
 example/Issue2040.class
 -----------------------
 
