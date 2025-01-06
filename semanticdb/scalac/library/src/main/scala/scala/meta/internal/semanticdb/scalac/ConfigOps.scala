@@ -13,6 +13,7 @@ case class SemanticdbConfig(
     fileFilter: FileFilter,
     sourceroot: AbsolutePath,
     targetroot: AbsolutePath,
+    cleanup: BinaryMode,
     text: BinaryMode,
     md5: BinaryMode,
     symbols: SymbolMode,
@@ -32,6 +33,7 @@ case class SemanticdbConfig(
       "sourceroot" -> sourceroot,
       "targetroot" -> targetroot,
       "text" -> text.name,
+      "cleanup" -> cleanup.name,
       "symbols" -> symbols.name,
       "diagnostics" -> diagnostics.name,
       "synthetics" -> synthetics.name,
@@ -49,6 +51,7 @@ object SemanticdbConfig {
     targetroot = PathIO.workingDirectory,
     text = BinaryMode.Off,
     md5 = BinaryMode.On,
+    cleanup = BinaryMode.On,
     symbols = SymbolMode.All,
     diagnostics = BinaryMode.On,
     synthetics = BinaryMode.Off,
@@ -68,6 +71,7 @@ object SemanticdbConfig {
   private val SetSymbols = "symbols:(.*)".r
   private val SetDiagnostics = "diagnostics:(.*)".r
   private val SetSynthetics = "synthetics:(.*)".r
+  private val SetCleanup = "cleanup:(.*)".r
   // ======== COMPATIBILITY WITH 3.X STARTS ========
   private val SetMode = "mode:(.*)".r
   private val SetOwners = "owners:(.*)".r
@@ -116,6 +120,7 @@ object SemanticdbConfig {
       case SetTargetroot(path) => config = config.copy(targetroot = AbsolutePath(path))
       case SetText(BinaryMode(mode)) => config = config.copy(text = mode)
       case SetMd5(BinaryMode(mode)) => config = config.copy(md5 = mode)
+      case SetCleanup(BinaryMode(mode)) => config = config.copy(cleanup = mode)
       case SetSymbols(SymbolMode(mode)) => config = config.copy(symbols = mode)
       case SetDiagnostics(BinaryMode(mode)) => config = config.copy(diagnostics = mode)
       case SetSynthetics(BinaryMode(mode)) => config = config.copy(synthetics = mode)

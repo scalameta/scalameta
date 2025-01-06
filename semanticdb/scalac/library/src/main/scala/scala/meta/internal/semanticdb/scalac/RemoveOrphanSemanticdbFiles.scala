@@ -14,6 +14,7 @@ object RemoveOrphanSemanticdbFiles {
 
   /** Removes *.semanticdb files that have no corresponding *.scala file. */
   def process(config: SemanticdbConfig): Unit = {
+    if (config.cleanup.isOff) return
     val sourceroot = config.sourceroot
     val targetroot = config.targetroot
     val semanticdbroot = targetroot.resolve(SemanticdbPaths.semanticdbPrefix).toNIO
