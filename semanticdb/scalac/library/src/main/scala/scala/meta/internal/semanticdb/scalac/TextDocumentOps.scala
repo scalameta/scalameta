@@ -10,8 +10,8 @@ import scala.meta.internal.{semanticdb => s}
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.internal._
-import scala.reflect.internal.util._
 import scala.reflect.internal.{Flags => gf}
+import scala.reflect.internal.{util => gu}
 import scala.{meta => m}
 
 trait TextDocumentOps {
@@ -291,8 +291,11 @@ trait TextDocumentOps {
             } success(margname, gparam)
           private def tryFindMtree(gtree: g.Tree): Unit = {
             val gpos = gtree.pos
-            if (gpos == null || gpos == NoPosition) return
+            if (gpos == null || !gpos.isDefined) return
             val gsym = gtree.symbol
+            val gstart = gpos.start
+            val gpoint = gpos.point
+            val gend = gpos.end
 
             def tryMstart(pos: Int): Unit = success(mstarts.get(pos), gsym)
             def tryMend(pos: Int): Unit = success(mends.get(pos), gsym)
@@ -302,14 +305,12 @@ trait TextDocumentOps {
               case _ =>
             }
 
-            val gstart = gpos.start
-            val gpoint = gpos.point
             tryNamedArg(gsym, gstart, gpoint)
 
             (gtree match {
               case gtree: g.Template => gtree.body.iterator.map(_.symbol)
-                  .find(x => x != null && x.isPrimaryConstructor).orElse(Some(g.NoSymbol))
-              case gtree: g.DefDef => if (gsym.isConstructor) Some(gsym) else None
+                  .find(x => x != null && x.isPrimaryConstructor)
+              case _: g.DefDef if gsym.isConstructor => Some(gsym)
               case _ => None
             }).foreach(success(mctordefs.get(gstart), _))
 
@@ -320,7 +321,6 @@ trait TextDocumentOps {
 
             // Ideally, we'd like a perfect match when gtree.pos == mtree.pos.
             // Unfortunately, this is often not the case as demonstrated by a bunch of cases above and below.
-            val gend = gpos.end
             val gstartMtree = mstarts.get(gstart)
             gstartMtree match {
               case Some(mtree) if mtree.pos.end == gend => success(mtree, gsym); return
@@ -328,12 +328,10 @@ trait TextDocumentOps {
             }
 
             gtree match {
-              case gtree: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
-              case gtree: g.MemberDef if gsym.isSynthetic || gsym.isArtifact =>
+              case _: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
+              case _: g.MemberDef if gsym.hasFlag(Flags.SYNTHETIC | Flags.ARTIFACT) =>
                 if (!gsym.isSemanticdbLocal && !gsym.isUseless) saveSymbolDo(gsym)
-              case gtree: g.PackageDef =>
-                // NOTE: capture PackageDef.pid instead
-                ()
+              case _: g.PackageDef => // NOTE: capture PackageDef.pid instead
               case gtree: g.ModuleDef if gtree.name == g.nme.PACKAGE =>
                 // NOTE: if a package object comes first in the compilation unit
                 // then its positions are completely mental, so we just hack around
@@ -344,21 +342,18 @@ trait TextDocumentOps {
                   case Some(mpos) => addPatOccurrence(mpos, gsym)
                   case _ => tryMstart(gpoint)
                 }
-              case _: g.ValDef =>
-                if (!gsym.isMethod && gsym.getterIn(gsym.owner) != g.NoSymbol) {
+              case _: g.ValDef => if (gsym.isMethod || gsym.getterIn(gsym.owner) == g.NoSymbol) {
                   // FIXME: https://github.com/scalameta/scalameta/issues/1538
                   // Skip the field definition in favor of the associated getter.
                   // This will make sure that val/var class parameters are consistently
                   // resolved to getter symbols both as definition and references.
-                } else {
                   tryMstart(gstart)
                   tryMstart(gpoint)
                 }
-              case gtree: g.MemberDef => tryMstart(gpoint)
-              case gtree: g.DefTree => tryMstart(gpoint)
-              case gtree: g.This
-                  if mstarts.get(gpoint).exists(name => gsym.nameString == name.value) =>
-                tryMstart(gpoint)
+              case _: g.DefTree => tryMstart(gpoint)
+              case _: g.This => mstarts.get(gpoint).foreach { name =>
+                  if (gsym.nameString == name.value) success(name, gsym)
+                }
               case t: g.Super => msupers.get(gend).foreach { mtree =>
                   success(mtree.thisp, gsym)
                   // now find the super parent
@@ -372,10 +367,7 @@ trait TextDocumentOps {
                 tryMstart(gstart)
               case g.Select(g.Ident(qualTerm), _) if qualTerm.startsWith(g.nme.QUAL_PREFIX) =>
                 tryMend(gend) // transformNamedApplication blockWithQualifier case
-              case gtree: g.RefTree =>
-                def prohibited(name: String) = name.contains(g.nme.DEFAULT_GETTER_STRING)
-                if (prohibited(gtree.name.decoded)) return
-                tryMstart(gpoint)
+              case _: g.RefTree => if (!gsym.isDefaultGetter) tryMstart(gpoint)
               case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
                 val sels = gtree.selectors.flatMap { sel =>
                   if (sel.name == g.nme.WILDCARD) Nil
@@ -597,20 +589,21 @@ trait TextDocumentOps {
                 traverse(t.body)
                 tryFindMtree(t)
               case t: g.ValDef =>
-                val gsym = t.symbol
-                if (gsym != null && gsym.isSynthetic) {
-                  traverse(t.tpt)
-                  traverse(t.rhs)
+                t.symbol match {
+                  case x: g.Symbol if x.isSynthetic => traverse(t.tpt); traverse(t.rhs)
+                  case _ =>
                 }
                 processMemberDef(t)
               case t: g.MemberDef => processMemberDef(t)
-              case _: g.Apply | _: g.TypeApply =>
+              case _: g.GenericApply =>
                 tryFindSynthetic(gtree)
-                val gpos = gtree.pos
-                if (gpos != null && gpos.isRange) tryNamedArg(gtree.symbol, gpos.start, gpos.point)
+                gtree.pos match {
+                  case p: gu.RangePosition => tryNamedArg(gtree.symbol, p.start, p.point)
+                  case _ =>
+                }
                 // fix #2040
                 gtree match {
-                  case view: g.ApplyImplicitView => view.args.headOption.foreach(traverse)
+                  case v: g.ApplyImplicitView => v.args.headOption.foreach(traverse)
                   case _ =>
                 }
               case select: g.Select if isSyntheticName(select) =>
