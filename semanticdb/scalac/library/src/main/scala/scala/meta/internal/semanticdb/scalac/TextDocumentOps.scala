@@ -78,6 +78,8 @@ trait TextDocumentOps {
 
       def addPatOccurrenceFromSemantic(mpos: m.Position, ssym: String): Unit =
         if (ssym != Symbols.None) mpatoccurrences.update(mpos, (ssym, Role.DEFINITION))
+      def addPatOccurrence(mpos: m.Position, gsym: g.Symbol): Unit =
+        addPatOccurrenceFromSemantic(mpos, gsym.toSemantic)
 
       locally {
         object traverser extends m.Traverser {
@@ -130,15 +132,24 @@ trait TextDocumentOps {
                 mwithins.put(menclName, mname).foreach(errorAmbiguous("mWithins", mname, _))
             }
           }
-          // Map the start position of the entire Defn.Val `val Foo(name) = ..` to the `name` position.
-          // This is needed to handle val patterns with a single binder since the position of `x` in the
-          // desugared `val x = ... match { case Foo(_x) => _x }` matches the position of Defn.Val
-          // and not `_x`.
-          def indexPats(pats: List[m.Pat], mpos: Int): Unit = pats.foreach(_.traverse {
-            // TODO: handle Pat.Extract
-            case pat: m.Pat.Var =>
-              val npos = pat.name.pos; mvalpatstart += npos.start; msinglevalpats(mpos) = npos
+          def indexPats(pats: List[m.Pat]): Unit = pats.foreach(_.traverse {
+            case pat: m.Pat.Extract => indexPatsWithExtract(pat)
+            case pat: m.Pat.Var => mvalpatstart += pat.name.pos.start
           })
+          // In an Extract pattern `Foo(name) = ...`, let's map the end position of the `fun` field
+          // to the `name` position. Compiler desugars it into a getter DefDef and specifically
+          // in the case of a single binder sets the position of this getter as an OffsetPosition
+          // pointing to "end of fun" rather than the field being extracted.
+          def indexPatsWithExtract(extract: m.Pat.Extract): Unit = extract.args match {
+            case pat :: Nil =>
+              val mpos = extract.fun.pos.end
+              pat.traverse {
+                case pat: m.Pat.Extract => indexPatsWithExtract(pat)
+                case pat: m.Pat.Var =>
+                  val npos = pat.name.pos; mvalpatstart += npos.start; msinglevalpats(mpos) = npos
+              }
+            case pats => indexPats(pats)
+          }
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
               case mtree: m.Term.Apply => indexArgNames(mtree)
@@ -152,7 +163,7 @@ trait TextDocumentOps {
               case mtree: m.Name => indexName(mtree)
               case mtree: m.Tree.WithPats => mtree.pats match {
                   case (_: m.Pat.Var) :: Nil =>
-                  case pats => indexPats(pats, mtree.pos.start)
+                  case pats => indexPats(pats)
                 }
               case _ =>
             }
@@ -312,7 +323,12 @@ trait TextDocumentOps {
                 // then its positions are completely mental, so we just hack around
                 tryMstart(gpoint + 7)
                 tryMstart(gpoint)
-              case gtree: g.ValDef =>
+              case _: g.DefDef if gsym.isGetter =>
+                msinglevalpats.get(gpoint) match {
+                  case Some(mpos) => addPatOccurrence(mpos, gsym)
+                  case _ => tryMstart(gpoint)
+                }
+              case _: g.ValDef =>
                 if (!gsym.isMethod && gsym.getterIn(gsym.owner) != g.NoSymbol) {
                   // FIXME: https://github.com/scalameta/scalameta/issues/1538
                   // Skip the field definition in favor of the associated getter.
@@ -322,11 +338,6 @@ trait TextDocumentOps {
                   tryMstart(gstart)
                   tryMstart(gpoint)
                 }
-                // Map Defn.Val position of val pattern with single binder to the position
-                // of the single binder. For example, map `val Foo(x) = ..` to the position of `x`.
-                // checked above, under MemberDef, that it's not isSynthetic anymore
-                if (gpos.isRange) msinglevalpats.get(gstart)
-                  .foreach(addOccurrence(_, gsym, Role.DEFINITION))
               case gtree: g.MemberDef => tryMstart(gpoint)
               case gtree: g.DefTree => tryMstart(gpoint)
               case gtree: g.This
