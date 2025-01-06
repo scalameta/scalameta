@@ -127,36 +127,30 @@ trait TextDocumentOps {
                 mwithins.put(menclName, mname).foreach(errorAmbiguous("mWithins", mname, _))
             }
           }
-          def indexPats(pats: List[m.Pat], pos: m.Position): Unit = pats match {
-            case m.Pat.Var(_) :: Nil =>
-            case _ => pats.foreach { pat =>
-                pat.traverse { case m.Pat.Var(name) =>
-                  mvalpatstart += name.pos.start
-                  // Map the start position of the entire Defn.Val `val Foo(name) = ..` to the `name` position.
-                  // This is needed to handle val patterns with a single binder since the position of `x` in the
-                  // desugared `val x = ... match { case Foo(_x) => _x }` matches the position of Defn.Val
-                  // and not `_x`.
-                  msinglevalpats(pos.start) = name.pos
-                }
-              }
-          }
+          // Map the start position of the entire Defn.Val `val Foo(name) = ..` to the `name` position.
+          // This is needed to handle val patterns with a single binder since the position of `x` in the
+          // desugared `val x = ... match { case Foo(_x) => _x }` matches the position of Defn.Val
+          // and not `_x`.
+          def indexPats(pats: List[m.Pat], mpos: Int): Unit = pats.foreach(_.traverse {
+            // TODO: handle Pat.Extract
+            case pat: m.Pat.Var =>
+              val npos = pat.name.pos; mvalpatstart += npos.start; msinglevalpats(mpos) = npos
+          })
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
               case mtree: m.Term.Apply => indexArgNames(mtree)
-              case m.Mod.Private(mname: m.Name.Indeterminate) => indexWithin(mname)
-              case m.Mod.Protected(mname: m.Name.Indeterminate) => indexWithin(mname)
-              case m.Importee.Rename(mname, mrename) =>
-                indexName(mname)
-                return // NOTE: ignore mrename for now, we may decide to make it a binder
+              case m.Mod.WithWithin(mname: m.Name.Indeterminate) => indexWithin(mname)
+              // NOTE: ignore mrename for now, we may decide to make it a binder
+              case m.Importee.Rename(mname, _) => indexName(mname); return
               case mtree: m.Ctor => mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
-              case mtree: m.Init =>
-                indexArgNames(mtree)
-                mctorrefs(mtree.pos.start) = mtree.name
+              case mtree: m.Init => indexArgNames(mtree); mctorrefs(mtree.pos.start) = mtree.name
               case _: m.Name.Anonymous | _: m.Name.Placeholder | _: m.Name.This =>
               case mtree: m.Name => indexName(mtree)
-              case mtree: m.Defn.Val => indexPats(mtree.pats, mtree.pos)
-              case mtree: m.Defn.Var => indexPats(mtree.pats, mtree.pos)
+              case mtree: m.Tree.WithPats => mtree.pats match {
+                  case (_: m.Pat.Var) :: Nil =>
+                  case pats => indexPats(pats, mtree.pos.start)
+                }
               case _ =>
             }
             super.apply(mtree)
