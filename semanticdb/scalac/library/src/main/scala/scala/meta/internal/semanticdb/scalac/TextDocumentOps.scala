@@ -82,6 +82,18 @@ trait TextDocumentOps {
       def addPatOccurrence(mpos: m.Position, gsym: g.Symbol): Unit =
         addPatOccurrenceFromSemantic(mpos, gsym.toSemantic)
 
+      def saveSymbol(gs: g.Symbol): Unit =
+        if (gs.isUsefulSymbolInformation) saveSymbolFromSemantic(gs, gs.toSemantic)
+      def saveSymbolFromSemantic(gs: g.Symbol, ssym: String): s.SymbolInformation = {
+        val info = gs.toSymbolInformation(SymlinkChildren)
+        symbols(ssym) = info
+        info
+      }
+      def shouldNotSaveSymbol(gsym: g.Symbol): Boolean = config.symbols.isNone || gsym == null ||
+        gsym.hasPackageFlag || gsym.isUselessSymbolInformation
+      def shouldNotSaveSemanticSymbol(ssym: String): Boolean = ssym == Symbols.None ||
+        config.symbols.isLocalOnly && !ssym.isLocal
+
       locally {
         object traverser extends m.Traverser {
           private def indexName(mname: m.Name): Unit = {
@@ -179,18 +191,11 @@ trait TextDocumentOps {
       locally {
         object traverser extends g.Traverser {
           private def trySymbolDefinition(gsym: g.Symbol): Unit = {
-            if (config.symbols.isNone) return
-            if (gsym == null) return
-            if (gsym.hasPackageFlag) return
-            if (gsym.isUselessSymbolInformation) return
+            if (shouldNotSaveSymbol(gsym)) return
             val symbol = gsym.toSemantic
-            if (symbol == Symbols.None) return
-            if (config.symbols.isLocalOnly && !symbol.isLocal) return
+            if (shouldNotSaveSemanticSymbol(symbol)) return
+            val symInfo = saveSymbolFromSemantic(gsym, symbol)
 
-            def saveSymbol(gs: g.Symbol): Unit = if (gs.isUsefulSymbolInformation)
-              symbols(gs.toSemantic) = gs.toSymbolInformation(SymlinkChildren)
-
-            saveSymbol(gsym)
             if (gsym.isClass && !gsym.isTrait) {
               if (gsym.isAnonymousClass)
                 addOccurrenceFromSemantic(gsym.pos.focus.toMeta, symbol, Role.DEFINITION)
@@ -204,12 +209,8 @@ trait TextDocumentOps {
               gsetter.info.paramss.flatten.foreach(saveSymbol)
             }
             if (gsym.isUsefulField && gsym.isMutable) {
-              val getterInfo = symbols(symbol)
-              val setterInfos = Synthetics.setterInfos(getterInfo, SymlinkChildren)
-              setterInfos.foreach { info =>
-                val msymbol = info.symbol
-                symbols(msymbol) = info
-              }
+              val setterInfos = Synthetics.setterInfos(symInfo, SymlinkChildren)
+              setterInfos.foreach(info => symbols(info.symbol) = info)
             }
           }
           private def success(mtree: Option[m.Name], gsym0: => g.Symbol): Unit = mtree
