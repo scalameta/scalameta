@@ -2358,4 +2358,11 @@ class SuccessSuite extends TreeSuiteBase {
     assertOriginType(fOfX, classOf[Origin.DialectOnly])
   }
 
+  test("extract pattern with named fields") {
+    val q"Foo(name = $name, id = $id)" = q"""Foo(name = "123", id = 456)"""
+    assertTrees(name, id)(lit("123"), lit(456))
+    assertWithOriginalSyntax(name, "\"123\"", "\"123\"")
+    assertWithOriginalSyntax(id, "456", "456")
+  }
+
 }
