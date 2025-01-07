@@ -116,4 +116,48 @@ class NamedTuplesSuite extends BaseDottySuite {
       )
     ))
   }
+
+  test("extractor with named fields: all") {
+    val code = """|a match {
+                  |  case Foo(name = nme, id = 123) =>
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:2: error: `)` expected but `=` found
+                   |  case Foo(name = nme, id = 123) =>
+                   |                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("extractor with named fields: some, with varargs") {
+    val code = """|a match {
+                  |  case Foo(x = y, z, rest*) =>
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:2: error: `)` expected but `=` found
+                   |  case Foo(x = y, z, rest*) =>
+                   |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("extractor with named fields: assignment") {
+    val code = """val Foo(name = name, id = id) = Foo(name = "123", id = 456)"""
+    val error = """|<input>:1: error: `)` expected but `=` found
+                   |val Foo(name = name, id = id) = Foo(name = "123", id = 456)
+                   |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("extractor with named fields: case clause only") {
+    val code = """case (a = 123, b = (c = "123", d = 123)) =>"""
+    val tree = Case(
+      Pat.Tuple(List(
+        Pat.Assign("a", lit(123)),
+        Pat.Assign("b", Pat.Tuple(List(Pat.Assign("c", lit("123")), Pat.Assign("d", lit(123)))))
+      )),
+      None,
+      blk()
+    )
+    runTestAssert[Case](code)(tree)
+  }
+
 }
