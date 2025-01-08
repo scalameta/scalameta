@@ -164,12 +164,13 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     reifySkeleton(skeleton, mode, qType, dialectExpr, input)
   }
 
+  private def throwSourceFileError() = // should never be reached
+    throw new Exception("Source file contents could not be read while expanding quasiquote")
+
   private def metaInput() = {
-    def throwError = // should never be reached
-      throw new Exception("Source file contents could not be read while expanding quasiquote")
     val pos = Position.ofMacroExpansion
     val reflectInput = pos.sourceFile
-    val content = new String(reflectInput.content.getOrElse(throwError))
+    val content = new String(reflectInput.content.getOrElse(throwSourceFileError()))
     val start = {
       var i = pos.start
       while (content(i) != '"') i += 1 // skip method name
@@ -185,9 +186,13 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     Input.Slice(metaInput, start, end)
   }
 
-  private def extractModeTerm(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Mode = {
+  private def isMultiline() = {
     val pos = Position.ofMacroExpansion
-    def isMultiline() = pos.startLine != pos.endLine
+    val content = pos.sourceFile.content.getOrElse(throwSourceFileError())
+    content(pos.start + 1) == '"' && content(pos.start + 2) == '"'
+  }
+
+  private def extractModeTerm(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Mode = {
     def mkHole(argi: (Expr[Any], Int)) = {
       val (arg, i) = argi
       val name = "quasiquote" + "$hole$" + i
@@ -200,7 +205,6 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
 
   private def extractModePattern(strCtxExpr: Expr[StringContext], selectorExpr: Expr[Any]): Mode = {
     val '{ StringContext(${ Varargs(parts) }: _*) } = strCtxExpr: @unchecked
-    val pos = Position.ofMacroExpansion
 
     // EXPERIMENT: Workaround mechanism for getting type declarations from unapply pattern.
     // Only works for `val q"${: T}" = (...)`, does nothing for pattern matching cases.
@@ -219,7 +223,6 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     // catch
     //   case _ => None
 
-    def isMultiline() = pos.startLine != pos.endLine
     def mkHole(i: Int) = {
       val name = "quasiquote" + "$hole$" + i
       val posStart = parts(i).asTerm.pos.end
