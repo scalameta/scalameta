@@ -35,7 +35,7 @@ trait Reflection extends AdtReflection {
   private lazy val scalaMetaRegistry: Map[Symbol, List[Symbol]] =
     AllModule.initialize.annotations match {
       case List(ann) if ann.tree.tpe =:= RegistryAnnotation.toType =>
-        val q"new $_($_.$_[..$_](..${astPaths: List[String]}))" = ann.tree
+        val q"new $_(..${astPaths: List[String]})" = ann.tree
         val astClasses = astPaths.map { astPath =>
           @tailrec
           def locateModule(root: ModuleSymbol, parts: List[String]): ModuleSymbol = parts match {
