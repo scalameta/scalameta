@@ -82,10 +82,10 @@ trait TextDocumentOps {
       def addPatOccurrence(mpos: m.Position, gsym: g.Symbol): Unit =
         addPatOccurrenceFromSemantic(mpos, gsym.toSemantic)
 
-      def saveSymbol(gs: g.Symbol): Unit =
-        if (gs.isUsefulSymbolInformation) saveSymbolFromSemantic(gs, gs.toSemantic)
+      def saveSymbol(gs: g.Symbol): Unit = if (gs.isUsefulSymbolInformation) saveSymbolDo(gs)
+      def saveSymbolDo(gs: g.Symbol): Unit = saveSymbolFromSemantic(gs, gs.toSemantic)
       def saveSymbolFromSemantic(gs: g.Symbol, ssym: String): s.SymbolInformation = {
-        val info = gs.toSymbolInformation(SymlinkChildren)
+        val info = gs.toSymbolInfo(SymlinkChildren, ssym)
         symbols(ssym) = info
         info
       }
@@ -316,8 +316,7 @@ trait TextDocumentOps {
             gtree match {
               case gtree: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
               case gtree: g.MemberDef if gsym.isSynthetic || gsym.isArtifact =>
-                if (!gsym.isSemanticdbLocal && !gsym.isUseless)
-                  symbols(gsym.toSemantic) = gsym.toSymbolInformation(SymlinkChildren)
+                if (!gsym.isSemanticdbLocal && !gsym.isUseless) saveSymbolDo(gsym)
               case gtree: g.PackageDef =>
                 // NOTE: capture PackageDef.pid instead
                 ()
