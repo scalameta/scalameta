@@ -186,8 +186,8 @@ trait SymbolInformationOps {
     def overriddenSymbols: List[String] =
       if (self.config.overrides.isOn) gsym.allOverriddenSymbols.map(_.toSemantic) else Nil
 
-    def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation = s.SymbolInformation(
-      symbol = gsym.ssym,
+    def toSymbolInfo(linkMode: LinkMode, ssym: String): s.SymbolInformation = s.SymbolInformation(
+      symbol = ssym,
       language = language,
       kind = kind,
       properties = properties,
@@ -197,5 +197,7 @@ trait SymbolInformationOps {
       annotations = annotations,
       access = access
     )
+    def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation =
+      toSymbolInfo(linkMode, gsym.ssym)
   }
 }
