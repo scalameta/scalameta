@@ -20,7 +20,15 @@ import scala.{meta => m}
 trait SymbolOps {
   self: SemanticdbOps =>
 
-  lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
+  def clearSymbolCaches(): Unit = {
+    symbolCache.clear()
+    idCache.clear()
+    clearSymbolPointsCache()
+  }
+
+  def clearSymbolPointsCache(): Unit = pointsCache.clear()
+
+  private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     def toSemantic: String = {
       def uncached(sym: g.Symbol): String = {
@@ -211,8 +219,8 @@ trait SymbolOps {
       !sym.isStatic
   }
 
-  lazy val idCache = new mutable.HashMap[String, Int]
-  lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
+  private lazy val idCache = new mutable.HashMap[String, Int]
+  private lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
     @tailrec
     def loop(sym: g.Symbol): m.Input = sym.pos.source match {

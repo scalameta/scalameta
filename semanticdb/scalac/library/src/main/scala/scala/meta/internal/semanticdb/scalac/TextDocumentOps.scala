@@ -44,7 +44,7 @@ trait TextDocumentOps {
     def toTextDocument: s.TextDocument = toTextDocument(None)
 
     def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
-      pointsCache.clear()
+      clearSymbolPointsCache()
       val occurrences = emptyOccurrenceMap()
       val samoccurrences = emptyOccurrenceMap()
       val symbols = mutable.Map[String, s.SymbolInformation]()
