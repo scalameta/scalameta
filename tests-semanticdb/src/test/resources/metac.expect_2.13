@@ -90,7 +90,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala-2.13/example/SingleAbstractMethod.scala
 Text => non-empty
 Language => Scala
-Symbols => 15 entries
+Symbols => 14 entries
 Occurrences => 30 entries
 
 Symbols:
@@ -115,18 +115,18 @@ example/SingleAbstractMethod#withSAM(). => method withSAM(a: SAM): Int
   Int => scala/Int#
 example/SingleAbstractMethod#withSAM().(a) => param a: SAM
   SAM => example/SingleAbstractMethod#SAM#
-local0 => val local $anonfun: $anon
-  $anon => local1
-local1 => class $anon extends Object with SAM { +1 decls }
+local0 => class $anon extends Object with SAM { +1 decls }
   Object => java/lang/Object#
   SAM => example/SingleAbstractMethod#SAM#
-local3 => val local $anonfun: $anon
-  $anon => local1
-local5 => param x: Int
+local2 => class $anon extends Object with SAM { +1 decls }
+  Object => java/lang/Object#
+  SAM => example/SingleAbstractMethod#SAM#
+local3 => param x: Int
   Int => scala/Int#
-local6 => val local $anonfun: $anon
-  $anon => local1
-local8 => param y: Int
+local4 => class $anon extends Object with SAM { +1 decls }
+  Object => java/lang/Object#
+  SAM => example/SingleAbstractMethod#SAM#
+local5 => param y: Int
   Int => scala/Int#
 
 Occurrences:
@@ -147,10 +147,10 @@ Occurrences:
 [9:10..9:15): _ + 1 <= local0
 [9:12..9:13): + => scala/Int#`+`(+4).
 [10:2..10:9): withSAM => example/SingleAbstractMethod#withSAM().
-[10:10..10:27): (x: Int) => x - 1 <= local3
-[10:11..10:12): x <= local5
+[10:10..10:27): (x: Int) => x - 1 <= local2
+[10:11..10:12): x <= local3
 [10:14..10:17): Int => scala/Int#
-[10:22..10:23): x => local5
+[10:22..10:23): x => local3
 [10:24..10:25): - => scala/Int#`-`(+3).
 [12:6..12:13): funcSAM <= example/SingleAbstractMethod#funcSAM().
 [12:14..12:15): y <= example/SingleAbstractMethod#funcSAM().(y)
@@ -159,7 +159,7 @@ Occurrences:
 [12:26..12:27): * => scala/Int#`*`(+3).
 [13:2..13:9): withSAM => example/SingleAbstractMethod#withSAM().
 [13:10..13:17): funcSAM => example/SingleAbstractMethod#funcSAM().
-[13:10..13:17): funcSAM <= local6
+[13:10..13:17): funcSAM <= local4
 
 semanticdb/integration/src/main/scala/example/Access.scala
 ----------------------------------------------------------

@@ -86,12 +86,11 @@ trait TextDocumentOps {
           case Symbols.None =>
           case ssym =>
             samoccurrences.update(mpos, (ssym, Role.DEFINITION))
-            if (!shouldNotSaveSymbol(gsym) && !shouldNotSaveSemanticSymbol(ssym)) {
-              saveSymbolDo(sam)
-              saveSymbolFromSemantic(gsym.setInfo(sam.tpe), ssym)
+            if (!shouldNotSaveSymbol(sam) && !shouldNotSaveSemanticSymbol(ssym)) {
+              saveSymbolFromSemantic(sam, ssym)
             }
         }
-        if (gpos.isDefined && (gsym ne null)) {
+        if (gpos.isDefined && (gsym ne null) && (sam ne null)) {
           val gstart = gpos.start
           mfuncs.get(gstart).fold {
             mstarts.get(gstart).foreach { name =>
