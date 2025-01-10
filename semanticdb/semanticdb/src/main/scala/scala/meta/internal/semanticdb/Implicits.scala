@@ -22,6 +22,7 @@ object Implicits {
       endLine = range.endLine,
       endColumn = range.endCharacter
     )
+    def toSemanticOriginal: OriginalTree = OriginalTree(range = Some(range))
   }
 
 }
