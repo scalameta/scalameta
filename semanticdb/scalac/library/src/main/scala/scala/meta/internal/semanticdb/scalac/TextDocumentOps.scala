@@ -470,73 +470,77 @@ trait TextDocumentOps {
             }
 
             if (!isVisitedParent(gtree)) gtree match {
-              case gview: g.ApplyImplicitView =>
-                val pos = gtree.pos.toMeta
+              case gtree: g.ApplyImplicitView =>
+                val range = gtree.toRange
                 synthetics += s.Synthetic(
-                  range = Some(pos.toRange),
+                  range = Some(range),
                   tree = s.ApplyTree(
-                    function = gview.fun.toSemanticTree,
-                    arguments = List(s.OriginalTree(range = Some(pos.toRange)))
+                    function = gtree.fun.toSemanticTree,
+                    arguments = Seq(range.toSemanticOriginal)
                   )
                 )
-                isVisited += gview.fun
-              case gimpl: g.ApplyToImplicitArgs => gimpl.fun match {
-                  case gview: g.ApplyImplicitView =>
-                    isVisitedParent += gview
-                    val range = gtree.pos.toMeta.toRange
+                isVisited += gtree.fun
+              case gtree: g.ApplyToImplicitArgs => gtree.fun match {
+                  case gfun: g.ApplyImplicitView =>
+                    isVisitedParent += gfun
+                    val range = gtree.toRange
                     synthetics += s.Synthetic(
                       range = Some(range),
                       tree = s.ApplyTree(
                         function = s.ApplyTree(
-                          function = gview.fun.toSemanticTree,
-                          arguments = List(s.OriginalTree(range = Some(range)))
+                          function = gfun.fun.toSemanticTree,
+                          arguments = Seq(range.toSemanticOriginal)
                         ),
-                        arguments = gimpl.args.map(_.toSemanticTree)
+                        arguments = gtree.args.map(_.toSemanticTree)
                       )
                     )
                   case gfun if isForSynthetic(gfun) =>
-                    val range = gimpl.pos.toMeta.toRange
-                    val synthTree = forSyntheticOrOrig(gimpl)
+                    val range = gtree.toRange
+                    val synthTree = forSyntheticOrOrig(gtree)
                     synthetics += s.Synthetic(range = Some(range), tree = synthTree)
-                  case gfun => synthetics += s.Synthetic(
-                      range = Some(gfun.pos.toMeta.toRange),
+                  case gfun =>
+                    val range = gfun.toRange
+                    synthetics += s.Synthetic(
+                      range = Some(range),
                       tree = s.ApplyTree(
-                        function = s.OriginalTree(range = Some(gfun.pos.toMeta.toRange)),
-                        arguments = gimpl.args.map(_.toSemanticTree)
+                        function = range.toSemanticOriginal,
+                        arguments = gtree.args.map(_.toSemanticTree)
                       )
                     )
                 }
               case g.TypeApply(fun, targs @ List(targ, _*)) =>
                 if (targ.pos.isRange) return
                 // for loops
+                val range = fun.toRange
                 val fnTree = fun match {
-                  case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
+                  case ApplySelect(select @ g.Select(qual, _)) if isSyntheticName(select) =>
                     isVisitedParent += select
                     isVisitedParent += fun
                     val symbol = select.symbol.toSemantic
                     s.SelectTree(
-                      qualifier = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
+                      qualifier = qual.toSemanticOriginal,
                       id = Some(s.IdTree(symbol = symbol))
                     )
-                  case _ => s.OriginalTree(range = Some(fun.pos.toMeta.toRange))
+                  case _ => range.toSemanticOriginal
                 }
                 synthetics += s.Synthetic(
-                  range = Some(fun.pos.toMeta.toRange),
+                  range = Some(range),
                   tree = s
                     .TypeApplyTree(function = fnTree, typeArguments = targs.map(_.tpe.toSemanticTpe))
                 )
-              case ApplySelect(select @ g.Select(qual, nme)) if isSyntheticName(select) =>
+              case ApplySelect(select @ g.Select(qual, _)) if isSyntheticName(select) =>
                 isVisitedParent += select
                 val symbol = select.symbol.toSemantic
+                val range = qual.toRange
                 synthetics += s.Synthetic(
-                  range = Some(qual.pos.toMeta.toRange),
+                  range = Some(range),
                   tree = s.SelectTree(
-                    qualifier = s.OriginalTree(range = Some(qual.pos.toMeta.toRange)),
+                    qualifier = range.toSemanticOriginal,
                     id = Some(s.IdTree(symbol = symbol))
                   )
                 )
               case gtree if isForSynthetic(gtree) =>
-                val range = gtree.pos.toMeta.toRange
+                val range = gtree.toRange
                 val synthTree = forSyntheticOrOrig(gtree)
                 synthetics += s.Synthetic(range = Some(range), tree = synthTree)
               case _ =>
@@ -579,26 +583,22 @@ trait TextDocumentOps {
               case gtree: g.TypeTree if gtree.original != null => traverse(gtree.original)
               case gtree: g.TypeTreeWithDeferredRefCheck => traverse(gtree.check())
 
-              case gtree: g.Literal
-                  if gtree.tpe != null && gtree.tpe.typeSymbol == g.definitions.ClassClass &&
-                    gtree.pos.isRange && isClassOf(gtree.pos.toMeta) =>
-                val coLen = "classOf".length
-                val mpos = gtree.pos.toMeta
-                val mposFix = new m.Position.Range(mpos.input, mpos.start, mpos.start + coLen)
-
-                addOccurrenceFromSemantic(mposFix, "scala/Predef.classOf().", Role.REFERENCE)
-
-                gtree.value match {
-                  // Limitation: can't extract occurrence from types inside classOf
-                  // if it's not a TypeRef without any type applications.
-                  // because `classOf[...]` is encoded as `Literal(Constant(...))` while typing and
-                  // positinal information inside of `classOf` disappear after the typechecking.
-                  case g.Constant(tpe @ g.TypeRef(_, _, Nil)) =>
-                    val mposClazz =
-                      new m.Position.Range(mpos.input, mpos.start + coLen + 1, mpos.end - 1)
-                    addOccurrence(mposClazz, tpe.typeSymbol, Role.REFERENCE)
-                  case _ =>
-                }
+              case t: g.Literal if t.tpe != null && t.tpe.typeSymbol == g.definitions.ClassClass =>
+                val mpos = t.toMeta
+                if (!mpos.isEmpty && isClassOf(mpos)) {
+                  val mposClassOf = mpos.trunc("classOf".length)
+                  addOccurrenceFromSemantic(mposClassOf, "scala/Predef.classOf().", Role.REFERENCE)
+                  t.value match {
+                    // Limitation: can't extract occurrence from types inside classOf
+                    // if it's not a TypeRef without any type applications.
+                    // because `classOf[...]` is encoded as `Literal(Constant(...))` while typing and
+                    // positinal information inside of `classOf` disappear after the typechecking.
+                    case g.Constant(tpe: g.TypeRef) if tpe.args.isEmpty =>
+                      val mposClazz = mpos.input.pos(mposClassOf.end + 1, mpos.end - 1)
+                      addOccurrence(mposClazz, tpe.typeSymbol, Role.REFERENCE)
+                    case _ =>
+                  }
+                } else tryFindMtree(t)
 
               case t: g.Function =>
                 addSamOccurrence(t)

@@ -1,13 +1,12 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.meta.internal.inputs._
-import scala.meta.internal.semanticdb.Implicits._
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.{semanticdb => s}
+import scala.{meta => m}
 
 trait SyntheticOps {
   self: SemanticdbOps =>
   import g._
+  import m.internal.{semanticdb => s}
+  import s.Implicits._
 
   implicit class XtensionGTreeSTree(gTree: g.Tree) {
 
@@ -40,7 +39,9 @@ trait SyntheticOps {
 
     def toSemanticId: s.IdTree = s.IdTree(symbol = gTree.symbol.toSemantic)
 
-    def toSemanticOriginal: s.Tree = s.OriginalTree(range = Some(gTree.pos.toMeta.toRange))
+    def toMeta: m.Position = gTree.pos.toMeta
+    def toRange: s.Range = toMeta.toRange
+    def toSemanticOriginal: s.OriginalTree = toRange.toSemanticOriginal
 
   }
 

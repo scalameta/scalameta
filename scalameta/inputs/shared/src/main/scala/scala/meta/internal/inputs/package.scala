@@ -52,6 +52,7 @@ package object inputs {
       case Position.None => s"Position.None"
       case Position.Range(input, start, end) => s"Position.Range(${input.structure}, $start, $end)"
     }
+    def trunc(len: Int): Position = pos.input.posWithLen(pos.start, len)
   }
 
   implicit class XtensionInput(private val input: Input) extends AnyVal {
@@ -66,6 +67,7 @@ package object inputs {
 
     def pos(beg: Int, end: Int): Position = Position.Range(input, beg, end)
     def pos(offset: Int): Position = pos(offset, offset)
+    def posWithLen(beg: Int, len: Int): Position = pos(beg, beg + len)
   }
 
 }
