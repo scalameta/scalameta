@@ -153,8 +153,8 @@ trait SymbolOps {
       case _ => g.NoType
     }
     def isSelfParameter: Boolean = sym != g.NoSymbol && sym.owner.thisSym == sym
-    def isJavaClass: Boolean = sym.isJavaDefined && !sym.hasPackageFlag &&
-      (sym.isClass || sym.isModule)
+    private def isJavaNonPackage: Boolean = sym.getFlag(gf.PACKAGE | gf.JAVA) == gf.JAVA
+    def isJavaClass: Boolean = isJavaNonPackage && (sym.isClass || sym.isModule)
     def isSyntheticConstructor: Boolean = {
       val isModuleConstructor = sym.isConstructor && sym.owner.isModuleClass
       val isTraitConstructor = sym.isMixinConstructor
@@ -171,7 +171,7 @@ trait SymbolOps {
       if (sym.isModule) sym.moduleClass.isSyntheticValueClassCompanion
       else sym.isModuleClass && sym.isSynthetic && sym.semanticdbDecls.gsyms.isEmpty
     def isValMethod: Boolean = sym.kind.isMethod && {
-      (sym.isAccessor && sym.isStable) || (sym.isUsefulField && !sym.isMutable)
+      (sym.isAccessor && sym.isStable) || (isUsefulField && !sym.isMutable)
     }
     def isScalacField: Boolean = {
       val isFieldForPrivateThis = sym.isPrivateThis && sym.isTerm && !sym.isMethod && !sym.isModule
@@ -179,31 +179,30 @@ trait SymbolOps {
       val isJavaDefined = sym.isJavaDefined || sym.hasJavaEnumFlag
       (isFieldForPrivateThis || isFieldForOther) && !isJavaDefined
     }
-    def isUselessField: Boolean = sym.isScalacField && sym.getterIn(sym.owner) != g.NoSymbol
-    def isUsefulField: Boolean = sym.isScalacField && !sym.isUselessField
+    def isUselessField: Boolean = isScalacField && sym.getterIn(sym.owner) != g.NoSymbol
+    def isUsefulField: Boolean = isScalacField && !isUselessField
     def isSyntheticCaseAccessor: Boolean = sym.isCaseAccessor && sym.name.toString.contains("$")
-    def isSyntheticJavaModule: Boolean = !sym.hasPackageFlag && sym.isJavaDefined && sym.isModule
+    def isSyntheticJavaModule: Boolean = isJavaNonPackage && sym.isModule
     def isAnonymousClassConstructor: Boolean = sym.isConstructor && sym.owner.isAnonymousClass
     def isSyntheticAbstractType: Boolean = sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
+    private def startsWithFreshTermName: Boolean = sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
     def isEtaExpandedParameter: Boolean =
       // Term.Placeholder occurrences are not persisted so we don't persist their symbol information.
       // We might want to revisit this decision https://github.com/scalameta/scalameta/issues/1657
-      sym.isParameter && sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) &&
-        sym.owner.isAnonymousFunction
-    def isAnonymousSelfParameter: Boolean = sym.isSelfParameter && {
+      sym.isParameter && startsWithFreshTermName && sym.owner.isAnonymousFunction
+    def isAnonymousSelfParameter: Boolean = isSelfParameter && {
       sym.name == g.nme.this_ || // hardlinked in ClassSignature.self
-      sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX) // wildcards can't be referenced: class A { _: B => }
+      startsWithFreshTermName // wildcards can't be referenced: class A { _: B => }
     }
-    def isUseless: Boolean = sym == g.NoSymbol || sym.isSyntheticConstructor ||
-      sym.isStaticConstructor || sym.isLocalChild || sym.isSyntheticValueClassCompanion ||
-      sym.isUselessField || sym.isSyntheticCaseAccessor || sym.isRefinementClass ||
-      sym.isSyntheticJavaModule
-    def isUseful: Boolean = !sym.isUseless
+    def isUseless: Boolean = sym == g.NoSymbol || isSyntheticConstructor ||
+      sym.isStaticConstructor || isLocalChild || isSyntheticValueClassCompanion || isUselessField ||
+      isSyntheticCaseAccessor || sym.isRefinementClass || isSyntheticJavaModule
+    def isUseful: Boolean = !isUseless
     def isUselessOccurrence: Boolean = sym.isAnonymousClass || {
-      sym.isUseless && !sym.isSyntheticJavaModule // references to static Java inner classes should have occurrences
+      isUseless && !isSyntheticJavaModule // references to static Java inner classes should have occurrences
     }
-    def isUselessSymbolInformation: Boolean = sym.isUseless || sym.isEtaExpandedParameter ||
-      sym.isAnonymousClassConstructor || sym.isSyntheticAbstractType || sym.isAnonymousSelfParameter
+    def isUselessSymbolInformation: Boolean = isUseless || isEtaExpandedParameter ||
+      isAnonymousClassConstructor || isSyntheticAbstractType || isAnonymousSelfParameter
 
     def isUsefulSymbolInformation: Boolean = !isUselessSymbolInformation
     def isClassfileAnnotation: Boolean = sym.isClass && sym.hasFlag(gf.JAVA_ANNOTATION)
