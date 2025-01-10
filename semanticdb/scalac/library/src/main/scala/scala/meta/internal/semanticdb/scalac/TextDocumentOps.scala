@@ -127,34 +127,16 @@ trait TextDocumentOps {
             mstarts.put(range.start, mname).foreach(errorAmbiguous("mStart", mname, _))
             mends.put(range.end, mname).foreach(errorAmbiguous("mEnd", mname, _))
           }
-          private def getAssignLhsAndIndexRhs(terms: Seq[m.Term.ArgClause]): List[m.Name] = {
+          private def setArgNames(pos: => Iterable[Int])(terms: m.Term.ArgClause*): Unit = {
             val names = List.newBuilder[m.Name]
             terms.foreach(_.values.foreach {
-              case t: m.Term.Assign =>
-                indexArgNames(t.rhs)
-                t.lhs match {
-                  case lhs: m.Term.Name => names += lhs
-                  case _ =>
-                }
+              case m.Term.Assign(n: m.Term.Name, _) => names += n
               case _ =>
             })
-            names.result()
-          }
-          private def indexArgNames(mapp: m.Tree): Unit = mapp match {
-            case t: m.Init =>
-              val names = getAssignLhsAndIndexRhs(t.argClauses)
-              margnames(t.pos.start) = names
-              // 2.13.16 changed position
-              t.parent.foreach {
-                case n: m.Term.New => margnames(n.pos.start) = names
-                case _ =>
-              }
-
-            case t: m.Term.Apply =>
-              margnames(t.fun.pos.end) = getAssignLhsAndIndexRhs(t.argClause :: Nil)
-
-            case t: m.Term.Select => indexArgNames(t.qual)
-            case _ =>
+            names.result() match {
+              case Nil =>
+              case names => pos.foreach(margnames.update(_, names))
+            }
           }
           private def indexWithin(mname: m.Name.Indeterminate): Unit = {
             todo += mname
@@ -191,14 +173,17 @@ trait TextDocumentOps {
           }
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
-              case mtree: m.Term.Apply => indexArgNames(mtree)
+              case mtree: m.Term.Apply => setArgNames(mtree.fun.pos.end :: Nil)(mtree.argClause)
               case m.Mod.WithWithin(mname: m.Name.Indeterminate) => indexWithin(mname)
               // NOTE: ignore mrename for now, we may decide to make it a binder
               case m.Importee.Rename(mname, _) => indexName(mname); return
               case mtree: m.Term.Super => msupers.update(mtree.pos.end, mtree)
               case mtree: m.Ctor => mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
-              case mtree: m.Init => indexArgNames(mtree); mctorrefs(mtree.pos.start) = mtree.name
+              case mtree: m.Init =>
+                mctorrefs(mtree.pos.start) = mtree.name
+                def parentOpt = mtree.parent.collect { case p: m.Term.New => p }
+                setArgNames((mtree +: parentOpt.toList).map(_.pos.start))(mtree.argClauses: _*)
               case _: m.Name.Anonymous | _: m.Name.Placeholder | _: m.Name.This =>
               case mtree: m.Name => indexName(mtree)
               case mtree @ (_: m.Term.FunctionTerm | _: m.Term.AnonymousFunction) =>
@@ -296,9 +281,10 @@ trait TextDocumentOps {
             tryWithin(mwithins, gsym)
             tryWithin(mwithinctors, gsym.primaryConstructor)
           }
-          private def tryNamedArg(gsym: g.Symbol, gstart: Int, gpoint: Int): Unit =
+          private def tryNamedArg(gsym: g.Symbol, offsets: Int*): Unit =
             if (gsym != null && (gsym.isMethod || gsym.isConstructor)) for {
-              margnames <- margnames.get(gstart) ++ margnames.get(gpoint)
+              offset <- offsets
+              margnames <- margnames.get(offset)
               margname <- margnames
               gparams <- gsym.paramss
               gparam <- gparams.find(_.name.decoded == margname.value)
