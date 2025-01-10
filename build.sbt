@@ -354,7 +354,7 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testS
     libraryDependencies ++= {
       if (isScala213.value) List(
         "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-        "org.scala-lang.modules" %% "scala-parallel-collections" % "1.0.4" % Test
+        "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0" % Test
       )
       else Nil
     }
