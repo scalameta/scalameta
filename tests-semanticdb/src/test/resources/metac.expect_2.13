@@ -90,7 +90,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala-2.13/example/SingleAbstractMethod.scala
 Text => non-empty
 Language => Scala
-Symbols => 14 entries
+Symbols => 13 entries
 Occurrences => 30 entries
 
 Symbols:
@@ -126,8 +126,6 @@ local3 => param x: Int
 local4 => class $anon extends Object with SAM { +1 decls }
   Object => java/lang/Object#
   SAM => example/SingleAbstractMethod#SAM#
-local5 => param y: Int
-  Int => scala/Int#
 
 Occurrences:
 [0:8..0:15): example <= example/
@@ -1266,7 +1264,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/EtaExpansion.scala
 Text => non-empty
 Language => Scala
-Symbols => 5 entries
+Symbols => 4 entries
 Occurrences => 13 entries
 Diagnostics => 1 entries
 Synthetics => 5 entries
@@ -1279,8 +1277,6 @@ example/EtaExpansion#meth(). => method meth(): String
   String => java/lang/String#
 example/EtaExpansion#prop(). => method prop: String
   String => java/lang/String#
-local0 => param x: Int
-  Int => scala/Int#
 
 Occurrences:
 [0:8..0:15): example <= example/
@@ -1648,7 +1644,7 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/ForComprehension.scala
 Text => non-empty
 Language => Scala
-Symbols => 15 entries
+Symbols => 13 entries
 Occurrences => 56 entries
 Synthetics => 13 entries
 
@@ -1670,9 +1666,6 @@ local4 => param a: Int
   Int => scala/Int#
 local5 => param b: Int
   Int => scala/Int#
-local6 => param check$ifrefutable$1: Tuple2[Int, Int]
-  Tuple2 => scala/Tuple2#
-  Int => scala/Int#
 local11 => val local c: Int
   Int => scala/Int#
 local12 => val local d: Int
@@ -1685,9 +1678,6 @@ local14 => val local e: Tuple4[Int, Int, Int, Int]
   Int => scala/Int#
 local15 => param f: Tuple4[Int, Int, Int, Int]
   Tuple4 => scala/Tuple4#
-  Int => scala/Int#
-local16 => param check$ifrefutable$2: Tuple2[Int, Int]
-  Tuple2 => scala/Tuple2#
   Int => scala/Int#
 
 Occurrences:
@@ -1807,7 +1797,7 @@ Synthetics:
     ) => orig(List(1)).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(a) => orig(List(a)).withFilter({(b) => orig((
       a,
       b
-    ) == (1, 2))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(b) => orig(List((a, b))).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(local7) => orig((
+    ) == (1, 2))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(b) => orig(List((a, b))).withFilter({(local6) => orig()}).withFilter({(local7) => orig((
       c,
       d
     ) <- List((a, b))
@@ -1839,7 +1829,7 @@ Synthetics:
   withFilter => scala/collection/IterableOps#withFilter().
   b => local5
   flatMap => scala/collection/WithFilter#flatMap().
-  check$ifrefutable$1 => local6
+  local6 => local6
   withFilter => scala/collection/WithFilter#withFilter().
   local7 => local7
   map => scala/collection/WithFilter#map().
@@ -1902,10 +1892,10 @@ Synthetics:
   Int => scala/Int#
 [45:2..47:12): for {
     (_, _) <- x
-  } yield () => orig(x).withFilter({(check$ifrefutable$2) => orig()}).map[Unit]({(local17) => orig((_, _) <- x
+  } yield () => orig(x).withFilter({(local16) => orig()}).map[Unit]({(local17) => orig((_, _) <- x
   } yield ())})
   withFilter => scala/Option#withFilter().
-  check$ifrefutable$2 => local16
+  local16 => local16
   map => scala/Option#WithFilter#map().
   Unit => scala/Unit#
   local17 => local17
