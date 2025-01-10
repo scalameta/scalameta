@@ -209,8 +209,11 @@ trait SymbolOps {
     def isUselessOccurrence: Boolean = sym.isAnonymousClass || {
       isUseless && !isSyntheticJavaModule // references to static Java inner classes should have occurrences
     }
+    def isSyntheticLocalParam: Boolean = sym.hasAllFlags(gf.SYNTHETIC | gf.PARAM) &&
+      sym.isSemanticdbLocal
     def isUselessSymbolInformation: Boolean = isUseless || isEtaExpandedParameter ||
-      isAnonymousClassConstructor || isSyntheticAbstractType || isAnonymousSelfParameter
+      isAnonymousClassConstructor || isSyntheticAbstractType || isAnonymousSelfParameter ||
+      isSyntheticLocalParam
 
     def isUsefulSymbolInformation: Boolean = !isUselessSymbolInformation
     def isClassfileAnnotation: Boolean = sym.isClass && sym.hasFlag(gf.JAVA_ANNOTATION)
