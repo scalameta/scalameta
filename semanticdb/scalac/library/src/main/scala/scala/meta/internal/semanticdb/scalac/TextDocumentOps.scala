@@ -151,21 +151,17 @@ trait TextDocumentOps {
           }
           private def indexWithin(mname: m.Name.Indeterminate): Unit = {
             todo += mname
-            val mencl = mname.parent.parent.get
-            mencl match {
-              case mencl: m.Ctor.Primary =>
-                val menclName = mencl.parent.get.asInstanceOf[m.Member].name
-                mwithinctors.put(menclName, mname).foreach(errorAmbiguous("mWithinCtors", mname, _))
-              case _ =>
-                def findBinder(pat: m.Pat) = pat.collect { case m.Pat.Var(name) => name }.head
-                val menclName = mencl match {
-                  case mtree: m.Member => mtree.name
-                  case m.Decl.Val(_, pat :: Nil, _) => findBinder(pat)
-                  case m.Decl.Var(_, pat :: Nil, _) => findBinder(pat)
-                  case m.Defn.Val(_, pat :: Nil, _, _) => findBinder(pat)
-                  case m.Defn.Var.Initial(_, pat :: Nil, _, _) => findBinder(pat)
+            def setWithins(mencl: m.Tree): Unit = mwithins.put(mencl, mname)
+              .foreach(errorAmbiguous("mWithins", mname, _))
+            mname.parent.parent.get match {
+              case mencl: m.Ctor.Primary => mencl.parent match {
+                  case Some(p: m.Member) => mwithinctors.put(p.name, mname)
+                      .foreach(errorAmbiguous("mWithinCtors", mname, _))
+                  case _ =>
                 }
-                mwithins.put(menclName, mname).foreach(errorAmbiguous("mWithins", mname, _))
+              case mencl: m.Member => setWithins(mencl.name)
+              case m.Tree.WithPats(p :: Nil) => p.traverse { case m.Pat.Var(n) => setWithins(n) }
+              case _ =>
             }
           }
           def indexPats(pats: List[m.Pat]): Unit = pats.foreach(_.traverse {
