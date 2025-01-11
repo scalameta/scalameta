@@ -453,7 +453,7 @@ Occurrences:
 [42:21..42:25): head => scala/collection/IterableOps#head().
 
 Diagnostics:
-[3:0..3:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
+[3:22..3:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
 
 Synthetics:
 [39:2..39:9): locally => *[Unit]
@@ -649,7 +649,7 @@ Occurrences:
 [16:10..16:10):  => java/lang/Object#`<init>`().
 
 Diagnostics:
-[1:0..1:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
+[1:22..1:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
 [6:15..6:15) [warning] Top-level wildcard is not allowed
 
 Synthetics:
@@ -1744,7 +1744,10 @@ Synthetics:
     b <- List(1)
     if b > 1
     c = a + b
-  } yield (a, b, c) => orig(List(1)).flatMap[Tuple3[Int, Int, Int]]({(a) => orig(List(1)).withFilter({(b) => orig(b > 1)}).map[Tuple2[Int, Int]]({(b) => orig(c = a + b)}).map[Tuple3[Int, Int, Int]]({(local2) => orig((a, b, c))})})
+  } yield (a, b, c) => orig(List(1)).flatMap[Tuple3[Int, Int, Int]]({(a) => orig(List(1)).withFilter({(b) => orig(b > 1)}).map[Tuple2[Int, Int]]({(b) => orig(c = a + b)}).map[Tuple3[Int, Int, Int]]({(local2) => orig(b <- List(1)
+    if b > 1
+    c = a + b
+  } yield (a, b, c))})})
   flatMap => scala/collection/immutable/List#flatMap().
   Tuple3 => scala/Tuple3#
   Int => scala/Int#
@@ -1806,12 +1809,55 @@ Synthetics:
       b,
       c,
       d
-    ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]({(local8) => orig(e = (
+    ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]({(local8) => orig((
+      c,
+      d
+    ) <- List((a, b))
+    if (
       a,
       b,
       c,
       d
-    ))}).withFilter({(local9) => orig(e == (1, 2, 3, 4))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(local10) => orig(f <- List(e)
+    ) == (1, 2, 3, 4)
+    e = (
+      a,
+      b,
+      c,
+      d
+    ))}).withFilter({(local9) => orig((
+      c,
+      d
+    ) <- List((a, b))
+    if (
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4)
+    e = (
+      a,
+      b,
+      c,
+      d
+    )
+    if e == (1, 2, 3, 4))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(local10) => orig((
+      c,
+      d
+    ) <- List((a, b))
+    if (
+      a,
+      b,
+      c,
+      d
+    ) == (1, 2, 3, 4)
+    e = (
+      a,
+      b,
+      c,
+      d
+    )
+    if e == (1, 2, 3, 4)
+    f <- List(e)
   } yield {
     (
       a,
@@ -2177,7 +2223,7 @@ Occurrences:
 [26:22..26:29): classOf => scala/Predef.classOf().
 
 Diagnostics:
-[4:0..4:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
+[4:22..4:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
 
 Synthetics:
 [8:12..8:16): List => *.apply[Any]
@@ -5404,7 +5450,7 @@ Occurrences:
 [119:36..119:39): T#C => types/T#C#
 
 Diagnostics:
-[3:0..3:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
+[3:22..3:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
 
 semanticdb/integration/src/main/scala/example/ValPattern.scala
 --------------------------------------------------------------
