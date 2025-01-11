@@ -43,6 +43,16 @@ jobs:
         java:
           - '8'
           - '17'
+        exclude:
+          - type: 'JS'
+            scala: '2.13.16'
+        include:
+          - type: 'JS'
+            scala: '2.13.15'
+            java: 17
+          - type: 'JS'
+            scala: '2.13.15'
+            java: 8
     steps:
       - uses: actions/checkout@v4
         with:
