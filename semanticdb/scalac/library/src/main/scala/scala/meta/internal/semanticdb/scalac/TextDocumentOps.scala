@@ -95,7 +95,14 @@ trait TextDocumentOps {
             names.result()
           }
           private def indexArgNames(mapp: m.Tree): Unit = mapp match {
-            case t: m.Init => margnames(t.pos.start) = getAssignLhsAndIndexRhs(t.argClauses)
+            case t: m.Init =>
+              val names = getAssignLhsAndIndexRhs(t.argClauses)
+              margnames(t.pos.start) = names
+              // 2.13.16 changed position
+              t.parent.foreach {
+                case n: m.Term.New => margnames(n.pos.start) = names
+                case _ =>
+              }
 
             case t: m.Term.Apply =>
               margnames(t.fun.pos.end) = getAssignLhsAndIndexRhs(t.argClause :: Nil)

@@ -4,10 +4,11 @@ package build
 object Versions {
   val Scala211Versions = getVersions(2, 11, 12 to 12)
   val Scala212Versions = getVersions(2, 12, 16 to 19)
-  val Scala213Versions = getVersions(2, 13, 11 to 14)
+  val Scala213Versions = getVersions(2, 13, 13 to 16)
   val LatestScala211 = Scala211Versions.head
   val LatestScala212 = Scala212Versions.head
   val LatestScala213 = Scala213Versions.head
+  val LatestScala213ForJS = "2.13.15"
   val EarliestScala211 = Scala211Versions.last
   val EarliestScala212 = Scala212Versions.last
   val EarliestScala213 = Scala213Versions.last
