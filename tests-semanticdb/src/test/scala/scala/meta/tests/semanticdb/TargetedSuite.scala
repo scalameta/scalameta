@@ -238,6 +238,61 @@ class TargetedSuite extends SemanticdbSuite {
     }
   )
 
+  test("named-args") {
+    val code = """|@deprecated(since = "123")
+                  |class CLS(name: String) {
+                  |  def this(name2: Int) = this(name = name2.toString)
+                  |}
+                  |""".stripMargin
+    assertEquals(
+      computePayloadFromSnippet(code).linesIterator.drop(3).filter(!_.startsWith("Uri => "))
+        .mkString("", "\n", "\n"),
+      """|Summary:
+         |Schema => SemanticDB v4
+         |Text => non-empty
+         |Language => Scala
+         |Symbols => 8 entries
+         |Occurrences => 14 entries
+         |
+         |Symbols:
+         |_empty_/CLS# => @deprecated class CLS extends AnyRef { +3 decls }
+         |  deprecated => scala/deprecated#
+         |  AnyRef => scala/AnyRef#
+         |_empty_/CLS#`<init>`(). => primary ctor <init>(name: String)
+         |  name => _empty_/CLS#`<init>`().(name)
+         |  String => scala/Predef.String#
+         |_empty_/CLS#`<init>`().(name) => param name: String
+         |  String => scala/Predef.String#
+         |_empty_/CLS#`<init>`(+1). => ctor <init>(name2: Int)
+         |  name2 => _empty_/CLS#`<init>`(+1).(name2)
+         |  Int => scala/Int#
+         |_empty_/CLS#`<init>`(+1).(name2) => param name2: Int
+         |  Int => scala/Int#
+         |_empty_/CLS#name. => private[this] val method name: String
+         |  String => scala/Predef.String#
+         |local0 => val local x$1: "123"
+         |local1 => val local x$2: String
+         |  String => scala/Predef.String#
+         |
+         |Occurrences:
+         |[0:1..0:11): deprecated => _empty_/
+         |[0:11..0:11):  => scala/deprecated#`<init>`().
+         |[0:12..0:17): since => scala/deprecated#`<init>`().(since)
+         |[1:6..1:9): CLS <= _empty_/CLS#
+         |[1:9..1:9):  <= _empty_/CLS#`<init>`().
+         |[1:10..1:14): name <= _empty_/CLS#name.
+         |[1:16..1:22): String => scala/Predef.String#
+         |[2:6..2:10): this <= _empty_/CLS#`<init>`(+1).
+         |[2:11..2:16): name2 <= _empty_/CLS#`<init>`(+1).(name2)
+         |[2:18..2:21): Int => scala/Int#
+         |[2:29..2:29):  => _empty_/CLS#`<init>`().
+         |[2:30..2:34): name => _empty_/CLS#`<init>`().(name)
+         |[2:37..2:42): name2 => _empty_/CLS#`<init>`(+1).(name2)
+         |[2:43..2:51): toString => scala/Any#toString().
+         |""".stripMargin
+    )
+  }
+
   locally { // #3738
     val code = """|trait AmbiguousMend {
                   |  def x
