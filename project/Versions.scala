@@ -9,6 +9,7 @@ object Versions {
   val LatestScala211 = Scala211Versions.head
   val LatestScala212 = Scala212Versions.head
   val LatestScala213 = Scala213Versions.head
+  val LatestScala213ForJS = "2.13.15"
   val EarliestScala211 = Scala211Versions.last
   val EarliestScala212 = Scala212Versions.last
   val EarliestScala213 = Scala213Versions.last

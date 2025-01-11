@@ -77,8 +77,8 @@ Global / resolvers +=
   "scala-integration".at("https://scala-ci.typesafe.com/artifactory/scala-integration/")
 
 val commonJsSettings = Seq(
-  crossScalaVersions := List("2.13.15", LatestScala212),
-  scalaVersion := "2.13.15",
+  crossScalaVersions := List(LatestScala213ForJS, LatestScala212),
+  scalaVersion := LatestScala213ForJS,
   bspEnabled := false,
   scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
   scalacOptions ++= {
