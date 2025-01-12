@@ -140,15 +140,14 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
       mods: List[Mod],
       s: String,
       params: List[Type.Param] = Nil,
-      bounds: Type.Bounds = noBounds,
-      vb: List[Type] = Nil
+      bounds: Type.Bounds = noBounds
   ): Type.Param = {
     val nameTree = s match {
       case "" => anon
       case "_" => phName
       case _ => pname(s)
     }
-    Type.Param(mods, nameTree, params, bounds, vb)
+    Type.Param(mods, nameTree, params, bounds)
   }
 
   final def pinfix(lt: Type, op: String, rt: Type): Type.ApplyInfix = Type.ApplyInfix(lt, op, rt)
@@ -191,8 +190,12 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final val noBounds = Type.Bounds.empty
   final def loBound(bound: Type): Type.Bounds = Type.Bounds(Some(bound), None)
   final def hiBound(bound: Type): Type.Bounds = Type.Bounds(None, Some(bound))
-  final def bounds(lo: Type = null, hi: Type = null, cb: List[Type] = Nil): Type.Bounds = Type
-    .Bounds(Option(lo), Option(hi), cb)
+  final def bounds(
+      lo: Type = null,
+      hi: Type = null,
+      cb: List[Type] = Nil,
+      vb: List[Type] = Nil
+  ): Type.Bounds = Type.Bounds(Option(lo), Option(hi), cb, vb)
 
   final def pwildcard(bounds: Type.Bounds): Type.Wildcard = Type.Wildcard(bounds)
   final val pwildcard: Type.Wildcard = pwildcard(noBounds)

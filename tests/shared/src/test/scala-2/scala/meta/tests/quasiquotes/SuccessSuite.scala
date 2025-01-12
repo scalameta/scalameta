@@ -1723,8 +1723,12 @@ class SuccessSuite extends TreeSuiteBase {
       List(Mod.Covariant()),
       "Z",
       List(pparam("Q"), pparam("W")),
-      bounds("E", "R", List(Type.With(pname("U"), pname("I")))),
-      List(Type.With(pname("T"), pname("Y")))
+      bounds(
+        "E",
+        "R",
+        cb = List(Type.With(pname("U"), pname("I"))),
+        vb = List(Type.With(pname("T"), pname("Y")))
+      )
     ))
   }
 

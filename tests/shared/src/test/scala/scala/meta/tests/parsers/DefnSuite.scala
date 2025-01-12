@@ -91,7 +91,7 @@ class DefnSuite extends ParseSuite {
 
   test("def x[A <% B] = 2") {
     assertTree(templStat("def x[A <% B] = 2")) {
-      Defn.Def(Nil, tname("x"), pparam(Nil, "A", vb = pname("B") :: Nil) :: Nil, Nil, None, int(2))
+      Defn.Def(Nil, tname("x"), List(pparam("A", bounds(vb = pname("B") :: Nil))), Nil, None, int(2))
     }
   }
 
