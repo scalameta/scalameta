@@ -148,7 +148,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |Type.ParamClause [A <% B[A]]
        |Type.Param A <% B[A]
        |Type.ParamClause def f[A @@<% B[A]]: C
-       |Type.Bounds def f[A @@<% B[A]]: C
+       |Type.Bounds <% B[A]
        |Type.Apply B[A]
        |Type.ArgClause [A]
        |""".stripMargin

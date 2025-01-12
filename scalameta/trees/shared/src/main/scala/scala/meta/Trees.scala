@@ -698,7 +698,9 @@ object Type {
       lo: Option[Type],
       hi: Option[Type],
       @newField("4.12.3")
-      context: List[sm.Type] = Nil
+      context: List[sm.Type] = Nil,
+      @newField("4.12.3")
+      view: List[Type] = Nil
   ) extends Tree
   object Bounds {
     val empty: Bounds = Bounds(None, None)
@@ -760,8 +762,8 @@ object Type {
   }
 
   object ParamBoundsCtor {
-    def apply(tbounds: Bounds, cbounds: List[Type]): Bounds = tbounds
-      .copy(context = tbounds.context ++ cbounds)
+    def apply(tbounds: Bounds, vbounds: List[Type], cbounds: List[Type]): Bounds = tbounds
+      .copy(context = tbounds.context ++ cbounds, view = tbounds.view ++ vbounds)
   }
 
   @ast
@@ -770,14 +772,15 @@ object Type {
       name: meta.Name,
       tparamClause: ParamClause,
       @replacesFields("4.12.3", ParamBoundsCtor)
-      bounds: Bounds,
-      vbounds: List[Type]
+      bounds: Bounds
   ) extends Member.Param with Tree.WithTParamClause {
     @replacedField("4.6.0")
     final def tparams: List[Param] = tparamClause.values
 
     @replacedField("4.12.3", pos = 3)
     final def tbounds: Type.Bounds = bounds
+    @replacedField("4.12.3", pos = 4)
+    final def vbounds: List[Type] = bounds.view
     @replacedField("4.12.3", pos = 5)
     final def cbounds: List[Type] = bounds.context
   }

@@ -3272,8 +3272,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case q: Quasi if endTparamQuasi => q.become[Type.Param]
           case _ =>
             val tparams = typeParamClauseOpt(ownerIsType = true)
-            val (bounds, vbounds) = typeBoundsWithOptViewBounds(allowViewBounds = true)
-            Type.Param(mods, name, tparams, bounds, vbounds)
+            val bounds = typeBoundsWithOptViewBounds(allowViewBounds = true)
+            Type.Param(mods, name, tparams, bounds)
         }
     }
   }
@@ -3291,13 +3291,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def entrypointTypeParam(): Type.Param = typeParam(ownerIsType = true)
 
-  def typeBounds() = typeBoundsWithOptViewBounds(allowViewBounds = false)._1
+  def typeBounds() = typeBoundsWithOptViewBounds(allowViewBounds = false)
 
-  private def typeBoundsWithOptViewBounds(allowViewBounds: Boolean) = {
-    val startPos = currIndex
+  private def typeBoundsWithOptViewBounds(allowViewBounds: Boolean) = autoPos {
     val loBound = bound[Supertype]
     val hiBound = bound[Subtype]
-    val midEndPos = prevIndex
     val vbounds =
       if (allowViewBounds) listBy[Type] { buf =>
         while (acceptOpt[Viewbound]) buf += contextBoundOrAlias(allowAlias = false)
@@ -3312,9 +3310,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         else addContextBounds[Colon]
       }
       else Nil
-    val endPos = if (cbounds.isEmpty) midEndPos else prevIndex
-    val bounds = atPos(startPos, endPos)(Type.Bounds(loBound, hiBound, cbounds))
-    (bounds, vbounds)
+    Type.Bounds(lo = loBound, hi = hiBound, context = cbounds, view = vbounds)
   }
 
   def bound[T: ClassTag]: Option[Type] = if (acceptOpt[T]) Some(typ()) else None
