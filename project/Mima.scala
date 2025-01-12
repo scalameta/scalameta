@@ -66,23 +66,5 @@ object Mima {
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
     // Tree
-    exclude[ReversedMissingMethodProblem]("Tree.tokens"), // new version has it, old doesn't; ok?
-    // testkit
-    exclude[IncompatibleResultTypeProblem]("testkit.Corpus.files"),
-    exclude[IncompatibleResultTypeProblem]("testkit.FileOps.listFiles"),
-    // newField; these methods should have been package-private
-    exclude[DirectMissingMethodProblem]("Defn#Type.setBounds"),
-    exclude[DirectMissingMethodProblem]("Template.setDerives"),
-    exclude[DirectMissingMethodProblem]("Term#If.setMods"),
-    exclude[DirectMissingMethodProblem]("Term#Match.setMods"),
-    // implicit classes
-    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectApply"),
-    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTokenSyntax"),
-    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTokensSyntax"),
-    exclude[IncompatibleResultTypeProblem]("package.XtensionDialectTreeSyntax"),
-    exclude[FinalClassProblem]("package$XtensionDialectApply"),
-    exclude[FinalClassProblem]("package$XtensionDialectTokenSyntax"),
-    exclude[FinalClassProblem]("package$XtensionDialectTokensSyntax"),
-    exclude[FinalClassProblem]("package$XtensionDialectTreeSyntax")
   )
 }
