@@ -20,5 +20,5 @@ object Metadata {
   class astField extends StaticAnnotation
   @getter
   class auxiliary extends StaticAnnotation
-  class registry(paths: String*) extends StaticAnnotation
+  class registry(paths: List[String]) extends StaticAnnotation
 }

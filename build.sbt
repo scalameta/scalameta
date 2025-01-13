@@ -178,6 +178,20 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   mainClass := Some("scala.meta.cli.Metacp")
 ).dependsOn(semanticdbScalacCore)
 
+/* ============== CODEGEN FOR SCALA 3 QUASIQUOTES ============= */
+lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).settings(
+  crossScalaVersions := List(LatestScala213),
+  scalaVersion := LatestScala213,
+  enableMacros,
+  nonPublishableSettings
+).dependsOn(trees.jvm, common.jvm)
+
+lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).settings(
+  crossScalaVersions := List(LatestScala213),
+  scalaVersion := LatestScala213,
+  nonPublishableSettings
+).dependsOn(scala3TreeLiftsMacro)
+
 /* ======================== SCALAMETA ======================== */
 lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
   moduleName := "common",
@@ -229,9 +243,19 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   description := "Scalameta APIs for parsing and their baseline implementation",
   enableHardcoreMacros,
   crossScalaVersions := AllScalaBinaryVersions,
-  mergedModule { base =>
-    List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers")
-  }
+  mergedModule(
+    base => List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers"),
+    base => List(base / "scalameta" / "quasiquotes")
+  ),
+  Compile / sourceGenerators += Def.taskDyn {
+    val outFile = (Compile / sourceManaged).value / "generated" / "TreeLifts.scala"
+    Def.task {
+      if (scalaVersion.value.startsWith("3")) {
+        (Compile / (scala3TreeLiftsCodeGen / run)).toTask(" " + outFile.getAbsolutePath).value
+        Seq(outFile)
+      } else Seq()
+    }
+  }.taskValue
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
     commonJsSettings,
@@ -263,7 +287,11 @@ def mergedModule(
       project / "shared" / "src" / "main" / scalaBinary,
       project / "shared" / "src" / "main" / "scala",
       project / platform / "src" / "main" / "scala"
-    )
+    ) ++ {
+      if (scalaBinaryVersion.value.startsWith("2"))
+        List(project / "shared" / "src" / "main" / "scala-2")
+      else Nil
+    }
   }
 })
 
@@ -356,6 +384,11 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testS
         "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
         "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0" % Test
       )
+      else Nil
+    },
+    scalacOptions ++= {
+      if (isScala3.value)
+        List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
       else Nil
     }
   )
