@@ -7,6 +7,7 @@ import scala.meta.io.AbsolutePath
 import scala.meta.io.RelativePath
 import scala.meta.metac
 import scala.meta.testkit.StringFS
+import scala.meta.tests.BuildInfo
 import scala.meta.tests.cli.CliTestUtils
 import scala.meta.tests.metacp.Library
 
@@ -25,12 +26,12 @@ class ConfigSuite extends FunSuite {
   }
 
   def check(
-      name: String,
+      topt: munit.TestOptions,
       scalacArgs: List[String],
       input: String,
       fn: s.TextDocument => Unit,
       targetroot: AbsolutePath = generateTargetroot()
-  ): Unit = test(name) {
+  )(implicit loc: munit.Location): Unit = test(topt) {
     val sourceroot = StringFS.fromString(input)
     val (metacIsSuccess, metacOut, metacErr) = CliTestUtils.withReporter { reporter =>
       val settings = metac.Settings().withScalacArgs(
@@ -103,13 +104,17 @@ class ConfigSuite extends FunSuite {
        |""".stripMargin,
     { doc =>
       val obtained = doc.symbols.map(i => i.symbol + " " + i.displayName).sorted.mkString("\n")
-      assertNoDiff(
-        obtained,
-        """|_empty_/A. A
-           |_empty_/A.x. x
-           |local0 y
-           |""".stripMargin
-      )
+      val expected =
+        if (BuildInfo.scalaBinaryVersion == "2.11") // different result
+          """|_empty_/A. A
+             |_empty_/A.x. x
+             |""".stripMargin
+        else """|_empty_/A. A
+               |_empty_/A.x. x
+               |local0 y
+               |""".stripMargin
+
+      assertNoDiff(obtained, expected)
     }
   )
 
