@@ -2885,4 +2885,46 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4147 func") {
+    implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code = """|def a: Int = c { D => e =>
+                  |  def f = e
+                  |
+                  |  f
+                  |}
+                  |""".stripMargin
+    val layout = """|def a: Int = c {
+                    |  D => e => {
+                    |    def f = e
+                    |    f
+                    |  }
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "a",
+      Nil,
+      Some("Int"),
+      tapply(
+        "c",
+        blk(tfunc(tparam("D"))(tfunc(tparam("e"))(blk(Defn.Def(Nil, "f", Nil, None, "e"), "f"))))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#4147 poly func") {
+    implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
+    val code = """|def a: Int = c { [D] => e =>
+                  |  def f = e
+                  |
+                  |  f
+                  |}
+                  |""".stripMargin
+    val error = """|<input>:2: error: illegal start of simple expression
+                   |  def f = e
+                   |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
