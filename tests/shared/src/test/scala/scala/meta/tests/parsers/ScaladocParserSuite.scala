@@ -4,12 +4,16 @@ import scala.meta.internal.Scaladoc
 import scala.meta.internal.Scaladoc._
 import scala.meta.internal.parsers.ScaladocParser
 
+import scala.language.implicitConversions
+
 import munit.FunSuite
 
 /**
  * Test for [[ScaladocParser]]
  */
 class ScaladocParserSuite extends FunSuite {
+
+  import ScaladocParserSuite._
 
   private def parseString(comment: String) = ScaladocParser.parse(comment.trim)
 
@@ -79,7 +83,7 @@ class ScaladocParserSuite extends FunSuite {
 
   test("paragraph parsing") {
     val descriptionBody = "Description Body"
-    val words: Seq[TextPart] = descriptionBody.split("\\s+").toSeq.map(Word.apply)
+    val words: Seq[TextPartInfo] = descriptionBody.split("\\s+").toSeq.map(Word.apply)
     assertEquals(
       parseString(
         s"""
@@ -98,7 +102,7 @@ class ScaladocParserSuite extends FunSuite {
 
   test("paragraph parsing with leading space") {
     val descriptionBody = "Description Body"
-    val words: Seq[TextPart] = descriptionBody.split("\\s+").toSeq.map(Word.apply)
+    val words: Seq[TextPartInfo] = descriptionBody.split("\\s+").toSeq.map(Word.apply)
     assertEquals(
       parseString(
         s"""
@@ -117,10 +121,10 @@ class ScaladocParserSuite extends FunSuite {
 
   test("paragraph parsing with references") {
     val descriptionBody = "Description Body"
-    val words: Seq[TextPart] = descriptionBody.split("\\s+").toSeq.map(Word.apply)
-    val refNone: Seq[TextPart] = Seq(Link("Description", Seq("Body")))
-    val refDots: Seq[TextPart] = Seq(Link("Description", Seq("Body"), "..."))
-    val refWithSuffix: Seq[TextPart] = Seq(Link("Description", Seq("Body"), "'s"))
+    val words: Seq[TextPartInfo] = descriptionBody.split("\\s+").toSeq.map(Word.apply)
+    val refNone: Seq[TextPartInfo] = Seq(Link("Description", Seq("Body")))
+    val refDots: Seq[TextPartInfo] = Seq(Link("Description", Seq("Body")), Word("...") -> true)
+    val refWithSuffix: Seq[TextPartInfo] = Seq(Link("Description", Seq("Body")), Word("'s") -> true)
     assertEquals(
       parseString(
         s"""
@@ -150,11 +154,11 @@ class ScaladocParserSuite extends FunSuite {
 
   test("paragraph parsing with complex references and parens") {
     val ref = "baz qux"
-    val link = new Link(ref.split("\\s+"), ")")
-    assertEquals(link.syntax, "[[baz qux]])")
+    val link = new Link(ref.split("\\s+"))
+    assertEquals(link.syntax, "[[baz qux]]")
 
-    val text1 = Seq[TextPart](Word("(foo"), Word("bar"), link)
-    val text2 = Seq[TextPart](Word("foo"), Word("bar"), link)
+    val text1 = Seq[TextPartInfo](Word("(foo"), Word("bar"), link, Word(")") -> true)
+    val text2 = Seq[TextPartInfo](Word("foo"), Word("bar"), link, Word(")") -> true)
 
     assertEquals(
       parseString(
@@ -175,7 +179,7 @@ class ScaladocParserSuite extends FunSuite {
   test("code blocks") {
 
     val testDescription = "This is a codeblock:"
-    val words: Seq[TextPart] = testDescription.split("\\s+").toSeq.map(Word.apply)
+    val words: Seq[TextPartInfo] = testDescription.split("\\s+").toSeq.map(Word.apply)
 
     val codeBlock1 = "{\"HELLO MARIANO\"}"
     val codeBlock2 = "\"HELLO SORAYA\""
@@ -204,8 +208,8 @@ class ScaladocParserSuite extends FunSuite {
        """.stripMargin
     )
 
-    val textpara1 = Seq.newBuilder[TextPart]
-    textpara1 ++= words += CodeExpr(codeBlock1, "?")
+    val textpara1 = Seq.newBuilder[TextPartInfo]
+    textpara1 ++= words += CodeExpr(codeBlock1) += (Word("?") -> true)
     textpara1 ++= words += CodeExpr(codeBlock2)
     val expectation = Option(Scaladoc(Seq(
       Paragraph(Seq(Text(textpara1.result()))),
@@ -357,10 +361,11 @@ class ScaladocParserSuite extends FunSuite {
 
     val expectation = Some(Scaladoc(Seq(Paragraph(Seq(Text(Seq(
       Word("foo"),
-      MdCodeSpan(" bar ` ` baz ", "``", ","),
+      MdCodeSpan(" bar ` ` baz ", "``"),
+      Word(",") -> true,
       Word("and"),
       Word("qux"),
-      MdCodeSpan("quux xyzzy", "`", "")
+      MdCodeSpan("quux xyzzy", "`")
     )))))))
 
     assertEquals(result, expectation)
@@ -397,7 +402,7 @@ class ScaladocParserSuite extends FunSuite {
     )
 
     val expectation = Some(Scaladoc(Seq(Paragraph(
-      Seq(Text(Seq(MdCodeSpan(" foo ` ` bar ", "```", ""))), MdCodeBlock(Seq("foo"), Nil, "```"))
+      Seq(Text(Seq(MdCodeSpan(" foo ` ` bar ", "```"))), MdCodeBlock(Seq("foo"), Nil, "```"))
     ))))
     assertEquals(result, expectation)
   }
@@ -1261,7 +1266,7 @@ class ScaladocParserSuite extends FunSuite {
     sb.append("/** ")
     TagType.predefined.foreach(generateTestString(_, testStringToMerge))
     sb.append('/')
-    val words: Seq[TextPart] = testStringToMerge.split("\\s+").map(Word.apply).toSeq
+    val words: Seq[TextPartInfo] = testStringToMerge.split("\\s+").map(Word.apply).toSeq
 
     val parsedScaladocOpt = parseString(sb.result())
     assertNotEquals(parsedScaladocOpt, None: Option[Scaladoc])
@@ -1825,4 +1830,9 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(Table.Center.leftPad(7), 3)
   }
 
+}
+
+object ScaladocParserSuite {
+  implicit def tupleToTextPartInfo(tuple: (TextPart, Boolean)): TextPartInfo = TextPartInfo
+    .tupled(tuple)
 }

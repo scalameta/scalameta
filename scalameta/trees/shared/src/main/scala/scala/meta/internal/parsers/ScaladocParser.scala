@@ -32,7 +32,6 @@ object ScaladocParser {
   private def spacesMin[$: P](min: Int) = CharsWhileIn("\t\r \n", min)
   private def spaces1[$: P] = spacesMin(1)
 
-  private def punctParser[$: P] = CharsWhileIn(".,:!?;)", 0)
   private def labelParser[$: P]: P[Unit] = (!space ~ AnyChar).rep(1)
   private def wordParser[$: P]: P[Word] = P(labelParser.!.map(Word.apply))
 
@@ -64,8 +63,8 @@ object ScaladocParser {
   }
 
   private def codeExprParser[$: P]: P[CodeExpr] = P {
-    def pattern = codePrefix ~ hspaces0 ~ codeLineParser ~ codeSuffix ~ punctParser.!
-    pattern.map { case (x, y) => CodeExpr(x.trim, y) }
+    def pattern = codePrefix ~ hspaces0 ~ codeLineParser ~ codeSuffix
+    pattern.map(x => CodeExpr(x.trim))
   }
 
   private def codeBlockParser[$: P]: P[CodeBlock] = P {
@@ -107,8 +106,8 @@ object ScaladocParser {
     val tick = "`"
     tick.rep(1).!.flatMap { fence =>
       def end = fence ~ !tick
-      def expr = (!end ~ !nl ~ AnyChar).rep.! ~ end ~ punctParser.!
-      expr.map { case (code, punct) => MdCodeSpan(code, fence, punct) }
+      def expr = (!end ~ !nl ~ AnyChar).rep.! ~ end
+      expr.map(MdCodeSpan(_, fence))
     }
   }
 
@@ -128,8 +127,8 @@ object ScaladocParser {
   private def linkParser[$: P]: P[Link] = P {
     def end = space | linkSuffix
     def anchor = P((!end ~ AnyChar).rep(1).!.rep(1, sep = spaces1))
-    def pattern = linkPrefix ~ (anchor ~ linkSuffix ~ labelParser.?.!)
-    pattern.map { case (x, y) => new Link(x, y) }
+    def pattern = linkPrefix ~ anchor ~ linkSuffix
+    pattern.map(new Link(_))
   }
 
   private def nextPartParser[$: P](indent: Int, mdOffset: Int = 0): P[Unit] = P {
@@ -146,8 +145,11 @@ object ScaladocParser {
     def end = P(nl ~/ nextPartParser(indent, mdOffset))
     def part: P[TextPart] =
       P(codeExprParser | mdCodeSpanParser | linkParser | enclosedJavaTagParser | wordParser)
-    def sep = P(!end ~ nl.? ~ hspaces0)
-    hspaces0 ~ part.rep(1, sep = sep).map(x => Text(x))
+    (hspaces0 ~ part ~ (!end ~ (nl.? ~ hspaces0).! ~ part).rep(0)).map { case (part1, parts) =>
+      val partInfos = parts.map { case (spaces, part) => TextPartInfo(part, spaces.isEmpty) }
+      // the first part is NOT attached to a previous part, whatever it is
+      Text(TextPartInfo(part1) +: partInfos)
+    }
   }
 
   // this is to be used at the start of a line
