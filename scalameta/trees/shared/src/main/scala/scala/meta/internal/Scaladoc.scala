@@ -1,5 +1,7 @@
 package scala.meta.internal
 
+import scala.language.implicitConversions
+
 /** The full document */
 final case class Scaladoc(para: Seq[Scaladoc.Paragraph])
 
@@ -22,8 +24,16 @@ object Scaladoc {
     def syntax: String
   }
 
+  case class TextPartInfo(part: TextPart, attachedToPrevious: Boolean = false)
+
+  implicit def textPartToTextPartInfo(part: TextPart): TextPartInfo = TextPartInfo(part)
+  implicit def seqTextPartToTextPartInfo(parts: Seq[TextPart]): Seq[TextPartInfo] = parts
+    .map(textPartToTextPartInfo)
+  implicit def iterTextPartToTextPartInfo(parts: Iterable[TextPart]): Iterable[TextPartInfo] = parts
+    .map(textPartToTextPartInfo)
+
   /** A description or other inline text block */
-  final case class Text(parts: Seq[TextPart]) extends Term
+  final case class Text(parts: Seq[TextPartInfo]) extends Term
 
   /** A single word, without whitespace */
   final case class Word(value: String) extends TextPart {
@@ -31,25 +41,25 @@ object Scaladoc {
   }
 
   /** A reference to a symbol */
-  final case class Link(ref: String, anchor: Seq[String], punct: String = "") extends TextPart {
-    def this(parts: Seq[String], punct: String) = this(parts.head, parts.tail, punct)
+  final case class Link(ref: String, anchor: Seq[String]) extends TextPart {
+    def this(parts: Seq[String]) = this(parts.head, parts.tail)
     override def syntax: String = {
       val sb = new StringBuilder
       sb.append("[[").append(ref)
       anchor.foreach(x => sb.append(' ').append(x))
-      sb.append("]]").append(punct)
+      sb.append("]]")
       sb.result()
     }
   }
 
   /** A single embedded code expression */
-  final case class CodeExpr(code: String, punct: String = "") extends TextPart {
-    override def syntax: String = s"{{{$code}}}$punct"
+  final case class CodeExpr(code: String) extends TextPart {
+    override def syntax: String = s"{{{$code}}}"
   }
 
   /** A markdown code span, an embedded code expression */
-  final case class MdCodeSpan(code: String, fence: String, punct: String = "") extends TextPart {
-    override def syntax: String = s"$fence$code$fence$punct"
+  final case class MdCodeSpan(code: String, fence: String) extends TextPart {
+    override def syntax: String = s"$fence$code$fence"
   }
 
   /** Represents an enclosed tagged documentation remark */
