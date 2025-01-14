@@ -398,4 +398,31 @@ class DefnSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4147 func") {
+    val code = """|def a: Int = c { D => e =>
+                  |  def f = e
+                  |
+                  |  f
+                  |}
+                  |""".stripMargin
+    val layout = """|def a: Int = c {
+                    |  D => e => {
+                    |    def f = e
+                    |    f
+                    |  }
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "a",
+      Nil,
+      Some("Int"),
+      tapply(
+        "c",
+        blk(tfunc(tparam("D"))(tfunc(tparam("e"))(blk(Defn.Def(Nil, "f", Nil, None, "e"), "f"))))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
