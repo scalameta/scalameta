@@ -1641,6 +1641,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: KwImplicit =>
         next()
         implicitClosure(location)
+      case _: LeftBracket if dialect.allowPolymorphicFunctions =>
+        val quants = typeParamClauseOpt(ownerIsType = true)
+        accept[RightArrow]
+        Term.PolyFunction(quants, expr(location, allowRepeated))
       case _ =>
         val startPos = currIndex
         val t: Term = postfixExpr(allowRepeated)
@@ -2177,19 +2181,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             case _ => Term.NewAnonymous(tpl)
           }
         })
-      case _: LeftBracket if dialect.allowPolymorphicFunctions => Success(polyFunction())
       case _ => Failure(ParseException(currToken.pos, "illegal start of simple expression"))
     }) match {
       case Success(x) => Success(simpleExprRest(x, canApply = canApply, startPos = startPos))
       case x: Failure[_] => x
     }
-  }
-
-  def polyFunction() = autoPos {
-    val quants = typeParamClauseOpt(ownerIsType = true)
-    accept[RightArrow]
-    val term = expr()
-    Term.PolyFunction(quants, term)
   }
 
   private def macroSplice(): Term = autoPos(QuotedSpliceContext.within {

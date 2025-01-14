@@ -2921,10 +2921,24 @@ class SignificantIndentationSuite extends BaseDottySuite {
                   |  f
                   |}
                   |""".stripMargin
-    val error = """|<input>:2: error: illegal start of simple expression
-                   |  def f = e
-                   |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = """|def a: Int = c {
+                    |  [D] => e => {
+                    |    def f = e
+                    |    f
+                    |  }
+                    |}
+                    |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "a",
+      Nil,
+      Some("Int"),
+      tapply(
+        "c",
+        blk(tpolyfunc(pparam("D"))(tfunc(tparam("e"))(blk(Defn.Def(Nil, "f", Nil, None, "e"), "f"))))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
