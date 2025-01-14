@@ -595,6 +595,10 @@ trait TextDocumentOps {
                 }
                 processMemberDef(t)
               case t: g.MemberDef => processMemberDef(t)
+              case t: g.Ident => t.pos match {
+                  case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
+                  case _ => tryFindMtree(t)
+                }
               case _: g.GenericApply =>
                 tryFindSynthetic(gtree)
                 gtree.pos match {

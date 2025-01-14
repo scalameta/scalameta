@@ -272,7 +272,7 @@ class TargetedSuite extends SemanticdbSuite {
                       |  String => scala/Predef.String#
                       |
                       |Occurrences:
-                      |[0:1..0:11): deprecated => _empty_/
+                      |[0:1..0:11): deprecated => scala/deprecated#
                       |[0:11..0:11):  => scala/deprecated#`<init>`().
                       |[0:12..0:17): since => scala/deprecated#`<init>`().(since)
                       |[1:6..1:9): CLS <= _empty_/CLS#
@@ -293,14 +293,14 @@ class TargetedSuite extends SemanticdbSuite {
       else expected
         .replace("Occurrences => 14 entries", "Occurrences => 14 entries\nDiagnostics => 1 entries")
         .replace(
-          "local0 => val local x$1: \"123\"",
+          """|local0 => val local x$1: "123"
+             |""".stripMargin,
           """|local0 => val local x$1: String
-             |  String => java/lang/String#""".stripMargin
-        ).replace(
-          "[0:1..0:11): deprecated => _empty_/",
-          "[0:1..0:11): deprecated => scala/deprecated#" // TODO https://github.com/scalameta/scalameta/issues/4136
-        ) + "\n" +
-        """|Diagnostics:
+             |  String => java/lang/String#
+             |""".stripMargin
+        ) +
+        """|
+           |Diagnostics:
            |[0:1..0:26) [warning] Usage of named or default arguments transformed this annotation
            |constructor call into a block. The corresponding AnnotationInfo
            |will contain references to local values and default getters instead
