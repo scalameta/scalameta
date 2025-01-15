@@ -1,12 +1,10 @@
 package scala.meta.interactive
 
+import scala.meta.internal.classpath.ClasspathUtils
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.io.AbsolutePath
 
 import java.io.File
-import java.net.URLClassLoader
-import java.nio.file.Files
 
 import scala.reflect.io.VirtualDirectory
 import scala.tools.nsc.Settings
@@ -110,10 +108,8 @@ object InteractiveSemanticdb extends VersionCompilerOps {
     richUnit
   }
 
-  private def thisClasspath: String = this.getClass.getClassLoader match {
-    case url: URLClassLoader => url.getURLs.map(_.toURI.getPath).mkString(File.pathSeparator)
-    case els => throw new IllegalStateException(s"Expected URLClassloader, got $els")
-  }
+  private def thisClasspath: String = ClasspathUtils
+    .getClassPathEntries(this.getClass.getClassLoader).mkString(File.pathSeparator)
 
   private def ask[A](f: Response[A] => Unit): Response[A] = {
     val r = new Response[A]
