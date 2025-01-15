@@ -1,13 +1,13 @@
 package scala.meta.tests.semanticdb
 
 import scala.meta.cli._
+import scala.meta.internal.classpath.ClasspathUtils
 import scala.meta.internal.io.FileIO
 import scala.meta.io.AbsolutePath
 import scala.meta.metac._
 import scala.meta.tests.BuildInfo
 
 import java.io.File
-import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -41,7 +41,7 @@ object MetacScalaLibrary {
       Files.isDirectory(library),
       s"$library is not a directory! Run `sbt download-scala-library`"
     )
-    val classpath = this.getClass.getClassLoader.asInstanceOf[URLClassLoader].getURLs.map(_.getPath)
+    val classpath = ClasspathUtils.getClassPathEntries(this.getClass.getClassLoader).map(_.toString)
       .filter(_.contains("scala-library")).mkString(File.pathSeparator)
     val files = FileIO.listAllFilesRecursively(AbsolutePath(library)).map(_.toString)
       .filter(_.endsWith("scala"))

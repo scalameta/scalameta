@@ -1,6 +1,7 @@
 package scala.meta.tests.testkit
 
 import java.io.File
+import java.net.URLClassLoader
 
 import scala.collection.mutable
 import scala.reflect.internal.util.CodeAction
@@ -15,11 +16,13 @@ object ScalacParser {
   var current: ClassLoader = Thread.currentThread().getContextClassLoader
   val files: mutable.Buffer[File] = collection.mutable.Buffer.empty[java.io.File]
   val settings = new Settings()
-  files.appendAll(System.getProperty("sun.boot.class.path").split(":").map(new java.io.File(_)))
+  Seq("sun.boot.class.path", "java.class.path").foreach { prop =>
+    System.getProperty(prop).split(File.pathSeparator)
+      .foreach(entry => files.append(new File(entry)))
+  }
   while (current != null) {
     current match {
-      case t: java.net.URLClassLoader => files
-          .appendAll(t.getURLs.map(u => new java.io.File(u.toURI)))
+      case t: URLClassLoader => t.getURLs.foreach(u => files.append(new File(u.toURI)))
       case _ =>
     }
     current = current.getParent

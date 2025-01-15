@@ -9,7 +9,6 @@ import scala.meta.io._
 import scala.meta.metacp._
 
 import java.io.BufferedOutputStream
-import java.net.URLClassLoader
 import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
@@ -198,17 +197,9 @@ class Main(settings: Settings, reporter: Reporter) {
 
   private def detectJavacp: Classpath =
     if (settings.usejavacp) {
-      val scalaLibrary = this.getClass.getClassLoader match {
-        case loader: URLClassLoader => loader.getURLs.collectFirst {
-            case url if url.toString.contains("scala-library") => AbsolutePath(Paths.get(url.toURI))
-          }.getOrElse {
-            throw new IllegalStateException("Unable to detect scala-library via --usejavacp")
-          }
-        case unexpected => throw new IllegalStateException(
-            s"Expected this.getClass.getClassLoader to be URLClassLoader. " +
-              s"Obtained $unexpected"
-          )
-      }
-      Classpath(scalaLibrary)
+      val scalaLibraryPath = ClasspathUtils.getClassPathEntries(this.getClass.getClassLoader)
+        .collectFirst { case x if x.toString.contains("scala-library") => x }
+        .getOrElse(throw new IllegalStateException("Unable to detect scala-library via --usejavacp"))
+      Classpath(scalaLibraryPath)
     } else Classpath(Nil)
 }

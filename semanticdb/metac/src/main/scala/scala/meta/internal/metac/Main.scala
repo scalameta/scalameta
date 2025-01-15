@@ -1,11 +1,11 @@
 package scala.meta.internal.metac
 
 import scala.meta.cli._
+import scala.meta.internal.classpath.ClasspathUtils
 import scala.meta.internal.semanticdb.scalac._
 import scala.meta.metac._
 
 import java.io._
-import java.net._
 import java.nio.channels._
 import java.nio.file._
 
@@ -21,8 +21,7 @@ class Main(settings: Settings, reporter: Reporter) {
     manifestStream.close()
     val pluginClasspath = classOf[SemanticdbPlugin].getClassLoader match {
       case null => manifestDir.toString
-      case cl: URLClassLoader => cl.getURLs.map(_.getFile).mkString(File.pathSeparator)
-      case cl => sys.error(s"unsupported classloader: $cl")
+      case cl => ClasspathUtils.getClassPathEntries(cl).mkString(File.pathSeparator)
     }
     val enablePluginArgs = List("-Xplugin:" + pluginClasspath, "-Xplugin-require:semanticdb")
     val enableRangeposArgs = List("-Yrangepos")
