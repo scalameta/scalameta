@@ -4,7 +4,7 @@ title: Built with Scalameta
 ---
 
 Feel free to add your project to this list by submitting a pull request
-[here](https://github.com/scalameta/tutorial/blob/master/docs/misc/built-with-scalameta.md).
+[here](https://github.com/scalameta/scalameta/blob/main/docs/misc/built-with-scalameta.md).
 
 - [Scalafmt](https://scalameta.org/scalafmt): code formatter.
 - [Scalafix](https://scalacenter.github.io/scalafix/): refactoring and linting
@@ -25,3 +25,4 @@ Feel free to add your project to this list by submitting a pull request
   examples in Scaladoc.
 - [Stryker4s](https://github.com/stryker-mutator/stryker4s): Test your tests with mutation testing.
 - [ScalaTs](https://github.com/swachter/scala-ts): SBT plugin based on ScalaJS; generates TypeScript declaration files from ScalaJS sources; outputs ECMAScript modules
+- [Regenesca](https://github.com/sake92/regenesca): Refactoring Generator of Scala Source Code.
