@@ -47,7 +47,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
   private def maybeClose(): Boolean = {
     nextCommentChar()
-    (ch == '/') && {
+    ch == '/' && {
       openComments -= 1
       val close = openComments == 0
       if (close) nextChar() else nextCommentChar()

@@ -631,7 +631,7 @@ lazy val publishableSettings = Def.settings(
   mimaBinaryIssueFilters ++= Mima.apiCompatibilityExceptions,
   licenses += "BSD" -> url("https://github.com/scalameta/scalameta/blob/main/LICENSE.md"),
   pomExtra :=
-    (<url>https://github.com/scalameta/scalameta</url>
+    <url>https://github.com/scalameta/scalameta</url>
     <inceptionYear>2014</inceptionYear>
     <issueManagement>
       <system>GitHub</system>
@@ -678,7 +678,7 @@ lazy val publishableSettings = Def.settings(
         <name>Denys Shabalin</name>
         <url>http://den.sh</url>
       </developer>
-    </developers>)
+    </developers>
 )
 
 lazy val nonPublishableSettings = Seq(

@@ -440,7 +440,7 @@ object Term {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
     checkFields(paramClause.values.forall(param =>
-      param.is[Param.Quasi] || (param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty)
+      param.is[Param.Quasi] || param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty
     ))
   }
   @ast

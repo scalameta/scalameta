@@ -30,7 +30,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def relativize(other: Path): Path = NodeNIOPath(JSPath.relative(filename, other.toString))
   override def getNameCount: Int = {
     val strippeddrive =
-      if ((filename.length > 1) && (filename(1) == ':')) filename.substring(2) else filename
+      if (filename.length > 1 && filename(1) == ':') filename.substring(2) else filename
     val (first, remaining) = strippeddrive.split(escapedSeparator + "+").span(_.isEmpty)
     if (remaining.isEmpty) first.length else remaining.length
   }

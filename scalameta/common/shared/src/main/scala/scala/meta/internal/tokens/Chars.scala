@@ -30,15 +30,15 @@ object Chars {
 
   /** Can character start an alphanumeric Scala identifier? */
   @inline
-  def isIdentifierStart(c: Int): Boolean = (c == '_') || isIdentifierPart(c)
+  def isIdentifierStart(c: Int): Boolean = c == '_' || isIdentifierPart(c)
 
   /** Can character form part of an alphanumeric Scala identifier? */
-  def isIdentifierPart(c: Int) = (c == '$') || Character.isUnicodeIdentifierPart(c)
+  def isIdentifierPart(c: Int) = c == '$' || Character.isUnicodeIdentifierPart(c)
 
   @inline
   def isUnicodeIdentifierPart(c: Int) =
     // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
-    (c != SU) && Character.isUnicodeIdentifierPart(c)
+    c != SU && Character.isUnicodeIdentifierPart(c)
 
   /** Is character a math or other symbol in Unicode? */
   def isSpecial(c: Int) = {

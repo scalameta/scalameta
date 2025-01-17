@@ -402,7 +402,7 @@ trait TextDocumentOps {
               val chars = pos.input.chars
               val classOfChars = "classOf".toCharArray
 
-              chars.length >= (classOfChars.length + pos.start) && (0 until classOfChars.length)
+              chars.length >= classOfChars.length + pos.start && (0 until classOfChars.length)
                 .forall(i => chars(i + pos.start) == classOfChars(i))
             }
 

@@ -65,9 +65,8 @@ trait SymbolOps {
     def isSemanticdbGlobal: Boolean = !isSemanticdbLocal
     def isSemanticdbLocal: Boolean = {
       def definitelyGlobal = sym.hasPackageFlag
-      def definitelyLocal = sym == g.NoSymbol ||
-        (sym.owner.isTerm && !sym.isParameter) ||
-        ((sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter) ||
+      def definitelyLocal = sym == g.NoSymbol || sym.owner.isTerm && !sym.isParameter ||
+        (sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter ||
         sym.isSelfParameter || sym.isLocalDummy || sym.isRefinementClass || sym.isAnonymousClass ||
         sym.isAnonymousFunction || sym.isExistential
       def ownerLocal = sym.owner.isSemanticdbLocal
@@ -178,7 +177,7 @@ trait SymbolOps {
       if (sym.isModule) sym.moduleClass.isSyntheticValueClassCompanion
       else sym.isModuleClass && sym.isSynthetic && sym.semanticdbDecls.gsyms.isEmpty
     def isValMethod: Boolean = sym.kind.isMethod && {
-      (sym.isAccessor && sym.isStable) || (isUsefulField && !sym.isMutable)
+      sym.isAccessor && sym.isStable || isUsefulField && !sym.isMutable
     }
     def isScalacField: Boolean = {
       val isFieldForPrivateThis = sym.isPrivateThis && sym.isTerm && !sym.isMethod && !sym.isModule

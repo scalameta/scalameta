@@ -209,7 +209,7 @@ class ScaladocParserSuite extends FunSuite {
     )
 
     val textpara1 = Seq.newBuilder[TextPartInfo]
-    textpara1 ++= words += CodeExpr(codeBlock1) += (Word("?") -> true)
+    textpara1 ++= words += CodeExpr(codeBlock1) += Word("?") -> true
     textpara1 ++= words += CodeExpr(codeBlock2)
     val expectation = Option(Scaladoc(Seq(
       Paragraph(Seq(Text(textpara1.result()))),

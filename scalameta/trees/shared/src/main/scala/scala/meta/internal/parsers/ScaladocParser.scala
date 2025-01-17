@@ -136,7 +136,7 @@ object ScaladocParser {
     nl | hspacesMinWithLen(0).flatMap { offset =>
       def dedented = if (offset < indent) Pass else Fail
       def mdCodeBlockPrefix = if (offset <= getMdOffsetMax(mdOffset)) mdCodeBlockFence else Fail
-      dedented | CharIn("@=") | (codePrefix ~ nl) | mdCodeBlockPrefix | tableSep | tableDelim |
+      dedented | CharIn("@=") | codePrefix ~ nl | mdCodeBlockPrefix | tableSep | tableDelim |
         listPrefix ~ &(" ")
     }
   }
@@ -287,7 +287,7 @@ object ScaladocParser {
     def completeParser = // will consume full line
       listBlockParser() | mdCodeBlockParser() | codeBlockParser | headingParser | tableParser |
         textParser(0) // keep at the end, this is the fallback
-    (nl | Start) ~ (leadingParser | (completeParser ~ nlOrEndPeek)) | textParser(0) // could be following an element leaving trailing text, e.g. tagParser
+    (nl | Start) ~ (leadingParser | completeParser ~ nlOrEndPeek) | textParser(0) // could be following an element leaving trailing text, e.g. tagParser
   }
 
   private def embeddedTermsParser[$: P](indent: Int = 0, mdOffset: Int = 0): P[Seq[Term]] = P {

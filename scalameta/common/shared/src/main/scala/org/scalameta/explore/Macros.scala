@@ -31,7 +31,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
       def testkit = sym.fullName.contains(".testkit.") || sym.fullName.endsWith(".testkit")
       def tests = sym.fullName.contains(".tests.") || sym.fullName.endsWith(".tests")
       def internal = sym.fullName.contains(".internal.") ||
-        (sym.fullName.endsWith(".internal") && !sym.fullName.endsWith(".meta.internal"))
+        sym.fullName.endsWith(".internal") && !sym.fullName.endsWith(".meta.internal")
       def invisible = !sym.isPublic
       def inexistent = !sym.asInstanceOf[scala.reflect.internal.SymbolTable#Symbol].exists // NOTE: wtf
       artefact || trivial || arbitrary || aliases || contrib || interactive || testkit || tests ||
