@@ -42,7 +42,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   implicit class XtensionTokenClass(token: Token) {
 
     def isClassOrObject = token.isAny[KwClass, KwObject]
-    def isClassOrObjectOrEnum = isClassOrObject || (token.is[Ident] && dialect.allowEnums)
+    def isClassOrObjectOrEnum = isClassOrObject || token.is[Ident] && dialect.allowEnums
 
     def asString: String =
       s"[${token.getClass.getSimpleName}@${token.end}]${token.syntax.replace("\n", "")}"
@@ -747,7 +747,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs =>
               if (nextIndent > r.indent) null
               else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
-              else if (nextIndent < r.indent || rc.arrow.ne(prev) && (!next.is[KwCase]) ||
+              else if (nextIndent < r.indent || rc.arrow.ne(prev) && !next.is[KwCase] ||
                 getNextToken(nextPos).isClassOrObject) OutdentInfo(r, dropRegionLine(nextIndent, rs))
               else null
             case (r: RegionIndent) :: (rs @ RegionTry :: xs) =>

@@ -30,7 +30,7 @@ trait Reflection {
 
   implicit class XtensionAdtSymbol(sym: Symbol) {
     def isAdt: Boolean = {
-      def inheritsFromAdt = sym.isClass && (sym.asClass.toType <:< typeOf[AdtMetadata.Adt])
+      def inheritsFromAdt = sym.isClass && sym.asClass.toType <:< typeOf[AdtMetadata.Adt]
       def isBookkeeping = sym.asClass == symbolOf[AdtMetadata.Adt] ||
         sym.asClass == symbolOf[AstMetadata.Ast]
       inheritsFromAdt && !isBookkeeping
@@ -152,8 +152,8 @@ trait Reflection {
     val roots = sym.baseClasses.filter(_.isRoot)
     if (roots.isEmpty && sym.isLeaf) fail(s"rootless leaf is disallowed")
     else if (roots.length > 1) fail(
-      s"multiple roots for a $designation: " + (roots.map(_.fullName).init.mkString(", ")) +
-        " and " + roots.last.fullName
+      s"multiple roots for a $designation: " + roots.map(_.fullName).init.mkString(", ") + " and " +
+        roots.last.fullName
     )
     val root = roots.headOption.getOrElse(NoSymbol)
     sym.baseClasses.map(_.asClass).foreach { bsym =>

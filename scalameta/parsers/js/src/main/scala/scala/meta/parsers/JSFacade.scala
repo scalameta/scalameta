@@ -23,7 +23,7 @@ object JSFacade {
   private[this] sealed trait JSLong extends js.Any
   private[this] implicit class LongJSOps(val x: Long) extends AnyVal {
     def toJSLong: JSLong = {
-      if (x >= 0) (x & ((1L << 53) - 1)).toDouble else -((-x) & ((1L << 53) - 1)).toDouble
+      if (x >= 0) (x & (1L << 53) - 1).toDouble else -(-x & (1L << 53) - 1).toDouble
     }.asInstanceOf[JSLong]
   }
 

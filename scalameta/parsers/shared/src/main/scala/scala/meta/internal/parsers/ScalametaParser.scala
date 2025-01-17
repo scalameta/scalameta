@@ -1663,7 +1663,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case Some(x) => x
           case _ =>
             next()
-            if (at[At] || (at[Ellipsis] && peek[At]))
+            if (at[At] || at[Ellipsis] && peek[At])
               iter(addPos(Term.Annotate(t, annots(skipNewLines = false))))
             else if (at[Underscore] && isStar(peekToken)) repeatedTerm(t, nextTwice)
             else
@@ -3992,7 +3992,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       insidePrimaryCtorAnnot: Boolean = false,
       allowBraces: Boolean = false,
       allowTypeSingleton: Boolean = true
-  ): Init = unquoteOpt[Init](!(peek[LeftParen] || (allowBraces && peek[LeftBrace]))).getOrElse {
+  ): Init = unquoteOpt[Init](!(peek[LeftParen] || allowBraces && peek[LeftBrace])).getOrElse {
     initRestAt(currIndex, typeParser)(
       allowArgss = allowArgss,
       insidePrimaryCtorAnnot = insidePrimaryCtorAnnot,

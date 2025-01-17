@@ -70,7 +70,7 @@ class PackageSuite extends ParseSuite {
 
   test("package foo {}; package bar {}") {
     assertTree(source("package foo {}; package bar {}"))(Source(
-      (Pkg(tname("foo"), Nil)) :: (Pkg(tname("bar"), Nil)) :: Nil
+      Pkg(tname("foo"), Nil) :: Pkg(tname("bar"), Nil) :: Nil
     ))
   }
 

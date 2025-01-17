@@ -31,14 +31,13 @@ trait SymbolOps {
     def isSemanticdbLocal: Boolean = {
       val owner = sym.parent.getOrElse(NoSymbol)
       def definitelyGlobal = sym.isPackage
-      def definitelyLocal = sym == NoSymbol ||
-        (owner.isInstanceOf[MethodSymbol] && !sym.isParam) ||
-        ((owner.isAlias || (owner.isType && owner.isDeferred)) && !sym.isParam) ||
+      def definitelyLocal = sym == NoSymbol || owner.isInstanceOf[MethodSymbol] && !sym.isParam ||
+        (owner.isAlias || owner.isType && owner.isDeferred) && !sym.isParam ||
         // NOTE: Scalap doesn't expose locals.
         // sym.isSelfParameter ||
         // sym.isLocalDummy ||
         sym.isRefinementClass || sym.isAnonymousClass || sym.isAnonymousFunction ||
-        (sym.isInstanceOf[TypeSymbol] && sym.isExistential)
+        sym.isInstanceOf[TypeSymbol] && sym.isExistential
       def ownerLocal = sym.parent.map(_.isSemanticdbLocal).getOrElse(false)
       !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
@@ -201,7 +200,7 @@ trait SymbolOps {
     }
     def isValMethod: Boolean = sym match {
       case sym: SymbolInfoSymbol => sym.kind.isMethod && {
-          (sym.isAccessor && sym.isStable) || (isUsefulField && !sym.isMutable)
+          sym.isAccessor && sym.isStable || isUsefulField && !sym.isMutable
         }
       case _ => false
     }

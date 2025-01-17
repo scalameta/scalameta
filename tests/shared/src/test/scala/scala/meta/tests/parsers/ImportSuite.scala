@@ -68,10 +68,8 @@ class ImportSuite extends ParseSuite {
 
   test("import foo.{bar, baz}") {
     assertTree(templStat("import foo.{bar, baz}"))(Import(
-      Importer(
-        TermName("foo"),
-        Name(Indeterminate("bar")) :: (Name(Indeterminate("baz"))) :: Nil
-      ) :: Nil
+      Importer(TermName("foo"), Name(Indeterminate("bar")) :: Name(Indeterminate("baz")) :: Nil) ::
+        Nil
     ))
   }
 

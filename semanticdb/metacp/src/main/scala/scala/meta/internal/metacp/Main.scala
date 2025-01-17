@@ -155,7 +155,7 @@ class Main(settings: Settings, reporter: Reporter) {
   }
 
   private def jarNameAlternatives(filename: String, i: Int): Stream[AbsolutePath] = {
-    val name = if (i == 0) filename else (filename.stripSuffix(".jar") + "-" + i) + ".jar"
+    val name = if (i == 0) filename else filename.stripSuffix(".jar") + "-" + i + ".jar"
     settings.out.resolve(name) #:: jarNameAlternatives(filename, i + 1)
   }
 
