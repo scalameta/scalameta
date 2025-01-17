@@ -94,10 +94,10 @@ SemanticDB payloads must include the version of the SemanticDB model in the
   <tr>
     <td><b>Version</b></td>
     <td><b>Explanation</b></td>
-    <td><b>Data model<b></td>
+    <td><b>Data model</b></td>
   </tr>
   <tr>
-    <td><code>LEGACY<code></td>
+    <td><code>LEGACY</code></td>
     <td>Legacy SemanticDB payloads</td>
     <td><a href="https://github.com/scalameta/scalameta/blob/v3.0.0/semanticdb/semanticdb2/semanticdb2.proto">semanticdb2.proto</a></td>
   </tr>
@@ -1530,7 +1530,7 @@ message SymbolInformation {
   </tr>
   <tr>
     <td><code>overridden_symbols</code></td>
-    <td>List of symbols this symbol overrides. See <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#overriding">Overriding</td>
+    <td>List of symbols this symbol overrides. See <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#overriding"/>Overriding</td>
   </tr>
   <tr>
     <td><code>documentation</code></td>
@@ -3145,7 +3145,7 @@ message SymbolInformation {
   </tr>
   <tr>
     <td><code>overridden_symbols</code></td>
-    <td>List of symbols this symbol overrides. See <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.8">Overriding</td>
+    <td>List of symbols this symbol overrides. See <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.8"/>Overriding</td>
   </tr>
   <tr>
     <td><code>documentation</code></td>
