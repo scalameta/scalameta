@@ -819,7 +819,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                  *   - after fewer-braces method call: will apply if not handled otherwise
                  */
                 def couldBeFewerBraces(): Boolean = dialect.allowFewerBraces &&
-                  !sepRegions.contains(RegionDefMark) && getPrevToken(prevPos)
+                  !sepRegions.exists(_.isInstanceOf[RegionHasParamMark]) && getPrevToken(prevPos)
                     .isAny[Ident, CloseDelim]
                 sepRegions match {
                   case (_: RegionTemplateDecl) :: rs =>

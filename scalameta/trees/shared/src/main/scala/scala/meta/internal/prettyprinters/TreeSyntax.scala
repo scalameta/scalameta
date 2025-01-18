@@ -812,7 +812,7 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, kw(": "), t.decltpe)
       case t: Decl.Given =>
         val sig = givenSig(t.name, t.paramClauseGroups)
-        r(" ")(t.mods, sig, p(AnnotTyp, t.decltpe))
+        r(" ")(t.mods, sig, givenDeclTpe(t.decltpe))
       case t: Defn.Val =>
         s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
       case t: Defn.Var =>
@@ -846,7 +846,7 @@ object TreeSyntax {
 
       case t: Defn.GivenAlias =>
         val sig = givenSig(t.name, t.paramClauseGroups)
-        r(" ")(t.mods, sig, p(AnnotTyp, t.decltpe), kw("="), t.body)
+        r(" ")(t.mods, sig, givenDeclTpe(t.decltpe), kw("="), t.body)
       case t: Defn.Given =>
         val sig = givenSig(t.name, t.paramClauseGroups)
         r(" ")(t.mods, sig, t.templ)
@@ -1029,6 +1029,11 @@ object TreeSyntax {
       def oldSyntax = s(kwGiven, w(" ", s(name, o(pcgs.headOption)), ":"))
       def newSyntax = r(" ")(kwGiven, w(name, ":"), r(pcgs.map(givenCond)))
       s(if (useNewSyntax) newSyntax else oldSyntax)
+    }
+
+    private def givenDeclTpe(decltpe: Type): Show.Result = decltpe match {
+      case _: Type.TypedParam => w("(", decltpe, ")")
+      case _ => p(AnnotTyp, decltpe)
     }
 
     // Multiples and optionals

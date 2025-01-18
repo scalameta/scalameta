@@ -37,9 +37,11 @@ final class RegionCaseExpr(override val indent: Int) extends SepRegionNonIndente
 final class RegionCaseBody(override val indent: Int, val arrow: Token)
     extends SepRegionNonIndented with CanProduceLF
 
+sealed trait RegionHasParamMark extends RegionNonDelimNonIndented
+
 sealed trait RegionDefDecl extends RegionNonDelimNonIndented
 // initial mark of a definition (before colon)
-case object RegionDefMark extends RegionDefDecl
+case object RegionDefMark extends RegionDefDecl with RegionHasParamMark
 // the type part of a definition (between colon and optional equals)
 case object RegionDefType extends RegionDefDecl
 
@@ -47,13 +49,13 @@ case object RegionDefType extends RegionDefDecl
 sealed trait RegionTemplateDecl extends RegionNonDelimNonIndented
 
 /** the initial part of declaration, before the template */
-case object RegionTemplateMark extends RegionTemplateDecl with CanProduceLF
+case object RegionTemplateMark extends RegionTemplateDecl with RegionHasParamMark with CanProduceLF
 
 /** the initial part of the template, containing any inherit clauses */
 case object RegionTemplateInherit extends RegionTemplateDecl
 
 // the initial part of a given declaration or definition, before `=` or template
-final class RegionGivenDecl(val kw: Token) extends RegionNonDelimNonIndented with CanProduceLF
+final class RegionGivenDecl(val kw: Token) extends RegionHasParamMark with CanProduceLF
 
 /**
  * this marks the template body (or constructs which look like a template body, such as extensions).
@@ -63,7 +65,7 @@ final class RegionGivenDecl(val kw: Token) extends RegionNonDelimNonIndented wit
 case object RegionTemplateBody extends RegionNonDelimNonIndented
 
 /** this marks the initial part of extension */
-case object RegionExtensionMark extends RegionNonDelimNonIndented
+case object RegionExtensionMark extends RegionHasParamMark
 
 /**
  * All control statements
