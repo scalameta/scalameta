@@ -40,4 +40,15 @@ class PrintSuite extends PrintSuiteBase {
        |orig(List).apply[Int]
        |""".stripMargin
   )
+
+  checkSynthetics(
+    """|object LegacySyntheticsTest {
+       |  def m1(xs: Set[Int]): List[Int] =
+       |    xs.to
+       |}
+       |""".stripMargin,
+    """|[4:4..4:9): xs.to => *(List.canBuildFrom[Int])
+       |""".stripMargin
+  )
+
 }
