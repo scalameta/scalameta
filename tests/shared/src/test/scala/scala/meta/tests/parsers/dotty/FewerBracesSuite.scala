@@ -2079,4 +2079,65 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4152 not fewer braces: class") {
+    val code = """|class A(b:
+                  |        Int)
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `indent` found
+                   |class A(b:
+                   |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#4152 not fewer braces: extension 1") {
+    val code = """|extension (b:
+                  |        Int)
+                  |  def foo = b
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `indent` found
+                   |extension (b:
+                   |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#4152 not fewer braces: extension with type params") {
+    val code = """|extension [B:
+                  |        Seq](b:
+                  |        Int)
+                  |  def foo = b
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `indent` found
+                   |extension [B:
+                   |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#4152 not fewer braces: given") {
+    val code = """|given (b:
+                  |        Int) = b
+                  |""".stripMargin
+    val error = """|<input>:1: error: `identifier` expected but `indent` found
+                   |given (b:
+                   |         ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#4152 not fewer braces: def") {
+    val code = """|def A(b:
+                  |        Int) = ???
+                  |""".stripMargin
+    val layout = "def A(b: Int) = ???"
+    val tree = Defn.Def(Nil, "A", Nil, List(List(tparam("b", "Int"))), None, "???")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#4152 not fewer braces: type") {
+    val code = """|def A[B:
+                  |        Seq] = ???
+                  |""".stripMargin
+    val layout = "def A[B: Seq] = ???"
+    val tree = Defn.Def(Nil, "A", List(pparam("B", bounds(cb = List("Seq")))), Nil, None, "???")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
