@@ -122,7 +122,6 @@ lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/s
     libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
     crossScalaVersions := EarliestScala2Versions,
     protobufSettings,
-    mimaPreviousArtifacts := Set.empty,
     description := "Library defining SemanticDB data structures"
   ).dependsOn(scalameta).nativeSettings(nativeSettings).jsSettings(commonJsSettings)
 
