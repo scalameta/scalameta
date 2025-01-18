@@ -2083,10 +2083,9 @@ class FewerBracesSuite extends BaseDottySuite {
     val code = """|class A(b:
                   |        Int)
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `indent` found
-                   |class A(b:
-                   |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "class A(b: Int)"
+    val tree = Defn.Class(Nil, pname("A"), Nil, ctorp(tparam("b", "Int")), tplNoBody())
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4152 not fewer braces: extension 1") {
@@ -2094,10 +2093,10 @@ class FewerBracesSuite extends BaseDottySuite {
                   |        Int)
                   |  def foo = b
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `indent` found
-                   |extension (b:
-                   |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "extension (b: Int) def foo = b"
+    val tree = Defn
+      .ExtensionGroup(Nil, List(List(tparam("b", "Int"))), Defn.Def(Nil, "foo", Nil, None, "b"))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4152 not fewer braces: extension with type params") {
@@ -2106,20 +2105,22 @@ class FewerBracesSuite extends BaseDottySuite {
                   |        Int)
                   |  def foo = b
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `indent` found
-                   |extension [B:
-                   |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "extension [B: Seq](b: Int) def foo = b"
+    val tree = Defn.ExtensionGroup(
+      List(pparam("B", bounds(cb = List("Seq")))),
+      List(List(tparam("b", "Int"))),
+      Defn.Def(Nil, "foo", Nil, None, "b")
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4152 not fewer braces: given") {
     val code = """|given (b:
                   |        Int) = b
                   |""".stripMargin
-    val error = """|<input>:1: error: `identifier` expected but `indent` found
-                   |given (b:
-                   |         ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given (b: Int) = b"
+    val tree = Defn.GivenAlias(Nil, "", Nil, Type.TypedParam("b", "Int", Nil), "b")
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4152 not fewer braces: def") {
