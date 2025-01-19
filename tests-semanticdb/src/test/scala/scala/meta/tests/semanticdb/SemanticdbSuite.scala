@@ -69,7 +69,7 @@ abstract class SemanticdbSuite extends FunSuite {
   def customizeConfig(config: SemanticdbConfig): SemanticdbConfig = config
   import databaseOps._
 
-  private def assertNoReporterErrors(): Unit = {
+  private def assertNoReporterErrors()(implicit loc: munit.Location): Unit = {
     val reporter = g.reporter.asInstanceOf[StoreReporter]
     val errors = reporter.infos.filter(_.severity == reporter.ERROR)
     val diagnostics = errors.map { error =>
