@@ -7,10 +7,10 @@ class XmlSuite extends ParseSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
-  def skip(original: String, expected: String): Unit =
+  def skip(original: String, expected: String)(implicit loc: munit.Location): Unit =
     test(logger.revealWhitespace(original).ignore) {}
 
-  def checkToken(original: String, expected: String): Unit = {
+  def checkToken(original: String, expected: String)(implicit loc: munit.Location): Unit = {
     def tokensStructure(tokenized: Tokens): String = tokenized.map(_.structure)
       .mkString("", "\n", "\n")
 

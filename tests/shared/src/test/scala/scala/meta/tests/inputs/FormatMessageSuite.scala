@@ -8,7 +8,7 @@ import scala.meta.internal.inputs._
 import munit._
 
 class FormatMessageSuite extends TreeSuiteBase {
-  private def test(s: String)(expected: String): Unit = {
+  private def test(s: String)(expected: String)(implicit loc: munit.Location): Unit = {
     val testName = if (s != "") s.replace("\n", "\\n") else "empty string"
     super.test(testName) {
       val content = Input.String(s)

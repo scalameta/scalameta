@@ -20,7 +20,7 @@ class Source3Suite extends FunSuite {
       original: String,
       expected: String,
       compat: List[(ScalaVersion.Version, String)] = List.empty
-  ): Unit = test(logger.revealWhitespace(original)) {
+  )(implicit loc: munit.Location): Unit = test(logger.revealWhitespace(original)) {
     val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
     val document = toTextDocument(compiler, original, options)
     val format = scala.meta.metap.Format.Detailed
