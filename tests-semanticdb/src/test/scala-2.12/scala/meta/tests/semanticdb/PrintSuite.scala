@@ -48,6 +48,7 @@ class PrintSuite extends PrintSuiteBase {
        |}
        |""".stripMargin,
     """|[4:4..4:9): xs.to => *(List.canBuildFrom[Int])
+       |[4:4..4:9): xs.to => *[List]
        |""".stripMargin
   )
 
