@@ -581,14 +581,22 @@ trait TextDocumentOps {
         private def getApplyToImplicitArgs(gt: g.ApplyToImplicitArgs, fun: s.Tree): s.ApplyTree = s
           .ApplyTree(fun, gt.args.map(_.toSemanticTree))
 
-        private def getApplyToImplicitArgs(gt: g.ApplyToImplicitArgs): s.ApplyTree =
-          getApplyToImplicitArgs(gt, cachedForOrOrig(gt.fun))
+        private def getApplyToImplicitArgs(gt: g.ApplyToImplicitArgs): s.ApplyTree = {
+          val fun = gt.fun match {
+            case f: g.Apply => cachedOrOrig(f)(forApply(f, usePos = false))
+            case f => f.toSemanticOriginal
+          }
+          getApplyToImplicitArgs(gt, fun)
+        }
 
-        private def cachedForOrOrig(gt: g.Tree) = cached(gt)(gt match {
+        private def cachedForOrOrig(gt: g.Tree) = cachedOrOrig(gt)(gt match {
           case t: g.ApplyToImplicitArgs => syn(getApplyToImplicitArgs(t))
           case t: g.Apply => forApply(t, usePos = false)
           case _ => None
-        }).fold[s.Tree](gt.toSemanticOriginal)(_.tree)
+        })
+
+        private def cachedOrOrig(gt: g.Tree)(res: => Option[s.Synthetic]) = cached(gt)(res)
+          .fold[s.Tree](gt.toSemanticOriginal)(_.tree)
 
         private def forApply(gt: g.Apply, usePos: Boolean = true): Option[s.Synthetic] =
           gt.args match {
