@@ -13,7 +13,6 @@ import org.scalajs.linker.interface.StandardConfig
 import org.scalajs.sbtplugin.ScalaJSCrossVersion
 
 import complete.DefaultParsers._
-import munit.sbtmunit.BuildInfo.munitVersion
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 def customVersion = sys.props.get("scalameta.version")
@@ -416,9 +415,25 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   semanticdbIntegration
 ).enablePlugins(BuildInfoPlugin)
 
-lazy val testSettings = Def.settings(
-  sharedSettings,
+lazy val munitSettings = Def.settings(
   testFrameworks := List(new TestFramework("munit.Framework")),
+  libraryDependencies += {
+    // TODO: this is getting ridiculous; any way to fix dependency on munit's
+    // scala version upgrades, specifically for 2.13 (and not 2.12 or earlier)?
+    val munitV =
+      if (isScala211.value) "0.7.29"
+      else if (scalaVersion.value == "2.13.11") "1.0.0-M10"
+      else if (scalaVersion.value == "2.13.12") "1.0.0-M11"
+      else if (scalaVersion.value == "2.13.13") "1.0.0"
+      else if (scalaVersion.value == "2.13.14") "1.0.2"
+      else munit.sbtmunit.BuildInfo.munitVersion
+    "org.scalameta" %%% "munit" % munitV
+  }
+)
+
+lazy val testSettings = Def.settings(
+  munitSettings,
+  sharedSettings,
   Test / unmanagedSourceDirectories ++= {
     val base = (Compile / baseDirectory).value
     List(base / "src" / "test" / ("scala-" + scalaVersion.value))
@@ -444,16 +459,14 @@ lazy val testSettings = Def.settings(
     "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
     "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value
   ),
-  buildInfoPackage := "scala.meta.tests",
-  libraryDependencies += munitLibrary.value
+  buildInfoPackage := "scala.meta.tests"
 )
 
 lazy val communitytest = project.in(file("community-test")).settings(
+  munitSettings,
   nonPublishableSettings,
   sharedSettings,
-  crossScalaVersions := LatestScalaVersions,
-  libraryDependencies += munitLibrary.value,
-  testFrameworks := List(new TestFramework("munit.Framework"))
+  crossScalaVersions := LatestScalaVersions
 ).dependsOn(scalameta.jvm)
 
 /* ======================== BENCHES ======================== */
@@ -487,19 +500,6 @@ lazy val isScala211 = isScalaBinaryVersion("2.11")
 lazy val isScala213 = isScalaBinaryVersion("2.13")
 lazy val isScala3 = isScalaBinaryVersion("3")
 def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
-
-lazy val munitLibrary = Def.setting {
-  // TODO: this is getting ridiculous; any way to fix dependency on munit's
-  // scala version upgrades, specifically for 2.13 (and not 2.12 or earlier)?
-  val munitV =
-    if (isScala211.value) "0.7.29"
-    else if (scalaVersion.value == "2.13.11") "1.0.0-M10"
-    else if (scalaVersion.value == "2.13.12") "1.0.0-M11"
-    else if (scalaVersion.value == "2.13.13") "1.0.0"
-    else if (scalaVersion.value == "2.13.14") "1.0.2"
-    else munitVersion
-  "org.scalameta" %%% "munit" % munitV
-}
 
 lazy val sharedSettings = Def.settings(
   version ~= { dynVer =>
