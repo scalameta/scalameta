@@ -422,10 +422,9 @@ lazy val munitSettings = Def.settings(
     // scala version upgrades, specifically for 2.13 (and not 2.12 or earlier)?
     val munitV =
       if (isScala211.value) "0.7.29"
-      else if (scalaVersion.value == "2.13.11") "1.0.0-M10"
-      else if (scalaVersion.value == "2.13.12") "1.0.0-M11"
       else if (scalaVersion.value == "2.13.13") "1.0.0"
       else if (scalaVersion.value == "2.13.14") "1.0.2"
+      else if (scalaVersion.value == "2.13.15") "1.0.4"
       else munit.sbtmunit.BuildInfo.munitVersion
     "org.scalameta" %%% "munit" % munitV
   }
