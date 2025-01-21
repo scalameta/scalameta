@@ -362,8 +362,6 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   sharedSettings,
   crossScalaVersions := AllScalaBinaryVersions,
   hasLargeIntegrationTests,
-  libraryDependencies += munitLibrary.value,
-  testFrameworks := List(new TestFramework("munit.Framework")),
   description := "Testing utilities for scalameta APIs"
 ).dependsOn(scalameta).configureCross(crossPlatformPublishSettings)
   .jvmSettings(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0")
