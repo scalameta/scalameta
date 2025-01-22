@@ -434,11 +434,7 @@ lazy val testSettings = Def.settings(
     List(base / "src" / "test" / ("scala-" + scalaVersion.value))
   },
   libraryDependencies += {
-    val coursierVersion =
-      if (isScala211.value) "2.0.0-RC5-6"
-      else if (scalaVersion.value == "2.13.11") "2.1.8"
-      else if (scalaVersion.value == "2.13.12") "2.1.9"
-      else "2.1.10"
+    val coursierVersion = if (isScala211.value) "2.0.0-RC5-6" else "2.1.24"
     ("io.get-coursier" %% "coursier" % coursierVersion).cross(CrossVersion.for3Use2_13)
   },
   nonPublishableSettings,
