@@ -415,7 +415,9 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   semanticdbIntegration
 ).enablePlugins(BuildInfoPlugin)
 
-lazy val munitSettings = Def.settings(
+lazy val sharedTestSettings = Def.settings(
+  sharedSettings,
+  nonPublishableSettings,
   testFrameworks := List(new TestFramework("munit.Framework")),
   dependencyOverrides ++= {
     if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value)
@@ -427,8 +429,7 @@ lazy val munitSettings = Def.settings(
 )
 
 lazy val testSettings = Def.settings(
-  munitSettings,
-  sharedSettings,
+  sharedTestSettings,
   Test / unmanagedSourceDirectories ++= {
     val base = (Compile / baseDirectory).value
     List(base / "src" / "test" / ("scala-" + scalaVersion.value))
@@ -441,7 +442,6 @@ lazy val testSettings = Def.settings(
       else "2.1.10"
     ("io.get-coursier" %% "coursier" % coursierVersion).cross(CrossVersion.for3Use2_13)
   },
-  nonPublishableSettings,
   exposePaths("tests", Test),
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
@@ -457,12 +457,8 @@ lazy val testSettings = Def.settings(
   buildInfoPackage := "scala.meta.tests"
 )
 
-lazy val communitytest = project.in(file("community-test")).settings(
-  munitSettings,
-  nonPublishableSettings,
-  sharedSettings,
-  crossScalaVersions := LatestScala2Versions
-).dependsOn(scalameta.jvm)
+lazy val communitytest = project.in(file("community-test"))
+  .settings(sharedTestSettings, crossScalaVersions := LatestScala2Versions).dependsOn(scalameta.jvm)
 
 /* ======================== BENCHES ======================== */
 lazy val bench = project.in(file("bench/suite")).enablePlugins(BuildInfoPlugin)
