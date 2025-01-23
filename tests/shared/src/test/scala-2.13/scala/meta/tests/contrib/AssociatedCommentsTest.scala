@@ -11,13 +11,14 @@ class AssociatedCommentsTest extends FunSuite {
   import AssociatedCommentsTest._
 
   test("leading") {
-    val input: Source = """|import a.b
-                           |/** leading docstring */
-                           |object a  {
-                           |  // leading 2
-                           |  val x = 2 // trailing
-                           |}
-                           |""".stripMargin.parse[Source].get
+    val input: Source =
+      """|import a.b
+         |/** leading docstring */
+         |object a  {
+         |  // leading 2
+         |  val x = 2 // trailing
+         |}
+         |""".stripMargin.parse[Source].get
     val comments = AssociatedComments(input)
     val defnObject = input.find(_.is[Defn.Object]).get
     val defnVal = input.find(_.is[Defn.Val]).get
@@ -31,12 +32,13 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("#897 first comment in file") {
-    val input = """|/** Scaladoc for class A
-                   |  */
-                   |class A
-                   |/** Scaladoc for object A
-                   |  */
-                   |object A""".stripMargin.parse[Source].get
+    val input =
+      """|/** Scaladoc for class A
+         |  */
+         |class A
+         |/** Scaladoc for object A
+         |  */
+         |object A""".stripMargin.parse[Source].get
 
     val defnClass = input.find(_.is[Defn.Class]).get
     val defnObject = input.find(_.is[Defn.Object]).get
@@ -56,9 +58,10 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("single leading comment at the beginning of a file") {
-    val input = """|// leading
-                   |object A
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|// leading
+         |object A
+         |""".stripMargin.parse[Source].get
 
     val defnObject = input.find(_.is[Defn.Object]).get
 
@@ -66,9 +69,10 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("multiple leading comments in a single line at the beginning of a file") {
-    val input = """|/** leading 1 */ /* leading 2 */ // leading 3
-                   |class A
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|/** leading 1 */ /* leading 2 */ // leading 3
+         |class A
+         |""".stripMargin.parse[Source].get
 
     val defnClass = input.find(_.is[Defn.Class]).get
 
@@ -78,11 +82,12 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("multiple leading comments in different lines at the beginning of a file".ignore) {
-    val input = """|/** leading 1 */
-                   |/* leading 2 */
-                   |// leading 3
-                   |trait A
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|/** leading 1 */
+         |/* leading 2 */
+         |// leading 3
+         |trait A
+         |""".stripMargin.parse[Source].get
 
     val defnTrait = input.find(_.is[Defn.Trait]).get
 
@@ -92,9 +97,10 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("single trailing comment at the end of a file".ignore) {
-    val input = """|object A {
-                   |} // trailing
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|object A {
+         |} // trailing
+         |""".stripMargin.parse[Source].get
 
     val defnObject = input.find(_.is[Defn.Object]).get
     val template = getTemplate(input).body // overlaps with `object`
@@ -105,9 +111,10 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("multiple trailing comments in a single line at the end of a file") {
-    val input = """|class A {
-                   |} /** trailing 1 */ /* trailing 2 */ // trailing 3
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|class A {
+         |} /** trailing 1 */ /* trailing 2 */ // trailing 3
+         |""".stripMargin.parse[Source].get
 
     val defnClass = input.find(_.is[Defn.Class]).get
     val template = getTemplate(input) // overlaps with `class`
@@ -123,11 +130,12 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("multiple trailing comments in different lines at the end of a file") {
-    val input = """|trait A {
-                   |} /** trailing 1 */
-                   |/* trailing 2 */
-                   |// trailing 3
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|trait A {
+         |} /** trailing 1 */
+         |/* trailing 2 */
+         |// trailing 3
+         |""".stripMargin.parse[Source].get
 
     val defnTrait = input.find(_.is[Defn.Trait]).get
     val template = getTemplate(input) // overlaps with `trait`
@@ -143,21 +151,23 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("comment not associated to any tree") {
-    val input = """|object A {
-                   | // foo
-                   |}
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|object A {
+         | // foo
+         |}
+         |""".stripMargin.parse[Source].get
 
     assertExpectations(input)(leading = Map.empty, trailing = Map.empty)
   }
 
   test("tree with both leading and trailing comments") {
-    val input = """|object A {
-                   | // leading
-                   | val x = 0 // trailing
-                   | var y = false
-                   |}
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|object A {
+         | // leading
+         | val x = 0 // trailing
+         | var y = false
+         |}
+         |""".stripMargin.parse[Source].get
 
     val defnVal = input.find(_.is[Defn.Val]).get
     val litInt = input.find(_.is[Lit.Int]).get // overlaps with `val`
@@ -169,10 +179,11 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("multiple comments interleaved with trees in a single line") {
-    val input = """|object A {
-                   | /* comment 1 */ val /* comment 2 */ foo = /* comment 3 */ 0 /* comment 4 */
-                   |}
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|object A {
+         | /* comment 1 */ val /* comment 2 */ foo = /* comment 3 */ 0 /* comment 4 */
+         |}
+         |""".stripMargin.parse[Source].get
 
     val defnVal = input.find(_.is[Defn.Val]).get
     val litInt = input.find(_.is[Lit.Int]).get
@@ -190,22 +201,24 @@ class AssociatedCommentsTest extends FunSuite {
   }
 
   test("comment after comma should be associated to preceding tree") {
-    val input = """|object Foo {
-                   | (
-                   |   None, // trailing
-                   |   Some(0)
-                   | )
-                   |}
-                   |""".stripMargin.parse[Source].get
+    val input =
+      """|object Foo {
+         | (
+         |   None, // trailing
+         |   Some(0)
+         | )
+         |}
+         |""".stripMargin.parse[Source].get
 
     val none = input.collectFirst { case t @ Name("None") => t }.get
 
     assertExpectations(input)(trailing = Map(none -> Set("// trailing")))
   }
 
-  private def assertExpectations(
-      input: Source
-  )(leading: Map[Tree, Set[String]] = Map.empty, trailing: Map[Tree, Set[String]] = Map.empty): Unit = {
+  private def assertExpectations(input: Source)(
+      leading: Map[Tree, Set[String]] = Map.empty,
+      trailing: Map[Tree, Set[String]] = Map.empty
+  ): Unit = {
     val associatedComments = AssociatedComments(input.tokens)
     // check expected leading comments
     for ((t, comments) <- leading) assertEquals(

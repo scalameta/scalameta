@@ -140,9 +140,8 @@ class Main(settings: Settings, reporter: Reporter) {
     val name = entry.toNIO.normalize().getFileName.toString
     if (PathIO.extension(entry.toNIO) == "jar") {
       val freeJar = jarNameAlternatives(name, 0).filter(!_.isFile).head
-      PlatformFileIO.withJarFileSystem(freeJar, create = true) { jarRoot =>
-        f(OutputEntry(freeJar, jarRoot))
-      }
+      PlatformFileIO
+        .withJarFileSystem(freeJar, create = true)(jarRoot => f(OutputEntry(freeJar, jarRoot)))
     } else {
       val freeDir = directoryNameAlternatives(name, 0).filter(!_.isDirectory).head
       Files.createDirectories(freeDir.toNIO)

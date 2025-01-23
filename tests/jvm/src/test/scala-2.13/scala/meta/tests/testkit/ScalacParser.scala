@@ -17,8 +17,7 @@ object ScalacParser {
   val files: mutable.Buffer[File] = collection.mutable.Buffer.empty[java.io.File]
   val settings = new Settings()
   Seq("sun.boot.class.path", "java.class.path").foreach { prop =>
-    System.getProperty(prop).split(File.pathSeparator)
-      .foreach(entry => files.append(new File(entry)))
+    System.getProperty(prop).split(File.pathSeparator).foreach(entry => files.append(new File(entry)))
   }
   while (current != null) {
     current match {

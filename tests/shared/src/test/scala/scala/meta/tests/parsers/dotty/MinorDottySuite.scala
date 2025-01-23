@@ -249,9 +249,10 @@ class MinorDottySuite extends BaseDottySuite {
   test("question-type-like") {
     val treeWithoutBounds = Decl.Val(Nil, List(patvar("stat")), papply("Tree", pname("?")))
     runTestAssert[Stat]("val stat: Tree[`?`]")(treeWithoutBounds)
-    val errorWithBounds = """|<input>:1: error: `]` expected but `>:` found
-                             |val stat: Tree[`?` >: Untyped]
-                             |                   ^""".stripMargin
+    val errorWithBounds =
+      """|<input>:1: error: `]` expected but `>:` found
+         |val stat: Tree[`?` >: Untyped]
+         |                   ^""".stripMargin
     runTestError[Stat]("val stat: Tree[`?` >: Untyped]", errorWithBounds)
   }
 
@@ -328,9 +329,10 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("repeated-like-class-parameter") {
-    val error = """|<input>:1: error: `identifier` expected but `)` found
-                   |class Foo(bars: Int`*`)
-                   |                      ^""".stripMargin
+    val error =
+      """|<input>:1: error: `identifier` expected but `)` found
+         |class Foo(bars: Int`*`)
+         |                      ^""".stripMargin
     runTestError[Stat]("class Foo(bars: Int`*`)", error)
   }
 
@@ -341,16 +343,14 @@ class MinorDottySuite extends BaseDottySuite {
       Nil,
       EmptyCtor(),
       tpl(
-        Decl
-          .Val(List(Mod.Protected(Term.This(anon)), Mod.Lazy()), List(patvar("from")), pname("Int"))
+        Decl.Val(List(Mod.Protected(Term.This(anon)), Mod.Lazy()), List(patvar("from")), pname("Int"))
       )
     ))
   }
 
   test("type-wildcard-questionmark") {
     runTestAssert[Stat]("val x: List[?] = List(1)")(
-      Defn
-        .Val(Nil, List(patvar("x")), Some(papply("List", pwildcard)), tapply(tname("List"), int(1)))
+      Defn.Val(Nil, List(patvar("x")), Some(papply("List", pwildcard)), tapply(tname("List"), int(1)))
     )
 
     runTestAssert[Stat]("def x(a: List[?]): Unit = ()")(Defn.Def(
@@ -385,8 +385,7 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  val patternBinding = Term
-    .Match(int(1), List(Case(Pat.Bind(patvar("intValue"), int(1)), None, blk())))
+  val patternBinding = Term.Match(int(1), List(Case(Pat.Bind(patvar("intValue"), int(1)), None, blk())))
 
   test("comment-after-coloneol") {
     val expected = "trait X { def x(): String }"
@@ -448,14 +447,15 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("catch-end-def") {
-    val layout = """|object X {
-                    |  def fx = try action() catch {
-                    |    case ex =>
-                    |      err()
-                    |  }
-                    |  private abstract class X()
-                    |}
-                    |""".stripMargin
+    val layout =
+      """|object X {
+         |  def fx = try action() catch {
+         |    case ex =>
+         |      err()
+         |  }
+         |  private abstract class X()
+         |}
+         |""".stripMargin
     runTestAssert[Stat](
       """|object X {
          |  def fx = try
@@ -601,9 +601,10 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("vararg-wildcard-like-postfix-start-pat") {
-    val error = """|<input>:1: error: bad simple pattern: use _* to match a sequence
-                   |a match {case List(xs`*`) => }
-                   |                        ^""".stripMargin
+    val error =
+      """|<input>:1: error: bad simple pattern: use _* to match a sequence
+         |a match {case List(xs`*`) => }
+         |                        ^""".stripMargin
     runTestError[Stat]("a match {case List(xs`*`) => }", error)
   }
 
@@ -774,9 +775,9 @@ class MinorDottySuite extends BaseDottySuite {
       Nil,
       List(patvar("f")),
       Some(pfunc(pname("String"))(papply("PartialFunction", "String", "Int"))),
-      tfunc(tparam("s"))(Term.PartialFunction(
-        List(Case(str("Hello"), None, int(5)), Case(str("Goodbye"), None, int(0)))
-      ))
+      tfunc(
+        tparam("s")
+      )(Term.PartialFunction(List(Case(str("Hello"), None, int(5)), Case(str("Goodbye"), None, int(0)))))
     ))
   }
 
@@ -855,8 +856,7 @@ class MinorDottySuite extends BaseDottySuite {
       Type.Project(
         Type.Refine(
           Some(
-            Type
-              .Refine(Some(pname("C")), List(Defn.Type(Nil, pname("U"), Nil, pname("T"), noBounds)))
+            Type.Refine(Some(pname("C")), List(Defn.Type(Nil, pname("U"), Nil, pname("T"), noBounds)))
           ),
           List(Defn.Type(Nil, pname("T"), Nil, pname("String"), noBounds))
         ),
@@ -1007,12 +1007,14 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("expr with annotation, then match") {
-    val code = """|underlyingStableClassRef(mbr.info.loBound): @unchecked match {
-                  |  case ref: TypeRef =>
-                  |}""".stripMargin
-    val layout = """|(underlyingStableClassRef(mbr.info.loBound): @unchecked) match {
-                    |  case ref: TypeRef =>
-                    |}""".stripMargin
+    val code =
+      """|underlyingStableClassRef(mbr.info.loBound): @unchecked match {
+         |  case ref: TypeRef =>
+         |}""".stripMargin
+    val layout =
+      """|(underlyingStableClassRef(mbr.info.loBound): @unchecked) match {
+         |  case ref: TypeRef =>
+         |}""".stripMargin
     runTestAssert[Stat](code, Some(layout))(tmatch(
       Term.Annotate(
         tapply(tname("underlyingStableClassRef"), tselect("mbr", "info", "loBound")),
@@ -1023,12 +1025,14 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("match on array-of-wildcard") {
-    val code = """|obj match { case arr: Array[Array[_]] => }
-                  |""".stripMargin
-    val layout = """|obj match {
-                    |  case arr: Array[Array[_]] =>
-                    |}
-                    |""".stripMargin
+    val code =
+      """|obj match { case arr: Array[Array[_]] => }
+         |""".stripMargin
+    val layout =
+      """|obj match {
+         |  case arr: Array[Array[_]] =>
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, Some(layout))(tmatch(
       tname("obj"),
       Case(Pat.Typed(patvar("arr"), papply(pname("Array"), papply("Array", pwildcard))), None, blk())
@@ -1036,13 +1040,14 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("apply with arguments of various complexity") {
-    val code = """|sc.submitJob(
-                  |  rdd,
-                  |  (iter: Iterator[Int]) => iter.toArray,
-                  |  partitions.getOrElse(rdd.partitions.indices),
-                  |  { case (_, _) => return }: (Int, Array[Int]) => Unit,
-                  |  { return }
-                  |)""".stripMargin
+    val code =
+      """|sc.submitJob(
+         |  rdd,
+         |  (iter: Iterator[Int]) => iter.toArray,
+         |  partitions.getOrElse(rdd.partitions.indices),
+         |  { case (_, _) => return }: (Int, Array[Int]) => Unit,
+         |  { return }
+         |)""".stripMargin
     val layout =
       """|sc.submitJob(rdd, (iter: Iterator[Int]) => iter.toArray, partitions.getOrElse(rdd.partitions.indices), {
          |  case (_, _) =>

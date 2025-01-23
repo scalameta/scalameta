@@ -6,7 +6,8 @@ import scala.meta._
 class TraverserSuite extends TreeSuiteBase {
 
   test("Traverser Ok") {
-    val tree0 = q"""
+    val tree0 =
+      q"""
       def foo(x: x)(x: Int) = x + x
       class C(x: x) {
         def bar(x: x) = ???

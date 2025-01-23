@@ -1000,11 +1000,10 @@ object ScannerTokens {
   }
 
   @tailrec
-  private def dropRegionLine(indent: Int, regions: List[SepRegion]): List[SepRegion] =
-    regions match {
-      case (r: RegionLine) :: rs if r.indent >= indent => dropRegionLine(indent, rs)
-      case _ => regions
-    }
+  private def dropRegionLine(indent: Int, regions: List[SepRegion]): List[SepRegion] = regions match {
+    case (r: RegionLine) :: rs if r.indent >= indent => dropRegionLine(indent, rs)
+    case _ => regions
+  }
 
   private def findIndent(sepRegions: List[SepRegion]): Int = sepRegions.find(_.indent >= 0)
     .fold(0)(_.indent)

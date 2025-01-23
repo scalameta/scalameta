@@ -637,8 +637,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("case List[_](xs @ _*)") {
     val tree = pat("List[_](xs @ _*)")
     checkTree(tree, "List[_](xs @ _*)")(
-      Pat
-        .Extract(tapplytype(tname("List"), pwildcard), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard())))
+      Pat.Extract(tapplytype(tname("List"), pwildcard), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard())))
     )
   }
 
@@ -656,11 +655,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("ammonite: package foo; class C; package baz { class D }") {
-    val code = """
-                 |package foo1; class C1; package baz1 { class D1 }
-                 |@
-                 |package foo2; class C2; package baz2 { class D2 }
-                 |""".stripMargin
+    val code =
+      """
+        |package foo1; class C1; package baz1 { class D1 }
+        |@
+        |package foo2; class C2; package baz2 { class D2 }
+        |""".stripMargin
     val tree = ammonite(code)
     assertTree(tree)(MultiSource(List(
       Source(List(Pkg(
@@ -901,14 +901,12 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
-    assertTree(templStat("foo(0.02d, 0.02D, 0.02)"))(
-      tapply(tname("foo"), dbl("0.02"), dbl("0.02"), dbl("0.02"))
-    )
+    assertTree(
+      templStat("foo(0.02d, 0.02D, 0.02)")
+    )(tapply(tname("foo"), dbl("0.02"), dbl("0.02"), dbl("0.02")))
   }
 
-  test("#1864 Terms with leading numerics are backquoted") {
-    checkStat("`123foo`")(tname("123foo"))
-  }
+  test("#1864 Terms with leading numerics are backquoted")(checkStat("`123foo`")(tname("123foo")))
 
   test("#1868 Term.Eta preserves structure") {
     checkStat("(x _).y")(tselect(Term.Eta("x"), "y"))
@@ -953,9 +951,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#1063 good") {
-    checkTree(term("foo(bar) { baz: _* }"))(
-      tapply(tapply(tname("foo"), tname("bar")), blk(Term.Repeated(tname("baz"))))
-    )
+    checkTree(
+      term("foo(bar) { baz: _* }")
+    )(tapply(tapply(tname("foo"), tname("bar")), blk(Term.Repeated(tname("baz")))))
   }
 
   test("#1063 bad") {
@@ -968,9 +966,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("#1384 char no unescaped LF") {
     val expr = "('\n')"
-    val error = """|<input>:1: error: can't use unescaped LF in character literals
-                   |('
-                   |  ^""".stripMargin.lf2nl
+    val error =
+      """|<input>:1: error: can't use unescaped LF in character literals
+         |('
+         |  ^""".stripMargin.lf2nl
     interceptMessage[ParseException](error)(super.term(expr))
   }
 

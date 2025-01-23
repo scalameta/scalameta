@@ -5,8 +5,9 @@ import scala.meta._
 class GivenSyntax36Suite extends BaseDottySuite {
 
   test("named-bounds") {
-    val code = """|def reduce[A: Monoid as mm](xs: A): A = ???
-                  |""".stripMargin
+    val code =
+      """|def reduce[A: Monoid as mm](xs: A): A = ???
+         |""".stripMargin
     runTestAssert[Stat](code)(Defn.Def(
       Nil,
       "reduce",
@@ -79,8 +80,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       ctor,
       tpl(
         Decl.Type(Nil, pname("Element"), Nil, noBounds),
-        Defn
-          .GivenAlias(Nil, anon, None, papply("Ord", "Element"), tselect("compiletime", "deferred"))
+        Defn.GivenAlias(Nil, anon, None, papply("Ord", "Element"), tselect("compiletime", "deferred"))
       )
     ))
   }
@@ -93,9 +93,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       pname("Comparer"),
       Nil,
-      ppolyfunc(pparam("X", bounds(cb = List("Ord"))))(
-        pfunc(Type.TypedParam("x", "X", Nil), Type.TypedParam("y", "X", Nil))("Boolean")
-      ),
+      ppolyfunc(
+        pparam("X", bounds(cb = List("Ord")))
+      )(pfunc(Type.TypedParam("x", "X", Nil), Type.TypedParam("y", "X", Nil))("Boolean")),
       noBounds
     ))
   }
@@ -111,11 +111,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       List(patvar("less")),
       Some("Comparer"),
-      tpolyfunc(pparam("X", bounds(cb = List(Type.BoundsAlias("ord", "Ord")))))(
-        tfunc(tparam("x", "X"), tparam("y", "X"))(
-          tinfix(tapply(tselect("ord", "compare"), "x", "y"), "<", lit(0))
-        )
-      )
+      tpolyfunc(
+        pparam("X", bounds(cb = List(Type.BoundsAlias("ord", "Ord"))))
+      )(tfunc(tparam("x", "X"), tparam("y", "X"))(
+        tinfix(tapply(tselect("ord", "compare"), "x", "y"), "<", lit(0))
+      ))
     ))
   }
 
@@ -313,9 +313,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
 
   // Simple typeclass
   test("Simple anonymous typeclass, coloneol") {
-    val code = """|given Ord[Int]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given Ord[Int]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given Ord[Int] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -327,10 +328,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Simple anonymous typeclass, braces") {
-    val code = """|given Ord[Int] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given Ord[Int] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given Ord[Int] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -342,9 +344,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Simple named typeclass, coloneol") {
-    val code = """|given ord: Ord[Int]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: Ord[Int]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord: Ord[Int] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -356,10 +359,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Simple named typeclass, braces") {
-    val code = """|given ord: Ord[Int] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: Ord[Int] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord: Ord[Int] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -372,9 +376,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
 
   // Parameterized typeclass with context bound
   test("Parameterized anonymous typeclass with context bound, coloneol") {
-    val code = """|given [A : Ord] => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given [A : Ord] => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given [A: Ord]: Ord[List[A]] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -387,10 +392,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized anonymous typeclass with context bound, braces") {
-    val code = """|given [A : Ord] => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given [A : Ord] => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given [A: Ord]: Ord[List[A]] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -403,9 +409,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized named typeclass with context bound, coloneol") {
-    val code = """|given ord: [A : Ord] => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: [A : Ord] => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord[A: Ord]: Ord[List[A]] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -418,10 +425,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized named typeclass with context bound, braces") {
-    val code = """|given ord: [A : Ord] => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: [A : Ord] => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord[A: Ord]: Ord[List[A]] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -435,9 +443,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
 
   // Parameterized typeclass with context bound
   test("Parameterized anonymous typeclass with context bound, coloneol") {
-    val code = """|given [A : Ord] => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given [A : Ord] => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given [A: Ord]: Ord[List[A]] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -450,10 +459,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized anonymous typeclass with context bound, braces") {
-    val code = """|given [A : Ord] => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given [A : Ord] => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given [A: Ord]: Ord[List[A]] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -466,9 +476,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized named typeclass with context bound, coloneol") {
-    val code = """|given ord: [A : Ord] => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: [A : Ord] => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord[A: Ord]: Ord[List[A]] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -481,10 +492,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized named typeclass with context bound, braces") {
-    val code = """|given ord: [A : Ord] => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: [A : Ord] => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord[A: Ord]: Ord[List[A]] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -498,9 +510,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
 
   // Parameterized typeclass with named context parameter
   test("Parameterized anonymous typeclass with named context parameter, coloneol") {
-    val code = """|given [A] => (ord: Ord[A]) => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given [A] => (ord: Ord[A]) => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given [A] => (ord: Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -513,10 +526,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized anonymous typeclass with named context parameter, braces") {
-    val code = """|given [A] => (ord: Ord[A]) => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given [A] => (ord: Ord[A]) => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given [A] => (ord: Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -529,9 +543,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized named typeclass with named context parameter, coloneol") {
-    val code = """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord: [A] => (ord: Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -544,10 +559,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized named typeclass with named context parameter, braces") {
-    val code = """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: [A] => (ord: Ord[A]) => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord: [A] => (ord: Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -561,9 +577,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
 
   // Parameterized typeclass with anonymous context parameter
   test("Parameterized anonymous typeclass with anonymous context parameter, coloneol") {
-    val code = """|given [A] => (Ord[A]) => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given [A] => (Ord[A]) => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given [A] => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -576,10 +593,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized anonymous typeclass with anonymous context parameter, braces") {
-    val code = """|given [A] => (Ord[A]) => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given [A] => (Ord[A]) => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given [A] => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -592,9 +610,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized named typeclass with anonymous context parameter, coloneol") {
-    val code = """|given ord: [A] => (Ord[A]) => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: [A] => (Ord[A]) => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord: [A] => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -607,10 +626,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("Parameterized named typeclass with anonymous context parameter, braces") {
-    val code = """|given ord: [A] => (Ord[A]) => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: [A] => (Ord[A]) => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord: [A] => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -625,9 +645,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   // extra new syntax tests: functions
 
   test("context a lambda function, coloneol") {
-    val code = """|given ord: ([A] =>> Ord[A]) => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: ([A] =>> Ord[A]) => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord: ([A] =>> Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -640,10 +661,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("context a lambda function, braces") {
-    val code = """|given ord: ([A] =>> Ord[A]) => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: ([A] =>> Ord[A]) => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord: ([A] =>> Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -656,9 +678,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("context a poly function, coloneol") {
-    val code = """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord: ([A] => Ord[A] => Ord[List[A]]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -674,10 +697,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("context a poly function, braces") {
-    val code = """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: ([A] => (Ord[A]) => Ord[List[A]]) => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord: ([A] => Ord[A] => Ord[List[A]]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -693,9 +717,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("given type a function, coloneol") {
-    val code = """|given ord: [A] => (Ord[A] => Ord[List[A]]):
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: [A] => (Ord[A] => Ord[List[A]]):
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord[A]: (Ord[A] => Ord[List[A]]) with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -711,10 +736,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("given type a function, braces") {
-    val code = """|given ord: [A] => (Ord[A] => Ord[List[A]]) {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: [A] => (Ord[A] => Ord[List[A]]) {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord[A]: (Ord[A] => Ord[List[A]]) with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -732,9 +758,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   // extra new syntax tests: param clause first
 
   test("named, param clause first, coloneol") {
-    val code = """|given ord: (a: A) => Ord[A] => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: (a: A) => Ord[A] => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord: (a: A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -747,10 +774,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("named, param clause first, braces") {
-    val code = """|given ord: (a: A) => Ord[A] => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: (a: A) => Ord[A] => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord: (a: A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -763,9 +791,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("anonymous, param clause first, coloneol") {
-    val code = """|given (a: A) => Ord[A] => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given (a: A) => Ord[A] => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given (a: A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -778,10 +807,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("anonymous, param clause first, braces") {
-    val code = """|given (a: A) => Ord[A] => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given (a: A) => Ord[A] => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given (a: A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -796,9 +826,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   // extra new syntax tests: func arg types
 
   test("named, func arg types, coloneol") {
-    val code = """|given ord: (A) => Ord[A] => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given ord: (A) => Ord[A] => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given ord: (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -811,10 +842,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("named, func arg types, braces") {
-    val code = """|given ord: (A) => Ord[A] => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given ord: (A) => Ord[A] => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given ord: (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -827,9 +859,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("anonymous, func arg types, coloneol") {
-    val code = """|given (A) => Ord[A] => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given (A) => Ord[A] => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -842,10 +875,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("anonymous, func arg types, braces") {
-    val code = """|given (A) => Ord[A] => Ord[List[A]] {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given (A) => Ord[A] => Ord[List[A]] {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -858,11 +892,12 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("breaks after arrow 1") {
-    val code = """|given (A) =>
-                  |  Ord[A] =>
-                  |  Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given (A) =>
+         |  Ord[A] =>
+         |  Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given (A) => (Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -875,10 +910,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("breaks after arrow 2") {
-    val code = """|given (a: A =>
-                  |  Ord[A]) => Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given (a: A =>
+         |  Ord[A]) => Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given (a: A => Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -891,11 +927,12 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("breaks after arrow 3") {
-    val code = """|given (a: A =>
-                  |  Ord[A]) =>
-                  |  Ord[List[A]]:
-                  |  def foo = ???
-                  |""".stripMargin
+    val code =
+      """|given (a: A =>
+         |  Ord[A]) =>
+         |  Ord[List[A]]:
+         |  def foo = ???
+         |""".stripMargin
     val layout = "given (a: A => Ord[A]) => Ord[List[A]] { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -908,15 +945,17 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("import given is not a given") {
-    val code = """|object a:
-                  |  import scala.util.chaining.given
-                  |  import scala.util.control.{ControlThrowable, NonFatal}
-                  |""".stripMargin
-    val layout = """|object a {
-                    |  import scala.util.chaining.given
-                    |  import scala.util.control.{ ControlThrowable, NonFatal }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object a:
+         |  import scala.util.chaining.given
+         |  import scala.util.control.{ControlThrowable, NonFatal}
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  import scala.util.chaining.given
+         |  import scala.util.control.{ ControlThrowable, NonFatal }
+         |}
+         |""".stripMargin
     val tree = Defn.Object(
       Nil,
       "a",
@@ -932,15 +971,17 @@ class GivenSyntax36Suite extends BaseDottySuite {
   }
 
   test("given decl") {
-    val code = """|object a:
-                  |  given TreeMethods: TreeMethods
-                  |  trait TreeMethods {}
-                  |""".stripMargin
-    val layout = """|object a {
-                    |  given TreeMethods: TreeMethods
-                    |  trait TreeMethods
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object a:
+         |  given TreeMethods: TreeMethods
+         |  trait TreeMethods {}
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  given TreeMethods: TreeMethods
+         |  trait TreeMethods
+         |}
+         |""".stripMargin
     val tree = Defn.Object(
       Nil,
       "a",

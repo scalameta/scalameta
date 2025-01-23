@@ -93,9 +93,10 @@ class ErasedDefsSuite extends BaseDottySuite {
   }
 
   test("erased param in lambda as argument") {
-    val code = """|List(1, 2, 3).map {
-                  |  (using erased i: Int) => i
-                  |}""".stripMargin
+    val code =
+      """|List(1, 2, 3).map {
+         |  (using erased i: Int) => i
+         |}""".stripMargin
     runTestAssert[Stat](code)(tapply(
       tselect(tapply(tname("List"), int(1), int(2), int(3)), "map"),
       blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "i", "Int"))(tname("i")))
@@ -133,10 +134,11 @@ class ErasedDefsSuite extends BaseDottySuite {
   }
 
   test("lambda-method-parameter") {
-    val code = """|LazyBody {
-                  |  (using erased ctx: Context) => 3
-                  |}
-                  |""".stripMargin
+    val code =
+      """|LazyBody {
+         |  (using erased ctx: Context) => 3
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(tapply(
       tname("LazyBody"),
       blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context"))(int(3)))

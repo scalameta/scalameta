@@ -1081,8 +1081,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpes = List(t"A", t"B")
     val pats = List(q"Q", q"W")
     assertTree(p"$ref[..$tpes](..$pats)")(
-      Pat
-        .Extract(tapplytype(tselect("x", "a"), pname("A"), pname("B")), List(tname("Q"), tname("W")))
+      Pat.Extract(tapplytype(tselect("x", "a"), pname("A"), pname("B")), List(tname("Q"), tname("W")))
     )
   }
 
@@ -2008,8 +2007,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tparams)(ppc(pparam("A")))
     checkTreesWithSyntax(paramss: _*)("(x: Int)")(tpc(tparam("x", "Int")))
     assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs")(
-      Defn
-        .Def(Nil, tname("f"), List(pparam("A")), List(List(tparam("x", "Int"))), None, tname("???"))
+      Defn.Def(Nil, tname("f"), List(pparam("A")), List(List(tparam("x", "Int"))), None, tname("???"))
     )
   }
 
@@ -2064,7 +2062,8 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("#450") {
     val defDefns = List(q"def baz {}")
-    val objectDefn = q"""
+    val objectDefn =
+      q"""
       object M {
         def foo = bar
         println("another stat")

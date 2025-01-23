@@ -113,18 +113,20 @@ class PackageSuite extends ParseSuite {
   }
 
   test("code with Shebang line") {
-    val code = """|#!/usr/bin/env foo bar && qux >/dev/null
-                  |package foo
-                  |
-                  |import bar.baz
-                  |
-                  |class Qux()
-                  |""".stripMargin
-    val layout = """|#!/usr/bin/env foo bar && qux >/dev/null
-                    |package foo
-                    |import bar.baz
-                    |class Qux()
-                    |""".stripMargin
+    val code =
+      """|#!/usr/bin/env foo bar && qux >/dev/null
+         |package foo
+         |
+         |import bar.baz
+         |
+         |class Qux()
+         |""".stripMargin
+    val layout =
+      """|#!/usr/bin/env foo bar && qux >/dev/null
+         |package foo
+         |import bar.baz
+         |class Qux()
+         |""".stripMargin
     val tree = Source(List(Pkg(
       tname("foo"),
       List(

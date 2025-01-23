@@ -343,16 +343,18 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("scala3 infix syntax 3.4") {
-    val code = """|{
-                  |  freezing
-                  |  |
-                  |  boiling
-                  |}
-                  |""".stripMargin
-    val layout = """|{
-                    |  freezing | boiling
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  freezing
+         |  |
+         |  boiling
+         |}
+         |""".stripMargin
+    val layout =
+      """|{
+         |  freezing | boiling
+         |}
+         |""".stripMargin
     val tree = blk(tinfix(tname("freezing"), "|", tname("boiling")))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -372,54 +374,60 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("scala3 infix syntax 3.6 comment") {
-    val code = """|{
-                  |  freezing /*
-                  |    c1 */ // c2
-                  |  |
-                  |  boiling
-                  |}
-                  |""".stripMargin
-    val layout = """|{
-                    |  freezing | boiling
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  freezing /*
+         |    c1 */ // c2
+         |  |
+         |  boiling
+         |}
+         |""".stripMargin
+    val layout =
+      """|{
+         |  freezing | boiling
+         |}
+         |""".stripMargin
     val tree = blk(tinfix(tname("freezing"), "|", tname("boiling")))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("scala3 infix syntax 3.7 comment") {
-    val code = """|{
-                  |  freezing
-                  |  // c1
-                  |  /*
-                  |    c2
-                  |  */ |
-                  |  boiling
-                  |}
-                  |""".stripMargin
-    val layout = """|{
-                    |  freezing | boiling
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  freezing
+         |  // c1
+         |  /*
+         |    c2
+         |  */ |
+         |  boiling
+         |}
+         |""".stripMargin
+    val layout =
+      """|{
+         |  freezing | boiling
+         |}
+         |""".stripMargin
     val tree = blk(tinfix(tname("freezing"), "|", tname("boiling")))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("scala3 infix syntax 3.8 comment") {
-    val code = """|{
-                  |  freezing
-                  |  // c1
-                  |  /*
-                  |    c2
-                  |  */
-                  |  |
-                  |  boiling
-                  |}
-                  |""".stripMargin
-    val layout = """|{
-                    |  freezing | boiling
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  freezing
+         |  // c1
+         |  /*
+         |    c2
+         |  */
+         |  |
+         |  boiling
+         |}
+         |""".stripMargin
+    val layout =
+      """|{
+         |  freezing | boiling
+         |}
+         |""".stripMargin
     val tree = blk(tinfix(tname("freezing"), "|", tname("boiling")))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -469,22 +477,24 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("scala3 infix syntax 5.2") {
-    val code = """|{
-                  |  println("hello")
-                  |    ???
-                  |    ??? match {
-                  |      case 0 => 1
-                  |    }
-                  |}
-                  |""".stripMargin
-    val layout = """|{
-                    |  println("hello")
-                    |  ???
-                    |  ??? match {
-                    |    case 0 => 1
-                    |  }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  println("hello")
+         |    ???
+         |    ??? match {
+         |      case 0 => 1
+         |    }
+         |}
+         |""".stripMargin
+    val layout =
+      """|{
+         |  println("hello")
+         |  ???
+         |  ??? match {
+         |    case 0 => 1
+         |  }
+         |}
+         |""".stripMargin
     val tree = blk(
       tapply(tname("println"), str("hello")),
       tname("???"),
@@ -590,28 +600,30 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("case: break before `|`") {
-    val code = """|case 'a'
-                  |   | 'A' =>
-                  |""".stripMargin
+    val code =
+      """|case 'a'
+         |   | 'A' =>
+         |""".stripMargin
     val layout = "case 'a' | 'A' =>"
     val tree = Case(Pat.Alternative(lit('a'), lit('A')), None, blk())
     runTestAssert[Case](code, Some(layout))(tree)
   }
 
   test("scalafmt #3720 different leading infix indentations") {
-    val code = """
-                 |object a:
-                 |  def mtd =
-                 |    abc(
-                 |        arg1
-                 |    )
-                 |    ++
-                 |    abc(arg2)
-                 |      ++
-                 |        abc(arg3)
-                 |  ++
-                 |    abc(arg4)
-                 |""".stripMargin
+    val code =
+      """
+        |object a:
+        |  def mtd =
+        |    abc(
+        |        arg1
+        |    )
+        |    ++
+        |    abc(arg2)
+        |      ++
+        |        abc(arg3)
+        |  ++
+        |    abc(arg4)
+        |""".stripMargin
     val layout = "object a { def mtd = abc(arg1) ++ abc(arg2) ++ abc(arg3) ++ abc(arg4) }"
     val tree = Defn.Object(
       Nil,
@@ -636,18 +648,20 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3825 1") {
-    val code = """|object a:
-                  |  foo
-                  |    .map: i =>
-                  |      i + 1
-                  |    *> bar
-                  |""".stripMargin
-    val layout = """|object a {
-                    |  foo.map {
-                    |    i => i + 1
-                    |  } *> bar
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object a:
+         |  foo
+         |    .map: i =>
+         |      i + 1
+         |    *> bar
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  foo.map {
+         |    i => i + 1
+         |  } *> bar
+         |}
+         |""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -661,27 +675,29 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3825 2") {
-    val code = """|object a:
-                  |  object b:
-                  |    foo
-                  |      .map: i =>
-                  |        i + 1
-                  |          + 2
-                  |        + 3
-                  |      *> bar
-                  |    baz
-                  |  qux
-                  |""".stripMargin
-    val layout = """|object a {
-                    |  object b {
-                    |    foo.map {
-                    |      i => i + 1 + 2 + 3
-                    |    } *> bar
-                    |    baz
-                    |  }
-                    |  qux
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object a:
+         |  object b:
+         |    foo
+         |      .map: i =>
+         |        i + 1
+         |          + 2
+         |        + 3
+         |      *> bar
+         |    baz
+         |  qux
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  object b {
+         |    foo.map {
+         |      i => i + 1 + 2 + 3
+         |    } *> bar
+         |    baz
+         |  }
+         |  qux
+         |}
+         |""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -710,31 +726,33 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("#3948 1") {
-    val code = """|object Hello {
-                  |  buffer
-                  |    += new Object()
-                  |    += new Object
-                  |}
-                  |""".stripMargin
-    val tokenized = """|BOF [0..0)
-                       |KwObject [0..6)
-                       |Ident(Hello) [7..12)
-                       |LeftBrace [13..14)
-                       |Ident(buffer) [17..23)
-                       |InfixLF [23..24)
-                       |Ident(+=) [28..30)
-                       |KwNew [31..34)
-                       |Ident(Object) [35..41)
-                       |LeftParen [41..42)
-                       |RightParen [42..43)
-                       |InfixLF [43..44)
-                       |Ident(+=) [48..50)
-                       |KwNew [51..54)
-                       |Ident(Object) [55..61)
-                       |LF [61..62)
-                       |RightBrace [62..63)
-                       |EOF [64..64)
-                       |""".stripMargin
+    val code =
+      """|object Hello {
+         |  buffer
+         |    += new Object()
+         |    += new Object
+         |}
+         |""".stripMargin
+    val tokenized =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(Hello) [7..12)
+         |LeftBrace [13..14)
+         |Ident(buffer) [17..23)
+         |InfixLF [23..24)
+         |Ident(+=) [28..30)
+         |KwNew [31..34)
+         |Ident(Object) [35..41)
+         |LeftParen [41..42)
+         |RightParen [42..43)
+         |InfixLF [43..44)
+         |Ident(+=) [48..50)
+         |KwNew [51..54)
+         |Ident(Object) [55..61)
+         |LF [61..62)
+         |RightBrace [62..63)
+         |EOF [64..64)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, tokenized)
     val layout = "object Hello { buffer += (new Object()) += (new Object) }"
     val tree = Defn.Object(
@@ -750,44 +768,46 @@ class InfixSuite extends BaseDottySuite {
   }
 
   test("#3948 2") {
-    val code = """|object Hello {
-                  |  buffer
-                  |    += new Object() with Foo {
-                  |      def toString() = "foo"
-                  |    }
-                  |    += new Object
-                  |}
-                  |""".stripMargin
-    val tokenized = """|BOF [0..0)
-                       |KwObject [0..6)
-                       |Ident(Hello) [7..12)
-                       |LeftBrace [13..14)
-                       |Ident(buffer) [17..23)
-                       |InfixLF [23..24)
-                       |Ident(+=) [28..30)
-                       |KwNew [31..34)
-                       |Ident(Object) [35..41)
-                       |LeftParen [41..42)
-                       |RightParen [42..43)
-                       |KwWith [44..48)
-                       |Ident(Foo) [49..52)
-                       |LeftBrace [53..54)
-                       |KwDef [61..64)
-                       |Ident(toString) [65..73)
-                       |LeftParen [73..74)
-                       |RightParen [74..75)
-                       |Equals [76..77)
-                       |Constant.String(foo) [78..83)
-                       |LF [83..84)
-                       |RightBrace [88..89)
-                       |InfixLF [89..90)
-                       |Ident(+=) [94..96)
-                       |KwNew [97..100)
-                       |Ident(Object) [101..107)
-                       |LF [107..108)
-                       |RightBrace [108..109)
-                       |EOF [110..110)
-                       |""".stripMargin
+    val code =
+      """|object Hello {
+         |  buffer
+         |    += new Object() with Foo {
+         |      def toString() = "foo"
+         |    }
+         |    += new Object
+         |}
+         |""".stripMargin
+    val tokenized =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Ident(Hello) [7..12)
+         |LeftBrace [13..14)
+         |Ident(buffer) [17..23)
+         |InfixLF [23..24)
+         |Ident(+=) [28..30)
+         |KwNew [31..34)
+         |Ident(Object) [35..41)
+         |LeftParen [41..42)
+         |RightParen [42..43)
+         |KwWith [44..48)
+         |Ident(Foo) [49..52)
+         |LeftBrace [53..54)
+         |KwDef [61..64)
+         |Ident(toString) [65..73)
+         |LeftParen [73..74)
+         |RightParen [74..75)
+         |Equals [76..77)
+         |Constant.String(foo) [78..83)
+         |LF [83..84)
+         |RightBrace [88..89)
+         |InfixLF [89..90)
+         |Ident(+=) [94..96)
+         |KwNew [97..100)
+         |Ident(Object) [101..107)
+         |LF [107..108)
+         |RightBrace [108..109)
+         |EOF [110..110)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, tokenized)
     val layout =
       """object Hello { buffer += (new Object() with Foo { def toString() = "foo" }) += (new Object) }"""

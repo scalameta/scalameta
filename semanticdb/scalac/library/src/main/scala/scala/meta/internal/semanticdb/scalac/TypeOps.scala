@@ -61,6 +61,7 @@ trait TypeOps {
         case g.NoType => s.NoType
         case g.NoPrefix => s.NoType
         case g.ErrorType => s.NoType
+
         /**
          * From the Scala compiler:
          * ```

@@ -87,9 +87,7 @@ class MetacpErrorSuite extends FunSuite {
     val settings = Settings().withOut(AbsolutePath(output)).withClasspath(Classpath(manifest))
 
     assert(!Files.list(output).iterator.hasNext)
-    val (result, out, err) = CliTestUtils.withReporter { reporter =>
-      Metacp.process(settings, reporter)
-    }
+    val (result, out, err) = CliTestUtils.withReporter(reporter => Metacp.process(settings, reporter))
     assert(result.classpath.isEmpty)
     assertNoDiff(
       out,
@@ -124,9 +122,7 @@ class MetacpErrorSuite extends FunSuite {
       .withClasspath(Classpath(AbsolutePath(input))).withStubBrokenSignatures(true)
       .withLogBrokenSignatures(true)
 
-    val (result, out, err) = CliTestUtils.withReporter { reporter =>
-      Metacp.process(settings, reporter)
-    }
+    val (result, out, err) = CliTestUtils.withReporter(reporter => Metacp.process(settings, reporter))
     assert(result.isSuccess)
     assertNoDiff(
       err,

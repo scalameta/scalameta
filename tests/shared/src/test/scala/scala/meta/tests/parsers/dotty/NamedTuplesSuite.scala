@@ -43,8 +43,9 @@ class NamedTuplesSuite extends BaseDottySuite {
   }
 
   test("named-tuple-summon") {
-    val code = """|val y = summon[Tuple2[Int, String] <:< (x: Int, y: String)]
-                  |""".stripMargin
+    val code =
+      """|val y = summon[Tuple2[Int, String] <:< (x: Int, y: String)]
+         |""".stripMargin
     runTestAssert[Stat](code)(Defn.Val(
       Nil,
       List(patvar("y")),
@@ -118,10 +119,11 @@ class NamedTuplesSuite extends BaseDottySuite {
   }
 
   test("extractor with named fields: all") {
-    val code = """|a match {
-                  |  case Foo(name = nme, id = 123) =>
-                  |}
-                  |""".stripMargin
+    val code =
+      """|a match {
+         |  case Foo(name = nme, id = 123) =>
+         |}
+         |""".stripMargin
     val tree = tmatch(
       "a",
       Case(
@@ -134,10 +136,11 @@ class NamedTuplesSuite extends BaseDottySuite {
   }
 
   test("extractor with named fields: some, with varargs") {
-    val code = """|a match {
-                  |  case Foo(x = y, z, rest*) =>
-                  |}
-                  |""".stripMargin
+    val code =
+      """|a match {
+         |  case Foo(x = y, z, rest*) =>
+         |}
+         |""".stripMargin
     val tree = tmatch(
       "a",
       Case(

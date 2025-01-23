@@ -133,29 +133,31 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
-    val expected = """|Defn.Val(
-                      |  Nil,
-                      |  List(
-                      |    Pat.Var(Term.Name("x"))
-                      |  ),
-                      |  None,
-                      |  Lit.Float(1f)
-                      |)
-                      |""".stripMargin
+    val expected =
+      """|Defn.Val(
+         |  Nil,
+         |  List(
+         |    Pat.Var(Term.Name("x"))
+         |  ),
+         |  None,
+         |  Lit.Float(1f)
+         |)
+         |""".stripMargin
     assertStruct(q"val x = 1f")(expected)
     assertStruct(q"val x = 1F")(expected)
   }
 
   test("show[Structure] should lowercase double literals suffix: '0.01D' -> '0.01d'") {
-    val expected = """|Defn.Val(
-                      |  Nil,
-                      |  List(
-                      |    Pat.Var(Term.Name("x"))
-                      |  ),
-                      |  None,
-                      |  Lit.Double(1d)
-                      |)
-                      |""".stripMargin
+    val expected =
+      """|Defn.Val(
+         |  Nil,
+         |  List(
+         |    Pat.Var(Term.Name("x"))
+         |  ),
+         |  None,
+         |  Lit.Double(1d)
+         |)
+         |""".stripMargin
     assertStruct(q"val x = 1d")(expected)
     assertStruct(q"val x = 1D")(expected)
     assertStruct(q"val x = 1.0")(expected)
@@ -342,9 +344,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )(q"new Foo({str => str.length})")
   }
 
-  test("#1917 init lambda") {
-    checkStat("new Foo((a: Int) => a + 1)")(q"new Foo((a: Int) => a + 1)")
-  }
+  test("#1917 init lambda")(checkStat("new Foo((a: Int) => a + 1)")(q"new Foo((a: Int) => a + 1)"))
 
   test("#1596") {
     val tree: Term.Xml = q"<h1>a{b}</h1>"

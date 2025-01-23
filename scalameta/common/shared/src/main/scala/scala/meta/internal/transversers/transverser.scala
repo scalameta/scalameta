@@ -34,7 +34,8 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
       val q"$mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self => ..$stats }" =
         cdef
 
-      val cdef1 = q"""
+      val cdef1 =
+        q"""
         $mods class $name[..$tparams] $ctorMods(...$paramss) extends { ..$earlydefns } with ..$parents { $self =>
           ..$stats
           ..${getPrimaryApply()}

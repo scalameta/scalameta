@@ -19,10 +19,11 @@ class TypeSuite extends BaseDottySuite {
       """|type A = AnyRef with
          |  type T>: Null
          |""".stripMargin,
-      assertLayout = """|type A = AnyRef {
-                        |  type T >: Null
-                        |}
-                        |""".stripMargin
+      assertLayout =
+        """|type A = AnyRef {
+           |  type T >: Null
+           |}
+           |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("A"),
@@ -37,10 +38,11 @@ class TypeSuite extends BaseDottySuite {
       """|type A = AnyRef with Product with
          |  type T>: Null
          |""".stripMargin,
-      assertLayout = """|type A = AnyRef with Product {
-                        |  type T >: Null
-                        |}
-                        |""".stripMargin
+      assertLayout =
+        """|type A = AnyRef with Product {
+           |  type T >: Null
+           |}
+           |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("A"),
@@ -60,12 +62,13 @@ class TypeSuite extends BaseDottySuite {
          |  with
          |    type D <: Product
          |""".stripMargin,
-      assertLayout = """|type A = Product {
-                        |  type T >: Null {
-                        |    type D <: Product
-                        |  }
-                        |}
-                        |""".stripMargin
+      assertLayout =
+        """|type A = Product {
+           |  type T >: Null {
+           |    type D <: Product
+           |  }
+           |}
+           |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("A"),
@@ -77,8 +80,7 @@ class TypeSuite extends BaseDottySuite {
           pname("T"),
           Nil,
           bounds(lo =
-            Type
-              .Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
+            Type.Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
           )
         ))
       ),
@@ -92,12 +94,13 @@ class TypeSuite extends BaseDottySuite {
          |  type T>: Null:
          |    type D <: Product
          |""".stripMargin,
-      assertLayout = """|type A = Product {
-                        |  type T >: Null {
-                        |    type D <: Product
-                        |  }
-                        |}
-                        |""".stripMargin
+      assertLayout =
+        """|type A = Product {
+           |  type T >: Null {
+           |    type D <: Product
+           |  }
+           |}
+           |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("A"),
@@ -109,8 +112,7 @@ class TypeSuite extends BaseDottySuite {
           pname("T"),
           Nil,
           bounds(lo =
-            Type
-              .Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
+            Type.Refine(Some(pname("Null")), List(Decl.Type(Nil, pname("D"), Nil, hiBound("Product"))))
           )
         ))
       ),
@@ -150,12 +152,13 @@ class TypeSuite extends BaseDottySuite {
          |        type T>: Int
          |      }
          |""".stripMargin,
-      assertLayout = """|type AA = String with Int {
-                        |  type T >: Null {
-                        |    type T >: Int
-                        |  }
-                        |}
-                        |""".stripMargin
+      assertLayout =
+        """|type AA = String with Int {
+           |  type T >: Null {
+           |    type T >: Int
+           |  }
+           |}
+           |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("AA"),
@@ -182,12 +185,13 @@ class TypeSuite extends BaseDottySuite {
          |    type T>: Null:
          |        type T>: Int
          |""".stripMargin,
-      assertLayout = """|type AA = String with Int {
-                        |  type T >: Null {
-                        |    type T >: Int
-                        |  }
-                        |}
-                        |""".stripMargin
+      assertLayout =
+        """|type AA = String with Int {
+           |  type T >: Null {
+           |    type T >: Int
+           |  }
+           |}
+           |""".stripMargin
     )(Defn.Type(
       Nil,
       pname("AA"),
@@ -249,22 +253,16 @@ class TypeSuite extends BaseDottySuite {
 
   test("F#T")(assertTpe("F#T")(Project(TypeName("F"), TypeName("T"))))
 
-  test("A \\/ B") {
-    assertTpe("A \\/ B")(ApplyInfix(TypeName("A"), TypeName("\\/"), TypeName("B")))
-  }
+  test("A \\/ B")(assertTpe("A \\/ B")(ApplyInfix(TypeName("A"), TypeName("\\/"), TypeName("B"))))
 
   test("A * B")(assertTpe("A * B")(ApplyInfix(TypeName("A"), TypeName("*"), TypeName("B"))))
 
-  test("A * B + C") {
-    assertTpe("A * B + C")(pinfix(pinfix("A", "*", pname("B")), "+", pname("C")))
-  }
+  test("A * B + C")(assertTpe("A * B + C")(pinfix(pinfix("A", "*", pname("B")), "+", pname("C"))))
 
   test("A + B * C")(assertTpe("A + B * C")(pinfix("A", "+", pinfix("B", "*", pname("C")))))
 
   test("A * B + C / D") {
-    assertTpe("A * B + C / D") {
-      pinfix(pinfix("A", "*", pname("B")), "+", pinfix("C", "/", pname("D")))
-    }
+    assertTpe("A * B + C / D")(pinfix(pinfix("A", "*", pname("B")), "+", pinfix("C", "/", pname("D"))))
   }
 
   test("f.T")(assertTpe("f.T")(pselect("f", "T")))
@@ -289,9 +287,7 @@ class TypeSuite extends BaseDottySuite {
     assertTpe("A & B")(ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")))
   }
 
-  test("A with B {}") {
-    assertTpe("A with B {}")(Refine(Some(With(TypeName("A"), TypeName("B"))), Nil))
-  }
+  test("A with B {}")(assertTpe("A with B {}")(Refine(Some(With(TypeName("A"), TypeName("B"))), Nil)))
 
   test("{}")(assertTpe("{}")(Refine(None, Nil)))
 
@@ -338,9 +334,7 @@ class TypeSuite extends BaseDottySuite {
   test("F[_]") {
     implicit val dialect: Dialect = dialects.Scala3Future
     assertTpe("F[_]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))))
-    assertTpe("F[+_]") {
-      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
-    }
+    assertTpe("F[+_]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant()))))))
     assertTpe("F[-_]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
     }
@@ -362,9 +356,7 @@ class TypeSuite extends BaseDottySuite {
     // will be deprecated in later versions
     implicit val dialect: Dialect = dialects.Scala31
     assertTpe("F[*]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))))
-    assertTpe("F[+*]") {
-      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant())))))
-    }
+    assertTpe("F[+*]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant()))))))
     assertTpe("F[-*]") {
       AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
     }
@@ -541,9 +533,7 @@ class TypeSuite extends BaseDottySuite {
       Nil,
       tname("++"),
       Nil,
-      List(
-        List(tparam("elems", Some(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "A")))))
-      ),
+      List(List(tparam("elems", Some(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "A")))))),
       papply("List", "A")
     )
     runTestAssert[Stat](code, layout)(tree)
@@ -601,9 +591,10 @@ class TypeSuite extends BaseDottySuite {
   test("#3995 into vararg type without parens (wrong)") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def concatAll(xss: into IterableOnce[Char]*): List[Char]"
-    val error = """|<input>:1: error: `)` expected but `identifier` found
-                   |def concatAll(xss: into IterableOnce[Char]*): List[Char]
-                   |                                          ^""".stripMargin
+    val error =
+      """|<input>:1: error: `)` expected but `identifier` found
+         |def concatAll(xss: into IterableOnce[Char]*): List[Char]
+         |                                          ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
@@ -698,9 +689,10 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("scala36 type member context bounds 1") {
-    val code = """|trait Foo:
-                  |  type Key : cats.Show
-                  |""".stripMargin
+    val code =
+      """|trait Foo:
+         |  type Key : cats.Show
+         |""".stripMargin
     val layout = "trait Foo { type Key: cats.Show }"
     val tree = Defn.Trait(
       Nil,
@@ -714,9 +706,10 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("scala36 type member context bounds 2") {
-    val code = """|trait Foo:
-                  |  type Value : {cats.Show, cats.Traverse}
-                  |""".stripMargin
+    val code =
+      """|trait Foo:
+         |  type Value : {cats.Show, cats.Traverse}
+         |""".stripMargin
     val layout = "trait Foo { type Value: {cats.Show, cats.Traverse} }"
     val tree = Defn.Trait(
       Nil,

@@ -55,23 +55,23 @@ class InlineSuite extends BaseDottySuite {
   }
 
   test("inline-def-object") {
-    runTestAssert[Stat](
-      "object X { inline def f(inline sc: Str)(inline args: Any*): String = ??? }"
-    )(Defn.Object(
-      Nil,
-      tname("X"),
-      tpl(Defn.Def(
-        List(Mod.Inline()),
-        tname("f"),
+    runTestAssert[Stat]("object X { inline def f(inline sc: Str)(inline args: Any*): String = ??? }")(
+      Defn.Object(
         Nil,
-        List(
-          List(tparamInline("sc", "Str")),
-          List(tparam(List(Mod.Inline()), "args", Type.Repeated(pname("Any"))))
-        ),
-        Some(pname("String")),
-        tname("???")
-      ))
-    ))
+        tname("X"),
+        tpl(Defn.Def(
+          List(Mod.Inline()),
+          tname("f"),
+          Nil,
+          List(
+            List(tparamInline("sc", "Str")),
+            List(tparam(List(Mod.Inline()), "args", Type.Repeated(pname("Any"))))
+          ),
+          Some(pname("String")),
+          tname("???")
+        ))
+      )
+    )
   }
   test("inline-mods-combination") {
     runTestAssert[Stat]("object X { inline override protected def f(): Unit = ??? }")(Defn.Object(

@@ -8,16 +8,18 @@ class CtrlExprJVMSuite extends BaseDottySuite {
     val nestedNum = 100 // was previously failing around 25-30 deep
     def generateIfs(num: Int, ident: String): String =
       if (num <= 1) "if (1 >= 10) {}"
-      else s"""|if (1 >= 10) {
-               |$ident  ${generateIfs(num - 1, ident + "  ")}
-               |$ident}""".stripMargin
+      else
+        s"""|if (1 >= 10) {
+            |$ident  ${generateIfs(num - 1, ident + "  ")}
+            |$ident}""".stripMargin
 
-    val code = s"""|object Test {
-                   |  def apply(): Unit = {
-                   |    ${generateIfs(nestedNum, "    ")}
-                   |  }
-                   |}
-                   |""".stripMargin
+    val code =
+      s"""|object Test {
+          |  def apply(): Unit = {
+          |    ${generateIfs(nestedNum, "    ")}
+          |  }
+          |}
+          |""".stripMargin
 
     def generateIfsTree(num: Int): Term.If = {
       val inner = if (num <= 1) blk() else blk(generateIfsTree(num - 1))

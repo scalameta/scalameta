@@ -59,8 +59,7 @@ trait SymbolOps {
         @tailrec
         def loop(value: String): String = {
           val i = value.lastIndexOf("$$")
-          if (i > 0) loop(value.substring(i + 2))
-          else NameTransformer.decode(value).stripSuffix(" ")
+          if (i > 0) loop(value.substring(i + 2)) else NameTransformer.decode(value).stripSuffix(" ")
         }
         loop(sym.name)
       }

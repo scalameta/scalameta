@@ -50,9 +50,8 @@ object PlatformFileIO {
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     import org.scalameta.collections._
-    val relativeFiles = Files.walk(root.toNIO).collect(Collectors.toList[Path]).toScala.collect {
-      case path if Files.isRegularFile(path) => RelativePath(root.toNIO.relativize(path))
-    }
+    val relativeFiles = Files.walk(root.toNIO).collect(Collectors.toList[Path]).toScala
+      .collect { case path if Files.isRegularFile(path) => RelativePath(root.toNIO.relativize(path)) }
     ListFiles(root, relativeFiles)
   }
 

@@ -22,10 +22,11 @@ class JSFacadeSuite extends FunSuite {
   ) = assertEquals(toJSON(a), toJSON(b))
 
   test("parseSource") {
-    val code = s"""|object Main {
-                   |  def main(args: Array[String]): Unit =
-                   |    println("Hello, World")
-                   |}""".stripMargin
+    val code =
+      s"""|object Main {
+          |  def main(args: Array[String]): Unit =
+          |    println("Hello, World")
+          |}""".stripMargin
     val parsed = JSFacade.parseSource(code)
     val expected = d(
       "type" -> "Source",
@@ -179,20 +180,22 @@ class JSFacadeSuite extends FunSuite {
   }
 
   test("inexisting dialects report an error") {
-    val code = """|List(
-                  |  1,
-                  |  2,
-                  |)""".stripMargin
+    val code =
+      """|List(
+         |  1,
+         |  2,
+         |)""".stripMargin
     val parsedDefaultDialect = JSFacade.parseStat(code, js.Dictionary("dialect" -> "wrong"))
     val expected = d("error" -> "'wrong' is not a valid dialect.").asInstanceOf[js.Dictionary[Any]]
     check(parsedDefaultDialect, expected)
   }
 
   test("can specify dialect") {
-    val code = """|List(
-                  |  1,
-                  |  2,
-                  |)""".stripMargin
+    val code =
+      """|List(
+         |  1,
+         |  2,
+         |)""".stripMargin
     val parsedDefaultDialect = JSFacade.parseStat(code, js.Dictionary("dialect" -> "Scala212"))
     val expected = d(
       "type" -> "Term.Apply",

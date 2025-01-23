@@ -11,7 +11,8 @@ trait TokenNamerMacroHelpers extends MacroHelpers {
   protected val Classifier = tq"_root_.scala.meta.classifiers.Classifier"
 
   protected def getClassifierBoilerplateRoot() = {
-    val q"..$classifierBoilerplate" = q"""
+    val q"..$classifierBoilerplate" =
+      q"""
         private object sharedClassifier extends $Classifier[$Token, $Token] {
           def apply(x: $Token): _root_.scala.Boolean = true
         }
@@ -24,7 +25,8 @@ trait TokenNamerMacroHelpers extends MacroHelpers {
 
   protected def getClassifierBoilerplate(cdef: ClassDef, unapplyToo: Boolean = false) = {
     val tpe = typeRef(cdef, false, true)
-    val q"..$classifierBoilerplate" = q"""
+    val q"..$classifierBoilerplate" =
+      q"""
         private object sharedClassifier extends $Classifier[$Token, $tpe] {
           def apply(x: $Token): _root_.scala.Boolean = x.isInstanceOf[$tpe]
         }

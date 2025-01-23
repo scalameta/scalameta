@@ -304,9 +304,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     val useParsedSource = !mode.hasHoles // otherwise, syntax will not make much sense
     val vDef =
       if (useParsedSource) '{
-        new Origin.ParsedSource(scala.meta.inputs.Input.String(${
-          Expr(input.text.replace("$$", "$"))
-        }))
+        new Origin.ParsedSource(scala.meta.inputs.Input.String(${ Expr(input.text.replace("$$", "$")) }))
       }
       else '{ scala.compiletime.summonInline[Origin.DialectOnly] }
 
@@ -320,8 +318,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
       )
       (ValDef(sym, Some(vDef.asTerm.changeOwner(sym))), Ref(sym))
 
-    object Internal
-        extends TreeLiftsTrait with TreeLifts(using quotes)(mode.isPattern, dialectExpr) {
+    object Internal extends TreeLiftsTrait with TreeLifts(using quotes)(mode.isPattern, dialectExpr) {
       import internalQuotes.reflect._
       def liftTree(tree: MetaTree): internalQuotes.reflect.Tree = this.liftableSubTree0(tree)
         .asInstanceOf[internalQuotes.reflect.Tree]
@@ -441,8 +438,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
         loop(trees, None, Nil)
       }
       def liftTreess(treess: List[List[MetaTree]]): Tree = {
-        val tripleDotQuasis = treess.flatten
-          .collect { case quasi: Quasi if quasi.rank == 2 => quasi }
+        val tripleDotQuasis = treess.flatten.collect { case quasi: Quasi if quasi.rank == 2 => quasi }
         if (tripleDotQuasis.isEmpty) {
           val args = treess.map(liftTrees)
           if mode.isTerm then
@@ -482,9 +478,9 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
             }
             val lifted = mode match {
               case Mode.Term(_, _) => inferredPt.asType match
-                  case '[t] =>
-                    '{ scala.meta.internal.quasiquotes.Lift[t](${ quasi.termHole.arg.asExpr }) }
-                      .asTerm
+                  case '[t] => '{
+                      scala.meta.internal.quasiquotes.Lift[t](${ quasi.termHole.arg.asExpr })
+                    }.asTerm
               case Mode.Pattern(_, _, _) =>
                 // Note copied from the Scala 2 counterpart file.
                 // NOTE: Here, we would like to say q"$InternalUnlift[$inferredPt](${quasi.hole.arg})".
@@ -561,11 +557,12 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
               .find(h => pos.start <= h.arg.pos.start && h.arg.pos.start <= pos.end)
             maybeHole.getOrElse {
               val message = "this code path should've been unreachable"
-              val relevantValues = s"""
-                                      |quasi = $quasi
-                                      |quasi.pos.absolutize = ${quasi.pos.absolutize}
-                                      |holes = $holes
-                                      |""".stripMargin
+              val relevantValues =
+                s"""
+                   |quasi = $quasi
+                   |quasi.pos.absolutize = ${quasi.pos.absolutize}
+                   |holes = $holes
+                   |""".stripMargin
               throw new UnreachableError(message + relevantValues)
             }
       }
@@ -576,11 +573,12 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
             val maybeHole = holes.find(h => pos.start <= h.posStart && h.posStart <= pos.end)
             maybeHole.getOrElse {
               val message = "this code path should've been unreachable"
-              val relevantValues = s"""
-                                      |quasi = $quasi
-                                      |quasi.pos.absolutize = ${quasi.pos.absolutize}
-                                      |holes = $holes
-                                      |""".stripMargin
+              val relevantValues =
+                s"""
+                   |quasi = $quasi
+                   |quasi.pos.absolutize = ${quasi.pos.absolutize}
+                   |holes = $holes
+                   |""".stripMargin
               throw new UnreachableError(message + relevantValues)
             }
       }
@@ -653,9 +651,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
                   else None
                 }
             }
-            def elsep(using Quotes) =
-              if (isBooleanExtractor) '{ false }
-              else '{ scala.None }
+            def elsep(using Quotes) = if (isBooleanExtractor) '{ false } else '{ scala.None }
 
             def matchp(input: Expr[Any])(using Quotes) = {
               val matchTerm = Match(

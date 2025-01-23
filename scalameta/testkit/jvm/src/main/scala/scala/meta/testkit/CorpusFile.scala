@@ -41,11 +41,12 @@ case class CorpusFile(filename: String, projectUrl: String, commit: String) {
   /** username in username/repo */
   def user: String = userRepo.split("/")(0)
 
-  override def toString: String = s"""ScalaFile(
-                                     |    project: $user
-                                     |    github: $githubUrl
-                                     |    raw: $rawUrl
-                                     |)""".stripMargin
+  override def toString: String =
+    s"""ScalaFile(
+       |    project: $user
+       |    github: $githubUrl
+       |    raw: $rawUrl
+       |)""".stripMargin
 
   private def link(url: String) = s"[$repo/${url.replaceFirst(".*/", "")}]($url)"
 }

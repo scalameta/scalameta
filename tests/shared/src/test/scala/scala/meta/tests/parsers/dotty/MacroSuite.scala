@@ -61,8 +61,7 @@ class MacroSuite extends BaseDottySuite {
 
   test("macro-quote-expr: if (b) '{ true } else '{ false }") {
     runTestAssert[Stat]("if (b) '{ true } else '{ false }")(
-      Term
-        .If(tname("b"), Term.QuotedMacroExpr(blk(bool(true))), Term.QuotedMacroExpr(blk(bool(false))))
+      Term.If(tname("b"), Term.QuotedMacroExpr(blk(bool(true))), Term.QuotedMacroExpr(blk(bool(false))))
     )
   }
 
@@ -82,8 +81,7 @@ class MacroSuite extends BaseDottySuite {
   test("macro-quote-expr: x match { case '{ a } => 1 }") {
     val layoutMatchComplex = "x match {\n  case '{ a } => 1\n}"
     runTestAssert[Stat]("x match { case '{ a } => 1 }", assertLayout = Some(layoutMatchComplex))(
-      Term
-        .Match(tname("x"), List(Case(Pat.Macro(Term.QuotedMacroExpr(blk(tname("a")))), None, int(1))))
+      Term.Match(tname("x"), List(Case(Pat.Macro(Term.QuotedMacroExpr(blk(tname("a")))), None, int(1))))
     )
   }
 
@@ -95,9 +93,9 @@ class MacroSuite extends BaseDottySuite {
     )(tmatch(
       tname("x"),
       Case(
-        Pat.Macro(Term.QuotedMacroExpr(blk(Term.SplicedMacroPat(
-          Pat.Bind(patvar("bind"), Pat.Macro(Term.QuotedMacroExpr(blk(tname("a")))))
-        )))),
+        Pat.Macro(Term.QuotedMacroExpr(blk(
+          Term.SplicedMacroPat(Pat.Bind(patvar("bind"), Pat.Macro(Term.QuotedMacroExpr(blk(tname("a"))))))
+        ))),
         None,
         int(1)
       )
@@ -122,11 +120,12 @@ class MacroSuite extends BaseDottySuite {
   }
 
   test("macro-quote-multiline") {
-    val code = """|'{
-                  |  1 + 3
-                  |  'x + 3
-                  |  zzz
-                  |}""".stripMargin
+    val code =
+      """|'{
+         |  1 + 3
+         |  'x + 3
+         |  zzz
+         |}""".stripMargin
     runTestAssert[Stat](code)(Term.QuotedMacroExpr(blk(
       tinfix(int(1), "+", int(3)),
       tinfix(Term.QuotedMacroExpr(tname("x")), "+", int(3)),
@@ -184,11 +183,12 @@ class MacroSuite extends BaseDottySuite {
   }
 
   test("macro-splice-multiline") {
-    val code = """|${
-                  |  val x = 'y
-                  |  println(d)
-                  |  1
-                  |}""".stripMargin
+    val code =
+      """|${
+         |  val x = 'y
+         |  println(d)
+         |  1
+         |}""".stripMargin
     runTestAssert[Stat](code)(Term.SplicedMacroExpr(blk(
       Defn.Val(Nil, List(patvar("x")), None, Term.QuotedMacroExpr(tname("y"))),
       tapply(tname("println"), tname("d")),
@@ -291,9 +291,10 @@ class MacroSuite extends BaseDottySuite {
   }
 
   test("#6483-metals splice in braces") {
-    val code = """|{
-                  |  ${ fn }
-                  |}[Int](0)""".stripMargin
+    val code =
+      """|{
+         |  ${ fn }
+         |}[Int](0)""".stripMargin
     val tree = tapply(tapplytype(blk(Term.SplicedMacroExpr(blk(tname("fn")))), pname("Int")), lit(0))
     runTestAssert[Stat](code)(tree)
   }
@@ -302,9 +303,9 @@ class MacroSuite extends BaseDottySuite {
     val code = "([B] => (c: B) => fn[B](c))[Int](0)"
     val tree = tapply(
       tapplytype(
-        tpolyfunc(pparam("B"))(
-          tfunc(tparam("c", "B"))(tapply(tapplytype(tname("fn"), pname("B")), tname("c")))
-        ),
+        tpolyfunc(
+          pparam("B")
+        )(tfunc(tparam("c", "B"))(tapply(tapplytype(tname("fn"), pname("B")), tname("c")))),
         pname("Int")
       ),
       lit(0)
@@ -313,10 +314,11 @@ class MacroSuite extends BaseDottySuite {
   }
 
   test("#6483-metals poly in braces") {
-    val code = """|{
-                  |  [B] => (c: B) => fn[B](c)
-                  |}[Int](0)
-                  |""".stripMargin
+    val code =
+      """|{
+         |  [B] => (c: B) => fn[B](c)
+         |}[Int](0)
+         |""".stripMargin
     val tree = tapply(
       tapplytype(
         blk(tpolyfunc(pparam("B"))(

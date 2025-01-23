@@ -40,9 +40,10 @@ object JSFacade {
   private[this] def toNode(t: Tree): js.Dynamic = {
     val base = js.Dynamic.literal("type" -> t.productPrefix, "pos" -> toPosition(t.pos))
 
-    val fields = js.Dictionary(t.productFields.zip(t.productIterator.toList).collect {
-      case (name, value) => name -> toNode(value)
-    }: _*).asInstanceOf[js.Dynamic]
+    val fields = js
+      .Dictionary(t.productFields.zip(t.productIterator.toList).collect { case (name, value) =>
+        name -> toNode(value)
+      }: _*).asInstanceOf[js.Dynamic]
 
     def v[A](a: A): js.Dynamic = js.Dynamic.literal("value" -> a.asInstanceOf[js.Any])
 
@@ -66,14 +67,14 @@ object JSFacade {
   private[this] type Settings = js.UndefOr[js.Dictionary[String]]
   private[this] val defaultSettings = js.undefined.asInstanceOf[Settings]
 
-  private[this] def extractDialect(s: Settings): Either[String, Dialect] =
-    s.toOption.flatMap(_.get("dialect")) match {
-      case Some(dialectStr) => Dialect.standards.get(dialectStr) match {
-          case Some(dialect) => Right(dialect)
-          case None => Left(s"'$dialectStr' is not a valid dialect.")
-        }
-      case None => Right(dialects.Scala213)
-    }
+  private[this] def extractDialect(s: Settings): Either[String, Dialect] = s.toOption
+    .flatMap(_.get("dialect")) match {
+    case Some(dialectStr) => Dialect.standards.get(dialectStr) match {
+        case Some(dialect) => Right(dialect)
+        case None => Left(s"'$dialectStr' is not a valid dialect.")
+      }
+    case None => Right(dialects.Scala213)
+  }
 
   private[this] def parse[A <: Tree: Parse](code: String, settings: Settings): js.Dictionary[Any] =
     extractDialect(settings) match {

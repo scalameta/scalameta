@@ -74,7 +74,7 @@ trait SymbolInformationOps {
         if (sym.isType && sym.isCovariant) flip(p.COVARIANT)
         if (sym.isType && sym.isContravariant) flip(p.CONTRAVARIANT)
         // NOTE: Scalap doesn't expose locals.
-        if (/*kind.isLocal ||*/ sym.isUsefulField) if (sym.isMutable) flip(p.VAR) else flip(p.VAL)
+        if ( /*kind.isLocal ||*/ sym.isUsefulField) if (sym.isMutable) flip(p.VAR) else flip(p.VAL)
         if (sym.isAccessor) if (sym.isStable) flip(p.VAL) else flip(p.VAR)
         if (sym.isParam) sym.parent.foreach {
           case parent: SymbolInfoSymbol => if ((parent.properties & p.PRIMARY.value) != 0) parent

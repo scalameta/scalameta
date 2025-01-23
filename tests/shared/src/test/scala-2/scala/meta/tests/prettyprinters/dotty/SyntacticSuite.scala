@@ -23,10 +23,9 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("case List[_](xs @ _*): scala31") {
     implicit val dialect = dialects.Scala31
-    checkTree(pat("List[_](xs @ _*)"), "List[_](xs @ _*)")(Pat.Extract(
-      tapplytype(tname("List"), pwildcard),
-      List(Pat.Bind(patvar("xs"), Pat.SeqWildcard()))
-    ))
+    checkTree(pat("List[_](xs @ _*)"), "List[_](xs @ _*)")(
+      Pat.Extract(tapplytype(tname("List"), pwildcard), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard())))
+    )
   }
 
   test("case List[_](xs @ _*): scala3future") {

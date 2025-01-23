@@ -25,9 +25,10 @@ class ChildrenSuite extends ParseSuite {
   }
 
   test("derives-in-children") {
-    val source = """|
-                    |class Foo derives A[T], B[T] {  }
-                    |""".stripMargin
+    val source =
+      """|
+         |class Foo derives A[T], B[T] {  }
+         |""".stripMargin
     val tree = dialects.Scala3(source).parse[Stat].get
     val containsBinaryCompatFields = tree.children.exists {
       case t: Template => t.children.exists(c => c.is[Type.Apply] && c.toString == "A[T]")

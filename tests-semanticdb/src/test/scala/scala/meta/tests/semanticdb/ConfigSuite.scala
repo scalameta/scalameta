@@ -109,10 +109,11 @@ class ConfigSuite extends FunSuite {
           """|_empty_/A. A
              |_empty_/A.x. x
              |""".stripMargin
-        else """|_empty_/A. A
-               |_empty_/A.x. x
-               |local0 y
-               |""".stripMargin
+        else
+          """|_empty_/A. A
+             |_empty_/A.x. x
+             |local0 y
+             |""".stripMargin
 
       assertNoDiff(obtained, expected)
     }

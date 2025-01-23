@@ -239,8 +239,7 @@ class ScaladocParserSuite extends FunSuite {
        """.stripMargin
     )
 
-    val expectation =
-      Option(Scaladoc(Seq(Paragraph(Seq(CodeBlock(complexCodeBlock ++ Seq("", " foo")))))))
+    val expectation = Option(Scaladoc(Seq(Paragraph(Seq(CodeBlock(complexCodeBlock ++ Seq("", " foo")))))))
     assertEquals(result, expectation)
   }
 
@@ -272,9 +271,9 @@ class ScaladocParserSuite extends FunSuite {
        """.stripMargin
     )
 
-    val expectation = Option(Scaladoc(
-      Seq(Paragraph(Seq(MdCodeBlock(Nil, Nil, "```"), Text(Seq(Word("```"), Word("```"))))))
-    ))
+    val expectation = Option(
+      Scaladoc(Seq(Paragraph(Seq(MdCodeBlock(Nil, Nil, "```"), Text(Seq(Word("```"), Word("```")))))))
+    )
     assertEquals(result, expectation)
   }
 
@@ -702,9 +701,8 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(
-      Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("-5"))))), Paragraph(Seq(Text(Seq(Word("1.0%")))))))
-    )
+    val expected =
+      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("-5"))))), Paragraph(Seq(Text(Seq(Word("1.0%"))))))))
     assertEquals(result, expected)
   }
 
@@ -1434,9 +1432,9 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
       ),
-      Option(Scaladoc(
-        Seq(Paragraph(Seq(Tag(TagType.Param, Some(Word("foo")), Seq(Text(Seq(Word("bar-baz"))))))))
-      ))
+      Option(
+        Scaladoc(Seq(Paragraph(Seq(Tag(TagType.Param, Some(Word("foo")), Seq(Text(Seq(Word("bar-baz")))))))))
+      )
     )
   }
 

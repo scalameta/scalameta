@@ -6,7 +6,8 @@ import scala.meta.tests.TreeSuiteBase
 class TransformerSuite extends TreeSuiteBase {
 
   test("Transformer Ok") {
-    val tree0 = q"""
+    val tree0 =
+      q"""
       def foo(x: x)(x: Int) = x + x + 1
       class C(x: x) {
         def bar(x: x) = ???
@@ -30,7 +31,8 @@ class TransformerSuite extends TreeSuiteBase {
   }
 
   test("Transformer Fail") {
-    val tree0 = q"""
+    val tree0 =
+      q"""
       def foo(x: x)(x: Int) = x + x
       class C(x: x) {
         def bar(x: x) = ???

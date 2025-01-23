@@ -35,9 +35,7 @@ class DeclSuite extends ParseSuite {
   }
 
   test("type T >: lo <: hi") {
-    assertTree(templStat("type T >: lo <: hi")) {
-      Decl.Type(Nil, pname("T"), Nil, bounds("lo", "hi"))
-    }
+    assertTree(templStat("type T >: lo <: hi"))(Decl.Type(Nil, pname("T"), Nil, bounds("lo", "hi")))
   }
 
   test("type F[T]") {
@@ -63,9 +61,7 @@ class DeclSuite extends ParseSuite {
     }
   }
 
-  test("def f") {
-    assertTree(templStat("def f"))(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Unit")))
-  }
+  test("def f")(assertTree(templStat("def f"))(Decl.Def(Nil, tname("f"), Nil, Nil, pname("Unit"))))
 
   test("def f(x: Int)") {
     assertTree(templStat("def f(x: Int)")) {
@@ -109,9 +105,7 @@ class DeclSuite extends ParseSuite {
     }
   }
 
-  test("def f: X") {
-    assertTree(templStat("def f: X"))(Decl.Def(Nil, tname("f"), Nil, Nil, pname("X")))
-  }
+  test("def f: X")(assertTree(templStat("def f: X"))(Decl.Def(Nil, tname("f"), Nil, Nil, pname("X"))))
 
   test("def f[T]: T") {
     assertTree(templStat("def f[T]: T")) {

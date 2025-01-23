@@ -8,9 +8,10 @@ class Scala210Suite extends ParseSuite {
   implicit val dialect: Dialect = dialects.Scala210
 
   test("$_") {
-    val error = """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr
-                   | val q"x + $_" = tree 
-                   |            ^""".stripMargin.lf2nl
+    val error =
+      """|<input>:1: error: Not one of: `$$', `$'ident, `$'this, `$'BlockExpr
+         | val q"x + $_" = tree 
+         |            ^""".stripMargin.lf2nl
     interceptMessage[ParseException](error)(stat(""" val q"x + $_" = tree """))
   }
 

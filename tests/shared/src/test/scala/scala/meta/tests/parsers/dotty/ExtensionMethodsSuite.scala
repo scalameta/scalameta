@@ -39,9 +39,10 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("simple-method-indent") {
-    val code = """|extension (c: Circle)
-                  |  def crc: Int = 2
-                  |""".stripMargin
+    val code =
+      """|extension (c: Circle)
+         |  def crc: Int = 2
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some("extension (c: Circle) def crc: Int = 2"))(
       Defn.ExtensionGroup(
         Nil,
@@ -52,9 +53,10 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("modifier-method-indent") {
-    val code = """|extension (c: Circle)
-                  |  private def crc: Int = 2
-                  |""".stripMargin
+    val code =
+      """|extension (c: Circle)
+         |  private def crc: Int = 2
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some("extension (c: Circle) private def crc: Int = 2"))(
       Defn.ExtensionGroup(
         Nil,
@@ -65,11 +67,12 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("multiple-methods-indent") {
-    val code = """|extension (c: Circle)
-                  |  def cra: Int = 2
-                  |  def crb: String = "3"
-                  |  def crc: Boolean = 4
-                  |""".stripMargin
+    val code =
+      """|extension (c: Circle)
+         |  def cra: Int = 2
+         |  def crb: String = "3"
+         |  def crc: Boolean = 4
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(Defn.ExtensionGroup(
       Nil,
       List(List(tparam("c", "Circle"))),
@@ -82,10 +85,11 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("simple-method-braces") {
-    val code = """|extension (c: Circle) {
-                  |  def crc: Int = 2
-                  |}
-                  |""".stripMargin
+    val code =
+      """|extension (c: Circle) {
+         |  def crc: Int = 2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](
       code,
       assertLayout = Some(
@@ -102,14 +106,16 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension-using-single") {
-    val code = """|extension (c: Circle)(using Context, x: Int) {
-                  |  def crc: Int = 2
-                  |}
-                  |""".stripMargin
-    val output = """|extension (c: Circle)(using Context, x: Int) {
-                    |  def crc: Int = 2
-                    |}
-                    |""".stripMargin
+    val code =
+      """|extension (c: Circle)(using Context, x: Int) {
+         |  def crc: Int = 2
+         |}
+         |""".stripMargin
+    val output =
+      """|extension (c: Circle)(using Context, x: Int) {
+         |  def crc: Int = 2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.ExtensionGroup(
       Nil,
       List(
@@ -121,16 +127,18 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension-using-newline") {
-    val code = """|extension (c: Circle)
-                  |  (using Context, x: Int) 
-                  |{
-                  |  def crc: Int = 2
-                  |}
-                  |""".stripMargin
-    val output = """|extension (c: Circle)(using Context, x: Int) {
-                    |  def crc: Int = 2
-                    |}
-                    |""".stripMargin
+    val code =
+      """|extension (c: Circle)
+         |  (using Context, x: Int) 
+         |{
+         |  def crc: Int = 2
+         |}
+         |""".stripMargin
+    val output =
+      """|extension (c: Circle)(using Context, x: Int) {
+         |  def crc: Int = 2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.ExtensionGroup(
       Nil,
       List(
@@ -142,14 +150,16 @@ class ExtensionMethodsSuite extends BaseDottySuite {
   }
 
   test("extension-using-multi") {
-    val code = """|extension (c: Circle)(using Context, x: Int)(using y: String, File) {
-                  |  def crc: Int = 2
-                  |}
-                  |""".stripMargin
-    val output = """|extension (c: Circle)(using Context, x: Int)(using y: String, File) {
-                    |  def crc: Int = 2
-                    |}
-                    |""".stripMargin
+    val code =
+      """|extension (c: Circle)(using Context, x: Int)(using y: String, File) {
+         |  def crc: Int = 2
+         |}
+         |""".stripMargin
+    val output =
+      """|extension (c: Circle)(using Context, x: Int)(using y: String, File) {
+         |  def crc: Int = 2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.ExtensionGroup(
       Nil,
       List(
@@ -521,8 +531,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
           Nil,
           List(List(tparam("x", "X"))),
           blk(
-            Defn
-              .Def(List(Mod.Private(anon)), tname("foo"), Nil, Some(pname("Foo")), tname("getFoo")),
+            Defn.Def(List(Mod.Private(anon)), tname("foo"), Nil, Some(pname("Foo")), tname("getFoo")),
             Defn
               .Def(List(Mod.Protected(anon)), tname("bar"), Nil, Some(pname("Bar")), tname("getBar"))
           )

@@ -64,9 +64,8 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val liftAdts = adts.zip(defNames).map { case (adt, defName) =>
       val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse {
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
-        def getNamePath(parts: Iterable[String]): Tree = parts.foldLeft(init) { (acc, part) =>
-          q"$u.Select($acc, $u.TermName($part))"
-        }
+        def getNamePath(parts: Iterable[String]): Tree = parts
+          .foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
         val nameParts = adt.sym.fullName.split('.')
         val body =
           if (adt.sym.isClass) {
@@ -80,9 +79,8 @@ class LiftableMacros(val c: Context) extends AdtReflection {
             }
             val latestAfterVersion =
               if (adt.sym.isAstClass) {
-                val moduleNames = adt.sym.companion.info.decls.flatMap { x =>
-                  if (x.isModule) Some(x.name.toString) else None
-                }
+                val moduleNames = adt.sym.companion.info.decls
+                  .flatMap(x => if (x.isModule) Some(x.name.toString) else None)
                 val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse {
                   c.abort(
                     c.enclosingPosition,

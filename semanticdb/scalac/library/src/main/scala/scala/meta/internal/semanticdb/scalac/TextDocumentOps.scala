@@ -350,9 +350,8 @@ trait TextDocumentOps {
                   tryMstart(gpoint)
                 }
               case _: g.DefTree => tryMstart(gpoint)
-              case _: g.This => mstarts.get(gpoint).foreach { name =>
-                  if (gsym.nameString == name.value) success(name, gsym)
-                }
+              case _: g.This => mstarts.get(gpoint)
+                  .foreach(name => if (gsym.nameString == name.value) success(name, gsym))
               case t: g.Super => msupers.get(gend).foreach { mtree =>
                   success(mtree.thisp, gsym)
                   // now find the super parent

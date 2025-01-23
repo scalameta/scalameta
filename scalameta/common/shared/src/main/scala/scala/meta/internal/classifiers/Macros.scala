@@ -28,7 +28,8 @@ class ClassifierMacros(val c: Context) extends MacroHelpers {
         case None => c
             .abort(c.enclosingPosition, "only traits with an unapply method can be @classifier")
       }
-      val evidence = q"""
+      val evidence =
+        q"""
         implicit def classifier[T <: $t]: $ClassifierClass[T, $name] = new $ClassifierClass[T, $name] {
           def apply(x: T): $BooleanClass = $mname.unapply(x)
         }

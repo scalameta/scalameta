@@ -8,9 +8,7 @@ class InterleavedDefnSuite extends BaseDottySuite {
 
   override protected val dialect: Dialect = Scala3Future
 
-  test("def x = 2") {
-    checkTree(templStat("def x = 2"))(Defn.Def(Nil, tname("x"), Nil, None, int(2)))
-  }
+  test("def x = 2")(checkTree(templStat("def x = 2"))(Defn.Def(Nil, tname("x"), Nil, None, int(2))))
 
   test("def x[A <: B] = 2") {
     checkTree(templStat("def x[A <: B] = 2")) {
@@ -75,8 +73,7 @@ class InterleavedDefnSuite extends BaseDottySuite {
         tselect(
           blk(Term.ForYield(
             List(
-              Enumerator
-                .Generator(patwildcard, tapply(tselect("scala", "util", "Success"), int(123)))
+              Enumerator.Generator(patwildcard, tapply(tselect("scala", "util", "Success"), int(123)))
             ),
             int(42)
           )),

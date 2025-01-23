@@ -15,13 +15,14 @@ sealed abstract class AssociatedComments(
     val commentStructure = comments.map(comment => logger.revealWhitespace(comment.syntax))
     s"    ${tok.structure} => $commentStructure"
   }.mkString("\n")
-  def syntax: String = s"""|AssociatedComments(
-                           |  Leading =
-                           |${pretty(leadingMap)}
-                           |
-                           |  Trailing =
-                           |${pretty(trailingMap)}
-                           |)""".stripMargin
+  def syntax: String =
+    s"""|AssociatedComments(
+        |  Leading =
+        |${pretty(leadingMap)}
+        |
+        |  Trailing =
+        |${pretty(trailingMap)}
+        |)""".stripMargin
 
   override def toString: String = syntax
   def leading(tree: Tree): Set[Comment] = (for {

@@ -19,10 +19,9 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
     else if (typeVariable != null) Some(typeVariable)
     else simpleClassTypeSignatures.result() match {
       case Nil => None
-      case simpleClass :: suffix => Some(ClassTypeSignature(
-          simpleClass.result(),
-          suffix.map(s => ClassTypeSignatureSuffix(s.result()))
-        ))
+      case simpleClass :: suffix => Some(
+          ClassTypeSignature(simpleClass.result(), suffix.map(s => ClassTypeSignatureSuffix(s.result())))
+        )
     }
 
   override def visitSuperclass: SignatureVisitor = this

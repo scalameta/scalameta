@@ -180,10 +180,8 @@ class FewerBracesSuite extends BaseDottySuite {
       Nil,
       None,
       blk(
-        Defn
-          .Val(Nil, List(patvar("firstLine")), None, tapply(tselect("files", "fold"), blk(int(123)))),
-        Defn
-          .Val(Nil, List(patvar("secondLine")), None, tapply(tselect("files", "fold"), blk(int(123))))
+        Defn.Val(Nil, List(patvar("firstLine")), None, tapply(tselect("files", "fold"), blk(int(123)))),
+        Defn.Val(Nil, List(patvar("secondLine")), None, tapply(tselect("files", "fold"), blk(int(123))))
       )
     ))
   }
@@ -501,42 +499,46 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3296") {
-    val code = """object MyApp:
-                 |
-                 |  def test(str: String)(block: => Boolean): Unit =
-                 |    println(str + " : " + block)
-                 |
-                 |  test("First test"):
-                 |    case class Foo(x: Int, y: String)
-                 |    1 == 1
-                 |
-                 |  test("Second test"):
-                 |    1 == 1
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  def test(str: String)(block: => Boolean): Unit = println(str + " : " + block)
-                    |  test("First test") {
-                    |    case class Foo(x: Int, y: String)
-                    |    1 == 1
-                    |  }
-                    |  test("Second test") {
-                    |    1 == 1
-                    |  }
-                    |}
-                    |""".stripMargin
+    val code =
+      """object MyApp:
+        |
+        |  def test(str: String)(block: => Boolean): Unit =
+        |    println(str + " : " + block)
+        |
+        |  test("First test"):
+        |    case class Foo(x: Int, y: String)
+        |    1 == 1
+        |
+        |  test("Second test"):
+        |    1 == 1
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  def test(str: String)(block: => Boolean): Unit = println(str + " : " + block)
+         |  test("First test") {
+         |    case class Foo(x: Int, y: String)
+         |    1 == 1
+         |  }
+         |  test("Second test") {
+         |    1 == 1
+         |  }
+         |}
+         |""".stripMargin
     assertNoDiff(parseStat(code).reprint, layout)
   }
 
   test("#3319 lambda complex lhs") {
-    val code = """object MyApp:
-                 |  List(1,2,3) foreach: x =>
-                 |    println(x)
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  List(1, 2, 3) foreach {
-                    |    x => println(x)
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """object MyApp:
+        |  List(1,2,3) foreach: x =>
+        |    println(x)
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  List(1, 2, 3) foreach {
+         |    x => println(x)
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -550,15 +552,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3319 lambda simple lhs") {
-    val code = """object MyApp:
-                 |  ids foreach: x =>
-                 |    println(x)
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  ids foreach {
-                    |    x => println(x)
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """object MyApp:
+        |  ids foreach: x =>
+        |    println(x)
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  ids foreach {
+         |    x => println(x)
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -572,20 +576,22 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3319 lambda 'chained'") {
-    val code = """object MyApp:
-                 |  ids map: x =>
-                 |      foo(x)
-                 |    map: x =>
-                 |      bar(x)
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  ids map {
-                    |    x => foo(x)
-                    |  }
-                    |  map {
-                    |    x => bar(x)
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """object MyApp:
+        |  ids map: x =>
+        |      foo(x)
+        |    map: x =>
+        |      bar(x)
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  ids map {
+         |    x => foo(x)
+         |  }
+         |  map {
+         |    x => bar(x)
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -598,17 +604,19 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3319 lambda block") {
-    val code = """object MyApp:
-                 |  ids map: x =>
-                 |      foo(x)
-                 |      bar(x)
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  ids map { x =>
-                    |    foo(x)
-                    |    bar(x)
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """object MyApp:
+        |  ids map: x =>
+        |      foo(x)
+        |      bar(x)
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  ids map { x =>
+         |    foo(x)
+         |    bar(x)
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -624,15 +632,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3319 function complex lhs") {
-    val code = """object MyApp:
-                 |  List(1,2,3) foreach:
-                 |    println
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  List(1, 2, 3) foreach {
-                    |    println
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """object MyApp:
+        |  List(1,2,3) foreach:
+        |    println
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  List(1, 2, 3) foreach {
+         |    println
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -642,35 +652,39 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3319 function simple lhs") {
-    val code = """object MyApp:
-                 |  ids foreach:
-                 |    println
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  ids foreach {
-                    |    println
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """object MyApp:
+        |  ids foreach:
+        |    println
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  ids foreach {
+         |    println
+         |  }
+         |}""".stripMargin
     val tree = Defn
       .Object(Nil, tname("MyApp"), tpl(tinfix(tname("ids"), "foreach", blk(tname("println")))))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("#3319 function 'chained'") {
-    val code = """object MyApp:
-                 |  ids map:
-                 |      foo
-                 |    map:
-                 |      bar
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  ids map {
-                    |    foo
-                    |  }
-                    |  map {
-                    |    bar
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """object MyApp:
+        |  ids map:
+        |      foo
+        |    map:
+        |      bar
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  ids map {
+         |    foo
+         |  }
+         |  map {
+         |    bar
+         |  }
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -680,22 +694,24 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3390 within infix, within indented block") {
-    val code = """object MyApp:
-                 |  a >>> b.map:
-                 |    foo
-                 |    bar(
-                 |      baz,
-                 |      qux
-                 |    )
-                 |  >>> c
-                 |""".stripMargin
-    val layout = """|object MyApp {
-                    |  a >>> b.map {
-                    |    foo
-                    |    bar(baz, qux)
-                    |  } >>> c
-                    |}
-                    |""".stripMargin
+    val code =
+      """object MyApp:
+        |  a >>> b.map:
+        |    foo
+        |    bar(
+        |      baz,
+        |      qux
+        |    )
+        |  >>> c
+        |""".stripMargin
+    val layout =
+      """|object MyApp {
+         |  a >>> b.map {
+         |    foo
+         |    bar(baz, qux)
+         |  } >>> c
+         |}
+         |""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
@@ -716,19 +732,21 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#3390 within infix, at top level") {
-    val code = """a >>> b.map:
-                 |  foo
-                 |  bar(
-                 |    baz,
-                 |    qux
-                 |  )
-                 |>>> c
-                 |""".stripMargin
-    val layout = """|a >>> b.map {
-                    |  foo
-                    |  bar(baz, qux)
-                    |} >>> c
-                    |""".stripMargin
+    val code =
+      """a >>> b.map:
+        |  foo
+        |  bar(
+        |    baz,
+        |    qux
+        |  )
+        |>>> c
+        |""".stripMargin
+    val layout =
+      """|a >>> b.map {
+         |  foo
+         |  bar(baz, qux)
+         |} >>> c
+         |""".stripMargin
     val tree = tinfix(
       tinfix(
         tname("a"),
@@ -742,81 +760,91 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 1 simple, space after op, top-level, not indented") {
-    val code = """
-                 |baz:
-                 |  arg
-                 |++ qux
-                 |""".stripMargin
-    val layout = """|baz {
-                    |  arg
-                    |} ++ qux""".stripMargin
+    val code =
+      """
+        |baz:
+        |  arg
+        |++ qux
+        |""".stripMargin
+    val layout =
+      """|baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = tinfix(tapply(tname("baz"), blk(tname("arg"))), "++", tname("qux"))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("scalafmt #3720 1 simple, space after op, top-level, indented") {
-    val code = """
-                 |  baz:
-                 |    arg
-                 |  ++ qux
-                 |""".stripMargin
-    val layout = """|baz {
-                    |  arg
-                    |} ++ qux""".stripMargin
+    val code =
+      """
+        |  baz:
+        |    arg
+        |  ++ qux
+        |""".stripMargin
+    val layout =
+      """|baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = tinfix(tapply(tname("baz"), blk(tname("arg"))), "++", tname("qux"))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("scalafmt #3720 1 simple, space after op, object in braces") {
-    val code = """
-                 |object a {
-                 |  baz:
-                 |    arg
-                 |  ++ qux
-                 |}
-                 |""".stripMargin
-    val layout = """|object a {
-                    |  baz {
-                    |    arg
-                    |  } ++ qux
-                    |}""".stripMargin
+    val code =
+      """
+        |object a {
+        |  baz:
+        |    arg
+        |  ++ qux
+        |}
+        |""".stripMargin
+    val layout =
+      """|object a {
+         |  baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn
       .Object(Nil, tname("a"), tpl(tinfix(tapply(tname("baz"), blk(tname("arg"))), "++", tname("qux"))))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("scalafmt #3720 1 simple, space after op, object indented") {
-    val code = """
-                 |object a:
-                 |  baz:
-                 |    arg
-                 |  ++ qux
-                 |""".stripMargin
-    val layout = """|object a {
-                    |  baz {
-                    |    arg
-                    |  } ++ qux
-                    |}""".stripMargin
+    val code =
+      """
+        |object a:
+        |  baz:
+        |    arg
+        |  ++ qux
+        |""".stripMargin
+    val layout =
+      """|object a {
+         |  baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn
       .Object(Nil, tname("a"), tpl(tinfix(tapply(tname("baz"), blk(tname("arg"))), "++", tname("qux"))))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
   test("scalafmt #3720 2 complex, break after op, top-level, not indented") {
-    val code = """
-                 |foo.bar:
-                 |  arg
-                 |++
-                 |  baz:
-                 |    arg
-                 |  ++
-                 |  qux
-                 |""".stripMargin
-    val layout = """|foo.bar {
-                    |  arg
-                    |} ++ baz {
-                    |  arg
-                    |} ++ qux""".stripMargin
+    val code =
+      """
+        |foo.bar:
+        |  arg
+        |++
+        |  baz:
+        |    arg
+        |  ++
+        |  qux
+        |""".stripMargin
+    val layout =
+      """|foo.bar {
+         |  arg
+         |} ++ baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = tinfix(
       tinfix(
         tapply(tselect("foo", "bar"), blk(tname("arg"))),
@@ -830,20 +858,22 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 2 complex, break after op, top-level, indented") {
-    val code = """
-                 |  foo.bar:
-                 |    arg
-                 |  ++
-                 |  baz:
-                 |    arg
-                 |  ++
-                 |  qux
-                 |""".stripMargin
-    val layout = """|foo.bar {
-                    |  arg
-                    |} ++ baz {
-                    |  arg
-                    |} ++ qux""".stripMargin
+    val code =
+      """
+        |  foo.bar:
+        |    arg
+        |  ++
+        |  baz:
+        |    arg
+        |  ++
+        |  qux
+        |""".stripMargin
+    val layout =
+      """|foo.bar {
+         |  arg
+         |} ++ baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = tinfix(
       tinfix(
         tapply(tselect("foo", "bar"), blk(tname("arg"))),
@@ -857,24 +887,26 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 2 complex, break after op, objeect in braces") {
-    val code = """
-                 |object a {
-                 |  foo.bar:
-                 |    arg
-                 |  ++
-                 |  baz:
-                 |    arg
-                 |  ++
-                 |  qux
-                 |}
-                 |""".stripMargin
-    val layout = """|object a {
-                    |  foo.bar {
-                    |    arg
-                    |  } ++ baz {
-                    |    arg
-                    |  } ++ qux
-                    |}""".stripMargin
+    val code =
+      """
+        |object a {
+        |  foo.bar:
+        |    arg
+        |  ++
+        |  baz:
+        |    arg
+        |  ++
+        |  qux
+        |}
+        |""".stripMargin
+    val layout =
+      """|object a {
+         |  foo.bar {
+         |    arg
+         |  } ++ baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -892,23 +924,25 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 2 complex, break after op, objeect indented") {
-    val code = """
-                 |object a:
-                 |  foo.bar:
-                 |    arg
-                 |  ++
-                 |  baz:
-                 |    arg
-                 |  ++
-                 |  qux
-                 |""".stripMargin
-    val layout = """|object a {
-                    |  foo.bar {
-                    |    arg
-                    |  } ++ baz {
-                    |    arg
-                    |  } ++ qux
-                    |}""".stripMargin
+    val code =
+      """
+        |object a:
+        |  foo.bar:
+        |    arg
+        |  ++
+        |  baz:
+        |    arg
+        |  ++
+        |  qux
+        |""".stripMargin
+    val layout =
+      """|object a {
+         |  foo.bar {
+         |    arg
+         |  } ++ baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -926,19 +960,21 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 3 complex, space after op, top-level, not indented") {
-    val code = """
-                 |foo.bar:
-                 |  arg
-                 |++
-                 |  baz:
-                 |    arg
-                 |  ++ qux
-                 |""".stripMargin
-    val layout = """|foo.bar {
-                    |  arg
-                    |} ++ baz {
-                    |  arg
-                    |} ++ qux""".stripMargin
+    val code =
+      """
+        |foo.bar:
+        |  arg
+        |++
+        |  baz:
+        |    arg
+        |  ++ qux
+        |""".stripMargin
+    val layout =
+      """|foo.bar {
+         |  arg
+         |} ++ baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = tinfix(
       tinfix(
         tapply(tselect("foo", "bar"), blk(tname("arg"))),
@@ -952,19 +988,21 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 3 complex, space after op, top-level, indented") {
-    val code = """
-                 |  foo.bar:
-                 |    arg
-                 |  ++
-                 |    baz:
-                 |      arg
-                 |    ++ qux
-                 |""".stripMargin
-    val layout = """|foo.bar {
-                    |  arg
-                    |} ++ baz {
-                    |  arg
-                    |} ++ qux""".stripMargin
+    val code =
+      """
+        |  foo.bar:
+        |    arg
+        |  ++
+        |    baz:
+        |      arg
+        |    ++ qux
+        |""".stripMargin
+    val layout =
+      """|foo.bar {
+         |  arg
+         |} ++ baz {
+         |  arg
+         |} ++ qux""".stripMargin
     val tree = tinfix(
       tinfix(
         tapply(tselect("foo", "bar"), blk(tname("arg"))),
@@ -978,23 +1016,25 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 3 complex, space after op, object in braces") {
-    val code = """
-                 |object a {
-                 |  foo.bar:
-                 |    arg
-                 |  ++
-                 |    baz:
-                 |      arg
-                 |    ++ qux
-                 |}
-                 |""".stripMargin
-    val layout = """|object a {
-                    |  foo.bar {
-                    |    arg
-                    |  } ++ baz {
-                    |    arg
-                    |  } ++ qux
-                    |}""".stripMargin
+    val code =
+      """
+        |object a {
+        |  foo.bar:
+        |    arg
+        |  ++
+        |    baz:
+        |      arg
+        |    ++ qux
+        |}
+        |""".stripMargin
+    val layout =
+      """|object a {
+         |  foo.bar {
+         |    arg
+         |  } ++ baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -1012,22 +1052,24 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 3 complex, space after op, object indented") {
-    val code = """
-                 |object a:
-                 |  foo.bar:
-                 |    arg
-                 |  ++
-                 |    baz:
-                 |      arg
-                 |    ++ qux
-                 |""".stripMargin
-    val layout = """|object a {
-                    |  foo.bar {
-                    |    arg
-                    |  } ++ baz {
-                    |    arg
-                    |  } ++ qux
-                    |}""".stripMargin
+    val code =
+      """
+        |object a:
+        |  foo.bar:
+        |    arg
+        |  ++
+        |    baz:
+        |      arg
+        |    ++ qux
+        |""".stripMargin
+    val layout =
+      """|object a {
+         |  foo.bar {
+         |    arg
+         |  } ++ baz {
+         |    arg
+         |  } ++ qux
+         |}""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -1045,24 +1087,26 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 4 complex, partial outdents, unindented def") {
-    val code = """
-                 |def mtd =
-                 |    abc:
-                 |        arg1
-                 |      ++
-                 |        abc:
-                 |            arg2
-                 |          ++
-                 |            abc:
-                 |                arg3
-                 |""".stripMargin
-    val layout = """|def mtd = abc {
-                    |  arg1 ++ abc {
-                    |    arg2 ++ abc {
-                    |      arg3
-                    |    }
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """
+        |def mtd =
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |          ++
+        |            abc:
+        |                arg3
+        |""".stripMargin
+    val layout =
+      """|def mtd = abc {
+         |  arg1 ++ abc {
+         |    arg2 ++ abc {
+         |      arg3
+         |    }
+         |  }
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1081,24 +1125,26 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 4 complex, partial outdents, indented def") {
-    val code = """
-                 |  def mtd =
-                 |    abc:
-                 |        arg1
-                 |      ++
-                 |        abc:
-                 |            arg2
-                 |          ++
-                 |            abc:
-                 |                arg3
-                 |""".stripMargin
-    val layout = """|def mtd = abc {
-                    |  arg1 ++ abc {
-                    |    arg2 ++ abc {
-                    |      arg3
-                    |    }
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |          ++
+        |            abc:
+        |                arg3
+        |""".stripMargin
+    val layout =
+      """|def mtd = abc {
+         |  arg1 ++ abc {
+         |    arg2 ++ abc {
+         |      arg3
+         |    }
+         |  }
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1117,29 +1163,31 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 4 complex, partial outdents, indented def in braces") {
-    val code = """
-                 |  def mtd = {
-                 |    abc:
-                 |        arg1
-                 |      ++
-                 |        abc:
-                 |            arg2
-                 |          ++
-                 |            abc:
-                 |                arg3
-                 |}
-                 |""".stripMargin
-    val layout = """
-                   |def mtd = {
-                   |  abc {
-                   |    arg1 ++ abc {
-                   |      arg2 ++ abc {
-                   |        arg3
-                   |      }
-                   |    }
-                   |  }
-                   |}
-                   |""".stripMargin
+    val code =
+      """
+        |  def mtd = {
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |          ++
+        |            abc:
+        |                arg3
+        |}
+        |""".stripMargin
+    val layout =
+      """
+        |def mtd = {
+        |  abc {
+        |    arg1 ++ abc {
+        |      arg2 ++ abc {
+        |        arg3
+        |      }
+        |    }
+        |  }
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1158,24 +1206,26 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 5 complex, full/partial outdents, unindented def") {
-    val code = """
-                 |def mtd =
-                 |    abc:
-                 |        arg1
-                 |      ++
-                 |        abc:
-                 |            arg2
-                 |        ++
-                 |            abc:
-                 |                arg3
-                 |""".stripMargin
-    val layout = """|def mtd = abc {
-                    |  arg1 ++ abc {
-                    |    arg2
-                    |  } ++ abc {
-                    |    arg3
-                    |  }
-                    |}""".stripMargin
+    val code =
+      """
+        |def mtd =
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |        ++
+        |            abc:
+        |                arg3
+        |""".stripMargin
+    val layout =
+      """|def mtd = abc {
+         |  arg1 ++ abc {
+         |    arg2
+         |  } ++ abc {
+         |    arg3
+         |  }
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1194,25 +1244,27 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 5 complex, full/partial outdents, indented def") {
-    val code = """
-                 |  def mtd =
-                 |    abc:
-                 |        arg1
-                 |      ++
-                 |        abc:
-                 |            arg2
-                 |        ++
-                 |            abc:
-                 |                arg3
-                 |""".stripMargin
-    val layout = """|def mtd = abc {
-                    |  arg1 ++ abc {
-                    |    arg2
-                    |  } ++ abc {
-                    |    arg3
-                    |  }
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |        ++
+        |            abc:
+        |                arg3
+        |""".stripMargin
+    val layout =
+      """|def mtd = abc {
+         |  arg1 ++ abc {
+         |    arg2
+         |  } ++ abc {
+         |    arg3
+         |  }
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1231,29 +1283,31 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 5 complex, full/partial outdents, indented def in braces") {
-    val code = """
-                 |  def mtd = {
-                 |    abc:
-                 |        arg1
-                 |      ++
-                 |        abc:
-                 |            arg2
-                 |        ++
-                 |            abc:
-                 |                arg3
-                 |  }
-                 |""".stripMargin
-    val layout = """
-                   |def mtd = {
-                   |  abc {
-                   |    arg1 ++ abc {
-                   |      arg2
-                   |    } ++ abc {
-                   |      arg3
-                   |    }
-                   |  }
-                   |}
-                   |""".stripMargin
+    val code =
+      """
+        |  def mtd = {
+        |    abc:
+        |        arg1
+        |      ++
+        |        abc:
+        |            arg2
+        |        ++
+        |            abc:
+        |                arg3
+        |  }
+        |""".stripMargin
+    val layout =
+      """
+        |def mtd = {
+        |  abc {
+        |    arg1 ++ abc {
+        |      arg2
+        |    } ++ abc {
+        |      arg3
+        |    }
+        |  }
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1272,26 +1326,28 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 6 complex, with indented comments") {
-    val code = """
-                 |  def mtd =
-                 |    abc:
-                 |        arg1
-                 |    ++ /* c1 */ // c2
-                 |        abc:
-                 |            arg2
-                 |        ++ /*
-                 |        c3
-                 |        */ abc:
-                 |                arg3
-                 |""".stripMargin
-    val layout = """|def mtd = abc {
-                    |  arg1
-                    |} ++ abc {
-                    |  arg2
-                    |} ++ abc {
-                    |  arg3
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |    ++ /* c1 */ // c2
+        |        abc:
+        |            arg2
+        |        ++ /*
+        |        c3
+        |        */ abc:
+        |                arg3
+        |""".stripMargin
+    val layout =
+      """|def mtd = abc {
+         |  arg1
+         |} ++ abc {
+         |  arg2
+         |} ++ abc {
+         |  arg3
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1307,21 +1363,23 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 6 complex, with outindented comments") {
-    val code = """
-                 |  def mtd =
-                 |    abc:
-                 |        arg1
-                 |    ++ /*
-                 |   c2
-                 |    */ abc:
-                 |        arg2
-                 |""".stripMargin
-    val layout = """|def mtd = abc {
-                    |  arg1
-                    |} ++ abc {
-                    |  arg2
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |    ++ /*
+        |   c2
+        |    */ abc:
+        |        arg2
+        |""".stripMargin
+    val layout =
+      """|def mtd = abc {
+         |  arg1
+         |} ++ abc {
+         |  arg2
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1333,21 +1391,23 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3720 6 complex, with newline after multiline comment") {
-    val code = """
-                 |  def mtd =
-                 |    abc:
-                 |        arg1
-                 |    ++ /*
-                 |       c2
-                 |    */
-                 |    abc:
-                 |        arg2
-                 |""".stripMargin
-    val layout = """|def mtd = abc {
-                    |  arg1
-                    |} ++ abc {
-                    |  arg2
-                    |}""".stripMargin
+    val code =
+      """
+        |  def mtd =
+        |    abc:
+        |        arg1
+        |    ++ /*
+        |       c2
+        |    */
+        |    abc:
+        |        arg2
+        |""".stripMargin
+    val layout =
+      """|def mtd = abc {
+         |  arg1
+         |} ++ abc {
+         |  arg2
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
@@ -1359,15 +1419,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 implicit after space") {
-    val code = """
-                 |def a =
-                 |   foo: implicit bar =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  implicit bar => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: implicit bar =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  implicit bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1379,15 +1441,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 implicit after space, with type") {
-    val code = """
-                 |def a =
-                 |   foo: implicit bar: Int =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  implicit bar: Int => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: implicit bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  implicit bar: Int => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1399,15 +1463,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 implicit after newline") {
-    val code = """
-                 |def a = foo:
-                 |   implicit bar =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  implicit bar => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a = foo:
+        |   implicit bar =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  implicit bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1419,15 +1485,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 implicit after newline, with type") {
-    val code = """
-                 |def a = foo:
-                 |   implicit bar: Int =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  implicit bar: Int => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a = foo:
+        |   implicit bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  implicit bar: Int => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1440,10 +1508,11 @@ class FewerBracesSuite extends BaseDottySuite {
 
   test("scalafmt #3763 implicit in braces, no fewer") {
     val code = "def a = foo { implicit bar => baz }"
-    val layout = """def a = foo {
-                   |  implicit bar => baz
-                   |}
-                   |""".stripMargin
+    val layout =
+      """def a = foo {
+        |  implicit bar => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1456,10 +1525,11 @@ class FewerBracesSuite extends BaseDottySuite {
 
   test("scalafmt #3763 implicit in braces, with type, no fewer") {
     val code = "def a = foo { implicit bar: Int => baz }"
-    val layout = """def a = foo {
-                   |  implicit bar: Int => baz
-                   |}
-                   |""".stripMargin
+    val layout =
+      """def a = foo {
+        |  implicit bar: Int => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1471,15 +1541,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using after space") {
-    val code = """
-                 |def a =
-                 |   foo: using bar =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: using bar =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1491,15 +1563,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using after space, with type") {
-    val code = """
-                 |def a =
-                 |   foo: using bar: Int =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar: Int) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: using bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1511,15 +1585,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using after newline") {
-    val code = """
-                 |def a = foo:
-                 |   using bar =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a = foo:
+        |   using bar =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1531,16 +1607,18 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using after newline, no indent") {
-    val code = """
-                 |def a =
-                 |   foo:
-                 |   using bar =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo:
+        |   using bar =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1552,15 +1630,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using after newline, with type") {
-    val code = """
-                 |def a = foo:
-                 |   using bar: Int =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar: Int) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a = foo:
+        |   using bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1572,16 +1652,18 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using after newline, with type, no indent") {
-    val code = """
-                 |def a =
-                 |   foo:
-                 |   using bar: Int =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar: Int) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo:
+        |   using bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1593,10 +1675,11 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using, arg in parens (no fewer braces)") {
-    val code = """
-                 |def a =
-                 |   foo(using bar => baz)
-                 |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo(using bar => baz)
+        |""".stripMargin
     val layout = "def a = foo(using bar => baz)"
     val tree = Defn
       .Def(Nil, tname("a"), Nil, None, tapplyUsing(tname("foo"), tfunc(tparam("bar"))(tname("baz"))))
@@ -1604,14 +1687,16 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using, arg in braces (no fewer braces)") {
-    val code = """
-                 |def a =
-                 |   foo { using bar => baz }
-                 |""".stripMargin
-    val layout = """def a = foo {
-                   |  (using bar) => baz
-                   |}
-                   |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo { using bar => baz }
+        |""".stripMargin
+    val layout =
+      """def a = foo {
+        |  (using bar) => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1623,10 +1708,11 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using, with type, arg in parens (no fewer braces)") {
-    val code = """
-                 |def a =
-                 |   foo(using bar: Int => baz)
-                 |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo(using bar: Int => baz)
+        |""".stripMargin
     val layout = "def a = foo(using bar: Int => baz)"
     val tree = Defn.Def(
       Nil,
@@ -1639,14 +1725,16 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using, with type, arg in braces (no fewer braces)") {
-    val code = """
-                 |def a =
-                 |   foo { using bar: Int => baz }
-                 |""".stripMargin
-    val layout = """def a = foo {
-                   |  (using bar: Int) => baz
-                   |}
-                   |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo { using bar: Int => baz }
+        |""".stripMargin
+    val layout =
+      """def a = foo {
+        |  (using bar: Int) => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1658,15 +1746,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using in parens") {
-    val code = """
-                 |def a =
-                 |   foo: (using bar) =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: (using bar) =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1678,15 +1768,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using in parens, with type") {
-    val code = """
-                 |def a =
-                 |   foo: (using bar: Int => String) =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar: Int => String) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: (using bar: Int => String) =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int => String) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1703,15 +1795,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 using id in parens, with type") {
-    val code = """
-                 |def a =
-                 |   foo: (using: Int => String) =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using: Int => String) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: (using: Int => String) =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using: Int => String) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1726,15 +1820,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 multiple using in parens") {
-    val code = """
-                 |def a =
-                 |   foo: (using bar: Int, baz: String) =>
-                 |      qux
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar: Int, baz: String) => qux
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: (using bar: Int, baz: String) =>
+        |      qux
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int, baz: String) => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1749,15 +1845,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 multiple using in parens, second is id") {
-    val code = """
-                 |def a =
-                 |   foo: (using bar: Int, using: String) =>
-                 |      qux
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (using bar: Int, using: String) => qux
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: (using bar: Int, using: String) =>
+        |      qux
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (using bar: Int, using: String) => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1772,15 +1870,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased after space") {
-    val code = """
-                 |def a =
-                 |   foo: erased bar =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  erased bar => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: erased bar =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  erased bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1792,15 +1892,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased after space, with type") {
-    val code = """
-                 |def a =
-                 |   foo: erased bar: Int =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (erased bar: Int) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: erased bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1812,15 +1914,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased after newline") {
-    val code = """
-                 |def a = foo:
-                 |   erased bar =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """def a = foo {
-                   |  erased bar => baz
-                   |}
-                   |""".stripMargin
+    val code =
+      """
+        |def a = foo:
+        |   erased bar =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """def a = foo {
+        |  erased bar => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1832,16 +1936,18 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased after newline, no indent") {
-    val code = """
-                 |def a =
-                 |   foo:
-                 |   erased bar =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """def a = foo {
-                   |  erased bar => baz
-                   |}
-                   |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo:
+        |   erased bar =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """def a = foo {
+        |  erased bar => baz
+        |}
+        |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1853,15 +1959,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased after newline, with type") {
-    val code = """
-                 |def a = foo:
-                 |   erased bar: Int =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (erased bar: Int) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a = foo:
+        |   erased bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1873,16 +1981,18 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased after newline, with type, no indent") {
-    val code = """
-                 |def a =
-                 |   foo:
-                 |   erased bar: Int =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (erased bar: Int) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo:
+        |   erased bar: Int =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1894,10 +2004,11 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased, arg in parens (no fewer braces)") {
-    val code = """
-                 |def a =
-                 |   foo(erased bar => baz)
-                 |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo(erased bar => baz)
+        |""".stripMargin
     val layout = "def a = foo(erased bar => baz)"
     val tree = Defn.Def(
       Nil,
@@ -1910,14 +2021,16 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased, arg in braces (no fewer braces)") {
-    val code = """
-                 |def a =
-                 |   foo { erased bar => baz }
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  erased bar => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo { erased bar => baz }
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  erased bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1929,15 +2042,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased in parens") {
-    val code = """
-                 |def a =
-                 |   foo: (erased bar) =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  erased bar => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: (erased bar) =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  erased bar => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1949,15 +2064,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 erased in parens, with type") {
-    val code = """
-                 |def a =
-                 |   foo: (erased bar: Int => String) =>
-                 |      baz
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (erased bar: Int => String) => baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: (erased bar: Int => String) =>
+        |      baz
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int => String) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1974,15 +2091,17 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 multiple erased in parens") {
-    val code = """
-                 |def a =
-                 |   foo: (erased bar: Int, erased baz: String) =>
-                 |      qux
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  (erased bar: Int, erased baz: String) => qux
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: (erased bar: Int, erased baz: String) =>
+        |      qux
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  (erased bar: Int, erased baz: String) => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),
@@ -1991,10 +2110,9 @@ class FewerBracesSuite extends BaseDottySuite {
       tapply(
         tname("foo"),
         blk(
-          tfunc(
-            tparam(List(Mod.Erased()), "bar", "Int"),
-            tparam(List(Mod.Erased()), "baz", "String")
-          )(tname("qux"))
+          tfunc(tparam(List(Mod.Erased()), "bar", "Int"), tparam(List(Mod.Erased()), "baz", "String"))(
+            tname("qux")
+          )
         )
       )
     )
@@ -2002,48 +2120,54 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3763 no params with space") {
-    val code = """
-                 |def a =
-                 |   foo: () =>
-                 |      qux
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  () => qux
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo: () =>
+        |      qux
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  () => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(Nil, tname("a"), Nil, None, tapply(tname("foo"), blk(tfunc()(tname("qux")))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 no params with newline") {
-    val code = """
-                 |def a =
-                 |   foo:
-                 |     () =>
-                 |       qux
-                 |""".stripMargin
-    val layout = """|def a = foo {
-                    |  () => qux
-                    |}
-                    |""".stripMargin
+    val code =
+      """
+        |def a =
+        |   foo:
+        |     () =>
+        |       qux
+        |""".stripMargin
+    val layout =
+      """|def a = foo {
+         |  () => qux
+         |}
+         |""".stripMargin
     val tree = Defn.Def(Nil, tname("a"), Nil, None, tapply(tname("foo"), blk(tfunc()(tname("qux")))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3785") {
-    val code = """|val foo = bar(): loader =>
-                  |  baz:
-                  |    loader: _ => 
-                  |      qux
-                  |""".stripMargin
-    val layout = """|val foo = bar() {
-                    |  loader => baz {
-                    |    loader {
-                    |      _ => qux
-                    |    }
-                    |  }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|val foo = bar(): loader =>
+         |  baz:
+         |    loader: _ => 
+         |      qux
+         |""".stripMargin
+    val layout =
+      """|val foo = bar() {
+         |  loader => baz {
+         |    loader {
+         |      _ => qux
+         |    }
+         |  }
+         |}
+         |""".stripMargin
     val tree = Defn.Val(
       Nil,
       List(patvar("foo")),
@@ -2059,19 +2183,21 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#4042") {
-    val code = """|arg
-                  |  .fn1:
-                  |    _ => "FOO1"
-                  |
-                  |  .fn2:
-                  |    _ => "FOO2"
-                  |""".stripMargin
-    val layout = """|arg.fn1 {
-                    |  _ => "FOO1"
-                    |}.fn2 {
-                    |  _ => "FOO2"
-                    |}
-                    |""".stripMargin
+    val code =
+      """|arg
+         |  .fn1:
+         |    _ => "FOO1"
+         |
+         |  .fn2:
+         |    _ => "FOO2"
+         |""".stripMargin
+    val layout =
+      """|arg.fn1 {
+         |  _ => "FOO1"
+         |}.fn2 {
+         |  _ => "FOO2"
+         |}
+         |""".stripMargin
     val tree = tapply(
       tselect(tapply(tselect("arg", "fn1"), blk(tfunc(tparam("_"))(lit("FOO1")))), "fn2"),
       blk(tfunc(tparam("_"))(lit("FOO2")))
@@ -2080,19 +2206,21 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#4152 not fewer braces: class") {
-    val code = """|class A(b:
-                  |        Int)
-                  |""".stripMargin
+    val code =
+      """|class A(b:
+         |        Int)
+         |""".stripMargin
     val layout = "class A(b: Int)"
     val tree = Defn.Class(Nil, pname("A"), Nil, ctorp(tparam("b", "Int")), tplNoBody())
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4152 not fewer braces: extension 1") {
-    val code = """|extension (b:
-                  |        Int)
-                  |  def foo = b
-                  |""".stripMargin
+    val code =
+      """|extension (b:
+         |        Int)
+         |  def foo = b
+         |""".stripMargin
     val layout = "extension (b: Int) def foo = b"
     val tree = Defn
       .ExtensionGroup(Nil, List(List(tparam("b", "Int"))), Defn.Def(Nil, "foo", Nil, None, "b"))
@@ -2100,11 +2228,12 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#4152 not fewer braces: extension with type params") {
-    val code = """|extension [B:
-                  |        Seq](b:
-                  |        Int)
-                  |  def foo = b
-                  |""".stripMargin
+    val code =
+      """|extension [B:
+         |        Seq](b:
+         |        Int)
+         |  def foo = b
+         |""".stripMargin
     val layout = "extension [B: Seq](b: Int) def foo = b"
     val tree = Defn.ExtensionGroup(
       List(pparam("B", bounds(cb = List("Seq")))),
@@ -2115,27 +2244,30 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   test("#4152 not fewer braces: given") {
-    val code = """|given (b:
-                  |        Int) = b
-                  |""".stripMargin
+    val code =
+      """|given (b:
+         |        Int) = b
+         |""".stripMargin
     val layout = "given (b: Int) = b"
     val tree = Defn.GivenAlias(Nil, "", Nil, Type.TypedParam("b", "Int", Nil), "b")
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4152 not fewer braces: def") {
-    val code = """|def A(b:
-                  |        Int) = ???
-                  |""".stripMargin
+    val code =
+      """|def A(b:
+         |        Int) = ???
+         |""".stripMargin
     val layout = "def A(b: Int) = ???"
     val tree = Defn.Def(Nil, "A", Nil, List(List(tparam("b", "Int"))), None, "???")
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4152 not fewer braces: type") {
-    val code = """|def A[B:
-                  |        Seq] = ???
-                  |""".stripMargin
+    val code =
+      """|def A[B:
+         |        Seq] = ???
+         |""".stripMargin
     val layout = "def A[B: Seq] = ???"
     val tree = Defn.Def(Nil, "A", List(pparam("B", bounds(cb = List("Seq")))), Nil, None, "???")
     runTestAssert[Stat](code, layout)(tree)

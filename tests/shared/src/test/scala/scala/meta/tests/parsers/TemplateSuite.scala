@@ -24,15 +24,11 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("trait T {}") {
-    assertTree(templStat("trait T {}")) {
-      Trait(Nil, pname("T"), Nil, EmptyCtor(), EmptyTemplate())
-    }
+    assertTree(templStat("trait T {}"))(Trait(Nil, pname("T"), Nil, EmptyCtor(), EmptyTemplate()))
   }
 
   test("trait F[T]") {
-    assertTree(templStat("trait F[T]")) {
-      Trait(Nil, pname("F"), pparam("T") :: Nil, ctor, tplNoBody())
-    }
+    assertTree(templStat("trait F[T]"))(Trait(Nil, pname("F"), pparam("T") :: Nil, ctor, tplNoBody()))
   }
 
   test("trait A extends B") {
@@ -82,14 +78,10 @@ class TemplateSuite extends ParseSuite {
     }
   }
 
-  test("class C") {
-    assertTree(templStat("class C"))(Class(Nil, pname("C"), Nil, ctor, tplNoBody()))
-  }
+  test("class C")(assertTree(templStat("class C"))(Class(Nil, pname("C"), Nil, ctor, tplNoBody())))
 
   test("class C[T]") {
-    assertTree(templStat("class C[T]")) {
-      Class(Nil, pname("C"), pparam("T") :: Nil, ctor, tplNoBody())
-    }
+    assertTree(templStat("class C[T]"))(Class(Nil, pname("C"), pparam("T") :: Nil, ctor, tplNoBody()))
   }
 
   test("class A extends B") {
@@ -243,29 +235,31 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("blank after template 1") {
-    val code = """|class DerivationSpec {
-                  |  case class Foo()
-                  |
-                  |  {
-                  |    deriveEncoder[Foo]
-                  |  }
-                  |
-                  |  {
-                  |    deriveEncoder[Foo]
-                  |  }
-                  |}
-                  |""".stripMargin
-    val layout = """|class DerivationSpec {
-                    |  case class Foo()
-                    |
-                    |  {
-                    |    deriveEncoder[Foo]
-                    |  }
-                    |  {
-                    |    deriveEncoder[Foo]
-                    |  }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|class DerivationSpec {
+         |  case class Foo()
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |}
+         |""".stripMargin
+    val layout =
+      """|class DerivationSpec {
+         |  case class Foo()
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |}
+         |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("DerivationSpec"),
@@ -281,29 +275,31 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("blank after template 2") {
-    val code = """|class DerivationSpec {
-                  |  case class Foo() extends Bar
-                  |
-                  |  {
-                  |    deriveEncoder[Foo]
-                  |  }
-                  |
-                  |  {
-                  |    deriveEncoder[Foo]
-                  |  }
-                  |}
-                  |""".stripMargin
-    val layout = """|class DerivationSpec {
-                    |  case class Foo() extends Bar
-                    |
-                    |  {
-                    |    deriveEncoder[Foo]
-                    |  }
-                    |  {
-                    |    deriveEncoder[Foo]
-                    |  }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|class DerivationSpec {
+         |  case class Foo() extends Bar
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |}
+         |""".stripMargin
+    val layout =
+      """|class DerivationSpec {
+         |  case class Foo() extends Bar
+         |
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |  {
+         |    deriveEncoder[Foo]
+         |  }
+         |}
+         |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("DerivationSpec"),

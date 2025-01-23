@@ -30,7 +30,8 @@ trait CommonNamerMacros extends MacroHelpers {
   lazy val DialectClass = tq"_root_.scala.meta.Dialect"
 
   def mkClassifier(name: TypeName): List[Tree] = {
-    val q"..$classifierBoilerplate" = q"""
+    val q"..$classifierBoilerplate" =
+      q"""
       private object sharedClassifier extends $ClassifierClass[$TreeClass, $name] {
         def apply(x: $TreeClass): _root_.scala.Boolean = x.isInstanceOf[$name]
       }

@@ -127,14 +127,15 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val code = "x ~/**/y"
     val syntax = "x ~/**/y"
     assertTokenizedAsSyntax(code, syntax)
-    val struct = """|BOF [0..0)
-                    |Ident(x) [0..1)
-                    |Space [1..2)
-                    |Ident(~) [2..3)
-                    |Comment() [3..7)
-                    |Ident(y) [7..8)
-                    |EOF [8..8)
-                    |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |Ident(x) [0..1)
+         |Space [1..2)
+         |Ident(~) [2..3)
+         |Comment() [3..7)
+         |Ident(y) [7..8)
+         |EOF [8..8)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, struct)
   }
 
@@ -998,10 +999,11 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("incomplete xml literal - 2") {
-    val code = """|object A {
-                  |  val a = <foo>bar
-                  |  val b = <baz qux="...">cde<?
-                  |""".stripMargin
+    val code =
+      """|object A {
+         |  val a = <foo>bar
+         |  val b = <baz qux="...">cde<?
+         |""".stripMargin
     interceptMessage[ParseException](
       """|<input>:3: error: malformed xml literal, expected:
          |Expected ("{{" | "}}" | "&" | "&#" | "&#x" | "{" | "<xml:unparsed" | "<![CDATA[" | "<!--" | "</"):3:29, found "<?\n"
@@ -1417,17 +1419,18 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("Interpolated string - escape, unclosed") {
-    val struct = """|BOF [0..0)
-                    |Interpolation.Id(s) [0..1)
-                    |Interpolation.Start(") [1..2)
-                    |Interpolation.Part(\\\\) [2..4)
-                    |Interpolation.End(") [4..5)
-                    |Interpolation.Id(Hello) [5..10)
-                    |Interpolation.Start(") [10..11)
-                    |Interpolation.Part() [11..11)
-                    |Invalid(unclosed single-line string interpolation) [11..11)
-                    |Interpolation.End() [11..11)
-                    |EOF [11..11)""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |Interpolation.Id(s) [0..1)
+         |Interpolation.Start(") [1..2)
+         |Interpolation.Part(\\\\) [2..4)
+         |Interpolation.End(") [4..5)
+         |Interpolation.Id(Hello) [5..10)
+         |Interpolation.Start(") [10..11)
+         |Interpolation.Part() [11..11)
+         |Invalid(unclosed single-line string interpolation) [11..11)
+         |Interpolation.End() [11..11)
+         |EOF [11..11)""".stripMargin
     assertTokenizedAsStructureLines("""s"\\"Hello"""", struct)
   }
 
@@ -1481,10 +1484,11 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("binary literals") {
-    val code = """|val v1 = 0b00101010
-                  |val v2 = 0B_0010_1010
-                  |val v3 = 0b_0010_1010L
-                  |""".stripMargin
+    val code =
+      """|val v1 = 0b00101010
+         |val v2 = 0B_0010_1010
+         |val v3 = 0b_0010_1010L
+         |""".stripMargin
     implicit val dialect: Dialect = dialects.Scala213
     assertEquals(tokenize(code).toString, code)
   }
@@ -1814,305 +1818,320 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("scala3 code using CRLF") {
-    val code = """|object A:
-                  |  foo.map:
-                  |    bar
-                  |    + baz
-                  |  for
-                  |    a <- foo
-                  |    b <- bar
-                  |  yield
-                  |    a + b
-                  |""".stripMargin
-    val struct = """|BOF [0..0)
-                    |KwObject [0..6)
-                    |Space [6..7)
-                    |Ident(A) [7..8)
-                    |Colon [8..9)
-                    |CRLF [9..11)
-                    |MultiHS(2) [11..13)
-                    |Ident(foo) [13..16)
-                    |Dot [16..17)
-                    |Ident(map) [17..20)
-                    |Colon [20..21)
-                    |CRLF [21..23)
-                    |MultiHS(4) [23..27)
-                    |Ident(bar) [27..30)
-                    |CRLF [30..32)
-                    |MultiHS(4) [32..36)
-                    |Ident(+) [36..37)
-                    |Space [37..38)
-                    |Ident(baz) [38..41)
-                    |CRLF [41..43)
-                    |MultiHS(2) [43..45)
-                    |KwFor [45..48)
-                    |CRLF [48..50)
-                    |MultiHS(4) [50..54)
-                    |Ident(a) [54..55)
-                    |Space [55..56)
-                    |LeftArrow [56..58)
-                    |Space [58..59)
-                    |Ident(foo) [59..62)
-                    |CRLF [62..64)
-                    |MultiHS(4) [64..68)
-                    |Ident(b) [68..69)
-                    |Space [69..70)
-                    |LeftArrow [70..72)
-                    |Space [72..73)
-                    |Ident(bar) [73..76)
-                    |CRLF [76..78)
-                    |MultiHS(2) [78..80)
-                    |KwYield [80..85)
-                    |CRLF [85..87)
-                    |MultiHS(4) [87..91)
-                    |Ident(a) [91..92)
-                    |Space [92..93)
-                    |Ident(+) [93..94)
-                    |Space [94..95)
-                    |Ident(b) [95..96)
-                    |CRLF [96..98)
-                    |EOF [98..98)
-                    |""".stripMargin
+    val code =
+      """|object A:
+         |  foo.map:
+         |    bar
+         |    + baz
+         |  for
+         |    a <- foo
+         |    b <- bar
+         |  yield
+         |    a + b
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Space [6..7)
+         |Ident(A) [7..8)
+         |Colon [8..9)
+         |CRLF [9..11)
+         |MultiHS(2) [11..13)
+         |Ident(foo) [13..16)
+         |Dot [16..17)
+         |Ident(map) [17..20)
+         |Colon [20..21)
+         |CRLF [21..23)
+         |MultiHS(4) [23..27)
+         |Ident(bar) [27..30)
+         |CRLF [30..32)
+         |MultiHS(4) [32..36)
+         |Ident(+) [36..37)
+         |Space [37..38)
+         |Ident(baz) [38..41)
+         |CRLF [41..43)
+         |MultiHS(2) [43..45)
+         |KwFor [45..48)
+         |CRLF [48..50)
+         |MultiHS(4) [50..54)
+         |Ident(a) [54..55)
+         |Space [55..56)
+         |LeftArrow [56..58)
+         |Space [58..59)
+         |Ident(foo) [59..62)
+         |CRLF [62..64)
+         |MultiHS(4) [64..68)
+         |Ident(b) [68..69)
+         |Space [69..70)
+         |LeftArrow [70..72)
+         |Space [72..73)
+         |Ident(bar) [73..76)
+         |CRLF [76..78)
+         |MultiHS(2) [78..80)
+         |KwYield [80..85)
+         |CRLF [85..87)
+         |MultiHS(4) [87..91)
+         |Ident(a) [91..92)
+         |Space [92..93)
+         |Ident(+) [93..94)
+         |Space [94..95)
+         |Ident(b) [95..96)
+         |CRLF [96..98)
+         |EOF [98..98)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
   }
 
   test("code with Shebang line") {
-    val code = """|#!/usr/bin/env foo bar && qux >/dev/null
-                  |package foo
-                  |
-                  |import bar
-                  |
-                  |class Baz()
-                  |""".stripMargin
-    val struct = """|BOF [0..0)
-                    |Shebang [0..40)
-                    |CRLF [40..42)
-                    |KwPackage [42..49)
-                    |Space [49..50)
-                    |Ident(foo) [50..53)
-                    |MultiNL(2) [53..57)
-                    |KwImport [57..63)
-                    |Space [63..64)
-                    |Ident(bar) [64..67)
-                    |MultiNL(2) [67..71)
-                    |KwClass [71..76)
-                    |Space [76..77)
-                    |Ident(Baz) [77..80)
-                    |LeftParen [80..81)
-                    |RightParen [81..82)
-                    |CRLF [82..84)
-                    |EOF [84..84)
-                    |""".stripMargin
+    val code =
+      """|#!/usr/bin/env foo bar && qux >/dev/null
+         |package foo
+         |
+         |import bar
+         |
+         |class Baz()
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |Shebang [0..40)
+         |CRLF [40..42)
+         |KwPackage [42..49)
+         |Space [49..50)
+         |Ident(foo) [50..53)
+         |MultiNL(2) [53..57)
+         |KwImport [57..63)
+         |Space [63..64)
+         |Ident(bar) [64..67)
+         |MultiNL(2) [67..71)
+         |KwClass [71..76)
+         |Space [76..77)
+         |Ident(Baz) [77..80)
+         |LeftParen [80..81)
+         |RightParen [81..82)
+         |CRLF [82..84)
+         |EOF [84..84)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
   }
 
   test("code with non-matching braces 1") {
-    val code = """|object a {
-                  |  def foo = {
-                  |    val a = q"bar${qux}"
-                  |""".stripMargin
-    val struct = """|BOF [0..0)
-                    |KwObject [0..6)
-                    |Space [6..7)
-                    |Ident(a) [7..8)
-                    |Space [8..9)
-                    |LeftBrace [9..10)
-                    |LF [10..11)
-                    |MultiHS(2) [11..13)
-                    |KwDef [13..16)
-                    |Space [16..17)
-                    |Ident(foo) [17..20)
-                    |Space [20..21)
-                    |Equals [21..22)
-                    |Space [22..23)
-                    |LeftBrace [23..24)
-                    |LF [24..25)
-                    |MultiHS(4) [25..29)
-                    |KwVal [29..32)
-                    |Space [32..33)
-                    |Ident(a) [33..34)
-                    |Space [34..35)
-                    |Equals [35..36)
-                    |Space [36..37)
-                    |Interpolation.Id(q) [37..38)
-                    |Interpolation.Start(") [38..39)
-                    |Interpolation.Part(bar) [39..42)
-                    |Interpolation.SpliceStart [42..43)
-                    |LeftBrace [43..44)
-                    |Ident(qux) [44..47)
-                    |RightBrace [47..48)
-                    |Interpolation.SpliceEnd [48..48)
-                    |Interpolation.Part() [48..48)
-                    |Interpolation.End(") [48..49)
-                    |LF [49..50)
-                    |EOF [50..50)
-                    |""".stripMargin
+    val code =
+      """|object a {
+         |  def foo = {
+         |    val a = q"bar${qux}"
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Space [6..7)
+         |Ident(a) [7..8)
+         |Space [8..9)
+         |LeftBrace [9..10)
+         |LF [10..11)
+         |MultiHS(2) [11..13)
+         |KwDef [13..16)
+         |Space [16..17)
+         |Ident(foo) [17..20)
+         |Space [20..21)
+         |Equals [21..22)
+         |Space [22..23)
+         |LeftBrace [23..24)
+         |LF [24..25)
+         |MultiHS(4) [25..29)
+         |KwVal [29..32)
+         |Space [32..33)
+         |Ident(a) [33..34)
+         |Space [34..35)
+         |Equals [35..36)
+         |Space [36..37)
+         |Interpolation.Id(q) [37..38)
+         |Interpolation.Start(") [38..39)
+         |Interpolation.Part(bar) [39..42)
+         |Interpolation.SpliceStart [42..43)
+         |LeftBrace [43..44)
+         |Ident(qux) [44..47)
+         |RightBrace [47..48)
+         |Interpolation.SpliceEnd [48..48)
+         |Interpolation.Part() [48..48)
+         |Interpolation.End(") [48..49)
+         |LF [49..50)
+         |EOF [50..50)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, struct, dialects.Scala3)
   }
 
   test("code with non-matching braces 2") {
-    val code = """|object a {
-                  |  def foo = {
-                  |    val a = "b"
-                  |  }
-                  |  }
-                  |}
-                  |""".stripMargin
-    val struct = """|BOF [0..0)
-                    |KwObject [0..6)
-                    |Space [6..7)
-                    |Ident(a) [7..8)
-                    |Space [8..9)
-                    |LeftBrace [9..10)
-                    |LF [10..11)
-                    |MultiHS(2) [11..13)
-                    |KwDef [13..16)
-                    |Space [16..17)
-                    |Ident(foo) [17..20)
-                    |Space [20..21)
-                    |Equals [21..22)
-                    |Space [22..23)
-                    |LeftBrace [23..24)
-                    |LF [24..25)
-                    |MultiHS(4) [25..29)
-                    |KwVal [29..32)
-                    |Space [32..33)
-                    |Ident(a) [33..34)
-                    |Space [34..35)
-                    |Equals [35..36)
-                    |Space [36..37)
-                    |Constant.String(b) [37..40)
-                    |LF [40..41)
-                    |MultiHS(2) [41..43)
-                    |RightBrace [43..44)
-                    |LF [44..45)
-                    |MultiHS(2) [45..47)
-                    |RightBrace [47..48)
-                    |LF [48..49)
-                    |RightBrace [49..50)
-                    |LF [50..51)
-                    |EOF [51..51)
-                    |""".stripMargin
+    val code =
+      """|object a {
+         |  def foo = {
+         |    val a = "b"
+         |  }
+         |  }
+         |}
+         |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Space [6..7)
+         |Ident(a) [7..8)
+         |Space [8..9)
+         |LeftBrace [9..10)
+         |LF [10..11)
+         |MultiHS(2) [11..13)
+         |KwDef [13..16)
+         |Space [16..17)
+         |Ident(foo) [17..20)
+         |Space [20..21)
+         |Equals [21..22)
+         |Space [22..23)
+         |LeftBrace [23..24)
+         |LF [24..25)
+         |MultiHS(4) [25..29)
+         |KwVal [29..32)
+         |Space [32..33)
+         |Ident(a) [33..34)
+         |Space [34..35)
+         |Equals [35..36)
+         |Space [36..37)
+         |Constant.String(b) [37..40)
+         |LF [40..41)
+         |MultiHS(2) [41..43)
+         |RightBrace [43..44)
+         |LF [44..45)
+         |MultiHS(2) [45..47)
+         |RightBrace [47..48)
+         |LF [48..49)
+         |RightBrace [49..50)
+         |LF [50..51)
+         |EOF [51..51)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, struct, dialects.Scala3)
   }
 
   test("code with incomplete interpolation") {
-    val code = """|object a {
-                  |  def foo = s"b$"
-                  |}
-                  |""".stripMargin
+    val code =
+      """|object a {
+         |  def foo = s"b$"
+         |}
+         |""".stripMargin
 
     // scala213
-    val struct213 = """|BOF [0..0)
-                       |KwObject [0..6)
-                       |Space [6..7)
-                       |Ident(a) [7..8)
-                       |Space [8..9)
-                       |LeftBrace [9..10)
-                       |LF [10..11)
-                       |MultiHS(2) [11..13)
-                       |KwDef [13..16)
-                       |Space [16..17)
-                       |Ident(foo) [17..20)
-                       |Space [20..21)
-                       |Equals [21..22)
-                       |Space [22..23)
-                       |Interpolation.Id(s) [23..24)
-                       |Interpolation.Start(") [24..25)
-                       |Interpolation.Part(b) [25..26)
-                       |Interpolation.SpliceStart [26..27)
-                       |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [27..27)
-                       |Constant.String() [27..27)
-                       |Interpolation.SpliceEnd [28..28)
-                       |Interpolation.Part(\n) [28..29)
-                       |Interpolation.End() [29..29)
-                       |RightBrace [29..30)
-                       |LF [30..31)
-                       |EOF [31..31)
-                       |""".stripMargin
+    val struct213 =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Space [6..7)
+         |Ident(a) [7..8)
+         |Space [8..9)
+         |LeftBrace [9..10)
+         |LF [10..11)
+         |MultiHS(2) [11..13)
+         |KwDef [13..16)
+         |Space [16..17)
+         |Ident(foo) [17..20)
+         |Space [20..21)
+         |Equals [21..22)
+         |Space [22..23)
+         |Interpolation.Id(s) [23..24)
+         |Interpolation.Start(") [24..25)
+         |Interpolation.Part(b) [25..26)
+         |Interpolation.SpliceStart [26..27)
+         |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [27..27)
+         |Constant.String() [27..27)
+         |Interpolation.SpliceEnd [28..28)
+         |Interpolation.Part(\n) [28..29)
+         |Interpolation.End() [29..29)
+         |RightBrace [29..30)
+         |LF [30..31)
+         |EOF [31..31)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, struct213, dialects.Scala213)
 
     // scala3
-    val struct3 = """|BOF [0..0)
-                     |KwObject [0..6)
-                     |Space [6..7)
-                     |Ident(a) [7..8)
-                     |Space [8..9)
-                     |LeftBrace [9..10)
-                     |LF [10..11)
-                     |MultiHS(2) [11..13)
-                     |KwDef [13..16)
-                     |Space [16..17)
-                     |Ident(foo) [17..20)
-                     |Space [20..21)
-                     |Equals [21..22)
-                     |Space [22..23)
-                     |Interpolation.Id(s) [23..24)
-                     |Interpolation.Start(") [24..25)
-                     |Interpolation.Part(b") [25..28)
-                     |Invalid(unclosed single-line string interpolation) [28..28)
-                     |Interpolation.End() [28..28)
-                     |LF [28..29)
-                     |RightBrace [29..30)
-                     |LF [30..31)
-                     |EOF [31..31)
-                     |""".stripMargin
+    val struct3 =
+      """|BOF [0..0)
+         |KwObject [0..6)
+         |Space [6..7)
+         |Ident(a) [7..8)
+         |Space [8..9)
+         |LeftBrace [9..10)
+         |LF [10..11)
+         |MultiHS(2) [11..13)
+         |KwDef [13..16)
+         |Space [16..17)
+         |Ident(foo) [17..20)
+         |Space [20..21)
+         |Equals [21..22)
+         |Space [22..23)
+         |Interpolation.Id(s) [23..24)
+         |Interpolation.Start(") [24..25)
+         |Interpolation.Part(b") [25..28)
+         |Invalid(unclosed single-line string interpolation) [28..28)
+         |Interpolation.End() [28..28)
+         |LF [28..29)
+         |RightBrace [29..30)
+         |LF [30..31)
+         |EOF [31..31)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, struct3, dialects.Scala3)
   }
 
   test("code with double-quote string within single-line quasiquotes") {
     val code = " \"...\" "
-    val struct = """|BOF [0..0)
-                    |Space [0..1)
-                    |Constant.String(...) [1..6)
-                    |Invalid(double quotes are not allowed in single-line quasiquotes) [1..1)
-                    |Space [6..7)
-                    |EOF [7..7)
-                    |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |Space [0..1)
+         |Constant.String(...) [1..6)
+         |Invalid(double quotes are not allowed in single-line quasiquotes) [1..1)
+         |Space [6..7)
+         |EOF [7..7)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, struct, dialects.Scala213.unquoteTerm(multiline = false))
   }
 
   test("code with interpolation within single-line quasiquotes") {
     val code = " s\"...\" "
-    val struct = """|BOF [0..0)
-                    |Space [0..1)
-                    |Interpolation.Id(s) [1..2)
-                    |Invalid(double quotes are not allowed in single-line quasiquotes) [2..2)
-                    |Interpolation.Start(") [2..3)
-                    |Interpolation.Part(...) [3..6)
-                    |Interpolation.End(") [6..7)
-                    |Space [7..8)
-                    |EOF [8..8)
-                    |""".stripMargin
+    val struct =
+      """|BOF [0..0)
+         |Space [0..1)
+         |Interpolation.Id(s) [1..2)
+         |Invalid(double quotes are not allowed in single-line quasiquotes) [2..2)
+         |Interpolation.Start(") [2..3)
+         |Interpolation.Part(...) [3..6)
+         |Interpolation.End(") [6..7)
+         |Space [7..8)
+         |EOF [8..8)
+         |""".stripMargin
     assertTokenizedAsStructureLines(code, struct, dialects.Scala213.unquoteTerm(multiline = false))
   }
 
   test("interpolator with $ character") {
     val code = """s"$$$foo$$""""
-    val struct = """|BOF [0..0)
-                    |Interpolation.Id(s) [0..1)
-                    |Interpolation.Start(") [1..2)
-                    |Interpolation.Part($) [2..4)
-                    |Interpolation.SpliceStart [4..5)
-                    |Ident(foo) [5..8)
-                    |Interpolation.SpliceEnd [8..8)
-                    |Interpolation.Part($) [8..10)
-                    |Interpolation.End(") [10..11)
-                    |EOF [11..11) 
-                    |""".stripMargin.nl2lf
+    val struct =
+      """|BOF [0..0)
+         |Interpolation.Id(s) [0..1)
+         |Interpolation.Start(") [1..2)
+         |Interpolation.Part($) [2..4)
+         |Interpolation.SpliceStart [4..5)
+         |Ident(foo) [5..8)
+         |Interpolation.SpliceEnd [8..8)
+         |Interpolation.Part($) [8..10)
+         |Interpolation.End(") [10..11)
+         |EOF [11..11) 
+         |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
   }
   test("broken-interpolator") {
-    val code = """|
-                  |s'''|Available languages (default = $):
-                  |verilog - Verilog or SystemVerilog dialects
-                  |vhdl    - VHDL dialects
-                  |
-                  |Available Verilog/SystemVerilog dialects (default = $defaultDialect):
-                  |v2001   - Verilog 2001
-                  |sv2005  - 
-                  |'''.stripMargin
-                  |""".stripMargin.replace("'''", "\"\"\"")
+    val code =
+      """|
+         |s'''|Available languages (default = $):
+         |verilog - Verilog or SystemVerilog dialects
+         |vhdl    - VHDL dialects
+         |
+         |Available Verilog/SystemVerilog dialects (default = $defaultDialect):
+         |v2001   - Verilog 2001
+         |sv2005  - 
+         |'''.stripMargin
+         |""".stripMargin.replace("'''", "\"\"\"")
 
     val struct =
       """|BOF [0..0)
@@ -2138,22 +2157,24 @@ class TokenizerSuite extends BaseTokenizerSuite {
   }
 
   test("unexpected-character") {
-    val code = """|
-                  |val 。 = 123
-                  |
-                  |""".stripMargin.replace("'''", "\"\"\"")
+    val code =
+      """|
+         |val 。 = 123
+         |
+         |""".stripMargin.replace("'''", "\"\"\"")
 
-    val struct = s"""|BOF [0..0)
-                     |LF [0..1)
-                     |KwVal [1..4)
-                     |Invalid(illegal unicode codepoint: 0x3002) [5..6)
-                     |MultiHS(3) [4..7)
-                     |Equals [7..8)
-                     |Space [8..9)
-                     |Constant.Int(123) [9..12)
-                     |MultiNL(2) [12..14)
-                     |EOF [14..14)
-                     |""".stripMargin.nl2lf
+    val struct =
+      s"""|BOF [0..0)
+          |LF [0..1)
+          |KwVal [1..4)
+          |Invalid(illegal unicode codepoint: 0x3002) [5..6)
+          |MultiHS(3) [4..7)
+          |Equals [7..8)
+          |Space [8..9)
+          |Constant.Int(123) [9..12)
+          |MultiNL(2) [12..14)
+          |EOF [14..14)
+          |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
   }
 

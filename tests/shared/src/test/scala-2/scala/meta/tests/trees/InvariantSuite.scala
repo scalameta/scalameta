@@ -12,9 +12,7 @@ class InvariantSuite extends TreeSuiteBase {
       .Secondary(Nil, anon, List(List()), init(Type.Singleton(Term.This(anon))), Nil)
     val template = tpl(secondaryCtor)
     Defn.Class(Nil, pname("test"), Nil, primaryCtor, template)
-    intercept[InvariantFailedException] {
-      Defn.Trait(Nil, pname("test"), Nil, primaryCtor, template)
-    }
+    intercept[InvariantFailedException](Defn.Trait(Nil, pname("test"), Nil, primaryCtor, template))
     intercept[InvariantFailedException](Defn.Object(Nil, tname("test"), template))
     intercept[InvariantFailedException](Pkg.Object(Nil, tname("test"), template))
   }

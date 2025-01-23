@@ -49,9 +49,8 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
       buf.result()
     }
   }
-  private lazy val scalalibSyntheticsPaths: Set[String] = Scalalib.synthetics.map { synthetic =>
-    synthetic.relativeUri.stripSuffix(".class").replace('/', '.')
-  }.toSet
+  private lazy val scalalibSyntheticsPaths: Set[String] = Scalalib.synthetics
+    .map(synthetic => synthetic.relativeUri.stripSuffix(".class").replace('/', '.')).toSet
 }
 
 object SymbolIndex {
