@@ -163,7 +163,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         .map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p.name)})")
       val privateCopyParentChecks =
         if (parentChecks.isEmpty) q""
-        else q"""
+        else
+          q"""
             if (destination != null) {
               def checkParent(fn: ($name, $TreeClass, $StringClass) => $BooleanClass): $UnitClass = {
                 val parentCheckOk = fn(this, parent, destination)
@@ -348,7 +349,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       }
       val internalArgs = params.map(getParamArg)
       val bparamCtorArgs = bparams1.map { p =>
-        if (p eq privateFields.origin.field) q"""
+        if (p eq privateFields.origin.field)
+          q"""
                $OriginModule.first(
                  alternativeOrigin,
                  $OriginModule.DialectOnly.getFromArgs(..$internalArgs)
@@ -534,7 +536,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       }
       if (needsUnapply) {
         def getUnapply(unapplyParams: List[ValDef], annots: Tree*): Tree =
-          if (unapplyParams.isEmpty) q"""
+          if (unapplyParams.isEmpty)
+            q"""
                 @$InlineAnnotation @..$annots final def unapply(x: $iname): $BooleanClass =
                   x != null && x.isInstanceOf[$name]
               """
@@ -602,8 +605,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       // to be ignored by Mima, use "internal"
       mstats1 += q"object internal { final val Latest = $latestTermName }"
 
-      mstats1 += q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +:
-          paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+      mstats1 +=
+        q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
 
       val res = ListBuffer.empty[ImplDef]
 
@@ -636,13 +639,15 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
   private def loadField(vr: ValOrDefDef): Tree = loadField(vr.name)
   private def loadField(name: TermName): Tree = loadField(internalize(name), name)
-  private def loadField(internalName: TermName, name: TermName): Tree = q"""
+  private def loadField(internalName: TermName, name: TermName): Tree =
+    q"""
       $CommonTyperMacrosModule.loadField(this.$internalName, ${name.decodedName.toString})
     """
 
   private def storeField(vr: ValOrDefDef): Tree = storeField(vr.name)
   private def storeField(name: TermName): Tree = storeField(internalize(name), name)
-  private def storeField(internalName: TermName, name: TermName): Tree = q"""
+  private def storeField(internalName: TermName, name: TermName): Tree =
+    q"""
       $CommonTyperMacrosModule.storeField(node.$internalName, $name, ${name.decodedName.toString})
     """
 
@@ -674,7 +679,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def declareSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
     q"$mods def ${setterName(name)}($name : $tpe): Unit"
 
-  private def defineSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree = q"""
+  private def defineSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
+    q"""
       $mods def ${setterName(name)}($name : $tpe): Unit = {
         val node = this
         ${storeField(name)}
@@ -791,11 +797,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   ) {
     def newValDefn: ValDef = {
       def bodyForSingleOldDef(oldDef: ValOrDefDef) =
-        if (ctor eq null) q"""
+        if (ctor eq null)
+          q"""
             import scala.meta.trees._
             ${oldDef.name}
            """
-        else q"""
+        else
+          q"""
             $ctor(${oldDef.name})
            """
       def bodyForMultipleOldDefs = {

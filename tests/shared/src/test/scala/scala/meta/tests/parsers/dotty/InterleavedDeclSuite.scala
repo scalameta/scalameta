@@ -52,9 +52,7 @@ class InterleavedDeclSuite extends BaseDottySuite {
   test("def f: X")(checkTree(templStat("def f: X"))(Decl.Def(Nil, tname("f"), Nil, pname("X"))))
 
   test("def f[T]: T") {
-    checkTree(templStat("def f[T]: T")) {
-      Decl.Def(Nil, tname("f"), pparam("T") :: Nil, Nil, pname("T"))
-    }
+    checkTree(templStat("def f[T]: T"))(Decl.Def(Nil, tname("f"), pparam("T") :: Nil, Nil, pname("T")))
   }
 
   test("def f[A][B]: A") {

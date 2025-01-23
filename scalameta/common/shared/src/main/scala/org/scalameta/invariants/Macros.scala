@@ -44,7 +44,8 @@ class Macros(val c: Context) extends MacroHelpers {
     sealed trait Simple extends Prop {
       def diagnostic: String
       def tree: Tree
-      override def emit = q"""
+      override def emit =
+        q"""
             val $result = $tree
             if ($result) _root_.scala.collection.immutable.Nil
             else _root_.scala.collection.immutable.List($diagnostic)
@@ -65,7 +66,8 @@ class Macros(val c: Context) extends MacroHelpers {
         def loop(props: List[Prop]): Tree = props match {
           case Nil => ???
           case prop :: Nil => prop.emit
-          case prop :: rest => q"""
+          case prop :: rest =>
+            q"""
                 val $failures = ${prop.emit}
                 if (!$failures.isEmpty) $failures
                 else ${loop(rest)}

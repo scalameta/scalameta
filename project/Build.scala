@@ -30,8 +30,7 @@ object Build extends AutoPlugin {
 
       def scalametaBenches: List[String]
       def scalametaCommands: List[String] =
-        if (scalametaBenches.isEmpty) Nil
-        else List("bench/jmh:run " + scalametaBenches.mkString(" "))
+        if (scalametaBenches.isEmpty) Nil else List("bench/jmh:run " + scalametaBenches.mkString(" "))
 
       final def command: String = {
         val benchCommands = metacpCommands ++ scalacCommands ++ scalametaCommands

@@ -65,14 +65,13 @@ object ParentChecks {
   def AnonymousImport(tree: Term.Anonymous, parent: Tree, destination: String): Boolean = parent
     .is[Importer]
 
-  def NameAnonymous(tree: Name.Anonymous, parent: Tree, destination: String): Boolean =
-    parent match {
-      case _: Ctor | _: Init | _: Self | _: Term.Param | _: Type.Param => destination == "name"
-      case _: Mod.Private | _: Mod.Protected => destination == "within"
-      case _: Term.This | _: Term.Super | _: Defn.Given | _: Defn.GivenAlias => true
-      case _: Defn.ExtensionGroup | _: Defn.RepeatedEnumCase => true
-      case _ => false
-    }
+  def NameAnonymous(tree: Name.Anonymous, parent: Tree, destination: String): Boolean = parent match {
+    case _: Ctor | _: Init | _: Self | _: Term.Param | _: Type.Param => destination == "name"
+    case _: Mod.Private | _: Mod.Protected => destination == "within"
+    case _: Term.This | _: Term.Super | _: Defn.Given | _: Defn.GivenAlias => true
+    case _: Defn.ExtensionGroup | _: Defn.RepeatedEnumCase => true
+    case _ => false
+  }
 
   def NameThis(tree: Name.This, parent: Tree, destination: String): Boolean = parent match {
     case _: Ctor.Secondary | _: Self => destination == "name"
@@ -105,8 +104,9 @@ object ParentChecks {
     parent.parent.parent.isOpt[Defn.Enum]
 
   def TypeLambda(tree: Type.Lambda, parent: Tree, destination: String): Boolean = parent match {
-    case _: Type | _: Defn.Type | _: Type.Bounds | _: Term.ApplyType | _: Type.Param | _: Term.Param |
-        _: Type.ArgClause | _: Decl.Given | _: Defn.Given | _: Defn.GivenAlias => true
+    case _: Type | _: Defn.Type | _: Type.Bounds | _: Term.ApplyType | _: Type.Param |
+        _: Term.Param | _: Type.ArgClause | _: Decl.Given | _: Defn.Given | _: Defn.GivenAlias =>
+      true
     case _ => false
   }
 

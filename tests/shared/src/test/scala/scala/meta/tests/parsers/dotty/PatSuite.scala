@@ -65,9 +65,7 @@ class PatSuite extends ParseSuite {
     }
   }
 
-  test("patTyp: t + u * v") {
-    assertPatTyp("t + u * v")(pinfix("t", "+", pinfix("u", "*", pname("v"))))
-  }
+  test("patTyp: t + u * v")(assertPatTyp("t + u * v")(pinfix("t", "+", pinfix("u", "*", pname("v")))))
 
   test("pat: F[t & u | v]()") {
     assertPat("F[t & u | v]()") {
@@ -75,18 +73,13 @@ class PatSuite extends ParseSuite {
     }
   }
 
-  test("_: (t Map u)") {
-    assertPat("_: (t Map u)")(Typed(Wildcard(), pinfix("t", "Map", pname("u"))))
-  }
+  test("_: (t Map u)")(assertPat("_: (t Map u)")(Typed(Wildcard(), pinfix("t", "Map", pname("u")))))
 
   test("_: T Map U")(intercept[ParseException](pat("_: T Map U")))
 
   test("_: T forSome { type U }")(intercept[ParseException](pat("_: T forSome { type U }")))
 
-  test("x@(__ : Y)") {
-
-    assertPat("x@(__ : Y)")(Pat.Bind(patvar("x"), Pat.Typed(patvar("__"), pname("Y"))))
-  }
+  test("x@(__ : Y)")(assertPat("x@(__ : Y)")(Pat.Bind(patvar("x"), Pat.Typed(patvar("__"), pname("Y")))))
 
   test("foo(x)")(assertPat("foo(x)")(Extract(tname("foo"), Var(tname("x")) :: Nil)))
 
@@ -100,9 +93,10 @@ class PatSuite extends ParseSuite {
 
   test("a ::[T] ()") {
     // the "a :: ()" case is tested in parsers/PatSuite, with other dialects
-    val error = """|<input>:1: error: infix patterns cannot have type arguments: not expected `[`
-                   |a ::[T] ()
-                   |    ^""".stripMargin
+    val error =
+      """|<input>:1: error: infix patterns cannot have type arguments: not expected `[`
+         |a ::[T] ()
+         |    ^""".stripMargin
     runTestError[Pat]("a ::[T] ()", error)
   }
 
@@ -138,9 +132,7 @@ class PatSuite extends ParseSuite {
     )
   }
 
-  test("#501") {
-    intercept[ParseException](pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false"))
-  }
+  test("#501")(intercept[ParseException](pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false")))
 
   test("<a>{_*}</a>") {
     assertPat("<a>{_*}</a>")(Pat.Xml(List(str("<a>"), str("</a>")), List(SeqWildcard())))

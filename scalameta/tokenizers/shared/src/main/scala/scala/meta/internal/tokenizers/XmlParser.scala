@@ -71,8 +71,7 @@ class XmlParser(dialect: Dialect) {
     def CharB[_: P] = P(!("{" | "}") ~ Char1)
 
     // discard result
-    def Name[_: P]: P0 = P(NameStart ~ NameChar.rep).!.filter(_.last != ':').opaque("Name")
-      .map(_ => ())
+    def Name[_: P]: P0 = P(NameStart ~ NameChar.rep).!.filter(_.last != ':').opaque("Name").map(_ => ())
     def NameStart[_: P] = P(CharPred(isNameStart))
     def NameChar[_: P] = P(CharPred(isNameChar))
 

@@ -81,9 +81,8 @@ trait SymbolOps {
       else sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
     def disambiguator: String = {
       val peers = sym.owner.semanticdbDecls.gsyms
-      val overloads = peers.filter { peer =>
-        peer.isMethod && peer.symbolName == sym.symbolName && !peer.isValMethod
-      }
+      val overloads = peers
+        .filter(peer => peer.isMethod && peer.symbolName == sym.symbolName && !peer.isValMethod)
       val suffix =
         if (overloads.lengthCompare(1) == 0) ""
         else {
@@ -206,9 +205,7 @@ trait SymbolOps {
       sym.isStaticConstructor || isLocalChild || isSyntheticValueClassCompanion || isUselessField ||
       isSyntheticCaseAccessor || sym.isRefinementClass || isSyntheticJavaModule
     def isUseful: Boolean = !isUseless
-    def isUselessOccurrence: Boolean = sym.isAnonymousClass || {
-      isUseless && !isSyntheticJavaModule // references to static Java inner classes should have occurrences
-    }
+    def isUselessOccurrence: Boolean = sym.isAnonymousClass || isUseless && !isSyntheticJavaModule // references to static Java inner classes should have occurrences
     def isSyntheticLocalParam: Boolean = sym.hasAllFlags(gf.SYNTHETIC | gf.PARAM) &&
       sym.isSemanticdbLocal
     def isUselessSymbolInformation: Boolean = isUseless || isEtaExpandedParameter ||

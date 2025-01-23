@@ -5,15 +5,15 @@ import scala.meta._
 
 class ModSuite extends ParseSuite {
   test("implicit") {
-    assertTree(templStat("implicit object A"))(
-      Defn.Object(List(Mod.Implicit()), tname("A"), tplNoBody())
-    )
-    assertTree(templStat("implicit class A"))(
-      Defn.Class(List(Mod.Implicit()), pname("A"), Nil, ctor, tplNoBody())
-    )
-    assertTree(templStat("implicit case object A"))(
-      Defn.Object(List(Mod.Implicit(), Mod.Case()), tname("A"), tplNoBody())
-    )
+    assertTree(
+      templStat("implicit object A")
+    )(Defn.Object(List(Mod.Implicit()), tname("A"), tplNoBody()))
+    assertTree(
+      templStat("implicit class A")
+    )(Defn.Class(List(Mod.Implicit()), pname("A"), Nil, ctor, tplNoBody()))
+    assertTree(
+      templStat("implicit case object A")
+    )(Defn.Object(List(Mod.Implicit(), Mod.Case()), tname("A"), tplNoBody()))
 
     assertTree(templStat("case class A(implicit val a: Int)")) {
       Defn.Class(
@@ -104,38 +104,23 @@ class ModSuite extends ParseSuite {
       { case Defn.Def(List(Mod.Final()), _, _, _, _, _) => () }
     )
 
-    matchSubStructure[Stat](
-      "final val a: Int = 1",
-      { case Defn.Val(List(Mod.Final()), _, _, _) => () }
-    )
+    matchSubStructure[Stat]("final val a: Int = 1", { case Defn.Val(List(Mod.Final()), _, _, _) => () })
 
     matchSubStructure[Stat]("final val a: Int", { case Decl.Val(List(Mod.Final()), _, _) => () })
 
-    matchSubStructure[Stat](
-      "final var a: Int = 1",
-      { case Defn.Var(List(Mod.Final()), _, _, _) => () }
-    )
+    matchSubStructure[Stat]("final var a: Int = 1", { case Defn.Var(List(Mod.Final()), _, _, _) => () })
 
     matchSubStructure[Stat]("final var a: Int", { case Decl.Var(List(Mod.Final()), _, _) => () })
 
-    matchSubStructure[Stat](
-      "final type A = Int",
-      { case Defn.Type(List(Mod.Final()), _, _, _) => () }
-    )
+    matchSubStructure[Stat]("final type A = Int", { case Defn.Type(List(Mod.Final()), _, _, _) => () })
   }
 
   testParseErrors("def foo(final val a: Int): Int = a")
 
   test("sealed") {
-    matchSubStructure[Stat](
-      "sealed trait A",
-      { case Defn.Trait(List(Mod.Sealed()), _, _, _, _) => () }
-    )
+    matchSubStructure[Stat]("sealed trait A", { case Defn.Trait(List(Mod.Sealed()), _, _, _, _) => () })
 
-    matchSubStructure[Stat](
-      "sealed class A",
-      { case Defn.Class(List(Mod.Sealed()), _, _, _, _) => () }
-    )
+    matchSubStructure[Stat]("sealed class A", { case Defn.Class(List(Mod.Sealed()), _, _, _, _) => () })
 
     matchSubStructure[Stat](
       "sealed abstract class A",
@@ -151,10 +136,7 @@ class ModSuite extends ParseSuite {
   testParseErrors("def foo(sealed val a: Int): Int = a")
 
   test("override") {
-    matchSubStructure[Stat](
-      "override object A",
-      { case Defn.Object(List(Mod.Override()), _, _) => () }
-    )
+    matchSubStructure[Stat]("override object A", { case Defn.Object(List(Mod.Override()), _, _) => () })
 
     matchSubStructure[Stat](
       "override case object A",
@@ -186,20 +168,11 @@ class ModSuite extends ParseSuite {
       { case Decl.Def(List(Mod.Override()), _, _, _, _) => () }
     )
 
-    matchSubStructure[Stat](
-      "override val a: Int",
-      { case Decl.Val(List(Mod.Override()), _, _) => () }
-    )
+    matchSubStructure[Stat]("override val a: Int", { case Decl.Val(List(Mod.Override()), _, _) => () })
 
-    matchSubStructure[Stat](
-      "override var a: Int",
-      { case Decl.Var(List(Mod.Override()), _, _) => () }
-    )
+    matchSubStructure[Stat]("override var a: Int", { case Decl.Var(List(Mod.Override()), _, _) => () })
 
-    matchSubStructure[Stat](
-      "override type A",
-      { case Decl.Type(List(Mod.Override()), _, _, _) => () }
-    )
+    matchSubStructure[Stat]("override type A", { case Decl.Type(List(Mod.Override()), _, _, _) => () })
   }
 
   testParseErrors("def foo(override val a: Int): Int = a")
@@ -355,9 +328,10 @@ class ModSuite extends ParseSuite {
   }
 
   test("covariant-like in type") {
-    val error = """|<input>:1: error: `]` expected but `identifier` found
-                   |type A[`+`T] = B[T]
-                   |          ^""".stripMargin
+    val error =
+      """|<input>:1: error: `]` expected but `identifier` found
+         |type A[`+`T] = B[T]
+         |          ^""".stripMargin
     runTestError[Stat]("type A[`+`T] = B[T]", error)
   }
 
@@ -388,9 +362,10 @@ class ModSuite extends ParseSuite {
   }
 
   test("contravariant-like in class") {
-    val error = """|<input>:1: error: `]` expected but `identifier` found
-                   |class A[`-`T](t: T)
-                   |           ^""".stripMargin
+    val error =
+      """|<input>:1: error: `]` expected but `identifier` found
+         |class A[`-`T](t: T)
+         |           ^""".stripMargin
     runTestError[Stat]("class A[`-`T](t: T)", error)
   }
 
@@ -586,23 +561,26 @@ class ModSuite extends ParseSuite {
   test("Annotation after modifier")(interceptParseError("implicit @foo def foo(a: Int): Int"))
 
   test("missing val after parameter modifier") {
-    val expected = s"""|error: `val` expected but `identifier` found
-                       |class A(implicit b: B, implicit c: C)
-                       |                                ^""".stripMargin
+    val expected =
+      s"""|error: `val` expected but `identifier` found
+          |class A(implicit b: B, implicit c: C)
+          |                                ^""".stripMargin
     runTestError[Stat]("class A(implicit b: B, implicit c: C)", expected)
   }
 
   test("repeated parameter modifier on first parameter") {
-    val expected = s"""|error: repeated modifier
-                       |class A(implicit implicit val b: B)
-                       |                 ^""".stripMargin
+    val expected =
+      s"""|error: repeated modifier
+          |class A(implicit implicit val b: B)
+          |                 ^""".stripMargin
     runTestError[Stat]("class A(implicit implicit val b: B)", expected)
   }
 
   test("by-name parameter: class with val") {
-    val expected = s"""|error: `val' parameters may not be call-by-name
-                       |class A(val b: => B)
-                       |               ^""".stripMargin
+    val expected =
+      s"""|error: `val' parameters may not be call-by-name
+          |class A(val b: => B)
+          |               ^""".stripMargin
     runTestError[Stat]("class A(val b: => B)", expected)
   }
 
@@ -614,16 +592,18 @@ class ModSuite extends ParseSuite {
   }
 
   test("by-name parameter: case class with val") {
-    val expected = s"""|error: `val' parameters may not be call-by-name
-                       |case class A(val b: => B)
-                       |                    ^""".stripMargin
+    val expected =
+      s"""|error: `val' parameters may not be call-by-name
+          |case class A(val b: => B)
+          |                    ^""".stripMargin
     runTestError[Stat]("case class A(val b: => B)", expected)
   }
 
   test("by-name parameter: class with implicit val") {
-    val expected = s"""|error: `val' parameters may not be call-by-name
-                       |class A(implicit val b: => B)
-                       |                        ^""".stripMargin
+    val expected =
+      s"""|error: `val' parameters may not be call-by-name
+          |class A(implicit val b: => B)
+          |                        ^""".stripMargin
     runTestError[Stat]("class A(implicit val b: => B)", expected)
   }
 

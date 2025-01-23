@@ -221,7 +221,7 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
       else if (VersionNumber(scalaVersion.value).matchesSemVer(SemanticSelector("<2.13.14")))
         "3.1.0"
       else "3.1.1"
-    List("com.lihaoyi" %%% "fastparse" % fastparseVersion),
+    List("com.lihaoyi" %%% "fastparse" % fastparseVersion)
   },
   mergedModule { base =>
     val scalameta = base / "scalameta"
@@ -366,34 +366,34 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   .jvmSettings(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0")
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
-lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings)
-  .jvmSettings(
-    crossScalaVersions := AllScalaVersions,
-    libraryDependencies ++= {
-      if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil
-    },
-    dependencyOverrides += {
-      val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
-      "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
-    },
-    libraryDependencies ++= {
-      if (isScala213.value) List(
-        "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-        "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0" % Test
-      )
-      else Nil
-    },
-    scalacOptions ++= {
-      if (isScala3.value)
-        List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
-      else Nil
-    }
-  )
-  .jsSettings(commonJsSettings, scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
-  .nativeSettings(
-    nativeSettings,
-    nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) }
-  ).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
+lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings).jvmSettings(
+  crossScalaVersions := AllScalaVersions,
+  libraryDependencies ++= {
+    if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil
+  },
+  dependencyOverrides += {
+    val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
+    "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
+  },
+  libraryDependencies ++= {
+    if (isScala213.value) List(
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
+      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0" % Test
+    )
+    else Nil
+  },
+  scalacOptions ++= {
+    if (isScala3.value)
+      List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
+    else Nil
+  }
+).jsSettings(
+  commonJsSettings,
+  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+).nativeSettings(
+  nativeSettings,
+  nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) }
+).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
 
 lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   crossScalaVersions := AllScala2Versions,
@@ -788,9 +788,8 @@ lazy val shadingSettings = Def.settings(
   },
   shadingRules ++= {
     if (isScala211.value) Seq.empty
-    else ShadedDependency.all.map { x =>
-      ShadingRule.moveUnder(x.namespace, "scala.meta.shaded.internal")
-    }
+    else ShadedDependency.all
+      .map(x => ShadingRule.moveUnder(x.namespace, "scala.meta.shaded.internal"))
   },
   validNamespaces ++= Set("org", "scala", "java")
 )

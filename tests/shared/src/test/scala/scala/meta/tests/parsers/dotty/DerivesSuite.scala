@@ -5,11 +5,12 @@ import scala.meta._
 class DerivesSuite extends BaseDottySuite {
 
   test("simple-derives") {
-    val derivesEnum = """|enum Tree[T] derives Eq, Ordering, Show {
-                         |  case Branch
-                         |  case Leaf
-                         |}
-                         |""".stripMargin
+    val derivesEnum =
+      """|enum Tree[T] derives Eq, Ordering, Show {
+         |  case Branch
+         |  case Leaf
+         |}
+         |""".stripMargin
 
     runTestAssert[Stat](derivesEnum)(Defn.Enum(
       Nil,
@@ -368,11 +369,12 @@ class DerivesSuite extends BaseDottySuite {
   }
 
   test("not-derives") {
-    val layout = """|class A {
-                    |  def derives() = ???
-                    |  derives()
-                    |}
-                    |""".stripMargin
+    val layout =
+      """|class A {
+         |  def derives() = ???
+         |  derives()
+         |}
+         |""".stripMargin
     val tree = Defn.Class(
       Nil,
       pname("A"),

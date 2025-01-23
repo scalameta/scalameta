@@ -362,8 +362,8 @@ object TreeSyntax {
        * https://github.com/scala-native/scala-native/issues/2187
        * instead we went with if clause to work around the issue.
        */
-      def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean = escapableSoftKeywords
-        .get(t.value).exists(_.exists(_.isInstance(parent)))
+      def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean = escapableSoftKeywords.get(t.value)
+        .exists(_.exists(_.isInstance(parent)))
 
       def isAmbiguousInParent(t: Tree, parent: Tree): Boolean = t match {
         case t: Term.Name => isAmbiguousWithPatVarTerm(t, parent) ||
@@ -470,8 +470,7 @@ object TreeSyntax {
         m(SimpleExpr1, s(r(zipped), parts.last))
 
       case t: Term.ArgClause => s("(", o(t.mod, " "), r(t.values, ", "), ")")
-      case t: Term.Apply =>
-        m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
+      case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
       case t: Term.ApplyUsing =>
         val args = s("(", kw("using"), " ", r(t.argClause.values, ", "), ")")
         m(SimpleExpr1, s(p(SimpleExpr1, t.fun), args))
@@ -661,8 +660,7 @@ object TreeSyntax {
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe))
       case t: Type.PolyFunction => m(Typ, t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe))
-      case t: Type.Match =>
-        m(Type, s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}")))
+      case t: Type.Match => m(Type, s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}")))
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
         val useStar = dialect.allowStarAsTypePlaceholder &&
@@ -729,8 +727,7 @@ object TreeSyntax {
           case _ => s(" ", kw("@"))
         }
         m(Pattern2, s(p(SimplePattern, t.lhs), separator, " ", p(AnyPattern3, t.rhs)))
-      case t: Pat.Alternative =>
-        m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
+      case t: Pat.Alternative => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
       case t: Pat.Tuple => m(SimplePattern, s("(", r(t.args, ", "), ")"))
       case t: Pat.ArgClause => m(SimplePattern, s("(", r(t.values, ", "), ")"))
       case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
@@ -871,8 +868,7 @@ object TreeSyntax {
       case t: Ctor.Primary =>
         val paramClauses = r(t.paramClauses.map(printParams(_)))
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), paramClauses)
-      case t: Ctor.Block =>
-        if (t.stats.isEmpty) s(t.init) else s("{", i(t.init), "", t.stats, n("}"))
+      case t: Ctor.Block => if (t.stats.isEmpty) s(t.init) else s("{", i(t.init), "", t.stats, n("}"))
       case t: Ctor.Secondary =>
         s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramClauses, " = ", t.body)
 
@@ -1164,6 +1160,6 @@ object TreeSyntax {
       }
     }
 
-  def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result =
-    new SyntaxInstances(dialect).syntaxTree[T].apply(x)
+  def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = new SyntaxInstances(dialect)
+    .syntaxTree[T].apply(x)
 }

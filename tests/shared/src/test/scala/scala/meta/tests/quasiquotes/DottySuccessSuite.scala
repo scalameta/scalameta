@@ -78,7 +78,8 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
 
-    val q"extension [..$tparams](..$params) { ..$stats }" = q"""extension (c: Circle) {
+    val q"extension [..$tparams](..$params) { ..$stats }" =
+      q"""extension (c: Circle) {
               def crc: Int = 2
             }"""
 
@@ -95,7 +96,8 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
 
-    val q"extension [..$tparams](..$params) { ..$stats }" = q"""extension [A](c: Circle) {
+    val q"extension [..$tparams](..$params) { ..$stats }" =
+      q"""extension [A](c: Circle) {
               def crc: Int = 2
             }"""
 
@@ -112,7 +114,8 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
 
-    val q"extension [..$tparams]($param) { ..$stats }" = q"""extension (c: Circle) {
+    val q"extension [..$tparams]($param) { ..$stats }" =
+      q"""extension (c: Circle) {
               def crb: Int = 1
               def crc: Int = 2
             }"""
@@ -131,7 +134,8 @@ class DottySuccessSuite extends TreeSuiteBase {
     val dialect: Dialect = null
     import dialects.Scala3
 
-    val q"extension [..$tparams]($param) { ..$stats }" = q"""extension [A, B, C](c: Circle) {
+    val q"extension [..$tparams]($param) { ..$stats }" =
+      q"""extension [A, B, C](c: Circle) {
               def crb: Int = 1
               def crc: Int = 2
             }"""

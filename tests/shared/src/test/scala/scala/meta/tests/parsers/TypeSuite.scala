@@ -60,9 +60,7 @@ class TypeSuite extends ParseSuite {
     }
   }
 
-  test("F[_ >: lo <: hi]") {
-    assertTpe("F[_ >: lo <: hi]")(papply("F", Wildcard(bounds("lo", "hi"))))
-  }
+  test("F[_ >: lo <: hi]")(assertTpe("F[_ >: lo <: hi]")(papply("F", Wildcard(bounds("lo", "hi")))))
 
   test("F[_ >: lo")(assertTpe("F[_ >: lo]")(papply("F", Wildcard(bounds(lo = "lo")))))
 

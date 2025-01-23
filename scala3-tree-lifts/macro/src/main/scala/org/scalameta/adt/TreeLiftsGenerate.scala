@@ -103,18 +103,15 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
     val liftAdts = adts.zip(defNames).map { case (adt, defName) =>
       val defaultBody: String = customMatcher(adt, defName, localName).getOrElse {
         val init = "_root_"
-        def getNamePath(parts: Iterable[String]) = parts.foldLeft(init) { (acc, part) =>
-          s"$acc.$part"
-        }
+        def getNamePath(parts: Iterable[String]) = parts.foldLeft(init)((acc, part) => s"$acc.$part")
         val nameParts = adt.sym.fullName.split('.')
         if (adt.sym.isClass) {
           val fields = adt match { case leaf: Leaf => leaf.fields(isPrivateOK); case _ => Nil }
           val args = fields.map(f => s"term($localName.${f.name})")
           val latestAfterVersion =
             if (adt.sym.isAstClass) {
-              val moduleNames = adt.sym.companion.info.decls.flatMap { x =>
-                if (x.isModule) Some(x.name.toString) else None
-              }
+              val moduleNames = adt.sym.companion.info.decls
+                .flatMap(x => if (x.isModule) Some(x.name.toString) else None)
               val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse {
                 c.abort(c.enclosingPosition, s"no latest version ${adt.sym.fullName}: $moduleNames")
               }

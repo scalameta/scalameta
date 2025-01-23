@@ -24,9 +24,7 @@ class VarargParameterSuite extends ParseSuite {
       Nil,
       tname("obj"),
       Nil,
-      List(
-        List(tparam("a", "String"), tparam("b", "Boolean"), tparam("f", Type.Repeated(pname("Int"))))
-      ),
+      List(List(tparam("a", "String"), tparam("b", "Boolean"), tparam("f", Type.Repeated(pname("Int"))))),
       Some(pname("Boolean")),
       bool(true)
     )

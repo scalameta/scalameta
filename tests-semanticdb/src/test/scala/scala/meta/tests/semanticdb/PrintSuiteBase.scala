@@ -25,7 +25,8 @@ abstract class PrintSuiteBase extends FunSuite {
       expected: String,
       fn: s.TextDocument => Unit
   ): Unit = test(name) {
-    val wrapped = s"""
+    val wrapped =
+      s"""
 object Wrapped {
 $original
 }

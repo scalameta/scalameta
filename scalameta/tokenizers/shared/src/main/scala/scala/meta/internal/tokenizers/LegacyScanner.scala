@@ -287,8 +287,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (isUnquoteNextNoDollar()) getUnquote()
         else {
           putCharAndNext()
-          if (dialect.allowSpliceAndQuote && peekNonWhitespace().ch == '{')
-            setTokStrVal(MACROSPLICE)
+          if (dialect.allowSpliceAndQuote && peekNonWhitespace().ch == '{') setTokStrVal(MACROSPLICE)
           else getIdentRestCheckInterpolation()
         }
       case '<' => // is XMLSTART?
@@ -492,18 +491,15 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         putCharAndNext()
         getOperatorRest()
       }
-    case _ =>
-      if (isSpecial(ch)) { putCharAndNext(); getOperatorRest() }
-      else finishNamed()
+    case _ => if (isSpecial(ch)) { putCharAndNext(); getOperatorRest() } else finishNamed()
   }
 
   // True means that we need to switch into unquote reading mode.
-  private def isUnquoteNextNoDollar(): Boolean = unquoteDialect != null && {
+  private def isUnquoteNextNoDollar(): Boolean = unquoteDialect != null &&
     // Skip the first dollar and move on to whatever we've been doing:
     // starting or continuing tokenization of an identifier,
     // or continuing reading a string literal, or whatever.
     !nextCharIf(_ == '$')
-  }
   @inline
   private def isUnquoteDollar(): Boolean = ch == '$' && isUnquoteNextNoDollar()
 
@@ -553,9 +549,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       getStringPart(multiLine)
     } else (ch: @switch) match {
       case '"' =>
-        if (multiLine) {
-          if (!canFinishMultilineStringLit(withoutQuotes = true)) getStringPart(true)
-        } else {
+        if (multiLine) { if (!canFinishMultilineStringLit(withoutQuotes = true)) getStringPart(true) }
+        else {
           endOffset = begCharOffset
           nextChar()
           finishStringLit()

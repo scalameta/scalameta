@@ -58,16 +58,16 @@ class NewFunctionsSuite extends BaseDottySuite {
       pctxfunc(pname("ExecutionContext"))(pname("T"))
     ))
 
-    val code = """|x match {
-                  |  case t: (Context ?=> Symbol) @unchecked =>
-                  |}""".stripMargin
+    val code =
+      """|x match {
+         |  case t: (Context ?=> Symbol) @unchecked =>
+         |}""".stripMargin
     runTestAssert[Stat](code)(tmatch(
       tname("x"),
       Case(
         Pat.Typed(
           patvar("t"),
-          Type
-            .Annotate(pctxfunc(pname("Context"))(pname("Symbol")), List(Mod.Annot(init("unchecked"))))
+          Type.Annotate(pctxfunc(pname("Context"))(pname("Symbol")), List(Mod.Annot(init("unchecked"))))
         ),
         None,
         blk()
@@ -185,11 +185,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       Nil,
       pname("F1"),
       Nil,
-      ppolyfunc(
-        pparam(Nil, "F", List(pparam("_"))),
-        pparam(Nil, "G", List(pparam("_"))),
-        pparam("T")
-      )(pfunc(papply("F", "T"), pfunc(papply("F", "T"))(papply("G", "T")))(papply("G", "T")))
+      ppolyfunc(pparam(Nil, "F", List(pparam("_"))), pparam(Nil, "G", List(pparam("_"))), pparam("T"))(
+        pfunc(papply("F", "T"), pfunc(papply("F", "T"))(papply("G", "T")))(papply("G", "T"))
+      )
     ))
   }
 
@@ -218,10 +216,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       List(patvar("t1")),
       None,
       tpolyfunc(pparam(Nil, "F", List(pparam("_"))), pparam("T"))(
-        tfunc(tparam(Nil, "f", pfunc(papply("F", "T"))(papply("G", "T"))))(tapply(
-          tname("f"),
-          tname("ft")
-        ))
+        tfunc(
+          tparam(Nil, "f", pfunc(papply("F", "T"))(papply("G", "T")))
+        )(tapply(tname("f"), tname("ft")))
       )
     ))
   }
@@ -241,9 +238,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       Nil,
       List(patvar("thisIsAPolymorphicFunction")),
       None,
-      tpolyfunc(pparam("PolymorphicFunctionTypeParam"))(
-        tfunc(tparam("polymorphicFunctionParam", papply("List", "T")))(tselect("ts", "headOption"))
-      )
+      tpolyfunc(
+        pparam("PolymorphicFunctionTypeParam")
+      )(tfunc(tparam("polymorphicFunctionParam", papply("List", "T")))(tselect("ts", "headOption")))
     ))
   }
 
@@ -270,10 +267,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       Nil,
       List(patvar("extractor")),
       Some(
-        pfunc(
-          Type.TypedParam(pname("e"), pname("Entry")),
-          Type.TypedParam(pname("f"), pname("Other"))
-        )(pselect("e", "Key"))
+        pfunc(Type.TypedParam(pname("e"), pname("Entry")), Type.TypedParam(pname("f"), pname("Other")))(
+          pselect("e", "Key")
+        )
       ),
       tname("extractKey")
     ))

@@ -7,7 +7,8 @@ import scala.meta.transversers.SimpleTraverser
 class SimpleTraverserSuite extends TreeSuiteBase {
 
   test("Traverser Ok") {
-    val tree0 = q"""
+    val tree0 =
+      q"""
       def foo(x: x)(x: Int) = x + x
       class C(x: x) {
         def bar(x: x) = ???

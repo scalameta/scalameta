@@ -51,7 +51,8 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
         """
         )
         val qmonadicResult = qmonadicResults.reduce((acc, curr) => q"$acc.orElse($curr)")
-        val qresult = q"""
+        val qresult =
+          q"""
           $qmonadicResult match {
             case x: _root_.scala.meta.parsers.Parsed.Success[_] => x.tree
             case x: _root_.scala.meta.parsers.Parsed.Error => throw x.details

@@ -15,9 +15,9 @@ class ExportImportSuite extends BaseDottySuite {
       """|package a
          |export A.b.c
          |""".stripMargin
-    )(Source(List(
-      Pkg(tname("a"), List(Export(List(Importer(tselect("A", "b"), List(Importee.Name(Name("c"))))))))
-    )))
+    )(Source(
+      List(Pkg(tname("a"), List(Export(List(Importer(tselect("A", "b"), List(Importee.Name(Name("c")))))))))
+    ))
   }
 
   test("export-given") {
@@ -33,9 +33,7 @@ class ExportImportSuite extends BaseDottySuite {
   }
 
   test("export-given-all") {
-    runTestAssert[Stat]("export A.given")(Export(
-      List(Importer(tname("A"), List(Importee.GivenAll())))
-    ))
+    runTestAssert[Stat]("export A.given")(Export(List(Importer(tname("A"), List(Importee.GivenAll())))))
   }
 
   test("export-given-all-mixed") {
@@ -105,9 +103,10 @@ class ExportImportSuite extends BaseDottySuite {
   }
 
   test("#3754 export Type.this.field") {
-    val code = """|case class A():
-                  |  export A.this.value
-                  |""".stripMargin
+    val code =
+      """|case class A():
+         |  export A.this.value
+         |""".stripMargin
     val layout = "case class A() { export A.this.value }"
     val tree = Defn.Class(
       List(Mod.Case()),

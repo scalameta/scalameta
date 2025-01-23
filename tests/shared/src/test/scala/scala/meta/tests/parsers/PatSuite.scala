@@ -64,17 +64,13 @@ class PatSuite extends ParseSuite {
     }
   }
 
-  test("_: (t Map u)") {
-    assertPat("_: (t Map u)")(Typed(patwildcard, pinfix("t", "Map", pname("u"))))
-  }
+  test("_: (t Map u)")(assertPat("_: (t Map u)")(Typed(patwildcard, pinfix("t", "Map", pname("u")))))
 
   test("_: T Map U")(intercept[ParseException](pat("_: T Map U")))
 
   test("_: T forSome { type U }")(intercept[ParseException](pat("_: T forSome { type U }")))
 
-  test("x@(__ : Y)") {
-    assertPat("x@(__ : Y)")(Pat.Bind(patvar("x"), Pat.Typed(patvar("__"), pname("Y"))))
-  }
+  test("x@(__ : Y)")(assertPat("x@(__ : Y)")(Pat.Bind(patvar("x"), Pat.Typed(patvar("__"), pname("Y")))))
 
   test("foo(x)")(assertPat("foo(x)")(Extract(tname("foo"), Var(tname("x")) :: Nil)))
 
@@ -87,9 +83,10 @@ class PatSuite extends ParseSuite {
   test("a :: b")(assertPat("a :: b")(patinfix(Var(tname("a")), "::", Var(tname("b")))))
 
   test("a ::[T] ()") {
-    val error = """|<input>:1: error: infix patterns cannot have type arguments: not expected `[`
-                   |a ::[T] ()
-                   |    ^""".stripMargin
+    val error =
+      """|<input>:1: error: infix patterns cannot have type arguments: not expected `[`
+         |a ::[T] ()
+         |    ^""".stripMargin
     runTestError[Pat]("a ::[T] ()", error)
   }
 
@@ -164,9 +161,7 @@ class PatSuite extends ParseSuite {
     )
   }
 
-  test("#501") {
-    intercept[ParseException](pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false"))
-  }
+  test("#501")(intercept[ParseException](pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false")))
 
   test("<a>{_*}</a>") {
     assertPat("<a>{_*}</a>")(Pat.Xml(List(str("<a>"), str("</a>")), List(SeqWildcard())))
@@ -180,9 +175,7 @@ class PatSuite extends ParseSuite {
 
   test("(A, B, C)")(assertPat("(A, B, C)")(Pat.Tuple(List(tname("A"), tname("B"), tname("C")))))
 
-  test("((A, B, C))") {
-    assertPat("((A, B, C))")(Pat.Tuple(List(tname("A"), tname("B"), tname("C"))))
-  }
+  test("((A, B, C))")(assertPat("((A, B, C))")(Pat.Tuple(List(tname("A"), tname("B"), tname("C")))))
 
   test("(A, B, C) :: ((A, B, C))") {
     assertPat("(A, B, C) :: ((A, B, C))") {
@@ -217,19 +210,21 @@ class PatSuite extends ParseSuite {
   }
 
   test("case: at top level") {
-    val code = """|case foo
-                  |  if true =>
-                  |  List(bar)
-                  |""".stripMargin
+    val code =
+      """|case foo
+         |  if true =>
+         |  List(bar)
+         |""".stripMargin
     checkTree(parseCase(code)) {
       Case(patvar("foo"), Some(bool(true)), tapply(tname("List"), tname("bar")))
     }
   }
 
   test("case: break before `|`") {
-    val code = """|case 'a'
-                  |   | 'A' =>
-                  |""".stripMargin
+    val code =
+      """|case 'a'
+         |   | 'A' =>
+         |""".stripMargin
     val layout = "case 'a' | 'A' =>"
     val tree = Case(Pat.Alternative(lit('a'), lit('A')), None, blk())
     runTestAssert[Case](code, Some(layout))(tree)

@@ -104,15 +104,14 @@ private object InputOps {
       }
     }
 
-    def uriRelativeToSourceRoot(file: AbsolutePath): URI = fileInSourceRoot(file.toNIO).map { f =>
-      RelativePath.toURI(f(), isDirectory = false)
-    }.getOrElse {
-      // java.net.URI.relativize returns `fileUri` unchanged when it is not contained within our sourceroot.
-      // We could attempt to return a ".." URI, but java.net doesn't provide facilities for that. While nio's Path
-      // does contain facilities for that, such relative paths cannot then be used to produce a percent-encoded,
-      // relative URI. It doesn't seem worth fighting this battle at the moment, so:
-      sys.error(s"'$file' is not located within sourceroot '${config.sourceroot}'.")
-    }
+    def uriRelativeToSourceRoot(file: AbsolutePath): URI = fileInSourceRoot(file.toNIO)
+      .map(f => RelativePath.toURI(f(), isDirectory = false)).getOrElse {
+        // java.net.URI.relativize returns `fileUri` unchanged when it is not contained within our sourceroot.
+        // We could attempt to return a ".." URI, but java.net doesn't provide facilities for that. While nio's Path
+        // does contain facilities for that, such relative paths cannot then be used to produce a percent-encoded,
+        // relative URI. It doesn't seem worth fighting this battle at the moment, so:
+        sys.error(s"'$file' is not located within sourceroot '${config.sourceroot}'.")
+      }
 
   }
 

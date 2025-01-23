@@ -114,12 +114,13 @@ class EnumSuite extends BaseDottySuite {
     def ext(tp: String) = init(papply("Option", tp))
 
     {
-      val opt = """|
-                   |enum Option[+T] {
-                   |  case Some(x: T)
-                   |  case None
-                   |}
-                   |""".stripMargin
+      val opt =
+        """|
+           |enum Option[+T] {
+           |  case Some(x: T)
+           |  case None
+           |}
+           |""".stripMargin
       runTestAssert[Stat](opt)(Defn.Enum(
         Nil,
         pname("Option"),
@@ -133,11 +134,12 @@ class EnumSuite extends BaseDottySuite {
     }
 
     {
-      val opt = """
-                  |enum Option[+T] {
-                  |  case Some(x: T) extends Option[T]
-                  |  case None extends Option[Nothing]
-                  |}""".stripMargin
+      val opt =
+        """
+          |enum Option[+T] {
+          |  case Some(x: T) extends Option[T]
+          |  case None extends Option[Nothing]
+          |}""".stripMargin
       runTestAssert[Stat](opt)(Defn.Enum(
         Nil,
         pname("Option"),
@@ -152,15 +154,16 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("case-caseother-diff") {
-    val code = """
-                 |enum X {
-                 |  case R
-                 |  v match {
-                 |    case Unap => 1
-                 |    case Unap => 2
-                 |  }
-                 |  case G
-                 |}""".stripMargin
+    val code =
+      """
+        |enum X {
+        |  case R
+        |  v match {
+        |    case Unap => 1
+        |    case Unap => 2
+        |  }
+        |  case G
+        |}""".stripMargin
     def unap(i: Int): Case = Case(tname("Unap"), None, int(i))
     runTestAssert[Stat](code)(Defn.Enum(
       Nil,
@@ -179,16 +182,17 @@ class EnumSuite extends BaseDottySuite {
   final val gcase = Defn.EnumCase(Nil, tname("G"), Nil, ctor, Nil)
 
   test("case-match-interop") {
-    val code = """
-                 |enum X {
-                 |  case R
-                 |  v match {
-                 |    case 'a' |
-                 |         'c' |
-                 |         'e' => "OK"
-                 |  }
-                 |  case G
-                 |}""".stripMargin
+    val code =
+      """
+        |enum X {
+        |  case R
+        |  v match {
+        |    case 'a' |
+        |         'c' |
+        |         'e' => "OK"
+        |  }
+        |  case G
+        |}""".stripMargin
     val cmatch = tmatch(
       tname("v"),
       Case(Pat.Alternative(lit('a'), Pat.Alternative(lit('c'), lit('e'))), None, str("OK"))
@@ -199,15 +203,16 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("case-match-if-interop") {
-    val code = """
-                 |enum X {
-                 |  case R
-                 |  v match {
-                 |    case x
-                 |       if x > 3 => "OK"
-                 |  }
-                 |  case G
-                 |}""".stripMargin
+    val code =
+      """
+        |enum X {
+        |  case R
+        |  v match {
+        |    case x
+        |       if x > 3 => "OK"
+        |  }
+        |  case G
+        |}""".stripMargin
     val cmatch = Term
       .Match(tname("v"), List(Case(patvar("x"), Some(tinfix(tname("x"), ">", int(3))), str("OK"))))
     runTestAssert[Stat](code, assertLayout = None)(
@@ -216,16 +221,17 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("case-try-interop") {
-    val code = """
-                 |enum X {
-                 |  case R
-                 |  try a() catch {
-                 |    case 'a' |
-                 |         'e' => "Recovered"
-                 |    case 'c' => "ERROR"
-                 |  }
-                 |  case G
-                 |}""".stripMargin
+    val code =
+      """
+        |enum X {
+        |  case R
+        |  try a() catch {
+        |    case 'a' |
+        |         'e' => "Recovered"
+        |    case 'c' => "ERROR"
+        |  }
+        |  case G
+        |}""".stripMargin
 
     val tryCatch = Term.Try(
       tapply(tname("a")),
@@ -324,9 +330,10 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("enum-colon") {
-    val code = """|enum A:
-                  |  case B, C
-                  |""".stripMargin
+    val code =
+      """|enum A:
+         |  case B, C
+         |""".stripMargin
     val expected = "enum A { case B, C }"
     runTestAssert[Stat](code, assertLayout = Some(expected))(
       enumWithCase("A", Defn.RepeatedEnumCase(Nil, List(tname("B"), tname("C"))))
@@ -334,10 +341,11 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("enum-annotated") {
-    val code = """|@annot
-                  |enum A:
-                  |  case B, C
-                  |""".stripMargin
+    val code =
+      """|@annot
+         |enum A:
+         |  case B, C
+         |""".stripMargin
     val expected = "@annot enum A { case B, C }"
     runTestAssert[Stat](code, assertLayout = Some(expected))(Defn.Enum(
       List(Mod.Annot(init("annot"))),
@@ -349,11 +357,12 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("enum-self-braces") {
-    val code = """|enum A { self =>
-                  |  case B(v: Int)
-                  |  case C(v: String)
-                  |}
-                  |""".stripMargin
+    val code =
+      """|enum A { self =>
+         |  case B(v: Int)
+         |  case C(v: String)
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(Defn.Enum(
       Nil,
       pname("A"),
@@ -368,17 +377,19 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("enum-self-indented") {
-    val code = """|enum A:
-                  |  self =>
-                  |    case B(v: Int)
-                  |    case C(v: String)
-                  |  def fx: Int = 4
-                  |""".stripMargin
-    val expected = """|enum A { self =>
-                      |  case B(v: Int)
-                      |  case C(v: String)
-                      |  def fx: Int = 4
-                      |}""".stripMargin
+    val code =
+      """|enum A:
+         |  self =>
+         |    case B(v: Int)
+         |    case C(v: String)
+         |  def fx: Int = 4
+         |""".stripMargin
+    val expected =
+      """|enum A { self =>
+         |  case B(v: Int)
+         |  case C(v: String)
+         |  def fx: Int = 4
+         |}""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(expected))(Defn.Enum(
       Nil,
       pname("A"),
@@ -394,18 +405,20 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("enum-colon-sep-after") {
-    val code = """|object Main :
-                  |  enum A {
-                  |    case B, C
-                  |  }
-                  |  object X:
-                  |    val x = "x"
-                  |""".stripMargin
-    val expected = """|object Main {
-                      |  enum A { case B, C }
-                      |  object X { val x = "x" }
-                      |}
-                      |""".stripMargin
+    val code =
+      """|object Main :
+         |  enum A {
+         |    case B, C
+         |  }
+         |  object X:
+         |    val x = "x"
+         |""".stripMargin
+    val expected =
+      """|object Main {
+         |  enum A { case B, C }
+         |  object X { val x = "x" }
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(expected))(Defn.Object(
       Nil,
       tname("Main"),
@@ -417,19 +430,21 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("enum-inside-indented") {
-    val code = """|object Main:
-                  |  enum A:
-                  |    kind =>
-                  |
-                  |    case B, C
-                  |
-                  |  end A
-                  |""".stripMargin
-    val output = """|object Main {
-                    |  enum A { kind => case B, C }
-                    |  end A
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object Main:
+         |  enum A:
+         |    kind =>
+         |
+         |    case B, C
+         |
+         |  end A
+         |""".stripMargin
+    val output =
+      """|object Main {
+         |  enum A { kind => case B, C }
+         |  end A
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Object(
       Nil,
       tname("Main"),
@@ -447,20 +462,22 @@ class EnumSuite extends BaseDottySuite {
   }
 
   test("enum-arrow-toplevel") {
-    val code = """|enum T2Enum:
-                  |  case Hmm
-                  |  val a = () =>  
-                  |    fx()
-                  |    gx()
-                  |""".stripMargin
-    val expected = """|enum T2Enum {
-                      |  case Hmm
-                      |  val a = () => {
-                      |    fx()
-                      |    gx()
-                      |  }
-                      |}
-                      |""".stripMargin
+    val code =
+      """|enum T2Enum:
+         |  case Hmm
+         |  val a = () =>  
+         |    fx()
+         |    gx()
+         |""".stripMargin
+    val expected =
+      """|enum T2Enum {
+         |  case Hmm
+         |  val a = () => {
+         |    fx()
+         |    gx()
+         |  }
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(expected))(Defn.Enum(
       Nil,
       pname("T2Enum"),
@@ -468,8 +485,7 @@ class EnumSuite extends BaseDottySuite {
       EmptyCtor(),
       tpl(
         Defn.EnumCase(Nil, tname("Hmm"), Nil, EmptyCtor(), Nil),
-        Defn
-          .Val(Nil, List(patvar("a")), None, tfunc()(blk(tapply(tname("fx")), tapply(tname("gx")))))
+        Defn.Val(Nil, List(patvar("a")), None, tfunc()(blk(tapply(tname("fx")), tapply(tname("gx")))))
       )
     ))
   }

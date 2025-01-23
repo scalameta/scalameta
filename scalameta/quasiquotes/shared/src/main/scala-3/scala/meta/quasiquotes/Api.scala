@@ -20,10 +20,8 @@ private[meta] trait Api {
       ${ ReificationMacros.typeParamImpl('sc, 'args) }
     transparent inline def p(inline args: Any*): Tree =
       ${ ReificationMacros.caseOrPatternImpl('sc, 'args) }
-    transparent inline def init(inline args: Any*): Init =
-      ${ ReificationMacros.initImpl('sc, 'args) }
-    transparent inline def self(inline args: Any*): Self =
-      ${ ReificationMacros.selfImpl('sc, 'args) }
+    transparent inline def init(inline args: Any*): Init = ${ ReificationMacros.initImpl('sc, 'args) }
+    transparent inline def self(inline args: Any*): Self = ${ ReificationMacros.selfImpl('sc, 'args) }
     transparent inline def template(inline args: Any*): Template =
       ${ ReificationMacros.templateImpl('sc, 'args) }
     transparent inline def mod(inline args: Any*): Mod = ${ ReificationMacros.modImpl('sc, 'args) }

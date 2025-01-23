@@ -142,8 +142,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       if (dialectsSym != sym.owner) None
       else {
         val name = sym.name
-        if (dialectsSym.info.member(name) == NoSymbol) None
-        else Dialect.standards.get(name.toString)
+        if (dialectsSym.info.member(name) == NoSymbol) None else Dialect.standards.get(name.toString)
       }
 
     // allow `scala.meta.dialects.Scala211`
@@ -203,8 +202,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
 
   private implicit class XtensionRankedTree(tree: u.Tree) {
     def wrap(rank: Int): u.Tree =
-      if (rank == 0) tree
-      else AppliedTypeTree(tq"${definitions.ListClass}", List(tree.wrap(rank - 1)))
+      if (rank == 0) tree else AppliedTypeTree(tq"${definitions.ListClass}", List(tree.wrap(rank - 1)))
   }
 
   private def reifySkeleton(
@@ -282,8 +280,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         loop(trees, EmptyTree, Nil)
       }
       def liftTreess(treess: List[List[MetaTree]]): ReflectTree = {
-        val tripleDotQuasis = treess.flatten
-          .collect { case quasi: Quasi if quasi.rank == 2 => quasi }
+        val tripleDotQuasis = treess.flatten.collect { case quasi: Quasi if quasi.rank == 2 => quasi }
         if (tripleDotQuasis.isEmpty) Liftable.liftList[List[MetaTree]](Liftables.liftableSubTrees)
           .apply(treess)
         else if (tripleDotQuasis.length == 1)
@@ -358,10 +355,12 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       implicit def liftableOrigin[T <: Origin]: Liftable[T] = Liftable((x: T) => Lifts.liftOrigin(x))
     }
     val valDefns = List(
-      if (sourceName eq null) q"""
+      if (sourceName eq null)
+        q"""
         val $dialectOnlyName = implicitly[$OriginModule.DialectOnly]
       """
-      else q"""
+      else
+        q"""
         val $sourceName = new $OriginModule.ParsedSource(
           _root_.scala.meta.inputs.Input.String(${input.text.replace("$$", "$")})
         )
@@ -369,7 +368,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     ).filter(_ ne null)
     mode match {
       case Mode.Term(_, _) =>
-        val internalResult = q"""
+        val internalResult =
+          q"""
           {
             ..$valDefns
             ${Lifts.liftTree(meta)}
@@ -393,7 +393,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
               patterns += pq"_root_.scala.Some($name)"
               terms += q"$name"
             }
-            val thenp = q"""
+            val thenp =
+              q"""
               (..$reifers) match {
                 case (..$patterns) => _root_.scala.Some((..$terms))
                 case _ => _root_.scala.None
@@ -405,7 +406,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           case Bind(_, Ident(termNames.WILDCARD)) => q"input match { case $pattern => $thenp }"
           case _ => q"input match { case $pattern => $thenp; case _ => $elsep }"
         }
-        val internalResult = q"""
+        val internalResult =
+          q"""
           new {
             ..$valDefns
             def unapply(input: _root_.scala.meta.Tree) = $matchp

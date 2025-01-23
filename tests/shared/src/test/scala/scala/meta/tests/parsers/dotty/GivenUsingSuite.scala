@@ -218,10 +218,11 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given-extension") {
-    val code = """|given x: AnyRef with
-                  |      extension (y: String)
-                  |         def f (y: Int): Boolean = false
-                  |""".stripMargin
+    val code =
+      """|given x: AnyRef with
+         |      extension (y: String)
+         |         def f (y: Int): Boolean = false
+         |""".stripMargin
     val expected = "given x: AnyRef with { extension (y: String) def f(y: Int): Boolean = false }"
     runTestAssert[Stat](code, assertLayout = Some(expected))(Defn.Given(
       Nil,
@@ -261,10 +262,11 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-with-import") {
     runTestAssert[Stat](
-      code = """|given intOrd: Ord[Int] with
-                |  import math.max as maxF
-                |  def f(): Int = 1
-                |""".stripMargin,
+      code =
+        """|given intOrd: Ord[Int] with
+           |  import math.max as maxF
+           |  def f(): Int = 1
+           |""".stripMargin,
       assertLayout = Some(
         """|given intOrd: Ord[Int] with {
            |  import math.max as maxF
@@ -288,10 +290,11 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-with-export") {
     runTestAssert[Stat](
-      code = """|given intOrd: Ord[Int] with
-                |  export math.max
-                |  def f(): Int = 1
-                |""".stripMargin,
+      code =
+        """|given intOrd: Ord[Int] with
+           |  export math.max
+           |  def f(): Int = 1
+           |""".stripMargin,
       assertLayout = Some(
         """|given intOrd: Ord[Int] with {
            |  export math.max
@@ -315,9 +318,10 @@ class GivenUsingSuite extends BaseDottySuite {
 
   test("given-with-empty-refinement") {
     runTestAssert[Stat](
-      code = """|given {} with
-                |  extension [T](t: T) def hello = ""
-                |""".stripMargin,
+      code =
+        """|given {} with
+           |  extension [T](t: T) def hello = ""
+           |""".stripMargin,
       assertLayout = Some("""given {} with { extension [T](t: T) def hello = "" }""")
     )(Defn.Given(
       Nil,
@@ -463,10 +467,11 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("given without sig and type in parens looking like a param clause") {
-    val code = """|given (using[String]) with Eq[Int] with {
-                  |  def foo = ???
-                  |}
-                  |""".stripMargin
+    val code =
+      """|given (using[String]) with Eq[Int] with {
+         |  def foo = ???
+         |}
+         |""".stripMargin
     val layout = "given using[String] with Eq[Int] with { def foo = ??? }"
     val tree = Defn.Given(
       Nil,
@@ -566,10 +571,11 @@ class GivenUsingSuite extends BaseDottySuite {
   }
 
   test("using-lambda-method-parameter") {
-    val output = """|LazyBody {
-                    |  (using ctx: Context) => 3
-                    |}
-                    |""".stripMargin
+    val output =
+      """|LazyBody {
+         |  (using ctx: Context) => 3
+         |}
+         |""".stripMargin
     runTestAssert[Stat]("LazyBody { (using ctx: Context) => 3 }", assertLayout = Some(output))(
       tapply(tname("LazyBody"), blk(tfunc(tparam(List(Mod.Using()), "ctx", "Context"))(int(3))))
     )

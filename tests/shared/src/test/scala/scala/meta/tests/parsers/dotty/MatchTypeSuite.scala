@@ -209,13 +209,15 @@ class MatchTypeSuite extends BaseDottySuite {
   }
 
   test("#4015") {
-    val code = """|type T1 = A[[T] =>> T match
-                  |    case _ => Int]
-                  |""".stripMargin
-    val layout = """|type T1 = A[[T] =>> T match {
-                    |  case _ => Int
-                    |}]
-                    |""".stripMargin
+    val code =
+      """|type T1 = A[[T] =>> T match
+         |    case _ => Int]
+         |""".stripMargin
+    val layout =
+      """|type T1 = A[[T] =>> T match {
+         |  case _ => Int
+         |}]
+         |""".stripMargin
     val tree = Defn.Type(
       Nil,
       pname("T1"),

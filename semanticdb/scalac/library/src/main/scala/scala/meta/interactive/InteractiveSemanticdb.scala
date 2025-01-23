@@ -101,7 +101,11 @@ object InteractiveSemanticdb extends VersionCompilerOps {
       .append("_CURSOR_").append(code.substring(offset)).toString()
 
   /** Create new compilation unit from given code. */
-  def addCompilationUnit(global: Global, code: String, filename: String): global.RichCompilationUnit = {
+  def addCompilationUnit(
+      global: Global,
+      code: String,
+      filename: String
+  ): global.RichCompilationUnit = {
     val unit = global.newCompilationUnit(code, filename)
     val richUnit = new global.RichCompilationUnit(unit.source)
     global.unitOfFile(richUnit.source.file) = richUnit

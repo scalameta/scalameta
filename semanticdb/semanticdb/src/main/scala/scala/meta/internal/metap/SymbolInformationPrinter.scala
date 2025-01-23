@@ -281,8 +281,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       }
     }
 
-    private def pprint(name: String): Unit =
-      if (name.nonEmpty) out.print(name) else out.print("<?>")
+    private def pprint(name: String): Unit = if (name.nonEmpty) out.print(name) else out.print("<?>")
 
     def pprint(const: Constant): Unit = const match {
       case NoConstant => out.print("<?>")

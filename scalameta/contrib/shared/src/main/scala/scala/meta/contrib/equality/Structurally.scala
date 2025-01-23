@@ -31,9 +31,8 @@ object Structurally {
     case (x, y) if x == null || y == null => x == null && y == null
     case (Some(x), Some(y)) => loopStructure(x, y)
     case (None, None) => true
-    case (xs: List[_], ys: List[_]) => xs.length == ys.length && xs.zip(ys).forall { case (x, y) =>
-        loopStructure(x, y)
-      }
+    case (xs: List[_], ys: List[_]) =>
+      xs.length == ys.length && xs.zip(ys).forall { case (x, y) => loopStructure(x, y) }
     case (x: Tree, y: Tree) =>
       def sameStructure = x.productPrefix == y.productPrefix &&
         loopStructure(x.productIterator.toList, y.productIterator.toList)

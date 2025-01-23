@@ -5,7 +5,12 @@ import scala.tools.nsc.reporters.Reporter
 import scala.tools.nsc.reporters.StoreReporter
 
 class SemanticdbReporter(underlying: Reporter) extends StoreReporter {
-  override protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
+  override protected def info0(
+      pos: Position,
+      msg: String,
+      severity: Severity,
+      force: Boolean
+  ): Unit = {
     super.info0(pos, msg, severity, force)
     severity.id match {
       case 0 => underlying.info(pos, msg, force)

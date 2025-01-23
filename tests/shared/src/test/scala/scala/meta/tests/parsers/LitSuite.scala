@@ -45,13 +45,9 @@ class LitSuite extends ParseSuite {
     )(term("9223372036854775808L"))
   }
 
-  test("9223372036854775807L") {
-    assertTree(term("9223372036854775807L"))(lit(9223372036854775807L))
-  }
+  test("9223372036854775807L")(assertTree(term("9223372036854775807L"))(lit(9223372036854775807L)))
 
-  test("-9223372036854775808L") {
-    assertTree(term("-9223372036854775808L"))(lit(-9223372036854775808L))
-  }
+  test("-9223372036854775808L")(assertTree(term("-9223372036854775808L"))(lit(-9223372036854775808L)))
 
   test("-9223372036854775809L") {
     interceptMessage[ParseException](
@@ -98,21 +94,22 @@ class LitSuite extends ParseSuite {
     matchSubStructure[Stat]("\"\"\"\"\"\"\"\"\"\"\"\"\"", { case Lit("\"\"\"\"\"\"\"") => () })
 
     assertTree(term("raw\"\"\"\"\"\"\"\""))(Term.Interpolate(tname("raw"), List(str("\"\"")), Nil))
-    assertTree(term("raw\"\"\"\"\"\"\"\"\"\"\"\"\""))(
-      Term.Interpolate(tname("raw"), List(str("\"\"\"\"\"\"\"")), Nil)
-    )
+    assertTree(
+      term("raw\"\"\"\"\"\"\"\"\"\"\"\"\"")
+    )(Term.Interpolate(tname("raw"), List(str("\"\"\"\"\"\"\"")), Nil))
   }
 
   test("minus-sign") {
-    val code = """|object X {
-                  |  sealed trait Foo {
-                  |    def negate1 : - = -
-                  |    def negate2 : - = -.fn("d")
-                  |  }
-                  |  trait -
-                  |  case object - extends -
-                  |}
-                  |""".stripMargin
+    val code =
+      """|object X {
+         |  sealed trait Foo {
+         |    def negate1 : - = -
+         |    def negate2 : - = -.fn("d")
+         |  }
+         |  trait -
+         |  case object - extends -
+         |}
+         |""".stripMargin
     source(code)
 
     val code2 = "trait Foo { def negate: - = - }"
@@ -265,14 +262,16 @@ class LitSuite extends ParseSuite {
   }
 
   test("scalatest-like infix without literal") {
-    val code = """|behavior of something {
-                  |  a shouldBe b
-                  |}
-                  |""".stripMargin
-    val layout = """|behavior of something {
-                    |  a shouldBe b
-                    |}
-                    |""".stripMargin
+    val code =
+      """|behavior of something {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
+    val layout =
+      """|behavior of something {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
     val tree = tinfix(
       tname("behavior"),
       "of",
@@ -282,10 +281,11 @@ class LitSuite extends ParseSuite {
   }
 
   test("scalatest-like infix with literal") {
-    val code = """|behavior of "..." {
-                  |  a shouldBe b
-                  |}
-                  |""".stripMargin
+    val code =
+      """|behavior of "..." {
+         |  a shouldBe b
+         |}
+         |""".stripMargin
     val tree = tinfix(
       tname("behavior"),
       "of",

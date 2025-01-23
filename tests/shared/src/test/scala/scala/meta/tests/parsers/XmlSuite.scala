@@ -105,11 +105,12 @@ class XmlSuite extends ParseSuite {
        |""".stripMargin
   )
 
-  private val trickyXml = """|{
-                             |val x = <div href={"/" + url}>Hello {name}</div>;
-                             |val noSemicolon = <h1>{msg infix upper}</h1>
-                             |val y = 2
-                             |}""".stripMargin
+  private val trickyXml =
+    """|{
+       |val x = <div href={"/" + url}>Hello {name}</div>;
+       |val noSemicolon = <h1>{msg infix upper}</h1>
+       |val y = 2
+       |}""".stripMargin
 
   checkToken(
     trickyXml,
@@ -336,17 +337,19 @@ class XmlSuite extends ParseSuite {
   // checkError("<a></b>") // FIXME: Should not parse
 
   test("SeqWildcard with trailing NL") {
-    val code = """|def foo =
-                  |  e match {
-                  |    case <title>{
-                  |      _*
-                  |    }</title> =>
-                  |  }
-                  |""".stripMargin
-    val layout = """|def foo = e match {
-                    |  case <title>{_*}</title> =>
-                    |}
-                    |""".stripMargin
+    val code =
+      """|def foo =
+         |  e match {
+         |    case <title>{
+         |      _*
+         |    }</title> =>
+         |  }
+         |""".stripMargin
+    val layout =
+      """|def foo = e match {
+         |  case <title>{_*}</title> =>
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),

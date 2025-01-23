@@ -17,20 +17,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("old-if-else-single1") {
-    val code = """|if (cond) fx
-                  |else gx
-                  |""".stripMargin
+    val code =
+      """|if (cond) fx
+         |else gx
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some("if (cond) fx else gx"))(
       Term.If(tname("cond"), tname("fx"), tname("gx"))
     )
   }
 
   test("old-if-else-single2") {
-    val code = """|if (cond)
-                  |  fx
-                  |else
-                  |  gx
-                  |""".stripMargin
+    val code =
+      """|if (cond)
+         |  fx
+         |else
+         |  gx
+         |""".stripMargin
     val output = """|if (cond) fx else gx""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(tname("cond"), tname("fx"), tname("gx"))
@@ -38,23 +40,25 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("old-if-else-braces") {
-    val code = """|if (cond) {
-                  |  fa1
-                  |  fa2
-                  |} else {
-                  |  fb1
-                  |  fb2
-                  |}
-                  |""".stripMargin
+    val code =
+      """|if (cond) {
+         |  fa1
+         |  fa2
+         |} else {
+         |  fb1
+         |  fb2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(
       Term.If(tname("cond"), blk(tname("fa1"), tname("fa2")), blk(tname("fb1"), tname("fb2")))
     )
   }
 
   test("new-if-else-single1") {
-    val code = """|if cond then fx
-                  |else gx
-                  |""".stripMargin
+    val code =
+      """|if cond then fx
+         |else gx
+         |""".stripMargin
     val output = "if (cond) fx else gx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(tname("cond"), tname("fx"), tname("gx"))
@@ -62,11 +66,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-if-else-single2") {
-    val code = """|if cond then
-                  |  fx
-                  |else 
-                  |  gx
-                  |""".stripMargin
+    val code =
+      """|if cond then
+         |  fx
+         |else 
+         |  gx
+         |""".stripMargin
     val output = "if (cond) fx else gx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(tname("cond"), tname("fx"), tname("gx"))
@@ -74,11 +79,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-if-single1") {
-    val code = """|if cond1
-                  |   && (cond2)
-                  |then
-                  |  gx
-                  |""".stripMargin
+    val code =
+      """|if cond1
+         |   && (cond2)
+         |then
+         |  gx
+         |""".stripMargin
     val output = "if (cond1 && cond2) gx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(tinfix(tname("cond1"), "&&", tname("cond2")), tname("gx"), Lit.Unit())
@@ -86,14 +92,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-if-single2") {
-    val code = """|if (cond1) || cond2(a1) then ok
-                  |""".stripMargin
+    val code =
+      """|if (cond1) || cond2(a1) then ok
+         |""".stripMargin
     val output = "if (cond1 || cond2(a1)) ok"
-    runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
-      tinfix(tname("cond1"), "||", tapply(tname("cond2"), tname("a1"))),
-      tname("ok"),
-      Lit.Unit()
-    ))
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      Term
+        .If(tinfix(tname("cond1"), "||", tapply(tname("cond2"), tname("a1"))), tname("ok"), Lit.Unit())
+    )
   }
 
   test("new-if-single3") {
@@ -105,16 +111,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-if-expr-without-then") {
-    val code = """|{
-                  |  if (x > 0) && (y > 0)
-                  |    x += 1
-                  |}
-                  |""".stripMargin
-    val layout = """|{
-                    |  if (x > 0) &&(y > 0)
-                    |  x += 1
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  if (x > 0) && (y > 0)
+         |    x += 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|{
+         |  if (x > 0) &&(y > 0)
+         |  x += 1
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, Some(layout))(blk(
       Term.If(
         tinfix(tname("x"), ">", int(0)),
@@ -127,11 +135,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-if-expr-without-then-2") {
-    val code = """|{
-                  |  if (x > 0) && y > 0
-                  |    x += 1
-                  |}
-                  |""".stripMargin
+    val code =
+      """|{
+         |  if (x > 0) && y > 0
+         |    x += 1
+         |}
+         |""".stripMargin
     runTestError[Stat](
       code,
       """|error: `;` expected but `integer constant` found
@@ -141,33 +150,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-if-else-multiple") {
-    val code = """|if cond then
-                  |  fx1
-                  |  fx2
-                  |else 
-                  |  gx1
-                  |  gx2
-                  |""".stripMargin
-    val output = """|if (cond) {
-                    |  fx1
-                    |  fx2
-                    |} else {
-                    |  gx1
-                    |  gx2
-                    |}
-                    |""".stripMargin
+    val code =
+      """|if cond then
+         |  fx1
+         |  fx2
+         |else 
+         |  gx1
+         |  gx2
+         |""".stripMargin
+    val output =
+      """|if (cond) {
+         |  fx1
+         |  fx2
+         |} else {
+         |  gx1
+         |  gx2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(tname("cond"), blk(tname("fx1"), tname("fx2")), blk(tname("gx1"), tname("gx2")))
     )
   }
 
   test("if-else-in-parens-1") {
-    val code = """|fx(
-                  |  if (cond)
-                  |    A
-                  |  else
-                  |    B)
-                  |""".stripMargin
+    val code =
+      """|fx(
+         |  if (cond)
+         |    A
+         |  else
+         |    B)
+         |""".stripMargin
     val output = "fx(if (cond) A else B)"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       tapply(tname("fx"), Term.If(tname("cond"), tname("A"), tname("B")))
@@ -175,22 +187,24 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("if-else-in-parens-2") {
-    val code = """|fx(
-                  |  if cond then
-                  |    A1
-                  |    A2
-                  |  else
-                  |    B1
-                  |    B2)
-                  |""".stripMargin
-    val output = """|fx(if (cond) {
-                    |  A1
-                    |  A2
-                    |} else {
-                    |  B1
-                    |  B2
-                    |})
-                    |""".stripMargin
+    val code =
+      """|fx(
+         |  if cond then
+         |    A1
+         |    A2
+         |  else
+         |    B1
+         |    B2)
+         |""".stripMargin
+    val output =
+      """|fx(if (cond) {
+         |  A1
+         |  A2
+         |} else {
+         |  B1
+         |  B2
+         |})
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(tapply(
       tname("fx"),
       Term.If(tname("cond"), blk(tname("A1"), tname("A2")), blk(tname("B1"), tname("B2")))
@@ -198,49 +212,54 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-if-indented") {
-    val code = """|if (cond)
-                  |  fx1
-                  |  fx2
-                  |""".stripMargin
-    val output = """|if (cond) {
-                    |  fx1
-                    |  fx2
-                    |}
-                    |""".stripMargin
+    val code =
+      """|if (cond)
+         |  fx1
+         |  fx2
+         |""".stripMargin
+    val output =
+      """|if (cond) {
+         |  fx1
+         |  fx2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.If(tname("cond"), blk(tname("fx1"), tname("fx2")), Lit.Unit())
     )
   }
 
   test("new-if-else-indented") {
-    val code = """|if cond
-                  |  fx1
-                  |  fx2
-                  |else
-                  |  gx
-                  |""".stripMargin
+    val code =
+      """|if cond
+         |  fx1
+         |  fx2
+         |else
+         |  gx
+         |""".stripMargin
     runTestError[Stat](code, "`then` expected but `identifier` found")
   }
 
   test("if-else-in-parens-3") {
-    val code = """|fx(
-                  |  if cond then
-                  |    A1
-                  |    A2
-                  |  else
-                  |    B1
-                  |    B2,
-                  |  secondArg
-                  |)
-                  |""".stripMargin
-    val output = """|fx(if (cond) {
-                    |  A1
-                    |  A2
-                    |} else {
-                    |  B1
-                    |  B2
-                    |}, secondArg)
-                    |""".stripMargin
+    val code =
+      """|fx(
+         |  if cond then
+         |    A1
+         |    A2
+         |  else
+         |    B1
+         |    B2,
+         |  secondArg
+         |)
+         |""".stripMargin
+    val output =
+      """|fx(if (cond) {
+         |  A1
+         |  A2
+         |} else {
+         |  B1
+         |  B2
+         |}, secondArg)
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(tapply(
       tname("fx"),
       Term.If(tname("cond"), blk(tname("A1"), tname("A2")), blk(tname("B1"), tname("B2"))),
@@ -253,24 +272,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
   // --------------------------
 
   test("old-try-finally1") {
-    val code = """|try { fx }
-                  |finally { ok }
-                  |""".stripMargin
-    val output = """|try {
-                    |  fx
-                    |} finally {
-                    |  ok
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try { fx }
+         |finally { ok }
+         |""".stripMargin
+    val output =
+      """|try {
+         |  fx
+         |} finally {
+         |  ok
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(blk(tname("fx")), Nil, Some(blk(tname("ok"))))
     )
   }
 
   test("old-try-finally2") {
-    val code = """|try fx
-                  |finally ok
-                  |""".stripMargin
+    val code =
+      """|try fx
+         |finally ok
+         |""".stripMargin
     val output = "try fx finally ok"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(tname("fx"), Nil, Some(tname("ok")))
@@ -278,11 +300,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-try-finally-single") {
-    val code = """|try
-                  |  fx
-                  |finally
-                  |  ok
-                  |""".stripMargin
+    val code =
+      """|try
+         |  fx
+         |finally
+         |  ok
+         |""".stripMargin
     val output = "try fx finally ok"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(tname("fx"), Nil, Some(tname("ok")))
@@ -290,50 +313,56 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-try-finally-multiple") {
-    val code = """|try
-                  |  fx
-                  |  fy
-                  |finally
-                  |  ok1
-                  |  ok2
-                  |""".stripMargin
-    val output = """|try {
-                    |  fx
-                    |  fy
-                    |} finally {
-                    |  ok1
-                    |  ok2
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try
+         |  fx
+         |  fy
+         |finally
+         |  ok1
+         |  ok2
+         |""".stripMargin
+    val output =
+      """|try {
+         |  fx
+         |  fy
+         |} finally {
+         |  ok1
+         |  ok2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(blk(tname("fx"), tname("fy")), Nil, Some(blk(tname("ok1"), tname("ok2"))))
     )
   }
 
   test("old-try-catch-single") {
-    val code = """|try fx 
-                  |catch { case x => 1 }
-                  |""".stripMargin
-    val output = """|try fx catch {
-                    |  case x => 1
-                    |}""".stripMargin
+    val code =
+      """|try fx 
+         |catch { case x => 1 }
+         |""".stripMargin
+    val output =
+      """|try fx catch {
+         |  case x => 1
+         |}""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(tname("fx"), List(Case(patvar("x"), None, int(1))), None)
     )
   }
 
   test("old-try-catch-multi") {
-    val code = """|try fx 
-                  |catch {
-                  |  case x => 1
-                  |  case y => 2
-                  |}
-                  |""".stripMargin
-    val output = """|try fx catch {
-                    |  case x => 1
-                    |  case y => 2
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try fx 
+         |catch {
+         |  case x => 1
+         |  case y => 2
+         |}
+         |""".stripMargin
+    val output =
+      """|try fx catch {
+         |  case x => 1
+         |  case y => 2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
       tname("fx"),
       List(Case(patvar("x"), None, int(1)), Case(patvar("y"), None, int(2))),
@@ -342,76 +371,84 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-try-catch-multi") {
-    val code = """|try
-                  |  fx 
-                  |  fy
-                  |catch { case x => ct }
-                  |""".stripMargin
-    val output = """|try {
-                    |  fx
-                    |  fy
-                    |} catch {
-                    |  case x => ct
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try
+         |  fx 
+         |  fy
+         |catch { case x => ct }
+         |""".stripMargin
+    val output =
+      """|try {
+         |  fx
+         |  fy
+         |} catch {
+         |  case x => ct
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(blk(tname("fx"), tname("fy")), List(Case(patvar("x"), None, tname("ct"))), None)
     )
   }
 
   test("new-catch-single1") {
-    val code = """|try fx
-                  |catch case x => ct
-                  |""".stripMargin
-    val output = """|try fx catch {
-                    |  case x => ct
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try fx
+         |catch case x => ct
+         |""".stripMargin
+    val output =
+      """|try fx catch {
+         |  case x => ct
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(tname("fx"), List(Case(patvar("x"), None, tname("ct"))), None)
     )
   }
 
   test("new-catch-single2") {
-    val code = """|try fx
-                  |catch
-                  |  case x =>
-                  |    fa
-                  |    fb
-                  |""".stripMargin
-    val output = """|try fx catch {
-                    |  case x =>
-                    |    fa
-                    |    fb
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try fx
+         |catch
+         |  case x =>
+         |    fa
+         |    fb
+         |""".stripMargin
+    val output =
+      """|try fx catch {
+         |  case x =>
+         |    fa
+         |    fb
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.Try(tname("fx"), List(Case(patvar("x"), None, blk(tname("fa"), tname("fb")))), None)
     )
   }
 
   test("new-catch-multi") {
-    val code = """|try fx
-                  |catch
-                  |  case x =>
-                  |    xa
-                  |    xb
-                  |  case y => yab
-                  |  case z =>
-                  |    za
-                  |    zb
-                  |""".stripMargin
-    val output = """|try fx catch {
-                    |  case x =>
-                    |    xa
-                    |    xb
-                    |  case y =>
-                    |    yab
-                    |  case z =>
-                    |    za
-                    |    zb
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try fx
+         |catch
+         |  case x =>
+         |    xa
+         |    xb
+         |  case y => yab
+         |  case z =>
+         |    za
+         |    zb
+         |""".stripMargin
+    val output =
+      """|try fx catch {
+         |  case x =>
+         |    xa
+         |    xb
+         |  case y =>
+         |    yab
+         |  case z =>
+         |    za
+         |    zb
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
       tname("fx"),
       List(
@@ -424,11 +461,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-catch-handler-nl") {
-    val code = """|try
-                  |  foo
-                  |catch
-                  |  bar
-                  |""".stripMargin
+    val code =
+      """|try
+         |  foo
+         |catch
+         |  bar
+         |""".stripMargin
     val output = "try foo catch bar"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.TryWithHandler(tname("foo"), tname("bar"), None)
@@ -436,13 +474,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-catch-handler-finally-nl") {
-    val code = """|try
-                  |  foo
-                  |catch
-                  |  bar
-                  |finally
-                  |  baz
-                  |""".stripMargin
+    val code =
+      """|try
+         |  foo
+         |catch
+         |  bar
+         |finally
+         |  baz
+         |""".stripMargin
     val output = "try foo catch bar finally baz"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.TryWithHandler(tname("foo"), tname("bar"), Some(tname("baz")))
@@ -450,19 +489,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-catch-finally-single") {
-    val code = """|try fx
-                  |catch case x =>
-                  |  ax
-                  |  bx
-                  |finally
-                  |  fx
-                  |""".stripMargin
-    val output = """|try fx catch {
-                    |  case x =>
-                    |    ax
-                    |    bx
-                    |} finally fx
-                    |""".stripMargin
+    val code =
+      """|try fx
+         |catch case x =>
+         |  ax
+         |  bx
+         |finally
+         |  fx
+         |""".stripMargin
+    val output =
+      """|try fx catch {
+         |  case x =>
+         |    ax
+         |    bx
+         |} finally fx
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
       tname("fx"),
       List(Case(patvar("x"), None, blk(tname("ax"), tname("bx")))),
@@ -471,25 +512,27 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-catch-inside-catch") {
-    val code = """|{
-                  |  try fx
-                  |  catch case x =>
-                  |    try fy
-                  |    catch case y =>
-                  |    throw ex
-                  |  finally fxclose
-                  |}
-                  |""".stripMargin
-    val output = """|{
-                    |  try fx catch {
-                    |    case x =>
-                    |      try fy catch {
-                    |        case y =>
-                    |          throw ex
-                    |      }
-                    |  } finally fxclose
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  try fx
+         |  catch case x =>
+         |    try fy
+         |    catch case y =>
+         |    throw ex
+         |  finally fxclose
+         |}
+         |""".stripMargin
+    val output =
+      """|{
+         |  try fx catch {
+         |    case x =>
+         |      try fy catch {
+         |        case y =>
+         |          throw ex
+         |      }
+         |  } finally fxclose
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(blk(Term.Try(
       tname("fx"),
       List(Case(
@@ -502,30 +545,32 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("catch after `end for` and `end match`") {
-    val code = """|object a:
-                  |   try
-                  |      for (i <- foo)
-                  |        foo
-                  |      end for
-                  |      foo match
-                  |         case foo =>
-                  |      end match
-                  |   catch
-                  |      case f =>
-                  |""".stripMargin
-    val layout = """|object a {
-                    |  try {
-                    |    for (i <- foo) foo
-                    |    end for
-                    |    foo match {
-                    |      case foo =>
-                    |    }
-                    |    end match
-                    |  } catch {
-                    |    case f =>
-                    |  }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object a:
+         |   try
+         |      for (i <- foo)
+         |        foo
+         |      end for
+         |      foo match
+         |         case foo =>
+         |      end match
+         |   catch
+         |      case f =>
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  try {
+         |    for (i <- foo) foo
+         |    end for
+         |    foo match {
+         |      case foo =>
+         |    }
+         |    end match
+         |  } catch {
+         |    case f =>
+         |  }
+         |}
+         |""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -544,13 +589,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally on same line") {
-    val code = """|try try Right(f()) finally iter.close()
-                  |finally arena.close()
-                  |""".stripMargin
+    val code =
+      """|try try Right(f()) finally iter.close()
+         |finally arena.close()
+         |""".stripMargin
     val layout = "try try Right(f()) finally iter.close() finally arena.close()"
     val tree = Term.Try(
-      Term
-        .Try(tapply(tname("Right"), tapply(tname("f"))), Nil, Some(tapply(tselect("iter", "close")))),
+      Term.Try(tapply(tname("Right"), tapply(tname("f"))), Nil, Some(tapply(tselect("iter", "close")))),
       Nil,
       Some(tapply(tselect("arena", "close")))
     )
@@ -558,15 +603,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally without catch") {
-    val code = """|try
-                  |  try Right(f())
-                  |  finally iter.close()
-                  |finally arena.close()
-                  |""".stripMargin
+    val code =
+      """|try
+         |  try Right(f())
+         |  finally iter.close()
+         |finally arena.close()
+         |""".stripMargin
     val layout = "try try Right(f()) finally iter.close() finally arena.close()"
     val tree = Term.Try(
-      Term
-        .Try(tapply(tname("Right"), tapply(tname("f"))), Nil, Some(tapply(tselect("iter", "close")))),
+      Term.Try(tapply(tname("Right"), tapply(tname("f"))), Nil, Some(tapply(tselect("iter", "close")))),
       Nil,
       Some(tapply(tselect("arena", "close")))
     )
@@ -574,17 +619,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, oneline catch") {
-    val code = """|try
-                  |  try Right(f())
-                  |  catch case NonFatal(ex) => Left(???)
-                  |  finally iter.close()
-                  |finally arena.close()
-                  |""".stripMargin
-    val layout = """|try try Right(f()) catch {
-                    |  case NonFatal(ex) =>
-                    |    Left(???)
-                    |} finally iter.close() finally arena.close()
-                    |""".stripMargin
+    val code =
+      """|try
+         |  try Right(f())
+         |  catch case NonFatal(ex) => Left(???)
+         |  finally iter.close()
+         |finally arena.close()
+         |""".stripMargin
+    val layout =
+      """|try try Right(f()) catch {
+         |  case NonFatal(ex) =>
+         |    Left(???)
+         |} finally iter.close() finally arena.close()
+         |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         tapply(tname("Right"), tapply(tname("f"))),
@@ -602,18 +649,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, catch with non-indented case") {
-    val code = """|try
-                  |  try Right(f())
-                  |  catch
-                  |  case NonFatal(ex) => Left(???)
-                  |  finally iter.close()
-                  |finally arena.close()
-                  |""".stripMargin
-    val layout = """|try try Right(f()) catch {
-                    |  case NonFatal(ex) =>
-                    |    Left(???)
-                    |} finally iter.close() finally arena.close()
-                    |""".stripMargin
+    val code =
+      """|try
+         |  try Right(f())
+         |  catch
+         |  case NonFatal(ex) => Left(???)
+         |  finally iter.close()
+         |finally arena.close()
+         |""".stripMargin
+    val layout =
+      """|try try Right(f()) catch {
+         |  case NonFatal(ex) =>
+         |    Left(???)
+         |} finally iter.close() finally arena.close()
+         |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         tapply(tname("Right"), tapply(tname("f"))),
@@ -631,18 +680,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, catch with indented case") {
-    val code = """|try
-                  |  try Right(f())
-                  |  catch
-                  |    case NonFatal(ex) => Left(???)
-                  |  finally iter.close()
-                  |finally arena.close()
-                  |""".stripMargin
-    val layout = """|try try Right(f()) catch {
-                    |  case NonFatal(ex) =>
-                    |    Left(???)
-                    |} finally iter.close() finally arena.close()
-                    |""".stripMargin
+    val code =
+      """|try
+         |  try Right(f())
+         |  catch
+         |    case NonFatal(ex) => Left(???)
+         |  finally iter.close()
+         |finally arena.close()
+         |""".stripMargin
+    val layout =
+      """|try try Right(f()) catch {
+         |  case NonFatal(ex) =>
+         |    Left(???)
+         |} finally iter.close() finally arena.close()
+         |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         tapply(tname("Right"), tapply(tname("f"))),
@@ -660,19 +711,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try, inner with catch, outer with finally") {
-    val code = """|try
-                  |  try Right(f())
-                  |  catch
-                  |    case NonFatal(ex) => Left(???)
-                  |finally arena.close()
-                  |""".stripMargin
-    val layout = """|try (
-                    |  try Right(f()) catch {
-                    |    case NonFatal(ex) =>
-                    |      Left(???)
-                    |  }
-                    |) finally arena.close()
-                    |""".stripMargin
+    val code =
+      """|try
+         |  try Right(f())
+         |  catch
+         |    case NonFatal(ex) => Left(???)
+         |finally arena.close()
+         |""".stripMargin
+    val layout =
+      """|try (
+         |  try Right(f()) catch {
+         |    case NonFatal(ex) =>
+         |      Left(???)
+         |  }
+         |) finally arena.close()
+         |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         tapply(tname("Right"), tapply(tname("f"))),
@@ -690,16 +743,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 1") {
-    val code = """|try
-                  |  try { 1 + 2 }
-                  |    + 3
-                  |  finally iter.close()
-                  |finally arena.close()
-                  |""".stripMargin
-    val layout = """|try try {
-                    |  1 + 2
-                    |} + 3 finally iter.close() finally arena.close()
-                    |""".stripMargin
+    val code =
+      """|try
+         |  try { 1 + 2 }
+         |    + 3
+         |  finally iter.close()
+         |finally arena.close()
+         |""".stripMargin
+    val layout =
+      """|try try {
+         |  1 + 2
+         |} + 3 finally iter.close() finally arena.close()
+         |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         tinfix(blk(tinfix(int(1), "+", int(2))), "+", int(3)),
@@ -713,16 +768,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 2") {
-    val code = """|try
-                  |  try { 1 + 2 }
-                  |    .foo
-                  |  finally iter.close()
-                  |finally arena.close()
-                  |""".stripMargin
-    val layout = """|try try {
-                    |  1 + 2
-                    |}.foo finally iter.close() finally arena.close()
-                    |""".stripMargin
+    val code =
+      """|try
+         |  try { 1 + 2 }
+         |    .foo
+         |  finally iter.close()
+         |finally arena.close()
+         |""".stripMargin
+    val layout =
+      """|try try {
+         |  1 + 2
+         |}.foo finally iter.close() finally arena.close()
+         |""".stripMargin
     val tree = Term.Try(
       Term.Try(
         tselect(blk(tinfix(int(1), "+", int(2))), "foo"),
@@ -736,46 +793,52 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3532 nested try-finally, try with multiline non-indented expr 3") {
-    val code = """|try
-                  |  try { 1 + 2 }
-                  |    (foo)
-                  |  finally iter.close()
-                  |finally arena.close()
-                  |""".stripMargin
-    val error = """|<input>:4: error: `;` expected but `finally` found
-                   |  finally iter.close()
-                   |  ^""".stripMargin
+    val code =
+      """|try
+         |  try { 1 + 2 }
+         |    (foo)
+         |  finally iter.close()
+         |finally arena.close()
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `;` expected but `finally` found
+         |  finally iter.close()
+         |  ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
   test("#3532 nested bare try, outer without catch") {
-    val code = """|try
-                  |  try 1
-                  |    + 2
-                  |finally foo
-                  |""".stripMargin
-    val layout = """|try (
-                    |  try 1 + 2
-                    |) finally foo
-                    |""".stripMargin
+    val code =
+      """|try
+         |  try 1
+         |    + 2
+         |finally foo
+         |""".stripMargin
+    val layout =
+      """|try (
+         |  try 1 + 2
+         |) finally foo
+         |""".stripMargin
     val tree = Term.Try(Term.Try(tinfix(int(1), "+", int(2)), Nil, None), Nil, Some(tname("foo")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#3532 nested bare try, outer with catch") {
-    val code = """|try
-                  |  try 1
-                  |    + 2
-                  |catch
-                  |  case NonFatal(ex) => 3
-                  |finally foo
-                  |""".stripMargin
-    val layout = """|try (
-                    |  try 1 + 2
-                    |) catch {
-                    |  case NonFatal(ex) => 3
-                    |} finally foo
-                    |""".stripMargin
+    val code =
+      """|try
+         |  try 1
+         |    + 2
+         |catch
+         |  case NonFatal(ex) => 3
+         |finally foo
+         |""".stripMargin
+    val layout =
+      """|try (
+         |  try 1 + 2
+         |) catch {
+         |  case NonFatal(ex) => 3
+         |} finally foo
+         |""".stripMargin
     val tree = Term.Try(
       Term.Try(tinfix(int(1), "+", int(2)), Nil, None),
       List(Case(Pat.Extract(tname("NonFatal"), List(patvar("ex"))), None, int(3))),
@@ -808,11 +871,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("old-for-multi") {
-    val code = """|for {
-                  |  i <- gen
-                  |  if i < 4
-                  |} work
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  i <- gen
+         |  if i < 4
+         |} work
+         |""".stripMargin
     val output = "for (i <- gen; if i < 4) work"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
       List(
@@ -826,8 +890,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
   test("old-for-yield-single1") {
     val code = "for (i <- 1 to 3) yield i"
     runTestAssert[Stat](code)(
-      Term
-        .ForYield(List(Enumerator.Generator(patvar("i"), tinfix(int(1), "to", int(3)))), tname("i"))
+      Term.ForYield(List(Enumerator.Generator(patvar("i"), tinfix(int(1), "to", int(3)))), tname("i"))
     )
   }
 
@@ -841,26 +904,28 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("old-for-yield-multi1") {
     val code = "for (i <- gen) yield {a; b}"
-    val output = """|for (i <- gen) yield {
-                    |  a
-                    |  b
-                    |}""".stripMargin
+    val output =
+      """|for (i <- gen) yield {
+         |  a
+         |  b
+         |}""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
-      Term
-        .ForYield(List(Enumerator.Generator(patvar("i"), tname("gen"))), blk(tname("a"), tname("b")))
+      Term.ForYield(List(Enumerator.Generator(patvar("i"), tname("gen"))), blk(tname("a"), tname("b")))
     )
   }
 
   test("old-for-yield-multi2") {
-    val code = """|for {
-                  |  i <- gen
-                  |  if i < 4
-                  |} yield { aa; bb }
-                  |""".stripMargin
-    val output = """|for (i <- gen; if i < 4) yield {
-                    |  aa
-                    |  bb
-                    |}""".stripMargin
+    val code =
+      """|for {
+         |  i <- gen
+         |  if i < 4
+         |} yield { aa; bb }
+         |""".stripMargin
+    val output =
+      """|for (i <- gen; if i < 4) yield {
+         |  aa
+         |  bb
+         |}""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
       List(
         Enumerator.Generator(patvar("i"), tname("gen")),
@@ -879,10 +944,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-fordo-single2") {
-    val code = """|for
-                  |  a <- gen
-                  |do fx
-                  |""".stripMargin
+    val code =
+      """|for
+         |  a <- gen
+         |do fx
+         |""".stripMargin
     val output = "for (a <- gen) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.For(List(Enumerator.Generator(patvar("a"), tname("gen"))), tname("fx"))
@@ -890,9 +956,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-fordo-single3") {
-    val code = """|for a <- gen if cnd
-                  |do fx
-                  |""".stripMargin
+    val code =
+      """|for a <- gen if cnd
+         |do fx
+         |""".stripMargin
     val output = "for (a <- gen; if cnd) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
       List(Enumerator.Generator(patvar("a"), tname("gen")), Enumerator.Guard(tname("cnd"))),
@@ -901,10 +968,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-fordo-single4") {
-    val code = """|for a <- gen
-                  |do
-                  |  fx
-                  |""".stripMargin
+    val code =
+      """|for a <- gen
+         |do
+         |  fx
+         |""".stripMargin
     val output = "for (a <- gen) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.For(List(Enumerator.Generator(patvar("a"), tname("gen"))), tname("fx"))
@@ -912,11 +980,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-fordo-multi1") {
-    val code = """|for
-                  |  a <- x
-                  |  b <- y
-                  |do fx
-                  |""".stripMargin
+    val code =
+      """|for
+         |  a <- x
+         |  b <- y
+         |do fx
+         |""".stripMargin
     val output = "for (a <- x; b <- y) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
       List(
@@ -928,18 +997,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-fordo-multi2") {
-    val code = """|for
-                  |  a <- x
-                  |  b <- y
-                  |do
-                  |  fx
-                  |  fy
-                  |""".stripMargin
-    val output = """|for (a <- x; b <- y) {
-                    |  fx
-                    |  fy
-                    |}
-                    |""".stripMargin
+    val code =
+      """|for
+         |  a <- x
+         |  b <- y
+         |do
+         |  fx
+         |  fy
+         |""".stripMargin
+    val output =
+      """|for (a <- x; b <- y) {
+         |  fx
+         |  fy
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
       List(
         Enumerator.Generator(patvar("a"), tname("x")),
@@ -950,41 +1021,46 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-for-indented-without-do") {
-    val code = """|for ( a <- x )
-                  |  fx
-                  |  fy
-                  |""".stripMargin
-    val output = """|for (a <- x) {
-                    |  fx
-                    |  fy
-                    |}
-                    |""".stripMargin
+    val code =
+      """|for ( a <- x )
+         |  fx
+         |  fy
+         |""".stripMargin
+    val output =
+      """|for (a <- x) {
+         |  fx
+         |  fy
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.For(List(Enumerator.Generator(patvar("a"), tname("x"))), blk(tname("fx"), tname("fy")))
     )
   }
 
   test("new-for-indented-without-do2") {
-    val code = """|for { a <- x }
-                  |  fx
-                  |  fy
-                  |""".stripMargin
-    val output = """|for (a <- x) {
-                    |  fx
-                    |  fy
-                    |}
-                    |""".stripMargin
+    val code =
+      """|for { a <- x }
+         |  fx
+         |  fy
+         |""".stripMargin
+    val output =
+      """|for (a <- x) {
+         |  fx
+         |  fy
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.For(List(Enumerator.Generator(patvar("a"), tname("x"))), blk(tname("fx"), tname("fy")))
     )
   }
 
   test("new-for-yield-single1") {
-    val code = """|for
-                  |  a <- x
-                  |  b <- y
-                  |yield fx
-                  |""".stripMargin
+    val code =
+      """|for
+         |  a <- x
+         |  b <- y
+         |yield fx
+         |""".stripMargin
     val output = "for (a <- x; b <- y) yield fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
       List(
@@ -996,9 +1072,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-for-yield-single2") {
-    val code = """|for a <- gen if cnd
-                  |yield fx
-                  |""".stripMargin
+    val code =
+      """|for a <- gen if cnd
+         |yield fx
+         |""".stripMargin
     val output = "for (a <- gen; if cnd) yield fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
       List(Enumerator.Generator(patvar("a"), tname("gen")), Enumerator.Guard(tname("cnd"))),
@@ -1007,10 +1084,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-for-yield-single3") {
-    val code = """|for a <- gen if cnd
-                  |yield
-                  |  fx
-                  |""".stripMargin
+    val code =
+      """|for a <- gen if cnd
+         |yield
+         |  fx
+         |""".stripMargin
     val output = "for (a <- gen; if cnd) yield fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
       List(Enumerator.Generator(patvar("a"), tname("gen")), Enumerator.Guard(tname("cnd"))),
@@ -1019,18 +1097,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-for-yield-multi") {
-    val code = """|for
-                  |  a <- x
-                  |  b <- y
-                  |yield
-                  |  fx
-                  |  fy
-                  |""".stripMargin
-    val output = """|for (a <- x; b <- y) yield {
-                    |  fx
-                    |  fy
-                    |}
-                    |""".stripMargin
+    val code =
+      """|for
+         |  a <- x
+         |  b <- y
+         |yield
+         |  fx
+         |  fy
+         |""".stripMargin
+    val output =
+      """|for (a <- x; b <- y) yield {
+         |  fx
+         |  fy
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
       List(
         Enumerator.Generator(patvar("a"), tname("x")),
@@ -1041,11 +1121,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-for-case1") {
-    val code = """|for case a: TP <- iter do
-                  |  echo
-                  |""".stripMargin
-    val output = """|for ( case a: TP <- iter) echo
-                    |""".stripMargin
+    val code =
+      """|for case a: TP <- iter do
+         |  echo
+         |""".stripMargin
+    val output =
+      """|for ( case a: TP <- iter) echo
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
       List(Enumerator.CaseGenerator(Pat.Typed(patvar("a"), pname("TP")), tname("iter"))),
       tname("echo")
@@ -1053,11 +1135,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-for-case2") {
-    val code = """|for case a: TP <- iter if cnd do
-                  |  echo
-                  |""".stripMargin
-    val output = """|for ( case a: TP <- iter; if cnd) echo
-                    |""".stripMargin
+    val code =
+      """|for case a: TP <- iter if cnd do
+         |  echo
+         |""".stripMargin
+    val output =
+      """|for ( case a: TP <- iter; if cnd) echo
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
       List(
         Enumerator.CaseGenerator(Pat.Typed(patvar("a"), pname("TP")), tname("iter")),
@@ -1068,13 +1152,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-for-case3") {
-    val code = """|for
-                  |  x <- gen
-                  |  case a1: TP <- iter1
-                  |  if cnd
-                  |  case a2: TP <- iter2
-                  |do fn
-                  |""".stripMargin
+    val code =
+      """|for
+         |  x <- gen
+         |  case a1: TP <- iter1
+         |  if cnd
+         |  case a2: TP <- iter2
+         |do fn
+         |""".stripMargin
     val output = "for (x <- gen;  case a1: TP <- iter1; if cnd;  case a2: TP <- iter2) fn"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
       List(
@@ -1088,11 +1173,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("for-new") {
-    val code = """|for i <- gen
-                  |    x = 3
-                  |    if (cnd1) && cnd2
-                  |yield work
-                  |""".stripMargin
+    val code =
+      """|for i <- gen
+         |    x = 3
+         |    if (cnd1) && cnd2
+         |yield work
+         |""".stripMargin
     val output = "for (i <- gen; x = 3; if cnd1 && cnd2) yield work"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
       List(
@@ -1105,11 +1191,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("multiline-for") {
-    val code = """|for (a,b) <- gen
-                  |  if a < 5
-                  |  c <- otherGen
-                  |yield c
-                  |""".stripMargin
+    val code =
+      """|for (a,b) <- gen
+         |  if a < 5
+         |  c <- otherGen
+         |yield c
+         |""".stripMargin
     val output = "for ((a, b) <- gen; if a < 5; c <- otherGen) yield c"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
       List(
@@ -1122,11 +1209,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("oneline-for") {
-    val code = """|for (arg, param) <- args.zip(vparams) yield
-                  |  arg
-                  |""".stripMargin
-    val output = """|for ((arg, param) <- args.zip(vparams)) yield arg
-                    |""".stripMargin
+    val code =
+      """|for (arg, param) <- args.zip(vparams) yield
+         |  arg
+         |""".stripMargin
+    val output =
+      """|for ((arg, param) <- args.zip(vparams)) yield arg
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.ForYield(
       List(Enumerator.Generator(
         Pat.Tuple(List(patvar("arg"), patvar("param"))),
@@ -1137,12 +1226,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3713 cond in parens within enums") {
-    val code = """|for (m <- decls
-                  |    if oneCond
-                  |      && (cond)
-                  |      && satisfiable) {}
-                  |
-                  |""".stripMargin
+    val code =
+      """|for (m <- decls
+         |    if oneCond
+         |      && (cond)
+         |      && satisfiable) {}
+         |
+         |""".stripMargin
     val layout = "for (m <- decls; if oneCond && cond && satisfiable) {}"
     val tree = Term.For(
       List(
@@ -1156,11 +1246,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-1") {
-    val code = """|for {
-                  |  a = 1
-                  |  b <- Some(2)
-                  |} yield a + b
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |  b <- Some(2)
+         |} yield a + b
+         |""".stripMargin
     val layout = "for (a = 1; b <- Some(2)) yield a + b"
     val tree = Term.ForYield(
       List(
@@ -1173,12 +1264,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-2") {
-    val code = """|for {
-                  |  a = 1
-                  |  b <- Some(2)
-                  |  c = 3
-                  |} yield a + b + c
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |  b <- Some(2)
+         |  c = 3
+         |} yield a + b + c
+         |""".stripMargin
     val layout = "for (a = 1; b <- Some(2); c = 3) yield a + b + c"
     val tree = Term.ForYield(
       List(
@@ -1192,12 +1284,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-3") {
-    val code = """|for {
-                  |  a = 1
-                  |  b = 3
-                  |  c <- Some(4)
-                  |} yield a + b + c
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |  b = 3
+         |  c <- Some(4)
+         |} yield a + b + c
+         |""".stripMargin
     val layout = "for (a = 1; b = 3; c <- Some(4)) yield a + b + c"
     val tree = Term.ForYield(
       List(
@@ -1211,13 +1304,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-4") {
-    val code = """|for {
-                  |  a = 1
-                  |  b <- Some(2)
-                  |  c = 3
-                  |  d <- Some(4)
-                  |} yield a + b + c + d
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |  b <- Some(2)
+         |  c = 3
+         |  d <- Some(4)
+         |} yield a + b + c + d
+         |""".stripMargin
     val layout = "for (a = 1; b <- Some(2); c = 3; d <- Some(4)) yield a + b + c + d"
     val tree = Term.ForYield(
       List(
@@ -1232,14 +1326,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-5") {
-    val code = """|for {
-                  |  a = 1
-                  |  b <- Some(2)
-                  |  if b > 0
-                  |  c = 3
-                  |  d <- Some(4)
-                  |} yield a + b + c + d
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |  b <- Some(2)
+         |  if b > 0
+         |  c = 3
+         |  d <- Some(4)
+         |} yield a + b + c + d
+         |""".stripMargin
     val layout = "for (a = 1; b <- Some(2); if b > 0; c = 3; d <- Some(4)) yield a + b + c + d"
     val tree = Term.ForYield(
       List(
@@ -1255,14 +1350,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-6") {
-    val code = """|for {
-                  |  a = 1
-                  |  b <- Some(2)
-                  |  c = 3
-                  |  if b > 0
-                  |  d <- Some(4)
-                  |} yield a + b + c + d
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |  b <- Some(2)
+         |  c = 3
+         |  if b > 0
+         |  d <- Some(4)
+         |} yield a + b + c + d
+         |""".stripMargin
     val layout = "for (a = 1; b <- Some(2); c = 3; if b > 0; d <- Some(4)) yield a + b + c + d"
     val tree = Term.ForYield(
       List(
@@ -1278,12 +1374,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-7") {
-    val code = """|for {
-                  |  a = 1
-                  |  if b > 0
-                  |  b <- Some(2)
-                  |} yield a + b
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |  if b > 0
+         |  b <- Some(2)
+         |} yield a + b
+         |""".stripMargin
     val layout = "for (a = 1; if b > 0; b <- Some(2)) yield a + b"
     val tree = Term.ForYield(
       List(
@@ -1297,11 +1394,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-8") {
-    val code = """|for {
-                  |  if a > 0
-                  |  b <- Some(2)
-                  |} yield b
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  if a > 0
+         |  b <- Some(2)
+         |} yield b
+         |""".stripMargin
     runTestError[Stat](
       code,
       """|error: illegal start of simple pattern
@@ -1311,13 +1409,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-9") {
-    val code = """|for {
-                  |  a = 1
-                  |  b = 3
-                  |  if b > 0
-                  |  c <- Some(2)
-                  |} yield a + b + c
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |  b = 3
+         |  if b > 0
+         |  c <- Some(2)
+         |} yield a + b + c
+         |""".stripMargin
     val layout = "for (a = 1; b = 3; if b > 0; c <- Some(2)) yield a + b + c"
     val tree = Term.ForYield(
       List(
@@ -1332,10 +1431,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("enum-val-first-ok-10") {
-    val code = """|for {
-                  |  a = 1
-                  |} yield a
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  a = 1
+         |} yield a
+         |""".stripMargin
     val layout = "for (a = 1) yield a"
     val tree = Term.ForYield(List(Enumerator.Val(patvar("a"), lit(1))), tname("a"))
     runTestAssert[Stat](code, layout)(tree)
@@ -1351,93 +1451,104 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("old-while-multi") {
-    val code = """|while (cond) {
-                  |  fx
-                  |  fy
-                  |}
-                  |""".stripMargin
+    val code =
+      """|while (cond) {
+         |  fx
+         |  fy
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(Term.While(tname("cond"), blk(tname("fx"), tname("fy"))))
   }
 
   test("new-while-single1") {
-    val code = """|while cond do fx
-                  |""".stripMargin
+    val code =
+      """|while cond do fx
+         |""".stripMargin
     val output = "while (cond) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(tname("cond"), tname("fx")))
   }
 
   test("new-while-single2") {
-    val code = """|while cond
-                  |do fx
-                  |""".stripMargin
+    val code =
+      """|while cond
+         |do fx
+         |""".stripMargin
     val output = "while (cond) fx"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(tname("cond"), tname("fx")))
   }
 
   test("new-while-indented-witout-do") {
-    val code = """|while (cond)
-                  |  fx
-                  |  gx
-                  |""".stripMargin
-    val output = """|while (cond) {
-                    |  fx
-                    |  gx
-                    |}""".stripMargin
+    val code =
+      """|while (cond)
+         |  fx
+         |  gx
+         |""".stripMargin
+    val output =
+      """|while (cond) {
+         |  fx
+         |  gx
+         |}""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.While(tname("cond"), blk(tname("fx"), tname("gx")))
     )
   }
 
   test("new-while-multi") {
-    val code = """|while
-                  |  fx +
-                  |  fy
-                  |do
-                  |  fx
-                  |  fy
-                  |""".stripMargin
-    val output = """|while (fx + fy) {
-                    |  fx
-                    |  fy
-                    |}
-                    |""".stripMargin
+    val code =
+      """|while
+         |  fx +
+         |  fy
+         |do
+         |  fx
+         |  fy
+         |""".stripMargin
+    val output =
+      """|while (fx + fy) {
+         |  fx
+         |  fy
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.While(tinfix(tname("fx"), "+", tname("fy")), blk(tname("fx"), tname("fy")))
     )
   }
 
   test("new-while-multistat") {
-    val code = """|while
-                  |  s1
-                  |  s2
-                  |do
-                  |  fx
-                  |  fy
-                  |""".stripMargin
-    val output = """|while ({
-                    |  s1
-                    |  s2
-                    |}) {
-                    |  fx
-                    |  fy
-                    |}
-                    |""".stripMargin
+    val code =
+      """|while
+         |  s1
+         |  s2
+         |do
+         |  fx
+         |  fy
+         |""".stripMargin
+    val output =
+      """|while ({
+         |  s1
+         |  s2
+         |}) {
+         |  fx
+         |  fy
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       Term.While(blk(tname("s1"), tname("s2")), blk(tname("fx"), tname("fy")))
     )
   }
 
   test("while-parens-yet-do") {
-    val code = """|def read(): String = {
-                  |  while (cond) do {}
-                  |  other()
-                  |}
-                  |""".stripMargin
-    val output = """|def read(): String = {
-                    |  while (cond) {}
-                    |  other()
-                    |}
-                    |""".stripMargin
+    val code =
+      """|def read(): String = {
+         |  while (cond) do {}
+         |  other()
+         |}
+         |""".stripMargin
+    val output =
+      """|def read(): String = {
+         |  while (cond) {}
+         |  other()
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
       Nil,
       tname("read"),
@@ -1449,9 +1560,10 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("while-cond-expr-do") {
-    val code = """|  while (x > 0) && (y > 0) do
-                  |    x += 1
-                  |""".stripMargin
+    val code =
+      """|  while (x > 0) && (y > 0) do
+         |    x += 1
+         |""".stripMargin
 
     val output = "while (x > 0 && y > 0) x += 1"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(
@@ -1461,10 +1573,11 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("while-cond-expr-lf-do") {
-    val code = """|  while (x > 0) && (y > 0)
-                  |  do
-                  |    x += 1
-                  |""".stripMargin
+    val code =
+      """|  while (x > 0) && (y > 0)
+         |  do
+         |    x += 1
+         |""".stripMargin
 
     val output = "while (x > 0 && y > 0) x += 1"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.While(
@@ -1480,22 +1593,25 @@ class ControlSyntaxSuite extends BaseDottySuite {
       tinfix(tname("x"), "+=", int(1))
     )
 
-    val code1 = """|  while (x > 0) and (y > 0) do
-                   |    x += 1
-                   |""".stripMargin
+    val code1 =
+      """|  while (x > 0) and (y > 0) do
+         |    x += 1
+         |""".stripMargin
     runTestAssert[Stat](code1, assertLayout = Some(output))(expected)
 
-    val code2 = """|  while (x > 0) and (y > 0)
-                   |  do
-                   |    x += 1
-                   |""".stripMargin
+    val code2 =
+      """|  while (x > 0) and (y > 0)
+         |  do
+         |    x += 1
+         |""".stripMargin
     runTestAssert[Stat](code2, assertLayout = Some(output))(expected)
   }
 
   test("if-cond-expr-with-apply-type") {
-    val code = """|if (sym == defn.BooleanClass) classOf[Boolean]
-                  |else if (sym == defn.ByteClass) classOf[Byte]
-                  |""".stripMargin
+    val code =
+      """|if (sym == defn.BooleanClass) classOf[Boolean]
+         |else if (sym == defn.ByteClass) classOf[Byte]
+         |""".stripMargin
     val layout =
       "if (sym == defn.BooleanClass) classOf[Boolean] else if (sym == defn.ByteClass) classOf[Byte]"
     val expected = Term.If(
@@ -1513,13 +1629,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("if-cond-expr-with-block") {
-    val code = """|if (sym == defn.BooleanClass) { classOf[Boolean] }
-                  |else if (sym == defn.ByteClass) classOf[Byte]
-                  |""".stripMargin
-    val layout = """|if (sym == defn.BooleanClass) {
-                    |  classOf[Boolean]
-                    |} else if (sym == defn.ByteClass) classOf[Byte]
-                    |""".stripMargin
+    val code =
+      """|if (sym == defn.BooleanClass) { classOf[Boolean] }
+         |else if (sym == defn.ByteClass) classOf[Byte]
+         |""".stripMargin
+    val layout =
+      """|if (sym == defn.BooleanClass) {
+         |  classOf[Boolean]
+         |} else if (sym == defn.ByteClass) classOf[Byte]
+         |""".stripMargin
     val expected = Term.If(
       tinfix(tname("sym"), "==", tselect("defn", "BooleanClass")),
       blk(tapplytype(tname("classOf"), pname("Boolean"))),
@@ -1535,29 +1653,31 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("while-cond-expr-without-do") {
-    val code = """|{
-                  |  while (x > 0) && (y > 0)
-                  |    x += 1
-                  |}
-                  |""".stripMargin
-    val layout = """|{
-                    |  while (x > 0) &&(y > 0)
-                    |  x += 1
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  while (x > 0) && (y > 0)
+         |    x += 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|{
+         |  while (x > 0) &&(y > 0)
+         |  x += 1
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, Some(layout))(blk(
-      Term
-        .While(tinfix(tname("x"), ">", int(0)), tapply(tname("&&"), tinfix(tname("y"), ">", int(0)))),
+      Term.While(tinfix(tname("x"), ">", int(0)), tapply(tname("&&"), tinfix(tname("y"), ">", int(0)))),
       tinfix(tname("x"), "+=", int(1))
     ))
   }
 
   test("while-cond-expr-without-do-2") {
-    val code = """|{
-                  |  while (x > 0) && y > 0
-                  |    x += 1
-                  |}
-                  |""".stripMargin
+    val code =
+      """|{
+         |  while (x > 0) && y > 0
+         |    x += 1
+         |}
+         |""".stripMargin
     runTestError[Stat](
       code,
       """|error: `;` expected but `integer constant` found
@@ -1571,11 +1691,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   // --------------------------
 
   test("right-arrow-indentation-block") {
-    val code = """|class A { slf =>
-                  |
-                  |  val x = 3
-                  |}
-                  |""".stripMargin
+    val code =
+      """|class A { slf =>
+         |
+         |  val x = 3
+         |}
+         |""".stripMargin
     val output = "class A { slf => val x = 3 }"
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Class(
       Nil,
@@ -1591,35 +1712,38 @@ class ControlSyntaxSuite extends BaseDottySuite {
   // --------------------------
 
   test("old-match-case-empty") {
-    val code = """|x match {
-                  |  case 1 =>
-                  |  case 2 =>
-                  |}
-                  |""".stripMargin
+    val code =
+      """|x match {
+         |  case 1 =>
+         |  case 2 =>
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(tmatch(tname("x"), Case(int(1), None, blk()), Case(int(2), None, blk())))
   }
 
   test("old-match-case-oneline") {
-    val code = """|x match {
-                  |  case 1 => "1"
-                  |  case 2 => "2"
-                  |}
-                  |""".stripMargin
+    val code =
+      """|x match {
+         |  case 1 => "1"
+         |  case 2 => "2"
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(
       tmatch(tname("x"), Case(int(1), None, str("1")), Case(int(2), None, str("2")))
     )
   }
 
   test("old-match-case-multiline") {
-    val code = """|x match {
-                  |  case 1 =>
-                  |    a1
-                  |    b1
-                  |  case 2 =>
-                  |    a2
-                  |    b2
-                  |}
-                  |""".stripMargin
+    val code =
+      """|x match {
+         |  case 1 =>
+         |    a1
+         |    b1
+         |  case 2 =>
+         |    a2
+         |    b2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(tmatch(
       tname("x"),
       Case(int(1), None, blk(tname("a1"), tname("b1"))),
@@ -1628,16 +1752,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("old-match-case-inside") {
-    val code = """|x match {
-                  |  case 1 =>
-                  |    y match {
-                  |      case 5 => "5"
-                  |      case 6 => "6"
-                  |    }
-                  |  case 2 =>
-                  |    "2"
-                  |}
-                  |""".stripMargin
+    val code =
+      """|x match {
+         |  case 1 =>
+         |    y match {
+         |      case 5 => "5"
+         |      case 6 => "6"
+         |    }
+         |  case 2 =>
+         |    "2"
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(tmatch(
       tname("x"),
       Case(int(1), None, tmatch(tname("y"), Case(int(5), None, str("5")), Case(int(6), None, str("6")))),
@@ -1646,53 +1771,59 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-match-case-empty") {
-    val code = """|x match
-                  |  case 1 =>
-                  |  case 2 =>
-                  |""".stripMargin
-    val output = """|x match {
-                    |  case 1 =>
-                    |  case 2 =>
-                    |}
-                    |""".stripMargin
+    val code =
+      """|x match
+         |  case 1 =>
+         |  case 2 =>
+         |""".stripMargin
+    val output =
+      """|x match {
+         |  case 1 =>
+         |  case 2 =>
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       tmatch(tname("x"), Case(int(1), None, blk()), Case(int(2), None, blk()))
     )
   }
 
   test("new-match-case-oneline") {
-    val code = """|x match
-                  |  case 1 => "1"
-                  |  case 2 => "2"
-                  |""".stripMargin
-    val output = """|x match {
-                    |  case 1 => "1"
-                    |  case 2 => "2"
-                    |}
-                    |""".stripMargin
+    val code =
+      """|x match
+         |  case 1 => "1"
+         |  case 2 => "2"
+         |""".stripMargin
+    val output =
+      """|x match {
+         |  case 1 => "1"
+         |  case 2 => "2"
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(
       tmatch(tname("x"), Case(int(1), None, str("1")), Case(int(2), None, str("2")))
     )
   }
 
   test("new-match-case-multiline") {
-    val code = """|x match
-                  |  case 1 =>
-                  |    a1
-                  |    b1
-                  |  case 2 =>
-                  |    a2
-                  |    b2
-                  |""".stripMargin
-    val output = """|x match {
-                    |  case 1 =>
-                    |    a1
-                    |    b1
-                    |  case 2 =>
-                    |    a2
-                    |    b2
-                    |}
-                    |""".stripMargin
+    val code =
+      """|x match
+         |  case 1 =>
+         |    a1
+         |    b1
+         |  case 2 =>
+         |    a2
+         |    b2
+         |""".stripMargin
+    val output =
+      """|x match {
+         |  case 1 =>
+         |    a1
+         |    b1
+         |  case 2 =>
+         |    a2
+         |    b2
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(tmatch(
       tname("x"),
       Case(int(1), None, blk(tname("a1"), tname("b1"))),
@@ -1701,44 +1832,46 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("old-match-case-one-align") {
-    val code = """|cond match {
-                  |  case a =>
-                  |  fa
-                  |  case b =>
-                  |  fb
-                  |}
-                  |""".stripMargin
-    val output = """|cond match {
-                    |  case a => fa
-                    |  case b => fb
-                    |}
-                    |""".stripMargin
+    val code =
+      """|cond match {
+         |  case a =>
+         |  fa
+         |  case b =>
+         |  fb
+         |}
+         |""".stripMargin
+    val output =
+      """|cond match {
+         |  case a => fa
+         |  case b => fb
+         |}
+         |""".stripMargin
 
-    runTestAssert[Stat](code, assertLayout = Some(output))(tmatch(
-      tname("cond"),
-      Case(patvar("a"), None, tname("fa")),
-      Case(patvar("b"), None, tname("fb"))
-    ))
+    runTestAssert[Stat](code, assertLayout = Some(output))(
+      tmatch(tname("cond"), Case(patvar("a"), None, tname("fa")), Case(patvar("b"), None, tname("fb")))
+    )
   }
 
   test("new-match-case-oneline-align") {
-    val code = """|def fx: String = {
-                  |  x match
-                  |  case 1 => "OK"
-                  |  case 2 => "ERROR"
-                  |  val c = "123"
-                  |  c
-                  |}
-                  |""".stripMargin
-    val output = """|def fx: String = {
-                    |  x match {
-                    |    case 1 => "OK"
-                    |    case 2 => "ERROR"
-                    |  }
-                    |  val c = "123"
-                    |  c
-                    |}
-                    |""".stripMargin
+    val code =
+      """|def fx: String = {
+         |  x match
+         |  case 1 => "OK"
+         |  case 2 => "ERROR"
+         |  val c = "123"
+         |  c
+         |}
+         |""".stripMargin
+    val output =
+      """|def fx: String = {
+         |  x match {
+         |    case 1 => "OK"
+         |    case 2 => "ERROR"
+         |  }
+         |  val c = "123"
+         |  c
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
       Nil,
       tname("fx"),
@@ -1746,8 +1879,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
       Nil,
       Some(pname("String")),
       blk(
-        Term
-          .Match(tname("x"), List(Case(int(1), None, str("OK")), Case(int(2), None, str("ERROR")))),
+        Term.Match(tname("x"), List(Case(int(1), None, str("OK")), Case(int(2), None, str("ERROR")))),
         Defn.Val(Nil, List(patvar("c")), None, str("123")),
         tname("c")
       )
@@ -1755,20 +1887,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("new-match-case-oneline-align-newline") {
-    val code = """|def fx: String = {
-                  |  x match
-                  |  case 2 =>
-                  |    "ERROR"
-                  |  end match
-                  |}
-                  |""".stripMargin
-    val output = """|def fx: String = {
-                    |  x match {
-                    |    case 2 => "ERROR"
-                    |  }
-                    |  end match
-                    |}
-                    |""".stripMargin
+    val code =
+      """|def fx: String = {
+         |  x match
+         |  case 2 =>
+         |    "ERROR"
+         |  end match
+         |}
+         |""".stripMargin
+    val output =
+      """|def fx: String = {
+         |  x match {
+         |    case 2 => "ERROR"
+         |  }
+         |  end match
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
       Nil,
       tname("fx"),
@@ -1780,16 +1914,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("unsure-correct") {
-    val code = """|try func match
-                  |  case A => Accept
-                  |  catch case ex => Error
-                  |""".stripMargin
-    val output = """|try func match {
-                    |  case A => Accept
-                    |} catch {
-                    |  case ex => Error
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try func match
+         |  case A => Accept
+         |  catch case ex => Error
+         |""".stripMargin
+    val output =
+      """|try func match {
+         |  case A => Accept
+         |} catch {
+         |  case ex => Error
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
       tmatch(tname("func"), Case(tname("A"), None, tname("Accept"))),
       List(Case(patvar("ex"), None, tname("Error"))),
@@ -1798,12 +1934,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("case-match-ignore-indent") {
-    val expected = """|x match {
-                      |  case x =>
-                      |    a()
-                      |    b()
-                      |}
-                      |""".stripMargin
+    val expected =
+      """|x match {
+         |  case x =>
+         |    a()
+         |    b()
+         |}
+         |""".stripMargin
     runTestAssert[Stat](
       """|x match {
          |  case x =>
@@ -2284,14 +2421,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("catch-case-in-paren") {
-    val code = """|fx(p1,
-                  |   try func()
-                  |   catch case x => ok())
-                  |""".stripMargin
-    val expected = """|fx(p1, try func() catch {
-                      |  case x =>
-                      |    ok()
-                      |})""".stripMargin
+    val code =
+      """|fx(p1,
+         |   try func()
+         |   catch case x => ok())
+         |""".stripMargin
+    val expected =
+      """|fx(p1, try func() catch {
+         |  case x =>
+         |    ok()
+         |})""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(expected))(tapply(
       tname("fx"),
       tname("p1"),
@@ -2300,18 +2439,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("match-braces-LFLF") {
-    val code = """|a match {
-                  |  case A() =>
-                  |    succ
-                  |
-                  |  case _ => fail
-                  |}
-                  |""".stripMargin
-    val expected = """|a match {
-                      |  case A() => succ
-                      |  case _ => fail
-                      |}
-                      |""".stripMargin
+    val code =
+      """|a match {
+         |  case A() =>
+         |    succ
+         |
+         |  case _ => fail
+         |}
+         |""".stripMargin
+    val expected =
+      """|a match {
+         |  case A() => succ
+         |  case _ => fail
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(expected))(tmatch(
       tname("a"),
       Case(Pat.Extract(tname("A"), Nil), None, tname("succ")),
@@ -2320,22 +2461,24 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("match-last-empty") {
-    val code = """|object Z:
-                  |  a match
-                  |    case A() =>
-                  |      succ
-                  |    case _ =>
-                  |  
-                  |  val x = 0
-                  |""".stripMargin
-    val expected = """|object Z {
-                      |  a match {
-                      |    case A() => succ
-                      |    case _ =>
-                      |  }
-                      |  val x = 0
-                      |}
-                      |""".stripMargin
+    val code =
+      """|object Z:
+         |  a match
+         |    case A() =>
+         |      succ
+         |    case _ =>
+         |  
+         |  val x = 0
+         |""".stripMargin
+    val expected =
+      """|object Z {
+         |  a match {
+         |    case A() => succ
+         |    case _ =>
+         |  }
+         |  val x = 0
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(expected))(Defn.Object(
       Nil,
       tname("Z"),
@@ -2645,8 +2788,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
               tselect(
                 tapply(
                   tselect("tl", "paramRefs", "map"),
-                  Term
-                    .AnonymousFunction(tapply(tselect("other", "typeVarOfParam"), Term.Placeholder()))
+                  Term.AnonymousFunction(tapply(tselect("other", "typeVarOfParam"), Term.Placeholder()))
                 ),
                 "collect"
               ),
@@ -2683,16 +2825,17 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("if-then 7") {
-    val code = """|
-                  |  private def genScalaClass(td: TypeDef): js.ClassDef = {
-                  |    val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
-                  |
-                  |    val kind =
-                  |      if (isStaticModule(sym)) ClassKind.ModuleClass
-                  |      else if (isHijacked) ClassKind.HijackedClass
-                  |      else ClassKind.Class
-                  |  }
-                  |""".stripMargin
+    val code =
+      """|
+         |  private def genScalaClass(td: TypeDef): js.ClassDef = {
+         |    val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
+         |
+         |    val kind =
+         |      if (isStaticModule(sym)) ClassKind.ModuleClass
+         |      else if (isHijacked) ClassKind.HijackedClass
+         |      else ClassKind.Class
+         |  }
+         |""".stripMargin
     val output =
       """|private def genScalaClass(td: TypeDef): js.ClassDef = {
          |  val hashedDefs = ir.Hashers.hashMemberDefs(allMemberDefs)
@@ -3007,26 +3150,28 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("several if-then, some nested") {
-    val code = """|classDef
-                  |      .foreach {
-                  |        case typeSymbol: Symbol =>
-                  |          if typ then {
-                  |            // foo
-                  |          }
-                  |          if typeDef then
-                  |            if typJava then {
-                  |              // foo
-                  |            }
-                  |        case _ =>
-                  |    }
-                  |""".stripMargin
-    val output = """|classDef.foreach {
-                    |  case typeSymbol: Symbol =>
-                    |    if (typ) {}
-                    |    if (typeDef) if (typJava) {}
-                    |  case _ =>
-                    |}
-                    |""".stripMargin
+    val code =
+      """|classDef
+         |      .foreach {
+         |        case typeSymbol: Symbol =>
+         |          if typ then {
+         |            // foo
+         |          }
+         |          if typeDef then
+         |            if typJava then {
+         |              // foo
+         |            }
+         |        case _ =>
+         |    }
+         |""".stripMargin
+    val output =
+      """|classDef.foreach {
+         |  case typeSymbol: Symbol =>
+         |    if (typ) {}
+         |    if (typeDef) if (typJava) {}
+         |  case _ =>
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(tapply(
       tselect("classDef", "foreach"),
       Term.PartialFunction(List(
@@ -3054,13 +3199,14 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |          val msg = s"ERROR: Multiple index pages for doc found ${indexes.map(_.file)}"
          |          report.error(msg)
          |""".stripMargin
-    val output = """|if (indexes.size > 1) {
-                    |  val msg = s"ERROR: Multiple index pages for doc found ${
-                    |    indexes.map(_.file)
-                    |  }"
-                    |  report.error(msg)
-                    |}
-                    |""".stripMargin
+    val output =
+      """|if (indexes.size > 1) {
+         |  val msg = s"ERROR: Multiple index pages for doc found ${
+         |    indexes.map(_.file)
+         |  }"
+         |  report.error(msg)
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
       tinfix(tselect("indexes", "size"), ">", int(1)),
       blk(
@@ -3085,17 +3231,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("if-then in parens") {
-    val code = """|{
-                  |  if this then
-                  |    tvars.foreach(tvar => if !tvar then includeVar(tvar))
-                  |  typeComparer.addToConstraint(tvars)
-                  |}
-                  |""".stripMargin
-    val output = """|{
-                    |  if (this) tvars.foreach(tvar => if (!tvar) includeVar(tvar))
-                    |  typeComparer.addToConstraint(tvars)
-                    |}
-                    |""".stripMargin
+    val code =
+      """|{
+         |  if this then
+         |    tvars.foreach(tvar => if !tvar then includeVar(tvar))
+         |  typeComparer.addToConstraint(tvars)
+         |}
+         |""".stripMargin
+    val output =
+      """|{
+         |  if (this) tvars.foreach(tvar => if (!tvar) includeVar(tvar))
+         |  typeComparer.addToConstraint(tvars)
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(blk(
       Term.If(
         Term.This(anon),
@@ -3151,18 +3299,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("several nested if, with () as body") {
-    val code = """|
-                  |  if !other
-                  |  then
-                  |    if (member)
-                  |      ()
-                  |    else
-                  |      overrideError()
-                  |  else
-                  |    checkOverrideDeprecated()
-                  |""".stripMargin
-    val output = """|if (!other) if (member) () else overrideError() else checkOverrideDeprecated()
-                    |""".stripMargin
+    val code =
+      """|
+         |  if !other
+         |  then
+         |    if (member)
+         |      ()
+         |    else
+         |      overrideError()
+         |  else
+         |    checkOverrideDeprecated()
+         |""".stripMargin
+    val output =
+      """|if (!other) if (member) () else overrideError() else checkOverrideDeprecated()
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
       Term.ApplyUnary(tname("!"), tname("other")),
       Term.If(tname("member"), Lit.Unit(), tapply(tname("overrideError")), Nil),
@@ -3172,40 +3322,44 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3136: block catch handler, indented") {
-    val code = """|try ???
-                  |catch
-                  |  val a = 10
-                  |  handler(a)
-                  |""".stripMargin
-    val msg = """|<input>:3: error: illegal start of simple expression
-                 |  val a = 10
-                 |  ^""".stripMargin
+    val code =
+      """|try ???
+         |catch
+         |  val a = 10
+         |  handler(a)
+         |""".stripMargin
+    val msg =
+      """|<input>:3: error: illegal start of simple expression
+         |  val a = 10
+         |  ^""".stripMargin
     runTestError[Stat](code, msg)
   }
 
   test("match with dedented single case") {
-    val code = """|val a = this match
-                  |      case a =>
-                  |         that match
-                  |        case b => bb
-                  |         end match
-                  |      case b =>
-                  |         that match
-                  |        case c => cc
-                  |""".stripMargin
-    val output = """|val a = this match {
-                    |  case a =>
-                    |    that match {
-                    |      case b =>
-                    |        bb
-                    |        end match
-                    |    }
-                    |  case b =>
-                    |    that match {
-                    |      case c => cc
-                    |    }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|val a = this match
+         |      case a =>
+         |         that match
+         |        case b => bb
+         |         end match
+         |      case b =>
+         |         that match
+         |        case c => cc
+         |""".stripMargin
+    val output =
+      """|val a = this match {
+         |  case a =>
+         |    that match {
+         |      case b =>
+         |        bb
+         |        end match
+         |    }
+         |  case b =>
+         |    that match {
+         |      case c => cc
+         |    }
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Val(
       Nil,
       List(patvar("a")),
@@ -3226,24 +3380,26 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("single-line try within catch case, then another case") {
-    val code = """|try foo
-                  |catch
-                  |case _ =>
-                  |    try bar finally qux
-                  |    try bar catch baz finally qux
-                  |    try bar catch case _ => baz finally qux
-                  |case xyz =>
-                  |""".stripMargin
-    val output = """|try foo catch {
-                    |  case _ =>
-                    |    try bar finally qux
-                    |    try bar catch baz finally qux
-                    |    try bar catch {
-                    |      case _ => baz
-                    |    } finally qux
-                    |  case xyz =>
-                    |}
-                    |""".stripMargin
+    val code =
+      """|try foo
+         |catch
+         |case _ =>
+         |    try bar finally qux
+         |    try bar catch baz finally qux
+         |    try bar catch case _ => baz finally qux
+         |case xyz =>
+         |""".stripMargin
+    val output =
+      """|try foo catch {
+         |  case _ =>
+         |    try bar finally qux
+         |    try bar catch baz finally qux
+         |    try bar catch {
+         |      case _ => baz
+         |    } finally qux
+         |  case xyz =>
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
       tname("foo"),
       List(
@@ -3263,23 +3419,25 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("single-line try within catch case, then finally") {
-    val code = """|try foo
-                  |catch
-                  |case _ =>
-                  |    try bar finally qux
-                  |    try bar catch baz finally qux
-                  |    try bar catch case _ => baz finally qux
-                  |finally xyz
-                  |""".stripMargin
-    val output = """|try foo catch {
-                    |  case _ =>
-                    |    try bar finally qux
-                    |    try bar catch baz finally qux
-                    |    try bar catch {
-                    |      case _ => baz
-                    |    } finally qux
-                    |} finally xyz
-                    |""".stripMargin
+    val code =
+      """|try foo
+         |catch
+         |case _ =>
+         |    try bar finally qux
+         |    try bar catch baz finally qux
+         |    try bar catch case _ => baz finally qux
+         |finally xyz
+         |""".stripMargin
+    val output =
+      """|try foo catch {
+         |  case _ =>
+         |    try bar finally qux
+         |    try bar catch baz finally qux
+         |    try bar catch {
+         |      case _ => baz
+         |    } finally qux
+         |} finally xyz
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.Try(
       tname("foo"),
       Case(
@@ -3296,11 +3454,12 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3220") {
-    val code = """|for {
-                  |  case (a, b) <- pairs
-                  |  x <- a to b
-                  |} yield x
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  case (a, b) <- pairs
+         |  x <- a to b
+         |} yield x
+         |""".stripMargin
     val layout = "for ( case (a, b) <- pairs; x <- a to b) yield x"
     runTestAssert[Stat](code, Some(layout))(Term.ForYield(
       List(
@@ -3312,20 +3471,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#3224") {
-    val code = """|for {
-                  |  x2 <- x1
-                  |} yield x2
-                  |  .x3 {
-                  |    case x4
-                  |        if x5.x6
-                  |          .x7(x8) =>
-                  |        x9
-                  |  }
-                  |""".stripMargin
-    val layout = """|for (x2 <- x1) yield x2.x3 {
-                    |  case x4 if x5.x6.x7(x8) => x9
-                    |}
-                    |""".stripMargin
+    val code =
+      """|for {
+         |  x2 <- x1
+         |} yield x2
+         |  .x3 {
+         |    case x4
+         |        if x5.x6
+         |          .x7(x8) =>
+         |        x9
+         |  }
+         |""".stripMargin
+    val layout =
+      """|for (x2 <- x1) yield x2.x3 {
+         |  case x4 if x5.x6.x7(x8) => x9
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, Some(layout))(Term.ForYield(
       List(Enumerator.Generator(patvar("x2"), tname("x1"))),
       tapply(
@@ -3339,62 +3500,70 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("while cond uses match with dot") {
-    val code = """|if sArr(last) == ')' then
-                  |  while (sArr(last): @switch).match
-                  |    case _ => false
-                  |  do last -= 1
-                  |""".stripMargin
-    val layout = """|if (sArr(last) == ')') while ((sArr(last): @switch).match {
-                    |  case _ => false
-                    |}) last -= 1
-                    |""".stripMargin
+    val code =
+      """|if sArr(last) == ')' then
+         |  while (sArr(last): @switch).match
+         |    case _ => false
+         |  do last -= 1
+         |""".stripMargin
+    val layout =
+      """|if (sArr(last) == ')') while ((sArr(last): @switch).match {
+         |  case _ => false
+         |}) last -= 1
+         |""".stripMargin
     assertNoDiff(parseStat(code).reprint, layout)
   }
 
   test("while cond uses match without dot") {
-    val code = """|if sArr(last) == ')' then
-                  |  while (sArr(last): @switch) match
-                  |    case _ => false
-                  |  do last -= 1
-                  |""".stripMargin
-    val layout = """|if (sArr(last) == ')') while ((sArr(last): @switch) match {
-                    |  case _ => false
-                    |}) last -= 1
-                    |""".stripMargin
+    val code =
+      """|if sArr(last) == ')' then
+         |  while (sArr(last): @switch) match
+         |    case _ => false
+         |  do last -= 1
+         |""".stripMargin
+    val layout =
+      """|if (sArr(last) == ')') while ((sArr(last): @switch) match {
+         |  case _ => false
+         |}) last -= 1
+         |""".stripMargin
     assertNoDiff(parseStat(code).reprint, layout)
   }
 
   test("scalafmt #3790 case") {
-    val code = """|case 1 =>
-                  |  println(2)
-                  |  (3, 4)
-                  |""".stripMargin
-    val layout = """|case 1 =>
-                    |  println(2)
-                    |  (3, 4)
-                    |""".stripMargin
+    val code =
+      """|case 1 =>
+         |  println(2)
+         |  (3, 4)
+         |""".stripMargin
+    val layout =
+      """|case 1 =>
+         |  println(2)
+         |  (3, 4)
+         |""".stripMargin
     val tree =
       Case(int(1), None, blk(tapply(tname("println"), int(2)), Term.Tuple(List(int(3), int(4)))))
     runTestAssert[Case](code, layout)(tree)
   }
 
   test("scalafmt #3790 match optional braces") {
-    val code = """|def foo =
-                  |  bar match
-                  |  case 1 =>
-                  |    println(2)
-                  |    (3, 4)
-                  |  baz
-                  |""".stripMargin
-    val layout = """|def foo = {
-                    |  bar match {
-                    |    case 1 =>
-                    |      println(2)
-                    |      (3, 4)
-                    |  }
-                    |  baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """|def foo =
+         |  bar match
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |  baz
+         |""".stripMargin
+    val layout =
+      """|def foo = {
+         |  bar match {
+         |    case 1 =>
+         |      println(2)
+         |      (3, 4)
+         |  }
+         |  baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),
@@ -3412,20 +3581,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3790 match optional braces, and case class following in case body") {
-    val code = """|def foo =
-                  |  bar match
-                  |  case 1 =>
-                  |    println(2)
-                  |    (3, 4)
-                  |    case class A(a: Int)
-                  |""".stripMargin
-    val layout = """|def foo = bar match {
-                    |  case 1 =>
-                    |    println(2)
-                    |    (3, 4)
-                    |    case class A(a: Int)
-                    |}
-                    |""".stripMargin
+    val code =
+      """|def foo =
+         |  bar match
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |    case class A(a: Int)
+         |""".stripMargin
+    val layout =
+      """|def foo = bar match {
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |    case class A(a: Int)
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),
@@ -3448,22 +3619,24 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3790 match optional braces, and case class following after case body") {
-    val code = """|def foo =
-                  |  bar match
-                  |  case 1 =>
-                  |    println(2)
-                  |    (3, 4)
-                  |  case class A(a: Int)
-                  |""".stripMargin
-    val layout = """|def foo = {
-                    |  bar match {
-                    |    case 1 =>
-                    |      println(2)
-                    |      (3, 4)
-                    |  }
-                    |  case class A(a: Int)
-                    |}
-                    |""".stripMargin
+    val code =
+      """|def foo =
+         |  bar match
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |  case class A(a: Int)
+         |""".stripMargin
+    val layout =
+      """|def foo = {
+         |  bar match {
+         |    case 1 =>
+         |      println(2)
+         |      (3, 4)
+         |  }
+         |  case class A(a: Int)
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),
@@ -3481,20 +3654,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("scalafmt #3790 match actual braces") {
-    val code = """|def foo =
-                  |  bar match {
-                  |  case 1 =>
-                  |    println(2)
-                  |    (3, 4)
-                  |  baz}
-                  |""".stripMargin
-    val layout = """|def foo = bar match {
-                    |  case 1 =>
-                    |    println(2)
-                    |    (3, 4)
-                    |    baz
-                    |}
-                    |""".stripMargin
+    val code =
+      """|def foo =
+         |  bar match {
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |  baz}
+         |""".stripMargin
+    val layout =
+      """|def foo = bar match {
+         |  case 1 =>
+         |    println(2)
+         |    (3, 4)
+         |    baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("foo"),
@@ -3514,17 +3689,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("scalafmt #3941 no significant indentation with quiet syntax: if-then 1") {
     implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
-    val code = """|def demo() = {
-                  |  if true then greet()
-                  |  else
-                  |    sayGoodbye()
-                  |    openDoor()
-                  |}
-                  |""".stripMargin
-    val layout = """|def demo() = {
-                    |  if (true) greet() else sayGoodbye()
-                    |  openDoor()
-                    |}""".stripMargin
+    val code =
+      """|def demo() = {
+         |  if true then greet()
+         |  else
+         |    sayGoodbye()
+         |    openDoor()
+         |}
+         |""".stripMargin
+    val layout =
+      """|def demo() = {
+         |  if (true) greet() else sayGoodbye()
+         |  openDoor()
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("demo"),
@@ -3541,19 +3718,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("scalafmt #3941 no significant indentation with quiet syntax: if-then 2") {
     implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
-    val code = """|def demo() = {
-                  |  if (a + b)
-                  |    == (c + d)
-                  |  then greet()
-                  |  else
-                  |    sayGoodbye()
-                  |    openDoor()
-                  |}
-                  |""".stripMargin
-    val layout = """|def demo() = {
-                    |  if (a + b == c + d) greet() else sayGoodbye()
-                    |  openDoor()
-                    |}""".stripMargin
+    val code =
+      """|def demo() = {
+         |  if (a + b)
+         |    == (c + d)
+         |  then greet()
+         |  else
+         |    sayGoodbye()
+         |    openDoor()
+         |}
+         |""".stripMargin
+    val layout =
+      """|def demo() = {
+         |  if (a + b == c + d) greet() else sayGoodbye()
+         |  openDoor()
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("demo"),
@@ -3575,16 +3754,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("scalafmt #3941 no significant indentation with quiet syntax: while-do 1") {
     implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
-    val code = """|def demo() = {
-                  |  while true do
-                  |    sayGoodbye()
-                  |    openDoor()
-                  |}
-                  |""".stripMargin
-    val layout = """|def demo() = {
-                    |  while (true) sayGoodbye()
-                    |  openDoor()
-                    |}""".stripMargin
+    val code =
+      """|def demo() = {
+         |  while true do
+         |    sayGoodbye()
+         |    openDoor()
+         |}
+         |""".stripMargin
+    val layout =
+      """|def demo() = {
+         |  while (true) sayGoodbye()
+         |  openDoor()
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("demo"),
@@ -3598,18 +3779,20 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("scalafmt #3941 no significant indentation with quiet syntax: while-do 2") {
     implicit val dialect = dialects.Scala3.withAllowSignificantIndentation(false)
-    val code = """|def demo() = {
-                  |  while (a + b)
-                  |    == (c + d)
-                  |  do
-                  |    sayGoodbye()
-                  |    openDoor()
-                  |}
-                  |""".stripMargin
-    val layout = """|def demo() = {
-                    |  while (a + b == c + d) sayGoodbye()
-                    |  openDoor()
-                    |}""".stripMargin
+    val code =
+      """|def demo() = {
+         |  while (a + b)
+         |    == (c + d)
+         |  do
+         |    sayGoodbye()
+         |    openDoor()
+         |}
+         |""".stripMargin
+    val layout =
+      """|def demo() = {
+         |  while (a + b == c + d) sayGoodbye()
+         |  openDoor()
+         |}""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("demo"),
@@ -3628,14 +3811,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("indent in enumerator") {
-    val code = """|object a:
-                  |      val abstractTypeNames =
-                  |        for (
-                  |          parent <-
-                  |           parents;
-                  |          mbr <- parent.abstractTypeMembers if qualifies(mbr.symbol))
-                  |        yield mbr.name.asTypeName
-                  |""".stripMargin
+    val code =
+      """|object a:
+         |      val abstractTypeNames =
+         |        for (
+         |          parent <-
+         |           parents;
+         |          mbr <- parent.abstractTypeMembers if qualifies(mbr.symbol))
+         |        yield mbr.name.asTypeName
+         |""".stripMargin
     val layout =
       "object a { val abstractTypeNames = for (parent <- parents; mbr <- parent.abstractTypeMembers; if qualifies(mbr.symbol)) yield mbr.name.asTypeName }"
     val tree = Defn.Object(
@@ -3659,19 +3843,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("terminate inline case on newline and same indent") {
-    val code = """|object a:
-                  |   try foo
-                  |   catch case ex => new Bar()
-                  |   private[io] def baz = qux
-                  |""".stripMargin
-    val layout = """|object a {
-                    |  try foo catch {
-                    |    case ex =>
-                    |      new Bar()
-                    |  }
-                    |  private[io] def baz = qux
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object a:
+         |   try foo
+         |   catch case ex => new Bar()
+         |   private[io] def baz = qux
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  try foo catch {
+         |    case ex =>
+         |      new Bar()
+         |  }
+         |  private[io] def baz = qux
+         |}
+         |""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -3684,12 +3870,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("break after <- in for-yield") {
-    val code = """|object a:
-                  |  for foo <-
-                  |    bar
-                  |  yield
-                  |    foo
-                  |""".stripMargin
+    val code =
+      """|object a:
+         |  for foo <-
+         |    bar
+         |  yield
+         |    foo
+         |""".stripMargin
     val layout = "object a { for (foo <- bar) yield foo }"
     val tree = Defn.Object(
       Nil,
@@ -3700,12 +3887,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("outdent inlinw try-finally opt-braces") {
-    val code = """|object a:
-                  |  def foo =
-                  |      try bar &&
-                  |          baz
-                  |      finally qux
-                  |""".stripMargin
+    val code =
+      """|object a:
+         |  def foo =
+         |      try bar &&
+         |          baz
+         |      finally qux
+         |""".stripMargin
     val layout = "object a { def foo = try bar && baz finally qux }"
     val tree = Defn.Object(
       Nil,
@@ -3722,19 +3910,21 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("outdent inlinw try-finally in braces") {
-    val code = """|object a:
-                  |  def foo = {
-                  |      try bar &&
-                  |          baz
-                  |      finally qux
-                  |  }
-                  |""".stripMargin
-    val layout = """|object a {
-                    |  def foo = {
-                    |    try bar && baz finally qux
-                    |  }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object a:
+         |  def foo = {
+         |      try bar &&
+         |          baz
+         |      finally qux
+         |  }
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  def foo = {
+         |    try bar && baz finally qux
+         |  }
+         |}
+         |""".stripMargin
     val tree = Defn.Object(
       Nil,
       tname("a"),
@@ -3752,60 +3942,62 @@ class ControlSyntaxSuite extends BaseDottySuite {
   test("#3979 w/ grouped whitespace") {
     implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = true)
 
-    val code = """|for {
-                  |  _ <-
-                  |    if (a) {
-                  |      b
-                  |    } else {
-                  |      c
-                  |    }
-                  |
-                  |  _ <- d
-                  |} yield e
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  _ <-
+         |    if (a) {
+         |      b
+         |    } else {
+         |      c
+         |    }
+         |
+         |  _ <- d
+         |} yield e
+         |""".stripMargin
 
-    val struct = """|BOF [0..0)
-                    |KwFor [0..3)
-                    |LeftBrace [4..5)
-                    |Underscore [8..9)
-                    |LeftArrow [10..12)
-                    |Indentation.Indent [12..12)
-                    |KwIf [17..19)
-                    |LeftParen [20..21)
-                    |Ident(a) [21..22)
-                    |RightParen [22..23)
-                    |LeftBrace [24..25)
-                    |Ident(b) [32..33)
-                    |LF [33..34)
-                    |RightBrace [38..39)
-                    |KwElse [40..44)
-                    |LeftBrace [45..46)
-                    |Ident(c) [53..54)
-                    |LF [54..55)
-                    |RightBrace [59..60)
-                    |Indentation.Outdent [61..61)
-                    |LFLF [61..62)
-                    |Underscore [64..65)
-                    |LeftArrow [66..68)
-                    |Ident(d) [69..70)
-                    |LF [70..71)
-                    |RightBrace [71..72)
-                    |KwYield [73..78)
-                    |Ident(e) [79..80)
-                    |EOF [81..81)
-                    |""".stripMargin.nl2lf
+    val struct =
+      """|BOF [0..0)
+         |KwFor [0..3)
+         |LeftBrace [4..5)
+         |Underscore [8..9)
+         |LeftArrow [10..12)
+         |Indentation.Indent [12..12)
+         |KwIf [17..19)
+         |LeftParen [20..21)
+         |Ident(a) [21..22)
+         |RightParen [22..23)
+         |LeftBrace [24..25)
+         |Ident(b) [32..33)
+         |LF [33..34)
+         |RightBrace [38..39)
+         |KwElse [40..44)
+         |LeftBrace [45..46)
+         |Ident(c) [53..54)
+         |LF [54..55)
+         |RightBrace [59..60)
+         |Indentation.Outdent [61..61)
+         |LFLF [61..62)
+         |Underscore [64..65)
+         |LeftArrow [66..68)
+         |Ident(d) [69..70)
+         |LF [70..71)
+         |RightBrace [71..72)
+         |KwYield [73..78)
+         |Ident(e) [79..80)
+         |EOF [81..81)
+         |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
 
-    val layout = """|for (_ <- if (a) {
-                    |  b
-                    |} else {
-                    |  c
-                    |}; _ <- d) yield e
-                    |""".stripMargin
+    val layout =
+      """|for (_ <- if (a) {
+         |  b
+         |} else {
+         |  c
+         |}; _ <- d) yield e
+         |""".stripMargin
     val tree = Term.ForYield(
       Term.EnumeratorsBlock(List(
-        Enumerator
-          .Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
+        Enumerator.Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
         Enumerator.Generator(patwildcard, tname("d"))
       )),
       tname("e")
@@ -3816,60 +4008,62 @@ class ControlSyntaxSuite extends BaseDottySuite {
   test("#3979 w/ granular whitespace") {
     implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = false)
 
-    val code = """|for {
-                  |  _ <-
-                  |    if (a) {
-                  |      b
-                  |    } else {
-                  |      c
-                  |    }
-                  |
-                  |  _ <- d
-                  |} yield e
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  _ <-
+         |    if (a) {
+         |      b
+         |    } else {
+         |      c
+         |    }
+         |
+         |  _ <- d
+         |} yield e
+         |""".stripMargin
 
-    val struct = """|BOF [0..0)
-                    |KwFor [0..3)
-                    |LeftBrace [4..5)
-                    |Underscore [8..9)
-                    |LeftArrow [10..12)
-                    |Indentation.Indent [12..12)
-                    |KwIf [17..19)
-                    |LeftParen [20..21)
-                    |Ident(a) [21..22)
-                    |RightParen [22..23)
-                    |LeftBrace [24..25)
-                    |Ident(b) [32..33)
-                    |LF [33..34)
-                    |RightBrace [38..39)
-                    |KwElse [40..44)
-                    |LeftBrace [45..46)
-                    |Ident(c) [53..54)
-                    |LF [54..55)
-                    |RightBrace [59..60)
-                    |Indentation.Outdent [61..61)
-                    |LFLF [61..62)
-                    |Underscore [64..65)
-                    |LeftArrow [66..68)
-                    |Ident(d) [69..70)
-                    |LF [70..71)
-                    |RightBrace [71..72)
-                    |KwYield [73..78)
-                    |Ident(e) [79..80)
-                    |EOF [81..81)
-                    |""".stripMargin.nl2lf
+    val struct =
+      """|BOF [0..0)
+         |KwFor [0..3)
+         |LeftBrace [4..5)
+         |Underscore [8..9)
+         |LeftArrow [10..12)
+         |Indentation.Indent [12..12)
+         |KwIf [17..19)
+         |LeftParen [20..21)
+         |Ident(a) [21..22)
+         |RightParen [22..23)
+         |LeftBrace [24..25)
+         |Ident(b) [32..33)
+         |LF [33..34)
+         |RightBrace [38..39)
+         |KwElse [40..44)
+         |LeftBrace [45..46)
+         |Ident(c) [53..54)
+         |LF [54..55)
+         |RightBrace [59..60)
+         |Indentation.Outdent [61..61)
+         |LFLF [61..62)
+         |Underscore [64..65)
+         |LeftArrow [66..68)
+         |Ident(d) [69..70)
+         |LF [70..71)
+         |RightBrace [71..72)
+         |KwYield [73..78)
+         |Ident(e) [79..80)
+         |EOF [81..81)
+         |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
 
-    val layout = """|for (_ <- if (a) {
-                    |  b
-                    |} else {
-                    |  c
-                    |}; _ <- d) yield e
-                    |""".stripMargin
+    val layout =
+      """|for (_ <- if (a) {
+         |  b
+         |} else {
+         |  c
+         |}; _ <- d) yield e
+         |""".stripMargin
     val tree = Term.ForYield(
       Term.EnumeratorsBlock(List(
-        Enumerator
-          .Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
+        Enumerator.Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
         Enumerator.Generator(patwildcard, tname("d"))
       )),
       tname("e")
@@ -3878,51 +4072,54 @@ class ControlSyntaxSuite extends BaseDottySuite {
   }
 
   test("#4008") {
-    val code = """|for
-                  |    _ <- Option(42).map: _ =>
-                  |      ???
-                  |
-                  |    _ <- Option(43)
-                  |yield ()
-                  |
-                  |""".stripMargin
+    val code =
+      """|for
+         |    _ <- Option(42).map: _ =>
+         |      ???
+         |
+         |    _ <- Option(43)
+         |yield ()
+         |
+         |""".stripMargin
 
-    val struct = """|BOF [0..0)
-                    |KwFor [0..3)
-                    |Indentation.Indent [3..3)
-                    |Underscore [8..9)
-                    |LeftArrow [10..12)
-                    |Ident(Option) [13..19)
-                    |LeftParen [19..20)
-                    |Constant.Int(42) [20..22)
-                    |RightParen [22..23)
-                    |Dot [23..24)
-                    |Ident(map) [24..27)
-                    |Colon [27..28)
-                    |Underscore [29..30)
-                    |RightArrow [31..33)
-                    |Indentation.Indent [33..33)
-                    |Ident(???) [40..43)
-                    |Indentation.Outdent [44..44)
-                    |LFLF [44..45)
-                    |Underscore [49..50)
-                    |LeftArrow [51..53)
-                    |Ident(Option) [54..60)
-                    |LeftParen [60..61)
-                    |Constant.Int(43) [61..63)
-                    |RightParen [63..64)
-                    |Indentation.Outdent [64..64)
-                    |KwYield [65..70)
-                    |LeftParen [71..72)
-                    |RightParen [72..73)
-                    |EOF [75..75)
-                    |""".stripMargin.nl2lf
+    val struct =
+      """|BOF [0..0)
+         |KwFor [0..3)
+         |Indentation.Indent [3..3)
+         |Underscore [8..9)
+         |LeftArrow [10..12)
+         |Ident(Option) [13..19)
+         |LeftParen [19..20)
+         |Constant.Int(42) [20..22)
+         |RightParen [22..23)
+         |Dot [23..24)
+         |Ident(map) [24..27)
+         |Colon [27..28)
+         |Underscore [29..30)
+         |RightArrow [31..33)
+         |Indentation.Indent [33..33)
+         |Ident(???) [40..43)
+         |Indentation.Outdent [44..44)
+         |LFLF [44..45)
+         |Underscore [49..50)
+         |LeftArrow [51..53)
+         |Ident(Option) [54..60)
+         |LeftParen [60..61)
+         |Constant.Int(43) [61..63)
+         |RightParen [63..64)
+         |Indentation.Outdent [64..64)
+         |KwYield [65..70)
+         |LeftParen [71..72)
+         |RightParen [72..73)
+         |EOF [75..75)
+         |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
 
-    val layout = """|for (_ <- Option(42).map {
-                    |  _ => ???
-                    |}; _ <- Option(43)) yield ()
-                    |""".stripMargin
+    val layout =
+      """|for (_ <- Option(42).map {
+         |  _ => ???
+         |}; _ <- Option(43)) yield ()
+         |""".stripMargin
     val tree = Term.ForYield(
       Term.EnumeratorsBlock(List(
         Enumerator.Generator(

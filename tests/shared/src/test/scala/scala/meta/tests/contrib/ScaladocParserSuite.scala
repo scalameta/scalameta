@@ -107,10 +107,11 @@ class ScaladocParserSuite extends FunSuite {
 
     val codeBlock1 = "\"HELLO MARIANO\""
     val codeBlock2 = "\"HELLO SORAYA\""
-    val complexCodeBlock = """|ggmqwogmwogmqwomgq
-                              |val x = 1 // sdfdfh
-                              |// zzz
-                              |gmqwgoiqmgoqmwomw""".stripMargin
+    val complexCodeBlock =
+      """|ggmqwogmwogmqwomgq
+         |val x = 1 // sdfdfh
+         |// zzz
+         |gmqwgoiqmgoqmwomw""".stripMargin
 
     val result: Option[List[DocToken]] = parseString(
       s"""
@@ -180,9 +181,10 @@ class ScaladocParserSuite extends FunSuite {
       .flatMap(token => List(generateTestString(token), testStringToMerge))
       .mkString("/**\n * ", "\n * ", "\n */")
 
-    val codeToParse: String = s"""
-                                 |$scaladoc
-                                 |case class Foo(bar: String)
+    val codeToParse: String =
+      s"""
+         |$scaladoc
+         |case class Foo(bar: String)
       """.stripMargin
 
     val parsedScaladoc: Option[List[DocToken]] = parseString(codeToParse)

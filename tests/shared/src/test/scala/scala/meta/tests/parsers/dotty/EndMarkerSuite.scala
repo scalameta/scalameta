@@ -16,12 +16,13 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("end-marker-toplevel") {
-    val code = """|object a:
-                  |  init()
-                  |end a
-                  |
-                  |type K = Map
-                  |""".stripMargin
+    val code =
+      """|object a:
+         |  init()
+         |end a
+         |
+         |type K = Map
+         |""".stripMargin
     runTestAssert[Source](code, assertLayout = None)(Source(List(
       Defn.Object(Nil, tname("a"), tpl(tapply(tname("init")))),
       Term.EndMarker(tname("a")),
@@ -30,12 +31,13 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("end-marker-extension") {
-    val code = """|extension (a: Int)
-                  |  def b = a + 1
-                  |end extension
-                  |
-                  |type K = Map
-                  |""".stripMargin
+    val code =
+      """|extension (a: Int)
+         |  def b = a + 1
+         |end extension
+         |
+         |type K = Map
+         |""".stripMargin
     runTestAssert[Source](code, assertLayout = None)(Source(List(
       Defn.ExtensionGroup(
         Nil,
@@ -54,11 +56,12 @@ class EndMarkerSuite extends BaseDottySuite {
 
     runTestAssert[Stat]("end + 3")(tinfix(tname("end"), "+", int(3)))
 
-    val code = """|def a: B = {
-                  |  b append end
-                  |  b
-                  |}
-                  |""".stripMargin
+    val code =
+      """|def a: B = {
+         |  b append end
+         |  b
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code)(Defn.Def(
       Nil,
       tname("a"),
@@ -72,12 +75,13 @@ class EndMarkerSuite extends BaseDottySuite {
   test("end-for-no-indent") {
     // to make parser more permissive 'end' is treated as independent statement
     // that doesn't need to be bound to any indentation
-    val code = """|
-                  |def a(): Unit = {
-                  |  end for
-                  |  val x = 3
-                  |}
-                  |""".stripMargin
+    val code =
+      """|
+         |def a(): Unit = {
+         |  end for
+         |  val x = 3
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = None)(Defn.Def(
       Nil,
       tname("a"),
@@ -89,13 +93,15 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("if-then-end-ident") {
-    val code = """|if limit < end then
-                  |   val aa = 1
-                  |""".stripMargin
-    val output = """|if (limit < end) {
-                    |  val aa = 1
-                    |}
-                    |""".stripMargin
+    val code =
+      """|if limit < end then
+         |   val aa = 1
+         |""".stripMargin
+    val output =
+      """|if (limit < end) {
+         |  val aa = 1
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.If(
       tinfix(tname("limit"), "<", tname("end")),
       blk(Defn.Val(Nil, List(patvar("aa")), None, int(1))),
@@ -104,31 +110,33 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("match-with-end") {
-    val code = """|val a = this match
-                  |      case a =>
-                  |         that match
-                  |            case b => bb
-                  |            case c => cc
-                  |         end match
-                  |      case b =>
-                  |         that match
-                  |            case c => cc
-                  |            case _ => dd
-                  |""".stripMargin
-    val output = """|val a = this match {
-                    |  case a =>
-                    |    that match {
-                    |      case b => bb
-                    |      case c => cc
-                    |    }
-                    |    end match
-                    |  case b =>
-                    |    that match {
-                    |      case c => cc
-                    |      case _ => dd
-                    |    }
-                    |}
-                    |""".stripMargin
+    val code =
+      """|val a = this match
+         |      case a =>
+         |         that match
+         |            case b => bb
+         |            case c => cc
+         |         end match
+         |      case b =>
+         |         that match
+         |            case c => cc
+         |            case _ => dd
+         |""".stripMargin
+    val output =
+      """|val a = this match {
+         |  case a =>
+         |    that match {
+         |      case b => bb
+         |      case c => cc
+         |    }
+         |    end match
+         |  case b =>
+         |    that match {
+         |      case c => cc
+         |      case _ => dd
+         |    }
+         |}
+         |""".stripMargin
     runTestAssert[Source](code, assertLayout = Some(output))(Source(List(Defn.Val(
       Nil,
       List(patvar("a")),
@@ -161,29 +169,31 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("val-with-end") {
-    val code = """|object a:
-                  |  val (foo, boo) =
-                  |    bar
-                  |    baz
-                  |  end val
-                  |  val (foo2, boo3) =
-                  |    bar
-                  |    baz
-                  |  end val
-                  |""".stripMargin
-    val output = """|object a {
-                    |  val (foo, boo) = {
-                    |    bar
-                    |    baz
-                    |  }
-                    |  end val
-                    |  val (foo2, boo3) = {
-                    |    bar
-                    |    baz
-                    |  }
-                    |  end val
-                    |}
-                    |""".stripMargin
+    val code =
+      """|object a:
+         |  val (foo, boo) =
+         |    bar
+         |    baz
+         |  end val
+         |  val (foo2, boo3) =
+         |    bar
+         |    baz
+         |  end val
+         |""".stripMargin
+    val output =
+      """|object a {
+         |  val (foo, boo) = {
+         |    bar
+         |    baz
+         |  }
+         |  end val
+         |  val (foo2, boo3) = {
+         |    bar
+         |    baz
+         |  }
+         |  end val
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Object(
       Nil,
       tname("a"),
@@ -276,43 +286,47 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("#3366 not an end marker") {
-    val code = """|x.end match
-                  |    case _ => ()
-                  |""".stripMargin
-    val layout = """|x.end match {
-                    |  case _ => ()
-                    |}
-                    |""".stripMargin
+    val code =
+      """|x.end match
+         |    case _ => ()
+         |""".stripMargin
+    val layout =
+      """|x.end match {
+         |  case _ => ()
+         |}
+         |""".stripMargin
     runTestAssert[Stat](code, Some(layout))(
       tmatch(tselect("x", "end"), Case(patwildcard, None, Lit.Unit()))
     )
   }
 
   test("scalafmt#4098") {
-    val code = """|class FmtTest:
-                  |
-                  |  private val const = 3
-                  |
-                  |  def testBrokenMatch(s: String) =
-                  |    s match
-                  |      case "hello" =>
-                  |        val a = 1
-                  |    end match
-                  |  
-                  |end FmtTest
-                  |""".stripMargin
-    val layout = """|class FmtTest {
-                    |  private val const = 3
-                    |  def testBrokenMatch(s: String) = {
-                    |    s match {
-                    |      case "hello" =>
-                    |        val a = 1
-                    |    }
-                    |    end match
-                    |  }
-                    |}
-                    |end FmtTest
-                    |""".stripMargin
+    val code =
+      """|class FmtTest:
+         |
+         |  private val const = 3
+         |
+         |  def testBrokenMatch(s: String) =
+         |    s match
+         |      case "hello" =>
+         |        val a = 1
+         |    end match
+         |  
+         |end FmtTest
+         |""".stripMargin
+    val layout =
+      """|class FmtTest {
+         |  private val const = 3
+         |  def testBrokenMatch(s: String) = {
+         |    s match {
+         |      case "hello" =>
+         |        val a = 1
+         |    }
+         |    end match
+         |  }
+         |}
+         |end FmtTest
+         |""".stripMargin
     val tree = Source(List(
       Defn.Class(
         Nil,
@@ -343,10 +357,11 @@ class EndMarkerSuite extends BaseDottySuite {
   }
 
   test("def body contains end, but not end marker") {
-    val code = """|object A:
-                  |  def foo = bar == end ||
-                  |    baz
-                  |""".stripMargin
+    val code =
+      """|object A:
+         |  def foo = bar == end ||
+         |    baz
+         |""".stripMargin
     val layout = "object A { def foo = bar == end || baz }"
     val tree = Defn.Object(
       Nil,

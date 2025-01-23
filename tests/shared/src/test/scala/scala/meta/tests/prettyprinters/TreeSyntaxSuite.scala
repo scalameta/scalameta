@@ -20,21 +20,21 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       val sep = if (needNL) "\n" else ""
       val statSyntax = Option(syntaxStr).getOrElse(stat).replace("\n", "\n  ")
 
-      val expectedSyntax = s"""|{
-                               |  $statSyntax$sep
-                               |  {
-                               |    a
-                               |  }
-                               |}""".stripMargin.lf2nl
+      val expectedSyntax =
+        s"""|{
+            |  $statSyntax$sep
+            |  {
+            |    a
+            |  }
+            |}""".stripMargin.lf2nl
 
       val treeWithSemi = templStat(s"{$stat;{a}}")
       val treeWithSemiStructure = treeWithSemi.structure
       assertNoDiff(TreeSyntax.reprint(treeWithSemi).toString, expectedSyntax)
 
       def getTreeWithNL() = templStat(s"{$stat\n{a}}")
-      if (needNL) scala.util.Try(getTreeWithNL()).foreach { treeWithNL =>
-        assertNotEquals(treeWithNL.structure, treeWithSemiStructure)
-      }
+      if (needNL) scala.util.Try(getTreeWithNL())
+        .foreach(treeWithNL => assertNotEquals(treeWithNL.structure, treeWithSemiStructure))
       else {
         val treeWithNL = getTreeWithNL()
         assertNoDiff(treeWithNL.reprint, expectedSyntax)

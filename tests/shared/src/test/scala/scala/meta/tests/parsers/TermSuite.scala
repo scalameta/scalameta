@@ -38,13 +38,9 @@ class TermSuite extends ParseSuite {
     assertTerm("a.super[b].c")(tselect(Super(Indeterminate("a"), Indeterminate("b")), "c"))
   }
 
-  test("super[b].c") {
-    assertTerm("super[b].c")(tselect(Super(Anonymous(), Indeterminate("b")), "c"))
-  }
+  test("super[b].c")(assertTerm("super[b].c")(tselect(Super(Anonymous(), Indeterminate("b")), "c")))
 
-  test("a.super.c") {
-    assertTerm("a.super.c")(tselect(Super(Indeterminate("a"), Anonymous()), "c"))
-  }
+  test("a.super.c")(assertTerm("a.super.c")(tselect(Super(Indeterminate("a"), Anonymous()), "c")))
 
   test("super.c")(assertTerm("super.c")(tselect(Super(Anonymous(), Anonymous()), "c")))
 
@@ -142,9 +138,7 @@ class TermSuite extends ParseSuite {
     }
   }
 
-  test("a :: b") {
-    assertTerm("a :: b")(ApplyInfix(tname("a"), tname("::"), Nil, tname("b") :: Nil))
-  }
+  test("a :: b")(assertTerm("a :: b")(ApplyInfix(tname("a"), tname("::"), Nil, tname("b") :: Nil)))
 
   test("a :: b :: c") {
     assertTerm("a :: b :: c") {
@@ -163,9 +157,7 @@ class TermSuite extends ParseSuite {
 
   test("a = true")(assertTerm("a = true")(Assign(tname("a"), bool(true))))
 
-  test("a(0) = true") {
-    assertTerm("a(0) = true")(Assign(Apply(tname("a"), int(0) :: Nil), bool(true)))
-  }
+  test("a(0) = true")(assertTerm("a(0) = true")(Assign(Apply(tname("a"), int(0) :: Nil), bool(true))))
 
   test("return")(assertTerm("return")(Return(Lit.Unit())))
 
@@ -194,14 +186,15 @@ class TermSuite extends ParseSuite {
   test("if (true) true")(assertTerm("if (true) true")(If(bool(true), bool(true), Lit.Unit())))
 
   test("if (true && '' match...") {
-    val file = """|
-                  |if (
-                  |  true && ("" match {
-                  |    case other ⇒ true
-                  |  })
-                  |  && true
-                  |) ""
-                  |""".stripMargin
+    val file =
+      """|
+         |if (
+         |  true && ("" match {
+         |    case other ⇒ true
+         |  })
+         |  && true
+         |) ""
+         |""".stripMargin
 
     assertTerm(file) {
       Term.If(
@@ -287,15 +280,13 @@ class TermSuite extends ParseSuite {
   }
 
   test("(x: Int, y: Int) => x") {
-    assertTerm("(x: Int, y: Int) => x") {
-      tfunc(tparam("x", "Int"), tparam("y", "Int"))(tname("x"))
-    }
-    assertTree(blockStat("(x: Int, y: Int) => x"))(
-      tfunc(tparam("x", "Int"), tparam("y", "Int"))(tname("x"))
-    )
-    assertTree(templStat("(x: Int, y: Int) => x"))(
-      tfunc(tparam("x", "Int"), tparam("y", "Int"))(tname("x"))
-    )
+    assertTerm("(x: Int, y: Int) => x")(tfunc(tparam("x", "Int"), tparam("y", "Int"))(tname("x")))
+    assertTree(
+      blockStat("(x: Int, y: Int) => x")
+    )(tfunc(tparam("x", "Int"), tparam("y", "Int"))(tname("x")))
+    assertTree(
+      templStat("(x: Int, y: Int) => x")
+    )(tfunc(tparam("x", "Int"), tparam("y", "Int"))(tname("x")))
   }
 
   test("{ implicit x => () }") {
@@ -305,9 +296,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("1 match { case 1 => true }") {
-    assertTerm("1 match { case 1 => true }") {
-      Match(int(1), Case(int(1), None, bool(true)) :: Nil)
-    }
+    assertTerm("1 match { case 1 => true }")(Match(int(1), Case(int(1), None, bool(true)) :: Nil))
   }
 
   test("1 match { case 1 => }") {
@@ -332,9 +321,7 @@ class TermSuite extends ParseSuite {
   test("try (2)")(assertTerm("try (2)")(Try(int(2), Nil, None)))
 
   test("try 1 catch { case _ => }") {
-    assertTerm("try 1 catch { case _ => }") {
-      Try(int(1), Case(patwildcard, None, blk()) :: Nil, None)
-    }
+    assertTerm("try 1 catch { case _ => }")(Try(int(1), Case(patwildcard, None, blk()) :: Nil, None))
   }
 
   test("try 1 finally 1")(assertTerm("try 1 finally 1")(Try(int(1), Nil, Some(int(1)))))
@@ -391,9 +378,7 @@ class TermSuite extends ParseSuite {
 
   test("new A")(assertTerm("new A")(New(init("A"))))
 
-  test("new A(xs: _*)") {
-    assertTerm("new A(xs: _*)")(New(init("A", List(Term.Repeated(tname("xs"))))))
-  }
+  test("new A(xs: _*)")(assertTerm("new A(xs: _*)")(New(init("A", List(Term.Repeated(tname("xs")))))))
 
   test("new A {}")(assertTerm("new A {}")(NewAnonymous(tpl(init("A") :: Nil, Nil))))
 
@@ -410,9 +395,7 @@ class TermSuite extends ParseSuite {
     }
   }
 
-  test("new { self: T => }") {
-    assertTerm("new { self: T => }")(NewAnonymous(tpl(self("self", "T"))))
-  }
+  test("new { self: T => }")(assertTerm("new { self: T => }")(NewAnonymous(tpl(self("self", "T")))))
 
   test("a + (b = c)") {
     assertTerm("a + (b = c)") {
@@ -426,9 +409,7 @@ class TermSuite extends ParseSuite {
     }
   }
 
-  test("a + (b = c).d") {
-    assertTerm("a + (b = c).d")(tinfix("a", "+", tselect(Assign("b", "c"), "d")))
-  }
+  test("a + (b = c).d")(assertTerm("a + (b = c).d")(tinfix("a", "+", tselect(Assign("b", "c"), "d"))))
 
   test("a + (b: _*)")(assertTerm("a + (b: _*)")(tinfix("a", "+", Repeated(tname("b")))))
 
@@ -500,9 +481,7 @@ class TermSuite extends ParseSuite {
          |  // sobaka
          |  case y => y
          |}""".stripMargin
-    ) {
-      tmatch(tname("x"), Case(patvar("x"), None, bool(true)), Case(patvar("y"), None, tname("y")))
-    }
+    )(tmatch(tname("x"), Case(patvar("x"), None, bool(true)), Case(patvar("y"), None, tname("y"))))
   }
 
   test("a + (bs: _*) * c")(intercept[ParseException](term("a + (bs: _*) * c")))
@@ -539,18 +518,15 @@ class TermSuite extends ParseSuite {
 
   test("$_")(intercept[ParseException](term(""" q"x + $_" """)))
 
-  test("!x = y") {
-    assertTerm("!x = y")(Term.Assign(Term.ApplyUnary(tname("!"), tname("x")), tname("y")))
-  }
+  test("!x = y")(assertTerm("!x = y")(Term.Assign(Term.ApplyUnary(tname("!"), tname("x")), tname("y"))))
 
-  test("x = (ys: _*)") {
-    assertTerm("x = (ys: _*)")(Term.Assign(tname("x"), Term.Repeated(tname("ys"))))
-  }
+  test("x = (ys: _*)")(assertTerm("x = (ys: _*)")(Term.Assign(tname("x"), Term.Repeated(tname("ys")))))
 
   test("x = (ys: _`*`)") {
-    val error = """|<input>:1: error: `identifier` expected but `)` found
-                   |x = (ys: _`*`)
-                   |             ^""".stripMargin
+    val error =
+      """|<input>:1: error: `identifier` expected but `)` found
+         |x = (ys: _`*`)
+         |             ^""".stripMargin
     runTestError[Stat]("x = (ys: _`*`)", error)
   }
 
@@ -595,9 +571,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("#492 parse Unit in infix operations") {
-    assertTerm("x == () :: Nil") {
-      tinfix(tname("x"), "==", tinfix(Lit.Unit(), "::", tname("Nil")))
-    }
+    assertTerm("x == () :: Nil")(tinfix(tname("x"), "==", tinfix(Lit.Unit(), "::", tname("Nil"))))
   }
 
   test("#492 parse hlist with Unit") {
@@ -607,11 +581,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("nested-braces-in-paren") {
-    val code = """|(if (bar) {
-                  |  if (foo) { doFoo() }
-                  |  val x = 2
-                  |})
-                  |""".stripMargin
+    val code =
+      """|(if (bar) {
+         |  if (foo) { doFoo() }
+         |  val x = 2
+         |})
+         |""".stripMargin
 
     assertTerm(code) {
       Term.If(
@@ -745,9 +720,7 @@ class TermSuite extends ParseSuite {
       List(int(1))
     )))
   }
-  test("anonymous-function-spec-3.2") {
-    assertTerm("(_: Int)")(Ascribe(Placeholder(), pname("Int")))
-  }
+  test("anonymous-function-spec-3.2")(assertTerm("(_: Int)")(Ascribe(Placeholder(), pname("Int"))))
   test("anonymous-function-spec-4") {
     assertTerm("if (_) x else y")(AnonymousFunction(If(Placeholder(), tname("x"), tname("y"))))
   }
@@ -800,13 +773,9 @@ class TermSuite extends ParseSuite {
     ))
   }
 
-  test("(a, b, c)") {
-    assertTerm("(a, b, c)")(Term.Tuple(List(tname("a"), tname("b"), tname("c"))))
-  }
+  test("(a, b, c)")(assertTerm("(a, b, c)")(Term.Tuple(List(tname("a"), tname("b"), tname("c")))))
 
-  test("((a, b, c))") {
-    assertTerm("((a, b, c))")(Term.Tuple(List(tname("a"), tname("b"), tname("c"))))
-  }
+  test("((a, b, c))")(assertTerm("((a, b, c))")(Term.Tuple(List(tname("a"), tname("b"), tname("c")))))
 
   test("(a, b, c) :: ((a, b, c))") {
     assertTerm("(a, b, c) :: ((a, b, c))") {
@@ -841,9 +810,7 @@ class TermSuite extends ParseSuite {
   }
 
   test("#2720 infix with repeated arg last") {
-    assertTerm("a foo (b, c: _*)") {
-      tinfix(tname("a"), "foo", tname("b"), Term.Repeated(tname("c")))
-    }
+    assertTerm("a foo (b, c: _*)")(tinfix(tname("a"), "foo", tname("b"), Term.Repeated(tname("c"))))
   }
   test("#2720-for-comp") {
     assertTerm("for { `j`: Int <- Seq(4, 5, 6, 7)} yield `j`") {
@@ -912,12 +879,13 @@ class TermSuite extends ParseSuite {
   }
 
   test("implicit closure with ascribe") {
-    val code = """|foo {
-                  |  implicit a => implicit b => {
-                  |    case bar => baz
-                  |  }: qux
-                  |}
-                  |""".stripMargin
+    val code =
+      """|foo {
+         |  implicit a => implicit b => {
+         |    case bar => baz
+         |  }: qux
+         |}
+         |""".stripMargin
     checkTerm(code) {
       tapply(
         tname("foo"),
@@ -932,11 +900,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("implicit closure with val") {
-    val code = """|foo { implicit a =>
-                  |  val bar = baz
-                  |  bar
-                  |}
-                  |""".stripMargin
+    val code =
+      """|foo { implicit a =>
+         |  val bar = baz
+         |  bar
+         |}
+         |""".stripMargin
     checkTerm(code) {
       tapply(
         tname("foo"),
@@ -965,9 +934,10 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3050 function without body") {
-    val code = """|f { (x1: A, x2: B => C) =>
-                  |}
-                  |""".stripMargin
+    val code =
+      """|f { (x1: A, x2: B => C) =>
+         |}
+         |""".stripMargin
     checkTerm(code)(tapply(
       tname("f"),
       blk(tfunc(tparam("x1", "A"), tparam(Nil, "x2", pfunc(pname("B"))(pname("C"))))(blk()))
@@ -975,11 +945,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3136: block catch handler, in braces") {
-    val code = """|try ??? catch {
-                  |  val a = 10
-                  |  handler(a)
-                  |}
-                  |""".stripMargin
+    val code =
+      """|try ??? catch {
+         |  val a = 10
+         |  handler(a)
+         |}
+         |""".stripMargin
     checkTerm(code, code)(Term.TryWithHandler(
       tname("???"),
       blk(Defn.Val(Nil, List(patvar("a")), None, int(10)), tapply(tname("handler"), tname("a"))),
@@ -988,21 +959,24 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3138: infix with a following block") {
-    val codeOnNextLine = """|{
-                            |  Foo bar (2, 3)
-                            |  { a }
-                            |}
-                            |""".stripMargin
-    val codeOnSameLine = """|{
-                            |  Foo bar (2, 3) { a }
-                            |}
-                            |""".stripMargin
-    val syntaxOnSameLine = """|{
-                              |  Foo bar (2, 3) {
-                              |    a
-                              |  }
-                              |}
-                              |""".stripMargin
+    val codeOnNextLine =
+      """|{
+         |  Foo bar (2, 3)
+         |  { a }
+         |}
+         |""".stripMargin
+    val codeOnSameLine =
+      """|{
+         |  Foo bar (2, 3) { a }
+         |}
+         |""".stripMargin
+    val syntaxOnSameLine =
+      """|{
+         |  Foo bar (2, 3) {
+         |    a
+         |  }
+         |}
+         |""".stripMargin
     val treeOnSameLine =
       blk(tinfix(tname("Foo"), "bar", tapply(Term.Tuple(List(int(2), int(3))), blk(tname("a")))))
     runTestAssert[Stat](codeOnNextLine, Some(syntaxOnSameLine))(treeOnSameLine)
@@ -1010,21 +984,24 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3138: apply with a following block") {
-    val codeOnNextLine = """|{
-                            |  Foo.bar (2, 3)
-                            |  { a }
-                            |}
-                            |""".stripMargin
-    val codeOnSameLine = """|{
-                            |  Foo.bar (2, 3) { a }
-                            |}
-                            |""".stripMargin
-    val syntaxOnSameLine = """|{
-                              |  Foo.bar(2, 3) {
-                              |    a
-                              |  }
-                              |}
-                              |""".stripMargin
+    val codeOnNextLine =
+      """|{
+         |  Foo.bar (2, 3)
+         |  { a }
+         |}
+         |""".stripMargin
+    val codeOnSameLine =
+      """|{
+         |  Foo.bar (2, 3) { a }
+         |}
+         |""".stripMargin
+    val syntaxOnSameLine =
+      """|{
+         |  Foo.bar(2, 3) {
+         |    a
+         |  }
+         |}
+         |""".stripMargin
     val treeOnSameLine = blk(tapply(tapply(tselect("Foo", "bar"), int(2), int(3)), blk(tname("a"))))
     runTestAssert[Stat](codeOnNextLine, Some(syntaxOnSameLine))(treeOnSameLine)
     runTestAssert[Stat](codeOnSameLine, Some(syntaxOnSameLine))(treeOnSameLine)
@@ -1050,12 +1027,14 @@ class TermSuite extends ParseSuite {
   }
 
   test("expr with annotation, then match") {
-    val code = """|underlyingStableClassRef(mbr.info.loBound): @unchecked match {
-                  |  case ref: TypeRef =>
-                  |}""".stripMargin
-    val layout = """|(underlyingStableClassRef(mbr.info.loBound): @unchecked) match {
-                    |  case ref: TypeRef =>
-                    |}""".stripMargin
+    val code =
+      """|underlyingStableClassRef(mbr.info.loBound): @unchecked match {
+         |  case ref: TypeRef =>
+         |}""".stripMargin
+    val layout =
+      """|(underlyingStableClassRef(mbr.info.loBound): @unchecked) match {
+         |  case ref: TypeRef =>
+         |}""".stripMargin
     runTestAssert[Term](code, Some(layout))(tmatch(
       Term.Annotate(
         tapply(tname("underlyingStableClassRef"), tselect("mbr", "info", "loBound")),
@@ -1066,11 +1045,12 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3220") {
-    val code = """|for {
-                  |  case (a, b) <- pairs
-                  |  x <- a to b
-                  |} yield x
-                  |""".stripMargin
+    val code =
+      """|for {
+         |  case (a, b) <- pairs
+         |  x <- a to b
+         |} yield x
+         |""".stripMargin
     val layout = "for ( case (a, b) <- pairs; x <- a to b) yield x"
     runTestAssert[Term](code, Some(layout))(Term.ForYield(
       List(
@@ -1082,20 +1062,22 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3224") {
-    val code = """|for {
-                  |  x2 <- x1
-                  |} yield x2
-                  |  .x3 {
-                  |    case x4
-                  |        if x5.x6
-                  |          .x7(x8) =>
-                  |        x9
-                  |  }
-                  |""".stripMargin
-    val layout = """|for (x2 <- x1) yield x2.x3 {
-                    |  case x4 if x5.x6.x7(x8) => x9
-                    |}
-                    |""".stripMargin
+    val code =
+      """|for {
+         |  x2 <- x1
+         |} yield x2
+         |  .x3 {
+         |    case x4
+         |        if x5.x6
+         |          .x7(x8) =>
+         |        x9
+         |  }
+         |""".stripMargin
+    val layout =
+      """|for (x2 <- x1) yield x2.x3 {
+         |  case x4 if x5.x6.x7(x8) => x9
+         |}
+         |""".stripMargin
     runTestAssert[Term](code, Some(layout))(Term.ForYield(
       List(Enumerator.Generator(patvar("x2"), tname("x1"))),
       tapply(
@@ -1108,12 +1090,14 @@ class TermSuite extends ParseSuite {
   }
 
   test("match on array-of-wildcard") {
-    val code = """|obj match { case arr: Array[Array[_]] => }
-                  |""".stripMargin
-    val layout = """|obj match {
-                    |  case arr: Array[Array[_]] =>
-                    |}
-                    |""".stripMargin
+    val code =
+      """|obj match { case arr: Array[Array[_]] => }
+         |""".stripMargin
+    val layout =
+      """|obj match {
+         |  case arr: Array[Array[_]] =>
+         |}
+         |""".stripMargin
     runTestAssert[Term](code, Some(layout))(tmatch(
       tname("obj"),
       Case(Pat.Typed(patvar("arr"), papply("Array", papply("Array", pwildcard))), None, blk())
@@ -1121,13 +1105,14 @@ class TermSuite extends ParseSuite {
   }
 
   test("apply with arguments of various complexity") {
-    val code = """|sc.submitJob(
-                  |  rdd,
-                  |  (iter: Iterator[Int]) => iter.toArray,
-                  |  partitions.getOrElse(rdd.partitions.indices),
-                  |  { case (_, _) => return }: (Int, Array[Int]) => Unit,
-                  |  { return }
-                  |)""".stripMargin
+    val code =
+      """|sc.submitJob(
+         |  rdd,
+         |  (iter: Iterator[Int]) => iter.toArray,
+         |  partitions.getOrElse(rdd.partitions.indices),
+         |  { case (_, _) => return }: (Int, Array[Int]) => Unit,
+         |  { return }
+         |)""".stripMargin
     val layout =
       """|sc.submitJob(rdd, (iter: Iterator[Int]) => iter.toArray, partitions.getOrElse(rdd.partitions.indices), {
          |  case (_, _) =>
@@ -1153,25 +1138,28 @@ class TermSuite extends ParseSuite {
   }
 
   test("scalafmt #3911 for in parens, NL after `(`, NL between") {
-    val code = """|for (
-                  |  a <- fooa
-                  |  b <- foob
-                  |  if a === b
-                  |) yield a
-                  |""".stripMargin
-    val error = """|<input>:3: error: `)` expected but `<-` found
-                   |  b <- foob
-                   |    ^""".stripMargin
+    val code =
+      """|for (
+         |  a <- fooa
+         |  b <- foob
+         |  if a === b
+         |) yield a
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `)` expected but `<-` found
+         |  b <- foob
+         |    ^""".stripMargin
     runTestError[Term](code, error)
   }
 
   test("scalafmt #3911 for in parens, NL after `(`, `;` between") {
-    val code = """|for (
-                  |  a <- fooa;
-                  |  b <- foob;
-                  |  if a === b
-                  |) yield a
-                  |""".stripMargin
+    val code =
+      """|for (
+         |  a <- fooa;
+         |  b <- foob;
+         |  if a === b
+         |) yield a
+         |""".stripMargin
     val layout = "for (a <- fooa; b <- foob; if a === b) yield a"
     val tree = Term.ForYield(
       List(
@@ -1185,21 +1173,24 @@ class TermSuite extends ParseSuite {
   }
 
   test("scalafmt #3911 for in parens, no NL after `(`, NL between") {
-    val code = """|for (a <- fooa
-                  |     b <- foob
-                  |     if a === b) yield a
-                  |""".stripMargin
-    val error = """|<input>:2: error: `)` expected but `<-` found
-                   |     b <- foob
-                   |       ^""".stripMargin
+    val code =
+      """|for (a <- fooa
+         |     b <- foob
+         |     if a === b) yield a
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `)` expected but `<-` found
+         |     b <- foob
+         |       ^""".stripMargin
     runTestError[Term](code, error)
   }
 
   test("scalafmt #3911 for in parens, no NL after `(`, `;` between") {
-    val code = """|for (a <- fooa;
-                  |     b <- foob;
-                  |     if a === b) yield a
-                  |""".stripMargin
+    val code =
+      """|for (a <- fooa;
+         |     b <- foob;
+         |     if a === b) yield a
+         |""".stripMargin
     val layout = "for (a <- fooa; b <- foob; if a === b) yield a"
     val tree = Term.ForYield(
       List(
@@ -1213,9 +1204,10 @@ class TermSuite extends ParseSuite {
   }
 
   test("scalafmt #3911 for in parens, no NL after `(`, NL between, no NL before guard") {
-    val code = """|for (a <- fooa if
-                  |       a > 0) yield a
-                  |""".stripMargin
+    val code =
+      """|for (a <- fooa if
+         |       a > 0) yield a
+         |""".stripMargin
     val layout = "for (a <- fooa; if a > 0) yield a"
     val tree = Term.ForYield(
       List(
@@ -1228,9 +1220,10 @@ class TermSuite extends ParseSuite {
   }
 
   test("scalafmt #3911 for in parens, no NL after `(`, `;` between, no NL before guard op") {
-    val code = """|for (a <- fooa if a >
-                  |       0) yield a
-                  |""".stripMargin
+    val code =
+      """|for (a <- fooa if a >
+         |       0) yield a
+         |""".stripMargin
     val layout = "for (a <- fooa; if a > 0) yield a"
     val tree = Term.ForYield(
       List(
@@ -1243,12 +1236,13 @@ class TermSuite extends ParseSuite {
   }
 
   test("#3713 cond in parens within enums") {
-    val code = """|for (m <- decls
-                  |    if oneCond
-                  |      && (cond)
-                  |      && satisfiable) {}
-                  |
-                  |""".stripMargin
+    val code =
+      """|for (m <- decls
+         |    if oneCond
+         |      && (cond)
+         |      && satisfiable) {}
+         |
+         |""".stripMargin
     val layout = "for (m <- decls; if oneCond && cond && satisfiable) {}"
     val tree = Term.For(
       List(
@@ -1280,27 +1274,28 @@ class TermSuite extends ParseSuite {
   test("#3979 w/ grouped whitespace") {
     implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = true)
 
-    val code = """|for {
-                  |  _ <-
-                  |    if (a) {
-                  |      b
-                  |    } else {
-                  |      c
-                  |    }
-                  |
-                  |  _ <- d
-                  |} yield e
-                  |""".stripMargin
-    val layout = """|for (_ <- if (a) {
-                    |  b
-                    |} else {
-                    |  c
-                    |}; _ <- d) yield e
-                    |""".stripMargin
+    val code =
+      """|for {
+         |  _ <-
+         |    if (a) {
+         |      b
+         |    } else {
+         |      c
+         |    }
+         |
+         |  _ <- d
+         |} yield e
+         |""".stripMargin
+    val layout =
+      """|for (_ <- if (a) {
+         |  b
+         |} else {
+         |  c
+         |}; _ <- d) yield e
+         |""".stripMargin
     val tree = Term.ForYield(
       Term.EnumeratorsBlock(List(
-        Enumerator
-          .Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
+        Enumerator.Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
         Enumerator.Generator(patwildcard, tname("d"))
       )),
       tname("e")
@@ -1311,27 +1306,28 @@ class TermSuite extends ParseSuite {
   test("#3979 w/ granular whitespace") {
     implicit def tokenizerOptions: TokenizerOptions = new TokenizerOptions(groupWhitespace = false)
 
-    val code = """|for {
-                  |  _ <-
-                  |    if (a) {
-                  |      b
-                  |    } else {
-                  |      c
-                  |    }
-                  |
-                  |  _ <- d
-                  |} yield e
-                  |""".stripMargin
-    val layout = """|for (_ <- if (a) {
-                    |  b
-                    |} else {
-                    |  c
-                    |}; _ <- d) yield e
-                    |""".stripMargin
+    val code =
+      """|for {
+         |  _ <-
+         |    if (a) {
+         |      b
+         |    } else {
+         |      c
+         |    }
+         |
+         |  _ <- d
+         |} yield e
+         |""".stripMargin
+    val layout =
+      """|for (_ <- if (a) {
+         |  b
+         |} else {
+         |  c
+         |}; _ <- d) yield e
+         |""".stripMargin
     val tree = Term.ForYield(
       Term.EnumeratorsBlock(List(
-        Enumerator
-          .Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
+        Enumerator.Generator(patwildcard, Term.If(tname("a"), blk(tname("b")), blk(tname("c")), Nil)),
         Enumerator.Generator(patwildcard, tname("d"))
       )),
       tname("e")

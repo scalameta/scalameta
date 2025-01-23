@@ -157,9 +157,8 @@ trait SymbolInformationOps {
       }
 
     private def annotations: List[s.Annotation] = {
-      val ganns = gsym.annotations.filter { gann =>
-        gann.atp.typeSymbol != definitions.MacroImplAnnotation
-      }
+      val ganns = gsym.annotations
+        .filter(gann => gann.atp.typeSymbol != definitions.MacroImplAnnotation)
       ganns.map(_.toSemantic)
     }
 

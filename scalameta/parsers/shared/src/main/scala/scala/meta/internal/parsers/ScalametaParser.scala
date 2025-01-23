@@ -66,19 +66,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   // Entry points for Parse[T]
-  def parseStat(): Stat =
-    parseRule(if (dialect.allowUnquotes) quasiquoteStat() else entrypointStat())
+  def parseStat(): Stat = parseRule(if (dialect.allowUnquotes) quasiquoteStat() else entrypointStat())
 
-  def parseTerm(): Term =
-    parseRule(if (dialect.allowUnquotes) quasiquoteExpr() else entrypointExpr())
+  def parseTerm(): Term = parseRule(if (dialect.allowUnquotes) quasiquoteExpr() else entrypointExpr())
 
   def parseUnquoteTerm(): Term = parseRule(unquoteExpr())
 
   def parseTermParam(): Term.Param =
     parseRule(if (dialect.allowUnquotes) quasiquoteTermParam() else entrypointTermParam())
 
-  def parseType(): Type =
-    parseRule(if (dialect.allowUnquotes) quasiquoteType() else entrypointType())
+  def parseType(): Type = parseRule(if (dialect.allowUnquotes) quasiquoteType() else entrypointType())
 
   def parseTypeParam(): Type.Param =
     parseRule(if (dialect.allowUnquotes) quasiquoteTypeParam() else entrypointTypeParam())
@@ -88,17 +85,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def parseUnquotePat(): Pat = parseRule(unquotePattern())
 
-  def parseCase(): Case =
-    parseRule(if (dialect.allowUnquotes) quasiquoteCase() else entrypointCase())
+  def parseCase(): Case = parseRule(if (dialect.allowUnquotes) quasiquoteCase() else entrypointCase())
 
-  def parseCtor(): Ctor =
-    parseRule(if (dialect.allowUnquotes) quasiquoteCtor() else entrypointCtor())
+  def parseCtor(): Ctor = parseRule(if (dialect.allowUnquotes) quasiquoteCtor() else entrypointCtor())
 
-  def parseInit(): Init =
-    parseRule(if (dialect.allowUnquotes) quasiquoteInit() else entrypointInit())
+  def parseInit(): Init = parseRule(if (dialect.allowUnquotes) quasiquoteInit() else entrypointInit())
 
-  def parseSelf(): Self =
-    parseRule(if (dialect.allowUnquotes) quasiquoteSelf() else entrypointSelf())
+  def parseSelf(): Self = parseRule(if (dialect.allowUnquotes) quasiquoteSelf() else entrypointSelf())
 
   def parseTemplate(): Template =
     parseRule(if (dialect.allowUnquotes) quasiquoteTemplate() else entrypointTemplate())
@@ -473,8 +466,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def acceptIfAfterOpt(unapplyA: Token => Boolean, unapplyB: Token => Boolean): Boolean =
     if (unapplyA(currToken)) { next(); true }
-    else if (unapplyB(currToken) && unapplyA(peekToken)) { nextTwice(); true }
-    else false
+    else if (unapplyB(currToken) && unapplyA(peekToken)) { nextTwice(); true } else false
 
   private def acceptIfAfterOpt[A <: Token: ClassTag](unapply: Token => Boolean): Boolean =
     acceptIfAfterOpt(_.is[A], unapply)
@@ -803,8 +795,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     private def paramValueType(allowRepeated: Boolean = false): Type = {
       val startPos = currIndex
       def withRepeated(t: Type) =
-        if (allowRepeated && isStar) { next(); autoEndPos(startPos)(Type.Repeated(t)) }
-        else t
+        if (allowRepeated && isStar) { next(); autoEndPos(startPos)(Type.Repeated(t)) } else t
       def atInto() = {
         val intoPos = currIndex
         val mod = atPos(intoPos)(Mod.Into())
@@ -1242,8 +1233,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def path(thisOK: Boolean = true): Term.Ref = {
     val startsAtBof = prev[BOF]
     def afterDot[A <: Term.Ref](ref: A)(f: PartialFunction[Token, A => Term.Ref]): Term.Ref =
-      if (!at[Dot]) ref
-      else f.lift(peekToken) match { case Some(f) => next(); f(ref); case _ => ref }
+      if (!at[Dot]) ref else f.lift(peekToken) match { case Some(f) => next(); f(ref); case _ => ref }
     @inline
     def maybeSelectors(ref: Term.Ref): Term.Ref = afterDot(ref) { case _: Ident | _: Unquote =>
       selectors
@@ -1282,8 +1272,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def selector(t: Term, startPos: Int): Term.Select =
-    autoEndPos(startPos)(Term.Select(t, termName()))
+  def selector(t: Term, startPos: Int): Term.Select = autoEndPos(startPos)(Term.Select(t, termName()))
   @tailrec
   private final def selectors(t: Term, startPos: Int): Term.Ref = {
     val t1 = selector(t, startPos)
@@ -1457,8 +1446,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def getDeclTpeOpt(fullTypeOK: Boolean): Option[Type] =
     if (acceptOpt[Colon]) Some(typeOrInfixType(fullTypeOK)) else None
 
-  private def typeOrInfixType(fullTypeOK: Boolean): Type =
-    if (fullTypeOK) typ() else startInfixType()
+  private def typeOrInfixType(fullTypeOK: Boolean): Type = if (fullTypeOK) typ() else startInfixType()
 
   @inline
   private def typeOrInfixType(location: Location): Type = typeOrInfixType(location.fullTypeOK)
@@ -1593,8 +1581,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         }
 
         if (acceptIfAfterOptNL[KwCatch]) currToken match {
-          case _: KwCase =>
-            tryWithCases(Some(autoPos { next(); toCasesBlock(caseClause(true) :: Nil) }))
+          case _: KwCase => tryWithCases(Some(autoPos { next(); toCasesBlock(caseClause(true) :: Nil) }))
           case _: Indentation.Indent => tryInDelims(indentedOnOpen)
           case _: LeftBrace => tryInDelims(inBracesOnOpen)
           case _ => tryWithHandler(expr())
@@ -1730,9 +1717,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val params = addPos(pc)
         next()
         val trm = termFunctionBody(location)
-        addPos {
-          if (contextFunction) Term.ContextFunction(params, trm) else Term.Function(params, trm)
-        }
+        addPos(if (contextFunction) Term.ContextFunction(params, trm) else Term.Function(params, trm))
       }
     // if couldn't convert to params:
     // do nothing, which will either allow self-type annotation parsing to kick in
@@ -2064,8 +2049,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         // Check whether we're still infix or already postfix by testing the current token.
         // In the running example, we're at `a + [b]` (infix).
         // If we were parsing `val c = a b`, then we'd be at `val c = a b[]` (postfix).
-        if (if (at[EOL]) nextIf(isExprIntro(peekToken, peekIndex))
-          else isIdentOrExprIntro(currToken))
+        if (if (at[EOL]) nextIf(isExprIntro(peekToken, peekIndex)) else isIdentOrExprIntro(currToken))
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
           getNextRhs(targs)(op) // [a]
@@ -2261,15 +2245,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     else {
       val colonPos = currIndex
       def addPos(term: Term) = autoEndPos(colonPos)(term)
-      def tryGetArgAsLambdaBlock(postCheck: => Boolean) = tryGetArgAsLambda().flatMap { arg =>
-        if (postCheck) Some(addPos(toBlockRaw(arg :: Nil))) else None
-      }
+      def tryGetArgAsLambdaBlock(postCheck: => Boolean) = tryGetArgAsLambda()
+        .flatMap(arg => if (postCheck) Some(addPos(toBlockRaw(arg :: Nil))) else None)
       peekToken match {
         case _: Indentation.Indent =>
           next()
-          tryAhead(tryGetArgAsLambdaBlock(acceptIfAfterOptNL[Indentation.Outdent])).orElse {
-            Some(addPos(blockExprOnIndent(keepBlock = true)))
-          }
+          tryAhead(tryGetArgAsLambdaBlock(acceptIfAfterOptNL[Indentation.Outdent]))
+            .orElse(Some(addPos(blockExprOnIndent(keepBlock = true))))
         case _: Indentation => syntaxError("expected fewer-braces method body", currToken)
         case _: AtEOL =>
           val colon = currToken
@@ -2523,8 +2505,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         next()
         val quasiCase = unquoteOpt[Case]
         cases += quasiCase.getOrElse(caseClause())
-        if (quasiCase.nonEmpty) skipAllStatSep()
-        else if (StatSep(currToken)) tryAhead(isCaseIntro())
+        if (quasiCase.nonEmpty) skipAllStatSep() else if (StatSep(currToken)) tryAhead(isCaseIntro())
         iter()
       case _ =>
     }
@@ -2573,8 +2554,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val hasEq = at[Equals]
 
     if (hasVal)
-      if (hasEq)
-        deprecationWarning("val keyword in for comprehension is deprecated", at = currToken)
+      if (hasEq) deprecationWarning("val keyword in for comprehension is deprecated", at = currToken)
       else syntaxError("val in for comprehension must be followed by assignment", at = currToken)
 
     if (hasEq) next() else accept[LeftArrow]
@@ -2651,8 +2631,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def pattern1(isForComprehension: Boolean = false): Pat = {
       val p = pattern2(isForComprehension)
       @inline
-      def typed() = Pat
-        .Typed(p, super.patternTyp(allowInfix = false, allowImmediateTypevars = false))
+      def typed() = Pat.Typed(p, super.patternTyp(allowInfix = false, allowImmediateTypevars = false))
       val pat = p match {
         case _ if !at[Colon] => p
         case _: Quasi =>
@@ -3783,8 +3762,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     val restype = ReturnTypeContext.within(typedOpt())
     if (acceptOpt[Equals])
-      if (!acceptOpt[KwMacro]) defn(restype)
-      else Defn.Macro(mods, name, paramClauses, restype, expr())
+      if (!acceptOpt[KwMacro]) defn(restype) else Defn.Macro(mods, name, paramClauses, restype, expr())
     else if (StatSeqEnd(currToken) || StatSep(currToken)) Decl
       .Def(mods, name, paramClauses, restype.getOrElse(procedureSyntaxDeclType))
     else if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) defn(Some(procedureSyntaxDeclType))
@@ -4236,9 +4214,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     next()
     val statsClause = toStatsBlock(currIndex) {
       val stats = inBraces(refineStatSeq())
-      stats.foreach { x =>
-        if (!x.isExistentialStat) syntaxError("not a legal existential clause", at = x)
-      }
+      stats
+        .foreach(x => if (!x.isExistentialStat) syntaxError("not a legal existential clause", at = x))
       stats
     }
     atPos(t, statsClause)(Type.Existential(t, statsClause))
@@ -4320,9 +4297,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val enumCaseAllowed = owner.isEnumCaseAllowed
     val secondaryConstructorAllowed = owner.isSecondaryCtorAllowed
     val selfTreeOpt = tryParse(selfEither().right.toOption)
-    if (owner eq OwnedByGiven) selfTreeOpt.foreach(_.decltpe.foreach { x =>
-      syntaxError("given cannot have a self type", at = x)
-    })
+    if (owner eq OwnedByGiven) selfTreeOpt
+      .foreach(_.decltpe.foreach(x => syntaxError("given cannot have a self type", at = x)))
     val stats = listBy[Stat] { buf =>
       def getStats() = statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
       val wasIndented = getStats() // some stats could be indented relative to self-type

@@ -83,13 +83,9 @@ class PublicSuite extends TreeSuiteBase {
     assertNoDiff(scala.meta.dialects.Sbt0137.toString, "Sbt0137")
   }
 
-  test("scala.meta.dialects.Sbt.toString") {
-    assertNoDiff(scala.meta.dialects.Sbt.toString, "Sbt1")
-  }
+  test("scala.meta.dialects.Sbt.toString")(assertNoDiff(scala.meta.dialects.Sbt.toString, "Sbt1"))
 
-  test("scala.meta.dialects.Sbt1.toString") {
-    assertNoDiff(scala.meta.dialects.Sbt1.toString, "Sbt1")
-  }
+  test("scala.meta.dialects.Sbt1.toString")(assertNoDiff(scala.meta.dialects.Sbt1.toString, "Sbt1"))
 
   test("scala.meta.dialects.Scala210.toString") {
     assertNoDiff(scala.meta.dialects.Scala210.toString, "Scala210")

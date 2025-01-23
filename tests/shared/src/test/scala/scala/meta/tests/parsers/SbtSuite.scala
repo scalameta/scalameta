@@ -15,7 +15,8 @@ class SbtSuite extends TreeSuiteBase {
   test("\"...\".parse[Stat]")(intercept[ParseException](simpleBuildSyntax.parse[Stat].get))
 
   test("source\"...\"") {
-    val tree = """
+    val tree =
+      """
       lazy val commonSettings = Seq(
         organization := "com.example",
         version := "0.1.0",
@@ -32,19 +33,20 @@ class SbtSuite extends TreeSuiteBase {
     assertSyntaxWithClue(tree)(expectedSyntax)(simpleBuildStructure)
   }
 
-  private def simpleBuildSyntax = """|
-                                     |lazy val commonSettings = Seq(
-                                     |  organization := "com.example",
-                                     |  version := "0.1.0",
-                                     |  scalaVersion := "2.11.7"
-                                     |)
-                                     |
-                                     |lazy val root = (project in file(".")).
-                                     |  settings(commonSettings: _*).
-                                     |  settings(
-                                     |    name := "hello"
-                                     |  )
-                                     |""".stripMargin.lf2nl
+  private def simpleBuildSyntax =
+    """|
+       |lazy val commonSettings = Seq(
+       |  organization := "com.example",
+       |  version := "0.1.0",
+       |  scalaVersion := "2.11.7"
+       |)
+       |
+       |lazy val root = (project in file(".")).
+       |  settings(commonSettings: _*).
+       |  settings(
+       |    name := "hello"
+       |  )
+       |""".stripMargin.lf2nl
   // native fails with a positive lookahead
   private def expectedSyntax: String = simpleBuildSyntax.replaceAll(s"[,]$EOL[ ]+", ", ")
     .replaceAll(s"$EOL[ ]+", "").replaceAll(s"$EOL[)]", ")").replaceAll(s"$EOL$EOL", EOL)

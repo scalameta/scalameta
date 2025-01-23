@@ -134,9 +134,8 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       expected: Tree
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit = {
     val struct = expected.structure
-    parseAndCheckTreeWithSyntaxAndStruct[T](code, assertLayout, struct, "Original").foreach {
-      parseAndCheckTreeWithSyntaxAndStruct[T](_, assertLayout, struct, "Reprinted")
-    }
+    parseAndCheckTreeWithSyntaxAndStruct[T](code, assertLayout, struct, "Original")
+      .foreach(parseAndCheckTreeWithSyntaxAndStruct[T](_, assertLayout, struct, "Reprinted"))
   }
 
   protected def parseAndCheckTree[T <: Tree](code: String, syntax: String = null)(
