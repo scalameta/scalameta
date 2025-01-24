@@ -9,9 +9,9 @@ object Platforms {
   )
 
   private val platformOpt = Option(System.getenv(envPlatform)).map(_.trim.toLowerCase)
-    .filter(_.nonEmpty).map { x =>
+    .filter(_.nonEmpty).map(x =>
       platforms.get(x).getOrElse(throw new NoSuchElementException(s"Platform '$x' is unknown'"))
-    }
+    )
 
   def shouldBuildPlatform(platform: sbtcrossproject.Platform): Boolean = platformOpt.isEmpty ||
     platformOpt.contains(platform)

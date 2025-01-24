@@ -2493,7 +2493,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))
   }
 
-  test("if-infix") {
+  test("if-infix")(
     runTestAssert[Stat](
       """|if (1) max 10 gt 0
          |
@@ -2504,7 +2504,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some("if (1 max 10 gt 0) 1 else 2")
     )(Term.If(tinfix(tinfix(int(1), "max", int(10)), "gt", int(0)), int(1), int(2), Nil))
-  }
+  )
 
   test("no-real-indentation") {
     runTestAssert[Stat](
@@ -2517,7 +2517,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case ex: Throwable => throw ex
          |  end try
          |""".stripMargin,
-      assertLayout = Some(
+      assertLayout = Some {
         """|object Test {
            |  try List(1, 2, 3) match {
            |    case x :: xs =>
@@ -2533,30 +2533,36 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |  end try
            |}
            |""".stripMargin
-      )
-    )(Defn.Object(
-      Nil,
-      tname("Test"),
-      tpl(
-        Term.Try(
-          tmatch(
-            tapply(tname("List"), int(1), int(2), int(3)),
-            Case(patinfix(patvar("x"), "::", patvar("xs")), None, tapply(tname("println"), tname("x"))),
-            Case(tname("Nil"), None, tapply(tname("println"), str("Nil")))
-          ),
-          List(
-            Case(
-              Pat.Typed(patvar("ex"), Type.Select(tselect("java", "io"), pname("IOException"))),
-              None,
-              tapply(tname("println"), tname("ex"))
+      }
+    ) {
+      Defn.Object(
+        Nil,
+        tname("Test"),
+        tpl(
+          Term.Try(
+            tmatch(
+              tapply(tname("List"), int(1), int(2), int(3)),
+              Case(
+                patinfix(patvar("x"), "::", patvar("xs")),
+                None,
+                tapply(tname("println"), tname("x"))
+              ),
+              Case(tname("Nil"), None, tapply(tname("println"), str("Nil")))
             ),
-            Case(Pat.Typed(patvar("ex"), pname("Throwable")), None, Term.Throw(tname("ex")))
+            List(
+              Case(
+                Pat.Typed(patvar("ex"), Type.Select(tselect("java", "io"), pname("IOException"))),
+                None,
+                tapply(tname("println"), tname("ex"))
+              ),
+              Case(Pat.Typed(patvar("ex"), pname("Throwable")), None, Term.Throw(tname("ex")))
+            ),
+            None
           ),
-          None
-        ),
-        Term.EndMarker(tname("try"))
+          Term.EndMarker(tname("try"))
+        )
       )
-    ))
+    }
   }
 
   test("comma-indent") {
@@ -2769,59 +2775,65 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Object(
-      Nil,
-      tname("a"),
-      tpl(tinfix(
-        tinfix(
-          tapply(tselect("constraint", "contains"), tname("tl")),
-          "||",
-          tapply(tselect("other", "isRemovable"), tname("tl"))
-        ),
-        "||",
-        blk(
-          Defn.Val(
-            Nil,
-            List(patvar("tvars")),
-            None,
-            tapply(
-              tselect(
+    runTestAssert[Stat](code, assertLayout = Some(output)) {
+      Defn.Object(
+        Nil,
+        tname("a"),
+        tpl {
+          tinfix(
+            tinfix(
+              tapply(tselect("constraint", "contains"), tname("tl")),
+              "||",
+              tapply(tselect("other", "isRemovable"), tname("tl"))
+            ),
+            "||",
+            blk(
+              Defn.Val(
+                Nil,
+                List(patvar("tvars")),
+                None,
                 tapply(
-                  tselect("tl", "paramRefs", "map"),
-                  Term.AnonymousFunction(tapply(tselect("other", "typeVarOfParam"), Term.Placeholder()))
-                ),
-                "collect"
-              ),
-              Term.PartialFunction(
-                Case(Pat.Typed(patvar("tv"), pname("TypeVar")), None, tname("tv")) :: Nil
-              )
-            )
-          ),
-          Term.If(
-            tselect(Term.This(anon), "isCommittable"),
-            tapply(
-              tselect("tvars", "foreach"),
-              tfunc(tparam("tvar"))(Term.If(
-                tinfix(
-                  Term.ApplyUnary(tname("!"), tselect("tvar", "inst", "exists")),
-                  "&&",
-                  Term.ApplyUnary(
-                    tname("!"),
-                    tapply(tname("isOwnedAnywhere"), Term.This(anon), tname("tvar"))
+                  tselect(
+                    tapply(
+                      tselect("tl", "paramRefs", "map"),
+                      Term.AnonymousFunction(
+                        tapply(tselect("other", "typeVarOfParam"), Term.Placeholder())
+                      )
+                    ),
+                    "collect"
+                  ),
+                  Term.PartialFunction(
+                    Case(Pat.Typed(patvar("tv"), pname("TypeVar")), None, tname("tv")) :: Nil
                   )
+                )
+              ),
+              Term.If(
+                tselect(Term.This(anon), "isCommittable"),
+                tapply(
+                  tselect("tvars", "foreach"),
+                  tfunc(tparam("tvar"))(Term.If(
+                    tinfix(
+                      Term.ApplyUnary(tname("!"), tselect("tvar", "inst", "exists")),
+                      "&&",
+                      Term.ApplyUnary(
+                        tname("!"),
+                        tapply(tname("isOwnedAnywhere"), Term.This(anon), tname("tvar"))
+                      )
+                    ),
+                    tapply(tname("includeVar"), tname("tvar")),
+                    Lit.Unit(),
+                    Nil
+                  ))
                 ),
-                tapply(tname("includeVar"), tname("tvar")),
                 Lit.Unit(),
                 Nil
-              ))
-            ),
-            Lit.Unit(),
-            Nil
-          ),
-          tapply(tselect("typeComparer", "addToConstraint"), tname("tl"), tname("tvars"))
-        )
-      ))
-    ))
+              ),
+              tapply(tselect("typeComparer", "addToConstraint"), tname("tl"), tname("tvars"))
+            )
+          )
+        }
+      )
+    }
   }
 
   test("if-then 7") {
@@ -2842,37 +2854,39 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  val kind = if (isStaticModule(sym)) ClassKind.ModuleClass else if (isHijacked) ClassKind.HijackedClass else ClassKind.Class
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(Defn.Def(
-      List(Mod.Private(anon)),
-      tname("genScalaClass"),
-      Nil,
-      List(List(tparam("td", "TypeDef"))),
-      Some(pselect("js", "ClassDef")),
-      blk(
-        Defn.Val(
-          Nil,
-          List(patvar("hashedDefs")),
-          None,
-          tapply(tselect("ir", "Hashers", "hashMemberDefs"), tname("allMemberDefs"))
-        ),
-        Defn.Val(
-          Nil,
-          List(patvar("kind")),
-          None,
-          Term.If(
-            tapply(tname("isStaticModule"), tname("sym")),
-            tselect("ClassKind", "ModuleClass"),
+    runTestAssert[Stat](code, assertLayout = Some(output)) {
+      Defn.Def(
+        List(Mod.Private(anon)),
+        tname("genScalaClass"),
+        Nil,
+        List(List(tparam("td", "TypeDef"))),
+        Some(pselect("js", "ClassDef")),
+        blk(
+          Defn.Val(
+            Nil,
+            List(patvar("hashedDefs")),
+            None,
+            tapply(tselect("ir", "Hashers", "hashMemberDefs"), tname("allMemberDefs"))
+          ),
+          Defn.Val(
+            Nil,
+            List(patvar("kind")),
+            None,
             Term.If(
-              tname("isHijacked"),
-              tselect("ClassKind", "HijackedClass"),
-              tselect("ClassKind", "Class"),
+              tapply(tname("isStaticModule"), tname("sym")),
+              tselect("ClassKind", "ModuleClass"),
+              Term.If(
+                tname("isHijacked"),
+                tselect("ClassKind", "HijackedClass"),
+                tselect("ClassKind", "Class"),
+                Nil
+              ),
               Nil
-            ),
-            Nil
+            )
           )
         )
       )
-    ))
+    }
   }
 
   test("try catch with case guard") {
@@ -2893,7 +2907,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case _ => String.valueOf(arg)
          |}
          |""".stripMargin,
-      assertLayout = Some(
+      assertLayout = Some {
         """|arg match {
            |  case arg: Showable =>
            |    try arg.show catch {
@@ -2914,58 +2928,60 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |    String.valueOf(arg)
            |}
            |""".stripMargin
-      )
-    )(tmatch(
-      tname("arg"),
-      Case(
-        Pat.Typed(patvar("arg"), pname("Showable")),
-        None,
-        Term.Try(
-          tselect("arg", "show"),
-          List(
-            Case(
-              Pat.Typed(patvar("ex"), pname("CyclicReference")),
-              None,
-              str("... (caught cyclic reference) ...")
-            ),
-            Case(
-              Pat.Extract(tname("NonFatal"), List(patvar("ex"))),
-              Some(tinfix(
-                Term.ApplyUnary(
-                  tname("!"),
-                  tapply(tselect("ctx", "mode", "is"), tselect("Mode", "PrintShowExceptions"))
-                ),
-                "&&",
-                Term.ApplyUnary(tname("!"), tselect("ctx", "settings", "YshowPrintErrors", "value"))
-              )),
-              blk(
-                Defn.Val(
-                  Nil,
-                  List(patvar("msg")),
-                  None,
-                  tmatch(
-                    tname("ex"),
-                    Case(
-                      Pat.Typed(patvar("te"), pname("TypeError")),
-                      None,
-                      tselect("te", "toMessage")
-                    ),
-                    Case(patwildcard, None, tselect("ex", "getMessage"))
+      }
+    ) {
+      tmatch(
+        tname("arg"),
+        Case(
+          Pat.Typed(patvar("arg"), pname("Showable")),
+          None,
+          Term.Try(
+            tselect("arg", "show"),
+            List(
+              Case(
+                Pat.Typed(patvar("ex"), pname("CyclicReference")),
+                None,
+                str("... (caught cyclic reference) ...")
+              ),
+              Case(
+                Pat.Extract(tname("NonFatal"), List(patvar("ex"))),
+                Some(tinfix(
+                  Term.ApplyUnary(
+                    tname("!"),
+                    tapply(tselect("ctx", "mode", "is"), tselect("Mode", "PrintShowExceptions"))
+                  ),
+                  "&&",
+                  Term.ApplyUnary(tname("!"), tselect("ctx", "settings", "YshowPrintErrors", "value"))
+                )),
+                blk(
+                  Defn.Val(
+                    Nil,
+                    List(patvar("msg")),
+                    None,
+                    tmatch(
+                      tname("ex"),
+                      Case(
+                        Pat.Typed(patvar("te"), pname("TypeError")),
+                        None,
+                        tselect("te", "toMessage")
+                      ),
+                      Case(patwildcard, None, tselect("ex", "getMessage"))
+                    )
+                  ),
+                  Term.Interpolate(
+                    tname("s"),
+                    List(str("[cannot display due to "), str(", raw string = "), str("]")),
+                    List(tname("msg"), blk(tselect("arg", "toString")))
                   )
-                ),
-                Term.Interpolate(
-                  tname("s"),
-                  List(str("[cannot display due to "), str(", raw string = "), str("]")),
-                  List(tname("msg"), blk(tselect("arg", "toString")))
                 )
               )
-            )
-          ),
-          None
-        )
-      ),
-      Case(patwildcard, None, tapply(tselect("String", "valueOf"), tname("arg")))
-    ))
+            ),
+            None
+          )
+        ),
+        Case(patwildcard, None, tapply(tselect("String", "valueOf"), tname("arg")))
+      )
+    }
   }
 
   test("partial function with guard") {
@@ -2983,40 +2999,42 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Defn.Val(
-      Nil,
-      List(patvar("tvars")),
-      None,
-      tapply(
-        tselect(
+    ) {
+      Defn.Val(
+        Nil,
+        List(patvar("tvars")),
+        None,
+        tapply(
           tselect(
-            tapply(
-              tselect("targs", "filter"),
-              Term.AnonymousFunction(
-                tapplytype(tselect(Term.Placeholder(), "isInstanceOf"), pname("InferredTypeTree"))
-              )
-            ),
-            "tpes"
-          ),
-          "collect"
-        ),
-        Term.PartialFunction(
-          Case(
-            Pat.Typed(patvar("tvar"), pname("TypeVar")),
-            Some(tinfix(
-              tinfix(
-                Term.ApplyUnary(tname("!"), tselect("tvar", "isInstantiated")),
-                "&&",
-                tapply(tselect("ctx", "typerState", "ownedVars", "contains"), tname("tvar"))
+            tselect(
+              tapply(
+                tselect("targs", "filter"),
+                Term.AnonymousFunction(
+                  tapplytype(tselect(Term.Placeholder(), "isInstanceOf"), pname("InferredTypeTree"))
+                )
               ),
-              "&&",
-              Term.ApplyUnary(tname("!"), tapply(tselect("locked", "contains"), tname("tvar")))
-            )),
-            tname("tvar")
-          ) :: Nil
+              "tpes"
+            ),
+            "collect"
+          ),
+          Term.PartialFunction(
+            Case(
+              Pat.Typed(patvar("tvar"), pname("TypeVar")),
+              Some(tinfix(
+                tinfix(
+                  Term.ApplyUnary(tname("!"), tselect("tvar", "isInstantiated")),
+                  "&&",
+                  tapply(tselect("ctx", "typerState", "ownedVars", "contains"), tname("tvar"))
+                ),
+                "&&",
+                Term.ApplyUnary(tname("!"), tapply(tselect("locked", "contains"), tname("tvar")))
+              )),
+              tname("tvar")
+            ) :: Nil
+          )
         )
       )
-    ))
+    }
   }
 
   test("nested if else without indent") {
@@ -3066,35 +3084,37 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |}
            |""".stripMargin
       )
-    )(Defn.Object(
-      Nil,
-      tname("foo"),
-      tpl(
-        Defn.Def(
-          List(Mod.Private(anon)),
-          tname("assertBounds"),
-          Nil,
-          List(List(tparam("context", "String"))),
-          None,
-          Term.If(
-            tinfix(tname("idx"), ">=", tselect("query", "length")),
-            tapply(tname("err"), tname("context")),
-            Lit.Unit(),
-            Nil
+    ) {
+      Defn.Object(
+        Nil,
+        tname("foo"),
+        tpl(
+          Defn.Def(
+            List(Mod.Private(anon)),
+            tname("assertBounds"),
+            Nil,
+            List(List(tparam("context", "String"))),
+            None,
+            Term.If(
+              tinfix(tname("idx"), ">=", tselect("query", "length")),
+              tapply(tname("err"), tname("context")),
+              Lit.Unit(),
+              Nil
+            )
+          ),
+          Defn.Def(
+            List(Mod.Private(anon)),
+            tname("err"),
+            Nil,
+            List(List(tparam("problem", "String"))),
+            None,
+            Term.Throw(Term.New(
+              init(pname("QueryParseException"), List(tname("query"), tname("idx"), tname("problem")))
+            ))
           )
-        ),
-        Defn.Def(
-          List(Mod.Private(anon)),
-          tname("err"),
-          Nil,
-          List(List(tparam("problem", "String"))),
-          None,
-          Term.Throw(Term.New(
-            init(pname("QueryParseException"), List(tname("query"), tname("idx"), tname("problem")))
-          ))
         )
       )
-    ))
+    }
   }
 
   test("old-style if") {
@@ -3280,22 +3300,24 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  for (name <- abstractTypeNames) foo
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(output))(blk(
-      Defn.Val(
-        Nil,
-        List(patvar("abstractTypeNames")),
-        None,
-        Term.ForYield(
-          List(
-            Enumerator.Generator(patvar("parent"), tname("parents")),
-            Enumerator.Generator(patvar("mbr"), tselect("parent", "abstractTypeMembers")),
-            Enumerator.Guard(tapply(tname("qualifies"), tselect("mbr", "symbol")))
-          ),
-          tselect("mbr", "name", "asTypeName")
-        )
-      ),
-      Term.For(List(Enumerator.Generator(patvar("name"), tname("abstractTypeNames"))), tname("foo"))
-    ))
+    runTestAssert[Stat](code, assertLayout = Some(output)) {
+      blk(
+        Defn.Val(
+          Nil,
+          List(patvar("abstractTypeNames")),
+          None,
+          Term.ForYield(
+            List(
+              Enumerator.Generator(patvar("parent"), tname("parents")),
+              Enumerator.Generator(patvar("mbr"), tselect("parent", "abstractTypeMembers")),
+              Enumerator.Guard(tapply(tname("qualifies"), tselect("mbr", "symbol")))
+            ),
+            tselect("mbr", "name", "asTypeName")
+          )
+        ),
+        Term.For(List(Enumerator.Generator(patvar("name"), tname("abstractTypeNames"))), tname("foo"))
+      )
+    }
   }
 
   test("several nested if, with () as body") {

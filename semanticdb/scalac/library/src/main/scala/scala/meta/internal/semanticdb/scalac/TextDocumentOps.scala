@@ -90,12 +90,10 @@ trait TextDocumentOps {
         val gpos = gt.pos
         if (gpos.isDefined && (gsym ne null)) {
           val gstart = gpos.start
-          mfuncs.get(gstart).fold {
-            mstarts.get(gstart).foreach { name =>
-              val mpos = name.pos
-              if (mpos.end == gpos.end) atPos(mpos)
-            }
-          }(atPos)
+          mfuncs.get(gstart).fold(mstarts.get(gstart).foreach { name =>
+            val mpos = name.pos
+            if (mpos.end == gpos.end) atPos(mpos)
+          })(atPos)
         }
       }
 
@@ -367,10 +365,10 @@ trait TextDocumentOps {
                 tryMend(gend) // transformNamedApplication blockWithQualifier case
               case _: g.RefTree => if (!gsym.isDefaultGetter) tryMstart(gpoint)
               case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
-                val sels = gtree.selectors.flatMap { sel =>
+                val sels = gtree.selectors.flatMap(sel =>
                   if (sel.name == g.nme.WILDCARD) Nil
                   else mstarts.get(sel.namePos).map(mname => (sel.name, mname))
-                }
+                )
                 sels.foreach { case (gname, mname) =>
                   val gexpr = gtree.expr
                   val gtpe = gexpr.tpe
@@ -440,9 +438,9 @@ trait TextDocumentOps {
 
               case t: g.Function =>
                 addSamOccurrence(t)
-                t.vparams.foreach { p =>
+                t.vparams.foreach(p =>
                   if (!(p.symbol.isSynthetic || p.name.decoded.startsWith("x$"))) traverse(p)
-                }
+                )
                 traverse(t.body)
                 tryFindMtree(t)
               case t: g.ValDef =>
@@ -527,20 +525,23 @@ trait TextDocumentOps {
             { val v = res; v.foreach(s => if (s.range.isDefined) synthetics += s); v }
           )
 
-        def getCached(gt: g.Tree): Option[s.Synthetic] = cached(gt)(gt match {
-          case t: g.ApplyImplicitView => val pos = t.toRange; syn(pos, getApplyImplicitView(t, pos))
-          case t: g.ApplyToImplicitArgs =>
-            val pos = t.toRange
-            t.fun match {
-              case f: g.ApplyImplicitView => cached(f)(syn(getApplyImplicitView(f, pos)))
-                  .flatMap(x => syn(pos, getApplyToImplicitArgs(t, x.tree)))
-              case _ => syn(pos, getApplyToImplicitArgs(t))
-            }
-          case t: g.TypeApply => getTypeApply(t, isWithinFor = false)
-          case t: g.Apply => val res = cachedIfSelect(t.fun); if (res.isEmpty) forApply(t) else None
-          case t: g.Select => getSelect(t)
-          case _ => None
-        })
+        def getCached(gt: g.Tree): Option[s.Synthetic] = cached(gt) {
+          gt match {
+            case t: g.ApplyImplicitView => val pos = t.toRange; syn(pos, getApplyImplicitView(t, pos))
+            case t: g.ApplyToImplicitArgs =>
+              val pos = t.toRange
+              t.fun match {
+                case f: g.ApplyImplicitView => cached(f)(syn(getApplyImplicitView(f, pos)))
+                    .flatMap(x => syn(pos, getApplyToImplicitArgs(t, x.tree)))
+                case _ => syn(pos, getApplyToImplicitArgs(t))
+              }
+            case t: g.TypeApply => getTypeApply(t, isWithinFor = false)
+            case t: g.Apply =>
+              val res = cachedIfSelect(t.fun); if (res.isEmpty) forApply(t) else None
+            case t: g.Select => getSelect(t)
+            case _ => None
+          }
+        }
 
         def syn(pos: Option[s.Range], st: s.Tree): Some[s.Synthetic] = Some(s.Synthetic(pos, st))
         def syn(st: s.Tree): Some[s.Synthetic] = syn(None, st)

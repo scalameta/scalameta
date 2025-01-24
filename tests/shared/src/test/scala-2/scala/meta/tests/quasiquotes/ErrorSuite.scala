@@ -39,20 +39,18 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("q\"foo + class\"") {
-    assertEquals(
-      typecheckError(
-        """
+  test("q\"foo + class\"")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"foo + class"
     """
-      ).nl2lf,
-      """|<macro>:4: `;` expected but `class` found
-         |      q"foo + class"
-         |              ^""".stripMargin.nl2lf
-    )
-  }
+    ).nl2lf,
+    """|<macro>:4: `;` expected but `class` found
+       |      q"foo + class"
+       |              ^""".stripMargin.nl2lf
+  ))
 
   test("q\"foo(x)\" when x has incompatible type") {
     assertEquals(
@@ -226,21 +224,19 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("q\"\"\" \"$x\" \"\"\"") {
-    assertEquals(
-      typecheckError(
-        """
+  test("q\"\"\" \"$x\" \"\"\"")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val x = "hello"
       qQQQ "$x" QQQ
     """
-      ).nl2lf,
-      """|<macro>:5: can't unquote into string literals
+    ).nl2lf,
+    """|<macro>:5: can't unquote into string literals
       |      qQQQ "$x" QQQ
       |            ^""".replace("QQQ", "\"\"\"").stripMargin.nl2lf
-    )
-  }
+  ))
 
   test("q\"val name = foo\"") {
     assertEquals(
@@ -274,21 +270,19 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("p\"name: T\"") {
-    assertEquals(
-      typecheckError(
-        """
+  test("p\"name: T\"")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val name = q"x"
       p"$name: T"
     """
-      ).nl2lf,
-      """|<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
-         |      p"$name: T"
-         |        ^""".stripMargin.nl2lf
-    )
-  }
+    ).nl2lf,
+    """|<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
+       |      p"$name: T"
+       |        ^""".stripMargin.nl2lf
+  ))
 
   test("""q"qname" when qname has incompatible type """) {
     assertEquals(
@@ -344,21 +338,19 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("""q"expr: tpes" """) {
-    assertEquals(
-      typecheckError(
-        """
+  test("""q"expr: tpes" """)(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val tpes = List(q"T")
       q"expr: ..$tpes"
     """
-      ).nl2lf,
-      """|<macro>:5: `identifier` expected but `ellipsis` found
-         |      q"expr: ..$tpes"
-         |              ^""".stripMargin.nl2lf
-    )
-  }
+    ).nl2lf,
+    """|<macro>:5: `identifier` expected but `ellipsis` found
+       |      q"expr: ..$tpes"
+       |              ^""".stripMargin.nl2lf
+  ))
 
   test("""q"expr.name" when name has incompatible type """) {
     assertEquals(
@@ -396,21 +388,19 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("""q"expr.names" """) {
-    assertEquals(
-      typecheckError(
-        """
+  test("""q"expr.names" """)(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val names = List(q"T")
       q"expr. ..$names"
     """
-      ).nl2lf,
-      """|<macro>:5: `identifier` expected but `ellipsis` found
-         |      q"expr. ..$names"
-         |              ^""".stripMargin.nl2lf
-    )
-  }
+    ).nl2lf,
+    """|<macro>:5: `identifier` expected but `ellipsis` found
+       |      q"expr. ..$names"
+       |              ^""".stripMargin.nl2lf
+  ))
 
   test("""p"pat @ pat"""") {
     assertEquals(
@@ -546,53 +536,47 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("unquote into character literals") {
-    assertEquals(
-      typecheckError(
-        """
+  test("unquote into character literals")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val foo = 'f'
       q"'$foo'"
     """
-      ).nl2lf,
-      """|<macro>:5: can't unquote into character literals
-         |      q"'$foo'"
-         |         ^""".stripMargin.nl2lf
-    )
-  }
+    ).nl2lf,
+    """|<macro>:5: can't unquote into character literals
+       |      q"'$foo'"
+       |         ^""".stripMargin.nl2lf
+  ))
 
-  test("unquote into single-line string literals") {
-    assertEquals(
-      typecheckError(
-        """
+  test("unquote into single-line string literals")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val foo = "foo"
       qQQQ "$foo" QQQ
     """
-      ).nl2lf,
-      """|<macro>:5: can't unquote into string literals
-         |      qQQQ "$foo" QQQ
-         |            ^""".stripMargin.replace("QQQ", "\"\"\"").nl2lf
-    )
-  }
+    ).nl2lf,
+    """|<macro>:5: can't unquote into string literals
+       |      qQQQ "$foo" QQQ
+       |            ^""".stripMargin.replace("QQQ", "\"\"\"").nl2lf
+  ))
 
-  test("unquote into single-line string interpolations") {
-    assertEquals(
-      typecheckError(
-        """
+  test("unquote into single-line string interpolations")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val foo = "foo"
       qQQQ s"$foo" QQQ
     """
-      ).nl2lf,
-      """|<macro>:5: can't unquote into string interpolations
+    ).nl2lf,
+    """|<macro>:5: can't unquote into string interpolations
       |      qQQQ s"$foo" QQQ
       |             ^""".replace("QQQ", "\"\"\"").stripMargin
-    )
-  }
+  ))
 
   test("unquote into single-line string interpolations, with braces") {
     assertEquals(
@@ -644,21 +628,19 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("unquote into backquoted identifiers") {
-    assertEquals(
-      typecheckError(
-        """
+  test("unquote into backquoted identifiers")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val foo = "foo"
       q"`$foo`"
     """
-      ).nl2lf,
-      """|<macro>:5: can't unquote into quoted identifiers
-         |      q"`$foo`"
-         |         ^""".stripMargin
-    )
-  }
+    ).nl2lf,
+    """|<macro>:5: can't unquote into quoted identifiers
+       |      q"`$foo`"
+       |         ^""".stripMargin
+  ))
 
   test("unquote into single-line comments") {
     assertEquals(
@@ -692,35 +674,31 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("weirdness after dot-dot") {
-    assertEquals(
-      typecheckError(
-        """
+  test("weirdness after dot-dot")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"..x${???}"
     """
-      ).nl2lf,
-      """|<macro>:4: $, ( or { expected but identifier found
-         |      q"..x${???}"
-         |          ^""".stripMargin
-    )
-  }
+    ).nl2lf,
+    """|<macro>:4: $, ( or { expected but identifier found
+       |      q"..x${???}"
+       |          ^""".stripMargin
+  ))
 
-  test("weirdness after triple-dor") {
-    assertEquals(
-      typecheckError(
-        """
+  test("weirdness after triple-dor")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"foo(...x${???})"
     """
-      ).nl2lf,
-      """|<macro>:4: $, ( or { expected but identifier found
-         |      q"foo(...x${???})"
-         |               ^""".stripMargin
-    )
-  }
+    ).nl2lf,
+    """|<macro>:4: $, ( or { expected but identifier found
+       |      q"foo(...x${???})"
+       |               ^""".stripMargin
+  ))
 
   test("x before triple-dot") {
     assertEquals(

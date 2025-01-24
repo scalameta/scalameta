@@ -14,7 +14,7 @@ class TypeSuite extends BaseDottySuite {
   private def assertTpe(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit =
     assertTree(tpe(expr))(tree)
 
-  test("with-type") {
+  test("with-type")(
     runTestAssert[Stat](
       """|type A = AnyRef with
          |  type T>: Null
@@ -31,7 +31,7 @@ class TypeSuite extends BaseDottySuite {
       Type.Refine(Some(pname("AnyRef")), List(Decl.Type(Nil, pname("T"), Nil, loBound("Null")))),
       noBounds
     ))
-  }
+  )
 
   test("with-type2") {
     runTestAssert[Stat](
@@ -120,21 +120,18 @@ class TypeSuite extends BaseDottySuite {
     ))
   }
 
-  test("with-type-error") {
-    runTestError[Stat](
-      """|type A = Product with
-         |  type T>: Null
-         | with
-         |    type D <: Product
-         |""".stripMargin,
-      """|<input>:3: error: illegal start of definition `with`
-         | with
-         | ^""".stripMargin
-    )
-  }
+  test("with-type-error")(runTestError[Stat](
+    """|type A = Product with
+       |  type T>: Null
+       | with
+       |    type D <: Product
+       |""".stripMargin,
+    """|<input>:3: error: illegal start of definition `with`
+       | with
+       | ^""".stripMargin
+  ))
 
-  test("with-indent-error") {
-
+  test("with-indent-error")(
     // latter type should be ignored despite indentation
     runTestAssert[Stat](
       """|type A = Product
@@ -142,7 +139,7 @@ class TypeSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some("type A = Product")
     )(Defn.Type(Nil, pname("A"), Nil, pname("Product"), noBounds))
-  }
+  )
 
   test("with-followed-by-brace-indent") {
     runTestAssert[Stat](
@@ -261,9 +258,9 @@ class TypeSuite extends BaseDottySuite {
 
   test("A + B * C")(assertTpe("A + B * C")(pinfix("A", "+", pinfix("B", "*", pname("C")))))
 
-  test("A * B + C / D") {
+  test("A * B + C / D")(
     assertTpe("A * B + C / D")(pinfix(pinfix("A", "*", pname("B")), "+", pinfix("C", "/", pname("D"))))
-  }
+  )
 
   test("f.T")(assertTpe("f.T")(pselect("f", "T")))
 
@@ -275,32 +272,28 @@ class TypeSuite extends BaseDottySuite {
 
   test("(A, B)")(assertTpe("(A, B)")(Tuple(TypeName("A") :: TypeName("B") :: Nil)))
 
-  test("(A, B) => C") {
+  test("(A, B) => C")(
     assertTpe("(A, B) => C")(Function(TypeName("A") :: TypeName("B") :: Nil, TypeName("C")))
-  }
+  )
 
   test("T @foo")(assertTpe("T @foo")(Annotate(TypeName("T"), Mod.Annot(init("foo")) :: Nil)))
 
   test("A with B")(assertTpe("A with B")(With(TypeName("A"), TypeName("B"))))
 
-  test("A & B is not a special type") {
+  test("A & B is not a special type")(
     assertTpe("A & B")(ApplyInfix(TypeName("A"), TypeName("&"), TypeName("B")))
-  }
+  )
 
   test("A with B {}")(assertTpe("A with B {}")(Refine(Some(With(TypeName("A"), TypeName("B"))), Nil)))
 
   test("{}")(assertTpe("{}")(Refine(None, Nil)))
 
-  test("A { def x: A; val y: B; type C }") {
-    assertTpe("A { def x: Int; val y: B; type C }") {
-      Refine(
-        Some(TypeName("A")),
-        Decl.Def(Nil, TermName("x"), Nil, Nil, TypeName("Int")) ::
-          Decl.Val(Nil, List(patvar("y")), TypeName("B")) ::
-          Decl.Type(Nil, TypeName("C"), Nil, noBounds) :: Nil
-      )
-    }
-  }
+  test("A { def x: A; val y: B; type C }")(assertTpe("A { def x: Int; val y: B; type C }")(Refine(
+    Some(TypeName("A")),
+    Decl.Def(Nil, TermName("x"), Nil, Nil, TypeName("Int")) ::
+      Decl.Val(Nil, List(patvar("y")), TypeName("B")) ::
+      Decl.Type(Nil, TypeName("C"), Nil, noBounds) :: Nil
+  )))
 
   test("F[_ >: lo <: hi]") {
     implicit val dialect: Dialect = dialects.Scala31
@@ -335,9 +328,9 @@ class TypeSuite extends BaseDottySuite {
     implicit val dialect: Dialect = dialects.Scala3Future
     assertTpe("F[_]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))))
     assertTpe("F[+_]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant()))))))
-    assertTpe("F[-_]") {
-      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
-    }
+    assertTpe("F[-_]")(AnonymousLambda(
+      Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant()))))
+    ))
     runTestError[Stat](
       "F[`+`_]",
       """|<input>:1: error: `]` expected but `_` found
@@ -357,9 +350,9 @@ class TypeSuite extends BaseDottySuite {
     implicit val dialect: Dialect = dialects.Scala31
     assertTpe("F[*]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(None)))))
     assertTpe("F[+*]")(AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Covariant()))))))
-    assertTpe("F[-*]") {
-      AnonymousLambda(Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant())))))
-    }
+    assertTpe("F[-*]")(AnonymousLambda(
+      Apply(TypeName("F"), List(AnonymousParam(Some(Mod.Contravariant()))))
+    ))
   }
 
   test("F[`*`]") {
@@ -370,24 +363,18 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Type]("F[`-*`]")(Apply(pname("F"), List(pname("-*"))))
   }
 
-  test("F[T] forSome { type T }") {
-    assertTpe("F[T] forSome { type T }") {
-      Existential(
-        Apply(TypeName("F"), TypeName("T") :: Nil),
-        Decl.Type(Nil, TypeName("T"), Nil, noBounds) :: Nil
-      )
-    }
-  }
+  test("F[T] forSome { type T }")(assertTpe("F[T] forSome { type T }")(Existential(
+    Apply(TypeName("F"), TypeName("T") :: Nil),
+    Decl.Type(Nil, TypeName("T"), Nil, noBounds) :: Nil
+  )))
 
-  test("a.T forSome { val a: A }") {
-    assertTpe("a.T forSome { val a: A }")(
-      Existential(pselect("a", "T"), Decl.Val(Nil, patvar("a") :: Nil, TypeName("A")) :: Nil)
-    )
-  }
+  test("a.T forSome { val a: A }")(assertTpe("a.T forSome { val a: A }")(
+    Existential(pselect("a", "T"), Decl.Val(Nil, patvar("a") :: Nil, TypeName("A")) :: Nil)
+  ))
 
-  test("A | B is not a special type") {
+  test("A | B is not a special type")(
     assertTpe("A | B")(ApplyInfix(TypeName("A"), TypeName("|"), TypeName("B")))
-  }
+  )
 
   test("42.type") {
     intercept[ParseException] {

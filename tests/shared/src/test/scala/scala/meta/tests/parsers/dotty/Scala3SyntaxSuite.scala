@@ -60,9 +60,9 @@ class Scala3SyntaxSuite extends BaseDottySuite {
     }
   }
 
-  test("given intOrd: Ord[Int]") {
+  test("given intOrd: Ord[Int]")(
     assertEquals(templStat("given intOrd: Ord[Int]").syntax, "given intOrd: Ord[Int]")
-  }
+  )
 
   test("backticked-keywords") {
     assertEquals(tname("enum").syntax, "`enum`")

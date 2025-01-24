@@ -51,14 +51,14 @@ class LegacyTokenData {
   // these values are always non-negative, since we don't include any unary operators
   def intVal: Either[String, BigInt] = integerVal
   def longVal: Either[String, BigInt] = integerVal
-  def floatVal: Either[String, BigDecimal] = floatingVal.right.flatMap { value =>
+  def floatVal: Either[String, BigDecimal] = floatingVal.right.flatMap(value =>
     if (value <= LegacyTokenData.bigDecimalMaxFloat) Right(value)
     else Left("floating-point value out of range for Float")
-  }
-  def doubleVal: Either[String, BigDecimal] = floatingVal.right.flatMap { value =>
+  )
+  def doubleVal: Either[String, BigDecimal] = floatingVal.right.flatMap(value =>
     if (value <= LegacyTokenData.bigDecimalMaxDouble) Right(value)
     else Left("floating-point value out of range for Double")
-  }
+  )
 
   def setIdentifier(ident: String, dialect: Dialect, check: Boolean = true)(
       fCheck: LegacyTokenData => Unit

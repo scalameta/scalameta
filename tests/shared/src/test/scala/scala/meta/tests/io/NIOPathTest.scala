@@ -77,26 +77,24 @@ class NIOPathTest extends FunSuite {
     assert(abs.resolveSibling("foobar") == abs.getParent.resolve("foobar"))
   }
   test(".relativize(Path)")(assert(abs.relativize(abs.resolve("qux")) == Paths.get("qux")))
-  test("file.toUri") {
+  test("file.toUri")(
     assert(file.toUri.getPath.endsWith("build.sbt"))
     // NOTE: Paths API seems to work inconsistently under Scala Native.
     // [info] - .toUri *** FAILED ***
     // [info]   "/Users/eburmako/Projects/scalameta/project" did not end with "project/" (NIOPathTest.scala:84)
     // assert(project.toUri.getPath.endsWith("project/"))
-  }
+  )
 
-  test("jar.toUri") {
-    if (scala.meta.internal.platform.isJVM) {
-      val jar = Files.createTempDirectory("scalameta").resolve("foo.jar")
-      FileIO.withJarFileSystem(AbsolutePath(jar), true, true) { root =>
-        val hello = root.resolve("hello")
-        Files.createDirectories(hello.toNIO)
-        assert(hello.toURI.toString.endsWith("hello"))
-      }
+  test("jar.toUri")(if (scala.meta.internal.platform.isJVM) {
+    val jar = Files.createTempDirectory("scalameta").resolve("foo.jar")
+    FileIO.withJarFileSystem(AbsolutePath(jar), true, true) { root =>
+      val hello = root.resolve("hello")
+      Files.createDirectories(hello.toNIO)
+      assert(hello.toURI.toString.endsWith("hello"))
     }
-  }
+  })
 
-  test(".toAbsolutePath") {
+  test(".toAbsolutePath")(
     assert(file.toAbsolutePath.endsWith(file))
     // NOTE: Paths API seems to work inconsistently under Scala Native.
     // [info] - .toAbsolutePath *** FAILED ***
@@ -106,7 +104,7 @@ class NIOPathTest extends FunSuite {
     // [info] - .toAbsolutePath *** FAILED ***
     // [info]   /Users/eburmako/Projects/scalameta/. did not equal /Users/eburmako/Projects/scalameta (NIOPathTest.scala:92)
     // assertEquals(cwd, Paths.get("").toAbsolutePath)
-  }
+  )
   test(".toFile") {
     assert(file.toFile.isFile)
     assert(project.toFile.isDirectory)

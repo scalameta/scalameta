@@ -54,7 +54,7 @@ class InlineSuite extends BaseDottySuite {
     )
   }
 
-  test("inline-def-object") {
+  test("inline-def-object")(
     runTestAssert[Stat]("object X { inline def f(inline sc: Str)(inline args: Any*): String = ??? }")(
       Defn.Object(
         Nil,
@@ -72,7 +72,7 @@ class InlineSuite extends BaseDottySuite {
         ))
       )
     )
-  }
+  )
   test("inline-mods-combination") {
     runTestAssert[Stat]("object X { inline override protected def f(): Unit = ??? }")(Defn.Object(
       Nil,
@@ -150,7 +150,7 @@ class InlineSuite extends BaseDottySuite {
     ))
   }
 
-  test("inline-match-paren") {
+  test("inline-match-paren")(
     runTestAssert[Stat](
       """|inline def g = inline (x) match {
          |  case x => x
@@ -164,9 +164,9 @@ class InlineSuite extends BaseDottySuite {
       None,
       tmatch(Mod.Inline())(tname("x"), Case(patvar("x"), None, tname("x")))
     ))
-  }
+  )
 
-  test("inline-match-brace") {
+  test("inline-match-brace")(
     runTestAssert[Stat](
       """|inline def g = inline {x} match {
          |  case x => x
@@ -180,9 +180,9 @@ class InlineSuite extends BaseDottySuite {
       None,
       tmatch(Mod.Inline())(blk(tname("x")), Case(patvar("x"), None, tname("x")))
     ))
-  }
+  )
 
-  test("inline-match-block") {
+  test("inline-match-block")(
     runTestAssert[Stat](
       """|inline def g = {
          |  inline x match {
@@ -198,9 +198,9 @@ class InlineSuite extends BaseDottySuite {
       None,
       blk(tmatch(Mod.Inline())(tname("x"), Case(patvar("x"), None, tname("x"))))
     ))
-  }
+  )
 
-  test("inline-match-block-paren") {
+  test("inline-match-block-paren")(
     runTestAssert[Stat](
       """|inline def g = {
          |  inline (x) match {
@@ -216,9 +216,9 @@ class InlineSuite extends BaseDottySuite {
       None,
       blk(tmatch(Mod.Inline())(tname("x"), Case(patvar("x"), None, tname("x"))))
     ))
-  }
+  )
 
-  test("inline-match-block-brace") {
+  test("inline-match-block-brace")(
     runTestAssert[Stat](
       """|inline def g = {
          |  inline {x} match {
@@ -234,9 +234,9 @@ class InlineSuite extends BaseDottySuite {
       None,
       blk(tmatch(Mod.Inline())(blk(tname("x")), Case(patvar("x"), None, tname("x"))))
     ))
-  }
+  )
 
-  test("inline-match-new") {
+  test("inline-match-new")(
     runTestAssert[Stat](
       """|inline def g = {
          |  inline new X match {
@@ -252,9 +252,9 @@ class InlineSuite extends BaseDottySuite {
       None,
       blk(tmatch(Mod.Inline())(Term.New(init("X")), Case(patvar("x"), None, tname("x"))))
     ))
-  }
+  )
 
-  test("inline-if-method") {
+  test("inline-if-method")(
     runTestAssert[Stat](
       """|def fn: Unit =
          |    inline if cond then
@@ -269,11 +269,9 @@ class InlineSuite extends BaseDottySuite {
       Some(pname("Unit")),
       Term.If(tname("cond"), tname("truep"), Lit.Unit(), List(Mod.Inline()))
     ))
+  )
 
-  }
-
-  test("inline-if-method-oneline") {
-
+  test("inline-if-method-oneline")(
     runTestAssert[Stat](
       """|def fn: Unit = inline if cond then truep
          |""".stripMargin,
@@ -286,8 +284,7 @@ class InlineSuite extends BaseDottySuite {
       Some(pname("Unit")),
       Term.If(tname("cond"), tname("truep"), Lit.Unit(), List(Mod.Inline()))
     ))
-
-  }
+  )
 
   test("transparent-inline") {
     runTestAssert[Stat](
@@ -305,26 +302,22 @@ class InlineSuite extends BaseDottySuite {
     ))
   }
 
-  test("transparent-trait") {
-    runTestAssert[Stat]("transparent trait S")(
-      Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, ctor, tplNoBody())
-    )
-  }
+  test("transparent-trait")(runTestAssert[Stat]("transparent trait S")(
+    Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, ctor, tplNoBody())
+  ))
 
-  test("transparent-class") {
-    runTestAssert[Stat]("transparent class S")(
-      Defn.Class(List(Mod.Transparent()), pname("S"), Nil, ctor, tplNoBody())
-    )
-  }
+  test("transparent-class")(runTestAssert[Stat]("transparent class S")(
+    Defn.Class(List(Mod.Transparent()), pname("S"), Nil, ctor, tplNoBody())
+  ))
 
-  test("transparent-trait-newlines") {
+  test("transparent-trait-newlines")(
     runTestAssert[Stat](
       """|transparent 
          |
          |trait S""".stripMargin,
       assertLayout = Some("transparent trait S")
     )(Defn.Trait(List(Mod.Transparent()), pname("S"), Nil, ctor, tplNoBody()))
-  }
+  )
 
   test("transparent-inline-with-constant") {
     runTestAssert[Stat](

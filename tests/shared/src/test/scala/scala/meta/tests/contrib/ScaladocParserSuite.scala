@@ -25,16 +25,14 @@ class ScaladocParserSuite extends FunSuite {
   private[this] def generateTestString(docKind: TagKind): String =
     s"${docKind.label} ${(0 until docKind.numberParameters).map(i => s"Test$docKind$i").mkString(" ")}"
 
-  test("example usage") {
-    assert(
-      parseString(
-        """|
-           | /** Example scaladoc **/
-           | case class foo(bar: String)
-           |""".stripMargin
-      ).toString == "Some(List(Description(Example scaladoc)))"
-    )
-  }
+  test("example usage")(assert(
+    parseString(
+      """|
+         | /** Example scaladoc **/
+         | case class foo(bar: String)
+         |""".stripMargin
+    ).toString == "Some(List(Description(Example scaladoc)))"
+  ))
 
   test("indentation checks") {
 
@@ -113,7 +111,7 @@ class ScaladocParserSuite extends FunSuite {
          |// zzz
          |gmqwgoiqmgoqmwomw""".stripMargin
 
-    val result: Option[List[DocToken]] = parseString(
+    val result: Option[List[DocToken]] = parseString {
       s"""
           /**
             * $testDescription {{{ $codeBlock1 }}}
@@ -128,7 +126,7 @@ class ScaladocParserSuite extends FunSuite {
             */
             case class foo(bar : String)
        """.stripMargin
-    )
+    }
 
     val expectation = Option(List(
       DocToken(Description, testDescription),
@@ -151,7 +149,7 @@ class ScaladocParserSuite extends FunSuite {
     val level5HeadingBody = "Level 5"
     val level6HeadingBody = "Level 6"
 
-    val result: Option[List[DocToken]] = parseString(
+    val result: Option[List[DocToken]] = parseString {
       s"""
         /**
           * =$level1HeadingBody=
@@ -163,7 +161,7 @@ class ScaladocParserSuite extends FunSuite {
           */
          case class foo(bar : String)
          """
-    )
+    }
     val expectation = Option(List(
       DocToken(Heading1, level1HeadingBody),
       DocToken(Heading2, level2HeadingBody),

@@ -588,12 +588,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def getStringSplice(): Unit = {
     def identifier() = {
       do putCharAndNextRaw() while (isUnicodeIdentifierPart(ch))
-      curr.setIdentifier(getAndResetCBuf(), dialect) { x =>
+      curr.setIdentifier(getAndResetCBuf(), dialect)(x =>
         if (x.token != IDENTIFIER && x.token != THIS) {
           val message = "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected"
           setInvalidToken(next, offset)(message)
         }
-      }
+      )
     }
 
     (ch: @switch) match {

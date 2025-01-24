@@ -40,29 +40,25 @@ class PatSuite extends ParseSuite {
 
   test("patTyp: t Map u")(assertPatTyp("t Map u")(pinfix("t", "Map", pname("u"))))
 
-  test("patTyp: t & u | v") {
+  test("patTyp: t & u | v")(
     assertPatTyp("t & u | v")(pinfix(pinfix("t", "&", pname("u")), "|", pname("v")))
-  }
+  )
 
-  test("patTyp: t * u + v") {
+  test("patTyp: t * u + v")(
     assertPatTyp("t * u + v")(pinfix(pinfix("t", "*", pname("u")), "+", pname("v")))
-  }
+  )
 
-  test("patTyp: t * u + v / w") {
-    assertPatTyp("t * u + v / w") {
-      pinfix(pinfix(pinfix("t", "*", pname("u")), "+", pname("v")), "/", pname("w"))
-    }
-  }
+  test("patTyp: t * u + v / w")(assertPatTyp("t * u + v / w")(
+    pinfix(pinfix(pinfix("t", "*", pname("u")), "+", pname("v")), "/", pname("w"))
+  ))
 
-  test("patTyp: t + u * v") {
+  test("patTyp: t + u * v")(
     assertPatTyp("t + u * v")(pinfix(pinfix("t", "+", pname("u")), "*", pname("v")))
-  }
+  )
 
-  test("pat: F[t & u | v]()") {
-    assertPat("F[t & u | v]()") {
-      Pat.Extract(tapplytype(tname("F"), pinfix(pinfix("t", "&", pname("u")), "|", pname("v"))), Nil)
-    }
-  }
+  test("pat: F[t & u | v]()")(assertPat("F[t & u | v]()")(
+    Pat.Extract(tapplytype(tname("F"), pinfix(pinfix("t", "&", pname("u")), "|", pname("v"))), Nil)
+  ))
 
   test("_: (t Map u)")(assertPat("_: (t Map u)")(Typed(patwildcard, pinfix("t", "Map", pname("u")))))
 
@@ -76,9 +72,9 @@ class PatSuite extends ParseSuite {
 
   test("foo(_*)")(assertPat("foo(_*)")(Extract(tname("foo"), SeqWildcard() :: Nil)))
 
-  test("foo(x @ _*)") {
+  test("foo(x @ _*)")(
     assertPat("foo(x @ _*)")(Extract(tname("foo"), Bind(Var(tname("x")), SeqWildcard()) :: Nil))
-  }
+  )
 
   test("a :: b")(assertPat("a :: b")(patinfix(Var(tname("a")), "::", Var(tname("b")))))
 
@@ -141,73 +137,53 @@ class PatSuite extends ParseSuite {
 
   test("foo\"bar\"")(assertPat("foo\"bar\"")(Interpolate(tname("foo"), str("bar") :: Nil, Nil)))
 
-  test("foo\"a $b c\"") {
-    assertPat("foo\"a $b c\"")(
-      Interpolate(tname("foo"), str("a ") :: str(" c") :: Nil, Var(tname("b")) :: Nil)
-    )
-  }
+  test("foo\"a $b c\"")(assertPat("foo\"a $b c\"")(
+    Interpolate(tname("foo"), str("a ") :: str(" c") :: Nil, Var(tname("b")) :: Nil)
+  ))
 
-  test("foo\"${b @ foo()}\"") {
-    assertPat("foo\"${b @ foo()}\"")(Interpolate(
-      tname("foo"),
-      str("") :: str("") :: Nil,
-      Bind(Var(tname("b")), Extract(tname("foo"), Nil)) :: Nil
-    ))
-  }
+  test("foo\"${b @ foo()}\"")(assertPat("foo\"${b @ foo()}\"")(Interpolate(
+    tname("foo"),
+    str("") :: str("") :: Nil,
+    Bind(Var(tname("b")), Extract(tname("foo"), Nil)) :: Nil
+  )))
 
-  test("$_") {
-    assertPat(""" q"x + $_" """)(
-      Pat.Interpolate(tname("q"), List(str("x + "), str("")), List(patwildcard))
-    )
-  }
+  test("$_")(assertPat(""" q"x + $_" """)(
+    Pat.Interpolate(tname("q"), List(str("x + "), str("")), List(patwildcard))
+  ))
 
   test("#501")(intercept[ParseException](pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false")))
 
-  test("<a>{_*}</a>") {
+  test("<a>{_*}</a>")(
     assertPat("<a>{_*}</a>")(Pat.Xml(List(str("<a>"), str("</a>")), List(SeqWildcard())))
-  }
+  )
 
-  test("<a>{ns @ _*}</a>") {
-    assertPat("<a>{ns @ _*}</a>")(
-      Pat.Xml(List(str("<a>"), str("</a>")), List(Bind(Var(tname("ns")), SeqWildcard())))
-    )
-  }
+  test("<a>{ns @ _*}</a>")(assertPat("<a>{ns @ _*}</a>")(
+    Pat.Xml(List(str("<a>"), str("</a>")), List(Bind(Var(tname("ns")), SeqWildcard())))
+  ))
 
   test("(A, B, C)")(assertPat("(A, B, C)")(Pat.Tuple(List(tname("A"), tname("B"), tname("C")))))
 
   test("((A, B, C))")(assertPat("((A, B, C))")(Pat.Tuple(List(tname("A"), tname("B"), tname("C")))))
 
-  test("(A, B, C) :: ((A, B, C))") {
-    assertPat("(A, B, C) :: ((A, B, C))") {
-      patinfix(
-        Pat.Tuple(List(tname("A"), tname("B"), tname("C"))),
-        "::",
-        Pat.Tuple(List(tname("A"), tname("B"), tname("C")))
-      )
-    }
-  }
+  test("(A, B, C) :: ((A, B, C))")(assertPat("(A, B, C) :: ((A, B, C))")(patinfix(
+    Pat.Tuple(List(tname("A"), tname("B"), tname("C"))),
+    "::",
+    Pat.Tuple(List(tname("A"), tname("B"), tname("C")))
+  )))
 
-  test("((A, B, C)) :: ((A, B, C))") {
-    assertPat("((A, B, C)) :: ((A, B, C))") {
-      patinfix(
-        Pat.Tuple(List(tname("A"), tname("B"), tname("C"))),
-        "::",
-        Pat.Tuple(List(tname("A"), tname("B"), tname("C")))
-      )
-    }
-  }
+  test("((A, B, C)) :: ((A, B, C))")(assertPat("((A, B, C)) :: ((A, B, C))")(patinfix(
+    Pat.Tuple(List(tname("A"), tname("B"), tname("C"))),
+    "::",
+    Pat.Tuple(List(tname("A"), tname("B"), tname("C")))
+  )))
 
-  test("((A, B, C)) :: (A, B, C)") {
-    assertPat("((A, B, C)) :: (A, B, C)") {
-      patinfix(
-        Pat.Tuple(List(tname("A"), tname("B"), tname("C"))),
-        "::",
-        tname("A"),
-        tname("B"),
-        tname("C")
-      )
-    }
-  }
+  test("((A, B, C)) :: (A, B, C)")(assertPat("((A, B, C)) :: (A, B, C)")(patinfix(
+    Pat.Tuple(List(tname("A"), tname("B"), tname("C"))),
+    "::",
+    tname("A"),
+    tname("B"),
+    tname("C")
+  )))
 
   test("case: at top level") {
     val code =
@@ -215,9 +191,9 @@ class PatSuite extends ParseSuite {
          |  if true =>
          |  List(bar)
          |""".stripMargin
-    checkTree(parseCase(code)) {
-      Case(patvar("foo"), Some(bool(true)), tapply(tname("List"), tname("bar")))
-    }
+    checkTree(
+      parseCase(code)
+    )(Case(patvar("foo"), Some(bool(true)), tapply(tname("List"), tname("bar"))))
   }
 
   test("case: break before `|`") {

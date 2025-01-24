@@ -42,10 +42,10 @@ object RelativePath {
     val suffix = if (isDirectory) "/" else ""
     // Can't use toNIO.toUri because it produces an absolute URI.
     val names = path.iterator().toScala
-    val uris = names.map { name =>
+    val uris = names.map(name =>
       // URI encode each part of the path individually.
       new URI(null, null, name.toString, null)
-    }
+    )
     URI.create(uris.mkString("", "/", suffix))
   }
 

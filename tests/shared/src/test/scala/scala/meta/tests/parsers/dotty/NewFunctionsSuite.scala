@@ -21,16 +21,14 @@ class NewFunctionsSuite extends BaseDottySuite {
     ))
   }
 
-  test("type-lambda-alias") {
-    runTestAssert[Stat]("type Tuple = [X] =>> (X, X)")(Defn.Type(
-      Nil,
-      pname("Tuple"),
-      Nil,
-      Type.Lambda(List(pparam("X")), Type.Tuple(List(pname("X"), pname("X"))))
-    ))
-  }
+  test("type-lambda-alias")(runTestAssert[Stat]("type Tuple = [X] =>> (X, X)")(Defn.Type(
+    Nil,
+    pname("Tuple"),
+    Nil,
+    Type.Lambda(List(pparam("X")), Type.Tuple(List(pname("X"), pname("X"))))
+  )))
 
-  test("context-function-single") {
+  test("context-function-single")(
     runTestAssert[Stat]("def table(init: Table ?=> Unit): Unit")(Decl.Def(
       Nil,
       tname("table"),
@@ -38,9 +36,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       List(List(tparam("init", pctxfunc(pname("Table"))(pname("Unit"))))),
       pname("Unit")
     ))
-  }
+  )
 
-  test("context-function-multi") {
+  test("context-function-multi")(
     runTestAssert[Stat]("def table(init: (T1, List[T2]) ?=> Unit): Unit")(Decl.Def(
       Nil,
       tname("table"),
@@ -48,7 +46,7 @@ class NewFunctionsSuite extends BaseDottySuite {
       List(List(tparam(Nil, "init", pctxfunc(pname("T1"), papply("List", "T2"))(pname("Unit"))))),
       pname("Unit")
     ))
-  }
+  )
 
   test("context-function-as-typedef") {
     runTestAssert[Stat]("type Executable[T] = ExecutionContext ?=> T")(Defn.Type(
@@ -95,25 +93,21 @@ class NewFunctionsSuite extends BaseDottySuite {
     ))
   }
 
-  test("polymorphic-func-term") {
+  test("polymorphic-func-term")(
     runTestAssert[Stat]("val t0 = [T] => (ts: List[T]) => ts.headOption")(Defn.Val(
       Nil,
       List(patvar("t0")),
       None,
       tpolyfunc(pparam("T"))(tfunc(tparam("ts", papply("List", "T")))(tselect("ts", "headOption")))
     ))
-  }
+  )
 
-  test("polymorphic-func-term-identity") {
-    runTestAssert[Stat]("val pid = [T] => (t: T) => t")(Defn.Val(
-      Nil,
-      List(patvar("pid")),
-      None,
-      tpolyfunc(pparam("T"))(tfunc(tparam("t", "T"))(tname("t")))
-    ))
-  }
+  test("polymorphic-func-term-identity")(runTestAssert[Stat]("val pid = [T] => (t: T) => t")(
+    Defn
+      .Val(Nil, List(patvar("pid")), None, tpolyfunc(pparam("T"))(tfunc(tparam("t", "T"))(tname("t"))))
+  ))
 
-  test("polymorphic-func-term-complex") {
+  test("polymorphic-func-term-complex")(
     runTestAssert[Stat]("val t1 = [F[_], G[_], T] => (ft: F[T], f: F[T] => G[T]) => f(ft)")(Defn.Val(
       Nil,
       List(patvar("t1")),
@@ -125,17 +119,15 @@ class NewFunctionsSuite extends BaseDottySuite {
         )(tapply(tname("f"), tname("ft")))
       )
     ))
-  }
+  )
 
-  test("poly-function-type") {
-    runTestAssert[Stat]("type F0 = [T] => List[T] => Option[T]")(Defn.Type(
-      Nil,
-      pname("F0"),
-      Nil,
-      ppolyfunc(pparam("T"))(pfunc(papply("List", "T"))(papply("Option", "T")))
-    ))
-  }
-  test("poly-function-type") {
+  test("poly-function-type")(runTestAssert[Stat]("type F0 = [T] => List[T] => Option[T]")(Defn.Type(
+    Nil,
+    pname("F0"),
+    Nil,
+    ppolyfunc(pparam("T"))(pfunc(papply("List", "T"))(papply("Option", "T")))
+  )))
+  test("poly-function-type")(
     runTestAssert[Stat](
       """|def foo = {
          |  f[[X] =>> String]
@@ -148,9 +140,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       None,
       blk(tapplytype(tname("f"), Type.Lambda(List(pparam("X")), pname("String"))))
     ))
-  }
+  )
 
-  test("poly-function-type-method") {
+  test("poly-function-type-method")(
     runTestAssert[Stat]("def m[T](f: [U] => U => U, t: T) = f(t)")(Defn.Def(
       Nil,
       tname("m"),
@@ -162,25 +154,23 @@ class NewFunctionsSuite extends BaseDottySuite {
       None,
       tapply(tname("f"), tname("t"))
     ))
-  }
+  )
 
-  test("poly-function-type-duo") {
+  test("poly-function-type-duo")(
     runTestAssert[Stat]("type F2 = [T, U] => (T, U) => Either[T, U]")(Defn.Type(
       Nil,
       pname("F2"),
       Nil,
       ppolyfunc(pparam("T"), pparam("U"))(pfunc(pname("T"), pname("U"))(papply("Either", "T", "U")))
     ))
-  }
+  )
 
-  test("poly-function-type-error") {
-    runTestError[Stat](
-      "type F2 = [T, U] => (T, U)",
-      "polymorphic function types must have a value parameter"
-    )
-  }
+  test("poly-function-type-error")(runTestError[Stat](
+    "type F2 = [T, U] => (T, U)",
+    "polymorphic function types must have a value parameter"
+  ))
 
-  test("poly-function-type-complex") {
+  test("poly-function-type-complex")(
     runTestAssert[Stat]("type F1 = [F[_], G[_], T] => (F[T], F[T] => G[T]) => G[T]")(Defn.Type(
       Nil,
       pname("F1"),
@@ -189,16 +179,16 @@ class NewFunctionsSuite extends BaseDottySuite {
         pfunc(papply("F", "T"), pfunc(papply("F", "T"))(papply("G", "T")))(papply("G", "T"))
       )
     ))
-  }
+  )
 
-  test("poly-context-function-type") {
+  test("poly-context-function-type")(
     runTestAssert[Stat]("type F0 = [T] => List[T] ?=> Option[T]")(Defn.Type(
       Nil,
       pname("F0"),
       Nil,
       ppolyfunc(pparam("T"))(pctxfunc(papply("List", "T"))(papply("Option", "T")))
     ))
-  }
+  )
 
   test("poly-context-function-complex") {
     runTestAssert[Stat](
@@ -244,25 +234,25 @@ class NewFunctionsSuite extends BaseDottySuite {
     ))
   }
 
-  test("dependent-type") {
+  test("dependent-type")(
     runTestAssert[Stat]("val extractor: (e: Entry) => e.Key = extractKey")(Defn.Val(
       Nil,
       List(patvar("extractor")),
       Some(pfunc(Type.TypedParam(pname("e"), pname("Entry")))(pselect("e", "Key"))),
       tname("extractKey")
     ))
-  }
+  )
 
-  test("dependent-type-context") {
+  test("dependent-type-context")(
     runTestAssert[Stat]("val extractor: (e: Entry) ?=> e.Key = extractKey")(Defn.Val(
       Nil,
       List(patvar("extractor")),
       Some(pctxfunc(Type.TypedParam(pname("e"), pname("Entry")))(pselect("e", "Key"))),
       tname("extractKey")
     ))
-  }
+  )
 
-  test("dependent-type-multi") {
+  test("dependent-type-multi")(
     runTestAssert[Stat]("val extractor: (e: Entry, f: Other) => e.Key = extractKey")(Defn.Val(
       Nil,
       List(patvar("extractor")),
@@ -273,29 +263,25 @@ class NewFunctionsSuite extends BaseDottySuite {
       ),
       tname("extractKey")
     ))
-  }
+  )
 
-  test("dependent-type-term") {
-    runTestAssert[Stat]("type T = (e: Entry) => e.Key")(Defn.Type(
-      Nil,
-      pname("T"),
-      Nil,
-      pfunc(Type.TypedParam(pname("e"), pname("Entry")))(pselect("e", "Key")),
-      noBounds
-    ))
-  }
+  test("dependent-type-term")(runTestAssert[Stat]("type T = (e: Entry) => e.Key")(Defn.Type(
+    Nil,
+    pname("T"),
+    Nil,
+    pfunc(Type.TypedParam(pname("e"), pname("Entry")))(pselect("e", "Key")),
+    noBounds
+  )))
 
-  test("dependent-type-term-context") {
-    runTestAssert[Stat]("type T = (e: Entry) ?=> e.Key")(Defn.Type(
-      Nil,
-      pname("T"),
-      Nil,
-      pctxfunc(Type.TypedParam(pname("e"), pname("Entry")))(pselect("e", "Key")),
-      noBounds
-    ))
-  }
+  test("dependent-type-term-context")(runTestAssert[Stat]("type T = (e: Entry) ?=> e.Key")(Defn.Type(
+    Nil,
+    pname("T"),
+    Nil,
+    pctxfunc(Type.TypedParam(pname("e"), pname("Entry")))(pselect("e", "Key")),
+    noBounds
+  )))
 
-  test("dependent-type-term-multi") {
+  test("dependent-type-term-multi")(
     runTestAssert[Stat]("type T = (e: Entry, o: Other[? <: P]) => e.Key")(Defn.Type(
       Nil,
       pname("T"),
@@ -306,9 +292,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       )(pselect("e", "Key")),
       noBounds
     ))
-  }
+  )
 
-  test("dependent-type-arrow-after-nl") {
+  test("dependent-type-arrow-after-nl")(
     runTestAssert[Stat](
       """|type T = 
          |  (e: Entry) 
@@ -322,21 +308,19 @@ class NewFunctionsSuite extends BaseDottySuite {
       pfunc(Type.TypedParam(pname("e"), pname("Entry")))(pselect("e", "Key")),
       noBounds
     ))
-  }
+  )
 
-  test("dependent-type-arrow-after-nl bad indent") {
-    runTestError[Stat](
-      """|type T = 
-         |  (e: Entry) 
-         |=> e.Key
-         |""".stripMargin,
-      """|<input>:3: error: illegal start of definition `=>`
-         |=> e.Key
-         |^""".stripMargin
-    )
-  }
+  test("dependent-type-arrow-after-nl bad indent")(runTestError[Stat](
+    """|type T = 
+       |  (e: Entry) 
+       |=> e.Key
+       |""".stripMargin,
+    """|<input>:3: error: illegal start of definition `=>`
+       |=> e.Key
+       |^""".stripMargin
+  ))
 
-  test("context-function-arrow-after-nl") {
+  test("context-function-arrow-after-nl")(
     runTestAssert[Stat](
       """|type Executable[T] =
          |  ExecutionContext
@@ -350,9 +334,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       pctxfunc(pname("ExecutionContext"))(pname("T")),
       noBounds
     ))
-  }
+  )
 
-  test("context-function-arrow-after-nl with parens") {
+  test("context-function-arrow-after-nl with parens")(
     runTestAssert[Stat](
       """|type Executable[T] =
          |  (ExecutionContext)
@@ -366,21 +350,19 @@ class NewFunctionsSuite extends BaseDottySuite {
       pctxfunc(pname("ExecutionContext"))(pname("T")),
       noBounds
     ))
-  }
+  )
 
-  test("context-function-arrow-after-nl bad indent") {
-    runTestError[Stat](
-      """|type Executable[T] =
-         |  ExecutionContext
-         |?=> T
-         |""".stripMargin,
-      """|error: illegal start of definition `?=>`
-         |?=> T
-         |^""".stripMargin
-    )
-  }
+  test("context-function-arrow-after-nl bad indent")(runTestError[Stat](
+    """|type Executable[T] =
+       |  ExecutionContext
+       |?=> T
+       |""".stripMargin,
+    """|error: illegal start of definition `?=>`
+       |?=> T
+       |^""".stripMargin
+  ))
 
-  test("lambda-function-arrow-after-nl") {
+  test("lambda-function-arrow-after-nl")(
     runTestAssert[Stat](
       """|type Tuple =
          |  [X]
@@ -394,9 +376,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       Type.Lambda(pparam("X") :: Nil, Type.Tuple(List(pname("X"), pname("X")))),
       noBounds
     ))
-  }
+  )
 
-  test("lambda-function-arrow-after-nl no NL after =") {
+  test("lambda-function-arrow-after-nl no NL after =")(
     runTestAssert[Stat](
       """|type Tuple = [X]
          |  =>> (X, X)
@@ -409,27 +391,23 @@ class NewFunctionsSuite extends BaseDottySuite {
       Type.Lambda(pparam("X") :: Nil, Type.Tuple(List(pname("X"), pname("X")))),
       noBounds
     ))
-  }
+  )
 
-  test("lambda-function-arrow-after-nl bad indent") {
-    runTestError[Stat](
-      """|type Tuple =
-         |  [X]
-         |=>> (X, X)
-         |""".stripMargin,
-      """|error: expected =>> or =>
-         |  [X]
-         |     ^""".stripMargin
-    )
-  }
+  test("lambda-function-arrow-after-nl bad indent")(runTestError[Stat](
+    """|type Tuple =
+       |  [X]
+       |=>> (X, X)
+       |""".stripMargin,
+    """|error: expected =>> or =>
+       |  [X]
+       |     ^""".stripMargin
+  ))
 
-  test("type-lambda-bounds") {
-    runTestAssert[Stat]("type U <: [X] =>> Any")(
-      Decl.Type(Nil, pname("U"), Nil, bounds(hi = Type.Lambda(List(pparam("X")), pname("Any"))))
-    )
-  }
+  test("type-lambda-bounds")(runTestAssert[Stat]("type U <: [X] =>> Any")(
+    Decl.Type(Nil, pname("U"), Nil, bounds(hi = Type.Lambda(List(pparam("X")), pname("Any"))))
+  ))
 
-  test("type Macro[X] = (=> Quotes) ?=> Expr[X]") {
+  test("type Macro[X] = (=> Quotes) ?=> Expr[X]")(
     runTestAssert[Stat]("type Macro[X] = (=> Quotes) ?=> Expr[X]")(Defn.Type(
       Nil,
       pname("Macro"),
@@ -437,9 +415,9 @@ class NewFunctionsSuite extends BaseDottySuite {
       pctxfunc(Type.ByName(pname("Quotes")))(papply("Expr", "X")),
       noBounds
     ))
-  }
+  )
 
-  test("type-lmabda-bounds") {
+  test("type-lmabda-bounds")(
     runTestAssert[Stat]("abstract class Repository[F[_]: [G[_]] =>> MonadCancel[G, Throwable]]")(
       Defn.Class(
         List(Mod.Abstract()),
@@ -459,9 +437,9 @@ class NewFunctionsSuite extends BaseDottySuite {
         tplNoBody()
       )
     )
-  }
+  )
 
-  test("#3050 function without body") {
+  test("#3050 function without body")(
     runTestAssert[Stat](
       """|f{ (x1: A, x2: B => C) => }
          |""".stripMargin,
@@ -472,7 +450,7 @@ class NewFunctionsSuite extends BaseDottySuite {
       tname("f"),
       blk(tfunc(tparam("x1", "A"), tparam("x2", pfunc(pname("B"))(pname("C"))))(blk()))
     ))
-  }
+  )
 
   test("#3996 functions: precedence 1") {
     val code = "A => B => C => D"

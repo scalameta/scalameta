@@ -177,31 +177,27 @@ class XmlSuite extends ParseSuite {
        |""".stripMargin
   )
 
-  test("deconstruct") {
-    assertTree(term(trickyXml)) {
-      blk(
-        Defn.Val(
-          Nil,
-          List(patvar("x")),
-          None,
-          Term.Xml(
-            List(str("<div href="), str(">Hello "), str("</div>")),
-            List(blk(tinfix(str("/"), "+", tname("url"))), blk(tname("name")))
-          )
-        ),
-        Defn.Val(
-          Nil,
-          List(patvar("noSemicolon")),
-          None,
-          Term.Xml(
-            List(str("<h1>"), str("</h1>")),
-            blk(tinfix(tname("msg"), "infix", tname("upper"))) :: Nil
-          )
-        ),
-        Defn.Val(Nil, List(patvar("y")), None, int(2))
+  test("deconstruct")(assertTree(term(trickyXml))(blk(
+    Defn.Val(
+      Nil,
+      List(patvar("x")),
+      None,
+      Term.Xml(
+        List(str("<div href="), str(">Hello "), str("</div>")),
+        List(blk(tinfix(str("/"), "+", tname("url"))), blk(tname("name")))
       )
-    }
-  }
+    ),
+    Defn.Val(
+      Nil,
+      List(patvar("noSemicolon")),
+      None,
+      Term.Xml(
+        List(str("<h1>"), str("</h1>")),
+        blk(tinfix(tname("msg"), "infix", tname("upper"))) :: Nil
+      )
+    ),
+    Defn.Val(Nil, List(patvar("y")), None, int(2))
+  )))
 
   checkOK("<foo/>")
   checkOK("<foo></foo>")

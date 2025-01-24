@@ -112,9 +112,9 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
             if (adt.sym.isAstClass) {
               val moduleNames = adt.sym.companion.info.decls
                 .flatMap(x => if (x.isModule) Some(x.name.toString) else None)
-              val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse {
+              val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse(
                 c.abort(c.enclosingPosition, s"no latest version ${adt.sym.fullName}: $moduleNames")
-              }
+              )
               latestAfterVersion :: Nil
             } else Nil
           val namePath = getNamePath(nameParts ++ latestAfterVersion)

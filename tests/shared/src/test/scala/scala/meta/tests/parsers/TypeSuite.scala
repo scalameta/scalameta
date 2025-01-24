@@ -24,9 +24,9 @@ class TypeSuite extends ParseSuite {
 
   test("A + B * C")(assertTpe("A + B * C")(pinfix(pinfix("A", "+", "B"), "*", "C")))
 
-  test("A * B + C / D") {
+  test("A * B + C / D")(
     assertTpe("A * B + C / D")(pinfix(pinfix(pinfix("A", "*", "B"), "+", "C"), "/", "D"))
-  }
+  )
 
   test("f.T")(assertTpe("f.T")(pselect("f", "T")))
 
@@ -50,15 +50,11 @@ class TypeSuite extends ParseSuite {
 
   test("{}")(assertTpe("{}")(Type.Refine(None, Nil)))
 
-  test("A { def x: A; val y: B; type C }") {
-    assertTpe("A { def x: Int; val y: B; type C }") {
-      Refine(
-        Some(pname("A")),
-        Decl.Def(Nil, "x", Nil, Nil, "Int") :: Decl.Val(Nil, List(patvar("y")), "B") ::
-          Decl.Type(Nil, pname("C"), Nil, noBounds) :: Nil
-      )
-    }
-  }
+  test("A { def x: A; val y: B; type C }")(assertTpe("A { def x: Int; val y: B; type C }")(Refine(
+    Some(pname("A")),
+    Decl.Def(Nil, "x", Nil, Nil, "Int") :: Decl.Val(Nil, List(patvar("y")), "B") ::
+      Decl.Type(Nil, pname("C"), Nil, noBounds) :: Nil
+  )))
 
   test("F[_ >: lo <: hi]")(assertTpe("F[_ >: lo <: hi]")(papply("F", Wildcard(bounds("lo", "hi")))))
 
@@ -68,17 +64,13 @@ class TypeSuite extends ParseSuite {
 
   test("F[_]")(assertTpe("F[_]")(papply("F", Wildcard(noBounds))))
 
-  test("F[T] forSome { type T }") {
-    assertTpe("F[T] forSome { type T }") {
-      Existential(papply("F", "T"), Decl.Type(Nil, pname("T"), Nil, noBounds) :: Nil)
-    }
-  }
+  test("F[T] forSome { type T }")(assertTpe("F[T] forSome { type T }")(
+    Existential(papply("F", "T"), Decl.Type(Nil, pname("T"), Nil, noBounds) :: Nil)
+  ))
 
-  test("a.T forSome { val a: A }") {
-    assertTpe("a.T forSome { val a: A }")(
-      Existential(pselect("a", "T"), Decl.Val(Nil, patvar("a") :: Nil, "A") :: Nil)
-    )
-  }
+  test("a.T forSome { val a: A }")(assertTpe("a.T forSome { val a: A }")(
+    Existential(pselect("a", "T"), Decl.Val(Nil, patvar("a") :: Nil, "A") :: Nil)
+  ))
 
   test("A | B is not a special type")(assertTpe("A | B")(pinfix("A", "|", "B")))
 

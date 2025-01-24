@@ -33,111 +33,111 @@ class PublicSuite extends TreeSuiteBase {
     assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
   }
 
-  test("scala.meta.dialects.Scala3.toString") {
+  test("scala.meta.dialects.Scala3.toString")(
     assertNoDiff(scala.meta.dialects.Scala3.toString, "Scala36")
-  }
+  )
 
-  test("scala.meta.dialects.Scala30.toString") {
+  test("scala.meta.dialects.Scala30.toString")(
     assertNoDiff(scala.meta.dialects.Scala30.toString, "Scala30")
-  }
+  )
 
-  test("scala.meta.dialects.Scala31.toString") {
+  test("scala.meta.dialects.Scala31.toString")(
     assertNoDiff(scala.meta.dialects.Scala31.toString, "Scala32")
-  }
+  )
 
-  test("scala.meta.dialects.Scala32.toString") {
+  test("scala.meta.dialects.Scala32.toString")(
     assertNoDiff(scala.meta.dialects.Scala32.toString, "Scala32")
-  }
+  )
 
-  test("scala.meta.dialects.Scala33.toString") {
+  test("scala.meta.dialects.Scala33.toString")(
     assertNoDiff(scala.meta.dialects.Scala33.toString, "Scala33")
-  }
+  )
 
-  test("scala.meta.dialects.Scala34.toString") {
+  test("scala.meta.dialects.Scala34.toString")(
     assertNoDiff(scala.meta.dialects.Scala34.toString, "Scala34")
-  }
+  )
 
-  test("scala.meta.dialects.Scala35.toString") {
+  test("scala.meta.dialects.Scala35.toString")(
     assertNoDiff(scala.meta.dialects.Scala35.toString, "Scala35")
-  }
+  )
 
-  test("scala.meta.dialects.Scala36.toString") {
+  test("scala.meta.dialects.Scala36.toString")(
     assertNoDiff(scala.meta.dialects.Scala36.toString, "Scala36")
-  }
+  )
 
-  test("scala.meta.dialects.Scala3Future.toString") {
+  test("scala.meta.dialects.Scala3Future.toString")(
     assertNoDiff(scala.meta.dialects.Scala3Future.toString.substring(0, 6), "Scala3")
-  }
+  )
 
-  test("scala.meta.dialects.Dotty") {
+  test("scala.meta.dialects.Dotty")(
     // NOTE(olafur): `Dotty` and `Scala3` are identical so it's expected that
     // `toString` returns "Scala3" instead of "Dotty".
     assertEquals(scala.meta.dialects.Dotty, scala.meta.dialects.Scala3)
-  }
+  )
 
-  test("scala.meta.dialects.Sbt0136.toString") {
+  test("scala.meta.dialects.Sbt0136.toString")(
     assertNoDiff(scala.meta.dialects.Sbt0136.toString, "Sbt0136")
-  }
+  )
 
-  test("scala.meta.dialects.Sbt0137.toString") {
+  test("scala.meta.dialects.Sbt0137.toString")(
     assertNoDiff(scala.meta.dialects.Sbt0137.toString, "Sbt0137")
-  }
+  )
 
   test("scala.meta.dialects.Sbt.toString")(assertNoDiff(scala.meta.dialects.Sbt.toString, "Sbt1"))
 
   test("scala.meta.dialects.Sbt1.toString")(assertNoDiff(scala.meta.dialects.Sbt1.toString, "Sbt1"))
 
-  test("scala.meta.dialects.Scala210.toString") {
+  test("scala.meta.dialects.Scala210.toString")(
     assertNoDiff(scala.meta.dialects.Scala210.toString, "Scala210")
-  }
+  )
 
-  test("scala.meta.dialects.Scala211.toString") {
+  test("scala.meta.dialects.Scala211.toString")(
     assertNoDiff(scala.meta.dialects.Scala211.toString, "Scala211")
-  }
+  )
 
-  test("scala.meta.dialects.Scala212.toString") {
+  test("scala.meta.dialects.Scala212.toString")(
     assertNoDiff(scala.meta.dialects.Scala212.toString, "Scala212")
-  }
+  )
 
-  test("scala.meta.dialects.Scala212Source3.toString") {
+  test("scala.meta.dialects.Scala212Source3.toString")(
     assertNoDiff(scala.meta.dialects.Scala212Source3.toString, "Scala212Source3")
-  }
+  )
 
-  test("scala.meta.dialects.Scala213.toString") {
+  test("scala.meta.dialects.Scala213.toString")(
     assertNoDiff(scala.meta.dialects.Scala213.toString, "Scala213")
-  }
+  )
 
-  test("scala.meta.dialects.Scala213Source3.toString") {
+  test("scala.meta.dialects.Scala213Source3.toString")(
     assertNoDiff(scala.meta.dialects.Scala213Source3.toString, "Scala213Source3")
-  }
+  )
 
-  test("scala.meta.dialects.Scala.toString") {
+  test("scala.meta.dialects.Scala.toString")(
     assertNoDiff(scala.meta.dialects.Scala.toString, "Scala213")
-  }
+  )
 
-  test("scala.meta.dialects.Typelevel211.toString") {
+  test("scala.meta.dialects.Typelevel211.toString")(
     assertNoDiff(scala.meta.dialects.Typelevel211.toString, "Typelevel211")
-  }
+  )
 
-  test("scala.meta.dialects.Typelevel212.toString") {
+  test("scala.meta.dialects.Typelevel212.toString")(
     assertNoDiff(scala.meta.dialects.Typelevel212.toString, "Typelevel212")
-  }
+  )
 
-  test("scala.meta.dialects.Paradise211.toString") {
+  test("scala.meta.dialects.Paradise211.toString")(
     assertNoDiff(scala.meta.dialects.Paradise211.toString, "Paradise211")
-  }
+  )
 
-  test("scala.meta.dialects.Paradise212.toString") {
+  test("scala.meta.dialects.Paradise212.toString")(
     assertNoDiff(scala.meta.dialects.Paradise212.toString, "Paradise212")
-  }
+  )
 
-  test("scala.meta.dialects.ParadiseTypelevel211.toString") {
+  test("scala.meta.dialects.ParadiseTypelevel211.toString")(
     assertNoDiff(scala.meta.dialects.ParadiseTypelevel211.toString, "ParadiseTypelevel211")
-  }
+  )
 
-  test("scala.meta.dialects.ParadiseTypelevel212.toString") {
+  test("scala.meta.dialects.ParadiseTypelevel212.toString")(
     assertNoDiff(scala.meta.dialects.ParadiseTypelevel212.toString, "ParadiseTypelevel212")
-  }
+  )
 
   test("scala.meta.inputs.Input.None.toString")(assertEquals(Input.None.toString, "Input.None"))
 
@@ -190,32 +190,28 @@ class PublicSuite extends TreeSuiteBase {
     assertEquals(input.toString, s"""Input.Ammonite(Input.None)""")
   }
 
-  test("scala.meta.inputs.Position.None.toString") {
+  test("scala.meta.inputs.Position.None.toString")(
     assertEquals(Position.None.toString, "Position.None")
-  }
+  )
 
-  test("scala.meta.inputs.Position.Range.toString") {
-    "foo + bar".parse[Term].get match {
-      case Term.ApplyInfix(lhs, _, _, _) =>
-        assertEquals(lhs.pos.toString, """[0..3) in Input.String("foo + bar")""")
-    }
-  }
+  test("scala.meta.inputs.Position.Range.toString")("foo + bar".parse[Term].get match {
+    case Term.ApplyInfix(lhs, _, _, _) =>
+      assertEquals(lhs.pos.toString, """[0..3) in Input.String("foo + bar")""")
+  })
 
-  test("scala.meta.parsers.ParseException.toString") {
-    intercept[ParseException] {
-      try "foo + class".parse[Term].get
-      catch {
-        case ex: ParseException =>
-          assertEquals(
-            ex.toString,
-            """|<input>:1: error: `end of file` expected but `class` found
-               |foo + class
-               |      ^""".stripMargin.lf2nl
-          )
-          throw ex
-      }
+  test("scala.meta.parsers.ParseException.toString")(intercept[ParseException](
+    try "foo + class".parse[Term].get
+    catch {
+      case ex: ParseException =>
+        assertEquals(
+          ex.toString,
+          """|<input>:1: error: `end of file` expected but `class` found
+             |foo + class
+             |      ^""".stripMargin.lf2nl
+        )
+        throw ex
     }
-  }
+  ))
 
   test("scala.meta.parsers.Parsed.Error.toString") {
     val parsed = "foo + class".parse[Term]

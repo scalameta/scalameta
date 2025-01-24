@@ -25,23 +25,19 @@ class GivenUsingSuite extends BaseDottySuite {
     .Def(mods, tname("f"), Nil, List(Nil), Some(pname("Int")), int(1))
   val defone: Defn.Def = defone(Nil)
 
-  test("given-named") {
-    runTestAssert[Stat]("given intOrd: Ord[Int] with { def f(): Int = 1 }")(
-      Defn.Given(Nil, tname("intOrd"), Nil, Nil, tpl(List(init(papply("Ord", "Int"))), List(defone)))
-    )
-  }
+  test("given-named")(runTestAssert[Stat]("given intOrd: Ord[Int] with { def f(): Int = 1 }")(
+    Defn.Given(Nil, tname("intOrd"), Nil, Nil, tpl(List(init(papply("Ord", "Int"))), List(defone)))
+  ))
 
-  test("given-named-newline") {
+  test("given-named-newline")(
     runTestAssert[Stat]("given intOrd: Ord[Int] with \n{ def f(): Int = 1 }", assertLayout = None)(
       Defn.Given(Nil, tname("intOrd"), Nil, Nil, tpl(List(init(papply("Ord", "Int"))), List(defone)))
     )
-  }
+  )
 
-  test("given-anonymous") {
-    runTestAssert[Stat]("given Ord[Int] with { def f(): Int = 1 }")(
-      Defn.Given(Nil, anon, Nil, Nil, tpl(List(init(papply("Ord", "Int"))), List(defone)))
-    )
-  }
+  test("given-anonymous")(runTestAssert[Stat]("given Ord[Int] with { def f(): Int = 1 }")(
+    Defn.Given(Nil, anon, Nil, Nil, tpl(List(init(papply("Ord", "Int"))), List(defone)))
+  ))
 
   test("given-multiple-inheritance") {
     val expectedGiven = Defn.Given(
@@ -63,7 +59,7 @@ class GivenUsingSuite extends BaseDottySuite {
     )(expectedGiven)
   }
 
-  test("given-override-def") {
+  test("given-override-def")(
     runTestAssert[Stat](
       "given intOrd: Ord[Int] \n with { override def f(): Int = 1 }",
       assertLayout = Some("given intOrd: Ord[Int] with { override def f(): Int = 1 }")
@@ -74,8 +70,8 @@ class GivenUsingSuite extends BaseDottySuite {
       Nil,
       tpl(List(init(papply("Ord", "Int"))), List(defone(List(Mod.Override()))))
     ))
-  }
-  test("given-override-def-colon-newline") {
+  )
+  test("given-override-def-colon-newline")(
     runTestAssert[Stat](
       """|given intOrd
          |   : Ord[Int] with {
@@ -90,7 +86,7 @@ class GivenUsingSuite extends BaseDottySuite {
       Nil,
       tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, tname("fn"), Nil, Nil, None, Lit.Unit())))
     ))
-  }
+  )
 
   test("given-override-def") {
     runTestAssert[Stat](
@@ -120,21 +116,16 @@ class GivenUsingSuite extends BaseDottySuite {
     ))
   }
 
-  test("given-self") {
-    runTestAssert[Stat]("given intOrd: Ord[Int] with { current => }")(
-      Defn
-        .Given(Nil, tname("intOrd"), Nil, Nil, tpl(List(init(papply("Ord", "Int"))), self("current")))
-    )
-  }
+  test("given-self")(runTestAssert[Stat]("given intOrd: Ord[Int] with { current => }")(
+    Defn.Given(Nil, tname("intOrd"), Nil, Nil, tpl(List(init(papply("Ord", "Int"))), self("current")))
+  ))
 
-  test("given-selftype-error") {
-    runTestError(
-      "given intOrd: Ord[Int] with { current: Ord[Int] => }",
-      "given cannot have a self type"
-    )
-  }
+  test("given-selftype-error")(runTestError(
+    "given intOrd: Ord[Int] with { current: Ord[Int] => }",
+    "given cannot have a self type"
+  ))
 
-  test("given-generic-named") {
+  test("given-generic-named")(
     runTestAssert[Stat]("given listOrd[T]: Ord[List[T]] with { def f(): Int = 1 }")(Defn.Given(
       Nil,
       tname("listOrd"),
@@ -142,14 +133,11 @@ class GivenUsingSuite extends BaseDottySuite {
       Nil,
       tpl(init(papply("Ord", papply("List", "T"))) :: Nil, List(defone))
     ))
-  }
+  )
 
-  test("given-generic-anonymous") {
-    runTestAssert[Stat]("given Ord[List[T]] with { def f(): Int = 1 }")(
-      Defn
-        .Given(Nil, anon, Nil, Nil, tpl(init(papply("Ord", papply("List", "T"))) :: Nil, List(defone)))
-    )
-  }
+  test("given-generic-anonymous")(runTestAssert[Stat]("given Ord[List[T]] with { def f(): Int = 1 }")(
+    Defn.Given(Nil, anon, Nil, Nil, tpl(init(papply("Ord", papply("List", "T"))) :: Nil, List(defone)))
+  ))
 
   test("given-generic-anonymous") {
     runTestAssert[Stat](
@@ -171,36 +159,36 @@ class GivenUsingSuite extends BaseDottySuite {
     ))
   }
 
-  test("given-empty-anon") {
+  test("given-empty-anon")(
     runTestAssert[Stat](
       """|given C(1) with {}
          |""".stripMargin,
       assertLayout = Some("given C(1)")
     )(Defn.Given(Nil, anon, Nil, Nil, tpl(List(init("C", List(int(1)))), Nil)))
-  }
+  )
 
-  test("given-empty-anon-parens") {
+  test("given-empty-anon-parens")(
     runTestAssert[Stat](
       """|given C(1)
          |""".stripMargin
     )(Defn.Given(Nil, anon, Nil, Nil, tplNoBody(init("C", List(int(1))))))
-  }
+  )
 
-  test("given-empty-anon-empty-parens") {
+  test("given-empty-anon-empty-parens")(
     runTestAssert[Stat](
       """|given C()
          |""".stripMargin
     )(Defn.Given(Nil, anon, Nil, Nil, tplNoBody(init("C", Nil))))
-  }
+  )
 
-  test("given-empty-anon-no-parens") {
+  test("given-empty-anon-no-parens")(
     runTestAssert[Stat](
       """|given C with {}
          |""".stripMargin
     )(Defn.Given(Nil, anon, Nil, Nil, tpl(List(init("C")), Nil)))
-  }
+  )
 
-  test("given-empty") {
+  test("given-empty")(
     runTestAssert[Stat](
       """|given t1[T]: E[T]("low") with {}
          |""".stripMargin,
@@ -215,7 +203,7 @@ class GivenUsingSuite extends BaseDottySuite {
       Nil,
       tpl(init(papply("E", "T"), List(str("low"))) :: Nil, Nil)
     ))
-  }
+  )
 
   test("given-extension") {
     val code =
@@ -247,7 +235,7 @@ class GivenUsingSuite extends BaseDottySuite {
     ))
   }
 
-  test("given-inline") {
+  test("given-inline")(
     runTestAssert[Stat]("inline given intOrd: Ord[Int] with { def f(): Int = 1 }")(Defn.Given(
       List(Mod.Inline()),
       tname("intOrd"),
@@ -258,7 +246,7 @@ class GivenUsingSuite extends BaseDottySuite {
         List(Defn.Def(Nil, tname("f"), Nil, List(List()), Some(pname("Int")), int(1)))
       )
     ))
-  }
+  )
 
   test("given-with-import") {
     runTestAssert[Stat](
@@ -343,7 +331,7 @@ class GivenUsingSuite extends BaseDottySuite {
   // GIVEN ALIAS
   // ---------------------------------
 
-  test("given-alias-named") {
+  test("given-alias-named")(
     runTestAssert[Stat]("given global: Option[Int] = Some(3)")(Defn.GivenAlias(
       Nil,
       tname("global"),
@@ -352,21 +340,17 @@ class GivenUsingSuite extends BaseDottySuite {
       papply("Option", "Int"),
       tapply(tname("Some"), int(3))
     ))
-  }
+  )
 
-  test("given-alias-anonymous") {
-    runTestAssert[Stat]("given Option[Int] = Some(3)")(
-      Defn.GivenAlias(Nil, anon, Nil, Nil, papply("Option", "Int"), tapply(tname("Some"), int(3)))
-    )
-  }
+  test("given-alias-anonymous")(runTestAssert[Stat]("given Option[Int] = Some(3)")(
+    Defn.GivenAlias(Nil, anon, Nil, Nil, papply("Option", "Int"), tapply(tname("Some"), int(3)))
+  ))
 
-  test("given-alias-anon-or") {
-    runTestAssert[Stat]("given (Cancelable & Movable) = ???")(
-      Defn.GivenAlias(Nil, anon, Nil, Nil, pinfix("Cancelable", "&", pname("Movable")), tname("???"))
-    )
-  }
+  test("given-alias-anon-or")(runTestAssert[Stat]("given (Cancelable & Movable) = ???")(
+    Defn.GivenAlias(Nil, anon, Nil, Nil, pinfix("Cancelable", "&", pname("Movable")), tname("???"))
+  ))
 
-  test("given-alias-block") {
+  test("given-alias-block")(
     runTestAssert[Stat](
       "given global: Option[Int] = { def f(): Int = 1; Some(3) }",
       assertLayout = None
@@ -378,9 +362,9 @@ class GivenUsingSuite extends BaseDottySuite {
       papply("Option", "Int"),
       blk(defone, tapply(tname("Some"), int(3)))
     ))
-  }
+  )
 
-  test("given-alias-using-named") {
+  test("given-alias-using-named")(
     runTestAssert[Stat]("given ordInt(using ord: Ord[Int]): Ord[List[Int]] = ???")(Defn.GivenAlias(
       Nil,
       tname("ordInt"),
@@ -389,9 +373,9 @@ class GivenUsingSuite extends BaseDottySuite {
       papply("Ord", papply("List", "Int")),
       tname("???")
     ))
-  }
+  )
 
-  test("given-alias-using-anonymous") {
+  test("given-alias-using-anonymous")(
     runTestAssert[Stat]("given (using ord: Ord[Int]): Ord[List[Int]] = ???")(Defn.GivenAlias(
       Nil,
       anon,
@@ -400,14 +384,11 @@ class GivenUsingSuite extends BaseDottySuite {
       papply("Ord", papply("List", "Int")),
       tname("???")
     ))
-  }
+  )
 
-  test("given-alias-inline") {
-    runTestAssert[Stat]("inline given intOrd: Ord[Int] = ???")(
-      Defn
-        .GivenAlias(List(Mod.Inline()), tname("intOrd"), Nil, Nil, papply("Ord", "Int"), tname("???"))
-    )
-  }
+  test("given-alias-inline")(runTestAssert[Stat]("inline given intOrd: Ord[Int] = ???")(
+    Defn.GivenAlias(List(Mod.Inline()), tname("intOrd"), Nil, Nil, papply("Ord", "Int"), tname("???"))
+  ))
   test("given-alias-type-apply") {
     runTestAssert[Stat](
       """|object AppliedName:
@@ -433,19 +414,15 @@ class GivenUsingSuite extends BaseDottySuite {
   // Abstract given
   // ---------------------------------
 
-  test("abstract-given") {
-    runTestAssert[Stat]("given intOrd: Ord[Int]")(
-      Decl.Given(Nil, tname("intOrd"), Nil, Nil, papply("Ord", "Int"))
-    )
-  }
+  test("abstract-given")(runTestAssert[Stat]("given intOrd: Ord[Int]")(
+    Decl.Given(Nil, tname("intOrd"), Nil, Nil, papply("Ord", "Int"))
+  ))
 
-  test("abstract-given-inline") {
-    runTestAssert[Stat]("inline given intOrd: Ord[Int]")(
-      Decl.Given(List(Mod.Inline()), tname("intOrd"), Nil, Nil, papply("Ord", "Int"))
-    )
-  }
+  test("abstract-given-inline")(runTestAssert[Stat]("inline given intOrd: Ord[Int]")(
+    Decl.Given(List(Mod.Inline()), tname("intOrd"), Nil, Nil, papply("Ord", "Int"))
+  ))
 
-  test("abstract-given-depend") {
+  test("abstract-given-depend")(
     runTestAssert[Stat]("given setOrd[T](using ord: Ord[T]): Ord[Set[T]]")(Decl.Given(
       Nil,
       tname("setOrd"),
@@ -453,7 +430,7 @@ class GivenUsingSuite extends BaseDottySuite {
       List(List(tparam(List(Mod.Using()), "ord", papply("Ord", "T")))),
       papply("Ord", papply("Set", "T"))
     ))
-  }
+  )
 
   test("abstract-given-anonymous") {
     runTestError("given Ord[Int]", "abstract givens cannot be anonymous")
@@ -489,27 +466,23 @@ class GivenUsingSuite extends BaseDottySuite {
   // USING
   // ---------------------------------
 
-  test("using-named") {
-    runTestAssert[Stat]("def f(a: Int)(using ord: UInt): Int = ???")(Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      List(List(tparam("a", "Int")), List(tparamUsing("ord", "UInt"))),
-      Some(pname("Int")),
-      tname("???")
-    ))
-  }
+  test("using-named")(runTestAssert[Stat]("def f(a: Int)(using ord: UInt): Int = ???")(Defn.Def(
+    Nil,
+    tname("f"),
+    Nil,
+    List(List(tparam("a", "Int")), List(tparamUsing("ord", "UInt"))),
+    Some(pname("Int")),
+    tname("???")
+  )))
 
-  test("using-anonymous") {
-    runTestAssert[Stat]("def f(a: Int)(using UInt): Int = ???")(Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      List(List(tparam("a", "Int")), List(tparamUsing("", "UInt"))),
-      Some(pname("Int")),
-      tname("???")
-    ))
-  }
+  test("using-anonymous")(runTestAssert[Stat]("def f(a: Int)(using UInt): Int = ???")(Defn.Def(
+    Nil,
+    tname("f"),
+    Nil,
+    List(List(tparam("a", "Int")), List(tparamUsing("", "UInt"))),
+    Some(pname("Int")),
+    tname("???")
+  )))
 
   test("using-multiple-parens") {
     runTestAssert[Stat]("def f(a: Int)(using ui: UInt)(using us: UString): Boolean = ???")(Defn.Def(
@@ -554,7 +527,7 @@ class GivenUsingSuite extends BaseDottySuite {
     ))
   }
 
-  test("using-complex") {
+  test("using-complex")(
     runTestAssert[Stat]("def f(x: String)(using Int)(y: String)(using b: Int): Unit = ???")(Defn.Def(
       Nil,
       tname("f"),
@@ -568,7 +541,7 @@ class GivenUsingSuite extends BaseDottySuite {
       Some(pname("Unit")),
       tname("???")
     ))
-  }
+  )
 
   test("using-lambda-method-parameter") {
     val output =
@@ -589,14 +562,12 @@ class GivenUsingSuite extends BaseDottySuite {
     )
   }
 
-  test("using-call-site") {
-    runTestAssert[Stat]("val a = f()(using a)(using 3, true)")(Defn.Val(
-      Nil,
-      List(patvar("a")),
-      None,
-      tapplyUsing(tapplyUsing(tapply(tname("f")), tname("a")), int(3), bool(true))
-    ))
-  }
+  test("using-call-site")(runTestAssert[Stat]("val a = f()(using a)(using 3, true)")(Defn.Val(
+    Nil,
+    List(patvar("a")),
+    None,
+    tapplyUsing(tapplyUsing(tapply(tname("f")), tname("a")), int(3), bool(true))
+  )))
 
   test("using-anonymous-method") {
     runTestAssert[Stat]("val fun = (using ctx: Context) => ctx.open")(Defn.Val(
@@ -621,7 +592,7 @@ class GivenUsingSuite extends BaseDottySuite {
     ))
   }
 
-  test("given-pat") {
+  test("given-pat")(
     runTestAssert[Stat](
       """|pair match {
          |  case (ctx @ given Context, y) =>
@@ -635,7 +606,7 @@ class GivenUsingSuite extends BaseDottySuite {
         blk()
       )
     ))
-  }
+  )
   test("given-pat-new") {
     runTestAssert[Stat](
       """|pair match {
@@ -663,7 +634,7 @@ class GivenUsingSuite extends BaseDottySuite {
     ))
   }
 
-  test("given-pat-for") {
+  test("given-pat-for")(
     runTestAssert[Stat](
       """|for given Context <- applicationContexts do a
          |""".stripMargin,
@@ -672,7 +643,7 @@ class GivenUsingSuite extends BaseDottySuite {
       List(Enumerator.Generator(Pat.Given(pname("Context")), tname("applicationContexts"))),
       tname("a")
     ))
-  }
+  )
 
   // ---------------------------------
   // GIVEN IMPORT

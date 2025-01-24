@@ -48,7 +48,7 @@ object PlatformFileIO {
   def slurp(path: AbsolutePath, charset: Charset): String = JSIO
     .inNode(JSFs.readFileSync(path.toString, charset.toString))
 
-  def listFiles(path: AbsolutePath): ListFiles = JSIO.inNode {
+  def listFiles(path: AbsolutePath): ListFiles = JSIO.inNode(
     if (path.isFile) new ListFiles(path, Nil)
     else {
       val jsArray = JSFs.readdirSync(path.toString)
@@ -61,7 +61,7 @@ object PlatformFileIO {
       }
       new ListFiles(path, builder.result())
     }
-  }
+  )
 
   def isFile(path: AbsolutePath): Boolean = JSIO.isFile(path.toString)
 

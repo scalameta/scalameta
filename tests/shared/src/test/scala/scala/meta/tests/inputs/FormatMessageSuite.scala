@@ -74,7 +74,7 @@ class FormatMessageSuite extends TreeSuiteBase {
        |""".stripMargin.lf2nl
   )
 
-  test("foo\nbar")(
+  test("foo\nbar") {
     """|
        |<input>:1: error: foo
        |foo
@@ -101,5 +101,5 @@ class FormatMessageSuite extends TreeSuiteBase {
        |bar
        |   ^
        |""".stripMargin.lf2nl
-  )
+  }
 }

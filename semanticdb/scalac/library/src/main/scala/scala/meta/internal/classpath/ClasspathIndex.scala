@@ -26,11 +26,11 @@ final class ClasspathIndex private (classpath: Classpath, val dirs: collection.M
     getClassfile(PathIO.dirname(path), PathIO.basename(path))
 
   /** Returns a classfile with the given directory and filename. */
-  def getClassfile(directory: String, filename: String): Option[Classfile] = dirs
-    .get(directory) match {
-    case Some(pkg) => pkg.resolve(filename).collect { case e: Classfile => e }
-    case _ => None
-  }
+  def getClassfile(directory: String, filename: String): Option[Classfile] =
+    dirs.get(directory) match {
+      case Some(pkg) => pkg.resolve(filename).collect { case e: Classfile => e }
+      case _ => None
+    }
 
   /** Returns true if this path is a class directory. */
   def isClassdir(path: String): Boolean = dirs.contains(path)

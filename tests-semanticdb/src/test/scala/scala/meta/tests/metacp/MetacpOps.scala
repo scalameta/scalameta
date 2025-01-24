@@ -11,12 +11,12 @@ object MetacpOps {
   /** Returns all symbols that have an associated SymbolInformation in the classpath */
   def collectAllGlobalSymbols(classpath: Classpath): collection.Set[String] = {
     val allSymbols = mutable.Set.empty[String]
-    Locator(classpath.entries.map(_.toNIO)) { (_, docs) =>
+    Locator(classpath.entries.map(_.toNIO))((_, docs) =>
       for {
         doc <- docs.documents
         sym <- doc.symbols
       } allSymbols += sym.symbol
-    }
+    )
     allSymbols
   }
 
@@ -70,12 +70,10 @@ object MetacpOps {
     }
     def visitSignature(signature: s.Signature): Unit = signature match {
       case s.ClassSignature(typeParameters, parents, self, declarations) =>
-        visitScope(typeParameters) {
-          visitScope(declarations) {
-            parents.foreach(visitType)
-            visitType(self)
-          }
-        }
+        visitScope(typeParameters)(visitScope(declarations) {
+          parents.foreach(visitType)
+          visitType(self)
+        })
       case s.MethodSignature(typeParameters, parameterLists, returnType) =>
         parameterLists.foreach(s => visitScope(Some(s))(()))
         visitScope(typeParameters)(visitType(returnType))
@@ -96,7 +94,7 @@ object MetacpOps {
   def collectReferencedToUndefinedSymbols(classpath: Classpath): Iterable[String] = {
     val isPersistedGlobalSymbol = collectAllGlobalSymbols(classpath)
     val errors = mutable.Set.empty[String]
-    Locator(classpath.entries.map(_.toNIO)) { (path, docs) =>
+    Locator(classpath.entries.map(_.toNIO))((path, docs) =>
       for {
         doc <- docs.documents
         sym <- doc.symbols
@@ -104,7 +102,7 @@ object MetacpOps {
         val references = collectAllSymbolReferences(sym)
         errors ++= references.filterNot(isPersistedGlobalSymbol)
       }
-    }
+    )
     errors
   }
 

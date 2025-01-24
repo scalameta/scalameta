@@ -88,13 +88,13 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
           }
         }
         val nameOpt =
-          if (showFieldName) t.parent.flatMap { p =>
+          if (showFieldName) t.parent.flatMap(p =>
             p.productFields.iterator.zip(p.productIterator).collectFirst {
               case (name, `t`) => name
               case (name, Some(`t`)) => name
               case (name, IterableIndex(idx)) => s"$name$idx"
             }
-          }.orElse(Some("?"))
+          ).orElse(Some("?"))
           else None
         nameOpt.foreach(x => sb.append('<').append(x).append('>'))
         sb.append(t.productPrefix).append(' ')

@@ -50,12 +50,12 @@ object ScalametaParserProperties {
 
   def runAnalysis(corpusSize: Int = Int.MaxValue) = {
     val corpus = Corpus.files(Corpus.fastparse).take(corpusSize).toBuffer.par
-    SyntaxAnalysis.run[ParserBug](corpus) { file =>
+    SyntaxAnalysis.run[ParserBug](corpus)(file =>
       file.jFile.parse[Source] match {
         case Parsed.Success(s) => onParseSuccess(s)
         case e: Parsed.Error => onParseError(file, e)
       }
-    }
+    )
   }
 
   def runAndPrintAnalysis(): Unit = {

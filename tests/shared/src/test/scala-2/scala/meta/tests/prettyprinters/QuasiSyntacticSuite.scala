@@ -106,31 +106,29 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertWithOriginalSyntax(t"((a, b), c) => c", "((a, b), c) => c", "((a, b), c) => c")
   }
 
-  test("Term.Apply(_, List(Term.Function(...))) #572, #574") {
-    assertWithOriginalSyntax(
-      q"foo { implicit i: Int => () }",
-      "foo { implicit i: Int => () }",
-      "foo {\n  implicit i: Int => ()\n}"
-    )
-  }
+  test("Term.Apply(_, List(Term.Function(...))) #572, #574")(assertWithOriginalSyntax(
+    q"foo { implicit i: Int => () }",
+    "foo { implicit i: Int => () }",
+    "foo {\n  implicit i: Int => ()\n}"
+  ))
 
   test("macro defs #581") {
     assertWithOriginalSyntax(q"def f = macro g", "def f = macro g", "def f = macro g")
     assertWithOriginalSyntax(q"def f: Int = macro g", "def f: Int = macro g", "def f: Int = macro g")
   }
 
-  test("Importee.Rename") {
+  test("Importee.Rename")(
     assertWithOriginalSyntax(q"import a.{b=>c}", "import a.{b=>c}", "import a.{b => c}")
-  }
+  )
 
   test("backquote importees when needed - scalafix #1337") {
     assertWithOriginalSyntax(q"import a.`{ q }`", "import a.`{ q }`", "import a.`{ q }`")
     assertWithOriginalSyntax(q"import a.`macro`", "import a.`macro`", "import a.`macro`")
   }
 
-  test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'") {
+  test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'")(
     assertTree(q"val x = 1l")(q"val x = 1L")
-  }
+  )
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
     val expected =
@@ -164,13 +162,13 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertStruct(q"val x = 1.0d")(expected)
   }
 
-  test("#931 val `a b` = 2") {
+  test("#931 val `a b` = 2")(
     assertWithOriginalSyntax(q"val `a b` = 2", "val `a b` = 2", "val `a b` = 2")
-  }
+  )
 
-  test("#2097 val `macro` = 42") {
+  test("#2097 val `macro` = 42")(
     assertWithOriginalSyntax(q"val `macro` = 42", "val `macro` = 42", "val `macro` = 42")
-  }
+  )
 
   test("#1661 Names outside: Must start with either a letter or an operator") {
     assertWithOriginalSyntax(q"val `foo` = 2", "val `foo` = 2", "val foo = 2")
@@ -216,12 +214,12 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat("list map (_.bar)")(q"list map (_.bar)")
     checkStat("list map Foo.bar")(q"list map (Foo.bar)")
   }
-  test("1826 ApplyInfix parentheses on multiple Select") {
+  test("1826 ApplyInfix parentheses on multiple Select")(
     checkStat("list map (_.foo.bar)")(q"list map (_.foo.bar)")
-  }
-  test("#1826 ApplyInfix parentheses on tuple") {
+  )
+  test("#1826 ApplyInfix parentheses on tuple")(
     checkStat("list map ((_, foo))")(q"list map ((_, foo))")
-  }
+  )
   test("#1826 ApplyInfix parentheses on Apply") {
     checkStat("list map (_.->(foo))")(q"list map (_.->(foo))")
     checkStat("list map a.->(foo)")(q"list map a.->(foo)")
@@ -230,9 +228,9 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat("list map a.diff(foo)")(q"list map a.diff(foo)")
     checkStat("list map a.diff.bar(foo)")(q"list map a.diff.bar(foo)")
   }
-  test("#1826 ApplyInfix parentheses on Function") {
+  test("#1826 ApplyInfix parentheses on Function")(
     checkStat("list map (_ => foo)")(q"list map (_ => foo)")
-  }
+  )
   test("#1826 ApplyInfix parentheses on ApplyInfix function") {
     checkStat("list map (_ diff foo)")(q"list map (_ diff foo)")
     // 'diff' has same precedence as 'map', so parentheses should be added
@@ -243,9 +241,9 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     // '->' has greater precendence than 'map', so parentheses are not needed
     checkStat("list map a -> foo")(q"list map (a -> foo)")
   }
-  test("1826 ApplyInfix parentheses on Term.Match") {
+  test("1826 ApplyInfix parentheses on Term.Match")(
     checkStat(s"list map (_ match {$EOL  case 1 => 2$EOL})")(q"list map (_ match { case 1 => 2})")
-  }
+  )
 
   test("#1839 ApplyInfix parentheses on Term.Placeholder") {
     checkStat("list reduce (_ + _)")(q"list reduce (_ + _)")
@@ -265,9 +263,9 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     ).foreach { case (code, expected) => checkStat(code, code)(expected) }
   }
 
-  test("#1864 Terms with leading numerics are backquoted") {
+  test("#1864 Terms with leading numerics are backquoted")(
     checkStat("""val `123foo` = "hello"""")(q""" val `123foo` = "hello" """)
-  }
+  )
 
   test("#1868 Term.Eta preserves structure") {
     checkStat("(x _).y")(q"""(x _).y""")
@@ -276,73 +274,55 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("#2447 Pat.Bind on tname")(checkStat("{\n  case x @ Y => x\n}")(q"{ case x @ Y => x }"))
 
-  test("#2447 Pat.Bind on tname backticks") {
+  test("#2447 Pat.Bind on tname backticks")(
     checkStat("{\n  case x @ `y` => x\n}")(q"{ case x @ `y` => x }")
-  }
+  )
 
-  test("#1843 anonymous functions 1") {
-    checkTree(q"list foo (_ fun (_.bar))")(tinfix(
-      tname("list"),
-      "foo",
-      Term.AnonymousFunction(
-        tinfix(Term.Placeholder(), "fun", Term.AnonymousFunction(tselect(Term.Placeholder(), "bar")))
-      )
-    ))
-  }
+  test("#1843 anonymous functions 1")(checkTree(q"list foo (_ fun (_.bar))")(tinfix(
+    tname("list"),
+    "foo",
+    Term.AnonymousFunction(
+      tinfix(Term.Placeholder(), "fun", Term.AnonymousFunction(tselect(Term.Placeholder(), "bar")))
+    )
+  )))
 
-  test("#1843 anonymous functions 2") {
-    checkTree(q"list foo (_ fun _.bar)")(tinfix(
-      tname("list"),
-      "foo",
-      Term.AnonymousFunction(tinfix(Term.Placeholder(), "fun", tselect(Term.Placeholder(), "bar")))
-    ))
-  }
+  test("#1843 anonymous functions 2")(checkTree(q"list foo (_ fun _.bar)")(tinfix(
+    tname("list"),
+    "foo",
+    Term.AnonymousFunction(tinfix(Term.Placeholder(), "fun", tselect(Term.Placeholder(), "bar")))
+  )))
 
-  test("#2717 anonymous function with unary") {
-    checkTree(q"xs span { !separates(_) }") {
-      tinfix(
-        tname("xs"),
-        "span",
-        blk(Term.AnonymousFunction(
-          Term.ApplyUnary(tname("!"), tapply(tname("separates"), Term.Placeholder()))
-        ))
-      )
-    }
-  }
+  test("#2717 anonymous function with unary")(checkTree(q"xs span { !separates(_) }")(tinfix(
+    tname("xs"),
+    "span",
+    blk(
+      Term.AnonymousFunction(Term.ApplyUnary(tname("!"), tapply(tname("separates"), Term.Placeholder())))
+    )
+  )))
 
-  test("anonymous function with new") {
-    checkTree(q"foo map (new foo(_))") {
-      tinfix(tname("foo"), "map", Term.AnonymousFunction(Term.New(init("foo", List(Term.Placeholder())))))
-    }
-  }
+  test("anonymous function with new")(checkTree(q"foo map (new foo(_))")(
+    tinfix(tname("foo"), "map", Term.AnonymousFunction(Term.New(init("foo", List(Term.Placeholder())))))
+  ))
 
-  test("anonymous function with select") {
-    checkTree(q"foo map (foo(_).bar)") {
-      tinfix(
-        tname("foo"),
-        "map",
-        Term.AnonymousFunction(tselect(tapply(tname("foo"), Term.Placeholder()), "bar"))
-      )
-    }
-  }
+  test("anonymous function with select")(checkTree(q"foo map (foo(_).bar)")(tinfix(
+    tname("foo"),
+    "map",
+    Term.AnonymousFunction(tselect(tapply(tname("foo"), Term.Placeholder()), "bar"))
+  )))
 
-  test("anonymous function with apply type") {
-    checkTree(q"foo map (_.foo[A])") {
-      tinfix(
-        tname("foo"),
-        "map",
-        Term.AnonymousFunction(tapplytype(tselect(Term.Placeholder(), "foo"), pname("A")))
-      )
-    }
-  }
+  test("anonymous function with apply type")(checkTree(q"foo map (_.foo[A])")(tinfix(
+    tname("foo"),
+    "map",
+    Term.AnonymousFunction(tapplytype(tselect(Term.Placeholder(), "foo"), pname("A")))
+  )))
 
-  test("#2317 init block") {
+  test("#2317 init block")(
     checkStat(
       """new Foo({
         |  str => str.length
         |})""".stripMargin
     )(q"new Foo({str => str.length})")
-  }
+  )
 
   test("#1917 init lambda")(checkStat("new Foo((a: Int) => a + 1)")(q"new Foo((a: Int) => a + 1)"))
 
@@ -361,7 +341,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(part2.tokens.structure, "Tokens(Xml.Part(</h1>) [8..13))")
   }
 
-  test("#1063 original") {
+  test("#1063 original")(
     checkStat(
       """def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) {
         |  cleaners: _*
@@ -369,9 +349,9 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     )(
       q"def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) { cleaners: _* }"
     )
-  }
+  )
 
-  test("#2708 term lassoc") {
+  test("#2708 term lassoc")(
     checkTree(
       q"""{
             () == ()
@@ -385,9 +365,9 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       tinfix(tinfix(Lit.Unit(), "=="), "=="),
       tinfix(tinfix(Lit.Unit(), "==", Lit.Unit()), "==", Lit.Unit())
     ))
-  }
+  )
 
-  test("#2708 term rassoc") {
+  test("#2708 term rassoc")(
     checkTree(
       q"""{
             () :: ()
@@ -401,7 +381,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       tinfix(Lit.Unit(), "::", tinfix(Lit.Unit(), "::")),
       tinfix(Lit.Unit(), "::", tinfix(Lit.Unit(), "::", Lit.Unit()))
     ))
-  }
+  )
 
   test("#2708 pat lassoc") {
     checkTree(
@@ -437,56 +417,48 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     ))
   }
 
-  test("pat infix: _ op (a | b)") {
-    checkTree(p"_ op (a | b)", "_ op (a | b)") {
-      patinfix(patwildcard, "op", Pat.Alternative(patvar("a"), patvar("b")))
-    }
-  }
+  test("pat infix: _ op (a | b)")(checkTree(p"_ op (a | b)", "_ op (a | b)")(
+    patinfix(patwildcard, "op", Pat.Alternative(patvar("a"), patvar("b")))
+  ))
 
-  test("pat infix: _ * (a + b)") {
-    checkTree(p"_ * (a + b)", "_ * (a + b)") {
-      patinfix(patwildcard, "*", patinfix(patvar("a"), "+", patvar("b")))
-    }
-  }
+  test("pat infix: _ * (a + b)")(checkTree(p"_ * (a + b)", "_ * (a + b)")(
+    patinfix(patwildcard, "*", patinfix(patvar("a"), "+", patvar("b")))
+  ))
 
-  test("term infix: _ * (a + b)") {
-    checkTree(q"_ * (a + b)", "_ * (a + b)") {
-      Term.AnonymousFunction(tinfix(Term.Placeholder(), "*", tinfix(tname("a"), "+", tname("b"))))
-    }
-  }
+  test("term infix: _ * (a + b)")(checkTree(q"_ * (a + b)", "_ * (a + b)")(Term.AnonymousFunction(
+    tinfix(Term.Placeholder(), "*", tinfix(tname("a"), "+", tname("b")))
+  )))
 
-  test("term infix: 1 + (2 / 3) * 4") {
-    checkTree(q"1 + (2 / 3) * 4", "1 + 2 / 3 * 4") {
-      tinfix(int(1), "+", tinfix(tinfix(int(2), "/", int(3)), "*", int(4)))
-    }
-  }
+  test("term infix: 1 + (2 / 3) * 4")(checkTree(q"1 + (2 / 3) * 4", "1 + 2 / 3 * 4")(
+    tinfix(int(1), "+", tinfix(tinfix(int(2), "/", int(3)), "*", int(4)))
+  ))
 
-  test("term infix: 1 + { 2 / 3 } * 4") {
+  test("term infix: 1 + { 2 / 3 } * 4")(
     checkTree(
       q"1 + { 2 / 3 } * 4",
       """|1 + {
          |  2 / 3
          |} * 4""".stripMargin
     )(tinfix(int(1), "+", tinfix(blk(tinfix(int(2), "/", int(3))), "*", int(4))))
-  }
+  )
 
-  test("term infix: { 2 / 3 } + 4") {
+  test("term infix: { 2 / 3 } + 4")(
     checkTree(
       q"{ 2 / 3 } + 4",
       """|{
          |  2 / 3
          |} + 4""".stripMargin
     )(tinfix(blk(tinfix(int(2), "/", int(3))), "+", int(4)))
-  }
+  )
 
-  test("term anon func: foo.bar(_: Int, _: String)") {
-    checkTree(q"foo.bar(_: Int, _: String)", "foo.bar(_: Int, _: String)") {
-      Term.AnonymousFunction(tapply(
+  test("term anon func: foo.bar(_: Int, _: String)")(
+    checkTree(q"foo.bar(_: Int, _: String)", "foo.bar(_: Int, _: String)")(Term.AnonymousFunction(
+      tapply(
         tselect("foo", "bar"),
         Term.Ascribe(Term.Placeholder(), pname("Int")),
         Term.Ascribe(Term.Placeholder(), pname("String"))
-      ))
-    }
-  }
+      )
+    ))
+  )
 
 }

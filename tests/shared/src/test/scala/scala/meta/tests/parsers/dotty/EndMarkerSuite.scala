@@ -216,16 +216,16 @@ class EndMarkerSuite extends BaseDottySuite {
     ))
   }
 
-  test("object-empty-body-end-marker") {
+  test("object-empty-body-end-marker")(
     runTestAssert[Source](
       """|object Foo:
          |end Foo
          |""".stripMargin,
       assertLayout = None
     )(Source(List(Defn.Object(Nil, tname("Foo"), EmptyTemplate()), Term.EndMarker(tname("Foo")))))
-  }
+  )
 
-  test("class-empty-body-end-marker") {
+  test("class-empty-body-end-marker")(
     runTestAssert[Source](
       """|class Foo:
          |end Foo
@@ -235,9 +235,9 @@ class EndMarkerSuite extends BaseDottySuite {
       Defn.Class(Nil, pname("Foo"), Nil, EmptyCtor(), EmptyTemplate()),
       Term.EndMarker(tname("Foo"))
     )))
-  }
+  )
 
-  test("trait-empty-body-end-marker") {
+  test("trait-empty-body-end-marker")(
     runTestAssert[Source](
       """|trait Foo:
          |end Foo
@@ -247,43 +247,37 @@ class EndMarkerSuite extends BaseDottySuite {
       Defn.Trait(Nil, pname("Foo"), Nil, EmptyCtor(), EmptyTemplate()),
       Term.EndMarker(tname("Foo"))
     )))
-  }
+  )
 
-  test("trait-empty-body-no-end-marker") {
-    runTestError[Source](
-      """|trait Foo:
-         |  trait Baz:
-         |  trait Bar:
-         |  end Bar
-         |end Foo
-         |""".stripMargin,
-      """|<input>:2: error: template body: `indent` expected but `\n` found
-         |  trait Baz:
-         |            ^""".stripMargin
-    )
-  }
+  test("trait-empty-body-no-end-marker")(runTestError[Source](
+    """|trait Foo:
+       |  trait Baz:
+       |  trait Bar:
+       |  end Bar
+       |end Foo
+       |""".stripMargin,
+    """|<input>:2: error: template body: `indent` expected but `\n` found
+       |  trait Baz:
+       |            ^""".stripMargin
+  ))
 
-  test("trait-empty-body-outer-end-marker") {
-    runTestError[Source](
-      """|trait Foo:
-         |  trait Bar:
-         |end Foo
-         |""".stripMargin,
-      """|<input>:2: error: template body: `indent` expected but `outdent` found
-         |  trait Bar:
-         |            ^""".stripMargin
-    )
-  }
+  test("trait-empty-body-outer-end-marker")(runTestError[Source](
+    """|trait Foo:
+       |  trait Bar:
+       |end Foo
+       |""".stripMargin,
+    """|<input>:2: error: template body: `indent` expected but `outdent` found
+       |  trait Bar:
+       |            ^""".stripMargin
+  ))
 
-  test("trait-empty-body-no-end-marker") {
-    runTestError[Source](
-      """|trait Foo:
-         |""".stripMargin,
-      """|<input>:1: error: template body: `indent` expected but `\n` found
-         |trait Foo:
-         |          ^""".stripMargin
-    )
-  }
+  test("trait-empty-body-no-end-marker")(runTestError[Source](
+    """|trait Foo:
+       |""".stripMargin,
+    """|<input>:1: error: template body: `indent` expected but `\n` found
+       |trait Foo:
+       |          ^""".stripMargin
+  ))
 
   test("#3366 not an end marker") {
     val code =
