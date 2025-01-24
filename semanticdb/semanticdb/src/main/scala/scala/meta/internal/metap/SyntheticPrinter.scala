@@ -21,7 +21,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
 
     if (settings.format.isDetailed) {
       val printed = mutable.Set[String]()
-      infoNotes.visited.foreach { info =>
+      infoNotes.visited.foreach(info =>
         if (!printed(info.symbol)) {
           printed += info.symbol
           out.print("  ")
@@ -29,7 +29,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
           out.print(" => ")
           out.println(info.symbol)
         }
-      }
+      )
     }
   }
 

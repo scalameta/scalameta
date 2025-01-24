@@ -489,22 +489,24 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: KwCatch => getCaseIntro(dropWhile(sepRegions)(_ ne RegionTry))
       case _: KwCase if !next.isClassOrObject =>
         def expr() = new RegionCaseExpr(countIndent(currPos))
-        currRef(dropRegionLine(sepRegions) match {
-          // `case` follows the body of a previous case
-          case (_: RegionCaseBody) :: rs => expr() :: rs
-          // head could be RegionIndent or RegionBrace
-          case x :: RegionCaseMark :: rs => expr() :: x :: rs
-          case (_: RegionDelim) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
-          // partial function
-          case (_: RegionBrace) :: _ => expr() :: sepRegions
-          // partial function in assignment or fewer braces
-          case (_: RegionIndent) :: _
-              if prevToken.is[Indentation.Indent] && prev.isAny[Equals, Colon] =>
-            expr() :: sepRegions
-          // `case` is at top-level (likely quasiquote)
-          case Nil if prevPos == 0 => expr() :: sepRegions
-          case _ => sepRegions
-        })
+        currRef {
+          dropRegionLine(sepRegions) match {
+            // `case` follows the body of a previous case
+            case (_: RegionCaseBody) :: rs => expr() :: rs
+            // head could be RegionIndent or RegionBrace
+            case x :: RegionCaseMark :: rs => expr() :: x :: rs
+            case (_: RegionDelim) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
+            // partial function
+            case (_: RegionBrace) :: _ => expr() :: sepRegions
+            // partial function in assignment or fewer braces
+            case (_: RegionIndent) :: _
+                if prevToken.is[Indentation.Indent] && prev.isAny[Equals, Colon] =>
+              expr() :: sepRegions
+            // `case` is at top-level (likely quasiquote)
+            case Nil if prevPos == 0 => expr() :: sepRegions
+            case _ => sepRegions
+          }
+        }
       case _: KwFinally => dropRegionLine(sepRegions) match {
           // covers case when finally follows catch case without a newline
           // otherwise, these two regions would have been removed already

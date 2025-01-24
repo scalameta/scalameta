@@ -105,7 +105,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     }
     val leaf = T.tpe.typeSymbol.asLeaf
     val allAnalyzedFields = leaf.fields
-    val acc = allAnalyzedFields.foldLeft(q"": Tree)((acc, f) =>
+    val acc = allAnalyzedFields.foldLeft(q"": Tree) { (acc, f) =>
       f.tpe match {
         case TreeTpe() =>
           streak :+= q"this.${f.sym}"
@@ -124,7 +124,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
           q"$acc1 ++ this.${f.sym}.flatten"
         case _ => acc
       }
-    )
+    }
     flushStreak(acc)
   }
 }

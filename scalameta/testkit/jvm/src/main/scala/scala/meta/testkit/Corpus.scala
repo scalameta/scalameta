@@ -110,11 +110,11 @@ object Corpus {
    */
   def files(corpus: Corpus): Iterator[CorpusFile] = {
     val repos = createReposDir(corpus)
-    val files = Option(repos.listFiles()).getOrElse {
+    val files = Option(repos.listFiles()).getOrElse(
       throw new IllegalStateException(
         s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry."
       )
-    }
+    )
     files.iterator.flatMap { repo =>
       val commit = FileOps.readFile(new File(repo, "COMMIT")).trim
       val url = FileOps.readFile(new File(repo, "URL")).trim

@@ -259,13 +259,13 @@ object MetacpUndefined extends ExpectHelpers {
   def loadObtained: String = {
     val classpath = Classpath(AbsolutePath(metacp(classDirectory)))
     val undefined = MetacpOps.collectReferencedToUndefinedSymbols(classpath)
-    val interesting = undefined.filterNot { symbol =>
+    val interesting = undefined.filterNot(symbol =>
       // We are only interested in references to symbols in semanticdb/integration
       // that have no SymbolInformation. It's expected that references to the packages
       // scala/ and java/ package have no SymbolInformation because we only process
       // databaseClasspath, scala-library and the JDK are only --dependency-classpath.
       symbol.startsWith("scala/") || symbol.startsWith("java/") || symbol == "local_wildcard"
-    }
+    )
     interesting.toSeq.sorted.mkString("", "\n", "\n")
   }
 }
@@ -305,13 +305,13 @@ object SaveManifestTest {
 
     val emptyClassfiles = Files.list(classes).iterator.asScala.toList
       .filter(f => Files.isRegularFile(f))
-    withJar(part0) { jos =>
+    withJar(part0)(jos =>
       emptyClassfiles.foreach { classfile =>
         jos.putNextEntry(new JarEntry(classes.relativize(classfile).toString))
         jos.write(Files.readAllBytes(classfile))
         jos.closeEntry()
       }
-    }
+    )
 
     val emptySemanticdbRelPath =
       "META-INF/semanticdb/semanticdb/integration/src/main/scala/example/Empty.scala.semanticdb"

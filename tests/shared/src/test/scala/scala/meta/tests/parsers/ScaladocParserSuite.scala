@@ -35,12 +35,10 @@ class ScaladocParserSuite extends FunSuite {
     sb.append(nl)
   }
 
-  test("example usage") {
-    assertEquals(
-      parseString("/** Example scaladoc */"),
-      Some(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("Example"), Word("scaladoc"))))))))
-    )
-  }
+  test("example usage")(assertEquals(
+    parseString("/** Example scaladoc */"),
+    Some(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("Example"), Word("scaladoc"))))))))
+  ))
 
   test("indentation checks") {
 
@@ -126,7 +124,7 @@ class ScaladocParserSuite extends FunSuite {
     val refDots: Seq[TextPartInfo] = Seq(Link("Description", Seq("Body")), Word("...") -> true)
     val refWithSuffix: Seq[TextPartInfo] = Seq(Link("Description", Seq("Body")), Word("'s") -> true)
     assertEquals(
-      parseString(
+      parseString {
         s"""
          /**
           *
@@ -142,7 +140,7 @@ class ScaladocParserSuite extends FunSuite {
           *
           */
          """
-      ),
+      },
       Option(Scaladoc(Seq(
         Paragraph(Seq(Text(words ++ refDots))),
         Paragraph(Seq(Text(words ++ refNone ++ words))),
@@ -190,7 +188,7 @@ class ScaladocParserSuite extends FunSuite {
          |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
     val complexCodeBlockAsComment = complexCodeBlock.mkString("\n *")
 
-    val result = parseString(
+    val result = parseString {
       s"""
           /**
             * $testDescription {{{$codeBlock1}}}? $testDescription
@@ -206,7 +204,7 @@ class ScaladocParserSuite extends FunSuite {
             * {{{
             *$complexCodeBlockAsComment }}}             */
        """.stripMargin
-    )
+    }
 
     val textpara1 = Seq.newBuilder[TextPartInfo]
     textpara1 ++= words += CodeExpr(codeBlock1) += Word("?") -> true
@@ -418,7 +416,7 @@ class ScaladocParserSuite extends FunSuite {
     val bad3 = "=====5left,5right=====debris"
     val bad4 = "debris=====5left,5right====="
 
-    val result = parseString(
+    val result = parseString {
       s"""
         /**
           * =$level1HeadingBody=
@@ -433,7 +431,7 @@ class ScaladocParserSuite extends FunSuite {
           * $bad4
           */
          """
-    )
+    }
     val expectation = Option(Scaladoc(Seq(Paragraph(Seq(
       Heading(1, level1HeadingBody),
       Heading(2, level2HeadingBody),
@@ -489,30 +487,32 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(
-      Text(Seq(Word("Some"), Word("text:"))),
-      ListBlock(
-        ListType.Bullet,
-        Seq(
-          ListItem(
-            "-",
-            Text(Seq(Word(list11))),
-            Seq(ListBlock(
-              ListType.Decimal,
-              Seq(ListItem("1.", Text(Seq(Word(list21)))), ListItem("2.", Text(Seq(Word(list22)))))
-            ))
-          ),
-          ListItem(
-            "-",
-            Text(Seq(Word(list12))),
-            Seq(ListBlock(
-              ListType.Alpha,
-              Seq(ListItem("a.", Text(Seq(Word(list21)))), ListItem("b.", Text(Seq(Word(list22)))))
-            ))
+    val expected = Option {
+      Scaladoc(Seq(Paragraph(Seq(
+        Text(Seq(Word("Some"), Word("text:"))),
+        ListBlock(
+          ListType.Bullet,
+          Seq(
+            ListItem(
+              "-",
+              Text(Seq(Word(list11))),
+              Seq(ListBlock(
+                ListType.Decimal,
+                Seq(ListItem("1.", Text(Seq(Word(list21)))), ListItem("2.", Text(Seq(Word(list22)))))
+              ))
+            ),
+            ListItem(
+              "-",
+              Text(Seq(Word(list12))),
+              Seq(ListBlock(
+                ListType.Alpha,
+                Seq(ListItem("a.", Text(Seq(Word(list21)))), ListItem("b.", Text(Seq(Word(list22)))))
+              ))
+            )
           )
         )
-      )
-    )))))
+      ))))
+    }
     assertEquals(result, expected)
   }
 
@@ -537,39 +537,47 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(
-      Text(Seq(Word("Some"), Word("text:"))),
-      ListBlock(
-        ListType.Decimal,
-        Seq(ListItem(
-          "1.",
-          Text(Seq(Word(list11))),
-          Seq(ListBlock(
-            ListType.Roman,
-            Seq(ListItem(
-              "i.",
-              Text(Seq(Word(list21))),
-              Seq(ListBlock(ListType.Roman, Seq(ListItem("I.", Text(Seq(Word(list31)))))))
-            ))
-          ))
-        ))
-      ),
-      ListBlock(
-        ListType.Bullet,
-        Seq(ListItem(
-          "-",
-          Text(Seq(Word(list12))),
-          Seq(ListBlock(
-            ListType.Roman,
-            Seq(ListItem(
-              "I.",
-              Text(Seq(Word(list22))),
-              Seq(ListBlock(ListType.Roman, Seq(ListItem("I.", Text(Seq(Word(list32)))))))
-            ))
-          ))
-        ))
-      )
-    )))))
+    val expected = Option {
+      Scaladoc {
+        Seq {
+          Paragraph {
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                ListType.Decimal,
+                Seq(ListItem(
+                  "1.",
+                  Text(Seq(Word(list11))),
+                  Seq(ListBlock(
+                    ListType.Roman,
+                    Seq(ListItem(
+                      "i.",
+                      Text(Seq(Word(list21))),
+                      Seq(ListBlock(ListType.Roman, Seq(ListItem("I.", Text(Seq(Word(list31)))))))
+                    ))
+                  ))
+                ))
+              ),
+              ListBlock(
+                ListType.Bullet,
+                Seq(ListItem(
+                  "-",
+                  Text(Seq(Word(list12))),
+                  Seq(ListBlock(
+                    ListType.Roman,
+                    Seq(ListItem(
+                      "I.",
+                      Text(Seq(Word(list22))),
+                      Seq(ListBlock(ListType.Roman, Seq(ListItem("I.", Text(Seq(Word(list32)))))))
+                    ))
+                  ))
+                ))
+              )
+            )
+          }
+        }
+      }
+    }
     assertEquals(result, expected)
   }
 
@@ -597,41 +605,52 @@ class ScaladocParserSuite extends FunSuite {
         */
        """
     )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(
-      Text(Seq(Word("Some"), Word("text:"))),
-      ListBlock(
-        ListType.Decimal,
-        Seq(ListItem(
-          "1.",
-          Text(Seq(Word(list11), Word("i.e."), Word("foo"))),
-          Seq(ListBlock(
-            ListType.Roman,
-            Seq(ListItem("i.", Text(Seq(Word(list21)))), ListItem("ii.", Text(Seq(Word(list22)))))
-          ))
-        ))
-      ),
-      ListBlock(
-        ListType.Bullet,
-        Seq(ListItem(
-          "-",
-          Text(Seq(Word(list12))),
-          Seq(ListBlock(
-            ListType.Roman,
+    val expected = Option {
+      Scaladoc {
+        Seq {
+          Paragraph {
             Seq(
-              ListItem("i.", Text(Seq(Word(list21)))),
-              ListItem(
-                "ix.",
-                Text(Seq(Word(list22), Word("i.e."), Word("bar"))),
-                Seq(
-                  ListBlock(ListType.Roman, Seq(ListItem("i.", Text(Seq(Word(list32)))))),
-                  Text(Seq(Word("baz")))
-                )
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                ListType.Decimal,
+                Seq(ListItem(
+                  "1.",
+                  Text(Seq(Word(list11), Word("i.e."), Word("foo"))),
+                  Seq(ListBlock(
+                    ListType.Roman,
+                    Seq(
+                      ListItem("i.", Text(Seq(Word(list21)))),
+                      ListItem("ii.", Text(Seq(Word(list22))))
+                    )
+                  ))
+                ))
+              ),
+              ListBlock(
+                ListType.Bullet,
+                Seq(ListItem(
+                  "-",
+                  Text(Seq(Word(list12))),
+                  Seq(ListBlock(
+                    ListType.Roman,
+                    Seq(
+                      ListItem("i.", Text(Seq(Word(list21)))),
+                      ListItem(
+                        "ix.",
+                        Text(Seq(Word(list22), Word("i.e."), Word("bar"))),
+                        Seq(
+                          ListBlock(ListType.Roman, Seq(ListItem("i.", Text(Seq(Word(list32)))))),
+                          Text(Seq(Word("baz")))
+                        )
+                      )
+                    )
+                  ))
+                ))
               )
             )
-          ))
-        ))
-      )
-    )))))
+          }
+        }
+      }
+    }
     assertEquals(result, expected)
   }
 
@@ -743,25 +762,31 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(
-      Text(Seq(Word("Some"), Word("text:"))),
-      ListBlock(
-        ListType.Bullet,
-        Seq(
-          ListItem("-", Text(Seq(Word(list11)))),
-          ListItem(
-            "-",
-            Text(Seq(Word(list12), Word("continue"), Word("text"))),
-            Seq(
-              MdCodeBlock(Seq("scala"), Seq("println(42)"), "```"),
-              Text(Seq(Word("and"), Word("some"), Word("text"))),
-              ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21))))))
+    val expected = Option {
+      Scaladoc {
+        Seq {
+          Paragraph(Seq(
+            Text(Seq(Word("Some"), Word("text:"))),
+            ListBlock(
+              ListType.Bullet,
+              Seq(
+                ListItem("-", Text(Seq(Word(list11)))),
+                ListItem(
+                  "-",
+                  Text(Seq(Word(list12), Word("continue"), Word("text"))),
+                  Seq(
+                    MdCodeBlock(Seq("scala"), Seq("println(42)"), "```"),
+                    Text(Seq(Word("and"), Word("some"), Word("text"))),
+                    ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21))))))
+                  )
+                ),
+                ListItem("-", Text(Seq(Word(list13))))
+              )
             )
-          ),
-          ListItem("-", Text(Seq(Word(list13))))
-        )
-      )
-    )))))
+          ))
+        }
+      }
+    }
     assertEquals(result, expected)
   }
 
@@ -787,31 +812,35 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(
-      Text(Seq(Word("Some"), Word("text:"))),
-      ListBlock(
-        ListType.Bullet,
-        Seq(
-          ListItem("-", Text(Seq(Word(list11)))),
-          ListItem(
-            "-",
-            Text(Seq(
-              Word(list12),
-              Word("continue"),
-              Word("text"),
-              Word("```scala"),
-              Word("println(42)"),
-              Word("```"),
-              Word("and"),
-              Word("some"),
-              Word("text")
-            )),
-            Seq(ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21)))))))
-          ),
-          ListItem("-", Text(Seq(Word(list13))))
-        )
-      )
-    )))))
+    val expected = Option {
+      Scaladoc {
+        Seq(Paragraph(Seq(
+          Text(Seq(Word("Some"), Word("text:"))),
+          ListBlock(
+            ListType.Bullet,
+            Seq(
+              ListItem("-", Text(Seq(Word(list11)))),
+              ListItem(
+                "-",
+                Text(Seq(
+                  Word(list12),
+                  Word("continue"),
+                  Word("text"),
+                  Word("```scala"),
+                  Word("println(42)"),
+                  Word("```"),
+                  Word("and"),
+                  Word("some"),
+                  Word("text")
+                )),
+                Seq(ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21)))))))
+              ),
+              ListItem("-", Text(Seq(Word(list13))))
+            )
+          )
+        )))
+      }
+    }
     assertEquals(result, expected)
   }
 
@@ -837,20 +866,28 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(
-      Text(Seq(Word("Some"), Word("text:"))),
-      ListBlock(
-        ListType.Bullet,
-        Seq(
-          ListItem("-", Text(Seq(Word(list11)))),
-          ListItem("-", Text(Seq(Word(list12), Word("continue"), Word("text"))))
-        )
-      ),
-      MdCodeBlock(Seq("scala"), Seq("println(42)"), "```"),
-      Text(Seq(Word("and"), Word("some"), Word("text"))),
-      ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21)))))),
-      ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list13))))))
-    )))))
+    val expected = Option {
+      Scaladoc {
+        Seq {
+          Paragraph {
+            Seq(
+              Text(Seq(Word("Some"), Word("text:"))),
+              ListBlock(
+                ListType.Bullet,
+                Seq(
+                  ListItem("-", Text(Seq(Word(list11)))),
+                  ListItem("-", Text(Seq(Word(list12), Word("continue"), Word("text"))))
+                )
+              ),
+              MdCodeBlock(Seq("scala"), Seq("println(42)"), "```"),
+              Text(Seq(Word("and"), Word("some"), Word("text"))),
+              ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21)))))),
+              ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list13))))))
+            )
+          }
+        }
+      }
+    }
     assertEquals(result, expected)
   }
 
@@ -876,25 +913,27 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(
-      Text(Seq(Word("Some"), Word("text:"))),
-      ListBlock(
-        ListType.Bullet,
-        Seq(
-          ListItem("-", Text(Seq(Word(list11)))),
-          ListItem(
-            "-",
-            Text(Seq(Word(list12), Word("continue"), Word("text"))),
-            Seq(
-              CodeBlock(Seq("     println(42)")),
-              Text(Seq(Word("and"), Word("some"), Word("text"))),
-              ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21))))))
-            )
-          ),
-          ListItem("-", Text(Seq(Word(list13))))
+    val expected = Option {
+      Scaladoc(Seq(Paragraph(Seq(
+        Text(Seq(Word("Some"), Word("text:"))),
+        ListBlock(
+          ListType.Bullet,
+          Seq(
+            ListItem("-", Text(Seq(Word(list11)))),
+            ListItem(
+              "-",
+              Text(Seq(Word(list12), Word("continue"), Word("text"))),
+              Seq(
+                CodeBlock(Seq("     println(42)")),
+                Text(Seq(Word("and"), Word("some"), Word("text"))),
+                ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21))))))
+              )
+            ),
+            ListItem("-", Text(Seq(Word(list13))))
+          )
         )
-      )
-    )))))
+      ))))
+    }
     assertEquals(result, expected)
   }
 
@@ -921,28 +960,32 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(Scaladoc(Seq(
-      Paragraph(Seq(
-        Text(Seq(Word("Some"), Word("text:"))),
-        ListBlock(
-          ListType.Bullet,
-          Seq(
-            ListItem("-", Text(Seq(Word(list11)))),
-            ListItem(
-              "-",
-              Text(Seq(Word(list12), Word("continue"), Word("text"))),
+    val expected = Option {
+      Scaladoc {
+        Seq(
+          Paragraph(Seq(
+            Text(Seq(Word("Some"), Word("text:"))),
+            ListBlock(
+              ListType.Bullet,
               Seq(
-                CodeBlock(Seq("     println(42)")),
-                Text(Seq(Word("and"), Word("some"), Word("text"))),
-                ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21))))))
+                ListItem("-", Text(Seq(Word(list11)))),
+                ListItem(
+                  "-",
+                  Text(Seq(Word(list12), Word("continue"), Word("text"))),
+                  Seq(
+                    CodeBlock(Seq("     println(42)")),
+                    Text(Seq(Word("and"), Word("some"), Word("text"))),
+                    ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21))))))
+                  )
+                ),
+                ListItem("-", Text(Seq(Word(list13))))
               )
-            ),
-            ListItem("-", Text(Seq(Word(list13))))
-          )
+            )
+          )),
+          Paragraph(Seq(Text(Seq(Word("next"), Word("para")))))
         )
-      )),
-      Paragraph(Seq(Text(Seq(Word("next"), Word("para")))))
-    )))
+      }
+    }
     assertEquals(result, expected)
   }
 
@@ -968,25 +1011,27 @@ class ScaladocParserSuite extends FunSuite {
           */
          """
     )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(
-      Text(Seq(Word("Some"), Word("text:"))),
-      ListBlock(
-        ListType.Bullet,
-        Seq(
-          ListItem("-", Text(Seq(Word(list11)))),
-          ListItem(
-            "-",
-            Text(Seq(Word(list12), Word("continue"), Word("text"))),
-            Seq(
-              CodeBlock(Seq(" println(42)")),
-              Text(Seq(Word("and"), Word("some"), Word("text"))),
-              ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21))))))
-            )
-          ),
-          ListItem("-", Text(Seq(Word(list13))))
+    val expected = Option {
+      Scaladoc(Seq(Paragraph(Seq(
+        Text(Seq(Word("Some"), Word("text:"))),
+        ListBlock(
+          ListType.Bullet,
+          Seq(
+            ListItem("-", Text(Seq(Word(list11)))),
+            ListItem(
+              "-",
+              Text(Seq(Word(list12), Word("continue"), Word("text"))),
+              Seq(
+                CodeBlock(Seq(" println(42)")),
+                Text(Seq(Word("and"), Word("some"), Word("text"))),
+                ListBlock(ListType.Bullet, Seq(ListItem("-", Text(Seq(Word(list21))))))
+              )
+            ),
+            ListItem("-", Text(Seq(Word(list13))))
+          )
         )
-      )
-    )))))
+      ))))
+    }
     assertEquals(result, expected)
   }
 
@@ -1115,7 +1160,7 @@ class ScaladocParserSuite extends FunSuite {
 
   test("list 9, complex embedded elements 1") {
     // table ends in a delim line
-    val result = parseString(
+    val result = parseString {
       s"""
          |  /** 1. foo
          |   *      {{{
@@ -1142,53 +1187,63 @@ class ScaladocParserSuite extends FunSuite {
          |   * 1. bar
          |   */
          |""".stripMargin
-    )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(ListBlock(
-      ListType.Decimal,
-      Seq(
-        ListItem(
-          "1.",
-          Text(Seq(Word("foo"))),
-          Seq(
-            CodeBlock(Seq("         embedded code")),
-            ListBlock(
-              ListType.Bullet,
-              Seq(ListItem(
-                "-",
-                Text(Seq(Word("foo1"))),
+    }
+    val expected = Option {
+      Scaladoc {
+        Seq {
+          Paragraph {
+            Seq {
+              ListBlock(
+                ListType.Decimal,
                 Seq(
-                  Table(
-                    Table.Row(Seq("hdr1", "hdr22")),
-                    Seq(Table.Left, Table.Right),
-                    Seq(Table.Row(Seq("r1 1", "r1 2")))
+                  ListItem(
+                    "1.",
+                    Text(Seq(Word("foo"))),
+                    Seq(
+                      CodeBlock(Seq("         embedded code")),
+                      ListBlock(
+                        ListType.Bullet,
+                        Seq(ListItem(
+                          "-",
+                          Text(Seq(Word("foo1"))),
+                          Seq(
+                            Table(
+                              Table.Row(Seq("hdr1", "hdr22")),
+                              Seq(Table.Left, Table.Right),
+                              Seq(Table.Row(Seq("r1 1", "r1 2")))
+                            ),
+                            ListBlock(
+                              ListType.Bullet,
+                              Seq(ListItem(
+                                "-",
+                                Text(Seq(Word("foo2"))),
+                                Seq(
+                                  CodeBlock(Seq("         embedded code")),
+                                  MdCodeBlock(Nil, Seq("code foo2"), "```")
+                                )
+                              ))
+                            ),
+                            MdCodeBlock(Nil, Seq(" code foo1"), "```")
+                          )
+                        ))
+                      ),
+                      MdCodeBlock(Nil, Seq("   code foo"), "```")
+                    )
                   ),
-                  ListBlock(
-                    ListType.Bullet,
-                    Seq(ListItem(
-                      "-",
-                      Text(Seq(Word("foo2"))),
-                      Seq(
-                        CodeBlock(Seq("         embedded code")),
-                        MdCodeBlock(Nil, Seq("code foo2"), "```")
-                      )
-                    ))
-                  ),
-                  MdCodeBlock(Nil, Seq(" code foo1"), "```")
+                  ListItem("1.", Text(Seq(Word("bar"))))
                 )
-              ))
-            ),
-            MdCodeBlock(Nil, Seq("   code foo"), "```")
-          )
-        ),
-        ListItem("1.", Text(Seq(Word("bar"))))
-      )
-    ))))))
+              )
+            }
+          }
+        }
+      }
+    }
     assertEquals(result, expected)
   }
 
   test("list 9, complex embedded elements 2") {
     // table doesn't end in a delim line, followed by "-" list
-    val result = parseString(
+    val result = parseString {
       s"""
          |  /** 1. foo
          |   *      {{{
@@ -1214,47 +1269,57 @@ class ScaladocParserSuite extends FunSuite {
          |   * 1. bar
          |   */
          |""".stripMargin
-    )
-    val expected = Option(Scaladoc(Seq(Paragraph(Seq(ListBlock(
-      ListType.Decimal,
-      Seq(
-        ListItem(
-          "1.",
-          Text(Seq(Word("foo"))),
-          Seq(
-            CodeBlock(Seq("         embedded code")),
-            ListBlock(
-              ListType.Bullet,
-              Seq(ListItem(
-                "-",
-                Text(Seq(Word("foo1"))),
+    }
+    val expected = Option {
+      Scaladoc {
+        Seq {
+          Paragraph {
+            Seq {
+              ListBlock(
+                ListType.Decimal,
                 Seq(
-                  Table(
-                    Table.Row(Seq("hdr1", "hdr22")),
-                    Seq(Table.Left, Table.Right),
-                    Seq(Table.Row(Seq("r1 1", "r1 2")))
+                  ListItem(
+                    "1.",
+                    Text(Seq(Word("foo"))),
+                    Seq(
+                      CodeBlock(Seq("         embedded code")),
+                      ListBlock(
+                        ListType.Bullet,
+                        Seq(ListItem(
+                          "-",
+                          Text(Seq(Word("foo1"))),
+                          Seq(
+                            Table(
+                              Table.Row(Seq("hdr1", "hdr22")),
+                              Seq(Table.Left, Table.Right),
+                              Seq(Table.Row(Seq("r1 1", "r1 2")))
+                            ),
+                            ListBlock(
+                              ListType.Bullet,
+                              Seq(ListItem(
+                                "-",
+                                Text(Seq(Word("foo2"))),
+                                Seq(
+                                  CodeBlock(Seq("         embedded code")),
+                                  MdCodeBlock(Nil, Seq("code foo2"), "```")
+                                )
+                              ))
+                            ),
+                            MdCodeBlock(Nil, Seq(" code foo1"), "```")
+                          )
+                        ))
+                      ),
+                      MdCodeBlock(Nil, Seq("   code foo"), "```")
+                    )
                   ),
-                  ListBlock(
-                    ListType.Bullet,
-                    Seq(ListItem(
-                      "-",
-                      Text(Seq(Word("foo2"))),
-                      Seq(
-                        CodeBlock(Seq("         embedded code")),
-                        MdCodeBlock(Nil, Seq("code foo2"), "```")
-                      )
-                    ))
-                  ),
-                  MdCodeBlock(Nil, Seq(" code foo1"), "```")
+                  ListItem("1.", Text(Seq(Word("bar"))))
                 )
-              ))
-            ),
-            MdCodeBlock(Nil, Seq("   code foo"), "```")
-          )
-        ),
-        ListItem("1.", Text(Seq(Word("bar"))))
-      )
-    ))))))
+              )
+            }
+          }
+        }
+      }
+    }
     assertEquals(result, expected)
   }
 
@@ -1368,118 +1433,104 @@ class ScaladocParserSuite extends FunSuite {
     )
   }
 
-  test("parse since, version tags") {
-    assertEquals(
-      parseString(
-        s"""
+  test("parse since, version tags")(assertEquals(
+    parseString(
+      s"""
          /**
           * @version 1.0 foo bar
           * @since 1.0 baz qux
           * bar-baz
           */
          """
-      ),
-      Option(Scaladoc(Seq(Paragraph(Seq(
-        Tag(TagType.Version, Some(Word("1.0 foo bar"))),
-        Tag(TagType.Since, Some(Word("1.0")), Seq(Text(Seq(Word("baz"), Word("qux"), Word("bar-baz")))))
-      )))))
-    )
-  }
+    ),
+    Option(Scaladoc(Seq(Paragraph(Seq(
+      Tag(TagType.Version, Some(Word("1.0 foo bar"))),
+      Tag(TagType.Since, Some(Word("1.0")), Seq(Text(Seq(Word("baz"), Word("qux"), Word("bar-baz")))))
+    )))))
+  ))
 
-  test("parse define macro tags") {
-    assertEquals(
-      parseString(
-        s"""
+  test("parse define macro tags")(assertEquals(
+    parseString(
+      s"""
          /**
           * @define what for what reason
           * bar-baz
           */
          """
-      ),
-      Option(Scaladoc(Seq(Paragraph(Seq(Tag(
-        TagType.Define,
-        Some(Word("what")),
-        Seq(Text(Seq(Word("for"), Word("what"), Word("reason"), Word("bar-baz"))))
-      ))))))
-    )
-  }
+    ),
+    Option(Scaladoc(Seq(Paragraph(Seq(Tag(
+      TagType.Define,
+      Some(Word("what")),
+      Seq(Text(Seq(Word("for"), Word("what"), Word("reason"), Word("bar-baz"))))
+    ))))))
+  ))
 
-  test("parse usecase tags") {
-    assertEquals(
-      parseString(
-        s"""
+  test("parse usecase tags")(assertEquals(
+    parseString(
+      s"""
          /**
           * @usecase foo bar
           * baz qux
           */
          """
-      ),
-      Option {
-        val label = Some(Word("foo bar"))
-        val rest = Seq(Text(Seq(Word("baz"), Word("qux"))))
-        Scaladoc(Seq(Paragraph(Tag(TagType.UseCase, label = label) +: rest)))
-      }
-    )
-  }
+    ),
+    Option {
+      val label = Some(Word("foo bar"))
+      val rest = Seq(Text(Seq(Word("baz"), Word("qux"))))
+      Scaladoc(Seq(Paragraph(Tag(TagType.UseCase, label = label) +: rest)))
+    }
+  ))
 
-  test("parse tag") {
-    assertEquals(
-      parseString(
-        s"""
+  test("parse tag")(assertEquals(
+    parseString(
+      s"""
          /**
           * @param foo
           * bar-baz
           */
          """
-      ),
-      Option(
-        Scaladoc(Seq(Paragraph(Seq(Tag(TagType.Param, Some(Word("foo")), Seq(Text(Seq(Word("bar-baz")))))))))
-      )
+    ),
+    Option(
+      Scaladoc(Seq(Paragraph(Seq(Tag(TagType.Param, Some(Word("foo")), Seq(Text(Seq(Word("bar-baz")))))))))
     )
-  }
+  ))
 
-  test("failing to parse 1") {
-    assertEquals(
-      parseString(
-        """
+  test("failing to parse 1")(assertEquals(
+    parseString(
+      """
          /**
           * @param
           */
          """
-      ),
-      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))))))))
-    )
-  }
+    ),
+    Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))))))))
+  ))
 
-  test("failing to parse 2") {
-    assertEquals(
-      parseString(
-        """
+  test("failing to parse 2")(assertEquals(
+    parseString(
+      """
          /**
           * @param
           * @return
           */
          """
-      ),
-      Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))), Tag(TagType.Return))))))
-    )
-  }
+    ),
+    Option(Scaladoc(Seq(Paragraph(Seq(Text(Seq(Word("@param"))), Tag(TagType.Return))))))
+  ))
 
-  test("using an unrecognized tag") {
-    assertEquals(
-      parseString(
-        """
+  test("using an unrecognized tag")(assertEquals(
+    parseString(
+      """
          /**
           * @newtag
           * newtag text
           */
          """
-      ),
-      Option(Scaladoc(Seq(Paragraph(
-        Seq(Tag(TagType.UnknownTag("@newtag"), desc = Seq(Text(Seq(Word("newtag"), Word("text"))))))
-      ))))
-    )
-  }
+    ),
+    Option(Scaladoc(Seq(Paragraph(
+      Seq(Tag(TagType.UnknownTag("@newtag"), desc = Seq(Text(Seq(Word("newtag"), Word("text"))))))
+    ))))
+  ))
 
   test("tag description with multiline code blocks") {
     val complexCodeBlock = // keep all newlines and leading spaces
@@ -1527,7 +1578,7 @@ class ScaladocParserSuite extends FunSuite {
          |   gmqwgoiqmgoqmwomw""".stripMargin.split("\n")
     val complexCodeBlockAsComment = complexCodeBlock.mkString(" ", "\n * ", "")
 
-    val result = parseString(
+    val result = parseString {
       s"""
           /** blah
             * @example
@@ -1541,7 +1592,7 @@ class ScaladocParserSuite extends FunSuite {
             * baz qux
             */
        """.stripMargin
-    )
+    }
 
     val expectation = Option(Scaladoc(Seq(Paragraph(Seq(
       Text(Seq(Word("blah"))),
@@ -1672,7 +1723,7 @@ class ScaladocParserSuite extends FunSuite {
   }
 
   test("table missing alignment row with +- delim line") {
-    val result = parseString(
+    val result = parseString {
       """
           /**
             * text1 text2
@@ -1684,7 +1735,7 @@ class ScaladocParserSuite extends FunSuite {
             * text3 text4
             */
        """.stripMargin
-    )
+    }
 
     val expectation = Option(Scaladoc(Seq(Paragraph(Seq(
       Text(Seq(Word("text1"), Word("text2"))),

@@ -42,9 +42,9 @@ class DialectSuite extends FunSuite {
 
   test("scala3copy toString")(assertEquals(scala3copy.toString, "Scala36"))
 
-  test("scala3 without indentation toString") {
+  test("scala3 without indentation toString")(
     assertEquals(Scala3.withAllowSignificantIndentation(false).toString, "Dialect()")
-  }
+  )
 
   test("scala3.unquoteTerm toString")(assertEquals(Scala3.unquoteTerm(true).toString, "Scala36"))
 

@@ -31,71 +31,86 @@ class JSFacadeSuite extends FunSuite {
     val expected = d(
       "type" -> "Source",
       "pos" -> pos(0, 83),
-      "stats" -> a(d(
-        "type" -> "Defn.Object",
-        "pos" -> pos(0, 83),
-        "mods" -> a(),
-        "name" -> d("type" -> "Term.Name", "pos" -> pos(7, 11), "value" -> "Main"),
-        "templ" -> d(
-          "type" -> "Template",
-          "pos" -> pos(12, 83),
-          "inits" -> a(),
-          "body" -> d(
-            "type" -> "Template.Body",
+      "stats" -> a {
+        d(
+          "type" -> "Defn.Object",
+          "pos" -> pos(0, 83),
+          "mods" -> a(),
+          "name" -> d("type" -> "Term.Name", "pos" -> pos(7, 11), "value" -> "Main"),
+          "templ" -> d(
+            "type" -> "Template",
             "pos" -> pos(12, 83),
-            "stats" -> a(d(
-              "type" -> "Defn.Def",
-              "pos" -> pos(16, 81),
-              "mods" -> a(),
-              "name" -> d("type" -> "Term.Name", "pos" -> pos(20, 24), "value" -> "main"),
-              "paramClauseGroups" -> a(d(
-                "type" -> "Member.ParamClauseGroup",
-                "pos" -> pos(24, 45),
-                "tparamClause" ->
-                  d("type" -> "Type.ParamClause", "pos" -> pos(24, 24), "values" -> a()),
-                "paramClauses" -> a(d(
-                  "type" -> "Term.ParamClause",
-                  "pos" -> pos(24, 45),
-                  "values" -> a(d(
-                    "type" -> "Term.Param",
-                    "pos" -> pos(25, 44),
-                    "mods" -> a(),
-                    "name" -> d("type" -> "Term.Name", "pos" -> pos(25, 29), "value" -> "args"),
-                    "decltpe" -> d(
-                      "type" -> "Type.Apply",
-                      "pos" -> pos(31, 44),
-                      "tpe" -> d("type" -> "Type.Name", "pos" -> pos(31, 36), "value" -> "Array"),
-                      "argClause" -> d(
-                        "type" -> "Type.ArgClause",
-                        "pos" -> pos(36, 44),
-                        "values" ->
-                          a(d("type" -> "Type.Name", "pos" -> pos(37, 43), "value" -> "String"))
-                      )
+            "inits" -> a(),
+            "body" -> d(
+              "type" -> "Template.Body",
+              "pos" -> pos(12, 83),
+              "stats" -> a {
+                d(
+                  "type" -> "Defn.Def",
+                  "pos" -> pos(16, 81),
+                  "mods" -> a(),
+                  "name" -> d("type" -> "Term.Name", "pos" -> pos(20, 24), "value" -> "main"),
+                  "paramClauseGroups" -> a {
+                    d(
+                      "type" -> "Member.ParamClauseGroup",
+                      "pos" -> pos(24, 45),
+                      "tparamClause" ->
+                        d("type" -> "Type.ParamClause", "pos" -> pos(24, 24), "values" -> a()),
+                      "paramClauses" -> a {
+                        d(
+                          "type" -> "Term.ParamClause",
+                          "pos" -> pos(24, 45),
+                          "values" -> a {
+                            d(
+                              "type" -> "Term.Param",
+                              "pos" -> pos(25, 44),
+                              "mods" -> a(),
+                              "name" ->
+                                d("type" -> "Term.Name", "pos" -> pos(25, 29), "value" -> "args"),
+                              "decltpe" -> d(
+                                "type" -> "Type.Apply",
+                                "pos" -> pos(31, 44),
+                                "tpe" ->
+                                  d("type" -> "Type.Name", "pos" -> pos(31, 36), "value" -> "Array"),
+                                "argClause" -> d(
+                                  "type" -> "Type.ArgClause",
+                                  "pos" -> pos(36, 44),
+                                  "values" -> a(d(
+                                    "type" -> "Type.Name",
+                                    "pos" -> pos(37, 43),
+                                    "value" -> "String"
+                                  ))
+                                )
+                              )
+                            )
+                          }
+                        )
+                      }
                     )
-                  ))
-                ))
-              )),
-              "decltpe" -> d("type" -> "Type.Name", "pos" -> pos(47, 51), "value" -> "Unit"),
-              "body" -> d(
-                "type" -> "Term.Apply",
-                "pos" -> pos(58, 81),
-                "fun" -> d("type" -> "Term.Name", "pos" -> pos(58, 65), "value" -> "println"),
-                "argClause" -> d(
-                  "type" -> "Term.ArgClause",
-                  "pos" -> pos(65, 81),
-                  "values" -> a(d(
-                    "type" -> "Lit.String",
-                    "pos" -> pos(66, 80),
-                    "value" -> "Hello, World",
-                    "syntax" -> """"Hello, World""""
-                  ))
+                  },
+                  "decltpe" -> d("type" -> "Type.Name", "pos" -> pos(47, 51), "value" -> "Unit"),
+                  "body" -> d(
+                    "type" -> "Term.Apply",
+                    "pos" -> pos(58, 81),
+                    "fun" -> d("type" -> "Term.Name", "pos" -> pos(58, 65), "value" -> "println"),
+                    "argClause" -> d(
+                      "type" -> "Term.ArgClause",
+                      "pos" -> pos(65, 81),
+                      "values" -> a(d(
+                        "type" -> "Lit.String",
+                        "pos" -> pos(66, 80),
+                        "value" -> "Hello, World",
+                        "syntax" -> """"Hello, World""""
+                      ))
+                    )
+                  )
                 )
-              )
-            ))
-          ),
-          "derives" -> a()
+              }
+            ),
+            "derives" -> a()
+          )
         )
-      ))
+      }
     ).asInstanceOf[js.Dictionary[Any]]
 
     check(parsed, expected)

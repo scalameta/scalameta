@@ -61,22 +61,22 @@ class VarargParameterSuite extends ParseSuite {
     check("def obj(fa: Int*)(implicit fb: Int*): Boolean = true", obj)
   }
 
-  test("error on return type vararg parameters") {
+  test("error on return type vararg parameters")(
     checkError("def obj(f: Int*): Boolean* = true", "error: `=` expected but `identifier` found")
-  }
+  )
 
-  test("error on multiple parameters vararg not last") {
+  test("error on multiple parameters vararg not last")(
     checkError("def obj(fa: Int*, fb: String): Boolean = true", "error: *-parameter must come last")
-  }
+  )
 
   test("error on repeated byname parameter") {
     checkError("def fx(x: => Int*): Int = 3", "`)` expected but `identifier` found")
     checkError("class Foo(bars: => Int*)", "`)` expected but `identifier` found")
   }
 
-  test("error on multiple vararg parameters") {
+  test("error on multiple vararg parameters")(
     checkError("def obj(fa: Int*, fb: Int*) = true", "error: *-parameter must come last")
-  }
+  )
 
   test("vararg-like parameters") {
     checkError("def obj(fa: Int, fb: Int`*`) = true", "error: `identifier` expected but `)` found")

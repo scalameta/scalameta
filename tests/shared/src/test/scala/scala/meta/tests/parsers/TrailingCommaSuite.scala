@@ -51,7 +51,7 @@ class TrailingCommaSuite extends ParseSuite {
     "trait ClassParams2 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }"
   )
   // Positive tests
-  checkOK(
+  checkOK {
     """|trait ArgumentExprs1 {
        |  def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1
        |  f(
@@ -70,7 +70,7 @@ class TrailingCommaSuite extends ParseSuite {
        |  )
        |}
        |""".stripMargin
-  )
+  }
   checkOK(
     """|trait ArgumentExprs2 {
        |  class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1)
@@ -96,7 +96,7 @@ class TrailingCommaSuite extends ParseSuite {
        |}
        |""".stripMargin
   )
-  checkOK(
+  checkOK {
     """|trait ClassParams {
        |  class C(
        |    foo: Int,
@@ -111,8 +111,8 @@ class TrailingCommaSuite extends ParseSuite {
        |  )
        |}
        |""".stripMargin
-  )
-  checkOK(
+  }
+  checkOK {
     """|trait SimpleExpr1 {
        |  def f: (Int, String) = (
        |    23,
@@ -126,7 +126,7 @@ class TrailingCommaSuite extends ParseSuite {
        |  )
        |}
        |""".stripMargin
-  )
+  }
   checkOK(
     """|trait TypeArgs {
        |  class C[A, B]
@@ -179,7 +179,7 @@ class TrailingCommaSuite extends ParseSuite {
        |}
        |""".stripMargin
   )
-  checkOK(
+  checkOK {
     """|trait SimplePattern {
        |  val (
        |    foo,
@@ -203,7 +203,7 @@ class TrailingCommaSuite extends ParseSuite {
        |  ) = 42 :: 17 :: Nil
        |}
        |""".stripMargin
-  )
+  }
   checkOK(
     """|trait ImportSelectors {
        |  import foo.{

@@ -22,21 +22,18 @@ class ExtensionMethodsSuite extends BaseDottySuite {
    *   - [[https://dotty.epfl.ch/docs/reference/contextual/extension-methods.html]]
    */
 
-  test("simple-method") {
-    runTestAssert[Stat]("extension (c: Circle) def crc: Int = 2")(Defn.ExtensionGroup(
-      Nil,
-      cparamss,
-      Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
-    ))
-  }
+  test("simple-method")(runTestAssert[Stat]("extension (c: Circle) def crc: Int = 2")(
+    Defn
+      .ExtensionGroup(Nil, cparamss, Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
+  ))
 
-  test("modifier-method") {
+  test("modifier-method")(
     runTestAssert[Stat]("extension (c: Circle) private def crc: Int = 2")(Defn.ExtensionGroup(
       Nil,
       cparamss,
       Defn.Def(List(Mod.Private(anon)), tname("crc"), Nil, Nil, Some(pname("Int")), int(2))
     ))
-  }
+  )
 
   test("simple-method-indent") {
     val code =
@@ -241,7 +238,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     runTestAssert[Stat]("extension.extension(3)")(tapply(tselect("extension", "extension"), int(3)))
   }
 
-  test("method-type-params") {
+  test("method-type-params")(
     runTestAssert[Stat]("extension [T](xs: List[T]) def sumBy[U](t: T): U = ???")(
       Defn.ExtensionGroup(
         List(pparam("T")),
@@ -256,15 +253,15 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         )
       )
     )
-  }
+  )
 
-  test("method-using-before") {
+  test("method-using-before")(
     runTestAssert[Stat]("extension (using a: Int)(b: Int) def hello = a + b")(Defn.ExtensionGroup(
       Nil,
       List(List(tparam(List(Mod.Using()), "a", "Int")), List(tparam("b", "Int"))),
       Defn.Def(Nil, tname("hello"), Nil, Nil, None, tinfix(tname("a"), "+", tname("b")))
     ))
-  }
+  )
 
   test("method-multi-using") {
     runTestAssert[Stat](

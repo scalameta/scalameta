@@ -11,9 +11,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
   override protected implicit def tokenizerOptions: TokenizerOptions =
     new TokenizerOptions(groupWhitespace = false)
 
-  test("showCode without comments - simple") {
+  test("showCode without comments - simple")(
     assertTokenizedAsSyntax("class C  {\t val x = 2}\n\n", "class C  {\t val x = 2}\n\n")
-  }
+  )
 
   test("showcode without comments - hard") {
     assertTokenizedAsSyntax(
@@ -115,12 +115,10 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("showCode with comments - easy") {
-    assertTokenizedAsSyntax(
-      "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n",
-      "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n"
-    )
-  }
+  test("showCode with comments - easy")(assertTokenizedAsSyntax(
+    "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n",
+    "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n"
+  ))
 
   test("showCode with comments - tricky") {
     val code = "x ~/**/y"
@@ -705,171 +703,147 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("showRaw with comments - tricky") {
-    assertTokenizedAsStructureLines(
-      "x ~/**/y",
-      """
-        |BOF [0..0)
-        |Ident(x) [0..1)
-        |Space [1..2)
-        |Ident(~) [2..3)
-        |Comment() [3..7)
-        |Ident(y) [7..8)
-        |EOF [8..8)
-        |""".stripMargin
-    )
-  }
+  test("showRaw with comments - tricky")(assertTokenizedAsStructureLines(
+    "x ~/**/y",
+    """
+      |BOF [0..0)
+      |Ident(x) [0..1)
+      |Space [1..2)
+      |Ident(~) [2..3)
+      |Comment() [3..7)
+      |Ident(y) [7..8)
+      |EOF [8..8)
+      |""".stripMargin
+  ))
 
-  test("showRaw with comments - skip unicode escape 1") {
-    assertTokenizedAsStructureLines(
-      "// Note: '\\u000A' = '\\n'",
-      """|BOF [0..0)
-         |Comment( Note: '\\u000A' = '\\n') [0..24)
-         |EOF [24..24)
-         |""".stripMargin
-    )
-  }
+  test("showRaw with comments - skip unicode escape 1")(assertTokenizedAsStructureLines(
+    "// Note: '\\u000A' = '\\n'",
+    """|BOF [0..0)
+       |Comment( Note: '\\u000A' = '\\n') [0..24)
+       |EOF [24..24)
+       |""".stripMargin
+  ))
 
-  test("showRaw with comments - skip unicode escape 2") {
-    assertTokenizedAsStructureLines(
-      "/* Note: '\\u000A' = '\\n' */",
-      """|BOF [0..0)
-         |Comment( Note: '\\u000A' = '\\n' ) [0..27)
-         |EOF [27..27)
-         |""".stripMargin
-    )
-  }
+  test("showRaw with comments - skip unicode escape 2")(assertTokenizedAsStructureLines(
+    "/* Note: '\\u000A' = '\\n' */",
+    """|BOF [0..0)
+       |Comment( Note: '\\u000A' = '\\n' ) [0..27)
+       |EOF [27..27)
+       |""".stripMargin
+  ))
 
-  test("interpolation start & end - episode 01") {
-    assertTokenizedAsStructureLines(
-      "q\"\"",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(") [1..2)
-        |Interpolation.Part() [2..2)
-        |Interpolation.End(") [2..3)
-        |EOF [3..3)
-        |""".stripMargin
-    )
-  }
+  test("interpolation start & end - episode 01")(assertTokenizedAsStructureLines(
+    "q\"\"",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(") [1..2)
+      |Interpolation.Part() [2..2)
+      |Interpolation.End(") [2..3)
+      |EOF [3..3)
+      |""".stripMargin
+  ))
 
-  test("interpolation start & end - episode 02") {
-    assertTokenizedAsStructureLines(
-      "q\"\";",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(") [1..2)
-        |Interpolation.Part() [2..2)
-        |Interpolation.End(") [2..3)
-        |Semicolon [3..4)
-        |EOF [4..4)
-        |""".stripMargin
-    )
-  }
+  test("interpolation start & end - episode 02")(assertTokenizedAsStructureLines(
+    "q\"\";",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(") [1..2)
+      |Interpolation.Part() [2..2)
+      |Interpolation.End(") [2..3)
+      |Semicolon [3..4)
+      |EOF [4..4)
+      |""".stripMargin
+  ))
 
-  test("interpolation start & end - episode 03") {
-    assertTokenizedAsStructureLines(
-      "q\"a\"",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(") [1..2)
-        |Interpolation.Part(a) [2..3)
-        |Interpolation.End(") [3..4)
-        |EOF [4..4)
-        |""".stripMargin
-    )
-  }
+  test("interpolation start & end - episode 03")(assertTokenizedAsStructureLines(
+    "q\"a\"",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(") [1..2)
+      |Interpolation.Part(a) [2..3)
+      |Interpolation.End(") [3..4)
+      |EOF [4..4)
+      |""".stripMargin
+  ))
 
-  test("interpolation start & end - episode 04") {
-    assertTokenizedAsStructureLines(
-      "q\"a\";",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(") [1..2)
-        |Interpolation.Part(a) [2..3)
-        |Interpolation.End(") [3..4)
-        |Semicolon [4..5)
-        |EOF [5..5)
-        |""".stripMargin
-    )
-  }
+  test("interpolation start & end - episode 04")(assertTokenizedAsStructureLines(
+    "q\"a\";",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(") [1..2)
+      |Interpolation.Part(a) [2..3)
+      |Interpolation.End(") [3..4)
+      |Semicolon [4..5)
+      |EOF [5..5)
+      |""".stripMargin
+  ))
 
-  test("interpolation start & end - episode 05") {
-    assertTokenizedAsStructureLines(
-      "q\"\"\"\"\"\"",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(QQQ) [1..4)
-        |Interpolation.Part() [4..4)
-        |Interpolation.End(QQQ) [4..7)
-        |EOF [7..7)
-        |""".stripMargin.tq()
-    )
-  }
+  test("interpolation start & end - episode 05")(assertTokenizedAsStructureLines(
+    "q\"\"\"\"\"\"",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(QQQ) [1..4)
+      |Interpolation.Part() [4..4)
+      |Interpolation.End(QQQ) [4..7)
+      |EOF [7..7)
+      |""".stripMargin.tq()
+  ))
 
-  test("interpolation start & end - episode 06") {
-    assertTokenizedAsStructureLines(
-      "q\"\"\"\"\"\";",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(QQQ) [1..4)
-        |Interpolation.Part() [4..4)
-        |Interpolation.End(QQQ) [4..7)
-        |Semicolon [7..8)
-        |EOF [8..8)
-        |""".stripMargin.tq()
-    )
-  }
+  test("interpolation start & end - episode 06")(assertTokenizedAsStructureLines(
+    "q\"\"\"\"\"\";",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(QQQ) [1..4)
+      |Interpolation.Part() [4..4)
+      |Interpolation.End(QQQ) [4..7)
+      |Semicolon [7..8)
+      |EOF [8..8)
+      |""".stripMargin.tq()
+  ))
 
-  test("interpolation start & end - episode 07") {
-    assertTokenizedAsStructureLines(
-      "q\"\"\"a\"\"\"",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(QQQ) [1..4)
-        |Interpolation.Part(a) [4..5)
-        |Interpolation.End(QQQ) [5..8)
-        |EOF [8..8)
-        |""".stripMargin.tq()
-    )
-  }
+  test("interpolation start & end - episode 07")(assertTokenizedAsStructureLines(
+    "q\"\"\"a\"\"\"",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(QQQ) [1..4)
+      |Interpolation.Part(a) [4..5)
+      |Interpolation.End(QQQ) [5..8)
+      |EOF [8..8)
+      |""".stripMargin.tq()
+  ))
 
-  test("interpolation start & end - episode 08") {
-    assertTokenizedAsStructureLines(
-      "q\"\"\"a\"\"\";",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(QQQ) [1..4)
-        |Interpolation.Part(a) [4..5)
-        |Interpolation.End(QQQ) [5..8)
-        |Semicolon [8..9)
-        |EOF [9..9)
-        |""".stripMargin.tq()
-    )
-  }
+  test("interpolation start & end - episode 08")(assertTokenizedAsStructureLines(
+    "q\"\"\"a\"\"\";",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(QQQ) [1..4)
+      |Interpolation.Part(a) [4..5)
+      |Interpolation.End(QQQ) [5..8)
+      |Semicolon [8..9)
+      |EOF [9..9)
+      |""".stripMargin.tq()
+  ))
 
-  test("interpolation start & end - episode 09") {
-    assertTokenizedAsStructureLines(
-      "q\"a\"\r\n",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(") [1..2)
-        |Interpolation.Part(a) [2..3)
-        |Interpolation.End(") [3..4)
-        |CRLF [4..6)
-        |EOF [6..6)
-        |""".stripMargin
-    )
-  }
+  test("interpolation start & end - episode 09")(assertTokenizedAsStructureLines(
+    "q\"a\"\r\n",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(") [1..2)
+      |Interpolation.Part(a) [2..3)
+      |Interpolation.End(") [3..4)
+      |CRLF [4..6)
+      |EOF [6..6)
+      |""".stripMargin
+  ))
 
   test("interpolation-underscore") {
     assertTokenizedAsStructureLines(
@@ -906,35 +880,31 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("monocle 1") {
-    assertTokenizedAsStructureLines(
-      "x => x",
-      """
-        |BOF [0..0)
-        |Ident(x) [0..1)
-        |Space [1..2)
-        |RightArrow [2..4)
-        |Space [4..5)
-        |Ident(x) [5..6)
-        |EOF [6..6)
-        |""".stripMargin
-    )
-  }
+  test("monocle 1")(assertTokenizedAsStructureLines(
+    "x => x",
+    """
+      |BOF [0..0)
+      |Ident(x) [0..1)
+      |Space [1..2)
+      |RightArrow [2..4)
+      |Space [4..5)
+      |Ident(x) [5..6)
+      |EOF [6..6)
+      |""".stripMargin
+  ))
 
-  test("monocle 2") {
-    assertTokenizedAsStructureLines(
-      "x ⇒ x",
-      """
-        |BOF [0..0)
-        |Ident(x) [0..1)
-        |Space [1..2)
-        |RightArrow [2..3)
-        |Space [3..4)
-        |Ident(x) [4..5)
-        |EOF [5..5)
-        |""".stripMargin
-    )
-  }
+  test("monocle 2")(assertTokenizedAsStructureLines(
+    "x ⇒ x",
+    """
+      |BOF [0..0)
+      |Ident(x) [0..1)
+      |Space [1..2)
+      |RightArrow [2..3)
+      |Space [3..4)
+      |Ident(x) [4..5)
+      |EOF [5..5)
+      |""".stripMargin
+  ))
 
   test("monocle 3") {
     assertTokenizedAsStructureLines(
@@ -984,44 +954,38 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("-2147483648") {
-    assertTokenizedAsStructureLines(
-      "-2147483648",
-      """
-        |BOF [0..0)
-        |Ident(-) [0..1)
-        |Constant.Int(2147483648) [1..11)
-        |EOF [11..11)
-        |""".stripMargin.tq()
-    )
-  }
+  test("-2147483648")(assertTokenizedAsStructureLines(
+    "-2147483648",
+    """
+      |BOF [0..0)
+      |Ident(-) [0..1)
+      |Constant.Int(2147483648) [1..11)
+      |EOF [11..11)
+      |""".stripMargin.tq()
+  ))
 
-  test("simple xml literal - 1") {
-    assertTokenizedAsStructureLines(
-      "<foo>bar</foo>",
-      """
-        |BOF [0..0)
-        |Xml.Start [0..0)
-        |Xml.Part(<foo>bar</foo>) [0..14)
-        |Xml.End [14..14)
-        |EOF [14..14)
-        |""".stripMargin.tq()
-    )
-  }
+  test("simple xml literal - 1")(assertTokenizedAsStructureLines(
+    "<foo>bar</foo>",
+    """
+      |BOF [0..0)
+      |Xml.Start [0..0)
+      |Xml.Part(<foo>bar</foo>) [0..14)
+      |Xml.End [14..14)
+      |EOF [14..14)
+      |""".stripMargin.tq()
+  ))
 
-  test("simple xml literal - 2") {
-    assertTokenizedAsStructureLines(
-      "<foo>bar</foo> ",
-      """
-        |BOF [0..0)
-        |Xml.Start [0..0)
-        |Xml.Part(<foo>bar</foo>) [0..14)
-        |Xml.End [14..14)
-        |Space [14..15)
-        |EOF [15..15)
-        |""".stripMargin.tq()
-    )
-  }
+  test("simple xml literal - 2")(assertTokenizedAsStructureLines(
+    "<foo>bar</foo> ",
+    """
+      |BOF [0..0)
+      |Xml.Start [0..0)
+      |Xml.Part(<foo>bar</foo>) [0..14)
+      |Xml.End [14..14)
+      |Space [14..15)
+      |EOF [15..15)
+      |""".stripMargin.tq()
+  ))
 
   test("incomplete xml literal - 1") {
     assertTokenizedAsStructureLines(
@@ -1120,33 +1084,25 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("Ident.value for normal") {
-    "foo".asInput.parse[Term].get.tokens match {
-      case Tokens(bof, foo: Ident, eof) => assertEquals(foo.value, "foo")
-    }
-  }
+  test("Ident.value for normal")("foo".asInput.parse[Term].get.tokens match {
+    case Tokens(bof, foo: Ident, eof) => assertEquals(foo.value, "foo")
+  })
 
-  test("Ident.value for backquoted") {
-    "`foo`".asInput.parse[Term].get.tokens match {
-      case Tokens(bof, foo: Ident, eof) =>
-        assertEquals(foo.value, "foo")
-        assertEquals(foo.syntax, "`foo`")
-    }
-  }
+  test("Ident.value for backquoted")("`foo`".asInput.parse[Term].get.tokens match {
+    case Tokens(bof, foo: Ident, eof) =>
+      assertEquals(foo.value, "foo")
+      assertEquals(foo.syntax, "`foo`")
+  })
 
-  test("Interpolation.Id.value") {
-    assertTokens(""" q"" """) { case Tokens(bof, _, id: Interpolation.Id, _, _, _, _, eof) =>
-      assertEquals(id.value, "q")
-    }
-  }
+  test("Interpolation.Id.value")(assertTokens(""" q"" """) {
+    case Tokens(bof, _, id: Interpolation.Id, _, _, _, _, eof) => assertEquals(id.value, "q")
+  })
 
-  test("Interpolation.Part.value") {
-    assertTokens(""" q"foo" """) { case Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) =>
-      assertEquals(part.value, "foo")
-    }
-  }
+  test("Interpolation.Part.value")(assertTokens(""" q"foo" """) {
+    case Tokens(bof, _, _, _, part: Interpolation.Part, _, _, eof) => assertEquals(part.value, "foo")
+  })
 
-  test("Interpolated tree parsed succesfully with windows newline") {
+  test("Interpolated tree parsed succesfully with windows newline")(
     assertTokens(""" q"foo"""" + "\r\n") {
       case Tokens(bof, _, _, _, part: Interpolation.Part, _, crlf: CRLF, eof) =>
         assertEquals(part.value, "foo")
@@ -1154,7 +1110,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
         assertEquals(part.len, 3)
         assertEquals(crlf.len, 2)
     }
-  }
+  )
 
   test("Interpolated tree parsed succesfully with windows newline, with LF escaped") {
     assertTokenizedAsStructureLines(
@@ -1172,13 +1128,13 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     )
   }
 
-  test("Interpolated tree parsed succesfully with unix newline") {
+  test("Interpolated tree parsed succesfully with unix newline")(
     assertTokens(""" q"foo"""" + "\n") {
       case Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =>
         assertEquals(part.value, "foo")
         assertEquals(lf.syntax, "\n")
     }
-  }
+  )
 
   test("Interpolated with quote escape 1") {
     val stringInterpolation = """s"$"$name$" in quotes""""
@@ -1236,11 +1192,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
 
   }
 
-  test("Comment.value") {
-    assertTokens("//foo") { case Tokens(bof, comment: Comment, eof) =>
-      assertEquals(comment.value, "foo")
-    }
-  }
+  test("Comment.value")(assertTokens("//foo") { case Tokens(bof, comment: Comment, eof) =>
+    assertEquals(comment.value, "foo")
+  })
 
   test("enum") {
     assertTokens("enum", dialects.Scala3) { case Tokens(bof @ BOF(), te: KwEnum, eof @ EOF()) =>
@@ -1341,12 +1295,12 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     "0b_0101",
     "123_456__789",
     "0x__123_456__789"
-  ).foreach { value =>
+  ).foreach(value =>
     test(s"numeric literal separator ok scala213: $value") {
       implicit val dialect: Dialect = dialects.Scala213
       tokenize(value) // no exception
     }
-  }
+  )
 
   Seq(
     (
@@ -1448,22 +1402,20 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     assertEquals(intConstant.value, BigInt(1000000))
   }
 
-  test("Interpolated string - escape") {
-    assertTokens("""s"\"Hello\", $person"""") {
-      case Tokens(
-            BOF(),
-            Interpolation.Id("s"),
-            Interpolation.Start(),
-            Interpolation.Part("\\\"Hello\\\", "),
-            Interpolation.SpliceStart(),
-            Ident("person"),
-            Interpolation.SpliceEnd(),
-            Interpolation.Part(""),
-            Interpolation.End(),
-            EOF()
-          ) =>
-    }
-  }
+  test("Interpolated string - escape")(assertTokens("""s"\"Hello\", $person"""") {
+    case Tokens(
+          BOF(),
+          Interpolation.Id("s"),
+          Interpolation.Start(),
+          Interpolation.Part("\\\"Hello\\\", "),
+          Interpolation.SpliceStart(),
+          Ident("person"),
+          Interpolation.SpliceEnd(),
+          Interpolation.Part(""),
+          Interpolation.End(),
+          EOF()
+        ) =>
+  })
 
   test("Interpolated string - escape, unclosed") {
     val struct =
@@ -1481,7 +1433,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     assertTokenizedAsStructureLines("""s"\\"Hello"""", struct)
   }
 
-  test("Multiline interpolated string - ignore escape") {
+  test("Multiline interpolated string - ignore escape")(
     assertTokens("raw\"\"\"\\$host\\$share\\\"\"\"") {
       case Tokens(
             BOF(),
@@ -1500,7 +1452,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
             EOF()
           ) =>
     }
-  }
+  )
 
   test("#3328") {
     val code = "val \\uD835\\uDF11: Double"
@@ -1508,21 +1460,19 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     assertEquals(tokenize(code).toString, code)
   }
 
-  test("#3328 2") {
-    assertTokenizedAsStructureLines(
-      "val \uD835\uDF11: Double",
-      s"""
-         |BOF [0..0)
-         |KwVal [0..3)
-         |Space [3..4)
-         |Ident(\uD835\uDF11) [4..6)
-         |Colon [6..7)
-         |Space [7..8)
-         |Ident(Double) [8..14)
-         |EOF [14..14)
-         |""".stripMargin
-    )
-  }
+  test("#3328 2")(assertTokenizedAsStructureLines(
+    "val \uD835\uDF11: Double",
+    s"""
+       |BOF [0..0)
+       |KwVal [0..3)
+       |Space [3..4)
+       |Ident(\uD835\uDF11) [4..6)
+       |Colon [6..7)
+       |Space [7..8)
+       |Ident(Double) [8..14)
+       |EOF [14..14)
+       |""".stripMargin
+  ))
 
   test("#3402") {
     val code = "val MIN_HIGH_SURROGATE = '\\uD800'"
@@ -1760,9 +1710,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
          |""".stripMargin
     )
   ).foreach { case (code, value) =>
-    test(s"numeric literal ok scala213: $code") {
+    test(s"numeric literal ok scala213: $code")(
       assertTokenizedAsStructureLines(code, value, dialects.Scala213)
-    }
+    )
   }
 
   Seq(
@@ -1831,7 +1781,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     // regular or half-surrogate char codes
     55297,
     56375
-  ).foreach { ch =>
+  ).foreach(ch =>
     test(s"#3690 any character with char code $ch") {
       implicit val dialect = dialects.Scala213
       tokenize(
@@ -1844,7 +1794,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
         case tokens => fail(s"unexpected tokens: ${tokens.structure}")
       }
     }
-  }
+  )
 
   Seq(
     // full-surrogate char code pairs

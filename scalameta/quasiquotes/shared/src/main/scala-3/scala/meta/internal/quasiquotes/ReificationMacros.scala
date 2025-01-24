@@ -250,12 +250,12 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
         .flatMap(expr => instantiateStandardDialect(expr.asTerm.tpe.termSymbol))
 
       // allow `scala.meta.dialects.current`
-      def standardDialectSingleton = dialectExpr.flatMap {
+      def standardDialectSingleton = dialectExpr.flatMap(
         _.asTerm.tpe match
           case termRef @ TermRef(prefix, _) => // TermRef(scala.meta.Dialect, method current)
             instantiateStandardDialect(prefix.memberType(termRef.termSymbol).termSymbol)
           case _ => None
-      }
+      )
 
       standardDialectReference.orElse(standardDialectSingleton).getOrElse {
         val suggestion =
@@ -614,10 +614,10 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
         val pattern = Internal.liftTree(meta)
 
         val args = holes.map(hole => hole.reifier.get.asInstanceOf[Term])
-        val argsContents = args.flatMap {
+        val argsContents = args.flatMap(
           _.tpe match
             case AppliedType(tpe, content) if tpe =:= TypeRepr.of[Option] => content
-        }
+        )
         val lst = Select.overloaded('{ List }.asTerm, "apply", List(TypeRepr.of[Option[Any]]), args)
           .asExprOf[List[Option[Any]]]
 

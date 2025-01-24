@@ -16,9 +16,9 @@ object ScalacParser {
   var current: ClassLoader = Thread.currentThread().getContextClassLoader
   val files: mutable.Buffer[File] = collection.mutable.Buffer.empty[java.io.File]
   val settings = new Settings()
-  Seq("sun.boot.class.path", "java.class.path").foreach { prop =>
+  Seq("sun.boot.class.path", "java.class.path").foreach(prop =>
     System.getProperty(prop).split(File.pathSeparator).foreach(entry => files.append(new File(entry)))
-  }
+  )
   while (current != null) {
     current match {
       case t: URLClassLoader => t.getURLs.foreach(u => files.append(new File(u.toURI)))

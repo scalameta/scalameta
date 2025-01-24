@@ -550,16 +550,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("type-in-next-line-equals") {
+  test("type-in-next-line-equals")(
     runTestAssert[Stat](
       """|val refinementTest:
          |      Int = 3
          |""".stripMargin,
       assertLayout = Some("val refinementTest: Int = 3")
     )(Defn.Val(Nil, List(patvar("refinementTest")), Some(pname("Int")), int(3)))
-  }
+  )
 
-  test("type-in-next-line-equals-newline") {
+  test("type-in-next-line-equals-newline")(
     runTestAssert[Stat](
       """|val refinementTest:
          |      Int = 
@@ -567,9 +567,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some("val refinementTest: Int = 3")
     )(Defn.Val(Nil, List(patvar("refinementTest")), Some(pname("Int")), int(3)))
-  }
+  )
 
-  test("type-equals-separate") {
+  test("type-equals-separate")(
     runTestAssert[Stat](
       """|def refinementTest(a :
          |      Int = 
@@ -584,9 +584,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
       None,
       tname("a")
     ))
-  }
+  )
 
-  test("type-multi-seq") {
+  test("type-multi-seq")(
     runTestAssert[Stat](
       """|val refinementTest:
          |    Int = 
@@ -595,9 +595,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some("val refinementTest: Int = {\n  fx\n  fy\n}")
     )(Defn.Val(Nil, List(patvar("refinementTest")), Some(pname("Int")), blk(tname("fx"), tname("fy"))))
-  }
+  )
 
-  test("equals-block") {
+  test("equals-block")(
     runTestAssert[Stat](
       """|val refinementTest:
          |  Int = 
@@ -606,7 +606,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some("val refinementTest: Int = {\n  fx\n  fy\n}")
     )(Defn.Val(Nil, List(patvar("refinementTest")), Some(pname("Int")), blk(tname("fx"), tname("fy"))))
-  }
+  )
 
   test("given-block-indent") {
     runTestAssert[Stat](
@@ -635,17 +635,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("given-block-indent-edge-cases: `with` and no-indent") {
-    runTestError[Stat](
-      """|given intOrd: Ord[Int] with
-         |def fa: Int = 1
-         |def fb: Int = 2
-         |""".stripMargin,
-      """|<input>:2: error: `identifier` expected but `def` found
-         |def fa: Int = 1
-         |^""".stripMargin
-    )
-  }
+  test("given-block-indent-edge-cases: `with` and no-indent")(runTestError[Stat](
+    """|given intOrd: Ord[Int] with
+       |def fa: Int = 1
+       |def fb: Int = 2
+       |""".stripMargin,
+    """|<input>:2: error: `identifier` expected but `def` found
+       |def fa: Int = 1
+       |^""".stripMargin
+  ))
 
   test("given-block-indent-edge-cases: coloneol") {
     runTestAssert[Stat](
@@ -683,14 +681,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )
   }
 
-  test("given-block-indent-edge-cases: `with` another parent type") {
+  test("given-block-indent-edge-cases: `with` another parent type")(
     runTestAssert[Stat](
       """|class A extends A with 
          |  B
          |""".stripMargin,
       assertLayout = Some("class A extends A with B")
     )(Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody(init("A"), init("B"))))
-  }
+  )
 
   test("nested-coloneol") {
     runTestAssert[Stat](
@@ -709,7 +707,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("semicolon-closes-indent-region") {
+  test("semicolon-closes-indent-region")(
     runTestAssert[Stat](
       """|val z =
          |  val a = 
@@ -728,7 +726,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       None,
       blk(Defn.Val(Nil, List(patvar("a")), None, int(0)), tapply(tname("f"), tname("a")))
     ))
-  }
+  )
 
   test("observe-indented-in-braces") {
     val code =
@@ -777,14 +775,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("object-type") {
+  test("object-type")(
     runTestAssert[Stat](
       """|object typeAndObjects:
          |  type Ala
          |""".stripMargin,
       assertLayout = Some("object typeAndObjects { type Ala }")
     )(Defn.Object(Nil, tname("typeAndObjects"), tpl(Decl.Type(Nil, pname("Ala"), Nil, noBounds))))
-  }
+  )
 
   test("old-try-catch-same-indent") {
     val code =
@@ -1062,7 +1060,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("return-single-indent") {
+  test("return-single-indent")(
     runTestAssert[Stat](
       """|def method =
          |   return
@@ -1071,7 +1069,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin,
       assertLayout = Some("def method = return 2 + 3")
     )(Defn.Def(Nil, tname("method"), Nil, Nil, None, Term.Return(tinfix(int(2), "+", int(3)))))
-  }
+  )
 
   test("empty-return") {
     runTestAssert[Stat](
@@ -1283,7 +1281,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("indented-apply") {
+  test("indented-apply")(
     runTestAssert[Stat](
       """|def method = 
          |  fun(a,b,c)
@@ -1298,7 +1296,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       None,
       tapply(tapply(tname("fun"), tname("a"), tname("b"), tname("c")), tname("d"), tname("e"))
     ))
-  }
+  )
 
   test("#3531 apply with optional braces and trailing comma") {
     val code =
@@ -1357,7 +1355,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
-  test("indented-double-apply") {
+  test("indented-double-apply")(
     runTestAssert[Stat](
       """|def method = 
          |  fun(a,b,c)
@@ -1377,7 +1375,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         tname("g")
       )
     ))
-  }
+  )
 
   test("indented-for") {
     runTestAssert[Stat](
@@ -1546,7 +1544,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("indented-double-new") {
+  test("indented-double-new")(
     runTestAssert[Stat](
       """|new fun
          |    (a,b,c)
@@ -1560,7 +1558,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       List(tname("d"), tname("e")),
       List(tname("f"), tname("g"))
     )))
-  }
+  )
 
   test("then-same-line") {
     runTestAssert[Stat](
@@ -1644,7 +1642,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))))
   }
 
-  test("empty-case-end-marker") {
+  test("empty-case-end-marker")(
     runTestAssert[Source](
       """|
          |  def abc: Unit =
@@ -1664,7 +1662,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       ),
       Term.EndMarker(tname("abc"))
     )))
-  }
+  )
 
   test("infix-operator-with-alpha") {
     runTestAssert[Stat](
@@ -1684,7 +1682,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("colon-eol-comment1") {
+  test("colon-eol-comment1")(
     runTestAssert[Stat](
       """|object Foo:
          |  /*inline*/ def foo: Int = ???
@@ -1699,9 +1697,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
       )
     ))
-  }
+  )
 
-  test("colon-eol-comment2") {
+  test("colon-eol-comment2")(
     runTestAssert[Stat](
       """|object Foo: /* comment*/
          |  def foo: Int = ???
@@ -1712,9 +1710,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
       tname("Foo"),
       tpl(Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")))
     ))
-  }
+  )
 
-  test("colon-eol-multiline-comment") {
+  test("colon-eol-multiline-comment")(
     runTestAssert[Stat](
       """|object Foo:/* multi
          |  line
@@ -1730,9 +1728,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
       )
     ))
-  }
+  )
 
-  test("given-with-comment") {
+  test("given-with-comment")(
     runTestAssert[Stat](
       """|given Foo with
          |   /* comment */  def foo: Int = ???
@@ -1752,7 +1750,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
         )
       )
     ))
-  }
+  )
 
   test("given-with-miltiline-comment") {
     runTestAssert[Stat](
@@ -1790,33 +1788,35 @@ class SignificantIndentationSuite extends BaseDottySuite {
           |class B
           |""".stripMargin,
       assertLayout = None
-    )(Source(List(
-      Defn.Class(
-        Nil,
-        pname("A1"),
-        Nil,
-        EmptyCtor(),
-        tplNoBody(
-          init(Type.Select(tselect("scala", "annotation"), pname("StaticAnnotation"))) :: Nil
+    ) {
+      Source(List(
+        Defn.Class(
+          Nil,
+          pname("A1"),
+          Nil,
+          EmptyCtor(),
+          tplNoBody(
+            init(Type.Select(tselect("scala", "annotation"), pname("StaticAnnotation"))) :: Nil
+          )
+        ),
+        Defn.Class(
+          Nil,
+          pname("A2"),
+          Nil,
+          EmptyCtor(),
+          tplNoBody(
+            init(Type.Select(tselect("scala", "annotation"), pname("StaticAnnotation"))) :: Nil
+          )
+        ),
+        Defn.Class(
+          List(Mod.Annot(init("A1")), Mod.Annot(init("A2"))),
+          pname("B"),
+          Nil,
+          EmptyCtor(),
+          tplNoBody()
         )
-      ),
-      Defn.Class(
-        Nil,
-        pname("A2"),
-        Nil,
-        EmptyCtor(),
-        tplNoBody(
-          init(Type.Select(tselect("scala", "annotation"), pname("StaticAnnotation"))) :: Nil
-        )
-      ),
-      Defn.Class(
-        List(Mod.Annot(init("A1")), Mod.Annot(init("A2"))),
-        pname("B"),
-        Nil,
-        EmptyCtor(),
-        tplNoBody()
-      )
-    )))
+      ))
+    }
   }
 
   test("i2505") {
@@ -2008,22 +2008,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  end foo
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("a"),
-        tpl(
-          Defn.Def(
-            Nil,
-            tname("foo"),
-            Nil,
-            Some(pname("Bar")),
-            Term.PartialFunction(List(Case(patvar("sym"), Some(tname("baz")), blk())))
-          ),
-          Term.EndMarker(tname("foo"))
-        )
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(
+        Defn.Def(
+          Nil,
+          tname("foo"),
+          Nil,
+          Some(pname("Bar")),
+          Term.PartialFunction(List(Case(patvar("sym"), Some(tname("baz")), blk())))
+        ),
+        Term.EndMarker(tname("foo"))
       )
-    }
+    ))
   }
 
   test("def body is non-partial function") {
@@ -2041,22 +2039,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(Defn.Def(
         Nil,
-        tname("a"),
-        tpl(Defn.Def(
-          Nil,
-          tname("foo"),
-          Nil,
-          Some(pname("Bar")),
-          blk(
-            Defn.Class(List(Mod.Case()), pname("Baz"), Nil, ctorp(tparam("baz", "Int")), tplNoBody()),
-            Term.New(init("Baz", List(int(0))))
-          )
-        ))
-      )
-    }
+        tname("foo"),
+        Nil,
+        Some(pname("Bar")),
+        blk(
+          Defn.Class(List(Mod.Case()), pname("Baz"), Nil, ctorp(tparam("baz", "Int")), tplNoBody()),
+          Term.New(init("Baz", List(int(0))))
+        )
+      ))
+    ))
   }
 
   test("#3252 `new` in arg, then comma 1") {
@@ -2070,18 +2066,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  )
          |""".stripMargin
     val layout = "object a { A(b = new B, c = d, e = f) }"
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("a"),
-        tpl(tapply(
-          tname("A"),
-          Term.Assign(tname("b"), Term.New(init("B"))),
-          Term.Assign(tname("c"), tname("d")),
-          Term.Assign(tname("e"), tname("f"))
-        ))
-      )
-    }
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(tapply(
+        tname("A"),
+        Term.Assign(tname("b"), Term.New(init("B"))),
+        Term.Assign(tname("c"), tname("d")),
+        Term.Assign(tname("e"), tname("f"))
+      ))
+    ))
   }
 
   test("#3252 `new` in arg, then comma 2") {
@@ -2095,18 +2089,16 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  )
          |""".stripMargin
     val layout = "object a { A(b = new B(0), c = d, e = f) }"
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("a"),
-        tpl(tapply(
-          tname("A"),
-          Term.Assign(tname("b"), Term.New(init("B", List(int(0))))),
-          Term.Assign(tname("c"), tname("d")),
-          Term.Assign(tname("e"), tname("f"))
-        ))
-      )
-    }
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(tapply(
+        tname("A"),
+        Term.Assign(tname("b"), Term.New(init("B", List(int(0))))),
+        Term.Assign(tname("c"), tname("d")),
+        Term.Assign(tname("e"), tname("f"))
+      ))
+    ))
   }
 
   test("#3252 `new` in arg, then comma 3") {
@@ -2120,24 +2112,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  )
          |""".stripMargin
     val layout = "object a { A(b = new B(0) { def foo = ??? }, c = d, e = f) }"
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("a"),
-        tpl(tapply(
-          tname("A"),
-          Term.Assign(
-            tname("b"),
-            Term.NewAnonymous(tpl(
-              List(init("B", List(int(0)))),
-              List(Defn.Def(Nil, tname("foo"), Nil, None, tname("???")))
-            ))
-          ),
-          Term.Assign(tname("c"), tname("d")),
-          Term.Assign(tname("e"), tname("f"))
-        ))
-      )
-    }
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(tapply(
+        tname("A"),
+        Term.Assign(
+          tname("b"),
+          Term.NewAnonymous(tpl(
+            List(init("B", List(int(0)))),
+            List(Defn.Def(Nil, tname("foo"), Nil, None, tname("???")))
+          ))
+        ),
+        Term.Assign(tname("c"), tname("d")),
+        Term.Assign(tname("e"), tname("f"))
+      ))
+    ))
   }
 
   test("#3257 `new` in arg value after indent, then comma") {
@@ -2150,17 +2140,15 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  )
          |""".stripMargin
     val layout = "object a { A(b = new B, c = d) }"
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("a"),
-        tpl(tapply(
-          tname("A"),
-          Term.Assign(tname("b"), Term.New(init("B"))),
-          Term.Assign(tname("c"), tname("d"))
-        ))
-      )
-    }
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(tapply(
+        tname("A"),
+        Term.Assign(tname("b"), Term.New(init("B"))),
+        Term.Assign(tname("c"), tname("d"))
+      ))
+    ))
   }
 
   test("#3257 `if-no-else` in arg value after indent, then comma") {
@@ -2173,20 +2161,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  )
          |""".stripMargin
     val layout = "object a { A(b = if (a + b) c, c = d) }"
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("a"),
-        tpl(tapply(
-          tname("A"),
-          Term.Assign(
-            tname("b"),
-            Term.If(tinfix(tname("a"), "+", tname("b")), tname("c"), Lit.Unit(), Nil)
-          ),
-          Term.Assign(tname("c"), tname("d"))
-        ))
-      )
-    }
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("a"),
+      tpl(tapply(
+        tname("A"),
+        Term.Assign(
+          tname("b"),
+          Term.If(tinfix(tname("a"), "+", tname("b")), tname("c"), Lit.Unit(), Nil)
+        ),
+        Term.Assign(tname("c"), tname("d"))
+      ))
+    ))
   }
 
   test("#3261 chained `match` with outdent, no block, in assign") {
@@ -2211,26 +2197,24 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("small"),
+      tpl(Defn.Val(
         Nil,
-        tname("small"),
-        tpl(Defn.Val(
-          Nil,
-          List(patvar("value")),
-          None,
+        List(patvar("value")),
+        None,
+        tmatch(
           tmatch(
-            tmatch(
-              tname("Nil"),
-              Case(tname("Nil"), None, str("empty")),
-              Case(patwildcard, None, str("nonempty"))
-            ),
-            Case(str("empty"), None, int(0)),
-            Case(str("nonempty"), None, int(1))
-          )
-        ))
-      )
-    }
+            tname("Nil"),
+            Case(tname("Nil"), None, str("empty")),
+            Case(patwildcard, None, str("nonempty"))
+          ),
+          Case(str("empty"), None, int(0)),
+          Case(str("nonempty"), None, int(1))
+        )
+      ))
+    ))
   }
 
   test("#3261 chained `match` with outdent, block, in assign") {
@@ -2259,29 +2243,27 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("small"),
+      tpl(Defn.Val(
         Nil,
-        tname("small"),
-        tpl(Defn.Val(
-          Nil,
-          List(patvar("value")),
-          None,
-          tmatch(
-            blk(
-              tapply(tname("foo")),
-              tmatch(
-                tname("Nil"),
-                Case(tname("Nil"), None, str("empty")),
-                Case(patwildcard, None, str("nonempty"))
-              )
-            ),
-            Case(str("empty"), None, int(0)),
-            Case(str("nonempty"), None, int(1))
-          )
-        ))
-      )
-    }
+        List(patvar("value")),
+        None,
+        tmatch(
+          blk(
+            tapply(tname("foo")),
+            tmatch(
+              tname("Nil"),
+              Case(tname("Nil"), None, str("empty")),
+              Case(patwildcard, None, str("nonempty"))
+            )
+          ),
+          Case(str("empty"), None, int(0)),
+          Case(str("nonempty"), None, int(1))
+        )
+      ))
+    ))
   }
 
   test("#3261 chained `match` with outdent, no block, in if cond") {
@@ -2308,26 +2290,24 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }) bar
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("small"),
-        tpl(Term.If(
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("small"),
+      tpl(Term.If(
+        tmatch(
           tmatch(
-            tmatch(
-              tname("Nil"),
-              Case(tname("Nil"), None, str("empty")),
-              Case(patwildcard, None, str("nonempty"))
-            ),
-            Case(str("empty"), None, bool(true)),
-            Case(str("nonempty"), None, bool(false))
+            tname("Nil"),
+            Case(tname("Nil"), None, str("empty")),
+            Case(patwildcard, None, str("nonempty"))
           ),
-          tname("bar"),
-          Lit.Unit(),
-          Nil
-        ))
-      )
-    }
+          Case(str("empty"), None, bool(true)),
+          Case(str("nonempty"), None, bool(false))
+        ),
+        tname("bar"),
+        Lit.Unit(),
+        Nil
+      ))
+    ))
   }
 
   test("#3261 chained `match` with outdent, block, in if cond") {
@@ -2358,29 +2338,27 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }) bar
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("small"),
-        tpl(Term.If(
-          tmatch(
-            blk(
-              tapply(tname("foo")),
-              tmatch(
-                tname("Nil"),
-                Case(tname("Nil"), None, str("empty")),
-                Case(patwildcard, None, str("nonempty"))
-              )
-            ),
-            Case(str("empty"), None, bool(true)),
-            Case(str("nonempty"), None, bool(false))
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("small"),
+      tpl(Term.If(
+        tmatch(
+          blk(
+            tapply(tname("foo")),
+            tmatch(
+              tname("Nil"),
+              Case(tname("Nil"), None, str("empty")),
+              Case(patwildcard, None, str("nonempty"))
+            )
           ),
-          tname("bar"),
-          Lit.Unit(),
-          Nil
-        ))
-      )
-    }
+          Case(str("empty"), None, bool(true)),
+          Case(str("nonempty"), None, bool(false))
+        ),
+        tname("bar"),
+        Lit.Unit(),
+        Nil
+      ))
+    ))
   }
 
   test("#3261 chained `match` with outdent, no block, in try") {
@@ -2410,25 +2388,23 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("small"),
-        tpl(Term.Try(
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("small"),
+      tpl(Term.Try(
+        tmatch(
           tmatch(
-            tmatch(
-              tname("Nil"),
-              Case(tname("Nil"), None, str("empty")),
-              Case(patwildcard, None, str("nonempty"))
-            ),
-            Case(str("empty"), None, int(0)),
-            Case(str("nonempty"), None, int(1))
+            tname("Nil"),
+            Case(tname("Nil"), None, str("empty")),
+            Case(patwildcard, None, str("nonempty"))
           ),
-          Case(patvar("e"), None, tapply(tselect("e", "getMessage"))) :: Nil,
-          None
-        ))
-      )
-    }
+          Case(str("empty"), None, int(0)),
+          Case(str("nonempty"), None, int(1))
+        ),
+        Case(patvar("e"), None, tapply(tselect("e", "getMessage"))) :: Nil,
+        None
+      ))
+    ))
   }
 
   test("#3261 chained `match` with outdent, block, in try") {
@@ -2462,28 +2438,26 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("small"),
-        tpl(Term.Try(
-          tmatch(
-            blk(
-              tapply(tname("foo")),
-              tmatch(
-                tname("Nil"),
-                Case(tname("Nil"), None, str("empty")),
-                Case(patwildcard, None, str("nonempty"))
-              )
-            ),
-            Case(str("empty"), None, int(0)),
-            Case(str("nonempty"), None, int(1))
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("small"),
+      tpl(Term.Try(
+        tmatch(
+          blk(
+            tapply(tname("foo")),
+            tmatch(
+              tname("Nil"),
+              Case(tname("Nil"), None, str("empty")),
+              Case(patwildcard, None, str("nonempty"))
+            )
           ),
-          Case(patvar("e"), None, tapply(tselect("e", "getMessage"))) :: Nil,
-          None
-        ))
-      )
-    }
+          Case(str("empty"), None, int(0)),
+          Case(str("nonempty"), None, int(1))
+        ),
+        Case(patvar("e"), None, tapply(tselect("e", "getMessage"))) :: Nil,
+        None
+      ))
+    ))
   }
 
   test("#3261 partial func, in try") {
@@ -2506,19 +2480,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, Some(layout)) {
-      Defn.Object(
-        Nil,
-        tname("small"),
-        tpl(Term.Try(
-          Term.PartialFunction(
-            List(Case(tname("Nil"), None, str("empty")), Case(patwildcard, None, str("nonempty")))
-          ),
-          Case(patvar("e"), None, tapply(tselect("e", "getMessage"))) :: Nil,
-          None
-        ))
-      )
-    }
+    runTestAssert[Stat](code, Some(layout))(Defn.Object(
+      Nil,
+      tname("small"),
+      tpl(Term.Try(
+        Term.PartialFunction(
+          List(Case(tname("Nil"), None, str("empty")), Case(patwildcard, None, str("nonempty")))
+        ),
+        Case(patvar("e"), None, tapply(tselect("e", "getMessage"))) :: Nil,
+        None
+      ))
+    ))
   }
 
   test("blank after template 1") {

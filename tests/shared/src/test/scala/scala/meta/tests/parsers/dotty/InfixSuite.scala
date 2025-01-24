@@ -4,7 +4,7 @@ import scala.meta._
 
 class InfixSuite extends BaseDottySuite {
 
-  test("simple-modifier") {
+  test("simple-modifier")(
     runTestAssert[Stat](
       """|infix def a(param: Int) = param
          |""".stripMargin
@@ -16,7 +16,7 @@ class InfixSuite extends BaseDottySuite {
       None,
       tname("param")
     ))
-  }
+  )
   test("infix-type-complex") {
     runTestAssert[Stat](
       """|class A:
@@ -50,19 +50,15 @@ class InfixSuite extends BaseDottySuite {
 
   }
 
-  test("infix-class") {
-    runTestAssert[Stat]("infix class A[B, C]")(
-      Defn.Class(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody())
-    )
-  }
+  test("infix-class")(runTestAssert[Stat]("infix class A[B, C]")(
+    Defn.Class(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody())
+  ))
 
-  test("infix-trait") {
-    runTestAssert[Stat]("infix trait A[B, C]")(
-      Defn.Trait(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody())
-    )
-  }
+  test("infix-trait")(runTestAssert[Stat]("infix trait A[B, C]")(
+    Defn.Trait(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody())
+  ))
 
-  test("infix-identifier") {
+  test("infix-identifier")(
     runTestAssert[Stat]("infix def infix(infix: infix): infix = new infix {}")(Defn.Def(
       List(Mod.Infix()),
       tname("infix"),
@@ -71,9 +67,9 @@ class InfixSuite extends BaseDottySuite {
       Some(pname("infix")),
       Term.NewAnonymous(tpl(List(init("infix")), Nil))
     ))
-  }
+  )
 
-  test("extension-method") {
+  test("extension-method")(
     runTestAssert[Stat]("extension (i: Int) infix def zero(other: Int): Int = 0")(
       Defn.ExtensionGroup(
         Nil,
@@ -88,7 +84,7 @@ class InfixSuite extends BaseDottySuite {
         )
       )
     )
-  }
+  )
 
   test("issue-2880 1") {
     runTestAssert[Stat](
@@ -163,7 +159,7 @@ class InfixSuite extends BaseDottySuite {
     ))
   }
 
-  test("scala3 infix syntax 1") {
+  test("scala3 infix syntax 1")(
     runTestAssert[Stat](
       """|val str = "hello"
          |  ++ " world"
@@ -179,7 +175,7 @@ class InfixSuite extends BaseDottySuite {
       None,
       tinfix(tinfix(str("hello"), "++", str(" world")), "++", str("!"))
     ))
-  }
+  )
 
   test("scala3 infix syntax 2") {
     runTestAssert[Stat](
@@ -213,7 +209,7 @@ class InfixSuite extends BaseDottySuite {
     ))
   }
 
-  test("scala3 infix syntax 3.1") {
+  test("scala3 infix syntax 3.1")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -227,9 +223,9 @@ class InfixSuite extends BaseDottySuite {
            |""".stripMargin
       )
     )(blk(tinfix(tname("freezing"), "|", tname("boiling"))))
-  }
+  )
 
-  test("scala3 infix syntax 3.2") {
+  test("scala3 infix syntax 3.2")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -243,9 +239,9 @@ class InfixSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     )(blk("freezing", tpostfix("|", "boiling")))
-  }
+  )
 
-  test("scala3 infix syntax 3.2.1") {
+  test("scala3 infix syntax 3.2.1")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -259,9 +255,9 @@ class InfixSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     )(blk("freezing", tpostfix("|", "boiling")))
-  }
+  )
 
-  test("scala3 infix syntax 3.2.2") {
+  test("scala3 infix syntax 3.2.2")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -275,9 +271,9 @@ class InfixSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     )(blk("freezing", tpostfix("|", "!")))
-  }
+  )
 
-  test("scala3 infix syntax 3.2.3") {
+  test("scala3 infix syntax 3.2.3")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -291,9 +287,9 @@ class InfixSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     )(blk("freezing", tpostfix("|", "!")))
-  }
+  )
 
-  test("scala3 infix syntax 3.2.4") {
+  test("scala3 infix syntax 3.2.4")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -307,9 +303,9 @@ class InfixSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     )(blk("freezing", tpostfix("|", "|")))
-  }
+  )
 
-  test("scala3 infix syntax 3.2.5") {
+  test("scala3 infix syntax 3.2.5")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -323,9 +319,9 @@ class InfixSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     )(blk("freezing", tpostfix("|", "|")))
-  }
+  )
 
-  test("scala3 infix syntax 3.3") {
+  test("scala3 infix syntax 3.3")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -340,7 +336,7 @@ class InfixSuite extends BaseDottySuite {
            |""".stripMargin
       )
     )(blk(tinfix(tname("freezing"), "|", tname("boiling"))))
-  }
+  )
 
   test("scala3 infix syntax 3.4") {
     val code =
@@ -359,19 +355,17 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
-  test("scala3 infix syntax 3.5") {
-    runTestError[Stat](
-      """|{
-         |  freezing
-         |    |
-         |  boiling
-         |}
-         |""".stripMargin,
-      """|error: Invalid indented leading infix operator found
-         |    |
-         |    ^""".stripMargin
-    )
-  }
+  test("scala3 infix syntax 3.5")(runTestError[Stat](
+    """|{
+       |  freezing
+       |    |
+       |  boiling
+       |}
+       |""".stripMargin,
+    """|error: Invalid indented leading infix operator found
+       |    |
+       |    ^""".stripMargin
+  ))
 
   test("scala3 infix syntax 3.6 comment") {
     val code =
@@ -432,7 +426,7 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
-  test("scala3 infix syntax 4") {
+  test("scala3 infix syntax 4")(
     runTestAssert[Stat](
       """|{
          |  freezing
@@ -447,7 +441,7 @@ class InfixSuite extends BaseDottySuite {
            |""".stripMargin
       )
     )(blk(tname("freezing"), Term.ApplyUnary(tname("!"), tname("boiling"))))
-  }
+  )
 
   test("scala3 infix syntax 5.1") {
     runTestAssert[Stat](
@@ -517,7 +511,7 @@ class InfixSuite extends BaseDottySuite {
          |  end toBeContinued
          |}
          |""".stripMargin,
-      Some(
+      Some {
         """|{
            |  def toBeContinued(altToken: Token): Boolean = {
            |    inline def canContinue = !in.canStartStatTokens.contains(in.token) || followedByToken(altToken)
@@ -526,42 +520,44 @@ class InfixSuite extends BaseDottySuite {
            |  end toBeContinued
            |}
            |""".stripMargin
-      )
-    )(blk(
-      Defn.Def(
-        Nil,
-        tname("toBeContinued"),
-        Nil,
-        List(List(tparam("altToken", "Token"))),
-        Some(pname("Boolean")),
-        blk(
-          Defn.Def(
-            List(Mod.Inline()),
-            tname("canContinue"),
-            None,
-            None,
-            tinfix(
-              Term.ApplyUnary(
-                tname("!"),
-                tapply(tselect("in", "canStartStatTokens", "contains"), tselect("in", "token"))
-              ),
-              "||",
-              tapply(tname("followedByToken"), tname("altToken"))
-            )
-          ),
-          tinfix(
-            tinfix(
-              Term.ApplyUnary(tname("!"), tselect("in", "isNewLine")),
-              "&&",
-              Term.ApplyUnary(tname("!"), tname("migrateTo3"))
+      }
+    ) {
+      blk(
+        Defn.Def(
+          Nil,
+          tname("toBeContinued"),
+          Nil,
+          List(List(tparam("altToken", "Token"))),
+          Some(pname("Boolean")),
+          blk(
+            Defn.Def(
+              List(Mod.Inline()),
+              tname("canContinue"),
+              None,
+              None,
+              tinfix(
+                Term.ApplyUnary(
+                  tname("!"),
+                  tapply(tselect("in", "canStartStatTokens", "contains"), tselect("in", "token"))
+                ),
+                "||",
+                tapply(tname("followedByToken"), tname("altToken"))
+              )
             ),
-            "&&",
-            tname("canContinue")
+            tinfix(
+              tinfix(
+                Term.ApplyUnary(tname("!"), tselect("in", "isNewLine")),
+                "&&",
+                Term.ApplyUnary(tname("!"), tname("migrateTo3"))
+              ),
+              "&&",
+              tname("canContinue")
+            )
           )
-        )
-      ),
-      Term.EndMarker(tname("toBeContinued"))
-    ))
+        ),
+        Term.EndMarker(tname("toBeContinued"))
+      )
+    }
   }
 
   test("#3051 scala3 leading infix syntax") {

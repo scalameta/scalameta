@@ -23,9 +23,9 @@ class OccurrenceSuite extends FunSuite {
   private def testBody(body: OccurrenceSuite.TestBody): Unit =
     assertNoDiff(body.obtained, body.expected)
 
-  ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212 || ScalaVersion.is213) {
+  ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212 || ScalaVersion.is213)(
     OccurrenceSuite.testCases.foreach(t => test(t.name)(t.body.fold(fail(_), testBody)))
-  }
+  )
 }
 
 object OccurrenceSuite {

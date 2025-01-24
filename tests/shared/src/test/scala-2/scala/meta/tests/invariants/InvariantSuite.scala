@@ -7,7 +7,7 @@ import org.scalameta.invariants._
 import munit._
 
 class InvariantSuite extends TreeSuiteBase {
-  test("more informative error messages") {
+  test("more informative error messages")(
     interceptMessage[InvariantFailedException](
       """|invariant failed:
          |when verifying x.>(3)
@@ -18,7 +18,7 @@ class InvariantSuite extends TreeSuiteBase {
       val x = 2
       require(x > 3)
     }
-  }
+  )
 
   test("even more informative error messages") {
     interceptMessage[InvariantFailedException](
@@ -38,11 +38,11 @@ class InvariantSuite extends TreeSuiteBase {
     }
   }
 
-  test("unreachable - 1") {
+  test("unreachable - 1")(
     interceptMessage[UnreachableError]("this code path should've been unreachable")(unreachable)
-  }
+  )
 
-  test("unreachable - 2") {
+  test("unreachable - 2")(
     interceptMessage[UnreachableError](
       """|this code path should've been unreachable
          |where C.this.x = 3
@@ -55,7 +55,7 @@ class InvariantSuite extends TreeSuiteBase {
       }
       C(3)
     }
-  }
+  )
 
   test("don't evaluate debug")(require(true && debug(throw new Exception)))
 }

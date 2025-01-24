@@ -49,16 +49,16 @@ commands += Command.command("download-scala-library") { s =>
   )
   s
 }
-commands += Command.command("save-expect") { s =>
+commands += Command.command("save-expect")(s =>
   List(LatestScala212, LatestScala213).foldLeft(s) { case (s, version) =>
     s"++$version" :: "semanticdbScalacPlugin/compile" :: "semanticdbIntegration/clean" ::
       "semanticdbIntegration/compile" ::
       "testsSemanticdb/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
   }
-}
-commands += Command.command("save-manifest") { s =>
+)
+commands += Command.command("save-manifest")(s =>
   "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s
-}
+)
 def helloContributor(): Unit = println(
   """Welcome to the Scalameta build! You probably don't want to run `sbt test` since
     |that will take a long time to complete.  More likely, you want to run `testsJVM/test`.
@@ -248,12 +248,10 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   ),
   Compile / sourceGenerators += Def.taskDyn {
     val outFile = (Compile / sourceManaged).value / "generated" / "TreeLifts.scala"
-    Def.task {
-      if (scalaVersion.value.startsWith("3")) {
-        (Compile / (scala3TreeLiftsCodeGen / run)).toTask(" " + outFile.getAbsolutePath).value
-        Seq(outFile)
-      } else Seq()
-    }
+    Def.task(if (scalaVersion.value.startsWith("3")) {
+      (Compile / (scala3TreeLiftsCodeGen / run)).toTask(" " + outFile.getAbsolutePath).value
+      Seq(outFile)
+    } else Seq())
   }.taskValue
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
@@ -274,25 +272,27 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
 def mergedModule(
     projects: File => List[File],
     projects3: File => List[File] = _ => Nil
-): List[Setting[_]] = List(Compile / unmanagedSourceDirectories ++= {
-  val base = (ThisBuild / baseDirectory).value
-  val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
-  val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
-  val platform = if (isJS) "js" else if (isNative) "native" else "jvm"
-  val scalaBinary = "scala-" + scalaBinaryVersion.value
-  val allProjects = if (isScala3.value) projects3(base) else projects(base)
-  allProjects.flatMap { project =>
-    List(
-      project / "shared" / "src" / "main" / scalaBinary,
-      project / "shared" / "src" / "main" / "scala",
-      project / platform / "src" / "main" / "scala"
-    ) ++ {
-      if (scalaBinaryVersion.value.startsWith("2"))
-        List(project / "shared" / "src" / "main" / "scala-2")
-      else Nil
-    }
+): List[Setting[_]] = List {
+  Compile / unmanagedSourceDirectories ++= {
+    val base = (ThisBuild / baseDirectory).value
+    val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
+    val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
+    val platform = if (isJS) "js" else if (isNative) "native" else "jvm"
+    val scalaBinary = "scala-" + scalaBinaryVersion.value
+    val allProjects = if (isScala3.value) projects3(base) else projects(base)
+    allProjects.flatMap(project =>
+      List(
+        project / "shared" / "src" / "main" / scalaBinary,
+        project / "shared" / "src" / "main" / "scala",
+        project / platform / "src" / "main" / "scala"
+      ) ++ {
+        if (scalaBinaryVersion.value.startsWith("2"))
+          List(project / "shared" / "src" / "main" / "scala-2")
+        else Nil
+      }
+    )
   }
-})
+}
 
 lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta")).settings(
   moduleName := "scalameta",
@@ -490,9 +490,9 @@ def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
 
 lazy val sharedSettings = Def.settings(
   version ~= { dynVer =>
-    customVersion.getOrElse {
+    customVersion.getOrElse(
       if (isCI) dynVer else localSnapshotVersion // only for local publishing
-    }
+    )
   },
   scalaVersion := LatestScala213,
   organization := "org.scalameta",
@@ -618,9 +618,9 @@ lazy val publishableSettings = Def.settings(
           val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
           !isJS && !isNative
         }
-        if (isJVM) previousVersion.map { previousVersion =>
+        if (isJVM) previousVersion.map(previousVersion =>
           organization.value % moduleName.value % previousVersion cross crossVersion.value
-        }
+        )
         else None
       }
       previousArtifact.toSet
@@ -781,10 +781,10 @@ lazy val docs = project.in(file("scalameta-docs")).settings(
 lazy val shadingSettings = Def.settings(
   shadedDependencies ++= {
     if (isScala211.value) Set.empty
-    else ShadedDependency.all.map { x =>
+    else ShadedDependency.all.map(x =>
       if (x.isPlatformSpecific) x.groupID %%% x.artifactID % "foo"
       else x.groupID %% x.artifactID % "foo"
-    }.toSet
+    ).toSet
   },
   shadingRules ++= {
     if (isScala211.value) Seq.empty

@@ -13,49 +13,49 @@ class LitSuite extends ParseSuite {
 
   test("42")(assertTree(term("42"))(int(42)))
 
-  test("2147483648") {
+  test("2147483648")(
     interceptMessage[ParseException](
       """|<input>:1: error: integer number too large for Int
          |2147483648
          |^""".stripMargin.lf2nl
     )(term("2147483648"))
-  }
+  )
 
   test("2147483647")(assertTree(term("2147483647"))(int(2147483647)))
 
   test("-2147483648")(assertTree(term("-2147483648"))(int(-2147483648)))
 
-  test("-2147483649") {
+  test("-2147483649")(
     interceptMessage[ParseException](
       """|<input>:1: error: integer number too small for Int
          |-2147483649
          | ^""".stripMargin.lf2nl
     )(term("-2147483649"))
-  }
+  )
 
   test("42L")(assertTree(term("42L"))(lit(42L)))
 
   test("2147483648L")(assertTree(term("2147483648L"))(lit(2147483648L)))
 
-  test("9223372036854775808L") {
+  test("9223372036854775808L")(
     interceptMessage[ParseException](
       """|<input>:1: error: integer number too large for Long
          |9223372036854775808L
          |^""".stripMargin.lf2nl
     )(term("9223372036854775808L"))
-  }
+  )
 
   test("9223372036854775807L")(assertTree(term("9223372036854775807L"))(lit(9223372036854775807L)))
 
   test("-9223372036854775808L")(assertTree(term("-9223372036854775808L"))(lit(-9223372036854775808L)))
 
-  test("-9223372036854775809L") {
+  test("-9223372036854775809L")(
     interceptMessage[ParseException](
       """|<input>:1: error: integer number too small for Long
          |-9223372036854775809L
          | ^""".stripMargin.lf2nl
     )(term("-9223372036854775809L"))
-  }
+  )
 
   test("42.42")(matchSubStructure[Stat]("42.42", { case Lit(42.42) => () }))
 
@@ -122,9 +122,9 @@ class LitSuite extends ParseSuite {
     ))
   }
 
-  test("simple-expression-parse-error") {
+  test("simple-expression-parse-error")(
     intercept[parsers.ParseException](templStat("def neg: Unit = 2 + throw"))
-  }
+  )
 
   test("binary literals") {
     matchSubStructure[Stat]("0b1", { case Lit(1) => () })

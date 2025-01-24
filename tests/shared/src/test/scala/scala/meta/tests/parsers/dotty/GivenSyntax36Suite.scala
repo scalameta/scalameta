@@ -85,7 +85,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     ))
   }
 
-  test("poly-function") {
+  test("poly-function")(
     runTestAssert[Stat](
       """|type Comparer = [X: Ord] => (x: X, y: X) => Boolean
          |""".stripMargin
@@ -98,7 +98,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       )(pfunc(Type.TypedParam("x", "X", Nil), Type.TypedParam("y", "X", Nil))("Boolean")),
       noBounds
     ))
-  }
+  )
 
   test("poly-function-val") {
     runTestAssert[Stat](
@@ -123,14 +123,14 @@ class GivenSyntax36Suite extends BaseDottySuite {
     Defn.Def(Nil, "compare", Nil, List(List(tparam("x", "Int"), tparam("y", "Int"))), None, "???")
   )
 
-  test("given") {
+  test("given")(
     runTestAssert[Stat](
       """|given Ord[Int] with
          |   def compare(x: Int, y: Int) = ???
          |""".stripMargin,
       assertLayout = Some("given Ord[Int] with { def compare(x: Int, y: Int) = ??? }")
     )(Defn.Given(Nil, anon, None, tpl(List(init(papply("Ord", "Int"))), body)))
-  }
+  )
 
   val bodyBounds = tpl(
     List(init(papply("Ord", papply("List", "A")))),
@@ -144,7 +144,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
     ))
   )
 
-  test("given-context") {
+  test("given-context")(
     runTestAssert[Stat](
       """|given [A: Ord]: Ord[List[A]] with
          |  def compare(x: List[A], y: List[A]) = ???
@@ -152,7 +152,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       assertLayout =
         Some("given [A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
     )(Defn.Given(Nil, anon, List(pparam("A", bounds(cb = List("Ord")))), Nil, bodyBounds))
-  }
+  )
 
   test("given-context-using") {
     runTestAssert[Stat](
@@ -186,13 +186,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
       bodyBounds
     ))
   }
-  test("given-simple-alias") {
-    runTestAssert[Stat]("given Ord[Int] = IntOrd()")(
-      Defn.GivenAlias(Nil, anon, None, papply("Ord", "Int"), tapply("IntOrd"))
-    )
-  }
+  test("given-simple-alias")(runTestAssert[Stat]("given Ord[Int] = IntOrd()")(
+    Defn.GivenAlias(Nil, anon, None, papply("Ord", "Int"), tapply("IntOrd"))
+  ))
 
-  test("given-alias-context-bound") {
+  test("given-alias-context-bound")(
     runTestAssert[Stat]("given [A: Ord]: Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
       anon,
@@ -201,9 +199,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
       papply("Ord", papply("List", "A")),
       tapplytype("ListOrd", "A")
     ))
-  }
+  )
 
-  test("given-alias-context-param") {
+  test("given-alias-context-param")(
     runTestAssert[Stat]("given [A](using Ord[A]): Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
       anon,
@@ -212,22 +210,20 @@ class GivenSyntax36Suite extends BaseDottySuite {
       papply("Ord", papply("List", "A")),
       tapplytype("ListOrd", "A")
     ))
-  }
+  )
 
-  test("given-by-name") {
-    runTestAssert[Stat]("given [DummySoItsByName]: Context = curCtx")(
-      Defn.GivenAlias(Nil, anon, List(pparam("DummySoItsByName")), Nil, "Context", "curCtx")
-    )
-  }
+  test("given-by-name")(runTestAssert[Stat]("given [DummySoItsByName]: Context = curCtx")(
+    Defn.GivenAlias(Nil, anon, List(pparam("DummySoItsByName")), Nil, "Context", "curCtx")
+  ))
 
-  test("given-named") {
+  test("given-named")(
     runTestAssert[Stat](
       """|given intOrd: Ord[Int] with
          |   def compare(x: Int, y: Int) = ???
          |""".stripMargin,
       assertLayout = Some("given intOrd: Ord[Int] with { def compare(x: Int, y: Int) = ??? }")
     )(Defn.Given(Nil, "intOrd", None, tpl(List(init(papply("Ord", "Int"))), body)))
-  }
+  )
 
   test("given-context-named") {
     runTestAssert[Stat](
@@ -272,13 +268,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
     ))
   }
 
-  test("given-simple-alias-named") {
-    runTestAssert[Stat]("given intOrd: Ord[Int] = IntOrd()")(
-      Defn.GivenAlias(Nil, "intOrd", None, papply("Ord", "Int"), tapply("IntOrd"))
-    )
-  }
+  test("given-simple-alias-named")(runTestAssert[Stat]("given intOrd: Ord[Int] = IntOrd()")(
+    Defn.GivenAlias(Nil, "intOrd", None, papply("Ord", "Int"), tapply("IntOrd"))
+  ))
 
-  test("given-alias-context-bound-named") {
+  test("given-alias-context-bound-named")(
     runTestAssert[Stat]("given listOrd[A: Ord]: Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
       "listOrd",
@@ -287,9 +281,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
       papply("Ord", papply("List", "A")),
       tapplytype("ListOrd", "A")
     ))
-  }
+  )
 
-  test("given-alias-context-param-named") {
+  test("given-alias-context-param-named")(
     runTestAssert[Stat]("given listOrd[A](using Ord[A]): Ord[List[A]] = ListOrd[A]")(Defn.GivenAlias(
       Nil,
       "listOrd",
@@ -298,16 +292,16 @@ class GivenSyntax36Suite extends BaseDottySuite {
       papply("Ord", papply("List", "A")),
       tapplytype("ListOrd", "A")
     ))
-  }
+  )
 
-  test("given-by-name-named") {
+  test("given-by-name-named")(
     runTestAssert[Stat]("given context[DummySoItsByName]: Context = curCtx")(
       Defn.GivenAlias(Nil, "context", List(pparam("DummySoItsByName")), Nil, "Context", "curCtx")
     )
-  }
-  test("given-abstract-named") {
+  )
+  test("given-abstract-named")(
     runTestAssert[Stat]("given context: Context")(Decl.Given(Nil, "context", None, "Context"))
-  }
+  )
 
   // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html#7-cleanup-of-given-syntax
 

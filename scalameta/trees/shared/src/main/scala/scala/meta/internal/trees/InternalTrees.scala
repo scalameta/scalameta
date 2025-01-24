@@ -57,11 +57,11 @@ trait InternalTree extends Product {
   @deprecated("dialect is ignored, use parameterless `tokens` method", "4.9.0")
   final def tokens(dialect: Dialect): Tokens = tokens
 
-  def tokens: Tokens = tokensOpt.getOrElse {
+  def tokens: Tokens = tokensOpt.getOrElse(
     throw new Error.MissingDialectException(
       "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.tokenizeFor`."
     )
-  }
+  )
 
   def tokenizeFor(dialect: Dialect): Tokens =
     if (origin.dialectOpt.contains(dialect)) tokensOpt.get else retokenizeFor(dialect)
@@ -94,11 +94,11 @@ trait InternalTree extends Product {
   // Text or syntax
   // ==============================================================
 
-  def text: String = textOpt.getOrElse {
+  def text: String = textOpt.getOrElse(
     throw new Error.MissingDialectException(
       "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.printSyntaxFor`."
     )
-  }
+  )
 
   def printSyntaxFor(dialect: Dialect): String =
     if (origin.dialectOpt.contains(dialect)) textOpt.get else reprintSyntax(dialect)

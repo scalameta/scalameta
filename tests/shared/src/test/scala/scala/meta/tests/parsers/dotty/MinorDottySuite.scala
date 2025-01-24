@@ -67,7 +67,7 @@ class MinorDottySuite extends BaseDottySuite {
     ))))
   }
 
-  test("open-identifier") {
+  test("open-identifier")(
     runTestAssert[Stat]("def run(): Unit = { start; open(p); end }", assertLayout = None)(Defn.Def(
       Nil,
       tname("run"),
@@ -76,7 +76,7 @@ class MinorDottySuite extends BaseDottySuite {
       Some(pname("Unit")),
       blk(tname("start"), tapply(tname("open"), tname("p")), tname("end"))
     ))
-  }
+  )
 
   test("case-classes-empty-plist") {
     templStat("case class A()")(dialects.Scala3)
@@ -86,22 +86,14 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("xml-literals")(term("<foo>{bar}</foo>")(dialects.Scala3))
 
-  test("opaque-type-alias") {
-    runTestAssert[Stat]("opaque type F = X")(
-      Defn.Type(List(Mod.Opaque()), pname("F"), Nil, pname("X"), noBounds)
-    )
+  test("opaque-type-alias")(runTestAssert[Stat]("opaque type F = X")(
+    Defn.Type(List(Mod.Opaque()), pname("F"), Nil, pname("X"), noBounds)
+  ))
 
-  }
-
-  test("opaque-type-bounded-alias") {
-    runTestAssert[Stat]("opaque type F <: A & B = AB")(Defn.Type(
-      List(Mod.Opaque()),
-      pname("F"),
-      Nil,
-      pname("AB"),
-      bounds(hi = pinfix("A", "&", pname("B")))
-    ))
-  }
+  test("opaque-type-bounded-alias")(runTestAssert[Stat]("opaque type F <: A & B = AB")(
+    Defn
+      .Type(List(Mod.Opaque()), pname("F"), Nil, pname("AB"), bounds(hi = pinfix("A", "&", pname("B"))))
+  ))
 
   test("opaque-type-bounded-alias-with-quasiquotes") {
     val dialect: Dialect = null // overrides implicit
@@ -111,7 +103,7 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
-  test("opaque-type-in-object") {
+  test("opaque-type-in-object")(
     runTestAssert[Source]("object X { opaque type IArray[+T] = Array }")(Source(List(Defn.Object(
       Nil,
       tname("X"),
@@ -122,7 +114,7 @@ class MinorDottySuite extends BaseDottySuite {
         pname("Array")
       ))
     ))))
-  }
+  )
 
   test("opaque-type-mix-mods") {
     runTestAssert[Stat]("object X { private opaque type T = List[Int] }")(Defn.Object(
@@ -137,45 +129,36 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("trait-parameters") {
-    runTestAssert[Stat]("trait Foo(val foo: Int)(bar: Int)")(Defn.Trait(
-      Nil,
-      pname("Foo"),
-      Nil,
-      ctorp(List(tparamval("foo", "Int")), List(tparam("bar", "Int"))),
-      tplNoBody()
-    ))
-  }
+  test("trait-parameters")(runTestAssert[Stat]("trait Foo(val foo: Int)(bar: Int)")(Defn.Trait(
+    Nil,
+    pname("Foo"),
+    Nil,
+    ctorp(List(tparamval("foo", "Int")), List(tparam("bar", "Int"))),
+    tplNoBody()
+  )))
 
-  test("secondary-trait-constructors") {
+  test("secondary-trait-constructors")(
     runTestError[Stat]("trait Foo{ def this(i: Int) = this() }", "Illegal secondary constructor")
-  }
+  )
 
-  test("secondary-object-constructors") {
+  test("secondary-object-constructors")(
     runTestError[Stat]("object Foo{ def this(i: Int) = this() }", "Illegal secondary constructor")
-  }
+  )
 
-  test("no-params") {
-    runTestError[Stat](
-      """|class A
-         |class B extends A:
-         |  def this = this.f()""".stripMargin,
-      "auxiliary constructor needs non-implicit parameter list"
-    )
-  }
+  test("no-params")(runTestError[Stat](
+    """|class A
+       |class B extends A:
+       |  def this = this.f()""".stripMargin,
+    "auxiliary constructor needs non-implicit parameter list"
+  ))
 
-  test("trait-parameters-generic") {
-    runTestAssert[Stat]("trait Foo[T](bar: T)")(
-      Defn.Trait(Nil, pname("Foo"), List(pparam("T")), ctorp(tparam("bar", "T")), tplNoBody())
-    )
-  }
+  test("trait-parameters-generic")(runTestAssert[Stat]("trait Foo[T](bar: T)")(
+    Defn.Trait(Nil, pname("Foo"), List(pparam("T")), ctorp(tparam("bar", "T")), tplNoBody())
+  ))
 
-  test("trait-parameters-context-bounds") {
-    runTestAssert[Stat]("trait Foo[T: Eq]")(
-      Defn
-        .Trait(Nil, pname("Foo"), List(pparam("T", bounds(cb = List(pname("Eq"))))), ctor, tplNoBody())
-    )
-  }
+  test("trait-parameters-context-bounds")(runTestAssert[Stat]("trait Foo[T: Eq]")(
+    Defn.Trait(Nil, pname("Foo"), List(pparam("T", bounds(cb = List(pname("Eq"))))), ctor, tplNoBody())
+  ))
 
   test("class-parameters-using") {
     runTestAssert[Stat]("trait A(using String)")(
@@ -195,20 +178,18 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("trait-extends-coma-separated") {
+  test("trait-extends-coma-separated")(
     runTestAssert[Stat](
       "trait Foo extends A, B, C",
       assertLayout = Some("trait Foo extends A with B with C")
     )(Defn.Trait(Nil, pname("Foo"), Nil, ctor, tplNoBody(init("A"), init("B"), init("C"))))
-  }
+  )
 
-  test("(new A(), new B())") {
-    runTestAssert[Stat]("(new A(), new B())")(Term.Tuple(
-      List(Term.New(init("A", Nil)), Term.New(init("B", Nil)))
-    ))
-  }
+  test("(new A(), new B())")(runTestAssert[Stat]("(new A(), new B())")(Term.Tuple(
+    List(Term.New(init("A", Nil)), Term.New(init("B", Nil)))
+  )))
 
-  test("new A(using b)(c)(using d, e)") {
+  test("new A(using b)(c)(using d, e)")(
     runTestAssert[Stat]("new A(using b)(c)(using d, e)", Some("new A(using b)(c)(using d, e)"))(
       Term.New(init(
         pname("A"),
@@ -217,9 +198,9 @@ class MinorDottySuite extends BaseDottySuite {
         Term.ArgClause(List(tname("d"), tname("e")), Some(Mod.Using()))
       ))
     )
-  }
+  )
 
-  test("class A extends B(using b)(c)(using d, e)") {
+  test("class A extends B(using b)(c)(using d, e)")(
     runTestAssert[Stat](
       "class A extends B(using b)(c)(using d, e)",
       Some("class A extends B(using b)(c)(using d, e)")
@@ -235,16 +216,14 @@ class MinorDottySuite extends BaseDottySuite {
         Term.ArgClause(List(tname("d"), tname("e")), Some(Mod.Using()))
       ))
     ))
-  }
+  )
 
   // Super traits were removed in Scala 3
   test("super-trait")(runTestError[Stat]("super trait Foo", "`.` expected but `trait` found"))
 
-  test("question-type") {
-    runTestAssert[Stat]("val stat: Tree[? >: Untyped]")(
-      Decl.Val(Nil, List(patvar("stat")), papply("Tree", pwildcard(loBound("Untyped"))))
-    )
-  }
+  test("question-type")(runTestAssert[Stat]("val stat: Tree[? >: Untyped]")(
+    Decl.Val(Nil, List(patvar("stat")), papply("Tree", pwildcard(loBound("Untyped"))))
+  ))
 
   test("question-type-like") {
     val treeWithoutBounds = Decl.Val(Nil, List(patvar("stat")), papply("Tree", pname("?")))
@@ -256,11 +235,9 @@ class MinorDottySuite extends BaseDottySuite {
     runTestError[Stat]("val stat: Tree[`?` >: Untyped]", errorWithBounds)
   }
 
-  test("lazy-val-toplevel") {
-    runTestAssert[Source]("lazy val x = 3")(Source(
-      List(Defn.Val(List(Mod.Lazy()), List(patvar("x")), None, int(3)))
-    ))
-  }
+  test("lazy-val-toplevel")(runTestAssert[Source]("lazy val x = 3")(Source(
+    List(Defn.Val(List(Mod.Lazy()), List(patvar("x")), None, int(3)))
+  )))
 
   test("changed-operator-syntax") {
     // https://dotty.epfl.ch/docs/reference/changed-features/operators.html#syntax-change
@@ -336,7 +313,7 @@ class MinorDottySuite extends BaseDottySuite {
     runTestError[Stat]("class Foo(bars: Int`*`)", error)
   }
 
-  test("lazy-abstract-class-value") {
+  test("lazy-abstract-class-value")(
     runTestAssert[Stat]("trait Foo { protected[this] lazy val from: Int }")(Defn.Trait(
       Nil,
       pname("Foo"),
@@ -346,7 +323,7 @@ class MinorDottySuite extends BaseDottySuite {
         Decl.Val(List(Mod.Protected(Term.This(anon)), Mod.Lazy()), List(patvar("from")), pname("Int"))
       )
     ))
-  }
+  )
 
   test("type-wildcard-questionmark") {
     runTestAssert[Stat]("val x: List[?] = List(1)")(
@@ -413,7 +390,7 @@ class MinorDottySuite extends BaseDottySuite {
     )(Defn.Type(List(Mod.Opaque()), pname("LinearSet"), List(pparam("Elem")), papply("Set", "Elem")))
   }
 
-  test("opaque-soft-keyword") {
+  test("opaque-soft-keyword")(
     runTestAssert[Stat]("enum Kind { case Type(opaque: Boolean, transparent: Boolean) }")(Defn.Enum(
       Nil,
       pname("Kind"),
@@ -428,23 +405,23 @@ class MinorDottySuite extends BaseDottySuite {
         Nil
       ))
     ))
-  }
+  )
 
-  test("capital-var-pattern-val") {
+  test("capital-var-pattern-val")(
     runTestAssert[Stat](
       """val Private @ _ = flags()
         |""".stripMargin
     )(Defn.Val(Nil, List(Pat.Bind(patvar("Private"), patwildcard)), None, tapply(tname("flags"))))
-  }
+  )
 
-  test("capital-var-pattern-case") {
+  test("capital-var-pattern-case")(
     runTestAssert[Stat](
       """|flags() match {
          |  case Pattern @ _ =>
          |}
          |""".stripMargin
     )(tmatch(tapply(tname("flags")), Case(Pat.Bind(patvar("Pattern"), patwildcard), None, blk())))
-  }
+  )
 
   test("catch-end-def") {
     val layout =
@@ -484,16 +461,16 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("type-in-block") {
+  test("type-in-block")(
     runTestAssert[Stat](
       """|def hello = {
          |  type T
          |}
          |""".stripMargin
     )(Defn.Def(Nil, tname("hello"), Nil, Nil, None, blk(Decl.Type(Nil, pname("T"), Nil, noBounds))))
-  }
+  )
 
-  test("operator-next-line") {
+  test("operator-next-line")(
     runTestAssert[Stat](
       """|val all = "-siteroot" +: "../docs"
          |    +: "-project" +:  Nil""".stripMargin,
@@ -508,7 +485,7 @@ class MinorDottySuite extends BaseDottySuite {
         tinfix(str("../docs"), "+:", tinfix(str("-project"), "+:", tname("Nil")))
       )
     ))
-  }
+  )
 
   test("operator-next-line-bad-indent") {
     runTestAssert[Stat](
@@ -531,7 +508,7 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("colon-extractor") {
+  test("colon-extractor")(
     runTestAssert[Stat](
       """|a match {case List(xs: _*) => }
          |""".stripMargin,
@@ -545,9 +522,9 @@ class MinorDottySuite extends BaseDottySuite {
       tname("a"),
       Case(Pat.Extract(tname("List"), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard()))), None, blk())
     ))
-  }
+  )
 
-  test("at-extractor") {
+  test("at-extractor")(
     runTestAssert[Stat](
       """|a match {case List(xs@ _*) => }
          |""".stripMargin,
@@ -561,14 +538,11 @@ class MinorDottySuite extends BaseDottySuite {
       tname("a"),
       Case(Pat.Extract(tname("List"), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard()))), None, blk())
     ))
-  }
+  )
 
-  test("vararg-wildcard-postfix-star") {
-    runTestAssert[Stat]("val lst = List(0, arr*)")(
-      Defn
-        .Val(Nil, List(patvar("lst")), None, tapply(tname("List"), int(0), Term.Repeated(tname("arr"))))
-    )
-  }
+  test("vararg-wildcard-postfix-star")(runTestAssert[Stat]("val lst = List(0, arr*)")(
+    Defn.Val(Nil, List(patvar("lst")), None, tapply(tname("List"), int(0), Term.Repeated(tname("arr"))))
+  ))
 
   test("vararg-wildcard-like-postfix-star") {
     val codeOriginal = "val lst = List(0, arr`*`)"
@@ -578,16 +552,14 @@ class MinorDottySuite extends BaseDottySuite {
     )
   }
 
-  test("non-vararg-infix-star") {
-    runTestAssert[Stat]("val lst = List(0, a * b)")(Defn.Val(
-      Nil,
-      List(patvar("lst")),
-      None,
-      tapply(tname("List"), int(0), tinfix(tname("a"), "*", tname("b")))
-    ))
-  }
+  test("non-vararg-infix-star")(runTestAssert[Stat]("val lst = List(0, a * b)")(Defn.Val(
+    Nil,
+    List(patvar("lst")),
+    None,
+    tapply(tname("List"), int(0), tinfix(tname("a"), "*", tname("b")))
+  )))
 
-  test("vararg-wildcard-postfix-start-pat") {
+  test("vararg-wildcard-postfix-start-pat")(
     runTestAssert[Stat](
       """|a match {case List(xs*) => }
          |""".stripMargin,
@@ -598,7 +570,7 @@ class MinorDottySuite extends BaseDottySuite {
            |""".stripMargin
       )
     )(tmatch(tname("a"), Case(Pat.Extract(tname("List"), List(Pat.Repeated(tname("xs")))), None, blk())))
-  }
+  )
 
   test("vararg-wildcard-like-postfix-start-pat") {
     val error =
@@ -615,7 +587,7 @@ class MinorDottySuite extends BaseDottySuite {
     runTestError[Stat]("case class A[T] private", error)
   }
 
-  test("trailing-coma") {
+  test("trailing-coma")(
     runTestAssert[Stat](
       """|case class A(
          |  x: X,
@@ -625,9 +597,9 @@ class MinorDottySuite extends BaseDottySuite {
            |""".stripMargin
       )
     )(Defn.Class(List(Mod.Case()), pname("A"), Nil, ctorp(tparam("x", "X")), tplNoBody()))
-  }
+  )
 
-  test("complex-interpolation") {
+  test("complex-interpolation")(
     runTestAssert[Stat](
       """|val base =
          |  ""
@@ -643,7 +615,7 @@ class MinorDottySuite extends BaseDottySuite {
       None,
       tinfix(str(""), "++", Term.Interpolate(tname("s"), List(str("")), Nil))
     ))
-  }
+  )
 
   test("tuple-pattern") {
     runTestAssert[Stat](
@@ -703,12 +675,12 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("multi-pattern") {
+  test("multi-pattern")(
     runTestAssert[Stat](
       """|val x * y = v
          |""".stripMargin
     )(Defn.Val(Nil, List(patinfix(patvar("x"), "*", patvar("y"))), None, tname("v")))
-  }
+  )
 
   test("typed-typed-pattern") {
     runTestAssert[Stat](
@@ -736,25 +708,21 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("procedure-syntax") {
-    runTestError[Stat](
-      """|def hello(){
-         |  println("Hello!")
-         |}""".stripMargin,
-      "Procedure syntax is not supported. Convert procedure `hello` to method by adding `: Unit =`"
-    )
-  }
+  test("procedure-syntax")(runTestError[Stat](
+    """|def hello(){
+       |  println("Hello!")
+       |}""".stripMargin,
+    "Procedure syntax is not supported. Convert procedure `hello` to method by adding `: Unit =`"
+  ))
 
-  test("do-while") {
-    runTestError[Stat](
-      """|def hello() = {
-         |  do {
-         |    i+= 1
-         |  } while (i < 10)
-         |}""".stripMargin,
-      "error: do {...} while (...) syntax is no longer supported"
-    )
-  }
+  test("do-while")(runTestError[Stat](
+    """|def hello() = {
+       |  do {
+       |    i+= 1
+       |  } while (i < 10)
+       |}""".stripMargin,
+    "error: do {...} while (...) syntax is no longer supported"
+  ))
 
   test("partial-function-function") {
     runTestAssert[Stat](
@@ -820,7 +788,7 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("type-param-last") {
+  test("type-param-last")(
     runTestAssert[Stat](
       """|def b2 = "".foo2(using foo)[Any]
          |""".stripMargin,
@@ -836,7 +804,7 @@ class MinorDottySuite extends BaseDottySuite {
       None,
       tapplytype(tapplyUsing(tselect(str(""), "foo2"), tname("foo")), pname("Any"))
     ))
-  }
+  )
 
   test("refinements") {
     runTestAssert[Stat](
@@ -865,7 +833,7 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("issue-2506") {
+  test("issue-2506")(
     runTestAssert[Stat](
       """|??? match {
          |  case x2: ([V] => () => Int) => ???
@@ -875,7 +843,7 @@ class MinorDottySuite extends BaseDottySuite {
       tname("???"),
       Case(Pat.Typed(patvar("x2"), ppolyfunc(pparam("V"))(pfunc()(pname("Int")))), None, tname("???"))
     ))
-  }
+  )
 
   test("issue-2567") {
     runTestAssert[Source](
@@ -932,18 +900,14 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("kleisli") {
-    runTestAssert[Stat]("new (Kleisli[F, Span[F], *] ~> F) {}")(Term.NewAnonymous(tpl(
-      init(Type.AnonymousLambda(pinfix(
-        papply("Kleisli", "F", papply("Span", "F"), Type.AnonymousParam(None)),
-        "~>",
-        pname("F")
-      ))) :: Nil,
-      Nil
-    )))
-  }
+  test("kleisli")(runTestAssert[Stat]("new (Kleisli[F, Span[F], *] ~> F) {}")(Term.NewAnonymous(tpl(
+    init(Type.AnonymousLambda(
+      pinfix(papply("Kleisli", "F", papply("Span", "F"), Type.AnonymousParam(None)), "~>", pname("F"))
+    )) :: Nil,
+    Nil
+  ))))
 
-  test("class Baz1 @deprecated(implicit c: C)") {
+  test("class Baz1 @deprecated(implicit c: C)")(
     runTestAssert[Stat](
       "class Baz1 @deprecated(implicit c: C)",
       Some("class Baz1 @deprecated (implicit c: C)")
@@ -958,9 +922,9 @@ class MinorDottySuite extends BaseDottySuite {
       ),
       tplNoBody()
     ))
-  }
+  )
 
-  test("class Baz1 @deprecated(c: C)") {
+  test("class Baz1 @deprecated(c: C)")(
     runTestAssert[Stat]("class Baz1 @deprecated(c: C)", Some("class Baz1 @deprecated (c: C)"))(
       Defn.Class(
         Nil,
@@ -970,9 +934,9 @@ class MinorDottySuite extends BaseDottySuite {
         tplNoBody()
       )
     )
-  }
+  )
 
-  test("class Baz1 @deprecated(c: C = some)") {
+  test("class Baz1 @deprecated(c: C = some)")(
     runTestAssert[Stat](
       "class Baz1 @deprecated(c: C = some)",
       Some("class Baz1 @deprecated (c: C = some)")
@@ -987,9 +951,9 @@ class MinorDottySuite extends BaseDottySuite {
       ),
       tplNoBody()
     ))
-  }
+  )
 
-  test("class Baz1 @deprecated(foo)(c: C)") {
+  test("class Baz1 @deprecated(foo)(c: C)")(
     runTestAssert[Stat](
       "class Baz1 @deprecated(foo)(c: C)",
       Some("class Baz1 @deprecated(foo) (c: C)")
@@ -1004,7 +968,7 @@ class MinorDottySuite extends BaseDottySuite {
       ),
       tplNoBody()
     ))
-  }
+  )
 
   test("expr with annotation, then match") {
     val code =

@@ -15,63 +15,54 @@ class ModSuite extends ParseSuite {
       templStat("implicit case object A")
     )(Defn.Object(List(Mod.Implicit(), Mod.Case()), tname("A"), tplNoBody()))
 
-    assertTree(templStat("case class A(implicit val a: Int)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        Nil,
-        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
-    assertTree(templStat("case class A(implicit var a: Int)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        Nil,
-        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
+    assertTree(templStat("case class A(implicit val a: Int)"))(Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      Nil,
+      ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
+      tplNoBody()
+    ))
+    assertTree(templStat("case class A(implicit var a: Int)"))(Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      Nil,
+      ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
+      tplNoBody()
+    ))
 
-    assertTree(templStat("def foo(implicit a: Int): Int = a")) {
-      Defn.Def(
-        Nil,
-        tname("foo"),
-        Nil,
-        List(List(tparam(List(Mod.Implicit()), "a", "Int"))),
-        Some(pname("Int")),
-        tname("a")
-      )
-    }
+    assertTree(templStat("def foo(implicit a: Int): Int = a"))(Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      List(List(tparam(List(Mod.Implicit()), "a", "Int"))),
+      Some(pname("Int")),
+      tname("a")
+    ))
 
-    assertTree(templStat("implicit def foo(a: Int): Int = a")) {
-      Defn.Def(
-        List(Mod.Implicit()),
-        tname("foo"),
-        Nil,
-        List(List(tparam("a", "Int"))),
-        Some(pname("Int")),
-        tname("a")
-      )
-    }
+    assertTree(templStat("implicit def foo(a: Int): Int = a"))(Defn.Def(
+      List(Mod.Implicit()),
+      tname("foo"),
+      Nil,
+      List(List(tparam("a", "Int"))),
+      Some(pname("Int")),
+      tname("a")
+    ))
 
-    assertTree(templStat("implicit val a: Int = 1")) {
-      Defn.Val(List(Mod.Implicit()), List(patvar("a")), Some(pname("Int")), int(1))
-    }
+    assertTree(
+      templStat("implicit val a: Int = 1")
+    )(Defn.Val(List(Mod.Implicit()), List(patvar("a")), Some(pname("Int")), int(1)))
 
-    assertTree(templStat("implicit val a: Int")) {
-      Decl.Val(List(Mod.Implicit()), List(patvar("a")), pname("Int"))
-    }
+    assertTree(
+      templStat("implicit val a: Int")
+    )(Decl.Val(List(Mod.Implicit()), List(patvar("a")), pname("Int")))
 
-    assertTree(templStat("implicit var a: Int = 1")) {
-      Defn.Var(List(Mod.Implicit()), List(patvar("a")), Some(pname("Int")), Some(int(1)))
+    assertTree(
+      templStat("implicit var a: Int = 1")
+    )(Defn.Var(List(Mod.Implicit()), List(patvar("a")), Some(pname("Int")), Some(int(1))))
 
-    }
-
-    assertTree(templStat("implicit var a: Int")) {
-      Decl.Var(List(Mod.Implicit()), List(patvar("a")), pname("Int"))
-    }
+    assertTree(
+      templStat("implicit var a: Int")
+    )(Decl.Var(List(Mod.Implicit()), List(patvar("a")), pname("Int")))
   }
 
   test("final") {
@@ -89,15 +80,13 @@ class ModSuite extends ParseSuite {
       { case Defn.Object(List(Mod.Final(), Mod.Case()), _, _) => () }
     )
 
-    assertTree(templStat("case class A(final val a: Int)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        Nil,
-        ctorp(tparam(List(Mod.Final(), Mod.ValParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
+    assertTree(templStat("case class A(final val a: Int)"))(Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      Nil,
+      ctorp(tparam(List(Mod.Final(), Mod.ValParam()), "a", "Int")),
+      tplNoBody()
+    ))
 
     matchSubStructure[Stat](
       "final def foo(a: Int): Int = a",
@@ -227,12 +216,10 @@ class ModSuite extends ParseSuite {
 
   testParseErrors("def foo(abstract val a: Int): Int = a", "abstract def foo(val a: Int): Int = a")
 
-  test("lazy") {
-    matchSubStructure[Stat](
-      "lazy val a: Int = 1",
-      { case Defn.Val(List(Mod.Lazy()), _, _, _) => () }
-    )
-  }
+  test("lazy")(matchSubStructure[Stat](
+    "lazy val a: Int = 1",
+    { case Defn.Val(List(Mod.Lazy()), _, _, _) => () }
+  ))
 
   testParseErrors("def foo(lazy val a: Int): Int = a", "lazy def foo(val a: Int): Int = a")
 
@@ -291,41 +278,29 @@ class ModSuite extends ParseSuite {
 
   testParseErrors("def foo(abstract override val a: Int): Int = a")
 
-  test("covariant in case class") {
-    assertTree(templStat("case class A[+T](t: T)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        pparam(List(Mod.Covariant()), "T") :: Nil,
-        ctorp(tparam("t", "T")),
-        tplNoBody()
-      )
-    }
-  }
+  test("covariant in case class")(assertTree(templStat("case class A[+T](t: T)"))(Defn.Class(
+    List(Mod.Case()),
+    pname("A"),
+    pparam(List(Mod.Covariant()), "T") :: Nil,
+    ctorp(tparam("t", "T")),
+    tplNoBody()
+  )))
 
-  test("covariant in class") {
-    assertTree(templStat("class A[+T](t: T)")) {
-      Defn.Class(
-        Nil,
-        pname("A"),
-        pparam(List(Mod.Covariant()), "T") :: Nil,
-        ctorp(tparam("t", "T")),
-        tplNoBody()
-      )
-    }
-  }
+  test("covariant in class")(assertTree(templStat("class A[+T](t: T)"))(Defn.Class(
+    Nil,
+    pname("A"),
+    pparam(List(Mod.Covariant()), "T") :: Nil,
+    ctorp(tparam("t", "T")),
+    tplNoBody()
+  )))
 
-  test("covariant in type") {
-    assertTree(templStat("type A[+T] = B[T]")) {
-      Defn.Type(
-        Nil,
-        pname("A"),
-        pparam(List(Mod.Covariant()), "T") :: Nil,
-        papply("B", pname("T")),
-        noBounds
-      )
-    }
-  }
+  test("covariant in type")(assertTree(templStat("type A[+T] = B[T]"))(Defn.Type(
+    Nil,
+    pname("A"),
+    pparam(List(Mod.Covariant()), "T") :: Nil,
+    papply("B", pname("T")),
+    noBounds
+  )))
 
   test("covariant-like in type") {
     val error =
@@ -337,29 +312,21 @@ class ModSuite extends ParseSuite {
 
   test("covariant in def")(interceptParseError("def foo[+T](t: T): Int"))
 
-  test("contravariant in case class") {
-    assertTree(templStat("case class A[-T](t: T)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        pparam(List(Mod.Contravariant()), "T") :: Nil,
-        ctorp(tparam("t", "T")),
-        tplNoBody()
-      )
-    }
-  }
+  test("contravariant in case class")(assertTree(templStat("case class A[-T](t: T)"))(Defn.Class(
+    List(Mod.Case()),
+    pname("A"),
+    pparam(List(Mod.Contravariant()), "T") :: Nil,
+    ctorp(tparam("t", "T")),
+    tplNoBody()
+  )))
 
-  test("contravariant in class") {
-    assertTree(templStat("class A[-T](t: T)")) {
-      Defn.Class(
-        Nil,
-        pname("A"),
-        pparam(List(Mod.Contravariant()), "T") :: Nil,
-        ctorp(tparam("t", "T")),
-        tplNoBody()
-      )
-    }
-  }
+  test("contravariant in class")(assertTree(templStat("class A[-T](t: T)"))(Defn.Class(
+    Nil,
+    pname("A"),
+    pparam(List(Mod.Contravariant()), "T") :: Nil,
+    ctorp(tparam("t", "T")),
+    tplNoBody()
+  )))
 
   test("contravariant-like in class") {
     val error =
@@ -369,122 +336,96 @@ class ModSuite extends ParseSuite {
     runTestError[Stat]("class A[`-`T](t: T)", error)
   }
 
-  test("contravariant in type") {
-    assertTree(templStat("type A[-T] = B[T]")) {
-      Defn.Type(
-        Nil,
-        pname("A"),
-        pparam(List(Mod.Contravariant()), "T") :: Nil,
-        papply("B", "T"),
-        noBounds
-      )
-    }
-  }
+  test("contravariant in type")(assertTree(templStat("type A[-T] = B[T]"))(Defn.Type(
+    Nil,
+    pname("A"),
+    pparam(List(Mod.Contravariant()), "T") :: Nil,
+    papply("B", "T"),
+    noBounds
+  )))
 
   test("contravariant in def")(interceptParseError("def foo[-T](t: T): Int"))
 
-  test("val param in case class") {
-    assertTree(templStat("case class A(val a: Int)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        Nil,
-        ctorp(tparam(List(Mod.ValParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
-  }
+  test("val param in case class")(assertTree(templStat("case class A(val a: Int)"))(Defn.Class(
+    List(Mod.Case()),
+    pname("A"),
+    Nil,
+    ctorp(tparam(List(Mod.ValParam()), "a", "Int")),
+    tplNoBody()
+  )))
 
-  test("val param in class") {
-    assertTree(templStat("class A(val a: Int)")) {
-      Defn.Class(Nil, pname("A"), Nil, ctorp(tparam(List(Mod.ValParam()), "a", "Int")), tplNoBody())
-    }
-  }
+  test("val param in class")(assertTree(templStat("class A(val a: Int)"))(
+    Defn.Class(Nil, pname("A"), Nil, ctorp(tparam(List(Mod.ValParam()), "a", "Int")), tplNoBody())
+  ))
 
-  test("implicit val param in case class") {
-    assertTree(templStat("case class A(implicit val a: Int)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        Nil,
-        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
-  }
+  test("implicit val param in case class")(
+    assertTree(templStat("case class A(implicit val a: Int)"))(Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      Nil,
+      ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
+      tplNoBody()
+    ))
+  )
 
-  test("implicit val param in class") {
-    assertTree(templStat("class A(implicit val a: Int)")) {
-      Defn.Class(
-        Nil,
-        pname("A"),
-        Nil,
-        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
-  }
+  test("implicit val param in class")(
+    assertTree(templStat("class A(implicit val a: Int)"))(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "a", "Int")),
+      tplNoBody()
+    ))
+  )
 
-  test("no val param in def") {
+  test("no val param in def")(
     // No ValParam detected inside parameter list
-    assertTree(templStat("def foo(a: Int): Int = a")) {
+    assertTree(templStat("def foo(a: Int): Int = a"))(
       Defn
         .Def(Nil, tname("foo"), Nil, List(tparam("a", "Int")) :: Nil, Some(pname("Int")), tname("a"))
-    }
-  }
+    )
+  )
 
   test("val param in def")(interceptParseError("def foo(val a: Int): Int"))
 
-  test("var param in case class") {
-    assertTree(templStat("case class A(var a: Int)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        Nil,
-        ctorp(tparam(List(Mod.VarParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
-  }
+  test("var param in case class")(assertTree(templStat("case class A(var a: Int)"))(Defn.Class(
+    List(Mod.Case()),
+    pname("A"),
+    Nil,
+    ctorp(tparam(List(Mod.VarParam()), "a", "Int")),
+    tplNoBody()
+  )))
 
-  test("var param in class") {
-    assertTree(templStat("class A(var a: Int)")) {
-      Defn.Class(Nil, pname("A"), Nil, ctorp(tparam(List(Mod.VarParam()), "a", "Int")), tplNoBody())
-    }
-  }
+  test("var param in class")(assertTree(templStat("class A(var a: Int)"))(
+    Defn.Class(Nil, pname("A"), Nil, ctorp(tparam(List(Mod.VarParam()), "a", "Int")), tplNoBody())
+  ))
 
-  test("implicit var param in case class") {
-    assertTree(templStat("case class A(implicit var a: Int)")) {
-      Defn.Class(
-        List(Mod.Case()),
-        pname("A"),
-        Nil,
-        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
-  }
+  test("implicit var param in case class")(
+    assertTree(templStat("case class A(implicit var a: Int)"))(Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      Nil,
+      ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
+      tplNoBody()
+    ))
+  )
 
-  test("implicit var param in class") {
-    assertTree(templStat("class A(implicit var a: Int)")) {
-      Defn.Class(
-        Nil,
-        pname("A"),
-        Nil,
-        ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
-        tplNoBody()
-      )
-    }
-  }
+  test("implicit var param in class")(
+    assertTree(templStat("class A(implicit var a: Int)"))(Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.VarParam()), "a", "Int")),
+      tplNoBody()
+    ))
+  )
 
   test("var param in def")(interceptParseError("def foo(var a: Int): Int"))
 
-  test("macro") {
-    matchSubStructure[Stat](
-      "def foo(a: Int): Int = macro myMacroImpl(a)",
-      { case Defn.Macro(_, _, _, _, _, _) => () }
-    )
-  }
+  test("macro")(matchSubStructure[Stat](
+    "def foo(a: Int): Int = macro myMacroImpl(a)",
+    { case Defn.Macro(_, _, _, _, _, _) => () }
+  ))
 
   test("final and abstract") {
     // Only check these because abstract cannot only be used for classes
@@ -584,12 +525,10 @@ class ModSuite extends ParseSuite {
     runTestError[Stat]("class A(val b: => B)", expected)
   }
 
-  test("by-name parameter: class with private[this] val") {
-    assertNoDiff(
-      templStat("class A(private[this] val b: => B)").syntax,
-      "class A(private[this] val b: => B)"
-    )
-  }
+  test("by-name parameter: class with private[this] val")(assertNoDiff(
+    templStat("class A(private[this] val b: => B)").syntax,
+    "class A(private[this] val b: => B)"
+  ))
 
   test("by-name parameter: case class with val") {
     val expected =

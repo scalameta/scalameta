@@ -9,129 +9,103 @@ class DefnSuite extends ParseSuite {
 
   test("val x = 2")(assertTree(templStat("val x = 2"))(Defn.Val(Nil, patvar("x") :: Nil, None, int(2))))
 
-  test("var x = 2") {
+  test("var x = 2")(
     assertTree(templStat("var x = 2"))(Defn.Var(Nil, patvar("x") :: Nil, None, Some(int(2))))
-  }
+  )
 
-  test("val x, y = 2") {
-    assertTree(
-      templStat("val x, y = 2")
-    )(Defn.Val(Nil, patvar("x") :: patvar("y") :: Nil, None, int(2)))
-  }
+  test("val x, y = 2")(assertTree(templStat("val x, y = 2"))(
+    Defn.Val(Nil, patvar("x") :: patvar("y") :: Nil, None, int(2))
+  ))
 
-  test("val x: Int = 2") {
-    assertTree(
-      templStat("val x: Int = 2")
-    )(Defn.Val(Nil, patvar("x") :: Nil, Some(pname("Int")), int(2)))
-  }
+  test("val x: Int = 2")(assertTree(templStat("val x: Int = 2"))(
+    Defn.Val(Nil, patvar("x") :: Nil, Some(pname("Int")), int(2))
+  ))
 
-  test("val `x`: Int = 2") {
-    assertTree(
-      templStat("val `x`: Int = 2")
-    )(Defn.Val(Nil, patvar("x") :: Nil, Some(pname("Int")), int(2)))
-  }
+  test("val `x`: Int = 2")(assertTree(templStat("val `x`: Int = 2"))(
+    Defn.Val(Nil, patvar("x") :: Nil, Some(pname("Int")), int(2))
+  ))
 
-  test("val f: Int => String = _.toString") {
+  test("val f: Int => String = _.toString")(
     assertTree(templStat("val f: Int => String = _.toString"))(Defn.Val(
       Nil,
       patvar("f") :: Nil,
       Some(pfunc(pname("Int"))(pname("String"))),
       Term.AnonymousFunction(tselect(Term.Placeholder(), "toString"))
     ))
-  }
+  )
 
-  test("var f: Int => String = _.toString") {
+  test("var f: Int => String = _.toString")(
     assertTree(templStat("var f: Int => String = _.toString"))(Defn.Var(
       Nil,
       patvar("f") :: Nil,
       Some(pfunc(pname("Int"))(pname("String"))),
       Some(Term.AnonymousFunction(tselect(Term.Placeholder(), "toString")))
     ))
-  }
+  )
 
-  test("var x: Int = _") {
-    assertTree(
-      templStat("var x: Int = _")
-    )(Defn.Var(Nil, patvar("x") :: Nil, Some(pname("Int")), None))
-  }
+  test("var x: Int = _")(assertTree(templStat("var x: Int = _"))(
+    Defn.Var(Nil, patvar("x") :: Nil, Some(pname("Int")), None)
+  ))
 
   test("var x = _ is not allowed")(intercept[parsers.ParseException](templStat("var x = _")))
 
   test("val x: Int = _ is not allowed")(intercept[parsers.ParseException](templStat("val x: Int = _")))
 
-  test("val (x: Int) = 2") {
-    assertTree(
-      templStat("val (x: Int) = 2")
-    )(Defn.Val(Nil, Pat.Typed(patvar("x"), pname("Int")) :: Nil, None, int(2)))
-  }
+  test("val (x: Int) = 2")(assertTree(templStat("val (x: Int) = 2"))(
+    Defn.Val(Nil, Pat.Typed(patvar("x"), pname("Int")) :: Nil, None, int(2))
+  ))
 
   test("type A = B")(assertTree(templStat("type A = B"))(Defn.Type(Nil, pname("A"), Nil, pname("B"))))
 
-  test("type F[T] = List[T]") {
-    assertTree(templStat("type F[T] = List[T]")) {
-      Defn.Type(Nil, pname("F"), pparam("T") :: Nil, papply("List", pname("T")))
-    }
-  }
+  test("type F[T] = List[T]")(assertTree(templStat("type F[T] = List[T]"))(
+    Defn.Type(Nil, pname("F"), pparam("T") :: Nil, papply("List", pname("T")))
+  ))
 
-  test("def x = 2") {
+  test("def x = 2")(
     assertTree(templStat("def x = 2"))(Defn.Def(Nil, tname("x"), Nil, Nil, None, int(2)))
-  }
+  )
 
-  test("def x[A <: B] = 2") {
-    assertTree(templStat("def x[A <: B] = 2")) {
-      Defn.Def(Nil, tname("x"), pparam("A", hiBound("B")) :: Nil, Nil, None, int(2))
-    }
-  }
+  test("def x[A <: B] = 2")(assertTree(templStat("def x[A <: B] = 2"))(
+    Defn.Def(Nil, tname("x"), pparam("A", hiBound("B")) :: Nil, Nil, None, int(2))
+  ))
 
-  test("def x[A <% B] = 2") {
-    assertTree(templStat("def x[A <% B] = 2")) {
-      Defn.Def(Nil, tname("x"), List(pparam("A", bounds(vb = pname("B") :: Nil))), Nil, None, int(2))
-    }
-  }
+  test("def x[A <% B] = 2")(assertTree(templStat("def x[A <% B] = 2"))(
+    Defn.Def(Nil, tname("x"), List(pparam("A", bounds(vb = pname("B") :: Nil))), Nil, None, int(2))
+  ))
 
-  test("def x[A: B] = 2") {
-    assertTree(templStat("def x[A: B] = 2")) {
-      Defn.Def(Nil, tname("x"), List(pparam("A", bounds(cb = List(pname("B"))))), Nil, None, int(2))
-    }
-  }
+  test("def x[A: B] = 2")(assertTree(templStat("def x[A: B] = 2"))(
+    Defn.Def(Nil, tname("x"), List(pparam("A", bounds(cb = List(pname("B"))))), Nil, None, int(2))
+  ))
 
-  test("def f(a: Int)(implicit b: Int) = a + b") {
-    assertTree(templStat("def f(a: Int)(implicit b: Int) = a + b")) {
-      Defn.Def(
-        Nil,
-        tname("f"),
-        Nil,
-        (tparam("a", "Int") :: Nil) :: (tparam(Mod.Implicit() :: Nil, "b", "Int") :: Nil) :: Nil,
-        None,
-        tinfix(tname("a"), "+", tname("b"))
-      )
-    }
-  }
+  test("def f(a: Int)(implicit b: Int) = a + b")(
+    assertTree(templStat("def f(a: Int)(implicit b: Int) = a + b"))(Defn.Def(
+      Nil,
+      tname("f"),
+      Nil,
+      (tparam("a", "Int") :: Nil) :: (tparam(Mod.Implicit() :: Nil, "b", "Int") :: Nil) :: Nil,
+      None,
+      tinfix(tname("a"), "+", tname("b"))
+    ))
+  )
 
-  test("def proc { return 42 }") {
-    assertTree(templStat("def proc { return 42 }")) {
-      Defn.Def(Nil, tname("proc"), Nil, Nil, Some(pname("Unit")), blk(Term.Return(int(42))))
-    }
-  }
+  test("def proc { return 42 }")(assertTree(templStat("def proc { return 42 }"))(
+    Defn.Def(Nil, tname("proc"), Nil, Nil, Some(pname("Unit")), blk(Term.Return(int(42))))
+  ))
 
-  test("def f(x: Int) = macro impl") {
-    assertTree(templStat("def f(x: Int) = macro impl")) {
-      Defn.Macro(Nil, tname("f"), Nil, (tparam("x", "Int") :: Nil) :: Nil, None, tname("impl"))
-    }
-  }
+  test("def f(x: Int) = macro impl")(assertTree(templStat("def f(x: Int) = macro impl"))(
+    Defn.Macro(Nil, tname("f"), Nil, (tparam("x", "Int") :: Nil) :: Nil, None, tname("impl"))
+  ))
 
-  test("def f(x: Int): Int = macro impl") {
-    assertTree(templStat("def f(x: Int): Int = macro impl")) {
-      Defn.Macro(
-        Nil,
-        tname("f"),
-        Nil,
-        (tparam("x", "Int") :: Nil) :: Nil,
-        Some(pname("Int")),
-        tname("impl")
-      )
-    }
-  }
+  test("def f(x: Int): Int = macro impl")(
+    assertTree(templStat("def f(x: Int): Int = macro impl"))(Defn.Macro(
+      Nil,
+      tname("f"),
+      Nil,
+      (tparam("x", "Int") :: Nil) :: Nil,
+      Some(pname("Int")),
+      tname("impl")
+    ))
+  )
 
   test("braces-in-functions") {
     val defn = templStat(

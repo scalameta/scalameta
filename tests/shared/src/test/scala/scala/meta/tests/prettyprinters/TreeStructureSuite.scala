@@ -29,7 +29,7 @@ class TreeStructureSuite extends ParseSuite {
   assertStructure(lit('a'))("Lit.Char('a')")
   assertStructure(sym("a"))("""Lit.Symbol(Symbol("a"))""")
 
-  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(bool(false))))(
+  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(bool(false)))) {
     """|Case(
        |  Pat.Wildcard(),
        |  None,
@@ -46,9 +46,9 @@ class TreeStructureSuite extends ParseSuite {
        |  )
        |)
        |""".stripMargin
-  )
+  }
 
-  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(blk(bool(false)))))(
+  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(blk(bool(false))))) {
     """|Case(
        |  Pat.Wildcard(),
        |  None,
@@ -67,9 +67,9 @@ class TreeStructureSuite extends ParseSuite {
        |  )
        |)
        |""".stripMargin
-  )
+  }
 
-  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(blk(bool(false), tname("a")))))(
+  assertStructure(Case(patwildcard, None, tfunc(tparam(""))(blk(bool(false), tname("a"))))) {
     """|Case(
        |  Pat.Wildcard(),
        |  None,
@@ -89,6 +89,6 @@ class TreeStructureSuite extends ParseSuite {
        |  )
        |)
        |""".stripMargin
-  )
+  }
 
 }

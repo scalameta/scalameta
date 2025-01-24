@@ -111,7 +111,7 @@ object ScaladocParser {
     }
   }
 
-  private def headingParser[$: P]: P[Heading] = P {
+  private def headingParser[$: P]: P[Heading] = P(
     // heading delimiter
     hspaces0 ~ CharsWhileIn("=", 1).!.flatMap { delim =>
       val level = delim.length
@@ -122,7 +122,7 @@ object ScaladocParser {
         (title.! ~ delim ~ &(nl)).map(x => Heading(level, x.trim))
       }
     }
-  }
+  )
 
   private def linkParser[$: P]: P[Link] = P {
     def end = space | linkSuffix
@@ -131,7 +131,7 @@ object ScaladocParser {
     pattern.map(new Link(_))
   }
 
-  private def nextPartParser[$: P](indent: Int, mdOffset: Int = 0): P[Unit] = P {
+  private def nextPartParser[$: P](indent: Int, mdOffset: Int = 0): P[Unit] = P(
     // used to terminate previous part, hence indent can be less
     nl | hspacesMinWithLen(0).flatMap { offset =>
       def dedented = if (offset < indent) Pass else Fail
@@ -139,7 +139,7 @@ object ScaladocParser {
       dedented | CharIn("@=") | codePrefix ~ nl | mdCodeBlockPrefix | tableSep | tableDelim |
         listPrefix ~ &(" ")
     }
-  }
+  )
 
   private def textParser[$: P](indent: Int, mdOffset: Int = 0): P[Text] = P {
     def end = P(nl ~/ nextPartParser(indent, mdOffset))
@@ -160,11 +160,9 @@ object ScaladocParser {
     def label = P((nl ~ !nextPartParser(indent)).? ~ hspaces0 ~ wordParser)
     // special case: @usecase takes a single code line, on the same line
     def labelInline = P(hspaces0 ~ (!nl ~ AnyChar).rep(1).!.map(Word))
-    def desc = P {
-      (textParser(indent).? ~ embeddedTermsParser()).map { case (x, terms) =>
-        x.fold(terms)(_ +: terms)
-      }
-    }
+    def desc = P((textParser(indent).? ~ embeddedTermsParser()).map { case (x, terms) =>
+      x.fold(terms)(_ +: terms)
+    })
     hspaces0 ~ ("@" ~ labelParser).!.flatMap { tag =>
       val tagType = TagType.getTag(tag)
       def labelOpt =
@@ -210,11 +208,11 @@ object ScaladocParser {
     }
   }
 
-  private def listItemParser[$: P](indent: Int, mdOffset: Int, prefix: String) = P {
+  private def listItemParser[$: P](indent: Int, mdOffset: Int, prefix: String) = P(
     (textParser(indent, mdOffset) ~ embeddedTermsParser(indent, mdOffset)).map { case (x, terms) =>
       ListItem(prefix, x, terms)
     }
-  }
+  )
 
   private def tableParser[$: P]: P[Table] = P {
     def toRow(x: Seq[String]): Table.Row = Table.Row(x)

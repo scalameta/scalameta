@@ -72,11 +72,11 @@ abstract class SemanticdbSuite extends FunSuite {
   private def assertNoReporterErrors()(implicit loc: munit.Location): Unit = {
     val reporter = g.reporter.asInstanceOf[StoreReporter]
     val errors = reporter.infos.filter(_.severity == reporter.ERROR)
-    val diagnostics = errors.map { error =>
+    val diagnostics = errors.map(error =>
       s"""|<input>:${error.pos.line}:${error.pos.column}: error ${error.msg}
           |${error.pos.lineContent}
           |${error.pos.lineCaret}""".stripMargin
-    }
+    )
     if (errors.nonEmpty) fail(diagnostics.mkString("\n"))
   }
 

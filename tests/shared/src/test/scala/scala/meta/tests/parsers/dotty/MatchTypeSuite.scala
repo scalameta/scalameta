@@ -50,7 +50,7 @@ class MatchTypeSuite extends BaseDottySuite {
     ))
   }
 
-  test("tuple") {
+  test("tuple")(
     runTestAssert[Stat](
       """|type Head[X <: Tuple] = X match {
          |  case (x1, ?) => x1
@@ -62,9 +62,9 @@ class MatchTypeSuite extends BaseDottySuite {
       List(pparam("X", hiBound("Tuple"))),
       Type.Match(pname("X"), List(TypeCase(Type.Tuple(List(pname("x1"), pwildcard)), pname("x1"))))
     ))
-  }
+  )
 
-  test("recursive") {
+  test("recursive")(
     runTestAssert[Stat](
       """|type Len[X] <: Int = X match {
          |  case Unit => 0
@@ -84,7 +84,7 @@ class MatchTypeSuite extends BaseDottySuite {
       ),
       hiBound("Int")
     ))
-  }
+  )
 
   test("concat") {
     runTestAssert[Stat](

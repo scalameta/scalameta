@@ -51,13 +51,13 @@ class QuasiquoteSuite extends ParseSuite {
 
     test("multi-line allow unicode escaping")(assertTree(term("\\u0061"))(tname("a")))
 
-    test("multi-line allow line breaks") {
+    test("multi-line allow line breaks")(
       assertTree(term("foo + \n bar"))(tinfix(tname("foo"), "+", tname("bar")))
-    }
+    )
 
     test("multi-line allow double quotes")(assertTree(term("\"a\""))(str("a")))
 
-    test("multi-line disallow single-line unquote") {
+    test("multi-line disallow single-line unquote")(
       interceptMessage[ParseException](
         """|<input>:2: error: can't unquote into string literals
            |" $x "
@@ -67,9 +67,9 @@ class QuasiquoteSuite extends ParseSuite {
            |" $x "
            |""".stripMargin
       ))
-    }
+    )
 
-    test("multi-line disallow multi-line unquote") {
+    test("multi-line disallow multi-line unquote")(
       interceptMessage[ParseException](
         """|<input>:2: error: can't unquote into multi-line string literals
            |QQQ $x QQQ
@@ -79,6 +79,6 @@ class QuasiquoteSuite extends ParseSuite {
            |QQQ $x QQQ
            |""".stripMargin.tq()
       ))
-    }
+    )
   }
 }

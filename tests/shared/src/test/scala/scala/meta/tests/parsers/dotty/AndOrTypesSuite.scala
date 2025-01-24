@@ -7,11 +7,9 @@ class AndOrTypesSuite extends BaseDottySuite {
 
   test("A with B")(runTestAssert[Type]("A with B", None)(With(pname("A"), pname("B"))))
 
-  test("A & B & C") {
-    runTestAssert[Type]("A & B & C")(
-      ApplyInfix(ApplyInfix(pname("A"), pname("&"), pname("B")), pname("&"), pname("C"))
-    )
-  }
+  test("A & B & C")(runTestAssert[Type]("A & B & C")(
+    ApplyInfix(ApplyInfix(pname("A"), pname("&"), pname("B")), pname("&"), pname("C"))
+  ))
 
   test("A & B")(runTestAssert[Type]("A & B")(ApplyInfix(pname("A"), pname("&"), pname("B"))))
 

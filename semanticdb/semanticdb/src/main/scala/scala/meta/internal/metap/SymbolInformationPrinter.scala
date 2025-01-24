@@ -21,7 +21,7 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     if (settings.format.isDetailed) {
       val printed = mutable.Set[String]()
-      infoNotes.visited.tail.foreach { info =>
+      infoNotes.visited.tail.foreach(info =>
         if (!printed(info.symbol)) {
           printed += info.symbol
           out.print("  ")
@@ -29,7 +29,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           out.print(" => ")
           out.println(info.symbol)
         }
-      }
+      )
     }
   }
 

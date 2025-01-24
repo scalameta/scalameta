@@ -34,9 +34,9 @@ package object metacp {
         }
       } yield ScalaSigNode(node.name + ".class", scalaSig)
     private def fromScalaSigAnnotation: Option[ScalaSig] = Option(node.visibleAnnotations).flatMap {
-      _.toScala.iterator.filter { annot =>
+      _.toScala.iterator.filter(annot =>
         annot.desc == Main.SCALA_SIG_ANNOTATION || annot.desc == Main.SCALA_LONG_SIG_ANNOTATION
-      }.map(_.values.toScala).collectFirst { case collection.Seq("bytes", anyBytes) =>
+      ).map(_.values.toScala).collectFirst { case collection.Seq("bytes", anyBytes) =>
         val baos = new ByteArrayOutputStream()
         val bytes: Array[Byte] = anyBytes match {
           case bytesString: String => bytesString.getBytes(StandardCharsets.UTF_8)

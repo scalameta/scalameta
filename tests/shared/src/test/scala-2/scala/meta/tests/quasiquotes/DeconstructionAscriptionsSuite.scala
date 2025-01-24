@@ -18,13 +18,11 @@ class DeconstructionAscriptionsSuite extends TreeSuiteBase {
     assertEquals(x.toString, "x")
   }
 
-  test("case q\"foo({x: Int})\"") {
-    q"foo(42)" match {
-      case q"$foo(${x: Int})" =>
-        assertTree(foo)(tname("foo"))
-        assertEquals(x, 42)
-    }
-  }
+  test("case q\"foo({x: Int})\"")(q"foo(42)" match {
+    case q"$foo(${x: Int})" =>
+      assertTree(foo)(tname("foo"))
+      assertEquals(x, 42)
+  })
 
   test("1 q\"foo(x, ..ys, z)\"") {
     val q"foo($x, ..$ys, $z)" = q"foo(1, 2, 3)"
@@ -46,12 +44,10 @@ class DeconstructionAscriptionsSuite extends TreeSuiteBase {
     assertEquals(body, 42)
   }
 
-  test("case q\"foo({x: Int}, ..ys, z)\"") {
-    q"foo(1, 2, 3)" match {
-      case q"$_(${x: Int}, ..$y, $z)" =>
-        assertEquals(x, 1)
-        assertEquals(y.map(_.structure), List("Lit.Int(2)"))
-        assertTree(z)(int(3))
-    }
-  }
+  test("case q\"foo({x: Int}, ..ys, z)\"")(q"foo(1, 2, 3)" match {
+    case q"$_(${x: Int}, ..$y, $z)" =>
+      assertEquals(x, 1)
+      assertEquals(y.map(_.structure), List("Lit.Int(2)"))
+      assertTree(z)(int(3))
+  })
 }

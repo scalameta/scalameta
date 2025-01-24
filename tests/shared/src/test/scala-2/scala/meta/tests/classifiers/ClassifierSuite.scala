@@ -35,31 +35,27 @@ trait Auto2 {
 }
 
 class ClassifierSuite extends FunSuite {
-  test("unclassifiable inheritance") {
-    assertEquals(
-      typecheckError(
-        """
+  test("unclassifiable inheritance")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       (??? : Unclassifiable).is[Derived]
     """
-      ),
-      "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable"
-    )
-  }
+    ),
+    "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable"
+  ))
 
-  test("unclassifiable typeclass") {
-    assertEquals(
-      typecheckError(
-        """
+  test("unclassifiable typeclass")(assertEquals(
+    typecheckError(
+      """
       import scala.meta._
       (??? : Unclassifiable).is[Manual]
       (??? : Unclassifiable).is[Auto1]
       (??? : Unclassifiable).is[Auto2]
     """
-      ),
-      "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable"
-    )
-  }
+    ),
+    "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable"
+  ))
 
   test("classifiable inheritance") {
     assertEquals(

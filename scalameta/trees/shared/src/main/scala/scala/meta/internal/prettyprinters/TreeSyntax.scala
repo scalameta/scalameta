@@ -886,11 +886,11 @@ object TreeSyntax {
         val derived = r(t.derives, "derives ", ", ", "")
         val ptype = t.parent match {
           case Some(p: Defn.Given) =>
-            val isNew = givenSigUsesNewSyntax(p.paramClauseGroups) {
-              t.inits.forall(_.argClauses.isEmpty) && !t.body.origin.tokensOpt.forall {
+            val isNew = givenSigUsesNewSyntax(p.paramClauseGroups)(
+              t.inits.forall(_.argClauses.isEmpty) && !t.body.origin.tokensOpt.forall(
                 _.rfindWideNot(_.is[Token.Trivia], -1).is[Token.KwWith] // still old syntax
-              }
-            }
+              )
+            )
             if (isNew) Decl.Given else Defn.Given
           case Some(_: Term.NewAnonymous) => Term.NewAnonymous
           case _ => null
@@ -1153,12 +1153,12 @@ object TreeSyntax {
     // If we prettyprint a tree that's just been parsed with the same dialect,
     // then we retain formatting. Otherwise, we don't, even in the tiniest.
     // I expect to improve on this in the nearest future, because we had it much better until recently.
-    Syntax { (x: T) =>
+    Syntax((x: T) =>
       x.origin match {
         case o: Origin.Parsed if o.dialect.isEquivalentTo(dialect) => s(o.text)
         case _ => reprint(x)(dialect)
       }
-    }
+    )
 
   def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = new SyntaxInstances(dialect)
     .syntaxTree[T].apply(x)

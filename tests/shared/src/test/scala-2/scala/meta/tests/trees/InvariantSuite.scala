@@ -75,14 +75,14 @@ class InvariantSuite extends TreeSuiteBase {
 
   test("empty Term.Tuple") {
     def tuple = Term.Tuple(Nil)
-    interceptMessage[InvariantFailedException](
+    interceptMessage[InvariantFailedException] {
       """|invariant failed (args should be non-empty):
          |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
          |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also args.nonEmpty is false
          |where args = List()
          |""".stripMargin.lf2nl
-    )(tuple)
+    }(tuple)
   }
   test("nested Term.Tuple") {
     def tuple = Term.Tuple(Term.Tuple(Lit.Unit() :: Nil) :: Nil)
@@ -97,14 +97,14 @@ class InvariantSuite extends TreeSuiteBase {
 
   test("empty Pat.Tuple") {
     def tuple = Pat.Tuple(Nil)
-    interceptMessage[InvariantFailedException](
+    interceptMessage[InvariantFailedException] {
       """|invariant failed (args should be non-empty):
          |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
          |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also args.nonEmpty is false
          |where args = List()
          |""".stripMargin.lf2nl
-    )(tuple)
+    }(tuple)
   }
   test("nested Pat.Tuple") {
     def tuple = Pat.Tuple(Pat.Tuple(Lit.Unit() :: Nil) :: Nil)
@@ -119,14 +119,14 @@ class InvariantSuite extends TreeSuiteBase {
 
   test("empty Type.Tuple") {
     def tuple = Type.Tuple(Nil)
-    interceptMessage[InvariantFailedException](
+    interceptMessage[InvariantFailedException] {
       """|invariant failed (args should be non-empty):
          |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
          |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
          |and also args.nonEmpty is false
          |where args = List()
          |""".stripMargin.lf2nl
-    )(tuple)
+    }(tuple)
   }
   test("nested Type.Tuple") {
     def tuple = Type.Tuple(Type.Tuple(Lit.Unit() :: Nil) :: Nil)

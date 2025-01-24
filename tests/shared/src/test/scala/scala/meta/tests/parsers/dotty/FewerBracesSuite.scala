@@ -48,7 +48,7 @@ class FewerBracesSuite extends BaseDottySuite {
     )(Defn.Val(Nil, List(patvar("firstLine")), None, tapply(tname("map"), blk(tname("indentedCode")))))
   }
 
-  test("simple-same-line") {
+  test("simple-same-line")(
     runTestAssert[Stat](
       """|val firstLine = files.map: a =>
          |    a
@@ -65,7 +65,7 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tapply(tselect("files", "map"), blk(tfunc(tparam("a"))(tname("a"))))
     ))
-  }
+  )
 
   test("advanced-same-line") {
     runTestAssert[Stat](
@@ -330,7 +330,7 @@ class FewerBracesSuite extends BaseDottySuite {
     ))
   }
 
-  test("no-self-type") {
+  test("no-self-type")(
     runTestAssert[Stat](
       """|class C:
          |  f:
@@ -345,7 +345,7 @@ class FewerBracesSuite extends BaseDottySuite {
            |""".stripMargin
       )
     )(Defn.Class(Nil, pname("C"), Nil, EmptyCtor(), tpl(tapply(tname("f"), blk(int(22))))))
-  }
+  )
 
   test("no-indent") {
     runTestAssert[Stat](
@@ -435,44 +435,38 @@ class FewerBracesSuite extends BaseDottySuite {
   }
 
   // Infix chains don't allow to continue with a .
-  test("chain-infix-error") {
-    runTestError[Stat](
-      """|val a: Int = xs map: x =>
-         |      x * x
-         |    .filter: (y: Int) =>
-         |      y > 0
-         |    (0)
-         |""".stripMargin,
-      """|<input>:3: error: illegal start of definition `.`
-         |    .filter: (y: Int) =>
-         |    ^""".stripMargin
-    )
-  }
+  test("chain-infix-error")(runTestError[Stat](
+    """|val a: Int = xs map: x =>
+       |      x * x
+       |    .filter: (y: Int) =>
+       |      y > 0
+       |    (0)
+       |""".stripMargin,
+    """|<input>:3: error: illegal start of definition `.`
+       |    .filter: (y: Int) =>
+       |    ^""".stripMargin
+  ))
 
-  test("#3164 empty argument 1") {
-    runTestError[Stat](
-      """|object a:
-         |  test("foo"):
-         |""".stripMargin,
-      """|<input>:2: error: expected fewer-braces method body
-         |  test("foo"):
-         |             ^""".stripMargin
-    )
-  }
+  test("#3164 empty argument 1")(runTestError[Stat](
+    """|object a:
+       |  test("foo"):
+       |""".stripMargin,
+    """|<input>:2: error: expected fewer-braces method body
+       |  test("foo"):
+       |             ^""".stripMargin
+  ))
 
-  test("#3164 empty argument 2") {
-    runTestError[Stat](
-      """|object a:
-         |  foo :
-         |  bar
-         |""".stripMargin,
-      """|<input>:2: error: expected fewer-braces method body
-         |  foo :
-         |      ^""".stripMargin
-    )
-  }
+  test("#3164 empty argument 2")(runTestError[Stat](
+    """|object a:
+       |  foo :
+       |  bar
+       |""".stripMargin,
+    """|<input>:2: error: expected fewer-braces method body
+       |  foo :
+       |      ^""".stripMargin
+  ))
 
-  test("#3164 empty argument 3") {
+  test("#3164 empty argument 3")(
     runTestAssert[Stat](
       """|object a:
          |  foo :
@@ -486,9 +480,9 @@ class FewerBracesSuite extends BaseDottySuite {
            |}""".stripMargin
       )
     )(Defn.Object(Nil, tname("a"), tpl(tapply(tname("foo"), blk(tname("bar"))))))
-  }
+  )
 
-  test("#3164 empty argument 4") {
+  test("#3164 empty argument 4")(
     runTestAssert[Stat](
       """|object a:
          |  foo
@@ -496,7 +490,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin,
       Some("object a { foo: bar }")
     )(Defn.Object(Nil, tname("a"), tpl(Term.Ascribe(tname("foo"), pname("bar")))))
-  }
+  )
 
   test("#3296") {
     val code =

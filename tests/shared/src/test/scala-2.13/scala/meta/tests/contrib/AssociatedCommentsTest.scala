@@ -227,13 +227,13 @@ class AssociatedCommentsTest extends FunSuite {
       s"actual leading comments didn't match expectation for ${t.syntax}"
     )
     // check unexpected leading comments
-    input.foreach { t =>
+    input.foreach(t =>
       if (!leading.contains(t)) assertEquals(
         associatedComments.leading(t),
         Set.empty[Token.Comment],
         s"unexpected leading comments for ${t.syntax}"
       )
-    }
+    )
     // check expected trailing comments
     for ((t, comments) <- trailing) assertEquals(
       associatedComments.trailing(t).map(_.text),
@@ -241,13 +241,13 @@ class AssociatedCommentsTest extends FunSuite {
       s"actual trailing comments didn't match expectation for ${t.syntax}"
     )
     // check unexpected trailing comments
-    input.foreach { t =>
+    input.foreach(t =>
       if (!trailing.contains(t)) assertEquals(
         associatedComments.trailing(t),
         Set.empty[Token.Comment],
         s"unexpected trailing comments for ${t.getClass}"
       )
-    }
+    )
   }
 }
 

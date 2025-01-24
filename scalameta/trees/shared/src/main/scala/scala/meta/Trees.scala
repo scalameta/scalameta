@@ -449,9 +449,9 @@ object Term {
     override final def params: List[Param] = paramClause.values
     checkFields(paramClause.is[ParamClause.Quasi] || {
       val params = paramClause.values
-      params.forall { param =>
+      params.forall(param =>
         param.is[Param.Quasi] || param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty
-      } && {
+      ) && {
         params.exists(_.is[Param.Quasi]) ||
         paramClause.mod.is[Mod.Implicit] ==> (params.lengthCompare(1) == 0)
       }
@@ -512,14 +512,14 @@ object Term {
   class ParamClause(values: List[Param], mod: Option[Mod.ParamsType] = None)
       extends Member.ParamClause
   object ParamClause {
-    private[meta] def getMod(v: Seq[Param]): Option[Mod.ParamsType] = v
-      .filter(!_.is[Param.Quasi]) match {
-      case head :: tail => head.mods.collectFirst {
-          case x: Mod.Using => x
-          case x: Mod.Implicit if tail.forall(_.mods.exists(_.is[Mod.Implicit])) => x
-        }
-      case _ => None
-    }
+    private[meta] def getMod(v: Seq[Param]): Option[Mod.ParamsType] =
+      v.filter(!_.is[Param.Quasi]) match {
+        case head :: tail => head.mods.collectFirst {
+            case x: Mod.Using => x
+            case x: Mod.Implicit if tail.forall(_.mods.exists(_.is[Mod.Implicit])) => x
+          }
+        case _ => None
+      }
   }
   def fresh(): Term.Name = fresh("fresh")
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
