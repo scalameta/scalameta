@@ -20,12 +20,14 @@ class File(path: String) {
     val withslash = if (isDirectory && !uripath.endsWith("/")) uripath + "/" else uripath
     new URI("file", null, withslash, null)
   }
+  def isAbsolute: Boolean = toPath.isAbsolute
   def getAbsoluteFile: File = toPath.toAbsolutePath.toFile
   def getAbsolutePath: String = getAbsoluteFile.toString
   def getParentFile: File = toPath.getParent.toFile
   def mkdirs(): Unit =
     throw new UnsupportedOperationException("mkdirs() is not supported in Scala.js")
   def getPath: String = path
+  def getName: String = JSPath.basename(path)
   def exists(): Boolean = JSIO.exists(path)
   def isFile: Boolean = JSIO.isFile(path)
   def isDirectory: Boolean = JSIO.isDirectory(path)
