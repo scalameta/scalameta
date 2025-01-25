@@ -1,6 +1,5 @@
 package java.nio.file
 
-import scala.meta.internal.io.JSPath
 import scala.meta.internal.io.NodeNIOPath
 
 import java.io.File
@@ -19,12 +18,10 @@ object Paths {
   def get(uri: URI): Path = {
     if (uri.getScheme != "file") throw new IllegalArgumentException("only file: URIs are supported")
     val uripath = uri.getPath
-    val parts = uripath.split('/').toList
-    val (leading, trailing) = parts.span(_ == "")
-    trailing match {
-      case drive :: path if drive.length == 2 && drive(1) == ':' =>
-        NodeNIOPath(trailing.mkString("\\"))
-      case _ => NodeNIOPath(uripath)
-    }
+    val trailing = uripath.split('/').toList.dropWhile(_ == "")
+    NodeNIOPath(trailing match {
+      case drive :: _ if drive.length == 2 && drive(1) == ':' => trailing.mkString("\\")
+      case _ => uripath
+    })
   }
 }

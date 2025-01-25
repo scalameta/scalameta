@@ -44,18 +44,46 @@ object JSFs extends js.Any {
 
   /** Writes file contents using blocking apis */
   def writeFileSync(path: String, buffer: js.Array[Int]): Unit = js.native
+  def writeFileSync(path: String, data: js.typedarray.Uint8Array): Unit = js.native
+  def writeFileSync(path: String, data: String, encoding: js.UndefOr[String] = js.undefined): Unit =
+    js.native
 
   /** Returns an array of filenames excluding '.' and '..'. */
   def readdirSync(path: String): js.Array[String] = js.native
 
   /** Returns an fs.Stats for path. */
   def lstatSync(path: String): JSStats = js.native
+  def statSync(path: String): JSStats = js.native
 
   /** Returns true if the file exists, false otherwise. */
   def existsSync(path: String): Boolean = js.native
 
+  /** creates a symlink */
+  def symlinkSync(
+      path: String, // real path
+      link: String, // link path
+      /** type is file, dir, junction (windows) */
+      `type`: js.UndefOr[String] = js.undefined
+  ): Unit = js.native
+
   /** Synchronously creates a directory. */
   def mkdirSync(path: String): Unit = js.native
+  def mkdirSync(path: String, options: js.UndefOr[js.Dynamic] = js.undefined): Unit = js.native
+  def mkdtempSync(prefix: String): String = js.native
+
+  /** e.g: rmSync(path, js.Dynamic.literal(recursive = true, force = true)) */
+  def rmSync(path: String, options: js.UndefOr[js.Dynamic] = js.undefined): Unit = js.native
+  def unlinkSync(path: String): Unit = js.native
+
+  /** moves files */
+  def renameSync(oldPath: String, newPath: String): Unit = js.native
+}
+
+@js.native
+@JSImport("os", JSImport.Namespace)
+object JSOS extends js.Object {
+  def tmpdir(): String = js.native
+  def homedir(): String = js.native
 }
 
 /**
@@ -69,6 +97,10 @@ object JSFs extends js.Any {
 class JSStats extends js.Any {
   def isFile(): Boolean = js.native
   def isDirectory(): Boolean = js.native
+  def isSymbolicLink(): Boolean = js.native
+  val atime: js.Date = js.native
+  val ctime: js.Date = js.native
+  val mtime: js.Date = js.native
 }
 
 /**
