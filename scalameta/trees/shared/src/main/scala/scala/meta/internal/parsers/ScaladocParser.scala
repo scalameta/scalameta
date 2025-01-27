@@ -303,8 +303,7 @@ object ScaladocParser {
     paraSep.? ~ docParser ~ spacesMin(0) ~ End
   }
 
-  private val ws = "[ \r\t]"
-  private val scaladocDelim = Pattern.compile(s"$ws*(?:$$|\n$ws*\\**)")
+  private val scaladocDelim = Pattern.compile("[ \r\t]*(?:\n(?:[ \r\t]*\\*+)?|$)")
 
   /** removes all trailing space, ensures newline at EOF */
   private[meta] def stripTrailingSpaces(content: CharSequence): String = scaladocDelim
