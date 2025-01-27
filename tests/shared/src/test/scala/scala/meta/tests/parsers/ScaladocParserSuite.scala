@@ -1783,7 +1783,7 @@ class ScaladocParserSuite extends FunSuite {
     val output =
       """|foo
          |bar
-         |baz
+         |  baz
          |qux
          |""".stripMargin
     assertEquals(ScaladocParser.stripTrailingSpaces(input), output)
