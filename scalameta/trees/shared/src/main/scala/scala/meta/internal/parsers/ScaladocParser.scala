@@ -306,14 +306,16 @@ object ScaladocParser {
   private val ws = "[ \r\t]"
   private val scaladocDelim = Pattern.compile(s"$ws*(?:$$|\n$ws*\\**)")
 
+  /** removes all trailing space, ensures newline at EOF */
+  private[meta] def stripTrailingSpaces(content: CharSequence): String = scaladocDelim
+    .matcher(content).replaceAll("\n")
+
   /** Parses a scaladoc comment */
   def parse(comment: String): Option[Scaladoc] = {
     val isScaladoc = comment.length >= 5 && comment.startsWith("/**") && comment.endsWith("*/")
     if (!isScaladoc) None
     else {
-      val content = CharBuffer.wrap(comment, 3, comment.length - 2)
-      // removes all trailing space, ensures newline at EOF
-      val text = scaladocDelim.matcher(content).replaceAll("\n")
+      val text = stripTrailingSpaces(CharBuffer.wrap(comment, 3, comment.length - 2))
       fastparse.parse(text, parser(_)) match {
         case p: Parsed.Success[Scaladoc] => Some(p.value)
         case _ => None

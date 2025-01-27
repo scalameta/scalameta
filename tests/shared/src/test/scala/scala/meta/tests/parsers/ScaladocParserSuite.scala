@@ -1770,6 +1770,22 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(Table.Center.leftPad(7), 3)
   }
 
+  test("strip trailing space") {
+    // XXX: \u0020 is a space, to make sure it's not removed by the editor
+    val input =
+      s"""|foo  \u0020
+          | \t**bar \r
+          |  baz   \r\t
+          |  *qux""".stripMargin
+    val output =
+      """|foo
+         |bar
+         |baz
+         |qux
+         |""".stripMargin
+    assertEquals(ScaladocParser.stripTrailingSpaces(input), output)
+  }
+
 }
 
 object ScaladocParserSuite {
