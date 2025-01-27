@@ -256,7 +256,7 @@ object Scaladoc {
     // @hideImplicitConversion
 
     /** Contains all known tags */
-    val predefined: Seq[Base] = Seq(
+    def predefined: Seq[Base] = Seq(
       Ctor,
       Return,
       Throws,
@@ -281,7 +281,7 @@ object Scaladoc {
       Documentable
     )
 
-    val tagTypeMap = predefined.map(x => x.tag -> x).toMap
+    lazy val tagTypeMap = predefined.map(x => x.tag -> x).toMap
 
     def getTag(tag: String): TagType = tagTypeMap.getOrElse(tag, TagType.UnknownTag(tag))
   }
