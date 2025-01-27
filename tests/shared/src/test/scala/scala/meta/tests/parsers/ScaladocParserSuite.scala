@@ -18,7 +18,10 @@ class ScaladocParserSuite extends FunSuite {
   private def parseString(comment: String) = ScaladocParser.parse(comment.trim)
   private def assertScaladoc(comment: String, expected: Scaladoc)(implicit
       loc: munit.Location
-  ): Unit = assertEquals(parseString(comment), Option(expected))
+  ): Unit = {
+    assertEquals(parseString(comment), Option(expected))
+    assertEquals(parseString(comment.replace("\n", " \t\r\n")), Option(expected))
+  }
 
   private def generateTestString(tagType: TagType, testStringToMerge: String)(implicit
       sb: StringBuilder
