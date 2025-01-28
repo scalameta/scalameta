@@ -324,6 +324,11 @@ trait TextDocumentOps {
               case _ =>
             }
 
+            def singleValPat(): Unit = msinglevalpats.get(gpoint) match {
+              case Some(mpos) => addPatOccurrence(mpos, gsym)
+              case _ => tryMstart(gpoint)
+            }
+
             gtree match {
               case _: g.ValDef if gsym.isSelfParameter => tryMstart(gstart)
               case _: g.MemberDef if gsym.hasFlag(Flags.SYNTHETIC | Flags.ARTIFACT) =>
@@ -334,18 +339,14 @@ trait TextDocumentOps {
                 // then its positions are completely mental, so we just hack around
                 tryMstart(gpoint + 7)
                 tryMstart(gpoint)
-              case _: g.DefDef if gsym.isGetter =>
-                msinglevalpats.get(gpoint) match {
-                  case Some(mpos) => addPatOccurrence(mpos, gsym)
-                  case _ => tryMstart(gpoint)
-                }
+              case _: g.DefDef if gsym.isGetter => singleValPat()
               case _: g.ValDef => if (gsym.isMethod || gsym.getterIn(gsym.owner) == g.NoSymbol) {
                   // FIXME: https://github.com/scalameta/scalameta/issues/1538
                   // Skip the field definition in favor of the associated getter.
                   // This will make sure that val/var class parameters are consistently
                   // resolved to getter symbols both as definition and references.
                   tryMstart(gstart)
-                  tryMstart(gpoint)
+                  singleValPat()
                 }
               case _: g.DefTree => tryMstart(gpoint)
               case _: g.This => mstarts.get(gpoint)
