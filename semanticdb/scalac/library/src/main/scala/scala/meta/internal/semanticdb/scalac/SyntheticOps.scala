@@ -43,6 +43,11 @@ trait SyntheticOps {
     def toRange: s.Range = toMeta.toRange
     def toSemanticOriginal: s.OriginalTree = toRange.toSemanticOriginal
 
+    def hasSyntheticSymbol: Boolean = gTree.symbol match {
+      case s: g.Symbol => s.isSynthetic
+      case _ => false
+    }
+
   }
 
 }

@@ -444,10 +444,8 @@ trait TextDocumentOps {
                 traverse(t.body)
                 tryFindMtree(t)
               case t: g.ValDef =>
-                t.symbol match {
-                  case x: g.Symbol if x.isSynthetic => traverse(t.tpt); traverse(t.rhs)
-                  case _ =>
-                }
+                if (t.hasSyntheticSymbol) traverse(t.tpt)
+                traverse(t.rhs)
                 processMemberDef(t)
               case t: g.MemberDef => processMemberDef(t)
               case t: g.Ident => t.pos match {

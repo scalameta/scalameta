@@ -5536,9 +5536,9 @@ local12 => var local rightVar: Int
 local13 => val local x$4: : Tuple2[Int, Int]
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
-local14 => var local number1Var: Int
+local14 => val local number1Var: Int
   Int => scala/Int#
-local15 => val local number1Var: Int
+local15 => var local number1Var: Int
   Int => scala/Int#
 
 Occurrences:
@@ -5568,18 +5568,18 @@ Occurrences:
 [24:11..24:15): left <= local6
 [24:17..24:22): right <= local7
 [25:10..25:14): Some => scala/Some.
-[25:15..25:22): number1 <= local10
+[25:15..25:22): number1 <= local9
 [26:8..26:12): Some => scala/Some.
 [28:11..28:18): leftVar <= local11
 [28:20..28:28): rightVar <= local12
 [29:10..29:14): Some => scala/Some.
-[29:15..29:25): number1Var <= local15
+[29:15..29:25): number1Var <= local14
 [30:8..30:12): Some => scala/Some.
 [31:6..31:13): println => scala/Predef.println(+1).
-[33:10..33:17): number1 => local9
+[33:10..33:17): number1 => local10
 [34:10..34:14): left => local6
 [35:10..35:15): right => local7
-[36:10..36:20): number1Var => local14
+[36:10..36:20): number1Var => local15
 [37:10..37:17): leftVar => local11
 [38:10..38:18): rightVar => local12
 
