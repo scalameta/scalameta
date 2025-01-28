@@ -5296,12 +5296,12 @@ Occurrences:
 [24:11..24:15): left <= local6
 [24:17..24:22): right <= local7
 [25:10..25:14): Some => scala/Some.
-[25:15..25:22): number1 <= local9
+[25:15..25:22): number1 <= local10
 [26:8..26:12): Some => scala/Some.
 [28:11..28:18): leftVar <= local11
 [28:20..28:28): rightVar <= local12
 [29:10..29:14): Some => scala/Some.
-[29:15..29:25): number1Var <= local14
+[29:15..29:25): number1Var <= local15
 [30:8..30:12): Some => scala/Some.
 [31:6..31:13): println => scala/Predef.println(+1).
 [33:10..33:17): number1 => local10
