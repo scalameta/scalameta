@@ -684,4 +684,34 @@ class GivenUsingSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
 
+  test("scalafmt #4764") {
+    val code =
+      """|object a:
+         |  def foo =
+         |    bar:
+         |      case given String =>
+         |  end foo
+         |""".stripMargin
+    val layout =
+      """|object a {
+         |  def foo = bar {
+         |    case given String =>
+         |      end foo
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Object(
+      Nil,
+      "a",
+      tpl(Defn.Def(
+        Nil,
+        "foo",
+        Nil,
+        None,
+        tapply("bar", Term.PartialFunction(List(Case(Pat.Given("String"), None, Term.EndMarker("foo")))))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
