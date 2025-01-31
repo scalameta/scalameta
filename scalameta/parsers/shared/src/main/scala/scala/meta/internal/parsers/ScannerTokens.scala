@@ -535,17 +535,17 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ :: rs => OutdentInfo(null, rs)
           case _ => null
         }
-      case _: LeftBracket => currRef(RegionBracket :: sepRegions)
+      case _: LeftBracket => currRef(RegionBracket(nextIndent) :: sepRegions)
       case _: RightBracket => mkOutdents(sepRegions) {
           case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
-          case RegionBracket :: rs => OutdentInfo(null, rs, done = true)
+          case (_: RegionBracket) :: rs => OutdentInfo(null, rs, done = true)
           case _ :: rs => OutdentInfo(null, rs)
           case _ => null
         }
-      case _: LeftParen => currRef(RegionParen :: sepRegions)
+      case _: LeftParen => currRef(RegionParen(nextIndent) :: sepRegions)
       case _: RightParen => mkOutdents(sepRegions) {
           case (r: SepRegionIndented) :: rs => OutdentInfo(r, rs)
-          case RegionParen :: rs => OutdentInfo(null, rs, true)
+          case (_: RegionParen) :: rs => OutdentInfo(null, rs, true)
           case _ :: rs => OutdentInfo(null, rs)
           case _ => null
         }
@@ -633,8 +633,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case r: RegionFor if r.isClosingConditionToken(prev) => rs
           case _ => if (prevToken.is[AtEOL] || curr.is[CloseDelim]) rs else regions
         }
-      case RegionParen :: RegionForMaybeParens :: rs if curr.is[LeftArrow] =>
-        RegionParen :: RegionForParens :: rs
+      case (r: RegionParen) :: RegionForMaybeParens :: rs if curr.is[LeftArrow] =>
+        r :: RegionForParens :: rs
       case _ => regions
     }
 
@@ -1018,7 +1018,7 @@ object ScannerTokens {
   @tailrec
   private def inParens(regions: List[SepRegion]): Boolean = regions.nonEmpty &&
     (regions.head match {
-      case r: RegionDelimNonIndented => r eq RegionParen
+      case r: RegionDelimNonIndented => r.isInstanceOf[RegionParen]
       case _ => inParens(regions.tail)
     })
 
