@@ -4166,11 +4166,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  "bar"
          |)
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `;` expected but `,` found
-         |  catch case _ => 2,
-         |                   ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|val foo = test(try 1 catch {
+         |  case _ => 2
+         |}, "bar")
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("foo")),
+      None,
+      tapply(
+        "test",
+        Term.Try(lit(1), Some(Term.CasesBlock(List(Case(patwildcard, None, lit(2))))), None),
+        lit("bar")
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

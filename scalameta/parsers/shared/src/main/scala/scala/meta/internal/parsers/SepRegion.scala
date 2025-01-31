@@ -28,8 +28,8 @@ case class RegionIndent(override val indent: Int) extends SepRegionIndented with
 
 case class RegionLine(override val indent: Int) extends RegionNonDelimNonIndented with CanProduceLF
 
-case object RegionParen extends RegionDelimNonIndented
-case object RegionBracket extends RegionDelimNonIndented
+case class RegionParen(override val indent: Int) extends RegionDelimNonIndented
+case class RegionBracket(override val indent: Int) extends RegionDelimNonIndented
 case class RegionBrace(override val indent: Int) extends RegionDelimNonIndented with CanProduceLF
 
 case object RegionCaseMark extends RegionNonDelimNonIndented
