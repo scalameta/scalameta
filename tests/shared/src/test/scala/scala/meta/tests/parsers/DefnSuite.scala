@@ -407,4 +407,30 @@ class DefnSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4177") {
+    val code =
+      """|val foo = test(
+         |  try 1
+         |  catch { case _ => 2 },
+         |  "bar"
+         |)
+         |""".stripMargin
+    val layout =
+      """|val foo = test(try 1 catch {
+         |  case _ => 2
+         |}, "bar")
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("foo")),
+      None,
+      tapply(
+        "test",
+        Term.Try(lit(1), Some(Term.CasesBlock(List(Case(patwildcard, None, lit(2))))), None),
+        lit("bar")
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
