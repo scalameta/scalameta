@@ -4158,4 +4158,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4177") {
+    val code =
+      """|val foo = test(
+         |  try 1
+         |  catch case _ => 2,
+         |  "bar"
+         |)
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `;` expected but `,` found
+         |  catch case _ => 2,
+         |                   ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
