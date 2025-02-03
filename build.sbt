@@ -512,6 +512,7 @@ lazy val sharedSettings = Def.settings(
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
   ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger,
+  evictionErrorLevel := sbt.util.Level.Warn,
   incOptions := incOptions.value.withLogRecompileOnMacro(false)
 )
 
