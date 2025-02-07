@@ -1,6 +1,5 @@
 package scala.meta.io
 
-import org.scalameta.collections._
 import scala.meta.internal.io.PathIO
 
 import java.io._
@@ -39,14 +38,16 @@ object RelativePath {
   def apply(path: nio.Path): RelativePath = new RelativePath(path) {}
 
   private[meta] def toURI(path: Path, isDirectory: Boolean): URI = {
-    val suffix = if (isDirectory) "/" else ""
     // Can't use toNIO.toUri because it produces an absolute URI.
-    val names = path.iterator().toScala
-    val uris = names.map(name =>
+    val sb = new StringBuilder
+    val pathiter = path.iterator()
+    while (pathiter.hasNext) {
+      if (sb.nonEmpty) sb.append('/')
       // URI encode each part of the path individually.
-      new URI(null, null, name.toString, null)
-    )
-    URI.create(uris.mkString("", "/", suffix))
+      sb.append(new URI(null, null, pathiter.next().toString, null))
+    }
+    if (isDirectory) sb.append('/')
+    URI.create(sb.toString())
   }
 
 }

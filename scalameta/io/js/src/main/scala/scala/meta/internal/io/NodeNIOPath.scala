@@ -1,7 +1,5 @@
 package scala.meta.internal.io
 
-import org.scalameta.collections._
-
 import java.io.File
 import java.net.URI
 import java.nio.file.Path
@@ -55,8 +53,14 @@ case class NodeNIOPath(filename: String) extends Path {
   override def startsWith(other: String): Boolean = paths(filename).startsWith(paths(other))
   private def paths(name: String) = name.split(escapedSeparator)
   override def toString: String = filename
-  override def iterator(): util.Iterator[Path] = filename.split(File.separator).iterator
-    .map(name => NodeNIOPath(name): Path).toJava
+  override def iterator(): util.Iterator[Path] = {
+    val parts = filename.split(File.separator)
+    new util.Iterator[Path] {
+      private val iter = parts.iterator
+      override def hasNext: Boolean = iter.hasNext
+      override def next(): Path = NodeNIOPath(iter.next())
+    }
+  }
 }
 
 object NodeNIOPath {

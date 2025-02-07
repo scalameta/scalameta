@@ -64,6 +64,8 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    // XXX: io split off from trees, to remove after release
+    exclude[MissingClassProblem]("io.*")
     // Tree
   )
 }
