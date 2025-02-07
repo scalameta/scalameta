@@ -108,7 +108,7 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   mimaPreviousArtifacts := Set.empty,
   description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
-).dependsOn(semanticdbShared)
+).dependsOn(semanticdbShared, io.jvm)
 
 lazy val semanticdbShared = project.in(file("semanticdb/semanticdb")).settings(
   moduleName := "semanticdb-shared",
@@ -207,6 +207,15 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
 
+lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
+  .configureCross(crossPlatformPublishSettings).settings(
+    moduleName := "io",
+    sharedSettings,
+    description := "Scalameta IO abstractions",
+    mimaPreviousArtifacts := Set.empty, // XXX: io split off from trees, to remove after release
+    crossScalaVersions := EarliestScala2Versions
+  ).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
+
 lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
   moduleName := "trees",
   sharedSettings,
@@ -226,15 +235,15 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   mergedModule { base =>
     val scalameta = base / "scalameta"
     List(
-      scalameta / "io",
       scalameta / "tokenizers",
       scalameta / "tokens",
       scalameta / "dialects",
       scalameta / "inputs"
     )
   }
-).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
-  .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(common) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
+) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
+  .configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
+  .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(common, io)
 
 lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).settings(
   moduleName := "parsers",
@@ -362,7 +371,7 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   crossScalaVersions := EarliestScalaVersions,
   hasLargeIntegrationTests,
   description := "Testing utilities for scalameta APIs"
-).dependsOn(scalameta).configureCross(crossPlatformPublishSettings)
+).dependsOn(scalameta, io).configureCross(crossPlatformPublishSettings)
   .jvmSettings(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0")
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
