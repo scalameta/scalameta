@@ -1,6 +1,7 @@
 package scala.meta.io
 
 import scala.meta.internal.io.PathIO
+import scala.meta.internal.io.PlatformPathIO
 
 import java.io._
 import java.net._
@@ -44,7 +45,7 @@ object RelativePath {
     while (pathiter.hasNext) {
       if (sb.nonEmpty) sb.append('/')
       // URI encode each part of the path individually.
-      sb.append(new URI(null, null, pathiter.next().toString, null))
+      sb.append(PlatformPathIO.urlEncode(pathiter.next().toString))
     }
     if (isDirectory) sb.append('/')
     URI.create(sb.toString())

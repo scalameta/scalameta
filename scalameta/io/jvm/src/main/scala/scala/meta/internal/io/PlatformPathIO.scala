@@ -1,10 +1,8 @@
 package scala.meta.internal.io
 
-import scala.meta.io._
-
-import java.io.File
-import java.nio.file.Paths
-
 object PlatformPathIO {
   def workingDirectoryString: String = sys.props("user.dir")
+
+  def urlEncode(str: String): String = java.net.URLEncoder.encode(str, "UTF-8")
+  def urlDecode(str: String): String = java.net.URLDecoder.decode(str, "UTF-8")
 }
