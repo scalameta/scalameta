@@ -12,10 +12,10 @@ object InputStreamIO {
     val baos = new ByteArrayOutputStream()
     val buffer = new Array[Byte](4096)
     var nread = -1
-    do {
+    while ({
       nread = is.read(buffer, 0, buffer.length)
-      if (nread != -1) baos.write(buffer, 0, nread)
-    } while (nread != -1)
+      nread != -1
+    }) baos.write(buffer, 0, nread)
     baos.toByteArray
   }
 }
