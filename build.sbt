@@ -10,10 +10,10 @@ import scala.xml.transform.RuleTransformer
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 
 import org.scalajs.linker.interface.StandardConfig
-import org.scalajs.sbtplugin.ScalaJSCrossVersion
 
 import complete.DefaultParsers._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
+import sbtcrossproject.Platform
 
 def customVersion = sys.props.get("scalameta.version")
 def parseTagVersion: String = {
@@ -284,21 +284,16 @@ def mergedModule(
 ): List[Setting[_]] = List {
   Compile / unmanagedSourceDirectories ++= {
     val base = (ThisBuild / baseDirectory).value
-    val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
-    val isJS = SettingKey[Boolean]("scalaJSUseMainModuleInitializer").?.value.isDefined
-    val platform = if (isJS) "js" else if (isNative) "native" else "jvm"
     val scalaBinary = "scala-" + scalaBinaryVersion.value
+    val scalaMajor = if (isScala3.value) "scala-3" else "scala-2"
     val allProjects = if (isScala3.value) projects3(base) else projects(base)
     allProjects.flatMap(project =>
       List(
         project / "shared" / "src" / "main" / scalaBinary,
+        project / "shared" / "src" / "main" / scalaMajor,
         project / "shared" / "src" / "main" / "scala",
-        project / platform / "src" / "main" / "scala"
-      ) ++ {
-        if (scalaBinaryVersion.value.startsWith("2"))
-          List(project / "shared" / "src" / "main" / "scala-2")
-        else Nil
-      }
+        project / crossProjectPlatform.value.identifier / "src" / "main" / "scala"
+      )
     )
   }
 }
@@ -497,6 +492,15 @@ lazy val isScala213 = isScalaBinaryVersion("2.13")
 lazy val isScala3 = isScalaBinaryVersion("3")
 def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
 
+// NOTE: Here's what I'd like to do, but I can't because of deprecations:
+//   val isJVM = crossPlatform.value == JVMPlatform
+// Here's my second best guess, but it doesn't work due to some reason:
+//   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
+def isPlatform(platform: Platform) = Def.settingDyn(
+  if (crossProjectPlatform.?.value.isEmpty) Def.setting(platform == JVMPlatform)
+  else Def.setting(crossProjectPlatform.value == platform)
+)
+
 lazy val sharedSettings = Def.settings(
   version ~= { dynVer =>
     customVersion.getOrElse(
@@ -606,7 +610,7 @@ lazy val publishableSettings = Def.settings(
   pomIncludeRepository := { x => false },
   versionScheme := Some("semver-spec"),
   mimaPreviousArtifacts := {
-    if (organization.value == "org.scalameta") {
+    if (organization.value == "org.scalameta" && isPlatform(JVMPlatform).value) {
       val rxVersion = """^(\d+)\.(\d+)\.(\d+)(.+)?$""".r
       val previousVersion = version.value match {
         case rxVersion(major, "0", "0", suffix) if suffix != null =>
@@ -618,22 +622,7 @@ lazy val publishableSettings = Def.settings(
         case rxVersion(major, minor, patch, null) => Some(s"$major.$minor.0")
         case _ => sys.error(s"Invalid version number: ${version.value}")
       }
-      val previousArtifact = {
-        // NOTE: Here's what I'd like to do, but I can't because of deprecations:
-        //   val isJVM = crossPlatform.value == JVMPlatform
-        // Here's my second best guess, but it doesn't work due to some reason:
-        //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
-        val isJVM = {
-          val isJS = platformDepsCrossVersion.value == ScalaJSCrossVersion.binary
-          val isNative = platformDepsCrossVersion.value == ScalaNativeCrossVersion.binary
-          !isJS && !isNative
-        }
-        if (isJVM) previousVersion.map(previousVersion =>
-          organization.value % moduleName.value % previousVersion cross crossVersion.value
-        )
-        else None
-      }
-      previousArtifact.toSet
+      previousVersion.map(organization.value % moduleName.value % _ cross crossVersion.value).toSet
     } else Set()
   },
   mimaBinaryIssueFilters += Mima.languageAgnosticCompatibilityPolicy,
