@@ -232,15 +232,10 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
       else "3.1.1"
     List("com.lihaoyi" %%% "fastparse" % fastparseVersion)
   },
-  mergedModule { base =>
+  mergedModule(projects2 = { base =>
     val scalameta = base / "scalameta"
-    List(
-      scalameta / "tokenizers",
-      scalameta / "tokens",
-      scalameta / "dialects",
-      scalameta / "inputs"
-    )
-  }
+    List("tokenizers", "tokens", "dialects", "inputs").map(scalameta / _)
+  })
 ) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
   .configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(common, io)
@@ -252,8 +247,8 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   enableHardcoreMacros,
   crossScalaVersions := EarliestScalaVersions,
   mergedModule(
-    base => List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers"),
-    base => List(base / "scalameta" / "quasiquotes")
+    base => List(base / "scalameta" / "quasiquotes"),
+    base => List(base / "scalameta" / "transversers")
   ),
   Compile / sourceGenerators += Def.taskDyn {
     val outFile = (Compile / sourceManaged).value / "generated" / "TreeLifts.scala"
@@ -279,22 +274,24 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   ).nativeSettings(nativeSettings).dependsOn(trees)
 
 def mergedModule(
-    projects: File => List[File],
+    projects: File => List[File] = _ => Nil,
+    projects2: File => List[File] = _ => Nil,
     projects3: File => List[File] = _ => Nil
 ): List[Setting[_]] = List {
   Compile / unmanagedSourceDirectories ++= {
     val base = (ThisBuild / baseDirectory).value
     val scalaBinary = "scala-" + scalaBinaryVersion.value
     val scalaMajor = if (isScala3.value) "scala-3" else "scala-2"
-    val allProjects = if (isScala3.value) projects3(base) else projects(base)
-    allProjects.flatMap(project =>
-      List(
-        project / "shared" / "src" / "main" / scalaBinary,
-        project / "shared" / "src" / "main" / scalaMajor,
-        project / "shared" / "src" / "main" / "scala",
-        project / crossProjectPlatform.value.identifier / "src" / "main" / "scala"
-      )
-    )
+    val allProjects = Iterable
+      .concat(projects(base), if (isScala3.value) projects3(base) else projects2(base))
+    val res = Seq.newBuilder[File]
+    allProjects.foreach { project =>
+      res += project / "shared" / "src" / "main" / scalaBinary
+      res += project / "shared" / "src" / "main" / scalaMajor
+      res += project / "shared" / "src" / "main" / "scala"
+      res += project / crossProjectPlatform.value.identifier / "src" / "main" / "scala"
+    }
+    res.result()
   }
 }
 
@@ -303,10 +300,7 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
   sharedSettings,
   description := "Scalameta umbrella module that includes all public APIs",
   crossScalaVersions := EarliestScalaVersions,
-  mergedModule(
-    base => List(base / "scalameta" / "contrib"),
-    base => List(base / "scalameta" / "contrib")
-  )
+  mergedModule(base => List(base / "scalameta" / "contrib"))
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(parsers)
 
