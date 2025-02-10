@@ -213,7 +213,7 @@ lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
     sharedSettings,
     description := "Scalameta IO abstractions",
     mimaPreviousArtifacts := Set.empty, // XXX: io split off from trees, to remove after release
-    crossScalaVersions := EarliestScalaVersions
+    crossScalaVersions := EarliestScala2Versions
   ).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
 lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
@@ -223,7 +223,6 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   crossScalaVersions := EarliestScala2Versions,
   // NOTE: uncomment this to update ast.md
   // scalacOptions += "-Xprint:typer",
-  scalacOptions ++= { if (isScala213.value) Seq("-Ytasty-reader") else Nil },
   enableHardcoreMacros,
   libraryDependencies ++= {
     val fastparseVersion =
