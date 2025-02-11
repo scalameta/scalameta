@@ -1,7 +1,7 @@
 package scala.meta.internal.io
 
-import scala.meta.io._
-
+import scala.concurrent.Future
+import scala.concurrent.Promise
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import scala.scalajs.js.annotation.JSImport.Namespace
@@ -42,11 +42,26 @@ object JSFs extends js.Any {
   /** Returns the file contents as String using blocking apis */
   def readFileSync(path: String, encoding: String): String = js.native
 
+  /** Reads file asynchronously, invokes callback when done */
+  def readFile(
+      path: String,
+      encoding: String,
+      callback: js.Function2[js.Error, String, Unit]
+  ): Unit = js.native
+
   /** Writes file contents using blocking apis */
   def writeFileSync(path: String, buffer: js.Array[Int]): Unit = js.native
   def writeFileSync(path: String, data: js.typedarray.Uint8Array): Unit = js.native
   def writeFileSync(path: String, data: String, encoding: js.UndefOr[String] = js.undefined): Unit =
     js.native
+
+  /** Writes file asynchronously */
+  def writeFile(
+      path: String,
+      data: String,
+      encoding: String,
+      callback: js.Function1[js.Error, Unit]
+  ): Unit = js.native
 
   /** Returns an array of filenames excluding '.' and '..'. */
   def readdirSync(path: String): js.Array[String] = js.native
@@ -140,4 +155,26 @@ object JSIO {
   def isFile(path: String): Boolean = exists(path) && JSFs.lstatSync(path).isFile()
 
   def isDirectory(path: String): Boolean = exists(path) && JSFs.lstatSync(path).isDirectory()
+
+  def readStdinAsync: Future[String] = {
+    val inputStream = js.Dynamic.global.process.stdin
+    val promise = Promise[String]()
+    val readBuffer = new StringBuilder
+
+    inputStream.on("data", (data: String) => readBuffer.append(data))
+
+    inputStream.on("end", () => promise.trySuccess(readBuffer.toString()))
+
+    inputStream.on(
+      "error",
+      (err: js.Any) =>
+        promise.tryFailure(new RuntimeException(err match {
+          case e: js.Error => e.message
+          case _ => err.toString
+        }))
+    )
+
+    promise.future
+  }
+
 }
