@@ -1000,4 +1000,19 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4190 given") {
+    val code =
+      """|def m =
+         |  given Random(1)
+         |  for _ <- 1 to 10 do
+         |    foo("Hello"):
+         |      for i <- 0 to 10 yield i
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `identifier` expected but `for` found
+         |      for i <- 0 to 10 yield i
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
