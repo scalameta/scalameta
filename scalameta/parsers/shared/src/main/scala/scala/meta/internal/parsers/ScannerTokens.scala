@@ -686,6 +686,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case RegionTry :: xs
               if !next.isAny[KwCatch, KwFinally] && canBeLeadingInfix != LeadingInfix.Yes &&
                 !isIndented(xs, nextIndent) => strip(xs)
+          case (_: RegionGivenDecl) :: xs => strip(xs)
           case Nil | (_: CanProduceLF) :: _ => Some(rs)
           case _ => None
         }
