@@ -1008,11 +1008,35 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |    foo("Hello"):
          |      for i <- 0 to 10 yield i
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `identifier` expected but `for` found
-         |      for i <- 0 to 10 yield i
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def m = {
+         |  given Random(1)
+         |  for (_ <- 1 to 10) foo("Hello") {
+         |    for (i <- 0 to 10) yield i
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "m",
+      Nil,
+      None,
+      blk(
+        Defn.Given(Nil, anon, Nil, tpl(List(init("Random", List(lit(1)))), tplBody())),
+        Term.For(
+          Term.EnumeratorsBlock(List(Enumerator.Generator(patwildcard, tinfix(lit(1), "to", lit(10))))),
+          tapply(
+            tapply("foo", lit("Hello")),
+            blk(Term.ForYield(
+              Term
+                .EnumeratorsBlock(List(Enumerator.Generator(patvar("i"), tinfix(lit(0), "to", lit(10))))),
+              tname("i")
+            ))
+          )
+        )
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
