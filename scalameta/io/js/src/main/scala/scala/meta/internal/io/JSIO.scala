@@ -130,7 +130,7 @@ object JSPath extends js.Any {
   def sep: String = js.native
   def delimiter: String = js.native
   def isAbsolute(path: String): Boolean = js.native
-  def parse(path: String): JSPath.type = js.native
+  def parse(path: String): ParsedPath = js.native
   def resolve(paths: String*): String = js.native
   def normalize(path: String): String = js.native
   def basename(path: String): String = js.native
@@ -138,6 +138,17 @@ object JSPath extends js.Any {
   def root: String = js.native
   def relative(from: String, to: String): String = js.native
   def join(first: String, more: String*): String = js.native
+}
+
+@js.native
+trait ParsedPath extends js.Object {
+  val root: String // Root of the path (e.g., "/" or "C:\")
+  val dir: String // Directory portion of the path
+  val base: String // Filename with extension
+  /* unused
+  val ext: String // Extension (including '.')
+  val name: String // Filename without extension
+   */
 }
 
 object JSIO {

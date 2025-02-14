@@ -49,7 +49,7 @@ object PlatformFileIO {
     .inNode(JSFs.readFileSync(path.toString, charset.toString))
 
   def listFiles(path: AbsolutePath): ListFiles = JSIO.inNode(
-    if (path.isFile) new ListFiles(path, Nil)
+    if (path.isFile) ListFiles(path, Nil)
     else {
       val jsArray = JSFs.readdirSync(path.toString)
       val builder = List.newBuilder[RelativePath]
@@ -59,7 +59,7 @@ object PlatformFileIO {
         builder += RelativePath(jsArray(curr))
         curr += 1
       }
-      new ListFiles(path, builder.result())
+      ListFiles(path, builder.result())
     }
   )
 
@@ -72,7 +72,7 @@ object PlatformFileIO {
     def loop(path: AbsolutePath): Unit =
       if (path.isDirectory) listFiles(path).foreach(loop) else builder += path.toRelative(root)
     loop(root)
-    new ListFiles(root, builder.result())
+    ListFiles(root, builder.result())
   }
 
   def jarRootPath(jarFile: AbsolutePath): AbsolutePath =
