@@ -114,21 +114,41 @@ class NIOPathTest extends FunSuite {
     assert(project.toFile.isDirectory)
     assert(cwd.toFile.isDirectory)
   }
-}
 
-trait NIOPathTestShared extends FunSuite {
-
-  def declareGetNameTest(file: String, root: String, cnt: Int, names: Seq[String]): Unit =
+  private val pathsWithNames =
+    if (File.separatorChar == '\\') Seq(
+      ("//foo/bar//baz/", "\\\\foo\\bar\\", 1, Seq("baz")),
+      ("//foo/bar///baz", "\\\\foo\\bar\\", 1, Seq("baz")),
+      ("/foo/bar//baz/", "\\", 3, Seq("foo", "bar", "baz")),
+      ("/foo/bar///baz", "\\", 3, Seq("foo", "bar", "baz")),
+      ("foo/bar////baz", null, 3, Seq("foo", "bar", "baz")),
+      ("c:/foo/bar///baz", "c:\\", 3, Seq("foo", "bar", "baz")),
+      ("c:\\foo\\\\bar\\baz", "c:\\", 3, Seq("foo", "bar", "baz")),
+      ("foo\\bar\\baz", null, 3, Seq("foo", "bar", "baz")),
+      ("\\\\foo\\bar\\baz", "\\\\foo\\bar\\", 1, Seq("baz"))
+    )
+    else Seq(
+      ("//foo/bar//baz/", "/", 3, Seq("foo", "bar", "baz")),
+      ("//foo/bar///baz", "/", 3, Seq("foo", "bar", "baz")),
+      ("/foo/bar/baz/", "/", 3, Seq("foo", "bar", "baz")),
+      ("/foo/bar/baz", "/", 3, Seq("foo", "bar", "baz")),
+      ("foo/bar////baz", null, 3, Seq("foo", "bar", "baz"))
+    )
+  pathsWithNames.foreach { case (file, root, cnt, names) =>
     test(s".getName: $file -> [${names.mkString(",")}]") {
-      val path = Paths.get(file)
-      val actualRoot = Option(path.getRoot).fold[String](null)(_.toString)
-      val actualNames = Seq.newBuilder[String]
-      var idx = 0
-      while (Try(path.getName(idx)) match {
-          case Success(name) => idx += 1; actualNames += name.toString; true
-          case _ => false
-        }) {}
-      assertEquals((actualRoot, actualNames.result(), path.getNameCount), (root, names, cnt))
+      try {
+        val path = Paths.get(file)
+        val actualRoot = Option(path.getRoot).fold[String](null)(_.toString)
+        val actualNames = Seq.newBuilder[String]
+        var idx = 0
+        while (Try(path.getName(idx)) match {
+            case Success(name) => idx += 1; actualNames += name.toString; true
+            case _ => false
+          }) {}
+        assertEquals((actualRoot, actualNames.result(), path.getNameCount), (root, names, cnt))
+        assertEquals(names.length, cnt)
+      } catch { case e: Throwable => fail("failed", e) }
     }
+  }
 
 }
