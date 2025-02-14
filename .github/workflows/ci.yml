@@ -32,10 +32,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        type:
-          - 'JVM'
-          - 'JS'
-          - 'Native'
         scala:
           - '2.12.20'
           - '2.13.16'
@@ -54,10 +50,14 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
-      - name: Test Parser on ${{ matrix.scala }} using ${{ matrix.type }}
-        run: sbt ++${{ matrix.scala }} tests${{ matrix.type }}/test
+      - name: Test Parser on ${{ matrix.scala }} using JVM
+        run: sbt ++${{ matrix.scala }} testsJVM/test
+      - name: Test Parser on ${{ matrix.scala }} using JS
+        run: sbt ++${{ matrix.scala }} testsJS/test
+      - name: Test Parser on ${{ matrix.scala }} using Native
+        run: sbt ++${{ matrix.scala }} testsNative/test
       - name: Test Semanticdb on ${{ matrix.scala }}
-        if: ${{ matrix.type == 'JVM' && !startsWith(matrix.scala, '3.') }}
+        if: ${{ !startsWith(matrix.scala, '3.') }}
         run: sbt ++${{ matrix.scala }} testsSemanticdb/test
   testOlderScalaOnJVM:
     runs-on: ubuntu-latest
@@ -83,7 +83,7 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
-      - name: Test Parser on ${{ matrix.scala }}
+      - name: Test Parser on ${{ matrix.scala }} using JVM
         run: sbt '++${{ matrix.scala }}!; testsJVM/test'
       - name: Test Semanticdb on ${{ matrix.scala }}
         run: sbt ++${{ matrix.scala }} testsSemanticdb/test
@@ -93,7 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: olafurpg/setup-scala@v14
-      - name: Test Parser on Windows
+      - name: Test Parser on Windows using JVM
         run: sbtx testsJVM/test
         shell: bash
       - name: Test Semanticdb on Windows
