@@ -9,6 +9,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+import scala.util.Success
+import scala.util.Try
+
 import munit.FunSuite
 
 class NIOPathTest extends FunSuite {
@@ -111,4 +114,21 @@ class NIOPathTest extends FunSuite {
     assert(project.toFile.isDirectory)
     assert(cwd.toFile.isDirectory)
   }
+}
+
+trait NIOPathTestShared extends FunSuite {
+
+  def declareGetNameTest(file: String, root: String, cnt: Int, names: Seq[String]): Unit =
+    test(s".getName: $file -> [${names.mkString(",")}]") {
+      val path = Paths.get(file)
+      val actualRoot = Option(path.getRoot).fold[String](null)(_.toString)
+      val actualNames = Seq.newBuilder[String]
+      var idx = 0
+      while (Try(path.getName(idx)) match {
+          case Success(name) => idx += 1; actualNames += name.toString; true
+          case _ => false
+        }) {}
+      assertEquals((actualRoot, actualNames.result(), path.getNameCount), (root, names, cnt))
+    }
+
 }
