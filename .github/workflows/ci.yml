@@ -96,6 +96,9 @@ jobs:
       - name: Test Parser on Windows using JVM
         run: sbtx testsJVM/test
         shell: bash
+      - name: Test Parser on Windows using JS
+        run: sbtx testsJS/test
+        shell: bash
       - name: Test Semanticdb on Windows
         run: sbtx testsSemanticdb/test
         shell: bash

@@ -20,14 +20,14 @@ import typecheckError.Options.WithPositions
 
 class ErrorSuite extends TreeSuiteBase {
   test("val q\"type name[A] = B\"") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val q"type $name[$X] = $Y" = q"type List[+A] = List[A]"
     """
-      ).nl2lf
+      )
         // Scala 2.13.7 adds additional message
         .replaceAll(
           "Identifiers that begin with uppercase are not pattern variables but match the value in scope.\r?\n",
@@ -39,21 +39,21 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("q\"foo + class\"")(assertEquals(
+  test("q\"foo + class\"")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"foo + class"
     """
-    ).nl2lf,
+    ),
     """|<macro>:4: `;` expected but `class` found
        |      q"foo + class"
-       |              ^""".stripMargin.nl2lf
+       |              ^""".stripMargin
   ))
 
   test("q\"foo(x)\" when x has incompatible type") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -62,17 +62,17 @@ class ErrorSuite extends TreeSuiteBase {
       val x = new Dummy
       q"foo($x)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:6: type mismatch when unquoting;
          | found   : Dummy
          | required: scala.meta.Term
          |      q"foo($x)"
-         |            ^""".stripMargin.nl2lf
+         |            ^""".stripMargin
     )
   }
 
   test("q\"x\" when x has incompatible type") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -81,17 +81,17 @@ class ErrorSuite extends TreeSuiteBase {
       val x = new Dummy
       q"$x"
     """
-      ).nl2lf,
+      ),
       """|<macro>:6: type mismatch when unquoting;
          | found   : Dummy
          | required: scala.meta.Stat
          |      q"$x"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
   test("q\"foo(..xs)\" when xs has incompatible type") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -100,17 +100,17 @@ class ErrorSuite extends TreeSuiteBase {
       val xs = List(new Dummy)
       q"foo(..$xs)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:6: type mismatch when unquoting;
          | found   : List[Dummy]
          | required: scala.meta.Term.ArgClause
          |      q"foo(..$xs)"
-         |           ^""".stripMargin.nl2lf
+         |           ^""".stripMargin
     )
   }
 
   test("q\"foo(xs)\" when xs has incompatible type") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -118,17 +118,17 @@ class ErrorSuite extends TreeSuiteBase {
       val xs = List(q"x")
       q"foo($xs)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : List[scala.meta.Term.Name]
          | required: scala.meta.Term
          |      q"foo($xs)"
-         |            ^""".stripMargin.nl2lf
+         |            ^""".stripMargin
     )
   }
 
   test("q\"xs\" when xs has incompatible type") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -136,17 +136,17 @@ class ErrorSuite extends TreeSuiteBase {
       val xs = List(q"x")
       q"$xs"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : List[scala.meta.Term.Name]
          | required: scala.meta.Stat
          |      q"$xs"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
   test("q\"...xss\"") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -154,17 +154,17 @@ class ErrorSuite extends TreeSuiteBase {
       val xss = List(List(q"x"))
       q"...$xss"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: rank mismatch when unquoting;
          | found   : ...$
          | required: $ or ..$
          |      q"...$xss"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
   test("q\"xss\"") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -172,17 +172,17 @@ class ErrorSuite extends TreeSuiteBase {
       val xss = List(List(q"x"))
       q"$xss"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : List[List[scala.meta.Term.Name]]
          | required: scala.meta.Stat
          |      q"$xss"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
   test("q\"foo[..terms]\"") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -190,17 +190,17 @@ class ErrorSuite extends TreeSuiteBase {
       val terms = List(q"T", q"U")
       q"foo[..$terms]"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : List[scala.meta.Term.Name]
          | required: scala.meta.Type.ArgClause
          |      q"foo[..$terms]"
-         |           ^""".stripMargin.nl2lf
+         |           ^""".stripMargin
     )
   }
 
   test("q\"foo(x, ..ys, z, ..ts)\"") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -213,18 +213,18 @@ class ErrorSuite extends TreeSuiteBase {
           println(z)
       }
     """
-      ).nl2lf,
+      ),
       """|<macro>:6: rank mismatch when unquoting;
          | found   : ..$
          | required: $
          |Note that you can extract a list into an unquote when pattern matching,
          |it just cannot follow another list either directly or indirectly.
          |        case q"$_($x, ..$ys, $z, ..$ts)" =>
-         |                                 ^""".stripMargin.nl2lf
+         |                                 ^""".stripMargin
     )
   }
 
-  test("q\"\"\" \"$x\" \"\"\"")(assertEquals(
+  test("q\"\"\" \"$x\" \"\"\"")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
@@ -232,45 +232,41 @@ class ErrorSuite extends TreeSuiteBase {
       val x = "hello"
       qQQQ "$x" QQQ
     """
-    ).nl2lf,
+    ),
     """|<macro>:5: can't unquote into string literals
       |      qQQQ "$x" QQQ
-      |            ^""".replace("QQQ", "\"\"\"").stripMargin.nl2lf
+      |            ^""".replace("QQQ", "\"\"\"").stripMargin
   ))
 
-  test("q\"val name = foo\"") {
-    assertEquals(
-      typecheckError(
-        """
+  test("q\"val name = foo\"")(assertNoDiff(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val name = q"x"
       q"val $name = foo"
     """
-      ).nl2lf,
-      """|<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
-         |      q"val $name = foo"
-         |            ^""".stripMargin.nl2lf
-    )
-  }
+    ),
+    """|<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
+       |      q"val $name = foo"
+       |            ^""".stripMargin
+  ))
 
-  test("q\"var name = foo\"") {
-    assertEquals(
-      typecheckError(
-        """
+  test("q\"var name = foo\"")(assertNoDiff(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val name = q"x"
       q"var $name = foo"
     """
-      ).nl2lf,
-      """|<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
-         |      q"var $name = foo"
-         |            ^""".stripMargin.nl2lf
-    )
-  }
+    ),
+    """|<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
+       |      q"var $name = foo"
+       |            ^""".stripMargin
+  ))
 
-  test("p\"name: T\"")(assertEquals(
+  test("p\"name: T\"")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
@@ -278,14 +274,14 @@ class ErrorSuite extends TreeSuiteBase {
       val name = q"x"
       p"$name: T"
     """
-    ).nl2lf,
+    ),
     """|<macro>:5: can't unquote a name here, use a pattern instead (e.g. p"x")
        |      p"$name: T"
-       |        ^""".stripMargin.nl2lf
+       |        ^""".stripMargin
   ))
 
   test("""q"qname" when qname has incompatible type """) {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -293,17 +289,17 @@ class ErrorSuite extends TreeSuiteBase {
       val name = t"x"
       q"$name"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : scala.meta.Type.Name
          | required: scala.meta.Stat
          |      q"$name"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
   test("""q"expr: tpe" when tpe has incompatible type """) {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -311,17 +307,17 @@ class ErrorSuite extends TreeSuiteBase {
       val tpe = q"T"
       q"expr: $tpe"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : scala.meta.Term.Name
          | required: scala.meta.Type
          |      q"expr: $tpe"
-         |              ^""".stripMargin.nl2lf
+         |              ^""".stripMargin
     )
   }
 
   test("""q"expr: tpe" when expr has incompatible type """) {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -329,16 +325,16 @@ class ErrorSuite extends TreeSuiteBase {
       val expr = t"x"
       q"$expr: tpe"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : scala.meta.Type.Name
          | required: scala.meta.Term
          |      q"$expr: tpe"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
-  test("""q"expr: tpes" """)(assertEquals(
+  test("""q"expr: tpes" """)(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
@@ -346,14 +342,14 @@ class ErrorSuite extends TreeSuiteBase {
       val tpes = List(q"T")
       q"expr: ..$tpes"
     """
-    ).nl2lf,
+    ),
     """|<macro>:5: `identifier` expected but `ellipsis` found
        |      q"expr: ..$tpes"
-       |              ^""".stripMargin.nl2lf
+       |              ^""".stripMargin
   ))
 
   test("""q"expr.name" when name has incompatible type """) {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -361,17 +357,17 @@ class ErrorSuite extends TreeSuiteBase {
       val name = t"T"
       q"expr.$name"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : scala.meta.Type.Name
          | required: scala.meta.Term.Name
          |      q"expr.$name"
-         |             ^""".stripMargin.nl2lf
+         |             ^""".stripMargin
     )
   }
 
   test("""q"expr.name" when expr has incompatible type """) {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -379,16 +375,16 @@ class ErrorSuite extends TreeSuiteBase {
       val expr = t"T"
       q"$expr.name"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : scala.meta.Type.Name
          | required: scala.meta.Term
          |      q"$expr.name"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
-  test("""q"expr.names" """)(assertEquals(
+  test("""q"expr.names" """)(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
@@ -396,14 +392,14 @@ class ErrorSuite extends TreeSuiteBase {
       val names = List(q"T")
       q"expr. ..$names"
     """
-    ).nl2lf,
+    ),
     """|<macro>:5: `identifier` expected but `ellipsis` found
        |      q"expr. ..$names"
-       |              ^""".stripMargin.nl2lf
+       |              ^""".stripMargin
   ))
 
   test("""p"pat @ pat"""") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -412,30 +408,30 @@ class ErrorSuite extends TreeSuiteBase {
       val pat2 = p"y"
       p"$pat1 @ $pat2"
     """
-      ).nl2lf,
+      ),
       """|<macro>:6: can't unquote a name here, use a pattern instead (e.g. p"x")
          |      p"$pat1 @ $pat2"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
   test("""p"ref[..tpes](..pats)""") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
     """
-      ).nl2lf,
+      ),
       """|<macro>:4: pattern must be a value or have parens: x[A, B]
          |      val p"$ref[..$tpes](..$pats)" = p"x[A, B]"
-         |                                               ^""".stripMargin.nl2lf
+         |                                               ^""".stripMargin
     )
   }
 
   test("""p"pat: tpe"""") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -444,49 +440,49 @@ class ErrorSuite extends TreeSuiteBase {
       val tpe = t"T"
       p"$pat: $tpe"
     """
-      ).nl2lf,
+      ),
       """|<macro>:6: can't unquote a name here, use a pattern instead (e.g. p"x")
          |      p"$pat: $tpe"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
   test("p\"case X: T =>\"") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val p"case $X: T => " = p"case x: T =>"
     """
-      ).nl2lf // Scala 2.13.7 adds additional message
+      ) // Scala 2.13.7 adds additional message
         .replaceAll(
           "Identifiers that begin with uppercase are not pattern variables but match the value in scope.\r?\n",
           ""
         ),
       """|<macro>:4: not found: value X
          |      val p"case $X: T => " = p"case x: T =>"
-         |                  ^""".stripMargin.nl2lf
+         |                  ^""".stripMargin
     )
   }
 
   test("""q"..mods def this(...paramss) = expr"""") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"private final def this(x: X, y: Y) = foo"
     """
-      ).nl2lf,
+      ),
       """|<macro>:4: `this` expected but `identifier` found
          |      q"private final def this(x: X, y: Y) = foo"
-         |                                             ^""".stripMargin.nl2lf
+         |                                             ^""".stripMargin
     )
   }
 
   test("unquote List[T] into Option[List[T]]") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -494,7 +490,7 @@ class ErrorSuite extends TreeSuiteBase {
       val stats = List(q"def x = 42")
       q"class C { $stats }"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : List[scala.meta.Defn.Def]
          | required: scala.meta.Stat
@@ -504,7 +500,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("unquote Option[List[T]] into Option[List[T]]") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -512,31 +508,31 @@ class ErrorSuite extends TreeSuiteBase {
       val stats = Some(List(q"def x = 42"))
       q"class C { $stats }"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : Some[List[scala.meta.Defn.Def]]
          | required: scala.meta.Stat
          |      q"class C { $stats }"
-         |                  ^""".stripMargin.nl2lf
+         |                  ^""".stripMargin
     )
   }
 
   test("q\"package foo {}; package bar {}\"") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"package foo {}; package bar {}"
     """
-      ).nl2lf,
+      ),
       """|<macro>:4: these statements can't be mixed together, try source"..." instead
          |      q"package foo {}; package bar {}"
-         |        ^""".stripMargin.nl2lf
+         |        ^""".stripMargin
     )
   }
 
-  test("unquote into character literals")(assertEquals(
+  test("unquote into character literals")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
@@ -544,13 +540,13 @@ class ErrorSuite extends TreeSuiteBase {
       val foo = 'f'
       q"'$foo'"
     """
-    ).nl2lf,
+    ),
     """|<macro>:5: can't unquote into character literals
        |      q"'$foo'"
-       |         ^""".stripMargin.nl2lf
+       |         ^""".stripMargin
   ))
 
-  test("unquote into single-line string literals")(assertEquals(
+  test("unquote into single-line string literals")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
@@ -558,13 +554,13 @@ class ErrorSuite extends TreeSuiteBase {
       val foo = "foo"
       qQQQ "$foo" QQQ
     """
-    ).nl2lf,
+    ),
     """|<macro>:5: can't unquote into string literals
        |      qQQQ "$foo" QQQ
-       |            ^""".stripMargin.replace("QQQ", "\"\"\"").nl2lf
+       |            ^""".stripMargin.replace("QQQ", "\"\"\"")
   ))
 
-  test("unquote into single-line string interpolations")(assertEquals(
+  test("unquote into single-line string interpolations")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
@@ -572,14 +568,14 @@ class ErrorSuite extends TreeSuiteBase {
       val foo = "foo"
       qQQQ s"$foo" QQQ
     """
-    ).nl2lf,
+    ),
     """|<macro>:5: can't unquote into string interpolations
       |      qQQQ s"$foo" QQQ
       |             ^""".replace("QQQ", "\"\"\"").stripMargin
   ))
 
   test("unquote into single-line string interpolations, with braces") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -587,7 +583,7 @@ class ErrorSuite extends TreeSuiteBase {
       val foo = "foo"
       qQQQ s"${foo}" QQQ
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: can't unquote into string interpolations
          |      qQQQ s"${foo}" QQQ
          |             ^""".replace("QQQ", "\"\"\"").stripMargin
@@ -595,7 +591,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("unquote into single-line string interpolations, with braces amd complex expression") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -603,7 +599,7 @@ class ErrorSuite extends TreeSuiteBase {
       val foo = "foo"
       qQQQ s"${foo + foo}" QQQ
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: can't unquote into string interpolations
          |      qQQQ s"${foo + foo}" QQQ
          |             ^""".replace("QQQ", "\"\"\"").stripMargin
@@ -611,7 +607,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("unquote into xml literals") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -619,7 +615,7 @@ class ErrorSuite extends TreeSuiteBase {
       val foo = "foo"
       q"<$foo></foo>"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: type mismatch when unquoting;
          | found   : String
          | required: scala.meta.Term.Name
@@ -628,7 +624,7 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("unquote into backquoted identifiers")(assertEquals(
+  test("unquote into backquoted identifiers")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
@@ -636,14 +632,14 @@ class ErrorSuite extends TreeSuiteBase {
       val foo = "foo"
       q"`$foo`"
     """
-    ).nl2lf,
+    ),
     """|<macro>:5: can't unquote into quoted identifiers
        |      q"`$foo`"
        |         ^""".stripMargin
   ))
 
   test("unquote into single-line comments") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -651,7 +647,7 @@ class ErrorSuite extends TreeSuiteBase {
       val content = "content"
       q"// $content has been unquoted"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: can't unquote into single-line comments
          |      q"// $content has been unquoted"
          |           ^""".stripMargin
@@ -659,7 +655,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("unquote into multiline comments") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -667,41 +663,41 @@ class ErrorSuite extends TreeSuiteBase {
       val content = "content"
       q"/* $content has been unquoted */"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: can't unquote into multi-line comments
          |      q"/* $content has been unquoted */"
          |           ^""".stripMargin
     )
   }
 
-  test("weirdness after dot-dot")(assertEquals(
+  test("weirdness after dot-dot")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"..x${???}"
     """
-    ).nl2lf,
+    ),
     """|<macro>:4: $, ( or { expected but identifier found
        |      q"..x${???}"
        |          ^""".stripMargin
   ))
 
-  test("weirdness after triple-dor")(assertEquals(
+  test("weirdness after triple-dor")(assertNoDiff(
     typecheckError(
       """
       import scala.meta._
       import scala.meta.dialects.Scala211
       q"foo(...x${???})"
     """
-    ).nl2lf,
+    ),
     """|<macro>:4: $, ( or { expected but identifier found
        |      q"foo(...x${???})"
        |               ^""".stripMargin
   ))
 
   test("x before triple-dot") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -709,7 +705,7 @@ class ErrorSuite extends TreeSuiteBase {
       val xss = List(List(q"x"))
       q"foo(x, ...$xss)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: rank mismatch when unquoting;
          | found   : ...$
          | required: $ or ..$
@@ -719,7 +715,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("no-dot before triple-dot") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -728,7 +724,7 @@ class ErrorSuite extends TreeSuiteBase {
       val xss = List(List(q"x"))
       q"foo($x, ...$xss)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:6: rank mismatch when unquoting;
          | found   : ...$
          | required: $ or ..$
@@ -738,7 +734,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("dot-dot before triple-dot") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -747,7 +743,7 @@ class ErrorSuite extends TreeSuiteBase {
       val xss = List(List(q"x"))
       q"foo(..$xs, ...$xss)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:6: rank mismatch when unquoting;
          | found   : ...$
          | required: $ or ..$
@@ -756,24 +752,22 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
-  test("triple-dot before triple-dot") {
-    assertEquals(
-      typecheckError(
-        """
+  test("triple-dot before triple-dot")(assertNoDiff(
+    typecheckError(
+      """
       import scala.meta._
       import scala.meta.dialects.Scala211
       val xss = List(List(q"x"))
       q"foo(...$xss, ...$xss)"
     """
-      ).nl2lf,
-      """|<macro>:5: `)` expected but `,` found
-         |      q"foo(...$xss, ...$xss)"
-         |                   ^""".stripMargin
-    )
-  }
+    ),
+    """|<macro>:5: `)` expected but `,` found
+       |      q"foo(...$xss, ...$xss)"
+       |                   ^""".stripMargin
+  ))
 
   test("triple-dot inside triple-dot (1)") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -782,7 +776,7 @@ class ErrorSuite extends TreeSuiteBase {
         case q"$_(...$argss)(...$_)" =>
       }
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: rank mismatch when unquoting;
          | found   : ..$
          | required: $
@@ -794,7 +788,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("triple-dot inside triple-dot (2)") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -803,7 +797,7 @@ class ErrorSuite extends TreeSuiteBase {
         case q"$_(...$argss)(foo)(...$_)" =>
       }
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: rank mismatch when unquoting;
          | found   : ..$
          | required: $
@@ -815,7 +809,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("triple-dot in Term.ApplyInfix") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -823,7 +817,7 @@ class ErrorSuite extends TreeSuiteBase {
       val argss = List(List("y"))
       q"x + (...$argss)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: rank mismatch when unquoting;
          | found   : ...$
          | required: $ or ..$
@@ -833,7 +827,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("triple-dot in Pat.Extract") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -841,7 +835,7 @@ class ErrorSuite extends TreeSuiteBase {
       val patss = List(List("x"))
       p"Foo(...$patss)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: rank mismatch when unquoting;
          | found   : ...$
          | required: $ or ..$
@@ -851,7 +845,7 @@ class ErrorSuite extends TreeSuiteBase {
   }
 
   test("triple-dot in Pat.ExtractInfix") {
-    assertEquals(
+    assertNoDiff(
       typecheckError(
         """
       import scala.meta._
@@ -859,7 +853,7 @@ class ErrorSuite extends TreeSuiteBase {
       val patss = List(List("x"))
       p"x Foo (...$patss)"
     """
-      ).nl2lf,
+      ),
       """|<macro>:5: rank mismatch when unquoting;
          | found   : ...$
          | required: $ or ..$
