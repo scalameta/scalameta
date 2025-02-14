@@ -24,6 +24,7 @@ class NIOPathTest extends FunSuite {
   test(".toString") {
     assertEquals(file.toString, "build.sbt")
     assertEquals(project.toString, "project")
+    assertEquals(abs.toString, s"${rootString}bar${File.separator}foo")
     assertEquals(nonNormalizedFile.toString, PathIO.fromUnix("project/../bin/scalafmt"))
   }
 
@@ -34,7 +35,7 @@ class NIOPathTest extends FunSuite {
   }
   test(".getRoot") {
     assertEquals(file.getRoot, null)
-    assert(Paths.get("").toAbsolutePath.getRoot != null)
+    assertNotEquals(Paths.get("").toAbsolutePath.getRoot, null)
   }
   test(".getFileName") {
     assertEquals(file.getFileName.toString, "build.sbt")
@@ -43,17 +44,17 @@ class NIOPathTest extends FunSuite {
   }
   test(".getParent")(assertEquals(abs.getParent.getFileName.toString, "bar"))
   test(".getNameCount") {
-    assert(Paths.get(rootString).getNameCount == 0)
-    assert(Paths.get("").getNameCount == 1)
-    assertEquals(abs.getNameCount, 2)
-    assertEquals(nonNormalizedFile.getNameCount, 4)
+    assertEquals(Paths.get(rootString).getNameCount, 0, rootString)
+    assertEquals(Paths.get("").getNameCount, 1)
+    assertEquals(abs.getNameCount, 2, abs)
+    assertEquals(nonNormalizedFile.getNameCount, 4, nonNormalizedFile)
   }
   test(".getName(index)") {
-    assert(file.getName(0).toString == "build.sbt")
-    assert(abs.getName(0).toString == "bar")
-    assert(abs.getName(1).toString == "foo")
+    assertEquals(file.getName(0).toString, "build.sbt", file)
+    assertEquals(abs.getName(0).toString, "bar", abs)
+    assertEquals(abs.getName(1).toString, "foo", abs)
   }
-  test(".subpath")(assert(abs.subpath(0, 1).toString == "bar"))
+  test(".subpath")(assertEquals(abs.subpath(0, 1).toString, "bar", abs))
   test(".startsWith(Path)") {
     assert(!abs.startsWith("bar"))
     assert(!file.startsWith("build"))
@@ -65,18 +66,18 @@ class NIOPathTest extends FunSuite {
     assert(file.endsWith("build.sbt"))
   }
   test(".normalize") {
-    assert(file.resolve("foo").resolve("..").normalize().toString == "build.sbt")
-    assert(nonNormalizedFile.normalize().toString == PathIO.fromUnix("bin/scalafmt"))
+    assertEquals(file.resolve("foo").resolve("..").normalize().toString, "build.sbt")
+    assertEquals(nonNormalizedFile.normalize().toString, PathIO.fromUnix("bin/scalafmt"))
   }
   test(".resolve") {
     assert(!file.resolve("bar").isAbsolute)
     assert(abs.resolve("bar").isAbsolute)
   }
   test(".resolveSibling(Path)") {
-    assert(file.resolveSibling("build.scala").toString == "build.scala")
-    assert(abs.resolveSibling("foobar") == abs.getParent.resolve("foobar"))
+    assertEquals(file.resolveSibling("build.scala").toString, "build.scala")
+    assertEquals(abs.resolveSibling("foobar"), abs.getParent.resolve("foobar"))
   }
-  test(".relativize(Path)")(assert(abs.relativize(abs.resolve("qux")) == Paths.get("qux")))
+  test(".relativize(Path)")(assertEquals(abs.relativize(abs.resolve("qux")), Paths.get("qux")))
   test("file.toUri")(
     assert(file.toUri.getPath.endsWith("build.sbt"))
     // NOTE: Paths API seems to work inconsistently under Scala Native.
