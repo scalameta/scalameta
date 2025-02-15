@@ -4,7 +4,6 @@ import scala.concurrent.Future
 import scala.concurrent.Promise
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
-import scala.scalajs.js.annotation.JSImport.Namespace
 
 /**
  * Facade for the native nodejs process API
@@ -28,7 +27,7 @@ trait JSProcess extends js.Any {
  *   https://nodejs.org/api/fs.html
  */
 @js.native
-@JSImport("fs", Namespace)
+@JSImport("fs", JSImport.Namespace)
 object JSFs extends js.Any {
 
   /**
@@ -95,6 +94,13 @@ object JSFs extends js.Any {
 }
 
 @js.native
+@JSImport("fs", "promises")
+object JSFsPromises extends js.Object {
+  def readFile(path: String, encoding: String): js.Promise[String] = js.native
+  def writeFile(path: String, data: String, encoding: String): js.Promise[Unit] = js.native
+}
+
+@js.native
 @JSImport("os", JSImport.Namespace)
 object JSOS extends js.Object {
   def tmpdir(): String = js.native
@@ -108,7 +114,7 @@ object JSOS extends js.Object {
  *   https://nodejs.org/api/fs.html#fs_class_fs_stats
  */
 @js.native
-@JSImport("fs", Namespace)
+@JSImport("fs", JSImport.Namespace)
 class JSStats extends js.Any {
   def isFile(): Boolean = js.native
   def isDirectory(): Boolean = js.native
@@ -125,7 +131,7 @@ class JSStats extends js.Any {
  *   https://nodejs.org/api/path.html
  */
 @js.native
-@JSImport("path", Namespace)
+@JSImport("path", JSImport.Namespace)
 object JSPath extends js.Any {
   def sep: String = js.native
   def delimiter: String = js.native
@@ -187,5 +193,10 @@ object JSIO {
 
     promise.future
   }
+
+  def readFileAsync(path: String, encoding: String): Future[String] = JSFsPromises
+    .readFile(path, encoding).toFuture
+  def writeFileAsync(path: String, data: String, encoding: String): Future[Unit] = JSFsPromises
+    .writeFile(path, data, encoding).toFuture
 
 }
