@@ -6,6 +6,9 @@ on:
       tag:
         description: "Git tag to publish (e.g., v1.2.3)"
         required: true
+      version:
+        description: "Scalameta version (e.g., 1.2.3)"
+        required: true
       project:
         description: "Project name to publish (e.g., coreJS, lib)"
         required: true
@@ -28,7 +31,7 @@ jobs:
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
       - name: Publish ${{ github.event.inputs.project }} to Sonatype
-        run: sbt ci-release
+        run: sbt -Dscalameta.version=${{ github.event.inputs.version }} ci-release
         env:
           CI_RELEASE: +${{ github.event.inputs.project }}/publishSigned
           SCALAMETA_PLATFORM: ${{ matrix.platform }}
