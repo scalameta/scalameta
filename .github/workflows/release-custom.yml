@@ -4,13 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Git tag to publish (e.g., v1.2.3)"
+        description: "Git tag (e.g., v1.2.3)"
         required: true
       version:
         description: "Scalameta version (e.g., 1.2.3)"
         required: true
       project:
-        description: "Project name to publish (e.g., coreJS, lib)"
+        description: "Project name (e.g., trees)"
+        required: true
+      platform:
+        description: "Platform name (JS, JVM, Native)"
         required: true
 
 jobs:
@@ -33,8 +36,9 @@ jobs:
       - name: Publish ${{ github.event.inputs.project }} to Sonatype
         run: sbt -Dscalameta.version=${{ github.event.inputs.version }} ci-release
         env:
-          CI_RELEASE: +${{ github.event.inputs.project }}/publishSigned
-          SCALAMETA_PLATFORM: ${{ matrix.platform }}
+          CI_COMMIT_TAG: ${{ github.event.inputs.tag }}
+          CI_RELEASE: +${{ github.event.inputs.project }}${{ github.event.inputs.platform }}/publishSigned
+          SCALAMETA_PLATFORM: ${{ github.event.inputs.platform }}
           GIT_USER: scalameta@scalameta.org
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
