@@ -1,0 +1,44 @@
+name: Release specific project/tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to publish (e.g., v1.2.3)"
+        required: true
+      project:
+        description: "Project name to publish (e.g., coreJS, lib)"
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tag ${{ github.event.inputs.tag }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag }}
+      - uses: olafurpg/setup-scala@v14
+      - name: Set up JVM
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+          cache: 'sbt'
+      - uses: sbt/setup-sbt@v1
+      - name: Publish ${{ github.event.inputs.project }} to Sonatype
+        run: sbt ci-release
+        env:
+          CI_RELEASE: +${{ github.event.inputs.project }}/publishSigned
+          SCALAMETA_PLATFORM: ${{ matrix.platform }}
+          GIT_USER: scalameta@scalameta.org
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          GITHUB_DEPLOY_KEY: ${{ secrets.GITHUB_DEPLOY_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS:
+            ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON:
+            ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
