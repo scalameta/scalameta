@@ -3,9 +3,6 @@ name: Release specific project/tag
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: "Git tag (e.g., v1.2.3)"
-        required: true
       version:
         description: "Scalameta version (e.g., 1.2.3)"
         required: true
@@ -16,18 +13,18 @@ on:
         description: "Platform name (JS, JVM, Native)"
         required: true
       scala:
-        description: "Scala version (2.13 etc.)"
+        description: "Scala version (e.g., 2.13.16)"
         required: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out tag ${{ github.event.inputs.tag }}
+      - name: Check out tag v${{ github.event.inputs.version }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.tag }}
+          ref: v${{ github.event.inputs.version }}
       - uses: olafurpg/setup-scala@v14
       - name: Set up JVM
         uses: actions/setup-java@v4
@@ -39,7 +36,7 @@ jobs:
       - name: Publish ${{ github.event.inputs.project }} to Sonatype
         run: sbt -Dscalameta.version=${{ github.event.inputs.version }} ci-release
         env:
-          CI_COMMIT_TAG: ${{ github.event.inputs.tag }}
+          CI_COMMIT_TAG: v${{ github.event.inputs.version }}
           CI_RELEASE: ${{ github.event.inputs.scala != '' && format('++{0} ', github.event.inputs.scala) || '+' }}${{ github.event.inputs.project }}${{ github.event.inputs.platform }}/publishSigned
           SCALAMETA_PLATFORM: ${{ github.event.inputs.platform }}
           GIT_USER: scalameta@scalameta.org
