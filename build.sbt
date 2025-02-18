@@ -108,18 +108,19 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   mimaPreviousArtifacts := Set.empty,
   description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
-).dependsOn(semanticdbShared, io.jvm)
+).dependsOn(semanticdbShared.jvm, io.jvm)
 
-lazy val semanticdbShared = project.in(file("semanticdb/semanticdb")).settings(
-  moduleName := "semanticdb-shared",
-  sharedSettings,
-  publishJVMSettings,
-  libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
-  crossScalaVersions := EarliestScala2Versions,
-  protobufSettings,
-  mimaPreviousArtifacts := Set.empty,
-  description := "Library defining SemanticDB data structures"
-).dependsOn(scalameta.jvm)
+lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/semanticdb"))
+  .settings(
+    moduleName := "semanticdb-shared",
+    sharedSettings,
+    publishJVMSettings,
+    libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
+    crossScalaVersions := EarliestScala2Versions,
+    protobufSettings,
+    mimaPreviousArtifacts := Set.empty,
+    description := "Library defining SemanticDB data structures"
+  ).dependsOn(scalameta).nativeSettings(nativeSettings).jsSettings(commonJsSettings)
 
 lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).settings(
   moduleName := "semanticdb-scalac",
@@ -165,7 +166,7 @@ lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
   mimaPreviousArtifacts := Set.empty,
   description := "Prints SemanticDB files",
   mainClass := Some("scala.meta.cli.Metap")
-).dependsOn(semanticdbShared)
+).dependsOn(semanticdbShared.jvm)
 
 lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   moduleName := "semanticdb-metacp",
@@ -568,7 +569,7 @@ lazy val protobufSettings = Def.settings(
       true // Don't append filename to package
     )._2
   )),
-  Compile / PB.protoSources := Seq(file("semanticdb/semanticdb/src/main/proto")),
+  Compile / PB.protoSources := Seq(file("semanticdb/semanticdb/shared/src/main/proto")),
   PB.additionalDependencies := Nil,
   libraryDependencies ++= {
     val scalapbVersion =
