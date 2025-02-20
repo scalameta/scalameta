@@ -3,6 +3,8 @@ package scala.meta.tests.prettyprinters
 import scala.meta._
 import scala.meta.internal.prettyprinters.TreeSyntax
 
+import java.util.regex.Pattern
+
 /**
  * This class, unlike similar SyntacticSuite, does not reset origins. Instead it uses runTestAssert
  * to force reprinting of syntax.
@@ -12,27 +14,27 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
+  private val regexLineBeg = Pattern.compile("^", Pattern.MULTILINE)
+
   private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String = null)(implicit
       loc: munit.Location
   ): Unit = {
     val stat = statStr.trim // make sure no trailing newlines
-    test(s"${loc.line}: $stat") {
-      val sep = if (needNL) "\n" else ""
+    def testWithSuffix(ok: Boolean)(suffix: String): Unit = test(s"${loc.line}: $stat [$suffix]") {
       val statSyntax = Option(syntaxStr).getOrElse(stat).replace("\n", "\n  ")
 
+      val indentedSuffix = regexLineBeg.matcher(suffix).replaceAll("  ")
       val expectedSyntax =
         s"""|{
-            |  $statSyntax$sep
-            |  {
-            |    a
-            |  }
+            |  $statSyntax${if (needNL && ok) "\n" else ""}
+            |$indentedSuffix
             |}""".stripMargin.lf2nl
 
-      val treeWithSemi = templStat(s"{$stat;{a}}")
+      val treeWithSemi = templStat(s"{$stat;$suffix}")
       val treeWithSemiStructure = treeWithSemi.structure
       assertNoDiff(TreeSyntax.reprint(treeWithSemi).toString, expectedSyntax)
 
-      def getTreeWithNL() = templStat(s"{$stat\n{a}}")
+      def getTreeWithNL() = templStat(s"{$stat\n$suffix}")
       if (needNL) scala.util.Try(getTreeWithNL())
         .foreach(treeWithNL => assertNotEquals(treeWithNL.structure, treeWithSemiStructure))
       else {
@@ -41,6 +43,23 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
         assertNoDiff(treeWithNL.structure, treeWithSemiStructure)
       }
     }
+    testWithSuffix(ok = true)(
+      """|{
+         |  a
+         |}""".stripMargin
+    )
+    testWithSuffix(ok = false)(
+      """|{
+         |  a
+         |} + {
+         |  b
+         |}""".stripMargin
+    )
+    testWithSuffix(ok = false)(
+      """|{
+         |  a
+         |}.b""".stripMargin
+    )
   }
 
   private def testBlockAddNL(t: String, expected: String = null)(implicit loc: munit.Location) =
