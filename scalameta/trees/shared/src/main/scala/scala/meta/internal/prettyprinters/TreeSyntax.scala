@@ -1078,15 +1078,14 @@ object TreeSyntax {
     implicit def syntaxCases: Syntax[Seq[CaseTree]] = Syntax(cases => r(cases.map(i(_))))
 
     private def printStats(stats: Seq[Stat]) = r {
-      val builder = List.newBuilder[Show.Result]
       var prevStat: Stat = null
-      stats.foreach { stat =>
-        if (stat.is[Term.Block] && null != prevStat && guessNeedsLineSep(prevStat)) builder +=
-          System.lineSeparator
-        builder += i(stat)
+      stats.map { stat =>
+        val showStat = i(stat)
+        val needNL = null != prevStat && showStat.headChar.contains('{') &&
+          guessNeedsLineSep(prevStat)
         prevStat = stat
+        if (needNL) n(showStat) else showStat
       }
-      builder.result()
     }
 
     private def printCaps(captures: List[Term.Ref], prefix: String = ""): Show.Result =

@@ -50,34 +50,44 @@ private[meta] object Show {
       sb.toString
     }
     final def isEmpty: Boolean = this eq None
+    def headChar: Option[Char]
   }
 
   final case object None extends Result {
     override def desc: String = "None"
+    def headChar: Option[Char] = Option.empty
   }
   final case class Str(value: String) extends Result {
     override def desc: String = s"Str($value)"
+    def headChar: Option[Char] = value.headOption
   }
   final case class Sequence(xs: Result*) extends Result {
     override def desc: String = s"Sequence(#${xs.length})"
+    def headChar: Option[Char] = xs.view.flatMap(_.headChar).headOption
   }
   final case class Repeat(xs: Seq[Result], sep: String) extends Result {
     override def desc: String = s"Repeat(#${xs.length}, s=$sep)"
+    def headChar: Option[Char] = xs.view.flatMap(_.headChar).headOption
   }
   final case class Indent(res: Result) extends Result {
     override def desc: String = s"Indent(r=${res.desc})"
+    def headChar: Option[Char] = res.headChar
   }
   final case class Newline(res: Result) extends Result {
     override def desc: String = s"Newline(r=${res.desc})"
+    def headChar: Option[Char] = Option.empty
   }
   final case class Meta(data: Any, res: Result) extends Result {
     override def desc: String = s"Meta(d=$data, r=${res.desc})"
+    def headChar: Option[Char] = res.headChar
   }
   final case class Wrap(prefix: String, res: Result, suffix: String) extends Result {
     override def desc: String = s"Wrap(p=$prefix, r=${res.desc}, s=$suffix)"
+    def headChar: Option[Char] = prefix.headOption.orElse(res.headChar)
   }
   final case class Function(fn: StringBuilder => Result) extends Result {
     override def desc: String = s"Function(...)"
+    def headChar: Option[Char] = Option.empty
   }
 
   def apply[T](f: T => Result): Show[T] = new Show[T] {
