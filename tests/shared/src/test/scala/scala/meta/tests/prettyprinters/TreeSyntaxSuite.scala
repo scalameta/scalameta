@@ -3,8 +3,6 @@ package scala.meta.tests.prettyprinters
 import scala.meta._
 import scala.meta.internal.prettyprinters.TreeSyntax
 
-import java.util.regex.Pattern
-
 /**
  * This class, unlike similar SyntacticSuite, does not reset origins. Instead it uses runTestAssert
  * to force reprinting of syntax.
@@ -14,20 +12,18 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
-  private val regexLineBeg = Pattern.compile("^", Pattern.MULTILINE)
-
   private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String = null)(implicit
       loc: munit.Location
   ): Unit = {
     val stat = statStr.trim // make sure no trailing newlines
-    def testWithSuffix(ok: Boolean)(suffix: String): Unit = test(s"${loc.line}: $stat [$suffix]") {
+    def testWithSuffix(suffix: String): Unit = test(s"${loc.line}: $stat [$suffix]") {
       val statSyntax = Option(syntaxStr).getOrElse(stat).replace("\n", "\n  ")
 
-      val indentedSuffix = regexLineBeg.matcher(suffix).replaceAll("  ")
+      val indentedSuffix = suffix.replace("\n", "\n  ")
       val expectedSyntax =
         s"""|{
-            |  $statSyntax${if (needNL && ok) "\n" else ""}
-            |$indentedSuffix
+            |  $statSyntax${if (needNL) "\n" else ""}
+            |  $indentedSuffix
             |}""".stripMargin.lf2nl
 
       val treeWithSemi = templStat(s"{$stat;$suffix}")
@@ -43,19 +39,19 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
         assertNoDiff(treeWithNL.structure, treeWithSemiStructure)
       }
     }
-    testWithSuffix(ok = true)(
+    testWithSuffix(
       """|{
          |  a
          |}""".stripMargin
     )
-    testWithSuffix(ok = false)(
+    testWithSuffix(
       """|{
          |  a
          |} + {
          |  b
          |}""".stripMargin
     )
-    testWithSuffix(ok = false)(
+    testWithSuffix(
       """|{
          |  a
          |}.b""".stripMargin
