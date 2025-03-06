@@ -714,4 +714,75 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("scalaz folded/unfolded refined type") {
+    val layout =
+      """|def foldStep(onGosub: ~>[({
+         |  type l[a] = (S[a], a => Free[S, A])
+         |})#l, ({
+         |  type l[a] = B
+         |})#l]): B = ???
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "foldStep",
+      Nil,
+      List(List(tparam(
+        "onGosub",
+        papply(
+          "~>",
+          Type.Project(
+            Type.Refine(
+              None,
+              Stat.Block(List(Defn.Type(
+                Nil,
+                "l",
+                List(pparam("a")),
+                Type.Tuple(List(papply("S", "a"), pfunc("a")(papply("Free", "S", "A"))))
+              )))
+            ),
+            "l"
+          ),
+          Type.Project(
+            Type.Refine(None, Stat.Block(List(Defn.Type(Nil, "l", List(pparam("a")), pname("B"))))),
+            "l"
+          )
+        )
+      ))),
+      Some("B"),
+      "???"
+    )
+
+    val codeFolded =
+      """|def foldStep(
+         |    onGosub: ~>[
+         |      ({ type l[a] = (S[a], a => Free[S, A]) })#l,
+         |      ({ type l[a] = B })#l
+         |    ]
+         |): B = ???
+         |""".stripMargin
+    runTestAssert[Stat](codeFolded, layout)(tree)
+
+    val codeUnfolded =
+      """|def foldStep(
+         |    onGosub: ~>[
+         |      (
+         |        {
+         |          type l[a] = (S[a], a => Free[S, A])
+         |        }
+         |      )#l,
+         |      (
+         |        {
+         |          type l[a] = B
+         |        }
+         |      )#l
+         |    ]
+         |): B = ???
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `identifier` expected but `{` found
+         |        {
+         |        ^""".stripMargin
+    runTestError[Stat](codeUnfolded, error)
+  }
+
 }
