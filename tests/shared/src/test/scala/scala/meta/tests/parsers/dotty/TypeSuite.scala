@@ -778,11 +778,7 @@ class TypeSuite extends BaseDottySuite {
          |    ]
          |): B = ???
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `identifier` expected but `{` found
-         |        {
-         |        ^""".stripMargin
-    runTestError[Stat](codeUnfolded, error)
+    runTestAssert[Stat](codeUnfolded, layout)(tree)
   }
 
 }

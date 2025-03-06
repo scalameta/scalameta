@@ -46,7 +46,7 @@ private[parsers] class LazyTokenIterator private (
 
   def previousIndentation: Int = curr.regions match {
     case (r: RegionLine) :: _ if !curr.token.is[Token.AtEOL] => r.indent
-    case _ :: r :: _ => r.indent
+    case _ :: r :: _ => if (r.isInstanceOf[RegionParen]) r.indent - 1 else r.indent
     case _ => 0
   }
 
