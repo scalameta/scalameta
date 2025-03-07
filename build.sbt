@@ -367,9 +367,8 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
 
 lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings).jvmSettings(
   crossScalaVersions := AllScalaVersions,
-  libraryDependencies ++= {
-    if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil
-  },
+  libraryDependencies ++=
+    { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
   dependencyOverrides += {
     val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
     "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
@@ -418,9 +417,8 @@ lazy val sharedTestSettings = Def.settings(
   sharedSettings,
   nonPublishableSettings,
   testFrameworks := List(new TestFramework("munit.Framework")),
-  dependencyOverrides ++= {
-    if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value)
-  },
+  dependencyOverrides ++=
+    { if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value) },
   libraryDependencies += {
     val munitV = if (isScala211.value) "1.0.0-M10" else munit.sbtmunit.BuildInfo.munitVersion
     "org.scalameta" %%% "munit" % munitV
@@ -513,9 +511,8 @@ lazy val sharedSettings = Def.settings(
   scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
   scalacOptions ++= { if (isScala3.value) List("-Wconf:cat=deprecation:silent") else Nil },
   scalacOptions ++= Seq("-feature", "-unchecked"),
-  Compile / doc / scalacOptions ++= {
-    if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups")
-  },
+  Compile / doc / scalacOptions ++=
+    { if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups") },
   Test / parallelExecution := false, // hello, reflection sync!!
   logBuffered := false,
   updateOptions := updateOptions.value.withCachedResolution(true),
