@@ -1122,9 +1122,7 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |<rhs>Type.Apply Foo[{ type A = Bar }]</rhs> [21:Foo[{ type A = Bar }]:42)
        |<argClause>Type.ArgClause [{ type A = Bar }]</argClause> [24:[{ type A = Bar }]:42)
        |<values0>Type.Refine { type A = Bar }</values0> [25:{ type A = Bar }:41)
-       |<body>Stat.Block {
-       |  type A = Bar
-       |}</body> <none>
+       |<body>Stat.Block { type A = Bar }</body> [25:{ type A = Bar }:41)
        |<stats0>Defn.Type type A = Bar</stats0> [27:type A = Bar:39)
        |<tparamClause>Type.ParamClause   case _: Foo[{ type A @@= Bar }] =></tparamClause> [34::34)
        |<bounds>Type.Bounds   case _: Foo[{ type A @@= Bar }] =></bounds> [34::34)
