@@ -1148,10 +1148,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def loop(outerTpe: Type, convertTypevars: Boolean): Type = setPos(outerTpe) {
         outerTpe match {
           case q: Quasi => q
-          case tpe @ Type.Name(value) if convertTypevars && value(0).isLower => Type.Var(tpe)
-          case tpe: Type.Name => tpe
+          case t: Type.Name => if (convertTypevars && t.value(0).isLower) Type.Var(t) else t
           case tpe: Type.Select => tpe
-          case Type.Project(qual, name) => Type.Project(copyType(qual), name)
+          case t: Type.Project => Type.Project(copyType(t.qual), t.name)
           case tpe: Type.Singleton => tpe
           case t: Type.Apply =>
             val args1 = t.argClause match {
@@ -1159,7 +1158,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               case x: Type.ArgClause => copyPos(x)(Type.ArgClause(x.values.map(convertType)))
             }
             Type.Apply(copyType(t.tpe), args1)
-          case Type.ApplyInfix(lhs, op, rhs) => Type.ApplyInfix(copyType(lhs), op, copyType(rhs))
+          case t: Type.ApplyInfix => Type.ApplyInfix(copyType(t.lhs), t.op, copyType(t.rhs))
           case t: Type.ByName => convertByName(t)(Type.ByName(_))
           case t: Type.PureByName => convertByName(t)(Type.PureByName(_))
           case t: Type.Function => convertFunc(t)(Type.Function(_, _))
@@ -1167,11 +1166,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case t: Type.ContextFunction => convertFunc(t)(Type.ContextFunction(_, _))
           case t: Type.PureContextFunction => convertFunc(t)(Type.PureContextFunction(_, _))
           case t: Type.PolyFunction => Type.PolyFunction(t.tparamClause, copyType(t.tpe))
-          case Type.Tuple(elements) => Type.Tuple(elements.map(convertType))
-          case Type.With(lhs, rhs) => Type.With(copyType(lhs), copyType(rhs))
-          case Type.Refine(tpe, stats) => Type.Refine(tpe.map(copyType), stats)
-          case Type.Existential(underlying, stats) => Type.Existential(copyType(underlying), stats)
-          case Type.Annotate(underlying, annots) => Type.Annotate(copyType(underlying), annots)
+          case t: Type.Tuple => Type.Tuple(t.args.map(convertType))
+          case t: Type.With => Type.With(copyType(t.lhs), copyType(t.rhs))
+          case t: Type.Refine => Type.Refine(t.tpe.map(copyType), t.body)
+          case t: Type.Existential => Type.Existential(copyType(t.tpe), t.body)
+          case t: Type.Annotate => Type.Annotate(copyType(t.tpe), t.annots)
           case t: Type.Wildcard => Type.Wildcard(t.bounds)
           case t: Type.AnonymousLambda => Type.AnonymousLambda(copyType(t.tpe))
           case t: Type.AnonymousParam => Type.AnonymousParam(t.variant)
