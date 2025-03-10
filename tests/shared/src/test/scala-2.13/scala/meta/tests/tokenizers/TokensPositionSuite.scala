@@ -1107,4 +1107,31 @@ class TokensPositionSuite extends BasePositionSuite(dialects.Scala213) {
        |""".stripMargin
   )
 
+  // #4208
+  checkPositions[Term](
+    """|"" match {
+       |  case _: Foo[{ type A = Bar }] =>
+       |}
+       |""".stripMargin,
+    """|<expr>Lit.String ""</expr> [0:"":2)
+       |<casesBlock>Term.CasesBlock {
+       |  case _: Foo[{ type A = Bar }] =>
+       |}</casesBlock> [9:{...:47)
+       |<cases0>Case case _: Foo[{ type A = Bar }] =></cases0> [13:case _: Foo[{ type A = Bar }] =>:45)
+       |<pat>Pat.Typed _: Foo[{ type A = Bar }]</pat> [18:_: Foo[{ type A = Bar }]:42)
+       |<rhs>Type.Apply Foo[{ type A = Bar }]</rhs> [21:Foo[{ type A = Bar }]:42)
+       |<argClause>Type.ArgClause [{ type A = Bar }]</argClause> [24:[{ type A = Bar }]:42)
+       |<values0>Type.Refine { type A = Bar }</values0> [25:{ type A = Bar }:41)
+       |<body>Stat.Block {
+       |  type A = Bar
+       |}</body> <none>
+       |<stats0>Defn.Type type A = Bar</stats0> [27:type A = Bar:39)
+       |<tparamClause>Type.ParamClause   case _: Foo[{ type A @@= Bar }] =></tparamClause> [34::34)
+       |<bounds>Type.Bounds   case _: Foo[{ type A @@= Bar }] =></bounds> [34::34)
+       |<body>Term.Block @@}</body> [46::46)
+       |""".stripMargin,
+    showPosition = true,
+    showFieldName = true
+  )
+
 }
