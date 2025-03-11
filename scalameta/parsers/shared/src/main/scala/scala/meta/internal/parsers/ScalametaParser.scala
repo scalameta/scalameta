@@ -880,7 +880,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         allowCaptures: Boolean = false,
         inParam: Boolean = false
     )(ctor: (Type.FuncParamClause, Type) => Type): Type = {
-      val funcParams = autoEndPos(paramPos)(params.reduceWith(Type.FuncParamClause.apply))
+      val funcParams =
+        autoEndPos(paramPos)(params.map(typeVar).reduceWith(Type.FuncParamClause.apply))
       next()
       withTypeCaptures(paramPos, allowCaptures = allowCaptures)(
         ctor(funcParams, maybeIndented(if (inParam) paramValueType() else typ()))
@@ -932,7 +933,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         nextTwice() // skip ident and equals
         val name = atPos(startPos)(Type.Name(t.value))
         autoEndPos(startPos)(Type.Assign(name, typ()))
-      case _ => typ()
+      case t => typeVar(typ(), t.text)
     }
 
     def typeArgsInBrackets(): Type.ArgClause = typeClauseInBrackets(typeArg(), Type.ArgClause.apply)
@@ -1131,70 +1132,31 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def typesInParens(): List[Type] =
       inParensOnOpen(commaSeparated(namedTypeOpt(Nil, allowFunctionType = false).getOrElse(typ())))
 
-    def patternTyp(allowInfix: Boolean, allowImmediateTypevars: Boolean): Type = {
-      def setPos(outerTpe: Type)(innerTpe: Type): Type =
-        if (innerTpe eq outerTpe) outerTpe else copyPos(outerTpe)(innerTpe)
-
-      def copyType(t: Type): Type = loop(t, convertTypevars = false)
-      def convertType(t: Type): Type = loop(t, convertTypevars = true)
-      def convertFuncParamClause(t: Type.FuncParamClause): Type.FuncParamClause = t match {
-        case t: Quasi => t
-        case t => copyPos(t)(Type.FuncParamClause(t.values.map(convertType)))
+    private def infixPatternTypeImpl(): Type = {
+      val t = if (at[LeftParen]) tupleInfixType() else compoundType()
+      currToken match {
+        case _: KwForsome => existentialTypeOnForSome(t)
+        case _: Unquote | Keywords.NotPatAlt() => infixTypeRest(t)
+        case _ => t
       }
-      def convertFunc[A <: Type.ParamFunctionType](t: A)(f: (Type.FuncParamClause, Type) => A): A =
-        f(convertFuncParamClause(t.paramClause), copyType(t.res))
-      def convertByName[A <: Type.ByNameType](t: A)(f: Type => A): A = f(copyType(t.tpe))
-
-      def loop(outerTpe: Type, convertTypevars: Boolean): Type = setPos(outerTpe) {
-        outerTpe match {
-          case q: Quasi => q
-          case t: Type.Name => if (convertTypevars && t.value(0).isLower) Type.Var(t) else t
-          case tpe: Type.Select => tpe
-          case t: Type.Project => Type.Project(copyType(t.qual), t.name)
-          case tpe: Type.Singleton => tpe
-          case t: Type.Apply =>
-            val args1 = t.argClause match {
-              case q: Type.ArgClause.Quasi => q
-              case x: Type.ArgClause => copyPos(x)(Type.ArgClause(x.values.map(convertType)))
-            }
-            Type.Apply(copyType(t.tpe), args1)
-          case t: Type.ApplyInfix => Type.ApplyInfix(copyType(t.lhs), t.op, copyType(t.rhs))
-          case t: Type.ByName => convertByName(t)(Type.ByName(_))
-          case t: Type.PureByName => convertByName(t)(Type.PureByName(_))
-          case t: Type.Function => convertFunc(t)(Type.Function(_, _))
-          case t: Type.PureFunction => convertFunc(t)(Type.PureFunction(_, _))
-          case t: Type.ContextFunction => convertFunc(t)(Type.ContextFunction(_, _))
-          case t: Type.PureContextFunction => convertFunc(t)(Type.PureContextFunction(_, _))
-          case t: Type.PolyFunction => Type.PolyFunction(t.tparamClause, copyType(t.tpe))
-          case t: Type.Tuple => Type.Tuple(t.args.map(convertType))
-          case t: Type.With => Type.With(copyType(t.lhs), copyType(t.rhs))
-          case t: Type.Refine => Type.Refine(t.tpe.map(copyType), t.body)
-          case t: Type.Existential => Type.Existential(copyType(t.tpe), t.body)
-          case t: Type.Annotate => Type.Annotate(copyType(t.tpe), t.annots)
-          case t: Type.Wildcard => Type.Wildcard(t.bounds)
-          case t: Type.AnonymousLambda => Type.AnonymousLambda(copyType(t.tpe))
-          case t: Type.AnonymousParam => Type.AnonymousParam(t.variant)
-          case t: Type.Placeholder => Type.Placeholder(t.bounds)
-          case t: Type.Block => Type.Block(t.typeDefs, copyType(t.tpe))
-          case t: Type.Capturing => Type.Capturing(convertType(t.tpe), t.caps)
-          case tpe: Lit => tpe
-        }
-      }
-      val t: Type = PatternTypeContext.within(if (allowInfix) {
-        val t = if (at[LeftParen]) tupleInfixType() else compoundType()
-        currToken match {
-          case _: KwForsome => existentialTypeOnForSome(t)
-          case _: Unquote | Keywords.NotPatAlt() => infixTypeRest(t)
-          case _ => t
-        }
-      } else compoundType())
-      loop(t, convertTypevars = allowImmediateTypevars)
     }
 
-    def patternTypeArgs() = typeClauseInBrackets(
-      patternTyp(allowInfix = true, allowImmediateTypevars = true),
-      Type.ArgClause.apply
+    def patternTyp(allowInfix: Boolean): Type = PatternTypeContext
+      .within(if (allowInfix) infixPatternTypeImpl() else compoundType())
+
+    def patternTypeArgs() = PatternTypeContext.within(
+      typeClauseInBrackets(typeVar(infixPatternTypeImpl(), prevToken.text), Type.ArgClause.apply)
     )
+
+    private def typeVar(t: Type, text: => String): Type = t match {
+      case _: Quasi => t
+      case t: Type.Name
+          if PatternTypeContext.isInside() && TypeBracketsContext.isInside() && text.isPatVar =>
+        copyPos(t)(Type.Var(t))
+      case _ => t
+    }
+
+    private def typeVar(t: Type): Type = typeVar(t, t.text)
   }
 
   private trait AllowedName[T]
@@ -2630,7 +2592,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def pattern1(isForComprehension: Boolean = false): Pat = {
       val p = pattern2(isForComprehension)
       @inline
-      def typed() = Pat.Typed(p, super.patternTyp(allowInfix = false, allowImmediateTypevars = false))
+      def typed() = Pat.Typed(p, super.patternTyp(allowInfix = false))
       val pat = p match {
         case _ if !at[Colon] => p
         case _: Quasi =>
@@ -2773,9 +2735,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             }
           case _: MacroQuote => QuotedPatternContext.within(Pat.Macro(macroQuote()))
           case MacroQuotedIdent(ident) => Pat.Macro(macroQuotedIdent(ident))
-          case _: KwGiven =>
-            next()
-            Pat.Given(super.patternTyp(allowInfix = false, allowImmediateTypevars = false))
+          case _: KwGiven => next(); Pat.Given(super.patternTyp(allowInfix = false))
           case t => onError(t)
         }
       }
@@ -2831,7 +2791,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def argumentPattern(): Pat = seqOK.pattern()
   def argumentPatterns(): List[Pat] = inParens(if (at[RightParen]) Nil else seqPatterns())
   def xmlLiteralPattern(): Pat = syntaxError("XML literals are not supported", at = currToken)
-  def patternTyp() = noSeq.patternTyp(allowInfix = true, allowImmediateTypevars = false)
+  def patternTyp() = noSeq.patternTyp(allowInfix = true)
   def patternTypeArgs() = noSeq.patternTypeArgs()
 
   /* -------- MODIFIERS and ANNOTATIONS ------------------------------------------- */
