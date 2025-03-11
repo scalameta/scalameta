@@ -304,6 +304,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     body
   }
 
+  private def typeClauseInBrackets[A <: Tree: AstInfo: ClassTag, B <: Tree: AstInfo](
+      part: => A,
+      f: List[A] => B
+  ): B = TypeBracketsContext.within(autoPos(inBrackets(commaSeparated(part).reduceWith(f))))
+
   /* ------------- POSITION HANDLING ------------------------------------------- */
 
   case object AutoPos extends Pos {
@@ -930,8 +935,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ => typ()
     }
 
-    def typeArgsInBrackets(): Type.ArgClause = TypeBracketsContext
-      .within(autoPos(inBrackets(commaSeparated(typeArg())).reduceWith(Type.ArgClause.apply)))
+    def typeArgsInBrackets(): Type.ArgClause = typeClauseInBrackets(typeArg(), Type.ArgClause.apply)
 
     def infixTypeOrTuple(inMatchType: Boolean = false): Type =
       if (at[LeftParen]) tupleInfixType(allowFunctionType = !inMatchType)
@@ -1188,9 +1192,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       loop(t, convertTypevars = allowImmediateTypevars)
     }
 
-    def patternTypeArgs() = autoPos(
-      inBrackets(commaSeparated(patternTyp(allowInfix = true, allowImmediateTypevars = true)))
-        .reduceWith(Type.ArgClause.apply)
+    def patternTypeArgs() = typeClauseInBrackets(
+      patternTyp(allowInfix = true, allowImmediateTypevars = true),
+      Type.ArgClause.apply
     )
   }
 
@@ -3222,9 +3226,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def typeParamClauseOnBracket(
       ownerIsType: Boolean,
       allowUnderscore: Boolean = true
-  ): Type.ParamClause = TypeBracketsContext.within(autoPos(inBrackets(
-    commaSeparated(typeParam(ownerIsType, allowUnderscore)).reduceWith(Type.ParamClause.apply)
-  )))
+  ): Type.ParamClause =
+    typeClauseInBrackets(typeParam(ownerIsType, allowUnderscore), Type.ParamClause.apply)
 
   def typeParam(ownerIsType: Boolean, allowUnderscore: Boolean = true): Type.Param = autoPos {
     val mods: List[Mod] = listBy[Mod] { buf =>
