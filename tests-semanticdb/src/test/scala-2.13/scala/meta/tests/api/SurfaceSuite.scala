@@ -243,6 +243,7 @@ class SurfaceSuite extends FunSuite {
          |* String.isBackquoted: Boolean
          |* String.isIdentSymbolicInfixOperator: Boolean
          |* String.isIdentSymbolicNonBackquotedInfixOperator: Boolean
+         |* String.isPatVar: Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).is(implicit XtensionClassifiable.this.C[U]): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2]): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3]): Boolean

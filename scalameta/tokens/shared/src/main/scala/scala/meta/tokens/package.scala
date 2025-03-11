@@ -18,7 +18,11 @@ package object tokens extends tokens.Api {
 
   implicit class StringExtensions(private val value: String) extends AnyVal {
 
-    def isBackquoted: Boolean = value.startsWith("`") && value.endsWith("`")
+    private def isBackquotedNonEmpty: Boolean = value.head == '`' && value.last == '`'
+
+    def isBackquoted: Boolean = value.nonEmpty && isBackquotedNonEmpty
+
+    def isPatVar: Boolean = value.nonEmpty && value.head.isLower && !isBackquotedNonEmpty
 
     def isIdentSymbolicNonBackquotedInfixOperator: Boolean = {
       @tailrec
