@@ -1214,6 +1214,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def termName(): Term.Name = name(Term.Name(_))
   def typeName(): Type.Name = name(Type.Name(_))
+  private def nameAsType(t: Name): Type.Name = copyPos(t)(Type.Name(t.value))
   private def termName(t: Ident): Term.Name = identName(t, Term.Name.apply)
   private def typeName(t: Ident): Type.Name = identName(t, Type.Name.apply)
   @inline
@@ -3575,8 +3576,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
     else if (pcg.paramClauses.nonEmpty) None // too hard to convert to init, re-parse
     else if (!name.isAnonymous) {
-      val typeName = copyPos(name)(Type.Name(name.value))
-      val tpe = convertNameTypeParamClauseToType(typeName, pcg.tparamClause)
+      val tpe = convertNameTypeParamClauseToType(nameAsType(name), pcg.tparamClause)
       val anon = anonNameAt(name)
       if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
         givenSigAfterArrow(anon, convertTypeToTermParamClause(tpe))
@@ -3681,9 +3681,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  private def convertTypeParamToType(param: Type.Param): Type = param.becomeOr[Type](x =>
-    convertNameTypeParamClauseToType(copyPos(x.name)(Type.Name(x.name.value)), param.tparamClause)
-  )
+  private def convertTypeParamToType(param: Type.Param): Type = param
+    .becomeOr[Type](x => convertNameTypeParamClauseToType(nameAsType(x.name), param.tparamClause))
 
   private def convertNameTypeParamClauseToType(name: Type.Name, tpc: Type.ParamClause) = tpc match {
     case q: Quasi => atPos(name, q)(Type.Apply(name, q.become[Type.ArgClause]))
@@ -3694,7 +3693,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def convertTermParamToType(param: Term.Param): Type = param.becomeOr[Type] { x =>
-    def name = copyPos(x.name)(Type.Name(x.name.value))
+    def name = nameAsType(x.name)
     x.decltpe.fold[Type](name)(tpe =>
       if (x.mods.isEmpty && x.name.isAnonymous) tpe
       else copyPos(x)(Type.TypedParam(name, tpe, x.mods))
