@@ -9,11 +9,14 @@ class PatSuite extends ParseSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
-  private def assertPat(expr: String)(tree: Tree): Unit = assertTree(pat(expr))(tree)
+  private def assertPat(expr: String)(tree: Tree)(implicit loc: munit.Location): Unit =
+    assertTree(pat(expr))(tree)
 
-  private def assertPatTyp(expr: String)(tree: Tree): Unit = assertTree(patternTyp(expr))(tree)
+  private def assertPatTyp(expr: String)(tree: Tree)(implicit loc: munit.Location): Unit =
+    assertTree(patternTyp(expr))(tree)
 
   implicit def caseParser(code: String, dialect: Dialect): Case = super.parseCase(code)(dialect)
+
   test("_")(assertPat("_")(patwildcard))
 
   test("a @ _")(assertPat("a @ _")(Bind(Var(tname("a")), patwildcard)))
