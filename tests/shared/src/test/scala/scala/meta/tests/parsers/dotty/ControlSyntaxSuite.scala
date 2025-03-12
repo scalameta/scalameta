@@ -4184,4 +4184,19 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4214") {
+    val code =
+      """|package object scope:
+         |  val result = for
+         |    x <- twice:
+         |         "4".toInt
+         |  yield x
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `outdent` expected but `.` found
+         |         "4".toInt
+         |            ^""".stripMargin
+    runTestError[Source](code, error)
+  }
+
 }
