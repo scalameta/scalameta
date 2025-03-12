@@ -484,7 +484,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ => sepRegions
         })
       case _: KwObject | _: KwClass | _: KwTrait | _: KwPackage | _: KwNew
-          if dialect.allowSignificantIndentation => currRef(RegionTemplateMark :: sepRegions)
+          if dialect.allowSignificantIndentation =>
+        currRef(sepRegions match {
+          case RegionTemplateMark :: _ => sepRegions
+          case _ => RegionTemplateMark :: sepRegions
+        })
       case _: KwTry if !isPrevEndMarker() => currRef(RegionTry :: dropRegionLine(sepRegions))
       case _: KwMatch if !isPrevEndMarker() => getCaseIntro(sepRegions)
       case _: KwCatch => getCaseIntro(dropWhile(sepRegions)(_ ne RegionTry))

@@ -4192,11 +4192,29 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |         "4".toInt
          |  yield x
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `outdent` expected but `.` found
-         |         "4".toInt
-         |            ^""".stripMargin
-    runTestError[Source](code, error)
+    val output =
+      """|package object scope {
+         |  val result = for (x <- twice {
+         |    "4".toInt
+         |  }) yield x
+         |}
+         |""".stripMargin
+    val tree = Source(List(Pkg.Object(
+      Nil,
+      "scope",
+      tpl(Defn.Val(
+        Nil,
+        List(patvar("result")),
+        None,
+        Term.ForYield(
+          Term.EnumeratorsBlock(List(
+            Enumerator.Generator(patvar("x"), tapply("twice", blk(tselect(lit("4"), "toInt"))))
+          )),
+          tname("x")
+        )
+      ))
+    )))
+    runTestAssert[Source](code, output)(tree)
   }
 
 }
