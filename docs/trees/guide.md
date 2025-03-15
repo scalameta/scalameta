@@ -233,7 +233,7 @@ println("function(argument)".parse[Stat].get.structure)
 The output of structure is safe to copy-paste into programs.
 
 Another good way to learn the structure of trees is
-[AST Explorer](http://astexplorer.net/#/gist/ec56167ffafb20cbd8d68f24a37043a9/97da19c8212688ceb232708b67228e3839dadc7c).
+[AST Explorer](https://scalameta.org/ast-explorer/).
 
 ### With quasiquotes
 
