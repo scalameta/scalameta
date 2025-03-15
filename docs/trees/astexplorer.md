@@ -1,10 +1,10 @@
 ---
 id: astexplorer
-title: AST Explorer
+title: Scalameta AST Explorer
 ---
 
 A great way to learn about the structure of Scalameta syntax trees is
-[AST explorer](https://astexplorer.net/#/gist/ec56167ffafb20cbd8d68f24a37043a9/677e43f3adb93db8513dbe4e2c868dd4f78df4b3).
+[Scalameta AST explorer](https://github.com/scalameta/ast-explorer).
 
 <!--
 <style>
@@ -25,6 +25,6 @@ Go to AST explorer
 
 ---
 
-![AST explorer](../assets/astexplorer.png)
+![AST explorer](../assets/keynmol-explorer.png)
 
 ---
