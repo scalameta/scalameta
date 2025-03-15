@@ -14,7 +14,7 @@ Feel free to add your project to this list by submitting a pull request
 - [Metabrowse](https://scalameta.org/metabrowse): static site generator to browse
   source code with "Jump to definition" and "Find references".
 - [Stags](https://github.com/pjrt/stags): Scala tags generator.
-- [AST explorer](https://astexplorer.net/#/gist/ec56167ffafb20cbd8d68f24a37043a9/74efb238ad02abaa8fa69fc80342563efa8a1bdc):
+- [AST explorer](https://scalameta.org/ast-explorer/):
   interactive explorer of Scala syntax trees.
 - [Metarpheus](https://github.com/buildo/metarpheus):
   extract models and apis from a spray-based server.

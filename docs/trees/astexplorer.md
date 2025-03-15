@@ -18,7 +18,7 @@ a.astexplorer {
 }
 </style> -->
 <div style="text-align:center;">
-<a href="https://astexplorer.net/#/gist/ec56167ffafb20cbd8d68f24a37043a9/677e43f3adb93db8513dbe4e2c868dd4f78df4b3" target="_blank" class="button">
+<a href="https://scalameta.org/ast-explorer/" target="_blank" class="button">
 Go to AST explorer
 </a>
 </div>
