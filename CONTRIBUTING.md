@@ -126,3 +126,12 @@ yarn start
 
 Now visit http://localhost:3000 and you should see a local version of the
 website. New changes should trigger a reload in the browser.
+
+## Back publishing
+
+To release a new version of the SemanticDB compiler plugin, you need to back publish it for a specific Scala version. To do this push a tag to the scalameta repository in a form of:
+
+  `v4.13.43@2.13.17@releaseSemanticdb`
+
+This will trigger a release workflow that will publish the plugin artifact to
+Sonatype. Replace `v4.13.4` and `2.13.17` with the version of the release you are making.
