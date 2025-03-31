@@ -39,6 +39,16 @@ enablePlugins(ScalaUnidocPlugin)
 addCommandAlias("benchAll", benchAll.command)
 addCommandAlias("benchLSP", benchLSP.command)
 addCommandAlias("benchQuick", benchQuick.command)
+commands += Command.command("releaseSemanticdb")(s =>
+  List(
+    "semanticdbSharedJVM",
+    "semanticdbScalacPlugin",
+    "semanticdbMetac",
+    "semanticdbMetap",
+    "semanticdbMetacp",
+    "semanticdbScalacCore"
+  ).map(s => s + "/publishSigned") ::: s
+)
 commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s)
 commands += Command.command("download-scala-library") { s =>
   val out = file("target/scala-library")
