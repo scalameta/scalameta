@@ -71,4 +71,54 @@ class InterleavedDeclSuite extends BaseDottySuite {
       pname("B")
     ))
   )
+
+  test("f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B [def with breaks]") {
+    val code =
+      """|def f
+         |  [A]
+         |  (a: A, as: A*)
+         |  [B]
+         |  (b: B, bs: B*)
+         |  [C]
+         |  (implicit c: C)
+         |  : B
+         |""".stripMargin
+    val layout = "def f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B"
+    runTestAssert[Stat](code, layout)(Decl.Def(
+      Nil,
+      tname("f"),
+      pcg(List(pparam("A")), List(tparam("a", "A"), tparam("as", Type.Repeated(pname("A"))))) ::
+        pcg(List(pparam("B")), List(tparam("b", "B"), tparam("bs", Type.Repeated(pname("B"))))) ::
+        pcg(List(pparam("C")), List(tparam(List(Mod.Implicit()), "c", "C"))) :: Nil,
+      pname("B")
+    ))
+  }
+
+  test("f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B [run with breaks before LP]") {
+    val code =
+      """|f[A]
+         |  (a1, a2)[B]
+         |  (b1, b2, b3)[C]
+         |""".stripMargin
+    val layout = "f[A](a1, a2)[B](b1, b2, b3)[C]"
+    val innerTree = tapplytype(tapply(tapplytype("f", "A"), "a1", "a2"), "B")
+    val tree = tapplytype(tapply(innerTree, "b1", "b2", "b3"), "C")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("f[A](a: A, as: A*)[B](b: B, bs: B*)[C](implicit c: C): B [run with breaks]") {
+    val code =
+      """|f
+         |  [A]
+         |  (a1, a2)
+         |  [B]
+         |  (b1, b2, b3)
+         |  [C]
+         |""".stripMargin
+    val layout = "f[A](a1, a2)[B](b1, b2, b3)[C]"
+    val innerTree = tapplytype(tapply(tapplytype("f", "A"), "a1", "a2"), "B")
+    val tree = tapplytype(tapply(innerTree, "b1", "b2", "b3"), "C")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }

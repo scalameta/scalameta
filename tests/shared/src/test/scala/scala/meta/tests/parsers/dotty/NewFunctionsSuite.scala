@@ -704,4 +704,33 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4226 brackets") {
+    val code =
+      """|def foo =
+         |  println()
+         |  [T] => (a: T) => a
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `;` expected but `=>` found
+         |  [T] => (a: T) => a
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#4226 parens") {
+    val code =
+      """|def foo =
+         |  println()
+         |  (a: T) => a
+         |""".stripMargin
+    val layout =
+      """|def foo = {
+         |  println()
+         |  (a: T) => a
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(Nil, "foo", Nil, None, blk(tapply("println"), tfunc(tparam("a", "T"))("a")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
