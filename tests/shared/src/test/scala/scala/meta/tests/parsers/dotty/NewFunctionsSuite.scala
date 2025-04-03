@@ -710,11 +710,20 @@ class NewFunctionsSuite extends BaseDottySuite {
          |  println()
          |  [T] => (a: T) => a
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `;` expected but `=>` found
+    val layout =
+      """|def foo = {
+         |  println()
          |  [T] => (a: T) => a
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "foo",
+      Nil,
+      None,
+      blk(tapply("println"), tpolyfunc(pparam("T"))(tfunc(tparam("a", "T"))("a")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4226 parens") {

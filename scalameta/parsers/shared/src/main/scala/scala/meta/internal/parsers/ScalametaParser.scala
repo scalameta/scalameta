@@ -1382,7 +1382,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def newLineOptWhenFollowedBy(pred: Token => Boolean): Boolean = nextIfPair[EOL](pred)
   def newLineOptWhenFollowedBy[T: ClassTag]: Boolean = nextIfPair[EOL, T]
 
-  def isIndentingOrEOL(nonOptBracesOK: Boolean): Boolean =
+  def isIndentingOrEOL(nonOptBracesOK: => Boolean): Boolean =
     if (dialect.allowSignificantIndentation) in.indenting else nonOptBracesOK && at[EOL]
 
   def isAfterOpt[A: ClassTag, B: ClassTag]: Boolean = if (at[B]) tryAhead[A] else at[A]
@@ -2167,8 +2167,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     currToken match {
       case _: AtEOL if (peekToken match {
             case _: Dot => true
-            case _: LeftBrace if canApply => isIndentingOrEOL(true)
-            case _: LeftParen if canApply => isIndentingOrEOL(false)
+            case t: OpenDelim if canApply => isIndentingOrEOL(t.is[LeftBrace])
             case _ => false
           }) => next(); simpleExprRest(t, canApply, startPos)
       case _: Dot =>
