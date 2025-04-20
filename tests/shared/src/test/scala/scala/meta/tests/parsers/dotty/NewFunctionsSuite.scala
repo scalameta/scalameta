@@ -674,7 +674,7 @@ class NewFunctionsSuite extends BaseDottySuite {
     val tree = Defn.Def(
       Nil,
       "map",
-      List(pparam("T", hiBound(Type.Capturing(purectxfunc("A")("B"), List("a", "c"))))),
+      List(pparam("T", hiBound(pcap(purectxfunc("A")("B"), "a", "c")))),
       List(List(tparam("f", "T"))),
       Some(purectxfunc("A")("B")),
       "???"
@@ -698,7 +698,7 @@ class NewFunctionsSuite extends BaseDottySuite {
       Nil,
       "func",
       Nil,
-      List(List(tparam("f", Type.Capturing(Type.PureByName("B"), List("a", "b", "c"))))),
+      List(List(tparam("f", pcap(Type.PureByName("B"), "a", "b", "c")))),
       "Unit"
     )
     runTestAssert[Stat](code, layout)(tree)

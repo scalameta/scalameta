@@ -628,13 +628,8 @@ class TypeSuite extends BaseDottySuite {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "class Logger(fs: FileSystem^)"
     val layout = "class Logger(fs: FileSystem^)"
-    val tree = Defn.Class(
-      Nil,
-      pname("Logger"),
-      Nil,
-      ctorp(tparam("fs", Type.Capturing("FileSystem", Nil))),
-      tplNoBody()
-    )
+    val tree = Defn
+      .Class(Nil, pname("Logger"), Nil, ctorp(tparam("fs", pcap("FileSystem"))), tplNoBody())
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -642,8 +637,7 @@ class TypeSuite extends BaseDottySuite {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "val l: Logger^{fs} = Logger(fs)"
     val layout = "val l: Logger^{fs} = Logger(fs)"
-    val tree = Defn
-      .Val(Nil, List(patvar("l")), Some(Type.Capturing("Logger", List("fs"))), tapply("Logger", "fs"))
+    val tree = Defn.Val(Nil, List(patvar("l")), Some(pcap("Logger", "fs")), tapply("Logger", "fs"))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -651,12 +645,11 @@ class TypeSuite extends BaseDottySuite {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def tail: LazyList[A]^{this}"
     val layout = "def tail: LazyList[A]^{this}"
-    val tree = Decl
-      .Def(Nil, "tail", Nil, Type.Capturing(papply("LazyList", "A"), List(Term.This(anon))))
+    val tree = Decl.Def(Nil, "tail", Nil, pcap(papply("LazyList", "A"), Term.This(anon)))
     runTestAssert[Stat](code, layout)(tree)
   }
 
-  test("#3996 capture checking: 3") {
+  test("#3996 capture checking: 4") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)"
     val layout = "def p: Pair[Int ->{ct} String, Logger^{fs}] = Pair(x, y)"
@@ -664,15 +657,41 @@ class TypeSuite extends BaseDottySuite {
       Nil,
       "p",
       Nil,
-      Some(papply(
-        "Pair",
-        Type.Capturing(purefunc("Int")("String"), List("ct")),
-        Type.Capturing("Logger", List("fs"))
-      )),
+      Some(papply("Pair", pcap(purefunc("Int")("String"), "ct"), pcap("Logger", "fs"))),
       tapply("Pair", "x", "y")
     )
 
     runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 capture checking: 5") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def foo[A](t: NThread)(fn: Foo^{t} ?->{this} A^{this}): A^{this} = ???"
+    val layout = "def foo[A](t: NThread)(fn: Foo^{t} ?->{this} A^{this}): A^{this} = ???"
+    val anonThis = Term.This(Name.Anonymous())
+    val aCapThis = pcap("A", anonThis)
+    val tree = Defn.Def(
+      Nil,
+      "foo",
+      List(pparam("A")),
+      List(
+        List(tparam("t", "NThread")),
+        List(tparam("fn", pcap(purectxfunc(pcap("Foo", "t"))(aCapThis), anonThis)))
+      ),
+      Some(aCapThis),
+      "???"
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#3996 capture checking: 6 polymorphism") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code = "def apply[B^](a: Foo^{B^}): Foo^{B^} = a"
+    val error =
+      """|<input>:1: error: `]` expected but `identifier` found
+         |def apply[B^](a: Foo^{B^}): Foo^{B^} = a
+         |           ^""".stripMargin
+    runTestError[Stat](code, error)
   }
 
   test("scala36 type member context bounds 1") {

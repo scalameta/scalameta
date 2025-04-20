@@ -71,11 +71,12 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   implicit def implicitStringsToTerms(obj: List[String]): List[Term.Name] = obj.map(tname)
   implicit def implicitStringToTermOpt(obj: Option[String]): Option[Term.Name] = obj.map(tname)
 
-  final def mname(name: String): meta.Name = name match {
+  final def nameOr(name: String, f: String => meta.Name): meta.Name = name match {
     case "" => anon
     case "_" => phName
-    case _ => tname(name)
+    case _ => f(name)
   }
+  final def mname(name: String): meta.Name = nameOr(name, tname)
   implicit def implicitStringToName(obj: String): meta.Name = mname(obj)
   implicit def implicitStringsToNames(obj: List[String]): List[meta.Name] = obj.map(mname)
   implicit def implicitStringToNameOpt(obj: Option[String]): Option[meta.Name] = obj.map(mname)
@@ -142,11 +143,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
       params: List[Type.Param] = Nil,
       bounds: Type.Bounds = noBounds
   ): Type.Param = {
-    val nameTree = s match {
-      case "" => anon
-      case "_" => phName
-      case _ => pname(s)
-    }
+    val nameTree = nameOr(s, pname)
     Type.Param(mods, nameTree, params, bounds)
   }
 
@@ -166,6 +163,9 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def purectxfunc(param: Type*)(res: Type): Type.PureContextFunction = Type
     .PureContextFunction(param.toList, res)
   final def ppolyfunc(params: Type.Param*)(body: Type) = Type.PolyFunction(params.toList, body)
+
+  final def pcap(tpe: Type, caps: Term.Ref*): Type.Capturing = Type.Capturing(tpe, caps.toList)
+  final def pcap(tpe: String, caps: String*): Type.Capturing = pcap(tpe, caps.map(tname): _*)
 
   final def tpc(tp: Term.Param*): Term.ParamClause = tpc(null, tp: _*)
   final def tpc(mod: Mod.ParamsType, tp: Term.Param*): Term.ParamClause = Term
