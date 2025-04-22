@@ -7,11 +7,21 @@ import scala.language.implicitConversions
 
 object CommonTrees {
   trait LowPriorityDefinitions {
+    final def nameOrCapset[A](name: String, fname: String => A, fcapset: String => A): A = {
+      val withoutSuffix = name.stripSuffix("^")
+      if (name eq withoutSuffix) fname(name) else fcapset(withoutSuffix)
+    }
 
     final def tname(name: String): Term.Name = Term.Name(name)
+    final def tnameCapset(name: String) = Term.CapSetName(name)
+    final def tnameOrCapset(name: String): meta.Name with Term.Ref =
+      nameOrCapset(name, tname, tnameCapset)
     implicit def implicitStringToTerm(obj: String): Term.Name = tname(obj)
 
     final def pname(name: String): Type.Name = Type.Name(name)
+    final def pnameCapset(name: String) = Type.CapSetName(name)
+    final def pnameOrCapset(name: String): meta.Name with Type.Ref =
+      nameOrCapset(name, pname, pnameCapset)
     implicit def implicitStringToType(obj: String): Type.Name = pname(obj)
 
   }
@@ -143,7 +153,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
       params: List[Type.Param] = Nil,
       bounds: Type.Bounds = noBounds
   ): Type.Param = {
-    val nameTree = nameOr(s, pname)
+    val nameTree = nameOr(s, pnameOrCapset)
     Type.Param(mods, nameTree, params, bounds)
   }
 
@@ -165,7 +175,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def ppolyfunc(params: Type.Param*)(body: Type) = Type.PolyFunction(params.toList, body)
 
   final def pcap(tpe: Type, caps: Term.Ref*): Type.Capturing = Type.Capturing(tpe, caps.toList)
-  final def pcap(tpe: String, caps: String*): Type.Capturing = pcap(tpe, caps.map(tname): _*)
+  final def pcap(tpe: String, caps: String*): Type.Capturing = pcap(tpe, caps.map(tnameOrCapset): _*)
 
   final def tpc(tp: Term.Param*): Term.ParamClause = tpc(null, tp: _*)
   final def tpc(mod: Mod.ParamsType, tp: Term.Param*): Term.ParamClause = Term

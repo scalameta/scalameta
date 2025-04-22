@@ -852,11 +852,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     private def typeCaptures(needCaret: Boolean, allowCaptures: Boolean): Option[List[Term.Ref]] =
       if (allowCaptures && dialect.allowCaptureChecking) {
-        def captures(): Option[List[Term.Ref]] = Some(commaSeparated(path()))
-        if (needCaret) currToken match {
-          case Token.Ident("^") => next(); inBracesOr(captures())(Some(Nil))
-          case _ => None
+        def ifCaret[A](thenPart: => A, elsePart: => A): A = currToken match {
+          case t: Token.Ident if t.text == "^" => next(); thenPart
+          case _ => elsePart
         }
+        def captures(): Option[List[Term.Ref]] = Some(commaSeparated(path() match {
+          case x: Term.Name => ifCaret(autoEndPos(x)(Term.CapSetName(x.value)), x)
+          case x => x
+        }))
+        if (needCaret) ifCaret(inBracesOr(captures())(Some(Nil)), None)
         else inBracesOr(captures())(None)
       } else None
 
@@ -3198,7 +3202,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case Some(q: Mod.Quasi) if endTparamQuasi => q.become[Type.Param]
       case _ =>
         val name = currToken match {
-          case t: Ident => typeName(t)
+          case t: Ident => peekToken match {
+              case p: Token.Ident if dialect.allowCaptureChecking && p.text == "^" =>
+                autoPos { nextTwice(); Type.CapSetName(t.value) }
+              case _ => typeName(t)
+            }
           case t: Unquote => unquote[Name](t)
           case _: Underscore if allowUnderscore => namePlaceholder()
           case _ =>
