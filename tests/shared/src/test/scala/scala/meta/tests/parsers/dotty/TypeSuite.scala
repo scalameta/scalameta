@@ -687,11 +687,11 @@ class TypeSuite extends BaseDottySuite {
   test("#3996 capture checking: 6 polymorphism") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def apply[B^](a: Foo^{B^}): Foo^{B^} = a"
-    val error =
-      """|<input>:1: error: `]` expected but `identifier` found
-         |def apply[B^](a: Foo^{B^}): Foo^{B^} = a
-         |           ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def apply[B^](a: Foo^{B^}): Foo^{B^} = a"
+    val fooCapB = pcap("Foo", "B^")
+    val tree = Defn
+      .Def(Nil, "apply", List(pparam("B^")), List(List(tparam("a", fooCapB))), Some(fooCapB), "a")
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scala36 type member context bounds 1") {

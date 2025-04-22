@@ -437,6 +437,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Term.Ascribe
          |scala.meta.Term.Assign
          |scala.meta.Term.Block
+         |scala.meta.Term.CapSetName
          |scala.meta.Term.CasesBlock
          |scala.meta.Term.ContextFunction
          |scala.meta.Term.Do
@@ -515,6 +516,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Type.BoundsAlias
          |scala.meta.Type.ByName
          |scala.meta.Type.ByNameType
+         |scala.meta.Type.CapSetName
          |scala.meta.Type.Capturing
          |scala.meta.Type.CasesBlock
          |scala.meta.Type.ContextFunction

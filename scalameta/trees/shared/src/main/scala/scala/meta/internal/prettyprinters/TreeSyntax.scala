@@ -436,6 +436,7 @@ object TreeSyntax {
       case t: Term.This => m(Path, w(t.qual, "."), kw("this"))
       case t: Term.Super => m(Path, s(w(t.thisp, "."), kw("super"), w("[", t.superp, "]")))
       case t: Term.Name => m(Path, printMaybeBackquoted(t))
+      case t: Term.CapSetName => m(Path, s(printMaybeBackquoted(t), "^"))
       case t: Term.Select => printSelect(t, ".")
       case t: Term.SelectPostfix =>
         val (sep, backquoteExpr) = t.qual match {
@@ -605,6 +606,7 @@ object TreeSyntax {
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
       case t: Type.Name => m(Path, printMaybeBackquoted(t))
+      case t: Type.CapSetName => m(Path, s(printMaybeBackquoted(t), "^"))
       case t: Type.Select => m(SimpleTyp, s(t.qual, kw("."), t.name))
       case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))

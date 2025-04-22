@@ -295,6 +295,8 @@ object Term {
   class Super(thisp: sm.Name, superp: sm.Name) extends Term.Ref
   @ast
   class Name(value: Predef.String @nonEmpty) extends sm.Name with Term.Ref with Pat
+  @ast // https://scala-lang.org/api/3.x/docs/docs/reference/experimental/cc.html#capability-polymorphism-1
+  class CapSetName(value: Predef.String @nonEmpty) extends sm.Name with Term.Ref
   @ast
   class Anonymous() extends sm.Name with Term.Ref {
     def value = ""
@@ -539,6 +541,8 @@ object Type {
   class Name(value: String @nonEmpty) extends sm.Name with Type.Ref
   @ast
   class AnonymousName() extends Type
+  @ast // https://scala-lang.org/api/3.x/docs/docs/reference/experimental/cc.html#capability-polymorphism-1
+  class CapSetName(value: Predef.String @nonEmpty) extends sm.Name with Type.Ref
   @ast
   class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
     checkFields(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
