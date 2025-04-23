@@ -854,9 +854,9 @@ class InfixSuite extends BaseDottySuite {
       """|a op [T]
          |""".stripMargin
     val error =
-      """|<input>:2: error: type application is not allowed for postfix operators
-         |
-         |^""".stripMargin
+      """|<input>:1: error: type application is not allowed for postfix operators
+         |a op [T]
+         |     ^""".stripMargin
     runTestError[Stat](code, error)
   }
 
