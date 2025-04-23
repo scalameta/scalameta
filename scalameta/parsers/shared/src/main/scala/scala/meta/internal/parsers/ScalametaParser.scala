@@ -2009,7 +2009,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def getPostfixOrNextRhs(op: Term.Name): Either[Term, Term] = {
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
-        val targs = if (at[LeftBracket]) exprTypeArgs() else emptyTypeArgs
+        val hasTypeArgs = at[LeftBracket] ||
+          isIndentingOrEOL(nonOptBracesOK = false) && tryAhead[LeftBracket]
+        val targs = if (hasTypeArgs) exprTypeArgs() else emptyTypeArgs
 
         // Check whether we're still infix or already postfix by testing the current token.
         // In the running example, we're at `a + [b]` (infix).
