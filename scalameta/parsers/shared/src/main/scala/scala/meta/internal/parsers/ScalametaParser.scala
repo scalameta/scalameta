@@ -1998,7 +1998,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         // Infix chain has ended with a postfix expression.
         // This never happens in the running example.
         if (targs.nonEmpty)
-          syntaxError("type application is not allowed for postfix operators", at = currToken)
+          syntaxError("type application is not allowed for postfix operators", at = targs)
         val finQual = getPrevLhs(op)
         val term: Term = atPos(getLhsStartPos(finQual), op)(Term.SelectPostfix(finQual, op))
         Left(term)
