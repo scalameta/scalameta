@@ -826,4 +826,50 @@ class InfixSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("infix with inline type args") {
+    val code =
+      """|a op [T]
+         |  b
+         |""".stripMargin
+    val layout = "a op[T] b"
+    val tree = tinfix("a", "op", List("T"), "b")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix with indented type args") {
+    val code =
+      """|a op
+         |  [T]
+         |  b
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: illegal start of simple expression
+         |  [T]
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("postfix with illegal inline type args") {
+    val code =
+      """|a op [T]
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: type application is not allowed for postfix operators
+         |
+         |^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("postfix with illegal indented type args") {
+    val code =
+      """|a op
+         |  [T]
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: illegal start of simple expression
+         |  [T]
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
