@@ -2191,7 +2191,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         }
         if (isOk(t)) {
           var app: Term = t
-          while (at[LeftBracket]) app = addPos(Term.ApplyType(app, exprTypeArgs()))
+          doWhile { app = addPos(Term.ApplyType(app, exprTypeArgs())) }(at[LeftBracket])
           simpleExprRest(app, canApply = true, startPos = startPos)
         } else addPos(t)
       case tok @ (_: LeftParen | _: LeftBrace) if canApply =>
