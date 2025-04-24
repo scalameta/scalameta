@@ -1218,4 +1218,50 @@ class TermSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("infix with inline type args") {
+    val code =
+      """|a op [T]
+         |  b
+         |""".stripMargin
+    val layout = "a op[T] b"
+    val tree = tinfix("a", "op", List("T"), "b")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix with indented type args") {
+    val code =
+      """|a op
+         |  [T]
+         |  b
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: `end of file` expected but `\n` found
+         |a op
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("postfix with illegal inline type args") {
+    val code =
+      """|a op [T]
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: type application is not allowed for postfix operators
+         |a op [T]
+         |     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("postfix with illegal indented type args") {
+    val code =
+      """|a op
+         |  [T]
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: `end of file` expected but `\n` found
+         |a op
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
