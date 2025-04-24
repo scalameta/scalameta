@@ -2010,7 +2010,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         // Infix chain continues.
         // In the running example, we're at `a [+] b`.
         val hasTypeArgs = at[LeftBracket] ||
-          isIndentingOrEOL(nonOptBracesOK = false) && tryAhead[LeftBracket]
+          isIndentingOrEOL(nonOptBracesOK = true) && tryAhead[LeftBracket]
         val targs = if (hasTypeArgs) exprTypeArgs() else emptyTypeArgs
 
         // Check whether we're still infix or already postfix by testing the current token.
