@@ -240,8 +240,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     val underlyingDialect = {
       def instantiateStandardDialect(sym: Symbol): Option[Dialect] = {
         val dialectsSym = Symbol.classSymbol("scala.meta.dialects.package$").companionModule
-        if (dialectsSym == sym.owner.companionModule)
-          if (dialectsSym.methodMember(sym.name).isEmpty) None else Dialect.standards.get(sym.name)
+        if dialectsSym == sym.owner.companionModule && dialectsSym.declarations.contains(sym) then
+          Dialect.standards.get(sym.name)
         else None
       }
 
