@@ -980,12 +980,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       if (ok) {
         val op = typeName()
-        val leftAssoc = op.isLeftAssoc
-        if (mode != InfixMode.FirstOp) checkAssoc(op, leftAssoc, mode == InfixMode.LeftOp)
         newLineOptWhenFollowedBy(TypeIntro)
         val typ = compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig)
         def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
-        if (leftAssoc) infixTypeRestWithMode(
+        if (op.isLeftAssoc) infixTypeRestWithMode(
           mkOp(typ),
           f,
           inMatchType = inMatchType,
@@ -1840,8 +1838,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         def samePrecedence = opPrecedence == this.head.precedence
         def canReduce = lowerPrecedence || leftAssoc && samePrecedence
 
-        if (samePrecedence) checkAssoc(this.head.op, leftAssoc)
-
         // Pop off an unfinished infix expression off the stack and finish it with the rhs.
         // Then convert the result, so that it can become someone else's rhs.
         // Repeat while precedence and associativity allow.
@@ -1939,16 +1935,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       atPos(lhs, rhsEnd)(Type.ApplyInfix(lhs, op, rhs))
     }
   }
-
-  @inline
-  def checkAssoc(op: Name, leftAssoc: Boolean): Unit = checkAssoc(op, op.isLeftAssoc, leftAssoc)
-
-  @inline
-  private def checkAssoc(at: Tree, opLeftAssoc: Boolean, leftAssoc: Boolean): Unit =
-    if (opLeftAssoc != leftAssoc) syntaxError(
-      "left- and right-associative operators with same precedence may not be mixed",
-      at = at
-    )
 
   private def getLeadingInfix[A <: Name, B](lf: InfixLF)(f: String => A)(g: A => B): Option[B] =
     peekToken match {
