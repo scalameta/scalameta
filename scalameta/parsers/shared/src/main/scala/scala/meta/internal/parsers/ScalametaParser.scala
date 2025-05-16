@@ -1822,33 +1822,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     var stack: List[UnfinishedInfix] = Nil
     @inline
     def isDone(base: List[UnfinishedInfix]): Boolean = this.stack == base
-    def head = stack.head
     def push(unfinishedInfix: UnfinishedInfix): Unit = stack ::= unfinishedInfix
-    def pop(): UnfinishedInfix =
-      try head
-      finally stack = stack.tail
 
-    def reduceStack(stack: List[UnfinishedInfix], curr: Typ, currEnd: EndPos, op: Option[Op]): Typ =
-      if (isDone(stack)) curr
+    def reduceStack(base: List[UnfinishedInfix], curr: Typ, currEnd: EndPos, op: Option[Op]): Typ =
+      if (isDone(base)) curr
       else {
         val opPrecedence = op.fold(0)(_.precedence)
         val leftAssoc = op.forall(_.isLeftAssoc)
-
-        def lowerPrecedence = opPrecedence < this.head.precedence
-        def samePrecedence = opPrecedence == this.head.precedence
-        def canReduce = lowerPrecedence || leftAssoc && samePrecedence
 
         // Pop off an unfinished infix expression off the stack and finish it with the rhs.
         // Then convert the result, so that it can become someone else's rhs.
         // Repeat while precedence and associativity allow.
         @tailrec
-        def loop(rhs: Typ): Typ =
+        def loop(rhs: Typ): Typ = {
+          val lhs = stack.head
+          val diffPrecedence = opPrecedence - lhs.precedence
+          val canReduce = diffPrecedence < 0 || diffPrecedence == 0 && leftAssoc
           if (!canReduce) rhs
           else {
-            val lhs = pop()
+            stack = stack.tail
             val fin = finishInfixExpr(lhs, rhs, currEnd)
-            if (isDone(stack)) fin else loop(fin)
+            if (isDone(base)) fin else loop(fin)
           }
+        }
 
         loop(curr)
       }
