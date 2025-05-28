@@ -6,6 +6,7 @@ import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.{semanticdb => s}
+
 import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.{Flags => gf}
@@ -41,9 +42,9 @@ trait TextDocumentOps {
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = toTextDocument(None)
 
-    implicit val rangeOrder: Ordering[Option[s.Range]] =
-      Ordering.Option(Ordering.by[s.Range, Int](_.startLine)
-        .orElse(Ordering.by[s.Range, Int](_.startCharacter)))
+    implicit val rangeOrder: Ordering[Option[s.Range]] = Ordering.Option(
+      Ordering.by[s.Range, Int](_.startLine).orElse(Ordering.by[s.Range, Int](_.startCharacter))
+    )
 
     def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
       clearSymbolPointsCache()
