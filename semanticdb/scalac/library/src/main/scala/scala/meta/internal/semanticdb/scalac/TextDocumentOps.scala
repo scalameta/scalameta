@@ -43,19 +43,6 @@ trait TextDocumentOps {
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = toTextDocument(None)
 
-    private def orderOrElse[T](one: Ordering[T], another: Ordering[T]): Ordering[T] =
-      (x: T, y: T) => {
-        val res1 = one.compare(x, y)
-        if (res1 != 0) res1 else another.compare(x, y)
-      }
-
-    implicit val rangeOrder: Ordering[Option[s.Range]] = {
-      val byLine = Ordering.by[s.Range, Int](_.startLine)
-      val byChar = Ordering.by[s.Range, Int](_.startCharacter)
-      val byLineOrChar = orderOrElse(byLine, byChar)
-      Ordering.Option(byLineOrChar)
-    }
-
     def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
       clearSymbolPointsCache()
       val occurrences = emptyOccurrenceMap()

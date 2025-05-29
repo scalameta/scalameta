@@ -70,10 +70,9 @@ object OccurrenceSuite {
   def printTextDocument(doc: TextDocument): String = {
     val symtab = doc.symbols.iterator.map(info => info.symbol -> info).toMap
     val sb = new StringBuilder
-    val occurrences = doc.occurrences.sorted
     val input = Input.VirtualFile(doc.uri, doc.text)
     var offset = 0
-    occurrences.foreach { occ =>
+    doc.occurrences.foreach { occ =>
       val range = occ.range.get
       val pos = Position
         .Range(input, range.startLine, range.startCharacter, range.endLine, range.endCharacter)
@@ -93,21 +92,5 @@ object OccurrenceSuite {
     sb.append("/*").append(arrow)
       // replace package / with dot . to not upset GitHub syntax highlighting.
       .append(symbol.replace('/', '.')).append("*/")
-  }
-
-  implicit val occurrenceOrdering: Ordering[SymbolOccurrence] = new Ordering[SymbolOccurrence] {
-    override def compare(x: SymbolOccurrence, y: SymbolOccurrence): Int =
-      if (x.range.isEmpty) 0
-      else if (y.range.isEmpty) 0
-      else {
-        val a = x.range.get
-        val b = y.range.get
-        val byLine = Integer.compare(a.startLine, b.startLine)
-        if (byLine != 0) byLine
-        else {
-          val byCharacter = Integer.compare(a.startCharacter, b.startCharacter)
-          byCharacter
-        }
-      }
   }
 }
