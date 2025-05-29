@@ -157,7 +157,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
   }
 
   private def expand(strCtx: Expr[StringContext], qType: QuasiquoteType, mode: Mode) = {
-    val input = metaInput()
+    val input = metaInput(strCtx)
     val (dialect, dialectExpr) = instantiateDialect(mode)
     val parser = instantiateParser(qType)
     val skeleton = parseSkeleton(parser, input, dialect)
@@ -167,29 +167,23 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
   private def throwSourceFileError() = // should never be reached
     throw new Exception("Source file contents could not be read while expanding quasiquote")
 
-  private def metaInput() = {
-    val pos = Position.ofMacroExpansion
+  private def metaInput(strCtx: Expr[StringContext]) = {
+    val pos = strCtx.asTerm.pos
     val reflectInput = pos.sourceFile
     val content = new String(reflectInput.content.getOrElse(throwSourceFileError()))
-    val start = {
-      var i = pos.start
-      while (content(i) != '"') i += 1 // skip method name
-      while (content(i) == '"') i += 1 // skip quotations
-      i
-    }
     val end = {
       var i = pos.end - 1
       while (content(i) == '"') i -= 1 // skip quotations
       i + 1
     }
     val metaInput = Input.VirtualFile(reflectInput.path, content)
-    Input.Slice(metaInput, start, end)
+    Input.Slice(metaInput, pos.start, end)
   }
 
-  private def isMultiline() = {
-    val pos = Position.ofMacroExpansion
+  private def isMultiline(strCtx: Expr[StringContext]) = {
+    val pos = strCtx.asTerm.pos
     val content = pos.sourceFile.content.getOrElse(throwSourceFileError())
-    content(pos.start + 1) == '"' && content(pos.start + 2) == '"'
+    content(pos.start - 1) == '"' && content(pos.start - 2) == '"'
   }
 
   private def extractModeTerm(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Mode = {
@@ -200,7 +194,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     }
     val Varargs(args) = argsExpr: @unchecked
     val holes = args.zipWithIndex.map(mkHole)
-    Mode.Term(isMultiline(), holes.toList)
+    Mode.Term(isMultiline(strCtxExpr), holes.toList)
   }
 
   private def extractModePattern(strCtxExpr: Expr[StringContext], selectorExpr: Expr[Any]): Mode = {
@@ -230,7 +224,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
       val argType = argTypes.map(_(i))
       PatternHole(name, posStart, posEnd, argType, None, None)
     }
-    Mode.Pattern(isMultiline(), List.range(0, parts.length - 1).map(mkHole(_)), selectorExpr)
+    Mode
+      .Pattern(isMultiline(strCtxExpr), List.range(0, parts.length - 1).map(mkHole(_)), selectorExpr)
   }
 
   private def instantiateDialect(mode: Mode): (Dialect, Expr[Dialect]) = {
