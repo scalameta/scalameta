@@ -25,4 +25,16 @@ object Implicits {
     def toSemanticOriginal: OriginalTree = OriginalTree(range = Some(range))
   }
 
+  implicit val rangeOrdering: Ordering[Range] = new Ordering[Range] {
+    override def compare(a: Range, b: Range): Int = {
+      val byLine = Integer.compare(a.startLine, b.startLine)
+      if (byLine != 0) byLine
+      else {
+        val byCharacter = Integer.compare(a.startCharacter, b.startCharacter)
+        byCharacter
+      }
+    }
+  }
+
+  implicit val rangeOptionOrdering: Ordering[Option[Range]] = Ordering.Option[Range]
 }

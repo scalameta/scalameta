@@ -7,8 +7,8 @@ import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.{semanticdb => s}
 
-import scala.annotation.tailrec
 import scala.collection.mutable
+import scala.math.Ordering
 import scala.reflect.internal._
 import scala.reflect.internal.{Flags => gf}
 import scala.reflect.internal.{util => gu}
@@ -637,10 +637,10 @@ trait TextDocumentOps {
         text = unit.source.toText,
         md5 = unit.source.toMD5,
         language = s.Language.SCALA,
-        symbols = finalSymbols,
-        occurrences = finalOccurrences,
-        diagnostics = diagnostics,
-        synthetics = synthetics.toScalaSeq
+        symbols = finalSymbols.sortBy(_.symbol),
+        occurrences = finalOccurrences.sortBy(_.range),
+        diagnostics = diagnostics.sortBy(_.range),
+        synthetics = synthetics.toScalaSeq.sortBy(_.range)
       )
     }
   }
