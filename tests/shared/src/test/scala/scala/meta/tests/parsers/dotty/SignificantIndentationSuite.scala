@@ -3016,4 +3016,17 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4252") {
+    val code =
+      """|foo:
+         |  case (x, y) =>
+         |    case "abc" => ()
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `outdent` expected but `case` found
+         |    case "abc" => ()
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
