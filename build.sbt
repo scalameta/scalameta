@@ -380,7 +380,7 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testS
   libraryDependencies ++=
     { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
   dependencyOverrides += {
-    val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.1.0"
+    val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.4.0"
     "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
   },
   libraryDependencies ++= {
