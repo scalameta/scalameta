@@ -962,18 +962,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     ): Type =
       if (dialect.useInfixTypePrecedence)
         infixTypeRestWithPrecedence(t, inMatchType = inMatchType, inGivenSig = inGivenSig)
-      else infixTypeRestWithMode(t, identity, inMatchType = inMatchType, inGivenSig = inGivenSig)(
-        InfixMode.FirstOp,
-        t.begIndex
-      )
+      else infixTypeRestImpl(t, identity, inMatchType = inMatchType, inGivenSig = inGivenSig)
 
     @tailrec
-    private final def infixTypeRestWithMode(
+    private final def infixTypeRestImpl(
         t: Type,
         f: Type => Type,
         inMatchType: Boolean = false,
         inGivenSig: Boolean = false
-    )(mode: InfixMode.Value, startPos: Int): Type = {
+    ): Type = {
       val ok = currToken match {
         case _: Unquote | InfixTypeIdent() => true
         case _ => false
@@ -982,19 +979,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val op = typeName()
         newLineOptWhenFollowedBy(TypeIntro)
         val typ = compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig)
-        def mkOp(t1: Type) = atPos(startPos, t1)(Type.ApplyInfix(t, op, t1))
-        if (op.isLeftAssoc) infixTypeRestWithMode(
-          mkOp(typ),
-          f,
-          inMatchType = inMatchType,
-          inGivenSig = inGivenSig
-        )(InfixMode.LeftOp, startPos)
-        else infixTypeRestWithMode(
-          typ,
-          f.compose(mkOp),
-          inMatchType = inMatchType,
-          inGivenSig = inGivenSig
-        )(InfixMode.RightOp, typ.begIndex)
+        def mkOp(t1: Type) = atPos(t, t1)(Type.ApplyInfix(t, op, t1))
+        if (op.isLeftAssoc)
+          infixTypeRestImpl(mkOp(typ), f, inMatchType = inMatchType, inGivenSig = inGivenSig)
+        else
+          infixTypeRestImpl(typ, f.compose(mkOp), inMatchType = inMatchType, inGivenSig = inGivenSig)
       } else f(t)
     }
 
