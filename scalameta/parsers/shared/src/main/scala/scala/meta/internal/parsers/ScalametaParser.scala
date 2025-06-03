@@ -2419,26 +2419,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       if (isOptional) blockOnOther(allowRepeated) else blockOnBrace(allowRepeated)
     )
 
-  private def blockOnOther(allowRepeated: Boolean = false): Term = autoPosOpt(
+  private def blockOnOther(allowRepeated: Boolean = false): Term = {
+    val start = currIndex
     blockStatSeq(allowRepeated = allowRepeated) match {
       case (term: Term) :: Nil => term
-      case stats => toBlockRaw(stats)
+      case (q: Quasi) :: Nil => q.become[Term]
+      case stats => autoEndPos(start)(toBlockRaw(stats))
     }
-  )
+  }
 
   def caseClause(forceSingleExpr: Boolean = false): Case = {
     expectNot[KwCase]
     autoEndPos(prevIndex) {
       def caseBody() = {
         accept[RightArrow]
-        val start = currIndex
-        def parseStatSeq() = blockStatSeq() match {
-          case List(q: Quasi) => q.become[Term]
-          case List(term: Term) => term
-          case other => autoEndPos(start)(Term.Block(other))
-        }
-        indentedOr(parseStatSeq())(
-          if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false) else parseStatSeq()
+        indentedOr(blockOnOther())(
+          if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false) else blockOnOther()
         )
       }
       @inline
