@@ -101,6 +101,10 @@ object ReificationMacros {
       case '{ ($sc: StringContext).source } => (sc, QuasiquoteType.Source)
       case _ => quotes.reflect.report.errorAndAbort("Expected call to quasiquote extension method. ")
     new ReificationMacros().expandUnapply(stringContext, scrutineeExpr, quasiquoteType)
+
+  private def throwSourceFileError() = // should never be reached
+    throw new Exception("Source file contents could not be read while expanding quasiquote")
+
 }
 
 class ReificationMacros(using val topLevelQuotes: Quotes) {
@@ -109,6 +113,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
   import scala.meta.inputs.{Position => MetaPosition, _}
   import scala.meta.{Tree => MetaTree}
 
+  import ReificationMacros._
   import topLevelQuotes.reflect._
   type MetaParser = (Input, Dialect) => MetaTree
 
@@ -164,13 +169,10 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     reifySkeleton(skeleton, mode, qType, dialectExpr, input)
   }
 
-  private def throwSourceFileError() = // should never be reached
-    throw new Exception("Source file contents could not be read while expanding quasiquote")
-
   private def metaInput() = {
     val pos = Position.ofMacroExpansion
     val reflectInput = pos.sourceFile
-    val content = new String(reflectInput.content.getOrElse(throwSourceFileError()))
+    val content = reflectInput.content.getOrElse(throwSourceFileError())
     val start = {
       var i = pos.start
       while (content(i) != '"') i += 1 // skip method name
