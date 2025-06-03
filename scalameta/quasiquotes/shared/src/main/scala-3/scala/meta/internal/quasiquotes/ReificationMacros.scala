@@ -143,8 +143,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
       unapplySelector: Expr[Any],
       qType: QuasiquoteType
   ): Expr[Any] = {
-    val mode = extractModePattern(strCtx, unapplySelector)
-    expand(strCtx, qType, mode)
+    given strCtxExpr: Expr[StringContext] = strCtx
+    expand(qType, extractModePattern(unapplySelector))
   }
 
   def expandApply(
@@ -152,11 +152,11 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
       args: Expr[Seq[Any]],
       qType: QuasiquoteType
   ): Expr[Any] = {
-    val mode = extractModeTerm(strCtx, args)
-    expand(strCtx, qType, mode)
+    given strCtxExpr: Expr[StringContext] = strCtx
+    expand(qType, extractModeTerm(args))
   }
 
-  private def expand(strCtx: Expr[StringContext], qType: QuasiquoteType, mode: Mode) = {
+  private def expand(qType: QuasiquoteType, mode: Mode)(using strCtxExpr: Expr[StringContext]) = {
     val input = metaInput()
     val (dialect, dialectExpr) = instantiateDialect(mode)
     val parser = instantiateParser(qType)
@@ -192,7 +192,9 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     content(pos.start + 1) == '"' && content(pos.start + 2) == '"'
   }
 
-  private def extractModeTerm(strCtxExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Mode = {
+  private def extractModeTerm(
+      argsExpr: Expr[Seq[Any]]
+  )(using strCtxExpr: Expr[StringContext]): Mode = {
     def mkHole(argi: (Expr[Any], Int)) = {
       val (arg, i) = argi
       val name = "quasiquote" + "$hole$" + i
@@ -203,7 +205,9 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     Mode.Term(isMultiline(), holes.toList)
   }
 
-  private def extractModePattern(strCtxExpr: Expr[StringContext], selectorExpr: Expr[Any]): Mode = {
+  private def extractModePattern(
+      selectorExpr: Expr[Any]
+  )(using strCtxExpr: Expr[StringContext]): Mode = {
     val '{ StringContext(${ Varargs(parts) }: _*) } = strCtxExpr: @unchecked
 
     // EXPERIMENT: Workaround mechanism for getting type declarations from unapply pattern.
