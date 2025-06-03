@@ -19,4 +19,14 @@ object TestHelpers {
 
   def tokensAsSyntax(tokens: Iterator[Token]) = tokens.map(_.syntax).mkString
 
+  def collect[B](tree: Tree)(pf: PartialFunction[Tree, B]): List[B] = {
+    val builder = List.newBuilder[B]
+    def loop(t: Tree): Unit = {
+      builder ++= pf.lift(t)
+      t.children.foreach(loop)
+    }
+    loop(tree)
+    builder.result()
+  }
+
 }
