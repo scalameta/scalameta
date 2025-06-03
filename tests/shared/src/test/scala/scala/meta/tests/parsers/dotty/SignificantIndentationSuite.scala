@@ -3022,11 +3022,23 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  case (x, y) =>
          |    case "abc" => ()
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `outdent` expected but `case` found
-         |    case "abc" => ()
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|foo {
+         |  case (x, y) =>
+         |    {
+         |      case "abc" => ()
+         |    }
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      "foo",
+      Term.PartialFunction(List(Case(
+        Pat.Tuple(List(patvar("x"), patvar("y"))),
+        None,
+        Term.PartialFunction(List(Case(lit("abc"), None, lit())))
+      )))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }

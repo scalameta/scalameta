@@ -504,9 +504,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             // partial function
             case (_: RegionBrace) :: _ => expr() :: sepRegions
             // partial function in assignment or fewer braces
-            case (_: RegionIndent) :: _
-                if prevToken.is[Indentation.Indent] && prev.isAny[Equals, Colon] =>
-              expr() :: sepRegions
+            case (_: RegionIndent) :: rs
+                if prevToken.is[Indentation.Indent] &&
+                  (prev match {
+                    case _: Equals | _: Colon => true
+                    case _: RightArrow => rs.headOption.exists(_.isInstanceOf[RegionCaseBody])
+                    case _ => false
+                  }) => expr() :: sepRegions
             // `case` is at top-level (likely quasiquote)
             case Nil if prevPos == 0 => expr() :: sepRegions
             case _ => sepRegions

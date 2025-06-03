@@ -2433,9 +2433,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     autoEndPos(prevIndex) {
       def caseBody() = {
         accept[RightArrow]
-        indentedOr(blockOnOther())(
-          if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false) else blockOnOther()
-        )
+        if (at[Indentation.Indent]) blockExprOnIndent()
+        else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
+        else blockOnOther()
       }
       @inline
       def guard(): Option[Term] = if (at[KwIf]) Some(guardOnIf()) else None
