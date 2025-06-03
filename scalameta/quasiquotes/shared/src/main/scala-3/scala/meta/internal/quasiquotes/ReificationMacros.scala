@@ -116,8 +116,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     def isTerm: Boolean = this.isInstanceOf[Mode.Term]
     def isPattern: Boolean = this.isInstanceOf[Mode.Pattern]
     def hasHoles: Boolean = this match
-      case Mode.Term(_, holes) => !holes.isEmpty
-      case Mode.Pattern(_, holes, _) => !holes.isEmpty
+      case x: Mode.Term => x.holes.nonEmpty
+      case x: Mode.Pattern => x.holes.nonEmpty
 
     def multiline: Boolean
   }
@@ -195,20 +195,27 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
   private def extractModeTerm(
       argsExpr: Expr[Seq[Any]]
   )(using strCtxExpr: Expr[StringContext]): Mode = {
-    def mkHole(argi: (Expr[Any], Int)) = {
-      val (arg, i) = argi
-      val name = "quasiquote" + "$hole$" + i
-      TermHole(name, arg.asTerm, reifier = None)
-    }
     val Varargs(args) = argsExpr: @unchecked
-    val holes = args.zipWithIndex.map(mkHole)
-    Mode.Term(isMultiline(), holes.toList)
+    val argsIter = args.iterator
+
+    val holes = List.newBuilder[TermHole]
+    @tailrec
+    def iter(i: Int): Unit = if (argsIter.hasNext) {
+      val arg = argsIter.next()
+      val name = "quasiquote" + "$hole$" + i
+      holes += TermHole(name, arg.asTerm, reifier = None)
+      iter(i + 1)
+    }
+    iter(0)
+
+    Mode.Term(isMultiline(), holes.result())
   }
 
   private def extractModePattern(
       selectorExpr: Expr[Any]
   )(using strCtxExpr: Expr[StringContext]): Mode = {
     val '{ StringContext(${ Varargs(parts) }: _*) } = strCtxExpr: @unchecked
+    val partPosIter = parts.iterator.map(_.asTerm.pos)
 
     // EXPERIMENT: Workaround mechanism for getting type declarations from unapply pattern.
     // Only works for `val q"${: T}" = (...)`, does nothing for pattern matching cases.
@@ -227,14 +234,18 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     // catch
     //   case _ => None
 
-    def mkHole(i: Int) = {
+    val holes = List.newBuilder[PatternHole]
+    @tailrec
+    def iter(i: Int, prevPartPos: Position): Unit = if (partPosIter.hasNext) {
+      val partPos = partPosIter.next()
       val name = "quasiquote" + "$hole$" + i
-      val posStart = parts(i).asTerm.pos.end
-      val posEnd = parts(i + 1).asTerm.pos.start
       val argType = argTypes.map(_(i))
-      PatternHole(name, posStart, posEnd, argType, None, None)
+      holes += PatternHole(name, prevPartPos.end, partPos.start, argType, None, None)
+      iter(i + 1, partPos)
     }
-    Mode.Pattern(isMultiline(), List.range(0, parts.length - 1).map(mkHole(_)), selectorExpr)
+    if (partPosIter.hasNext) iter(0, partPosIter.next())
+
+    Mode.Pattern(isMultiline(), holes.result(), selectorExpr)
   }
 
   private def instantiateDialect(mode: Mode): (Dialect, Expr[Dialect]) = {
