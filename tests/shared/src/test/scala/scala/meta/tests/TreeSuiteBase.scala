@@ -215,7 +215,8 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       tree: Tree,
       expected: String,
       showPosition: Boolean = false,
-      showFieldName: Boolean = false
+      showFieldName: Boolean = false,
+      skipFullTree: Boolean = true
   )(implicit loc: Location): Unit = {
     val sb = new StringBuilder
     TestHelpers.collect(tree) {
@@ -224,7 +225,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       // `.syntax` without using tokens. For example, if a Mod.Lazy tree has
       // the syntax "lazy" then it's trivially verified and excluded from the
       // output.
-      case `tree` =>
+      case `tree` if skipFullTree =>
       case t: Lit.Null if t.text == "null" =>
       case t: Lit.Unit if t.text == "()" => // This case is needed for Scala.js.
       case t: Lit if t.value != null && t.text == t.value.toString =>
@@ -257,13 +258,16 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
           else None
         nameOpt.foreach(x => sb.append('<').append(x).append('>'))
         sb.append(t.productPrefix).append(' ')
+        val pos = t.pos
         val syntax = t.text
-        if (syntax.isEmpty) {
-          val (leading, trailing) = t.pos.lineContent.splitAt(t.pos.startColumn)
+        if (syntax.nonEmpty) sb.append(syntax)
+        else if (pos eq Position.None) sb.append("@?@")
+        else {
+          val (leading, trailing) = pos.lineContent.splitAt(pos.startColumn)
           sb.append(leading).append("@@").append(trailing)
-        } else sb.append(syntax)
+        }
         nameOpt.foreach(x => sb.append("</").append(x).append('>'))
-        if (showPosition) sb.append(' ').append(t.pos.desc)
+        if (showPosition) sb.append(' ').append(pos.desc)
         sb.append('\n')
     }
     val obtained = sb.result()
