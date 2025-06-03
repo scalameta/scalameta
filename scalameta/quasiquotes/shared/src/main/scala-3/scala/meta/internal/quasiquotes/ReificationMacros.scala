@@ -169,29 +169,18 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
     reifySkeleton(skeleton, mode, qType, dialectExpr, input)
   }
 
-  private def metaInput() = {
-    val pos = Position.ofMacroExpansion
+  private def metaInput()(using strCtxExpr: Expr[StringContext]) = {
+    val pos = strCtxExpr.asTerm.pos
     val reflectInput = pos.sourceFile
     val content = reflectInput.content.getOrElse(throwSourceFileError())
-    val start = {
-      var i = pos.start
-      while (content(i) != '"') i += 1 // skip method name
-      while (content(i) == '"') i += 1 // skip quotations
-      i
-    }
-    val end = {
-      var i = pos.end - 1
-      while (content(i) == '"') i -= 1 // skip quotations
-      i + 1
-    }
     val metaInput = Input.VirtualFile(reflectInput.path, content)
-    Input.Slice(metaInput, start, end)
+    Input.Slice(metaInput, pos.start, pos.end)
   }
 
-  private def isMultiline() = {
-    val pos = Position.ofMacroExpansion
+  private def isMultiline()(using strCtxExpr: Expr[StringContext]) = {
+    val pos = strCtxExpr.asTerm.pos
     val content = pos.sourceFile.content.getOrElse(throwSourceFileError())
-    content(pos.start + 1) == '"' && content(pos.start + 2) == '"'
+    content(pos.start - 1) == '"' && content(pos.start - 2) == '"'
   }
 
   private def extractModeTerm(
