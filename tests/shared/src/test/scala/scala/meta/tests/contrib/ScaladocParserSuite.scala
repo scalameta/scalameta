@@ -246,7 +246,7 @@ class ScaladocParserSuite extends FunSuite {
           |""".stripMargin
     )
 
-    val expectation = Some(List(DocToken(Param, Some("a\nThis"), Some(description.drop(5)))))
+    val expectation = Some(List(DocToken(Param, Some("a"), Some(description))))
 
     assertEquals(result, expectation)
   }
