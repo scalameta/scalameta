@@ -236,4 +236,19 @@ class ScaladocParserSuite extends FunSuite {
     assertEquals(result, expectation)
   }
 
+  test("multiline param") {
+    val description = "This description starts on the next line."
+    val result = parseString(
+      s"""|/** @param a
+            *    $description
+            */
+          |case class foo(a: String)
+          |""".stripMargin
+    )
+
+    val expectation = Some(List(DocToken(Param, Some("a\nThis"), Some(description.drop(5)))))
+
+    assertEquals(result, expectation)
+  }
+
 }
