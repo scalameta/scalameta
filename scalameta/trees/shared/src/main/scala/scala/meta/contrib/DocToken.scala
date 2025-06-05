@@ -6,6 +6,7 @@ import fastparse._
 /**
  * Represents a scaladoc line.
  */
+@deprecated("Use scala.meta.internal.Scaladoc instead", "4.3.13")
 case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[String]) {
 
   override def toString: String = ((name, body) match {
@@ -35,6 +36,7 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
  * @see
  *   http://docs.scala-lang.org/overviews/scaladoc/for-library-authors.html
  */
+@deprecated("Use scala.meta.internal.Scaladoc instead", "4.3.13")
 object DocToken {
 
   /**
