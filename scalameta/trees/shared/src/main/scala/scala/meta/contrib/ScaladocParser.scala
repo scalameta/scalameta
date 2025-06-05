@@ -85,10 +85,10 @@ object ScaladocParser {
         require(kind.numberParameters == 2)
         // Multiple parameter doc tokens
         def parser[$: P] = {
-          def nameParser: P[String] = ((AnyChar ~ !" ").rep ~ AnyChar).!.map(_.trim)
+          def nameParser: P[String] = ((AnyChar ~ !(" " | "\n")).rep ~ AnyChar).!.map(_.trim)
 
           def nameAndBodyParsers: P[DocToken] = (nameParser ~ " ".rep.? ~ bodyParser.!).map {
-            case (name, body) => DocToken(kind, name, body)
+            case (name, body) => DocToken(kind, name, body.trim)
           }
           P(s"$label" ~ nameAndBodyParsers)
         }
