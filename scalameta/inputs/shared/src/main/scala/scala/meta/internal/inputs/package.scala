@@ -29,20 +29,24 @@ package object inputs {
     def lineContent: String = {
       val input = pos.input
       val start = input.lineToOffset(pos.startLine)
-      val notEof = start < input.chars.length
-      val end = if (notEof) input.lineToOffset(pos.startLine + 1) else start
-      new String(input.chars, start, end - start).stripLineEnd
+      if (start < input.chars.length) {
+        val end = input.lineToOffset(pos.startLine + 1)
+        new String(input.chars, start, end - start).stripLineEnd
+      } else ""
     }
-    def lineCaret: String = " " * pos.startColumn + "^"
-    def formatMessage(severity: String, message: String): String =
+    def formatMessage(severity: String, message: String): String = {
       // WONTFIX: https://github.com/scalameta/scalameta/issues/383
+      implicit val sb = new StringBuilder
+      def appendMessage = sb.append(severity).append(": ").append(message)
       if (pos != Position.None) {
-        val input = pos.input
-        val header = s"${input.syntax}:${pos.startLine + 1}: $severity: $message"
-        val line = lineContent
-        val caret = lineCaret
-        header + EOL + line + EOL + caret
-      } else s"$severity: $message"
+        sb.append(pos.input.syntax).append(':').append(pos.startLine + 1).append(": ")
+        appendMessage
+        sb.append(EOL).append(lineContent).append(EOL)
+        var i = 0; while (i < pos.startColumn) { sb.append(' '); i += 1 }
+        sb.append('^')
+      } else appendMessage
+      sb.result()
+    }
 
     def syntax: String = pos match {
       case Position.None => s"<none>"
