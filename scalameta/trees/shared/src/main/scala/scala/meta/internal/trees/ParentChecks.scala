@@ -68,7 +68,7 @@ object ParentChecks {
   def NameAnonymous(tree: Name.Anonymous, parent: Tree, destination: String): Boolean = parent match {
     case _: Ctor | _: Init | _: Self | _: Term.Param | _: Type.Param => destination == "name"
     case _: Mod.Private | _: Mod.Protected => destination == "within"
-    case _: Term.This | _: Term.Super | _: Defn.Given | _: Defn.GivenAlias => true
+    case _: Term.This | _: Term.Super | _: Stat.GivenLike => true
     case _: Defn.ExtensionGroup | _: Defn.RepeatedEnumCase => true
     case _ => false
   }
