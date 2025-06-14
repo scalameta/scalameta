@@ -1039,4 +1039,13 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("abstract-given-anonymous") {
+    runTestError[Stat]("given Ord[Int]", "abstract givens cannot be anonymous")
+    runTestError[Stat](
+      "given [T](using ord: Ord[T]): Ord[Set[T]]",
+      "abstract givens cannot be anonymous"
+    )
+    runTestError[Stat]("given (using Ord[String]): Ord[Int]", "abstract givens cannot be anonymous")
+  }
+
 }
