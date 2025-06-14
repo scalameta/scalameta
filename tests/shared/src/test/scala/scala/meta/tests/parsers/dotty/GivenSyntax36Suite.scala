@@ -1039,4 +1039,20 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("abstract-given-anonymous") {
+    runTestAssert[Stat]("given Ord[Int]")(Decl.GivenAnonymous(Nil, anon, Nil, papply("Ord", "Int")))
+    runTestAssert[Stat]("given [T](using ord: Ord[T]): Ord[Set[T]]")(Decl.GivenAnonymous(
+      Nil,
+      anon,
+      List(Member.ParamClauseGroup(List(pparam("T")), List(List(tparamUsing("ord", papply("Ord", "T")))))),
+      papply("Ord", papply("Set", "T"))
+    ))
+    runTestAssert[Stat]("given (using Ord[String]): Ord[Int]")(Decl.GivenAnonymous(
+      Nil,
+      anon,
+      List(Member.ParamClauseGroup(Nil, List(List(tparamUsing("", papply("Ord", "String")))))),
+      papply("Ord", "Int")
+    ))
+  }
+
 }

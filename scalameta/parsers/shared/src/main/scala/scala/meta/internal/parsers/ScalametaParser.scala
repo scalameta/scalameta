@@ -3455,6 +3455,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Comma | _: LeftBrace | _: Colon if newSyntaxOK => getDefnGiven()
       case _ => sig.name match {
           case n: Term.Name => Decl.Given(mods, n, sig.pcg, decltype)
+          case n: Name.Anonymous if dialect.allowImprovedTypeClassesSyntax =>
+            Decl.GivenAnonymous(mods, n, sig.pcg, decltype)
           case n => syntaxError("abstract givens cannot be anonymous", at = n)
         }
     }
