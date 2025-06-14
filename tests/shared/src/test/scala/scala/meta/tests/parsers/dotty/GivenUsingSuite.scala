@@ -5,6 +5,8 @@ import scala.meta._
 class GivenUsingSuite extends BaseDottySuite {
 
   implicit val parseBlock: String => Stat = blockStat(_)
+  // we have a separate suite for 3.6 features
+  override protected implicit val dialect: Dialect = dialects.Scala35
 
   /**
    * For checking examples in repl declare:
