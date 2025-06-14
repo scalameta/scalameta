@@ -809,7 +809,7 @@ object TreeSyntax {
       case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparamClause, t.bounds)
       case t: Decl.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, kw(": "), t.decltpe)
-      case t: Decl.Given =>
+      case t: Decl.GivenLike =>
         val sig = givenSig(t.name, t.paramClauseGroups)
         r(" ")(t.mods, sig, givenDeclTpe(t.decltpe))
       case t: Defn.Val =>

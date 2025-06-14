@@ -1046,6 +1046,21 @@ object Decl {
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values
   }
+
+  @branch
+  trait GivenLike extends Decl with Stat.GivenLike with Member with Tree.WithDeclTpe {
+    def mods: List[Mod]
+    def name: Name
+    def paramClauseGroups: List[Member.ParamClauseGroup]
+    def decltpe: sm.Type
+  }
+  @ast
+  class GivenAnonymous(
+      mods: List[Mod],
+      name: Name.Anonymous,
+      paramClauseGroups: List[Member.ParamClauseGroup],
+      decltpe: sm.Type
+  ) extends GivenLike
   @ast
   class Given(
       mods: List[Mod],
@@ -1054,11 +1069,7 @@ object Decl {
       @replacesFields("4.12.0", Member.ParamClauseGroupsCtor)
       paramClauseGroups: List[Member.ParamClauseGroup],
       decltpe: sm.Type
-  ) extends Decl
-      with Stat.GivenLike
-      with Member.Term
-      with Tree.WithParamClauseGroup
-      with Tree.WithDeclTpe {
+  ) extends GivenLike with Member.Term with Tree.WithParamClauseGroup {
     @replacedField("4.6.0", pos = 2)
     final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroups)
     @replacedField("4.6.0", pos = 3)
@@ -1066,6 +1077,7 @@ object Decl {
     @replacedField("4.12.0")
     final def paramClauseGroup: Option[Member.ParamClauseGroup] = paramClauseGroups.headOption
   }
+
 }
 
 @branch
