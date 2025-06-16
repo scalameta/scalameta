@@ -43,6 +43,11 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
         out.print("(")
         rep(tree.arguments, ", ")(pprint)
         out.print(")")
+      case tree: ApplyContextTree =>
+        pprint(tree.function)
+        out.print("(using ")
+        rep(tree.arguments, ", ")(pprint)
+        out.print(")")
       case tree: FunctionTree =>
         out.print("{")
         rep("(", tree.parameters, ", ", ") => ")(pprint)
