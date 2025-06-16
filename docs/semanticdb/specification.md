@@ -1037,6 +1037,7 @@ message Tree {
     OriginalTree original_tree = 6;
     SelectTree select_tree = 7;
     TypeApplyTree type_apply_tree = 8;
+    ApplyContextTree apply_context_tree = 9;
   }
 }
 ```
@@ -1121,6 +1122,15 @@ message TypeApplyTree {
 
 A `TypeApplyTree` represents the type application of a method, providing that
 method with type arguments.
+
+An `ApplyContextTree` represents a contextual method application, using Scala 3 `using` syntax.
+
+```protobuf
+message ApplyContextTree {
+  Tree function = 1;
+  repeated Tree arguments = 2;
+}
+```
 
 ## Data Schemas
 
