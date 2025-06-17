@@ -2200,7 +2200,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
     }
 
-  private def tryGetArgAsLambda(): Option[Term.FunctionTerm] = Try {
+  private def tryGetArgAsLambda(): Option[Term.FunctionLike] = Try {
     val paramPos = currIndex
     def getFunctionTerm(params: Term.ParamClause): Option[Term.FunctionTerm] = {
       def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) =

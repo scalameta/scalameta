@@ -183,7 +183,7 @@ trait TextDocumentOps {
                 setArgNames((mtree +: parentOpt.toList).map(_.pos.start))(mtree.argClauses: _*)
               case _: m.Name.Anonymous | _: m.Name.Placeholder | _: m.Name.This =>
               case mtree: m.Name => indexName(mtree)
-              case mtree @ (_: m.Term.FunctionTerm | _: m.Term.AnonymousFunction) =>
+              case mtree @ (_: m.Term.FunctionLike | _: m.Term.AnonymousFunction) =>
                 val mpos = mtree.pos; mfuncs.update(mpos.start, mpos)
               case mtree: m.Tree.WithPats => mtree.pats match {
                   case (_: m.Pat.Var) :: Nil =>

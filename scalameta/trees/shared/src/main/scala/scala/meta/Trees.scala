@@ -432,7 +432,13 @@ object Term {
   }
 
   @branch
-  trait FunctionTerm extends Term with Member.Function {
+  trait FunctionLike extends Term with Member.Function {
+    def paramClause: Member.ParamClause
+    def body: Term
+  }
+
+  @branch
+  trait FunctionTerm extends FunctionLike {
     def paramClause: ParamClause
     def params: List[Param] = paramClause.values
     def body: Term
@@ -463,10 +469,10 @@ object Term {
   class AnonymousFunction(body: Term) extends Term
   @ast
   class PolyFunction(tparamClause: Type.ParamClause, body: Term)
-      extends Term with Tree.WithTParamClause with Member.Function {
+      extends Term with Tree.WithTParamClause with FunctionLike {
     @replacedField("4.6.0")
     final def tparams: List[Type.Param] = tparamClause.values
-    override final def paramClause: Member.SyntaxValuesClause = tparamClause
+    override final def paramClause: Type.ParamClause = tparamClause
   }
   @ast
   class PartialFunction(cases: List[Case] @nonEmpty)
