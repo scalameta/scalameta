@@ -450,6 +450,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Term.ForClause
          |scala.meta.Term.ForYield
          |scala.meta.Term.Function
+         |scala.meta.Term.FunctionLike
          |scala.meta.Term.FunctionTerm
          |scala.meta.Term.If
          |scala.meta.Term.Interpolate
