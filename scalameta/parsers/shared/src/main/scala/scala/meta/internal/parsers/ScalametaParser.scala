@@ -2202,6 +2202,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def tryGetArgAsLambda(): Option[Term.FunctionTerm] = Try {
     val paramPos = currIndex
+    def getFunctionTerm(params: Term.ParamClause): Option[Term.FunctionTerm] = {
+      def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) =
+        if (nextIfIndentAhead()) Some(autoEndPos(paramPos)(f(params, blockExprOnIndent())))
+        else None
+      currToken match {
+        case _: RightArrow => impl(Term.Function.apply)
+        case _: ContextArrow => impl(Term.ContextFunction.apply)
+        case _ => None
+      }
+    }
 
     /**
      * We need to handle param and then open indented region, otherwise only the block will be
@@ -2214,18 +2224,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
      * ```
      * Without manual handling here, filter would be included for `(a+1).filter`
      */
-    @tailrec
-    def getParamClause(pt: Option[Mod.ParamsType], mods: List[Mod]): Term.ParamClause =
-      currToken match {
-        case _: KwImplicit if pt.isEmpty =>
-          val mod = atCurPosNext(Mod.Implicit())
-          getParamClause(Some(mod), mod :: mods)
-        case _ => commaSeparated(getParamWithPos(mods, fullTypeOK = true))
-            .reduceWith(toParamClause(pt))
-      }
-    def getParamAsClause(pt: Option[Mod.ParamsType], mods: List[Mod]): Option[Term.ParamClause] = {
-      val param = getParamWithPos(mods, fullTypeOK = false)
-      Some(copyPos(param)(reduceAs(param :: Nil, toParamClause(pt))))
+    def getParamAsFunction(pt: Option[Mod.ParamsType]) = {
+      val param = getParamWithPos(pt.toList, fullTypeOK = false)
+      getFunctionTerm(copyPos(param)(reduceAs(param :: Nil, toParamClause(pt))))
     }
     def getParamWithPos(mods: List[Mod], fullTypeOK: Boolean) = autoPos(getParam(mods, fullTypeOK))
     @tailrec
@@ -2250,27 +2251,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
     }
 
-    val paramClauseOpt = currToken match {
-      case _: LeftParen =>
-        Some(autoPos(inParensOnOpenOr(getParamClause(None, Nil))(Term.ParamClause(Nil))))
-      case t: Ellipsis if t.rank == 2 => Some(ellipsis[Term.ParamClause](t))
-      case _: Ident | _: Underscore | _: Ellipsis => getParamAsClause(None, Nil)
-      case _: KwImplicit =>
-        val mod = atCurPosNext(Mod.Implicit())
-        getParamAsClause(Some(mod), mod :: Nil)
+    currToken match {
+      case _: LeftParen => getFunctionTerm(autoPos(
+          inParensOnOpenOr {
+            val pt = if (at[KwImplicit]) Some(atCurPosNext(Mod.Implicit())) else None
+            val mods = pt.toList
+            commaSeparated(getParamWithPos(mods, fullTypeOK = true)).reduceWith(toParamClause(pt))
+          }(Term.ParamClause(Nil))
+        ))
+      case t: Ellipsis if t.rank == 2 => getFunctionTerm(ellipsis[Term.ParamClause](t))
+      case _: Ident | _: Underscore | _: Ellipsis => getParamAsFunction(None)
+      case _: KwImplicit => getParamAsFunction(Some(atCurPosNext(Mod.Implicit())))
       case _ => None
     }
-
-    paramClauseOpt.flatMap(params =>
-      if (at[FunctionArrow] && nextIfIndentAhead()) Some {
-        val contextFunction = prev[ContextArrow]
-        val trm = blockExprOnIndent()
-        autoEndPos(paramPos)(
-          if (contextFunction) Term.ContextFunction(params, trm) else Term.Function(params, trm)
-        )
-      }
-      else None
-    )
   }.getOrElse(None)
 
   private def getFewerBracesApplyOnColon(fun: Term, startPos: Int): Option[Term] = {
