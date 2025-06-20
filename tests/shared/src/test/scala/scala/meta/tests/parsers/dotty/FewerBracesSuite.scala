@@ -86,6 +86,25 @@ class FewerBracesSuite extends BaseDottySuite {
     ))
   }
 
+  test("advanced-same-line-poly") {
+    val code =
+      """|val firstLine = files.map: [a, b] =>
+         |    a
+         |""".stripMargin
+    val layout =
+      """|val firstLine = files.map {
+         |  [a, b] => a
+         |}
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("firstLine")),
+      None,
+      tapply(tselect("files", "map"), blk(tpolyfunc(pparam("a"), pparam("b"))(tname("a"))))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("advanced-same-line-case") {
     runTestAssert[Stat](
       """|val firstLine = files.map: 
