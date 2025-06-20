@@ -2212,6 +2212,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _ => None
       }
     }
+    def getPolyFunction(params: Type.ParamClause): Option[Term.PolyFunction] =
+      if (at[RightArrow] && nextIfIndentAhead())
+        Some(autoEndPos(paramPos)(Term.PolyFunction(params, blockExprOnIndent())))
+      else None
 
     /**
      * We need to handle param and then open indented region, otherwise only the block will be
@@ -2259,6 +2263,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             commaSeparated(getParamWithPos(mods, fullTypeOK = true)).reduceWith(toParamClause(pt))
           }(Term.ParamClause(Nil))
         ))
+      case _: LeftBracket => getPolyFunction(typeParamClauseOnBracket(ownerIsType = false))
       case t: Ellipsis if t.rank == 2 => getFunctionTerm(ellipsis[Term.ParamClause](t))
       case _: Ident | _: Underscore | _: Ellipsis => getParamAsFunction(None)
       case _: KwImplicit => getParamAsFunction(Some(atCurPosNext(Mod.Implicit())))
