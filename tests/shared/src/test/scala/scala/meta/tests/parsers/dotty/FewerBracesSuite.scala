@@ -91,11 +91,18 @@ class FewerBracesSuite extends BaseDottySuite {
       """|val firstLine = files.map: [a, b] =>
          |    a
          |""".stripMargin
-    val error =
-      """|<input>:1: error: polymorphic function types must have a value parameter
-         |val firstLine = files.map: [a, b] =>
-         |                                  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|val firstLine = files.map {
+         |  [a, b] => a
+         |}
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("firstLine")),
+      None,
+      tapply(tselect("files", "map"), blk(tpolyfunc(pparam("a"), pparam("b"))(tname("a"))))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("advanced-same-line-case") {
