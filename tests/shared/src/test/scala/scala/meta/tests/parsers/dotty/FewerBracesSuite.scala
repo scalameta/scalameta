@@ -86,6 +86,18 @@ class FewerBracesSuite extends BaseDottySuite {
     ))
   }
 
+  test("advanced-same-line-poly") {
+    val code =
+      """|val firstLine = files.map: [a, b] =>
+         |    a
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: polymorphic function types must have a value parameter
+         |val firstLine = files.map: [a, b] =>
+         |                                  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("advanced-same-line-case") {
     runTestAssert[Stat](
       """|val firstLine = files.map: 
