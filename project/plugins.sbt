@@ -13,7 +13,7 @@ addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.1")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc"     % "0.5.0")
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.1")
 
-addSbtPlugin("com.thesamet" % "sbt-protoc"      % "1.0.7")
+addSbtPlugin("com.thesamet" % "sbt-protoc"      % "1.0.8")
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.4")
 
 addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.2.0")
