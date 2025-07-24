@@ -1262,4 +1262,25 @@ class TermSuite extends ParseSuite {
     runTestError[Stat](code, error)
   }
 
+  test("sfmt#4948 single-value named tuple") {
+    val code = "(age = 2)"
+    val layout = "age = 2"
+    val tree = Term.Assign("age", lit(2))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt#4948 single-value named tuple in val rhs") {
+    val code =
+      """|{
+         |  val _ = (age = 2)
+         |}""".stripMargin
+    val layout =
+      """|{
+         |  val _ = age = 2
+         |}
+         |""".stripMargin
+    val tree = blk(Defn.Val(Nil, List(Pat.Wildcard()), None, Term.Assign("age", lit(2))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
