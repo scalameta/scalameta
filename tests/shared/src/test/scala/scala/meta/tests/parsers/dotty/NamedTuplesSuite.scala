@@ -168,4 +168,74 @@ class NamedTuplesSuite extends BaseDottySuite {
     runTestAssert[Case](code)(tree)
   }
 
+  test("sfmt#4948 single-value named tuple: scala36") {
+    implicit val dialect: Dialect = dialects.Scala36
+    val code = "(age = 2)"
+    val layout = "age = 2"
+    val tree = Term.Assign("age", lit(2))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt#4948 single-value named tuple: scala37") {
+    implicit val dialect: Dialect = dialects.Scala37
+    val code = "(age = 2)"
+    val layout = "age = 2"
+    val tree = Term.Assign("age", lit(2))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt#4948 single-value named tuple in val rhs: scala36") {
+    implicit val dialect: Dialect = dialects.Scala36
+    val code =
+      """|{
+         |  val _ = (age = 2)
+         |}""".stripMargin
+    val layout =
+      """|{
+         |  val _ = age = 2
+         |}
+         |""".stripMargin
+    val tree = blk(Defn.Val(Nil, List(Pat.Wildcard()), None, Term.Assign("age", lit(2))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt#4948 single-value named tuple in val rhs: scala37") {
+    implicit val dialect: Dialect = dialects.Scala37
+    val code =
+      """|{
+         |  val _ = (age = 2)
+         |}""".stripMargin
+    val layout =
+      """|{
+         |  val _ = age = 2
+         |}
+         |""".stripMargin
+    val tree = blk(Defn.Val(Nil, List(Pat.Wildcard()), None, Term.Assign("age", lit(2))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt#4948 single-value named tuple extractor: scala36") {
+    implicit val dialect: Dialect = dialects.Scala36
+    val code = """case (a = 123, b = (c = 123)) =>"""
+    val layout = """case (a = 123, b = c = 123) =>"""
+    val tree = Case(
+      Pat.Tuple(List(Pat.Assign("a", lit(123)), Pat.Assign("b", Pat.Assign("c", lit(123))))),
+      None,
+      blk()
+    )
+    runTestAssert[Case](code, layout)(tree)
+  }
+
+  test("sfmt#4948 single-value named tuple extractor: scala37") {
+    implicit val dialect: Dialect = dialects.Scala37
+    val code = """case (a = 123, b = (c = 123)) =>"""
+    val layout = """case (a = 123, b = c = 123) =>"""
+    val tree = Case(
+      Pat.Tuple(List(Pat.Assign("a", lit(123)), Pat.Assign("b", Pat.Assign("c", lit(123))))),
+      None,
+      blk()
+    )
+    runTestAssert[Case](code, layout)(tree)
+  }
+
 }
