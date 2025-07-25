@@ -109,7 +109,9 @@ package object dialects {
 
   implicit val Scala36: Dialect = Scala35.withAllowImprovedTypeClassesSyntax(true)
 
-  implicit val Scala3: Dialect = Scala36
+  implicit val Scala37: Dialect = Scala36.withAllowNamedTuples(true)
+
+  implicit val Scala3: Dialect = Scala37
 
   implicit val Scala3Future: Dialect = Scala3.withAllowUnderscoreAsTypePlaceholder(true)
     .withAllowTrackedParameters(true).withAllowPureFunctions(true).withAllowCaptureChecking(true)

@@ -176,6 +176,8 @@ final class Dialect private[meta] (
     val allowPureFunctions: Boolean,
     // https://dotty.epfl.ch/docs/reference/experimental/cc.html
     val allowCaptureChecking: Boolean,
+    // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html
+    val allowNamedTuples: Boolean,
     // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html?
     val allowImprovedTypeClassesSyntax: Boolean
 ) extends Product with Serializable {
@@ -278,6 +280,7 @@ final class Dialect private[meta] (
     allowParameterTypeConversions = false,
     allowPureFunctions = false,
     allowCaptureChecking = false,
+    allowNamedTuples = false,
     allowImprovedTypeClassesSyntax = false
     // NOTE(olafur): declare the default value for new fields above this comment.
   )
@@ -430,6 +433,8 @@ final class Dialect private[meta] (
   def withAllowCaptureChecking(newValue: Boolean): Dialect =
     privateCopy(allowCaptureChecking = newValue)
 
+  def withAllowNamedTuples(newValue: Boolean): Dialect = privateCopy(allowNamedTuples = newValue)
+
   def withAllowImprovedTypeClassesSyntax(newValue: Boolean): Dialect =
     privateCopy(allowImprovedTypeClassesSyntax = newValue)
 
@@ -503,6 +508,7 @@ final class Dialect private[meta] (
       allowParameterTypeConversions: Boolean = this.allowParameterTypeConversions,
       allowPureFunctions: Boolean = this.allowPureFunctions,
       allowCaptureChecking: Boolean = this.allowCaptureChecking,
+      allowNamedTuples: Boolean = this.allowNamedTuples,
       allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax
       // NOTE(olafur): add the next parameter above this comment.
   ): Dialect = {
@@ -571,6 +577,7 @@ final class Dialect private[meta] (
       allowParameterTypeConversions = allowParameterTypeConversions,
       allowPureFunctions = allowPureFunctions,
       allowCaptureChecking = allowCaptureChecking,
+      allowNamedTuples = allowNamedTuples,
       allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax
     )
     if (equivalent) return this // RETURN!
@@ -642,6 +649,7 @@ final class Dialect private[meta] (
       allowParameterTypeConversions = allowParameterTypeConversions,
       allowPureFunctions = allowPureFunctions,
       allowCaptureChecking = allowCaptureChecking,
+      allowNamedTuples = allowNamedTuples,
       allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
@@ -735,6 +743,7 @@ final class Dialect private[meta] (
       allowParameterTypeConversions: Boolean,
       allowPureFunctions: Boolean,
       allowCaptureChecking: Boolean,
+      allowNamedTuples: Boolean,
       allowImprovedTypeClassesSyntax: Boolean
   ): Boolean =
     // do not include deprecated values in this comparison
@@ -792,6 +801,7 @@ final class Dialect private[meta] (
       this.allowParameterTypeConversions == allowParameterTypeConversions &&
       this.allowPureFunctions == allowPureFunctions &&
       this.allowCaptureChecking == allowCaptureChecking &&
+      this.allowNamedTuples == allowNamedTuples &&
       this.allowImprovedTypeClassesSyntax == allowImprovedTypeClassesSyntax
 
   @inline
@@ -860,6 +870,7 @@ final class Dialect private[meta] (
       allowParameterTypeConversions = that.allowParameterTypeConversions,
       allowPureFunctions = that.allowPureFunctions,
       allowCaptureChecking = that.allowCaptureChecking,
+      allowNamedTuples = that.allowNamedTuples,
       allowImprovedTypeClassesSyntax = that.allowImprovedTypeClassesSyntax
     )
 
@@ -977,6 +988,7 @@ object Dialect extends InternalDialect {
     Scala34,
     Scala35,
     Scala36,
+    Scala37,
     Paradise211,
     Paradise212,
     ParadiseTypelevel211,
