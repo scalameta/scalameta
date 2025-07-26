@@ -655,13 +655,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ => autoEndPos(lpPos)(tuple(body))
   }
 
+  private def getTupleSingleTerm(single: Term): Either[List[Term], Term] = {
+    val force = single match {
+      // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
+      case _: Term.Assign => dialect.allowNamedTuples
+      case _ => false
+    }
+    if (force) Left(single :: Nil) else Right(single)
+  }
+
   private def makeTupleTerm(
       single: Term => Either[List[Term], Term]
   )(lpPos: Int, body: List[Term]): Term =
     makeTuple(lpPos, body, Lit.Unit(), Term.Tuple.apply)(single)
 
   private def makeTupleTerm(lpPos: Int, body: List[Term]): Term =
-    makeTupleTerm(Right(_))(lpPos, body)
+    makeTupleTerm(getTupleSingleTerm)(lpPos, body)
 
   private def makeTupleType(lpPos: Int, body: List[Type], zero: => Type, wrap: Boolean): Type =
     makeTuple(lpPos, body, zero, Type.Tuple.apply)(maybeAnonymousLambda(_) match {
@@ -685,7 +694,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         syntaxError("repeated argument not allowed here", at = arg.tokens.last)
       case _ =>
     }
-    makeTupleTerm(x => Right(maybeAnonymousFunction(x)))(lpPos, maybeTupleArgs)
+    makeTupleTerm(x => getTupleSingleTerm(maybeAnonymousFunction(x)))(lpPos, maybeTupleArgs)
   }
 
   /* -------- IDENTIFIERS AND LITERALS ------------------------------------------- */
@@ -1866,7 +1875,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     def toArgClause(rhs: Typ): Term.ArgClause = copyPos(rhs)(
       (rhs match {
         case _: Lit.Unit if dialect.allowEmptyInfixArgs => Nil
-        case t: Term.Tuple => t.args
+        // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
+        case Term.Tuple(args) if (args match {
+              case (_: Term.Assign) :: Nil => !dialect.allowNamedTuples
+              case _ => true
+            }) => args
         case _ => rhs :: Nil
       }).reduceWith(Term.ArgClause(_))
     )
@@ -1874,7 +1887,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
       val UnfinishedInfix(lhsExt, op, targs) = unf
       val lhs = lhsExt match {
-        case Term.Tuple(arg :: Nil) => arg
+        // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
+        case Term.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Term.Assign] => arg
         case x => x
       }
 
@@ -1895,13 +1909,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
       val UnfinishedInfix(lhsExt, op) = unf
       val lhs = lhsExt match {
-        case Pat.Tuple(arg :: Nil) => arg
+        // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
+        case Pat.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Pat.Assign] => arg
         case x => x
       }
       val args = copyPos(rhs)(
         (rhs match {
           case _: Lit.Unit if dialect.allowEmptyInfixArgs => Nil
-          case t: Pat.Tuple => t.args
+          // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
+          case Pat.Tuple(args) if (args match {
+                case (_: Pat.Assign) :: Nil => !dialect.allowNamedTuples
+                case _ => true
+              }) => args
           case _ => rhs :: Nil
         }).reduceWith(Pat.ArgClause.apply)
       )
@@ -2305,7 +2324,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           getRest()
         case _ => makeTupleTerm { arg =>
             val res = maybeAnonymousFunction(arg)
-            if (isBrace) Right(res) else Left(res :: Nil)
+            if (isBrace) getTupleSingleTerm(res) else Left(res :: Nil)
           }(lpPos, args)
       }
     }
@@ -2699,6 +2718,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             val lpPos = currIndex
             val patterns = inParensOnOpenOr(noSeqWithNamed.patterns())(Nil)
             makeTuple(lpPos, patterns, Lit.Unit(), Pat.Tuple.apply) {
+              case t: Pat.Assign if dialect.allowNamedTuples => Left(t :: Nil)
               case t if !isRhs => Right(t)
               case t @ Pat.Tuple(_ :: Nil) => Right(t)
               case t => Left(t :: Nil)
