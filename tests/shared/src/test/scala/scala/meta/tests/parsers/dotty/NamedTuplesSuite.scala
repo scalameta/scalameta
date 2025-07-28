@@ -241,4 +241,20 @@ class NamedTuplesSuite extends BaseDottySuite {
     runTestAssert[Case](code, layout)(tree)
   }
 
+  test("sfmt#4948 single-value named tuple type: scala36") {
+    implicit val dialect: Dialect = dialects.Scala36
+    val code = """type A = (a: Int)"""
+    val layout = """type A = a: Int"""
+    val tree = Defn.Type(Nil, pname("A"), Nil, Type.TypedParam("a", "Int", Nil), noBounds)
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("sfmt#4948 single-value named tuple type: scala37") {
+    implicit val dialect: Dialect = dialects.Scala37
+    val code = """type A = (a: Int)"""
+    val layout = """type A = a: Int"""
+    val tree = Defn.Type(Nil, pname("A"), Nil, Type.TypedParam("a", "Int", Nil), noBounds)
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
 }
