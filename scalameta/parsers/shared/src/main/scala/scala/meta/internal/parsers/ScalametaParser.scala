@@ -672,10 +672,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def makeTupleTerm(lpPos: Int, body: List[Term]): Term =
     makeTupleTerm(getTupleSingleTerm)(lpPos, body)
 
+  private def keepTupleType(single: Type): Boolean = single match {
+    case t: Type.TypedParam => dialect.allowNamedTuples
+    case _ => false
+  }
+
   private def makeTupleType(lpPos: Int, body: List[Type], zero: => Type): Type =
     makeTuple(lpPos, body, zero, Type.Tuple.apply) { x =>
       val single = maybeAnonymousLambda(x)
-      Right(single)
+      if (keepTupleType(single)) Left(single :: Nil) else Right(single)
     }
 
   private def makeTupleType(lpPos: Int, body: List[Type]): Type = {
@@ -3658,7 +3663,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def convertTermParamClauseToType(pc: Term.ParamClause) = pc.becomeOr[Type](x =>
     x.values.map(convertTermParamToType) match {
       case Nil => copyPos(x)(Lit.Unit())
-      case v :: Nil => v
+      case v :: Nil if !keepTupleType(v) => v
       case vs => copyPos(x)(Type.Tuple(vs))
     }
   )
