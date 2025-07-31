@@ -2262,7 +2262,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |        Int) = b
          |""".stripMargin
     val layout = "given (b: Int) = b"
-    val tree = Defn.GivenAlias(Nil, "", Nil, Type.TypedParam("b", "Int", Nil), "b")
+    val tree = Defn.GivenAlias(Nil, "", Nil, Type.Tuple(List(Type.TypedParam("b", "Int", Nil))), "b")
     runTestAssert[Stat](code, layout)(tree)
   }
 
