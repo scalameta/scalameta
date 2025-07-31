@@ -672,16 +672,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def makeTupleTerm(lpPos: Int, body: List[Term]): Term =
     makeTupleTerm(getTupleSingleTerm)(lpPos, body)
 
-  private def makeTupleType(lpPos: Int, body: List[Type], zero: => Type, wrap: Boolean): Type =
-    makeTuple(lpPos, body, zero, Type.Tuple.apply)(maybeAnonymousLambda(_) match {
-      case t: Type.Tuple if wrap && t.args.lengthCompare(1) > 0 => Left(t :: Nil)
-      case t => Right(t)
-    })
+  private def makeTupleType(lpPos: Int, body: List[Type], zero: => Type): Type =
+    makeTuple(lpPos, body, zero, Type.Tuple.apply) { x =>
+      val single = maybeAnonymousLambda(x)
+      Right(single)
+    }
 
   private def makeTupleType(lpPos: Int, body: List[Type]): Type = {
     def invalidLiteralUnitType =
       syntaxError("illegal literal type (), use Unit instead", at = currToken.pos)
-    makeTupleType(lpPos, body, invalidLiteralUnitType, wrap = false)
+    makeTupleType(lpPos, body, invalidLiteralUnitType)
   }
 
   private def inParensOrTupleOrUnitExpr(allowRepeated: Boolean): Term = {
@@ -3656,10 +3656,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def convertTermParamClauseToType(pc: Term.ParamClause) = pc.becomeOr[Type](x =>
-    x.values match {
+    x.values.map(convertTermParamToType) match {
       case Nil => copyPos(x)(Lit.Unit())
-      case v :: Nil => convertTermParamToType(v)
-      case vs => copyPos(x)(Type.Tuple(vs.map(convertTermParamToType)))
+      case v :: Nil => v
+      case vs => copyPos(x)(Type.Tuple(vs))
     }
   )
 
