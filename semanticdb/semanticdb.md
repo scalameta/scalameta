@@ -141,7 +141,7 @@ SemanticDB payloads must include the version of the SemanticDB model in the
   <tr>
     <td><code>SEMANTICDB4</code></td>
     <td>SemanticDB v4 payloads</td>
-    <td><a href="https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb/semanticdb.proto">semanticdb.proto</a></td> (described in this document)
+    <td><a href="https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb/shared/src/main/proto/semanticdb.proto">semanticdb.proto</a></td> (described in this document)
   </tr>
 </table>
 
