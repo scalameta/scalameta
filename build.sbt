@@ -376,7 +376,7 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
 lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings).jvmSettings(
-  crossScalaVersions := AllScalaVersions :+ Scala3NextVersion,
+  crossScalaVersions := AllScalaVersions,
   libraryDependencies ++=
     { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
   dependencyOverrides += {
