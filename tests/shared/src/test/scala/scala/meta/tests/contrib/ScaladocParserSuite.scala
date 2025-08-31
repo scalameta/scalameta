@@ -14,7 +14,7 @@ import munit.FunSuite
  */
 class ScaladocParserSuite extends FunSuite {
 
-  private[this] def parseString(commentCode: String): Option[List[DocToken]] = {
+  private def parseString(commentCode: String): Option[List[DocToken]] = {
     val code = commentCode.parse[Source].get
     val comments = AssociatedComments(code.tokens)
     val defnClass = code.collectFirst { case t: Defn.Class => t }.get
@@ -22,7 +22,7 @@ class ScaladocParserSuite extends FunSuite {
     ScaladocParser.parseScaladoc(comment)
   }
 
-  private[this] def generateTestString(docKind: TagKind): String =
+  private def generateTestString(docKind: TagKind): String =
     s"${docKind.label} ${(0 until docKind.numberParameters).map(i => s"Test$docKind$i").mkString(" ")}"
 
   test("example usage")(assert(

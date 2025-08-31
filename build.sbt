@@ -493,7 +493,6 @@ def isScalaBinaryVersion(version: String) = Def.setting(scalaBinaryVersion.value
 lazy val isScala211 = isScalaBinaryVersion("2.11")
 lazy val isScala213 = isScalaBinaryVersion("2.13")
 lazy val isScala3 = isScalaBinaryVersion("3")
-lazy val isScala3Next = Def.setting(scalaVersion.value == Scala3NextVersion)
 def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
 
 // NOTE: Here's what I'd like to do, but I can't because of deprecations:
@@ -518,10 +517,17 @@ lazy val sharedSettings = Def.settings(
     else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
   },
   scalacOptions ++= { if (isScala213.value) List("-Ymacro-annotations") else Nil },
-  scalacOptions ++=
-    { if (isScala213or3.value && !isScala3Next.value) List("-Xfatal-warnings") else Nil },
+  scalacOptions ++= { if (isScala213or3.value) List("-Xfatal-warnings") else Nil },
   scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
-  scalacOptions ++= { if (isScala3.value) List("-Wconf:cat=deprecation:silent") else Nil },
+  scalacOptions ++= {
+    if (isScala3.value) List(
+      "-Wconf:msg=.*no longer supported for vararg splices.*:silent",
+      "-Wconf:msg=.*Implicit parameters should be provided.*:silent",
+      "-Wconf:msg=.* deprecated.*:silent", // covers several
+      "-Wconf:cat=deprecation:silent"
+    )
+    else Nil
+  },
   scalacOptions ++= Seq("-feature", "-unchecked"),
   Compile / doc / scalacOptions ++=
     { if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups") },
