@@ -107,14 +107,14 @@ object ReificationMacros {
 
 }
 
-class ReificationMacros(using val topLevelQuotes: Quotes) {
+class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuotes {
   rei =>
   import scala.meta.Dialect
   import scala.meta.inputs.{Position => MetaPosition, _}
   import scala.meta.{Tree => MetaTree}
 
   import ReificationMacros._
-  import topLevelQuotes.reflect._
+  import internalQuotes.reflect._
   type MetaParser = (Input, Dialect) => MetaTree
 
   private sealed trait Mode {
@@ -324,7 +324,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
       )
       (ValDef(sym, Some(vDef.asTerm.changeOwner(sym))), Ref(sym))
 
-    object Internal extends TreeLiftsTrait with TreeLifts(using quotes)(mode.isPattern, dialectExpr) {
+    object Internal extends TreeLifts(using quotes)(mode.isPattern, dialectExpr) {
       import internalQuotes.reflect._
       def liftTree(tree: MetaTree): internalQuotes.reflect.Tree = this.liftableSubTree0(tree)
         .asInstanceOf[internalQuotes.reflect.Tree]
@@ -479,7 +479,7 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
               val unwrappedPt = quasi.pt.wrap(pendingQuasis.map(_.rank).sum).toTpe
               if optional then
                 unwrappedPt.asType match
-                  case '[t] => rei.topLevelQuotes.reflect.TypeRepr.of[Option[t]]
+                  case '[t] => rei.internalQuotes.reflect.TypeRepr.of[Option[t]]
               else unwrappedPt
             }
             val lifted = mode match {
@@ -515,8 +515,8 @@ class ReificationMacros(using val topLevelQuotes: Quotes) {
                       List(inferredPt.asInstanceOf[TypeRepr]),
                       List(Ref(symbol))
                     )
-                hole.symbol = Some(symbol).asInstanceOf[Option[rei.topLevelQuotes.reflect.Symbol]]
-                hole.reifier = Some(reifier).asInstanceOf[Option[rei.topLevelQuotes.reflect.Term]]
+                hole.symbol = Some(symbol).asInstanceOf[Option[rei.internalQuotes.reflect.Symbol]]
+                hole.reifier = Some(reifier).asInstanceOf[Option[rei.internalQuotes.reflect.Term]]
                 Bind(symbol, Wildcard())
             }
             lifted
