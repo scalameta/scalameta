@@ -42,11 +42,11 @@ object ConversionMacros {
   ).unliftUnapply[O](inside)
 }
 
-class ConversionMacros(using val topLevelQuotes: Quotes) {
+class ConversionMacros(using val internalQuotes: Quotes) extends HasInternalQuotes {
   import scala.meta.quasiquotes.Lift
   import scala.meta.quasiquotes.Unlift
 
-  import topLevelQuotes.reflect._
+  import internalQuotes.reflect._
 
   private def typeMismatchMessage(found: TypeRepr, req: TypeRepr): String = {
     val foundReqMessage = found.show + ", required " + req.show

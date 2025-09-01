@@ -146,7 +146,9 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
           |
           |$treeLiftsTrait
           |
-          |trait TreeLifts(using override val internalQuotes: Quotes)(isPatternMode: Boolean, dialectExpr: Expr[Dialect]) extends ReificationMacros with TreeLiftsTrait {
+          |trait TreeLifts(using quotes: Quotes)(isPatternMode: Boolean, dialectExpr: Expr[Dialect])
+          |  extends ReificationMacros with TreeLiftsTrait
+          |{
           |  import internalQuotes.reflect._
           |$treeByMode
           |
@@ -169,7 +171,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
   // Methods use holes in implementation, for which we do not have access here, so we implement those elsewhere
   def treeLiftsTrait =
     """|
-       |trait TreeLiftsTrait(using val internalQuotes: Quotes) {
+       |trait TreeLiftsTrait extends HasInternalQuotes {
        |  def liftTree(tree: MetaTree): internalQuotes.reflect.Tree
        |  def liftOptionTree[T: Type](maybeTree: Option[MetaTree]): internalQuotes.reflect.Tree
        |  def liftTrees[T: Type](trees: Seq[MetaTree]): internalQuotes.reflect.Tree
