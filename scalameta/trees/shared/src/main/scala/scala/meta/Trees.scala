@@ -443,27 +443,26 @@ object Term {
     def params: List[Param] = paramClause.values
     def body: Term
   }
+  private def validateFunctionParams(pc: ParamClause): Boolean = pc.values
+    .forall(x => x.is[Param.Quasi] || !x.name.is[sm.Name.Anonymous] || x.default.isEmpty)
+  private def validateFunctionMod(pc: ParamClause): Boolean = pc.values match {
+    case _ :: Nil => true
+    case x => !pc.mod.is[Mod.Implicit] || x.exists(_.is[Param.Quasi])
+  }
   @ast
   class ContextFunction(paramClause: ParamClause, body: Term) extends FunctionTerm {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
-    checkFields(paramClause.values.forall(param =>
-      param.is[Param.Quasi] || !param.name.is[sm.Name.Anonymous] || param.default.isEmpty
-    ))
+    checkFields(paramClause.is[ParamClause.Quasi] || validateFunctionParams(paramClause))
   }
   @ast
   class Function(paramClause: ParamClause, body: Term) extends FunctionTerm {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
-    checkFields(paramClause.is[ParamClause.Quasi] || {
-      val params = paramClause.values
-      params.forall(param =>
-        param.is[Param.Quasi] || !param.name.is[sm.Name.Anonymous] || param.default.isEmpty
-      ) && {
-        params.exists(_.is[Param.Quasi]) || !paramClause.mod.is[Mod.Implicit] ||
-        params.lengthCompare(1) == 0
-      }
-    })
+    checkFields(
+      paramClause.is[ParamClause.Quasi] ||
+        validateFunctionParams(paramClause) && validateFunctionMod(paramClause)
+    )
   }
   @ast
   class AnonymousFunction(body: Term) extends Term
@@ -878,7 +877,7 @@ object Pat {
   @ast
   class Typed(lhs: Pat, rhs: Type) extends Pat {
     checkFields(rhs match {
-      case _: Type.Var | _: Type.Placeholder | _: Type.Wildcard | _: Type.AnonymousParam => false
+      case _: Type.Var | _: Type.Wildcard | _: Type.AnonymousParam => false
       case _ => true
     })
   }
@@ -1288,15 +1287,17 @@ object Defn {
       with Tree.WithTParamClause
       with Stat.WithCtor
       with Stat.WithTemplate {
-    checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
+    checkFields(validateTemplateNoCtor(templ))
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
       extends Defn with Member.Term with Stat.WithMods with Stat.WithTemplate {
-    checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
+    checkFields(validateTemplateNoCtor(templ))
   }
+  private[meta] def validateTemplateNoCtor(templ: Template): Boolean = templ.is[Template.Quasi] ||
+    !templ.stats.exists(_.is[Ctor])
 }
 
 @ast
@@ -1313,7 +1314,7 @@ object Pkg {
   @ast
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
       extends Member.Term with Stat with Stat.WithMods with Stat.WithTemplate {
-    checkFields(templ.is[Template.Quasi] || templ.stats.forall(!_.is[Ctor]))
+    checkFields(Defn.validateTemplateNoCtor(templ))
   }
   @ast
   class Body(stats: List[Stat]) extends Tree.Block
@@ -1522,17 +1523,19 @@ object Importee {
   class GivenAll() extends Importee
   @ast
   class Name(name: sm.Name) extends Importee {
-    checkFields(name.is[sm.Name.Quasi] || name.is[sm.Name.Indeterminate])
+    checkFields(validateNameIndeterminate(name))
   }
   @ast
   class Rename(name: sm.Name, rename: sm.Name) extends Importee {
-    checkFields(name.is[sm.Name.Quasi] || name.is[sm.Name.Indeterminate])
-    checkFields(rename.is[sm.Name.Quasi] || rename.is[sm.Name.Indeterminate])
+    checkFields(validateNameIndeterminate(name))
+    checkFields(validateNameIndeterminate(rename))
   }
   @ast
   class Unimport(name: sm.Name) extends Importee {
-    checkFields(name.is[sm.Name.Quasi] || name.is[sm.Name.Indeterminate])
+    checkFields(validateNameIndeterminate(name))
   }
+  private def validateNameIndeterminate(name: sm.Name): Boolean = name.is[sm.Name.Quasi] ||
+    name.is[sm.Name.Indeterminate]
 }
 
 @branch
