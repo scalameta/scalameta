@@ -350,9 +350,7 @@ object Term {
   }
   @ast
   class Assign(lhs: Term, rhs: Term) extends Term with Tree.WithBody {
-    checkFields(
-      lhs.isInstanceOf[Term.Quasi] || lhs.isInstanceOf[Term.Ref] || lhs.isInstanceOf[Term.Apply]
-    )
+    checkField(lhs, lhs.isInstanceOf[Term.Ref] || lhs.isInstanceOf[Term.Apply])
     checkParent(ParentChecks.TermAssign)
     override def body: Tree = rhs
   }
@@ -455,16 +453,13 @@ object Term {
   class ContextFunction(paramClause: ParamClause, body: Term) extends FunctionTerm {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
-    checkFields(paramClause.isInstanceOf[ParamClause.Quasi] || validateFunctionParams(paramClause))
+    checkField(paramClause, validateFunctionParams(paramClause))
   }
   @ast
   class Function(paramClause: ParamClause, body: Term) extends FunctionTerm {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
-    checkFields(
-      paramClause.isInstanceOf[ParamClause.Quasi] ||
-        validateFunctionParams(paramClause) && validateFunctionMod(paramClause)
-    )
+    checkField(paramClause, validateFunctionParams(paramClause) && validateFunctionMod(paramClause))
   }
   @ast
   class AnonymousFunction(body: Term) extends Term
@@ -552,7 +547,7 @@ object Type {
   class CapSetName(value: Predef.String @nonEmpty) extends sm.Name with Type.Ref
   @ast
   class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
-    checkFields(qual.isPath || qual.isInstanceOf[Term.Super] || qual.isInstanceOf[Term.Ref.Quasi])
+    checkFields(qual.isPath || qual.isInstanceOf[Term.Super])
   }
   @ast
   class Project(qual: Type, name: Type.Name) extends Type.Ref
@@ -649,13 +644,13 @@ object Type {
   class Or(lhs: Type, rhs: Type) extends Type
   @ast
   class Refine(tpe: Option[Type], body: Stat.Block) extends Type with Tree.WithStatsBlock {
-    checkFields(body.isInstanceOf[Stat.Block.Quasi] || body.stats.forall(_.isRefineStat))
+    checkField(body, body.stats.forall(_.isRefineStat))
     @replacedField("4.9.9")
     override final def stats: List[Stat] = body.stats
   }
   @ast
   class Existential(tpe: Type, body: Stat.Block @nonEmpty) extends Type with Tree.WithStatsBlock {
-    checkFields(body.isInstanceOf[Stat.Block.Quasi] || body.stats.forall(_.isExistentialStat))
+    checkField(body, body.stats.forall(_.isExistentialStat))
     @replacedField("4.9.9")
     override final def stats: List[Stat] = body.stats
   }
@@ -841,7 +836,7 @@ object Pat {
   }
   @ast
   class Bind(lhs: Pat, rhs: Pat) extends Pat {
-    checkFields(lhs.isInstanceOf[Pat.Var] || lhs.isInstanceOf[Pat.Quasi])
+    checkField(lhs, lhs.isInstanceOf[Pat.Var])
   }
   @ast
   class Alternative(lhs: Pat, rhs: Pat) extends Pat
@@ -889,7 +884,10 @@ object Pat {
   }
   @ast
   class Macro(body: Term) extends Pat with Tree.WithBody {
-    checkFields(body.isInstanceOf[Term.QuotedMacroExpr] || body.isInstanceOf[Term.QuotedMacroType])
+    checkField(
+      body,
+      body.isInstanceOf[Term.QuotedMacroExpr] || body.isInstanceOf[Term.QuotedMacroType]
+    )
   }
   @ast
   class Given(tpe: Type) extends Pat
@@ -1290,17 +1288,16 @@ object Defn {
       with Tree.WithTParamClause
       with Stat.WithCtor
       with Stat.WithTemplate {
-    checkFields(validateTemplateNoCtor(templ))
+    checkField(templ, validateTemplateNoCtor(templ))
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
       extends Defn with Member.Term with Stat.WithMods with Stat.WithTemplate {
-    checkFields(validateTemplateNoCtor(templ))
+    checkField(templ, validateTemplateNoCtor(templ))
   }
-  private[meta] def validateTemplateNoCtor(templ: Template): Boolean = templ.is[Template.Quasi] ||
-    !templ.stats.exists(_.is[Ctor])
+  private[meta] def validateTemplateNoCtor(templ: Template): Boolean = !templ.stats.exists(_.is[Ctor])
 }
 
 @ast
@@ -1317,7 +1314,7 @@ object Pkg {
   @ast
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
       extends Member.Term with Stat with Stat.WithMods with Stat.WithTemplate {
-    checkFields(Defn.validateTemplateNoCtor(templ))
+    checkField(templ, Defn.validateTemplateNoCtor(templ))
   }
   @ast
   class Body(stats: List[Stat]) extends Tree.Block
@@ -1527,19 +1524,18 @@ object Importee {
   class GivenAll() extends Importee
   @ast
   class Name(name: sm.Name) extends Importee {
-    checkFields(validateNameIndeterminate(name))
+    checkField(name, validateNameIndeterminate(name))
   }
   @ast
   class Rename(name: sm.Name, rename: sm.Name) extends Importee {
-    checkFields(validateNameIndeterminate(name))
-    checkFields(validateNameIndeterminate(rename))
+    checkField(name, validateNameIndeterminate(name))
+    checkField(rename, validateNameIndeterminate(rename))
   }
   @ast
   class Unimport(name: sm.Name) extends Importee {
-    checkFields(validateNameIndeterminate(name))
+    checkField(name, validateNameIndeterminate(name))
   }
-  private def validateNameIndeterminate(name: sm.Name): Boolean = name.is[sm.Name.Quasi] ||
-    name.is[sm.Name.Indeterminate]
+  private def validateNameIndeterminate(name: sm.Name): Boolean = name.is[sm.Name.Indeterminate]
 }
 
 @branch

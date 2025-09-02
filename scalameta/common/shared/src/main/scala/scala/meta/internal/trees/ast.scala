@@ -98,7 +98,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         var needCopies = !isQuasi
         val importsBuilder = List.newBuilder[Import]
-        val checkFieldsBuilder = List.newBuilder[Tree]
+        val checkFieldsBuilder = List.newBuilder[(Tree, Tree)]
         val checkParentsBuilder = List.newBuilder[Tree]
 
         stats.foreach {
@@ -113,7 +113,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               q"$mods def ${x.name}: ${x.tpt} = ${x.rhs}"
             }.getOrElse(x)
             if (x.mods.hasFlag(Flag.FINAL)) istats1 += p else quasiExtraAbstractDefs += p
-          case q"checkFields($arg)" => checkFieldsBuilder += arg
+          case q"checkFields($arg)" => checkFieldsBuilder += (null: Tree) -> arg
+          case q"checkField($field, $check)" => checkFieldsBuilder += field -> check
           case x @ q"checkParent($what)" => checkParentsBuilder += x
           case x =>
             val error =
@@ -324,8 +325,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           internalBody += q"$DataTyperMacrosModule.emptyCheck($local)"
         }
         internalBody ++= imports
-        fieldChecks.foreach { x =>
-          val fieldCheck = q"_root_.org.scalameta.invariants.require($x)"
+        fieldChecks.foreach { case (f, x) =>
           var hasErrors = false
           object errorChecker extends Traverser {
             private val nmeParent = TermName("parent")
@@ -341,8 +341,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               case _ => super.traverse(tree)
             }
           }
-          errorChecker.traverse(fieldCheck)
-          if (!hasErrors) internalBody += fieldCheck
+          errorChecker.traverse(x)
+          if (!hasErrors) internalBody += {
+            if (f == null) q"$InvariantsRequireMethod($x)"
+            else q"$InvariantsRequireMethod(($f ne null) && $f.isInstanceOf[$QuasiClass] || ($x))"
+          }
         }
         val paramInits = params.map(p => q"$CommonTyperMacrosModule.initParam(${p.name})")
         privateParams.foreach(p =>
