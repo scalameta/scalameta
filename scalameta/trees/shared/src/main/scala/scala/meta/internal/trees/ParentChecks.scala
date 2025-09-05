@@ -97,8 +97,8 @@ object ParentChecks {
     loop(Some(tree))
   }
 
-  def Init(tree: Init, parent: Tree, destination: String): Boolean = tree.tpe.is[Type.Singleton] ==>
-    (parent.is[Ctor.Block] && destination == "init")
+  def Init(tree: Init, parent: Tree, destination: String): Boolean = !tree.tpe.is[Type.Singleton] ||
+    parent.is[Ctor.Block] && destination == "init"
 
   def EnumCase(tree: Tree, parent: Tree, destination: String): Boolean = parent.is[Template.Body] &&
     parent.parent.parent.isOpt[Defn.Enum]

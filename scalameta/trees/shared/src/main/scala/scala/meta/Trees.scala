@@ -448,7 +448,7 @@ object Term {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
     checkFields(paramClause.values.forall(param =>
-      param.is[Param.Quasi] || param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty
+      param.is[Param.Quasi] || !param.name.is[sm.Name.Anonymous] || param.default.isEmpty
     ))
   }
   @ast
@@ -458,10 +458,10 @@ object Term {
     checkFields(paramClause.is[ParamClause.Quasi] || {
       val params = paramClause.values
       params.forall(param =>
-        param.is[Param.Quasi] || param.name.is[sm.Name.Anonymous] ==> param.default.isEmpty
+        param.is[Param.Quasi] || !param.name.is[sm.Name.Anonymous] || param.default.isEmpty
       ) && {
-        params.exists(_.is[Param.Quasi]) ||
-        paramClause.mod.is[Mod.Implicit] ==> (params.lengthCompare(1) == 0)
+        params.exists(_.is[Param.Quasi]) || !paramClause.mod.is[Mod.Implicit] ||
+        params.lengthCompare(1) == 0
       }
     })
   }
