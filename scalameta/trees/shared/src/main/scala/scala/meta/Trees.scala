@@ -444,10 +444,10 @@ object Term {
     def body: Term
   }
   private def validateFunctionParams(pc: ParamClause): Boolean = pc.values
-    .forall(x => x.is[Param.Quasi] || !x.name.is[sm.Name.Anonymous] || x.default.isEmpty)
+    .forall(x => isQuasiOr(x, !x.name.is[sm.Name.Anonymous] || x.default.isEmpty))
   private def validateFunctionMod(pc: ParamClause): Boolean = pc.values match {
     case _ :: Nil => true
-    case x => !pc.mod.is[Mod.Implicit] || x.exists(_.is[Param.Quasi])
+    case x => !pc.mod.is[Mod.Implicit] || x.exists(isQuasi)
   }
   @ast
   class ContextFunction(paramClause: ParamClause, body: Term) extends FunctionTerm {
@@ -516,14 +516,16 @@ object Term {
   class ParamClause(values: List[Param], mod: Option[Mod.ParamsType] = None)
       extends Member.ParamClause
   object ParamClause {
-    private[meta] def getMod(v: Seq[Param]): Option[Mod.ParamsType] =
-      v.filter(!_.is[Param.Quasi]) match {
-        case head :: tail => head.mods.collectFirst {
-            case x: Mod.Using => x
-            case x: Mod.Implicit if tail.forall(_.mods.exists(_.is[Mod.Implicit])) => x
-          }
-        case _ => None
-      }
+    @tailrec
+    private[meta] def getMod(v: Seq[Param]): Option[Mod.ParamsType] = v match {
+      case head +: tail =>
+        if (isQuasi(head)) getMod(tail)
+        else head.mods.collectFirst { case x: Mod.ParamsType => x }.filter {
+          case _: Mod.Implicit => tail.forall(x => isQuasiOr(x, x.mods.exists(_.is[Mod.Implicit])))
+          case _ => true
+        }
+      case _ => None
+    }
   }
   def fresh(): Term.Name = fresh("fresh")
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
@@ -1395,10 +1397,7 @@ class Template(
     @newField("4.4.0")
     derives: List[Type] = Nil
 ) extends Tree with Tree.WithStats {
-  checkFields(
-    inits.isEmpty ||
-      earlyClause.forall(x => x.isInstanceOf[Stat.Block.Quasi] || x.stats.forall(_.isEarlyStat))
-  )
+  checkFields(inits.isEmpty || earlyClause.forall(x => isQuasiOr(x, x.stats.forall(_.isEarlyStat))))
   @replacedField("4.9.9")
   final def early: List[Stat] = earlyClause match {
     case None => Nil
