@@ -1129,7 +1129,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Hash =>
         next()
         simpleTypeRest(autoEndPos(startPos)(Type.Project(t, typeName())), startPos)
-      case _: LeftBracket =>
+      case token if token.is[LeftBracket] || token.is[AtEOL] && peek[LeftBracket] =>
+        acceptOpt[AtEOL]
         simpleTypeRest(autoEndPos(startPos)(Type.Apply(t, typeArgsInBrackets())), startPos)
       case _ => t
     }
