@@ -1125,14 +1125,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
 
     @tailrec
-    private final def simpleTypeRest(t: Type, startPos: Int): Type = currToken match {
-      case _: Hash =>
-        next()
-        simpleTypeRest(autoEndPos(startPos)(Type.Project(t, typeName())), startPos)
-      case token if token.is[LeftBracket] || token.is[AtEOL] && peek[LeftBracket] =>
-        acceptOpt[AtEOL]
-        simpleTypeRest(autoEndPos(startPos)(Type.Apply(t, typeArgsInBrackets())), startPos)
-      case _ => t
+    private final def simpleTypeRest(t: Type, startPos: Int): Type = {
+      def onLeftBracket() = autoEndPos(startPos)(Type.Apply(t, typeArgsInBrackets()))
+      currToken match {
+        case _: Hash =>
+          next()
+          simpleTypeRest(autoEndPos(startPos)(Type.Project(t, typeName())), startPos)
+        case _: LeftBracket => simpleTypeRest(onLeftBracket(), startPos)
+        case _: AtEOL if isIndentingOrEOL(nonOptBracesOK = true) && tryAhead[LeftBracket] =>
+          simpleTypeRest(onLeftBracket(), startPos)
+        case _ => t
+      }
     }
 
     def typesInParens(): List[Type] =

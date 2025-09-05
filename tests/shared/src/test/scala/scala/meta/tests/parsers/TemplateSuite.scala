@@ -195,6 +195,18 @@ class TemplateSuite extends ParseSuite {
          |trait B extends F
          |  [Int]
          |""".stripMargin
+    val code2 =
+      """|
+         |trait B extends F
+         |  [
+         |    Int]
+         |""".stripMargin
+    val code3 =
+      """|
+         |trait B extends F
+         |[Int]
+         |""".stripMargin
+
     val tree = Defn.Trait(
       Nil,
       pname("B"),
@@ -212,6 +224,8 @@ class TemplateSuite extends ParseSuite {
       )
     )
     checkStat(code, "trait B extends F[Int]")(tree)
+    checkStat(code2, "trait B extends F[Int]")(tree)
+    checkStat(code3, "trait B extends F[Int]")(tree)
   }
 
   test("blank after template 1") {
