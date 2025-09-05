@@ -14,9 +14,8 @@ trait FreeLocalFinder {
     object freeLocalFinder extends Traverser {
       private val localRefs = scala.collection.mutable.ListBuffer[Tree]()
       private val localSyms = scala.collection.mutable.Set[Symbol]()
-      def registerLocalSym(sym: Symbol): Unit = if (sym != null && sym != NoSymbol) localSyms += sym
-      def processLocalDef(tree: Tree): Unit = if (tree.symbol != null && tree.symbol != NoSymbol) {
-        val sym = tree.symbol
+      private def registerLocalSym(s: Symbol) = if (s != null && s != NoSymbol) localSyms += s
+      private def processLocalDef(sym: Symbol) = if (sym != null && sym != NoSymbol) {
         registerLocalSym(sym)
         registerLocalSym(sym.deSkolemize)
         registerLocalSym(sym.companion)
@@ -29,18 +28,24 @@ trait FreeLocalFinder {
       override def traverse(tree: Tree): Unit = {
         val sym = tree.symbol
         tree match {
-          case tree: Ident
-              if !sym.owner.isClass && tree.name != termNames.WILDCARD && !sym.isMethod =>
-            localRefs += tree
-          case tree: This if !sym.isPackageClass => localRefs += tree
-          case _: DefTree | Function(_, _) | Template(_, _, _) =>
-            processLocalDef(tree); super.traverse(tree)
+          case tree: Ident => if (tree.name != termNames.WILDCARD)
+              if (!sym.owner.isClass && !sym.isMethod) localRefs += tree
+          case _: This => if (!sym.isPackageClass) localRefs += tree
+          case _: DefTree | _: Function | _: Template =>
+            processLocalDef(tree.symbol); super.traverse(tree)
           case _ => super.traverse(tree)
         }
       }
-      def freeLocals = localRefs.filter(ref => !localSyms.contains(ref.symbol))
+      def freeLocals: Map[String, Tree] = {
+        val builder = Map.newBuilder[String, Tree]
+        localRefs.foreach { ref =>
+          val sym = ref.symbol
+          if (!localSyms.contains(sym)) builder += sym.name.toString -> ref.duplicate
+        }
+        builder.result()
+      }
     }
     freeLocalFinder.traverse(tree)
-    freeLocalFinder.freeLocals.map(tree => tree.symbol.name.toString -> tree.duplicate).toMap
+    freeLocalFinder.freeLocals
   }
 }
