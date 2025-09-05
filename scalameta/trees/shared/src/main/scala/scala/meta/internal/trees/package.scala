@@ -241,4 +241,10 @@ package object trees {
   private[meta] def checkValidEnumerators(enums: List[Enumerator]): Boolean =
     !enums.headOption.isOpt[Enumerator.Guard]
 
+  @inline
+  private[meta] def isQuasi(tree: Tree): Boolean = tree.isInstanceOf[Quasi]
+
+  @inline
+  private[meta] def isQuasiOr(tree: Tree, check: => Boolean): Boolean = isQuasi(tree) || check
+
 }
