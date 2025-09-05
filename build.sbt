@@ -207,7 +207,7 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
   moduleName := "common",
   sharedSettings,
   libraryDependencies += {
-    val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.2"
+    val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.4"
     "com.lihaoyi" %%% "sourcecode" % sourceCodeVersion
   },
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
