@@ -189,6 +189,45 @@ class TemplateSuite extends ParseSuite {
     checkStat(code, code)(tree)
   }
 
+  test("blank-after-template") {
+    val code =
+      """|
+         |trait B extends F
+         |  [Int]
+         |""".stripMargin
+    val code2 =
+      """|
+         |trait B extends F
+         |  [
+         |    Int]
+         |""".stripMargin
+    val code3 =
+      """|
+         |trait B extends F
+         |[Int]
+         |""".stripMargin
+
+    val tree = Defn.Trait(
+      Nil,
+      pname("B"),
+      Type.ParamClause(Nil),
+      EmptyCtor(),
+      Template(
+        None,
+        List(Init(
+          Type.Apply(Type.Name("F"), Type.ArgClause(List(Type.Name("Int")))),
+          Name.Anonymous(),
+          Seq.empty[Term.ArgClause]
+        )),
+        Template.Body(None, Nil),
+        Nil
+      )
+    )
+    checkStat(code, "trait B extends F[Int]")(tree)
+    checkStat(code2, "trait B extends F[Int]")(tree)
+    checkStat(code3, "trait B extends F[Int]")(tree)
+  }
+
   test("blank after template 1") {
     val code =
       """|class DerivationSpec {

@@ -742,4 +742,42 @@ class NewFunctionsSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("polymorphic-no-indent") {
+    val code =
+      """|def foo =
+         |  trait B extends F
+         |  [X, Y] => Z
+         |
+         |""".stripMargin
+    val layout =
+      """|def foo = {
+         |  trait B extends F
+         |  [X, Y] => Z
+         |}
+         |""".stripMargin
+
+    val tree = Defn.Def(
+      Nil,
+      Term.Name("foo"),
+      Nil,
+      None,
+      Term.Block(List(
+        Defn.Trait(
+          Nil,
+          Type.Name("B"),
+          Type.ParamClause(Nil),
+          EmptyCtor(),
+          Template(
+            None,
+            List(Init(Type.Name("F"), Name.Anonymous(), Seq.empty[Term.ArgClause])),
+            Template.Body(None, Nil),
+            Nil
+          )
+        ),
+        Term.PolyFunction(Type.ParamClause(List(pparam("X"), pparam("Y"))), Term.Name("Z"))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
