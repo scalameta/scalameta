@@ -114,6 +114,7 @@ trait InternalTree extends Product {
   // ==============================================================
 
   protected def checkFields(x: Any): Unit = ()
+  protected def checkField(field: Tree, requirement: Boolean): Unit = ()
   protected def checkParent(x: Any): Unit = ()
 }
 
