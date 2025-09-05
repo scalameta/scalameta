@@ -350,7 +350,9 @@ object Term {
   }
   @ast
   class Assign(lhs: Term, rhs: Term) extends Term with Tree.WithBody {
-    checkFields(lhs.is[Term.Quasi] || lhs.is[Term.Ref] || lhs.is[Term.Apply])
+    checkFields(
+      lhs.isInstanceOf[Term.Quasi] || lhs.isInstanceOf[Term.Ref] || lhs.isInstanceOf[Term.Apply]
+    )
     checkParent(ParentChecks.TermAssign)
     override def body: Tree = rhs
   }
@@ -453,14 +455,14 @@ object Term {
   class ContextFunction(paramClause: ParamClause, body: Term) extends FunctionTerm {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
-    checkFields(paramClause.is[ParamClause.Quasi] || validateFunctionParams(paramClause))
+    checkFields(paramClause.isInstanceOf[ParamClause.Quasi] || validateFunctionParams(paramClause))
   }
   @ast
   class Function(paramClause: ParamClause, body: Term) extends FunctionTerm {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
     checkFields(
-      paramClause.is[ParamClause.Quasi] ||
+      paramClause.isInstanceOf[ParamClause.Quasi] ||
         validateFunctionParams(paramClause) && validateFunctionMod(paramClause)
     )
   }
@@ -550,13 +552,13 @@ object Type {
   class CapSetName(value: Predef.String @nonEmpty) extends sm.Name with Type.Ref
   @ast
   class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
-    checkFields(qual.isPath || qual.is[Term.Super] || qual.is[Term.Ref.Quasi])
+    checkFields(qual.isPath || qual.isInstanceOf[Term.Super] || qual.isInstanceOf[Term.Ref.Quasi])
   }
   @ast
   class Project(qual: Type, name: Type.Name) extends Type.Ref
   @ast
   class Singleton(ref: Term.Ref) extends Type.Ref {
-    checkFields(ref.isPath || ref.is[Term.Super])
+    checkFields(ref.isPath || ref.isInstanceOf[Term.Super])
   }
   @ast
   class Apply(tpe: Type, argClause: ArgClause @nonEmpty) extends Type with Member.Apply {
@@ -647,13 +649,13 @@ object Type {
   class Or(lhs: Type, rhs: Type) extends Type
   @ast
   class Refine(tpe: Option[Type], body: Stat.Block) extends Type with Tree.WithStatsBlock {
-    checkFields(body.is[Stat.Block.Quasi] || body.stats.forall(_.isRefineStat))
+    checkFields(body.isInstanceOf[Stat.Block.Quasi] || body.stats.forall(_.isRefineStat))
     @replacedField("4.9.9")
     override final def stats: List[Stat] = body.stats
   }
   @ast
   class Existential(tpe: Type, body: Stat.Block @nonEmpty) extends Type with Tree.WithStatsBlock {
-    checkFields(body.is[Stat.Block.Quasi] || body.stats.forall(_.isExistentialStat))
+    checkFields(body.isInstanceOf[Stat.Block.Quasi] || body.stats.forall(_.isExistentialStat))
     @replacedField("4.9.9")
     override final def stats: List[Stat] = body.stats
   }
@@ -839,7 +841,7 @@ object Pat {
   }
   @ast
   class Bind(lhs: Pat, rhs: Pat) extends Pat {
-    checkFields(lhs.is[Pat.Var] || lhs.is[Pat.Quasi])
+    checkFields(lhs.isInstanceOf[Pat.Var] || lhs.isInstanceOf[Pat.Quasi])
   }
   @ast
   class Alternative(lhs: Pat, rhs: Pat) extends Pat
@@ -887,7 +889,7 @@ object Pat {
   }
   @ast
   class Macro(body: Term) extends Pat with Tree.WithBody {
-    checkFields(body.is[Term.QuotedMacroExpr] || body.is[Term.QuotedMacroType])
+    checkFields(body.isInstanceOf[Term.QuotedMacroExpr] || body.isInstanceOf[Term.QuotedMacroType])
   }
   @ast
   class Given(tpe: Type) extends Pat
@@ -1091,8 +1093,8 @@ object Defn {
   @ast
   class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: Option[sm.Type], rhs: Term)
       extends Defn with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpeOpt with Tree.WithBody {
-    checkFields(!rhs.is[Term.Placeholder])
-    checkFields(pats.forall(!_.is[Term.Name]))
+    checkFields(!rhs.isInstanceOf[Term.Placeholder])
+    checkFields(!pats.exists(_.isInstanceOf[Term.Name]))
     override def body: Tree = rhs
   }
 
@@ -1109,8 +1111,9 @@ object Defn {
       body: Term
   ) extends Defn with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpeOpt with Tree.WithBody {
     checkFields(
-      if (body.is[Term.Placeholder]) decltpe.nonEmpty && pats.forall(_.is[Pat.Var])
-      else pats.forall(!_.is[Term.Name])
+      if (body.isInstanceOf[Term.Placeholder]) decltpe.nonEmpty &&
+      pats.forall(_.isInstanceOf[Pat.Var])
+      else !pats.exists(_.isInstanceOf[Term.Name])
     )
     @replacedField("4.7.2")
     final def rhs: Option[Term] = VarRhsCtor.toOpt(body)
@@ -1396,7 +1399,8 @@ class Template(
     derives: List[Type] = Nil
 ) extends Tree with Tree.WithStats {
   checkFields(
-    inits.isEmpty || earlyClause.forall(x => x.is[Stat.Block.Quasi] || x.stats.forall(_.isEarlyStat))
+    inits.isEmpty ||
+      earlyClause.forall(x => x.isInstanceOf[Stat.Block.Quasi] || x.stats.forall(_.isEarlyStat))
   )
   @replacedField("4.9.9")
   final def early: List[Stat] = earlyClause match {
