@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !contains(github.ref, 'semanticdb') }}
     steps:
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "18"
       - uses: actions/checkout@v5
