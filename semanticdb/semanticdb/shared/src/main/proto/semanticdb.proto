@@ -35,6 +35,7 @@ enum Language {
   UNKNOWN_LANGUAGE = 0;
   SCALA = 1;
   JAVA = 2;
+  PROTOBUF = 3;
 }
 
 message Range {
@@ -267,6 +268,19 @@ message SymbolInformation {
     CLASS = 13;
     TRAIT = 14;
     INTERFACE = 18;
+
+    // =======================
+    // Protobuf-specific kinds
+    // =======================
+    MESSAGE = 19;
+    // IMPORTANT! Java enums are classes with *enum* property, see
+    // https://scalameta.org/docs/semanticdb/specification.html#symbolinformation-2
+    ENUM = 20;
+    ENUM_VALUE = 21;
+    SERVICE = 22;
+    RPC = 23;
+    ONEOF = 24;
+    FILE = 25;
   }
   enum Property {
     UNKNOWN_PROPERTY = 0;
@@ -292,6 +306,8 @@ message SymbolInformation {
     TRANSPARENT = 0x80000;
     INFIX = 0x100000;
     OPAQUE = 0x200000;
+
+    // Intentionally no Protobuf-specific properties for now.
   }
   reserved 2, 6, 7, 8, 9, 10, 11, 12, 14, 15;
   string symbol = 1;
