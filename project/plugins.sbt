@@ -11,7 +11,7 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly"  % "2.3.1")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.1")
 
 addSbtPlugin("com.github.sbt" % "sbt-unidoc"     % "0.5.0")
-addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.9.3")
+addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.2")
 
 addSbtPlugin("com.thesamet" % "sbt-protoc"      % "1.0.7")
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.4")
@@ -23,9 +23,9 @@ addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject"      % crossProje
 addSbtPlugin("org.portable-scala" % "sbt-scala-native-crossproject" % crossProjectV)
 
 addSbtPlugin("org.scala-debugger" % "sbt-jdi-tools"    % "1.1.1")
-addSbtPlugin("org.scala-js"       % "sbt-scalajs"      % "1.18.2")
-addSbtPlugin("org.scala-native"   % "sbt-scala-native" % "0.5.6")
-addSbtPlugin("org.scalameta"      % "sbt-mdoc"         % "2.6.5")
+addSbtPlugin("org.scala-js"       % "sbt-scalajs"      % "1.20.1")
+addSbtPlugin("org.scala-native"   % "sbt-scala-native" % "0.5.8")
+addSbtPlugin("org.scalameta"      % "sbt-mdoc"         % "2.7.2")
 addSbtPlugin("org.scalameta"      % "sbt-munit"        % "1.1.0")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.7")
