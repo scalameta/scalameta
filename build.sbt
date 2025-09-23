@@ -116,9 +116,11 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   publishJVMSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
+  buildInfoPackage := "scala.meta.internal.semanticdb.scalac",
+  buildInfoKeys := Seq[BuildInfoKey](scalaVersion),
   description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
-).dependsOn(semanticdbShared.jvm, io.jvm)
+).dependsOn(semanticdbShared.jvm, io.jvm).enablePlugins(BuildInfoPlugin)
 
 lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/semanticdb"))
   .settings(
@@ -506,11 +508,8 @@ def isPlatform(platform: Platform) = Def.settingDyn(
 )
 
 lazy val sharedSettings = Def.settings(
-  version ~= { dynVer =>
-    customVersion.getOrElse(
-      if (isCI) dynVer else localSnapshotVersion // only for local publishing
-    )
-  },
+  version := "4.13.9",
+  isSnapshot := false,
   scalaVersion := LatestScala213,
   organization := "org.scalameta",
   libraryDependencies ++= {
@@ -584,8 +583,7 @@ lazy val protobufSettings = Def.settings(
     val scalapbVersion =
       if (isScala211.value) "0.9.8"
       // for SIP-51, freeze version to the latest ScalaPB built against the earliest Scala 2.13.x version we support
-      else if (EarliestScala213 == "2.13.11") "0.11.13"
-      else if (EarliestScala213 == "2.13.12" || scalaVersion.value == "2.13.13") "0.11.15"
+      else if (scalaVersion.value == "2.13.14") "0.11.17"
       else scalapb.compiler.Version.scalapbVersion
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,

@@ -40,6 +40,12 @@ trait TextDocumentOps {
   type Occurrence = (String, Role)
   def emptyOccurrenceMap() = mutable.Map.empty[m.Position, Occurrence]
 
+  val isOldBehaviourOnPats = BuildInfo.scalaVersion.split("\\.") match {
+    case Array("2", "13", patch) if patch == "16" || patch == "15" || patch == "14" => true
+    case Array("2", "13", _) => false
+    case _ => true
+  }
+
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = toTextDocument(None)
 
@@ -154,13 +160,14 @@ trait TextDocumentOps {
             case pat: m.Pat.Extract => indexPatsWithExtract(pat)
             case pat: m.Pat.Var => mvalpatstart += pat.name.pos.start
           })
-          // In an Extract pattern `Foo(name) = ...`, let's map the end position of the `fun` field
+          // In an Extract pattern `Foo(name) = ...`, let's map the start position of the `fun` field
           // to the `name` position. Compiler desugars it into a getter DefDef and specifically
           // in the case of a single binder sets the position of this getter as an OffsetPosition
-          // pointing to "end of fun" rather than the field being extracted.
+          // pointing to "start of fun" rather than the field being extracted.
           def indexPatsWithExtract(extract: m.Pat.Extract): Unit = extract.args match {
             case pat :: Nil =>
-              val mpos = extract.fun.pos.end
+              // Most likely the difference coming from https://github.com/scalameta/scalameta/commit/27cb4c43dbb1485fc6f43b71dc58435393556390
+              val mpos = if (isOldBehaviourOnPats) extract.fun.pos.end else extract.fun.pos.start
               pat.traverse {
                 case pat: m.Pat.Extract => indexPatsWithExtract(pat)
                 case pat: m.Pat.Var =>
@@ -257,7 +264,6 @@ trait TextDocumentOps {
                 addOccurrenceFromSemantic(pos, _, Role.REFERENCE)
               else null
             if (register eq null) return
-
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
 

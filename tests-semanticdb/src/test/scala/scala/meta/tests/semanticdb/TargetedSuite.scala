@@ -237,6 +237,16 @@ class TargetedSuite extends SemanticdbSuite {
     }
   )
 
+  targeted(
+    """|
+       |package o
+       |object O {
+       |  val Some(<<a>>) = Some(123)
+       |}
+       |""".stripMargin,
+    (_, foo1) => assertEquals(foo1, "o/O.a.")
+  )
+
   test("named-args") {
     val code =
       """|@deprecated(since = "123")
@@ -249,7 +259,7 @@ class TargetedSuite extends SemanticdbSuite {
          |Schema => SemanticDB v4
          |Text => non-empty
          |Language => Scala
-         |Symbols => 8 entries
+         |Symbols => 6 entries
          |Occurrences => 14 entries
          |
          |Symbols:
@@ -267,9 +277,6 @@ class TargetedSuite extends SemanticdbSuite {
          |_empty_/CLS#`<init>`(+1).(name2) => param name2: Int
          |  Int => scala/Int#
          |_empty_/CLS#name. => private[this] val method name: String
-         |  String => scala/Predef.String#
-         |local0 => val local x$1: "123"
-         |local1 => val local x$2: String
          |  String => scala/Predef.String#
          |
          |Occurrences:
@@ -289,24 +296,45 @@ class TargetedSuite extends SemanticdbSuite {
          |[2:43..2:51): toString => scala/Any#toString().
          |""".stripMargin
 
-    val expectedCompat =
-      if (isScala213) expected
-      else expected
-        .replace("Occurrences => 14 entries", "Occurrences => 14 entries\nDiagnostics => 1 entries")
-        .replace(
-          """|local0 => val local x$1: "123"
-             |""".stripMargin,
-          """|local0 => val local x$1: String
-             |  String => java/lang/String#
-             |""".stripMargin
-        ) +
+    val expectedPrevious213 = expected.replace("Symbols => 6 entries", "Symbols => 8 entries")
+      .replace(
         """|
-           |Diagnostics:
-           |[0:1..0:26) [warning] Usage of named or default arguments transformed this annotation
-           |constructor call into a block. The corresponding AnnotationInfo
-           |will contain references to local values and default getters instead
-           |of the actual argument trees
+           |Occurrences:""".stripMargin,
+        """|local0 => val local x$1: "123"
+           |local1 => val local x$2: String
+           |  String => scala/Predef.String#
+           |
+           |Occurrences:""".stripMargin
+      )
+
+    val expected212 = expectedPrevious213
+      .replace("Occurrences => 14 entries", "Occurrences => 14 entries\nDiagnostics => 1 entries")
+      .replace(
+        """|local0 => val local x$1: "123"
+           |""".stripMargin,
+        """|local0 => val local x$1: String
+           |  String => java/lang/String#
            |""".stripMargin
+      ) +
+      """|
+         |Diagnostics:
+         |[0:1..0:26) [warning] Usage of named or default arguments transformed this annotation
+         |constructor call into a block. The corresponding AnnotationInfo
+         |will contain references to local values and default getters instead
+         |of the actual argument trees
+         |""".stripMargin
+
+    val expectedCompat = ScalaVersion.getExpected(
+      compat = List(
+        ScalaVersion.Full("2.13.14") -> expectedPrevious213,
+        ScalaVersion.Full("2.13.15") -> expectedPrevious213,
+        ScalaVersion.Full("2.13.16") -> expectedPrevious213,
+        ScalaVersion.Scala212 -> expected212,
+        ScalaVersion.Scala211 -> expected212,
+        ScalaVersion.Scala213 -> expected
+      ),
+      expected
+    )
     assertEquals(
       computePayloadFromSnippet(code).linesIterator.drop(3).filter(!_.startsWith("Uri => "))
         .mkString("", "\n", "\n"),

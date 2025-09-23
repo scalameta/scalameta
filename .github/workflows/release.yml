@@ -32,10 +32,24 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
-      - name: Publish to Sonatype
-        run: sbt ci-release
+      - name: Publish
+        run: |
+          COMMAND="ci-release"
+          if [[ $GITHUB_REF == "refs/tags"* ]] && [[ $GITHUB_REF_NAME == "semanticdb_v"* ]]; then
+            VERSION=$(echo $GITHUB_REF_NAME | cut -d "_" -f2 | cut -c2-)
+            SCALA_VERSION=$(echo $GITHUB_REF_NAME | cut -d "_" -f3)
+            if [ ! -z $VERSION ] && [ ! -z $SCALA_VERSION ]; then
+              export CI_RELEASE="++$SCALA_VERSION; semanticdbScalacCore/publishSigned; semanticdbScalacPlugin/publishSigned; semanticdbMetac/publishSigned; semanticdbMetap/publishSigned"
+              COMMAND="; set ThisBuild/version :=\"$VERSION\"; $COMMAND"
+            else
+              echo 'Invalid tag name. Expected: semanticdb_v${existing-release}_${scala-version}'
+              exit 1
+            fi
+          fi
+          sbt "$COMMAND"
         env:
           SCALAMETA_PLATFORM: ${{ matrix.platform }}
+          GIT_USER: scalameta@scalameta.org
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
