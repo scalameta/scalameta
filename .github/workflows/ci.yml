@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         command:
-          - "++2.13.16; download-scala-library; testsSemanticdb/test"
+          - "++2.13.17; download-scala-library; testsSemanticdb/test"
           - "communitytest/test"
           - "mima"
     steps:
@@ -34,7 +34,7 @@ jobs:
       matrix:
         scala:
           - '2.12.20'
-          - '2.13.16'
+          - '2.13.17'
           - '3.3.6'
           - '3.7.3'
         java:
@@ -70,9 +70,9 @@ jobs:
           - '2.12.16'
           - '2.12.17'
           - '2.12.18'
-          - '2.13.13'
           - '2.13.14'
           - '2.13.15'
+          - '2.13.16'
     steps:
       - uses: actions/checkout@v5
         with:

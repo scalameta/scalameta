@@ -17,17 +17,7 @@ class PrintSuite extends PrintSuiteBase {
 
   checkInfo(
     "scala/Predef.assert(+1).",
-    ScalaVersion.getExpected(
-      Seq(
-        ScalaVersion.Full("2.13.9") ->
-          """scala/Predef.assert(+1). => @inline @elidable final method assert(assertion: Boolean, message: => Any): Unit""",
-        ScalaVersion.Full("2.13.10") ->
-          """scala/Predef.assert(+1). => @inline @elidable final method assert(assertion: Boolean, message: => Any): Unit""",
-        ScalaVersion.Full("2.13.11") ->
-          """scala/Predef.assert(+1). => @inline @elidable final method assert(assertion: Boolean, message: => Any): Unit"""
-      ),
-      """scala/Predef.assert(+1). => @elidable @inline final method assert(assertion: Boolean, message: => Any): Unit"""
-    )
+    """scala/Predef.assert(+1). => @elidable @inline final method assert(assertion: Boolean, message: => Any): Unit"""
   )
   checkInfo("scala/Any#", """scala/Any# => abstract class Any { +10 decls }""")
   checkInfo(
