@@ -88,12 +88,6 @@ class InteractiveSuite extends FunSuite {
     "apply => scala/collection/immutable/List.apply()."
   )
 
-  val expectedPrevious213 = expected(
-    10,
-    "[3:23..3:27): List => scala/collection/immutable/List.",
-    "apply => scala/collection/IterableFactory#apply()."
-  )
-
   check(
     """|package b
        |import scala.concurrent.Future
@@ -105,12 +99,7 @@ class InteractiveSuite extends FunSuite {
     // Note that scala don't resolve to a symbol, this is a sign that the
     // typer hijacking is not working as expected with interactive.Global.
     expectedPrevious,
-    compat = List(
-      ScalaVersion.Full("2.13.3") -> expectedPrevious213,
-      ScalaVersion.Full("2.13.2") -> expectedPrevious213,
-      ScalaVersion.Full("2.13.1") -> expectedPrevious213,
-      ScalaVersion.Scala213 -> expectedLatest
-    )
+    compat = List(ScalaVersion.Scala213 -> expectedLatest)
   )
 
   // This tests a case where SymbolOps.toSemantic crashes
