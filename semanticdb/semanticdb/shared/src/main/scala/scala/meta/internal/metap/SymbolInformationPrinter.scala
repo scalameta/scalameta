@@ -75,6 +75,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         case TRAIT => out.print("trait ")
         case INTERFACE => out.print("interface ")
         case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
+        case _ => out.print(s"${info.kind.toString().toLowerCase} ")
       }
       pprint(info.displayName)
       info.signature match {
@@ -272,6 +273,7 @@ trait SymbolInformationPrinter extends BasePrinter {
             case TRAIT => out.print("trait ")
             case INTERFACE => out.print("interface ")
             case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
+            case _ => out.print(s"${info.kind.toString().toLowerCase} ")
           }
           pprint(info.displayName)
           info.signature match {
@@ -305,6 +307,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           ": "
         case METHOD | CONSTRUCTOR | MACRO | TYPE | TYPE_PARAMETER | OBJECT | PACKAGE |
             PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE => ""
+        case _ => ""
       }
     }
   }
