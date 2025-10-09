@@ -269,9 +269,7 @@ message SymbolInformation {
     TRAIT = 14;
     INTERFACE = 18;
 
-    // =======================
     // Protobuf-specific kinds
-    // =======================
     MESSAGE = 22;
     // IMPORTANT! Java enums are classes with *enum* property, see
     // https://scalameta.org/docs/semanticdb/specification.html#symbolinformation-2
