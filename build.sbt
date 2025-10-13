@@ -503,10 +503,17 @@ lazy val sharedSettings = Def.settings(
   // version is set dynamically by sbt-dynver, but let's adjust it
   version := sys.props.get("scalameta.version").getOrElse {
     val curVersion = version.value
-    def dynVer(out: sbtdynver.GitDescribeOutput): String = // modify for local builds
-      if (out.isCleanAfterTag || isCI) curVersion else s"${out.ref.dropPrefix}-next-SNAPSHOT"
+    def dynVer(out: sbtdynver.GitDescribeOutput): String = {
+      def tagVersion = out.ref.dropPrefix
+      if (out.isCleanAfterTag) tagVersion
+      else if (System.getProperty("CI") == null) s"$tagVersion-next-SNAPSHOT" // modified for local builds
+      else if (out.commitSuffix.distance == 0) tagVersion
+      else if (sys.props.contains("backport.release")) tagVersion
+      else curVersion
+    }
     dynverGitDescribeOutput.value.mkVersion(dynVer, curVersion)
   },
+  isSnapshot := version.value.endsWith("-SNAPSHOT"), // overrides dynver setting
   scalaVersion := LatestScala213,
   organization := "org.scalameta",
   libraryDependencies ++= {
