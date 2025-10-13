@@ -8,10 +8,7 @@ import scala.meta.prettyprinters._
 import scala.annotation.tailrec
 
 object TreeStructure {
-  import Show.{indent => i}
-  import Show.{newline => n}
-  import Show.{repeat => r}
-  import Show.{sequence => s}
+  import Show.{indent => i, newline => n, repeat => r, sequence => s}
 
   def apply[T <: Tree]: Structure[T] = Structure(anyTree)
 

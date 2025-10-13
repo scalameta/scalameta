@@ -1,7 +1,6 @@
 package scala.meta.internal.semanticdb
 
-import scala.meta.inputs.Input
-import scala.meta.inputs.Position
+import scala.meta.inputs.{Input, Position}
 
 object Implicits {
 

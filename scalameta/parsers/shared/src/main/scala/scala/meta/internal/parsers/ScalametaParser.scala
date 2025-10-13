@@ -20,11 +20,8 @@ import scala.collection.immutable._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
-import scala.reflect.ClassTag
-import scala.reflect.classTag
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.reflect.{ClassTag, classTag}
+import scala.util.{Failure, Success, Try}
 
 class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   parser =>

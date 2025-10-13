@@ -1,8 +1,7 @@
 package org.scalameta.adt
 
 import org.scalameta.adt.Metadata.Adt
-import scala.meta.internal.trees.AstNamerMacros
-import scala.meta.internal.trees.{Reflection => AdtReflection}
+import scala.meta.internal.trees.{AstNamerMacros, Reflection => AdtReflection}
 
 import scala.language.experimental.macros
 import scala.language.implicitConversions

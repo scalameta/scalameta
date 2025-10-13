@@ -1,7 +1,6 @@
 package scala.meta.tests
 package contrib
 
-import scala.meta.Defn
 import scala.meta._
 import scala.meta.contrib.DocToken._
 import scala.meta.contrib._

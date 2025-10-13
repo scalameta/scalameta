@@ -2,8 +2,7 @@ package scala.meta.internal.classpath
 
 import java.io.File
 import java.net.URLClassLoader
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 
 object ClasspathUtils {
 

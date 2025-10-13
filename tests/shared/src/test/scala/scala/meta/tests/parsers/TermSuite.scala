@@ -8,8 +8,7 @@ import scala.meta.tokenizers.TokenizerOptions
 import scala.language.implicitConversions
 
 class TermSuite extends ParseSuite {
-  import Name.Anonymous
-  import Name.Indeterminate
+  import Name.{Anonymous, Indeterminate}
   import Term.{Name => _, _}
 
   implicit val dialect: Dialect = dialects.Scala211

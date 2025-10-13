@@ -2,8 +2,7 @@ package scala.meta.tests.metacp
 
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.PathIO
-import scala.meta.io.AbsolutePath
-import scala.meta.io.Classpath
+import scala.meta.io.{AbsolutePath, Classpath}
 import scala.meta.tests.BuildInfo
 import scala.meta.tests.semanticdb.ManifestMetacp
 

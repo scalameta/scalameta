@@ -8,20 +8,15 @@ import scala.meta.io.AbsolutePath
 import scala.meta.testkit._
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{FileVisitResult, Files, Path}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
-import scala.tools.asm.tree.ClassNode
-import scala.tools.asm.tree.FieldNode
-import scala.tools.asm.tree.MethodNode
+import scala.tools.asm.tree.{ClassNode, FieldNode, MethodNode}
 import scala.util.control.NonFatal
 
-import munit.FunSuite
-import munit.Ignore
+import munit.{FunSuite, Ignore}
 
 class SignatureSuite extends FunSuite {
 

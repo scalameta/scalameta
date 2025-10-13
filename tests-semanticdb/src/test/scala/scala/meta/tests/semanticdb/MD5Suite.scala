@@ -1,18 +1,13 @@
 package scala.meta.tests.semanticdb
 
 import scala.meta.internal.semanticdb.Locator
-import scala.meta.internal.semanticdb.scalac.Hex
-import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
-import scala.meta.io.AbsolutePath
-import scala.meta.io.RelativePath
+import scala.meta.internal.semanticdb.scalac.{Hex, SemanticdbPaths}
+import scala.meta.io.{AbsolutePath, RelativePath}
 import scala.meta.tests.BuildInfo
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.security.DigestInputStream
-import java.security.MessageDigest
+import java.nio.file.{Files, Path, Paths}
+import java.security.{DigestInputStream, MessageDigest}
 
 import scala.collection.mutable
 

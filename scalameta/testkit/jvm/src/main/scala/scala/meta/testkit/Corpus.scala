@@ -1,8 +1,7 @@
 package scala.meta.testkit
 
 import java.io.File
-import java.net.URI
-import java.net.URL
+import java.net.{URI, URL}
 
 import org.rauschig.jarchivelib.ArchiverFactory
 

@@ -3,8 +3,7 @@ package scala.meta.tests.semanticdb
 import scala.meta.cli.Metac
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
 import scala.meta.internal.{semanticdb => s}
-import scala.meta.io.AbsolutePath
-import scala.meta.io.RelativePath
+import scala.meta.io.{AbsolutePath, RelativePath}
 import scala.meta.metac
 import scala.meta.testkit.StringFS
 import scala.meta.tests.BuildInfo

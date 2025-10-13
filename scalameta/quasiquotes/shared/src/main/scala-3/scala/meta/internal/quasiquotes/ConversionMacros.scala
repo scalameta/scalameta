@@ -43,8 +43,7 @@ object ConversionMacros {
 }
 
 class ConversionMacros(using val internalQuotes: Quotes) extends HasInternalQuotes {
-  import scala.meta.quasiquotes.Lift
-  import scala.meta.quasiquotes.Unlift
+  import scala.meta.quasiquotes.{Lift, Unlift}
 
   import internalQuotes.reflect._
 

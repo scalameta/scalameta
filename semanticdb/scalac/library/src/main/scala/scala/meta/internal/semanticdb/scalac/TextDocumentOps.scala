@@ -9,9 +9,7 @@ import scala.meta.internal.{semanticdb => s}
 
 import scala.collection.mutable
 import scala.math.Ordering
-import scala.reflect.internal._
-import scala.reflect.internal.{Flags => gf}
-import scala.reflect.internal.{util => gu}
+import scala.reflect.internal.{Flags => gf, util => gu, _}
 import scala.{meta => m}
 
 trait TextDocumentOps {

@@ -2,8 +2,7 @@ package scala.meta.tests.metacp
 
 import scala.meta.AbsolutePath
 
-import java.io.OutputStreamWriter
-import java.io.PrintStream
+import java.io.{OutputStreamWriter, PrintStream}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

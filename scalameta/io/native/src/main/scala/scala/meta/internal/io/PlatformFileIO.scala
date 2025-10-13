@@ -1,13 +1,10 @@
 package scala.meta.internal.io
 
-import scala.meta.io.AbsolutePath
 import scala.meta.io._
 
 import java.net.URI
 import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 
 object PlatformFileIO {
 

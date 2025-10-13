@@ -6,8 +6,7 @@ import scala.meta.prettyprinters._
 import scala.meta.tokens._
 
 object TokensStructure {
-  import Show.{repeat => r}
-  import Show.{sequence => s}
+  import Show.{repeat => r, sequence => s}
 
   def apply[T <: Tokens]: Structure[T] = Structure { xs =>
     // val prefix = xs.productPrefix

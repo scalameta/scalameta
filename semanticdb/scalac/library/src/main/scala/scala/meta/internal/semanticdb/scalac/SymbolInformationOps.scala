@@ -2,8 +2,7 @@ package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Scala.{DisplayNames => dn}
-import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k, Property => p}
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
 

@@ -1,7 +1,6 @@
 package scala.meta.internal.io
 
-import scala.concurrent.Future
-import scala.concurrent.Promise
+import scala.concurrent.{Future, Promise}
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 

@@ -7,8 +7,7 @@ import munit.Location
 
 class TypeSuite extends BaseDottySuite {
   import Name.Anonymous
-  import Term.Super
-  import Term.{Name => TermName}
+  import Term.{Name => TermName, Super}
   import Type.{Name => TypeName, _}
 
   private def assertTpe(expr: String)(tree: Tree)(implicit dialect: Dialect): Unit =

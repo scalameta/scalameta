@@ -2,9 +2,7 @@ package scala.meta.tests
 
 import scala.meta.io.AbsolutePath
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 
 import scala.annotation.tailrec
 

@@ -2,8 +2,7 @@ package org.scalameta.data
 
 import org.scalameta.internal.MacroHelpers
 
-import scala.annotation.StaticAnnotation
-import scala.annotation.tailrec
+import scala.annotation.{StaticAnnotation, tailrec}
 import scala.collection.mutable.ListBuffer
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context

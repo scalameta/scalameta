@@ -2,8 +2,7 @@ package scala.meta.contrib.implicits
 
 import scala.meta.Tree
 import scala.meta.contrib.TreeOps
-import scala.meta.contrib.equality.Equal
-import scala.meta.contrib.equality.TreeEquality
+import scala.meta.contrib.equality.{Equal, TreeEquality}
 
 import scala.language.higherKinds
 
