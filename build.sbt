@@ -15,13 +15,6 @@ import complete.DefaultParsers._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 import sbtcrossproject.Platform
 
-def customVersion = sys.props.get("scalameta.version")
-def parseTagVersion: String = {
-  import scala.sys.process._
-  // drop `v` prefix
-  "git describe --abbrev=0 --tags".!!.drop(1).trim
-}
-def localSnapshotVersion: String = s"$parseTagVersion-SNAPSHOT"
 def isCI = System.getenv("CI") != null
 
 // ==========================================
@@ -507,10 +500,12 @@ def isPlatform(platform: Platform) = Def.settingDyn(
 )
 
 lazy val sharedSettings = Def.settings(
-  version ~= { dynVer =>
-    customVersion.getOrElse(
-      if (isCI) dynVer else localSnapshotVersion // only for local publishing
-    )
+  // version is set dynamically by sbt-dynver, but let's adjust it
+  version := sys.props.get("scalameta.version").getOrElse {
+    val curVersion = version.value
+    def dynVer(out: sbtdynver.GitDescribeOutput): String = // modify for local builds
+      if (out.isCleanAfterTag || isCI) curVersion else s"${out.ref.dropPrefix}-next-SNAPSHOT"
+    dynverGitDescribeOutput.value.mkVersion(dynVer, curVersion)
   },
   scalaVersion := LatestScala213,
   organization := "org.scalameta",
