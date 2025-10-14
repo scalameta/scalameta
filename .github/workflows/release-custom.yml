@@ -3,8 +3,8 @@ name: Release specific project/tag
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: "Scalameta version (e.g., 1.2.3)"
+      commit:
+        description: "Github commit (version will be taken from previous tag)"
         required: true
       project:
         description: "Project name (e.g., trees)"
@@ -20,11 +20,11 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out tag v${{ github.event.inputs.version }}
+      - name: Check out ref ${{ github.event.inputs.commit }}
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          ref: v${{ github.event.inputs.version }}
+          ref: ${{ github.event.inputs.commit }}
       - uses: olafurpg/setup-scala@v14
       - name: Set up JVM
         uses: actions/setup-java@v5
@@ -34,9 +34,9 @@ jobs:
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
       - name: Publish ${{ github.event.inputs.project }} to Sonatype
-        run: sbt -Dscalameta.version=${{ github.event.inputs.version }} ci-release
+        run: sbt -Dbackport.release=1 ci-release
         env:
-          CI_COMMIT_TAG: v${{ github.event.inputs.version }}
+          CI_COMMIT_TAG: ${{ github.event.inputs.commit }} // ci-release uses this to detect non-snapshot releases
           CI_RELEASE: ${{ github.event.inputs.scala != '' && format('++{0} ', github.event.inputs.scala) || '+' }}${{ github.event.inputs.project }}${{ github.event.inputs.platform }}/publishSigned
           SCALAMETA_PLATFORM: ${{ github.event.inputs.platform }}
           GIT_USER: scalameta@scalameta.org
