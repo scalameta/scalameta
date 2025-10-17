@@ -1,7 +1,6 @@
 package scala.meta.internal.metap
 
-import scala.meta.internal.semanticdb.SymbolInformation
-import scala.meta.internal.semanticdb.TextDocument
+import scala.meta.internal.semanticdb.{SymbolInformation, TextDocument}
 
 // Identical to symtab.SymbolTable but copied since symtab is JVM-only.
 trait PrinterSymtab {

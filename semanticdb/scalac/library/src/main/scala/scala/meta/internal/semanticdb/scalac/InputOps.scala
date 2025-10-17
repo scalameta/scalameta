@@ -1,21 +1,17 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.meta.internal.io._
-import scala.meta.io.AbsolutePath
-import scala.meta.io.RelativePath
+import scala.meta.io.{AbsolutePath, RelativePath}
 
-import java.net.URI
-import java.net.URLEncoder
+import java.net.{URI, URLEncoder}
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Path
 import java.security.MessageDigest
 
 import scala.collection.mutable
-import scala.reflect.internal.util.{Position => GPosition}
-import scala.reflect.internal.util.{SourceFile => GSourceFile}
-import scala.reflect.io.VirtualFile
-import scala.reflect.io.{PlainFile => GPlainFile}
+import scala.reflect.internal.util.{Position => GPosition, SourceFile => GSourceFile}
+import scala.reflect.io.{PlainFile => GPlainFile, VirtualFile}
 import scala.{meta => m}
 
 trait InputOps {

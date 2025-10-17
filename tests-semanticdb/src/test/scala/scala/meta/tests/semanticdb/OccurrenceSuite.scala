@@ -1,17 +1,12 @@
 package scala.meta.tests.semanticdb
 
-import scala.meta.inputs.Input
-import scala.meta.inputs.Position
-import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PathIO
+import scala.meta.inputs.{Input, Position}
+import scala.meta.internal.io.{FileIO, PathIO}
 import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.SymbolOccurrence
-import scala.meta.internal.semanticdb.TextDocument
-import scala.meta.internal.semanticdb.TextDocuments
 import scala.meta.internal.semanticdb.scalac.SemanticdbPaths
+import scala.meta.internal.semanticdb.{SymbolOccurrence, TextDocument, TextDocuments}
 import scala.meta.io.AbsolutePath
-import scala.meta.tests.BuildInfo
-import scala.meta.tests.Utils
+import scala.meta.tests.{BuildInfo, Utils}
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files

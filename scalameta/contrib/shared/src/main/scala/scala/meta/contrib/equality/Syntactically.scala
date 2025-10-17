@@ -1,7 +1,6 @@
 package scala.meta.contrib.equality
 
-import scala.meta.Tree
-import scala.meta.XtensionSyntax
+import scala.meta.{Tree, XtensionSyntax}
 
 import scala.language.implicitConversions
 

@@ -1,8 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.reflect.internal.util.Position
-import scala.tools.nsc.reporters.Reporter
-import scala.tools.nsc.reporters.StoreReporter
+import scala.tools.nsc.reporters.{Reporter, StoreReporter}
 
 class SemanticdbReporter(underlying: Reporter) extends StoreReporter {
   override protected def info0(

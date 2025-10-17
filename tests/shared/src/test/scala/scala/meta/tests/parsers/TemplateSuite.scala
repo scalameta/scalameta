@@ -4,9 +4,7 @@ package parsers
 import scala.meta._
 
 class TemplateSuite extends ParseSuite {
-  import Defn.Class
-  import Defn.Object
-  import Defn.Trait
+  import Defn.{Class, Object, Trait}
 
   implicit val dialect: Dialect = dialects.Scala211
 

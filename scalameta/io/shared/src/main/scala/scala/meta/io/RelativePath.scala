@@ -4,8 +4,7 @@ import scala.meta.internal.io.PathIO
 
 import java.io._
 import java.net._
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Path, Paths}
 import java.nio.{file => nio}
 
 /** Wrapper around a relative nio.Path. */

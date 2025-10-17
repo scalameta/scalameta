@@ -2,16 +2,11 @@ package scala.meta.internal.classpath
 
 import org.scalameta.collections._
 import scala.meta.internal.io.PathIO
-import scala.meta.io.AbsolutePath
-import scala.meta.io.Classpath
+import scala.meta.io.{AbsolutePath, Classpath}
 
 import java.net.URI
-import java.nio.file.FileSystems
-import java.nio.file.FileVisitResult
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
+import java.nio.file.{FileSystems, FileVisitResult, Files, Path, SimpleFileVisitor}
 import java.util.jar.JarFile
 import java.util.zip.ZipException
 

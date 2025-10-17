@@ -5,8 +5,7 @@ import java.net.URLClassLoader
 
 import scala.collection.mutable
 import scala.reflect.internal.util.CodeAction
-import scala.tools.nsc.Global
-import scala.tools.nsc.Settings
+import scala.tools.nsc.{Global, Settings}
 
 /**
  * Borrowed from

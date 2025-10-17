@@ -1,7 +1,6 @@
 package scala.meta.internal.scalacp
 
-import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb => s}
 

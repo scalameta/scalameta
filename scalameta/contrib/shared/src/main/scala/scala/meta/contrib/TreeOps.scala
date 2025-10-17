@@ -1,8 +1,7 @@
 package scala.meta
 package contrib
 
-import scala.meta.contrib.equality.Equal
-import scala.meta.contrib.equality.TreeEquality
+import scala.meta.contrib.equality.{Equal, TreeEquality}
 
 import scala.annotation.tailrec
 import scala.language.higherKinds

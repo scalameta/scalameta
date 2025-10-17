@@ -4,8 +4,7 @@ import org.scalameta.internal.ScalaCompat
 import scala.meta._
 import scala.meta.internal.inputs._
 import scala.meta.tests.parsers.CommonTrees
-import scala.meta.tokenizers.Tokenize
-import scala.meta.tokenizers.TokenizerOptions
+import scala.meta.tokenizers.{Tokenize, TokenizerOptions}
 import scala.meta.trees.Origin
 
 import munit._

@@ -5,8 +5,7 @@ import sbt.io.IO
 
 import java.io._
 
-import scala.xml.transform.RewriteRule
-import scala.xml.transform.RuleTransformer
+import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 
 import org.scalajs.linker.interface.StandardConfig

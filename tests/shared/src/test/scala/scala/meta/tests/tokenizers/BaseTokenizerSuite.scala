@@ -1,8 +1,7 @@
 package scala.meta.tests.tokenizers
 
 import scala.meta._
-import scala.meta.tests.TestHelpers
-import scala.meta.tests.TreeSuiteBase
+import scala.meta.tests.{TestHelpers, TreeSuiteBase}
 
 import munit.Location
 

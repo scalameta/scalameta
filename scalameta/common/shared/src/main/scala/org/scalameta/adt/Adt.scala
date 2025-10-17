@@ -1,7 +1,6 @@
 package org.scalameta.adt
 
-import org.scalameta.adt.{Metadata => AdtMetadata}
-import org.scalameta.adt.{Reflection => AdtReflection}
+import org.scalameta.adt.{Metadata => AdtMetadata, Reflection => AdtReflection}
 import org.scalameta.internal.MacroHelpers
 import scala.meta.common.Optional
 

@@ -4,8 +4,7 @@ package transversers
 import scala.meta.Tree
 import scala.meta.testkit.SyntaxAnalysis
 import scala.meta.tests.testkit.contrib.ContribSuite
-import scala.meta.transversers.SimpleTraverser
-import scala.meta.transversers.Traverser
+import scala.meta.transversers.{SimpleTraverser, Traverser}
 
 import scala.collection.mutable
 
