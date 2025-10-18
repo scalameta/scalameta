@@ -274,16 +274,28 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("type.param-with-name.anon") {
-    runTestError[Stat]("trait F[_]", "identifier expected")
-    runTestError[Stat]("class F[_]", "identifier expected")
-    runTestError[Stat]("enum X[T]{ case A[_] extends X[Int] }", "identifier expected")
-    runTestError[Stat]("extension [_](x: Int) def inc: Int = x + 1", "identifier expected")
-    runTestError[Stat](
-      "given [_](using Ord[T]): Ord[List[T]] with {}",
-      """|<input>:1: error: `identifier` expected but `[` found
-         |given [_](using Ord[T]): Ord[List[T]] with {}
-         |      ^""".stripMargin
-    )
+    // make no sense but we don't want the parser to crash
+    runTestAssert[Stat]("trait F[_]")(Defn.Trait(Nil, pname("F"), List(pparam("_")), ctor, tplNoBody()))
+    runTestAssert[Stat]("class F[_]")(Defn.Class(Nil, pname("F"), List(pparam("_")), ctor, tplNoBody()))
+    runTestAssert[Stat]("enum X[T] { case A[_] extends X[Int] }")(Defn.Enum(
+      Nil,
+      pname("X"),
+      List(pparam("T")),
+      ctor,
+      tpl(Defn.EnumCase(Nil, tname("A"), List(pparam("_")), ctor, List(init(papply("X", "Int")))))
+    ))
+    runTestAssert[Stat]("extension [_](x: Int) def inc: Int = x + 1")(Defn.ExtensionGroup(
+      List(pparam("_")),
+      List(List(tparam("x", "Int"))),
+      Defn.Def(Nil, "inc", Nil, Some("Int"), tinfix("x", "+", lit(1)))
+    ))
+    runTestAssert[Stat]("given [_](using Ord[T]): Ord[List[T]] with {}")(Defn.Given(
+      Nil,
+      anon,
+      List(pparam("_")),
+      List(List(tparamUsing("", papply("Ord", "T")))),
+      tpl(List(init(papply("Ord", papply("List", "T")))), tplBody())
+    ))
   }
 
   test("repeated-byname-class-parameter") {

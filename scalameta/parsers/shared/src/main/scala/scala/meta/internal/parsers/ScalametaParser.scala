@@ -2965,20 +2965,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     })
   }
 
-  private def memberParamClauseGroupOnBracket(
-      allowUnderscore: Boolean = true
-  ): Member.ParamClauseGroup = autoPos {
-    val tparamClause = typeParamClauseOnBracket(allowUnderscore = allowUnderscore)
+  private def memberParamClauseGroupOnBracket(): Member.ParamClauseGroup = autoPos {
+    val tparamClause = typeParamClauseOnBracket()
     val paramClauses = termParamClauses()
     Member.ParamClauseGroup(tparamClause, paramClauses)
   }
 
-  def memberParamClauseGroup(
-      isFirst: Boolean,
-      allowUnderscore: Boolean = true
-  ): Option[Member.ParamClauseGroup] = {
+  def memberParamClauseGroup(isFirst: Boolean): Option[Member.ParamClauseGroup] = {
     def onFirstParen = Some(memberParamClauseGroupOnParen())
-    def onBracket = Some(memberParamClauseGroupOnBracket(allowUnderscore = allowUnderscore))
+    def onBracket = Some(memberParamClauseGroupOnBracket())
     currToken match {
       case _: LeftParen if isFirst => onFirstParen
       case _: LeftBracket => onBracket
@@ -3110,14 +3105,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def emptyTypeParamsRaw: Type.ParamClause = Type.ParamClause(Nil)
   private def emptyTypeParams: Type.ParamClause = atCurPosEmpty(emptyTypeParamsRaw)
 
-  private def typeParamClauseOpt(allowUnderscore: Boolean = true): Type.ParamClause =
-    if (!isAfterOptNewLine[LeftBracket]) emptyTypeParams
-    else typeParamClauseOnBracket(allowUnderscore)
+  private def typeParamClauseOpt(): Type.ParamClause =
+    if (!isAfterOptNewLine[LeftBracket]) emptyTypeParams else typeParamClauseOnBracket()
 
-  private def typeParamClauseOnBracket(allowUnderscore: Boolean = true): Type.ParamClause =
-    typeClauseInBrackets(typeParam(allowUnderscore), Type.ParamClause.apply)
+  private def typeParamClauseOnBracket(): Type.ParamClause =
+    typeClauseInBrackets(typeParam(), Type.ParamClause.apply)
 
-  def typeParam(allowUnderscore: Boolean = true): Type.Param = autoPos {
+  def typeParam(): Type.Param = autoPos {
     val mods: List[Mod] = listBy[Mod] { buf =>
       annotsBuf(buf, skipNewLines = false)
       tparamModifiers(buf)
@@ -3133,10 +3127,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               case _ => typeName(t)
             }
           case t: Unquote => unquote[Name](t)
-          case _: Underscore if allowUnderscore => namePlaceholder()
-          case _ =>
-            if (allowUnderscore) syntaxError("identifier or `_' expected", at = currToken)
-            else syntaxError("identifier expected", at = currToken)
+          case _: Underscore => namePlaceholder()
+          case _ => syntaxError("identifier expected", at = currToken)
         }
         name match {
           case q: Quasi if endTparamQuasi => q.become[Type.Param]
@@ -3457,26 +3449,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def givenOldSyntaxColon(): Boolean = at[Colon] && tryAheadNot[Indentation.Indent]
 
-  private def givenTypeParamClause(): Type.ParamClause =
-    typeParamClauseOnBracket(allowUnderscore = dialect.allowTypeParamUnderscore)
+  private def givenTypeParamClause(): Type.ParamClause = typeParamClauseOnBracket()
 
   private def givenTermParamClause(): Term.ParamClause = termParamClauseOnParen()
 
-  private def givenSigOnBracket(name: Name): Option[GivenSig] = Try(
-    memberParamClauseGroupOnBracket(allowUnderscore = dialect.allowTypeParamUnderscore)
-  ).toOption.flatMap { pcg =>
-    if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
-    else if (pcg.paramClauses.nonEmpty) None // too hard to convert to init, re-parse
-    else if (!name.isAnonymous) {
-      val tpe = convertNameTypeParamClauseToType(nameAsType(name), pcg.tparamClause)
-      val anon = anonNameAt(name)
-      if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
-        givenSigAfterArrow(anon, convertTypeToTermParamClause(tpe))
-      else Some(GivenSig(anon, declType = Some(tpe)))
-    } else if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
-      givenSigAfterArrow(name, pcg.tparamClause)
-    else None
-  }
+  private def givenSigOnBracket(name: Name): Option[GivenSig] = Try(memberParamClauseGroupOnBracket())
+    .toOption.flatMap { pcg =>
+      if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
+      else if (pcg.paramClauses.nonEmpty) None // too hard to convert to init, re-parse
+      else if (!name.isAnonymous) {
+        val tpe = convertNameTypeParamClauseToType(nameAsType(name), pcg.tparamClause)
+        val anon = anonNameAt(name)
+        if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
+          givenSigAfterArrow(anon, convertTypeToTermParamClause(tpe))
+        else Some(GivenSig(anon, declType = Some(tpe)))
+      } else if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
+        givenSigAfterArrow(name, pcg.tparamClause)
+      else None
+    }
 
   private def givenSigOnParen(name: Name): Option[GivenSig] = {
     // under the new syntax, this is possible only with anonymous name
@@ -3613,9 +3603,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = autoEndPos(mods) {
     next() // 'extension'
 
-    val pcg = ExtensionSigContext.within(
-      memberParamClauseGroup(isFirst = true, allowUnderscore = dialect.allowTypeParamUnderscore)
-    )
+    val pcg = ExtensionSigContext.within(memberParamClauseGroup(isFirst = true))
 
     newLinesOpt()
 
@@ -3694,7 +3682,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     Defn.Trait(
       mods,
       traitName,
-      typeParamClauseOpt(allowUnderscore = dialect.allowTypeParamUnderscore),
+      typeParamClauseOpt(),
       primaryCtor(OwnedByTrait),
       templateOpt(OwnedByTrait)
     )
@@ -3704,7 +3692,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     next()
 
     val className = typeName()
-    val typeParams = typeParamClauseOpt(allowUnderscore = dialect.allowTypeParamUnderscore)
+    val typeParams = typeParamClauseOpt()
     val ctor = primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass)
 
     if (!dialect.allowCaseClassWithoutParameterList && mods.has[Mod.Case] &&
@@ -3721,7 +3709,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def enumDef(mods: List[Mod]): Defn.Enum = {
     next()
     val enumName = typeName()
-    val typeParams = typeParamClauseOpt(allowUnderscore = dialect.allowTypeParamUnderscore)
+    val typeParams = typeParamClauseOpt()
     val ctor = primaryCtor(OwnedByEnum)
     val tmpl = templateOpt(OwnedByEnum)
     Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
@@ -3742,7 +3730,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def enumSingleCaseDef(mods: List[Mod]): Defn.EnumCase = {
     val name = termName()
-    val tparams = typeParamClauseOpt(allowUnderscore = dialect.allowTypeParamUnderscore)
+    val tparams = typeParamClauseOpt()
     val ctor = primaryCtor(OwnedByEnum)
     val inits = if (acceptOpt[KwExtends]) templateParents(afterExtend = true) else List()
     Defn.EnumCase(mods, name, tparams, ctor, inits)

@@ -95,7 +95,7 @@ final class Dialect private[meta] (
     // Dotty changed wildcard for types from `_` to `?`
     val allowQuestionMarkAsTypeWildcard: Boolean,
     // Dotty rejects placeholder as Type parameter
-    val allowTypeParamUnderscore: Boolean,
+    val allowTypeParamUnderscore: Boolean, // TODO: deprecate, not used
     // Dotty allows by-name repeated parameters
     val allowByNameRepeatedParameters: Boolean,
     // Dotty allows lazy val abstract values
