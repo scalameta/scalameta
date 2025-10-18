@@ -41,11 +41,20 @@ class EnumSuite extends BaseDottySuite {
     ))
   }
 
-  test("enum-wrong-soft")(runTestError[Stat](
-    """|enum Color:
-       | open case R, G """.stripMargin,
-    "error: Only access modifiers allowed on enum case"
-  ))
+  test("enum-wrong-soft") {
+    val code =
+      """|enum Color:
+         | open case R, G """.stripMargin
+    val layout = "enum Color { open case R, G }"
+    val tree = Defn.Enum(
+      Nil,
+      pname("Color"),
+      Nil,
+      ctor,
+      tpl(Defn.RepeatedEnumCase(List(Mod.Open()), List("R", "G")))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
 
   test("enum-parametrized")(runTestAssert[Stat]("enum C(i: Int) { case R, G }")(
     Defn.Enum(Nil, pname("C"), Nil, ctorp(tparam("i", "Int")), tpl(RGCase))
@@ -304,12 +313,27 @@ class EnumSuite extends BaseDottySuite {
     ))
   )
 
-  test("enum-case-toplevel")(runTestError[Stat](
-    """|class A { 
-       |  case Red[T](a: Int) extends Color(65280) 
-       |}""".stripMargin,
-    "Enum cases are only allowed in enums"
-  ))
+  test("enum-case-toplevel") {
+    val code =
+      """|class A { 
+         |  case Red[T](a: Int) extends Color(65280) 
+         |}""".stripMargin
+    val layout = "class A { case Red[T](a: Int) extends Color(65280) }"
+    val tree = Defn.Class(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Defn.EnumCase(
+        Nil,
+        tname("Red"),
+        List(pparam("T")),
+        ctorp(tparam("a", "Int")),
+        List(init("Color", List(lit(65280))))
+      ))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
 
   test("enum-colon") {
     val code =

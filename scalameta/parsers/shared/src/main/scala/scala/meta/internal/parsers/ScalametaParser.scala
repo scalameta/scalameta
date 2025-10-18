@@ -3260,25 +3260,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def entrypointImportee(): Importee = importee()
 
-  def nonLocalDefOrDcl(
-      enumCaseAllowed: Boolean = false,
-      secondaryConstructorAllowed: Boolean = false
-  ): Stat = {
+  def nonLocalDefOrDcl(secondaryConstructorAllowed: Boolean = false): Stat = {
     val mods = listBy[Mod] { buf =>
       annotsBuf(buf, skipNewLines = true)
       modifiersBuf(buf)
     }
-    defOrDclOrSecondaryCtor(mods, enumCaseAllowed, secondaryConstructorAllowed) match {
+    defOrDclOrSecondaryCtor(mods, secondaryConstructorAllowed) match {
       case s if s.isTemplateStat => s
       case other => syntaxError("is not a valid template statement", at = other)
     }
   }
 
-  def defOrDclOrSecondaryCtor(
-      mods: List[Mod],
-      enumCaseAllowed: Boolean = false,
-      secondaryConstructorAllowed: Boolean = false
-  ): Stat = {
+  def defOrDclOrSecondaryCtor(mods: List[Mod], secondaryConstructorAllowed: Boolean = false): Stat = {
     def onlyInline() = mods match {
       case (_: Mod.Inline) :: Nil => true
       case _ => false
@@ -3291,11 +3284,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           syntaxError("Illegal secondary constructor", at = t)
         funDefOrDclOrExtensionOrSecondaryCtor(mods)
       case _: KwType => typeDefOrDcl(mods)
-      case t: KwCase if dialect.allowEnums && peek[Ident] =>
-        if (!enumCaseAllowed) syntaxError("Enum cases are only allowed in enums", at = t)
-        mods.find(mod => !mod.isAccessMod && !mod.is[Mod.Annot]) match {
-          case Some(mod) => syntaxError("Only access modifiers allowed on enum case", at = mod.pos)
-          case None => enumCaseDef(mods)
+      case _: KwCase if dialect.allowEnums && peek[Ident] =>
+        autoEndPos(mods) {
+          next() // skip KwCase, now at Ident
+          if (peek[Comma]) enumRepeatedCaseDef(mods) else enumSingleCaseDef(mods)
         }
       case _: KwIf if onlyInline() => ifClause(mods)
       case _ if isExprIntro(currToken, currIndex) && onlyInline() => inlineMatchClause(mods)
@@ -3715,10 +3707,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   // EnumCase          ::=  ‘case’ (id ClassConstr [‘extends’ ConstrApps]] | ids)
   // ids               ::=  id {‘,’ id}
   // ClassConstr       ::=  [ClsTypeParamClause] [ConstrMods] ClsParamClauses
-  def enumCaseDef(mods: List[Mod]): Stat = autoEndPos(mods) {
-    accept[KwCase]
-    if (at[Ident] && peek[Comma]) enumRepeatedCaseDef(mods) else enumSingleCaseDef(mods)
-  }
 
   def enumRepeatedCaseDef(mods: List[Mod]): Defn.RepeatedEnumCase = {
     val values = commaSeparated(termName())
@@ -3901,38 +3889,31 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   /* -------- TEMPLATES ------------------------------------------- */
 
   sealed trait TemplateOwner {
-    def isEnumCaseAllowed: Boolean
     def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean
     def isSecondaryCtorAllowed: Boolean
   }
   object OwnedByTrait extends TemplateOwner {
-    override final def isEnumCaseAllowed: Boolean = false
     override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean =
       dialect.allowTraitParameters
     override final def isSecondaryCtorAllowed: Boolean = false
   }
   object OwnedByCaseClass extends TemplateOwner {
-    override final def isEnumCaseAllowed: Boolean = false
     override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
     override final def isSecondaryCtorAllowed: Boolean = true
   }
   object OwnedByClass extends TemplateOwner {
-    override final def isEnumCaseAllowed: Boolean = false
     override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
     override final def isSecondaryCtorAllowed: Boolean = true
   }
   object OwnedByEnum extends TemplateOwner {
-    override final def isEnumCaseAllowed: Boolean = true
     override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = true
     override final def isSecondaryCtorAllowed: Boolean = true
   }
   object OwnedByObject extends TemplateOwner {
-    override final def isEnumCaseAllowed: Boolean = false
     override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = false
     override final def isSecondaryCtorAllowed: Boolean = false
   }
   object OwnedByGiven extends TemplateOwner {
-    override final def isEnumCaseAllowed: Boolean = false
     override final def isPrimaryCtorAllowed(implicit dialect: Dialect): Boolean = false
     override final def isSecondaryCtorAllowed: Boolean = false
   }
@@ -4159,26 +4140,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   }
 
   private def templateStatSeq(owner: TemplateOwner): Template.Body = {
-    val enumCaseAllowed = owner.isEnumCaseAllowed
     val secondaryConstructorAllowed = owner.isSecondaryCtorAllowed
     val selfTreeOpt = tryParse(selfEither().right.toOption)
     if (owner eq OwnedByGiven) selfTreeOpt
       .foreach(_.decltpe.foreach(x => syntaxError("given cannot have a self type", at = x)))
     val stats = listBy[Stat] { buf =>
-      def getStats() = statSeqBuf(buf, templateStat(enumCaseAllowed, secondaryConstructorAllowed))
+      def getStats() = statSeqBuf(buf, templateStat(secondaryConstructorAllowed))
       val wasIndented = getStats() // some stats could be indented relative to self-type
       if (wasIndented && selfTreeOpt.isDefined) getStats() // and the rest might not be
     }
     Template.Body(selfTreeOpt, stats)
   }
 
-  def templateStat(
-      enumCaseAllowed: Boolean = false,
-      secondaryConstructorAllowed: Boolean = false
-  ): PartialFunction[Token, Stat] = {
+  def templateStat(secondaryConstructorAllowed: Boolean = false): PartialFunction[Token, Stat] = {
     case _: KwImport => importStmt()
     case _: KwExport => exportStmt()
-    case _ if isDefIntro(currIndex) => nonLocalDefOrDcl(enumCaseAllowed, secondaryConstructorAllowed)
+    case _ if isDefIntro(currIndex) => nonLocalDefOrDcl(secondaryConstructorAllowed)
     case t: Unquote => unquote[Stat](t)
     case t: Ellipsis => ellipsis[Stat](t, 1)
     case _ if isAtEndMarker() => endMarker()
