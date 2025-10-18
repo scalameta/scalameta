@@ -198,7 +198,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def extension(a : Int) = a + 2
          |  extension(2)
          |}""".stripMargin,
-      "`identifier` expected but `integer constant` found"
+      s"""|<input>:4: error: Extension without extension method
+          |}
+          |^""".stripMargin
     )
 
     runTestAssert[Stat](
