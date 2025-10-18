@@ -13,3 +13,15 @@ private[parsers] trait NestedContext {
   @inline
   def isDeeper(level: Int) = nested > level
 }
+
+private[parsers] abstract class NestedContextWithOwner[A <: AnyRef](private var _owner: A)
+    extends NestedContext {
+  def within[T](newOwner: A)(body: => T): T = {
+    val oldOwner = _owner
+    _owner = newOwner
+    try within(body)
+    finally _owner = oldOwner
+  }
+  @inline
+  def owner: A = _owner
+}

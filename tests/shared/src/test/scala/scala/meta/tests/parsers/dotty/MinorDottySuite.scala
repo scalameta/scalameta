@@ -149,7 +149,7 @@ class MinorDottySuite extends BaseDottySuite {
     """|class A
        |class B extends A:
        |  def this = this.f()""".stripMargin,
-    "auxiliary constructor needs non-implicit parameter list"
+    "secondary constructor needs explicit parameter list"
   ))
 
   test("trait-parameters-generic")(runTestAssert[Stat]("trait Foo[T](bar: T)")(

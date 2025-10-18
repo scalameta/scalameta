@@ -43,6 +43,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private object PatternTypeContext extends NestedContext
   private object ExtensionSigContext extends NestedContext
   private object GivenSigContext extends NestedContext
+  private object TemplateOwnerContext extends NestedContextWithOwner[TemplateOwner](OwnedByObject)
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
 
@@ -2108,7 +2109,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         canApply = false
         Success(autoPos {
           next()
-          val tpl = template(OwnedByTrait)
+          val tpl = TemplateOwnerContext.within(OwnedByTrait)(template())
           tpl.inits match {
             case init :: Nil if !prev[RightBrace] && tpl.earlyClause.isEmpty && tpl.body.isEmpty =>
               Term.New(init)
@@ -3220,18 +3221,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def entrypointImportee(): Importee = importee()
 
-  def nonLocalDefOrDcl(secondaryConstructorAllowed: Boolean = false): Stat = {
+  def nonLocalDefOrDcl(): Stat = {
     val mods = listBy[Mod] { buf =>
       annotsBuf(buf, skipNewLines = true)
       modifiersBuf(buf)
     }
-    defOrDclOrSecondaryCtor(mods, secondaryConstructorAllowed) match {
+    defOrDclOrSecondaryCtor(mods) match {
       case s if s.isTemplateStat => s
       case other => syntaxError("is not a valid template statement", at = other)
     }
   }
 
-  def defOrDclOrSecondaryCtor(mods: List[Mod], secondaryConstructorAllowed: Boolean = false): Stat = {
+  def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
     def onlyInline() = mods match {
       case (_: Mod.Inline) :: Nil => true
       case _ => false
@@ -3239,10 +3240,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     currToken match {
       case _: KwVal | _: KwVar => patDefOrDcl(mods)
       case _: KwGiven => givenDecl(mods)
-      case t: KwDef =>
-        if (!secondaryConstructorAllowed && peek[KwThis])
-          syntaxError("Illegal secondary constructor", at = t)
-        funDefOrDclOrExtensionOrSecondaryCtor(mods)
+      case t: KwDef => autoEndPos(mods) {
+          next() // skip KwDef
+          if (!at[KwThis]) funDefRestAfterKwDef(mods)
+          else if (TemplateOwnerContext.owner.isSecondaryCtorAllowed) peekToken match {
+            case _: LeftParen => secondaryCtorRest(mods, nameThis(), termParamClausesOnParen())
+            case t => syntaxError("secondary constructor needs explicit parameter list", at = t)
+          }
+          else syntaxError("Illegal secondary constructor", at = t)
+        }
       case _: KwType => typeDefOrDcl(mods)
       case _: KwCase if dialect.allowEnums && peek[Ident] =>
         autoEndPos(mods) {
@@ -3330,17 +3336,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val initPos = sig.declPos.getOrElse(sig.declType.fold(currIndex)(_.begIndex))
     val decltype = sig.declType.getOrElse(refinement(None).getOrElse(startModType()))
 
-    def getDefnGiven() = {
+    def getDefnGiven() = TemplateOwnerContext.within(OwnedByGiven) {
       val headInit =
         if (!at[LeftParen]) initImpl(initPos, decltype)(Nil)
         else initRestAt(initPos, decltype)(allowArgss = true)
       val inits = templateParentsWithFirst(allowComma = newSyntaxOK, allowWithBody = true)(headInit)
       val body =
         if (acceptOpt[KwWith])
-          if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(OwnedByGiven)
-          else if (at[Indentation.Indent]) autoPos(templateBodyOnIndentRaw(OwnedByGiven))
+          if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace()
+          else if (at[Indentation.Indent]) autoPos(templateBodyOnIndentRaw())
           else syntaxError("expected '{' or indentation", at = currToken)
-        else if (usedNewSyntax) templateBodyOpt(OwnedByGiven)
+        else if (usedNewSyntax) templateBodyOpt()
         else if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
         else emptyTemplateBody()
       val rhs = autoEndPos(initPos)(Template(None, inits, body, Nil))
@@ -3543,9 +3549,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     copyPos(x)(Term.ParamClause(copyPos(x)(Term.Param(Nil, anonNameAt(x), Some(x), None)) :: Nil))
   )
 
-  def funDefOrDclOrExtensionOrSecondaryCtor(mods: List[Mod]): Stat =
-    if (peek[KwThis]) secondaryCtor(mods) else funDefRest(mods)
-
   // TmplDef           ::= ‘extension’ [DefTypeParamClause] ‘(’ DefParam ‘)’ {UsingParamClause} ExtMethods
   // ExtMethods        ::=  ExtMethod | [nl] ‘{’ ExtMethod {semi ExtMethod ‘}’
   // ExtMethod         ::=  {Annotation [nl]} {Modifier} ‘def’ DefDef
@@ -3556,7 +3559,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     newLinesOpt()
 
-    def getStats() = statSeq(templateStat())
+    def getStats() = statSeq(templateStat)
     val body: Stat = currToken match {
       case _: LeftBrace => blockOnBrace(getStats())
       case _: Indentation.Indent => autoPosOpt(indentedOnOpen(getStats() match {
@@ -3569,8 +3572,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     Defn.ExtensionGroup(pcg, body)
   }
 
-  def funDefRest(mods: List[Mod]): Stat = autoEndPos(mods) {
-    accept[KwDef]
+  private def funDefRestAfterKwDef(mods: List[Mod]): Stat = {
     val name = termName()
 
     def procedureSyntaxDeclType: Type = {
@@ -3628,12 +3630,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def traitDef(mods: List[Mod]): Defn.Trait = {
     next()
     val traitName = typeName()
-    Defn.Trait(
-      mods,
-      traitName,
-      typeParamClauseOpt(),
-      primaryCtor(OwnedByTrait),
-      templateOpt(OwnedByTrait)
+    TemplateOwnerContext.within(OwnedByTrait)(
+      Defn.Trait(mods, traitName, typeParamClauseOpt(), primaryCtor(), templateOpt())
     )
   }
 
@@ -3642,25 +3640,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     val className = typeName()
     val typeParams = typeParamClauseOpt()
-    val ctor = primaryCtor(if (mods.has[Mod.Case]) OwnedByCaseClass else OwnedByClass)
+    val modCase = mods.has[Mod.Case]
 
-    if (!dialect.allowCaseClassWithoutParameterList && mods.has[Mod.Case] &&
-      ctor.paramClauses.isEmpty) syntaxError(
-      s"case classes must have a parameter list; try 'case class $className()' or 'case object $className'",
-      at = currToken
-    )
+    TemplateOwnerContext.within(if (modCase) OwnedByCaseClass else OwnedByClass) {
+      val ctor = primaryCtor()
 
-    val tmpl = templateOpt(OwnedByClass)
-    Defn.Class(mods, className, typeParams, ctor, tmpl)
+      if (modCase && !dialect.allowCaseClassWithoutParameterList && ctor.paramClauses.isEmpty)
+        syntaxError(
+          s"case classes must have a parameter list; try 'case class $className()' or 'case object $className'",
+          at = currToken
+        )
+
+      Defn.Class(mods, className, typeParams, ctor, templateOpt())
+    }
   }
 
   // EnumDef           ::=  id ClassConstr InheritClauses EnumBody
-  private def enumDef(mods: List[Mod]): Defn.Enum = {
+  private def enumDef(mods: List[Mod]): Defn.Enum = TemplateOwnerContext.within(OwnedByEnum) {
     next()
     val enumName = typeName()
     val typeParams = typeParamClauseOpt()
-    val ctor = primaryCtor(OwnedByEnum)
-    val tmpl = templateOpt(OwnedByEnum)
+    val ctor = primaryCtor()
+    val tmpl = templateOpt()
     Defn.Enum(mods, enumName, typeParams, ctor, tmpl)
   }
 
@@ -3673,10 +3674,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     Defn.RepeatedEnumCase(mods, values)
   }
 
-  def enumSingleCaseDef(mods: List[Mod]): Defn.EnumCase = {
+  def enumSingleCaseDef(mods: List[Mod]): Defn.EnumCase = TemplateOwnerContext.within(OwnedByEnum) {
     val name = termName()
     val tparams = typeParamClauseOpt()
-    val ctor = primaryCtor(OwnedByEnum)
+    val ctor = primaryCtor()
     val inits = if (acceptOpt[KwExtends]) templateParents(afterExtend = true) else List()
     Defn.EnumCase(mods, name, tparams, ctor, inits)
   }
@@ -3684,13 +3685,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def objectDef(mods: List[Mod]): Defn.Object = {
     next()
     val objectName = termName()
-    Defn.Object(mods, objectName, templateOpt(OwnedByObject))
+    TemplateOwnerContext.within(OwnedByObject)(Defn.Object(mods, objectName, templateOpt()))
   }
 
   /* -------- CONSTRUCTORS ------------------------------------------- */
 
-  def primaryCtor(owner: TemplateOwner): Ctor.Primary = autoPos {
-    val noCtor = !owner.isPrimaryCtorAllowed
+  def primaryCtor(): Ctor.Primary = autoPos {
+    val noCtor = !TemplateOwnerContext.owner.isPrimaryCtorAllowed
     val mods =
       if (noCtor) Nil
       else listBy[Mod] { buf =>
@@ -3700,16 +3701,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val name = anonName()
     val paramss = if (noCtor) Nil else termParamClauses()
     Ctor.Primary(mods, name, paramss)
-  }
-
-  def secondaryCtor(mods: List[Mod]): Ctor.Secondary = autoEndPos(mods) {
-    accept[KwDef]
-    expect[KwThis]
-    val name = nameThis()
-    currToken match {
-      case _: LeftParen => secondaryCtorRest(mods, name, termParamClausesOnParen())
-      case t => syntaxError("auxiliary constructor needs non-implicit parameter list", at = t)
-    }
   }
 
   def quasiquoteCtor(): Ctor = autoPos {
@@ -3911,19 +3902,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     } else Nil
 
   private def templateAfterExtends(
-      owner: TemplateOwner,
       parents: List[Init] = Nil,
       edefs: Option[Stat.Block] = None
   ): Template = {
     val derived = derivesClasses()
-    val body = templateBodyOpt(owner)
+    val body = templateBodyOpt()
     Template(edefs, parents, body, derived)
   }
 
-  def template(owner: TemplateOwner, afterExtend: Boolean = false): Template = autoPos {
+  def template(afterExtend: Boolean = false): Template = autoPos {
     if (isAfterOptNewLine[LeftBrace]) {
       // @S: pre template body cannot stub like post body can!
-      val body = templateBodyOnLeftBrace(owner)
+      val body = templateBodyOnLeftBrace()
       if (at[KwWith] && body.selfOpt.isEmpty) {
         val edefs = body.stats
         edefs.foreach(_ match {
@@ -3933,26 +3923,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         next()
         val parents = templateParents(afterExtend)
         val early = copyPos(body)(toStatsBlockRaw(edefs))
-        templateAfterExtends(owner, parents, Some(early))
+        templateAfterExtends(parents, Some(early))
       } else Template(None, Nil, body, Nil)
     } else {
       val parents = if (at[Colon]) Nil else templateParents(afterExtend)
-      templateAfterExtends(owner, parents)
+      templateAfterExtends(parents)
     }
   }
 
   def quasiquoteTemplate(): Template = entrypointTemplate()
 
-  def entrypointTemplate(): Template = autoPos(template(OwnedByClass))
+  def entrypointTemplate(): Template = TemplateOwnerContext.within(OwnedByClass)(autoPos(template()))
 
-  def templateOpt(owner: TemplateOwner): Template = autoPos(
+  def templateOpt(): Template = autoPos(
     unquoteOpt[Template](peekToken match {
       case _: Dot | _: Hash | _: At | _: Ellipsis | _: LeftParen | _: LeftBracket | _: LeftBrace |
           _: KwWith => false
       case _ => true
     }).getOrElse {
-      val onExtends = acceptOpt[KwExtends] || (owner eq OwnedByTrait) && acceptOpt[Subtype]
-      if (onExtends) template(owner, afterExtend = true) else templateAfterExtends(owner)
+      val onExtends =
+        acceptOpt[KwExtends] || (TemplateOwnerContext.owner eq OwnedByTrait) && acceptOpt[Subtype]
+      if (onExtends) template(afterExtend = true) else templateAfterExtends()
     }
   )
 
@@ -3960,27 +3951,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def emptyTemplateBody(): Template.Body = atCurPosEmpty(Template.Body(None, Nil))
 
   @inline
-  private def templateBodyOnLeftBrace(owner: TemplateOwner): Template.Body =
-    autoPos(inBracesOnOpen(templateStatSeq(owner)))
+  private def templateBodyOnLeftBrace(): Template.Body = autoPos(inBracesOnOpen(templateStatSeq()))
 
   @inline
-  private def templateBodyOnIndentRaw(owner: TemplateOwner): Template.Body =
-    indentedOnOpen(templateStatSeq(owner))
+  private def templateBodyOnIndentRaw(): Template.Body = indentedOnOpen(templateStatSeq())
 
-  def templateBodyOpt(owner: TemplateOwner): Template.Body =
-    if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace(owner)
+  def templateBodyOpt(): Template.Body =
+    if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace()
     else if (at[Colon] && peek[Indentation, EOL]) autoPos {
       next()
       expect[Indentation.Indent]("template body")
-      templateBodyOnIndentRaw(owner)
+      templateBodyOnIndentRaw()
     }
-    else if (at[LeftParen])
+    else if (at[LeftParen]) {
+      val owner = TemplateOwnerContext.owner
       if (owner.isPrimaryCtorAllowed) syntaxError("unexpected opening parenthesis", at = currToken)
       else {
         val what = owner.getClass.getSimpleName.stripPrefix("OwnedBy")
         syntaxError(s"$what may not have parameters", at = currToken)
       }
-    else emptyTemplateBody()
+    } else emptyTemplateBody()
 
   private def toStatsBlockRaw(stats: List[Stat]): Stat.Block = stats.reduceWith(Stat.Block.apply)
   private def toStatsBlock(startPos: Int)(stats: List[Stat]): Stat.Block =
@@ -4034,7 +4024,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _: KwExport => exportStmt()
     case _: KwPackage =>
       packageOrPackageObjectDef(if (dialect.allowToplevelTerms) consumeStat else topStat)
-    case _ if isDefIntro(currIndex) => nonLocalDefOrDcl(secondaryConstructorAllowed = true)
+    case _ if isDefIntro(currIndex) => TemplateOwnerContext.within(OwnedByClass)(nonLocalDefOrDcl())
     case _ if isAtEndMarker() => endMarker()
     case _ if isIdentOrExprIntro(currToken) => stat(expr(location = NoStat))
     case t: Ellipsis => ellipsis[Stat](t, 1)
@@ -4099,23 +4089,22 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ if dialect.allowToplevelStatements && isDefIntro(currIndex) => nonLocalDefOrDcl()
   }
 
-  private def templateStatSeq(owner: TemplateOwner): Template.Body = {
-    val secondaryConstructorAllowed = owner.isSecondaryCtorAllowed
+  private def templateStatSeq(): Template.Body = {
     val selfTreeOpt = tryParse(selfEither().right.toOption)
-    if (owner eq OwnedByGiven) selfTreeOpt
+    if (TemplateOwnerContext.owner eq OwnedByGiven) selfTreeOpt
       .foreach(_.decltpe.foreach(x => syntaxError("given cannot have a self type", at = x)))
     val stats = listBy[Stat] { buf =>
-      def getStats() = statSeqBuf(buf, templateStat(secondaryConstructorAllowed))
+      def getStats() = statSeqBuf(buf, templateStat)
       val wasIndented = getStats() // some stats could be indented relative to self-type
       if (wasIndented && selfTreeOpt.isDefined) getStats() // and the rest might not be
     }
     Template.Body(selfTreeOpt, stats)
   }
 
-  def templateStat(secondaryConstructorAllowed: Boolean = false): PartialFunction[Token, Stat] = {
+  val templateStat: PartialFunction[Token, Stat] = {
     case _: KwImport => importStmt()
     case _: KwExport => exportStmt()
-    case _ if isDefIntro(currIndex) => nonLocalDefOrDcl(secondaryConstructorAllowed)
+    case _ if isDefIntro(currIndex) => nonLocalDefOrDcl()
     case t: Unquote => unquote[Stat](t)
     case t: Ellipsis => ellipsis[Stat](t, 1)
     case _ if isAtEndMarker() => endMarker()
@@ -4190,7 +4179,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def packageOrPackageObjectDef(statpf: PartialFunction[Token, Stat]): Stat = autoPos {
     next()
-    if (acceptOpt[KwObject]) Pkg.Object(Nil, termName(), templateOpt(OwnedByObject))
+    if (acceptOpt[KwObject]) TemplateOwnerContext
+      .within(OwnedByObject)(Pkg.Object(Nil, termName(), templateOpt()))
     else {
       def packageBody = toPkgBody(currIndex)(
         if (nextIfColonIndent()) indentedOnOpen(statSeq(statpf)) else inBracesOrNil(statSeq(statpf))
