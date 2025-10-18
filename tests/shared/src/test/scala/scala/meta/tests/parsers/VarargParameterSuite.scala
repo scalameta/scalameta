@@ -16,7 +16,7 @@ class VarargParameterSuite extends ParseSuite {
       Some(pname("Boolean")),
       bool(true)
     )
-    check("def obj(f: Int*): Boolean = true", obj)
+    check("def obj(f: Int*): Boolean = true")(obj)
   }
 
   test("vararg parameter multiple arguments") {
@@ -28,7 +28,7 @@ class VarargParameterSuite extends ParseSuite {
       Some(pname("Boolean")),
       bool(true)
     )
-    check("def obj(a: String, b: Boolean, f: Int*): Boolean = true", obj)
+    check("def obj(a: String, b: Boolean, f: Int*): Boolean = true")(obj)
   }
 
   test("vararg parameter partially applied arguments") {
@@ -43,7 +43,7 @@ class VarargParameterSuite extends ParseSuite {
       Some(pname("Boolean")),
       bool(true)
     )
-    check("def obj(fa: Int*)(fb: Int*): Boolean = true", obj)
+    check("def obj(fa: Int*)(fb: Int*): Boolean = true")(obj)
   }
 
   test("vararg parameter implicit argument") {
@@ -58,7 +58,7 @@ class VarargParameterSuite extends ParseSuite {
       Some(pname("Boolean")),
       bool(true)
     )
-    check("def obj(fa: Int*)(implicit fb: Int*): Boolean = true", obj)
+    check("def obj(fa: Int*)(implicit fb: Int*): Boolean = true")(obj)
   }
 
   test("error on return type vararg parameters")(
@@ -70,8 +70,21 @@ class VarargParameterSuite extends ParseSuite {
   )
 
   test("error on repeated byname parameter") {
-    checkError("def fx(x: => Int*): Int = 3", "`)` expected but `identifier` found")
-    checkError("class Foo(bars: => Int*)", "`)` expected but `identifier` found")
+    check("def fx(x: => Int*): Int = 3")(Defn.Def(
+      Nil,
+      tname("fx"),
+      Nil,
+      List(List(tparam("x", Type.ByName(Type.Repeated("Int"))))),
+      Some("Int"),
+      lit(3)
+    ))
+    check("class Foo(bars: => Int*)")(Defn.Class(
+      Nil,
+      pname("Foo"),
+      Nil,
+      ctorp(tparam("bars", Type.ByName(Type.Repeated("Int")))),
+      tplNoBody()
+    ))
   }
 
   test("error on multiple vararg parameters")(
@@ -83,10 +96,11 @@ class VarargParameterSuite extends ParseSuite {
     checkError("def obj(fa: Int`*`, fb: Int) = true", "error: `identifier` expected but `,` found")
   }
 
-  private def check(definition: String, expected: scala.meta.Stat): Unit =
-    checkTree(templStat(definition))(expected)
+  private def check(definition: String)(expected: scala.meta.Stat)(implicit
+      loc: munit.Location
+  ): Unit = checkTree(templStat(definition))(expected)
 
-  private def checkError(definition: String, expected: String): Unit = {
+  private def checkError(definition: String, expected: String)(implicit loc: munit.Location): Unit = {
     val error = intercept[parsers.ParseException](templStat(definition))
     val obtained = error.getMessage
     assert(obtained.contains(expected), s"got: [$obtained]")

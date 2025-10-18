@@ -928,13 +928,18 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     tapply(tapply(tname("foo"), tname("bar")), blk(Term.Repeated(tname("baz"))))
   ))
 
-  test("#1063 bad") {
-    val thrown = intercept[ParseException](term("foo(bar) { val baz = qux; baz: _* }"))
-    assertEquals(
-      thrown.getMessage.substring(0, 52),
-      "<input>:1: error: repeated argument not allowed here"
-    )
-  }
+  test("#1063 bad")(
+    runTestAssert[Stat](
+      "foo(bar) { val baz = qux; baz: _* }",
+      """|foo(bar) {
+         |  val baz = qux
+         |  baz: _*
+         |}""".stripMargin
+    )(tapply(
+      tapply("foo", "bar"),
+      blk(Defn.Val(Nil, List(patvar("baz")), None, "qux"), Term.Repeated("baz"))
+    ))
+  )
 
   test("#1384 char no unescaped LF") {
     val expr = "('\n')"

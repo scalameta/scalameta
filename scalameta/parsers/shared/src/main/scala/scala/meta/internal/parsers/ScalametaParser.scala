@@ -689,16 +689,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     makeTupleType(lpPos, body, invalidLiteralUnitType)
   }
 
-  private def inParensOrTupleOrUnitExpr(allowRepeated: Boolean): Term = {
+  private def inParensOrTupleOrUnitExpr(): Term = {
     val lpPos = currIndex
-    val maybeTupleArgs = inParensOnOpenOr(
-      commaSeparated(expr(location = PostfixStat, allowRepeated = allowRepeated))
-    )(Nil)
-    if (maybeTupleArgs.lengthCompare(1) > 0) maybeTupleArgs.foreach {
-      case arg: Term.Repeated =>
-        syntaxError("repeated argument not allowed here", at = arg.tokens.last)
-      case _ =>
-    }
+    val maybeTupleArgs = inParensOnOpenOr(commaSeparated(expr(location = PostfixStat)))(Nil)
     makeTupleTerm(x => getTupleSingleTerm(maybeAnonymousFunction(x)))(lpPos, maybeTupleArgs)
   }
 
@@ -805,10 +798,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }).getOrElse(t)
     }
 
-    private def paramValueType(allowRepeated: Boolean = false): Type = {
+    private def paramValueType(): Type = {
       val startPos = currIndex
       def withRepeated(t: Type) =
-        if (allowRepeated && isStar) { next(); autoEndPos(startPos)(Type.Repeated(t)) } else t
+        if (isStar) { next(); autoEndPos(startPos)(Type.Repeated(t)) } else t
       def atInto() = {
         val intoPos = currIndex
         val mod = atPos(intoPos)(Mod.Into())
@@ -824,15 +817,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
 
     def paramType(): Type = {
-      def byNameParamValueType =
-        paramValueType(allowRepeated = dialect.allowByNameRepeatedParameters)
+      def byNameParamValueType = paramValueType()
       currToken match {
         case _: RightArrow => autoPos { next(); Type.ByName(byNameParamValueType) }
         case soft.KwPureFunctionArrow() =>
           val startPos = currIndex
           next()
           withTypeCaptures(startPos)(autoEndPos(startPos)(Type.PureByName(byNameParamValueType)))
-        case _ => paramValueType(allowRepeated = true)
+        case _ => paramValueType()
       }
     }
 
@@ -1423,15 +1415,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def condExpr(): Term = inParens(expr())
 
-  def expr(): Term = expr(location = NoStat, allowRepeated = false)
+  def expr(): Term = expr(location = NoStat)
 
-  def quasiquoteExpr(): Term = expr(location = NoStat, allowRepeated = true)
+  def quasiquoteExpr(): Term = expr(location = NoStat)
 
-  def entrypointExpr(): Term = expr(location = NoStat, allowRepeated = false)
+  def entrypointExpr(): Term = expr(location = NoStat)
 
   def unquoteExpr(): Term = currToken match {
     case t: Ident => termName(t)
-    case _: LeftBrace => expr(location = UnquoteStat, allowRepeated = true)
+    case _: LeftBrace => expr(location = UnquoteStat)
     case _: KwThis => anonThis()
     case _ => syntaxError(
         "error in interpolated string: identifier, `this' or block expected",
@@ -1443,11 +1435,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
    * Deals with Scala 3 concept of {{{inline x match { ...}}}. Since matches can also be chained in
    * Scala 3 we need to create the Match first and only then add the the inline modifier.
    */
-  def inlineMatchClause(inlineMods: List[Mod]) =
-    autoEndPos(inlineMods)(postfixExpr(allowRepeated = false)) match {
-      case t: Term.Match => copyPos(t)(t.fullCopy(mods = inlineMods))
-      case other => syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
-    }
+  def inlineMatchClause(inlineMods: List[Mod]) = autoEndPos(inlineMods)(postfixExpr()) match {
+    case t: Term.Match => copyPos(t)(t.fullCopy(mods = inlineMods))
+    case other => syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
+  }
 
   private def matchClause(t: Term, startPos: Int, isSelect: Boolean = false) = {
     val cases =
@@ -1479,7 +1470,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         else {
           // let's consider case when something can continue cond or start body
           val argsOrInitBody = currToken match {
-            case _: LeftParen => Some(inParensOrTupleOrUnitExpr(allowRepeated = false))
+            case _: LeftParen => Some(inParensOrTupleOrUnitExpr())
             case _: LeftBrace => Some(blockExprOnBrace())
             case _ => None
           }
@@ -1489,8 +1480,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               autoEndPos(startPos)(Term.Apply(simpleExpr, args))
             }
             val simpleRest = simpleExprRest(simpleExprWithArgs, canApply = true, startPos = startPos)
-            Try(postfixExpr(startPos, simpleRest, allowRepeated = false)).toOption.flatMap { x =>
-              val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
+            Try(postfixExpr(startPos, simpleRest)).toOption.flatMap { x =>
+              val exprCond = exprOtherRest(startPos, x, location = NoStat)
               if (acceptIfAfterOptNL[T]) Some(exprCond -> None) else None
             }
           }
@@ -1499,8 +1490,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             simpleExpr -> argsOrInitBody.map { t =>
               val startPos = t.begIndex
               val rest = simpleExprRest(t, canApply = true, startPos = startPos)
-              val init = postfixExpr(startPos, rest, allowRepeated = false)
-              exprOtherRest(startPos, init, NoStat, allowRepeated = false)
+              val init = postfixExpr(startPos, rest)
+              exprOtherRest(startPos, init, NoStat)
             }
           }
         }
@@ -1514,7 +1505,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   // if yes, then nothing has to change here
   // if no, we need eschew autoPos here, because it forces those parentheses on the result of calling prefixExpr
   // see https://github.com/scalameta/scalameta/issues/1083 and https://github.com/scalameta/scalameta/issues/1223
-  def expr(location: Location, allowRepeated: Boolean): Term = {
+  def expr(location: Location): Term = {
     def inlineMod() = autoPos {
       accept[Ident]
       Mod.Inline()
@@ -1600,33 +1591,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _: LeftBracket if dialect.allowPolymorphicFunctions =>
           val quants = typeParamClauseOpt()
           accept[RightArrow]
-          Term.PolyFunction(quants, expr(location, allowRepeated))
+          Term.PolyFunction(quants, expr(location))
         case _ =>
           val startPos = currIndex
-          val t: Term = postfixExpr(allowRepeated)
-          exprOtherRest(startPos, t, location, allowRepeated)
+          val t: Term = postfixExpr()
+          exprOtherRest(startPos, t, location)
       }
     }
     if (location.anonFuncOK) maybeAnonymousFunction(res) else res
   }
 
-  private def exprOtherRest(
-      startPos: Int,
-      prefix: Term,
-      location: Location,
-      allowRepeated: Boolean
-  ): Term = {
+  private def exprOtherRest(startPos: Int, prefix: Term, location: Location): Term = {
     @inline
     def addPos[T <: Tree](body: T) = autoEndPos(startPos)(body)
-    def repeatedTerm(t: Term, nextTokens: () => Unit): Term =
-      if (allowRepeated) addPos { nextTokens(); Term.Repeated(t) }
-      else syntaxError("repeated argument not allowed here", at = currToken)
+    def repeatedTerm(t: Term, nextTokens: () => Unit): Term = addPos { nextTokens(); Term.Repeated(t) }
     @tailrec
     def iter(t: Term): Term = currToken match {
       case _: Equals => t match {
           case _: Term.Ref | _: Term.Apply | _: Quasi =>
             next()
-            addPos(Term.Assign(t, expr(location = NoStat, allowRepeated = true)))
+            addPos(Term.Assign(t, expr(location = NoStat)))
           case _ => t
         }
       case _: Colon => getFewerBracesApplyOnColon(t, startPos) match {
@@ -1641,7 +1625,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
               // check out the `if (token.is[RightArrow]) { ... }` block below
               iter(addPos(Term.Ascribe(t, typeOrInfixType(location))))
         }
-      case soft.StarSplice() if allowRepeated && peek[RightParen] => repeatedTerm(t, next)
+      case soft.StarSplice() if peek[RightParen] => repeatedTerm(t, next)
       case _: KwMatch =>
         next()
         matchClause(t, startPos)
@@ -1957,17 +1941,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ => None
     }
 
-  def postfixExpr(allowRepeated: Boolean): Term = {
+  def postfixExpr(): Term = {
     val startPos = currIndex
 
     // Start the infix chain.
     // We'll use `a + b` as our running example.
-    val rhs0 = prefixExpr(allowRepeated)
+    val rhs0 = prefixExpr()
 
-    postfixExpr(startPos, rhs0, allowRepeated)
+    postfixExpr(startPos, rhs0)
   }
 
-  private def postfixExpr(startPos: Int, rhs0: Term, allowRepeated: Boolean): Term = {
+  private def postfixExpr(startPos: Int, rhs0: Term): Term = {
     val ctx = termInfixContext
     val base = ctx.stack
 
@@ -2038,7 +2022,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case t: Unquote =>
           val op = unquote[Term.Name](t)
           Some(getPostfixOrNextRhs(op))
-        case t: Ident if !(allowRepeated && soft.StarSplice(t) && peek[RightParen]) =>
+        case t: Ident if !(soft.StarSplice(t) && peek[RightParen]) =>
           val op = atCurPosNext(Term.Name(t.value))
           Some(getPostfixOrNextRhs(op))
         case _: KwMatch if dialect.allowMatchAsOperator =>
@@ -2077,7 +2061,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def prefixExpr(allowRepeated: Boolean): Term = currToken match {
+  def prefixExpr(): Term = currToken match {
     case Unary((ident, unary)) =>
       val startPos = currIndex
       next()
@@ -2085,7 +2069,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def addPos(tree: Term) = autoEndPos(startPos)(tree)
       def rest(tree: Term) = simpleExprRest(tree, canApply = true, startPos = startPos)
       def applyUnary(term: Term) = addPos(Term.ApplyUnary(op, term))
-      def otherwise = simpleExpr0(allowRepeated = true) match {
+      def otherwise = simpleExpr0() match {
         case Success(result) => applyUnary(result)
         case Failure(_) =>
           // maybe it is not unary operator but simply an ident `trait - {...}`
@@ -2099,12 +2083,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           next(); rest(addPos(Lit.Boolean(unary(tok.value))))
         case _ => otherwise
       }
-    case _ => simpleExpr(allowRepeated)
+    case _ => simpleExpr()
   }
 
-  def simpleExpr(allowRepeated: Boolean): Term = simpleExpr0(allowRepeated).get
+  def simpleExpr(): Term = simpleExpr0().get
 
-  private def simpleExpr0(allowRepeated: Boolean): Try[Term] = {
+  private def simpleExpr0(): Try[Term] = {
     var canApply = true
     val startPos = currIndex
     (currToken match {
@@ -2117,7 +2101,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Xml.Start => Success(xmlTerm())
       case _: Ident | _: KwThis | _: KwSuper | _: Unquote => Success(path().become[Term])
       case _: Underscore => Success(atCurPosNext(Term.Placeholder()))
-      case _: LeftParen => Success(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated))
+      case _: LeftParen => Success(inParensOrTupleOrUnitExpr())
       case _: LeftBrace => canApply = false; Success(blockExprOnBrace())
       case _: Indentation.Indent => canApply = false; Success(blockExprOnIndent())
       case _: KwNew =>
@@ -2311,20 +2295,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def argumentExprsOrPrefixExpr(location: Location): Term = {
     val isBrace = at[LeftBrace]
-    if (!isBrace && !at[LeftParen]) prefixExpr(allowRepeated = false)
+    if (!isBrace && !at[LeftParen]) prefixExpr()
     else {
-      def findRep(args: List[Term]): Option[Term.Repeated] = args.collectFirst {
-        case Term.Assign(_, rep: Term.Repeated) => rep
-        case rep: Term.Repeated => rep
-      }
       val lpPos = currIndex
       val args =
-        if (isBrace) checkNoTripleDot(blockExprOnBrace(allowRepeated = true)) :: Nil
+        if (isBrace) checkNoTripleDot(blockExprOnBrace()) :: Nil
         else inParensOnOpenOr(argumentExprsInParens(location))(Nil)
-      def getRest() = {
-        findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
-        simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
-      }
+      def getRest() = simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
       currToken match {
         case _: Dot | _: OpenDelim | _: Underscore => getRest()
         // see ArgumentExprs in:
@@ -2341,11 +2318,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def argumentExpr(location: Location): Term = currToken match {
     case t @ Ellipsis(2) => syntaxError(Messages.QuasiquoteRankMismatch(2, 1), at = t)
-    case _ => expr(location = location, allowRepeated = true)
+    case _ => expr(location = location)
   }
 
   private def getArgClauseOnBrace(): Term.ArgClause = autoPos {
-    val arg = blockExprOnBrace(allowRepeated = true)
+    val arg = blockExprOnBrace()
     Term.ArgClause(arg :: Nil)
   }
 
@@ -2359,18 +2336,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     })(Term.ArgClause(Nil))
   )
 
-  private def argumentExprsInParens(location: Location = NoStat): List[Term] = {
-    @tailrec
-    def checkRep(exprsLeft: List[Term]): Unit = exprsLeft match {
-      case head :: tail =>
-        if (!head.is[Term.Repeated]) checkRep(tail)
-        else if (tail.nonEmpty) syntaxError("repeated argument not allowed here", at = head)
-      case _ =>
-    }
-    val exprs = commaSeparated(argumentExpr(location))
-    checkRep(exprs)
-    exprs
-  }
+  private def argumentExprsInParens(location: Location = NoStat): List[Term] =
+    commaSeparated(argumentExpr(location))
 
   private def checkNoTripleDot[T <: Tree](tree: T): T = tree match {
     case q: Quasi if q.rank == 2 => syntaxError(Messages.QuasiquoteRankMismatch(q.rank, 1), at = q)
@@ -2395,8 +2362,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     else orElse
   }
 
-  private def blockRaw(allowRepeated: Boolean = false): Term.Block =
-    toBlockRaw(blockStatSeq(allowRepeated = allowRepeated))
+  private def blockRaw(): Term.Block = toBlockRaw(blockStatSeq())
 
   private def blockOnIndent(keepBlock: Boolean = false): Term = autoPosOpt(
     indentedOnOpen(blockStatSeq() match {
@@ -2409,16 +2375,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     blockExprPartial[Indentation.Outdent](blockOnIndent(keepBlock))
 
   private def blockOnBrace(fstats: => List[Stat]): Term = autoPos(toBlockRaw(inBracesOnOpen(fstats)))
-  private def blockOnBrace(allowRepeated: Boolean = false): Term =
-    blockOnBrace(blockStatSeq(allowRepeated = allowRepeated))
-  private def blockExprOnBrace(allowRepeated: Boolean = false, isOptional: Boolean = false): Term =
-    blockExprPartial[RightBrace](
-      if (isOptional) blockOnOther(allowRepeated) else blockOnBrace(allowRepeated)
-    )
+  private def blockOnBrace(): Term = blockOnBrace(blockStatSeq())
+  private def blockExprOnBrace(isOptional: Boolean = false): Term =
+    blockExprPartial[RightBrace](if (isOptional) blockOnOther() else blockOnBrace())
 
-  private def blockOnOther(allowRepeated: Boolean = false): Term = {
+  private def blockOnOther(): Term = {
     val start = currIndex
-    blockStatSeq(allowRepeated = allowRepeated) match {
+    blockStatSeq() match {
       case (term: Term) :: Nil => term
       case (q: Quasi) :: Nil => q.become[Term]
       case stats => autoEndPos(start)(toBlockRaw(stats))
@@ -2431,7 +2394,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def caseBody() = {
         accept[RightArrow]
         if (at[Indentation.Indent]) blockExprOnIndent()
-        else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
+        else if (forceSingleExpr) expr(location = BlockStat)
         else blockOnOther()
       }
       @inline
@@ -2474,7 +2437,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private def guardOnIf(): Term = {
     next()
-    autoPos(postfixExpr(allowRepeated = false))
+    autoPos(postfixExpr())
   }
 
   private def enumeratorGuardOnIf() = autoPos(Enumerator.Guard(guardOnIf()))
@@ -4073,7 +4036,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       packageOrPackageObjectDef(if (dialect.allowToplevelTerms) consumeStat else topStat)
     case _ if isDefIntro(currIndex) => nonLocalDefOrDcl(secondaryConstructorAllowed = true)
     case _ if isAtEndMarker() => endMarker()
-    case _ if isIdentOrExprIntro(currToken) => stat(expr(location = NoStat, allowRepeated = true))
+    case _ if isIdentOrExprIntro(currToken) => stat(expr(location = NoStat))
     case t: Ellipsis => ellipsis[Stat](t, 1)
   }
 
@@ -4156,7 +4119,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case t: Unquote => unquote[Stat](t)
     case t: Ellipsis => ellipsis[Stat](t, 1)
     case _ if isAtEndMarker() => endMarker()
-    case _ if isIdentOrExprIntro(currToken) => expr(location = TemplateStat, allowRepeated = false)
+    case _ if isIdentOrExprIntro(currToken) => expr(location = TemplateStat)
   }
 
   private def refineStatSeq(): List[Stat] = listBy[Stat] { stats =>
@@ -4193,7 +4156,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
   }
 
-  def blockStatSeq(allowRepeated: Boolean = false): List[Stat] = listBy[Stat] { stats =>
+  def blockStatSeq(): List[Stat] = listBy[Stat] { stats =>
     def notCaseDefEnd(): Boolean = currToken match {
       case _: RightParen | StatSeqEnd() => false
       case _: KwCase => !isCaseIntroOnKwCase()
@@ -4214,17 +4177,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         else localDef(Some(atPos(implicitPos)(Mod.Implicit())))
       case t if !isNonlocalModifier(t) && isDefIntro(currIndex) => localDef(None)
       case _ if isAtEndMarker() => endMarker()
-      case _ if isIdentOrExprIntro(currToken) =>
-        stat(expr(location = BlockStat, allowRepeated = allowRepeated))
+      case _ if isIdentOrExprIntro(currToken) => stat(expr(location = BlockStat))
       case t: Ellipsis => ellipsis[Stat](t, 1)
       case _ => syntaxError("illegal start of statement", at = currToken)
     }
 
     if (cond()) doWhile(stats += getStat())(notCaseDefEnd() && { acceptStatSep(); cond() })
-    if (allowRepeated && stats.length > 1) stats.foreach {
-      case t: Term.Repeated => syntaxError("repeated argument not allowed here", at = t)
-      case _ =>
-    }
   }
 
   private def toPkgBody(startPos: Int)(stats: List[Stat]): Pkg.Body =
