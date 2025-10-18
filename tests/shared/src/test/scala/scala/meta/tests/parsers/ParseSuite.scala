@@ -56,12 +56,21 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
         fail(richFeedback)
     }
 
-  def checkError(stat: String)(implicit dialect: Dialect, loc: munit.Location) =
+  def checkError(stat: String)(implicit dialect: Dialect, loc: munit.Location): Unit =
     test(logger.revealWhitespace(stat).take(50))(interceptParseError(stat))
-  def checkOK(stat: String)(implicit dialect: Dialect, loc: munit.Location) =
-    test(logger.revealWhitespace(stat).take(50))(templStat(stat))
-  def checkOK(stat: String, syntax: String)(implicit dialect: Dialect, loc: munit.Location) =
-    test(logger.revealWhitespace(stat).take(50))(assertSyntax(syntax)(templStat(stat)))
+  final def checkErrors(stats: String*)(implicit dialect: Dialect, loc: munit.Location): Unit =
+    stats.foreach(checkError)
+  def checkOK(stat: String, syntax: String = "")(implicit
+      dialect: Dialect,
+      loc: munit.Location
+  ): Unit = test(logger.revealWhitespace(stat).take(50))(assertSyntax(syntax)(templStat(stat)))
+  final def checkOKs(stats: String*)(implicit dialect: Dialect, loc: munit.Location): Unit = stats
+    .foreach(checkOK(_))
+  final def checkOKsWithSyntax(
+      pairs: (String, String)*
+  )(implicit dialect: Dialect, loc: munit.Location): Unit = pairs.foreach { case (stat, syntax) =>
+    checkOK(stat, syntax)
+  }
 
   protected def checkParsedTree[T <: Tree](
       code: String,

@@ -54,12 +54,12 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected def assertSyntax(
       syntax: String
-  )(obtained: Tree)(implicit loc: Location, dialect: Dialect): Unit =
+  )(obtained: Tree)(implicit loc: Location, dialect: Dialect): String =
     assertSyntaxWithClue(obtained)(syntax)(obtained.structure)
 
   protected def assertSyntax(obtained: Tree, syntax: String = null)(
       expected: Tree
-  )(implicit loc: Location, dialect: Dialect): Unit =
+  )(implicit loc: Location, dialect: Dialect): String =
     assertSyntaxWithClue(obtained, syntax)(expected, expected.structure)
 
   protected def assertSyntaxWithClue(
@@ -73,7 +73,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   protected def assertSyntaxWithClue(
       obtained: Tree,
       syntax: String = null
-  )(expected: Tree, clue: => Any)(implicit loc: Location, dialect: Dialect): Unit =
+  )(expected: Tree, clue: => Any)(implicit loc: Location, dialect: Dialect): String =
     assertSyntaxWithClue(obtained)(TestHelpers.getSyntax(expected.reprint, syntax))(clue)
 
   protected def checkTree(obtained: Tree, syntax: String = null)(

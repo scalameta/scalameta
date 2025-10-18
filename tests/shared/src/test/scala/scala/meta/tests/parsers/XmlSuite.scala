@@ -199,88 +199,86 @@ class XmlSuite extends ParseSuite {
     Defn.Val(Nil, List(patvar("y")), None, int(2))
   )))
 
-  checkOK("<foo/>")
-  checkOK("<foo></foo>")
-  checkOK("<foo/><bar/>")
-  checkOK("<foo:bar/>")
-  checkOK("<foo><bar/></foo>")
-  checkOK("<foo\n>\t <bar   />\t  </foo\n>")
-  checkOK("""<foo a="a" b="b"/>""")
-  checkOK("""<foo a:a="a" b:b="b"/>""")
-  checkOK("""<foo a="'"/>""")
-  checkOK("""<foo a='"'/>""")
-  checkOK("<foo>&name;</foo>")
-  checkOK("<foo>&na:me;</foo>")
-  checkOK("<foo>&lt;</foo>")
-  checkOK("<foo>Hello &name;!</foo>")
-  checkOK("""<foo a="&name;" />""")
-  checkOK("""<foo a="&na:me;" />""")
-  checkOK("""<foo a="&lt;" />""")
-  checkOK("""<foo a="Hello &name;!"/>""")
-  checkOK("""<foo a="1 &lt; 2"/>""")
-  checkOK("<foo>&#1234;</foo>")
-  checkOK("<foo>&#x1234;</foo>")
-  checkOK("<foo>Hello&#x1234;Allan</foo>")
-  checkOK("""<foo a="&#1234;" />""")
-  checkOK("""<foo a="&#x1234;" />""")
-  checkOK("""<foo a="Hello&#x1234;Allan" />""")
-  checkOK("<xml:group><foo/><bar/></xml:group>")
-  checkOK("<xml:group></xml:group>")
-  checkOK("<!---->")
-  checkOK("<!----->")
-  checkOK("<!--foo-->")
-  checkOK("<!--a-b-->")
-  checkOK("<!-- -- -->") // fails at runtime
-  checkOK("<!------>") // fails at runtime
-  checkOK("<![CDATA[foo]]>")
-  checkOK("<![CDATA[]]>")
-  checkOK("<![CDATA[>]]>")
-  checkOK("<![CDATA[]>]]>")
-  checkOK("<![CDATA[]]]]>")
-  checkOK("<?foo bar?>")
-  checkOK("<?foo  bar?>")
-  checkOK("<?foo?>")
-  checkOK("<?foo     ?>")
-  checkOK("<?foo??>")
-  checkOK("<?foo<bar?>")
-  checkOK("<?xml bar?>") // fails at runtime
-  checkOK("<xml:unparsed>foo</xml:unparsed>")
-  checkOK("<xml:unparsed>{</xml:unparsed>")
-  checkOK("<xml:unparsed><</xml:unparsed>")
-  checkOK("<![CDATA[hello, world]]>")
-  checkOK("<![CDATA[hello, world]]><![CDATA[hello, world]]>")
-  checkOK("<foo>x<![CDATA[hello, world]]></foo>")
-  checkOK("<foo><![CDATA[hello, world]]></foo>")
-  checkOK("<foo><![CDATA[hello, world]]><![CDATA[hello, world]]></foo>")
-  checkOK("<a><b/>start<![CDATA[hi & bye]]><c/>world<d/>stuff<![CDATA[red & black]]></a>")
-  checkOK("<foo>{foo}</foo>")
-  checkOK("<foo>{foo }</foo>")
-  checkOK("<foo>{ foo}</foo>")
-  checkOK("<foo>{ foo }</foo>")
-  checkOK("<foo>{2}</foo>")
-  checkOK("""<foo>{"bar"}</foo>""")
-  checkOK("<foo>{1}</foo>")
-  checkOK("<foo>{<bar/>}</foo>")
-  checkOK("<foo>{<bar/><bat/>}</foo>")
-  checkOK("""<foo a={"foo"}/>""")
-  checkOK("<foo a={<bar/>}/>")
-  checkOK("<foo a={<bar/><bat/>}/>")
-  checkOK("<a>{ List(1, 2) }</a>")
-  checkOK("<a>{}</a>")
-  checkOK("<a>{1}{2}</a>")
-  checkOK("<a>{1}{2}<b/>{3}</a>")
-  checkOK("<a>{<b>{1}{2}</b>}</a>")
-  checkOK("e match { case <a>{_*}</a> => }")
-  checkOK("<a>{{</a>")
-  checkOK("<a>}}</a>")
-  checkOK(
+  checkOKs(
+    "<foo/>",
+    "<foo></foo>",
+    "<foo/><bar/>",
+    "<foo:bar/>",
+    "<foo><bar/></foo>",
+    "<foo\n>\t <bar   />\t  </foo\n>",
+    """<foo a="a" b="b"/>""",
+    """<foo a:a="a" b:b="b"/>""",
+    """<foo a="'"/>""",
+    """<foo a='"'/>""",
+    "<foo>&name;</foo>",
+    "<foo>&na:me;</foo>",
+    "<foo>&lt;</foo>",
+    "<foo>Hello &name;!</foo>",
+    """<foo a="&name;" />""",
+    """<foo a="&na:me;" />""",
+    """<foo a="&lt;" />""",
+    """<foo a="Hello &name;!"/>""",
+    """<foo a="1 &lt; 2"/>""",
+    "<foo>&#1234;</foo>",
+    "<foo>&#x1234;</foo>",
+    "<foo>Hello&#x1234;Allan</foo>",
+    """<foo a="&#1234;" />""",
+    """<foo a="&#x1234;" />""",
+    """<foo a="Hello&#x1234;Allan" />""",
+    "<xml:group><foo/><bar/></xml:group>",
+    "<xml:group></xml:group>",
+    "<!---->",
+    "<!----->",
+    "<!--foo-->",
+    "<!--a-b-->",
+    "<!-- -- -->", // fails at runtime
+    "<!------>", // fails at runtime
+    "<![CDATA[foo]]>",
+    "<![CDATA[]]>",
+    "<![CDATA[>]]>",
+    "<![CDATA[]>]]>",
+    "<![CDATA[]]]]>",
+    "<?foo bar?>",
+    "<?foo  bar?>",
+    "<?foo?>",
+    "<?foo     ?>",
+    "<?foo??>",
+    "<?foo<bar?>",
+    "<?xml bar?>", // fails at runtime
+    "<xml:unparsed>foo</xml:unparsed>",
+    "<xml:unparsed>{</xml:unparsed>",
+    "<xml:unparsed><</xml:unparsed>",
+    "<![CDATA[hello, world]]>",
+    "<![CDATA[hello, world]]><![CDATA[hello, world]]>",
+    "<foo>x<![CDATA[hello, world]]></foo>",
+    "<foo><![CDATA[hello, world]]></foo>",
+    "<foo><![CDATA[hello, world]]><![CDATA[hello, world]]></foo>",
+    "<a><b/>start<![CDATA[hi & bye]]><c/>world<d/>stuff<![CDATA[red & black]]></a>",
+    "<foo>{foo}</foo>",
+    "<foo>{foo }</foo>",
+    "<foo>{ foo}</foo>",
+    "<foo>{ foo }</foo>",
+    "<foo>{2}</foo>",
+    """<foo>{"bar"}</foo>""",
+    "<foo>{1}</foo>",
+    "<foo>{<bar/>}</foo>",
+    "<foo>{<bar/><bat/>}</foo>",
+    """<foo a={"foo"}/>""",
+    "<foo a={<bar/>}/>",
+    "<foo a={<bar/><bat/>}/>",
+    "<a>{ List(1, 2) }</a>",
+    "<a>{}</a>",
+    "<a>{1}{2}</a>",
+    "<a>{1}{2}<b/>{3}</a>",
+    "<a>{<b>{1}{2}</b>}</a>",
+    "e match { case <a>{_*}</a> => }",
+    "<a>{{</a>",
+    "<a>}}</a>",
     """|
        |<a>
        |  <b/>
        |</a>
-       |""".stripMargin
-  )
-  checkOK(
+       |""".stripMargin,
     """|object a {
        |  <tr>
        |    <td> {session} </td>
@@ -288,10 +286,8 @@ class XmlSuite extends ParseSuite {
        |    <td> {formatDate(session)} </td>
        |    <td> {foo} </td>
        |  </tr>
-       |}""".stripMargin
-  )
-  checkOK("<a>{<b>{1}</b>}</a>")
-  checkOK(
+       |}""".stripMargin,
+    "<a>{<b>{1}</b>}</a>",
     """|
        |val ips = <ips>{
        |  for {
@@ -299,38 +295,40 @@ class XmlSuite extends ParseSuite {
        |    JString(ip) <- field.value
        |  } yield <ip>{ ip }</ip>
        |}</ips>
-       |""".stripMargin
-  )
+       |""".stripMargin,
 
-  // Matches bugs in scalac
-  checkOK("""<a b="&#;"/>""")
-  checkOK("""<a b="&#x;"/>""")
-  checkOK("<a>&#;</a>")
-  checkOK("<a>&#x;</a>")
-  checkOK("<a>]]></a>")
-  checkOK("<a/>{0}")
+    // Matches bugs in scalac
+    """<a b="&#;"/>""",
+    """<a b="&#x;"/>""",
+    "<a>&#;</a>",
+    "<a>&#x;</a>",
+    "<a>]]></a>",
+    "<a/>{0}"
+  )
   // checkOK("""<a b="&:;"/>""") // FIXME
   // checkOK("""<a b="&:a;"/>""") //FIXME
   // checkOK("""<a b="&a:;"/>""") // FIXME
   // checkOK("e match { case <a>&</a> => () }") // FIXME
 
-  checkError("<a:/>")
-  checkError("""<a b:="Hello"/>""")
-  checkError("<a>&b:;</a>")
-  checkError("<a>&:b;</a>")
-  checkError("<a><a:/>")
-  checkError("<a>")
-  checkError("<!--->")
-  checkError("<!-- >")
-  checkError("<!-- ->")
-  checkError("<![CDATA[]]>]]>")
-  checkError("<a></ a>")
-  checkError("<a></\na>")
-  checkError("e match { case <a>{}</a> => ??? }")
-  checkError("<a>}</a>")
-  checkError("<a>{</a>")
-  checkError("<a>}{</a>")
-  // checkError("<a></b>") // FIXME: Should not parse
+  checkErrors(
+    "<a:/>",
+    """<a b:="Hello"/>""",
+    "<a>&b:;</a>",
+    "<a>&:b;</a>",
+    "<a><a:/>",
+    "<a>",
+    "<!--->",
+    "<!-- >",
+    "<!-- ->",
+    "<![CDATA[]]>]]>",
+    "<a></ a>",
+    "<a></\na>",
+    "e match { case <a>{}</a> => ??? }",
+    "<a>}</a>",
+    "<a>{</a>",
+    "<a>}{</a>"
+//    "<a></b>", // FIXME: Should not parse
+  )
 
   test("SeqWildcard with trailing NL") {
     val code =
