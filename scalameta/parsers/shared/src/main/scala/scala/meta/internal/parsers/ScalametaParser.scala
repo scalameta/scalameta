@@ -3380,8 +3380,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
     def getDefnGiven() = {
       val headInit =
-        if (!at[LeftParen]) initImpl(initPos, decltype, allowSingleton = false)(Nil)
-        else initRestAt(initPos, decltype)(allowArgss = true, allowSingleton = false)
+        if (!at[LeftParen]) initImpl(initPos, decltype)(Nil)
+        else initRestAt(initPos, decltype)(allowArgss = true)
       val inits = templateParentsWithFirst(allowComma = newSyntaxOK, allowWithBody = true)(headInit)
       val body =
         if (acceptOpt[KwWith])
@@ -3808,8 +3808,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     initRest(tpe, allowArgss = true, allowBraces = true)
   }
 
-  def initInsideTemplate(): Init =
-    initRest(startModType(), allowArgss = true, allowTypeSingleton = false)
+  def initInsideTemplate(): Init = initRest(startModType(), allowArgss = true)
 
   def quasiquoteInit(): Init = entrypointInit()
 
@@ -3818,19 +3817,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     case _ => initInsideTemplate()
   }
 
-  private def initImpl(startPos: StartPos, tpe: Type, allowSingleton: Boolean)(
-      argss: => List[Term.ArgClause]
-  ): Init = {
-    if (!allowSingleton && tpe.is[Type.Singleton])
-      syntaxError(s"class type required but $tpe found", at = tpe)
-    autoEndPos(startPos)(Init(tpe, anonName(), argss))
-  }
+  private def initImpl(startPos: StartPos, tpe: Type)(argss: => List[Term.ArgClause]): Init =
+    try autoEndPos(startPos)(Init(tpe, anonName(), argss))
+    catch {
+      case _: InvariantFailedException =>
+        syntaxError(s"class type required but $tpe found", at = tpe)
+    }
 
   def initRestAt(startPos: StartPos, tpe: Type)(
       allowArgss: Boolean,
       insidePrimaryCtorAnnot: Boolean = false,
-      allowBraces: Boolean = false,
-      allowSingleton: Boolean = true
+      allowBraces: Boolean = false
   ): Init = {
     def getArgss = listBy[Term.ArgClause] { argss =>
       def allowParens: Boolean = peekToken match {
@@ -3856,21 +3853,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       if (maybeBody() && allowArgss) while (maybeBody()) {}
     }
-    initImpl(startPos, tpe, allowSingleton = allowSingleton)(getArgss)
+    initImpl(startPos, tpe)(getArgss)
   }
 
   def initRest(
       typeParser: => Type,
       allowArgss: Boolean,
       insidePrimaryCtorAnnot: Boolean = false,
-      allowBraces: Boolean = false,
-      allowTypeSingleton: Boolean = true
+      allowBraces: Boolean = false
   ): Init = unquoteOpt[Init](!(peek[LeftParen] || allowBraces && peek[LeftBrace]))
     .getOrElse(initRestAt(currIndex, typeParser)(
       allowArgss = allowArgss,
       insidePrimaryCtorAnnot = insidePrimaryCtorAnnot,
-      allowBraces = allowBraces,
-      allowSingleton = allowTypeSingleton
+      allowBraces = allowBraces
     ))
 
   /* ---------- SELFS --------------------------------------------- */
