@@ -3134,7 +3134,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case q: Quasi if endTparamQuasi => q.become[Type.Param]
           case _ =>
             val tparams = typeParamClauseOpt()
-            val bounds = typeBoundsWithOptViewBounds(allowViewBounds = true)
+            val bounds = typeBoundsWithOptViewBounds()
             Type.Param(mods, name, tparams, bounds)
         }
     }
@@ -3153,16 +3153,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   def entrypointTypeParam(): Type.Param = typeParam()
 
-  def typeBounds() = typeBoundsWithOptViewBounds(allowViewBounds = false)
+  def typeBounds() = typeBoundsWithOptViewBounds()
 
-  private def typeBoundsWithOptViewBounds(allowViewBounds: Boolean) = autoPos {
+  private def typeBoundsWithOptViewBounds() = autoPos {
     val loBound = bound[Supertype]
     val hiBound = bound[Subtype]
     val vbounds =
-      if (allowViewBounds) listBy[Type](buf =>
-        while (acceptOpt[Viewbound]) buf += contextBoundOrAlias(allowAlias = false)
-      )
-      else Nil
+      listBy[Type](buf => while (acceptOpt[Viewbound]) buf += contextBoundOrAlias(allowAlias = false))
     val cbounds =
       if (acceptOpt[Colon]) listBy[Type] { buf =>
         def addContextBounds[T: ClassTag]: Unit = doWhile(
