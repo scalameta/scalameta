@@ -6,52 +6,51 @@ package parsers
 class TrailingCommaSuite extends ParseSuite {
   implicit val Scala2122: Dialect = scala.meta.dialects.Scala212.copy(allowTrailingCommas = true)
 
+  checkErrors(
+    """trait ValDcl { val foo, bar, = 23 }""",
+    """trait VarDcl { var foo, bar, = 23 }""",
+    """trait VarDef { var foo, bar, = _ }""",
+    """trait PatDef { val Foo(foo), Bar(bar), = bippy }"""
+  )
+
   // Negative tests
-  checkOK("""trait ArgumentExprs1 { f(23, "bar", )(Ev0, Ev1) }""")
-  checkOK("""trait ArgumentExprs2 { f(23, "bar")(Ev0, Ev1, ) }""")
-  checkOK("""trait ArgumentExprs3 { new C(23, "bar", )(Ev0, Ev1) }""")
-  checkOK("""trait ArgumentExprs4 { new C(23, "bar")(Ev0, Ev1, ) }""")
-  checkOK("""trait SimpleExpr { (23, "bar", ) }""")
-  checkOK("""trait TypeArgs { def f: C[Int, String, ] }""")
-  checkOK("""trait TypeParamClause { type C[A, B, ] }""")
-  checkOK("""trait FunTypeParamClause { def f[A, B, ] }""")
-  checkOK("""trait SimpleType { def f: (Int, String, ) }""")
-  checkOK("""trait FunctionArgTypes { def f: (Int, String, ) => Boolean }""")
-  checkOK("""trait SimplePattern { val (foo, bar, ) = null: Any }""")
-  checkOK("""trait ImportSelectors { import foo.{ Ev0, Ev1, } }""")
-  checkOK("""trait Import { import foo.Ev0, foo.Ev1, }""")
-  checkError("""trait ValDcl { val foo, bar, = 23 }""")
-  checkError("""trait VarDcl { var foo, bar, = 23 }""")
-  checkError("""trait VarDef { var foo, bar, = _ }""")
-  checkError("""trait PatDef { val Foo(foo), Bar(bar), = bippy }""")
-  checkOK("""trait SimpleExpr2 { (23, ) }""")
-  checkOK("""trait SimpleType2 { def f: (Int, ) }""", "trait SimpleType2 { def f: Int }")
-  checkOK(
+  checkOKs(
+    """trait ArgumentExprs1 { f(23, "bar", )(Ev0, Ev1) }""",
+    """trait ArgumentExprs2 { f(23, "bar")(Ev0, Ev1, ) }""",
+    """trait ArgumentExprs3 { new C(23, "bar", )(Ev0, Ev1) }""",
+    """trait ArgumentExprs4 { new C(23, "bar")(Ev0, Ev1, ) }""",
+    """trait SimpleExpr { (23, "bar", ) }""",
+    """trait TypeArgs { def f: C[Int, String, ] }""",
+    """trait TypeParamClause { type C[A, B, ] }""",
+    """trait FunTypeParamClause { def f[A, B, ] }""",
+    """trait SimpleType { def f: (Int, String, ) }""",
+    """trait FunctionArgTypes { def f: (Int, String, ) => Boolean }""",
+    """trait SimplePattern { val (foo, bar, ) = null: Any }""",
+    """trait ImportSelectors { import foo.{ Ev0, Ev1, } }""",
+    """trait Import { import foo.Ev0, foo.Ev1, }""",
+    """trait SimpleExpr2 { (23, ) }"""
+  )
+  checkOKsWithSyntax(
+    """trait SimpleType2 { def f: (Int, ) }""" -> "trait SimpleType2 { def f: Int }",
     """|trait Params1 {
        |  def f(foo: Int, bar: String, )(implicit ev0: Ev0, ev1: Ev1, ) = 1
-       |}""".stripMargin,
-    "trait Params1 { def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1 }"
-  )
-  checkOK(
+       |}""".stripMargin ->
+      "trait Params1 { def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1 }",
     """|trait Params2 {
        |  def f(foo: Int, bar: String, )(implicit ev0: Ev0, ev1: Ev1, ) = 1
-       |}""".stripMargin,
-    "trait Params2 { def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1 }"
-  )
-  checkOK(
+       |}""".stripMargin ->
+      "trait Params2 { def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1 }",
     """|trait ClassParams1 {
        |  final class C(foo: Int, bar: String, )(implicit ev0: Ev0, ev1: Ev1)
-       |  }""".stripMargin,
-    "trait ClassParams1 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }"
-  )
-  checkOK(
+       |  }""".stripMargin ->
+      "trait ClassParams1 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }",
     """|trait ClassParams2 {
        |  final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1, )
-       |}""".stripMargin,
-    "trait ClassParams2 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }"
+       |}""".stripMargin ->
+      "trait ClassParams2 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }"
   )
   // Positive tests
-  checkOK {
+  checkOKs(
     """|trait ArgumentExprs1 {
        |  def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1
        |  f(
@@ -69,9 +68,7 @@ class TrailingCommaSuite extends ParseSuite {
        |  g(1,List(2, 3): _*,
        |  )
        |}
-       |""".stripMargin
-  }
-  checkOK(
+       |""".stripMargin,
     """|trait ArgumentExprs2 {
        |  class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1)
        |  new C(
@@ -82,9 +79,7 @@ class TrailingCommaSuite extends ParseSuite {
        |    Ev1,
        |  )
        |}
-       |""".stripMargin
-  )
-  checkOK(
+       |""".stripMargin,
     """|trait Params {
        |  def f(
        |    foo: Int,
@@ -94,9 +89,7 @@ class TrailingCommaSuite extends ParseSuite {
        |    ev1: Ev1,
        |  )
        |}
-       |""".stripMargin
-  )
-  checkOK {
+       |""".stripMargin,
     """|trait ClassParams {
        |  class C(
        |    foo: Int,
@@ -110,9 +103,7 @@ class TrailingCommaSuite extends ParseSuite {
        |  case class D(i: Int*,
        |  )
        |}
-       |""".stripMargin
-  }
-  checkOK {
+       |""".stripMargin,
     """|trait SimpleExpr1 {
        |  def f: (Int, String) = (
        |    23,
@@ -125,9 +116,7 @@ class TrailingCommaSuite extends ParseSuite {
        |    23,
        |  )
        |}
-       |""".stripMargin
-  }
-  checkOK(
+       |""".stripMargin,
     """|trait TypeArgs {
        |  class C[A, B]
        |  def f: C[
@@ -135,27 +124,21 @@ class TrailingCommaSuite extends ParseSuite {
        |    String,
        |  ]
        |}
-       |""".stripMargin
-  )
-  checkOK(
+       |""".stripMargin,
     """|trait TypeParamClause {
        |  class C[
        |    A,
        |    B,
        |  ]
        |}
-       |""".stripMargin
-  )
-  checkOK(
+       |""".stripMargin,
     """|trait FunTypeParamClause {
        |  def f[
        |    A,
        |    B,
        |  ]
        |}
-       |""".stripMargin
-  )
-  checkOK(
+       |""".stripMargin,
     """|trait SimpleType {
        |  def f: (
        |    Int,
@@ -168,18 +151,14 @@ class TrailingCommaSuite extends ParseSuite {
        |    Int,
        |  ) = 23
        |}
-       |""".stripMargin
-  )
-  checkOK(
+       |""".stripMargin,
     """|trait FunctionArgTypes {
        |  def f: (
        |    Int,
        |    String,
        |  ) => Boolean
        |}
-       |""".stripMargin
-  )
-  checkOK {
+       |""".stripMargin,
     """|trait SimplePattern {
        |  val (
        |    foo,
@@ -202,18 +181,14 @@ class TrailingCommaSuite extends ParseSuite {
        |  val List(x, y, _*,
        |  ) = 42 :: 17 :: Nil
        |}
-       |""".stripMargin
-  }
-  checkOK(
+       |""".stripMargin,
     """|trait ImportSelectors {
        |  import foo.{
        |    Ev0,
        |    Ev1,
        |  }
        |}
-       |""".stripMargin
-  )
-  checkOK(
+       |""".stripMargin,
     """|trait Bindings {
        |  def g(f: (Int, String) => Boolean)
        |
@@ -222,9 +197,7 @@ class TrailingCommaSuite extends ParseSuite {
        |    bar,
        |  ) => true)
        |}
-       |""".stripMargin
-  )
-  checkOK(
+       |""".stripMargin,
     """|trait Comments {
        |  def f(
        |    a: String,

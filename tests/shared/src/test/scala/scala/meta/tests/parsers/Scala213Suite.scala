@@ -10,8 +10,7 @@ class Scala213Suite extends ParseSuite {
 
   import dialects.Scala213
 
-  checkOK("def foo(implicit x: => Int) = 1")
-  checkOK("def foo(implicit y: Int, x: => Int) = 1")
+  checkOKs("def foo(implicit x: => Int) = 1", "def foo(implicit y: Int, x: => Int) = 1")
 
   test("literal-types") {
     // https://docs.scala-lang.org/sips/42.type.html
