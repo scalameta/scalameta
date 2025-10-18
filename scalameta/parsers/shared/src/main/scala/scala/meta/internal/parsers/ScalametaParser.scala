@@ -3025,9 +3025,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         onlyLastParameterCanBeRepeated(x)
         toParamClause(mod)(x)
       }
-    def parseParams(mod: Option[Mod.ParamsType] = None, anonNameOK: Boolean = false) = {
-      val allowAnonName = anonNameOK || GivenSigContext.isInside()
-      val params = commaSeparatedWithIndex(termParam(allowAnonName = allowAnonName, mod = mod))
+    def parseParams(mod: Option[Mod.ParamsType] = None) = {
+      val params = commaSeparatedWithIndex(termParam(mod = mod))
       reduceParams(params, mod)
     }
     inParensOnOpenOr(currToken match {
@@ -3036,17 +3035,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: KwImplicit => parseParams(Some(atCurPosNext(Mod.Implicit())))
       case t: Ident if !peek[Colon] =>
         t.text match {
-          case soft.KwUsing() =>
-            parseParams(mod = Some(atCurPosNext(Mod.Using())), anonNameOK = true)
+          case soft.KwUsing() => parseParams(mod = Some(atCurPosNext(Mod.Using())))
           case _ => parseParams()
         }
       case _ => parseParams()
     })(Term.ParamClause(Nil))
   }
 
-  def termParam(mod: Option[Mod.ParamsType] = None, allowAnonName: Boolean = false)(
-      paramIdx: Int
-  ): Term.Param = autoPos {
+  def termParam(mod: Option[Mod.ParamsType] = None)(paramIdx: Int): Term.Param = autoPos {
     val mods = new ListBuffer[Mod]
     annotsBuf(mods, skipNewLines = false)
     val numAnnots = mods.length
@@ -3083,12 +3079,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     mods.headOption.collect { case q: Mod.Quasi if endParamQuasi => q.become[Term.Param] }.getOrElse {
       currToken match {
         case t: Ellipsis => ellipsis[Term.Param](t, 1)
-        case _ if !peek[Colon] && (allowAnonName || GivenSigContext.isInside()) =>
-          getParam(anonName(), Some(getParamType))
         case t: Unquote =>
           val name = unquote[Name](t)
           if (endParamQuasi) name.become[Term.Param]
-          else getParam(name, if (acceptOpt[Colon]) Some(getParamType) else None)
+          else if (acceptOpt[Colon]) getParam(name, Some(getParamType))
+          else if (at[Equals]) getParam(name, None)
+          else getParam(anonNameAt(name), Some(name.become[Type]))
+        case _ if !peek[Colon] => getParam(anonName(), Some(getParamType))
         case t: Ident =>
           val name = atCurPosNext(Term.Name(t.value))
           accept[Colon]
