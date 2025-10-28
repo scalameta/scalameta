@@ -70,21 +70,8 @@ class VarargParameterSuite extends ParseSuite {
   )
 
   test("error on repeated byname parameter") {
-    check("def fx(x: => Int*): Int = 3")(Defn.Def(
-      Nil,
-      tname("fx"),
-      Nil,
-      List(List(tparam("x", Type.ByName(Type.Repeated("Int"))))),
-      Some("Int"),
-      lit(3)
-    ))
-    check("class Foo(bars: => Int*)")(Defn.Class(
-      Nil,
-      pname("Foo"),
-      Nil,
-      ctorp(tparam("bars", Type.ByName(Type.Repeated("Int")))),
-      tplNoBody()
-    ))
+    checkError("def fx(x: => Int*): Int = 3", "`)` expected but `identifier` found")
+    checkError("class Foo(bars: => Int*)", "`)` expected but `identifier` found")
   }
 
   test("error on multiple vararg parameters")(
@@ -108,10 +95,15 @@ class VarargParameterSuite extends ParseSuite {
 
   test("vararg function-type parameter") {
     val code = "def b(x: Int => List[Int]*): Int = 2"
-    import org.scalameta.invariants.InvariantFailedException
-    val exception = intercept[InvariantFailedException](templStat(code))
-    val expected = "invariant failed:\nwhen verifying "
-    assertEquals(exception.getMessage.take(expected.length), expected)
+    val tree = Defn.Def(
+      Nil,
+      "b",
+      Nil,
+      List(List(tparam("x", Type.Repeated(pfunc("Int")(papply("List", "Int")))))),
+      Some("Int"),
+      lit(2)
+    )
+    check(code)(tree)
   }
 
 }
