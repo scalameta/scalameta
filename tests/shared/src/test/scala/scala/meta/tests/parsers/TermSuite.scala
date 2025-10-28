@@ -442,7 +442,7 @@ class TermSuite extends ParseSuite {
 
   test("a + (bs: _*) * c")(intercept[ParseException](term("a + (bs: _*) * c")))
 
-  test("a + b: _*")(assertTerm("a + b: _*")(Term.Repeated(tinfix("a", "+", "b"))))
+  test("a + b: _*")(intercept[ParseException](term("a + b: _*")))
 
   test("foo(a + b: _*)")(assertTerm("foo(a + b: _*)")(
     tapply(tname("foo"), Term.Repeated(tinfix(tname("a"), "+", tname("b"))))
@@ -723,9 +723,12 @@ class TermSuite extends ParseSuite {
     tname("j")
   )))
 
-  test("#2720 infix with repeated arg not last")(
-    checkTerm("a op (b: _*, c)")(tinfix("a", "op", Term.Repeated("b"), "c"))
-  )
+  test("#2720 infix with repeated arg not last")(assertNoDiff(
+    intercept[ParseException](term("a op (b: _*, c)")).getMessage,
+    """|<input>:1: error: repeated argument not allowed here
+       |a op (b: _*, c)
+       |      ^""".stripMargin
+  ))
 
   test("#1384 string") {
     val tq = "\"" * 3
