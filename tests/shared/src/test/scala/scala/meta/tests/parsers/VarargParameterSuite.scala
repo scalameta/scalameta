@@ -106,4 +106,12 @@ class VarargParameterSuite extends ParseSuite {
     assert(obtained.contains(expected), s"got: [$obtained]")
   }
 
+  test("vararg function-type parameter") {
+    val code = "def b(x: Int => List[Int]*): Int = 2"
+    import org.scalameta.invariants.InvariantFailedException
+    val exception = intercept[InvariantFailedException](templStat(code))
+    val expected = "invariant failed:\nwhen verifying "
+    assertEquals(exception.getMessage.take(expected.length), expected)
+  }
+
 }
