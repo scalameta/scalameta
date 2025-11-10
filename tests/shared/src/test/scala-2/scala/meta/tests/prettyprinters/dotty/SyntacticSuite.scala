@@ -86,7 +86,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val layout =
       """|Behaviors.receive {
-         |  case (given ActorContext[t], _) =>
+         |  case (given ActorContext[`t`], _) =>
          |    Behaviors.empty
          |}
          |""".stripMargin
@@ -98,7 +98,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         tselect("Behaviors", "empty")
       )))
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4348 type pattern match without backquotes") {
