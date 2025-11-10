@@ -331,31 +331,37 @@ object TreeSyntax {
         (keywords.contains(t.value) || t.value.contains("//") || t.value.contains("/*") ||
           t.value.contains("*/") || !validPlainid(t.value) || lexicalDigit(t.value.codePointAt(0)))
       }
-      def isAmbiguousWithPatVarTerm(t: Term.Name, p: Tree): Boolean = {
-        val looksLikePatVar = t.value.head.isLower && t.value.head.isLetter
-        val thisLocationAlsoAcceptsPatVars = p match {
-          case p: Term.Name => unreachable
-          case _: Term.SelectLike => false
-          case p: Pat.Wildcard => unreachable
-          case p: Pat.Var => false
-          case p: Pat.Repeated => false
-          case p: Pat.Bind => true
-          case p: Pat.Alternative => true
-          case p: Pat.ArgClause => p.values.contains(t)
-          case p: Pat.Tuple => true
-          case p: Pat.Extract => false
-          case p: Pat.ExtractInfix => p.lhs eq t
-          case p: Pat.Assign => false
-          case p: Pat.Interpolate => p.args.contains(t)
-          case p: Pat.Typed => unreachable
-          case p: Pat => unreachable
-          case p: Case => p.pat eq t
-          case p: Defn.Val => p.pats.contains(t)
-          case p: Defn.Var => p.pats.contains(t)
-          case p: Enumerator.Assign => p.pat eq t
-          case _ => false
-        }
-        looksLikePatVar && thisLocationAlsoAcceptsPatVars
+      def thisLocationAlsoAcceptsPatVars(p: Tree): Boolean = p match {
+        case p: Term.Name => unreachable
+        case _: Term.SelectLike => false
+        case p: Pat.Wildcard => unreachable
+        case p: Pat.Var => false
+        case p: Pat.Repeated => false
+        case p: Pat.Bind => true
+        case p: Pat.Alternative => true
+        case p: Pat.ArgClause => p.values.contains(t)
+        case p: Pat.Tuple => true
+        case p: Pat.Extract => false
+        case p: Pat.ExtractInfix => p.lhs eq t
+        case p: Pat.Assign => false
+        case p: Pat.Interpolate => p.args.contains(t)
+        case p: Pat.Typed => unreachable
+        case p: Pat => unreachable
+        case p: Case => p.pat eq t
+        case p: Defn.Val => p.pats.contains(t)
+        case p: Defn.Var => p.pats.contains(t)
+        case p: Enumerator.Assign => p.pat eq t
+        case _ => false
+      }
+      @tailrec
+      def thisLocationAlsoAcceptsTypeVars(p: Tree): Boolean = p match {
+        case _: Type.Var | _: Pat.Typed => false
+        case _: Pat => true
+        case p @ (_: Type | _: Type.ArgClause) => p.parent match {
+            case Some(pp) => thisLocationAlsoAcceptsTypeVars(pp)
+            case _ => false
+          }
+        case _ => false
       }
       /* Soft keywords might need to be written with backquotes in some places.
        * Previously used match clause fails due to:
@@ -365,13 +371,17 @@ object TreeSyntax {
       def isEscapableSoftKeyword(t: Name, parent: Tree): Boolean = escapableSoftKeywords.get(t.value)
         .exists(_.exists(_.isInstance(parent)))
 
-      def isAmbiguousInParent(t: Tree, parent: Tree): Boolean = t match {
-        case t: Term.Name => isAmbiguousWithPatVarTerm(t, parent) ||
-          isEscapableSoftKeyword(t, parent)
-        case t: Name => isEscapableSoftKeyword(t, parent)
+      def isAmbiguousInParent(t: Tree)(parent: Tree): Boolean = t match {
+        case t: Name =>
+          def patVarIsOk = t match {
+            case _: Term => thisLocationAlsoAcceptsPatVars(parent)
+            case _: Type => thisLocationAlsoAcceptsTypeVars(parent)
+            case _ => false
+          }
+          t.value.head.isLower && patVarIsOk || isEscapableSoftKeyword(t, parent)
         case _ => false
       }
-      cantBeWrittenWithoutBackquotes(t) || t.parent.exists(isAmbiguousInParent(t, _))
+      cantBeWrittenWithoutBackquotes(t) || t.parent.exists(isAmbiguousInParent(t))
     }
     def guessHasExpr(t: Term.Return): Boolean =
       t.expr match { case Lit.Unit() => false; case _ => true }
