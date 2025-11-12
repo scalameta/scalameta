@@ -78,4 +78,50 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     "class C(x: Int) { def this(x: String)(using String, Boolean) = this(x.toInt) }"
   ))
 
+  test("#4348 type pattern match with backquotes") {
+    val code =
+      """|Behaviors.receive {
+         |  case (given ActorContext[`t`], _) => Behaviors.empty
+         |}
+         |""".stripMargin
+    val layout =
+      """|Behaviors.receive {
+         |  case (given ActorContext[t], _) =>
+         |    Behaviors.empty
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("Behaviors", "receive"),
+      Term.PartialFunction(List(Case(
+        Pat.Tuple(List(Pat.Given(papply("ActorContext", "t")), Pat.Wildcard())),
+        None,
+        tselect("Behaviors", "empty")
+      )))
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("#4348 type pattern match without backquotes") {
+    val code =
+      """|Behaviors.receive {
+         |  case (given ActorContext[t], _) => Behaviors.empty
+         |}
+         |""".stripMargin
+    val layout =
+      """|Behaviors.receive {
+         |  case (given ActorContext[t], _) =>
+         |    Behaviors.empty
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("Behaviors", "receive"),
+      Term.PartialFunction(List(Case(
+        Pat.Tuple(List(Pat.Given(papply("ActorContext", Type.Var("t"))), Pat.Wildcard())),
+        None,
+        tselect("Behaviors", "empty")
+      )))
+    )
+    runTestAssert[Stat](layout, layout)(tree)
+  }
+
 }
