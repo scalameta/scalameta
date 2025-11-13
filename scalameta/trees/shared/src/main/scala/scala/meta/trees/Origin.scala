@@ -71,6 +71,9 @@ object Origin {
   object DialectOnly {
     implicit def fromDialect(implicit dialect: Dialect): DialectOnly = new DialectOnly(dialect)
 
+    private[meta] def fromOrigin(origin: Origin): Origin = origin.dialectOpt
+      .fold[Origin](Origin.None)(x => fromDialect(x))
+
     private[meta] def getFromArgs(args: Any*): DialectOnly = {
       val queue = scala.collection.mutable.Queue.empty[Iterator[Any]]
       @scala.annotation.tailrec
