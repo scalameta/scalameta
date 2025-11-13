@@ -31,7 +31,7 @@ class TreeSuite extends TreeSuiteBase {
       tree.copy(body = tree.body)
     }
     assertEquals(tree.origin.dialectOpt, Some(dialects.Scala3))
-    assertEquals(copy.origin.dialectOpt, Some(dialects.Scala213))
+    assertEquals(copy.origin.dialectOpt, Some(dialects.Scala3))
     assertEquals(tree.structure, copy.structure)
 
     val expectedSyntax =
@@ -43,10 +43,7 @@ class TreeSuite extends TreeSuiteBase {
     assertEquals(copy.syntax, expectedSyntax)
     // however, `.toString` attempts to take the dialect from the tree
     assertEquals(tree.toString, expectedSyntax)
-    interceptMessage[UnsupportedOperationException]("Scala213 doesn't support inline modifiers")(
-      copy.toString
-    )
-
+    assertEquals(copy.toString, expectedSyntax)
   }
 
 }

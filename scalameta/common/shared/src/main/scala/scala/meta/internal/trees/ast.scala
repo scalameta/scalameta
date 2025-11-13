@@ -140,6 +140,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           istats1 += declareGetter(p.name, p.tpt, mods)
           p
         }
+        val privateArgsForCopy = privateApplyParams.map(p =>
+          if (p.name.toString == "origin") q"$OriginModule.DialectOnly.fromOrigin(${p.name})"
+          else p.rhs
+        )
 
         // step 5: turn all parameters into vars, create getters and setters
         params.foreach { p =>
@@ -205,7 +209,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             q"""
             $mods def copy(..$params): $iname
           """
-          val args = params.map(getParamArg)
+          val args = privateArgsForCopy ++ params.map(getParamArg)
           stats1 +=
             q"""
             final override def copy(..$params): $iname = {
