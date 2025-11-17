@@ -594,7 +594,7 @@ lazy val protobufSettings = Def.settings(
     val scalapbVersion =
       if (isScala211.value) "0.9.8"
       // for SIP-51, freeze version to the latest ScalaPB built against the earliest Scala 2.13.x version we support
-      else if (scalaVersion.value == "2.13.14") "0.11.17"
+      else if (scalaVersion.value == "2.13.15") "0.11.17"
       else scalapb.compiler.Version.scalapbVersion
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
