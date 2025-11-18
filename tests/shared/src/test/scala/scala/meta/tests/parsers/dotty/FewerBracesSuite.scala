@@ -2295,19 +2295,17 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|val a = List("").map {
-         |  case x => x
-         |}.trim
+         |  case x =>
+         |    x.trim
+         |}
          |""".stripMargin
     val tree = Defn.Val(
       Nil,
       List(patvar("a")),
       None,
-      tselect(
-        tapply(
-          tselect(tapply("List", str("")), "map"),
-          Term.PartialFunction(List(Case(patvar("x"), None, "x")))
-        ),
-        "trim"
+      tapply(
+        tselect(tapply("List", str("")), "map"),
+        Term.PartialFunction(List(Case(patvar("x"), None, tselect("x", "trim"))))
       )
     )
     runTestAssert[Stat](code, layout)(tree)
