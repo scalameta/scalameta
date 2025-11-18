@@ -755,6 +755,24 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            *     foo()
            *     ```
            */
+          def getOutdentOnIndent(r: SepRegionIndented, rs: List[SepRegion]) = rs match {
+            case RegionTry :: xs =>
+              if (nextIndent < r.indent || nextIndent == r.indent && next.isAny[KwCatch, KwFinally]) {
+                val done = noOutdent(xs)
+                OutdentInfo(r, if (done) rs else xs, done)
+              } else null
+            case _ if nextIndent >= r.indent => null // we stop here
+            case (rc: RegionControl) :: xs =>
+              OutdentInfo(r, if (rc.isNotTerminatingTokenIfOptional(next)) xs else rs)
+            case RegionTemplateBody :: xs => OutdentInfo(r, xs)
+            case _ if (prev match {
+                  // then  [else]  [do]  catch  [finally]  [yield]  match
+                  case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
+                  // exclude leading infix op
+                  case _ => !isIndented(rs, nextIndent) || canBeLeadingInfix != LeadingInfix.Yes
+                }) => OutdentInfo(r, rs)
+            case _ => null
+          }
           def getOutdentInfo(sepRegions: List[SepRegion]) = sepRegions match {
             case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs =>
               if (nextIndent > r.indent) null
@@ -762,27 +780,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               else if (nextIndent < r.indent || rc.arrow.ne(prev) && !next.is[KwCase] ||
                 getNextToken(nextPos).isClassOrObject) OutdentInfo(r, dropRegionLine(nextIndent, rs))
               else null
-            case (r: RegionIndent) :: (rs @ RegionTry :: xs) =>
-              if (nextIndent < r.indent || nextIndent == r.indent && next.isAny[KwCatch, KwFinally]) {
-                val done = noOutdent(xs)
-                OutdentInfo(r, if (done) rs else xs, done)
-              } else null
             case RegionTry :: rs => if (noOutdent(rs)) null else OutdentInfo(null, rs)
             case (_: RegionNonDelimNonIndented) :: rs if (prev match {
                   // [then]  else  do  [catch]  finally  yield  [match]
                   case _: KwThen | _: KwCatch | _: KwMatch => false
                   case _ => !noOutdent(rs)
                 }) => OutdentInfo(null, rs)
-            case (r: SepRegionIndented) :: _ if nextIndent >= r.indent => null // we stop here
-            case (r: RegionIndent) :: (rs @ (rc: RegionControl) :: xs) =>
-              OutdentInfo(r, if (rc.isNotTerminatingTokenIfOptional(next)) xs else rs)
-            case (r: RegionIndent) :: RegionTemplateBody :: rs => OutdentInfo(r, rs)
-            case (r: SepRegionIndented) :: rs if (prev match {
-                  // then  [else]  [do]  catch  [finally]  [yield]  match
-                  case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
-                  // exclude leading infix op
-                  case _ => !isIndented(rs, nextIndent) || canBeLeadingInfix != LeadingInfix.Yes
-                }) => OutdentInfo(r, rs)
+            case (r: SepRegionIndented) :: rs => getOutdentOnIndent(r, rs)
             case _ => null
           }
 
