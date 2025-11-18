@@ -2286,4 +2286,31 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("sfmt #5046 fewer braces: 'starts with' but not 'is' partial function") {
+    val code =
+      """|val a = List("").map:
+         |  case x =>
+         |  x
+         |  .trim
+         |""".stripMargin
+    val layout =
+      """|val a = List("").map {
+         |  case x => x
+         |}.trim
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("a")),
+      None,
+      tselect(
+        tapply(
+          tselect(tapply("List", str("")), "map"),
+          Term.PartialFunction(List(Case(patvar("x"), None, "x")))
+        ),
+        "trim"
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }

@@ -1952,8 +1952,18 @@ class ControlSyntaxSuite extends BaseDottySuite {
     )(tmatch(tname("x"), Case(patvar("x"), None, blk(tapply(tname("a")), tapply(tname("b"))))))
   }
 
-  test("match-chained") {
-    val expected = tmatch(
+  test("match-chained unindented") {
+    val layout =
+      """|(xs match {
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty"
+         |}) match {
+         |  case "empty" => 0
+         |  case "nonempty" => 1
+         |}
+         |""".stripMargin
+
+    val tree = tmatch(
       tmatch(
         tname("xs"),
         Case(tname("Nil"), None, str("empty")),
@@ -1972,17 +1982,52 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case "nonempty" => 1
          |}
          |""".stripMargin,
-      Some(
-        """|(xs match {
-           |  case Nil => "empty"
-           |  case x :: xs1 => "nonempty"
-           |}) match {
-           |  case "empty" => 0
-           |  case "nonempty" => 1
-           |}
-           |""".stripMargin
-      )
-    )(expected)
+      layout
+    )(tree)
+
+    runTestAssert[Stat](
+      """|xs match
+         |case Nil => "empty"
+         |case x :: xs1 => "nonempty"
+         |match
+         |case "empty" => 0
+         |case "nonempty" => 1
+         |""".stripMargin,
+      layout
+    )(tree)
+  }
+
+  test("match-chained indented") {
+    val layout =
+      """|(xs match {
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty"
+         |}) match {
+         |  case "empty" => 0
+         |  case "nonempty" => 1
+         |}
+         |""".stripMargin
+
+    val tree = tmatch(
+      tmatch(
+        tname("xs"),
+        Case(tname("Nil"), None, str("empty")),
+        Case(patinfix(patvar("x"), "::", patvar("xs1")), None, str("nonempty"))
+      ),
+      Case(str("empty"), None, int(0)),
+      Case(str("nonempty"), None, int(1))
+    )
+
+    runTestAssert[Stat](
+      """|xs match {
+         |  case Nil => "empty"
+         |  case x :: xs1 => "nonempty" } match {
+         |    case "empty" => 0
+         |    case "nonempty" => 1
+         |}
+         |""".stripMargin,
+      layout
+    )(tree)
 
     runTestAssert[Stat](
       """|xs match
@@ -1993,17 +2038,8 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |    case "nonempty" => 1
          |
          |""".stripMargin,
-      assertLayout = Some(
-        """|(xs match {
-           |  case Nil => "empty"
-           |  case x :: xs1 => "nonempty"
-           |}) match {
-           |  case "empty" => 0
-           |  case "nonempty" => 1
-           |}
-           |""".stripMargin
-      )
-    )(expected)
+      layout
+    )(tree)
   }
 
   test("match-chained-complex") {
