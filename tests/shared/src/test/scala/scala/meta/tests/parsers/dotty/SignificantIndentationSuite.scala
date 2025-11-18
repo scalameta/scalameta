@@ -949,12 +949,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |
          |""".stripMargin,
       Some(
-        """|val hello = (xs match {
-           |  case Nil => "empty"
-           |  case x :: xs1 => "nonempty"
-           |}) match {
-           |  case true => 0
-           |  case false => 1
+        """|val hello = xs match {
+           |  case Nil =>
+           |    "empty"
+           |  case x :: xs1 =>
+           |    "nonempty" match {
+           |      case true => 0
+           |      case false => 1
+           |    }
            |}
            |""".stripMargin
       )
@@ -963,13 +965,13 @@ class SignificantIndentationSuite extends BaseDottySuite {
       List(patvar("hello")),
       None,
       tmatch(
-        tmatch(
-          tname("xs"),
-          Case(tname("Nil"), None, str("empty")),
-          Case(patinfix(patvar("x"), "::", patvar("xs1")), None, str("nonempty"))
-        ),
-        Case(bool(true), None, int(0)),
-        Case(bool(false), None, int(1))
+        tname("xs"),
+        Case(tname("Nil"), None, str("empty")),
+        Case(
+          patinfix(patvar("x"), "::", patvar("xs1")),
+          None,
+          tmatch(str("nonempty"), Case(bool(true), None, int(0)), Case(bool(false), None, int(1)))
+        )
       )
     ))
 

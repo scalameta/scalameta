@@ -1999,31 +1999,34 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("match-chained indented") {
     val layout =
-      """|(xs match {
-         |  case Nil => "empty"
-         |  case x :: xs1 => "nonempty"
-         |}) match {
-         |  case "empty" => 0
-         |  case "nonempty" => 1
+      """|xs match {
+         |  case Nil =>
+         |    "empty"
+         |  case x :: xs1 =>
+         |    "nonempty" match {
+         |      case "empty" => 0
+         |      case "nonempty" => 1
+         |    }
          |}
          |""".stripMargin
 
     val tree = tmatch(
-      tmatch(
-        tname("xs"),
-        Case(tname("Nil"), None, str("empty")),
-        Case(patinfix(patvar("x"), "::", patvar("xs1")), None, str("nonempty"))
-      ),
-      Case(str("empty"), None, int(0)),
-      Case(str("nonempty"), None, int(1))
+      tname("xs"),
+      Case(tname("Nil"), None, str("empty")),
+      Case(
+        patinfix(patvar("x"), "::", patvar("xs1")),
+        None,
+        tmatch(str("nonempty"), Case(str("empty"), None, int(0)), Case(str("nonempty"), None, int(1)))
+      )
     )
 
     runTestAssert[Stat](
       """|xs match {
          |  case Nil => "empty"
-         |  case x :: xs1 => "nonempty" } match {
+         |  case x :: xs1 => "nonempty" match {
          |    case "empty" => 0
          |    case "nonempty" => 1
+         |  }
          |}
          |""".stripMargin,
       layout

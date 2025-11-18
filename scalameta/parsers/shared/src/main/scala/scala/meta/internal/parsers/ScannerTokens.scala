@@ -755,15 +755,22 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
            *     foo()
            *     ```
            */
-          def getOutdentOnIndent(r: SepRegionIndented, rs: List[SepRegion]) = rs match {
+          def getOutdentOnIndent(
+              r: SepRegionIndented,
+              rs: List[SepRegion],
+              ctrlOnly: Boolean
+          ): OutdentInfo = rs match {
             case RegionTry :: xs =>
               if (nextIndent < r.indent || nextIndent == r.indent && next.isAny[KwCatch, KwFinally]) {
                 val done = noOutdent(xs)
                 OutdentInfo(r, if (done) rs else xs, done)
               } else null
-            case _ if nextIndent >= r.indent => null // we stop here
             case (rc: RegionControl) :: xs =>
-              OutdentInfo(r, if (rc.isNotTerminatingTokenIfOptional(next)) xs else rs)
+              if (rc.isTerminatingToken(next)) OutdentInfo(r, rs)
+              else if (nextIndent < r.indent)
+                OutdentInfo(r, if (rc.isTerminatingTokenRequired()) rs else xs)
+              else null
+            case _ if ctrlOnly || nextIndent >= r.indent => null // we stop here
             case RegionTemplateBody :: xs => OutdentInfo(r, xs)
             case _ if (prev match {
                   // then  [else]  [do]  catch  [finally]  [yield]  match
@@ -777,16 +784,20 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
             case (rc: RegionCaseBody) :: (r: RegionIndent) :: rs =>
               if (nextIndent > r.indent) null
               else if (next.is[KwFinally]) OutdentInfo(r, rs, noOutdent(rs))
-              else if (nextIndent < r.indent || rc.arrow.ne(prev) && !next.is[KwCase] ||
-                getNextToken(nextPos).isClassOrObject) OutdentInfo(r, dropRegionLine(nextIndent, rs))
-              else null
+              else if (nextIndent < r.indent ||
+                // only if outer is at the same indentation level
+                findIndent(rs) == nextIndent &&
+                // https://docs.scala-lang.org/scala3/reference/other-new-features/indentation.html#special-treatment-of-case-clauses
+                (rc.arrow.ne(prev) && !next.is[KwCase] || getNextToken(nextPos).isClassOrObject))
+                OutdentInfo(r, dropRegionLine(nextIndent, rs))
+              else getOutdentOnIndent(r, rs, ctrlOnly = true)
             case RegionTry :: rs => if (noOutdent(rs)) null else OutdentInfo(null, rs)
             case (_: RegionNonDelimNonIndented) :: rs if (prev match {
                   // [then]  else  do  [catch]  finally  yield  [match]
                   case _: KwThen | _: KwCatch | _: KwMatch => false
                   case _ => !noOutdent(rs)
                 }) => OutdentInfo(null, rs)
-            case (r: SepRegionIndented) :: rs => getOutdentOnIndent(r, rs)
+            case (r: SepRegionIndented) :: rs => getOutdentOnIndent(r, rs, ctrlOnly = false)
             case _ => null
           }
 
