@@ -161,7 +161,7 @@ lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
   description := "Scalac 2.x launcher that generates SemanticDB on compile",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   mainClass := Some("scala.meta.cli.Metac")
-).dependsOn(semanticdbScalacCore)
+).dependsOn(semanticdbScalacPlugin)
 
 lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
   moduleName := "semanticdb-metap",
@@ -412,6 +412,7 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
 ).dependsOn(
   scalameta.jvm,
   testkit.jvm,
+  semanticdbScalacPlugin,
   semanticdbMetac,
   semanticdbMetacp,
   semanticdbMetap,
