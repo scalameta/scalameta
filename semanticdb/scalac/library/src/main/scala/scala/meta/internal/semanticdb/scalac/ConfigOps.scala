@@ -24,7 +24,7 @@ case class SemanticdbConfig(
   private[scalac] lazy val realSourceRoot = sourceroot.toNIO.toRealPath()
 
   def syntax: String = {
-    val p = SemanticdbPlugin.name
+    val p = SemanticdbConfig.pluginName
     List(
       "failures" -> failures.name,
       "profiling" -> profiling.name,
@@ -43,6 +43,8 @@ case class SemanticdbConfig(
 
 }
 object SemanticdbConfig {
+  val pluginName = "semanticdb"
+
   def default = SemanticdbConfig(
     failures = FailureMode.Error,
     profiling = BinaryMode.Off,

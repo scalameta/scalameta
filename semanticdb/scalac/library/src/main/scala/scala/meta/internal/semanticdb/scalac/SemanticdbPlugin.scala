@@ -36,6 +36,6 @@ class SemanticdbPlugin(val global: Global) extends Plugin with SemanticdbPipelin
 }
 
 object SemanticdbPlugin {
-  val name = "semanticdb"
+  val name = SemanticdbConfig.pluginName
   val description = "Scalac 2.x compiler plugin that generates SemanticDB on compile"
 }
