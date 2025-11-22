@@ -13,16 +13,17 @@ import scala.tools.nsc.{Main => ScalacMain}
 
 class Main(settings: Settings, reporter: Reporter) {
   def process(): Boolean = {
-    val manifestDir = Files.createTempDirectory("semanticdb-scalac_")
-    val resourceUrl = classOf[SemanticdbPlugin].getResource("/scalac-plugin.xml")
-    val resourceChannel = Channels.newChannel(resourceUrl.openStream())
-    val manifestStream = new FileOutputStream(manifestDir.resolve("scalac-plugin.xml").toFile)
-    manifestStream.getChannel.transferFrom(resourceChannel, 0, Long.MaxValue)
-    manifestStream.close()
-    val pluginClasspath = classOf[SemanticdbPlugin].getClassLoader match {
-      case null => manifestDir.toString
-      case cl => ClasspathUtils.getClassPathEntries(cl).mkString(File.pathSeparator)
-    }
+    val pluginClass = classOf[SemanticdbPlugin]
+    val pluginClasspath = Option(pluginClass.getClassLoader).fold {
+      val manifestDir = Files.createTempDirectory("semanticdb-scalac_")
+      val pluginConfig = "scalac-plugin.xml"
+      val resourceUrl = pluginClass.getResource("/" + pluginConfig)
+      val resourceChannel = Channels.newChannel(resourceUrl.openStream())
+      val manifestStream = new FileOutputStream(manifestDir.resolve(pluginConfig).toFile)
+      manifestStream.getChannel.transferFrom(resourceChannel, 0, Long.MaxValue)
+      manifestStream.close()
+      manifestDir.toString
+    }(cl => ClasspathUtils.getClassPathEntries(cl).mkString(File.pathSeparator))
     val enablePluginArgs = List("-Xplugin:" + pluginClasspath, "-Xplugin-require:semanticdb")
     val enableRangeposArgs = List("-Yrangepos")
     val stopAfterPluginArgs = List("-Ystop-after:semanticdb-typer")
