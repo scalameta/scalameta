@@ -127,9 +127,11 @@ trait CommonNamerMacros extends MacroHelpers {
   }
 
   protected def getPrivateFields(iname: TypeName): PrivateFields = PrivateFields(
-    PrivateField(q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null"),
-    PrivateField(q"private[meta] override val privateParent: $TreeClass = null"),
-    PrivateField(q"override val origin: $OriginClass = $OriginModule.None", true)
+    prototype = PrivateField(
+      q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null"
+    ),
+    parent = PrivateField(q"private[meta] override val privateParent: $TreeClass = null"),
+    origin = PrivateField(q"override val origin: $OriginClass = $OriginModule.None", true)
   )
 
 }

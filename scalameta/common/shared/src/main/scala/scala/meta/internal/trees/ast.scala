@@ -132,18 +132,28 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         // step 4: implement the unimplemented methods in InternalTree (part 1)
         val privateFields = getPrivateFields(iname)
-        val privateParams = privateFields.asList
-        val bparams1 = privateParams.map(_.field)
-        val privateApplyParams = privateParams.collect { case PrivateField(p, true) =>
-          val annots = privateFieldAnnot :: p.mods.annotations
-          val mods = Modifiers(p.mods.flags | OVERRIDE | DEFERRED, p.mods.privateWithin, annots)
-          istats1 += declareGetter(p.name, p.tpt, mods)
-          p
+        val privateFieldsList = privateFields.asList
+        val privateParams = privateFieldsList.map(_.field)
+        val privateApplyParamsBuilder = List.newBuilder[ValOrDefDef]
+        val privateArgsForCopyBuilder = List.newBuilder[Tree]
+        privateFieldsList.foreach { f =>
+          if (f.persist) {
+            val p = f.field
+
+            val annots = privateFieldAnnot :: p.mods.annotations
+            val mods = Modifiers(p.mods.flags | OVERRIDE | DEFERRED, p.mods.privateWithin, annots)
+            istats1 += declareGetter(p.name, p.tpt, mods)
+
+            privateApplyParamsBuilder += p
+
+            privateArgsForCopyBuilder += {
+              if (f eq privateFields.origin) q"$OriginModule.DialectOnly.fromOrigin(${p.name})"
+              else getParamArg(p)
+            }
+          }
         }
-        val privateArgsForCopy = privateApplyParams.map(p =>
-          if (p.name.toString == "origin") q"$OriginModule.DialectOnly.fromOrigin(${p.name})"
-          else p.rhs
-        )
+        val privateApplyParams = privateApplyParamsBuilder.result()
+        val privateArgsForCopy = privateArgsForCopyBuilder.result()
 
         // step 5: turn all parameters into vars, create getters and setters
         params.foreach { p =>
@@ -182,19 +192,25 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               }
               ..$parentChecks
             }
-          """
+            """
         stats1 +=
           q"""
-        private[meta] def privateCopy(
-            prototype: $TreeClass = this,
-            parent: $TreeClass = ${privateFields.parent.field.name},
-            destination: $StringClass = null,
-            origin: $OriginClass = ${privateFields.origin.field.name}): Tree = {
-          $privateCopyParentChecks
-          $DataTyperMacrosModule.nullCheck(origin)
-          new $name(prototype.asInstanceOf[$iname], parent, origin)(..$privateCopyArgs)
-        }
-      """
+            private[meta] def privateCopy(
+                prototype: $TreeClass = this,
+                parent: ${privateFields.parent.field.tpt} = ${privateFields.parent.field.name},
+                destination: $StringClass = null,
+                origin: ${privateFields.origin.field.tpt} = ${privateFields.origin.field.name}
+            ): Tree = {
+              $privateCopyParentChecks
+              $DataTyperMacrosModule.nullCheck(origin)
+              new $name(
+                ${privateFields.prototype.field.name} =
+                  prototype.asInstanceOf[${privateFields.prototype.field.tpt}],
+                ${privateFields.parent.field.name} = parent,
+                ${privateFields.origin.field.name} = origin
+              )(..$privateCopyArgs)
+            }
+          """
         // step 7: create the copy method
         // The purpose of this method is to provide a facility to change small parts of the tree
         // without modifying the other parts, much like the standard case class copy works.
@@ -202,24 +218,25 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // NOTE: Can't generate XXX.Quasi.copy, because XXX.Quasi already inherits XXX.copy,
         // and there can't be multiple overloaded methods with default parameters.
         // Not a big deal though, since XXX.Quasi is an internal class.
-        def getParamArg(p: ValOrDefDef) = q"${p.name}"
-        def addCopy(params: List[ValDef], annots: Tree*) = {
+        def addCopy(params: List[ValOrDefDef], withDefault: Boolean, annots: Tree*) = {
           val mods = getDeferredModifiers(annots.toList)
+          val toCopyParams: ValOrDefDef => ValDef =
+            if (withDefault) getCopyParamWithDefault else asValDecl
+          val copyParams = params.map(toCopyParams)
           istats1 +=
             q"""
-            $mods def copy(..$params): $iname
-          """
+            $mods def copy(..$copyParams): $iname
+            """
           val args = privateArgsForCopy ++ params.map(getParamArg)
           stats1 +=
             q"""
-            final override def copy(..$params): $iname = {
+            final override def copy(..$copyParams): $iname = {
               $mname.apply(..$args)
             }
-          """
-          quasiCopyExtraParamss += params
+            """
+          quasiCopyExtraParamss += copyParams
         }
         if (!isQuasi) {
-          def getCopyParamWithDefault(p: ValOrDefDef): ValDef = asValDefn(p, q"this.${p.name}")
           val fullCopyParams = params.map(getCopyParamWithDefault)
           val iFullCopy = q"private[meta] def fullCopy(..$fullCopyParams): $iname"
           istats1 += iFullCopy
@@ -229,27 +246,26 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             private[meta] final override def fullCopy(..$fullCopyParams): $iname = {
               $mname.apply(..${params.map(_.name)})
             }
-          """
+            """
           if (needCopies)
-            if (versionedParams.isEmpty) addCopy(fullCopyParams)
+            if (versionedParams.isEmpty) addCopy(params, withDefault = true)
             else {
               // add primary copy with default values
               val defaultCopyParams =
                 positionVersionedParams(versionedParams.flatMap(_.getDefaultCopyDef()))
-                  .map(getCopyParamWithDefault)
-              addCopy(defaultCopyParams)
+              addCopy(defaultCopyParams, withDefault = true)
 
               val defaultCopyParamNames = defaultCopyParams.map(_.name.toString).toSet
               def allInDefaults(cp: Iterable[ValDef]): Boolean = cp
                 .forall(x => defaultCopyParamNames.contains(x.name.toString))
 
               // add full copy without defaults
-              if (!allInDefaults(params)) addCopy(params.map(asValDecl))
+              if (!allInDefaults(params)) addCopy(params, withDefault = false)
               // add secondary copy
               paramsVersions.foreach { version =>
                 val copyParams = paramsForVersion(version)
                 if (copyParams.length != defaultCopyParams.length || !allInDefaults(copyParams))
-                  addCopy(copyParams.map(asValDecl), getDeprecatedAnno(version))
+                  addCopy(copyParams, withDefault = false, getDeprecatedAnno(version))
               }
             }
         }
@@ -318,7 +334,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             ..${params.map(loadField)}
             this
           }
-        """
+          """
 
         // step 13: generate Companion.apply
         val internalBody = ListBuffer[Tree]()
@@ -352,12 +368,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           }
         }
         val paramInits = params.map(p => q"$CommonTyperMacrosModule.initParam(${p.name})")
-        privateParams.foreach(p =>
+        privateFieldsList.foreach(p =>
           if (p.persist) internalBody += q"$DataTyperMacrosModule.nullCheck(${p.field.name})"
           else internalBody += asValDefn(p.field)
         )
         val internalArgs = params.map(getParamArg)
-        val bparamCtorArgs = bparams1.map(p =>
+        val applyCall = q"$mname.apply(..$internalArgs)"
+        val privateParamCtorArgs = privateParams.map(p =>
           if (p eq privateFields.origin.field)
             q"""
                $OriginModule.first(
@@ -370,40 +387,41 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         internalBody +=
           q"""
           val node = new $name(
-            ..$bparamCtorArgs
+            ..$privateParamCtorArgs
           )(
             ..$paramInits
           )
-        """
+          """
         params.foreach(p => internalBody += storeField(p))
         internalBody += q"node"
         val applyParamDefns = params.map(asValDefn)
         val applyParamDecls = params.map(asValDecl)
-        val bparamDecls = privateApplyParams.map(asValDecl)
-        val fullApplyParamDecls = bparamDecls ++ applyParamDecls
-        val fullInternalArgs = privateApplyParams.map(getParamArg) ++ internalArgs
-        val bparamRhsInternalArgs = privateApplyParams.map(p => p.rhs) ++ internalArgs
+        val privateParamDecls = privateApplyParams.map(asValDecl)
+        val fullApplyParamDecls = privateParamDecls ++ applyParamDecls
+        val fullApplyCall =
+          q"$mname.apply(..${privateApplyParams.map(getParamArg) ++ internalArgs})"
+        val privateRhsInternalArgs = privateApplyParams.map(p => p.rhs) ++ internalArgs
         if (isTopLevel) {
           mstats1 +=
             q"""
             def apply(..$applyParamDefns): $iname = {
-              $mname.apply(..$bparamRhsInternalArgs)
+              $mname.apply(..$privateRhsInternalArgs)
             }
-          """
+            """
           mstats1 +=
             q"""
             def apply(..$fullApplyParamDecls): $iname = {
               val alternativeOrigin = origin
               ..$internalBody
             }
-          """
+            """
         } else {
           mstats1 +=
             q"""
             def apply(..$applyParamDefns)(implicit dialect: $DialectClass): $iname = {
-              $mname.apply(..$bparamRhsInternalArgs)
+              $mname.apply(..$privateRhsInternalArgs)
             }
-          """
+            """
           mstats1 +=
             q"""
             def apply(..$fullApplyParamDecls)(implicit dialect: $DialectClass): $iname = {
@@ -411,40 +429,44 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 $OriginModule.first(origin, implicitly[$OriginModule.DialectOnly])
               ..$internalBody
             }
-          """
+            """
           mstats1LowPriority +=
             q"""
             @$deprecatedSince_4_9_0 def apply(..$applyParamDecls): $iname = {
-              $mname.apply(..$bparamRhsInternalArgs)
+              $mname.apply(..$privateRhsInternalArgs)
             }
-          """
+            """
           mstats1LowPriority +=
             q"""
             @$deprecatedSince_4_9_0 def apply(..$fullApplyParamDecls): $iname = {
-              $mname.apply(..$fullInternalArgs)
+              $fullApplyCall
             }
-          """
+            """
         }
         mstatsLatest +=
           q"""
-          @$InlineAnnotation def apply(..$fullApplyParamDecls)(implicit dialect: $DialectClass): $iname =
-            $mname.apply(..$fullInternalArgs)
-        """
+          @$InlineAnnotation def apply(..$fullApplyParamDecls)(implicit dialect: $DialectClass): $iname = {
+            $fullApplyCall
+          }
+          """
         mstatsLatestLowPriority +=
           q"""
-          @$InlineAnnotation @$deprecatedSince_4_9_0 def apply(..$fullApplyParamDecls): $iname =
-            $mname.apply(..$fullInternalArgs)
-        """
+          @$InlineAnnotation @$deprecatedSince_4_9_0 def apply(..$fullApplyParamDecls): $iname = {
+            $fullApplyCall
+          }
+          """
         mstatsLatest +=
           q"""
-          @$InlineAnnotation def apply(..$applyParamDefns)(implicit dialect: $DialectClass): $iname =
-            $mname.apply(..$internalArgs)
-        """
+          @$InlineAnnotation def apply(..$applyParamDefns)(implicit dialect: $DialectClass): $iname = {
+            $applyCall
+          }
+          """
         mstatsLatestLowPriority +=
           q"""
-          @$InlineAnnotation @$deprecatedSince_4_9_0 def apply(..$applyParamDecls): $iname =
-            $mname.apply(..$internalArgs)
-        """
+          @$InlineAnnotation @$deprecatedSince_4_9_0 def apply(..$applyParamDecls): $iname = {
+            $applyCall
+          }
+          """
 
         // step 13a: generate additional companion apply for added and replaced fields
         // generate new applies for each new field added
@@ -460,81 +482,79 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           }
           val paramDefns = positionVersionedParams(applyParamsBuilder.result())
           val applyBody = applyBodyBuilder.result()
-          val applyCall = q"$mname.apply(..$internalArgs)"
           val paramDecls = paramDefns.map(asValDecl)
-          val fullParamDecls = bparamDecls ++ paramDecls
+          val fullParamDecls = privateParamDecls ++ paramDecls
           val fullParamDeclNames = fullParamDecls.map(_.name)
           verMstats.lowPrio +=
             q"""
             @$deprecatedSince_4_9_0 def apply(..$fullParamDecls): $iname = {
               $mname.apply(..$fullParamDeclNames)
             }
-          """
+            """
           verMstats.primary +=
             q"""
             def apply(..$fullParamDecls)(implicit dialect: $DialectClass): $iname = {
               $mname.apply(..$fullParamDeclNames)
             }
-          """
+            """
           verMstats.lowPrio +=
             q"""
             @$deprecatedSince_4_9_0 def apply(..$paramDecls): $iname = {
               ..$applyBody
               $applyCall
             }
-          """
+            """
           verMstats.primary +=
             q"""
             def apply(..$paramDefns)(implicit dialect: $DialectClass): $iname = {
               ..$applyBody
               $applyCall
             }
-          """
+            """
           if (isTopLevel) {
             mstats1 +=
               q"""
               def apply(..$fullParamDecls): $iname = {
                 ..$applyBody
-                $mname.apply(..$fullInternalArgs)
+                $fullApplyCall
               }
-            """
+              """
             mstats1 +=
               q"""
               @${getDeprecatedAnno(v)} def apply(..$paramDecls): $iname = {
                 ..$applyBody
                 $applyCall
               }
-            """
-
+              """
           } else {
             mstats1LowPriority +=
               q"""
               @$deprecatedSince_4_9_0 def apply(..$fullParamDecls): $iname = {
                 ..$applyBody
-                $mname.apply(..$fullInternalArgs)
+                $fullApplyCall
               }
-            """
+              """
             mstats1LowPriority +=
               q"""
               @${getDeprecatedAnno(v)} def apply(..$paramDecls): $iname = {
                 ..$applyBody
                 $applyCall
               }
-            """
+              """
             mstats1 +=
               q"""
               def apply(..$fullParamDecls)(implicit dialect: $DialectClass): $iname = {
                 ..$applyBody
-                $mname.apply(..$fullInternalArgs)
+                $fullApplyCall
               }
-            """
+              """
             mstats1 +=
               q"""
               @${getDeprecatedAnno(v)} def apply(..$paramDecls)(implicit dialect: $DialectClass): $iname = {
                 ..$applyBody
                 $applyCall
               }
-            """
+              """
           }
         }
 
@@ -587,7 +607,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 throw new Exception("complex ellipses are not supported yet")
             }).withOrigin(this.origin): T with $QuasiClass
           }
-        """
+          """
         else mstats1 += mkQuasi(
           iname,
           iparents,
@@ -615,7 +635,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         mstats1 += q"object internal { final val Latest = $latestTermName }"
 
         mstats1 +=
-          q"$mods1 class $name[..$tparams] $ctorMods(...${bparams1 +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+          q"$mods1 class $name[..$tparams] $ctorMods(...${privateParams +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
 
         val res = ListBuffer.empty[ImplDef]
 
@@ -811,11 +831,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           q"""
             import scala.meta.trees._
             ${oldDef.name}
-           """
+          """
         else
           q"""
             $ctor(${oldDef.name})
-           """
+          """
       def bodyForMultipleOldDefs = {
         if (ctor eq null) c.abort(newVal.pos, s"${newVal.name} must define a ctor for ver=$version")
         val names = oldDefs.map { case (oldDef, _) =>
@@ -904,6 +924,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def asValDefn(p: ValOrDefDef): ValDef = asValDefn(p, p.rhs)
   private def asValDefn(p: ValOrDefDef, rhs: Tree): ValDef =
     q"@..${p.mods.annotations} val ${p.name}: ${p.tpt} = $rhs"
+
+  private def getParamArg(p: ValOrDefDef) = q"${p.name}"
+  private def getCopyParamWithDefault(p: ValOrDefDef): ValDef = asValDefn(p, q"this.${p.name}")
 
 }
 
