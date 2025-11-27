@@ -1024,4 +1024,18 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(tree.reprint, "type t = Int; t")
   }
 
+  test("#3372") {
+    val code =
+      """|// c1
+         |/* c2 */
+         |val foo = bar /* c3 */ // c4
+         |/* c5 */
+         |""".stripMargin
+    val layout =
+      """|val foo = bar
+         |""".stripMargin
+    val tree = Defn.Val(Nil, List(Pat.Var(Term.Name("foo"))), None, Term.Name("bar"))
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
 }
