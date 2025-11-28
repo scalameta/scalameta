@@ -164,7 +164,7 @@ object TreeSyntax {
       )
     }
   }
-  private final class SyntaxInstances(dialect: Dialect) {
+  private final class SyntaxInstances(implicit dialect: Dialect) {
     val keywords = tokenizers.keywords(dialect)
     import SyntaxInstances.SyntacticGroup
     import SyntaxInstances.SyntacticGroup.Literal
@@ -422,7 +422,7 @@ object TreeSyntax {
     }
 
     // Branches
-    implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax {
+    implicit def syntaxTree[T <: Tree]: Syntax[T] = AsTreeSyntax {
       // Bottom
       case t: Quasi =>
         implicit val unquoteDialect: Dialect = dialect.unquoteParentDialect
@@ -432,7 +432,7 @@ object TreeSyntax {
         else {
           val allowBraceless = t.tree.is[Term.Name] || t.tree.is[Pat.Var] || t.tree.is[Term.This] ||
             t.tree.is[Pat.Wildcard]
-          s("$", w("{", t.tree.syntax, "}", !allowBraceless))
+          s("$", w("{", s(t.tree), "}", !allowBraceless))
         }
 
       // Name
@@ -1158,8 +1158,13 @@ object TreeSyntax {
 
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 
+    private def AsTreeSyntax[T <: Tree](f: T => Show.Result): Syntax[T] = new Syntax[T] {
+      def apply(tree: T): Show.Result = f(tree)
+    }
+
   }
-  def apply[T <: Tree](dialect: Dialect): Syntax[T] =
+
+  def apply[T <: Tree](implicit dialect: Dialect): Syntax[T] =
     // NOTE: This is the current state of the art of smart prettyprinting.
     // If we prettyprint a tree that's just been parsed with the same dialect,
     // then we retain formatting. Otherwise, we don't, even in the tiniest.
@@ -1167,10 +1172,10 @@ object TreeSyntax {
     Syntax((x: T) =>
       x.origin match {
         case o: Origin.Parsed if o.dialect.isEquivalentTo(dialect) => s(o.text)
-        case _ => reprint(x)(dialect)
+        case _ => reprint(x)
       }
     )
 
-  def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = new SyntaxInstances(dialect)
+  def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = (new SyntaxInstances)
     .syntaxTree[T].apply(x)
 }

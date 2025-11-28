@@ -28,31 +28,34 @@ object TreeStructure {
   private def iterableStructure(xs: Seq[_], cls: String): Show.Result =
     if (xs.isEmpty) s("Nil") else s(s"$cls(", r(xs.map(x => i(anyStructure(x))), ","), n(")"))
 
-  private def anyTree(tree: Tree) = tree match {
-    case _: Name.Anonymous => s(s"""Name.Anonymous()""")
-    case _: Name.This => s(s"""Name.This()""")
-    case _: Name.Placeholder => s(s"""Name.Placeholder()""")
-    case Name.Indeterminate(value) => s("Name(", DoubleQuotes(value), ")")
-    case x =>
-      val args: List[Show.Result] = {
-        def default = x.productIterator.map(anyStructure).toList
-        x match {
-          case _: Quasi => default
-          case x: Lit.String => DoubleQuotes.orTriple(x.value) :: Nil
-          case x: Lit.Char => s"'${x.value}'" :: Nil
-          case x: Lit.Symbol => s"""Symbol("${x.value.name}")""" :: Nil
-          case _: Lit.Unit | _: Lit.Null => Nil
-          case x: Lit.Double => asFloat(x.format, 'd') :: Nil
-          case x: Lit.Float => asFloat(x.format, 'f') :: Nil
-          case x: Lit.Long => x.value.toString + 'L' :: Nil
-          case x: Lit => x.value.toString :: Nil
-          case x: Term.ArgClause if x.mod.isEmpty => anyStructure(x.values) :: Nil
-          case x: Term.ParamClause if x.mod.isEmpty => anyStructure(x.values) :: Nil
-          case _ => default
-        }
+  private def anyTree(tree: Tree) = {
+    def getArgs: List[Show.Result] = {
+      def default = tree.productIterator.map(anyStructure).toList
+      tree match {
+        case _: Quasi => default
+        case x: Lit.String => DoubleQuotes.orTriple(x.value) :: Nil
+        case x: Lit.Char => s"'${x.value}'" :: Nil
+        case x: Lit.Symbol => s"""Symbol("${x.value.name}")""" :: Nil
+        case _: Lit.Unit | _: Lit.Null => Nil
+        case x: Lit.Double => asFloat(x.format, 'd') :: Nil
+        case x: Lit.Float => asFloat(x.format, 'f') :: Nil
+        case x: Lit.Long => x.value.toString + 'L' :: Nil
+        case x: Lit => x.value.toString :: Nil
+        case x: Term.ArgClause if x.mod.isEmpty => anyStructure(x.values) :: Nil
+        case x: Term.ParamClause if x.mod.isEmpty => anyStructure(x.values) :: Nil
+        case _ => default
       }
-      if (args.lengthCompare(1) > 0) s(x.productPrefix, "(", r(args.map(i), ","), n(")"))
-      else s(x.productPrefix, "(", r(args), ")")
+    }
+    tree match {
+      case _: Name.Anonymous => s(s"""Name.Anonymous()""")
+      case _: Name.This => s(s"""Name.This()""")
+      case _: Name.Placeholder => s(s"""Name.Placeholder()""")
+      case Name.Indeterminate(value) => s("Name(", DoubleQuotes(value), ")")
+      case x =>
+        val args: List[Show.Result] = getArgs
+        val showArgs = if (args.lengthCompare(1) > 0) r(args.map(i), s(), ",", n()) else r(args)
+        s(x.productPrefix, "(", showArgs, ")")
+    }
   }
 
   private def asFloat(value: String, suffix: Char): String = {

@@ -109,6 +109,9 @@ private[meta] object Show {
   def repeat[T](xs: Seq[T], prefix: String, sep: String, suffix: String)(implicit
       show: Show[T]
   ): Result = wrap(prefix, repeat(xs, sep), suffix)
+  def repeat[T](xs: Seq[T], prefix: => Result, sep: String, suffix: => Result)(implicit
+      show: Show[T]
+  ): Result = wrap(prefix, repeat(xs, sep), suffix)
 
   def repeat(xs: Result*): Result = repeat("")(xs: _*)
   def repeat(sep: String)(xs: Result*): Result = {
@@ -117,7 +120,10 @@ private[meta] object Show {
   }
   def repeat(prefix: String, sep: String, suffix: String)(xs: Result*): Result =
     wrap(prefix, repeat(sep)(xs: _*), suffix)
+  def repeat(prefix: => Result, sep: String, suffix: => Result)(xs: Result*): Result =
+    wrap(prefix, repeat(sep)(xs: _*), suffix)
 
+  def newline(): Result = Newline(None)
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
   def newline[T](x: T)(implicit show: Show[T]): Result = newline(show(x))
 
@@ -127,10 +133,13 @@ private[meta] object Show {
   // wrap if non-empty
   def wrap[T](x: T, suffix: String)(implicit show: Show[T]): Result = wrap("", x, suffix)
   def wrap[T](prefix: String, x: T)(implicit show: Show[T]): Result = wrap(prefix, x, "")
-  def wrap[T](prefix: => String, x: T, suffix: => String)(implicit show: Show[T]): Result =
-    wrap(prefix, show(x), suffix)
-  def wrap(prefix: => String, res: Result, suffix: => String): Result =
-    if (res eq None) None else Wrap(prefix, res, suffix)
+  def wrap[P, T, S](prefix: => P, x: T, suffix: => S)(implicit
+      showP: Show[P],
+      showT: Show[T],
+      showS: Show[S]
+  ): Result = wrap(showP(prefix), showT(x), showS(suffix))
+  def wrap(prefix: => Result, res: Result, suffix: => Result): Result =
+    if (res eq None) None else mkseq(prefix, res, suffix)
 
   // wrap if cond, even if value ends up being none
   def wrap[T](x: T, suffix: => String, cond: Boolean)(implicit show: Show[T]): Result =
