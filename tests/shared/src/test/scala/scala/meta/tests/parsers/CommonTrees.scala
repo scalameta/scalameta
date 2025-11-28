@@ -13,6 +13,8 @@ object CommonTrees {
     }
 
     final def tname(name: String): Term.Name = Term.Name(name)
+    final def tnameComments(name: String)(begComment: String*)(endComment: String*): Term.Name =
+      Term.Name.createWithComments(name, begComment = begComment, endComment = endComment)
     final def tnameCapset(name: String) = Term.CapSetName(name)
     final def tnameOrCapset(name: String): meta.Name with Term.Ref =
       nameOrCapset(name, tname, tnameCapset)
@@ -23,6 +25,20 @@ object CommonTrees {
     final def pnameOrCapset(name: String): meta.Name with Type.Ref =
       nameOrCapset(name, pname, pnameCapset)
     implicit def implicitStringToType(obj: String): Type.Name = pname(obj)
+
+    final def comment(str: String): Tree.Comment = str :: Nil
+    final def comment(vals: String*): Tree.Comment = vals
+    implicit def implicitStringToComment(obj: String): Tree.Comment = comment(obj)
+    implicit def implicitSeqStringToComment(objs: Seq[String]): Tree.Comment = Tree
+      .Comment(parts = objs.map(Lit.String.apply).toList)
+
+    final def comments(vals: Tree.Comment*): Option[Tree.Comments] =
+      if (vals.isEmpty) None else Some(Tree.Comments(vals.toList))
+    final def comments(str: String, strs: String*): Option[Tree.Comments] = str +: strs
+    implicit def implicitCommentToOptionComments(obj: Tree.Comment): Option[Tree.Comments] =
+      comments(obj)
+    implicit def implicitSeqStringToOptionComments(objs: Seq[String]): Option[Tree.Comments] =
+      comments(objs.map(comment): _*)
 
   }
 }

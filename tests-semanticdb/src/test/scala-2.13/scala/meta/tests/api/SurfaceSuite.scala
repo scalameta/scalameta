@@ -158,6 +158,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.parsers.Parsed
          |scala.meta.parsers.Parsed.Error *
          |scala.meta.parsers.Parsed.Success *
+         |scala.meta.parsers.ParserOptions *
          |scala.meta.prettyprinters
          |scala.meta.prettyprinters.Show *
          |scala.meta.prettyprinters.Structure

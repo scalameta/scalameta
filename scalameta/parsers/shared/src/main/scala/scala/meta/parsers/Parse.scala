@@ -9,6 +9,8 @@ import scala.annotation.implicitNotFound
 @implicitNotFound(msg = "don't know how to parse into ${T}")
 trait Parse[T] {
   def apply(input: Input, dialect: Dialect): Parsed[T]
+  def apply(input: Input)(implicit dialect: Dialect, options: ParserOptions): Parsed[T] =
+    apply(input, dialect) // fallback to the original method
 }
 
 object Parse {
@@ -31,9 +33,14 @@ object Parse {
   implicit lazy val parseAmmonite: Parse[MultiSource] = toParse(_.parseAmmonite())
 
   private def toParse[T](fn: ScalametaParser => T): Parse[T] = new Parse[T] {
-    def apply(input: Input, dialect: Dialect): Parsed[T] =
+    def apply(input: Input, dialect: Dialect): Parsed[T] = {
+      implicit val implicitDialect: Dialect = dialect
+      apply(input)
+    }
+
+    override def apply(input: Input)(implicit dialect: Dialect, options: ParserOptions): Parsed[T] =
       try {
-        val parser = new ScalametaParser(input)(dialect)
+        val parser = new ScalametaParser(input)
         Parsed.Success(fn(parser))
       } catch {
         case details @ tokenizers.TokenizeException(pos, message) => Parsed
