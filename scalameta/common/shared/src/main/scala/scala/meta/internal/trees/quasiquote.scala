@@ -29,35 +29,40 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
         val mmods1 = Modifiers(mmods.flags, TypeName("meta"), mmods.annotations)
         if (stats.nonEmpty) c.abort(cdef.pos, "@quasiquote classes must have empty bodies")
         val qmodule = {
-          val qtypesLub = lub(qtypes.map(_.duplicate).map(qtype =>
-            try c.typecheck(qtype, c.TYPEmode).tpe
+          val qtypesLub = lub(qtypes.map(qtype =>
+            try c.typecheck(qtype.duplicate, c.TYPEmode).tpe
             catch { case c.TypecheckException(pos, msg) => c.abort(pos.asInstanceOf[c.Position], msg) }
           ))
           q"""
-          object ${TermName(qname)} {
-            import scala.language.experimental.macros
-            def apply[T >: Any](args: T*)(implicit dialect: _root_.scala.meta.Dialect): $qtypesLub = macro $ReificationMacros.apply
-            def unapply(scrutinee: Any)(implicit dialect: _root_.scala.meta.Dialect): Any = macro $ReificationMacros.unapply
-          }
-        """
+            object ${TermName(qname)} {
+              import scala.language.experimental.macros
+              def apply[T >: Any](args: T*)(implicit dialect: _root_.scala.meta.Dialect): $qtypesLub = macro $ReificationMacros.apply
+              def unapply(scrutinee: Any)(implicit dialect: _root_.scala.meta.Dialect): Any = macro $ReificationMacros.unapply
+            }
+          """
         }
         val qparser = {
-          val qmonadicResults = qtypes.map(qtype =>
+          val qmonadicResult = qtypes.map(qtype =>
             q"""
-          type Parse[T] = _root_.scala.meta.parsers.Parse[T]
-          val parse = _root_.scala.Predef.implicitly[Parse[$qtype]]
-          parse(input, dialect)
-        """
+              _root_.scala.Predef.implicitly[Parse[$qtype]].apply(input, dialect)
+            """
+          ).reduce((acc, curr) =>
+            q"""
+              ($acc) match {
+                case _: Parsed.Error => $curr
+                case x => x
+              }
+            """
           )
-          val qmonadicResult = qmonadicResults.reduce((acc, curr) => q"$acc.orElse($curr)")
-          val qresult =
-            q"""
-          $qmonadicResult match {
-            case x: _root_.scala.meta.parsers.Parsed.Success[_] => x.tree
-            case x: _root_.scala.meta.parsers.Parsed.Error => throw x.details
-          }
-        """
-          q"private[meta] def parse(input: _root_.scala.meta.inputs.Input, dialect: _root_.scala.meta.Dialect) = $qresult"
+          q"""
+            private[meta] def parse(input: _root_.scala.meta.inputs.Input, dialect: _root_.scala.meta.Dialect) = {
+              import _root_.scala.meta.parsers._
+              ($qmonadicResult) match {
+                case x: Parsed.Error => throw x.details
+                case x: Parsed.Success[_] => x.tree
+              }
+            }
+          """
         }
         val stats1 = stats :+ qmodule
         val mstats1 = mstats :+ qparser

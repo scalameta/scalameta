@@ -4,18 +4,16 @@ package transversers
 private[meta] trait Api {
   implicit class XtensionCollectionLikeUI(tree: Tree) {
     def transform(fn: PartialFunction[Tree, Tree]): Tree = {
-      val liftedFn = fn.lift
       object transformer extends Transformer {
-        override def apply(tree: Tree): Tree = super.apply(liftedFn(tree).getOrElse(tree))
+        override def apply(tree: Tree): Tree = super.apply(fn.applyOrElse(tree, identity[Tree]))
       }
       transformer(tree)
     }
 
     def traverse(fn: PartialFunction[Tree, Unit]): Unit = {
-      val liftedFn = fn.lift
       object traverser extends SimpleTraverser {
         override def apply(tree: Tree): Unit = {
-          liftedFn(tree)
+          fn.applyOrElse(tree, (_: Tree) => ())
           super.apply(tree)
         }
       }
@@ -23,11 +21,10 @@ private[meta] trait Api {
     }
 
     def collect[T](fn: PartialFunction[Tree, T]): List[T] = {
-      val liftedFn = fn.lift
       val buf = scala.collection.mutable.ListBuffer[T]()
       object traverser extends SimpleTraverser {
         override def apply(tree: Tree): Unit = {
-          liftedFn(tree).foreach(buf += _)
+          fn.runWith(buf.+=)(tree)
           super.apply(tree)
         }
       }
