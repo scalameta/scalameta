@@ -156,10 +156,12 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
     Tokens(underlying, 0, underlying.length)
   }
 
+  private def getPart(start: Int, end: Int): String = new String(input.chars, start, end - start)
+
   private def getXmlPart(curr: LegacyTokenData): Token = {
     val beg = curr.offset
     val end = curr.endOffset
-    val part = new String(input.chars, beg, end - beg)
+    val part = getPart(beg, end)
     Token.Xml.Part(input, dialect, beg, end, part)
   }
 
@@ -274,10 +276,11 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       case WHITESPACE_FF => Token.FF(input, dialect, curr.offset)
 
       case COMMENT =>
-        var value = new String(input.chars, curr.offset, curr.endOffset - curr.offset)
-        if (value.startsWith("//")) value = value.stripPrefix("//")
-        if (value.startsWith("/*")) value = value.stripPrefix("/*").stripSuffix("*/")
-        Token.Comment(input, dialect, curr.offset, curr.endOffset, value)
+        val stripEnd = if (scanner.openComments == 0) 2 else 0
+        val beg = curr.offset
+        val end = curr.endOffset
+        val part = getPart(beg + 2, end - stripEnd)
+        Token.Comment(input, dialect, beg, end, part)
 
       case ELLIPSIS => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset, curr.base)
       case UNQUOTE => Token.Unquote(input, dialect, curr.offset, curr.endOffset)

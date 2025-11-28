@@ -26,42 +26,44 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   import curr._
   import reader._
 
-  private var openComments = 0
+  private[tokenizers] var openComments = -1
 
   @tailrec
   private def skipLineComment(): Unit = {
     nextCommentChar()
     ch match {
-      case SU | CR | LF => return
-      case _ =>
-    }
-    if (isUnquoteDollar()) setInvalidToken(next)("can't unquote into single-line comments")
-    skipLineComment()
-  }
-  private def maybeOpen(): Unit = {
-    nextCommentChar()
-    if (ch == '*') {
-      nextCommentChar()
-      openComments += 1
-    }
-  }
-  private def maybeClose(): Boolean = {
-    nextCommentChar()
-    ch == '/' && {
-      openComments -= 1
-      val close = openComments == 0
-      if (close) nextChar() else nextCommentChar()
-      close
+      case SU | CR | LF =>
+      case '$' if isUnquoteNextNoDollar() =>
+        setInvalidToken(next)("can't unquote into single-line comments")
+      case _ => skipLineComment()
     }
   }
   @tailrec
   private final def skipNestedComments(): Unit = ch match {
-    case '/' => maybeOpen(); skipNestedComments()
-    case '*' => if (!maybeClose()) skipNestedComments()
+    case '/' =>
+      nextCommentChar()
+      if (ch == '*') {
+        nextCommentChar()
+        openComments += 1
+      }
+      skipNestedComments()
+    case '*' =>
+      nextCommentChar()
+      val stillOpen = ch != '/' || {
+        openComments -= 1
+        if (openComments == 0) {
+          nextChar()
+          false
+        } else {
+          nextCommentChar()
+          true
+        }
+      }
+      if (stillOpen) skipNestedComments()
     case SU => setInvalidToken(next)("unclosed comment")
-    case _ =>
-      if (isUnquoteDollar()) setInvalidToken(next)("can't unquote into multi-line comments")
-      nextCommentChar(); skipNestedComments()
+    case '$' if isUnquoteNextNoDollar() =>
+      setInvalidToken(next)("can't unquote into multi-line comments")
+    case _ => nextCommentChar(); skipNestedComments()
   }
 
   private def isAtEnd = endCharOffset >= buf.length
@@ -313,6 +315,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         ch match {
           case '/' =>
             token = COMMENT
+            openComments = -1
             skipLineComment()
           case '*' =>
             token = COMMENT
