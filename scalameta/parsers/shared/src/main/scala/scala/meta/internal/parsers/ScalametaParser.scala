@@ -23,7 +23,7 @@ import scala.language.implicitConversions
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Failure, Success, Try}
 
-class ScalametaParser(input: Input)(implicit dialect: Dialect) {
+class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOptions) {
   parser =>
 
   import ScalametaParser._
@@ -352,6 +352,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
   private val originSource = new Origin.ParsedSource(input)
 
+  private def asOrigin(beg: Int, end: Int): Origin = Origin.Parsed(originSource, beg, end)
+  private def asOrigin(idx: Int): Origin = asOrigin(idx, idx + 1)
+
+  private def asString(token: Token, origin: Origin): Lit.String = Lit.String
+    ._ctor(origin = origin, value = token.text)
+
+  private def asComment(parts: List[Lit.String], origin: Origin): Tree.Comment = Tree.Comment
+    ._ctor(origin = origin, parts = parts)
+
+  private def asComment(token: Token, idx: Int): Tree.Comment = {
+    val origin = asOrigin(idx)
+    asComment(asString(token, origin) :: Nil, origin)
+  }
+
+  private def asComments(values: ListBuffer[Tree.Comment]): Option[Tree.Comments] =
+    if (values.isEmpty) None
+    else Some {
+      val origin = asOrigin(values.head.begIndex, values.last.endIndex + 1)
+      Tree.Comments._ctor(origin = origin, values = values.toList)
+    }
+
   def atPosWithBody[T <: Tree](startPos: Int, body: T, endPos: Int): T = {
     def getPosRange(): (Int, Int) = { // uses "return"
       if (endPos < startPos) return (startPos, startPos)
@@ -365,7 +386,76 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       (start, (if (tokens(end).is[AtEOLorF]) nonSpaceEnd else end) + 1)
     }
     val (start, endExcl) = getPosRange()
-    body.withOrigin(Origin.Parsed(originSource, start, endExcl))
+
+    val (begComment, endComment) =
+      if (!options.captureComments) (None, None)
+      else if (body.hasComments) (body.begComment, body.endComment)
+      else {
+        // we don't use comments attributed to a child
+        var minChild: Tree = null
+        var minChildBeg = Int.MaxValue
+        var maxChild: Tree = null
+        var maxChildEnd = -1
+        body.children.foreach { x =>
+          val pos = x.pos
+          val beg = x.begComment.fold(pos)(_.pos).start
+          val end = x.endComment.fold(pos)(_.pos).end
+          if (beg < end) {
+            if (beg < minChildBeg) {
+              minChild = x
+              minChildBeg = beg
+            }
+            if (end > maxChildEnd) {
+              maxChild = x
+              maxChildEnd = end
+            }
+          }
+        }
+
+        val begComment =
+          if (start < minChildBeg) {
+            val begBuf = new ListBuffer[Tree.Comment]
+            var idx = start - 1
+            var pending = 0
+            while (tokens.getOpt(idx) match {
+                case Some(t: Comment) =>
+                  begBuf.prepend(asComment(t, idx))
+                  pending += 1
+                  true
+                case Some(_: AtEOL) =>
+                  pending = 0
+                  true
+                case Some(_: HSpace) => true
+                case Some(t) =>
+                  if (t.isAny[Ident, CloseDelim] || body.is[Term.Block]) begBuf.remove(0, pending)
+                  false
+                case _ => false
+              }) idx -= 1
+            asComments(begBuf)
+          } else minChild.begComment
+
+        val endComment =
+          if (endExcl > maxChildEnd) {
+            val endBuf = new ListBuffer[Tree.Comment]
+            var idx = endExcl
+            while (tokens.getOpt(idx) match {
+                case Some(t: Comment) =>
+                  endBuf.append(asComment(t, idx))
+                  true
+                case Some(_: HSpace) => true
+                case _ => false
+              }) idx += 1
+            asComments(endBuf)
+          } else maxChild.endComment
+
+        (begComment, endComment)
+      }
+
+    body.privateCopy(
+      origin = asOrigin(start, endExcl),
+      begComment = begComment,
+      endComment = endComment
+    ).asInstanceOf[T]
   }
 
   def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
@@ -598,13 +688,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     if (null eq unquoteDialect) syntaxError(s"$dialect doesn't support unquotes", at = unquote)
     // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
     // but then such positions wouldn't be usable with Input.Slice.chars.
-    val unquotedTree = atCurPosNext(try {
+    val unquotedTree = atCurPosNext {
       val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
-      val unquoteParser = new ScalametaParser(unquoteInput)(unquoteDialect)
-      if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
-      else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
-      else unreachable
-    } catch { case ex: Exception => throw ex.absolutize })
+      try {
+        val unquoteParser = {
+          implicit val dialect: Dialect = unquoteDialect
+          new ScalametaParser(unquoteInput)
+        }
+        if (dialect.allowTermUnquotes) unquoteParser.parseUnquoteTerm()
+        else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
+        else unreachable
+      } catch { case ex: Exception => throw ex.absolutize }
+    }
     copyPos(unquotedTree)(quasi[T](0, unquotedTree))
   }
 
@@ -4050,10 +4145,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val body = templateBodyOnLeftBrace()
       if (at[KwWith] && body.selfOpt.isEmpty) {
         val edefs = body.stats
-        edefs.foreach(_ match {
+        edefs.foreach {
           case _: Quasi | _: Defn.Val | _: Defn.Var | _: Defn.Type =>
           case other => syntaxError("not a valid early definition", at = other)
-        })
+        }
         next()
         val parents = templateParents(afterExtend)
         val early = copyPos(body)(toStatsBlockRaw(edefs))

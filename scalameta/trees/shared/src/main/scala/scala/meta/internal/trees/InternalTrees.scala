@@ -128,5 +128,8 @@ trait InternalTreeXtensions {
 
     def withDialectNonRecursiveIfNotSet(implicit dialect: Dialect): T =
       if (tree.origin ne Origin.None) tree else withOrigin(Origin.DialectOnly(dialect))
+
+    def hasComments: Boolean = tree.begComment.nonEmpty || tree.endComment.nonEmpty
+
   }
 }
