@@ -12,10 +12,9 @@ import scala.annotation.tailrec
 class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: TokenizerOptions) {
   import LegacyToken._
 
-  def tokenize(): Tokens = input.tokenCache.getOrElseUpdate(dialect, uncachedTokenize())
+  private val scanner = new LegacyScanner(input, dialect)
 
-  private def uncachedTokenize(): Tokens = {
-    val scanner = new LegacyScanner(input, dialect)
+  def tokenize(): Tokens = {
     scanner.initialize(bof = true)
 
     implicit val tokens = new java.util.ArrayList[Token]()
@@ -298,9 +297,11 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
 object ScalametaTokenizer {
   def toTokenize: Tokenize = new Tokenize {
     def apply(input: Input, dialect: Dialect): Tokenized = {
-      implicit val options: TokenizerOptions = input.tokenizerOptions
-      val tokenizer = new ScalametaTokenizer(input.withoutTokenizerOptions, dialect)
-      try Tokenized.Success(tokenizer.tokenize())
+      def tokenize = {
+        implicit val options: TokenizerOptions = input.tokenizerOptions
+        new ScalametaTokenizer(input.withoutTokenizerOptions, dialect).tokenize()
+      }
+      try Tokenized.Success(input.tokenCache.getOrElseUpdate(dialect, tokenize))
       catch {
         case details @ TokenizeException(pos, message) => Tokenized.Error(pos, message, details)
       }
