@@ -68,7 +68,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val mstatsLatestLowPriority = ListBuffer.empty[Tree]
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
-        val quasiCopyExtraParamss = ListBuffer[List[ValDef]]()
         val quasiExtraAbstractDefs = ListBuffer[ValOrDefDef]()
 
         // step 1: validate the shape of the class
@@ -129,6 +128,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         mstats1 ++= imports
         stats1 ++= imports
         stats1 ++= quasiExtraAbstractDefs
+
+        def istatsAdd(decl: ValOrDefDef): Unit = {
+          istats1 += decl
+          if (!isQuasi) quasiExtraAbstractDefs += decl
+        }
 
         // step 4: implement the unimplemented methods in InternalTree (part 1)
         val privateFields = getPrivateFields(iname)
@@ -223,10 +227,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val toCopyParams: ValOrDefDef => ValDef =
             if (withDefault) getCopyParamWithDefault else asValDecl
           val copyParams = params.map(toCopyParams)
-          istats1 +=
-            q"""
-            $mods def copy(..$copyParams): $iname
-            """
+          istatsAdd(q"$mods def copy(..$copyParams): $iname")
           val args = privateArgsForCopy ++ params.map(getParamArg)
           stats1 +=
             q"""
@@ -234,13 +235,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               $mname.apply(..$args)
             }
             """
-          quasiCopyExtraParamss += copyParams
         }
         if (!isQuasi) {
           val fullCopyParams = params.map(getCopyParamWithDefault)
-          val iFullCopy = q"private[meta] def fullCopy(..$fullCopyParams): $iname"
-          istats1 += iFullCopy
-          quasiExtraAbstractDefs += iFullCopy
+          istatsAdd(q"private[meta] def fullCopy(..$fullCopyParams): $iname")
           stats1 +=
             q"""
             private[meta] final override def fullCopy(..$fullCopyParams): $iname = {
@@ -608,16 +606,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }).withOrigin(this.origin): T with $QuasiClass
           }
           """
-        else mstats1 += mkQuasi(
-          iname,
-          iparents,
-          params,
-          quasiCopyExtraParamss,
-          quasiExtraAbstractDefs.result(),
-          "name",
-          "value",
-          "tpe"
-        )
+        else mstats1 +=
+          mkQuasi(iname, iparents, params, quasiExtraAbstractDefs)("name", "value", "tpe")
 
         val latestName = mstatsPerVersion
           .foldLeft(initialName) { case (afterPrevVerName, (ver, verMstats)) =>
