@@ -227,7 +227,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           stats1 +=
             q"""
             private[meta] final override def fullCopy(..$fullCopyParams): $iname = {
-              $mname.apply(..${params.map(_.name)})
+              $mname.apply(..${(privateApplyParams ++ params).map(getParamArg)})
             }
           """
           if (needCopies)
