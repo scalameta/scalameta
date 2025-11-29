@@ -11,43 +11,61 @@ trait Show[-T] {
 }
 
 private[meta] object Show {
+
+  private class Serializer {
+    private val sb = new StringBuilder
+    private val indentation = new StringBuilder
+    private var afterEOL = false
+    private var delay: CharSequence = _
+
+    def result: String = sb.result()
+
+    def delay(value: CharSequence = null): Unit = delay = value
+
+    def append(value: String): Unit = if (value.nonEmpty) {
+      if (delay ne null) {
+        sb.append(delay)
+        delay = null
+      }
+      sb.append(value)
+      afterEOL = false
+    }
+
+    def append(fn: StringBuilder => Result): Unit = fn(sb).serialize(this)
+
+    def appendNoDelay(value: String): Unit = if (delay eq null) append(value) else delay = null
+
+    def blank(): Unit = {
+      if ((delay ne null) && (delay ne indentation)) sb.append(delay)
+      sb.append(EOL)
+      delay = indentation
+    }
+
+    def nl(): Unit = if (!afterEOL) {
+      blank()
+      afterEOL = true
+    }
+
+    def nlBefore(obj: Result): Unit = {
+      nl()
+      obj.serialize(this)
+    }
+
+    def indent(obj: Result): Unit = {
+      val prev = indentation.length
+      indentation.append("  ")
+      nlBefore(obj)
+      indentation.setLength(prev)
+    }
+  }
+
   sealed abstract class Result {
     def desc: String
-    override def toString = {
-      val sb = new StringBuilder
-      var indentation = 0
-      def nl(obj: Result) = {
-        sb.append(EOL)
-        sb.append("  " * indentation)
-        loop(obj)
-      }
-      def loop(obj: Result): Unit = obj match {
-        case None => // do nothing
-        case obj: Str => sb.append(obj.value)
-        case obj: Sequence => obj.xs.foreach(loop)
-        case obj: Repeat =>
-          val sep = obj.sep
-          val sbLenInit = sb.length
-          obj.xs.foreach { x =>
-            val sbLen = sb.length
-            loop(x)
-            if (sbLen != sb.length) sb.append(sep)
-          }
-          val sbLenLast = sb.length
-          if (sbLenInit != sbLenLast) sb.setLength(sbLenLast - sep.length)
-        case obj: Indent => indentation += 1; nl(obj.res); indentation -= 1
-        case obj: Newline => nl(obj.res)
-        case obj: Meta => loop(obj.res)
-        case obj: Wrap =>
-          val sbLenInit = sb.length
-          sb.append(obj.prefix)
-          val sbLen = sb.length
-          loop(obj.res)
-          if (sbLen != sb.length) sb.append(obj.suffix) else sb.setLength(sbLenInit)
-        case result: Function => loop(result.fn(sb))
-      }
-      loop(this)
-      sb.toString
+    def serialize(builder: Serializer): Unit
+    override def toString: String = {
+      val builder = new Serializer
+      serialize(builder)
+      builder.result
     }
     final def isEmpty: Boolean = this eq None
     def headChar: Option[Char]
@@ -56,38 +74,62 @@ private[meta] object Show {
   final case object None extends Result {
     override def desc: String = "None"
     def headChar: Option[Char] = Option.empty
+    override def serialize(builder: Serializer): Unit = {} // do nothing
   }
   final case class Str(value: String) extends Result {
     override def desc: String = s"Str($value)"
     def headChar: Option[Char] = value.headOption
+    override def serialize(builder: Serializer): Unit = builder.append(value);
   }
   final case class Sequence(xs: Result*) extends Result {
     override def desc: String = s"Sequence(#${xs.length})"
     def headChar: Option[Char] = xs.view.flatMap(_.headChar).headOption
+    override def serialize(builder: Serializer): Unit = xs.foreach(_.serialize(builder))
   }
   final case class Repeat(xs: Seq[Result], sep: String) extends Result {
     override def desc: String = s"Repeat(#${xs.length}, s=$sep)"
     def headChar: Option[Char] = xs.view.flatMap(_.headChar).headOption
+    override def serialize(builder: Serializer): Unit = {
+      xs.foreach { x =>
+        x.serialize(builder)
+        builder.delay(sep)
+      }
+      builder.delay(null)
+    }
   }
   final case class Indent(res: Result) extends Result {
     override def desc: String = s"Indent(r=${res.desc})"
     def headChar: Option[Char] = res.headChar
+    override def serialize(builder: Serializer): Unit = builder.indent(res)
+  }
+  final case object Blank extends Result {
+    override def desc: String = s"Blank()"
+    def headChar: Option[Char] = Option.empty
+    override def serialize(builder: Serializer): Unit = builder.blank()
   }
   final case class Newline(res: Result) extends Result {
     override def desc: String = s"Newline(r=${res.desc})"
     def headChar: Option[Char] = Option.empty
+    override def serialize(builder: Serializer): Unit = builder.nlBefore(res)
   }
   final case class Meta(data: Any, res: Result) extends Result {
     override def desc: String = s"Meta(d=$data, r=${res.desc})"
     def headChar: Option[Char] = res.headChar
+    override def serialize(builder: Serializer): Unit = res.serialize(builder)
   }
   final case class Wrap(prefix: String, res: Result, suffix: String) extends Result {
     override def desc: String = s"Wrap(p=$prefix, r=${res.desc}, s=$suffix)"
     def headChar: Option[Char] = prefix.headOption.orElse(res.headChar)
+    override def serialize(builder: Serializer): Unit = {
+      builder.delay(prefix)
+      res.serialize(builder)
+      builder.appendNoDelay(suffix)
+    }
   }
   final case class Function(fn: StringBuilder => Result) extends Result {
     override def desc: String = s"Function(...)"
     def headChar: Option[Char] = Option.empty
+    override def serialize(builder: Serializer): Unit = builder.append(fn)
   }
 
   def apply[T](f: T => Result): Show[T] = new Show[T] {
@@ -122,6 +164,9 @@ private[meta] object Show {
     wrap(prefix, repeat(sep)(xs: _*), suffix)
   def repeat(prefix: => Result, sep: String, suffix: => Result)(xs: Result*): Result =
     wrap(prefix, repeat(sep)(xs: _*), suffix)
+
+  def blank(): Result = Blank
+  def blank(cond: Boolean): Result = if (cond) Blank else None
 
   def newline(): Result = Newline(None)
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
