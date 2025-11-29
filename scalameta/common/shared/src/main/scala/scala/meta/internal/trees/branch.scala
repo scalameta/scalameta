@@ -40,7 +40,7 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
         mstats1 ++= mkClassifier(name)
         if (!isQuasi) {
           mstats1 += mkAstInfo(name)
-          mstats1 += mkQuasi(name, parents, Nil, Nil, stats, "value", "name", "tpe")
+          mstats1 += mkQuasi(name, parents, extraAbstractDefs = stats)("value", "name", "tpe")
         }
 
         val needsUnapply = !mstats.exists {
