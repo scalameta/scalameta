@@ -23,11 +23,10 @@ trait CommonNamerMacros extends MacroHelpers {
   lazy val AstAnnotation = tq"_root_.scala.meta.internal.trees.ast"
   lazy val PositionClass = tq"_root_.scala.meta.inputs.Position"
   lazy val PositionModule = q"_root_.scala.meta.inputs.Position"
-  lazy val PointClass = tq"_root_.scala.meta.inputs.Point"
-  lazy val PointModule = q"_root_.scala.meta.inputs.Point"
   lazy val OriginClass = tq"_root_.scala.meta.trees.Origin"
   lazy val OriginModule = q"_root_.scala.meta.trees.Origin"
   lazy val DialectClass = tq"_root_.scala.meta.Dialect"
+  lazy val CommentsClass = tq"_root_.scala.meta.Tree.Comments"
 
   def mkClassifier(name: TypeName): List[Tree] = {
     val q"..$classifierBoilerplate" =
@@ -116,9 +115,11 @@ trait CommonNamerMacros extends MacroHelpers {
   protected case class PrivateFields(
       prototype: PrivateField,
       parent: PrivateField,
-      origin: PrivateField
+      origin: PrivateField,
+      begComment: PrivateField,
+      endComment: PrivateField
   ) {
-    def asList = prototype :: parent :: origin :: Nil
+    def asList = prototype :: parent :: origin :: begComment :: endComment :: Nil
   }
 
   protected def getPrivateFields(iname: TypeName): PrivateFields = PrivateFields(
@@ -126,7 +127,15 @@ trait CommonNamerMacros extends MacroHelpers {
       q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null"
     ),
     parent = PrivateField(q"private[meta] override val privateParent: $TreeClass = null"),
-    origin = PrivateField(q"override val origin: $OriginClass = $OriginModule.None", true)
+    origin = PrivateField(q"override val origin: $OriginClass = $OriginModule.None", persist = true),
+    begComment = PrivateField(
+      q"override val begComment: $OptionClass[$CommentsClass] = $NoneModule",
+      persist = true
+    ),
+    endComment = PrivateField(
+      q"override val endComment: $OptionClass[$CommentsClass] = $NoneModule",
+      persist = true
+    )
   )
 
 }

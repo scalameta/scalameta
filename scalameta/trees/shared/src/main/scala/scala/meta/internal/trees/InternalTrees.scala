@@ -26,9 +26,11 @@ trait InternalTree extends Product {
   private[meta] def privateParent: Tree
   private[meta] def privateCopy(
       prototype: Tree = this,
-      parent: Tree = privateParent,
+      parent: Tree = this.privateParent,
       destination: String = null,
-      origin: Origin = origin
+      origin: Origin = this.origin,
+      begComment: Option[Tree.Comments] = this.begComment,
+      endComment: Option[Tree.Comments] = this.endComment
   ): Tree
 
   // ==============================================================
@@ -48,6 +50,9 @@ trait InternalTree extends Product {
   def origin: Origin
 
   def pos: Position = origin.position
+
+  def begComment: Option[Tree.Comments]
+  def endComment: Option[Tree.Comments]
 
   // ==============================================================
   // Tokens

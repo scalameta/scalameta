@@ -138,6 +138,13 @@ object Tree extends InternalTreeXtensions {
   trait Repeated extends Tree {
     def body: Tree
   }
+
+  @ast
+  class Comment(parts: List[Lit.String] @nonEmpty) extends Tree
+
+  @ast
+  class Comments(values: List[Comment] @nonEmpty) extends Tree
+
 }
 
 @branch
