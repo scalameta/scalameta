@@ -491,6 +491,8 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Term.Xml
          |scala.meta.Tree.Block
          |scala.meta.Tree.CasesBlock
+         |scala.meta.Tree.Comment
+         |scala.meta.Tree.Comments
          |scala.meta.Tree.Repeated
          |scala.meta.Tree.WithBody
          |scala.meta.Tree.WithCases

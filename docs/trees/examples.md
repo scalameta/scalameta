@@ -279,3 +279,96 @@ Lit.Null()
 | `Char`    | `'a'`                 |
 | `Symbol`  | `'a`                  |
 | `String`  | `"A"`                 |
+
+## Coments (`meta.Tree.Comments`)
+
+Starting with v4.14.3, scalameta allows both parsing some comments and attaching
+them to trees.
+
+```scala
+"""|/*
+   | * leading comment 1
+   | */
+   |// leading comment
+   |null /* trailing comment 1 */ // trailing comment 2
+   |// unattached comment
+   |""".stripMargin.parse[Term].get.structure
+
+/*
+ * leading comment 1
+ */
+// leading comment 2
+Lit.Null() /* trailing comment 1 */ // trailing comment 2
+```
+
+### Constructing trees with comments
+
+To create a tree with comments, instead of the standard `apply` method, use
+`createWithComments` which appends two additional parameters:
+
+```scala
+
+Lit.Null.createWithComments(
+  begComment = Some(Tree.Comments(List(
+    Tree.Comment(List(Lit.String("/*\n * leading comment 1\n */"))),
+    Tree.Comment(List(Lit.String("// leading comment 2")))
+  ))),
+  endComment = Some(Tree.Comments(List(
+    Tree.Comment(List(Lit.String("/* trailing comment 1 */"))),
+    Tree.Comment(List(Lit.String("// trailing comment 2")))
+  )))
+)
+Term.Name.createWithComments(
+  "identifier",
+  begComment = Some(Tree.Comments(List(
+    Tree.Comment(List(Lit.String("/* comment */")))
+  ))),
+  endComment = None // default
+)
+```
+
+In addition, the trees now also provide `copyWithComments` instance methods,
+which work similarly.
+
+### Parsing trees with comments
+
+The scalameta parser will attach the following comments to a parsed tree:
+- any comment tokens which follow the tree until the first newline or
+  non-trivial (non-space and non-comment) token
+- any comment tokens which precede the tree if they are themselves preceded
+  by a newline or if the first non-trivial token before them is neither an
+  identifier nor a closing delimiter (because then that comment would be
+  attached to the tree ending in that token)
+
+This means, for instance, that a comment following punctuation (say, a comma
+or a an equals or a colon) would be attached to the next tree rather than
+the preceding (because punctuation is not included in that previous tree):
+
+```scala
+foo: // fewer braces call; leading for `bar`
+  bar, // first argument comment; leading for `baz`
+  baz // second argument; trailing for `baz
+)
+
+foo /* fewer braces call; trailing for `foo` */:
+  bar /* first argument comment; trailing for `bar` */,
+  baz
+)
+```
+
+Keep in mind that after parsing, multiple trees might refer to the same exact
+comments. In the example below, `// some comment` will be accessible both from
+`Term.Name("bar")` and from `Defn.Val("foo", ...)`.
+
+```scala
+val foo = bar // some comment
+```
+
+### Showing trees with comments
+
+The `.structure` and `.syntax` methods will only output a comment associated with
+a tree if
+- the tree is not parsed (say, created manually), or
+- its `parent` is not set (also a likely case with manually generated trees), or
+- the `parent` does not contain the same comment
+  - if it does, the comment will simply be attributed to the parent

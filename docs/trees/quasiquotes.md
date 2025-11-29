@@ -298,3 +298,22 @@ template according to the following rules:
 | -ss    | `List[List[_]]` | `exprss: List[List[meta.Term]]` |
 | -opt   | `Option[_]`     | `expropt: Option[meta.Term]`    |
 | -nel   | `_`             | `tpesnel: List[meta.Type]`      |
+
+## Comments
+
+Starting with v4.14.3, scalameta supports
+[comments attached to trees](examples.md#coments-metatreecomments).
+Specifically for quasiquotes, the only special case is with interpolated comments
+which must be passed as scala strings (since each interpolated value is parsed as
+valid scala):
+
+```scala
+val scaladoc = q"""
+  "some scaladoc string"
+"""
+val comment = q"\"some comment string\""
+val tree = q"""
+  /** $scaladoc */
+  val foo = bar // $comment
+"""
+```

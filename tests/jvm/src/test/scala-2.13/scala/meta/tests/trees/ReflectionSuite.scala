@@ -24,7 +24,7 @@ class ReflectionSuite extends TreeSuiteBase {
     val sym = symbolOf[scala.meta.Tree]
     assert(sym.isRoot)
     val root = sym.asRoot
-    assertEquals((root.allBranches.length, root.allLeafs.length), (73, 475))
+    assertEquals((root.allBranches.length, root.allLeafs.length), (73, 479))
   }
 
   test("If") {
@@ -42,6 +42,8 @@ class ReflectionSuite extends TreeSuiteBase {
       iff.allFields.map(_.toString),
       List(
         "field Term.If.origin: scala.meta.trees.Origin",
+        "field Term.If.begComment: Option[meta.Tree.Comments]",
+        "field Term.If.endComment: Option[meta.Tree.Comments]",
         "field Term.If.cond: scala.meta.Term",
         "field Term.If.thenp: scala.meta.Term",
         "field Term.If.elsep: scala.meta.Term",
@@ -60,6 +62,8 @@ class ReflectionSuite extends TreeSuiteBase {
       iff.allFields.map(_.toString),
       List(
         "field Term.Name.origin: scala.meta.trees.Origin",
+        "field Term.Name.begComment: Option[meta.Tree.Comments]",
+        "field Term.Name.endComment: Option[meta.Tree.Comments]",
         "field Term.Name.value: String @org.scalameta.invariants.nonEmpty"
       )
     )
@@ -91,6 +95,7 @@ class ReflectionSuite extends TreeSuiteBase {
          |List[scala.meta.Importee]
          |List[scala.meta.Importer]
          |List[scala.meta.Init]
+         |List[scala.meta.Lit.String]
          |List[scala.meta.Lit]
          |List[scala.meta.Member.ParamClauseGroup]
          |List[scala.meta.Mod.Annot]
@@ -103,6 +108,7 @@ class ReflectionSuite extends TreeSuiteBase {
          |List[scala.meta.Term.Param]
          |List[scala.meta.Term.Ref]
          |List[scala.meta.Term]
+         |List[scala.meta.Tree.Comment]
          |List[scala.meta.Type.Param]
          |List[scala.meta.TypeCase]
          |List[scala.meta.Type]
