@@ -21,6 +21,7 @@ import scala.reflect.classTag
 
 object TreeSyntax {
   import Show.alt
+  import Show.blank
   import Show.{function => fn}
   import Show.{indent => i}
   import Show.{meta => m}
@@ -1093,10 +1094,13 @@ object TreeSyntax {
       var prevStat: Stat = null
       stats.map { stat =>
         val showStat = i(stat)
-        val needNL = null != prevStat && showStat.headChar.contains('{') &&
-          guessNeedsLineSep(prevStat)
-        prevStat = stat
-        if (needNL) n(showStat) else showStat
+        if (showStat.isEmpty) showStat
+        else {
+          val needNL = null != prevStat && showStat.headChar.contains('{') &&
+            guessNeedsLineSep(prevStat)
+          prevStat = stat
+          s(blank(needNL), showStat)
+        }
       }
     }
 
