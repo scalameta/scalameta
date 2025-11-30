@@ -49,37 +49,34 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
     def specialcaseTermApply: String =
       s"""|
           |    object ApplyToTripleDots extends scala.AnyRef {
-          |      def unapply(t: scala.meta.Term.Apply): Option[scala.Tuple2[scala.meta.Term, scala.meta.Term.ArgClause.Quasi]] = t.argClause match {
-          |        case (arg @ (_: scala.meta.Term.ArgClause.Quasi)) if arg.rank == 1 => scala.Some(scala.Tuple2(t.fun, arg))
+          |      import sm.Term.ArgClause.{Quasi => ArgClauseQuasi}
+          |      def unapply(t: sm.Term.Apply): Option[scala.Tuple2[sm.Term, ArgClauseQuasi]] = t.argClause match {
+          |        case arg: ArgClauseQuasi if arg.rank == 1 => scala.Some(scala.Tuple2(t.fun, arg))
           |        case _ => scala.None
           |      }
           |    }
-          |    @tailrec() def checkNoTripleDots(fn: scala.meta.Term, arg: scala.meta.internal.trees.Quasi): Unit = fn match {
-          |      case (t @ (_: scala.meta.Term.Apply)) => ApplyToTripleDots.unapply(t) match {
-          |        case scala.None => checkNoTripleDots(t.fun, arg)
+          |    @tailrec def checkNoTripleDots(fn: sm.Term): Unit = fn match {
+          |      case t: sm.Term.Apply => ApplyToTripleDots.unapply(t) match {
+          |        case scala.None => checkNoTripleDots(t.fun)
           |        case _ => report.errorAndAbort("rank mismatch when unquoting")
           |      }
           |      case _ => () // do nothing
           |    }
-          |    def applyArgClauseQuasi(fn: _root_.scala.meta.Term)(arg: _root_.scala.meta.Term.ArgClause.Quasi) = {
-          |      checkNoTripleDots(fn, arg)
-          |      treeByMode('{scala.meta.internal.trees.Syntactic.TermApply.ArgList}, None, term(fn), term(List(arg)))
-          |    }
           |    $localName match {
-          |      case ApplyToTripleDots(fn, acq) => applyArgClauseQuasi(fn)(acq)
+          |      case ApplyToTripleDots(fn, acq) =>
+          |        checkNoTripleDots(fn)
+          |        treeByMode('{sm.internal.trees.Syntactic.TermApply.ArgList}, None, term(fn), term(List(acq)))
           |      case _ => $body
           |    }
           |""".stripMargin
     if (adt.tpe <:< QuasiSymbol.toType) Some(s"liftQuasi0($localName)")
     else if (adt.tpe <:< TermApplySymbol.toType) Some(specialcaseTermApply)
     else if (adt.tpe <:< DefnValSymbol.toType)
-      Some(s"{ $localName.pats.foreach{pat => ${prohibitName(s"pat")}}\n    $body }")
+      Some(s"{ $localName.pats.foreach(prohibitName)\n    $body }")
     else if (adt.tpe <:< DefnVarSymbol.toType)
-      Some(s"{ $localName.pats.foreach{pat => ${prohibitName(s"pat")}}\n    $body }")
-    else if (adt.tpe <:< PatBindSymbol.toType)
-      Some(s"{ ${prohibitName(s"$localName.lhs")}\n    $body }")
-    else if (adt.tpe <:< PatTypedSymbol.toType)
-      Some(s"{ ${prohibitName(s"$localName.lhs")}\n    $body }")
+      Some(s"{ $localName.pats.foreach(prohibitName)\n    $body }")
+    else if (adt.tpe <:< PatBindSymbol.toType) Some(s"{ prohibitName($localName.lhs)\n    $body }")
+    else if (adt.tpe <:< PatTypedSymbol.toType) Some(s"{ prohibitName($localName.lhs)\n    $body }")
     else None
   }
 
@@ -94,10 +91,6 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
         s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
       c.abort(c.enclosingPosition, message)
     }
-    val u = q"${c.prefix}.u"
-    val mainParam = c.freshName(TermName("x"))
-    val mainModule = c.freshName(TermName("Module"))
-    val mainMethod = TermName("liftableSub" + root.prefix.capitalize.replace(".", ""))
     val localName = c.freshName(TermName("x"))
     val defNames = adts.map(adt => "lift" + adt.prefix.capitalize.replace(".", ""))
     val liftAdts = adts.zip(defNames).map { case (adt, defName) =>
@@ -128,21 +121,20 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
     val clauses = adts.zip(defNames).map { case (adt, name) => s"case y : ${adt.tpe} => $name(y)" }
 
     val retStr =
-      s"""|
-          |package scala.meta
+      s"""|package scala.meta
           |package internal
           |package quasiquotes
           |
           |import scala.runtime.ScalaRunTime
           |import scala.quoted._
-          |import scala.meta.{Tree => MetaTree}
-          |import scala.meta.internal.trees.Quasi
-          |import scala.meta.internal.parsers.Absolutize._
-          |import scala.meta.internal.parsers.Messages
+          |import scala.{meta => sm}
+          |import sm.internal.trees.Quasi
+          |import sm.internal.parsers.Absolutize._
+          |import sm.internal.parsers.Messages
+          |import sm.trees.Origin
           |
           |import scala.collection.mutable
           |import scala.annotation.tailrec
-          |import scala.meta.trees.Origin
           |
           |$treeLiftsTrait
           |
@@ -156,11 +148,16 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
           |
           |  ${liftAdts.mkString("\n  ")}
           |
-          |  def liftableSubTree0[T <: MetaTree](y: T)(using Quotes): Tree = {
-          |    y match {
-          |      ${clauses.mkString("\n      ")}
-          |      case _ => sys.error("none of leafs matched " + (y.getClass.getSimpleName))
-          |    }
+          |  def liftableSubTree0[T <: sm.Tree](y: T)(using Quotes): Tree = y match {
+          |    ${clauses.mkString("\n    ")}
+          |    case _ => sys.error("none of leafs matched " + y.getClass.getSimpleName)
+          |  }
+          |
+          |  private def prohibitName(pat: sm.Tree): _root_.scala.Unit = pat match {
+          |    case q: Quasi if unquotesName(q) =>
+          |      val action = if (q.rank == 0) "unquote" else "splice"
+          |      report.errorAndAbort("can't " + action + " a name here, use a pattern instead (e.g. p\\\"x\\\")")
+          |    case _ =>
           |  }
           |}
           |""".stripMargin
@@ -172,14 +169,14 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
   def treeLiftsTrait =
     """|
        |trait TreeLiftsTrait extends HasInternalQuotes {
-       |  def liftTree(tree: MetaTree): internalQuotes.reflect.Tree
-       |  def liftOptionTree[T: Type](maybeTree: Option[MetaTree]): internalQuotes.reflect.Tree
-       |  def liftTrees[T: Type](trees: Seq[MetaTree]): internalQuotes.reflect.Tree
-       |  def liftTreess(treess: List[List[MetaTree]]): internalQuotes.reflect.Tree
-       |  def liftQuasi0(quasi: Quasi, optional: Boolean = false): internalQuotes.reflect.Tree
-       |  def liftOrigin(origin: Origin): internalQuotes.reflect.Tree
-       |
-       |  protected def unquotesName(q: scala.meta.internal.trees.Quasi): Boolean
+       |  import internalQuotes.{reflect => qr}
+       |  def liftTree(tree: sm.Tree): qr.Tree
+       |  def liftOptionTree[T: Type](maybeTree: Option[sm.Tree]): qr.Tree
+       |  def liftTrees[T: Type](trees: Seq[sm.Tree]): qr.Tree
+       |  def liftTreess(treess: List[List[sm.Tree]]): qr.Tree
+       |  def liftQuasi0(quasi: Quasi, optional: Boolean = false): qr.Tree
+       |  def liftOrigin(origin: Origin): qr.Tree
+       |  protected def unquotesName(q: Quasi): Boolean
        |}
        |""".stripMargin
 
@@ -188,6 +185,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
        |  def treeByMode[T](expr: Expr[T], origin: Option[Tree], args: Tree*): Tree =
        |    val term = expr.asTerm match
        |      case Inlined(_, _, inlined) => inlined
+       |    @tailrec
        |    def getResultType(x: TypeRepr, hasImplicit: Boolean): (TypeRepr, Boolean) = x match
        |      case mType @ MethodType(_, _, res) => getResultType(res, hasImplicit || mType.isImplicit)
        |      case res => (res, hasImplicit)
@@ -205,14 +203,13 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
        |""".stripMargin
 
   def termMethods =
-    """|  def term[T <: MetaTree](tree: T): Tree = liftableSubTree0(tree)
-       |  def term[T <: MetaTree: Type](tree: Seq[T]): Tree = liftTrees[T](tree)
-       |  def term[T <: MetaTree: Type](tree: List[T]): Tree = liftTrees[T](tree)
-       |  @scala.annotation.targetName("term2") def term[T <: MetaTree: Type](tree: Seq[List[T]]): Tree = liftTreess(tree.toList)
-       |  @scala.annotation.targetName("term3") def term[T <: MetaTree: Type](tree: List[List[T]]): Tree = liftTreess(tree)
-       |  def term[T <: MetaTree: Type](tree: Option[T]): Tree = liftOptionTree[T](tree)
+    """|  def term[T <: sm.Tree](tree: T): Tree = liftableSubTree0(tree)
+       |  def term[T <: sm.Tree: Type](tree: Seq[T]): Tree = liftTrees[T](tree)
+       |  def term[T <: sm.Tree: Type](tree: List[T]): Tree = liftTrees[T](tree)
+       |  @scala.annotation.targetName("term2") def term[T <: sm.Tree: Type](tree: Seq[List[T]]): Tree = liftTreess(tree.toList)
+       |  @scala.annotation.targetName("term3") def term[T <: sm.Tree: Type](tree: List[List[T]]): Tree = liftTreess(tree)
+       |  def term[T <: sm.Tree: Type](tree: Option[T]): Tree = liftOptionTree[T](tree)
        |  def term(tree: Origin): Option[Tree] = if (isPatternMode) None else Some(liftOrigin(tree))
-       |
        |  def term(tree: String): Tree = Literal(StringConstant(tree))
        |  def term(tree: Byte): Tree = Literal(ByteConstant(tree))
        |  def term(tree: Int): Tree = Literal(IntConstant(tree))
@@ -221,17 +218,4 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
        |  def term(tree: scala.Symbol): Tree = '{scala.Symbol(${Expr(tree.name)})}.asTerm//Apply(Literal(StringConstant(tree)) 
        |""".stripMargin
 
-  private def prohibitName(pat: String): String =
-    s"""|
-        |    import internalQuotes.reflect._
-        |    def prohibitName(pat: _root_.scala.meta.Tree): _root_.scala.Unit = {
-        |      pat match {
-        |        case q: _root_.scala.meta.internal.trees.Quasi if unquotesName(q) =>
-        |          val action = if (q.rank == 0) "unquote" else "splice"
-        |          report.errorAndAbort("can't " + action + " a name here, use a pattern instead (e.g. p\\\"x\\\")")
-        |        case _ =>
-        |      }
-        |    }
-        |    prohibitName($pat)
-        |""".stripMargin
 }
