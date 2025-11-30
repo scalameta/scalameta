@@ -15,36 +15,70 @@ private[meta] object Show {
   private class Serializer {
     private val sb = new StringBuilder
     private val indentation = new StringBuilder
-    private var afterEOL = false
+    private var afterEOL = 0
     private var delay: CharSequence = _
 
     def result: String = sb.result()
 
+    def wasNL: Boolean = afterEOL != 0
+
     def delay(value: CharSequence = null): Unit = delay = value
 
     def append(value: String): Unit = if (value.nonEmpty) {
-      if (delay ne null) {
-        sb.append(delay)
-        delay = null
-      }
-      sb.append(value)
-      afterEOL = false
+      appendDelay()
+      if (wasNL) appendImpl(indentation)
+      appendImpl(value)
+      afterEOL = 0
+    }
+
+    private def appendDelay(): Unit = if (delay ne null) {
+      appendImpl(delay)
+      delay = null
+    }
+
+    private def appendImpl(value: CharSequence): Unit = {
+      val len = value.length
+      if (len != 0)
+        if (value eq indentation) sb.append(indentation)
+        else {
+          // check for CR, would erase the current line on Unix
+          val hasCR = EOL == "\n" &&
+            (value match {
+              case x: String => x.contains('\r')
+              case _ => true
+            })
+          if (hasCR) {
+            var idx = 0
+            while (idx < len) {
+              value.charAt(idx) match {
+                case '\r' =>
+                  idx += 1
+                  if (idx < len) {
+                    val ch = value.charAt(idx)
+                    if (ch != '\n') sb.append('\n')
+                    sb.append(ch)
+                  }
+                case ch => sb.append(ch)
+              }
+              idx += 1
+            }
+          } else sb.append(value)
+        }
     }
 
     def append(fn: CharSequence => Result): Unit = fn(sb).serialize(this)
 
     def appendNoDelay(value: String): Unit = if (delay eq null) append(value) else delay = null
 
-    def blank(): Unit = {
-      if ((delay ne null) && (delay ne indentation)) sb.append(delay)
+    private def blank(newAfterEOL: Int): Unit = {
+      appendDelay()
       sb.append(EOL)
-      delay = indentation
+      afterEOL = newAfterEOL
     }
 
-    def nl(): Unit = if (!afterEOL) {
-      blank()
-      afterEOL = true
-    }
+    def blank(): Unit = blank(-1)
+
+    def nl(): Unit = if (afterEOL <= 0) blank(1)
 
     def nlBefore(obj: Result): Unit = {
       nl()
