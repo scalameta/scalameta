@@ -6,9 +6,7 @@ import scala.meta._
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.GenIterable
-import scala.collection.GenTraversableOnce
-import scala.collection.mutable
+import scala.collection.{GenIterable, GenTraversableOnce, mutable}
 import scala.util.control.NonFatal
 
 object SyntaxAnalysis {

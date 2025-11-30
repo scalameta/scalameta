@@ -1,7 +1,5 @@
 package scala.meta.tests
 
-import scala.meta.Dialect
-import scala.meta.Token
 import scala.meta._
 
 object TestHelpers {

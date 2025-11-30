@@ -3,9 +3,8 @@ package tests
 
 import scala.language.experimental.macros
 import scala.reflect.internal.util.Position
-import scala.reflect.macros.ParseException
-import scala.reflect.macros.TypecheckException
 import scala.reflect.macros.blackbox.Context
+import scala.reflect.macros.{ParseException, TypecheckException}
 
 object typecheckError {
   // Typechecks the enclosed code at compile time

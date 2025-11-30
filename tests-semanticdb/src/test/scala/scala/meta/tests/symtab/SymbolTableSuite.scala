@@ -1,8 +1,6 @@
 package scala.meta.tests.symtab
 
-import scala.meta.internal.symtab.AggregateSymbolTable
-import scala.meta.internal.symtab.GlobalSymbolTable
-import scala.meta.internal.symtab.LocalSymbolTable
+import scala.meta.internal.symtab.{AggregateSymbolTable, GlobalSymbolTable, LocalSymbolTable}
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.Classpath
 import scala.meta.tests.BuildInfo

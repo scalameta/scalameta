@@ -6,10 +6,8 @@ import scala.meta.inputs.Input
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.tokenizers._
-import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
-import scala.meta.tokens.TokenExtensions
-import scala.meta.tokens.Tokens
+import scala.meta.tokens.{Token, TokenExtensions, Tokens}
 
 import scala.annotation.tailrec
 

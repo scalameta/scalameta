@@ -3,8 +3,7 @@ package scala.meta.internal.tokenizers
 import scala.meta.Dialect
 import scala.meta.inputs.Input
 
-import scala.annotation.switch
-import scala.annotation.tailrec
+import scala.annotation.{switch, tailrec}
 
 import fastparse.NoWhitespace._
 import fastparse._

@@ -6,13 +6,10 @@ import scala.meta.cli._
 import scala.meta.internal.io._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb._
-import scala.meta.internal.{semanticdb => s}
-import scala.meta.internal.{semanticidx => i}
-import scala.meta.io.AbsolutePath
-import scala.meta.io.Classpath
+import scala.meta.internal.{semanticdb => s, semanticidx => i}
+import scala.meta.io.{AbsolutePath, Classpath}
 import scala.meta.tests.cli.CliTestUtils
-import scala.meta.tests.metacp.Library
-import scala.meta.tests.metacp.MetacpOps
+import scala.meta.tests.metacp.{Library, MetacpOps}
 
 import java.io._
 import java.nio.charset.StandardCharsets._

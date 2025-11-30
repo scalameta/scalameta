@@ -3,10 +3,9 @@ package internal
 package prettyprinters
 
 import org.scalameta.adt._
-import org.scalameta.debug
 import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
-import org.scalameta.unreachable
+import org.scalameta.{debug, unreachable}
 import scala.meta.classifiers._
 import scala.meta.inputs.Position
 import scala.meta.internal.tokens.Chars._
@@ -16,20 +15,11 @@ import scala.meta.tokens._
 import scala.meta.trees.Origin
 
 import scala.annotation.tailrec
-import scala.reflect.ClassTag
-import scala.reflect.classTag
+import scala.reflect.{ClassTag, classTag}
 
 object TreeSyntax {
-  import Show.alt
-  import Show.blank
-  import Show.{function => fn}
-  import Show.{indent => i}
-  import Show.{meta => m}
-  import Show.{newline => n}
-  import Show.{opt => o}
-  import Show.{repeat => r}
-  import Show.{sequence => s}
-  import Show.{wrap => w}
+  import Show.{alt, blank, function => fn, indent => i, meta => m, newline => n, opt => o,
+    repeat => r, sequence => s, wrap => w}
 
   private final object SyntaxInstances {
     // NOTE: these groups closely follow non-terminals in the grammar spec from SLS, except for:
@@ -170,11 +160,10 @@ object TreeSyntax {
   private final class SyntaxInstances(implicit dialect: Dialect) {
     val keywords = tokenizers.keywords(dialect)
     import SyntaxInstances.SyntacticGroup
-    import SyntaxInstances.SyntacticGroup.Literal
     import SyntaxInstances.SyntacticGroup.Pat._
-    import SyntaxInstances.SyntacticGroup.Path
     import SyntaxInstances.SyntacticGroup.Term._
     import SyntaxInstances.SyntacticGroup.Type._
+    import SyntaxInstances.SyntacticGroup.{Literal, Path}
 
     private val escapableSoftKeywords: Map[String, Seq[Class[_]]] = {
       val seq = Seq.newBuilder[(String, Seq[ClassTag[_]])]

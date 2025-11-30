@@ -1,7 +1,6 @@
 package example
 
-import scala.annotation.StaticAnnotation
-import scala.annotation.compileTimeOnly
+import scala.annotation.{StaticAnnotation, compileTimeOnly}
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox
 

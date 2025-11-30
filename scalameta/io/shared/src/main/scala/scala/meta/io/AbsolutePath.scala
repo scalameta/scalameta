@@ -1,14 +1,10 @@
 package scala.meta.io
 
-import scala.meta.internal.io.FileIO
-import scala.meta.internal.io.PathIO
-import scala.meta.internal.io.PlatformPathIO
+import scala.meta.internal.io.{FileIO, PathIO, PlatformPathIO}
 
 import java.io._
 import java.net._
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 import java.nio.{file => nio}
 
 /** Wrapper around an absolute nio.Path. */

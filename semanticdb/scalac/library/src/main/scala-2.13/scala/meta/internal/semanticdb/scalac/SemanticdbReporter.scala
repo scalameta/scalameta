@@ -1,10 +1,8 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.reflect.internal.util.CodeAction
-import scala.reflect.internal.util.Position
+import scala.reflect.internal.util.{CodeAction, Position}
 import scala.tools.nsc.Settings
-import scala.tools.nsc.reporters.FilteringReporter
-import scala.tools.nsc.reporters.StoreReporter
+import scala.tools.nsc.reporters.{FilteringReporter, StoreReporter}
 
 class SemanticdbReporter(underlying: FilteringReporter)
     extends StoreReporter(SemanticdbReporter.defaultSettings(underlying.settings)) {

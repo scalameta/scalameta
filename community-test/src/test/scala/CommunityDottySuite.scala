@@ -2,9 +2,7 @@ package scala.meta.parser.dotty
 
 import scala.meta._
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 
 import scala.concurrent.duration
 import scala.language.postfixOps

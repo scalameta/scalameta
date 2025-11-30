@@ -2,8 +2,7 @@ package scala.meta
 package internal
 package tokenizers
 
-import java.math.MathContext
-import java.math.RoundingMode
+import java.math.{MathContext, RoundingMode}
 
 import scala.util.Try
 

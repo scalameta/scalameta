@@ -2,9 +2,7 @@ package scala.meta.internal.io
 
 import scala.meta.io._
 
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Paths

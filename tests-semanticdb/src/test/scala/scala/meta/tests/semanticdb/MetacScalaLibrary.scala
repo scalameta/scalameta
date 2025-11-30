@@ -8,8 +8,7 @@ import scala.meta.metac._
 import scala.meta.tests.BuildInfo
 
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 
 import scala.concurrent.duration
 import scala.util.Properties

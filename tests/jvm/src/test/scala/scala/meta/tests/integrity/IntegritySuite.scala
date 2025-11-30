@@ -2,8 +2,7 @@ package scala.meta.tests
 package integrity
 
 import java.io.File
-import java.io.File.pathSeparator
-import java.io.File.separator
+import java.io.File.{pathSeparator, separator}
 
 import munit._
 

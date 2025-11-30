@@ -2,13 +2,11 @@ package scala.meta.internal.scalacp
 
 import scala.meta.internal.classpath.MissingSymbolException
 import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb.Scala.{Names => n}
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb => s}
 
-import java.util.HashMap
-import java.util.HashSet
+import java.util.{HashMap, HashSet}
 
 import scala.annotation.tailrec
 import scala.collection.mutable

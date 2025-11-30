@@ -7,8 +7,7 @@ import scala.meta.internal.prettyprinters.TreeSyntax
 import scala.meta.tokenizers._
 import scala.meta.tokens.Token._
 import scala.meta.tokens._
-import scala.meta.trees.Error
-import scala.meta.trees.Origin
+import scala.meta.trees.{Error, Origin}
 
 // NOTE: Methods that start with "private" are NOT intended to be called outside scala.meta.
 // Calling these methods from hosts will compile (because hosts are in meta), but is strongly discouraged.

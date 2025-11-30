@@ -2,13 +2,9 @@ package scala.meta.internal.classpath
 
 import scala.meta.io.AbsolutePath
 
-import java.io.File
-import java.io.FilterInputStream
-import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
+import java.io.{File, FilterInputStream, InputStream}
+import java.nio.file.{Files, Path}
+import java.util.zip.{ZipEntry, ZipFile}
 
 import scala.collection.mutable
 

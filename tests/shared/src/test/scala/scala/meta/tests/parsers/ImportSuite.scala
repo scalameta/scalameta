@@ -1,17 +1,13 @@
 package scala.meta.tests
 package parsers
 
-import scala.meta.Name.Anonymous
-import scala.meta.Name.Indeterminate
+import scala.meta.Name.{Anonymous, Indeterminate}
 import scala.meta.parsers.ParseException
 import scala.meta.{Name => _, _}
 
 class ImportSuite extends ParseSuite {
   import Importee._
-  import Term.Select
-  import Term.Super
-  import Term.This
-  import Term.{Name => TermName}
+  import Term.{Name => TermName, Select, Super, This}
 
   implicit val dialect: Dialect = dialects.Scala211
 

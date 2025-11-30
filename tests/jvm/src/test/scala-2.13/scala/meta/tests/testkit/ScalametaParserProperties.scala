@@ -2,11 +2,7 @@ package scala.meta.tests.testkit
 
 import scala.meta._
 import scala.meta.parsers.Parsed
-import scala.meta.testkit.Corpus
-import scala.meta.testkit.CorpusFile
-import scala.meta.testkit.Observation
-import scala.meta.testkit.StructurallyEqual
-import scala.meta.testkit.SyntaxAnalysis
+import scala.meta.testkit.{Corpus, CorpusFile, Observation, StructurallyEqual, SyntaxAnalysis}
 
 import scala.collection.parallel.CollectionConverters._
 
