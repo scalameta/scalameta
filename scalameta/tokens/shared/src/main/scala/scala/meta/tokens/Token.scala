@@ -308,6 +308,14 @@ object Token {
   }
   @freeform("comment")
   class Comment(value: String) extends HTrivia
+  @freeform("comment_start")
+  class CommentStart(value: String) extends HTrivia
+  @freeform("comment_part")
+  class CommentPart(value: String) extends HTrivia
+  @freeform("comment_end")
+  class CommentEnd(value: String) extends HTrivia
+  @freeform("comment_unquote")
+  class CommentUnquote extends HTrivia
   @freeform("beginning of file")
   class BOF extends AtEOLorF {
     def this(input: Input, dialect: Dialect) = this(input, dialect, 0)

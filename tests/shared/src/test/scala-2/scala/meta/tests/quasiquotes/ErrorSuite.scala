@@ -638,38 +638,6 @@ class ErrorSuite extends TreeSuiteBase {
        |         ^""".stripMargin
   ))
 
-  test("unquote into single-line comments") {
-    assertNoDiff(
-      typecheckError(
-        """
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      val content = "content"
-      q"// $content has been unquoted"
-    """
-      ),
-      """|<macro>:5: can't unquote into single-line comments
-         |      q"// $content has been unquoted"
-         |           ^""".stripMargin
-    )
-  }
-
-  test("unquote into multiline comments") {
-    assertNoDiff(
-      typecheckError(
-        """
-      import scala.meta._
-      import scala.meta.dialects.Scala211
-      val content = "content"
-      q"/* $content has been unquoted */"
-    """
-      ),
-      """|<macro>:5: can't unquote into multi-line comments
-         |      q"/* $content has been unquoted */"
-         |           ^""".stripMargin
-    )
-  }
-
   test("weirdness after dot-dot")(assertNoDiff(
     typecheckError(
       """

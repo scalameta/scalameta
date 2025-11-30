@@ -31,9 +31,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def skipLineComment(): Unit = {
     nextCommentChar()
     ch match {
-      case SU | CR | LF =>
-      case '$' if isUnquoteNextNoDollar() =>
-        setInvalidToken(next)("can't unquote into single-line comments")
+      case SU | CR | LF => if (token != COMMENT) token = COMMENT_END
+      case '$' if isUnquoteNextNoDollar() => token = COMMENT_PART
       case _ => skipLineComment()
     }
   }
@@ -52,6 +51,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         openComments -= 1
         if (openComments == 0) {
           nextChar()
+          if (token != COMMENT) token = COMMENT_END
           false
         } else {
           nextCommentChar()
@@ -60,8 +60,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       }
       if (stillOpen) skipNestedComments()
     case SU => setInvalidToken(next)("unclosed comment")
-    case '$' if isUnquoteNextNoDollar() =>
-      setInvalidToken(next)("can't unquote into multi-line comments")
+    case '$' if isUnquoteNextNoDollar() => token = COMMENT_PART
     case _ =>
       nextCommentChar()
       skipNestedComments()
@@ -173,6 +172,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   @inline
   def nextTokenOrEof(): LegacyTokenData = nextToken { prev.token = PASTEOF }
 
+  private[tokenizers] def prevToken: LegacyTokenData = prev
+
   /**
    * Produce next token, filling curr TokenData fields of Scanner.
    */
@@ -224,6 +225,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case _ =>
     }
     if (fetchXmlPart()) return
+    if (prev.token == COMMENT_UNQUOTE) {
+      token = COMMENT_PART
+      if (openComments > 0) skipNestedComments() else skipLineComment()
+      return
+    }
 
     def noQuasiDoubleQuote(error: String): Unit = // only triple quote
       if (!dialect.allowMultilinePrograms) setInvalidToken(next)(error)
@@ -921,7 +927,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         }
         return reader.nextCharFrom(start + ltd.endOffset)
     }
-    finishComposite(UNQUOTE, start + ltdEnd.endOffset)
+    val nexttoken = if (token == COMMENT_PART) COMMENT_UNQUOTE else UNQUOTE
+    finishComposite(nexttoken, start + ltdEnd.endOffset)
   }
 
 // Errors -----------------------------------------------------------------

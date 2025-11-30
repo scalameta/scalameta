@@ -281,8 +281,22 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
         val stripEnd = if (scanner.openComments == 0) 2 else 0
         val beg = curr.offset
         val end = curr.endOffset
-        val part = getPart(beg + 2, end - stripEnd)
-        Token.Comment(input, dialect, beg, end, part)
+        Token.Comment(input, dialect, beg, end, getPart(beg + 2, end - stripEnd))
+
+      case COMMENT_PART =>
+        val beg = curr.offset
+        val end = curr.endOffset
+        val isPart = scanner.prevToken.token == COMMENT_UNQUOTE
+        if (isPart) Token.CommentPart(input, dialect, beg, end, getPart(beg, end))
+        else Token.CommentStart(input, dialect, beg, end, getPart(beg + 2, end))
+
+      case COMMENT_END =>
+        val stripEnd = if (scanner.openComments == 0) 2 else 0
+        val beg = curr.offset
+        val end = curr.endOffset
+        Token.CommentEnd(input, dialect, beg, end, getPart(beg, end - stripEnd))
+
+      case COMMENT_UNQUOTE => Token.CommentUnquote(input, dialect, curr.offset, curr.endOffset)
 
       case ELLIPSIS => Token.Ellipsis(input, dialect, curr.offset, curr.endOffset, curr.base)
       case UNQUOTE => Token.Unquote(input, dialect, curr.offset, curr.endOffset)

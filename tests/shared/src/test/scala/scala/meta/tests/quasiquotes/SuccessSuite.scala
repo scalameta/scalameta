@@ -2316,4 +2316,42 @@ class SuccessSuite extends TreeSuiteBase {
     assertWithOriginalSyntax(id, "456", "456")
   }
 
+  test("comments: single-line: literal") {
+    val content = q""""real content""""
+    assertTree(q"0 // $content has been unquoted")(
+      Lit.Int.createWithComments(0, endComment = Seq("// real content has been unquoted"))
+    )
+  }
+
+  test("comments: multi-line: literal") {
+    val content = q""""real content""""
+    assertTree(q"0 /* $content has been unquoted */")(
+      Lit.Int.createWithComments(0, endComment = Seq("/* real content has been unquoted */"))
+    )
+  }
+
+  test("comments: single-line: definition") {
+    val content = q""""real content""""
+    val tree = Defn.Val.createWithComments(
+      Nil,
+      List(Pat.Var(Term.Name("foo"))),
+      None,
+      lit(0),
+      endComment = Seq("// real content has been unquoted")
+    )
+    assertTree(q"val foo = 0 // $content has been unquoted")(tree)
+  }
+
+  test("comments: multi-line: definition") {
+    val content = q""""real content""""
+    val tree = Defn.Val.createWithComments(
+      Nil,
+      List(Pat.Var(Term.Name("foo"))),
+      None,
+      lit(0),
+      endComment = Seq("/* real content has been unquoted */")
+    )
+    assertTree(q"val foo = 0 /* $content has been unquoted */")(tree)
+  }
+
 }

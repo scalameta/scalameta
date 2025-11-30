@@ -126,6 +126,9 @@ object LegacyToken {
   final val WHITESPACE_END = WHITESPACE_BEG + 6
 
   final val COMMENT = 300
+  final val COMMENT_PART = 301
+  final val COMMENT_END = 302
+  final val COMMENT_UNQUOTE = 303
 
   final val UNQUOTE = 400
   final val ELLIPSIS = 401
