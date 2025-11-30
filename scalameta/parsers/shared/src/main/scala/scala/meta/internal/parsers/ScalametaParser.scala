@@ -357,6 +357,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def asString(token: Token, origin: Origin): Lit.String = Lit.String
     ._ctor(origin = origin, value = token.text)
+  private def asString(token: Token, idx: Int): Lit.String = asString(token, asOrigin(idx))
+  private def asString(token: CommentUnquote, idx: Int): Lit.String =
+    unquoteAt[Lit.String](idx, token)
 
   private def asComment(parts: List[Lit.String], origin: Origin): Tree.Comment = Tree.Comment
     ._ctor(origin = origin, parts = parts)
@@ -365,6 +368,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val origin = asOrigin(idx)
     asComment(asString(token, origin) :: Nil, origin)
   }
+
+  private def asComment(parts: List[Lit.String], beg: Int, end: Int): Tree.Comment =
+    asComment(parts, asOrigin(beg, end))
 
   private def asComments(values: ListBuffer[Tree.Comment]): Option[Tree.Comments] =
     if (values.isEmpty) None
@@ -422,6 +428,29 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   begBuf.prepend(asComment(t, idx))
                   pending += 1
                   true
+                case Some(endPart: CommentEnd) =>
+                  val endIdx = idx + 1
+                  val parts = new ListBuffer[Lit.String]
+                  parts.prepend(asString(endPart, idx))
+                  while ({
+                    idx -= 1
+                    tokens.getOpt(idx) match {
+                      case Some(t: CommentStart) =>
+                        parts.prepend(asString(t, idx))
+                        begBuf.prepend(asComment(parts.toList, idx, endIdx))
+                        pending += 1
+                        false
+                      case Some(t: CommentPart) =>
+                        parts.prepend(asString(t, idx))
+                        true
+                      case Some(t: CommentUnquote) =>
+                        parts.prepend(asString(t, idx))
+                        true
+                      case _ => false
+                    }
+                  }) {}
+                  idx += 1
+                  true
                 case Some(_: AtEOL) =>
                   pending = 0
                   true
@@ -441,6 +470,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             while (tokens.getOpt(idx) match {
                 case Some(t: Comment) =>
                   endBuf.append(asComment(t, idx))
+                  true
+                case Some(begPart: CommentStart) =>
+                  val begIdx = idx
+                  val parts = new ListBuffer[Lit.String]
+                  parts.append(asString(begPart, idx))
+                  while ({
+                    idx += 1
+                    tokens.getOpt(idx) match {
+                      case Some(t: CommentEnd) =>
+                        parts.append(asString(t, idx))
+                        endBuf.prepend(asComment(parts.toList, begIdx, idx + 1))
+                        false
+                      case Some(t: CommentPart) =>
+                        parts.append(asString(t, idx))
+                        true
+                      case Some(t: CommentUnquote) =>
+                        parts.append(asString(t, idx))
+                        true
+                      case _ => false
+                    }
+                  }) {}
+                  idx -= 1
                   true
                 case Some(_: HSpace) => true
                 case _ => false
@@ -682,13 +733,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       quasi[T](ell.rank, tree)
     }
 
-  private def unquote[T <: Tree: AstInfo](unquote: Token): T with Quasi = {
+  private def unquoteAt[T <: Tree: AstInfo](idx: Int, unquote: Token): T with Quasi = {
     assert(unquote.input.chars(unquote.start + 1) != '$', "Expected unquote to start with $")
     val unquoteDialect = dialect.unquoteParentDialect
     if (null eq unquoteDialect) syntaxError(s"$dialect doesn't support unquotes", at = unquote)
     // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
     // but then such positions wouldn't be usable with Input.Slice.chars.
-    val unquotedTree = atCurPosNext {
+    val unquotedTree = atPos(idx) {
       val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
       try {
         val unquoteParser = {
@@ -701,6 +752,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       } catch { case ex: Exception => throw ex.absolutize }
     }
     copyPos(unquotedTree)(quasi[T](0, unquotedTree))
+  }
+
+  private def unquote[T <: Tree: AstInfo](unquote: Token): T with Quasi = {
+    next()
+    unquoteAt[T](prevIndex, unquote)
   }
 
   def unquote[T <: Tree: AstInfo]: T with Quasi = currToken match {

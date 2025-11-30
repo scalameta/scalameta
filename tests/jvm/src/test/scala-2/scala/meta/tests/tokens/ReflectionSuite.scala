@@ -22,6 +22,10 @@ class ReflectionSuite extends TreeSuiteBase {
       """|
          |Token.BOF
          |Token.Comment
+         |Token.CommentEnd
+         |Token.CommentPart
+         |Token.CommentStart
+         |Token.CommentUnquote
          |Token.Constant.Char
          |Token.Constant.Double
          |Token.Constant.Float

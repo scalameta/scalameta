@@ -583,6 +583,10 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.tokens.Token.Colon
          |scala.meta.tokens.Token.Comma
          |scala.meta.tokens.Token.Comment
+         |scala.meta.tokens.Token.CommentEnd
+         |scala.meta.tokens.Token.CommentPart
+         |scala.meta.tokens.Token.CommentStart
+         |scala.meta.tokens.Token.CommentUnquote
          |scala.meta.tokens.Token.Constant.Char
          |scala.meta.tokens.Token.Constant.Double
          |scala.meta.tokens.Token.Constant.Float
