@@ -31,7 +31,7 @@ private[meta] object Show {
       afterEOL = false
     }
 
-    def append(fn: StringBuilder => Result): Unit = fn(sb).serialize(this)
+    def append(fn: CharSequence => Result): Unit = fn(sb).serialize(this)
 
     def appendNoDelay(value: String): Unit = if (delay eq null) append(value) else delay = null
 
@@ -126,7 +126,7 @@ private[meta] object Show {
       builder.appendNoDelay(suffix)
     }
   }
-  final case class Function(fn: StringBuilder => Result) extends Result {
+  final case class Function(fn: CharSequence => Result) extends Result {
     override def desc: String = s"Function(...)"
     def headChar: Option[Char] = Option.empty
     override def serialize(implicit builder: Serializer): Unit = builder.append(fn)
@@ -208,7 +208,7 @@ private[meta] object Show {
   def alt[A, B](a: A, b: => B)(implicit showA: Show[A], showB: Show[B]): Result =
     alt(showA(a), showB(b))
 
-  def function(fn: StringBuilder => Result): Result = Function(fn)
+  def function(fn: CharSequence => Result): Result = Function(fn)
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)
   implicit def printString[T <: String]: Show[T] = apply(Show.Str(_))
