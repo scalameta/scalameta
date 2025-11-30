@@ -1,7 +1,6 @@
 package scala.meta.internal.io
 
-import scala.meta.io.AbsolutePath
-import scala.meta.io.RelativePath
+import scala.meta.io.{AbsolutePath, RelativePath}
 
 final case class ListFiles(root: AbsolutePath, files: List[RelativePath])
     extends Seq[AbsolutePath] {

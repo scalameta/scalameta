@@ -1,8 +1,7 @@
 package scala.meta.internal.parsers
 
-import scala.meta.Dialect
-import scala.meta.Mod
 import scala.meta.tokens.Token
+import scala.meta.{Dialect, Mod}
 
 class SoftKeywords(dialect: Dialect) {
 

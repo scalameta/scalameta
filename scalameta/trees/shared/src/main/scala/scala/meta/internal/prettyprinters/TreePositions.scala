@@ -32,8 +32,7 @@ object SliceStyle {
 @implicitNotFound(msg = "don't know how to show[Positions] for ${T}")
 trait Positions[T] extends Show[T]
 object Positions {
-  import Show.{repeat => r}
-  import Show.{sequence => s}
+  import Show.{repeat => r, sequence => s}
 
   def apply[T](f: T => Show.Result): Positions[T] = new Positions[T] {
     def apply(input: T) = f(input)

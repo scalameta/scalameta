@@ -4,12 +4,8 @@ import scala.meta.io._
 
 import java.net.URI
 import java.nio.charset.Charset
-import java.nio.file.FileSystem
-import java.nio.file.FileSystemAlreadyExistsException
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.OpenOption
-import java.nio.file.Path
+import java.nio.file.{FileSystem, FileSystemAlreadyExistsException, FileSystems, Files, OpenOption,
+  Path}
 import java.util
 import java.util.stream.Collectors
 

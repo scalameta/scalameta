@@ -1,13 +1,10 @@
 package scala.meta.internal
 
-import scala.meta.internal.io.InputStreamIO
-import scala.meta.internal.io.OutputStreamIO
-import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
-import scala.meta.internal.semanticdb.SymbolInformation.{Property => p}
+import scala.meta.internal.io.{InputStreamIO, OutputStreamIO}
+import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k, Property => p}
 import scala.meta.internal.semanticdb.{Language => l}
 
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.{InputStream, OutputStream}
 
 package object semanticdb {
 

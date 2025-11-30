@@ -5,8 +5,7 @@ import scala.meta.internal._
 import scala.meta.io._
 import scala.meta.tokenizers.TokenizerOptions
 
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.{file => nio}
 
 sealed trait Input extends Product with Serializable with inputs.InternalInput {

@@ -5,12 +5,9 @@ import scala.meta.internal.io._
 import scala.meta.io._
 
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Success, Try}
 
 import munit.FunSuite
 

@@ -9,8 +9,7 @@ import scala.meta.dialects
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Messages
 import scala.meta.internal.trees._
-import scala.meta.internal.trees.{Liftables => AstLiftables}
-import scala.meta.internal.trees.{Reflection => AstReflection}
+import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection}
 import scala.meta.parsers._
 import scala.meta.quasiquotes._
 import scala.meta.tokenizers._
@@ -109,9 +108,8 @@ object ReificationMacros {
 
 class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuotes {
   rei =>
-  import scala.meta.Dialect
   import scala.meta.inputs.{Position => MetaPosition, _}
-  import scala.meta.{Tree => MetaTree}
+  import scala.meta.{Dialect, Tree => MetaTree}
 
   import ReificationMacros._
   import internalQuotes.reflect._

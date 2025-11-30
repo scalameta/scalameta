@@ -3,16 +3,14 @@ package scala.meta.internal.semanticdb.scalac
 import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Scala._
-import scala.meta.internal.semanticdb.Scala.{Descriptor => d}
-import scala.meta.internal.semanticdb.Scala.{Names => n}
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.{semanticdb => s}
 
 import java.util.HashMap
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile}
-import scala.reflect.internal.util.{SourceFile => GSourceFile}
+import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile, SourceFile => GSourceFile}
 import scala.reflect.internal.{Flags => gf}
 import scala.util.control.NonFatal
 import scala.{meta => m}

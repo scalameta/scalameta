@@ -8,8 +8,7 @@ import java.io.File
 
 import scala.reflect.io.VirtualDirectory
 import scala.tools.nsc.Settings
-import scala.tools.nsc.interactive.Global
-import scala.tools.nsc.interactive.Response
+import scala.tools.nsc.interactive.{Global, Response}
 import scala.tools.nsc.reporters.StoreReporter
 
 object InteractiveSemanticdb extends VersionCompilerOps {

@@ -7,8 +7,7 @@ import scala.meta.inputs._
 import scala.meta.internal.inputs._
 import scala.meta.internal.tokens.Chars._
 
-import scala.annotation.switch
-import scala.annotation.tailrec
+import scala.annotation.{switch, tailrec}
 import scala.collection.mutable
 
 class LegacyScanner(input: Input, dialect: Dialect) {

@@ -6,7 +6,6 @@ import org.scalameta._
 import org.scalameta.adt.{Liftables => AdtLiftables}
 import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
-import scala.meta.dialects
 import scala.meta.inputs.{Position => MetaPosition, _}
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Messages
@@ -14,7 +13,7 @@ import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstRe
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.trees.Origin
-import scala.meta.{Tree => MetaTree}
+import scala.meta.{Tree => MetaTree, dialects}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -26,10 +25,8 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
 
-  import c.universe.{Position => ReflectPosition}
-  import c.universe.{Position => _, Symbol => _, Tree => _, Type => _, _}
-  import c.universe.{Symbol => ReflectSymbol}
-  import c.universe.{Tree => ReflectTree}
+  import c.universe.{Position => ReflectPosition, Symbol => ReflectSymbol, Tree => ReflectTree,
+    Type => _, _}
 
   type MetaParser = (Input, Dialect) => MetaTree
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"

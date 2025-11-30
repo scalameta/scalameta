@@ -2,8 +2,7 @@ package scala.meta.tests.semanticdb
 
 import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.metap.PrinterSymtab
-import scala.meta.internal.semanticdb.Print
-import scala.meta.internal.semanticdb.SymbolInformation
+import scala.meta.internal.semanticdb.{Print, SymbolInformation}
 import scala.meta.internal.symtab.GlobalSymbolTable
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.metap.Format
