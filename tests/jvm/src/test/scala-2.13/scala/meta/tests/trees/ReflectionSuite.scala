@@ -68,8 +68,10 @@ class ReflectionSuite extends TreeSuiteBase {
   test("allFields") {
     val allRelevantFields = symbolOf[scala.meta.Tree].asRoot.allLeafs
       .filter(!_.sym.fullName.endsWith(".Quasi")).flatMap(_.fields)
-    val duplicateRelevantFieldTpes = allRelevantFields.map(_.tpe)
-      .map { case AnnotatedType(_, tpe) => tpe; case tpe => tpe }
+    val duplicateRelevantFieldTpes = allRelevantFields.map(_.tpe).map {
+      case AnnotatedType(_, tpe) => tpe
+      case tpe => tpe
+    }
     // NOTE: we can't just do `duplicateRelevantFieldTpes.distinct`, because that doesn't account for `=:=`
     val distinctRelevantFieldTpes = ListBuffer[Type]()
     duplicateRelevantFieldTpes.foreach(tpe =>

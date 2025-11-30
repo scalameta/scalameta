@@ -106,7 +106,8 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
         val nameParts = adt.sym.fullName.split('.')
         if (adt.sym.isClass) {
           val args = getArgs(adt match {
-            case leaf: Leaf => leaf.fields(isPrivateOK).map(_.name); case _ => Nil
+            case leaf: Leaf => leaf.fields(isPrivateOK).map(_.name)
+            case _ => Nil
           })
           val latestAfterVersion =
             if (adt.sym.isAstClass) {

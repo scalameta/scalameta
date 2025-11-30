@@ -142,7 +142,10 @@ class NIOPathTest extends FunSuite {
         val actualNames = Seq.newBuilder[String]
         var idx = 0
         while (Try(path.getName(idx)) match {
-            case Success(name) => idx += 1; actualNames += name.toString; true
+            case Success(name) =>
+              idx += 1
+              actualNames += name.toString
+              true
             case _ => false
           }) {}
         assertEquals((actualRoot, actualNames.result(), path.getNameCount), (root, names, cnt))

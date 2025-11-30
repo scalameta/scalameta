@@ -364,7 +364,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           if (outdent eq null) mkOutdentsOpt(rs, isDone, head, last, multiEOL)
           else {
             val tr = mkOutdentTo(outdent, rs)
-            val newHead = if (head eq null) tr else { last.next = tr; head }
+            val newHead =
+              if (head eq null) tr
+              else {
+                last.next = tr
+                head
+              }
             mkOutdentsOpt(rs, isDone, newHead, tr, multiEOL)
           }
       }

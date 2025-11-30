@@ -46,7 +46,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       }
       getToken(next) match {
         case nt: Token.Whitespace => emitTokenWhitespace(nt)
-        case nt => whitespaceTokenizer.flush(); nt
+        case nt =>
+          whitespaceTokenizer.flush()
+          nt
       }
     }
     def emitTokenInterpolation(token: Token.Interpolation.Id) = {

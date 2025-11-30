@@ -69,7 +69,8 @@ trait Reflection {
     private def ensureModule(sym: Symbol): Symbol =
       if (sym.isModuleClass) sym.owner.info.member(sym.name.toTermName) else sym
     def branches: List[Symbol] = {
-      sym.initialize; figureOutDirectSubclasses(sym.asClass).filter(_.isBranch)
+      sym.initialize
+      figureOutDirectSubclasses(sym.asClass).filter(_.isBranch)
     }
     def allBranches: List[Symbol] = (sym.branches ++ sym.branches.flatMap(_.allBranches)).distinct
     def leafs: List[Symbol] = {

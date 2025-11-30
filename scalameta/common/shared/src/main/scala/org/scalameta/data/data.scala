@@ -64,7 +64,10 @@ class DataMacros(val c: Context) extends MacroHelpers {
           }
           def present = {
             val where = if (companion) mstats else stats
-            where.exists { case mdef: MemberDef => mdef.name == name; case _ => false }
+            where.exists {
+              case mdef: MemberDef => mdef.name == name
+              case _ => false
+            }
           }
           !ban && (duplicate || !present)
         }

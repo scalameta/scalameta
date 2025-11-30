@@ -171,7 +171,9 @@ trait TextDocumentOps {
               pat.traverse {
                 case pat: m.Pat.Extract => indexPatsWithExtract(pat)
                 case pat: m.Pat.Var =>
-                  val npos = pat.name.pos; mvalpatstart += npos.start; msinglevalpats(mpos) = npos
+                  val npos = pat.name.pos
+                  mvalpatstart += npos.start
+                  msinglevalpats(mpos) = npos
               }
             case pats => indexPats(pats)
           }
@@ -180,7 +182,9 @@ trait TextDocumentOps {
               case mtree: m.Term.Apply => setArgNames(mtree.fun.pos.end :: Nil)(mtree.argClause)
               case m.Mod.WithWithin(mname: m.Name.Indeterminate) => indexWithin(mname)
               // NOTE: ignore mrename for now, we may decide to make it a binder
-              case m.Importee.Rename(mname, _) => indexName(mname); return
+              case m.Importee.Rename(mname, _) =>
+                indexName(mname)
+                return
               case mtree: m.Term.Super => msupers.update(mtree.pos.end, mtree)
               case mtree: m.Ctor => mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
@@ -191,7 +195,8 @@ trait TextDocumentOps {
               case _: m.Name.Anonymous | _: m.Name.Placeholder | _: m.Name.This =>
               case mtree: m.Name => indexName(mtree)
               case mtree @ (_: m.Term.FunctionLike | _: m.Term.AnonymousFunction) =>
-                val mpos = mtree.pos; mfuncs.update(mpos.start, mpos)
+                val mpos = mtree.pos
+                mfuncs.update(mpos.start, mpos)
               case mtree: m.Tree.WithPats => mtree.pats match {
                   case (_: m.Pat.Var) :: Nil =>
                   case pats => indexPats(pats)
@@ -326,7 +331,9 @@ trait TextDocumentOps {
             // Unfortunately, this is often not the case as demonstrated by a bunch of cases above and below.
             val gstartMtree = mstarts.get(gstart)
             gstartMtree match {
-              case Some(mtree) if mtree.pos.end == gend => success(mtree, gsym); return
+              case Some(mtree) if mtree.pos.end == gend =>
+                success(mtree, gsym)
+                return
               case _ =>
             }
 
@@ -527,12 +534,18 @@ trait TextDocumentOps {
           syntheticTreeCache.getOrElseUpdate(
             gt,
             // if v is None, no synthetic; if v has no range, cache for parents but don't output
-            { val v = res; v.foreach(s => if (s.range.isDefined) synthetics += s); v }
+            {
+              val v = res
+              v.foreach(s => if (s.range.isDefined) synthetics += s)
+              v
+            }
           )
 
         def getCached(gt: g.Tree): Option[s.Synthetic] = cached(gt) {
           gt match {
-            case t: g.ApplyImplicitView => val pos = t.toRange; syn(pos, getApplyImplicitView(t, pos))
+            case t: g.ApplyImplicitView =>
+              val pos = t.toRange
+              syn(pos, getApplyImplicitView(t, pos))
             case t: g.ApplyToImplicitArgs =>
               val pos = t.toRange
               t.fun match {
@@ -542,7 +555,8 @@ trait TextDocumentOps {
               }
             case t: g.TypeApply => getTypeApply(t, isWithinFor = false)
             case t: g.Apply =>
-              val res = cachedIfSelect(t.fun); if (res.isEmpty) forApply(t) else None
+              val res = cachedIfSelect(t.fun)
+              if (res.isEmpty) forApply(t) else None
             case t: g.Select => getSelect(t)
             case _ => None
           }
@@ -564,8 +578,10 @@ trait TextDocumentOps {
           }
         }
 
-        private def cachedIfSelect(gt: g.Tree, usePos: Boolean = true) =
-          gt match { case t: g.Select => cached(t)(getSelect(t, usePos = usePos)); case _ => None }
+        private def cachedIfSelect(gt: g.Tree, usePos: Boolean = true) = gt match {
+          case t: g.Select => cached(t)(getSelect(t, usePos = usePos))
+          case _ => None
+        }
 
         private def getTypeApply(gt: g.TypeApply, isWithinFor: Boolean): Option[s.Synthetic] = {
           def res(fun: s.Tree) = s.TypeApplyTree(fun, gt.args.map(_.tpe.toSemanticTpe))
@@ -573,7 +589,12 @@ trait TextDocumentOps {
             case Some(fun) => syn(res(fun.tree))
             case _ if gt.args.headOption.exists(!_.pos.isRange) =>
               val pos = gt.fun.toRange
-              def noApply = gt.fun match { case f: g.Apply => cached(f)(None); f.fun; case f => f }
+              def noApply = gt.fun match {
+                case f: g.Apply =>
+                  cached(f)(None)
+                  f.fun
+                case f => f
+              }
               def fun = cachedIfSelect(noApply, false).fold[s.Tree](pos.toSemanticOriginal)(_.tree)
               syn(pos, res(fun))
             case _ => None

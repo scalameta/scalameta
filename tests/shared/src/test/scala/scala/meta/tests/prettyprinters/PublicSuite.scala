@@ -223,7 +223,10 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.parsers.Parsed.Error.toString") {
     val parsed = "foo + class".parse[Term]
-    parsed match { case _: Parsed.Error => ; case _ => }
+    parsed match {
+      case _: Parsed.Error =>
+      case _ =>
+    }
     assertEquals(
       parsed.toString,
       """|<input>:1: error: `end of file` expected but `class` found
@@ -234,13 +237,19 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.parsers.Parsed.Success.toString") {
     val parsed = "foo + bar".parse[Term]
-    parsed match { case _: Parsed.Success[_] => ; case _ => }
+    parsed match {
+      case _: Parsed.Success[_] =>
+      case _ =>
+    }
     assertEquals(parsed.toString, "foo + bar")
   }
 
   test("scala.meta.tokenizers.Tokenized.Success.toString") {
     val tokenized = "foo + bar".tokenize
-    tokenized match { case _: Tokenized.Success => ; case _ => }
+    tokenized match {
+      case _: Tokenized.Success =>
+      case _ =>
+    }
     assertEquals(tokenized.toString, "foo + bar")
   }
 

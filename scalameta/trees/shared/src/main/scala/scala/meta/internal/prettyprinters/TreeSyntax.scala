@@ -148,7 +148,8 @@ object TreeSyntax {
       }
       @leaf
       object Literal extends Term with Pat with Type {
-        override def categories = List("Term", "Pat", "Type"); def precedence = 6
+        override def categories = List("Term", "Pat", "Type")
+        def precedence = 6
       }
       require(
         Literal.precedence == Term.SimpleExpr1.precedence &&
@@ -156,7 +157,8 @@ object TreeSyntax {
       )
       @leaf
       object Path extends Type with Term with Pat {
-        override def categories = List("Type", "Term", "Pat"); def precedence = 6
+        override def categories = List("Type", "Term", "Pat")
+        def precedence = 6
       }
       require(
         Path.precedence == Type.SimpleTyp.precedence &&
@@ -385,10 +387,14 @@ object TreeSyntax {
       }
       cantBeWrittenWithoutBackquotes(t) || t.parent.exists(isAmbiguousInParent(t))
     }
-    def guessHasExpr(t: Term.Return): Boolean =
-      t.expr match { case Lit.Unit() => false; case _ => true }
-    def guessHasElsep(t: Term.If): Boolean =
-      t.elsep match { case Lit.Unit() => false; case e => true }
+    def guessHasExpr(t: Term.Return): Boolean = t.expr match {
+      case Lit.Unit() => false
+      case _ => true
+    }
+    def guessHasElsep(t: Term.If): Boolean = t.elsep match {
+      case Lit.Unit() => false
+      case e => true
+    }
     def guessHasBraces(t: Pkg): Boolean = {
       @tailrec
       def isOnlyChildOfOnlyChild(t: Tree): Boolean = t.parent match {
@@ -1029,7 +1035,9 @@ object TreeSyntax {
     )(ifEmpty: => Boolean): Boolean = dialect.allowImprovedTypeClassesSyntax &&
       (pcgs match {
         case Nil => ifEmpty
-        case pcg :: Nil => val pcs = pcg.paramClauses; pcs.nonEmpty && pcs.forall(_.mod.isEmpty)
+        case pcg :: Nil =>
+          val pcs = pcg.paramClauses
+          pcs.nonEmpty && pcs.forall(_.mod.isEmpty)
         case _ => true
       })
 

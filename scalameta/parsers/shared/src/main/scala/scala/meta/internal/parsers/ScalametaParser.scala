@@ -162,7 +162,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ =>
     }
   }
-  def nextTwice() = { next(); next() }
+  def nextTwice() = {
+    next()
+    next()
+  }
 
   @inline
   private def nextIf(cond: Boolean): Boolean = {
@@ -469,8 +472,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def acceptIf(unapply: Token => Boolean): Boolean = nextIf(unapply(currToken))
 
   private def acceptIfAfterOpt(unapplyA: Token => Boolean, unapplyB: Token => Boolean): Boolean =
-    if (unapplyA(currToken)) { next(); true }
-    else if (unapplyB(currToken) && unapplyA(peekToken)) { nextTwice(); true } else false
+    if (unapplyA(currToken)) {
+      next()
+      true
+    } else if (unapplyB(currToken) && unapplyA(peekToken)) {
+      nextTwice()
+      true
+    } else false
 
   private def acceptIfAfterOpt[A <: Token: ClassTag](unapply: Token => Boolean): Boolean =
     acceptIfAfterOpt(_.is[A], unapply)
@@ -781,7 +789,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       val quants = typeParamClauseOpt()
       newLineOpt()
       currToken match {
-        case _: TypeLambdaArrow => next(); Type.Lambda(quants, typeIndentedOpt())
+        case _: TypeLambdaArrow =>
+          next()
+          Type.Lambda(quants, typeIndentedOpt())
         case t: RightArrow =>
           next()
           typeIndentedOpt() match {
@@ -801,7 +811,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
 
       getAfterOptNewLine(currToken match {
         case _: KwForsome => Some(existentialTypeOnForSome(t))
-        case _: KwMatch if dialect.allowTypeMatch => next(); Some(Type.Match(t, typeCaseClauses()))
+        case _: KwMatch if dialect.allowTypeMatch =>
+          next()
+          Some(Type.Match(t, typeCaseClauses()))
         case _ => typeFuncOnArrowOpt(startPos, t :: Nil, inParam = inParam)
       }).getOrElse(t)
     }
@@ -809,7 +821,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     private def paramValueType(allowRepeated: Boolean = false): Type = {
       val startPos = currIndex
       def withRepeated(t: Type) =
-        if (allowRepeated && isStar) { next(); autoEndPos(startPos)(Type.Repeated(t)) } else t
+        if (allowRepeated && isStar) {
+          next()
+          autoEndPos(startPos)(Type.Repeated(t))
+        } else t
       def atInto() = {
         val intoPos = currIndex
         val mod = atPos(intoPos)(Mod.Into())
@@ -828,7 +843,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       def byNameParamValueType =
         paramValueType(allowRepeated = dialect.allowByNameRepeatedParameters)
       currToken match {
-        case _: RightArrow => autoPos { next(); Type.ByName(byNameParamValueType) }
+        case _: RightArrow => autoPos {
+            next()
+            Type.ByName(byNameParamValueType)
+          }
         case soft.KwPureFunctionArrow() =>
           val startPos = currIndex
           next()
@@ -868,7 +886,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     private def typeCaptures(needCaret: Boolean, allowCaptures: Boolean): Option[List[Term.Ref]] =
       if (allowCaptures && dialect.allowCaptureChecking) {
         def ifCaret[A](thenPart: => A, elsePart: => A): A = currToken match {
-          case t: Token.Ident if t.text == "^" => next(); thenPart
+          case t: Token.Ident if t.text == "^" =>
+            next()
+            thenPart
           case _ => elsePart
         }
         def captures(): Option[List[Term.Ref]] = Some(commaSeparated(path() match {
@@ -1095,12 +1115,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case _: LeftParen => makeTupleType(startPos, typesInParens())
         case MacroSplicedIdent(ident) => Type.Macro(macroSplicedIdent(ident))
         case _: MacroSplice => Type.Macro(macroSplice())
-        case _: Underscore if inMatchType => next(); Type.PatWildcard()
+        case _: Underscore if inMatchType =>
+          next()
+          Type.PatWildcard()
         case _: Underscore
             if dialect.allowUnderscoreAsTypePlaceholder ||
               dialect.allowTypeLambdas && !PatternTypeContext.isInside() &&
               TypeBracketsContext.isDeeper(1) && !peek[Supertype, Subtype] =>
-          next(); Type.AnonymousParam(None)
+          next()
+          Type.AnonymousParam(None)
         case _: Underscore => wildcardType()
         case _: Literal =>
           if (dialect.allowLiteralTypes) literal()
@@ -1110,7 +1133,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case t: Token.Ident if !inMatchType =>
           t.text match {
             case soft.QuestionMarkAsTypeWildcard() => wildcardType()
-            case soft.StarAsTypePlaceholder(value) => next(); anonymousParamWithVariant(value)
+            case soft.StarAsTypePlaceholder(value) =>
+              next()
+              anonymousParamWithVariant(value)
             case value @ TParamVariantStr(mod)
                 if (dialect.allowPlusMinusUnderscoreAsIdent ||
                   dialect.allowUnderscoreAsTypePlaceholder) && tryAhead[Underscore] =>
@@ -1203,7 +1228,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def path(thisOK: Boolean = true): Term.Ref = {
     val startsAtBof = prev[BOF]
     def afterDot[A <: Term.Ref](ref: A)(f: PartialFunction[Token, A => Term.Ref]): Term.Ref =
-      if (!at[Dot]) ref else f.lift(peekToken) match { case Some(f) => next(); f(ref); case _ => ref }
+      if (!at[Dot]) ref
+      else f.lift(peekToken) match {
+        case Some(f) =>
+          next()
+          f(ref)
+        case _ => ref
+      }
     @inline
     def maybeSelectors(ref: Term.Ref): Term.Ref = afterDot(ref) { case _: Ident | _: Unquote =>
       selectors
@@ -1338,7 +1369,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ =>
     }
     val interpolator = atCurPos(currToken match {
-      case Interpolation.Id(value) => next(); Term.Name(value)
+      case Interpolation.Id(value) =>
+        next()
+        Term.Name(value)
       case _ => syntaxErrorExpected[Interpolation.Id]
     })
     accept[Interpolation.Start]
@@ -1550,8 +1583,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           }
 
           if (acceptIfAfterOptNL[KwCatch]) currToken match {
-            case _: KwCase =>
-              tryWithCases(Some(autoPos { next(); toCasesBlock(caseClause(true) :: Nil) }))
+            case _: KwCase => tryWithCases(Some(autoPos {
+                next()
+                toCasesBlock(caseClause(true) :: Nil)
+              }))
             case _: Indentation.Indent => tryInDelims(indentedOnOpen)
             case _: LeftBrace => tryInDelims(inBracesOnOpen)
             case _ => tryWithHandler(expr())
@@ -1620,7 +1655,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     @inline
     def addPos[T <: Tree](body: T) = autoEndPos(startPos)(body)
     def repeatedTerm(t: Term, nextTokens: () => Unit): Term =
-      if (allowRepeated) addPos { nextTokens(); Term.Repeated(t) }
+      if (allowRepeated) addPos {
+        nextTokens()
+        Term.Repeated(t)
+      }
       else syntaxError("repeated argument not allowed here", at = currToken)
     @tailrec
     def iter(t: Term): Term = currToken match {
@@ -1785,7 +1823,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         case Nil => Some(params.toList)
         case head :: tail => convertToParam(head) match {
             case None => None
-            case Some(p) => params += p; iter(tail)
+            case Some(p) =>
+              params += p
+              iter(tail)
           }
       }
       iter(t.args)
@@ -1953,7 +1993,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   private def getLeadingInfix[A <: Name, B](lf: InfixLF)(f: String => A)(g: A => B): Option[B] =
     peekToken match {
       case op: Ident =>
-        def res = Some(g(atCurPos { next(); newLineOpt(); f(op.value) }))
+        def res = Some(g(atCurPos {
+          next()
+          newLineOpt()
+          f(op.value)
+        }))
         tryAhead(if (peek[Indentation]) None else lf.invalid.fold(res)(syntaxError(_, at = op)))
       case _ => None
     }
@@ -2095,9 +2139,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       }
       (currToken, unary) match {
         case (tok: NumericConstant[_], unary: Unary.Numeric) =>
-          next(); rest(numericLiteralMaybeWithUnaryAt(tok, unary).fold(applyUnary, addPos))
+          next()
+          rest(numericLiteralMaybeWithUnaryAt(tok, unary).fold(applyUnary, addPos))
         case (tok: BooleanConstant, unary: Unary.Logical) =>
-          next(); rest(addPos(Lit.Boolean(unary(tok.value))))
+          next()
+          rest(addPos(Lit.Boolean(unary(tok.value))))
         case _ => otherwise
       }
     case _ => simpleExpr(allowRepeated)
@@ -2119,8 +2165,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: Ident | _: KwThis | _: KwSuper | _: Unquote => Success(path().become[Term])
       case _: Underscore => Success(atCurPosNext(Term.Placeholder()))
       case _: LeftParen => Success(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated))
-      case _: LeftBrace => canApply = false; Success(blockExprOnBrace())
-      case _: Indentation.Indent => canApply = false; Success(blockExprOnIndent())
+      case _: LeftBrace =>
+        canApply = false
+        Success(blockExprOnBrace())
+      case _: Indentation.Indent =>
+        canApply = false
+        Success(blockExprOnIndent())
       case _: KwNew =>
         canApply = false
         Success(autoPos {
@@ -2175,7 +2225,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             case _: Dot => true
             case t: OpenDelim if canApply => isIndentingOrEOL(t.is[LeftBrace])
             case _ => false
-          }) => next(); simpleExprRest(t, canApply, startPos)
+          }) =>
+        next()
+        simpleExprRest(t, canApply, startPos)
       case _: Dot =>
         next()
         val isMatch = dialect.allowMatchAsOperator && acceptOpt[KwMatch]
@@ -2201,7 +2253,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply => getFewerBracesApplyOnColon(t, startPos).getOrElse(t)
-      case _: Underscore if canApply => next(); addPos(Term.Eta(t))
+      case _: Underscore if canApply =>
+        next()
+        addPos(Term.Eta(t))
       case _ => t
     }
   }
@@ -2735,7 +2789,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
             }
           case _: MacroQuote => QuotedPatternContext.within(Pat.Macro(macroQuote()))
           case MacroQuotedIdent(ident) => Pat.Macro(macroQuotedIdent(ident))
-          case _: KwGiven => next(); Pat.Given(super.patternTyp(allowInfix = false))
+          case _: KwGiven =>
+            next()
+            Pat.Given(super.patternTyp(allowInfix = false))
           case t => onError(t)
         }
       }
@@ -2902,7 +2958,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       isLocal: Boolean = false,
       isParams: Boolean = false
   ): Unit = {
-    def append(mod: Mod): Unit = { buf += mod; newLinesOpt() }
+    def append(mod: Mod): Unit = {
+      buf += mod
+      newLinesOpt()
+    }
     // the only things that can come after $mod or $mods are either keywords or names; the former is easy,
     // but in the case of the latter, we need to take care to not hastily parse those names as modifiers
     def continueLoop = peekToken match {
@@ -2912,15 +2971,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     }
     @tailrec
     def loop: Unit = currToken match {
-      case _: AtEOL if !isLocal => next(); loop
-      case t: Unquote => if (!continueLoop) { append(unquote[Mod](t)); loop }
-      case t: Ellipsis => append(ellipsis[Mod](t, 1)); loop
+      case _: AtEOL if !isLocal =>
+        next()
+        loop
+      case t: Unquote => if (!continueLoop) {
+          append(unquote[Mod](t))
+          loop
+        }
+      case t: Ellipsis =>
+        append(ellipsis[Mod](t, 1))
+        loop
       case _: KwCase if peek[KwObject, KwClass] => buf += atCurPosNext(Mod.Case())
-      case t: ModifierKeyword => append(modifier(t, isLocal)); loop
+      case t: ModifierKeyword =>
+        append(modifier(t, isLocal))
+        loop
       case t: Ident if {
             if (isParams) !peek[Colon] && ParamsModifier.matches(t.value)
             else isSoftModifier(currIndex)
-          } => append(modifier(t, isLocal)); loop
+          } =>
+        append(modifier(t, isLocal))
+        loop
       case _ =>
     }
     loop
@@ -2979,8 +3049,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _: LeftParen if isFirst => onFirstParen
       case _: LeftBracket => onBracket
       case _: EOL => peekToken match {
-          case _: LeftParen if isFirst => next(); onFirstParen
-          case _: LeftBracket => next(); onBracket
+          case _: LeftParen if isFirst =>
+            next()
+            onFirstParen
+          case _: LeftBracket =>
+            next()
+            onBracket
           case _ => None
         }
       case _ => None
@@ -3066,7 +3140,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
     val varOrVarParamMod = currToken match {
       case _: KwVal => Some(atCurPosNext(Mod.ValParam()))
       case _: KwVar => Some(atCurPosNext(Mod.VarParam()))
-      case _ => if (hasExplicitMods) syntaxErrorExpected[KwVal]; None
+      case _ =>
+        if (hasExplicitMods) syntaxErrorExpected[KwVal]
+        None
     }
     varOrVarParamMod.foreach(mods += _)
 
@@ -3121,7 +3197,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
         val name = currToken match {
           case t: Ident => peekToken match {
               case p: Token.Ident if dialect.allowCaptureChecking && p.text == "^" =>
-                autoPos { nextTwice(); Type.CapSetName(t.value) }
+                autoPos {
+                  nextTwice()
+                  Type.CapSetName(t.value)
+                }
               case _ => typeName(t)
             }
           case t: Unquote => unquote[Name](t)
@@ -3228,10 +3307,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   def importWildcardOrName(): Importee = {
     val startPos = currIndex
     autoEndPos(startPos)(currToken match {
-      case Wildcard() => next(); Importee.Wildcard()
-      case _: KwGiven => next(); if (at[Ident]) Importee.Given(typ()) else Importee.GivenAll()
+      case Wildcard() =>
+        next()
+        Importee.Wildcard()
+      case _: KwGiven =>
+        next()
+        if (at[Ident]) Importee.Given(typ()) else Importee.GivenAll()
       case t: Unquote => Importee.Name(unquote[Name.Quasi](t))
-      case t: Ident => next(); Importee.Name(atPos(startPos)(Name.Indeterminate(t.value)))
+      case t: Ident =>
+        next()
+        Importee.Name(atPos(startPos)(Name.Indeterminate(t.value)))
       case _ => syntaxErrorExpected[Ident]
     })
   }
@@ -3390,7 +3475,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       Defn.Given(mods, sig.name, sig.pcg, rhs)
     }
     currToken match {
-      case _: Equals => next(); Defn.GivenAlias(mods, sig.name, sig.pcg, decltype, expr())
+      case _: Equals =>
+        next()
+        Defn.GivenAlias(mods, sig.name, sig.pcg, decltype, expr())
       case _: KwWith | _: LeftParen => getDefnGiven()
       case _: Comma | _: LeftBrace | _: Colon if newSyntaxOK => getDefnGiven()
       case _ => sig.name match {
@@ -3761,7 +3848,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       name: Name.This,
       paramss: Seq[Term.ParamClause]
   ): Ctor.Secondary = {
-    val hasLeftBrace = isAfterOptNewLine[LeftBrace] || { accept[Equals]; at[LeftBrace] }
+    val hasLeftBrace = isAfterOptNewLine[LeftBrace] || {
+      accept[Equals]
+      at[LeftBrace]
+    }
     val body = autoPos(
       if (hasLeftBrace) inBracesOnOpen(constrInternal())
       else indentedOr(constrInternal())(Ctor.Block(initInsideConstructor(), Nil))
@@ -3822,8 +3912,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
           case _ => false
         })
         currToken match {
-          case _: LeftParen if allowParens => argss += getArgClauseOnParen(); true
-          case _: LeftBrace if allowBraces => argss += getArgClauseOnBrace(); true
+          case _: LeftParen if allowParens =>
+            argss += getArgClauseOnParen()
+            true
+          case _: LeftBrace if allowBraces =>
+            argss += getArgClauseOnBrace()
+            true
           case _ => false
         }
       }
@@ -3916,7 +4010,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
   ): List[Init] = {
     def impl(isSeparator: => Boolean) =
       if (!isSeparator) None
-      else Some(listBy[Init] { x => x += first; doWhile { next(); x += init() }(isSeparator) })
+      else Some(listBy[Init] { x =>
+        x += first
+        doWhile {
+          next()
+          x += init()
+        }(isSeparator)
+      })
     // whitespace includes Indent and AtEOL
     (if (allowWithBody) impl(at[KwWith] && !peek[Whitespace, LeftBrace]) else impl(at[KwWith]))
       .orElse(if (allowComma && dialect.allowCommaSeparatedExtend) impl(at[Comma]) else None)
@@ -4209,7 +4309,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect) {
       case _ => syntaxError("illegal start of statement", at = currToken)
     }
 
-    if (cond()) doWhile(stats += getStat())(notCaseDefEnd() && { acceptStatSep(); cond() })
+    if (cond()) doWhile(stats += getStat())(notCaseDefEnd() && {
+      acceptStatSep()
+      cond()
+    })
     if (allowRepeated && stats.length > 1) stats.foreach {
       case t: Term.Repeated => syntaxError("repeated argument not allowed here", at = t)
       case _ =>

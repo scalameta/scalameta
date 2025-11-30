@@ -22,7 +22,7 @@ trait FreeLocalFinder {
         sym match {
           case sym: ClassSymbol => registerLocalSym(sym.module)
           case sym: ModuleSymbol => registerLocalSym(sym.moduleClass)
-          case _ => ;
+          case _ =>
         }
       }
       override def traverse(tree: Tree): Unit = {
@@ -32,7 +32,8 @@ trait FreeLocalFinder {
               if (!sym.owner.isClass && !sym.isMethod) localRefs += tree
           case _: This => if (!sym.isPackageClass) localRefs += tree
           case _: DefTree | _: Function | _: Template =>
-            processLocalDef(tree.symbol); super.traverse(tree)
+            processLocalDef(tree.symbol)
+            super.traverse(tree)
           case _ => super.traverse(tree)
         }
       }
