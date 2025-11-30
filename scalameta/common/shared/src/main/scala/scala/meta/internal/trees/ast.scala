@@ -103,7 +103,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats.foreach {
           case x: Import => importsBuilder += x
           case x: DefDef if !isQuasi && x.name == TermName("copy") =>
-            istats1 += x; needCopies = false
+            istats1 += x
+            needCopies = false
           case x: ValOrDefDef =>
             if (x.mods.hasFlag(Flag.ABSTRACT) || x.rhs.isEmpty) c
               .abort(x.pos, "definition without a value")
@@ -349,7 +350,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             private val nmeParent = TermName("parent")
             override def traverse(tree: Tree): Unit = tree match {
               case _: This =>
-                hasErrors = true; c.error(tree.pos, "cannot refer to this in @ast field checks")
+                hasErrors = true
+                c.error(tree.pos, "cannot refer to this in @ast field checks")
               case Ident(`nmeParent`) =>
                 hasErrors = true
                 c.error(
@@ -641,7 +643,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val mdef1 =
           q"$mmods1 object $mname extends { ..$mearlydefns } with ..$mparents1 { $mself => ..$mstats1 }"
         res += mdef1
-        if (c.compilerSettings.contains("-Xprint:typer")) { println(cdef1); println(mdef1) }
+        if (c.compilerSettings.contains("-Xprint:typer")) {
+          println(cdef1)
+          println(mdef1)
+        }
         res.result()
       }
     }

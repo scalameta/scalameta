@@ -50,8 +50,10 @@ class TokenNamerMacros(val c: Context) extends TokenNamerMacroHelpers {
         val mstats1 = ListBuffer[Tree]() ++ mstats
         val manns1 = ListBuffer[Tree]() ++ mmods.annotations
         def mmods1 = mmods.mapAnnotations(_ => manns1.toList)
-        def hasMethod(name: String): Boolean = stats1
-          .exists { case DefDef(_, TermName(`name`), _, _, _, _) => true; case _ => false }
+        def hasMethod(name: String): Boolean = stats1.exists {
+          case DefDef(_, TermName(`name`), _, _, _, _) => true
+          case _ => false
+        }
 
         // step 1: generate boilerplate required by the @adt infrastructure
         // NOTE: toString is inherited from Token, unapply is customized.

@@ -188,11 +188,16 @@ abstract class SemanticdbSuite extends FunSuite {
     (database, symbols)
   }
 
-  trait OverloadHack1; implicit object OverloadHack1 extends OverloadHack1
-  trait OverloadHack2; implicit object OverloadHack2 extends OverloadHack2
-  trait OverloadHack3; implicit object OverloadHack3 extends OverloadHack3
-  trait OverloadHack4; implicit object OverloadHack4 extends OverloadHack4
-  trait OverloadHack5; implicit object OverloadHack5 extends OverloadHack5
+  trait OverloadHack1
+  implicit object OverloadHack1 extends OverloadHack1
+  trait OverloadHack2
+  implicit object OverloadHack2 extends OverloadHack2
+  trait OverloadHack3
+  implicit object OverloadHack3 extends OverloadHack3
+  trait OverloadHack4
+  implicit object OverloadHack4 extends OverloadHack4
+  trait OverloadHack5
+  implicit object OverloadHack5 extends OverloadHack5
 
   def targeted(markup: String, fn: s.TextDocument => Unit)(implicit hack: OverloadHack1): Unit =
     test(markup) {

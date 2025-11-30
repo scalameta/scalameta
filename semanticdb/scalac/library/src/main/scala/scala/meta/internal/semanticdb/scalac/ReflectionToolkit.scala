@@ -54,9 +54,13 @@ trait ReflectionToolkit {
   implicit class XtensionMetadataAttachable[T: Attachable](carrier: T) {
     def metadata: Metadata[T] = new Metadata(carrier)
     def appendMetadata(kvps: (String, Any)*): T = {
-      kvps.foreach(kvp => carrier.metadata += kvp); carrier
+      kvps.foreach(kvp => carrier.metadata += kvp)
+      carrier
     }
-    def removeMetadata(keys: String*): T = { keys.foreach(key => carrier.metadata -= key); carrier }
+    def removeMetadata(keys: String*): T = {
+      keys.foreach(key => carrier.metadata -= key)
+      carrier
+    }
     def hasMetadata(key: String): Boolean = metadata.get(key).isDefined
   }
 

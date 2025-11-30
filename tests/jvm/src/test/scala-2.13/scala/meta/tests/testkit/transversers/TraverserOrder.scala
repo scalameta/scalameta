@@ -37,7 +37,10 @@ class TraverserOrder extends FunSuite {
   private def asList_Traverser(tree: Tree): List[Tree] = {
     val buf = mutable.ListBuffer[Tree]()
     object traverser extends Traverser {
-      override def apply(tree: Tree): Unit = { buf += tree; super.apply(tree) }
+      override def apply(tree: Tree): Unit = {
+        buf += tree
+        super.apply(tree)
+      }
     }
     traverser(tree)
     buf.toList
@@ -46,7 +49,10 @@ class TraverserOrder extends FunSuite {
   private def asList_SimpleTraverser(tree: Tree): List[Tree] = {
     val buf = mutable.ListBuffer[Tree]()
     object traverser extends SimpleTraverser {
-      override def apply(tree: Tree): Unit = { buf += tree; super.apply(tree) }
+      override def apply(tree: Tree): Unit = {
+        buf += tree
+        super.apply(tree)
+      }
     }
     traverser(tree)
     buf.toList

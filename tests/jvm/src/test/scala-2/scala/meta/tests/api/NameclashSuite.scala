@@ -17,8 +17,14 @@ class NameclashSuite extends FunSuite {
         val mirror: u.Mirror = u.runtimeMirror(classOf[scala.meta.tokens.Token].getClassLoader)
       }
       with scala.meta.internal.tokens.Reflection
-  val TreeRoot = { import TreeReflection._; ru.symbolOf[scala.meta.Tree].asRoot }
-  val TokenRoot = { import TokenReflection._; ru.symbolOf[scala.meta.tokens.Token].asRoot }
+  val TreeRoot = {
+    import TreeReflection._
+    ru.symbolOf[scala.meta.Tree].asRoot
+  }
+  val TokenRoot = {
+    import TokenReflection._
+    ru.symbolOf[scala.meta.tokens.Token].asRoot
+  }
 
   test("name clashes between top-level trees and tokens") {
     val tlTrees = TreeRoot.all.map(_.prefix)

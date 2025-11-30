@@ -69,7 +69,10 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         val nameParts = adt.sym.fullName.split('.')
         val body =
           if (adt.sym.isClass) {
-            val fields = adt match { case leaf: Leaf => leaf.fields(isPrivateOK); case _ => Nil }
+            val fields = adt match {
+              case leaf: Leaf => leaf.fields(isPrivateOK)
+              case _ => Nil
+            }
             val args = fields.map(f =>
               q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
               // NOTE: we can't really use AssignOrNamedArg here, sorry

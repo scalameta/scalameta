@@ -42,7 +42,11 @@ package object inputs {
         sb.append(pos.input.syntax).append(':').append(pos.startLine + 1).append(": ")
         appendMessage
         sb.append(EOL).append(lineContent).append(EOL)
-        var i = 0; while (i < pos.startColumn) { sb.append(' '); i += 1 }
+        var i = 0
+        while (i < pos.startColumn) {
+          sb.append(' ')
+          i += 1
+        }
         sb.append('^')
       } else appendMessage
       sb.result()

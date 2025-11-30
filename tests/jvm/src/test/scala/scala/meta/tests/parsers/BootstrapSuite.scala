@@ -24,7 +24,10 @@ class BootstrapSuite extends ParseSuite {
         val content = new String(Files.readAllBytes(src.toPath), StandardCharsets.UTF_8)
         // check #1: everything's covered
         var isFail = false
-        def fail(msg: String) = { isFail = true; println(msg) }
+        def fail(msg: String) = {
+          isFail = true
+          println(msg)
+        }
         val bitmap = new Array[Boolean](content.length)
         val tokenmap = scala.collection.mutable.Map[Int, List[Token]]()
         tokens.foreach { tok =>

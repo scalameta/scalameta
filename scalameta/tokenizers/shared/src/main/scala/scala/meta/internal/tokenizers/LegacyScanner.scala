@@ -63,7 +63,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     case SU => setInvalidToken(next)("unclosed comment")
     case '$' if isUnquoteNextNoDollar() =>
       setInvalidToken(next)("can't unquote into multi-line comments")
-    case _ => nextCommentChar(); skipNestedComments()
+    case _ =>
+      nextCommentChar()
+      skipNestedComments()
   }
 
   private def isAtEnd = endCharOffset >= buf.length
@@ -134,13 +136,17 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def pushSepRegions(sr: LegacyToken) = sepRegions = sr :: sepRegions
 
   private def popSepRegionsIf(token: LegacyToken) = sepRegions match {
-    case head :: tail if head == token => sepRegions = tail; true
+    case head :: tail if head == token =>
+      sepRegions = tail
+      true
     case _ => false
   }
 
   @tailrec
   private def popSepRegionsUntil(token: LegacyToken): Boolean = sepRegions match {
-    case head :: tail => sepRegions = tail; head == token || popSepRegionsUntil(token)
+    case head :: tail =>
+      sepRegions = tail
+      head == token || popSepRegionsUntil(token)
     case _ => false
   }
 
@@ -177,7 +183,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     val lastToken = prev.token
     // Adapt sepRegions according to last token
     (lastToken: @switch) match {
-      case EOF | PASTEOF => onEof; return prev
+      case EOF | PASTEOF =>
+        onEof
+        return prev
       case LPAREN => pushSepRegions(RPAREN)
       case LBRACKET => pushSepRegions(RBRACKET)
       case LBRACE => pushSepRegions(RBRACE)
@@ -414,8 +422,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         fetchSingleQuote()
       case '.' =>
         nextChar()
-        if (isDigit()) { putChar('.'); setFractionOnDot() }
-        else if (unquoteDialect != null && ch == '.') {
+        if (isDigit()) {
+          putChar('.')
+          setFractionOnDot()
+        } else if (unquoteDialect != null && ch == '.') {
           base = 0
           while (ch == '.') {
             base += 1
@@ -423,14 +433,30 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
           token = ELLIPSIS
         } else token = DOT
-      case ';' => nextChar(); token = SEMI
-      case ',' => nextChar(); token = COMMA
-      case '(' => nextChar(); token = LPAREN
-      case '{' => nextChar(); token = LBRACE
-      case ')' => nextChar(); token = RPAREN
-      case '}' => nextChar(); token = RBRACE
-      case '[' => nextChar(); token = LBRACKET
-      case ']' => nextChar(); token = RBRACKET
+      case ';' =>
+        nextChar()
+        token = SEMI
+      case ',' =>
+        nextChar()
+        token = COMMA
+      case '(' =>
+        nextChar()
+        token = LPAREN
+      case '{' =>
+        nextChar()
+        token = LBRACE
+      case ')' =>
+        nextChar()
+        token = RPAREN
+      case '}' =>
+        nextChar()
+        token = RBRACE
+      case '[' =>
+        nextChar()
+        token = LBRACKET
+      case ']' =>
+        nextChar()
+        token = RBRACKET
       case SU =>
         if (isAtEnd) {
           // NOTE: sometimes EOF's offset is `input.chars.length - 1`, and that might mess things up
@@ -440,8 +466,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           reportIllegalCharacter()
           nextChar()
         }
-      case '\u21D2' => nextChar(); token = ARROW
-      case '\u2190' => nextChar(); token = LARROW
+      case '\u21D2' =>
+        nextChar()
+        token = ARROW
+      case '\u2190' =>
+        nextChar()
+        token = LARROW
       case _ =>
         def fetchOther() =
           if (Character.isUnicodeIdentifierStart(ch)) {
@@ -486,7 +516,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   @tailrec
   private def getOperatorRest(): Unit = (ch: @switch) match {
     case '~' | '!' | '@' | '#' | '%' | '^' | '*' | '+' | '-' | '<' | '>' | '?' | ':' | '=' | '&' |
-        '|' | '\\' => putCharAndNext(); getOperatorRest()
+        '|' | '\\' =>
+      putCharAndNext()
+      getOperatorRest()
     case '/' =>
       val peekNextChar = peekRawChar().ch
       if (peekNextChar == '/' || peekNextChar == '*') finishNamed()
@@ -494,7 +526,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         putCharAndNext()
         getOperatorRest()
       }
-    case _ => if (isSpecial(ch)) { putCharAndNext(); getOperatorRest() } else finishNamed()
+    case _ =>
+      if (isSpecial(ch)) {
+        putCharAndNext()
+        getOperatorRest()
+      } else finishNamed()
   }
 
   // True means that we need to switch into unquote reading mode.
@@ -686,7 +722,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         case '\"' => '\"'
         case '\'' => '\''
         case '\\' => '\\'
-        case _ => putChar('\\'); ch
+        case _ =>
+          putChar('\\')
+          ch
       })
     } else if (isUnquoteDollar()) {} // bail and let the caller handle this
     else putCharAndNext()
@@ -704,9 +742,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   @tailrec
   private def readDigits(base: Int, prevSeparatorOffset: Int = -1): Unit =
-    if (digit2int(ch, base) >= 0) { putCharAndNext(); readDigits(base) }
-    else looksLikeNumberSeparator() match {
-      case Some(true) => val offset = begCharOffset; nextChar(); readDigits(base, offset)
+    if (digit2int(ch, base) >= 0) {
+      putCharAndNext()
+      readDigits(base)
+    } else looksLikeNumberSeparator() match {
+      case Some(true) =>
+        val offset = begCharOffset
+        nextChar()
+        readDigits(base, offset)
       case Some(false) => setInvalidToken(next)("numeric separators are not allowed")
       case _ if prevSeparatorOffset < 0 =>
       case _ => setInvalidToken(next, prevSeparatorOffset)("trailing number separator")
@@ -736,7 +779,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     else {
       cbuf.setLength(preExponentLen) // to make it a parsable value
       setInvalidToken(next) {
-        val isLeadingSeparator = isNumberSeparator() && { nextChar(); isDigit() }
+        val isLeadingSeparator = isNumberSeparator() && {
+          nextChar()
+          isDigit()
+        }
         if (isLeadingSeparator) "leading number separator"
         else s"Invalid literal floating-point number, exponent not followed by integer"
       }
