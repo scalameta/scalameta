@@ -136,6 +136,22 @@ private[meta] object Show {
     def headChar: Option[Char] = res.headChar
     override def serialize(implicit builder: Serializer): Unit = builder.indent(res)
   }
+  final case class NoSplit(res: Result) extends Result {
+    override def desc: String = s"NoSplit(r=${res.desc})"
+    def headChar: Option[Char] = res.headChar
+    override def serialize(implicit builder: Serializer): Unit =
+      if (builder.wasNL) builder.indent(res) else res.serialize
+  }
+  final case class Space(res: Result, space: String) extends Result {
+    override def desc: String = s"NoSplit(r=${res.desc})"
+    def headChar: Option[Char] = res.headChar
+    override def serialize(implicit builder: Serializer): Unit =
+      if (builder.wasNL) builder.indent(res)
+      else {
+        builder.append(space)
+        res.serialize
+      }
+  }
   final case object Blank extends Result {
     override def desc: String = s"Blank()"
     def headChar: Option[Char] = Option.empty
@@ -190,9 +206,10 @@ private[meta] object Show {
   ): Result = wrap(prefix, repeat(xs, sep), suffix)
 
   def repeat(xs: Result*): Result = repeat("")(xs: _*)
-  def repeat(sep: String)(xs: Result*): Result = {
-    val results = xs.filter(_ ne None)
-    if (results.isEmpty) None else Repeat(results, sep)
+  def repeat(sep: String)(xs: Result*): Result = xs.filter(_ ne None) match {
+    case Seq() => None
+    case Seq(head) => head
+    case res => Repeat(res, sep)
   }
   def repeat(prefix: String, sep: String, suffix: String)(xs: Result*): Result =
     wrap(prefix, repeat(sep)(xs: _*), suffix)
@@ -201,6 +218,10 @@ private[meta] object Show {
 
   def blank(): Result = Blank
   def blank(cond: Boolean): Result = if (cond) Blank else None
+
+  def space(x: Result, space: String): Result = if (x.isEmpty) None else Space(x, space)
+  def space[T](x: T)(implicit show: Show[T]): Result = space(show(x), " ")
+  def nosplit[T](x: T)(implicit show: Show[T]): Result = space(show(x), "")
 
   def newline(): Result = Newline(None)
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
@@ -245,7 +266,7 @@ private[meta] object Show {
   def function(fn: CharSequence => Result): Result = Function(fn)
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)
-  implicit def printString[T <: String]: Show[T] = apply(Show.Str(_))
-  implicit def stringAsResult(value: String): Result = if (value.isEmpty) None else Show.Str(value)
+  implicit def printString[T <: String]: Show[T] = apply(str)
+  implicit def str(value: String): Result = if (value.isEmpty) None else Str(value)
   implicit def showAsResult[T](x: T)(implicit show: Show[T]): Result = show(x)
 }
