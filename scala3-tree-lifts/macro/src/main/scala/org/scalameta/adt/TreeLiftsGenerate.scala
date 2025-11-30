@@ -2,6 +2,7 @@ package org.scalameta.adt
 
 import org.scalameta.adt.Metadata.Adt
 import scala.meta.internal.trees.AstNamerMacros
+import scala.meta.internal.trees.CommonNamerMacros
 import scala.meta.internal.trees.{Reflection => AdtReflection}
 
 import scala.language.experimental.macros
@@ -19,7 +20,7 @@ object TreeLiftsGenerate {
 // into another macro code, which reference other methods from that macro code.
 // Here, we instead generate a scala file for use as part of the macro, and we
 // expose these methods via the TreeLiftsTrait trait.
-class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
+class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonNamerMacros {
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
@@ -34,6 +35,9 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
     .asClass
   lazy val PatTypedSymbol = c.mirror.staticModule("scala.meta.Pat").info.member(TypeName("Typed"))
     .asClass
+
+  private lazy val privateFields = getPrivateFields(TypeName(c.freshName())).asList
+    .collect { case PrivateField(field, true) => field.name }
 
   def customAdts(root: Root): Option[List[Adt]] = {
     val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiSymbol.toType))
@@ -65,7 +69,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
           |    $localName match {
           |      case ApplyToTripleDots(fn, acq) =>
           |        checkNoTripleDots(fn)
-          |        treeByMode('{sm.internal.trees.Syntactic.TermApply.ArgList}, None, term(fn), term(List(acq)))
+          |        treeByMode('{sm.internal.trees.Syntactic.TermApply.ArgList})(term(fn), term(List(acq)))
           |      case _ => $body
           |    }
           |""".stripMargin
@@ -92,6 +96,8 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
       c.abort(c.enclosingPosition, message)
     }
     val localName = c.freshName(TermName("x"))
+    def getArgs(fields: List[TermName]) = fields.map(f => s"term($localName.$f)").mkString(", ")
+    val privateArgs = getArgs(privateFields)
     val defNames = adts.map(adt => "lift" + adt.prefix.capitalize.replace(".", ""))
     val liftAdts = adts.zip(defNames).map { case (adt, defName) =>
       val defaultBody: String = customMatcher(adt, defName, localName).getOrElse {
@@ -99,8 +105,9 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
         def getNamePath(parts: Iterable[String]) = parts.foldLeft(init)((acc, part) => s"$acc.$part")
         val nameParts = adt.sym.fullName.split('.')
         if (adt.sym.isClass) {
-          val fields = adt match { case leaf: Leaf => leaf.fields(isPrivateOK); case _ => Nil }
-          val args = fields.map(f => s"term($localName.${f.name})")
+          val args = getArgs(adt match {
+            case leaf: Leaf => leaf.fields(isPrivateOK).map(_.name); case _ => Nil
+          })
           val latestAfterVersion =
             if (adt.sym.isAstClass) {
               val moduleNames = adt.sym.companion.info.decls
@@ -111,8 +118,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
               latestAfterVersion :: Nil
             } else Nil
           val namePath = getNamePath(nameParts ++ latestAfterVersion)
-          val formattedArgs = (List(s"term($localName.origin)") ++ args).mkString(", ")
-          s"treeByMode('{$namePath}, $formattedArgs)"
+          s"treeByMode('{$namePath}, $privateArgs)($args)"
         } else getNamePath(nameParts)
       }
       val body = customWrapper(adt, defName, localName, defaultBody).getOrElse(defaultBody)
@@ -182,7 +188,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
 
   def treeByMode =
     """|
-       |  def treeByMode[T](expr: Expr[T], origin: Option[Tree], args: Tree*): Tree =
+       |  def treeByMode[T](expr: Expr[T], privateArgs: Tree*)(args: Tree*): Tree =
        |    val term = expr.asTerm match
        |      case Inlined(_, _, inlined) => inlined
        |    @tailrec
@@ -195,8 +201,8 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
        |      case '[t] =>
        |        if isPatternMode then
        |          TypedOrTest(Unapply(Select.unique(term, "unapply"), Nil, args.toList), TypeTree.of[t])
-       |        else 
-       |          val applied = Select.overloaded(term, "apply", Nil, (origin.map(List(_)).getOrElse(Nil) ++ args.toList).asInstanceOf[List[Term]])
+       |        else
+       |          val applied = Select.overloaded(term, "apply", Nil, (privateArgs ++ args).toList.asInstanceOf[List[Term]])
        |          applied.tpe match
        |            case MethodType(_, _, _) => Apply(applied, List(dialectExpr.asTerm))
        |            case _ => applied
@@ -209,7 +215,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection {
        |  @scala.annotation.targetName("term2") def term[T <: sm.Tree: Type](tree: Seq[List[T]]): Tree = liftTreess(tree.toList)
        |  @scala.annotation.targetName("term3") def term[T <: sm.Tree: Type](tree: List[List[T]]): Tree = liftTreess(tree)
        |  def term[T <: sm.Tree: Type](tree: Option[T]): Tree = liftOptionTree[T](tree)
-       |  def term(tree: Origin): Option[Tree] = if (isPatternMode) None else Some(liftOrigin(tree))
+       |  def term(tree: Origin): Tree = liftOrigin(tree)
        |  def term(tree: String): Tree = Literal(StringConstant(tree))
        |  def term(tree: Byte): Tree = Literal(ByteConstant(tree))
        |  def term(tree: Int): Tree = Literal(IntConstant(tree))
