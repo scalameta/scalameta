@@ -27,8 +27,16 @@ object Origin {
   }
 
   // `begTokenIdx` and `endTokenIdx` are half-open interval of index range
-  @adt.leaf
-  class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int) extends Origin {
+  @adt.branch
+  trait Partial extends Origin {
+    val begTokenIdx: Int
+    val endTokenIdx: Int
+  }
+
+  @adt.branch
+  trait ParsedPartial extends Partial {
+    val source: ParsedSource
+
     @inline
     def allInputTokens() = source.tokens
 
@@ -41,16 +49,26 @@ object Origin {
 
     def dialectOpt: Option[Dialect] = Some(dialect)
     private[meta] def inputOpt: Option[Input] = Some(input)
-    private[meta] def textOpt: Option[String] = Some(text)
     private[meta] def tokensOpt: Option[Tokens] = Some(tokens)
 
     @inline
     def input: Input = source.input
     @inline
     def dialect: Dialect = source.dialect
+    def tokens: Tokens = allInputTokens().slice(begTokenIdx, endTokenIdx)
+  }
+
+  @adt.leaf
+  class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int) extends ParsedPartial {
+    private[meta] def textOpt: Option[String] = Some(text)
     @inline
     def text: String = position.text
-    def tokens: Tokens = allInputTokens().slice(begTokenIdx, endTokenIdx)
+  }
+
+  @adt.leaf
+  class ParsedSpliced(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)
+      extends ParsedPartial {
+    private[meta] def textOpt: Option[String] = scala.None
   }
 
   class ParsedSource(val input: Input)(implicit val dialect: Dialect) {

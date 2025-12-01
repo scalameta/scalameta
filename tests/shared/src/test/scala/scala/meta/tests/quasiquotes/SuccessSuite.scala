@@ -2306,7 +2306,7 @@ class SuccessSuite extends TreeSuiteBase {
     )
 
     assertOriginType(valX, classOf[Origin.Parsed])
-    assertOriginType(fOfX, classOf[Origin.DialectOnly])
+    assertOriginType(fOfX, classOf[Origin.ParsedSpliced])
   }
 
   test("extract pattern with named fields") {

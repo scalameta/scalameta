@@ -305,22 +305,16 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
   ): Expr[Any] = {
     val pendingQuasis = mutable.Stack[Quasi]()
 
-    val useParsedSource = !mode.hasHoles // otherwise, syntax will not make much sense
-    val vDef =
-      if (useParsedSource) '{
-        new Origin.ParsedSource(scala.meta.inputs.Input.String(${ Expr(input.text.replace("$$", "$")) }))
-      }
-      else '{ scala.compiletime.summonInline[Origin.DialectOnly] }
+    def getValRef[T: Type](name: String)(obj: Expr[T]): (ValDef, Expr[T]) = {
+      val tpe = TypeRepr.of[T]
+      val sym = Symbol.newVal(Symbol.spliceOwner, name, tpe, Flags.EmptyFlags, Symbol.noSymbol)
+      (ValDef(sym, Some(obj.asTerm.changeOwner(sym))), Ref(sym).asExprOf[T])
+    }
 
-    val (valDef, originRef) =
-      val sym = Symbol.newVal(
-        Symbol.spliceOwner,
-        "origin",
-        if (useParsedSource) TypeRepr.of[Origin.ParsedSource] else TypeRepr.of[Origin.DialectOnly],
-        Flags.EmptyFlags,
-        Symbol.noSymbol
-      )
-      (ValDef(sym, Some(vDef.asTerm.changeOwner(sym))), Ref(sym))
+    val (psourceVal, psourceExpr) = getValRef("psource")('{
+      new Origin.ParsedSource(Input.String(${ Expr(input.text.replace("$$", "$")) }))
+    })
+    val valDefs = List(psourceVal)
 
     object Internal extends TreeLifts(using quotes)(mode.isPattern, dialectExpr) {
       import internalQuotes.reflect._
@@ -524,15 +518,15 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
           }
         } finally pendingQuasis.pop()
 
-      def liftOrigin(origin: Origin): internalQuotes.reflect.Tree =
-        if (useParsedSource) origin match {
-          case Origin.Parsed(_, beg, end) => '{
-              Origin
-                .Parsed(${ originRef.asExprOf[Origin.ParsedSource] }, ${ Expr(beg) }, ${ Expr(end) })
-            }.asTerm
-          case x => report.errorAndAbort("likely missing positions in the parser")
-        }
-        else originRef.asInstanceOf[internalQuotes.reflect.Tree]
+      private val liftPartialOrigin: (Int, Int) => Expr[Origin.Partial] =
+        if (mode.hasHoles) // direct syntax will not make much sense, need to regenerate
+          (beg, end) => '{ Origin.ParsedSpliced(${ psourceExpr }, ${ Expr(beg) }, ${ Expr(end) }) }
+        else (beg, end) => '{ Origin.Parsed(${ psourceExpr }, ${ Expr(beg) }, ${ Expr(end) }) }
+
+      def liftOrigin(origin: Origin): internalQuotes.reflect.Tree = origin match {
+        case x: Origin.Partial => liftPartialOrigin(x.begTokenIdx, x.endTokenIdx).asTerm
+        case x => report.errorAndAbort("likely missing positions in the parser")
+      }
 
       // Depending on pattern types, this is able to cause some custom errors to be thrown
       // We cannot obtain the types of the pattern in Scala 3 for now
@@ -607,10 +601,9 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
           case QuasiquoteType.Importee => TypeRepr.of[scala.meta.Importee]
           case QuasiquoteType.Source => TypeRepr.of[scala.meta.Source]
         resType.asType match
-          case '[t] => Block(
-              List(valDef),
-              '{ scala.meta.internal.quasiquotes.Unlift[t]($internalResult) }.asTerm
-            ).asExprOf[t]
+          case '[t] =>
+            Block(valDefs, '{ scala.meta.internal.quasiquotes.Unlift[t]($internalResult) }.asTerm)
+              .asExprOf[t]
 
       case Mode.Pattern(_, holes, unapplySelector) =>
         import Internal.internalQuotes.reflect._
@@ -668,13 +661,15 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
               if (isBooleanExtractor) matchTerm.asExprOf[Boolean] else matchTerm.asExprOf[Option[t]]
             }
 
+            val valDefsAsStatements = valDefs
+              .map(_.asInstanceOf[Internal.internalQuotes.reflect.Statement])
             val internalResult =
               if (isBooleanExtractor) Block(
-                List(valDef.asInstanceOf[Internal.internalQuotes.reflect.Statement]),
+                valDefsAsStatements,
                 '{ ${ matchp(unapplySelector) }.asInstanceOf[Boolean] }.asTerm
               ).asExprOf[Boolean]
               else Block(
-                List(valDef.asInstanceOf[Internal.internalQuotes.reflect.Statement]),
+                valDefsAsStatements,
                 '{ ${ matchp(unapplySelector) }.asInstanceOf[Option[t]] }.asTerm
               ).asExprOf[Option[t]]
 
