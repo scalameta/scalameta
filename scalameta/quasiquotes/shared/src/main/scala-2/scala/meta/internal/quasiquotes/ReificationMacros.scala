@@ -225,9 +225,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       }
     }
 
-    val useParsedSource = mode.holes.isEmpty // otherwise, syntax will not make much sense
-    val sourceName = if (useParsedSource) TermName(c.freshName("parsedSource")) else null
-    val dialectOnlyName = TermName(c.freshName("dialectOnly"))
+    val sourceName = TermName(c.freshName("parsedSource"))
     object Lifts {
       def liftTree(tree: MetaTree): ReflectTree = Liftables.liftableSubTree(tree)
       def liftOptionTree(maybeTree: Option[MetaTree]): ReflectTree = maybeTree match {
@@ -324,15 +322,16 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
             case _ => c.abort(quasi.pos, "complex ellipses are not supported yet")
           }
         } finally pendingQuasis.pop()
-      val liftOrigin: Origin => ReflectTree =
-        if (sourceName ne null) _ match {
-          case Origin.Parsed(_, beg, end) => q"$OriginModule.Parsed($sourceName, $beg, $end)"
-          case x => unreachable(debug(x), "likely missing positions in the parser")
-        }
-        else {
-          val dialectOnlyNameTree = q"$dialectOnlyName"
-          _ => dialectOnlyNameTree
-        }
+
+      private val liftPartialOrigin: (Int, Int) => ReflectTree =
+        if (mode.holes.nonEmpty) // if spliced, syntax will not make much sense
+          (beg, end) => q"$OriginModule.ParsedSpliced($sourceName, $beg, $end)"
+        else (beg, end) => q"$OriginModule.Parsed($sourceName, $beg, $end)"
+
+      val liftOrigin: Origin => ReflectTree = {
+        case x: Origin.Partial => liftPartialOrigin(x.begTokenIdx, x.endTokenIdx)
+        case x => unreachable(debug(x), "likely missing positions in the parser")
+      }
     }
     object Liftables {
       // NOTE: we could write just `implicitly[Liftable[MetaTree]].apply(meta)`
@@ -352,12 +351,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       implicit def liftableOrigin[T <: Origin]: Liftable[T] = Liftable((x: T) => Lifts.liftOrigin(x))
     }
     val valDefns = List(
-      if (sourceName eq null)
-        q"""
-        val $dialectOnlyName = implicitly[$OriginModule.DialectOnly]
-      """
-      else
-        q"""
+      q"""
         val $sourceName = new $OriginModule.ParsedSource(
           _root_.scala.meta.inputs.Input.String(${input.text.replace("$$", "$")})
         )

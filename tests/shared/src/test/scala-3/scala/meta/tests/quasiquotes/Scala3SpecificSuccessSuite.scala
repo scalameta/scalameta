@@ -15,12 +15,12 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
       """
     assertPositions(
       foo(Type.Name("AAA")),
-      """|<?>Defn.Class class AAA { val a: Int = 1 }</?> <none>
-         |<tparamClause>Type.ParamClause @?@</tparamClause> <none>
-         |<ctor>Ctor.Primary @?@</ctor> <none>
-         |<templ>Template { val a: Int = 1 }</templ> <none>
-         |<body>Template.Body { val a: Int = 1 }</body> <none>
-         |<stats0>Defn.Val val a: Int = 1</stats0> <none>
+      """|<?>Defn.Class class AAA { val a: Int = 1 }</?> [0:...class $name:...:53)
+         |<tparamClause>Type.ParamClause         class $name@@:</tparamClause> [20::20)
+         |<ctor>Ctor.Primary         class $name@@:</ctor> [20::20)
+         |<templ>Template { val a: Int = 1 }</templ> [20<:...>46)
+         |<body>Template.Body { val a: Int = 1 }</body> [20<:...>46)
+         |<stats0>Defn.Val val a: Int = 1</stats0> [32:val a: Int = 1:46)
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
@@ -36,12 +36,12 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
       """
     assertPositions(
       foo(Type.Name("AAA")),
-      """|<?>Defn.Class class AAA { val a: Int = 1 }</?> <none>
-         |<tparamClause>Type.ParamClause @?@</tparamClause> <none>
-         |<ctor>Ctor.Primary @?@</ctor> <none>
-         |<templ>Template { val a: Int = 1 }</templ> <none>
-         |<body>Template.Body { val a: Int = 1 }</body> <none>
-         |<stats0>Defn.Val val a: Int = 1</stats0> <none>
+      """|<?>Defn.Class class AAA { val a: Int = 1 }</?> [0:...class $name:...:53)
+         |<tparamClause>Type.ParamClause         class $name@@:</tparamClause> [20::20)
+         |<ctor>Ctor.Primary         class $name@@:</ctor> [20::20)
+         |<templ>Template { val a: Int = 1 }</templ> [20<:...>46)
+         |<body>Template.Body { val a: Int = 1 }</body> [20<:...>46)
+         |<stats0>Defn.Val val a: Int = 1</stats0> [32:val a: Int = 1:46)
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,

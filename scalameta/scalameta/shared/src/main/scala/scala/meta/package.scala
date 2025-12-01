@@ -86,7 +86,8 @@ package object meta
   implicit class XtensionTreeT[A <: Tree](private val tree: A) extends AnyVal {
     def maybeParse(implicit dialect: Dialect, parse: parsers.Parse[A]): Parsed[A] =
       tree.origin match {
-        case o: trees.Origin.Parsed if o.dialect.isEquivalentTo(dialect) => Parsed.Success(tree)
+        case o: trees.Origin.ParsedPartial if o.dialect.isEquivalentTo(dialect) =>
+          Parsed.Success(tree)
         case _ => tree.reparseAs[A]
       }
   }

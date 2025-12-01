@@ -190,7 +190,10 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.trees.Origin.DialectOnly *
          |scala.meta.trees.Origin.None *
          |scala.meta.trees.Origin.Parsed *
+         |scala.meta.trees.Origin.ParsedPartial *
          |scala.meta.trees.Origin.ParsedSource *
+         |scala.meta.trees.Origin.ParsedSpliced *
+         |scala.meta.trees.Origin.Partial *
          |""".stripMargin.lf2nl
     )
   }
