@@ -377,18 +377,28 @@ class MinorDottySuite extends BaseDottySuite {
   val patternBinding = Term.Match(int(1), List(Case(Pat.Bind(patvar("intValue"), int(1)), None, blk())))
 
   test("comment-after-coloneol") {
-    val expected = "trait X { def x(): String }"
     runTestAssert[Stat](
       """trait X: // comment
         |  def x(): String
         |""".stripMargin,
-      assertLayout = Some(expected)
+      """|trait X {
+         |  // comment
+         |  def x(): String
+         |}""".stripMargin
     )(Defn.Trait(
       Nil,
       pname("X"),
       Nil,
       EmptyCtor(),
-      tpl(Decl.Def(Nil, tname("x"), Nil, List(List()), pname("String")))
+      tpl(Decl.Def.createWithComments(
+        Nil,
+        tname("x"),
+        Nil,
+        List(List()),
+        pname("String"),
+        begComment = Seq("// comment"),
+        endComment = None
+      ))
     ))
   }
 

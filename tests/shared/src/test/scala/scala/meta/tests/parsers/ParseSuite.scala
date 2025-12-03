@@ -177,10 +177,9 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     val reprinted =
       parseAndCheckTreeWithSyntaxAndStructImpl[T](code, expectedSyntax, struct, extraClue)
     def checkAlternative(altCode: String, altMsg: String): Unit = if (code != altCode) {
-      val res =
-        parseAndCheckTreeWithSyntaxAndStructImpl[T](altCode, expectedSyntax, struct, extraClue)
-      if (expectedSyntax.nonEmpty)
-        assertNoDiff(res, reprinted, TestHelpers.getMessageWithExtraClue(altMsg, extraClue))
+      val altClue = TestHelpers.getMessageWithExtraClue(altMsg, extraClue)
+      val res = parseAndCheckTreeWithSyntaxAndStructImpl[T](altCode, expectedSyntax, struct, altClue)
+      if (expectedSyntax.nonEmpty) assertNoDiff(res, reprinted, altClue)
     }
     checkAlternative(codeLF, "LF vs original")
     checkAlternative(codeLF.replace("\n", "\r\n"), "CRLF vs original")

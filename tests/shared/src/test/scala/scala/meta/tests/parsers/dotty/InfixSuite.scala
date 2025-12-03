@@ -378,10 +378,13 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|{
-         |  freezing | boiling
+         |  freezing /*
+         |    c1 */ // c2
+         |    | boiling
          |}
          |""".stripMargin
-    val tree = blk(tinfix(tname("freezing"), "|", tname("boiling")))
+    val tree =
+      blk(tinfix(tnameComments("freezing")()("/*\n    c1 */", "// c2"), "|", tname("boiling")))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
@@ -398,10 +401,17 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|{
-         |  freezing | boiling
+         |  freezing 
+         |  // c1
+         |  /*
+         |    c2
+         |  */
+         |  | boiling
          |}
          |""".stripMargin
-    val tree = blk(tinfix(tname("freezing"), "|", tname("boiling")))
+    val tree = blk(
+      tinfix(tname("freezing"), tnameComments("|")("// c1", "/*\n    c2\n  */")(), tname("boiling"))
+    )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
@@ -419,10 +429,17 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|{
-         |  freezing | boiling
+         |  freezing 
+         |  // c1
+         |  /*
+         |    c2
+         |  */
+         |  | boiling
          |}
          |""".stripMargin
-    val tree = blk(tinfix(tname("freezing"), "|", tname("boiling")))
+    val tree = blk(
+      tinfix(tname("freezing"), tnameComments("|")("// c1", "/*\n    c2\n  */")(), tname("boiling"))
+    )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
@@ -511,16 +528,16 @@ class InfixSuite extends BaseDottySuite {
          |  end toBeContinued
          |}
          |""".stripMargin,
-      Some {
-        """|{
-           |  def toBeContinued(altToken: Token): Boolean = {
-           |    inline def canContinue = !in.canStartStatTokens.contains(in.token) || followedByToken(altToken)
-           |    !in.isNewLine && !migrateTo3 && canContinue
-           |  }
-           |  end toBeContinued
-           |}
-           |""".stripMargin
-      }
+      """|{
+         |  def toBeContinued(altToken: Token): Boolean = {
+         |    inline def canContinue = !in.canStartStatTokens.contains(in.token) || followedByToken(altToken)
+         |    !in.isNewLine // a newline token means the expression is finished
+         |      && !migrateTo3 // old syntax
+         |      && canContinue
+         |  }
+         |  end toBeContinued
+         |}
+         |""".stripMargin
     ) {
       blk(
         Defn.Def(
@@ -546,9 +563,17 @@ class InfixSuite extends BaseDottySuite {
             ),
             tinfix(
               tinfix(
-                Term.ApplyUnary(tname("!"), tselect("in", "isNewLine")),
+                Term.ApplyUnary.createWithComments(
+                  tname("!"),
+                  tselect("in", "isNewLine"),
+                  endComment = Seq("// a newline token means the expression is finished")
+                ),
                 "&&",
-                Term.ApplyUnary(tname("!"), tname("migrateTo3"))
+                Term.ApplyUnary.createWithComments(
+                  tname("!"),
+                  tname("migrateTo3"),
+                  endComment = Seq("// old syntax")
+                )
               ),
               "&&",
               tname("canContinue")

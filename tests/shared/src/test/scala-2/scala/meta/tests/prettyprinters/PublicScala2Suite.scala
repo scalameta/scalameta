@@ -15,11 +15,11 @@ class PublicScala2Suite extends TreeSuiteBase {
 
   test("scala.meta.Tree.structure (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assertTree(tree)(tinfix(tname("foo"), "+", tname("bar")))
+    assertTree(tree)(tinfix(tname("foo"), "+", tnameComments("bar")()("// baz")))
   }
 
   test("scala.meta.Tree.syntax (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar")
+    assertWithOriginalSyntax(tree, "foo + bar // baz", "foo + bar // baz")
   }
 }

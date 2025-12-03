@@ -436,7 +436,11 @@ class TermSuite extends ParseSuite {
          |  // sobaka
          |  case y => y
          |}""".stripMargin
-    )(tmatch(tname("x"), Case(patvar("x"), None, bool(true)), Case(patvar("y"), None, tname("y"))))
+    )(tmatch(
+      tname("x"),
+      Case(patvar("x"), None, bool(true)),
+      Case.createWithComments(patvar("y"), None, tname("y"), begComment = Seq("// sobaka"))
+    ))
   )
 
   test("a + (bs: _*) * c")(intercept[ParseException](term("a + (bs: _*) * c")))

@@ -18,8 +18,8 @@ import scala.annotation.tailrec
 import scala.reflect.{ClassTag, classTag}
 
 object TreeSyntax {
-  import Show.{alt, blank, function => fn, indent => i, meta => m, newline => n, opt => o,
-    repeat => r, sequence => s, wrap => w}
+  import Show.{alt, blank, function => fn, indent => i, meta => m, newline => n, nosplit => nosp,
+    opt => o, repeat => r, sequence => s, space => sp, wrap => w}
 
   private final object SyntaxInstances {
     // NOTE: these groups closely follow non-terminals in the grammar spec from SLS, except for:
@@ -477,11 +477,11 @@ object TreeSyntax {
         }
         m(SimpleExpr1, s(r(zipped), parts.last))
 
-      case t: Term.ArgClause => s("(", o(t.mod, " "), r(t.values, ", "), ")")
+      case t: Term.ArgClause => nosp(s("(", o(t.mod, " "), r(t.values, ", "), ")"))
       case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
       case t: Term.ApplyUsing =>
         val args = s("(", kw("using"), " ", r(t.argClause.values, ", "), ")")
-        m(SimpleExpr1, s(p(SimpleExpr1, t.fun), args))
+        m(SimpleExpr1, s(p(SimpleExpr1, t.fun), nosp(withComments(t.argClause)(args))))
       case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targClause))
       case t: Term.ApplyInfix =>
         val args = t.argClause.values match {
@@ -494,10 +494,9 @@ object TreeSyntax {
               }) => p(InfixExpr(t.op.value), arg, right = true)
           case _ => printApplyArgs(t.argClause, "")
         }
-
         m(
           InfixExpr(t.op.value),
-          s(p(InfixExpr(t.op.value), t.lhs, left = true), " ", t.op, t.targClause, " ", args)
+          s(p(InfixExpr(t.op.value), t.lhs, left = true), sp(s(t.op, t.targClause, sp(args))))
         )
       case t: Term.ApplyUnary => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
       case t: Term.Assign => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
@@ -608,7 +607,7 @@ object TreeSyntax {
       case t: Term.Param =>
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
         printParam(t)
-      case t: Term.ParamClause => printParams(t, needParens = !t.parent.is[Term])
+      case t: Term.ParamClause => nosp(printParams(t, needParens = !t.parent.is[Term]))
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -617,7 +616,7 @@ object TreeSyntax {
       case t: Type.Select => m(SimpleTyp, s(t.qual, kw("."), t.name))
       case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
-      case t: Type.ArgClause => r(t.values.map(arg => p(Typ, arg)), "[", ", ", "]")
+      case t: Type.ArgClause => nosp(r(t.values.map(arg => p(Typ, arg)), "[", ", ", "]"))
       case t: Type.Apply => m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
       case t: Type.ApplyInfix => m(
           InfixTyp(t.op.value),
@@ -720,7 +719,7 @@ object TreeSyntax {
         }
 
       // Pat
-      case t: Pat.Var => m(SimplePattern, printMaybeBackquoted(t.name))
+      case t: Pat.Var => m(SimplePattern, t.name)
       case _: Pat.Wildcard => m(SimplePattern, kw("_"))
       case a: Pat.Assign => m(SimplePattern, s(a.name, " ", kw("="), " ", a.rhs))
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
@@ -1071,7 +1070,7 @@ object TreeSyntax {
           (useParens, o(modOpt, " "))
         case _ => (true, Show.None)
       }
-      w("(", s(mod, r(v.map(printParam(_, mod eq Show.None)), ", ")), ")", useParens)
+      w("(", s(mod, r(v.map(printParam(_, mod.isEmpty)), ", ")), ")", useParens)
     }
     implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax(r(_))
     implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax(o(kw(": "), _))
@@ -1148,20 +1147,19 @@ object TreeSyntax {
 
     private def printSelectLhs(expr: Term, backquote: Boolean = false) = expr match {
       case t: Term.New if t.init.argClauses.isEmpty => w("(", t, ")")
-      case t: Term.Name if backquote => printBackquoted(t, isBackquoted = true)
+      case t: Term.Name if backquote => withComments(t)(printBackquoted(t, isBackquoted = true))
       case t => p(SimpleExpr, t)
     }
 
     private def printSelect(t: Term.SelectLike, sep: String, bqExpr: Boolean = false) = {
       val expr = printSelectLhs(t.qual, backquote = bqExpr)
-      val name = printMaybeBackquoted(t.name)
-      m(Path, s(expr, sep, name))
+      m(Path, s(expr, sep, t.name))
     }
 
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 
     private def AsTreeSyntax[T <: Tree](f: T => Show.Result): Syntax[T] = new Syntax[T] {
-      def apply(tree: T): Show.Result = f(tree)
+      def apply(tree: T): Show.Result = withComments(tree)(f(tree))
     }
 
   }
@@ -1180,4 +1178,24 @@ object TreeSyntax {
 
   def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = (new SyntaxInstances)
     .syntaxTree[T].apply(x)
+
+  private def printComments(tree: Tree, f: Tree => Option[Tree.Comments]): List[Show.Result] =
+    f(tree) match {
+      case Some(tc) // skip if the parent refers to the same comments
+          if tc.values.nonEmpty && tree.parent.flatMap(f).forall(ptc =>
+            (tc ne ptc) &&
+              ((tc.origin, ptc.origin) match {
+                case (otc: Origin.Partial, optc: Origin.Partial) =>
+                  otc.begTokenIdx != optc.begTokenIdx || otc.endTokenIdx != optc.endTokenIdx
+                case _ => true
+              })
+          ) => tc.values.map(x => r(x.parts.map(_.value)))
+      case _ => Nil
+    }
+
+  private[prettyprinters] def withComments(tree: Tree)(syntax: Show.Result): Show.Result = s(
+    r(s(), "", n())(printComments(tree, _.begComment).map(n): _*),
+    syntax,
+    r(Show.str(" "), " ", n())(printComments(tree, _.endComment): _*)
+  )
 }

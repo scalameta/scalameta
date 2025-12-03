@@ -180,13 +180,18 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |    
          |    /** */
          |""".stripMargin,
-      """|extension (a: Int) {
+      """|extension (a: Int) 
+         |/** */
+         |{
          |  def double = a * 2
          |}""".stripMargin
     )(Defn.ExtensionGroup(
       Nil,
       List(List(tparam("a", "Int"))),
-      blk(Defn.Def(Nil, tname("double"), Nil, Nil, None, tinfix(tname("a"), "*", int(2))))
+      Term.Block.createWithComments(
+        List(Defn.Def(Nil, tname("double"), Nil, Nil, None, tinfix(tname("a"), "*", int(2)))),
+        begComment = Seq("/** */")
+      )
     ))
   }
 

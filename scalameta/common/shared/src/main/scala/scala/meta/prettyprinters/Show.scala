@@ -139,12 +139,6 @@ private[meta] object Show {
     def headChar: Option[Char] = res.headChar
     override def serialize(implicit builder: Serializer): Unit = builder.indent(res)
   }
-  final case class NoSplit(res: Result) extends Result {
-    override def desc: String = s"NoSplit(r=${res.desc})"
-    def headChar: Option[Char] = res.headChar
-    override def serialize(implicit builder: Serializer): Unit =
-      if (builder.wasNL) builder.indent(res) else res.serialize
-  }
   final case class Space(res: Result, space: String) extends Result {
     override def desc: String = s"NoSplit(r=${res.desc})"
     def headChar: Option[Char] = res.headChar
