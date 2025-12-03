@@ -39,13 +39,19 @@ class FewerBracesSuite extends BaseDottySuite {
          |   indentedCode
          |
          |""".stripMargin,
-      assertLayout = Some(
-        """|val firstLine = map {
-           |  indentedCode
-           |}
-           |""".stripMargin
-      )
-    )(Defn.Val(Nil, List(patvar("firstLine")), None, tapply(tname("map"), blk(tname("indentedCode")))))
+      """|val firstLine = map {
+         |  /*
+         |    line
+         |    line */
+         |  indentedCode
+         |}
+         |""".stripMargin
+    )(Defn.Val(
+      Nil,
+      List(patvar("firstLine")),
+      None,
+      tapply(tname("map"), blk(tnameComments("indentedCode")("/*\n    line\n    line */")()))
+    ))
   }
 
   test("simple-same-line")(
@@ -1355,11 +1361,15 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def mtd = abc {
          |  arg1
-         |} ++ abc {
-         |  arg2
-         |} ++ abc {
-         |  arg3
-         |}
+         |} ++ /* c1 */ // c2
+         |  abc {
+         |    arg2
+         |  } ++ /*
+         |        c3
+         |        */
+         |  abc {
+         |    arg3
+         |  }
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
@@ -1367,8 +1377,12 @@ class FewerBracesSuite extends BaseDottySuite {
       Nil,
       None,
       tinfix(
-        tinfix(tapply(tname("abc"), blk(tname("arg1"))), "++", tapply(tname("abc"), blk(tname("arg2")))),
-        "++",
+        tinfix(
+          tapply(tname("abc"), blk(tname("arg1"))),
+          tnameComments("++")()("/* c1 */", "// c2"),
+          tapply(tname("abc"), blk(tname("arg2")))
+        ),
+        tnameComments("++")()("/*\n        c3\n        */"),
         tapply(tname("abc"), blk(tname("arg3")))
       )
     )
@@ -1389,16 +1403,23 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def mtd = abc {
          |  arg1
-         |} ++ abc {
-         |  arg2
-         |}
+         |} ++ /*
+         |   c2
+         |    */
+         |  abc {
+         |    arg2
+         |  }
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
       Nil,
       None,
-      tinfix(tapply(tname("abc"), blk(tname("arg1"))), "++", tapply(tname("abc"), blk(tname("arg2"))))
+      tinfix(
+        tapply(tname("abc"), blk(tname("arg1"))),
+        tnameComments("++")()("/*\n   c2\n    */"),
+        tapply(tname("abc"), blk(tname("arg2")))
+      )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1418,15 +1439,23 @@ class FewerBracesSuite extends BaseDottySuite {
     val layout =
       """|def mtd = abc {
          |  arg1
-         |} ++ abc {
-         |  arg2
-         |}""".stripMargin
+         |} ++ /*
+         |       c2
+         |    */
+         |  abc {
+         |    arg2
+         |  }
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("mtd"),
       Nil,
       None,
-      tinfix(tapply(tname("abc"), blk(tname("arg1"))), "++", tapply(tname("abc"), blk(tname("arg2"))))
+      tinfix(
+        tapply(tname("abc"), blk(tname("arg1"))),
+        tnameComments("++")()("/*\n       c2\n    */"),
+        tapply(tname("abc"), blk(tname("arg2")))
+      )
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }

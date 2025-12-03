@@ -137,11 +137,11 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def tparamInline(name: String, tpe: Type) = tparam(List(Mod.Inline()), name, tpe)
   final def tparamUsing(name: String, tpe: Type) = tparam(List(Mod.Using()), name, tpe)
 
-  final def tinfix(lt: Term, op: String, ta: List[Type], rt: Term*): Term.ApplyInfix = Term
-    .ApplyInfix(lt, tname(op), ta, rt.toList)
-  final def tinfix(lt: Term, op: String, rt: Term*): Term.ApplyInfix = tinfix(lt, op, Nil, rt: _*)
+  final def tinfix(lt: Term, op: Term.Name, ta: List[Type], rt: Term*): Term.ApplyInfix = Term
+    .ApplyInfix(lt, op, ta, rt.toList)
+  final def tinfix(lt: Term, op: Term.Name, rt: Term*): Term.ApplyInfix = tinfix(lt, op, Nil, rt: _*)
   final def tpostfix(lt: Term, op: String): Term.SelectPostfix = Term.SelectPostfix(lt, op)
-  final def tselect(lt: Term, op: String, ops: String*): Term.Select = ops
+  final def tselect(lt: Term, op: Term.Name, ops: Term.Name*): Term.Select = ops
     .foldLeft(Term.Select(lt, op)) { case (res, op) => Term.Select(res, op) }
   final def tapply(fun: Term, args: Term*): Term.Apply = Term.Apply(fun, args.toList)
   final def tapplyUsing(fun: Term, args: Term*): Term.Apply = Term
@@ -173,10 +173,13 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
     Type.Param(mods, nameTree, params, bounds)
   }
 
+  def t2pname(op: Term.Name): Type.Name = Type.Name
+    .createWithComments(op.value, op.begComment, op.endComment)
+
   final def pinfix(lt: Type, op: String, rt: Type): Type.ApplyInfix = Type.ApplyInfix(lt, op, rt)
-  final def pselect(lt: Term.Ref, op: String, ops: String*): Type.Select = ops match {
-    case Seq() => Type.Select(lt, op)
-    case ops :+ last => Type.Select(tselect(lt, op, ops: _*), last)
+  final def pselect(lt: Term.Ref, op: Term.Name, ops: Term.Name*): Type.Select = ops match {
+    case Seq() => Type.Select(lt, t2pname(op))
+    case ops :+ last => Type.Select(tselect(lt, op, ops: _*), t2pname(last))
   }
   final def papply(tpe: Type, args: Type*): Type.Apply = Type.Apply(tpe, args.toList)
   final def pfunc(params: Type.FuncParamClause, res: Type): Type.Function = Type

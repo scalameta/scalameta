@@ -2297,8 +2297,8 @@ class SuccessSuite extends TreeSuiteBase {
     val valX = q"x // X"
     val fOfX = q"func( $valX )"
 
-    assertWithOriginalSyntax(valX, "x // X", "x")
-    assertWithOriginalSyntax(fOfX, "func(x)", "func(x)")
+    assertWithOriginalSyntax(valX, "x // X", "x // X")
+    assertWithOriginalSyntax(fOfX, "func(x // X\n)", "func(x // X\n)")
 
     def assertOriginType(obtained: Tree, expected: Class[_ <: Origin]): Unit = assertEquals(
       obtained.origin.getClass.asInstanceOf[Class[Origin]],

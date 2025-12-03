@@ -81,7 +81,16 @@ class PackageSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin
-    ))(Source(List(Pkg(tname("foo"), List(Pkg(tname("bar"), List(Pkg(tname("baz"), List()))))))))
+    ))(Source(List(Pkg(
+      tnameComments("foo")()("// foo package left brace in newline"),
+      Pkg.Body.createWithComments(
+        List(Pkg(
+          tnameComments("bar")()("/* also in newline */"),
+          Pkg.Body.createWithComments(List(Pkg(tname("baz"), List())), begComment = Seq("// open"))
+        )),
+        begComment = Seq("/* still okay */")
+      )
+    ))))
   }
 
   test("code with Shebang line") {

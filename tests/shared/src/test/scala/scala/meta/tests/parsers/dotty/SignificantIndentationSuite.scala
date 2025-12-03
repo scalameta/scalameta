@@ -1527,10 +1527,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |      extends Namespace // Defn.EnumCase ends here
          |        ("http://www.w3.org/1999/xhtml") // str
          |""".stripMargin,
-      assertLayout = Some(
-        """|enum Namespace(val uri: String | Null) { case xhtml extends Namespace("http://www.w3.org/1999/xhtml") }
-           |""".stripMargin
-      )
+      """|enum Namespace(val uri: String | Null) {
+         |  case xhtml extends Namespace // Defn.EnumCase ends here
+         |    ("http://www.w3.org/1999/xhtml")
+         |}
+         |""".stripMargin
     )(Defn.Enum(
       Nil,
       pname("Namespace"),
@@ -1541,7 +1542,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
         tname("xhtml"),
         Nil,
         EmptyCtor(),
-        List(init("Namespace", List(str("http://www.w3.org/1999/xhtml"))))
+        List(init(
+          Type.Name.createWithComments("Namespace", endComment = Seq("// Defn.EnumCase ends here")),
+          List(str("http://www.w3.org/1999/xhtml"))
+        ))
       ))
     ))
   }
@@ -1684,7 +1688,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
-  test("colon-eol-comment1")(
+  test("colon-eol-comment1") {
     runTestAssert[Stat](
       """|object Foo:
          |  /*inline*/ def foo: Int = ???
@@ -1695,11 +1699,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("Foo"),
       tpl(
-        Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+        Defn.Def.createWithComments(
+          Nil,
+          tname("foo"),
+          Nil,
+          Nil,
+          Some(pname("Int")),
+          tname("???"),
+          begComment = Seq("/*inline*/"),
+          endComment = None
+        ),
         Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
       )
     ))
-  )
+  }
 
   test("colon-eol-comment2")(
     runTestAssert[Stat](
@@ -1710,11 +1723,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )(Defn.Object(
       Nil,
       tname("Foo"),
-      tpl(Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")))
+      tpl(Defn.Def.createWithComments(
+        Nil,
+        tname("foo"),
+        Nil,
+        Nil,
+        Some(pname("Int")),
+        tname("???"),
+        begComment = Seq("/* comment*/"),
+        endComment = None
+      ))
     ))
   )
 
-  test("colon-eol-multiline-comment")(
+  test("colon-eol-multiline-comment") {
     runTestAssert[Stat](
       """|object Foo:/* multi
          |  line
@@ -1726,13 +1748,22 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("Foo"),
       tpl(
-        Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+        Defn.Def.createWithComments(
+          Nil,
+          tname("foo"),
+          Nil,
+          Nil,
+          Some(pname("Int")),
+          tname("???"),
+          begComment = Seq("/* multi\n  line\n   comment */"),
+          endComment = None
+        ),
         Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
       )
     ))
-  )
+  }
 
-  test("given-with-comment")(
+  test("given-with-comment") {
     runTestAssert[Stat](
       """|given Foo with
          |   /* comment */  def foo: Int = ???
@@ -1746,13 +1777,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tpl(
         List(init("Foo")),
-        List(
-          Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
-          Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
+        Template.Body.createWithComments(
+          None,
+          List(
+            Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+            Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
+          ),
+          begComment = Seq("/* comment */"),
+          endComment = None
         )
       )
     ))
-  )
+  }
 
   test("given-with-miltiline-comment") {
     runTestAssert[Stat](
@@ -1769,9 +1805,14 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tpl(
         List(init("Foo")),
-        List(
-          Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
-          Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
+        Template.Body.createWithComments(
+          None,
+          List(
+            Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+            Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
+          ),
+          begComment = Seq("/* multi\n   line\n   comment */"),
+          endComment = None
         )
       )
     ))
@@ -1791,33 +1832,38 @@ class SignificantIndentationSuite extends BaseDottySuite {
           |""".stripMargin,
       assertLayout = None
     ) {
-      Source(List(
-        Defn.Class(
-          Nil,
-          pname("A1"),
-          Nil,
-          EmptyCtor(),
-          tplNoBody(
-            init(Type.Select(tselect("scala", "annotation"), pname("StaticAnnotation"))) :: Nil
+      Source {
+        List(
+          Defn.Class(
+            Nil,
+            pname("A1"),
+            Nil,
+            EmptyCtor(),
+            tplNoBody(
+              init(Type.Select(tselect("scala", "annotation"), pname("StaticAnnotation"))) :: Nil
+            )
+          ),
+          Defn.Class(
+            Nil,
+            pname("A2"),
+            Nil,
+            EmptyCtor(),
+            tplNoBody(
+              init(Type.Select(tselect("scala", "annotation"), pname("StaticAnnotation"))) :: Nil
+            )
+          ),
+          Defn.Class(
+            List(
+              Mod.Annot(init("A1")),
+              Mod.Annot.createWithComments(init("A2"), begComment = Seq("/*\n * hello\n */"))
+            ),
+            pname("B"),
+            Nil,
+            EmptyCtor(),
+            tplNoBody()
           )
-        ),
-        Defn.Class(
-          Nil,
-          pname("A2"),
-          Nil,
-          EmptyCtor(),
-          tplNoBody(
-            init(Type.Select(tselect("scala", "annotation"), pname("StaticAnnotation"))) :: Nil
-          )
-        ),
-        Defn.Class(
-          List(Mod.Annot(init("A1")), Mod.Annot(init("A2"))),
-          pname("B"),
-          Nil,
-          EmptyCtor(),
-          tplNoBody()
         )
-      ))
+      }
     }
   }
 
@@ -2897,7 +2943,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def foo = {
-         |  val baz = if (qux) quux else fred
+         |  val baz = if (qux) quux else fred // not very, but a somewhat long comment
          |  (baz, null)
          |}
          |""".stripMargin
@@ -2907,11 +2953,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       None,
       blk(
-        Defn.Val(
+        Defn.Val.createWithComments(
           Nil,
           List(patvar("baz")),
           None,
-          Term.If(tname("qux"), tname("quux"), tname("fred"), Nil)
+          Term.If(tname("qux"), tname("quux"), tname("fred"), Nil),
+          endComment = Seq("// not very, but a somewhat long comment")
         ),
         Term.Tuple(List(tname("baz"), Lit.Null()))
       )
