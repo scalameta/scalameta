@@ -14,7 +14,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
 
     val tree = sourceString.parse[Source].get
 
-    assertEquals(tree.syntax, sourceString)
+    assertEquals(tree.syntax, sourceString.lf2nl)
     val expected = Source(List(
       Defn.Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
       tapply(tname("foo"), tname("x"))
@@ -32,7 +32,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
 
     val tree = sourceString.parse[Source].get
 
-    assertEquals(tree.syntax, sourceString)
+    assertEquals(tree.syntax, sourceString.lf2nl)
     val expected = Source(List(Pkg(
       tname("bar"),
       List(
@@ -52,7 +52,7 @@ class ToplevelTermSuite extends TreeSuiteBase {
 
     val tree = sourceString.parse[Source].get
 
-    assertEquals(tree.syntax, sourceString)
+    assertEquals(tree.syntax, sourceString.lf2nl)
     val expected = Source(List(
       Defn.Def(Nil, tname("foo"), Nil, List(List(tparam("x", "Int"))), Some(pname("Int")), tname("x")),
       tapply(tname("foo"), tname("x"))

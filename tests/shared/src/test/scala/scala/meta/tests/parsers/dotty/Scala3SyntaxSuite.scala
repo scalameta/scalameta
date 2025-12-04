@@ -7,13 +7,13 @@ class Scala3SyntaxSuite extends BaseDottySuite {
   test("given intOrd: Ord[Int] with \n{ def f(): Int = 1 }") {
     assertEquals(
       templStat("given intOrd: Ord[Int] with \n{ def f(): Int = 1 }").syntax,
-      "given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
+      "given intOrd: Ord[Int] with \n{ def f(): Int = 1 }".lf2nl
     )
 
     matchSubStructure[Stat](
       "given intOrd: Ord[Int] with \n{ def f(): Int = 1 }",
       { case givenDefn: Defn.Given =>
-        assertEquals(givenDefn.templ.syntax, "Ord[Int] with \n{ def f(): Int = 1 }")
+        assertEquals(givenDefn.templ.syntax, "Ord[Int] with \n{ def f(): Int = 1 }".lf2nl)
       }
     )
   }
@@ -21,13 +21,13 @@ class Scala3SyntaxSuite extends BaseDottySuite {
   test("private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }") {
     assertEquals(
       templStat("private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }").syntax,
-      "private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }"
+      "private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }".lf2nl
     )
 
     matchSubStructure[Stat](
       "private final given intOrd: Ord[Int] with \n{ def f(): Int = 1 }",
       { case givenDefn: Defn.Given =>
-        assertEquals(givenDefn.templ.syntax, "Ord[Int] with \n{ def f(): Int = 1 }")
+        assertEquals(givenDefn.templ.syntax, "Ord[Int] with \n{ def f(): Int = 1 }".lf2nl)
       }
     )
   }
