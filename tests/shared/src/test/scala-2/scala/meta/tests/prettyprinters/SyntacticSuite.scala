@@ -652,7 +652,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         )
       )))
     )))
-    assertEquals(tree.syntax, code)
+    assertEquals(tree.syntax, code.lf2nl)
     assertEquals(
       tree.reprint,
       s"""package foo1

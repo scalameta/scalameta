@@ -25,45 +25,43 @@ private[meta] object Show {
     def delay(value: CharSequence = null): Unit = delay = value
 
     def append(value: String): Unit = if (value.nonEmpty) {
-      appendDelay()
-      if (wasNL) appendImpl(indentation)
+      appendPrepare()
       appendImpl(value)
-      afterEOL = 0
+    }
+
+    def appendAsIs(value: String): Unit = if (value.nonEmpty) {
+      appendPrepare()
+      sb.append(value)
+    }
+
+    private def appendPrepare(): Unit = {
+      appendDelay()
+      if (wasNL) {
+        sb.append(indentation)
+        afterEOL = 0
+      }
     }
 
     private def appendDelay(): Unit = if (delay ne null) {
-      appendImpl(delay)
+      if (delay.length() != 0) appendImpl(delay)
       delay = null
     }
 
     private def appendImpl(value: CharSequence): Unit = {
       val len = value.length
-      if (len != 0)
-        if (value eq indentation) sb.append(indentation)
-        else {
-          // check for CR, would erase the current line on Unix
-          val hasCR = EOL == "\n" &&
-            (value match {
-              case x: String => x.contains('\r')
-              case _ => true
-            })
-          if (hasCR) {
-            var idx = 0
-            while (idx < len) {
-              value.charAt(idx) match {
-                case '\r' =>
-                  idx += 1
-                  if (idx < len) {
-                    val ch = value.charAt(idx)
-                    if (ch != '\n') sb.append('\n')
-                    sb.append(ch)
-                  }
-                case ch => sb.append(ch)
-              }
-              idx += 1
-            }
-          } else sb.append(value)
+      var idx = 0
+      while (idx < len) {
+        value.charAt(idx) match {
+          case '\r' =>
+            sb.append(EOL)
+            // now skip '\n'
+            idx += 1
+            if (idx < len && value.charAt(idx) != '\n') idx -= 1
+          case '\n' => sb.append(EOL)
+          case ch => sb.append(ch)
         }
+        idx += 1
+      }
     }
 
     def append(fn: CharSequence => Result): Unit = fn(sb).serialize(this)
@@ -109,6 +107,11 @@ private[meta] object Show {
     override def desc: String = "None"
     def headChar: Option[Char] = Option.empty
     override def serialize(implicit builder: Serializer): Unit = {} // do nothing
+  }
+  final case class AsIs(value: String) extends Result {
+    override def desc: String = s"AsIs($value)"
+    def headChar: Option[Char] = value.headOption
+    override def serialize(implicit builder: Serializer): Unit = builder.appendAsIs(value)
   }
   final case class Str(value: String) extends Result {
     override def desc: String = s"Str($value)"
@@ -264,6 +267,8 @@ private[meta] object Show {
     alt(showA(a), showB(b))
 
   def function(fn: CharSequence => Result): Result = Function(fn)
+
+  def asis(value: String): Result = if (value.isEmpty) None else AsIs(value)
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)
   implicit def printString[T <: String]: Show[T] = apply(str)

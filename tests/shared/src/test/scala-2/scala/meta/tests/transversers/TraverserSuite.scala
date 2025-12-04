@@ -16,7 +16,7 @@ class TraverserSuite extends TreeSuiteBase {
     val log = scala.collection.mutable.ListBuffer[String]()
     object traverser extends Traverser {
       override def apply(tree: Tree): Unit = {
-        log += tree.toString.trim.replace("\n", " ")
+        log += tree.toString.trim.replace(EOL, " ")
         super.apply(tree)
       }
     }
