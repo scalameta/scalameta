@@ -528,6 +528,9 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Type.ByName
          |scala.meta.Type.ByNameType
          |scala.meta.Type.CapSetName
+         |scala.meta.Type.Captures
+         |scala.meta.Type.CapturesAny
+         |scala.meta.Type.CapturesSet
          |scala.meta.Type.Capturing
          |scala.meta.Type.CasesBlock
          |scala.meta.Type.ContextFunction

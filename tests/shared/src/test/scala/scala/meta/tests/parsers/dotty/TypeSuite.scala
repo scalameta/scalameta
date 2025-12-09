@@ -696,11 +696,9 @@ class TypeSuite extends BaseDottySuite {
   test("#4385 capture checking: empty") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "def foo(a: A^{}): Unit"
-    val error =
-      """|<input>:1: error: `identifier` expected but `}` found
-         |def foo(a: A^{}): Unit
-         |              ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "def foo(a: A^{}): Unit"
+    val tree = Decl.Def(Nil, "foo", Nil, List(List(tparam("a", Some(pcap("A", Nil: _*))))), "Unit")
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scala36 type member context bounds 1") {

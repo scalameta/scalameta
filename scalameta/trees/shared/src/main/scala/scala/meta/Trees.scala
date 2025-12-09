@@ -812,10 +812,19 @@ object Type {
     final def stats: List[Tree] = typeDefs
   }
 
+  @branch
+  trait Captures extends Tree
+
+  @ast
+  class CapturesAny() extends Captures
+
+  @ast
+  class CapturesSet(values: List[Term.Ref]) extends Captures
+
   @ast
   class Capturing(
       tpe: Type,
-      caps: List[Term.Ref] // [cap]tures or [cap]abilities
+      caps: Captures // [cap]tures or [cap]abilities
   ) extends Type
 
   def fresh(): Type.Name = fresh("fresh")
