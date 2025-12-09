@@ -1031,7 +1031,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
       else typ()
 
-    private def typeCaptures(needCaret: Boolean, allowCaptures: Boolean): Option[List[Term.Ref]] =
+    private def typeCaptures(needCaret: Boolean, allowCaptures: Boolean): Option[Type.Captures] =
       if (allowCaptures && dialect.allowCaptureChecking) {
         def ifCaret[A](thenPart: => A, elsePart: => A): A = currToken match {
           case t: Token.Ident if t.text == "^" =>
@@ -1039,12 +1039,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             thenPart
           case _ => elsePart
         }
-        def captures(): Option[List[Term.Ref]] = Some(commaSeparated(path() match {
-          case x: Term.Name => ifCaret(autoEndPos(x)(Term.CapSetName(x.value)), x)
-          case x => x
-        }))
-        if (needCaret) ifCaret(inBracesOr(captures())(Some(Nil)), None)
-        else inBracesOr(captures())(None)
+        def capturesOnBrace(): Option[Type.Captures] =
+          if (!acceptOpt[Token.LeftBrace]) None
+          else Some(autoEndPos(prevIndex)(Type.CapturesSet(
+            if (acceptOpt[Token.RightBrace]) Nil
+            else inBracesAfterOpen(commaSeparated(path() match {
+              case x: Term.Name => ifCaret(autoEndPos(x)(Term.CapSetName(x.value)), x)
+              case x => x
+            }))
+          )))
+        if (!needCaret) capturesOnBrace()
+        else ifCaret(capturesOnBrace().orElse(Some(atCurPosEmpty(Type.CapturesAny()))), None)
       } else None
 
     private def withTypeCapturesOpt(startPos: Int, needCaret: Boolean, allowCaptures: Boolean = true)(

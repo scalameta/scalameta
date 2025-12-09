@@ -193,8 +193,12 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
     .PureContextFunction(param.toList, res)
   final def ppolyfunc(params: Type.Param*)(body: Type) = Type.PolyFunction(params.toList, body)
 
-  final def pcap(tpe: Type, caps: Term.Ref*): Type.Capturing = Type.Capturing(tpe, caps.toList)
-  final def pcap(tpe: String, caps: String*): Type.Capturing = pcap(tpe, caps.map(tnameOrCapset): _*)
+  final def pcap(tpe: Type): Type.Capturing = Type.Capturing(tpe, Type.CapturesAny())
+  final def pcap(tpe: Type, caps: Term.Ref*): Type.Capturing = Type
+    .Capturing(tpe, Type.CapturesSet(caps.toList))
+  final def pcap(tpe: String): Type.Capturing = pcap(pname(tpe))
+  final def pcap(tpe: String, caps: String*): Type.Capturing =
+    pcap(pname(tpe), caps.map(tnameOrCapset): _*)
 
   final def tpc(tp: Term.Param*): Term.ParamClause = tpc(null, tp: _*)
   final def tpc(mod: Mod.ParamsType, tp: Term.Param*): Term.ParamClause = Term

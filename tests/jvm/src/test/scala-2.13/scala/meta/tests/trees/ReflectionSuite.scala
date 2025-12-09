@@ -24,7 +24,7 @@ class ReflectionSuite extends TreeSuiteBase {
     val sym = symbolOf[scala.meta.Tree]
     assert(sym.isRoot)
     val root = sym.asRoot
-    assertEquals((root.allBranches.length, root.allLeafs.length), (73, 479))
+    assertEquals((root.allBranches.length, root.allLeafs.length), (74, 484))
   }
 
   test("If") {
@@ -151,6 +151,7 @@ class ReflectionSuite extends TreeSuiteBase {
          |scala.meta.Type
          |scala.meta.Type.ArgClause
          |scala.meta.Type.Bounds
+         |scala.meta.Type.Captures
          |scala.meta.Type.CasesBlock
          |scala.meta.Type.FuncParamClause
          |scala.meta.Type.Name
