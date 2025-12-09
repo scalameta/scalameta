@@ -8,26 +8,26 @@ import com.typesafe.tools.mima.core._
 // More details about Mima:
 // https://github.com/typesafehub/migration-manager/wiki/sbt-plugin#basic-usage
 object Mima {
-  val languageAgnosticCompatibilityPolicy: ProblemFilter = (problem: Problem) => {
-    val (fullName, accessible) = problem match {
-      case problem: TemplateProblem =>
-        val ref = problem.ref
-        (ref.fullName, ref.isPublic && ref.scopedPrivateSuff.isEmpty)
-      case problem: MemberProblem =>
-        val ref = problem.ref
-        val accessible = ScalametaMimaUtils.isPublic(ref) &&
-          (ref.fullName match {
-            case "scala.meta.Dialect.this" =>
-              // exclude ctor with the longest method signature (aka, primary)
-              // for some reason, `private[meta]` on the primary ctor is not visible
-              val descriptorLength = ref.descriptor.length
-              !ref.owner.methods.get(MemberInfo.ConstructorName)
-                .forall(ctor => (ctor eq ref) || ctor.descriptor.length < descriptorLength)
-            case _ => true
-          })
-        (ref.fullName, accessible)
-    }
+  val languageAgnosticCompatibilityPolicy: ProblemFilter = {
+    case problem: TemplateProblem =>
+      val ref = problem.ref
+      isPublicAndNotExcluded(ref.fullName, ref.isPublic && ref.scopedPrivateSuff.isEmpty)
+    case problem: MemberProblem =>
+      val ref = problem.ref
+      val accessible = ScalametaMimaUtils.isPublic(ref) &&
+        (ref.fullName match {
+          case "scala.meta.Dialect.this" =>
+            // exclude ctor with the longest method signature (aka, primary)
+            // for some reason, `private[meta]` on the primary ctor is not visible
+            val descriptorLength = ref.descriptor.length
+            !ref.owner.methods.get(MemberInfo.ConstructorName)
+              .forall(ctor => (ctor eq ref) || ctor.descriptor.length < descriptorLength)
+          case _ => true
+        })
+      isPublicAndNotExcluded(ref.fullName, accessible)
+  }
 
+  private def isPublicAndNotExcluded(fullName: String, accessible: Boolean): Boolean = {
     def exclude(parts: Seq[String]) = parts.exists {
       case "internal" | "contrib" => true
       case _ => false
@@ -64,8 +64,12 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
-    // XXX: io split off from trees, to remove after release
-    exclude[MissingClassProblem]("io.*")
+    // TODO: Type.Capturing is experimental, remove these after release
+    exclude[IncompatibleResultTypeProblem]("Type#Capturing.caps"),
+    exclude[IncompatibleMethTypeProblem]("Type#Capturing.copy"),
+    exclude[DirectMissingMethodProblem]("Type#Capturing.copy$default$2"),
+    exclude[IncompatibleMethTypeProblem]("Type#Capturing.apply"),
+    exclude[IncompatibleMethTypeProblem]("Type#Capturing#Initial.apply")
     // Tree
   )
 }

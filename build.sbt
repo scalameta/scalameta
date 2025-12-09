@@ -217,7 +217,6 @@ lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
     moduleName := "io",
     sharedSettings,
     description := "Scalameta IO abstractions",
-    mimaPreviousArtifacts := Set.empty, // XXX: io split off from trees, to remove after release
     crossScalaVersions := EarliestScala2Versions
   ).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
