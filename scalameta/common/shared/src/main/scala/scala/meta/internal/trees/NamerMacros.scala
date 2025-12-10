@@ -111,7 +111,7 @@ trait CommonNamerMacros extends MacroHelpers {
     """
   }
 
-  protected case class PrivateField(field: ValOrDefDef, persist: Boolean = false)
+  protected case class PrivateField(field: ValOrDefDef, version: Version)
   protected case class PrivateFields(
       prototype: PrivateField,
       parent: PrivateField,
@@ -124,17 +124,19 @@ trait CommonNamerMacros extends MacroHelpers {
 
   protected def getPrivateFields(iname: TypeName): PrivateFields = PrivateFields(
     prototype = PrivateField(
-      q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null"
+      q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null",
+      version = null
     ),
-    parent = PrivateField(q"private[meta] override val privateParent: $TreeClass = null"),
-    origin = PrivateField(q"override val origin: $OriginClass = $OriginModule.None", persist = true),
+    parent =
+      PrivateField(q"private[meta] override val privateParent: $TreeClass = null", version = null),
+    origin = PrivateField(q"override val origin: $OriginClass = $OriginModule.None", Version.zero),
     begComment = PrivateField(
       q"override val begComment: $OptionClass[$CommentsClass] = $NoneModule",
-      persist = true
+      Version(4, 14, 2)
     ),
     endComment = PrivateField(
       q"override val endComment: $OptionClass[$CommentsClass] = $NoneModule",
-      persist = true
+      Version(4, 14, 2)
     )
   )
 
