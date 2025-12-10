@@ -35,7 +35,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
     .asClass
 
   private lazy val privateFields = getPrivateFields(TypeName(c.freshName())).asList
-    .collect { case PrivateField(field, true) => field.name }
+    .collect { case PrivateField(field, version) if version ne null => field.name }
 
   def customAdts(root: Root): Option[List[Adt]] = {
     val nonQuasis = root.allLeafs.filter(leaf => !(leaf.tpe <:< QuasiSymbol.toType))
