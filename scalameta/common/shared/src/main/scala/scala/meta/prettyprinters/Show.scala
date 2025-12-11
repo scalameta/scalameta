@@ -93,7 +93,7 @@ private[meta] object Show {
 
   sealed abstract class Result {
     def desc: String
-    def serialize(implicit builder: Serializer): Unit
+    private[meta] def serialize(implicit builder: Serializer): Unit
     override def toString: String = {
       implicit val builder: Serializer = new Serializer
       serialize
@@ -106,27 +106,29 @@ private[meta] object Show {
   final case object None extends Result {
     override def desc: String = "None"
     def headChar: Option[Char] = Option.empty
-    override def serialize(implicit builder: Serializer): Unit = {} // do nothing
+    override private[meta] def serialize(implicit builder: Serializer): Unit = {} // do nothing
   }
   final case class AsIs(value: String) extends Result {
     override def desc: String = s"AsIs($value)"
     def headChar: Option[Char] = value.headOption
-    override def serialize(implicit builder: Serializer): Unit = builder.appendAsIs(value)
+    override private[meta] def serialize(implicit builder: Serializer): Unit = builder
+      .appendAsIs(value)
   }
   final case class Str(value: String) extends Result {
     override def desc: String = s"Str($value)"
     def headChar: Option[Char] = value.headOption
-    override def serialize(implicit builder: Serializer): Unit = builder.append(value)
+    override private[meta] def serialize(implicit builder: Serializer): Unit = builder.append(value)
   }
   final case class Sequence(xs: Result*) extends Result {
     override def desc: String = s"Sequence(#${xs.length})"
     def headChar: Option[Char] = xs.view.flatMap(_.headChar).headOption
-    override def serialize(implicit builder: Serializer): Unit = xs.foreach(_.serialize)
+    override private[meta] def serialize(implicit builder: Serializer): Unit = xs
+      .foreach(_.serialize)
   }
   final case class Repeat(xs: Seq[Result], sep: String) extends Result {
     override def desc: String = s"Repeat(#${xs.length}, s=$sep)"
     def headChar: Option[Char] = xs.view.flatMap(_.headChar).headOption
-    override def serialize(implicit builder: Serializer): Unit = {
+    override private[meta] def serialize(implicit builder: Serializer): Unit = {
       xs.foreach { x =>
         x.serialize
         builder.delay(sep)
@@ -137,12 +139,12 @@ private[meta] object Show {
   final case class Indent(res: Result) extends Result {
     override def desc: String = s"Indent(r=${res.desc})"
     def headChar: Option[Char] = res.headChar
-    override def serialize(implicit builder: Serializer): Unit = builder.indent(res)
+    override private[meta] def serialize(implicit builder: Serializer): Unit = builder.indent(res)
   }
   final case class Space(res: Result, space: String) extends Result {
     override def desc: String = s"NoSplit(r=${res.desc})"
     def headChar: Option[Char] = res.headChar
-    override def serialize(implicit builder: Serializer): Unit =
+    override private[meta] def serialize(implicit builder: Serializer): Unit =
       if (builder.wasNL) builder.indent(res)
       else {
         builder.append(space)
@@ -152,22 +154,22 @@ private[meta] object Show {
   final case object Blank extends Result {
     override def desc: String = s"Blank()"
     def headChar: Option[Char] = Option.empty
-    override def serialize(implicit builder: Serializer): Unit = builder.blank()
+    override private[meta] def serialize(implicit builder: Serializer): Unit = builder.blank()
   }
   final case class Newline(res: Result) extends Result {
     override def desc: String = s"Newline(r=${res.desc})"
     def headChar: Option[Char] = Option.empty
-    override def serialize(implicit builder: Serializer): Unit = builder.nlBefore(res)
+    override private[meta] def serialize(implicit builder: Serializer): Unit = builder.nlBefore(res)
   }
   final case class Meta(data: Any, res: Result) extends Result {
     override def desc: String = s"Meta(d=$data, r=${res.desc})"
     def headChar: Option[Char] = res.headChar
-    override def serialize(implicit builder: Serializer): Unit = res.serialize
+    override private[meta] def serialize(implicit builder: Serializer): Unit = res.serialize
   }
   final case class Wrap(prefix: String, res: Result, suffix: String) extends Result {
     override def desc: String = s"Wrap(p=$prefix, r=${res.desc}, s=$suffix)"
     def headChar: Option[Char] = prefix.headOption.orElse(res.headChar)
-    override def serialize(implicit builder: Serializer): Unit = {
+    override private[meta] def serialize(implicit builder: Serializer): Unit = {
       builder.delay(prefix)
       res.serialize
       builder.appendNoDelay(suffix)
@@ -176,7 +178,7 @@ private[meta] object Show {
   final case class Function(fn: CharSequence => Result) extends Result {
     override def desc: String = s"Function(...)"
     def headChar: Option[Char] = Option.empty
-    override def serialize(implicit builder: Serializer): Unit = builder.append(fn)
+    override private[meta] def serialize(implicit builder: Serializer): Unit = builder.append(fn)
   }
 
   def apply[T](f: T => Result): Show[T] = new Show[T] {
