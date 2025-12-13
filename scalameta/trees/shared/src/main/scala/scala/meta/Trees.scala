@@ -7,6 +7,8 @@ import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.trees._
 
+import java.lang.{String => JString}
+
 import scala.annotation.tailrec
 import scala.{meta => sm}
 
@@ -209,7 +211,7 @@ object Name {
     checkParent(ParentChecks.NameThis)
   }
   @ast
-  class Indeterminate(value: Predef.String @nonEmpty) extends Name
+  class Indeterminate(value: JString @nonEmpty) extends Name
   @ast
   class Placeholder() extends Name {
     def value = "_"
@@ -238,7 +240,7 @@ object Lit {
   // 1.4f.toString == "1.4"               // in JVM
   // See https://www.scala-js.org/doc/semantics.html#tostring-of-float-double-and-unit
   @ast
-  class Double(format: scala.Predef.String) extends Lit {
+  class Double(format: JString) extends Lit {
     val value = format.toDouble
   }
   object Double {
@@ -249,7 +251,7 @@ object Lit {
     private[meta] def apply(number: scala.BigDecimal): Double = apply(number.toString)
   }
   @ast
-  class Float(format: scala.Predef.String) extends Lit {
+  class Float(format: JString) extends Lit {
     val value = format.toFloat
   }
   object Float {
@@ -274,7 +276,7 @@ object Lit {
     def value: Any = ()
   }
   @ast
-  class String(value: scala.Predef.String) extends Lit
+  class String(value: JString) extends Lit
   @ast
   class Symbol(value: scala.Symbol) extends Lit
 }
@@ -299,9 +301,9 @@ object Term {
   @ast
   class Super(thisp: sm.Name, superp: sm.Name) extends Term.Ref
   @ast
-  class Name(value: Predef.String @nonEmpty) extends sm.Name with Term.Ref with Pat
+  class Name(value: JString @nonEmpty) extends sm.Name with Term.Ref with Pat
   @ast // https://scala-lang.org/api/3.x/docs/docs/reference/experimental/cc.html#capability-polymorphism-1
-  class CapSetName(value: Predef.String @nonEmpty) extends sm.Name with Term.Ref
+  class CapSetName(value: JString @nonEmpty) extends sm.Name with Term.Ref
   @ast
   class Anonymous() extends sm.Name with Term.Ref {
     def value = ""
@@ -551,7 +553,7 @@ object Type {
   @ast
   class AnonymousName() extends Type
   @ast // https://scala-lang.org/api/3.x/docs/docs/reference/experimental/cc.html#capability-polymorphism-1
-  class CapSetName(value: Predef.String @nonEmpty) extends sm.Name with Type.Ref
+  class CapSetName(value: JString @nonEmpty) extends sm.Name with Type.Ref
   @ast
   class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
     checkFields(qual.isPath || qual.isInstanceOf[Term.Super])
