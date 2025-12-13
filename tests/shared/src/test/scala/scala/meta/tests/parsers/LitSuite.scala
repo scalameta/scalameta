@@ -13,49 +13,17 @@ class LitSuite extends ParseSuite {
 
   test("42")(assertTree(term("42"))(int(42)))
 
-  test("2147483648")(
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large for Int
-         |2147483648
-         |^""".stripMargin.lf2nl
-    )(term("2147483648"))
-  )
-
   test("2147483647")(assertTree(term("2147483647"))(int(2147483647)))
 
   test("-2147483648")(assertTree(term("-2147483648"))(int(-2147483648)))
-
-  test("-2147483649")(
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small for Int
-         |-2147483649
-         | ^""".stripMargin.lf2nl
-    )(term("-2147483649"))
-  )
 
   test("42L")(assertTree(term("42L"))(lit(42L)))
 
   test("2147483648L")(assertTree(term("2147483648L"))(lit(2147483648L)))
 
-  test("9223372036854775808L")(
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large for Long
-         |9223372036854775808L
-         |^""".stripMargin.lf2nl
-    )(term("9223372036854775808L"))
-  )
-
   test("9223372036854775807L")(assertTree(term("9223372036854775807L"))(lit(9223372036854775807L)))
 
   test("-9223372036854775808L")(assertTree(term("-9223372036854775808L"))(lit(-9223372036854775808L)))
-
-  test("-9223372036854775809L")(
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small for Long
-         |-9223372036854775809L
-         | ^""".stripMargin.lf2nl
-    )(term("-9223372036854775809L"))
-  )
 
   test("42.42")(matchSubStructure[Stat]("42.42", { case Lit(42.42) => () }))
 
@@ -152,35 +120,9 @@ class LitSuite extends ParseSuite {
     assertTree(term("-0xffffffff"))(Lit.Int(1))
   }
 
-  test("0xffffffff0") {
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large for Int
-         |0xffffffff0
-         |^""".stripMargin.lf2nl
-    )(term("0xffffffff0"))
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small for Int
-         |-0xffffffff0
-         | ^""".stripMargin.lf2nl
-    )(term("-0xffffffff0"))
-  }
-
   test("0b11111111111111111111111111111111") { // 32
     assertTree(term("0b11111111111111111111111111111111"))(Lit.Int(-1))
     assertTree(term("-0b11111111111111111111111111111111"))(Lit.Int(1))
-  }
-
-  test("0b111111111111111111111111111111110") { // 33
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large for Int
-         |0b111111111111111111111111111111110
-         |^""".stripMargin.lf2nl
-    )(term("0b111111111111111111111111111111110"))
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small for Int
-         |-0b111111111111111111111111111111110
-         | ^""".stripMargin.lf2nl
-    )(term("-0b111111111111111111111111111111110"))
   }
 
   test("0xffffffffffffffffL") {
@@ -188,52 +130,45 @@ class LitSuite extends ParseSuite {
     assertTree(term("-0xffffffffffffffffL"))(lit(1L))
   }
 
-  test("0xffffffffffffffff0L") {
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too large for Long
-         |0xffffffffffffffff0L
-         |^""".stripMargin.lf2nl
-    )(term("0xffffffffffffffff0L"))
-    interceptMessage[ParseException](
-      """|<input>:1: error: integer number too small for Long
-         |-0xffffffffffffffff0L
-         | ^""".stripMargin.lf2nl
-    )(term("-0xffffffffffffffff0L"))
-  }
-
   test("unary: +1") {
-    runTestAssert[Stat]("+1", "1")(lit(1))
-    val tree = tapply(lit(1), lit(0))
+    val number = lit(1)
+    runTestAssert[Stat]("+1", "1")(number)
+    val tree = tapply(number, lit(0))
     runTestAssert[Stat]("+1(0)", "1(0)")(tree)
   }
 
   test("unary: -1") {
-    runTestAssert[Stat]("-1")(lit(-1))
-    val tree = tapply(lit(-1), lit(0))
+    val number = lit(-1)
+    runTestAssert[Stat]("-1")(number)
+    val tree = tapply(number, lit(0))
     runTestAssert[Stat]("-1(0)")(tree)
   }
 
   test("unary: ~1") {
-    runTestAssert[Stat]("~1", "-2")(lit(-2))
-    val tree = tapply(lit(-2), lit(0))
+    val number = lit(-2)
+    runTestAssert[Stat]("~1", "-2")(number)
+    val tree = tapply(number, lit(0))
     runTestAssert[Stat]("~1(0)", "-2(0)")(tree)
   }
 
   test("unary: !1") {
-    runTestAssert[Stat]("!1")(Term.ApplyUnary(tname("!"), lit(1)))
-    val tree = Term.ApplyUnary(tname("!"), tapply(lit(1), lit(0)))
+    val number = lit(1)
+    runTestAssert[Stat]("!1")(Term.ApplyUnary(tname("!"), number))
+    val tree = Term.ApplyUnary(tname("!"), tapply(number, lit(0)))
     runTestAssert[Stat]("!1(0)")(tree)
   }
 
   test("unary: +1.0") {
-    runTestAssert[Stat]("+1.0", "1.0d")(lit(1d))
-    val tree = tapply(lit(1d), lit(0))
+    val number = lit(1d)
+    runTestAssert[Stat]("+1.0", "1.0d")(number)
+    val tree = tapply(number, lit(0))
     runTestAssert[Stat]("+1.0(0)", "1.0d(0)")(tree)
   }
 
   test("unary: -1.0") {
-    runTestAssert[Stat]("-1.0", "-1.0d")(lit(-1d))
-    val tree = tapply(lit(-1d), lit(0))
+    val number = lit(-1d)
+    runTestAssert[Stat]("-1.0", "-1.0d")(number)
+    val tree = tapply(number, lit(0))
     runTestAssert[Stat]("-1.0(0)", "-1.0d(0)")(tree)
   }
 
@@ -244,20 +179,23 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: !1.0") {
-    runTestAssert[Stat]("!1.0", "!1.0d")(Term.ApplyUnary(tname("!"), lit(1d)))
-    val tree = Term.ApplyUnary(tname("!"), tapply(lit(1d), lit(0)))
+    val number = lit(1d)
+    runTestAssert[Stat]("!1.0", "!1.0d")(Term.ApplyUnary(tname("!"), number))
+    val tree = Term.ApplyUnary(tname("!"), tapply(number, lit(0)))
     runTestAssert[Stat]("!1.0(0)", "!1.0d(0)")(tree)
   }
 
   test("unary: !true") {
-    runTestAssert[Stat]("!true", "false")(lit(false))
-    val tree = tapply(lit(false), lit(0))
+    val number = lit(false)
+    runTestAssert[Stat]("!true", "false")(number)
+    val tree = tapply(number, lit(0))
     runTestAssert[Stat]("!true(0)", "false(0)")(tree)
   }
 
   test("unary: !false") {
-    runTestAssert[Stat]("!false", "true")(lit(true))
-    val tree = tapply(lit(true), lit(0))
+    val number = lit(true)
+    runTestAssert[Stat]("!false", "true")(number)
+    val tree = tapply(number, lit(0))
     runTestAssert[Stat]("!false(0)", "true(0)")(tree)
   }
 
@@ -295,31 +233,63 @@ class LitSuite extends ParseSuite {
   }
 
   Seq(
-    ("0d", 0d),
-    ("0.0", 0d),
-    ("00e0", 0d),
-    ("00e0f", 0f),
-    ("0xe1", 225),
-    ("0xd", 13),
-    ("0f", 0f),
-    ("0.0f", 0f),
-    ("0xf", 15),
-    ("0", 0),
-    ("0l", 0L),
-    ("0L", 0L),
-    ("0x80000000", -2147483648),
-    ("0x8000000000000000L", -9223372036854775808L),
-    ("3.4028235e38f", Float.MaxValue),
-    ("-3.4028235e38f", Float.MinValue),
-    ("1.7976931348623157e+308d", Double.MaxValue),
-    ("-1.7976931348623157e+308d", Double.MinValue),
-    ("0b00101010", 42),
-    ("0B_0010_1010", 42),
-    ("0b_0010_1010L", 42L)
-  ).foreach { case (code, expected) =>
+    ("0d", lit(0d), 0d, "0d"),
+    ("0.0", lit(0d), 0d, "0.0d"),
+    ("00e0", lit(0d), 0d, "0d"),
+    ("00e0f", lit(0f), 0f, "0f"),
+    ("0xe1", lit(225), 225, "225"),
+    ("0xd", lit(13), 13, "13"),
+    ("0f", lit(0f), 0f, "0f"),
+    ("0.0f", lit(0f), 0f, "0.0f"),
+    ("0xf", lit(15), 15, "15"),
+    ("0", lit(0), 0, "0"),
+    ("0l", lit(0L), 0L, "0L"),
+    ("0L", lit(0L), 0L, "0L"),
+    ("0x80000000", lit(-2147483648), -2147483648, "-2147483648"),
+    (
+      "0x8000000000000000L",
+      lit(-9223372036854775808L),
+      -9223372036854775808L,
+      "-9223372036854775808L"
+    ),
+    ("3.4028235e38f", flt("3.4028235E+38"), Float.MaxValue, "3.4028235E+38f"),
+    ("-3.4028235e38f", flt("-3.4028235E+38"), Float.MinValue, "-3.4028235E+38f"),
+    (
+      "1.7976931348623157e+308d",
+      dbl("1.7976931348623157E+308"),
+      Double.MaxValue,
+      "1.7976931348623157E+308d"
+    ),
+    (
+      "-1.7976931348623157e+308d",
+      dbl("-1.7976931348623157E+308"),
+      Double.MinValue,
+      "-1.7976931348623157E+308d"
+    ),
+    ("1e-500d", dbl("1E-500"), 0d, "1E-500d"),
+    ("-1E-500d", dbl("-1E-500"), 0d, "-1E-500d"),
+    ("2.4E-324d", dbl("2.4E-324"), 0d, "2.4E-324d"),
+    ("-2.4e-324d", dbl("-2.4E-324"), 0d, "-2.4E-324d"),
+    ("2.5e-324d", dbl("2.5E-324"), Double.MinPositiveValue, "2.5E-324d"),
+    ("-2.5E-324d", dbl("-2.5E-324"), -Double.MinPositiveValue, "-2.5E-324d"),
+    ("4.8E-324d", dbl("4.8E-324"), Double.MinPositiveValue, "4.8E-324d"),
+    ("-4.8e-324d", dbl("-4.8E-324"), -Double.MinPositiveValue, "-4.8E-324d"),
+    ("1E-500", dbl("1E-500"), 0d, "1E-500d"),
+    ("-1e-500", dbl("-1E-500"), 0d, "-1E-500d"),
+    ("2.4e-324", dbl("2.4E-324"), 0d, "2.4E-324d"),
+    ("-2.4E-324", dbl("-2.4E-324"), 0d, "-2.4E-324d"),
+    ("2.5E-324", dbl("2.5E-324"), Double.MinPositiveValue, "2.5E-324d"),
+    ("-2.5e-324", dbl("-2.5E-324"), -Double.MinPositiveValue, "-2.5E-324d"),
+    ("4.8e-324", dbl("4.8E-324"), Double.MinPositiveValue, "4.8E-324d"),
+    ("-4.8E-324", dbl("-4.8E-324"), -Double.MinPositiveValue, "-4.8E-324d"),
+    ("0b00101010", lit(42), 42, "42"),
+    ("0B_0010_1010", lit(42), 42, "42"),
+    ("0b_0010_1010L", lit(42L), 42L, "42L")
+  ).foreach { case (code, tree: Lit, number, syntax) =>
     test(s"numeric literal ok scala213: $code") {
       implicit val dialect: Dialect = dialects.Scala213
-      parseStat(code) match { case lit: Lit => assertEquals(lit.value, expected) }
+      runTestAssert[Stat](code, syntax)(tree)
+      assertEquals(tree.value, number)
     }
   }
 
@@ -333,6 +303,96 @@ class LitSuite extends ParseSuite {
   }
 
   Seq(
+    (
+      "2147483648",
+      """|<input>:1: error: integer number too large for Int
+         |2147483648
+         |^""".stripMargin
+    ),
+    (
+      "-2147483649",
+      """|<input>:1: error: integer number too small for Int
+         |-2147483649
+         | ^""".stripMargin
+    ),
+    (
+      "9223372036854775808L",
+      """|<input>:1: error: integer number too large for Long
+         |9223372036854775808L
+         |^""".stripMargin
+    ),
+    (
+      "-9223372036854775809L",
+      """|<input>:1: error: integer number too small for Long
+         |-9223372036854775809L
+         | ^""".stripMargin
+    ),
+    (
+      "0xffffffff0",
+      """|<input>:1: error: integer number too large for Int
+         |0xffffffff0
+         |^""".stripMargin
+    ),
+    (
+      "-0xffffffff0",
+      """|<input>:1: error: integer number too small for Int
+         |-0xffffffff0
+         | ^""".stripMargin
+    ),
+    (
+      "0b111111111111111111111111111111110", // 33
+      """|<input>:1: error: integer number too large for Int
+         |0b111111111111111111111111111111110
+         |^""".stripMargin
+    ),
+    (
+      "-0b111111111111111111111111111111110",
+      """|<input>:1: error: integer number too small for Int
+         |-0b111111111111111111111111111111110
+         | ^""".stripMargin
+    ),
+    (
+      "0xffffffffffffffff0L",
+      """|<input>:1: error: integer number too large for Long
+         |0xffffffffffffffff0L
+         |^""".stripMargin
+    ),
+    (
+      "-0xffffffffffffffff0L",
+      """|<input>:1: error: integer number too small for Long
+         |-0xffffffffffffffff0L
+         | ^""".stripMargin
+    ),
+    (
+      "1.7976931348623158e+308",
+      """|<input>:1: error: floating-point value out of range for Double
+         |1.7976931348623158e+308
+         |^""".stripMargin
+    ),
+    (
+      "-1.7976931348623158e+308",
+      """|<input>:1: error: floating-point value out of range for Double
+         |-1.7976931348623158e+308
+         | ^""".stripMargin
+    ),
+    (
+      "1e10_0000_000_000",
+      """|<input>:1: error: malformed floating-point number
+         |1e10_0000_000_000
+         |^""".stripMargin
+    ),
+    (
+      "1_000_000_000_000",
+      """|<input>:1: error: integer number too large for Int
+         |1_000_000_000_000
+         |^""".stripMargin
+    ),
+    (
+      "1_000_000_000_000_000_000_000l",
+      """|<input>:1: error: integer number too large for Long
+         |1_000_000_000_000_000_000_000l
+         |^""".stripMargin
+    ),
     (
       "00",
       """|<input>:1: error: Non-zero integral values may not have a leading zero.
