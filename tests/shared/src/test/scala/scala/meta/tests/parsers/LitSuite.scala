@@ -295,31 +295,43 @@ class LitSuite extends ParseSuite {
   }
 
   Seq(
-    ("0d", 0d),
-    ("0.0", 0d),
-    ("00e0", 0d),
-    ("00e0f", 0f),
-    ("0xe1", 225),
-    ("0xd", 13),
-    ("0f", 0f),
-    ("0.0f", 0f),
-    ("0xf", 15),
-    ("0", 0),
-    ("0l", 0L),
-    ("0L", 0L),
-    ("0x80000000", -2147483648),
-    ("0x8000000000000000L", -9223372036854775808L),
-    ("3.4028235e38f", Float.MaxValue),
-    ("-3.4028235e38f", Float.MinValue),
-    ("1.7976931348623157e+308d", Double.MaxValue),
-    ("-1.7976931348623157e+308d", Double.MinValue),
-    ("0b00101010", 42),
-    ("0B_0010_1010", 42),
-    ("0b_0010_1010L", 42L)
-  ).foreach { case (code, expected) =>
+    ("0d", 0d, "0d"),
+    ("0.0", 0d, "0.0d"),
+    ("00e0", 0d, "0d"),
+    ("00e0f", 0f, "0f"),
+    ("0xe1", 225, "225"),
+    ("0xd", 13, "13"),
+    ("0f", 0f, "0f"),
+    ("0.0f", 0f, "0.0f"),
+    ("0xf", 15, "15"),
+    ("0", 0, "0"),
+    ("0l", 0L, "0L"),
+    ("0L", 0L, "0L"),
+    ("0x80000000", -2147483648, "-2147483648"),
+    ("0x8000000000000000L", -9223372036854775808L, "-9223372036854775808L"),
+    ("3.4028235e38f", Float.MaxValue, "3.4028235E+38f"),
+    ("-3.4028235e38f", Float.MinValue, "-3.4028235E+38f"),
+    ("1.7976931348623157e+308d", Double.MaxValue, "1.7976931348623157E+308d"),
+    ("-1.7976931348623157e+308d", Double.MinValue, "-1.7976931348623157E+308d"),
+    ("1e-500d", 0d, "1E-500d"),
+    ("-1e-500d", 0d, "-1E-500d"),
+    ("4.8e-324d", Double.MinPositiveValue, "4.8E-324d"),
+    ("-4.8e-324d", -Double.MinPositiveValue, "-4.8E-324d"),
+    ("1e-500", 0d, "1E-500d"),
+    ("-1e-500", 0d, "-1E-500d"),
+    ("4.8e-324", Double.MinPositiveValue, "4.8E-324d"),
+    ("-4.8e-324", -Double.MinPositiveValue, "-4.8E-324d"),
+    ("0b00101010", 42, "42"),
+    ("0B_0010_1010", 42, "42"),
+    ("0b_0010_1010L", 42L, "42L")
+  ).foreach { case (code, expected, reprinted) =>
     test(s"numeric literal ok scala213: $code") {
       implicit val dialect: Dialect = dialects.Scala213
-      parseStat(code) match { case lit: Lit => assertEquals(lit.value, expected) }
+      parseStat(code) match {
+        case lit: Lit =>
+          assertEquals(lit.value, expected)
+          assertEquals(lit.reprint, reprinted)
+      }
     }
   }
 
@@ -333,6 +345,24 @@ class LitSuite extends ParseSuite {
   }
 
   Seq(
+    (
+      "1.7976931348623158e+308",
+      """|<input>:1: error: floating-point value out of range for Double
+         |1.7976931348623158e+308
+         |^""".stripMargin
+    ),
+    (
+      "-1.7976931348623158e+308",
+      """|<input>:1: error: floating-point value out of range for Double
+         |-1.7976931348623158e+308
+         | ^""".stripMargin
+    ),
+    (
+      "1e10_0000_000_000",
+      """|<input>:1: error: malformed floating-point number: Too many nonzero exponent digits.
+         |1e10_0000_000_000
+         |^""".stripMargin
+    ),
     (
       "00",
       """|<input>:1: error: Non-zero integral values may not have a leading zero.
