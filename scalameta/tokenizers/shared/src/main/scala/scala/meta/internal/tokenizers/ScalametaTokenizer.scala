@@ -186,6 +186,15 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
           getInvalid(curr, _),
           Token.Constant.Double(input, dialect, curr.offset, curr.endOffset, _)
         )
+      case DECIMALLIT => curr.decimalVal.fold(
+          getInvalid(curr, _),
+          value => {
+            val maybeDouble = LegacyTokenData.toDoubleOpt(value)
+            maybeDouble.fold[Token](
+              Token.Constant.Decimal(input, dialect, curr.offset, curr.endOffset, value)
+            )(Token.Constant.Double(input, dialect, curr.offset, curr.endOffset, _))
+          }
+        )
       case CHARLIT => Token.Constant.Char(input, dialect, curr.offset, curr.endOffset, curr.charVal)
       case SYMBOLLIT => Token.Constant
           .Symbol(input, dialect, curr.offset, curr.endOffset, scala.Symbol(curr.strVal))

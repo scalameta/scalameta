@@ -260,6 +260,14 @@ object Lit {
     private[meta] def apply(number: scala.BigDecimal): Float = apply(number.toString)
   }
   @ast
+  class Decimal(significand36: scala.Predef.String, exponent36: scala.Predef.String) extends Lit {
+    val value = FineDecimal(FineDecimal.fromBase36(significand36), FineDecimal.fromBase36(exponent36))
+  }
+  object Decimal {
+    def apply(value: FineDecimal): Decimal =
+      apply(FineDecimal.toBase36(value.significand), FineDecimal.toBase36(value.exponent))
+  }
+  @ast
   class Byte(value: scala.Byte) extends Lit
   @ast
   class Short(value: scala.Short) extends Lit

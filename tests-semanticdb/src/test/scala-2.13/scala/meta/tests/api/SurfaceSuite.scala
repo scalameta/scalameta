@@ -66,6 +66,7 @@ class SurfaceSuite extends FunSuite {
       diagnostic,
       """|
          |scala.meta.Dialect
+         |scala.meta.FineDecimal
          |scala.meta.Name.ImplicitName
          |scala.meta.Tree
          |scala.meta.Tree.ImplicitOptionTree
@@ -344,6 +345,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Lit.Boolean
          |scala.meta.Lit.Byte
          |scala.meta.Lit.Char
+         |scala.meta.Lit.Decimal
          |scala.meta.Lit.Double
          |scala.meta.Lit.Float
          |scala.meta.Lit.Int
@@ -591,6 +593,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.tokens.Token.CommentStart
          |scala.meta.tokens.Token.CommentUnquote
          |scala.meta.tokens.Token.Constant.Char
+         |scala.meta.tokens.Token.Constant.Decimal
          |scala.meta.tokens.Token.Constant.Double
          |scala.meta.tokens.Token.Constant.Float
          |scala.meta.tokens.Token.Constant.Int

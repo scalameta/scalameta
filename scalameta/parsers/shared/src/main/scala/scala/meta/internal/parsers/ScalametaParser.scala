@@ -1472,6 +1472,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val number = tok.value
       unary(number).fold[Either[Lit, Lit]](Left(f(number)))(x => Right(f(x)))
     }
+    def getFineDecimal(tok: NumericConstant[FineDecimal], f: FineDecimal => Lit) = {
+      val number = tok.value
+      unary(number).fold[Either[Lit, Lit]](Left(f(number)))(x => Right(f(x)))
+    }
     tok match {
       case tok: Constant.Int =>
         Right(Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue))
@@ -1479,6 +1483,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         Right(Lit.Long(getBigInt(tok, bigIntMaxLong, bigIntMaxULong, "Long").longValue))
       case tok: Constant.Float => getBigDecimal(tok, Lit.Float.apply)
       case tok: Constant.Double => getBigDecimal(tok, Lit.Double.apply)
+      case tok: Constant.Decimal => getFineDecimal(tok, Lit.Decimal.apply)
     }
   }
 

@@ -231,6 +231,8 @@ object Token {
     class Float(value: BigDecimal) extends NumericConstant[BigDecimal]
     @freeform("double constant")
     class Double(value: BigDecimal) extends NumericConstant[BigDecimal]
+    @freeform("decimal constant")
+    class Decimal(value: FineDecimal) extends NumericConstant[FineDecimal]
     @freeform("character constant")
     class Char(value: scala.Char) extends Constant[scala.Char]
     @freeform("symbol constant")

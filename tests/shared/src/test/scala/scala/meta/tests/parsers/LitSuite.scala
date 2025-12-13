@@ -313,14 +313,13 @@ class LitSuite extends ParseSuite {
     ("-3.4028235e38f", Float.MinValue, "-3.4028235E+38f"),
     ("1.7976931348623157e+308d", Double.MaxValue, "1.7976931348623157E+308d"),
     ("-1.7976931348623157e+308d", Double.MinValue, "-1.7976931348623157E+308d"),
-    ("1e-500d", 0d, "1E-500d"),
-    ("-1e-500d", 0d, "-1E-500d"),
-    ("4.8e-324d", Double.MinPositiveValue, "4.8E-324d"),
-    ("-4.8e-324d", -Double.MinPositiveValue, "-4.8E-324d"),
-    ("1e-500", 0d, "1E-500d"),
-    ("-1e-500", 0d, "-1E-500d"),
-    ("4.8e-324", Double.MinPositiveValue, "4.8E-324d"),
-    ("-4.8e-324", -Double.MinPositiveValue, "-4.8E-324d"),
+    ("1.7976931348623158e+308", FineDecimal(17976931348623158L, 292), "1.7976931348623158E+308"),
+    ("-1.7976931348623158e+308", FineDecimal(-17976931348623158L, 292), "-1.7976931348623158E+308"),
+    ("1e10_0000_000_000", FineDecimal(1, 100000000000L), "1e100000000000"),
+    ("1e-500", FineDecimal(1, -500), "1E-500"),
+    ("-1e-500", FineDecimal(-1, -500), "-1E-500"),
+    ("4.8e-324", FineDecimal(48, -325), "4.8E-324"),
+    ("-4.8e-324", FineDecimal(-48, -325), "-4.8E-324"),
     ("0b00101010", 42, "42"),
     ("0B_0010_1010", 42, "42"),
     ("0b_0010_1010L", 42L, "42L")
@@ -345,24 +344,6 @@ class LitSuite extends ParseSuite {
   }
 
   Seq(
-    (
-      "1.7976931348623158e+308",
-      """|<input>:1: error: floating-point value out of range for Double
-         |1.7976931348623158e+308
-         |^""".stripMargin
-    ),
-    (
-      "-1.7976931348623158e+308",
-      """|<input>:1: error: floating-point value out of range for Double
-         |-1.7976931348623158e+308
-         | ^""".stripMargin
-    ),
-    (
-      "1e10_0000_000_000",
-      """|<input>:1: error: malformed floating-point number: Too many nonzero exponent digits.
-         |1e10_0000_000_000
-         |^""".stripMargin
-    ),
     (
       "00",
       """|<input>:1: error: Non-zero integral values may not have a leading zero.
@@ -433,6 +414,30 @@ class LitSuite extends ParseSuite {
       "-1.7976931348623158e+308d",
       """|<input>:1: error: floating-point value out of range for Double
          |-1.7976931348623158e+308d
+         | ^""".stripMargin
+    ),
+    (
+      "1e-500d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |1e-500d
+         |^""".stripMargin
+    ),
+    (
+      "-1e-500d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |-1e-500d
+         | ^""".stripMargin
+    ),
+    (
+      "4.8e-324d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |4.8e-324d
+         |^""".stripMargin
+    ),
+    (
+      "-4.8e-324d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |-4.8e-324d
          | ^""".stripMargin
     )
   ).foreach { case (code, error) =>
