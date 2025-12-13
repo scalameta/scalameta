@@ -45,7 +45,7 @@ class LegacyTokenData {
    */
   private def floatingVal: Either[String, BigDecimal] =
     try Right(BigDecimal(strVal))
-    catch { case e: Exception => Left(s"malformed floating-point number: ${e.getMessage}") }
+    catch { case _: Exception => Left("malformed floating-point number") }
 
   // these values are always non-negative, since we don't include any unary operators
   def intVal: Either[String, BigInt] = integerVal
