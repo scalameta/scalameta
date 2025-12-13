@@ -427,10 +427,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         fetchSingleQuote()
       case '.' =>
         nextChar()
-        if (isDigit()) {
-          putChar('.')
-          setFractionOnDot()
-        } else if (unquoteDialect != null && ch == '.') {
+        if (isDigit()) setFractionOnDot()
+        else if (unquoteDialect != null && ch == '.') {
           base = 0
           while (ch == '.') {
             base += 1
@@ -764,51 +762,46 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * read fractional part and exponent of floating point number if one is present.
    */
   private def setFractionOnDot(): Unit = {
+    putChar('.')
     readDigits(10)
     token = DOUBLELIT
-    getFractionExponentAndTypeSuffix()
-    setFractionDone()
+    setFractionExponentAndTypeSuffix()
   }
 
-  private def getFractionExponentAndTypeSuffix(): Boolean = {
-    val hasExponent = getFractionExponent()
-    getFractionTypeSuffix() || hasExponent
-  }
-
-  private def getFractionExponent(): Boolean = (ch == 'e' || ch == 'E') && {
-    val preExponentLen = cbuf.length()
-    putCharAndNext()
-    if (ch == '+' || ch == '-') putCharAndNext()
-    token = DOUBLELIT
-    if (isDigit()) readDigits(10)
-    else {
-      cbuf.setLength(preExponentLen) // to make it a parsable value
-      setInvalidToken(next) {
-        val isLeadingSeparator = isNumberSeparator() && {
-          nextChar()
-          isDigit()
+  private def setFractionExponentAndTypeSuffix(): Boolean = {
+    // token is either DOUBLELIT if we have seen a dot, or INTLIT if only digits
+    if (ch == 'e' || ch == 'E') {
+      val preExponentLen = cbuf.length()
+      putCharAndNext()
+      if (ch == '+' || ch == '-') putCharAndNext()
+      token = DOUBLELIT
+      if (isDigit()) readDigits(10)
+      else {
+        cbuf.setLength(preExponentLen) // to make it a parsable value
+        setInvalidToken(next) {
+          val isLeadingSeparator = isNumberSeparator() && {
+            nextChar()
+            isDigit()
+          }
+          if (isLeadingSeparator) "leading number separator"
+          else s"Invalid literal floating-point number, exponent not followed by integer"
         }
-        if (isLeadingSeparator) "leading number separator"
-        else s"Invalid literal floating-point number, exponent not followed by integer"
       }
     }
-    true
-  }
-
-  @inline
-  private def getFractionTypeSuffix(): Boolean = {
     ch match {
-      case 'd' | 'D' => token = DOUBLELIT
-      case 'f' | 'F' => token = FLOATLIT
-      case _ => return false
+      case 'd' | 'D' =>
+        token = DOUBLELIT
+        nextChar()
+      case 'f' | 'F' =>
+        token = FLOATLIT
+        nextChar()
+      case _ =>
     }
-    nextChar()
-    true
-  }
-
-  private def setFractionDone(): Unit = {
-    checkNoLetter()
-    setStrVal()
+    token != INTLIT && {
+      checkNoLetter()
+      setStrVal()
+      true
+    }
   }
 
   private def checkNoLetter(): Unit = if (isIdentifierPart(ch) && ch >= ' ' && !isNumberSeparator())
@@ -818,38 +811,38 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * Read a number into strVal and set base
    */
   private def getNumber(hadLeadingZero: Boolean = false): Unit = {
+    token = INTLIT
     readDigits(base)
     val noMoreDigits = cbuf.length() == 0
     if (hadLeadingZero && noMoreDigits) putChar('0')
 
-    def setNumberInt(tokenValue: LegacyToken) = {
+    def setNumberInt() = {
       if (hadLeadingZero && !noMoreDigits) { // octal deprecated in 2.10, removed in 2.11
         val message = "Non-zero integral values may not have a leading zero."
         setInvalidToken(next, offset)(message)
       }
-      setTokStrVal(tokenValue)
+      setStrVal()
     }
 
     def setNumberInteger() =
       if (ch == 'l' || ch == 'L') {
         nextChar()
-        setNumberInt(LONGLIT)
+        token = LONGLIT
+        setNumberInt()
       } else {
         checkNoLetter()
-        setNumberInt(INTLIT)
+        setNumberInt()
       }
 
-    if (base == 10)
-      if (getFractionExponentAndTypeSuffix()) setFractionDone()
-      else if (ch == '.') {
+    if (base != 10) setNumberInteger()
+    else if (!setFractionExponentAndTypeSuffix())
+      if (ch == '.') {
         val nextChar = peekRawChar()
         if (CharArrayReader.isDigit(nextChar.ch)) {
-          putChar(ch) // '.'
           setNextRawChar(nextChar)
           setFractionOnDot()
-        } else setNumberInt(INTLIT)
+        } else setNumberInt()
       } else setNumberInteger()
-    else setNumberInteger()
   }
 
   /**
