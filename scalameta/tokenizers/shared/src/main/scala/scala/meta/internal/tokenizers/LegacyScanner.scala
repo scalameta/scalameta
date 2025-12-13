@@ -118,6 +118,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     try cbuf.toString
     finally resetCBuf()
 
+  private def setDecimalWholeLength(): Unit = decimalWholeLength = cbuf.length()
+  private def setDecimalSignificand(): Unit = decimalSignificand = getAndResetCBuf()
+
   /**
    * a stack of tokens which indicates whether line-ends can be statement separators also used for
    * keeping track of nesting levels. We keep track of the closing symbol of a region. This can be
@@ -762,22 +765,23 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * read fractional part and exponent of floating point number if one is present.
    */
   private def setFractionOnDot(): Unit = {
-    putChar('.')
+    setDecimalWholeLength()
     readDigits(10)
-    token = DOUBLELIT
+    token = DECIMALLIT
     setFractionExponentAndTypeSuffix()
   }
 
   private def setFractionExponentAndTypeSuffix(): Boolean = {
     // token is either DOUBLELIT if we have seen a dot, or INTLIT if only digits
+    if (token != DECIMALLIT) setDecimalWholeLength()
     if (ch == 'e' || ch == 'E') {
-      val preExponentLen = cbuf.length()
-      putCharAndNext()
+      setDecimalSignificand()
+      nextChar()
       if (ch == '+' || ch == '-') putCharAndNext()
-      token = DOUBLELIT
+      token = DECIMALLIT
       if (isDigit()) readDigits(10)
       else {
-        cbuf.setLength(preExponentLen) // to make it a parsable value
+        cbuf.setLength(0) // to make it a parsable value
         setInvalidToken(next) {
           val isLeadingSeparator = isNumberSeparator() && {
             nextChar()
@@ -787,7 +791,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           else s"Invalid literal floating-point number, exponent not followed by integer"
         }
       }
-    }
+    } else decimalSignificand = null
     ch match {
       case 'd' | 'D' =>
         token = DOUBLELIT
@@ -799,6 +803,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
     token != INTLIT && {
       checkNoLetter()
+      if (decimalSignificand eq null) setDecimalSignificand()
       setStrVal()
       true
     }

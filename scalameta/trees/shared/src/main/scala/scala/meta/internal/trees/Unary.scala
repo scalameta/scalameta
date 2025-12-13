@@ -1,5 +1,6 @@
 package scala.meta.internal.trees
 
+import scala.meta.FineDecimal
 import scala.meta.tokens.Token
 
 private[meta] sealed trait Unary {
@@ -22,6 +23,7 @@ private[meta] object Unary {
     def apply(value: BigInt): BigInt
     // could return None if not applicable (such as `~`)
     def apply(value: BigDecimal): Option[BigDecimal]
+    def apply(value: FineDecimal): Option[FineDecimal]
   }
 
   object Numeric {
@@ -36,24 +38,29 @@ private[meta] object Unary {
     val op = ""
     def apply(value: BigInt): BigInt = value
     def apply(value: BigDecimal): Option[BigDecimal] = Some(value)
+    def apply(value: FineDecimal): Option[FineDecimal] = Some(value)
   }
 
   case object Plus extends Numeric {
     val op = "+"
     def apply(value: BigInt): BigInt = value
     def apply(value: BigDecimal): Option[BigDecimal] = Some(value)
+    def apply(value: FineDecimal): Option[FineDecimal] = Some(value)
   }
 
   case object Minus extends Numeric {
     val op = "-"
     def apply(value: BigInt): BigInt = -value
     def apply(value: BigDecimal): Option[BigDecimal] = Some(-value)
+    def apply(value: FineDecimal): Option[FineDecimal] =
+      Some(new FineDecimal(-value.significand, value.exponent))
   }
 
   case object Tilde extends Numeric {
     val op = "~"
     def apply(value: BigInt): BigInt = ~value
     def apply(value: BigDecimal): Option[BigDecimal] = None
+    def apply(value: FineDecimal): Option[FineDecimal] = None
   }
 
   case object Not extends Logical {

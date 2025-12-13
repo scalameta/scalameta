@@ -295,31 +295,42 @@ class LitSuite extends ParseSuite {
   }
 
   Seq(
-    ("0d", 0d),
-    ("0.0", 0d),
-    ("00e0", 0d),
-    ("00e0f", 0f),
-    ("0xe1", 225),
-    ("0xd", 13),
-    ("0f", 0f),
-    ("0.0f", 0f),
-    ("0xf", 15),
-    ("0", 0),
-    ("0l", 0L),
-    ("0L", 0L),
-    ("0x80000000", -2147483648),
-    ("0x8000000000000000L", -9223372036854775808L),
-    ("3.4028235e38f", Float.MaxValue),
-    ("-3.4028235e38f", Float.MinValue),
-    ("1.7976931348623157e+308d", Double.MaxValue),
-    ("-1.7976931348623157e+308d", Double.MinValue),
-    ("0b00101010", 42),
-    ("0B_0010_1010", 42),
-    ("0b_0010_1010L", 42L)
-  ).foreach { case (code, expected) =>
+    ("0d", 0d, "0d"),
+    ("0.0", 0d, "0.0d"),
+    ("00e0", 0d, "0d"),
+    ("00e0f", 0f, "0f"),
+    ("0xe1", 225, "225"),
+    ("0xd", 13, "13"),
+    ("0f", 0f, "0f"),
+    ("0.0f", 0f, "0.0f"),
+    ("0xf", 15, "15"),
+    ("0", 0, "0"),
+    ("0l", 0L, "0L"),
+    ("0L", 0L, "0L"),
+    ("0x80000000", -2147483648, "-2147483648"),
+    ("0x8000000000000000L", -9223372036854775808L, "-9223372036854775808L"),
+    ("3.4028235e38f", Float.MaxValue, "3.4028235E+38f"),
+    ("-3.4028235e38f", Float.MinValue, "-3.4028235E+38f"),
+    ("1.7976931348623157e+308d", Double.MaxValue, "1.7976931348623157E+308d"),
+    ("-1.7976931348623157e+308d", Double.MinValue, "-1.7976931348623157E+308d"),
+    ("1.7976931348623158e+308", FineDecimal(17976931348623158L, 292), "1.7976931348623158E+308"),
+    ("-1.7976931348623158e+308", FineDecimal(-17976931348623158L, 292), "-1.7976931348623158E+308"),
+    ("1e10_0000_000_000", FineDecimal(1, 100000000000L), "1e100000000000"),
+    ("1e-500", FineDecimal(1, -500), "1E-500"),
+    ("-1e-500", FineDecimal(-1, -500), "-1E-500"),
+    ("4.8e-324", FineDecimal(48, -325), "4.8E-324"),
+    ("-4.8e-324", FineDecimal(-48, -325), "-4.8E-324"),
+    ("0b00101010", 42, "42"),
+    ("0B_0010_1010", 42, "42"),
+    ("0b_0010_1010L", 42L, "42L")
+  ).foreach { case (code, expected, reprinted) =>
     test(s"numeric literal ok scala213: $code") {
       implicit val dialect: Dialect = dialects.Scala213
-      parseStat(code) match { case lit: Lit => assertEquals(lit.value, expected) }
+      parseStat(code) match {
+        case lit: Lit =>
+          assertEquals(lit.value, expected)
+          assertEquals(lit.reprint, reprinted)
+      }
     }
   }
 
@@ -403,6 +414,30 @@ class LitSuite extends ParseSuite {
       "-1.7976931348623158e+308d",
       """|<input>:1: error: floating-point value out of range for Double
          |-1.7976931348623158e+308d
+         | ^""".stripMargin
+    ),
+    (
+      "1e-500d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |1e-500d
+         |^""".stripMargin
+    ),
+    (
+      "-1e-500d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |-1e-500d
+         | ^""".stripMargin
+    ),
+    (
+      "4.8e-324d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |4.8e-324d
+         |^""".stripMargin
+    ),
+    (
+      "-4.8e-324d",
+      """|<input>:1: error: floating-point value out of range for Double
+         |-4.8e-324d
          | ^""".stripMargin
     )
   ).foreach { case (code, error) =>
