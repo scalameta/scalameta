@@ -344,22 +344,16 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           nextChar()
           if (ch == 'x' || ch == 'X') {
             nextChar()
-            base = 16
-            getNumber()
+            getNumber(16)
           } else if (dialect.allowBinaryLiterals && (ch == 'b' || ch == 'B')) {
             nextChar()
-            base = 2
-            getNumber()
-          } else {
+            getNumber(2)
+          } else
             // since we didn't store '0', might need to do it later if there are no more digits
-            base = 10
             getNumber(hadLeadingZero = true)
-          }
         }
         fetchZero()
-      case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-        base = 10
-        getNumber()
+      case '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' => getNumber()
       case '`' => getBackquotedIdent()
       case '"' =>
         def fetchDoubleQuote(): Unit =
@@ -810,7 +804,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   /**
    * Read a number into strVal and set base
    */
-  private def getNumber(hadLeadingZero: Boolean = false): Unit = {
+  private def getNumber(base: Int = 10, hadLeadingZero: Boolean = false): Unit = {
+    curr.base = base
     token = INTLIT
     readDigits(base)
     val noMoreDigits = cbuf.length() == 0
