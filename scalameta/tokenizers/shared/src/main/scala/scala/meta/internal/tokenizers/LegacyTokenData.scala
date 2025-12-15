@@ -2,9 +2,9 @@ package scala.meta
 package internal
 package tokenizers
 
-import java.math.{MathContext, RoundingMode}
+import scala.meta.tokens.Token
 
-import scala.util.Try
+import java.math.{MathContext, RoundingMode}
 
 class LegacyTokenData {
 
@@ -33,31 +33,39 @@ class LegacyTokenData {
    */
   def charVal: Char = if (strVal.isEmpty) 0 else strVal.charAt(0)
 
-  /**
-   * Convert current strVal, base to an integer value This is tricky because of max negative value.
-   */
-  private def integerVal: Either[String, BigInt] =
-    try Right(BigInt(strVal, base))
-    catch { case e: Exception => Left(s"malformed integer number: ${e.getMessage}") }
+  private def isNegativeSign(prevToken: Token): Boolean = prevToken match {
+    case t: Token.Ident => t.text == "-"
+    case _ => false
+  }
 
-  /**
-   * Convert current strVal, base to double value
-   */
-  private def floatingVal: Either[String, BigDecimal] =
+  private def toBigInt(
+      prevToken: Token,
+      maxBitLength: Int,
+      what: String
+  ): Either[String, BigInt] = {
+    try Right(BigInt(strVal, base))
+    catch { case e: Exception => Left(s"malformed integer $what number: ${e.getMessage}") }
+  }.right.flatMap { value =>
+    val adjustedValue =
+      if (isNegativeSign(prevToken)) value.underlying().negate() else value.underlying()
+    val ok = adjustedValue.bitLength() < maxBitLength + (if (base == 10) 0 else 1)
+    if (ok) Right(value) else Left("integer number out of range for " + what)
+  }
+
+  private def toBigDec(max: BigDecimal, what: String): Either[String, BigDecimal] = {
     try Right(BigDecimal(strVal))
-    catch { case _: Exception => Left("malformed floating-point number") }
+    catch { case _: Exception => Left(s"malformed floating-point $what number") }
+  }.right.flatMap(value =>
+    if (value <= max) Right(value) else Left("floating-point value out of range for " + what)
+  )
 
   // these values are always non-negative, since we don't include any unary operators
-  def intVal: Either[String, BigInt] = integerVal
-  def longVal: Either[String, BigInt] = integerVal
-  def floatVal: Either[String, BigDecimal] = floatingVal.right.flatMap(value =>
-    if (value <= LegacyTokenData.bigDecimalMaxFloat) Right(value)
-    else Left("floating-point value out of range for Float")
-  )
-  def doubleVal: Either[String, BigDecimal] = floatingVal.right.flatMap(value =>
-    if (value <= LegacyTokenData.bigDecimalMaxDouble) Right(value)
-    else Left("floating-point value out of range for Double")
-  )
+  def intVal(prevToken: Token): Either[String, BigInt] =
+    toBigInt(prevToken, java.lang.Integer.SIZE, "Int")
+  def longVal(prevToken: Token): Either[String, BigInt] =
+    toBigInt(prevToken, java.lang.Long.SIZE, "Long")
+  def floatVal: Either[String, BigDecimal] = toBigDec(LegacyTokenData.bigDecimalMaxFloat, "Float")
+  def doubleVal: Either[String, BigDecimal] = toBigDec(LegacyTokenData.bigDecimalMaxDouble, "Double")
 
   def setIdentifier(ident: String, dialect: Dialect, check: Boolean = true)(
       fCheck: LegacyTokenData => Unit
