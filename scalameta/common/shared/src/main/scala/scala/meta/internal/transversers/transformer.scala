@@ -77,9 +77,10 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
 
   def leafHandler(l: Leaf, treeName: TermName): Tree = {
     val constructor = hygienicRef(l.sym.companion)
-    val relevantFields = l.fields.filter(f => !(f.tpe =:= typeOf[Any]) && !(f.tpe =:= typeOf[String]))
-    if (relevantFields.isEmpty) return q"$treeName"
-    val transformedFields: List[ValDef] = relevantFields.map(transformField(treeName))
+    val hasOnlyPrimitiveFields = l.fields
+      .forall(f => f.tpe =:= typeOf[Any] || PrimitiveTpe.unapply(f.tpe))
+    if (hasOnlyPrimitiveFields) return q"$treeName"
+    val transformedFields: List[ValDef] = l.fields.map(transformField(treeName))
 
     q"""
       var same = true
