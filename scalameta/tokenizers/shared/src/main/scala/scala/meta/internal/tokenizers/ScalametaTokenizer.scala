@@ -7,6 +7,8 @@ import scala.meta.inputs._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 
+import java.{util => ju}
+
 import scala.annotation.tailrec
 
 class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: TokenizerOptions) {
@@ -17,7 +19,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
   def tokenize(): Tokens = {
     scanner.initialize(bof = true)
 
-    implicit val tokens = new java.util.ArrayList[Token]()
+    implicit val tokens = new ju.ArrayList[Token]()
     val whitespaceTokenizer: WhitespaceTokenizer = WhitespaceTokenizer(input, dialect)
 
     @inline
@@ -32,8 +34,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       } else nt
     }
 
-    // tokens is non-empty, contains BOF
-    def lastEmittedToken: Token = tokens.get(tokens.size() - 1)
     def isAtLineStart: Boolean = lastEmittedToken.isInstanceOf[Token.AtEOLorF]
 
     @tailrec
@@ -167,14 +167,14 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
     Token.Xml.Part(input, dialect, beg, end, part)
   }
 
-  private def getToken(curr: LegacyTokenData): Token = {
+  private def getToken(curr: LegacyTokenData)(implicit tokens: ju.ArrayList[Token]): Token = {
     (curr.token: @scala.annotation.switch) match {
       case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset, curr.strVal)
-      case INTLIT => curr.intVal.fold(
+      case INTLIT => curr.intVal(lastEmittedToken).fold(
           getInvalid(curr, _),
           Token.Constant.Int(input, dialect, curr.offset, curr.endOffset, _)
         )
-      case LONGLIT => curr.longVal.fold(
+      case LONGLIT => curr.longVal(lastEmittedToken).fold(
           getInvalid(curr, _),
           Token.Constant.Long(input, dialect, curr.offset, curr.endOffset, _)
         )
@@ -310,6 +310,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
 
   private def getInvalid(curr: LegacyTokenData, error: String): Token.Invalid =
     new Token.Invalid(input, dialect, curr.offset, curr.endOffset, error)
+
+  // tokens is non-empty, contains BOF
+  private def lastEmittedToken(implicit toks: ju.ArrayList[Token]): Token = toks.get(toks.size() - 1)
 
 }
 

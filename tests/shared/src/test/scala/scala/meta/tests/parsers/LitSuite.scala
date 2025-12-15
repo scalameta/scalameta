@@ -305,61 +305,61 @@ class LitSuite extends ParseSuite {
   Seq(
     (
       "2147483648",
-      """|<input>:1: error: integer number too large for Int
+      """|<input>:1: error: integer number out of range for Int
          |2147483648
          |^""".stripMargin
     ),
     (
       "-2147483649",
-      """|<input>:1: error: integer number too small for Int
+      """|<input>:1: error: integer number out of range for Int
          |-2147483649
          | ^""".stripMargin
     ),
     (
       "9223372036854775808L",
-      """|<input>:1: error: integer number too large for Long
+      """|<input>:1: error: integer number out of range for Long
          |9223372036854775808L
          |^""".stripMargin
     ),
     (
       "-9223372036854775809L",
-      """|<input>:1: error: integer number too small for Long
+      """|<input>:1: error: integer number out of range for Long
          |-9223372036854775809L
          | ^""".stripMargin
     ),
     (
       "0xffffffff0",
-      """|<input>:1: error: integer number too large for Int
+      """|<input>:1: error: integer number out of range for Int
          |0xffffffff0
          |^""".stripMargin
     ),
     (
       "-0xffffffff0",
-      """|<input>:1: error: integer number too small for Int
+      """|<input>:1: error: integer number out of range for Int
          |-0xffffffff0
          | ^""".stripMargin
     ),
     (
       "0b111111111111111111111111111111110", // 33
-      """|<input>:1: error: integer number too large for Int
+      """|<input>:1: error: integer number out of range for Int
          |0b111111111111111111111111111111110
          |^""".stripMargin
     ),
     (
       "-0b111111111111111111111111111111110",
-      """|<input>:1: error: integer number too small for Int
+      """|<input>:1: error: integer number out of range for Int
          |-0b111111111111111111111111111111110
          | ^""".stripMargin
     ),
     (
       "0xffffffffffffffff0L",
-      """|<input>:1: error: integer number too large for Long
+      """|<input>:1: error: integer number out of range for Long
          |0xffffffffffffffff0L
          |^""".stripMargin
     ),
     (
       "-0xffffffffffffffff0L",
-      """|<input>:1: error: integer number too small for Long
+      """|<input>:1: error: integer number out of range for Long
          |-0xffffffffffffffff0L
          | ^""".stripMargin
     ),
@@ -377,19 +377,19 @@ class LitSuite extends ParseSuite {
     ),
     (
       "1e10_0000_000_000",
-      """|<input>:1: error: malformed floating-point number
+      """|<input>:1: error: malformed floating-point Double number
          |1e10_0000_000_000
          |^""".stripMargin
     ),
     (
       "1_000_000_000_000",
-      """|<input>:1: error: integer number too large for Int
+      """|<input>:1: error: integer number out of range for Int
          |1_000_000_000_000
          |^""".stripMargin
     ),
     (
       "1_000_000_000_000_000_000_000l",
-      """|<input>:1: error: integer number too large for Long
+      """|<input>:1: error: integer number out of range for Long
          |1_000_000_000_000_000_000_000l
          |^""".stripMargin
     ),

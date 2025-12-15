@@ -1456,37 +1456,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       tok: NumericConstant[_],
       unary: Unary.Numeric
   ): Either[Lit, Lit] = {
-    def getBigInt(tok: NumericConstant[BigInt], dec: BigInt, hex: BigInt, typ: String) = {
-      // decimal never starts with `0` as octal was removed in 2.11; "hex" includes `0x` or `0b`
-      // non-decimal literals allow signed overflow within unsigned range
-      val max = if (tok.text(0) != '0') dec else hex
-      // token value is always positive as it doesn't take into account a sign
-      val value = tok.value
-      val result = unary(value)
-      if (result.signum < 0) {
-        if (value > max) syntaxError(s"integer number too small for $typ", at = tok)
-      } else if (value >= max) syntaxError(s"integer number too large for $typ", at = tok)
-      result
-    }
     def getBigDecimal(tok: NumericConstant[BigDecimal], f: BigDecimal => Lit) = {
       val number = tok.value
       unary(number).fold[Either[Lit, Lit]](Left(f(number)))(x => Right(f(x)))
     }
     tok match {
-      case tok: Constant.Int =>
-        Right(Lit.Int(getBigInt(tok, bigIntMaxInt, bigIntMaxUInt, "Int").intValue))
-      case tok: Constant.Long =>
-        Right(Lit.Long(getBigInt(tok, bigIntMaxLong, bigIntMaxULong, "Long").longValue))
+      case tok: Constant.Int => Right(Lit.Int(unary(tok.value).intValue))
+      case tok: Constant.Long => Right(Lit.Long(unary(tok.value).longValue))
       case tok: Constant.Float => getBigDecimal(tok, Lit.Float.apply)
       case tok: Constant.Double => getBigDecimal(tok, Lit.Double.apply)
     }
   }
 
   private def numericLiteralWithUnaryAt(tok: NumericConstant[_], unary: Unary.Numeric): Lit =
-    numericLiteralMaybeWithUnaryAt(tok, unary) match {
-      case Right(x) => x
-      case _ => syntaxError(s"bad unary op `${unary.op}` for floating-point", at = tok)
-    }
+    numericLiteralMaybeWithUnaryAt(tok, unary).right
+      .getOrElse(syntaxError(s"bad unary op `${unary.op}` for floating-point", at = tok))
 
   def literal(): Lit = atCurPosNext {
     currToken match {
@@ -4594,14 +4578,8 @@ object ScalametaParser {
     case v => f(v)
   }
 
-  private val bigIntMaxInt = BigInt(Int.MaxValue) + 1
-  private val bigIntMaxUInt = bigIntMaxInt << 1
-
-  private val bigIntMaxLong = BigInt(Long.MaxValue) + 1
-  private val bigIntMaxULong = bigIntMaxLong << 1
-
-  private def getTokenName[T <: Token: ClassTag]: String = {
-    val name = classTag[T].runtimeClass.getName
+  private def getTokenName[T <: Token](implicit ctag: ClassTag[T]): String = {
+    val name = ctag.runtimeClass.getName
     val simplerName = name.substring(name.lastIndexOf('.') + 1)
     simplerName.stripPrefix("Token$").replace('$', '.') match {
       case "Semicolon" => ";"
