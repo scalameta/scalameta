@@ -27,28 +27,26 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val isPrivateOK = c.eval(isPrivateOKExpr)
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
-    val adts =
-      // NOTE: The code below doesn't quite work, because we can have `A` and `B`, none of which inherits each other,
-      // but then at runtime we get `C` which inherits both and then execution suddenly takes the wrong path.
-      // Real life example: Term.Name and Quasi, none of them are related, so we kinda can reorder their cases, right?
-      // Nope! If we get Term.Name.Quasi, then we really need it to go into Quasi, but not into Term.Name.
-      // Therefore, simple sorting doesn't work.
-      //
-      // // NOTE: need to make sure that more specific leafs come before less specific ones
-      // // so that we don't get dead code during pattern matching
-      // val cache = mutable.Map[Symbol, Int]()
-      // def metric(sym: Symbol): Int = cache.getOrElseUpdate(sym, {
-      //   if (sym == root.sym) 0
-      //   else {
-      //     val classSym = if (sym.isModule) sym.asModule.moduleClass else sym.asClass
-      //     val parents = classSym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
-      //     val relevantParents = parents.filter(_.asType.toType <:< root.tpe)
-      //     relevantParents.length + relevantParents.map(metric).sum
-      //   }
-      // })
-      // unsortedAdts.sortBy(adt => -1 * metric(adt.sym))
-      unsortedAdts
-    if (adts.isEmpty) {
+    // NOTE: The code below doesn't quite work, because we can have `A` and `B`, none of which inherits each other,
+    // but then at runtime we get `C` which inherits both and then execution suddenly takes the wrong path.
+    // Real life example: Term.Name and Quasi, none of them are related, so we kinda can reorder their cases, right?
+    // Nope! If we get Term.Name.Quasi, then we really need it to go into Quasi, but not into Term.Name.
+    // Therefore, simple sorting doesn't work.
+    //
+    // // NOTE: need to make sure that more specific leafs come before less specific ones
+    // // so that we don't get dead code during pattern matching
+    // val cache = mutable.Map[Symbol, Int]()
+    // def metric(sym: Symbol): Int = cache.getOrElseUpdate(sym, {
+    //   if (sym == root.sym) 0
+    //   else {
+    //     val classSym = if (sym.isModule) sym.asModule.moduleClass else sym.asClass
+    //     val parents = classSym.info.asInstanceOf[ClassInfoType].parents.map(_.typeSymbol)
+    //     val relevantParents = parents.filter(_.asType.toType <:< root.tpe)
+    //     relevantParents.length + relevantParents.map(metric).sum
+    //   }
+    // })
+    // unsortedAdts.sortBy(adt => -1 * metric(adt.sym))
+    if (unsortedAdts.isEmpty) {
       val message = s"materialization failed for Liftable[${weakTypeOf[T]}] " +
         s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, " +
         s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
@@ -59,9 +57,9 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val mainModule = c.freshName(TermName("Module"))
     val mainMethod = TermName("liftableSub" + root.prefix.capitalize.replace(".", ""))
     val localName = c.freshName(TermName("x"))
-    val defNames = adts
-      .map(adt => c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
-    val liftAdts = adts.zip(defNames).map { case (adt, defName) =>
+    val adts = unsortedAdts
+      .map(adt => adt -> c.freshName(TermName("lift" + adt.prefix.capitalize.replace(".", ""))))
+    val liftAdts = adts.map { case (adt, defName) =>
       val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse {
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
         def getNamePath(parts: Iterable[String]): Tree = parts
@@ -107,7 +105,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         body
       )
     }
-    val clauses = adts.zip(defNames).map { case (adt, name) =>
+    val clauses = adts.map { case (adt, name) =>
       cq"$localName: ${adt.tpe} => $name($localName.asInstanceOf[${adt.tpe}])"
     }
     q"""
