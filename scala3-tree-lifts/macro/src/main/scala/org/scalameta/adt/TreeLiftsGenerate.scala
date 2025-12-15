@@ -86,8 +86,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
     val isPrivateOK = c.eval(isPrivateOKExpr)
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
-    val adts = unsortedAdts
-    if (adts.isEmpty) {
+    if (unsortedAdts.isEmpty) {
       val message = s"materialization failed for Liftable[${weakTypeOf[T]}] " +
         s"(the most common reason for that is that you cannot materialize ADTs that haven't been compiled yet, " +
         s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
@@ -96,8 +95,8 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
     val localName = c.freshName(TermName("x"))
     def getArgs(fields: List[TermName]) = fields.map(f => s"term($localName.$f)").mkString(", ")
     val privateArgs = getArgs(privateFields)
-    val defNames = adts.map(adt => "lift" + adt.prefix.capitalize.replace(".", ""))
-    val liftAdts = adts.zip(defNames).map { case (adt, defName) =>
+    val adts = unsortedAdts.map(adt => adt -> ("lift" + adt.prefix.capitalize.replace(".", "")))
+    val liftAdts = adts.map { case (adt, defName) =>
       val defaultBody: String = customMatcher(adt, defName, localName).getOrElse {
         val init = "_root_"
         def getNamePath(parts: Iterable[String]) = parts.foldLeft(init)((acc, part) => s"$acc.$part")
@@ -123,7 +122,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
       val body = customWrapper(adt, defName, localName, defaultBody).getOrElse(defaultBody)
       s"def $defName($localName: ${adt.tpe}) = $body"
     }
-    val clauses = adts.zip(defNames).map { case (adt, name) => s"case y : ${adt.tpe} => $name(y)" }
+    val clauses = adts.map { case (adt, name) => s"case y : ${adt.tpe} => $name(y)" }
 
     val retStr =
       s"""|package scala.meta
