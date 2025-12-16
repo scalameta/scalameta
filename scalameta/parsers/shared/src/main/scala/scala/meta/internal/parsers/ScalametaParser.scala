@@ -218,6 +218,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   @inline
+  private def nextAfter[T](body: T): T = next(body)
+
+  @inline
   final def inParens[T](body: => T): T = {
     accept[LeftParen]
     inParensAfterOpen(body)
@@ -339,16 +342,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
   def atPos[T <: Tree](pos: Int)(body: => T): T = atPosWithBody(pos, body, pos)
   def atCurPos[T <: Tree](body: => T): T = atPos(currIndex)(body)
-  def atCurPosNext[T <: Tree](body: => T): T =
-    try atCurPos(body)
-    finally next()
+  def atCurPosNext[T <: Tree](body: => T): T = nextAfter(atCurPos(body))
 
   def atPosEmpty[T <: Tree](pos: Int)(body: => T): T = atPosWithBody(pos, body, pos - 1)
   def atPosEmpty[T <: Tree](pos: StartPos)(body: => T): T = atPosEmpty(pos.begIndex)(body)
   def atCurPosEmpty[T <: Tree](body: => T): T = atPosEmpty(currIndex)(body)
-  def atCurPosEmptyNext[T <: Tree](body: => T): T =
-    try atCurPosEmpty(body)
-    finally next()
+  def atCurPosEmptyNext[T <: Tree](body: => T): T = nextAfter(atCurPosEmpty(body))
 
   private val originSource = new Origin.ParsedSource(input)
 
@@ -1408,9 +1407,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         maybeSelectors(autoEndPos(name)(Term.Select(superp, termName())))
       }
     }
-    def getAnonQual(): Name =
-      try anonName()
-      finally next()
+    def getAnonQual(): Name = nextAfter(anonName())
     def getQual(name: Term.Name): Name = {
       next()
       name.becomeOr[Name](x => copyPos(x)(Name.Indeterminate(x.value)))
@@ -1448,8 +1445,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def numericLiteral(unary: Unary.Numeric): Lit = {
     val number = currToken.asInstanceOf[NumericConstant[_]]
-    next()
-    numericLiteralWithUnaryAt(number, unary)
+    nextAfter(numericLiteralWithUnaryAt(number, unary))
   }
 
   private def numericLiteralMaybeWithUnaryAt(
@@ -2276,8 +2272,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
       (currToken, unary) match {
         case (tok: NumericConstant[_], unary: Unary.Numeric) =>
-          next()
-          rest(numericLiteralMaybeWithUnaryAt(tok, unary).fold(applyUnary, addPos))
+          rest(nextAfter(numericLiteralMaybeWithUnaryAt(tok, unary)).fold(applyUnary, addPos))
         case (tok: BooleanConstant, unary: Unary.Logical) =>
           next()
           rest(addPos(Lit.Boolean(unary(tok.value))))
