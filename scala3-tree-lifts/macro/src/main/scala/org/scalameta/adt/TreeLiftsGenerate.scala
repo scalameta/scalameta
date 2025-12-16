@@ -92,14 +92,17 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
         s"i.e. materialization will fail if the file with ADT definitions comes after the file with the materialization call)"
       c.abort(c.enclosingPosition, message)
     }
-    val localName = c.freshName(TermName("x"))
-    def getArgs(fields: List[TermName]) = fields.map(f => s"term($localName.$f)").mkString(", ")
+    val localName = TermName("_x")
+    def getArgs(fields: List[TermName]) = fields.map(f => s"$localName.$f").mkString(",")
     val privateArgs = getArgs(privateFields)
     val adts = unsortedAdts.map(adt => adt -> ("lift" + adt.prefix.capitalize.replace(".", "")))
     val liftAdts = adts.map { case (adt, defName) =>
       val defaultBody: String = customMatcher(adt, defName, localName).getOrElse {
-        val init = "_root_"
-        def getNamePath(parts: Iterable[String]) = parts.foldLeft(init)((acc, part) => s"$acc.$part")
+        def getNamePath(parts: Iterable[String]) = {
+          val name = parts.mkString(".")
+          val smname = name.stripPrefix("scala.meta.")
+          if (smname ne name) "sm." + smname else "_root_." + name
+        }
         val nameParts = adt.sym.fullName.split('.')
         if (adt.sym.isClass) {
           val args = getArgs(adt match {
@@ -139,6 +142,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
           |
           |import scala.collection.mutable
           |import scala.annotation.tailrec
+          |import scala.language.implicitConversions
           |
           |$treeLiftsTrait
           |
@@ -207,19 +211,24 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
        |""".stripMargin
 
   def termMethods =
-    """|  def term[T <: sm.Tree](tree: T): Tree = liftableSubTree0(tree)
-       |  def term[T <: sm.Tree: Type](tree: Seq[T]): Tree = liftTrees[T](tree)
-       |  def term[T <: sm.Tree: Type](tree: List[T]): Tree = liftTrees[T](tree)
-       |  @scala.annotation.targetName("term2") def term[T <: sm.Tree: Type](tree: Seq[List[T]]): Tree = liftTreess(tree.toList)
-       |  @scala.annotation.targetName("term3") def term[T <: sm.Tree: Type](tree: List[List[T]]): Tree = liftTreess(tree)
-       |  def term[T <: sm.Tree: Type](tree: Option[T]): Tree = liftOptionTree[T](tree)
-       |  def term(tree: Origin): Tree = liftOrigin(tree)
-       |  def term(tree: String): Tree = Literal(StringConstant(tree))
-       |  def term(tree: Byte): Tree = Literal(ByteConstant(tree))
-       |  def term(tree: Int): Tree = Literal(IntConstant(tree))
-       |  def term(tree: Long): Tree = Literal(LongConstant(tree))
-       |  def term(tree: Boolean): Tree = Literal(BooleanConstant(tree))
-       |  def term(tree: scala.Symbol): Tree = '{scala.Symbol(${Expr(tree.name)})}.asTerm//Apply(Literal(StringConstant(tree)) 
+    """|  implicit def term[T <: sm.Tree](tree: T): Tree = liftableSubTree0(tree)
+       |  implicit def term[T <: sm.Tree: Type](tree: Seq[T]): Tree = liftTrees[T](tree)
+       |  implicit def term[T <: sm.Tree: Type](tree: List[T]): Tree = liftTrees[T](tree)
+       |  @scala.annotation.targetName("term2")
+       |  implicit def term[T <: sm.Tree: Type](tree: Seq[List[T]]): Tree = liftTreess(tree.toList)
+       |  @scala.annotation.targetName("term3")
+       |  implicit def term[T <: sm.Tree: Type](tree: List[List[T]]): Tree = liftTreess(tree)
+       |  implicit def term[T <: sm.Tree: Type](tree: Option[T]): Tree = liftOptionTree[T](tree)
+       |  implicit def term(tree: Origin): Tree = liftOrigin(tree)
+       |  implicit def term(tree: String): Tree = Literal(StringConstant(tree))
+       |  implicit def term(tree: Char): Tree = Literal(CharConstant(tree))
+       |  implicit def term(tree: Byte): Tree = Literal(ByteConstant(tree))
+       |  implicit def term(tree: Short): Tree = Literal(ShortConstant(tree))
+       |  implicit def term(tree: Int): Tree = Literal(IntConstant(tree))
+       |  implicit def term(tree: Long): Tree = Literal(LongConstant(tree))
+       |  implicit def term(tree: Boolean): Tree = Literal(BooleanConstant(tree))
+       |  implicit def term(tree: scala.Symbol): Tree =
+       |    '{scala.Symbol(${Expr(tree.name)})}.asTerm//Apply(Literal(StringConstant(tree)) 
        |""".stripMargin
 
 }
