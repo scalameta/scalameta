@@ -191,74 +191,49 @@ private[meta] object Show {
   def sequence[T](xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.sequence
 
   def indent(res: Result): Result = if (res eq None) None else Indent(res)
-  def indent[T](x: T)(implicit show: Show[T]): Result = indent(show(x))
 
-  def repeat[T](xs: Seq[T], sep: String = "")(implicit show: Show[T]): Result =
-    repeat(sep)(xs.map(show(_)): _*)
-  def repeat[T](xs: Seq[T], prefix: String, sep: String, suffix: String)(implicit
-      show: Show[T]
-  ): Result = wrap(prefix, repeat(xs, sep), suffix)
-  def repeat[T](xs: Seq[T], prefix: => Result, sep: String, suffix: => Result)(implicit
-      show: Show[T]
-  ): Result = wrap(prefix, repeat(xs, sep), suffix)
-
-  def repeat(xs: Result*): Result = repeat("")(xs: _*)
   def repeat(sep: String)(xs: Result*): Result = xs.filter(_ ne None) match {
     case Seq() => None
     case Seq(head) => head
     case res => Repeat(res, sep)
   }
-  def repeat(prefix: String, sep: String, suffix: String)(xs: Result*): Result =
-    wrap(prefix, repeat(sep)(xs: _*), suffix)
+  def repeat(xs: Seq[Result], sep: String = ""): Result = repeat(sep)(xs: _*)
   def repeat(prefix: => Result, sep: String, suffix: => Result)(xs: Result*): Result =
-    wrap(prefix, repeat(sep)(xs: _*), suffix)
+    wrap(prefix, repeat(xs, sep), suffix)
 
   def blank(): Result = Blank
   def blank(cond: Boolean): Result = if (cond) Blank else None
 
   def space(x: Result, space: String): Result = if (x.isEmpty) None else Space(x, space)
-  def space[T](x: T)(implicit show: Show[T]): Result = space(show(x), " ")
-  def nosplit[T](x: T)(implicit show: Show[T]): Result = space(show(x), "")
+  def space[T: Show](x: T): Result = space(x, " ")
+  def nosplit[T: Show](x: T): Result = space(x, "")
 
   def newline(): Result = Newline(None)
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
-  def newline[T](x: T)(implicit show: Show[T]): Result = newline(show(x))
 
   def meta(data: Any, res: Result): Result = if (res eq None) None else Meta(data, res)
   def meta[T](data: Any, xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.meta
 
   // wrap if non-empty
-  def wrap[T](x: T, suffix: String)(implicit show: Show[T]): Result = wrap("", x, suffix)
-  def wrap[T](prefix: String, x: T)(implicit show: Show[T]): Result = wrap(prefix, x, "")
-  def wrap[P, T, S](prefix: => P, x: T, suffix: => S)(implicit
-      showP: Show[P],
-      showT: Show[T],
-      showS: Show[S]
-  ): Result = wrap(showP(prefix), showT(x), showS(suffix))
+  def wrap(x: Result, suffix: => String): Result = if (x eq None) None else mkseq(x, suffix)
+  def wrap(prefix: => String, x: Result): Result = if (x eq None) None else mkseq(prefix, x)
   def wrap(prefix: => Result, res: Result, suffix: => Result): Result =
     if (res eq None) None else mkseq(prefix, res, suffix)
 
   // wrap if cond, even if value ends up being none
-  def wrap[T](x: T, suffix: => String, cond: Boolean)(implicit show: Show[T]): Result =
-    wrap("", x, suffix, cond)
-  def wrap[T](prefix: => String, x: T, cond: Boolean)(implicit show: Show[T]): Result =
-    wrap(prefix, x, "", cond)
-  def wrap[T](prefix: => String, x: T, suffix: => String, cond: Boolean)(implicit
-      show: Show[T]
-  ): Result = if (!cond) x else mkseq(prefix, x, suffix)
+  def wrap(x: Result, suffix: => String, cond: Boolean): Result = if (cond) mkseq(x, suffix) else x
+  def wrap(prefix: => String, x: Result, cond: Boolean): Result = if (cond) mkseq(prefix, x) else x
+  def wrap(prefix: => Result, x: Result, suffix: => Result, cond: Boolean): Result =
+    if (cond) mkseq(prefix, x, suffix) else x
 
-  def opt[T](x: => T, cond: Boolean)(implicit show: Show[T]): Result = if (cond) x else None
-  def opt[T](x: Option[T])(implicit show: Show[T]): Result = x.fold[Result](None)(show(_))
-  def opt[T](x: Option[T], suffix: => Result)(implicit show: Show[T]): Result = x
-    .fold[Result](None)(x => mkseq(x, suffix))
-  def opt[T](prefix: => Result, x: Option[T])(implicit show: Show[T]): Result = x
-    .fold[Result](None)(x => mkseq(prefix, x))
-  def opt[T](prefix: => Result, x: Option[T], suffix: => Result)(implicit show: Show[T]): Result = x
-    .fold[Result](None)(x => mkseq(prefix, x, suffix))
+  def opt(x: => Result, cond: Boolean): Result = if (cond) x else None
+  def opt[T](x: Option[T])(implicit show: Show[T]): Result = x.fold[Result](None)(show.apply)
+  def opt[T: Show](x: Option[T], suffix: => Result): Result = x.fold[Result](None)(mkseq(_, suffix))
+  def opt[T: Show](prefix: => Result, x: Option[T]): Result = x.fold[Result](None)(mkseq(prefix, _))
+  def opt[T: Show](prefix: => Result, x: Option[T], suffix: => Result): Result = x
+    .fold[Result](None)(mkseq(prefix, _, suffix))
 
   def alt(a: Result, b: => Result): Result = if (a ne None) a else b
-  def alt[A, B](a: A, b: => B)(implicit showA: Show[A], showB: Show[B]): Result =
-    alt(showA(a), showB(b))
 
   def function(fn: CharSequence => Result): Result = Function(fn)
 
@@ -268,4 +243,5 @@ private[meta] object Show {
   implicit def printString[T <: String]: Show[T] = apply(str)
   implicit def str(value: String): Result = if (value.isEmpty) None else Str(value)
   implicit def showAsResult[T](x: T)(implicit show: Show[T]): Result = show(x)
+  implicit def seq[T](x: Seq[T])(implicit show: Show[T]): Seq[Result] = x.map(show.apply)
 }

@@ -50,7 +50,7 @@ object TreeStructure {
       case Name.Indeterminate(value) => s("Name(", DoubleQuotes(value), ")")
       case x =>
         val args: List[Show.Result] = getArgs
-        val showArgs = if (args.lengthCompare(1) > 0) r(args.map(i), s(), ",", n()) else r(args)
+        val showArgs = if (args.lengthCompare(1) > 0) r(s(), ",", n())(args.map(i): _*) else r(args)
         s(x.productPrefix, "(", showArgs, ")")
     }
   }

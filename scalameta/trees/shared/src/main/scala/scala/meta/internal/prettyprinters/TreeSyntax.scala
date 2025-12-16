@@ -616,7 +616,7 @@ object TreeSyntax {
       case t: Type.Select => m(SimpleTyp, s(t.qual, kw("."), t.name))
       case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
-      case t: Type.ArgClause => nosp(r(t.values.map(arg => p(Typ, arg)), "[", ", ", "]"))
+      case t: Type.ArgClause => nosp(r("[", ", ", "]")(t.values.map(p(Typ, _)): _*))
       case t: Type.Apply => m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
       case t: Type.ApplyInfix => m(
           InfixTyp(t.op.value),
@@ -703,7 +703,7 @@ object TreeSyntax {
       case t: Type.FunctionArg => m(ParamTyp, w(t.mods, " "), p(Typ, t.tpe))
       case t: Type.TypedParam => m(SimpleTyp, w(t.mods, " "), s(t.name.value), ": ", p(Typ, t.typ))
       case t: Type.Assign => m(SimpleTyp, s(t.name.value), " ", kw("="), " ", p(Typ, t.rhs))
-      case t: Type.ParamClause => r(t.values, "[", ", ", "]")
+      case t: Type.ParamClause => r("[", ", ", "]")(t.values: _*)
       case t: Type.BoundsAlias => m(SimpleTyp, s(t.bounds, " ", "as", " ", t.name))
       case t: Type.Param =>
         def isVariant(m: Mod) = m.is[Mod.Variant]
@@ -893,7 +893,7 @@ object TreeSyntax {
       case t: Template =>
         val pearly = w(o(t.earlyClause), " with")
         val pparents = r(t.inits, " with ")
-        val derived = r(t.derives, "derives ", ", ", "")
+        val derived = r("derives ", ", ", "")(t.derives: _*)
         val ptype = t.parent match {
           case Some(p: Defn.Given) =>
             val isNew = givenSigUsesNewSyntax(p.paramClauseGroups)(
@@ -1195,6 +1195,6 @@ object TreeSyntax {
   private[prettyprinters] def withComments(tree: Tree)(syntax: Show.Result): Show.Result = s(
     r(s(), "", n())(printComments(tree, _.begComment).map(n): _*),
     syntax,
-    r(Show.str(" "), " ", n())(printComments(tree, _.endComment): _*)
+    r(" ", " ", n())(printComments(tree, _.endComment): _*)
   )
 }
