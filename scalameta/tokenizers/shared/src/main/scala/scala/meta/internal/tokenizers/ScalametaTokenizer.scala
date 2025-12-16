@@ -15,6 +15,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
   import LegacyToken._
 
   private val scanner = new LegacyScanner(input, dialect)
+  private val chars = scanner.chars
 
   def tokenize(): Tokens = {
     scanner.initialize(bof = true)
@@ -158,7 +159,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
     Tokens(underlying, 0, underlying.length)
   }
 
-  private def getPart(start: Int, end: Int): String = new String(input.chars, start, end - start)
+  private def getPart(start: Int, end: Int): String = new String(chars, start, end - start)
 
   private def getXmlPart(curr: LegacyTokenData): Token = {
     val beg = curr.offset
