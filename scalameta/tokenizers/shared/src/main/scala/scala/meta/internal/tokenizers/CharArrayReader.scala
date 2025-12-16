@@ -7,7 +7,7 @@ import scala.meta.internal.tokens.Chars._
 
 import scala.annotation.tailrec
 
-private[meta] case class CharArrayReader private (
+private[meta] case class CharArrayReader(
     buf: Array[Char],
     dialect: Dialect,
     /** the last read character */
@@ -22,8 +22,6 @@ private[meta] case class CharArrayReader private (
 ) {
 
   import CharArrayReader._
-
-  def this(input: Input, dialect: Dialect) = this(buf = input.chars, dialect = dialect)
 
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = {

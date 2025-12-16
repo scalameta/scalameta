@@ -14,13 +14,15 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   import LegacyToken._
 
+  private[tokenizers] val chars = input.chars
+
   private val unquoteDialect = dialect.unquoteParentDialect
 
   private val curr: LegacyTokenData = new LegacyTokenData
   private val next: LegacyTokenData = new LegacyTokenData
   private var prev: LegacyTokenData = curr
 
-  private val reader: CharArrayReader = new CharArrayReader(input, dialect)
+  private val reader: CharArrayReader = new CharArrayReader(chars, dialect)
 
   import curr._
   import reader._
@@ -99,7 +101,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def finishComposite(token: LegacyToken, endExclusive: Offset): Unit = {
     val start = offset
     curr.token = token
-    curr.strVal = new String(input.chars, start, endExclusive - start)
+    curr.strVal = new String(chars, start, endExclusive - start)
     curr.endOffset = endExclusive
     reader.nextCharFrom(endExclusive)
   }
@@ -457,7 +459,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case SU =>
         if (isAtEnd) {
           // NOTE: sometimes EOF's offset is `input.chars.length - 1`, and that might mess things up
-          offset = input.chars.length
+          offset = chars.length
           token = EOF
         } else {
           reportIllegalCharacter()
@@ -888,7 +890,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   private def getUnquote(): Unit = {
     val start = endCharOffset
-    val exploratoryInput = Input.Slice(input, start, input.chars.length)
+    val exploratoryInput = Input.Slice(input, start, chars.length)
     val exploratoryScanner = new LegacyScanner(exploratoryInput, unquoteDialect)
     exploratoryScanner.initialize()
     val ltd = exploratoryScanner.nextToken()
