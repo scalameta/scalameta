@@ -25,7 +25,9 @@ class LitSuite extends ParseSuite {
 
   test("-9223372036854775808L")(assertTree(term("-9223372036854775808L"))(lit(-9223372036854775808L)))
 
-  test("42.42")(matchSubStructure[Stat]("42.42", { case Lit(42.42) => () }))
+  test("42.42")(
+    matchSubStructure[Stat]("42.42", { case t: Lit.Double => assertEquals(t.format, "42.42") })
+  )
 
   test("42.0f")(matchSubStructure[Stat]("42.42f", { case Lit(42.42f) => () }))
 
@@ -280,6 +282,37 @@ class LitSuite extends ParseSuite {
     ("-2.5e-324", dbl("-2.5E-324"), -Double.MinPositiveValue, "-2.5E-324"),
     ("4.8e-324", dbl("4.8E-324"), Double.MinPositiveValue, "4.8E-324"),
     ("-4.8E-324", dbl("-4.8E-324"), -Double.MinPositiveValue, "-4.8E-324"),
+    (
+      "1.7976931348623158e+308",
+      fltXL("1.7976931348623158", "+308"),
+      dec("1.7976931348623158", "+308"),
+      "1.7976931348623158e+308"
+    ),
+    (
+      "-1.7976931348623158e+308",
+      lit("-", fltXL("1.7976931348623158", "+308")),
+      ("-", dec("1.7976931348623158", "+308")),
+      "-1.7976931348623158e+308"
+    ),
+    ("1e10_0000_000_000", fltXL("1", "100000000000"), dec("1", "100000000000"), "1e100000000000"),
+    ("1_000_000_000_000", intXL(1000000000000L), BigInt(1000000000000L), "1000000000000"),
+    (
+      "1_000_000_000_000_000_000",
+      intXL("1000000000000000000"),
+      BigInt("1000000000000000000"),
+      "1000000000000000000"
+    ),
+    ("0b111111111111111111111111111111110", intXL(8589934590L), BigInt(8589934590L), "8589934590"),
+    (
+      "-0b111111111111111111111111111111110",
+      intXL(-8589934590L),
+      BigInt(-8589934590L),
+      "-8589934590"
+    ),
+    ("2147483648", intXL(2147483648L), BigInt(2147483648L), "2147483648"),
+    ("-2147483649", intXL(-2147483649L), BigInt(-2147483649L), "-2147483649"),
+    ("0xffffffff0", intXL(68719476720L), BigInt(68719476720L), "68719476720"),
+    ("-0xffffffff0", intXL(-68719476720L), BigInt(-68719476720L), "-68719476720"),
     ("0b00101010", lit(42), 42, "42"),
     ("0B_0010_1010", lit(42), 42, "42"),
     ("0b_0010_1010L", lit(42L), 42L, "42L")
@@ -302,18 +335,6 @@ class LitSuite extends ParseSuite {
 
   Seq(
     (
-      "2147483648",
-      """|<input>:1: error: integer number out of range for Int
-         |2147483648
-         |^""".stripMargin
-    ),
-    (
-      "-2147483649",
-      """|<input>:1: error: integer number out of range for Int
-         |-2147483649
-         | ^""".stripMargin
-    ),
-    (
       "9223372036854775808L",
       """|<input>:1: error: integer number out of range for Long
          |9223372036854775808L
@@ -323,30 +344,6 @@ class LitSuite extends ParseSuite {
       "-9223372036854775809L",
       """|<input>:1: error: integer number out of range for Long
          |-9223372036854775809L
-         | ^""".stripMargin
-    ),
-    (
-      "0xffffffff0",
-      """|<input>:1: error: integer number out of range for Int
-         |0xffffffff0
-         |^""".stripMargin
-    ),
-    (
-      "-0xffffffff0",
-      """|<input>:1: error: integer number out of range for Int
-         |-0xffffffff0
-         | ^""".stripMargin
-    ),
-    (
-      "0b111111111111111111111111111111110", // 33
-      """|<input>:1: error: integer number out of range for Int
-         |0b111111111111111111111111111111110
-         |^""".stripMargin
-    ),
-    (
-      "-0b111111111111111111111111111111110",
-      """|<input>:1: error: integer number out of range for Int
-         |-0b111111111111111111111111111111110
          | ^""".stripMargin
     ),
     (
@@ -360,30 +357,6 @@ class LitSuite extends ParseSuite {
       """|<input>:1: error: integer number out of range for Long
          |-0xffffffffffffffff0L
          | ^""".stripMargin
-    ),
-    (
-      "1.7976931348623158e+308",
-      """|<input>:1: error: floating-point value out of range for Double
-         |1.7976931348623158e+308
-         |^""".stripMargin
-    ),
-    (
-      "-1.7976931348623158e+308",
-      """|<input>:1: error: floating-point value out of range for Double
-         |-1.7976931348623158e+308
-         | ^""".stripMargin
-    ),
-    (
-      "1e10_0000_000_000",
-      """|<input>:1: error: malformed floating-point Double number
-         |1e10_0000_000_000
-         |^""".stripMargin
-    ),
-    (
-      "1_000_000_000_000",
-      """|<input>:1: error: integer number out of range for Int
-         |1_000_000_000_000
-         |^""".stripMargin
     ),
     (
       "1_000_000_000_000_000_000_000l",

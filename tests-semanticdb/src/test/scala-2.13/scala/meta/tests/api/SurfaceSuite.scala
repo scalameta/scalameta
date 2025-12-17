@@ -65,6 +65,7 @@ class SurfaceSuite extends FunSuite {
     assertNoDiff(
       diagnostic,
       """|
+         |scala.meta.AnyDecimal
          |scala.meta.Dialect
          |scala.meta.Name.ImplicitName
          |scala.meta.Tree
@@ -346,7 +347,9 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Lit.Char
          |scala.meta.Lit.Double
          |scala.meta.Lit.Float
+         |scala.meta.Lit.FloatXL
          |scala.meta.Lit.Int
+         |scala.meta.Lit.IntXL
          |scala.meta.Lit.Long
          |scala.meta.Lit.Null
          |scala.meta.Lit.Short
@@ -594,7 +597,9 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.tokens.Token.Constant.Char
          |scala.meta.tokens.Token.Constant.Double
          |scala.meta.tokens.Token.Constant.Float
+         |scala.meta.tokens.Token.Constant.FloatXL
          |scala.meta.tokens.Token.Constant.Int
+         |scala.meta.tokens.Token.Constant.IntXL
          |scala.meta.tokens.Token.Constant.Long
          |scala.meta.tokens.Token.Constant.String
          |scala.meta.tokens.Token.Constant.Symbol

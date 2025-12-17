@@ -1452,6 +1452,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     currToken match {
       case tok: Constant.Int => withUnary(Lit.Int(unary(tok.value).intValue))
       case tok: Constant.Long => withUnary(Lit.Long(unary(tok.value).longValue))
+      case tok: Constant.IntXL => withUnary(Lit.IntXL(unary(tok.value)))
       case tok: Constant.Float => getBigDecimal(tok, Lit.Float.apply)
       case tok: Constant.Double => getBigDecimal(tok, Lit.Double.apply)
       case tok => unreachable(tok)
@@ -1460,6 +1461,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def rawLiteral(unary: Unary): Lit = nextAfter {
     val res = currToken match {
+      case t: Constant.FloatXL => Left(Lit.FloatXL(t.value))
       case _: NumericConstant[_] => rawNumericLiteral(unary match {
           case unary: Unary.Numeric => unary
           case _ => Unary.Noop

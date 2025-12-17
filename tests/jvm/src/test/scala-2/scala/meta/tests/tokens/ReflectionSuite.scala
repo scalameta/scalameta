@@ -29,7 +29,9 @@ class ReflectionSuite extends TreeSuiteBase {
          |Token.Constant.Char
          |Token.Constant.Double
          |Token.Constant.Float
+         |Token.Constant.FloatXL
          |Token.Constant.Int
+         |Token.Constant.IntXL
          |Token.Constant.Long
          |Token.Constant.String
          |Token.Constant.Symbol
