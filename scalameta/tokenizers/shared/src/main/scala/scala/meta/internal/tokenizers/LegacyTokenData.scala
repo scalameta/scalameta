@@ -33,31 +33,23 @@ class LegacyTokenData {
    */
   def charVal: Char = if (strVal.isEmpty) 0 else strVal.charAt(0)
 
-  private def isNegativeSign(prevToken: Token): Boolean = prevToken match {
-    case t: Token.Ident => t.text == "-"
-    case _ => false
-  }
+  private def toBigInt(prevToken: Token, maxBitLength: Int, what: String): Either[String, BigInt] =
+    try {
+      val value = BigInt(strVal, base)
+      val isNegativeSign = prevToken match {
+        case t: Token.Ident => t.text == "-"
+        case _ => false
+      }
+      val adjustedValue = if (isNegativeSign) value.underlying().negate() else value.underlying()
+      val ok = adjustedValue.bitLength() < maxBitLength + (if (base == 10) 0 else 1)
+      if (ok) Right(value) else Left("integer number out of range for " + what)
+    } catch { case _: Exception => Left(s"malformed integer $what number") }
 
-  private def toBigInt(
-      prevToken: Token,
-      maxBitLength: Int,
-      what: String
-  ): Either[String, BigInt] = {
-    try Right(BigInt(strVal, base))
-    catch { case e: Exception => Left(s"malformed integer $what number: ${e.getMessage}") }
-  }.right.flatMap { value =>
-    val adjustedValue =
-      if (isNegativeSign(prevToken)) value.underlying().negate() else value.underlying()
-    val ok = adjustedValue.bitLength() < maxBitLength + (if (base == 10) 0 else 1)
-    if (ok) Right(value) else Left("integer number out of range for " + what)
-  }
-
-  private def toBigDec(max: BigDecimal, what: String): Either[String, BigDecimal] = {
-    try Right(BigDecimal(strVal))
-    catch { case _: Exception => Left(s"malformed floating-point $what number") }
-  }.right.flatMap(value =>
-    if (value <= max) Right(value) else Left("floating-point value out of range for " + what)
-  )
+  private def toBigDec(max: BigDecimal, what: String): Either[String, BigDecimal] =
+    try {
+      val value = BigDecimal(strVal)
+      if (value <= max) Right(value) else Left("floating-point value out of range for " + what)
+    } catch { case _: Exception => Left(s"malformed floating-point $what number") }
 
   // these values are always non-negative, since we don't include any unary operators
   def intVal(prevToken: Token): Either[String, BigInt] =
