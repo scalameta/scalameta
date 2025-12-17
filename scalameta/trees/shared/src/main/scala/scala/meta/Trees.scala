@@ -262,6 +262,10 @@ object Lit {
     private[meta] def apply(number: scala.BigDecimal): Float = apply(number.toString)
   }
   @ast
+  class WithUnary(op: Term.Name, arg: Lit) extends Lit {
+    def value = (op.value, arg.value)
+  }
+  @ast
   class Byte(value: scala.Byte) extends Lit
   @ast
   class Short(value: scala.Short) extends Lit

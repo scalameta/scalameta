@@ -173,9 +173,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: ~1.0") {
-    val tree = Term.ApplyUnary(tname("~"), lit(1d))
+    val tree = lit("~", lit(1d))
     runTestAssert[Stat]("~1.0", "~1.0d")(tree)
-    runTestAssert[Stat]("~1.0(0)", "(~1.0d)(0)")(tapply(tree, lit(0)))
+    runTestAssert[Stat]("~1.0(0)", "~1.0d(0)")(tapply(tree, lit(0)))
   }
 
   test("unary: !1.0") {
