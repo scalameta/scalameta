@@ -793,7 +793,12 @@ object TreeSyntax {
         w(s(format), "f", Character.toLowerCase(format.last) != 'f')
       case t: Lit.Double =>
         val format = t.format
-        w(s(format), "d", Character.toLowerCase(format.last) != 'd')
+        val suffix =
+          if (Character.toLowerCase(format.last) == 'd') None
+          else if (t.origin.textOpt.exists(x => Character.toLowerCase(x.last) == 'd')) Some("d")
+          else if (format.forall(Character.isDigit)) Some(".0")
+          else None
+        s(format, o(suffix))
       case t: Lit.WithUnary => s(t.op, t.arg)
       case t @ Lit.Char(value) =>
         val syntax = t.pos match {
