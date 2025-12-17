@@ -227,10 +227,14 @@ object Token {
     class Int(value: BigInt) extends NumericConstant[BigInt]
     @freeform("long constant")
     class Long(value: BigInt) extends NumericConstant[BigInt]
+    @freeform("generic integer constant")
+    class IntXL(value: BigInt) extends NumericConstant[BigInt]
     @freeform("float constant")
     class Float(value: BigDecimal) extends NumericConstant[BigDecimal]
     @freeform("double constant")
     class Double(value: BigDecimal) extends NumericConstant[BigDecimal]
+    @freeform("generic floating-point constant")
+    class FloatXL(value: AnyDecimal) extends Constant[AnyDecimal]
     @freeform("character constant")
     class Char(value: scala.Char) extends Constant[scala.Char]
     @freeform("symbol constant")

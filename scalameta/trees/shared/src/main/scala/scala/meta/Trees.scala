@@ -262,6 +262,25 @@ object Lit {
     private[meta] def apply(number: scala.BigDecimal): Float = apply(number.toString)
   }
   @ast
+  class IntXL(private val value36: JString) extends Lit {
+    val value = IntXL.fromBase36(value36)
+  }
+  object IntXL {
+    def apply(value: BigInt)(implicit dialect: Dialect): IntXL = apply(toBase36(value))
+    def toBase36(obj: BigInt): JString =
+      if (obj.signum == 0) "" else obj.toString(Character.MAX_RADIX)
+    def fromBase36(str: JString): BigInt =
+      if (str.isEmpty) BigInt(0) else BigInt(str, Character.MAX_RADIX)
+  }
+  @ast
+  class FloatXL(digits: JString, exponent: JString) extends Lit {
+    val value = AnyDecimal(digits, exponent)
+  }
+  object FloatXL {
+    def apply(value: AnyDecimal)(implicit dialect: Dialect): FloatXL =
+      apply(value.digits, value.exponent)
+  }
+  @ast
   class WithUnary(op: Term.Name, arg: Lit) extends Lit {
     def value = (op.value, arg.value)
   }

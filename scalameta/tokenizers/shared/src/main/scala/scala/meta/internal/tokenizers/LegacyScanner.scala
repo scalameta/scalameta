@@ -760,20 +760,23 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private def setFractionOnDot(): Unit = {
     putChar('.')
     readDigits(10)
-    token = DOUBLELIT
+    token = DECIMALLIT
     setFractionExponentAndTypeSuffix()
   }
 
   private def setFractionExponentAndTypeSuffix(): Boolean = {
     // token is either DOUBLELIT if we have seen a dot, or INTLIT if only digits
+    decimalExponent = ""
     if (ch == 'e' || ch == 'E') {
-      val preExponentLen = cbuf.length()
-      putCharAndNext()
+      setStrVal()
+      nextChar()
       if (ch == '+' || ch == '-') putCharAndNext()
-      token = DOUBLELIT
-      if (isDigit()) readDigits(10)
-      else {
-        cbuf.setLength(preExponentLen) // to make it a parsable value
+      token = DECIMALLIT
+      if (isDigit()) {
+        readDigits(10)
+        decimalExponent = getAndResetCBuf()
+      } else {
+        resetCBuf()
         setInvalidToken(next) {
           val isLeadingSeparator = isNumberSeparator() && {
             nextChar()
@@ -795,7 +798,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     }
     token != INTLIT && {
       checkNoLetter()
-      setStrVal()
+      if (cbuf.length() != 0) setStrVal()
       true
     }
   }

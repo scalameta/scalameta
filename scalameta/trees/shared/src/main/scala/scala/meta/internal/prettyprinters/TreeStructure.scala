@@ -37,6 +37,7 @@ object TreeStructure {
         case x: Lit.Double => asFloat(x.format, 'd') :: Nil
         case x: Lit.Float => asFloat(x.format, 'f') :: Nil
         case x: Lit.Long => x.value.toString + 'L' :: Nil
+        case x: Lit.FloatXL => s(x.digits) :: s(x.exponent) :: Nil
         case x: Lit.WithUnary => s(x.op.value) :: anyTree(x.arg) :: Nil
         case x: Lit => x.value.toString :: Nil
         case x: Term.ArgClause if x.mod.isEmpty => anyStructure(x.values) :: Nil

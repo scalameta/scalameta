@@ -799,6 +799,8 @@ object TreeSyntax {
           else if (format.forall(Character.isDigit)) Some(".0")
           else None
         s(format, o(suffix))
+      case t: Lit.IntXL => s(t.value.toString)
+      case t: Lit.FloatXL => s(t.digits, w("e", s(t.exponent)))
       case t: Lit.WithUnary => s(t.op, t.arg)
       case t @ Lit.Char(value) =>
         val syntax = t.pos match {

@@ -243,6 +243,10 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def lit(v: Double) = Lit.Double(v)
   final def flt(v: String) = Lit.Float(v)
   final def lit(v: Float) = Lit.Float(v)
+  final def intXL(v: BigInt): Lit.IntXL = Lit.IntXL(v)
+  final def intXL(v: String): Lit.IntXL = intXL(BigInt(v))
+  final def fltXL(v: String, exp: String = ""): Lit = Lit.FloatXL(v, exp)
+  final def dec(v: String, exp: String = "") = AnyDecimal(v, exp)
   final def lit(op: String, v: Lit): Lit = Lit.WithUnary(op, v)
   final def str(v: String) = Lit.String(v)
   final def lit(v: String) = str(v)
@@ -251,6 +255,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def lit(v: Symbol) = Lit.Symbol(v)
   final def init(tpe: Type, args: Term.ArgClause*): Init = Init(tpe, anon, args.toList)
   final def blk(stats: Stat*): Term.Block = Term.Block(stats.toList)
+  final def unary(op: String, v: Term): Term.ApplyUnary = Term.ApplyUnary(op, v)
 
   final def stats(vals: Stat*): Stat.Block = Stat.Block(vals.toList)
 

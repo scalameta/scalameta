@@ -25,6 +25,8 @@ class LegacyTokenData {
   /** the base of a number */
   var base: Int = 0
 
+  var decimalExponent = ""
+
   override def toString =
     s"{token = $token, position = [$offset,$endOffset), strVal = $strVal, base = $base}"
 
@@ -33,7 +35,18 @@ class LegacyTokenData {
    */
   def charVal: Char = if (strVal.isEmpty) 0 else strVal.charAt(0)
 
-  private def toBigInt(prevToken: Token, maxBitLength: Int, what: String): Either[String, BigInt] =
+  /**
+   * @return
+   *   - left: error string
+   *   - right: parsed BigInt
+   *     - left: if the value is out of range
+   *     - right: if the value is correct and in range
+   */
+  private def toBigInt(
+      prevToken: Token,
+      maxBitLength: Int,
+      what: String
+  ): Either[String, Either[BigInt, BigInt]] =
     try {
       val value = BigInt(strVal, base)
       val isNegativeSign = prevToken match {
@@ -42,22 +55,35 @@ class LegacyTokenData {
       }
       val adjustedValue = if (isNegativeSign) value.underlying().negate() else value.underlying()
       val ok = adjustedValue.bitLength() < maxBitLength + (if (base == 10) 0 else 1)
-      if (ok) Right(value) else Left("integer number out of range for " + what)
+      Right(if (ok) Right(value) else Left(value))
     } catch { case _: Exception => Left(s"malformed integer $what number") }
 
+  private def decimalVal = AnyDecimal(strVal, decimalExponent)
   private def toBigDec(max: BigDecimal, what: String): Either[String, BigDecimal] =
-    try {
-      val value = BigDecimal(strVal)
-      if (value <= max) Right(value) else Left("floating-point value out of range for " + what)
-    } catch { case _: Exception => Left(s"malformed floating-point $what number") }
+    try decimalVal.toBigDecimalOpt match {
+        case None => Left(s"malformed floating-point $what number: overflow")
+        case Some(value) =>
+          if (value <= max) Right(value) else Left("floating-point value out of range for " + what)
+      }
+    catch { case _: Exception => Left(s"malformed floating-point $what number") }
 
   // these values are always non-negative, since we don't include any unary operators
-  def intVal(prevToken: Token): Either[String, BigInt] =
+  def intVal(prevToken: Token): Either[String, Either[BigInt, BigInt]] =
     toBigInt(prevToken, java.lang.Integer.SIZE, "Int")
   def longVal(prevToken: Token): Either[String, BigInt] =
-    toBigInt(prevToken, java.lang.Long.SIZE, "Long")
+    toBigInt(prevToken, java.lang.Long.SIZE, "Long").right.flatMap {
+      case Right(v) => Right(v)
+      case _ => Left("integer number out of range for Long")
+    }
   def floatVal: Either[String, BigDecimal] = toBigDec(LegacyTokenData.bigDecimalMaxFloat, "Float")
   def doubleVal: Either[String, BigDecimal] = toBigDec(LegacyTokenData.bigDecimalMaxDouble, "Double")
+  def doubleOrDecimalVal: Either[AnyDecimal, BigDecimal] = {
+    val anyDec = decimalVal
+    val bigDec =
+      try anyDec.toBigDecimalOpt.filter(_ <= LegacyTokenData.bigDecimalMaxDouble)
+      catch { case _: Exception => None }
+    bigDec.toRight(anyDec)
+  }
 
   def setIdentifier(ident: String, dialect: Dialect, check: Boolean = true)(
       fCheck: LegacyTokenData => Unit

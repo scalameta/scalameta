@@ -328,7 +328,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(templStat("0.0f").reprint, "0.0f")
     assertEquals(templStat("0.0F").reprint, "0.0f")
     assertEquals(templStat("1.4f").reprint, "1.4f")
-    assertEquals(templStat("1.40f").reprint, "1.40f")
+    assertEquals(templStat("1.40f").reprint, "1.4f")
     assertEquals(templStat("0.0").reprint, "0.0")
     assertEquals(templStat("0d").reprint, "0d")
     assertEquals(templStat("0D").reprint, "0d")

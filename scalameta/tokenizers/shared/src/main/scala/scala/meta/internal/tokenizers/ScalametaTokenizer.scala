@@ -173,7 +173,10 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       case IDENTIFIER => Token.Ident(input, dialect, curr.offset, curr.endOffset, curr.strVal)
       case INTLIT => curr.intVal(lastEmittedToken).fold(
           getInvalid(curr, _),
-          Token.Constant.Int(input, dialect, curr.offset, curr.endOffset, _)
+          _.fold(
+            Token.Constant.IntXL(input, dialect, curr.offset, curr.endOffset, _),
+            Token.Constant.Int(input, dialect, curr.offset, curr.endOffset, _)
+          )
         )
       case LONGLIT => curr.longVal(lastEmittedToken).fold(
           getInvalid(curr, _),
@@ -185,6 +188,10 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
         )
       case DOUBLELIT => curr.doubleVal.fold(
           getInvalid(curr, _),
+          Token.Constant.Double(input, dialect, curr.offset, curr.endOffset, _)
+        )
+      case DECIMALLIT => curr.doubleOrDecimalVal.fold(
+          Token.Constant.FloatXL(input, dialect, curr.offset, curr.endOffset, _),
           Token.Constant.Double(input, dialect, curr.offset, curr.endOffset, _)
         )
       case CHARLIT => Token.Constant.Char(input, dialect, curr.offset, curr.endOffset, curr.charVal)
