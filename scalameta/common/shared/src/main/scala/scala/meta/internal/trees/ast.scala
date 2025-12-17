@@ -161,9 +161,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
             val p = f.field
 
-            val annots = privateFieldAnnot :: p.mods.annotations
-            val mods = Modifiers(p.mods.flags | OVERRIDE | DEFERRED, p.mods.privateWithin, annots)
-            istats1 += declareGetter(p.name, p.tpt, mods)
+            istats1 += declareGetter(p, OVERRIDE | DEFERRED, privateFieldAnnot :: Nil)
 
             privateApplyParamsBuilder += p
 
@@ -191,9 +189,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         // step 5: turn all parameters into vars, create getters and setters
         params.foreach { p =>
-          istats1 += declareGetter(p.name, p.tpt, astFieldAnnot :: p.mods.annotations)
-          val pmods = if (p.mods.hasFlag(OVERRIDE)) Modifiers(OVERRIDE) else NoMods
-          stats1 += defineGetter(p.name, p.tpt, pmods)
+          istats1 += declareGetter(p, DEFERRED, astFieldAnnot :: Nil)
+          stats1 += defineGetter(p, if (p.mods.hasFlag(OVERRIDE)) OVERRIDE else NoFlags)
         }
         paramss1 += params.map { p =>
           val mods1 = p.mods.mkMutable.unPrivate.unOverride.unDefault
@@ -774,11 +771,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getDeferredModifiers(annots: List[Tree]): Modifiers =
     Modifiers(DEFERRED, typeNames.EMPTY, annots)
 
+  private def getModifiers(p: ValOrDefDef, flags: FlagSet, annots: List[Tree] = Nil): Modifiers =
+    Modifiers(flags, p.mods.privateWithin, annots ++ p.mods.annotations)
+
   private val astFieldAnnot = q"new $AstMetadataModule.astField"
   private val privateFieldAnnot = q"new $AdtMetadataModule.privateField"
-
-  private def declareGetter(name: TermName, tpe: Tree, annots: List[Tree]): Tree =
-    declareGetter(name, tpe, getDeferredModifiers(annots))
 
   private def declareGetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
     q"$mods def ${getterName(name)}: $tpe"
@@ -793,19 +790,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     """
   }
 
-  private def declareSetter(name: TermName, tpe: Tree, annots: List[Tree]): Tree =
-    declareSetter(name, tpe, getDeferredModifiers(annots))
+  private def declareGetter(p: ValOrDefDef, flags: FlagSet, annots: List[Tree] = Nil): Tree =
+    declareGetter(p.name, p.tpt, getModifiers(p, flags, annots))
 
-  private def declareSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
-    q"$mods def ${setterName(name)}($name : $tpe): Unit"
-
-  private def defineSetter(name: TermName, tpe: Tree, mods: Modifiers): Tree =
-    q"""
-      $mods def ${setterName(name)}($name : $tpe): Unit = {
-        val node = this
-        ${storeField(name)}
-      }
-    """
+  private def defineGetter(p: ValOrDefDef, flags: FlagSet, annots: List[Tree] = Nil): Tree =
+    defineGetter(p.name, p.tpt, getModifiers(p, flags, annots))
 
   private class VersionedParam(
       val param: ValDef,
