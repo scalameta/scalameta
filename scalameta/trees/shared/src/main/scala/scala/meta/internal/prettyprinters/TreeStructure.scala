@@ -25,7 +25,7 @@ object TreeStructure {
   private def iterableStructure(xs: Seq[_], cls: String): Show.Result =
     if (xs.isEmpty) s("Nil") else s(s"$cls(", r(xs.map(x => i(anyStructure(x))), ","), n(")"))
 
-  private def anyTree(tree: Tree) = TreeSyntax.withComments(tree) {
+  private def anyTree(tree: Tree): Show.Result = TreeSyntax.withComments(tree) {
     def getArgs: List[Show.Result] = {
       def default = tree.productIterator.map(anyStructure).toList
       tree match {
@@ -37,6 +37,7 @@ object TreeStructure {
         case x: Lit.Double => asFloat(x.format, 'd') :: Nil
         case x: Lit.Float => asFloat(x.format, 'f') :: Nil
         case x: Lit.Long => x.value.toString + 'L' :: Nil
+        case x: Lit.WithUnary => s(x.op.value) :: anyTree(x.arg) :: Nil
         case x: Lit => x.value.toString :: Nil
         case x: Term.ArgClause if x.mod.isEmpty => anyStructure(x.values) :: Nil
         case x: Term.ParamClause if x.mod.isEmpty => anyStructure(x.values) :: Nil

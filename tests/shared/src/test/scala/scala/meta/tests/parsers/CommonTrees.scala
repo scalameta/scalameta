@@ -243,6 +243,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def lit(v: Double) = Lit.Double(v)
   final def flt(v: String) = Lit.Float(v)
   final def lit(v: Float) = Lit.Float(v)
+  final def lit(op: String, v: Lit): Lit = Lit.WithUnary(op, v)
   final def str(v: String) = Lit.String(v)
   final def lit(v: String) = str(v)
   final def lit(v: Char) = Lit.Char(v)

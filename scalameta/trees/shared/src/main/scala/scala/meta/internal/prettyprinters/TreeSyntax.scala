@@ -794,6 +794,7 @@ object TreeSyntax {
       case t: Lit.Double =>
         val format = t.format
         w(s(format), "d", Character.toLowerCase(format.last) != 'd')
+      case t: Lit.WithUnary => s(t.op, t.arg)
       case t @ Lit.Char(value) =>
         val syntax = t.pos match {
           case Position.None => SingleQuotes(value)

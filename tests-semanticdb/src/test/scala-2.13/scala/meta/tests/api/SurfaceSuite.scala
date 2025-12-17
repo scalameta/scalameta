@@ -353,6 +353,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Lit.String
          |scala.meta.Lit.Symbol
          |scala.meta.Lit.Unit
+         |scala.meta.Lit.WithUnary
          |scala.meta.Member
          |scala.meta.Member.Apply
          |scala.meta.Member.ArgClause
