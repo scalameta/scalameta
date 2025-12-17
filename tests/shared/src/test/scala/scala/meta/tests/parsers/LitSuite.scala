@@ -104,7 +104,7 @@ class LitSuite extends ParseSuite {
   }
 
   test("numeric literals with separators") {
-    runTestAssert[Stat]("1_000_000_000.0", "1000000000.0d")(dbl("1000000000"))
+    runTestAssert[Stat]("1_000_000_000.0", "1000000000.0")(dbl("1000000000"))
     runTestAssert[Stat]("1_000_000_000d", "1000000000d")(dbl("1000000000"))
     runTestAssert[Stat]("1_000_000_000D", "1000000000d")(dbl("1000000000"))
     runTestAssert[Stat]("1000000000d")(dbl("1000000000d"))
@@ -160,29 +160,29 @@ class LitSuite extends ParseSuite {
 
   test("unary: +1.0") {
     val number = lit(1d)
-    runTestAssert[Stat]("+1.0", "1.0d")(number)
+    runTestAssert[Stat]("+1.0", "1.0")(number)
     val tree = tapply(number, lit(0))
-    runTestAssert[Stat]("+1.0(0)", "1.0d(0)")(tree)
+    runTestAssert[Stat]("+1.0(0)", "1.0(0)")(tree)
   }
 
   test("unary: -1.0") {
     val number = lit(-1d)
-    runTestAssert[Stat]("-1.0", "-1.0d")(number)
+    runTestAssert[Stat]("-1.0", "-1.0")(number)
     val tree = tapply(number, lit(0))
-    runTestAssert[Stat]("-1.0(0)", "-1.0d(0)")(tree)
+    runTestAssert[Stat]("-1.0(0)", "-1.0(0)")(tree)
   }
 
   test("unary: ~1.0") {
     val tree = lit("~", lit(1d))
-    runTestAssert[Stat]("~1.0", "~1.0d")(tree)
-    runTestAssert[Stat]("~1.0(0)", "~1.0d(0)")(tapply(tree, lit(0)))
+    runTestAssert[Stat]("~1.0", "~1.0")(tree)
+    runTestAssert[Stat]("~1.0(0)", "~1.0(0)")(tapply(tree, lit(0)))
   }
 
   test("unary: !1.0") {
     val number = lit(1d)
-    runTestAssert[Stat]("!1.0", "!1.0d")(Term.ApplyUnary(tname("!"), number))
+    runTestAssert[Stat]("!1.0", "!1.0")(Term.ApplyUnary(tname("!"), number))
     val tree = Term.ApplyUnary(tname("!"), tapply(number, lit(0)))
-    runTestAssert[Stat]("!1.0(0)", "!1.0d(0)")(tree)
+    runTestAssert[Stat]("!1.0(0)", "!1.0(0)")(tree)
   }
 
   test("unary: !true") {
@@ -234,8 +234,8 @@ class LitSuite extends ParseSuite {
 
   Seq(
     ("0d", lit(0d), 0d, "0d"),
-    ("0.0", lit(0d), 0d, "0.0d"),
-    ("00e0", lit(0d), 0d, "0d"),
+    ("0.0", lit(0d), 0d, "0.0"),
+    ("00e0", lit(0d), 0d, "0.0"),
     ("00e0f", lit(0f), 0f, "0f"),
     ("0xe1", lit(225), 225, "225"),
     ("0xd", lit(13), 13, "13"),
@@ -274,14 +274,14 @@ class LitSuite extends ParseSuite {
     ("-2.5E-324d", dbl("-2.5E-324"), -Double.MinPositiveValue, "-2.5E-324d"),
     ("4.8E-324d", dbl("4.8E-324"), Double.MinPositiveValue, "4.8E-324d"),
     ("-4.8e-324d", dbl("-4.8E-324"), -Double.MinPositiveValue, "-4.8E-324d"),
-    ("1E-500", dbl("1E-500"), 0d, "1E-500d"),
-    ("-1e-500", dbl("-1E-500"), 0d, "-1E-500d"),
-    ("2.4e-324", dbl("2.4E-324"), 0d, "2.4E-324d"),
-    ("-2.4E-324", dbl("-2.4E-324"), 0d, "-2.4E-324d"),
-    ("2.5E-324", dbl("2.5E-324"), Double.MinPositiveValue, "2.5E-324d"),
-    ("-2.5e-324", dbl("-2.5E-324"), -Double.MinPositiveValue, "-2.5E-324d"),
-    ("4.8e-324", dbl("4.8E-324"), Double.MinPositiveValue, "4.8E-324d"),
-    ("-4.8E-324", dbl("-4.8E-324"), -Double.MinPositiveValue, "-4.8E-324d"),
+    ("1E-500", dbl("1E-500"), 0d, "1E-500"),
+    ("-1e-500", dbl("-1E-500"), 0d, "-1E-500"),
+    ("2.4e-324", dbl("2.4E-324"), 0d, "2.4E-324"),
+    ("-2.4E-324", dbl("-2.4E-324"), 0d, "-2.4E-324"),
+    ("2.5E-324", dbl("2.5E-324"), Double.MinPositiveValue, "2.5E-324"),
+    ("-2.5e-324", dbl("-2.5E-324"), -Double.MinPositiveValue, "-2.5E-324"),
+    ("4.8e-324", dbl("4.8E-324"), Double.MinPositiveValue, "4.8E-324"),
+    ("-4.8E-324", dbl("-4.8E-324"), -Double.MinPositiveValue, "-4.8E-324"),
     ("0b00101010", lit(42), 42, "42"),
     ("0B_0010_1010", lit(42), 42, "42"),
     ("0b_0010_1010L", lit(42L), 42L, "42L")
