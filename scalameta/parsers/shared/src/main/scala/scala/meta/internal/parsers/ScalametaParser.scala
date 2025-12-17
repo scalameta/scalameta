@@ -1280,8 +1280,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case _: Literal =>
           if (dialect.allowLiteralTypes) literal()
           else syntaxError(s"$dialect doesn't support literal types", at = path())
-        case Unary.Numeric(unary) if dialect.allowLiteralTypes && tryAhead[NumericConstant[_]] =>
-          autoEndPos(prevIndex)(numericLiteral(unary))
+        case Unary(unary) if dialect.allowLiteralTypes && tryAhead[Literal] =>
+          autoEndPos(prevIndex)(rawLiteral(unary))
         case t: Token.Ident if !inMatchType =>
           t.text match {
             case soft.QuestionMarkAsTypeWildcard() => wildcardType()
@@ -1443,40 +1443,48 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     if (acceptOpt[Dot]) selectors(name) else name
   }
 
-  private def numericLiteral(unary: Unary.Numeric): Lit = {
-    val number = currToken.asInstanceOf[NumericConstant[_]]
-    nextAfter(numericLiteralAt(number, unary))
-  }
-
-  private def numericLiteralAt(tok: NumericConstant[_], unary: Unary.Numeric): Lit = {
-    def withUnary(arg: Lit) =
-      if (unary eq Unary.Noop) arg
-      else Lit.WithUnary(atPos(prevIndex)(Term.Name(unary.op)), atCurPos(arg))
+  private def rawNumericLiteral(unary: Unary.Numeric): Either[Lit, Lit] = {
+    def withUnary(lit: Lit) = Either.cond(unary ne Unary.Noop, lit, lit)
     def getBigDecimal(tok: NumericConstant[BigDecimal], f: String => Lit) = unary(tok.value) match {
-      case Some(x) => f(x.toString())
-      case _ => withUnary(f(tok.value.toString()))
+      case Some(x) => withUnary(f(x.toString()))
+      case _ => Left(f(tok.value.toString()))
     }
-    tok match {
-      case tok: Constant.Int => Lit.Int(unary(tok.value).intValue)
-      case tok: Constant.Long => Lit.Long(unary(tok.value).longValue)
+    currToken match {
+      case tok: Constant.Int => withUnary(Lit.Int(unary(tok.value).intValue))
+      case tok: Constant.Long => withUnary(Lit.Long(unary(tok.value).longValue))
       case tok: Constant.Float => getBigDecimal(tok, Lit.Float.apply)
       case tok: Constant.Double => getBigDecimal(tok, Lit.Double.apply)
+      case tok => unreachable(tok)
     }
   }
 
-  def literal(): Lit = atCurPosNext {
-    currToken match {
-      case number: NumericConstant[_] => numericLiteralAt(number, Unary.Noop)
-      case Constant.Char(value) => Lit.Char(value)
-      case Constant.String(value) => Lit.String(value)
+  private def rawLiteral(unary: Unary): Lit = nextAfter {
+    val res = currToken match {
+      case _: NumericConstant[_] => rawNumericLiteral(unary match {
+          case unary: Unary.Numeric => unary
+          case _ => Unary.Noop
+        })
+      case Constant.Char(value) => Left(Lit.Char(value))
+      case Constant.String(value) => Left(Lit.String(value))
       case t: Constant.Symbol =>
-        if (dialect.allowSymbolLiterals) Lit.Symbol(t.value)
+        if (dialect.allowSymbolLiterals) Left(Lit.Symbol(t.value))
         else syntaxError("Symbol literals are no longer allowed", at = t)
-      case x: BooleanConstant => Lit.Boolean(x.value)
-      case _: KwNull => Lit.Null()
+      case x: BooleanConstant => unary match {
+          case unary: Unary.Logical => Right(Lit.Boolean(unary(x.value)))
+          case _ => Left(Lit.Boolean(x.value))
+        }
+      case _: KwNull => Left(Lit.Null())
       case t => unreachable(t)
     }
+    res match {
+      case Right(arg) => arg
+      case Left(arg) =>
+        if (unary eq Unary.Noop) arg
+        else Lit.WithUnary(atPos(prevIndex)(Term.Name(unary.op)), atCurPos(arg))
+    }
   }
+
+  private def literal(): Lit = atCurPos(rawLiteral(Unary.Noop))
 
   private def interpolateWith[Ctx, Ret <: Tree](
       arg: => Ctx,
@@ -2252,23 +2260,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   def prefixExpr(allowRepeated: Boolean): Term = currToken match {
-    case Unary((ident, unary)) =>
+    case Unary(unary) =>
       val startPos = currIndex
       next()
-      def op = atPos(startPos)(Term.Name(ident))
+      def op = atPos(startPos)(Term.Name(unary.op))
       def addPos(tree: Term) = autoEndPos(startPos)(tree)
       def rest(tree: Term) = simpleExprRest(tree, canApply = true, startPos = startPos)
-      val litOpt = (currToken, unary) match {
-        case (tok: NumericConstant[_], unary: Unary.Numeric) => Some(numericLiteralAt(tok, unary))
-        case (tok: BooleanConstant, unary: Unary.Logical) => Some(Lit.Boolean(unary(tok.value)))
-        case _ => None
-      }
-      litOpt.fold(simpleExpr0(allowRepeated = true) match {
+      if (at[Literal]) rest(addPos(rawLiteral(unary)))
+      else simpleExpr0(allowRepeated = true) match {
         case Success(x) => addPos(Term.ApplyUnary(op, x))
         // maybe it is not unary operator but simply an ident `trait - {...}`
         // we would fail here anyway, let's try to treat it as ident
         case _ => rest(op)
-      })(lit => next(rest(addPos(lit))))
+      }
     case _ => simpleExpr(allowRepeated)
   }
 
@@ -2861,7 +2865,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val startPos = currIndex
       autoEndPos(startPos) {
         currToken match {
-          case Unary.Numeric(unary) if tryAhead[NumericConstant[_]] => numericLiteral(unary)
+          case Unary(unary) if tryAhead[Literal] => rawLiteral(unary)
           case sidToken @ (_: Ident | _: KwThis | _: Unquote) =>
             val sid = stableId()
             val targs = if (at[LeftBracket]) Some(super.patternTypeArgs()) else None

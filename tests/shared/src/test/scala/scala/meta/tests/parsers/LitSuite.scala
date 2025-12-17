@@ -152,10 +152,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: !1") {
-    val number = lit(1)
-    runTestAssert[Stat]("!1")(Term.ApplyUnary(tname("!"), number))
-    val tree = Term.ApplyUnary(tname("!"), tapply(number, lit(0)))
-    runTestAssert[Stat]("!1(0)")(tree)
+    val number = lit("!", lit(1))
+    runTestAssert[Stat]("!1")(number)
+    runTestAssert[Stat]("!1(0)")(tapply(number, lit(0)))
   }
 
   test("unary: +1.0") {
@@ -179,10 +178,9 @@ class LitSuite extends ParseSuite {
   }
 
   test("unary: !1.0") {
-    val number = lit(1d)
-    runTestAssert[Stat]("!1.0", "!1.0")(Term.ApplyUnary(tname("!"), number))
-    val tree = Term.ApplyUnary(tname("!"), tapply(number, lit(0)))
-    runTestAssert[Stat]("!1.0(0)", "!1.0(0)")(tree)
+    val number = lit("!", lit(1d))
+    runTestAssert[Stat]("!1.0", "!1.0")(number)
+    runTestAssert[Stat]("!1.0(0)", "!1.0(0)")(tapply(number, lit(0)))
   }
 
   test("unary: !true") {

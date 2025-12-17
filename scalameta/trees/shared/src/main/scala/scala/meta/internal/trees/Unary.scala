@@ -13,10 +13,7 @@ private[meta] object Unary {
 
   private def unaryWithKey[T <: Unary](unary: T) = unary.op -> unary
 
-  def unapply(token: Token.Ident): Option[(String, Unary)] = {
-    val op = token.text
-    opMap.get(op).map(op -> _)
-  }
+  def unapply(token: Token.Ident): Option[Unary] = opMap.get(token.text)
 
   sealed trait Numeric extends Unary {
     def apply(value: BigInt): BigInt
