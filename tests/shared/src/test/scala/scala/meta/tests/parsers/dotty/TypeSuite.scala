@@ -509,96 +509,72 @@ class TypeSuite extends BaseDottySuite {
 
   test("#3672 [scala3] ***")(runTestAssert[Type]("***")(pname("***")))
 
-  // https://dotty.epfl.ch/docs/reference/experimental/into-modifier.html
+  // Into modifier according to the SIP-71
+  // https://docs.scala-lang.org/sips/71.html#syntax-changes
 
-  test("#3995 into type") {
+  test("into-trait") {
     implicit val dialect: Dialect = dialects.Scala3Future
-    val code = "def ++ (elems: into IterableOnce[A]): List[A]"
-    val layout = "def ++(elems: into IterableOnce[A]): List[A]"
-    val tree = Decl.Def(
-      Nil,
-      tname("++"),
-      Nil,
-      List(List(tparam("elems", Some(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "A")))))),
-      papply("List", "A")
-    )
-    runTestAssert[Stat](code, layout)(tree)
-  }
-
-  test("#3995 into by-name type") {
-    implicit val dialect: Dialect = dialects.Scala3Future
-    val code = "def ++ (elems: => into IterableOnce[A]): List[A]"
-    val layout = "def ++(elems: => (into IterableOnce[A])): List[A]"
-    val tree = Decl.Def(
-      Nil,
-      tname("++"),
-      Nil,
-      List(List(tparam(
-        "elems",
-        Some(Type.ByName(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "A"))))
-      ))),
-      papply("List", "A")
-    )
-    runTestAssert[Stat](code, layout)(tree)
-  }
-
-  test("#3995 into func type") {
-    implicit val dialect: Dialect = dialects.Scala3Future
-    val code = "def flatMap[B](f: into A => IterableOnce[B]): List[B]"
-    val tree = Decl.Def(
-      Nil,
-      tname("flatMap"),
-      List(pparam("B")),
-      List(List(tparam(
-        "f",
-        Some(Type.FunctionArg(List(Mod.Into()), pfunc(pname("A"))(papply("IterableOnce", "B"))))
-      ))),
-      papply("List", "B")
-    )
+    val code = "into trait T"
+    val tree = Defn.Trait(List(Mod.Into()), pname("T"), Nil, ctor, tplNoBody())
     runTestAssert[Stat](code)(tree)
   }
 
-  test("#3995 into func arg type") {
+  test("into-class") {
     implicit val dialect: Dialect = dialects.Scala3Future
-    val code = "def flatMap[B](f: A => into IterableOnce[B]): List[B]"
-    val layout = "def flatMap[B](f: A => (into IterableOnce[B])): List[B]"
-    val tree = Decl.Def(
-      Nil,
-      tname("flatMap"),
-      List(pparam("B")),
-      List(List(
-        tparam("f", Some(pfunc("A")(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "B")))))
-      )),
-      papply("List", "B")
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val code = "into class Test"
+    val tree = Defn.Class(List(Mod.Into()), pname("Test"), Nil, ctor, tplNoBody())
+    runTestAssert[Stat](code)(tree)
   }
 
-  test("#3995 into vararg type without parens (wrong)") {
+  test("into-object") {
     implicit val dialect: Dialect = dialects.Scala3Future
-    val code = "def concatAll(xss: into IterableOnce[Char]*): List[Char]"
-    val error =
-      """|<input>:1: error: `)` expected but `identifier` found
-         |def concatAll(xss: into IterableOnce[Char]*): List[Char]
-         |                                          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val code = "into object Test"
+    runTestError[Stat](code, "error: `;` expected but `object` found")
   }
 
-  test("#3995 into vararg type with parens (correct)") {
+  test("into-def") {
     implicit val dialect: Dialect = dialects.Scala3Future
-    val code = "def concatAll(xss: (into IterableOnce[Char])*): List[Char]"
-    val layout = "def concatAll(xss: (into IterableOnce[Char])*): List[Char]"
-    val tree = Decl.Def(
+    val code =
+      """|object Test:
+         |  into def foo = 22
+         |""".stripMargin
+    runTestError[Stat](code, "error: `;` expected but `def` found")
+  }
+  test("into-val") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object Test:
+         |  into val foo = 22
+         |""".stripMargin
+    runTestError[Stat](code, "error: `;` expected but `val` found")
+  }
+
+  test("into-type") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|object Test:
+         |  into opaque type U = Int
+         |""".stripMargin
+    val tree = Defn.Object(
       Nil,
-      "concatAll",
-      Nil,
-      List(List(tparam(
-        "xss",
-        Some(Type.Repeated(Type.FunctionArg(List(Mod.Into()), papply("IterableOnce", "Char"))))
-      ))),
-      papply("List", "Char")
+      tname("Test"),
+      Template(
+        None,
+        Nil,
+        Template.Body(
+          None,
+          List(Defn.Type(
+            List(Mod.Into(), Mod.Opaque()),
+            pname("U"),
+            Type.ParamClause(Nil),
+            pname("Int"),
+            noBounds
+          ))
+        ),
+        Nil
+      )
     )
-    runTestAssert[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, assertLayout = Some("object Test { into opaque type U = Int }"))(tree)
   }
 
   test("#3998") {
