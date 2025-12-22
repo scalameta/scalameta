@@ -120,10 +120,19 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       val next = getNextIndex(index)
       isDclIntro(next) || isModifier(next) || f(tokens(next))
     }
+    @inline
+    def nextIsClassOrObjectorOpaqueType: Boolean = {
+      val next = getNextIndex(index)
+      tokens(next) match {
+        case _: KwClass | _: KwType | _: KwTrait => true
+        case otherwise => isModifier(next)
+      }
+    }
 
     tokens(index).text match {
       case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.isAny[KwTrait, KwClass])
       case soft.KwOpaque() => nextIsDclIntroOrModifierOr(_ => false)
+      case soft.KwInto() => nextIsClassOrObjectorOpaqueType
       case soft.KwInline() => nextIsDclIntroOrModifierOr(matchesAfterInlineMatchMod)
       case soft.KwOpen() | soft.KwInfix() | soft.KwErased() | soft.KwTracked() =>
         isDefIntro(getNextIndex(index))

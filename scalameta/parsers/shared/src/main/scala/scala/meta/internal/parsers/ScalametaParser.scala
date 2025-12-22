@@ -973,18 +973,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           next()
           autoEndPos(startPos)(Type.Repeated(t))
         } else t
-      def atInto() = {
-        val intoPos = currIndex
-        val mod = atPos(intoPos)(Mod.Into())
-        next()
-        autoEndPos(intoPos)(Type.FunctionArg(mod :: Nil, typ(inParam = true)))
-      }
-      currToken match {
-        case soft.KwInto() => atInto()
-        case _: LeftParen if nextIf(soft.KwInto.matches(peekToken)) =>
-          withRepeated(inParensAfterOpen(atInto()))
-        case _ => withRepeated(typ(inParam = true))
-      }
+      withRepeated(typ(inParam = true))
     }
 
     def paramType(): Type = {
@@ -3037,6 +3026,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def modifier(tok: Ident, isLocal: Boolean): Mod = tok.text match {
     case soft.KwInline() => atCurPosNext(Mod.Inline())
     case soft.KwInfix() => atCurPosNext(Mod.Infix())
+    case soft.KwInto() => atCurPosNext(Mod.Into())
     case soft.KwOpen() if !isLocal => atCurPosNext(Mod.Open())
     case soft.KwOpaque() => atCurPosNext(Mod.Opaque())
     case soft.KwTransparent() => atCurPosNext(Mod.Transparent())
