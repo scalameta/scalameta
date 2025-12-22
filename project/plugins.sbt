@@ -2,7 +2,7 @@
 
 val crossProjectV = "1.3.2"
 
-resolvers ++= Resolver.sonatypeOssRepos("snapshots")
+resolvers += Resolver.sonatypeCentralSnapshots
 
 libraryDependencies += "com.thesamet.scalapb" %% "compilerplugin"  % "0.11.20"
 libraryDependencies += "org.scala-sbt"        %% "scripted-plugin" % sbtVersion.value
