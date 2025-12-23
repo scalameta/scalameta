@@ -1567,10 +1567,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   /* ------------- TYPES ---------------------------------------------------- */
 
   def typedOpt(): Option[Type] =
-    if (acceptOpt[Colon]) Some(if (at[At] && peek[Ident]) {
-      val startPos = currIndex
-      outPattern.annotTypeRest(autoEndPos(startPos)(Type.AnonymousName()), startPos)
-    } else typ())
+    if (acceptOpt[Colon]) Some(
+      if (at[At] && peek[Ident]) {
+        val startPos = currIndex
+        outPattern.annotTypeRest(autoEndPos(startPos)(Type.AnonymousName()), startPos)
+      } else typ()
+    )
     else None
 
   private def getDeclTpeOpt(fullTypeOK: Boolean): Option[Type] =

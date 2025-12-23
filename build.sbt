@@ -256,10 +256,12 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   ),
   Compile / sourceGenerators += Def.taskDyn {
     val outFile = (Compile / sourceManaged).value / "generated" / "TreeLifts.scala"
-    Def.task(if (scalaVersion.value.startsWith("3")) {
-      (Compile / (scala3TreeLiftsCodeGen / run)).toTask(" " + outFile.getAbsolutePath).value
-      Seq(outFile)
-    } else Seq())
+    Def.task(
+      if (scalaVersion.value.startsWith("3")) {
+        (Compile / (scala3TreeLiftsCodeGen / run)).toTask(" " + outFile.getAbsolutePath).value
+        Seq(outFile)
+      } else Seq()
+    )
   }.taskValue
 ).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
