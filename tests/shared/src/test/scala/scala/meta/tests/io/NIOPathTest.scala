@@ -86,14 +86,16 @@ class NIOPathTest extends FunSuite {
     // assert(project.toUri.getPath.endsWith("project/"))
   )
 
-  test("jar.toUri")(if (scala.meta.internal.platform.isJVM) {
-    val jar = Files.createTempDirectory("scalameta").resolve("foo.jar")
-    FileIO.withJarFileSystem(AbsolutePath(jar), true, true) { root =>
-      val hello = root.resolve("hello")
-      Files.createDirectories(hello.toNIO)
-      assert(hello.toURI.toString.endsWith("hello"))
+  test("jar.toUri")(
+    if (scala.meta.internal.platform.isJVM) {
+      val jar = Files.createTempDirectory("scalameta").resolve("foo.jar")
+      FileIO.withJarFileSystem(AbsolutePath(jar), true, true) { root =>
+        val hello = root.resolve("hello")
+        Files.createDirectories(hello.toNIO)
+        assert(hello.toURI.toString.endsWith("hello"))
+      }
     }
-  })
+  )
 
   test(".toAbsolutePath")(
     assert(file.toAbsolutePath.endsWith(file))
