@@ -3090,4 +3090,36 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("break+indent in then-body before else") {
+    val code =
+      """|  if (foo)
+         |    if (bar) baz &&
+         |      qux
+         |    else quux
+         |  else
+         |    xyzzy
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `;` expected but `else` found
+         |  else
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("break+noindent in then-body before else") {
+    val code =
+      """|  if (foo)
+         |    if (bar) baz &&
+         |    qux
+         |    else quux
+         |  else
+         |    xyzzy
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `;` expected but `else` found
+         |  else
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
