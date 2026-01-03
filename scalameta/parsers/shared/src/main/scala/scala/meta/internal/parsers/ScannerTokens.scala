@@ -596,7 +596,6 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         }
       case _: KwElse if dialect.allowQuietSyntax =>
         dropRegionLine(sepRegions) match {
-          case (r: RegionIndent) :: RegionThen :: rs => outdentThenCurrRef(r, rs)
           case (_: RegionControl) :: rs => currRef(rs)
           case _ => currRef(sepRegions)
         }
@@ -777,12 +776,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                 val done = noOutdent(xs)
                 OutdentInfo(r, if (done) rs else xs, done)
               } else null
-            case (rc: RegionControl) :: xs =>
-              if (rc.isTerminatingToken(next)) OutdentInfo(r, rs)
-              else if (nextIndent < r.indent)
-                OutdentInfo(r, if (rc.isTerminatingTokenRequired()) rs else xs)
-              else null
-            case _ if ctrlOnly || nextIndent >= r.indent => null // we stop here
+            case _ if nextIndent >= r.indent => null // we stop here
+            case (_: RegionControl) :: _ => OutdentInfo(r, rs)
+            case _ if ctrlOnly => null // we stop here
             case RegionTemplateBody :: xs => OutdentInfo(r, xs)
             case _ if (prev match {
                   // then  [else]  [do]  catch  [finally]  [yield]  match

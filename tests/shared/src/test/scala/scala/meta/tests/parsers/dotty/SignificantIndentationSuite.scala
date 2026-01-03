@@ -3099,11 +3099,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  else
          |    xyzzy
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `;` expected but `else` found
-         |  else
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "if (foo) if (bar) baz && qux else quux else xyzzy"
+    val tree = Term.If("foo", Term.If("bar", tinfix("baz", "&&", "qux"), "quux", Nil), "xyzzy", Nil)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("break+noindent in then-body before else") {
@@ -3115,11 +3113,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  else
          |    xyzzy
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `;` expected but `else` found
-         |  else
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "if (foo) if (bar) baz && qux else quux else xyzzy"
+    val tree = Term.If("foo", Term.If("bar", tinfix("baz", "&&", "qux"), "quux", Nil), "xyzzy", Nil)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
