@@ -355,7 +355,7 @@ class MinorDottySuite extends BaseDottySuite {
   test("annotation after modifier") {
     runTestError[Stat]("implicit @foo def foo(): Int", "Annotations must precede keyword modifiers")
 
-    runTestError[Stat]("{ inline @foo def foo(): Int }", "`;` expected but `@` found")
+    runTestError[Stat]("{ inline @foo def foo(): Int }", "`}` expected but `@` found")
   }
 
   test("unchecked-annotation") {
