@@ -1624,9 +1624,30 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
     accept[KwIf]
-    val (cond, thenp) = condExprWithBody[KwThen]
-    val elsep = if (acceptIfAfterOpt[KwElse](StatSep)) expr() else atCurPosEmpty(Lit.Unit())
-    Term.If(cond, thenp, elsep, mods)
+    def getMaybeIndented(fthen: Term => Term)(felse: => Term): Term =
+      if (acceptOpt[Indentation.Indent]) {
+        val begPos = prevIndex
+        val termInitRaw = blockMaybeRaw()
+        val outdented = acceptOpt[Indentation.Outdent]
+        val init = autoEndPosOpt(begPos)(termInitRaw)
+        val term = exprAfterSimpleInit(init, begPos)
+        try fthen(term)
+        finally if (!outdented) accept[Indentation.Outdent]
+      } else felse
+    def getWithCondAndThenp(cond: Term, thenp: Term) = {
+      val elsep = if (acceptIfAfterOpt[KwElse](StatSep)) expr() else atCurPosEmpty(Lit.Unit())
+      Term.If(cond, thenp, elsep, mods)
+    }
+    def getWithCond(cond: Term) =
+      getMaybeIndented(getWithCondAndThenp(cond, _))(getWithCondAndThenp(cond, expr()))
+
+    getMaybeIndented { cond =>
+      acceptAfterOptNL[KwThen]
+      getWithCond(cond)
+    } {
+      val (cond, thenpOpt) = condExprWithOptionalBody[KwThen]
+      thenpOpt.fold(getWithCond(cond))(getWithCondAndThenp(cond, _))
+    }
   }
 
   private def condExprWithOptionalBody[T <: Token: ClassTag]: (Term, Option[Term]) =
