@@ -541,7 +541,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   import this.reporter._
 
   implicit class XtensionToken(tok: Token) {
-    def is[T: ClassTag] = classTag[T].runtimeClass.isAssignableFrom(tok.getClass())
+    def is[T](implicit ctag: ClassTag[T]) = ctag.runtimeClass.isAssignableFrom(tok.getClass())
     def as[T <: AnyRef: ClassTag]: T = (if (is[T]) tok else null).asInstanceOf[T]
 
     def isAny[A: ClassTag, B: ClassTag] = is[A] || is[B]
@@ -1626,51 +1626,44 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     Term.If(cond, thenp, elsep, mods)
   }
 
-  private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
-    val (cond, bodyOpt) =
-      if (!dialect.allowQuietSyntax) {
-        val cond = condExpr()
-        newLinesOpt()
-        (cond, None)
-      } else if (!at[LeftParen]) {
-        val cond = expr()
-        acceptAfterOptNL[T]
-        (cond, None)
-      } else {
-        val startPos = currIndex
-        val simpleExpr = condExpr()
-        if (acceptIfAfterOptNL[T]) (simpleExpr, None)
-        else {
-          // let's consider case when something can continue cond or start body
-          val argsOrInitBody = currToken match {
-            case _: LeftParen => Some(inParensOrTupleOrUnitExpr(allowRepeated = false))
-            case _: LeftBrace => Some(blockExprOnBrace())
-            case _ => None
+  private def condExprWithOptionalBody[T <: Token: ClassTag]: (Term, Option[Term]) =
+    if (!dialect.allowQuietSyntax) {
+      val cond = condExpr()
+      newLinesOpt()
+      (cond, None)
+    } else if (!at[LeftParen]) {
+      val cond = expr()
+      acceptAfterOptNL[T]
+      (cond, None)
+    } else {
+      val startPos = currIndex
+      val simpleExpr = condExpr()
+      if (acceptIfAfterOptNL[T]) (simpleExpr, None)
+      else {
+        // let's consider case when something can continue cond or start body
+        val argsOrInitBody = currToken match {
+          case _: LeftParen => Some(inParensOrTupleOrUnitExpr(allowRepeated = false))
+          case _: LeftBrace => Some(blockExprOnBrace())
+          case _ => None
+        }
+        val complexExpr = tryParse {
+          val simpleExprWithArgs = argsOrInitBody.fold(simpleExpr) { t =>
+            val args = copyPos(t)(termInfixContext.toArgClause(t))
+            autoEndPos(startPos)(Term.Apply(simpleExpr, args))
           }
-          val complexExpr = tryParse {
-            val simpleExprWithArgs = argsOrInitBody.fold(simpleExpr) { t =>
-              val args = copyPos(t)(termInfixContext.toArgClause(t))
-              autoEndPos(startPos)(Term.Apply(simpleExpr, args))
-            }
-            val simpleRest = simpleExprRest(simpleExprWithArgs, canApply = true, startPos = startPos)
-            Try(postfixExpr(startPos, simpleRest, allowRepeated = false)).toOption.flatMap { x =>
-              val exprCond = exprOtherRest(startPos, x, location = NoStat, allowRepeated = false)
-              if (acceptIfAfterOptNL[T]) Some(exprCond -> None) else None
-            }
-          }
-          complexExpr.getOrElse {
-            if (argsOrInitBody.isEmpty) newLinesOpt()
-            simpleExpr -> argsOrInitBody.map { t =>
-              val startPos = t.begIndex
-              val rest = simpleExprRest(t, canApply = true, startPos = startPos)
-              val init = postfixExpr(startPos, rest, allowRepeated = false)
-              exprOtherRest(startPos, init, NoStat, allowRepeated = false)
-            }
-          }
+          Try(exprAfterSimpleInit(simpleExprWithArgs, startPos = startPos, canApply = true))
+            .toOption.flatMap(x => if (acceptIfAfterOptNL[T]) Some(x -> None) else None)
+        }
+        complexExpr.getOrElse {
+          if (argsOrInitBody.isEmpty) newLinesOpt()
+          simpleExpr -> argsOrInitBody.map(t => exprAfterSimpleInit(t, t.begIndex, canApply = true))
         }
       }
-    val body = bodyOpt.getOrElse(expr())
+    }
 
+  private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
+    val (cond, bodyOpt) = condExprWithOptionalBody[T]
+    val body = bodyOpt.getOrElse(expr())
     (cond, body)
   }
 
@@ -1769,16 +1762,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           Term.PolyFunction(quants, expr(location, allowRepeated))
         case _ =>
           val startPos = currIndex
-          val t: Term = postfixExpr(allowRepeated)
-          exprOtherRest(startPos, t, location, allowRepeated)
+          val t: Term = postfixExpr(startPos, allowRepeated)
+          exprOtherRest(t, startPos, location, allowRepeated)
       }
     }
     if (location.anonFuncOK) maybeAnonymousFunction(res) else res
   }
 
   private def exprOtherRest(
-      startPos: Int,
       prefix: Term,
+      startPos: Int,
       location: Location,
       allowRepeated: Boolean
   ): Term = {
@@ -1935,6 +1928,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           copyPos(t)(Term.Param(mod, name, None, None))
         }
     }
+  }
+
+  private def exprAfterSimple(
+      term: Term,
+      startPos: Int,
+      location: Location = NoStat,
+      allowRepeated: Boolean = false
+  ): Term = {
+    val postfix = postfixExpr(term, startPos, allowRepeated = allowRepeated)
+    exprOtherRest(postfix, startPos, location, allowRepeated = allowRepeated)
+  }
+
+  private def exprAfterSimpleInit(
+      term: Term,
+      startPos: Int,
+      location: Location = NoStat,
+      canApply: Boolean = false,
+      allowRepeated: Boolean = false
+  ): Term = {
+    val simple = simpleExprRest(term, canApply = canApply, startPos = startPos)
+    exprAfterSimple(simple, startPos, location, allowRepeated = allowRepeated)
   }
 
   private def convertToParamClause(
@@ -2132,17 +2146,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _ => None
     }
 
-  def postfixExpr(allowRepeated: Boolean): Term = {
-    val startPos = currIndex
+  def postfixExpr(allowRepeated: Boolean): Term = postfixExpr(currIndex, allowRepeated)
 
+  def postfixExpr(startPos: Int, allowRepeated: Boolean): Term = {
     // Start the infix chain.
     // We'll use `a + b` as our running example.
     val rhs0 = prefixExpr(allowRepeated)
 
-    postfixExpr(startPos, rhs0, allowRepeated)
+    postfixExpr(rhs0, startPos, allowRepeated)
   }
 
-  private def postfixExpr(startPos: Int, rhs0: Term, allowRepeated: Boolean): Term = {
+  private def postfixExpr(rhs0: Term, startPos: Int, allowRepeated: Boolean): Term = {
     val ctx = termInfixContext
     val base = ctx.stack
 
@@ -2649,7 +2663,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def guardOnIf(): Term = {
     next()
-    autoPos(postfixExpr(allowRepeated = false))
+    postfixExpr(allowRepeated = false)
   }
 
   private def enumeratorGuardOnIf() = autoPos(Enumerator.Guard(guardOnIf()))
