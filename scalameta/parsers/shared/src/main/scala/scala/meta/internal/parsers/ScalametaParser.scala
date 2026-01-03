@@ -643,12 +643,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   @inline
   def isImplicitStatSep(): Boolean = prev[Indentation.Outdent]
 
-  def acceptStatSep(): Boolean = {
-    val ok = acceptIfStatSep() || isAtEndMarker() || isImplicitStatSep() && !at[Indentation.Outdent]
-    if (!ok) syntaxErrorExpected[Semicolon]
+  def acceptIfExtendedStatSep(): Boolean = acceptIfStatSep() || isAtEndMarker() ||
+    isImplicitStatSep() && !at[Indentation.Outdent]
+
+  def acceptExtendedStatSep(): Unit = if (!acceptIfExtendedStatSep()) syntaxErrorExpected[Semicolon]
+  def acceptExtendedStatSepOpt(): Boolean = {
+    val ok = !StatSeqEnd(currToken)
+    if (ok) acceptExtendedStatSep()
     ok
   }
-  def acceptStatSepOpt() = !StatSeqEnd(currToken) && acceptStatSep()
 
   def skipAllStatSep(): Boolean = {
     val ok = acceptIfStatSep()
@@ -2573,13 +2576,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def blockRaw(allowRepeated: Boolean = false): Term.Block =
     toBlockRaw(blockStatSeq(allowRepeated = allowRepeated))
 
-  private def blockOnIndent(keepBlock: Boolean = false): Term = autoPosOpt(
-    indentedOnOpen(blockStatSeq() match {
+  private def blockMaybeRaw(allowRepeated: Boolean = false, keepBlock: Boolean = false): Term =
+    blockStatSeq(allowRepeated = allowRepeated) match {
       case (t: Term) :: Nil if !(keepBlock || isPrecededByDetachedComment(currIndex, t.endIndex)) =>
         t
       case stats => toBlockRaw(stats)
-    })
-  )
+    }
+
+  private def blockOnIndent(keepBlock: Boolean = false): Term =
+    autoPosOpt(indentedOnOpen(blockMaybeRaw(keepBlock = keepBlock)))
   private def blockExprOnIndent(keepBlock: Boolean = false): Term =
     blockExprPartial[Indentation.Outdent](blockOnIndent(keepBlock))
 
@@ -4329,7 +4334,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val statpfAdd = statpf.runWith(stats += _)
 
     while (!StatSeqEnd(currToken))
-      if (statpfAdd(currToken)) acceptStatSepOpt()
+      if (statpfAdd(currToken)) acceptExtendedStatSepOpt()
       else if (!acceptIfStatSep()) syntaxError(errorMsg + s" `${currToken.name}`", at = currToken)
 
     if (isIndented) accept[Indentation.Outdent]
@@ -4380,7 +4385,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         "illegal start of declaration (possible cause: missing `=' in front of current method body)"
       )
       else fail("illegal start of declaration")
-      acceptStatSepOpt()
+      acceptExtendedStatSepOpt()
     }
     doWhile(skipAllStatSep())(cond(currToken))
   }
@@ -4404,17 +4409,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   def blockStatSeq(allowRepeated: Boolean = false): List[Stat] = listBy[Stat] { stats =>
-    def notCaseDefEnd(): Boolean = currToken match {
-      case _: RightParen | StatSeqEnd() => false
-      case _: KwCase => !isCaseIntroOnKwCase()
-      case _: Ellipsis => !peek[KwCase]
-      case _ => true
-    }
-    def cond(): Boolean = {
-      skipAllStatSep()
-      notCaseDefEnd()
-    }
     def getStat(): Stat = currToken match {
+      case _: Indentation.Outdent => null
+      case _: KwCase if isCaseIntroOnKwCase() => null
+      case _: Ellipsis if peek[KwCase] => null
       case _: KwExport => exportStmt()
       case _: KwImport => importStmt()
       case _: KwImplicit =>
@@ -4427,13 +4425,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _ if isIdentOrExprIntro(currToken) =>
         stat(expr(location = BlockStat, allowRepeated = allowRepeated))
       case t: Ellipsis => ellipsis[Stat](t, 1)
-      case _ => syntaxError("illegal start of statement", at = currToken)
+      case t if !mightStartStat(t, closeDelimOK = false) => null
+      case t => syntaxError("illegal start of statement", at = t)
     }
 
-    if (cond()) doWhile(stats += getStat())(notCaseDefEnd() && {
-      acceptStatSep()
-      cond()
-    })
+    while ({
+      skipAllStatSep()
+      val stat = getStat()
+      (null ne stat) && {
+        stats += stat
+        acceptIfExtendedStatSep()
+      }
+    }) {}
+
     if (allowRepeated && stats.length > 1) stats.foreach {
       case t: Term.Repeated => syntaxError("repeated argument not allowed here", at = t)
       case _ =>
@@ -4477,7 +4481,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           buf.clear()
           buf += pkg
           if (!at[EOF]) {
-            acceptStatSep()
+            acceptExtendedStatSep()
             statSeqBuf(buf, statpf)
           }
         })
