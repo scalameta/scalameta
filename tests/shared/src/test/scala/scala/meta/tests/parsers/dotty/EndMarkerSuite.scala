@@ -382,11 +382,33 @@ class EndMarkerSuite extends BaseDottySuite {
          |      end match
          |  case _ =>
          |""".stripMargin
-    val error =
-      """|<input>:8: error: `outdent` expected but `case` found
+    val layout =
+      """|tree match {
+         |  case foo =>
+         |    if (bar) {
+         |      baz match {
+         |        case qux => quux
+         |      }
+         |      end match
+         |    }
          |  case _ =>
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}
+         |""".stripMargin
+    val tree = tmatch(
+      "tree",
+      Case(
+        patvar("foo"),
+        None,
+        Term.If(
+          "bar",
+          blk(tmatch("baz", Case(patvar("qux"), None, "quux")), Term.EndMarker("match")),
+          Lit.Unit(),
+          Nil
+        )
+      ),
+      Case(patwildcard, None, blk())
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
