@@ -507,7 +507,7 @@ lazy val sharedSettings = Def.settings(
     def dynVer(out: sbtdynver.GitDescribeOutput): String = {
       def tagVersion = out.ref.dropPrefix
       if (out.isCleanAfterTag) tagVersion
-      else if (System.getProperty("CI") == null) s"$tagVersion-next-SNAPSHOT" // modified for local builds
+      else if (System.getenv("CI") == null) s"$tagVersion-next-SNAPSHOT" // modified for local builds
       else if (out.commitSuffix.distance == 0) tagVersion
       else if (sys.props.contains("backport.release")) tagVersion
       else curVersion
