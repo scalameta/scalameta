@@ -3,7 +3,9 @@ package scala.meta.tests.parsers.dotty
 import scala.meta._
 import scala.meta.tests.parsers.BasePositionSuite
 
-class Scala3PositionSuite extends BasePositionSuite(dialects.Scala3) {
+class Scala3PositionSuite extends BasePositionSuite {
+
+  private implicit val dialect: Dialect = dialects.Scala3
 
   checkPositions[Type]("A & B")
   checkPositions[Type]("A | B")
