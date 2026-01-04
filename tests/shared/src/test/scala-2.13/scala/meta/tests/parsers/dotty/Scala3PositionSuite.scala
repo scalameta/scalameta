@@ -3291,7 +3291,7 @@ class Scala3PositionSuite extends BasePositionSuite {
     checkPositions[Stat](
       "val foo: Int ?->{a} List[Int] = _ ?=> List(1, 2, 3)",
       """|Type.Capturing Int ?->{a} List[Int] [9:Int ?->{a} List[Int]:29)
-         |Type.PureContextFunction Int ?->{a} List[Int] <none>
+         |Type.PureContextFunction Int ?->{a} List[Int] [9:Int ?->{a} List[Int]:29)
          |Type.FuncParamClause Int [9:Int:12)
          |Type.Apply List[Int] [20:List[Int]:29)
          |Type.ArgClause [Int] [24:[Int]:29)

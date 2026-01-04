@@ -39,11 +39,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
   test("agregate-bounds-named") {
-    runTestAssert[Stat](
-      "trait A{ def showMax[X : {Ordering as ordering, Show as show}](x: X, y: X): String }",
-      assertLayout =
-        Some("trait A { def showMax[X: Ordering as ordering: Show as show](x: X, y: X): String }")
-    )(Defn.Trait(
+    val code =
+      "trait A { def showMax[X: {Ordering as ordering, Show as show}](x: X, y: X): String }"
+    val tree = Defn.Trait(
       Nil,
       pname("A"),
       Nil,
@@ -58,8 +56,10 @@ class GivenSyntax36Suite extends BaseDottySuite {
         List(List(tparam("x", "X"), tparam("y", "X"))),
         "String"
       ))
-    ))
+    )
+    runTestAssert[Stat](code)(tree)
   }
+
   test("deferred") {
     runTestAssert[Stat](
       """|trait Sorted:

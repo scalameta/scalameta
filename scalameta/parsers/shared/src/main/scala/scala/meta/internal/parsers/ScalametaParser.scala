@@ -1066,9 +1066,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val funcParams =
         autoEndPos(paramPos)(params.map(typeVar).reduceWith(Type.FuncParamClause.apply))
       next()
-      withTypeCaptures(paramPos, allowCaptures = allowCaptures)(
+      withTypeCaptures(paramPos, allowCaptures = allowCaptures)(autoEndPos(paramPos)(
         ctor(funcParams, maybeIndented(if (inParam) paramValueType() else typ()))
-      )
+      ))
     }
 
     private def typeFuncOnArrowOpt(
@@ -3385,8 +3385,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def contextBoundOrAlias(allowAlias: Boolean) = currToken match {
     case t: Ellipsis => ellipsis[Type](t, 1)
     case _ => typ() match {
-        case Type.ApplyInfix(nm: Type.Name, Type.Name("as"), alias: Type.Name) if allowAlias =>
-          Type.BoundsAlias(alias, nm)
+        case tpe @ Type.ApplyInfix(nm: Type.Name, Type.Name("as"), alias: Type.Name)
+            if allowAlias => copyPos(tpe)(Type.BoundsAlias(alias, nm))
         case tpe => tpe
       }
   }
