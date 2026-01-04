@@ -3285,4 +3285,25 @@ class Scala3PositionSuite extends BasePositionSuite {
        |""".stripMargin
   )
 
+  locally {
+    implicit val dialect: Dialect = dialects.Scala3Future
+
+    checkPositions[Stat](
+      "val foo: Int ?->{a} List[Int] = _ ?=> List(1, 2, 3)",
+      """|Type.Capturing Int ?->{a} List[Int] [9:Int ?->{a} List[Int]:29)
+         |Type.PureContextFunction Int ?->{a} List[Int] <none>
+         |Type.FuncParamClause Int [9:Int:12)
+         |Type.Apply List[Int] [20:List[Int]:29)
+         |Type.ArgClause [Int] [24:[Int]:29)
+         |Type.CapturesSet {a} [16:{a}:19)
+         |Term.ContextFunction _ ?=> List(1, 2, 3) [32:_ ?=> List(1, 2, 3):51)
+         |Term.ParamClause _ [32:_:33)
+         |Term.Param _ [32:_:33)
+         |Term.Apply List(1, 2, 3) [38:List(1, 2, 3):51)
+         |Term.ArgClause (1, 2, 3) [42:(1, 2, 3):51)
+         |""".stripMargin,
+      showPosition = true
+    )
+  }
+
 }
