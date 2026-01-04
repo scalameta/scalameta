@@ -371,4 +371,22 @@ class EndMarkerSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("match with end marker") {
+    val code =
+      """|tree match
+         |  case foo =>
+         |    if bar then
+         |      baz match
+         |        case qux =>
+         |          quux
+         |      end match
+         |  case _ =>
+         |""".stripMargin
+    val error =
+      """|<input>:8: error: `outdent` expected but `case` found
+         |  case _ =>
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
