@@ -3,7 +3,10 @@ package parsers
 
 import scala.meta._
 
-class BasicPositionSuite extends BasePositionSuite(dialects.Scala213) {
+class BasicPositionSuite extends BasePositionSuite {
+
+  private implicit val dialect: Dialect = dialects.Scala213
+
   checkPositions[Term](
     "1 + (2 / 3) * 4",
     """|Type.ArgClause 1 + @@(2 / 3) * 4

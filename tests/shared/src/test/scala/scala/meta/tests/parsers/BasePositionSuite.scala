@@ -5,12 +5,13 @@ import scala.meta.parsers.Parse
 
 import munit.{Location, TestOptions}
 
-abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
+abstract class BasePositionSuite extends ParseSuite {
   import scala.meta._
   import scala.meta.tests.parsers.MoreHelpers._
 
-  def checkPositions[T <: Tree: Parse](code: TestOptions)(implicit loc: Location): Unit =
-    checkPositions[T](code, "")
+  def checkPositions[T <: Tree: Parse](
+      code: TestOptions
+  )(implicit loc: Location, dialect: Dialect): Unit = checkPositions[T](code, "")
 
   /**
    * Position tests assert that the position of tree nodes enclose the expected source range.
@@ -51,8 +52,7 @@ abstract class BasePositionSuite(defaultDialect: Dialect) extends ParseSuite {
       expectedTokens: String = "",
       showPosition: Boolean = false,
       showFieldName: Boolean = false
-  )(implicit loc: Location): Unit = test(code) {
-    implicit val D = defaultDialect
+  )(implicit loc: Location, dialect: Dialect): Unit = test(code) {
     if (expectedTokens.nonEmpty) assertTokenizedAsStructureLines(code.name, expectedTokens)
     val tree = code.name.asInput.parse[T]
       .fold(x => fail("parse failure", x.details), MoreHelpers.requireNonEmptyOrigin(_))
