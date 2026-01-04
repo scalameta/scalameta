@@ -12,7 +12,8 @@ import munit._
 object MoreHelpers {
 
   def requireNonEmptyOrigin(tree: Tree): tree.type = {
-    val missingOrigin = TestHelpers.collect(tree) { case t if t.origin == Origin.None => t }
+    val missingOrigin = TestHelpers
+      .collect(tree) { case t if !t.origin.isInstanceOf[Origin.Parsed] => t }
     Assertions.assertEquals(
       missingOrigin.map(_.structure),
       Nil,
