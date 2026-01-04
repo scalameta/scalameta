@@ -2079,11 +2079,24 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  else
          |    case msg2: Int => msg2 + 2
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `case` found
-         |    case msg1: Int => msg1 + 1
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|if (foo) {
+         |  case msg1: Int =>
+         |    msg1 + 1
+         |} else {
+         |  case msg2: Int =>
+         |    msg2 + 2
+         |}
+         |""".stripMargin
+    val tree = Term.If(
+      "foo",
+      Term
+        .PartialFunction(List(Case(Pat.Typed(patvar("msg1"), "Int"), None, tinfix("msg1", "+", lit(1))))),
+      Term
+        .PartialFunction(List(Case(Pat.Typed(patvar("msg2"), "Int"), None, tinfix("msg2", "+", lit(2))))),
+      Nil
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("def body is non-partial function") {
