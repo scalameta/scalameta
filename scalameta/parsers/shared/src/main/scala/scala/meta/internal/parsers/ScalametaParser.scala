@@ -1625,9 +1625,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
     accept[KwIf]
     def getMaybeIndented(fthen: Term => Term)(felse: => Term): Term =
-      if (acceptOpt[Indentation.Indent]) {
-        val begPos = prevIndex
-        val termInitRaw = blockMaybeRaw()
+      if (at[Indentation.Indent]) {
+        val begPos = currIndex
+        val termInitRaw = blockExprMaybePartialRaw().getOrElse(next(blockMaybeRaw()))
         val outdented = acceptOpt[Indentation.Outdent]
         val init = autoEndPosOpt(begPos)(termInitRaw)
         val term = exprAfterSimpleInit(init, begPos)
@@ -2596,16 +2596,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def isCaseIntroOnKwCase(): Boolean = !peekToken.isClassOrObject
 
   private def blockExprPartial[T <: Token: ClassTag](orElse: => Term): Term = {
+    val startPos = currIndex
+    blockExprMaybePartialRaw().fold(orElse) { term =>
+      acceptAfterOptNL[T]
+      autoEndPos(startPos)(term)
+    }
+  }
+
+  private def blockExprMaybePartialRaw(): Option[Term] = {
     val isPartial = peekToken match {
       case _: KwCase => ahead(isCaseIntroOnKwCase())
       case _: Ellipsis => ahead(peek[KwCase])
       case _ => false
     }
-    if (isPartial) autoPos(next(
-      try Term.PartialFunction(caseClauses())
-      finally acceptAfterOptNL[T]
-    ))
-    else orElse
+    if (isPartial) next(Some(Term.PartialFunction(caseClauses()))) else None
   }
 
   private def blockRaw(allowRepeated: Boolean = false): Term.Block =
