@@ -218,7 +218,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       skipFullTree: Boolean = true
   )(implicit loc: Location): Unit = {
     val sb = new StringBuilder
-    TestHelpers.collect(tree) {
+    TestHelpers.foreach(tree) {
       // Reduce the expected output by ignoring lines that can be trivially
       // verified. A line can be trivially verified when you can re-print the
       // `.syntax` without using tokens. For example, if a Mod.Lazy tree has
