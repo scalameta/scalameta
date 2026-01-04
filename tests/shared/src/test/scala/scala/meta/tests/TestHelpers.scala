@@ -2,6 +2,8 @@ package scala.meta.tests
 
 import scala.meta._
 
+import scala.annotation.tailrec
+
 object TestHelpers {
 
   def getMessageWithExtraClue(msg: String, extraClue: String = ""): String =
@@ -17,13 +19,23 @@ object TestHelpers {
 
   def tokensAsSyntax(tokens: Iterator[Token]) = tokens.map(_.syntax).mkString
 
+  def foreach(tree: Tree)(pf: PartialFunction[Tree, Unit]): Unit = {
+    @tailrec
+    def iter(treess: List[List[Tree]]): Unit = treess match {
+      case trees :: treess => trees match {
+          case tree :: trees =>
+            pf.applyOrElse(tree, (_: Tree) => ())
+            iter(tree.children :: trees :: treess)
+          case _ => iter(treess)
+        }
+      case _ =>
+    }
+    iter(List(List(tree)))
+  }
+
   def collect[B](tree: Tree)(pf: PartialFunction[Tree, B]): List[B] = {
     val builder = List.newBuilder[B]
-    def loop(t: Tree): Unit = {
-      builder ++= pf.lift(t)
-      t.children.foreach(loop)
-    }
-    loop(tree)
+    foreach(tree)(pf.andThen(builder += _))
     builder.result()
   }
 
