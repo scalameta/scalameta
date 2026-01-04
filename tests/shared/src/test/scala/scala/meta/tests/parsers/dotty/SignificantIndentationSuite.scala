@@ -2072,6 +2072,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
+  test("`if` body is a partial function") {
+    val code =
+      """|  if foo then
+         |    case msg1: Int => msg1 + 1
+         |  else
+         |    case msg2: Int => msg2 + 2
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `case` found
+         |    case msg1: Int => msg1 + 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("def body is non-partial function") {
     val code =
       """|object a:
