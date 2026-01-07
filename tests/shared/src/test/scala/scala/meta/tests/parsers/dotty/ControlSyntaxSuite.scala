@@ -4256,4 +4256,81 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Source](code, output)(tree)
   }
 
+  test("#4421 unindented") {
+    val code =
+      """|for
+         |given Foo <- frob
+         |yield
+         |  identity:
+         |    sql""
+         |""".stripMargin
+    val error =
+      """|<input>:5: error: `identifier` expected but `interpolation id` found
+         |    sql""
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#4421 indented") {
+    val code =
+      """|for
+         |  given Foo <- frob
+         |yield
+         |  identity:
+         |    sql""
+         |""".stripMargin
+    val layout =
+      """|for (given Foo <- frob) yield identity {
+         |  sql""
+         |}
+         |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(Enumerator.Generator(Pat.Given("Foo"), "frob"))),
+      tapply("identity", blk(Term.Interpolate("sql", List(lit("")), Nil)))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#4421 in braces") {
+    val code =
+      """|for {
+         |  given Foo <- frob
+         |}
+         |yield
+         |  identity:
+         |    sql""
+         |""".stripMargin
+    val layout =
+      """|for (given Foo <- frob) yield identity {
+         |  sql""
+         |}
+         |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(Enumerator.Generator(Pat.Given("Foo"), "frob"))),
+      tapply("identity", blk(Term.Interpolate("sql", List(lit("")), Nil)))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#4421 in parens") {
+    val code =
+      """|for (
+         |  given Foo <- frob
+         |)
+         |yield
+         |  identity:
+         |    sql""
+         |""".stripMargin
+    val layout =
+      """|for (given Foo <- frob) yield identity {
+         |  sql""
+         |}
+         |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(Enumerator.Generator(Pat.Given("Foo"), "frob"))),
+      tapply("identity", blk(Term.Interpolate("sql", List(lit("")), Nil)))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
