@@ -1,5 +1,7 @@
 package scala.meta.internal.tokens
 
+import java.lang.{Character => JC}
+
 import scala.annotation.switch
 import scala.language.postfixOps
 
@@ -15,6 +17,13 @@ object Chars {
   final val FF = '\u000C'
   final val CR = '\u000D'
   final val SU = '\u001A'
+
+  /** Letter belongs to Unicode general categories {{{Ll, Lu, Lo, Lt, Nl}}} */
+  val scalaLetterTypeMask: Int = 1 << JC.LOWERCASE_LETTER | 1 << JC.UPPERCASE_LETTER |
+    1 << JC.OTHER_LETTER | 1 << JC.TITLECASE_LETTER | 1 << JC.LETTER_NUMBER
+
+  @inline
+  def isTypeMask(mask: Int)(ch: Int): Boolean = (mask >> JC.getType(ch) & 1) != 0
 
   /**
    * Convert a character digit to an Int according to given base, -1 if no success
@@ -33,18 +42,16 @@ object Chars {
   def isIdentifierStart(c: Int): Boolean = c == '_' || isIdentifierPart(c)
 
   /** Can character form part of an alphanumeric Scala identifier? */
-  def isIdentifierPart(c: Int) = c == '$' || Character.isUnicodeIdentifierPart(c)
+  def isIdentifierPart(c: Int) = c == '$' || JC.isUnicodeIdentifierPart(c)
 
   @inline
   def isUnicodeIdentifierPart(c: Int) =
-    // strangely enough, Character.isUnicodeIdentifierPart(SU) returns true!
-    c != SU && Character.isUnicodeIdentifierPart(c)
+    // strangely enough, isUnicodeIdentifierPart(SU) returns true!
+    c != SU && JC.isUnicodeIdentifierPart(c)
 
   /** Is character a math or other symbol in Unicode? */
-  def isSpecial(c: Int) = {
-    val chtp = Character.getType(c)
-    chtp == Character.MATH_SYMBOL.toInt || chtp == Character.OTHER_SYMBOL.toInt
-  }
+  @inline
+  def isSpecial(c: Int) = isTypeMask(1 << JC.MATH_SYMBOL | 1 << JC.OTHER_SYMBOL)(c)
 
   /** Can character form part of a Scala operator name? */
   def isOperatorPart(c: Int): Boolean = (c: @switch) match {
@@ -55,6 +62,11 @@ object Chars {
   @inline
   def isOperatorPart(c: Char): Boolean = isOperatorPart(c.toInt)
 
+  // The constants represent groups Mc, Me, Mn, Lm, and Nd.
+  private val nameTypeMask = scalaLetterTypeMask | 1 << JC.COMBINING_SPACING_MARK |
+    1 << JC.ENCLOSING_MARK | 1 << JC.NON_SPACING_MARK | 1 << JC.MODIFIER_LETTER |
+    1 << JC.DECIMAL_DIGIT_NUMBER
+
   /**
    * {{{
    *  NameChar ::= Letter | Digit | '.' | '-' | '_' | ':'
@@ -62,16 +74,9 @@ object Chars {
    * }}}
    * See [4] and Appendix B of XML 1.0 specification.
    */
-  def isNameChar(ch: Char) = {
-    import java.lang.Character._
-    // The constants represent groups Mc, Me, Mn, Lm, and Nd.
-
-    isNameStart(ch) ||
-    (getType(ch).toByte match {
-      case COMBINING_SPACING_MARK | ENCLOSING_MARK | NON_SPACING_MARK | MODIFIER_LETTER |
-          DECIMAL_DIGIT_NUMBER => true
-      case _ => ".-:".contains(ch)
-    })
+  def isNameChar(ch: Char) = (ch: @switch) match {
+    case '.' | '-' | '_' | ':' => true
+    case _ => isTypeMask(nameTypeMask)(ch)
   }
 
   /**
@@ -82,15 +87,7 @@ object Chars {
    *
    * We do not allow a name to start with ':'. See [3] and Appendix B of XML 1.0 specification
    */
-  def isNameStart(ch: Int) = {
-    import java.lang.Character._
-
-    getType(ch).toByte match {
-      case LOWERCASE_LETTER | UPPERCASE_LETTER | OTHER_LETTER | TITLECASE_LETTER | LETTER_NUMBER =>
-        true
-      case _ => ch == '_'
-    }
-  }
+  def isNameStart(ch: Int) = ch == '_' || isTypeMask(scalaLetterTypeMask)(ch)
 
   private val codepage =
     Map('\t' -> "\\t", '\b' -> "\\b", '\n' -> "\\n", '\r' -> "\\r", '\f' -> "\\f", '\\' -> "\\\\")
