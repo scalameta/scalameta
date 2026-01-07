@@ -490,7 +490,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         } else currRef(sepRegions)
       case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
       case _: KwGiven if !prevToken.isAny[Dot, KwCase] =>
-        currRef(new RegionGivenDecl(curr) :: sepRegions)
+        currRef(dropRegionLine(sepRegions) match {
+          case (_: RegionFor) :: _ => sepRegions
+          case (_: RegionDelim) :: (_: RegionFor) :: _ => sepRegions
+          case rs => new RegionGivenDecl(curr) :: rs
+        })
       case _: KwWith => currRef(dropRegionLine(sepRegions) match {
           case (_: RegionGivenDecl) :: rs => rs
           case _ => sepRegions

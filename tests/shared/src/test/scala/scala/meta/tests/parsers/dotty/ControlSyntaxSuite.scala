@@ -4264,11 +4264,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  identity:
          |    sql""
          |""".stripMargin
-    val error =
-      """|<input>:5: error: `identifier` expected but `interpolation id` found
-         |    sql""
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|for (given Foo <- frob) yield identity {
+         |  sql""
+         |}
+         |""".stripMargin
+    val tree = Term.ForYield(
+      Term.EnumeratorsBlock(List(Enumerator.Generator(Pat.Given("Foo"), "frob"))),
+      tapply("identity", blk(Term.Interpolate("sql", List(lit("")), Nil)))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4421 indented") {
