@@ -726,12 +726,11 @@ class TermSuite extends ParseSuite {
     tname("j")
   )))
 
-  test("#2720 infix with repeated arg not last")(assertNoDiff(
-    intercept[ParseException](term("a op (b: _*, c)")).getMessage,
-    """|<input>:1: error: repeated argument not allowed here
-       |a op (b: _*, c)
-       |      ^""".stripMargin
-  ))
+  test("#2720 infix with repeated arg not last") {
+    val code = "a op (b: _*, c)"
+    val tree = tinfix("a", "op", Term.Repeated("b"), "c")
+    runTestAssert[Term](code)(tree)
+  }
 
   test("#1384 string") {
     val tq = "\"" * 3

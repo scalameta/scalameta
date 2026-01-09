@@ -185,9 +185,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   @inline
   private def tryAhead[T: ClassTag]: Boolean = nextIf(peek[T])
+  @inline
+  private def tryAhead[A: ClassTag, B: ClassTag]: Boolean = nextIf(peek[A, B])
 
   @inline
   private def tryAheadNot[T: ClassTag]: Boolean = nextIf(!peek[T])
+  @inline
+  private def tryAheadNot[A: ClassTag, B: ClassTag]: Boolean = nextIf(!peek[A, B])
 
   private def unreachable(debuggees: Map[String, Any]): Nothing = UnreachableError.raise(debuggees)
   private def unreachable(tok: Token): Nothing = unreachable(Map("token" -> tok))
@@ -1827,7 +1831,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               // check out the `if (token.is[RightArrow]) { ... }` block below
               iter(addPos(Term.Ascribe(t, typeOrInfixType(location))))
         }
-      case soft.StarSplice() if allowRepeated && peek[RightParen] => repeatedTerm(t, next)
+      case soft.StarSplice() if allowRepeated && peek[RightParen, Comma] => repeatedTerm(t, next)
       case _: KwMatch =>
         next()
         matchClause(t, startPos)
@@ -2251,7 +2255,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case t: Unquote =>
           val op = unquote[Term.Name](t)
           Some(getPostfixOrNextRhs(op))
-        case t: Ident if !(allowRepeated && soft.StarSplice(t) && peek[RightParen]) =>
+        case t: Ident if !(allowRepeated && soft.StarSplice(t) && peek[RightParen, Comma]) =>
           val op = atCurPosNext(Term.Name(t.value))
           Some(getPostfixOrNextRhs(op))
         case _: KwMatch if dialect.allowMatchAsOperator =>
@@ -2572,18 +2576,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     })(Term.ArgClause(Nil))
   )
 
-  private def argumentExprsInParens(location: Location = NoStat): List[Term] = {
-    @tailrec
-    def checkRep(exprsLeft: List[Term]): Unit = exprsLeft match {
-      case head :: tail =>
-        if (!head.is[Term.Repeated]) checkRep(tail)
-        else if (tail.nonEmpty) syntaxError("repeated argument not allowed here", at = head)
-      case _ =>
-    }
-    val exprs = commaSeparated(argumentExpr(location))
-    checkRep(exprs)
-    exprs
-  }
+  private def argumentExprsInParens(location: Location = NoStat): List[Term] =
+    commaSeparated(argumentExpr(location))
 
   private def checkNoTripleDot[T <: Tree](tree: T): T = tree match {
     case q: Quasi if q.rank == 2 => syntaxError(Messages.QuasiquoteRankMismatch(q.rank, 1), at = q)
@@ -2921,7 +2915,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   Pat.Assign(name, noSeqWithNamed.pattern())
                 case name: Term.Name.Quasi => name.become[Pat]
                 case name: Term.Name =>
-                  if (soft.StarSplice(currToken) && tryAheadNot[Ident]) Pat.Repeated(name)
+                  if (soft.StarSplice(currToken) && tryAhead[RightParen, Comma]) Pat.Repeated(name)
                   else if (if (!isForComprehension && sidToken.isBackquoted) at[Colon, At]
                     else {
                       val first = name.value.head
