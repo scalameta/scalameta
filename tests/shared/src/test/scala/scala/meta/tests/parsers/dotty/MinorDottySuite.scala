@@ -1058,4 +1058,25 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
+  test("single spread") {
+    val code = "foo(1, xs*)"
+    val tree = tapply("foo", lit(1), Term.Repeated("xs"))
+    runTestAssert[Stat](code)(tree)
+
+    val codeWithTrailingcomma =
+      """|foo(
+         |  1,
+         |  xs*,
+         |)
+         |""".stripMargin
+    runTestAssert[Stat](codeWithTrailingcomma, code)(tree)
+  }
+
+  test("SIP-70 multiple spreads") {
+    val code = "foo(1, xs*, 2, 3)"
+    val layout = "foo(1, xs `*`, 2, 3)"
+    val tree = tapply("foo", lit(1), tpostfix("xs", "*"), lit(2), lit(3))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
