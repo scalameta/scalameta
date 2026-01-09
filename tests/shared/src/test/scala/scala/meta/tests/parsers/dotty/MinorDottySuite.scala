@@ -1074,9 +1074,8 @@ class MinorDottySuite extends BaseDottySuite {
 
   test("SIP-70 multiple spreads") {
     val code = "foo(1, xs*, 2, 3)"
-    val layout = "foo(1, xs `*`, 2, 3)"
-    val tree = tapply("foo", lit(1), tpostfix("xs", "*"), lit(2), lit(3))
-    runTestAssert[Stat](code, layout)(tree)
+    val tree = tapply("foo", lit(1), Term.Repeated("xs"), lit(2), lit(3))
+    runTestAssert[Stat](code)(tree)
   }
 
 }
