@@ -145,4 +145,25 @@ class PatSuite extends ParseSuite {
     assert(err.contains("} is false"), err)
   }
 
+  test("single spread") {
+    val code = "case Seq(1, xs*) =>"
+    val tree = Case(Pat.Extract(tname("Seq"), List(lit(1), Pat.Repeated("xs"))), None, blk())
+    runTestAssert[Case](code)(tree)
+
+    val codeWithTrailingcomma =
+      """|case Seq(
+         |  1,
+         |  xs*,
+         |) =>
+         |""".stripMargin
+    runTestAssert[Case](codeWithTrailingcomma, code)(tree)
+  }
+
+  test("SIP-70 multiple spreads") {
+    val code = "case Seq(1, xs*, 2, 3) =>"
+    val tree =
+      Case(Pat.Extract(tname("Seq"), List(lit(1), Pat.Repeated("xs"), lit(2), lit(3))), None, blk())
+    runTestAssert[Case](code)(tree)
+  }
+
 }
