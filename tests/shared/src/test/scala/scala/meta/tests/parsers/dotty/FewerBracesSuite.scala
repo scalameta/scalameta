@@ -2344,11 +2344,13 @@ class FewerBracesSuite extends BaseDottySuite {
     val code =
       """|xs.map: x => x + 1
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `;` expected but `=>` found
-         |xs.map: x => x + 1
-         |          ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|xs.map {
+         |  x => x + 1
+         |}
+         |""".stripMargin
+    val tree = tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "+", lit(1)))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
