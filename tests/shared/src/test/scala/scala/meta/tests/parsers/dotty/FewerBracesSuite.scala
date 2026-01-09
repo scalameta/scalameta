@@ -2340,4 +2340,15 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("SIP-75 single-line lambda") {
+    val code =
+      """|xs.map: x => x + 1
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: `;` expected but `=>` found
+         |xs.map: x => x + 1
+         |          ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
