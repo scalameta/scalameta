@@ -52,14 +52,16 @@ private[parsers] class LazyTokenIterator private (
 
   override def prevIndex: Int = prev.pointPos
   override def prevToken: Token = prev.token
+  override def prevRegions: List[SepRegion] = prev.regions
 
   override def currIndex: Int = curr.pointPos
   override def currToken: Token = curr.token
+  override def currRegions: List[SepRegion] = curr.regions
 
   override def fork: TokenIterator = new LazyTokenIterator(scannerTokens, prev, curr)
 
   override def peekToken: Token = getNextTokenRef().token
-
   override def peekIndex: Int = getNextTokenRef().pointPos
+  override def peekRegions: List[SepRegion] = getNextTokenRef().regions
 
 }

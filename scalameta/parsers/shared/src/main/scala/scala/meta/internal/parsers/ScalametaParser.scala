@@ -40,6 +40,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private object PatternTypeContext extends NestedContext
   private object ExtensionSigContext extends NestedContext
   private object GivenSigContext extends NestedContext
+  private object SimpleExprContext extends NestedContext
   private object TemplateOwnerContext extends NestedContextWithOwner[TemplateOwner](OwnedByObject)
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
@@ -1941,10 +1942,31 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case t: Term.Eta => getMod(t.expr).map((atPos(t.endIndex)(Name.Placeholder()), _))
       case _ => None
     }
+    def getType(t: Term): Option[Type] = t.becomeOrOpt[Type] {
+      case t: Term.Name => Some(copyPos(t)(Type.Name(t.value)))
+      case t: Term.Function => getTypeFunction(t)
+      case t: Term.ApplyType => getType(t.fun).map(fun => copyPos(t)(Type.Apply(fun, t.targClause)))
+      case _ => None
+    }
+    def getTypeFunction(t: Term.Function): Option[Type.Function] = t.becomeOrOpt[Type.Function](t =>
+      getType(t.body).map { tpe =>
+        val pc = t.paramClause.becomeOr[Type.FuncParamClause](pc =>
+          copyPos(pc)(Type.FuncParamClause(pc.values.map(convertTermParamToType)))
+        )
+        copyPos(t)(Type.Function(pc, tpe))
+      }
+    )
 
-    tree match {
-      case q: Quasi => Some(q.become[Term.Param])
+    tree.becomeOrOpt[Term.Param] {
       case _: Lit.Unit => None
+      case t: Term.Apply => t.fun match {
+          case fun: Term.Name => t.argClause.values match {
+              case Term.Block((arg: Term.Function) :: Nil) :: Nil => getTypeFunction(arg)
+                  .map(tpe => copyPos(t)(Term.Param(Nil, fun, Some(tpe), None)))
+              case _ => None
+            }
+          case _ => None
+        }
       case t: Term.Ascribe => getNameAndMod(t.expr).map { case (name, mod) =>
           copyPos(t)(Term.Param(mod, name, Some(t.tpe), None))
         }
@@ -2410,7 +2432,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         def argClause = if (tok.is[LeftBrace]) getArgClauseOnBrace() else getArgClauseOnParen()
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
-      case _: Colon if canApply => getFewerBracesApplyOnColon(t, startPos).getOrElse(t)
+      case _: Colon if canApply =>
+        SimpleExprContext.within(getFewerBracesApplyOnColon(t, startPos).getOrElse(t))
       case _: Underscore if canApply =>
         next()
         addPos(Term.Eta(t))
@@ -2444,9 +2467,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def tryGetArgAsLambda(): Option[Term.FunctionLike] = Try {
     val paramPos = currIndex
     def getFunctionTerm(params: Term.ParamClause): Option[Term.FunctionTerm] = {
-      def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) =
-        if (nextIfIndentAhead()) Some(autoEndPos(paramPos)(f(params, blockExprOnIndent())))
-        else None
+      def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) = {
+        val bodyOpt =
+          if (nextIfIndentAhead()) Some(blockExprOnIndent())
+          else if (!SimpleExprContext.isInside()) None
+          else if (in.currRegions.headOption.exists(_.isInstanceOf[RegionParen])) None
+          else next(Some(expr()))
+        bodyOpt.map(body => autoEndPos(paramPos)(f(params, body)))
+      }
       currToken match {
         case _: RightArrow => impl(Term.Function.apply)
         case _: ContextArrow => impl(Term.ContextFunction.apply)
@@ -4575,6 +4603,11 @@ object ScalametaParser {
 
     def becomeOr[A <: Tree: AstInfo](f: T => A): A = tree match {
       case q: Quasi => q.become[A]
+      case _ => f(tree)
+    }
+
+    def becomeOrOpt[A <: Tree: AstInfo](f: T => Option[A]): Option[A] = tree match {
+      case q: Quasi => Some(q.become[A])
       case _ => f(tree)
     }
 
