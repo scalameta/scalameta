@@ -10,12 +10,15 @@ trait TokenIterator {
 
   def prevToken: Token
   def prevIndex: Int
+  def prevRegions: List[SepRegion]
   def previousIndentation: Int
 
   def currToken: Token
   def currIndex: Int
+  def currRegions: List[SepRegion]
   def indenting: Boolean
 
   def peekToken: Token
   def peekIndex: Int
+  def peekRegions: List[SepRegion]
 }
