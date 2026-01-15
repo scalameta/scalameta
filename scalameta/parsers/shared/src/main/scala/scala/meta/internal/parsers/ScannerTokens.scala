@@ -491,9 +491,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: KwEnum => currRef(RegionTemplateMark :: sepRegions)
       case _: KwGiven if !prevToken.isAny[Dot, KwCase] =>
         currRef(dropRegionLine(sepRegions) match {
-          case (_: RegionFor) :: _ => sepRegions
-          case (_: RegionDelim) :: (_: RegionFor) :: _ => sepRegions
-          case rs => new RegionGivenDecl(curr) :: rs
+          case rs @ (Nil | (_: RegionBrace | _: RegionIndent) :: _) => new RegionGivenDecl(curr) ::
+              rs
+          case _ => sepRegions
         })
       case _: KwWith => currRef(dropRegionLine(sepRegions) match {
           case (_: RegionGivenDecl) :: rs => rs
