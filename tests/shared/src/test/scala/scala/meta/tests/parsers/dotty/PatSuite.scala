@@ -188,12 +188,7 @@ class PatSuite extends ParseSuite {
         blk(Import(List(Importer("foo", List(Importee.Wildcard())))), tapply("x"))
       )))
     )
-
-    val error =
-      """|<input>:3: error: `}` expected but `identifier` found
-         |  x()
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    runTestAssert[Stat](code, layout)(tree)
 
     val codeInParens =
       """|withFoo { case foo @ (given Foo) => 
@@ -201,7 +196,7 @@ class PatSuite extends ParseSuite {
          |  x()
          |}
          |""".stripMargin
-    parseAndCheckTree[Stat](codeInParens, layout)(tree)
+    runTestAssert[Stat](codeInParens, layout)(tree)
   }
 
 }
