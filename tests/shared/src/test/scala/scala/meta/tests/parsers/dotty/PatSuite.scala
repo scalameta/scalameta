@@ -166,4 +166,42 @@ class PatSuite extends ParseSuite {
     runTestAssert[Case](code)(tree)
   }
 
+  test("#4428 pat with given") {
+    val code =
+      """|withFoo { case foo @ given Foo => 
+         |  import foo.* // Works fine if I remove this line
+         |  x()
+         |}
+         |""".stripMargin
+    val layout =
+      """|withFoo {
+         |  case foo @ given Foo =>
+         |    import foo.*
+         |    x()
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      "withFoo",
+      Term.PartialFunction(List(Case(
+        Pat.Bind(patvar("foo"), Pat.Given("Foo")),
+        None,
+        blk(Import(List(Importer("foo", List(Importee.Wildcard())))), tapply("x"))
+      )))
+    )
+
+    val error =
+      """|<input>:3: error: `}` expected but `identifier` found
+         |  x()
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+
+    val codeInParens =
+      """|withFoo { case foo @ (given Foo) => 
+         |  import foo.* // Works fine if I remove this line
+         |  x()
+         |}
+         |""".stripMargin
+    parseAndCheckTree[Stat](codeInParens, layout)(tree)
+  }
+
 }
