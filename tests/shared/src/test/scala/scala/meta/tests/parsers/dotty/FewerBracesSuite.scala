@@ -2353,4 +2353,23 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("SIP-75 nested fewer-braces single-line lambda") {
+    // this looks like a simple lambda in scala2, but scala3 requires parens around typed param
+    // https://docs.scala-lang.org/scala3/guides/migration/incompat-syntactic.html#parentheses-around-lambda-parameter
+    val code =
+      """|foo {
+         |  x: X => x + 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|foo {
+         |  x {
+         |    X => x + 1
+         |  }
+         |}
+         |""".stripMargin
+    val tree = tapply("foo", blk(tapply("x", blk(tfunc(tparam("X"))(tinfix("x", "+", lit(1)))))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
