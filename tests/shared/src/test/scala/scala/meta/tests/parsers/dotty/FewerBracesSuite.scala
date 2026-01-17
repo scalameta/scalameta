@@ -2365,6 +2365,176 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("SIP-75 single-line lambda: erased") {
+    val code =
+      """|xs.map: erased x => x + 1
+         |""".stripMargin
+    val layout =
+      """|xs.map {
+         |  erased x => x + 1
+         |}
+         |""".stripMargin
+    val tree =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam(List(Mod.Erased()), "x"))(tinfix("x", "+", lit(1)))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: using") {
+    val code =
+      """|xs.map: using x => x + 1
+         |""".stripMargin
+    val layout =
+      """|xs.map {
+         |  (using x) => x + 1
+         |}
+         |""".stripMargin
+    val tree =
+      tapply(tselect("xs", "map"), blk(tfunc(tparam(List(Mod.Using()), "x"))(tinfix("x", "+", lit(1)))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: implicit") {
+    val code =
+      """|xs.map: implicit x => x + 1
+         |""".stripMargin
+    val layout =
+      """|xs.map {
+         |  implicit x => x + 1
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam(List(Mod.Implicit()), "x"))(tinfix("x", "+", lit(1))))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: implicit w/ type") {
+    val code =
+      """|xs.map: (implicit x: Int) => x + 1
+         |""".stripMargin
+    val layout =
+      """|xs.map {
+         |  implicit x: Int => x + 1
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam(List(Mod.Implicit()), "x", "Int"))(tinfix("x", "+", lit(1))))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: nested") {
+    val code =
+      """|fooX: x => fooY: y => fooZ: z =>
+         |  x + y + z
+         |""".stripMargin
+    val layout =
+      """|fooX {
+         |  x => fooY {
+         |    y => fooZ {
+         |      z => x + y + z
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      "fooX",
+      blk(tfunc(tparam("x"))(tapply(
+        "fooY",
+        blk(tfunc(tparam("y"))(
+          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z"))))
+        ))
+      )))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 nested lambda: indented 1") {
+    val code =
+      """|fooX:
+         |  x => fooY: y => fooZ: z =>
+         |    x + y + z
+         |""".stripMargin
+    val layout =
+      """|fooX {
+         |  x => fooY {
+         |    y => fooZ {
+         |      z => x + y + z
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      "fooX",
+      blk(tfunc(tparam("x"))(tapply(
+        "fooY",
+        blk(tfunc(tparam("y"))(
+          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z"))))
+        ))
+      )))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 nested lambda: indented 2") {
+    val code =
+      """|fooX:
+         |  x => fooY:
+         |    y => fooZ: z =>
+         |      x + y + z
+         |""".stripMargin
+    val layout =
+      """|fooX {
+         |  x => fooY {
+         |    y => fooZ {
+         |      z => x + y + z
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      "fooX",
+      blk(tfunc(tparam("x"))(tapply(
+        "fooY",
+        blk(tfunc(tparam("y"))(
+          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z"))))
+        ))
+      )))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 nested lambda: indented 3") {
+    val code =
+      """|fooX:
+         |  x => fooY:
+         |    y => fooZ:
+         |      z =>
+         |        x + y + z
+         |""".stripMargin
+    val layout =
+      """|fooX {
+         |  x => fooY {
+         |    y => fooZ {
+         |      z => x + y + z
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      "fooX",
+      blk(tfunc(tparam("x"))(tapply(
+        "fooY",
+        blk(tfunc(tparam("y"))(
+          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z"))))
+        ))
+      )))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("SIP-75 nested fewer-braces single-line lambda") {
     // this looks like a simple lambda in scala2, but scala3 requires parens around typed param
     // https://docs.scala-lang.org/scala3/guides/migration/incompat-syntactic.html#parentheses-around-lambda-parameter
