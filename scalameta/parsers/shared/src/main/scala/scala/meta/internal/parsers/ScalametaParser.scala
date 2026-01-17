@@ -1840,49 +1840,75 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     val res: Term = iter(prefix)
 
-    // Note the absense of `else if` here!!
-    if (at[FunctionArrow])
-      // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
-      // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
-      //
-      // If we exclude Implicit (which is parsed elsewhere anyway), then we can see that
-      // these sequences are non-trivially ambiguous with tuples and self-type annotations
-      // (i.e. are not resolvable with static lookahead).
-      //
-      // Therefore, when we encounter RightArrow, the part in parentheses is already parsed into a Term,
-      // and we need to figure out whether that term represents what we expect from a lambda's param list
-      // in order to disambiguate. The term that we have at hand might wildly differ from the param list that one would expect.
-      // For example, when parsing `() => x`, we arrive at RightArrow having `Lit.Unit` as the parsed term.
-      // That's why we later need `convertToParams` to make sense of what the parser has produced.
-      //
-      // Rules:
-      // 1. `() => ...` means lambda
-      // 2. `x => ...` means self-type annotation, but only in template position
-      // 3. `(x) => ...` means self-type annotation, but only in template position
-      // 4a. `x: Int => ...` means self-type annotation in template position
-      // 4b. `x: Int => ...` means lambda in block position
-      // 4c. `x: Int => ...` means ascription, i.e. `x: (Int => ...)`, in expression position
-      // 5a.  `(x: Int) => ...` means lambda
-      // 5b. `(using x: Int) => ...` means lambda for dotty
-      // 6. `(x, y) => ...` or `(x: Int, y: Int) => ...` or with more entries means lambda
-      //
-      // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
-      // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
-      // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
-      convertToParamClause(res)(
-        isNameAllowed = location != TemplateStat,
-        isParamAllowed = location.funcParamOK || tokens(startPos).is[LeftParen] && prev[RightParen]
-      ).fold(res) { pc =>
-        val contextFunction = at[ContextArrow]
-        val params = addPos(pc)
-        next()
-        val trm = termFunctionBody(location)
-        addPos(if (contextFunction) Term.ContextFunction(params, trm) else Term.Function(params, trm))
-      }
+    // Now check for a possible arrow and then parse it as lambda.
+    //
+    // This is a tricky one. In order to parse lambdas, we need to recognize token sequences
+    // like `(...) => ...`, `id | _ => ...` and `implicit id | _ => ...`.
+    //
+    // If we exclude Implicit (which is parsed elsewhere anyway), then we can see that
+    // these sequences are non-trivially ambiguous with tuples and self-type annotations
+    // (i.e. are not resolvable with static lookahead).
+    //
+    // Therefore, when we encounter RightArrow, the part in parentheses is already parsed into a Term,
+    // and we need to figure out whether that term represents what we expect from a lambda's param list
+    // in order to disambiguate. The term that we have at hand might wildly differ from the param list that one would expect.
+    // For example, when parsing `() => x`, we arrive at RightArrow having `Lit.Unit` as the parsed term.
+    // That's why we later need `convertToParams` to make sense of what the parser has produced.
+    //
+    // Rules:
+    // 1. `() => ...` means lambda
+    // 2. `x => ...` means self-type annotation, but only in template position
+    // 3. `(x) => ...` means self-type annotation, but only in template position
+    // 4a. `x: Int => ...` means self-type annotation in template position
+    // 4b. `x: Int => ...` means lambda in block position
+    // 4c. `x: Int => ...` means ascription, i.e. `x: (Int => ...)`, in expression position
+    // 5a.  `(x: Int) => ...` means lambda
+    // 5b. `(using x: Int) => ...` means lambda for dotty
+    // 6. `(x, y) => ...` or `(x: Int, y: Int) => ...` or with more entries means lambda
+    //
+    // A funny thing is that scalac's parser tries to disambiguate between self-type annotations and lambdas
+    // even if it's not parsing the first statement in the template. E.g. `class C { foo; x => x }` will be
+    // a parse error, because `x => x` will be deemed a self-type annotation, which ends up being inapplicable there.
+
     // if couldn't convert to params:
     // do nothing, which will either allow self-type annotation parsing to kick in
     // or will trigger an unexpected token error down the line
-    else res
+
+    def allowName = location != TemplateStat
+    def allowParam = location.funcParamOK || tokens(startPos).is[LeftParen] && prev[RightParen]
+
+    val funcParamClauseOpt = res match {
+      case _ if !at[FunctionArrow] => None
+      case _: Lit.Unit => Some(Nil)
+      case q: Quasi => q.rank match {
+          case 0 if allowName => Some(q.become[Term.Param] :: Nil)
+          case 1 if allowParam => Some(q.become[Term.Param] :: Nil)
+          case _ => None
+        }
+      case t: Term.Tuple =>
+        val params = new ListBuffer[Term.Param]
+        @tailrec
+        def iter(ts: List[Term]): Option[List[Term.Param]] = ts match {
+          case Nil => Some(params.toList)
+          case head :: tail => convertToParam(head) match {
+              case None => None
+              case Some(p) =>
+                params += p
+                iter(tail)
+            }
+        }
+        iter(t.args)
+      case t => convertToParam(t)
+          .filter(p => if (p.decltpe.isEmpty && p.mods.isEmpty) allowName else allowParam)
+          .map(_ :: Nil)
+    }
+
+    funcParamClauseOpt.fold(res) { x =>
+      val contextFunction = at[ContextArrow]
+      val pc = addPos(x.reduceWith(toParamClause(None)))
+      val trm = next(termFunctionBody(location))
+      addPos(if (contextFunction) Term.ContextFunction(pc, trm) else Term.Function(pc, trm))
+    }
   }
 
   private def termFunctionBody(location: Location): Term =
@@ -1999,33 +2025,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val simple = simpleExprRest(term, canApply = canApply, startPos = startPos)
     exprAfterSimple(simple, startPos, location, allowRepeated = allowRepeated)
   }
-
-  private def convertToParamClause(
-      tree: Term
-  )(isNameAllowed: => Boolean, isParamAllowed: => Boolean): Option[Term.ParamClause] = (tree match {
-    case _: Lit.Unit => Some(Nil)
-    case q: Quasi => q.rank match {
-        case 0 if isNameAllowed => Some(q.become[Term.Param] :: Nil)
-        case 1 if isParamAllowed => Some(q.become[Term.Param] :: Nil)
-        case _ => None
-      }
-    case t: Term.Tuple =>
-      val params = new ListBuffer[Term.Param]
-      @tailrec
-      def iter(ts: List[Term]): Option[List[Term.Param]] = ts match {
-        case Nil => Some(params.toList)
-        case head :: tail => convertToParam(head) match {
-            case None => None
-            case Some(p) =>
-              params += p
-              iter(tail)
-          }
-      }
-      iter(t.args)
-    case t => convertToParam(t)
-        .filter(p => if (p.decltpe.isEmpty && p.mods.isEmpty) isNameAllowed else isParamAllowed)
-        .map(_ :: Nil)
-  }).map(_.reduceWith(toParamClause(None)))
 
   private def implicitClosure(location: Location): Term.Function = {
     val implicitPos = prevIndex
