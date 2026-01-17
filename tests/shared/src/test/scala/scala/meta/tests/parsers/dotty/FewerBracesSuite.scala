@@ -1766,17 +1766,29 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
-  test("scalafmt #3763 using, with type, arg in braces (no fewer braces)") {
+  test("scalafmt #3763 using, with type, arg in braces (no fewer braces and no parens)") {
     val code =
       """
         |def a =
         |   foo { using bar: Int => baz }
         |""".stripMargin
+    val error =
+      """|<input>:3: error: `}` expected but `=>` found
+         |   foo { using bar: Int => baz }
+         |                        ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("scalafmt #3763 using, with type, arg in braces (no fewer braces)") {
+    val code =
+      """|def a =
+         |   foo { (using bar: Int) => baz }
+         |""".stripMargin
     val layout =
-      """def a = foo {
-        |  (using bar: Int) => baz
-        |}
-        |""".stripMargin
+      """|def a = foo {
+         |  (using bar: Int) => baz
+         |}
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("a"),

@@ -1875,14 +1875,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     // or will trigger an unexpected token error down the line
 
     def allowName = location != TemplateStat
-    def allowParam = location.funcParamOK || tokens(startPos).is[LeftParen] && prev[RightParen]
+    def allowParam(hasType: Boolean) = location.funcParamOK && // scala3 requires typed in parens
+      !(hasType && dialect.allowFewerBraces) || tokens(startPos).is[LeftParen] && prev[RightParen]
 
     val funcParamClauseOpt = res match {
       case _ if !at[FunctionArrow] => None
       case _: Lit.Unit => Some(Nil)
       case q: Quasi => q.rank match {
           case 0 if allowName => Some(q.become[Term.Param] :: Nil)
-          case 1 if allowParam => Some(q.become[Term.Param] :: Nil)
+          case 1 if allowParam(hasType = false) => Some(q.become[Term.Param] :: Nil)
           case _ => None
         }
       case t: Term.Tuple =>
@@ -1898,9 +1899,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             }
         }
         iter(t.args)
-      case t => convertToParam(t)
-          .filter(p => if (p.decltpe.isEmpty && p.mods.isEmpty) allowName else allowParam)
-          .map(_ :: Nil)
+      case t => convertToParam(t).filter(p =>
+          if (p.decltpe.nonEmpty) allowParam(hasType = true)
+          else if (p.mods.nonEmpty) allowParam(hasType = false)
+          else allowName
+        ).map(_ :: Nil)
     }
 
     funcParamClauseOpt.fold(res) { x =>
