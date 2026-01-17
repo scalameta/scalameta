@@ -40,7 +40,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private object PatternTypeContext extends NestedContext
   private object ExtensionSigContext extends NestedContext
   private object GivenSigContext extends NestedContext
-  private object SimpleExprContext extends NestedContext
   private object TemplateOwnerContext extends NestedContextWithOwner[TemplateOwner](OwnedByObject)
 
   /* ------------- PARSER ENTRY POINTS -------------------------------------------- */
@@ -2437,7 +2436,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply =>
-        SimpleExprContext.within(getFewerBracesApplyOnColon(t, startPos).getOrElse(t))
+        getFewerBracesApplyOnColon(t, startPos, okSingleLineLambda = true).getOrElse(t)
       case _: Underscore if canApply =>
         next()
         addPos(Term.Eta(t))
@@ -2445,12 +2444,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def getFewerBracesArgOnColon(): Option[Term] =
+  private def getFewerBracesArgOnColon(okSingleLineLambda: Boolean = false): Option[Term] =
     if (!dialect.allowFewerBraces) None
     else {
       val colonPos = currIndex
       def addPos(term: Term) = autoEndPos(colonPos)(term)
-      def tryGetArgAsLambdaBlock(postCheck: => Boolean) = tryGetArgAsLambda()
+      def tryGetArgAsLambdaBlock(postCheck: => Boolean) = tryGetArgAsLambda(okSingleLineLambda)
         .flatMap(arg => if (postCheck) Some(addPos(toBlockRaw(arg :: Nil))) else None)
       peekToken match {
         case _: Indentation.Indent =>
@@ -2468,13 +2467,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
     }
 
-  private def tryGetArgAsLambda(): Option[Term.FunctionLike] = Try {
+  private def tryGetArgAsLambda(okSingleLine: Boolean): Option[Term.FunctionLike] = Try {
     val paramPos = currIndex
     def getFunctionTerm(params: Term.ParamClause): Option[Term.FunctionTerm] = {
       def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) = {
         val bodyOpt =
           if (nextIfIndentAhead()) Some(blockExprOnIndent())
-          else if (!SimpleExprContext.isInside()) None
+          else if (!okSingleLine) None
           else if (in.currRegions.headOption.exists(_.isInstanceOf[RegionParen])) None
           else next(Some(expr()))
         bodyOpt.map(body => autoEndPos(paramPos)(f(params, body)))
@@ -2544,9 +2543,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }.getOrElse(None)
 
-  private def getFewerBracesApplyOnColon(fun: Term, startPos: Int): Option[Term] = {
+  private def getFewerBracesApplyOnColon(
+      fun: Term,
+      startPos: Int,
+      okSingleLineLambda: Boolean = false
+  ): Option[Term] = {
     val colonPos = currIndex
-    getFewerBracesArgOnColon().map { arg =>
+    getFewerBracesArgOnColon(okSingleLineLambda).map { arg =>
       val endPos = AutoPos.endIndex
       val argClause = atPos(colonPos, endPos)(Term.ArgClause(arg :: Nil))
       val arguments = atPos(startPos, endPos)(Term.Apply(fun, argClause))
