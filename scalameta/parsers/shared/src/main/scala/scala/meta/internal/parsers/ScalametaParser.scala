@@ -1991,14 +1991,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     tree.becomeOrOpt[Term.Param] {
       case _: Lit.Unit => None
-      case t: Term.Apply => t.fun match {
-          case fun: Term.Name => t.argClause.values match {
-              case Term.Block((arg: Term.Function) :: Nil) :: Nil => getTypeFunction(arg)
-                  .map(tpe => copyPos(t)(Term.Param(Nil, fun, Some(tpe), None)))
-              case _ => None
-            }
-          case _ => None
-        }
       case t: Term.Ascribe => getNameAndMod(t.expr).map { case (name, mod) =>
           copyPos(t)(Term.Param(mod, name, Some(t.tpe), None))
         }
