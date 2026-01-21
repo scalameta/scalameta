@@ -185,4 +185,42 @@ class DottySuccessSuite extends TreeSuiteBase {
     )
   }
 
+  test("#4434 quasiquote in braces") {
+    import dialects.Scala3
+    val fooTypes = Seq(q"Foo", q"Bar")
+    val quoted: Tree = q"""${fooTypes(0)}; "any message""""
+
+    assertTokensAsStructureLines(
+      quoted.tokens,
+      """|BOF [0..0)
+         |MacroSplice [0..1)
+         |LeftBrace [1..2)
+         |Ident(fooTypes) [2..10)
+         |LeftParen [10..11)
+         |Constant.Int(0) [11..12)
+         |""".stripMargin
+    )
+    val pos = quoted.pos
+    assertNoDiff(pos.toString, """[0..12) in Input.String("${fooTypes(0)}; "any message"")""")
+    assertNoDiff(pos.text, """${fooTypes(0""")
+    assertPositions(
+      quoted,
+      """|<stats1>Lit.String (</stats1> [10:(:11)
+         |""".stripMargin,
+      showPosition = true,
+      showFieldName = true
+    )
+
+    val syntax =
+      """|{
+         |  Foo
+         |  (
+         |}
+         |""".stripMargin
+    assertNoDiff(quoted.text, syntax)
+    assertNoDiff(quoted.syntax, syntax)
+    assertNoDiff(quoted.reprint, syntax)
+    assertTree(quoted)(blk(tname("Foo"), lit("any message")))
+  }
+
 }
