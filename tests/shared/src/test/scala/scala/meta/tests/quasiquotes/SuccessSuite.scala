@@ -2354,4 +2354,26 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"val foo = 0 /* $content has been unquoted */")(tree)
   }
 
+  test("#4434") {
+    val fooType = t"Foo"
+    val quoted =
+      q"""
+        type Bar = $fooType
+        val qux = "any message"
+      """
+    val syntax =
+      """|{
+         |  type Bar = Foo
+         |  val qux = "any message"
+         |}""".stripMargin
+    assertNoDiff(quoted.text, syntax)
+    assertNoDiff(quoted.syntax, syntax)
+    assertNoDiff(quoted.reprint, syntax)
+    val tree = blk(
+      Defn.Type(Nil, pname("Bar"), Nil, pname("Foo"), noBounds),
+      Defn.Val(Nil, List(patvar("qux")), None, lit("any message"))
+    )
+    assertTree(quoted)(tree)
+  }
+
 }
