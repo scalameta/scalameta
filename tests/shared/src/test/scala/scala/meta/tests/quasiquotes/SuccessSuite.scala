@@ -2355,12 +2355,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("#4434") {
-    val fooType = t"Foo"
-    val quoted =
-      q"""
-        type Bar = $fooType
-        val qux = "any message"
-      """
+    val quoted = Object4434.quoted
     val syntax =
       """|{
          |  type Bar = Foo
@@ -2375,5 +2370,13 @@ class SuccessSuite extends TreeSuiteBase {
     )
     assertTree(quoted)(tree)
   }
+}
 
+object Object4434 {
+  val fooType = t"Foo"
+  val quoted   =
+    q"""
+      type Bar = ${fooType}
+      val qux = "any message"
+     """
 }
