@@ -9,11 +9,12 @@ import org.scalameta.invariants._
 import scala.meta.inputs.{Position => MetaPosition, _}
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Messages
+import scala.meta.internal.prettyprinters.TokensToString
 import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection, _}
 import scala.meta.parsers._
 import scala.meta.tokenizers._
 import scala.meta.trees.Origin
-import scala.meta.{Tree => MetaTree, dialects}
+import scala.meta.{Tree => MetaTree}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -61,7 +62,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       if (mode.isTerm) underlyingDialect.unquoteTerm(mode.multiline)
       else underlyingDialect.unquotePat(mode.multiline)
     val skeleton = parseSkeleton(parser, input, dialect)
-    reifySkeleton(skeleton, mode, input, dialectTree)
+    reifySkeleton(skeleton, mode, input)
   }
 
   private def mkHoles(args: Seq[ReflectTree]) = {
@@ -202,12 +203,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       if (rank == 0) tree else AppliedTypeTree(tq"${definitions.ListClass}", List(tree.wrap(rank - 1)))
   }
 
-  private def reifySkeleton(
-      meta: MetaTree,
-      mode: Mode,
-      input: Input,
-      dialectTree: ReflectTree
-  ): ReflectTree = {
+  private def reifySkeleton(meta: MetaTree, mode: Mode, input: Input): ReflectTree = {
     val isTerm = mode.isTerm
     val pendingQuasis = mutable.Stack[Quasi]()
     implicit class XtensionQuasiHole(quasi: Quasi) {
@@ -219,9 +215,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           val pt = h.arg.pos.point
           beg <= pt && pt <= end
         }
-        maybeHole.getOrElse(unreachable(
-          debug(quasi, quasi.pos.absolutize, mode.holes, mode.holes.map(_.arg.pos))
-        ))
+        maybeHole.getOrElse(unreachable(debug(quasi, pos, mode.holes, mode.holes.map(_.arg.pos))))
       }
     }
 
@@ -353,7 +347,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
     val valDefns = List(
       q"""
         val $sourceName = new $OriginModule.ParsedSource(
-          _root_.scala.meta.inputs.Input.String(${input.text.replace("$$", "$")})
+          _root_.scala.meta.inputs.Input.String(${TokensToString.quasi(meta.tokens, input)})
         )
       """
     ).filter(_ ne null)
