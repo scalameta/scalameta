@@ -8,6 +8,7 @@ import org.scalameta.invariants._
 import scala.meta.dialects
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Messages
+import scala.meta.internal.prettyprinters.TokensToString
 import scala.meta.internal.trees._
 import scala.meta.internal.trees.{Liftables => AstLiftables, Reflection => AstReflection}
 import scala.meta.parsers._
@@ -312,7 +313,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
     }
 
     val (psourceVal, psourceExpr) = getValRef("psource")('{
-      new Origin.ParsedSource(Input.String(${ Expr(input.text.replace("$$", "$")) }))
+      new Origin.ParsedSource(Input.String(${ Expr(TokensToString.quasi(meta.tokens, input)) }))
     })
     val valDefs = List(psourceVal)
 
