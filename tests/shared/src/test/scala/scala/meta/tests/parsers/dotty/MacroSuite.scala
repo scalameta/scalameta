@@ -68,7 +68,7 @@ class MacroSuite extends BaseDottySuite {
   test("macro-quote-expr: x match { case 'c => 1 }") {
     val layoutMatchSimple = "x match {\n  case 'c => 1\n}"
     runTestAssert[Stat]("x match { case 'c => 1 }", assertLayout = Some(layoutMatchSimple))(
-      tmatch(tname("x"), Case(Lit.Symbol(Symbol("c")), None, int(1)))
+      tmatch(tname("x"), Case(Pat.Macro(Term.QuotedMacroExpr(tname("c"))), None, int(1)))
     )
   }
 
@@ -142,7 +142,7 @@ class MacroSuite extends BaseDottySuite {
 
   test("macro-quote-id-by-itself: 'x") {
     val code = " 'x "
-    val tree = Lit.Symbol(Symbol("x"))
+    val tree = Term.QuotedMacroExpr(tname("x"))
     runTestAssert[Stat](code)(tree)
     runTestAssert[Stat]("`'x`")(tname("'x"))
   }
@@ -173,10 +173,10 @@ class MacroSuite extends BaseDottySuite {
 
   test("macro-splice-id-within-splice: ${ $x }") {
     val code = "${ $x }"
-    val tree = Term.SplicedMacroExpr(blk(Term.SplicedMacroExpr(tname("x"))))
+    val tree = Term.SplicedMacroExpr(blk(tname("$x")))
     runTestAssert[Stat](code)(tree)
     val backquoted = Term.SplicedMacroExpr(blk(tname("$x")))
-    parseAndCheckTree[Stat]("${ `$x` }", code)(backquoted)
+    runTestAssert[Stat]("${ `$x` }", code)(backquoted)
   }
 
   test("macro-splice: ${ powerCode('x) }")(runTestAssert[Stat]("${ powerCode('x) }")(
