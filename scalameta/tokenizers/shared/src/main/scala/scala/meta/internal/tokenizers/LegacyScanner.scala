@@ -696,7 +696,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    */
   protected def getLitChar(): Unit =
     if (ch == '\\' && !wasMultiChar) {
-      val start = begCharOffset
       nextChar()
       if ('0' <= ch && ch <= '7') {
         val leadch = ch
@@ -710,7 +709,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             nextChar()
           }
         }
-        val alt = if (oct == LF) "\\n" else "\\u%04x".format(oct)
         putChar(oct)
       } else putCharAndNext(ch match {
         case 'b' => '\b'
