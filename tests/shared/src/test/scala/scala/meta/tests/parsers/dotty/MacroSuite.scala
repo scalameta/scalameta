@@ -229,7 +229,7 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat]("'{ $`x` }", "'{ $ x }")(spaceTree)
     runTestAssert[Stat]("'{ $ `x` }", "'{ $ x }")(spaceTree)
     val backquoted = Term.QuotedMacroExpr(blk(tname("$x")))
-    parseAndCheckTree[Stat]("'{ `$x` }", code)(backquoted)
+    runTestAssert[Stat]("'{ `$x` }")(backquoted)
   }
 
   test("macro-splice-id-within-splice: ${ $x }") {

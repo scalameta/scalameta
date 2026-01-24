@@ -309,10 +309,21 @@ object TreeSyntax {
           validity == Valid
         }
 
+        @tailrec
+        def withinMacroQuote(tree: Tree): Boolean = tree.parent match {
+          case Some(_: Term.QuotedMacroExpr) => true
+          case Some(p: Stat) => withinMacroQuote(p)
+          case _ => false
+        }
+
         val name = t.value
         name.nonEmpty &&
         (keywords.contains(name) || name.contains("//") || name.contains("/*") ||
-          name.contains("*/") || !validPlainid(name) || lexicalDigit(name.codePointAt(0)))
+          name.contains("*/") || !validPlainid(name) || {
+            val ch = name.codePointAt(0)
+            lexicalDigit(ch) ||
+            ch == '$' && dialect.allowSpliceAndQuote && name.length > 1 && withinMacroQuote(t)
+          })
       }
       def thisLocationAlsoAcceptsPatVars(p: Tree): Boolean = p match {
         case p: Term.Name => unreachable
