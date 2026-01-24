@@ -140,11 +140,41 @@ class MacroSuite extends BaseDottySuite {
     Term.QuotedMacroType(papply("Show", Type.Macro(Term.SplicedMacroExpr(tname("tp")))))
   ))
 
-  test("macro-splice: ${ $x }") {
+  test("macro-quote-id-by-itself: 'x") {
+    val code = " 'x "
+    val tree = Lit.Symbol(Symbol("x"))
+    runTestAssert[Stat](code)(tree)
+    runTestAssert[Stat]("`'x`")(tname("'x"))
+  }
+
+  test("macro-quote-id-within-quote: '{ 'x }") {
+    val code = "'{ 'x }"
+    val tree = Term.QuotedMacroExpr(blk(Term.QuotedMacroExpr(tname("x"))))
+    runTestAssert[Stat](code)(tree)
+    val backquoted = Term.QuotedMacroExpr(blk(tname("'x")))
+    runTestAssert[Stat]("'{ `'x` }")(backquoted)
+  }
+
+  test("macro-quote-id-within-splice: ${ 'x }") {
+    val code = "${ 'x }"
+    val tree = Term.SplicedMacroExpr(blk(Term.QuotedMacroExpr(tname("x"))))
+    runTestAssert[Stat](code)(tree)
+    val backquoted = Term.SplicedMacroExpr(blk(tname("'x")))
+    runTestAssert[Stat]("${ `'x` }")(backquoted)
+  }
+
+  test("macro-splice-id-within-quote: '{ $x }") {
+    val code = "'{ $x }"
+    val tree = Term.QuotedMacroExpr(blk(Term.SplicedMacroExpr(tname("x"))))
+    runTestAssert[Stat](code)(tree)
+    val backquoted = Term.QuotedMacroExpr(blk(tname("$x")))
+    parseAndCheckTree[Stat]("'{ `$x` }", code)(backquoted)
+  }
+
+  test("macro-splice-id-within-splice: ${ $x }") {
     val code = "${ $x }"
     val tree = Term.SplicedMacroExpr(blk(Term.SplicedMacroExpr(tname("x"))))
     runTestAssert[Stat](code)(tree)
-    runTestAssert[Stat](code, assertLayout = Some(code))(tree)
     val backquoted = Term.SplicedMacroExpr(blk(tname("$x")))
     parseAndCheckTree[Stat]("${ `$x` }", code)(backquoted)
   }
