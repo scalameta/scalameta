@@ -395,6 +395,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
         fetchDoubleQuote()
       case '\'' =>
+        def fetchCharLit(): Unit = {
+          getLitChar()
+          charLitOr(setInvalidToken(curr)("unclosed character literal"))
+        }
         def isNonLiteralBraceOrBracket = {
           val nextNonWhitespace = peekNonWhitespace()
           (nextNonWhitespace.ch == '{' || nextNonWhitespace.ch == '[') &&
@@ -408,17 +412,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
           if (ch == LF && !wasMultiChar)
             setInvalidToken(curr)("can't use unescaped LF in character literals")
-          else if (isIdentifierStart(ch)) charLitOr(getIdentRest)
-          else if (isOperatorPart(ch) && (ch != '\\' || wasMultiChar)) charLitOr(getOperatorRest)
+          else if (isIdentifierStart(ch)) nextCharLitOrSym(getIdentRest)
+          else if (isOperatorPart(ch) && !isEscapeChar) nextCharLitOrSym(getOperatorRest)
           else if (dialect.allowSpliceAndQuote && isNonLiteralBraceOrBracket)
             setTokStrVal(MACROQUOTE)
-          else {
-            getLitChar()
-            if (ch == '\'') {
-              nextChar()
-              setTokStrVal(CHARLIT)
-            } else setInvalidToken(curr)("unclosed character literal")
-          }
+          else fetchCharLit()
         }
         fetchSingleQuote()
       case '.' =>
@@ -690,12 +688,14 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     false
   }
 
+  private def isEscapeChar: Boolean = ch == '\\' && !wasMultiChar
+
   /**
    * copy current character into cbuf, interpreting any escape sequences, and advance to next
    * character.
    */
   protected def getLitChar(): Unit =
-    if (ch == '\\' && !wasMultiChar) {
+    if (isEscapeChar) {
       nextChar()
       if ('0' <= ch && ch <= '7') {
         val leadch = ch
@@ -847,16 +847,19 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * Parse character literal if current character is followed by \', or follow with given op and
    * return a symbol literal token
    */
-  private def charLitOr(op: () => Unit): Unit = {
+  private def nextCharLitOrSym(op: () => Unit): Unit = {
     putCharAndNext()
-    if (ch == '\'') {
-      nextChar()
-      setTokStrVal(CHARLIT)
-    } else {
+    charLitOr {
       op()
       token = SYMBOLLIT
     }
   }
+
+  private def charLitOr(orElse: => Unit): Unit =
+    if (ch == '\'') {
+      nextChar()
+      setTokStrVal(CHARLIT)
+    } else orElse
 
   private def getXml(): Boolean = {
     // 1. Collect positions of scala expressions inside this xml literal.
