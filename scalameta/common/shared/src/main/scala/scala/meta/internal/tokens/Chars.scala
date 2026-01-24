@@ -42,16 +42,14 @@ object Chars {
   def isIdentifierStart(c: Int): Boolean = c == '_' || isIdentifierPart(c)
 
   /** Can character form part of an alphanumeric Scala identifier? */
-  def isIdentifierPart(c: Int) = c == '$' || JC.isUnicodeIdentifierPart(c)
+  def isIdentifierPart(c: Int): Boolean = c == '$' || JC.isUnicodeIdentifierPart(c)
 
-  @inline
-  def isUnicodeIdentifierPart(c: Int) =
-    // strangely enough, isUnicodeIdentifierPart(SU) returns true!
-    c != SU && JC.isUnicodeIdentifierPart(c)
+  @inline // strangely enough, isUnicodeIdentifierPart(SU) returns true!
+  def isUnicodeIdentifierPart(c: Int): Boolean = c != SU && JC.isUnicodeIdentifierPart(c)
 
   /** Is character a math or other symbol in Unicode? */
   @inline
-  def isSpecial(c: Int) = isTypeMask(1 << JC.MATH_SYMBOL | 1 << JC.OTHER_SYMBOL)(c)
+  def isSpecial(c: Int): Boolean = isTypeMask(1 << JC.MATH_SYMBOL | 1 << JC.OTHER_SYMBOL)(c)
 
   /** Can character form part of a Scala operator name? */
   def isOperatorPart(c: Int): Boolean = (c: @switch) match {
@@ -74,7 +72,7 @@ object Chars {
    * }}}
    * See [4] and Appendix B of XML 1.0 specification.
    */
-  def isNameChar(ch: Char) = (ch: @switch) match {
+  def isNameChar(ch: Char): Boolean = (ch: @switch) match {
     case '.' | '-' | '_' | ':' => true
     case _ => isTypeMask(nameTypeMask)(ch)
   }
@@ -87,7 +85,7 @@ object Chars {
    *
    * We do not allow a name to start with ':'. See [3] and Appendix B of XML 1.0 specification
    */
-  def isNameStart(ch: Int) = ch == '_' || isTypeMask(scalaLetterTypeMask)(ch)
+  def isNameStart(ch: Int): Boolean = ch == '_' || isTypeMask(scalaLetterTypeMask)(ch)
 
   private val codepage =
     Map('\t' -> "\\t", '\b' -> "\\b", '\n' -> "\\n", '\r' -> "\\r", '\f' -> "\\f", '\\' -> "\\\\")
