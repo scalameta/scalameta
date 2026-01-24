@@ -262,26 +262,16 @@ object TreeSyntax {
         // https://github.com/scala/scala/blob/2.13.x/spec/01-lexical-syntax.md#lexical-syntax
         def lexicalWhitespace(codepoint: Int): Boolean =
           Set[Int]('\u0020', '\u0009', '\u000D', '\u000A').contains(codepoint)
-        def lexicalLetter(codepoint: Int): Boolean = Set[Int]('\u0024', '\u005F')
-          .contains(codepoint) || Set[Int](
-          Character.LOWERCASE_LETTER,
-          Character.UPPERCASE_LETTER,
-          Character.TITLECASE_LETTER,
-          Character.OTHER_LETTER,
-          Character.LETTER_NUMBER
-        ).contains(Character.getType(codepoint))
-        def lexicalDigit(codepoint: Int): Boolean =
-          Set[Int]('0', '1', '2', '3', '4', '5', '6', '7', '8', '9').contains(codepoint)
+        def lexicalLetter(codepoint: Int): Boolean = isNameStart(codepoint) || codepoint == '$'
+        def lexicalDigit(codepoint: Int): Boolean = '0' <= codepoint && codepoint <= '9'
         def lexicalParentheses(codepoint: Int): Boolean = Set[Int]('(', ')', '[', ']', '{', '}')
           .contains(codepoint)
         def lexicalDelimiter(codepoint: Int): Boolean = Set[Int]('`', '\'', '"', '.', ';', ',')
           .contains(codepoint)
-        def lexicalOperator(codepoint: Int): Boolean = '\u0020' <= codepoint &&
-          codepoint <= '\u007E' &&
-          (!lexicalWhitespace(codepoint) && !lexicalLetter(codepoint) && !lexicalDigit(codepoint) &&
-            !lexicalParentheses(codepoint) && !lexicalDelimiter(codepoint)) ||
-          Set[Int](Character.MATH_SYMBOL, Character.OTHER_SYMBOL)
-            .contains(Character.getType(codepoint))
+        def lexicalOperator(codepoint: Int): Boolean = isSpecial(codepoint) ||
+          '\u0020' <= codepoint && codepoint <= '\u007E' && !(lexicalWhitespace(codepoint) ||
+            lexicalLetter(codepoint) || lexicalDigit(codepoint) || lexicalParentheses(codepoint) ||
+            lexicalDelimiter(codepoint))
 
         sealed trait OperatorState
         case object Accepted extends OperatorState
@@ -296,33 +286,33 @@ object TreeSyntax {
           val (_, validity) =
             foldCodepoints[(OperatorState, ValidityState)](string, (Accepted, Valid)) {
               // Any invalid state is invalid
-              case (offset, (_, Invalid), _) => (Forbidden, Invalid)
+              case (_, (_, Invalid), _) => (Forbidden, Invalid)
               // Must start with either a letter or an operator
-              case (offset @ 0, (Accepted, Valid), next) if lexicalLetter(next) => (Forbidden, Valid)
-              case (offset @ 0, (Accepted, Valid), next) if lexicalOperator(next) =>
-                (Required, Valid)
+              case (0, (Accepted, Valid), next) if lexicalLetter(next) => (Forbidden, Valid)
+              case (0, (Accepted, Valid), next) if lexicalOperator(next) => (Required, Valid)
               // Non-leading underscores reset operator validity
-              case (offset, (Forbidden, Valid), next) if next == '_' => (Accepted, Valid)
+              case (_, (Forbidden, Valid), '_') => (Accepted, Valid)
               // Non-leading operators are accepted only after underscores
-              case (offset, (Accepted, Valid), next) if lexicalOperator(next) => (Required, Valid)
+              case (_, (Accepted, Valid), next) if lexicalOperator(next) => (Required, Valid)
               // Operators must not be followed by non-operators
-              case (offset, (Required, Valid), next) if lexicalOperator(next) => (Required, Valid)
+              case (_, (Required, Valid), next) if lexicalOperator(next) => (Required, Valid)
               // Lexical letters and digits can follow underscores
-              case (offset, (Accepted, Valid), next) if lexicalLetter(next) => (Forbidden, Valid)
-              case (offset, (Accepted, Valid), next) if lexicalDigit(next) => (Forbidden, Valid)
+              case (_, (Accepted, Valid), next) if lexicalLetter(next) => (Forbidden, Valid)
+              case (_, (Accepted, Valid), next) if lexicalDigit(next) => (Forbidden, Valid)
               // Non-operators must not be followed by operators
-              case (offset, (Forbidden, Valid), next) if lexicalLetter(next) => (Forbidden, Valid)
-              case (offset, (Forbidden, Valid), next) if lexicalDigit(next) => (Forbidden, Valid)
+              case (_, (Forbidden, Valid), next) if lexicalLetter(next) => (Forbidden, Valid)
+              case (_, (Forbidden, Valid), next) if lexicalDigit(next) => (Forbidden, Valid)
               // Bail on anything not matched here
-              case (_, (_, _), next) => (Forbidden, Invalid)
+              case _ => (Forbidden, Invalid)
             }
 
           validity == Valid
         }
 
-        t.value.nonEmpty &&
-        (keywords.contains(t.value) || t.value.contains("//") || t.value.contains("/*") ||
-          t.value.contains("*/") || !validPlainid(t.value) || lexicalDigit(t.value.codePointAt(0)))
+        val name = t.value
+        name.nonEmpty &&
+        (keywords.contains(name) || name.contains("//") || name.contains("/*") ||
+          name.contains("*/") || !validPlainid(name) || lexicalDigit(name.codePointAt(0)))
       }
       def thisLocationAlsoAcceptsPatVars(p: Tree): Boolean = p match {
         case p: Term.Name => unreachable
