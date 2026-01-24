@@ -34,7 +34,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   /* ------------- NESTED CONTEXT OBJECTS ----------------------------------------- */
   // must all be parser-specific, to avoid sharing state with other parsers
   private object QuotedSpliceContext extends NestedContext
-  private object QuotedPatternContext extends NestedContext
+  private object PatternContext extends NestedContext
   private object ReturnTypeContext extends NestedContext
   private object TypeBracketsContext extends NestedContext
   private object PatternTypeContext extends NestedContext
@@ -2361,7 +2361,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def macroSplice(): Term = autoPos {
     next()
-    if (QuotedPatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBraces(pattern())))
+    if (PatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBraces(pattern())))
     else Term.SplicedMacroExpr(autoPos(inBraces(blockRaw())))
   }
 
@@ -2910,7 +2910,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         onError: Token => Nothing,
         isRhs: Boolean = false,
         isForComprehension: Boolean = false
-    ): Pat = {
+    ): Pat = PatternContext.within {
       val startPos = currIndex
       autoEndPos(startPos) {
         currToken match {
@@ -2951,7 +2951,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               }
             }
           case _: Underscore => getSeqWildcardAtUnderscore().getOrElse(next(Pat.Wildcard()))
-          case _: MacroQuote => QuotedPatternContext.within(Pat.Macro(macroQuote()))
+          case _: MacroQuote => Pat.Macro(macroQuote())
           case MacroQuotedIdent(ident) => Pat.Macro(macroQuotedIdent(ident))
           case _: Literal => literal()
           case _: Interpolation.Id => interpolatePat()
