@@ -669,24 +669,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def isStar: Boolean = isStar(currToken)
   def isStar(tok: Token): Boolean = Keywords.Star(tok)
 
-  private trait MacroIdent {
-    protected def ident(tok: Token): Option[String]
-    final def unapply(tok: Token): Option[String] =
-      if (dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside()) ident(tok) else None
+  private object MacroSplicedIdent {
+    final def unapply(tok: Ident): Option[String] =
+      if (dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside()) {
+        val value = tok.text
+        if (value.length > 1 && value.charAt(0) == '$') Some(value.substring(1)) else None
+      } else None
   }
 
-  private object MacroSplicedIdent extends MacroIdent {
-    protected def ident(tok: Token): Option[String] = tok match {
-      case Keywords(value) if value.length > 1 && value.charAt(0) == '$' => Some(value.substring(1))
-      case _ => None
-    }
-  }
-
-  private object MacroQuotedIdent extends MacroIdent {
-    protected def ident(tok: Token): Option[String] = tok match {
-      case Constant.Symbol(value) => Some(value.name)
-      case _ => None
-    }
+  private object MacroQuotedIdent {
+    final def unapply(tok: Constant.Symbol): Option[String] =
+      if (dialect.allowSpliceAndQuote) Some(tok.value.name) else None
   }
 
   private object InfixTypeIdent {
@@ -2366,11 +2359,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def macroSplice(): Term = autoPos(QuotedSpliceContext.within {
+  private def macroSplice(): Term = autoPos {
     next()
     if (QuotedPatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBraces(pattern())))
     else Term.SplicedMacroExpr(autoPos(inBraces(blockRaw())))
-  })
+  }
 
   private def macroQuote(): Term = autoPos(QuotedSpliceContext.within {
     next()
@@ -2958,6 +2951,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               }
             }
           case _: Underscore => getSeqWildcardAtUnderscore().getOrElse(next(Pat.Wildcard()))
+          case _: MacroQuote => QuotedPatternContext.within(Pat.Macro(macroQuote()))
+          case MacroQuotedIdent(ident) => Pat.Macro(macroQuotedIdent(ident))
           case _: Literal => literal()
           case _: Interpolation.Id => interpolatePat()
           case _: Xml.Start => xmlPat()
@@ -2970,8 +2965,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               case t @ Pat.Tuple(_ :: Nil) => Right(t)
               case t => Left(t :: Nil)
             }
-          case _: MacroQuote => QuotedPatternContext.within(Pat.Macro(macroQuote()))
-          case MacroQuotedIdent(ident) => Pat.Macro(macroQuotedIdent(ident))
           case _: KwGiven =>
             next()
             Pat.Given(super.patternTyp(allowInfix = false))
