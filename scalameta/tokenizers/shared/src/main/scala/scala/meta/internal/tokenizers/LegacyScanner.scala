@@ -531,11 +531,15 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   // True means that we need to switch into unquote reading mode.
-  private def isUnquoteNextNoDollar(): Boolean = unquoteDialect != null &&
+  private def isUnquoteNextNoDollar(): Boolean = unquoteDialect != null && {
     // Skip the first dollar and move on to whatever we've been doing:
     // starting or continuing tokenization of an identifier,
     // or continuing reading a string literal, or whatever.
-    !nextCharIf(_ == '$')
+    val nextChar = peekRawChar()
+    val skip = nextChar.ch == '$'
+    if (skip) setNextRawChar(nextChar)
+    !skip
+  }
   @inline
   private def isUnquoteDollar(): Boolean = ch == '$' && isUnquoteNextNoDollar()
 
