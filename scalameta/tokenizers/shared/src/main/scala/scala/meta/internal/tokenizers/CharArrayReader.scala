@@ -61,16 +61,6 @@ private[meta] case class CharArrayReader(
     if (peekEndOffset < nextChar.end) endCharOffset = nextChar.end
   }
 
-  final def nextCharIf(f: Int => Boolean): Boolean = {
-    val nextChar = peekRawChar()
-    val ok = f(nextChar.ch)
-    if (ok) {
-      setNextRawChar(nextChar)
-      checkRawChar()
-    }
-    ok
-  }
-
   @inline
   final def peekRawChar(): NextChar = peekRawChar(endCharOffset)
 
