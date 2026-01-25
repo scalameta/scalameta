@@ -144,24 +144,9 @@ class MacroSuite extends BaseDottySuite {
     val code = " 'x "
     val tree = Term.QuotedMacroExpr(tname("x"))
     runTestAssert[Stat](code)(tree)
-    runTestError[Stat](
-      "' x",
-      """|<input>:1: error: unclosed character literal
-         |' x
-         |  ^""".stripMargin
-    )
-    runTestError[Stat](
-      "'`x`",
-      """|<input>:1: error: unclosed character literal
-         |'`x`
-         |  ^""".stripMargin
-    )
-    runTestError[Stat](
-      "' `x`",
-      """|<input>:1: error: unclosed character literal
-         |' `x`
-         |  ^""".stripMargin
-    )
+    runTestAssert[Stat]("' x", code)(tree)
+    runTestAssert[Stat]("'`x`", code)(tree)
+    runTestAssert[Stat]("' `x`", code)(tree)
     runTestAssert[Stat]("`'x`")(tname("'x"))
   }
 
@@ -170,24 +155,9 @@ class MacroSuite extends BaseDottySuite {
     val tree = Term.QuotedMacroExpr(blk(Term.QuotedMacroExpr(tname("x"))))
     runTestAssert[Stat](code)(tree)
     runTestAssert[Stat]("' { 'x }", code)(tree)
-    runTestError[Stat](
-      "' { ' x }",
-      """|<input>:1: error: unclosed character literal
-         |' { ' x }
-         |      ^""".stripMargin
-    )
-    runTestError[Stat](
-      "'{ '`x` }",
-      """|<input>:1: error: unclosed character literal
-         |'{ '`x` }
-         |     ^""".stripMargin
-    )
-    runTestError[Stat](
-      "'{ ' `x` }",
-      """|<input>:1: error: unclosed character literal
-         |'{ ' `x` }
-         |     ^""".stripMargin
-    )
+    runTestAssert[Stat]("' { ' x }", code)(tree)
+    runTestAssert[Stat]("'{ '`x` }", code)(tree)
+    runTestAssert[Stat]("'{ ' `x` }", code)(tree)
     val backquoted = Term.QuotedMacroExpr(blk(tname("'x")))
     runTestAssert[Stat]("'{ `'x` }")(backquoted)
   }
@@ -197,24 +167,9 @@ class MacroSuite extends BaseDottySuite {
     val tree = Term.SplicedMacroExpr(blk(Term.QuotedMacroExpr(tname("x"))))
     runTestAssert[Stat](code)(tree)
     runTestAssert[Stat]("$ { 'x }", code)(tree)
-    runTestError[Stat](
-      "$ { ' x }",
-      """|<input>:1: error: unclosed character literal
-         |$ { ' x }
-         |      ^""".stripMargin
-    )
-    runTestError[Stat](
-      "${ '`x` }",
-      """|<input>:1: error: unclosed character literal
-         |${ '`x` }
-         |     ^""".stripMargin
-    )
-    runTestError[Stat](
-      "${ ' `x` }",
-      """|<input>:1: error: unclosed character literal
-         |${ ' `x` }
-         |     ^""".stripMargin
-    )
+    runTestAssert[Stat]("$ { ' x }", code)(tree)
+    runTestAssert[Stat]("${ '`x` }", code)(tree)
+    runTestAssert[Stat]("${ ' `x` }", code)(tree)
     val backquoted = Term.SplicedMacroExpr(blk(tname("'x")))
     runTestAssert[Stat]("${ `'x` }")(backquoted)
   }
@@ -224,10 +179,9 @@ class MacroSuite extends BaseDottySuite {
     val tree = Term.QuotedMacroExpr(blk(Term.SplicedMacroExpr(tname("x"))))
     runTestAssert[Stat](code)(tree)
     runTestAssert[Stat]("' { $x }", code)(tree)
-    val spaceTree = Term.QuotedMacroExpr(blk(tpostfix("$", "x")))
-    runTestAssert[Stat]("' { $ x }", "'{ $ x }")(spaceTree)
-    runTestAssert[Stat]("'{ $`x` }", "'{ $ x }")(spaceTree)
-    runTestAssert[Stat]("'{ $ `x` }", "'{ $ x }")(spaceTree)
+    runTestAssert[Stat]("' { $ x }", code)(tree)
+    runTestAssert[Stat]("'{ $`x` }", code)(tree)
+    runTestAssert[Stat]("'{ $ `x` }", code)(tree)
     val backquoted = Term.QuotedMacroExpr(blk(tname("$x")))
     runTestAssert[Stat]("'{ `$x` }")(backquoted)
   }

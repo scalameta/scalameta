@@ -199,8 +199,8 @@ object Token {
   class ContextArrow extends FunctionArrow
   @fixed("'")
   class MacroQuote extends SymbolicKeyword
-  @fixed("$")
-  class MacroSplice extends SymbolicKeyword
+  @fixed("$") @deprecated("use Ident($) instead", "v4.14.5")
+  private[meta] class MacroSplice extends SymbolicKeyword
 
   // Delimiters
   @fixed("(")

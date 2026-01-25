@@ -304,8 +304,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (isUnquoteNextNoDollar()) getUnquote()
         else {
           putCharAndNext()
-          if (dialect.allowSpliceAndQuote && peekNonWhitespace().ch == '{') setTokStrVal(MACROSPLICE)
-          else getIdentRestCheckInterpolation()
+          getIdentRestCheckInterpolation()
         }
       case '<' => // is XMLSTART?
         def fetchLT() = {
@@ -399,11 +398,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           getLitChar()
           charLitOr(setInvalidToken(curr)("unclosed character literal"))
         }
-        def isNonLiteralBraceOrBracket = {
-          val nextNonWhitespace = peekNonWhitespace()
-          (nextNonWhitespace.ch == '{' || nextNonWhitespace.ch == '[') &&
-          peekRawChar(nextNonWhitespace.end).ch != '\''
-        }
         def fetchSingleQuote() = {
           nextRawChar()
           if (isUnquoteDollar()) {
@@ -412,10 +406,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
           if (ch == LF && !wasMultiChar)
             setInvalidToken(curr)("can't use unescaped LF in character literals")
+          else if (dialect.allowSpliceAndQuote)
+            if (isEscapeChar || peekRawChar().ch == '\'') fetchCharLit()
+            else setTokStrVal(MACROQUOTE)
           else if (isIdentifierStart(ch)) nextCharLitOrSym(getIdentRest)
           else if (isOperatorPart(ch) && !isEscapeChar) nextCharLitOrSym(getOperatorRest)
-          else if (dialect.allowSpliceAndQuote && isNonLiteralBraceOrBracket)
-            setTokStrVal(MACROQUOTE)
           else fetchCharLit()
         }
         fetchSingleQuote()

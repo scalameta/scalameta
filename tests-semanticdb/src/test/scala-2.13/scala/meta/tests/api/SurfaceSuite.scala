@@ -668,7 +668,6 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.tokens.Token.LeftBracket
          |scala.meta.tokens.Token.LeftParen
          |scala.meta.tokens.Token.MacroQuote
-         |scala.meta.tokens.Token.MacroSplice
          |scala.meta.tokens.Token.MultiHS
          |scala.meta.tokens.Token.MultiNL
          |scala.meta.tokens.Token.RightArrow
