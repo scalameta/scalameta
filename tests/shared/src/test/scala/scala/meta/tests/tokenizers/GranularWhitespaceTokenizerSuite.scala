@@ -1273,7 +1273,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     assertTokens("$ { a }", dialects.Scala3) {
       case Tokens(
             BOF(),
-            MacroSplice(),
+            Ident("$"),
             Space(),
             LeftBrace(),
             Space(),

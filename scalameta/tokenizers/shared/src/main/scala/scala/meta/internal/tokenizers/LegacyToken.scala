@@ -134,7 +134,6 @@ object LegacyToken {
   final val UNQUOTE = 400
   final val ELLIPSIS = 401
   final val MACROQUOTE = 402
-  final val MACROSPLICE = 403
 
   val kw2legacytoken = Map[String, LegacyToken](
     "abstract" -> ABSTRACT,

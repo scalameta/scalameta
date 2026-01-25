@@ -276,7 +276,6 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       case CTXARROW => Token.ContextArrow(input, dialect, curr.offset)
 
       case MACROQUOTE => Token.MacroQuote(input, dialect, curr.offset)
-      case MACROSPLICE => Token.MacroSplice(input, dialect, curr.offset)
 
       case WHITESPACE_SPC => Token.Space(input, dialect, curr.offset)
       case WHITESPACE_TAB => Token.Tab(input, dialect, curr.offset)

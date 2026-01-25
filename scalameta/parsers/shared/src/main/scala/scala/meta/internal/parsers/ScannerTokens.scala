@@ -105,11 +105,11 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   def isIdentOrExprIntro(token: Token): Boolean = isExprIntroImpl(token)(true)
 
   private def isExprIntroImpl(token: Token)(isIdentOK: => Boolean): Boolean = token match {
-    case _: Ident => isIdentOK
+    case t: Ident => isIdentOK ||
+      dialect.allowSpliceAndQuote && t.value.nonEmpty && t.value.charAt(0) == '$'
     case _: Literal | _: Interpolation.Id | _: Xml.Start | _: KwDo | _: KwFor | _: KwIf | _: KwNew |
         _: KwReturn | _: KwSuper | _: KwThis | _: KwThrow | _: KwTry | _: KwWhile | _: LeftParen |
-        _: LeftBrace | _: Underscore | _: Unquote | _: MacroSplice | _: MacroQuote |
-        _: Indentation.Indent => true
+        _: LeftBrace | _: Underscore | _: Unquote | _: MacroQuote | _: Indentation.Indent => true
     case _: LeftBracket => dialect.allowPolymorphicFunctions
     case _ => false
   }
@@ -146,7 +146,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   private def matchesAfterInlineMatchMod(token: Token): Boolean = token match {
     case _: LeftParen | _: LeftBrace | _: KwNew | _: Ident | _: Literal | _: Interpolation.Id |
-        _: Xml.Start | _: KwSuper | _: KwThis | _: MacroSplice | _: MacroQuote => true
+        _: Xml.Start | _: KwSuper | _: KwThis | _: MacroQuote => true
     case _ => false
   }
 

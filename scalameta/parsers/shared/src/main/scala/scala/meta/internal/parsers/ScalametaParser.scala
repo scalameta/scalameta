@@ -670,16 +670,37 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def isStar(tok: Token): Boolean = Keywords.Star(tok)
 
   private object MacroSplicedIdent {
-    final def unapply(tok: Ident): Option[String] =
-      if (dialect.allowSpliceAndQuote && QuotedSpliceContext.isInside()) {
+    final def unapply(tok: Ident): Option[Term] =
+      if (dialect.allowSpliceAndQuote) {
         val value = tok.text
-        if (value.length > 1 && value.charAt(0) == '$') Some(value.substring(1)) else None
+        if (value.isEmpty || value.charAt(0) != '$') None
+        else if (value.length > 1)
+          if (QuotedSpliceContext.isInside())
+            Some(autoPos(macroIdent(value.substring(1), Term.SplicedMacroExpr.apply)))
+          else None
+        else peekToken match {
+          case _: LeftBrace => Some(autoPos {
+              next()
+              if (PatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBracesOnOpen(pattern())))
+              else Term.SplicedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
+            })
+          case t: Ident if t.value.nonEmpty && QuotedSpliceContext.isInside() =>
+            Some(autoPos(next(macroIdent(t.value, Term.SplicedMacroExpr.apply))))
+          case _ => None
+        }
       } else None
   }
 
-  private object MacroQuotedIdent {
-    final def unapply(tok: Constant.Symbol): Option[String] =
-      if (dialect.allowSpliceAndQuote) Some(tok.value.name) else None
+  private object MacroQuoted {
+    final def unapply(tok: MacroQuote): Some[Term] = QuotedSpliceContext.within(Some(autoPos {
+      next()
+      currToken match {
+        case _: LeftBrace => Term.QuotedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
+        case _: LeftBracket => Term.QuotedMacroType(inBracketsOnOpen(typeBlock()))
+        case t: Ident => macroIdent(t.value, Term.QuotedMacroExpr.apply)
+        case t => syntaxError("Macro quote must be followed by id, brace or bracket", at = t)
+      }
+    }))
   }
 
   private object InfixTypeIdent {
@@ -1254,8 +1275,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val res = currToken match {
         case _: Ident if peek[Dot] => pathSimpleType()
         case _: LeftParen => makeTupleType(startPos, typesInParens())
-        case MacroSplicedIdent(ident) => Type.Macro(macroSplicedIdent(ident))
-        case _: MacroSplice => Type.Macro(macroSplice())
+        case MacroSplicedIdent(term) => Type.Macro(term)
         case _: Underscore if inMatchType =>
           next()
           Type.PatWildcard()
@@ -2325,10 +2345,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     var canApply = true
     val startPos = currIndex
     (currToken match {
-      case _: MacroQuote => Success(macroQuote())
-      case _: MacroSplice => Success(macroSplice())
-      case MacroQuotedIdent(ident) => Success(macroQuotedIdent(ident))
-      case MacroSplicedIdent(ident) => Success(macroSplicedIdent(ident))
+      case MacroQuoted(term) => Success(term)
+      case MacroSplicedIdent(term) => Success(term)
       case _: Literal => Success(literal())
       case _: Interpolation.Id => Success(interpolateTerm())
       case _: Xml.Start => Success(xmlTerm())
@@ -2359,32 +2377,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def macroSplice(): Term = autoPos {
-    next()
-    if (PatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBraces(pattern())))
-    else Term.SplicedMacroExpr(autoPos(inBraces(blockRaw())))
-  }
-
-  private def macroQuote(): Term = autoPos(QuotedSpliceContext.within {
-    next()
-    currToken match {
-      case _: LeftBrace => Term.QuotedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
-      case _: LeftBracket => Term.QuotedMacroType(inBracketsOnOpen(typeBlock()))
-      case t => syntaxError("Quotation only works for expressions and types", at = t)
-    }
-  })
-
-  @inline
-  private def macroQuotedIdent(ident: String): Term = macroIdent(ident, Term.QuotedMacroExpr.apply)
-
-  @inline
-  private def macroSplicedIdent(ident: String): Term = macroIdent(ident, Term.SplicedMacroExpr.apply)
-
-  private def macroIdent(ident: String, f: Term.Name => Term): Term = {
-    val curpos = currIndex
-    next()
-    autoEndPos(curpos)(f(atPos(curpos)(Term.Name(ident))))
-  }
+  private def macroIdent(ident: String, f: Term.Name => Term): Term = f(atCurPosNext(Term.Name(ident)))
 
   @tailrec
   private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
@@ -2951,8 +2944,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               }
             }
           case _: Underscore => getSeqWildcardAtUnderscore().getOrElse(next(Pat.Wildcard()))
-          case _: MacroQuote => Pat.Macro(macroQuote())
-          case MacroQuotedIdent(ident) => Pat.Macro(macroQuotedIdent(ident))
+          case MacroQuoted(term) => Pat.Macro(term)
           case _: Literal => literal()
           case _: Interpolation.Id => interpolatePat()
           case _: Xml.Start => xmlPat()
@@ -4640,7 +4632,6 @@ object ScalametaParser {
       case "TypeLambdaArrow" => "=>>"
       case "ContextArrow" => "?=>"
       case "MacroQuote" => "'"
-      case "MacroSplice" => "$"
       case "LeftParen" => "("
       case "RightParen" => ")"
       case "Comma" => ","
