@@ -2,14 +2,13 @@ package scala.meta
 package internal
 package prettyprinters
 
-import org.scalameta.adt._
 import org.scalameta.internal.ScalaCompat.EOL
 import org.scalameta.invariants._
 import org.scalameta.{debug, unreachable}
 import scala.meta.classifiers._
 import scala.meta.inputs.Position
 import scala.meta.internal.tokens.Chars._
-import scala.meta.internal.trees.{branch => _, root => _, _}
+import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.tokens._
 import scala.meta.trees.Origin
@@ -21,149 +20,9 @@ object TreeSyntax {
   import Show.{alt, blank, function => fn, indent => i, meta => m, newline => n, nosplit => nosp,
     opt => o, repeat => r, sequence => s, space => sp, wrap => w}
 
-  private final object SyntaxInstances {
-    // NOTE: these groups closely follow non-terminals in the grammar spec from SLS, except for:
-    // 1) we don't care about tracking non-terminals (with m() and/or p()) when that doesn't affect parenthesization
-    // 2) `InfixType ::= CompoundType {id [nl] CompoundType}` is incorrect. Should be `CompoundType | InfixType {id [nl] InfixType}`
-    // 3) `Pattern2 ::= varid ['@' Pattern3]` has become `Pattern2 ::= varid ['@' AnyPattern3]` due to implementational reasons
-    // 4) `Type ::= ... | InfixType [ExistentialClause]` has become `Type ::= ... | AnyInfixType [ExistentialClause]` due to implementational reasons
-    // 5) `FunctionArgTypes ::= InfixType | ...` has become `Type ::= AnyInfixType | ...` due to implementational reasons
-    @root
-    trait SyntacticGroup {
-      def categories: List[String]
-      def precedence: Double
-    }
-    object SyntacticGroup {
-      @branch
-      trait Type extends SyntacticGroup {
-        def categories = List("Type")
-      }
-      object Type {
-        @leaf
-        object ParamTyp extends Type {
-          def precedence = 0
-        }
-        @leaf
-        object Typ extends Type {
-          def precedence = 1
-        }
-        @leaf
-        object AnyInfixTyp extends Type {
-          def precedence = 1.5
-        }
-        @leaf
-        class InfixTyp(op: String) extends Type {
-          def precedence = 2
-        }
-        @leaf
-        object RefineTyp extends Type {
-          def precedence = 3
-        }
-        @leaf
-        object WithTyp extends Type {
-          def precedence = 3.5
-        }
-        @leaf
-        object AnnotTyp extends Type {
-          def precedence = 4
-        }
-        @leaf
-        object SimpleTyp extends Type {
-          def precedence = 6
-        }
-      }
-      @branch
-      trait Term extends SyntacticGroup {
-        def categories = List("Term")
-      }
-      object Term {
-        @leaf
-        object Expr extends Term {
-          def precedence = 0
-        }
-        @leaf
-        object Expr1 extends Term {
-          def precedence = 1
-        }
-        @leaf
-        object PostfixExpr extends Term {
-          def precedence = 2
-        }
-        @leaf
-        class InfixExpr(op: String) extends Term {
-          def precedence = 3
-        }
-        @leaf
-        object PrefixExpr extends Term {
-          def precedence = 4
-        }
-        @leaf
-        object SimpleExpr extends Term {
-          def precedence = 5
-        }
-        @leaf
-        object SimpleExpr1 extends Term {
-          def precedence = 6
-        }
-      }
-      @branch
-      trait Pat extends SyntacticGroup {
-        def categories = List("Pat")
-      }
-      object Pat {
-        @leaf
-        object Pattern extends Pat {
-          def precedence = 0
-        }
-        @leaf
-        object Pattern1 extends Pat {
-          def precedence = 1
-        }
-        @leaf
-        object Pattern2 extends Pat {
-          def precedence = 2
-        }
-        @leaf
-        object AnyPattern3 extends Pat {
-          def precedence = 2.5
-        }
-        @leaf
-        class Pattern3(op: String) extends Pat {
-          def precedence = 3
-        }
-        @leaf
-        object SimplePattern extends Pat {
-          def precedence = 6
-        }
-      }
-      @leaf
-      object Literal extends Term with Pat with Type {
-        override def categories = List("Term", "Pat", "Type")
-        def precedence = 6
-      }
-      require(
-        Literal.precedence == Term.SimpleExpr1.precedence &&
-          Literal.precedence == Pat.SimplePattern.precedence
-      )
-      @leaf
-      object Path extends Type with Term with Pat {
-        override def categories = List("Type", "Term", "Pat")
-        def precedence = 6
-      }
-      require(
-        Path.precedence == Type.SimpleTyp.precedence &&
-          Path.precedence == Term.SimpleExpr1.precedence &&
-          Path.precedence == Pat.SimplePattern.precedence
-      )
-    }
-  }
   private final class SyntaxInstances(implicit dialect: Dialect) {
     val keywords = tokenizers.keywords(dialect)
-    import SyntaxInstances.SyntacticGroup
-    import SyntaxInstances.SyntacticGroup.Pat._
-    import SyntaxInstances.SyntacticGroup.Term._
-    import SyntaxInstances.SyntacticGroup.Type._
-    import SyntaxInstances.SyntacticGroup.{Literal, Path}
+    import TreeSyntacticGroup._
 
     private val escapableSoftKeywords: Map[String, Seq[Class[_]]] = {
       val seq = Seq.newBuilder[(String, Seq[ClassTag[_]])]
@@ -191,44 +50,15 @@ object TreeSyntax {
       }
     }
 
-    def p(
-        og: SyntacticGroup,
-        t: Tree,
-        left: Boolean = false,
-        right: Boolean = false,
-        force: Boolean = false
-    ) = {
-      def opNeedsParens(oo: String, io: String, customPrecedence: Boolean = true): Boolean = {
-        def precedence(op: String) = if (customPrecedence) op.precedence else 0
-        require(left != right)
-        val (ol, il) = (oo.isLeftAssoc, io.isLeftAssoc)
-        if (ol ^ il) true
-        else {
-          val (l, r) = (ol, !ol)
-          val (op, ip) = (precedence(oo), precedence(io))
-          if (op < ip) r else if (op > ip) l else l ^ left
-        }
-      }
-      def groupNeedsParens(og: SyntacticGroup, ig: SyntacticGroup): Boolean = {
-        require(og.categories.intersect(ig.categories).nonEmpty)
-        (og, ig) match {
-          case (InfixExpr(oo), InfixExpr(io)) => opNeedsParens(oo, io)
-          case (InfixTyp(oo), InfixTyp(io)) =>
-            opNeedsParens(oo, io, customPrecedence = dialect.useInfixTypePrecedence)
-          case (Pattern3(oo), Pattern3(io)) => opNeedsParens(oo, io)
-          case _ => og.precedence > ig.precedence
-        }
-      }
-      s(t) match {
-        case x: Show.Meta =>
-          val needParens = force ||
-            (x.data match {
-              case ig: SyntacticGroup => groupNeedsParens(og, ig)
-              case _ => false
-            })
-          w("(", x.res, ")", needParens)
-        case res => res
-      }
+    def p(og: TreeSyntacticGroup, t: Tree, force: Boolean = false) = s(t) match {
+      case x: Show.Meta =>
+        val needParens = force ||
+          (x.data match {
+            case ig: TreeSyntacticGroup => groupNeedsParens(og, ig)
+            case _ => false
+          })
+        w("(", x.res, ")", needParens)
+      case res => res
     }
 
     def kw(keyword: String) = fn { sb =>
@@ -485,6 +315,7 @@ object TreeSyntax {
         m(SimpleExpr1, s(p(SimpleExpr1, t.fun), nosp(withComments(t.argClause)(args))))
       case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targClause))
       case t: Term.ApplyInfix =>
+        val sg = InfixExpr(t)
         val args = t.argClause.values match {
           case (arg: Term) :: Nil if (arg match {
                 case _: Term.AnonymousFunction | _: Lit.Unit => false
@@ -492,13 +323,10 @@ object TreeSyntax {
                     _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr |
                     _: Term.SplicedMacroPat | _: Term.Apply | _: Term.Placeholder => true
                 case _ => false
-              }) => p(InfixExpr(t.op.value), arg, right = true)
+              }) => p(sg, arg)
           case _ => printApplyArgs(t.argClause, "")
         }
-        m(
-          InfixExpr(t.op.value),
-          s(p(InfixExpr(t.op.value), t.lhs, left = true), sp(s(t.op, t.targClause, sp(args))))
-        )
+        m(sg, s(p(sg, t.lhs), sp(s(t.op, t.targClause, sp(args)))))
       case t: Term.ApplyUnary => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
       case t: Term.Assign => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
       case t: Term.Return =>
@@ -619,16 +447,9 @@ object TreeSyntax {
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
       case t: Type.ArgClause => nosp(r("[", ", ", "]")(t.values.map(p(Typ, _)): _*))
       case t: Type.Apply => m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
-      case t: Type.ApplyInfix => m(
-          InfixTyp(t.op.value),
-          s(
-            p(InfixTyp(t.op.value), t.lhs, left = true),
-            " ",
-            t.op,
-            " ",
-            p(InfixTyp(t.op.value), t.rhs, right = true)
-          )
-        )
+      case t: Type.ApplyInfix =>
+        val sg = InfixTyp(t)
+        m(sg, s(p(sg, t.lhs), " ", t.op, " ", p(sg, t.rhs)))
       case t: Type.FuncParamClause => t.values match {
           case arg :: Nil if (arg match {
                 case _: Type.Tuple | _: Type.ByNameType | _: Type.FunctionParamOrArg |
@@ -643,26 +464,8 @@ object TreeSyntax {
       case t: Type.PureContextFunction => printFunctionType(t, Token.pureContextFunctionArrow)
       case t: Type.Tuple => m(SimpleTyp, s("(", r(t.args, ", "), ")"))
       case t: Type.With => m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
-      case t: Type.And => m(
-          InfixTyp("&"),
-          s(
-            p(InfixTyp("&"), t.lhs, left = true),
-            " ",
-            "&",
-            " ",
-            p(InfixTyp("&"), t.rhs, right = true)
-          )
-        )
-      case t: Type.Or => m(
-          InfixTyp("|"),
-          s(
-            p(InfixTyp("|"), t.lhs, left = true),
-            " ",
-            "|",
-            " ",
-            p(InfixTyp("|"), t.rhs, right = true)
-          )
-        )
+      case t: Type.And => s(Type.ApplyInfix(t.lhs, Type.Name("&"), t.rhs))
+      case t: Type.Or => s(Type.ApplyInfix(t.lhs, Type.Name("|"), t.rhs))
       case t: Type.Refine =>
         m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.body)
       case t: Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " ", t.body))
@@ -743,12 +546,12 @@ object TreeSyntax {
       case t: Pat.ArgClause => m(SimplePattern, s("(", r(t.values, ", "), ")"))
       case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
       case t: Pat.ExtractInfix =>
-        val pop = Pattern3(t.op.value)
+        val pop = InfixPat(t)
         val rhs = t.argClause match {
-          case Pat.ArgClause(pat :: Nil) if !pat.is[Lit.Unit] => s(p(pop, pat, right = true))
+          case Pat.ArgClause(pat :: Nil) if !pat.is[Lit.Unit] => s(p(pop, pat))
           case pats => s(pats)
         }
-        m(pop, s(p(pop, t.lhs, left = true), " ", t.op, " ", rhs))
+        m(pop, s(p(pop, t.lhs), " ", t.op, " ", rhs))
       case t: Pat.Interpolate =>
         /** @see LegacyScanner.getStringPart, when ch == '$' */
         def needBraces(id: String): Boolean = !Character.isUnicodeIdentifierStart(id.head)
