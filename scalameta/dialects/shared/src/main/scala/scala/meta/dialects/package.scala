@@ -1,26 +1,11 @@
 package scala.meta
 
 package object dialects {
-  implicit val Scala210: Dialect = Dialect(
-    allowAndTypes = false,
+  implicit val Scala210: Dialect = new Dialect(
     allowAtForExtractorVarargs = true,
     allowCaseClassWithoutParameterList = true,
-    allowColonForExtractorVarargs = false,
-    allowEnums = false,
-    allowImplicitByNameParameters = false,
     allowInlineIdents = true,
-    allowInlineMods = false,
-    allowLiteralTypes = false,
-    allowMethodTypes = false,
-    allowOrTypes = false,
-    allowSpliceUnderscores = false, // SI-7715, only fixed in 2.11.0-M5
-    allowToplevelTerms = false,
-    allowTrailingCommas = false,
-    allowTraitParameters = false,
-    allowTypeLambdas = false,
-    allowViewBounds = true,
-    allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
-    toplevelSeparator = ""
+    allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
   )
 
   implicit val Scala211: Dialect = Scala210.withAllowCaseClassWithoutParameterList(false)

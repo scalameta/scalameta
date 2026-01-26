@@ -11,115 +11,115 @@ import scala.meta.internal.dialects._
 final class Dialect private[meta] (
     // Are `&` intersection types supported by this dialect?
     @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
-    private[meta] val allowAndTypes: Boolean, // unused
+    private[meta] val allowAndTypes: Boolean = false, // unused
     // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
-    val allowAtForExtractorVarargs: Boolean,
+    val allowAtForExtractorVarargs: Boolean = false,
     // Can case classes be declared without a parameter list?
     // Deprecated in 2.10, not supported in 2.11 and newer.
-    val allowCaseClassWithoutParameterList: Boolean,
+    val allowCaseClassWithoutParameterList: Boolean = false,
     // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
-    val allowColonForExtractorVarargs: Boolean,
+    val allowColonForExtractorVarargs: Boolean = false,
     // treatment of "a b ()" changed from 2.12 (empty args, aka "nullary") to 2.13 (a Unit arg)
-    val allowEmptyInfixArgs: Boolean,
+    val allowEmptyInfixArgs: Boolean = true,
 
     // *** scala3 flags below ***
 
     // Are enums allowed?
     // They are in Dotty, but not in Scala 2.13 or older.
-    val allowEnums: Boolean,
+    val allowEnums: Boolean = false,
     // Are implicit by name parameters supported?
     // They are in Dotty, but not in Scala 2.12 or older.
-    val allowImplicitByNameParameters: Boolean,
+    val allowImplicitByNameParameters: Boolean = false,
     // Are `inline` identifiers supported by this dialect?
-    val allowInlineIdents: Boolean,
+    val allowInlineIdents: Boolean = false,
     // Are inline vals and defs supported by this dialect?
-    val allowInlineMods: Boolean,
+    val allowInlineMods: Boolean = false,
     // Are literal types allowed, i.e. is `val a : 42 = 42` legal or not?
-    val allowLiteralTypes: Boolean,
+    val allowLiteralTypes: Boolean = false,
     // Are `|` (union types) supported by this dialect?
     @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
-    private[meta] val allowOrTypes: Boolean, // unused
+    private[meta] val allowOrTypes: Boolean = false, // unused
     // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
-    val allowSpliceUnderscores: Boolean,
+    val allowSpliceUnderscores: Boolean = false,
     // Are terms on the top level supported by this dialect?
     // Necessary to support popular script-like DSLs.
-    val allowToplevelTerms: Boolean,
+    val allowToplevelTerms: Boolean = false,
     // Are trailing commas allowed? SIP-27.
-    val allowTrailingCommas: Boolean,
+    val allowTrailingCommas: Boolean = false,
     // Are trait allowed to have parameters?
     // They are in Dotty, but not in Scala 2.13 or older.
-    val allowTraitParameters: Boolean,
+    val allowTraitParameters: Boolean = false,
     // Are type lambdas allowed, i.e. is `[T] => (T, T)` legal or not?
-    val allowTypeLambdas: Boolean,
+    val allowTypeLambdas: Boolean = false,
     // Are view bounds supported by this dialect?
     // def f[A <% Int](a: A)
     // Removed in Dotty.
     @deprecated("allowViewBounds unneeded, it was only used for an error", ">4.10.2")
-    private[meta] val allowViewBounds: Boolean,
+    private[meta] val allowViewBounds: Boolean = false,
     // Are XML literals supported by this dialect?
     // We plan to deprecate XML literal syntax, and some dialects
     // might go ahead and drop support completely.
-    val allowXmlLiterals: Boolean,
+    val allowXmlLiterals: Boolean = false,
     @deprecated("toplevelSeparator has never been used", ">4.4.35")
-    private[meta] val toplevelSeparator: String, // unused
+    private[meta] val toplevelSeparator: String = "", // unused
     // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
-    val allowNumericLiteralUnderscoreSeparators: Boolean,
+    val allowNumericLiteralUnderscoreSeparators: Boolean = false,
     // Can try body contain any expression? (2.13.1 https://github.com/scala/scala/pull/8071)
-    val allowTryWithAnyExpr: Boolean,
+    val allowTryWithAnyExpr: Boolean = false,
     // Given/using introduced in dotty
-    val allowGivenUsing: Boolean,
+    val allowGivenUsing: Boolean = false,
     // https://dotty.epfl.ch/docs/reference/experimental/erased-defs.html
-    val allowErasedDefs: Boolean,
+    val allowErasedDefs: Boolean = false,
     // Extension methods introduced in dotty
-    val allowExtensionMethods: Boolean,
+    val allowExtensionMethods: Boolean = false,
     // Open modifier for classes introduced in dotty
-    val allowOpenClass: Boolean,
+    val allowOpenClass: Boolean = false,
     // Top level statements introduced in dotty.
     // differs from ToplevelTerms because here you can define packages
-    val allowToplevelStatements: Boolean,
+    val allowToplevelStatements: Boolean = false,
     // Opaque types introduced in dotty
-    val allowOpaqueTypes: Boolean,
+    val allowOpaqueTypes: Boolean = false,
     // Export selected members of an object introduced in dotty
-    val allowExportClause: Boolean,
+    val allowExportClause: Boolean = false,
     // Extended classes separated by ',' introduced in dotty
-    val allowCommaSeparatedExtend: Boolean,
+    val allowCommaSeparatedExtend: Boolean = false,
     // end marker introduced in dotty
-    val allowEndMarker: Boolean,
+    val allowEndMarker: Boolean = false,
     // Support for escaping `"` in interpolated strings using $ - "$""
-    val allowInterpolationDolarQuoteEscape: Boolean,
+    val allowInterpolationDolarQuoteEscape: Boolean = false,
     // Significant identation introduced in dotty
-    val allowSignificantIndentation: Boolean,
+    val allowSignificantIndentation: Boolean = false,
     // Dotty changed wildcard for types from `_` to `?`
-    val allowQuestionMarkAsTypeWildcard: Boolean,
+    val allowQuestionMarkAsTypeWildcard: Boolean = false,
     // Dotty rejects placeholder as Type parameter
     @deprecated("allowTypeParamUnderscore not used", "4.14.1")
-    private[meta] val allowTypeParamUnderscore: Boolean, // TODO: deprecate, not used
+    private[meta] val allowTypeParamUnderscore: Boolean = false,
     // Dotty allows by-name repeated parameters
-    val allowByNameRepeatedParameters: Boolean,
+    val allowByNameRepeatedParameters: Boolean = false,
     // Dotty allows lazy val abstract values
-    val allowLazyValAbstractValues: Boolean,
+    val allowLazyValAbstractValues: Boolean = false,
     // Dotty allows capital pattern vars in `case A @ _ =>`
-    val allowUpperCasePatternVarBinding: Boolean,
+    val allowUpperCasePatternVarBinding: Boolean = false,
     // Dotty allows to use derives to automatically generate given instances for type classes
-    val allowDerives: Boolean,
+    val allowDerives: Boolean = false,
     // Dotty allows to specify `type T` inside blocks
-    val allowTypeInBlock: Boolean,
+    val allowTypeInBlock: Boolean = false,
     // Dotty allows to define function like `[T] => (ts: List[T]) => ts.headOption`
-    val allowPolymorphicFunctions: Boolean,
+    val allowPolymorphicFunctions: Boolean = false,
     // Dotty allows `.match` expressions and chaining matches
-    val allowMatchAsOperator: Boolean,
+    val allowMatchAsOperator: Boolean = false,
     // Dotty allows `match` on type
-    val allowTypeMatch: Boolean,
+    val allowTypeMatch: Boolean = false,
     // Dotty allows to define types and methods with an `infix` soft keyword modifier
-    val allowInfixMods: Boolean,
+    val allowInfixMods: Boolean = false,
     // Scala 3 splices/quotes
-    val allowSpliceAndQuote: Boolean,
+    val allowSpliceAndQuote: Boolean = false,
     // https://docs.scala-lang.org/sips/quote-pattern-type-variable-syntax.html
-    val allowQuotedTypeVariables: Boolean,
+    val allowQuotedTypeVariables: Boolean = false,
     // Scala 3 disallowed symbol literals
-    val allowSymbolLiterals: Boolean,
+    val allowSymbolLiterals: Boolean = true,
     // Scala 3 disallowed symbol literals
-    val allowDependentFunctionTypes: Boolean,
+    val allowDependentFunctionTypes: Boolean = false,
     /* Scala 3 added possibility to use simpler splices such as:
      * val arr = Array(1, 2, 3)
      * val lst = List(0, arr*)                  // vararg splice argument
@@ -127,65 +127,65 @@ final class Dialect private[meta] (
      *    case List(0, 1, xs*) => println(xs)   // binds xs to Seq(2, 3)
      *    case List(1, _*) =>                   // wildcard pattern
      */
-    val allowPostfixStarVarargSplices: Boolean,
+    val allowPostfixStarVarargSplices: Boolean = false,
     /* Scala 3 allows us to specify:
      * `case tp @ OrNull(tp1): OrType`
      * the last section after : was not allowed previously.
      */
-    val allowAllTypedPatterns: Boolean,
+    val allowAllTypedPatterns: Boolean = false,
     // Scala 3 import renames can use as soft keyword `import a.b.C as D`
-    val allowAsForImportRename: Boolean,
+    val allowAsForImportRename: Boolean = false,
     // Scala 3 wildcard imports can be specified as `import a.b.*`
-    val allowStarWildcardImport: Boolean,
+    val allowStarWildcardImport: Boolean = false,
     // Scala 3 no longer allows def hello(){} - `=` is always needed
-    val allowProcedureSyntax: Boolean,
+    val allowProcedureSyntax: Boolean = true,
     // Scala 3 no longer allows `do {...} while(...)`
-    val allowDoWhile: Boolean,
+    val allowDoWhile: Boolean = true,
     /* Kind-project support
      * works under -Xsource3 flag
      * https://github.com/scala/scala/pull/9605
      */
-    val allowPlusMinusUnderscoreAsIdent: Boolean,
+    val allowPlusMinusUnderscoreAsIdent: Boolean = false,
     // Dotty uses `_` for placeholder for types since 3.2
-    val allowUnderscoreAsTypePlaceholder: Boolean,
+    val allowUnderscoreAsTypePlaceholder: Boolean = false,
     // Dotty uses `*` for placeholder for types in 3.0-3.2
-    val allowStarAsTypePlaceholder: Boolean,
+    val allowStarAsTypePlaceholder: Boolean = false,
     // import a.b.c.{ given, _} used for -X:source3
-    val allowGivenImports: Boolean,
+    val allowGivenImports: Boolean = false,
     // Scala 3 uses proper precedence rules for infix types, unlike Scala 2
-    val useInfixTypePrecedence: Boolean,
+    val useInfixTypePrecedence: Boolean = false,
     // Scala213Source3 and Scala3 allow infix operator being placed after nl
-    val allowInfixOperatorAfterNL: Boolean,
+    val allowInfixOperatorAfterNL: Boolean = false,
     // Scala 3 allows `def f[X](x: X)[Y](y: Y)`
-    val allowParamClauseInterleaving: Boolean,
+    val allowParamClauseInterleaving: Boolean = false,
     /* Scala 3 allows dropping braces for block arguments such as `list.map: a =>`
      * It wasn't available in Scala 3.0 and got introduced later.
      */
-    val allowFewerBraces: Boolean,
+    val allowFewerBraces: Boolean = false,
     // https://docs.scala-lang.org/scala3/reference/other-new-features/control-syntax.html
-    val allowQuietSyntax: Boolean,
+    val allowQuietSyntax: Boolean = false,
     // Are binary literals allowed? SIP-42.
-    val allowBinaryLiterals: Boolean,
+    val allowBinaryLiterals: Boolean = false,
     // Are tracked parameters allowed? docs: https://dotty.epfl.ch/docs/reference/experimental/modularity.html
-    val allowTrackedParameters: Boolean,
+    val allowTrackedParameters: Boolean = false,
     // https://dotty.epfl.ch/docs/reference/experimental/into-modifier.html
-    val allowParameterTypeConversions: Boolean,
+    val allowParameterTypeConversions: Boolean = false,
     // https://dotty.epfl.ch/docs/reference/experimental/purefuns.html
-    val allowPureFunctions: Boolean,
+    val allowPureFunctions: Boolean = false,
     // https://dotty.epfl.ch/docs/reference/experimental/cc.html
-    val allowCaptureChecking: Boolean,
+    val allowCaptureChecking: Boolean = false,
     // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html
-    val allowNamedTuples: Boolean,
+    val allowNamedTuples: Boolean = false,
     // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html?
-    val allowImprovedTypeClassesSyntax: Boolean,
+    val allowImprovedTypeClassesSyntax: Boolean = false,
     // https://github.com/scala/scala/pull/8282
-    val treatUnicodeEscapesAsOrdinary: Boolean,
+    val treatUnicodeEscapesAsOrdinary: Boolean = false,
 
     // NOTE: add new fields above this line
-    private[meta] val unquoteParentDialect: Dialect,
+    private[meta] val unquoteParentDialect: Dialect = null,
     // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
     // If yes, they will be parsed as patterns or terms.
-    private[meta] val unquoteType: UnquoteType
+    private[meta] val unquoteType: UnquoteType = UnquoteType.None
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -205,11 +205,11 @@ final class Dialect private[meta] (
       allowInlineIdents: Boolean,
       allowInlineMods: Boolean,
       allowLiteralTypes: Boolean,
-      allowMultilinePrograms: Boolean = true, // unused
+      allowMultilinePrograms: Boolean, // unused
       allowOrTypes: Boolean, // unused
-      allowPatUnquotes: Boolean = false, // unused
+      allowPatUnquotes: Boolean, // unused
       allowSpliceUnderscores: Boolean,
-      allowTermUnquotes: Boolean = false, // unused
+      allowTermUnquotes: Boolean, // unused
       allowToplevelTerms: Boolean,
       allowTrailingCommas: Boolean,
       allowTraitParameters: Boolean,
@@ -218,79 +218,20 @@ final class Dialect private[meta] (
       allowXmlLiterals: Boolean,
       toplevelSeparator: String // unused
   ) = this(
-    allowAndTypes = true, // unused
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
     allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
     allowColonForExtractorVarargs = allowColonForExtractorVarargs,
-    allowEmptyInfixArgs = true,
     allowEnums = allowEnums,
     allowImplicitByNameParameters = allowImplicitByNameParameters,
     allowInlineIdents = allowInlineIdents,
     allowInlineMods = allowInlineMods,
     allowLiteralTypes = allowLiteralTypes,
-    allowOrTypes = true, // unused
     allowSpliceUnderscores = allowSpliceUnderscores,
     allowToplevelTerms = allowToplevelTerms,
     allowTrailingCommas = allowTrailingCommas,
     allowTraitParameters = allowTraitParameters,
     allowTypeLambdas = allowTypeLambdas,
-    allowViewBounds = true,
-    allowXmlLiterals = allowXmlLiterals,
-    toplevelSeparator = "", // unused
-    allowNumericLiteralUnderscoreSeparators = false,
-    allowTryWithAnyExpr = false,
-    allowGivenUsing = false,
-    allowErasedDefs = false,
-    allowExtensionMethods = false,
-    allowOpenClass = false,
-    allowToplevelStatements = false,
-    allowOpaqueTypes = false,
-    allowExportClause = false,
-    allowCommaSeparatedExtend = false,
-    allowEndMarker = false,
-    allowInterpolationDolarQuoteEscape = false,
-    allowSignificantIndentation = false,
-    allowQuestionMarkAsTypeWildcard = false,
-    allowTypeParamUnderscore = true, // unused
-    allowByNameRepeatedParameters = false,
-    allowLazyValAbstractValues = false,
-    allowUpperCasePatternVarBinding = false,
-    allowDerives = false,
-    allowTypeInBlock = false,
-    allowPolymorphicFunctions = false,
-    allowMatchAsOperator = false,
-    allowTypeMatch = false,
-    allowInfixMods = false,
-    allowSpliceAndQuote = false,
-    allowQuotedTypeVariables = false,
-    allowSymbolLiterals = true,
-    allowDependentFunctionTypes = false,
-    allowPostfixStarVarargSplices = false,
-    allowAllTypedPatterns = false,
-    allowAsForImportRename = false,
-    allowStarWildcardImport = false,
-    allowProcedureSyntax = true,
-    allowDoWhile = true,
-    allowPlusMinusUnderscoreAsIdent = false,
-    allowUnderscoreAsTypePlaceholder = false,
-    allowStarAsTypePlaceholder = false,
-    allowGivenImports = false,
-    useInfixTypePrecedence = false,
-    allowInfixOperatorAfterNL = false,
-    allowParamClauseInterleaving = false,
-    allowFewerBraces = false,
-    allowQuietSyntax = false,
-    allowBinaryLiterals = false,
-    allowTrackedParameters = false,
-    allowParameterTypeConversions = false,
-    allowPureFunctions = false,
-    allowCaptureChecking = false,
-    allowNamedTuples = false,
-    allowImprovedTypeClassesSyntax = false,
-    treatUnicodeEscapesAsOrdinary = false,
-    // NOTE(olafur): declare the default value for new fields above this comment.
-    unquoteParentDialect = null,
-    unquoteType = UnquoteType.None
+    allowXmlLiterals = allowXmlLiterals
   )
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
@@ -530,7 +471,6 @@ final class Dialect private[meta] (
   ): Dialect = {
     val notForUnquote = unquoteType eq UnquoteType.None
     val that = new Dialect(
-      allowAndTypes = true, // unused
       allowAtForExtractorVarargs = allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs = allowColonForExtractorVarargs,
@@ -540,15 +480,12 @@ final class Dialect private[meta] (
       allowInlineIdents = allowInlineIdents,
       allowInlineMods = allowInlineMods,
       allowLiteralTypes = allowLiteralTypes,
-      allowOrTypes = true, // unused
       allowSpliceUnderscores = allowSpliceUnderscores,
       allowToplevelTerms = allowToplevelTerms,
       allowTrailingCommas = allowTrailingCommas,
       allowTraitParameters = allowTraitParameters,
       allowTypeLambdas = allowTypeLambdas,
-      allowViewBounds = true,
       allowXmlLiterals = allowXmlLiterals,
-      toplevelSeparator = "", // unused
       allowNumericLiteralUnderscoreSeparators = allowNumericLiteralUnderscoreSeparators,
       allowTryWithAnyExpr = allowTryWithAnyExpr,
       allowGivenUsing = allowGivenUsing,
@@ -563,7 +500,6 @@ final class Dialect private[meta] (
       allowInterpolationDolarQuoteEscape = allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation = allowSignificantIndentation,
       allowQuestionMarkAsTypeWildcard = allowQuestionMarkAsTypeWildcard,
-      allowTypeParamUnderscore = false, // unused
       allowByNameRepeatedParameters = allowByNameRepeatedParameters,
       allowLazyValAbstractValues = allowLazyValAbstractValues,
       allowUpperCasePatternVarBinding = allowUpperCasePatternVarBinding,
@@ -754,30 +690,8 @@ final class Dialect private[meta] (
 }
 
 object Dialect extends InternalDialect {
-  val empty: Dialect = new Dialect(
-    allowAndTypes = false,
-    allowAtForExtractorVarargs = false,
-    allowCaseClassWithoutParameterList = false,
-    allowColonForExtractorVarargs = false,
-    allowEnums = false,
-    allowImplicitByNameParameters = false,
-    allowInlineIdents = false,
-    allowInlineMods = false,
-    allowLiteralTypes = false,
-    allowMultilinePrograms = false,
-    allowOrTypes = false,
-    allowPatUnquotes = false,
-    allowSpliceUnderscores = false,
-    allowTermUnquotes = false,
-    allowToplevelTerms = false,
-    allowTrailingCommas = false,
-    allowTraitParameters = false,
-    allowTypeLambdas = false,
-    allowViewBounds = false,
-    allowXmlLiterals = false,
-    toplevelSeparator = ""
-  ).withAllowEmptyInfixArgs(false).withAllowSymbolLiterals(false).withAllowProcedureSyntax(false)
-    .withAllowDoWhile(false)
+  val empty: Dialect = new Dialect().withAllowEmptyInfixArgs(false).withAllowSymbolLiterals(false)
+    .withAllowProcedureSyntax(false).withAllowDoWhile(false)
 
   @deprecated("Use Dialect.empty (or any of the predefined dialects) and `.withXxx` methods")
   def apply(
@@ -808,7 +722,6 @@ object Dialect extends InternalDialect {
       @deprecated("toplevelSeparator has never been used", ">4.4.35")
       toplevelSeparator: String // unused
   ): Dialect = new Dialect(
-    allowAndTypes = true, // unused
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
     allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
     allowColonForExtractorVarargs = allowColonForExtractorVarargs,
@@ -817,15 +730,12 @@ object Dialect extends InternalDialect {
     allowInlineIdents = allowInlineIdents,
     allowInlineMods = allowInlineMods,
     allowLiteralTypes = allowLiteralTypes,
-    allowOrTypes = true, // unused
     allowSpliceUnderscores = allowSpliceUnderscores,
     allowToplevelTerms = allowToplevelTerms,
     allowTrailingCommas = allowTrailingCommas,
     allowTraitParameters = allowTraitParameters,
     allowTypeLambdas = allowTypeLambdas,
-    allowViewBounds = true, // unused
-    allowXmlLiterals = allowXmlLiterals,
-    toplevelSeparator = "" // unused
+    allowXmlLiterals = allowXmlLiterals
   )
   private lazy val standardPairs = Seq[sourcecode.Text[Dialect]](
     Dotty,
