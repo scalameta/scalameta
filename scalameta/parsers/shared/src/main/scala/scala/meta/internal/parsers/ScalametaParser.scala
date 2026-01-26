@@ -1189,17 +1189,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         inMatchType: Boolean = false,
         inGivenSig: Boolean = false
     ): Type = {
-      val ctx = TypeInfixContext
-      val base = ctx.stack
+      import TypeInfixContext._
+      val base = stack
       @inline
-      def reduce(rhs: ctx.Typ, op: Option[ctx.Op]): ctx.Typ = ctx.reduceStack(base, rhs, rhs, op)
-      def getNextRhs(rhs: ctx.Typ)(op: ctx.Op): ctx.Typ = {
+      def reduce(rhs: Typ, op: Option[Op]): Typ = reduceStack(base, rhs, rhs, op)
+      def getNextRhs(rhs: Typ)(op: Op): Typ = {
         newLineOptWhenFollowedBy(TypeIntro)
-        ctx.push(ctx.UnfinishedInfix(reduce(rhs, Some(op)), op))
+        push(UnfinishedInfix(reduce(rhs, Some(op)), op))
         compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig)
       }
       @tailrec
-      def loop(rhs: ctx.Typ): ctx.Typ = (currToken match {
+      def loop(rhs: Typ): Typ = (currToken match {
         case lf: InfixLF => getLeadingInfix(lf)(Type.Name.apply)(getNextRhs(rhs))
         case _: Unquote | InfixTypeIdent() => Some(getNextRhs(rhs)(typeName()))
         case _ => None
@@ -1689,7 +1689,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         }
         val complexExpr = tryParse {
           val simpleExprWithArgs = argsOrInitBody.fold(simpleExpr) { t =>
-            val args = copyPos(t)(termInfixContext.toArgClause(t))
+            val args = copyPos(t)(TermInfixContext.toArgClause(t))
             autoEndPos(startPos)(Term.Apply(simpleExpr, args))
           }
           Try(exprAfterSimpleInit(simpleExprWithArgs, startPos = startPos, canApply = true))
@@ -2112,7 +2112,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   // Actually there's even crazier stuff in scala-compiler.jar.
   // Apparently you can parse and typecheck `a + (bs: _*) * c`,
   // however I'm going to error out on this.
-  object termInfixContext extends InfixContext {
+  object TermInfixContext extends InfixContext {
     type Typ = Term
     type Op = Term.Name
 
@@ -2150,7 +2150,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   // In comparison with terms, patterns are trivial.
-  implicit object patInfixContext extends InfixContext {
+  implicit object PatInfixContext extends InfixContext {
     type Typ = Pat
     type Op = Term.Name
 
@@ -2213,19 +2213,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   private def postfixExpr(rhs0: Term, startPos: Int, allowRepeated: Boolean): Term = {
-    val ctx = termInfixContext
-    val base = ctx.stack
+    import TermInfixContext._
+    val base = stack
 
-    def getLhsStartPos(lhs: ctx.Typ): Int = if (lhs eq rhs0) startPos else lhs.begIndex
+    def getLhsStartPos(lhs: Typ): Int = if (lhs eq rhs0) startPos else lhs.begIndex
 
     // Skip to later in the `postfixExpr` method to start mental debugging.
     // rhsStartK/rhsEndK may be bigger than then extent of rhsK,
     // so we really have to track them separately.
     @tailrec
-    def loop(rhsK: ctx.Typ): ctx.Typ = {
+    def loop(rhsK: Typ): Typ = {
       val rhsEndK = prevIndex
 
-      def getPrevLhs(op: Term.Name): Term = ctx.reduceStack(base, rhsK, rhsEndK, Some(op))
+      def getPrevLhs(op: Term.Name): Term = reduceStack(base, rhsK, rhsEndK, Some(op))
 
       def getNextRhs(targs: => Type.ArgClause)(op: Term.Name) =
         getNextRhsWith(op, targs, argumentExprsOrPrefixExpr(PostfixStat))
@@ -2234,7 +2234,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         val lhs = getPrevLhs(op)
         val wrap = (lhs eq rhs0) && lhs.begIndex != startPos
         val lhsExt = if (wrap) atPosWithBody(startPos, Term.Tuple(lhs :: Nil), rhsEndK) else lhs
-        ctx.push(ctx.UnfinishedInfix(lhsExt, op, targs))
+        push(UnfinishedInfix(lhsExt, op, targs))
         Right(rhs)
       }
 
@@ -2264,7 +2264,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           // Infix chain continues, so we need to reduce the stack.
           // In the running example, base = List(), rhsK = [a].
           getNextRhs(targs)(op) // [a]
-        // afterwards, ctx.stack = List([a +])
+        // afterwards, stack = List([a +])
         else {
           val argPos = currIndex
           (currToken match {
@@ -2315,10 +2315,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     // base contains pending UnfinishedInfix parts and rhsN is the final rhs.
     // For our running example, this'll be List([a +]) and [b].
     // Afterwards, lhsResult will be List([a + b]).
-    if (rhs0 == rhsN && ctx.isDone(base)) rhs0
+    if (rhs0 == rhsN && isDone(base)) rhs0
     else {
       val endPos = prevIndex
-      atPosWithBody(startPos, ctx.reduceStack(base, rhsN, endPos, None), endPos)
+      atPosWithBody(startPos, reduceStack(base, rhsN, endPos, None), endPos)
     }
   }
 
@@ -2857,18 +2857,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
 
     def pattern3(isForComprehension: Boolean = false): Pat = {
-      val ctx = patInfixContext
+      import PatInfixContext._
       val lhs = simplePattern(badPattern3, isForComprehension = isForComprehension)
-      val base = ctx.stack
+      val base = stack
       @tailrec
-      def loop(rhs: ctx.Typ): ctx.Typ = {
+      def loop(rhs: Typ): Typ = {
         @inline
-        def lhs(opOpt: Option[Term.Name]) = ctx.reduceStack(base, rhs, rhs, opOpt)
+        def lhs(opOpt: Option[Term.Name]) = reduceStack(base, rhs, rhs, opOpt)
         currToken match {
           case _: Unquote | Keywords.NotPatAlt() =>
             val op = termName()
             expectNot[LeftBracket]("infix patterns cannot have type arguments")
-            ctx.push(ctx.UnfinishedInfix(lhs(Some(op)), op))
+            push(UnfinishedInfix(lhs(Some(op)), op))
             loop(simplePattern(badPattern3, isRhs = true))
           case _ => lhs(None)
         }
@@ -2877,7 +2877,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
 
     def badPattern3(tok: Token): Nothing = {
-      import patInfixContext._
+      import PatInfixContext._
       def isComma = tok.is[Comma]
       def isDelimiter = tok.isAny[RightParen, RightBrace]
       def isCommaOrDelimiter = isComma || isDelimiter
