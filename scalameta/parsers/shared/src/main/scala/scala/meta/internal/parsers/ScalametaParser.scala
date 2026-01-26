@@ -1191,11 +1191,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     ): Type = {
       import TypeInfixContext._
       val base = stack
-      @inline
-      def reduce(rhs: Typ, op: Option[Op]): Typ = reduceStack(base, rhs, rhs, op)
       def getNextRhs(rhs: Typ)(op: Op): Typ = {
         newLineOptWhenFollowedBy(TypeIntro)
-        push(UnfinishedInfix(reduce(rhs, Some(op)), op))
+        reduceAndPush(base, rhs, op)(UnfinishedInfix.apply)
         compoundType(inMatchType = inMatchType, inGivenSig = inGivenSig)
       }
       @tailrec
@@ -1205,7 +1203,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case _ => None
       }) match {
         case Some(x) => loop(x)
-        case None => reduce(rhs, None)
+        case None => drainStack(base, rhs, rhs)
       }
       loop(t)
     }
@@ -2052,7 +2050,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     // (Lhs, op and targs form UnfinishedInfix).
     // FinishedInfix is the type of an infix expression.
     // The conversions are necessary to push the output of finishInfixExpr on stack.
-    type Typ
+    type Typ <: Tree
     type Op <: Name
     type UnfinishedInfix <: Unfinished
 
@@ -2071,12 +2069,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     @inline
     def isDone(base: List[UnfinishedInfix]): Boolean = this.stack == base
     def push(unfinishedInfix: UnfinishedInfix): Unit = stack ::= unfinishedInfix
+    def reduceAndPush(base: List[UnfinishedInfix], rhs: Typ, op: Op)(
+        f: (Typ, Op) => UnfinishedInfix
+    ): Unit = push(f(reduceStack(base, rhs, rhs, op), op))
 
-    def reduceStack(base: List[UnfinishedInfix], curr: Typ, currEnd: EndPos, op: Option[Op]): Typ =
+    def drainStack(base: List[UnfinishedInfix], curr: Typ, currEnd: EndPos): Typ = {
+      @tailrec
+      def loop(rhs: Typ): Typ = stack match {
+        case lhs :: rest if !isDone(base) =>
+          stack = rest
+          loop(finishInfixExpr(lhs, rhs, currEnd))
+        case _ => rhs
+      }
+      loop(curr)
+    }
+
+    def reduceStack(base: List[UnfinishedInfix], curr: Typ, currEnd: EndPos, op: Op): Typ =
       if (isDone(base)) curr
       else {
-        val opPrecedence = op.fold(0)(_.precedence)
-        val leftAssoc = op.forall(_.isLeftAssoc)
+        val opPrecedence = op.precedence
+        val leftAssoc = op.isLeftAssoc
 
         // Pop off an unfinished infix expression off the stack and finish it with the rhs.
         // Then convert the result, so that it can become someone else's rhs.
@@ -2225,7 +2237,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def loop(rhsK: Typ): Typ = {
       val rhsEndK = prevIndex
 
-      def getPrevLhs(op: Term.Name): Term = reduceStack(base, rhsK, rhsEndK, Some(op))
+      def getPrevLhs(op: Term.Name): Term = reduceStack(base, rhsK, rhsEndK, op)
 
       def getNextRhs(targs: => Type.ArgClause)(op: Term.Name) =
         getNextRhsWith(op, targs, argumentExprsOrPrefixExpr(PostfixStat))
@@ -2318,7 +2330,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     if (rhs0 == rhsN && isDone(base)) rhs0
     else {
       val endPos = prevIndex
-      atPosWithBody(startPos, reduceStack(base, rhsN, endPos, None), endPos)
+      atPosWithBody(startPos, drainStack(base, rhsN, endPos), endPos)
     }
   }
 
@@ -2861,17 +2873,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val lhs = simplePattern(badPattern3, isForComprehension = isForComprehension)
       val base = stack
       @tailrec
-      def loop(rhs: Typ): Typ = {
-        @inline
-        def lhs(opOpt: Option[Term.Name]) = reduceStack(base, rhs, rhs, opOpt)
-        currToken match {
-          case _: Unquote | Keywords.NotPatAlt() =>
-            val op = termName()
-            expectNot[LeftBracket]("infix patterns cannot have type arguments")
-            push(UnfinishedInfix(lhs(Some(op)), op))
-            loop(simplePattern(badPattern3, isRhs = true))
-          case _ => lhs(None)
-        }
+      def loop(rhs: Typ): Typ = currToken match {
+        case _: Unquote | Keywords.NotPatAlt() =>
+          val op = termName()
+          expectNot[LeftBracket]("infix patterns cannot have type arguments")
+          reduceAndPush(base, rhs, op)(UnfinishedInfix.apply)
+          loop(simplePattern(badPattern3, isRhs = true))
+        case _ => drainStack(base, rhs, rhs)
       }
       loop(lhs)
     }
