@@ -95,7 +95,8 @@ final class Dialect private[meta] (
     // Dotty changed wildcard for types from `_` to `?`
     val allowQuestionMarkAsTypeWildcard: Boolean,
     // Dotty rejects placeholder as Type parameter
-    val allowTypeParamUnderscore: Boolean, // TODO: deprecate, not used
+    @deprecated("allowTypeParamUnderscore not used", "4.14.1")
+    val allowTypeParamUnderscore: Boolean,
     // Dotty allows by-name repeated parameters
     val allowByNameRepeatedParameters: Boolean,
     // Dotty allows lazy val abstract values
@@ -246,7 +247,7 @@ final class Dialect private[meta] (
     allowInterpolationDolarQuoteEscape = false,
     allowSignificantIndentation = false,
     allowQuestionMarkAsTypeWildcard = false,
-    allowTypeParamUnderscore = true,
+    allowTypeParamUnderscore = true, // unused
     allowByNameRepeatedParameters = false,
     allowLazyValAbstractValues = false,
     allowUpperCasePatternVarBinding = false,
@@ -355,8 +356,8 @@ final class Dialect private[meta] (
   def withAllowQuestionMarkPlaceholder(newValue: Boolean): Dialect =
     withAllowQuestionMarkAsTypeWildcard(newValue)
 
-  def withAllowTypeParamUnderscore(newValue: Boolean): Dialect =
-    privateCopy(allowTypeParamUnderscore = newValue)
+  @deprecated("allowTypeParamUnderscore not used", "4.14.1")
+  def withAllowTypeParamUnderscore(newValue: Boolean): Dialect = this
   def withAllowByNameRepeatedParameters(newValue: Boolean): Dialect =
     privateCopy(allowByNameRepeatedParameters = newValue)
   def withAllowLazyValAbstractValues(newValue: Boolean): Dialect =
@@ -474,7 +475,6 @@ final class Dialect private[meta] (
       allowInterpolationDolarQuoteEscape: Boolean = this.allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation: Boolean = this.allowSignificantIndentation,
       allowQuestionMarkAsTypeWildcard: Boolean = this.allowQuestionMarkAsTypeWildcard,
-      allowTypeParamUnderscore: Boolean = this.allowTypeParamUnderscore,
       allowByNameRepeatedParameters: Boolean = this.allowByNameRepeatedParameters,
       allowLazyValAbstractValues: Boolean = this.allowLazyValAbstractValues,
       allowUpperCasePatternVarBinding: Boolean = this.allowUpperCasePatternVarBinding,
@@ -543,7 +543,6 @@ final class Dialect private[meta] (
       allowInterpolationDolarQuoteEscape = allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation = allowSignificantIndentation,
       allowQuestionMarkAsTypeWildcard = allowQuestionMarkAsTypeWildcard,
-      allowTypeParamUnderscore = allowTypeParamUnderscore,
       allowByNameRepeatedParameters = allowByNameRepeatedParameters,
       allowLazyValAbstractValues = allowLazyValAbstractValues,
       allowUpperCasePatternVarBinding = allowUpperCasePatternVarBinding,
@@ -615,7 +614,7 @@ final class Dialect private[meta] (
       allowInterpolationDolarQuoteEscape = allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation = allowSignificantIndentation,
       allowQuestionMarkAsTypeWildcard = allowQuestionMarkAsTypeWildcard,
-      allowTypeParamUnderscore = allowTypeParamUnderscore,
+      allowTypeParamUnderscore = false, // unused
       allowByNameRepeatedParameters = allowByNameRepeatedParameters,
       allowLazyValAbstractValues = allowLazyValAbstractValues,
       allowUpperCasePatternVarBinding = allowUpperCasePatternVarBinding,
@@ -709,7 +708,6 @@ final class Dialect private[meta] (
       allowInterpolationDolarQuoteEscape: Boolean,
       allowSignificantIndentation: Boolean,
       allowQuestionMarkAsTypeWildcard: Boolean,
-      allowTypeParamUnderscore: Boolean,
       allowByNameRepeatedParameters: Boolean,
       allowLazyValAbstractValues: Boolean,
       allowUpperCasePatternVarBinding: Boolean,
@@ -771,7 +769,6 @@ final class Dialect private[meta] (
       this.allowInterpolationDolarQuoteEscape == allowInterpolationDolarQuoteEscape &&
       this.allowSignificantIndentation == allowSignificantIndentation &&
       this.allowQuestionMarkAsTypeWildcard == allowQuestionMarkAsTypeWildcard &&
-      this.allowTypeParamUnderscore == allowTypeParamUnderscore &&
       this.allowByNameRepeatedParameters == allowByNameRepeatedParameters &&
       this.allowLazyValAbstractValues == allowLazyValAbstractValues &&
       this.allowUpperCasePatternVarBinding == allowUpperCasePatternVarBinding &&
@@ -836,7 +833,6 @@ final class Dialect private[meta] (
       allowInterpolationDolarQuoteEscape = that.allowInterpolationDolarQuoteEscape,
       allowSignificantIndentation = that.allowSignificantIndentation,
       allowQuestionMarkAsTypeWildcard = that.allowQuestionMarkAsTypeWildcard,
-      allowTypeParamUnderscore = that.allowTypeParamUnderscore,
       allowByNameRepeatedParameters = that.allowByNameRepeatedParameters,
       allowLazyValAbstractValues = that.allowLazyValAbstractValues,
       allowUpperCasePatternVarBinding = that.allowUpperCasePatternVarBinding,
