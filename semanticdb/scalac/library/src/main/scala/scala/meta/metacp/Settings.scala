@@ -34,7 +34,7 @@ final class Settings private (
   def withOut(out: AbsolutePath): Settings = copy(out = out)
 
   @deprecated("Use withOut instead", "4.0.0")
-  def withCacheDir(out: AbsolutePath): Settings = copy(out = out)
+  private[meta] def withCacheDir(out: AbsolutePath): Settings = copy(out = out)
 
   def withClasspath(classpath: Classpath): Settings = copy(classpath = classpath)
 

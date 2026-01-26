@@ -7,7 +7,7 @@ import fastparse._
  * Represents a scaladoc line.
  */
 @deprecated("Use scala.meta.internal.Scaladoc instead", "4.3.13")
-case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[String]) {
+private[meta] case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[String]) {
 
   override def toString: String = ((name, body) match {
     case (Some(n), _) => s"$kind(name=$n, body=${body.getOrElse("")})"
@@ -37,7 +37,7 @@ case class DocToken(kind: DocToken.Kind, name: Option[String], body: Option[Stri
  *   http://docs.scala-lang.org/overviews/scaladoc/for-library-authors.html
  */
 @deprecated("Use scala.meta.internal.Scaladoc instead", "4.3.13")
-object DocToken {
+private[meta] object DocToken {
 
   /**
    * Parser that for obtaining a class reference from an scaladoc body.
