@@ -64,6 +64,9 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    exclude[DirectMissingMethodProblem]("Dialect.<init>$default$14"),
+    exclude[DirectMissingMethodProblem]("Dialect.<init>$default$12"),
+    exclude[DirectMissingMethodProblem]("Dialect.<init>$default$10"),
     // Tree
     // XXX: this was a private class, not sure why mima complained
     exclude[MissingClassProblem]("inputs.Input$File$SerializationProxy"),
