@@ -59,7 +59,7 @@ trait InternalTree extends Product {
   // ==============================================================
 
   @deprecated("dialect is ignored, use parameterless `tokens` method", "4.9.0")
-  final def tokens(dialect: Dialect): Tokens = tokens
+  private[meta] final def tokens(dialect: Dialect): Tokens = tokens
 
   def tokens: Tokens = tokensOpt.getOrElse(
     throw new Error.MissingDialectException(

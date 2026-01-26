@@ -8,7 +8,7 @@ final case class Classpath(entries: List[AbsolutePath]) {
   def ++(other: Classpath): Classpath = Classpath(entries ++ other.entries)
 
   @deprecated("Use .entries instead", "4.0.0")
-  def shallow: List[AbsolutePath] = entries
+  private[meta] def shallow: List[AbsolutePath] = entries
 
   def syntax: String = entries.mkString(pathSeparator)
   def structure: String = s"""Classpath("$syntax")"""

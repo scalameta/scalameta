@@ -7,7 +7,7 @@ import fastparse.NoWhitespace._
 import fastparse._
 
 @deprecated("Use scala.meta.internal.parsers.ScaladocParser instead", "4.3.13")
-object ScaladocParser {
+private[meta] object ScaladocParser {
 
   private[this] val numberOfSupportedHeadingLevels = 6
 

@@ -14,7 +14,7 @@ final class Dialect private[meta] (
     private[meta] val unquoteType: UnquoteType,
     // Are `&` intersection types supported by this dialect?
     @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
-    val allowAndTypes: Boolean, // unused
+    private[meta] val allowAndTypes: Boolean, // unused
     // Are extractor varargs specified using ats, i.e. is `case Extractor(xs @ _*)` legal or not?
     val allowAtForExtractorVarargs: Boolean,
     // Can case classes be declared without a parameter list?
@@ -41,7 +41,7 @@ final class Dialect private[meta] (
     val allowLiteralTypes: Boolean,
     // Are `|` (union types) supported by this dialect?
     @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
-    val allowOrTypes: Boolean, // unused
+    private[meta] val allowOrTypes: Boolean, // unused
     // Are naked underscores allowed after $ in pattern interpolators, i.e. is `case q"$_ + $_" =>` legal or not?
     val allowSpliceUnderscores: Boolean,
     // Are terms on the top level supported by this dialect?
@@ -58,13 +58,13 @@ final class Dialect private[meta] (
     // def f[A <% Int](a: A)
     // Removed in Dotty.
     @deprecated("allowViewBounds unneeded, it was only used for an error", ">4.10.2")
-    val allowViewBounds: Boolean,
+    private[meta] val allowViewBounds: Boolean,
     // Are XML literals supported by this dialect?
     // We plan to deprecate XML literal syntax, and some dialects
     // might go ahead and drop support completely.
     val allowXmlLiterals: Boolean,
     @deprecated("toplevelSeparator has never been used", ">4.4.35")
-    val toplevelSeparator: String, // unused
+    private[meta] val toplevelSeparator: String, // unused
     // Are numeric literal underscore separators, i.e. `1_000_000` legal or not?
     val allowNumericLiteralUnderscoreSeparators: Boolean,
     // Can try body contain any expression? (2.13.1 https://github.com/scala/scala/pull/8071)
@@ -96,7 +96,7 @@ final class Dialect private[meta] (
     val allowQuestionMarkAsTypeWildcard: Boolean,
     // Dotty rejects placeholder as Type parameter
     @deprecated("allowTypeParamUnderscore not used", "4.14.1")
-    val allowTypeParamUnderscore: Boolean,
+    private[meta] val allowTypeParamUnderscore: Boolean, // TODO: deprecate, not used
     // Dotty allows by-name repeated parameters
     val allowByNameRepeatedParameters: Boolean,
     // Dotty allows lazy val abstract values
@@ -189,6 +189,7 @@ final class Dialect private[meta] (
   // - add new `withX()` method to allow overriding that specific field.
   // - add new `x = FIELD_DEFAULT_VALUE` in the `def this()` constructor below.
 
+  @deprecated("Use Dialect.empty (or any of the predefined dialects) and `.withXxx` methods")
   def this(
       allowAndTypes: Boolean, // unused
       allowAtForExtractorVarargs: Boolean,
@@ -293,7 +294,7 @@ final class Dialect private[meta] (
   def allowMultilinePrograms: Boolean = unquoteType.isMultiline
 
   @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
-  def withAllowAndTypes(newValue: Boolean): Dialect = this
+  private[meta] def withAllowAndTypes(newValue: Boolean): Dialect = this
   def withAllowAtForExtractorVarargs(newValue: Boolean): Dialect =
     privateCopy(allowAtForExtractorVarargs = newValue)
   def withAllowCaseClassWithoutParameterList(newValue: Boolean): Dialect =
@@ -311,7 +312,7 @@ final class Dialect private[meta] (
   def withAllowLiteralTypes(newValue: Boolean): Dialect = privateCopy(allowLiteralTypes = newValue)
   def withAllowMultilinePrograms(newValue: Boolean): Dialect = ???
   @deprecated("allowOrTypes unneeded, infix types are supported", "4.5.1")
-  def withAllowOrTypes(newValue: Boolean): Dialect = this
+  private[meta] def withAllowOrTypes(newValue: Boolean): Dialect = this
   def withAllowPatUnquotes(newValue: Boolean): Dialect = ???
   def withAllowSpliceUnderscores(newValue: Boolean): Dialect =
     privateCopy(allowSpliceUnderscores = newValue)
@@ -323,10 +324,10 @@ final class Dialect private[meta] (
     privateCopy(allowTraitParameters = newValue)
   def withAllowTypeLambdas(newValue: Boolean): Dialect = privateCopy(allowTypeLambdas = newValue)
   @deprecated("allowViewBounds unneeded, it was only used for an error", ">4.10.2")
-  def withAllowViewBounds(newValue: Boolean): Dialect = this
+  private[meta] def withAllowViewBounds(newValue: Boolean): Dialect = this
   def withAllowXmlLiterals(newValue: Boolean): Dialect = privateCopy(allowXmlLiterals = newValue)
   @deprecated("toplevelSeparator has never been used", ">4.4.35")
-  def withToplevelSeparator(newValue: String): Dialect = this
+  private[meta] def withToplevelSeparator(newValue: String): Dialect = this
   def withAllowNumericLiteralUnderscoreSeparators(newValue: Boolean): Dialect =
     privateCopy(allowNumericLiteralUnderscoreSeparators = newValue)
   def withAllowTryWithAnyExpr(newValue: Boolean): Dialect =
@@ -351,9 +352,9 @@ final class Dialect private[meta] (
   def withAllowQuestionMarkAsTypeWildcard(newValue: Boolean): Dialect =
     privateCopy(allowQuestionMarkAsTypeWildcard = newValue)
   @deprecated("use allowQuestionMarkAsTypeWildcard", ">4.5.13")
-  def allowQuestionMarkPlaceholder: Boolean = allowQuestionMarkAsTypeWildcard
+  private[meta] def allowQuestionMarkPlaceholder: Boolean = allowQuestionMarkAsTypeWildcard
   @deprecated("use withAllowQuestionMarkAsTypeWildcard", ">4.5.13")
-  def withAllowQuestionMarkPlaceholder(newValue: Boolean): Dialect =
+  private[meta] def withAllowQuestionMarkPlaceholder(newValue: Boolean): Dialect =
     withAllowQuestionMarkAsTypeWildcard(newValue)
 
   @deprecated("allowTypeParamUnderscore not used", "4.14.1")
@@ -400,10 +401,11 @@ final class Dialect private[meta] (
   def withAllowStarAsTypePlaceholder(newValue: Boolean): Dialect =
     privateCopy(allowStarAsTypePlaceholder = newValue)
   @deprecated("use withAllowUnderscoreAsTypePlaceholder", ">4.5.13")
-  def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect =
+  private[meta] def withAllowPlusMinusUnderscoreAsPlaceholder(newValue: Boolean): Dialect =
     withAllowUnderscoreAsTypePlaceholder(newValue)
   @deprecated("use allowUnderscoreAsTypePlaceholder", ">4.5.13")
-  def allowPlusMinusUnderscoreAsPlaceholder: Boolean = allowUnderscoreAsTypePlaceholder
+  private[meta] def allowPlusMinusUnderscoreAsPlaceholder: Boolean =
+    allowUnderscoreAsTypePlaceholder
 
   def withAllowGivenImports(newValue: Boolean): Dialect = privateCopy(allowGivenImports = newValue)
 
@@ -681,7 +683,7 @@ final class Dialect private[meta] (
       this.allowImprovedTypeClassesSyntax == that.allowImprovedTypeClassesSyntax
 
   @deprecated("Use withX method instead", "4.3.11")
-  def copy(
+  private[meta] def copy(
       allowAndTypes: Boolean = true, // unused
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
@@ -736,6 +738,32 @@ final class Dialect private[meta] (
 }
 
 object Dialect extends InternalDialect {
+  val empty: Dialect = new Dialect(
+    allowAndTypes = false,
+    allowAtForExtractorVarargs = false,
+    allowCaseClassWithoutParameterList = false,
+    allowColonForExtractorVarargs = false,
+    allowEnums = false,
+    allowImplicitByNameParameters = false,
+    allowInlineIdents = false,
+    allowInlineMods = false,
+    allowLiteralTypes = false,
+    allowMultilinePrograms = false,
+    allowOrTypes = false,
+    allowPatUnquotes = false,
+    allowSpliceUnderscores = false,
+    allowTermUnquotes = false,
+    allowToplevelTerms = false,
+    allowTrailingCommas = false,
+    allowTraitParameters = false,
+    allowTypeLambdas = false,
+    allowViewBounds = false,
+    allowXmlLiterals = false,
+    toplevelSeparator = ""
+  ).withAllowEmptyInfixArgs(false).withAllowSymbolLiterals(false).withAllowProcedureSyntax(false)
+    .withAllowDoWhile(false)
+
+  @deprecated("Use Dialect.empty (or any of the predefined dialects) and `.withXxx` methods")
   def apply(
       @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
       allowAndTypes: Boolean, // unused

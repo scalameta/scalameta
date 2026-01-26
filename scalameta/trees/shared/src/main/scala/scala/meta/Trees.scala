@@ -355,7 +355,7 @@ object Term {
     final def args: List[Term] = argClause.values
   }
   @deprecated("Use Term.Apply, pass Mod.Using to Term.ArgClause", "4.6.0") @ast
-  class ApplyUsing(fun: Term, argClause: ArgClause) extends Term with Member.Apply {
+  private[meta] class ApplyUsing(fun: Term, argClause: ArgClause) extends Term with Member.Apply {
     @replacedField("4.6.0")
     final def args: List[Term] = argClause.values
   }
@@ -627,7 +627,7 @@ object Type {
   trait FunctionType extends ParamFunctionType {
     def paramClause: FuncParamClause
     @deprecated("Please use paramClause instead", "4.6.0")
-    def params: List[Type]
+    private[meta] def params: List[Type]
     def res: Type
   }
 
@@ -661,7 +661,7 @@ object Type {
   }
 
   @ast @deprecated("Implicit functions are not supported in any dialect")
-  class ImplicitFunction(params: List[Type], res: Type) extends Type
+  private[meta] class ImplicitFunction(params: List[Type], res: Type) extends Type
   @ast
   class Tuple(args: List[Type] @nonEmpty) extends Type with Member.Tuple {
     // tuple may have one element (see scala.Tuple1)
@@ -671,9 +671,9 @@ object Type {
   @ast
   class With(lhs: Type, rhs: Type) extends Type
   @deprecated("And unused, replaced by ApplyInfix", "4.5.1") @ast
-  class And(lhs: Type, rhs: Type) extends Type
+  private[meta] class And(lhs: Type, rhs: Type) extends Type
   @deprecated("Or unused, replaced by ApplyInfix", "4.5.1") @ast
-  class Or(lhs: Type, rhs: Type) extends Type
+  private[meta] class Or(lhs: Type, rhs: Type) extends Type
   @ast
   class Refine(tpe: Option[Type], body: Stat.Block) extends Type with Tree.WithStatsBlock {
     checkField(body, body.stats.forall(_.isRefineStat))
@@ -702,24 +702,32 @@ object Type {
   @ast
   class Macro(body: Term) extends Type with Tree.WithBody
   @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3") @ast
-  class Method(paramClauses: Seq[Term.ParamClause], tpe: Type) extends Type {
+  private[meta] class Method(paramClauses: Seq[Term.ParamClause], tpe: Type) extends Type {
     checkParent(ParentChecks.TypeMethod)
     @replacedField("4.6.0")
     final def paramss: List[List[Term.Param]] = paramClauses.map(_.values).toList
   }
   @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13") @branch
   trait Placeholder extends Type {
-    def bounds: Bounds
-    def copy(bounds: Bounds = this.bounds): Placeholder
+    private[meta] def bounds: Bounds
+    private[meta] def copy(bounds: Bounds = this.bounds): Placeholder
   }
   @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
-  object Placeholder {
-    @ast
-    private[meta] class Impl(bounds: Bounds) extends Placeholder
+  private[meta] object Placeholder {
+    private[meta] object Impl {
+      private[meta] object Initial
+      private[meta] object Quasi {
+        private[meta] object Initial
+        private[meta] object TypePlaceholderImplQuasiImpl
+        private[meta] object sharedClassifier
+      }
+      private[meta] object TypePlaceholderImplImpl
+      private[meta] object sharedClassifier
+    }
     @inline
-    def apply(bounds: Bounds): Placeholder = Impl(bounds)
+    private[meta] def apply(bounds: Bounds): Placeholder = ???
     @inline
-    final def unapply(tree: Placeholder): Option[Bounds] = Some(tree.bounds)
+    private[meta] final def unapply(tree: Placeholder): Option[Bounds] = ???
   }
   @ast
   class PatWildcard extends Type
@@ -728,8 +736,9 @@ object Type {
   @ast
   class AnonymousParam(variant: Option[Mod.Variant]) extends Placeholder {
     @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
-    override final def bounds: Bounds = Bounds.empty
-    override def copy(bounds: Bounds): Placeholder = Placeholder(bounds)
+    override private[meta] final def bounds: Bounds = ???
+    @deprecated("Placeholder replaced with AnonymousParam and Wildcard", ">4.5.13")
+    override private[meta] def copy(bounds: Bounds): Placeholder = ???
   }
   @ast
   class Bounds(
@@ -1460,7 +1469,7 @@ object Mod {
   @ast
   class Annot(init: Init) extends Mod {
     @deprecated("Use init instead", "1.9.0")
-    def body = init
+    private[meta] def body = init
   }
   @branch
   trait WithWithin extends Mod {
@@ -1483,7 +1492,7 @@ object Mod {
   @ast
   class Open() extends Mod
   @deprecated("Super traits introduced in dotty, but later removed.") @ast
-  class Super() extends Mod
+  private[meta] class Super() extends Mod
   @ast
   class Override() extends Mod
   @ast

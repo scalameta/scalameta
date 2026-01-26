@@ -557,7 +557,6 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Type.ParamFunctionType
          |scala.meta.Type.PatWildcard
          |scala.meta.Type.Placeholder
-         |scala.meta.Type.Placeholder.Impl
          |scala.meta.Type.PolyFunction
          |scala.meta.Type.Project
          |scala.meta.Type.PureByName
