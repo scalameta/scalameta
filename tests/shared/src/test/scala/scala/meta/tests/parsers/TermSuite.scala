@@ -1399,18 +1399,18 @@ class TermSuite extends ParseSuite {
 
   test("infix assoc and precedence: mix 1") {
     val code = "foo :: (bar == baz) :: qux == xuq *: (zab +: rab) * oof"
-    val layout = "(foo :: (bar == baz) :: qux) == (xuq *: zab +: rab) * oof"
+    val layout = "(foo :: (bar == baz) :: qux) == (xuq *: (zab +: rab)) * oof"
     val tree = tinfix(
       tinfix("foo", "::", tinfix(tinfix("bar", "==", "baz"), "::", "qux")),
       "==",
       tinfix(tinfix("xuq", "*:", tinfix("zab", "+:", "rab")), "*", "oof")
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("infix assoc and precedence: mix 2") {
     val code = "foo :: (bar == baz) :: (qux == xuq) *: (zab +: rab) * oof"
-    val layout = "foo :: (bar == baz) :: (((qux == xuq) *: zab +: rab) * oof)"
+    val layout = "foo :: (bar == baz) :: (((qux == xuq) *: (zab +: rab)) * oof)"
     val tree = tinfix(
       "foo",
       "::",
@@ -1420,12 +1420,12 @@ class TermSuite extends ParseSuite {
         tinfix(tinfix(tinfix("qux", "==", "xuq"), "*:", tinfix("zab", "+:", "rab")), "*", "oof")
       )
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("infix assoc and precedence: mix 3") {
     val code = "(foo :: bar) == (baz :: qux) == (xuq *: zab) +: (rab * oof)"
-    val layout = "(foo :: bar) == (baz :: qux) == ((xuq *: zab) +: (rab * oof))"
+    val layout = "(foo :: bar) == (baz :: qux) == (xuq *: zab +: (rab * oof))"
     val tree = tinfix(
       tinfix(tinfix("foo", "::", "bar"), "==", tinfix("baz", "::", "qux")),
       "==",

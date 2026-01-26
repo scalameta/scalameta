@@ -8,6 +8,7 @@ import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Location._
+import scala.meta.internal.prettyprinters.{TreeSyntacticGroup => TSG}
 import scala.meta.internal.trees._
 import scala.meta.parsers._
 import scala.meta.prettyprinters._
@@ -2058,7 +2059,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     protected trait Unfinished {
       def lhs: Typ
       def op: Op
-      final def precedence = op.precedence
       override def toString = s"[$lhs $op]"
     }
 
@@ -2088,7 +2088,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       if (isDone(base)) curr
       else {
         val opPrecedence = op.precedence
-        val leftAssoc = op.isLeftAssoc
+        val ifSamePrecedence = !op.isLeftAssoc // see comment below
 
         // Pop off an unfinished infix expression off the stack and finish it with the rhs.
         // Then convert the result, so that it can become someone else's rhs.
@@ -2096,9 +2096,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         @tailrec
         def loop(rhs: Typ): Typ = {
           val lhs = stack.head
-          val diffPrecedence = opPrecedence - lhs.precedence
-          val canReduce = diffPrecedence < 0 || diffPrecedence == 0 && leftAssoc
-          if (!canReduce) rhs
+          /* if op were to become the outer infix, would lhs.op need parens?
+           * if yes, op binds tighter than lhs.op, so we can't continue reducing.
+           * if op and lhs.op were of same precedence, then associativity is the
+           * tie-breaker, and right-associative needs to keep going right. Keep
+           * in mind that scala forbids mixed-associativity at the same level of
+           * precedence, so we have to assume that in that case op and lhs.op are
+           * of the same associativity.
+           */
+          if (TSG.opNeedsParens(opPrecedence, lhs.op.precedence, ifSamePrecedence)) rhs
           else {
             stack = stack.tail
             val fin = finishInfixExpr(lhs, rhs, currEnd)

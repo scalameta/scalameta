@@ -137,26 +137,25 @@ object TreeSyntacticGroup {
   @leaf
   object Path extends AllSimpleGroup
 
-  def opNeedsParensSameAssoc(
+  def opNeedsParens(
       outerPrecedence: Int,
       innerPrecedence: Int,
-      isLeftAssoc: => Boolean,
-      isLhs: => Boolean
+      ifSamePrecedence: => Boolean
   ): Boolean = {
     val diffPrecedence = outerPrecedence - innerPrecedence
-    if (diffPrecedence < 0) !isLeftAssoc
-    else if (diffPrecedence > 0) isLeftAssoc
-    else isLeftAssoc != isLhs
+    diffPrecedence > 0 || diffPrecedence == 0 && ifSamePrecedence
   }
 
   def opNeedsParens(outerOp: Name, innerOp: Name, isLhs: => Boolean)(implicit
       dialect: Dialect
   ): Boolean = {
     val outerIsLeftAssoc = outerOp.isLeftAssoc
-    if (outerIsLeftAssoc != innerOp.isLeftAssoc) true
+    @inline
+    def ifSamePrecedence = outerIsLeftAssoc != isLhs
+    if (outerIsLeftAssoc != innerOp.isLeftAssoc) true // not really true but visually clearer
     else if (!outerOp.is[Type] || dialect.useInfixTypePrecedence)
-      opNeedsParensSameAssoc(outerOp.precedence, innerOp.precedence, outerIsLeftAssoc, isLhs)
-    else outerIsLeftAssoc != isLhs
+      opNeedsParens(outerOp.precedence, innerOp.precedence, ifSamePrecedence)
+    else ifSamePrecedence
   }
 
   def opNeedsParens(outer: Member.Infix, inner: Member.Infix)(implicit dialect: Dialect): Boolean =
