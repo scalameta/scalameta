@@ -1285,4 +1285,153 @@ class TermSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("infix assoc and precedence: sides/right same precedence as middle/left, no parens") {
+    val code = "foo *: bar * baz *: qux"
+    val layout = "(foo *: bar) * (baz *: qux)"
+    val tree = tinfix(tinfix("foo", "*:", "bar"), "*", tinfix("baz", "*:", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right same precedence as middle/left, parens sides") {
+    val code = "(foo *: bar) * (baz *: qux)"
+    val layout = "(foo *: bar) * (baz *: qux)"
+    val tree = tinfix(tinfix("foo", "*:", "bar"), "*", tinfix("baz", "*:", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right same precedence as middle/left, parens middle") {
+    val code = "foo *: (bar * baz) *: qux"
+    val layout = "foo *: (bar * baz) *: qux"
+    val tree = tinfix("foo", "*:", tinfix(tinfix("bar", "*", "baz"), "*:", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/left same precedence as middle/right, no parens") {
+    val code = "foo * bar *: baz * qux"
+    val layout = "foo * (bar *: baz) * qux"
+    val tree = tinfix(tinfix("foo", "*", tinfix("bar", "*:", "baz")), "*", "qux")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/left same precedence as middle/right, parens sides") {
+    val code = "(foo * bar) *: (baz * qux)"
+    val layout = "(foo * bar) *: (baz * qux)"
+    val tree = tinfix(tinfix("foo", "*", "bar"), "*:", tinfix("baz", "*", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/left same precedence as middle/right, parens middle") {
+    val code = "foo * (bar *: baz) * qux"
+    val layout = "foo * (bar *: baz) * qux"
+    val tree = tinfix(tinfix("foo", "*", tinfix("bar", "*:", "baz")), "*", "qux")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/left same precedence as middle/left, no parens") {
+    val code = "foo * bar * baz * qux"
+    val layout = "foo * bar * baz * qux"
+    val tree = tinfix(tinfix(tinfix("foo", "*", "bar"), "*", "baz"), "*", "qux")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/left same precedence as middle/left, parens sides") {
+    val code = "(foo * bar) * (baz * qux)"
+    val layout = "foo * bar * (baz * qux)"
+    val tree = tinfix(tinfix("foo", "*", "bar"), "*", tinfix("baz", "*", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/left same precedence as middle/left, parens middle") {
+    val code = "foo * (bar * baz) * qux"
+    val layout = "foo * (bar * baz) * qux"
+    val tree = tinfix(tinfix("foo", "*", tinfix("bar", "*", "baz")), "*", "qux")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right same precedence as middle/right, no parens") {
+    val code = "foo *: bar *: baz *: qux"
+    val layout = "foo *: bar *: baz *: qux"
+    val tree = tinfix("foo", "*:", tinfix("bar", "*:", tinfix("baz", "*:", "qux")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right same precedence as middle/right, parens sides") {
+    val code = "(foo *: bar) *: (baz *: qux)"
+    val layout = "(foo *: bar) *: baz *: qux"
+    val tree = tinfix(tinfix("foo", "*:", "bar"), "*:", tinfix("baz", "*:", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right same precedence as middle/right, parens middle") {
+    val code = "foo *: (bar *: baz) *: qux"
+    val layout = "foo *: (bar *: baz) *: qux"
+    val tree = tinfix("foo", "*:", tinfix(tinfix("bar", "*:", "baz"), "*:", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right higher precedence than middle/left, no parens") {
+    val code = "foo :: bar == baz :: qux"
+    val layout = "(foo :: bar) == (baz :: qux)"
+    val tree = tinfix(tinfix("foo", "::", "bar"), "==", tinfix("baz", "::", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right higher precedence than middle/left, parens") {
+    val code = "(foo :: bar) == (baz :: qux)"
+    val layout = "(foo :: bar) == (baz :: qux)"
+    val tree = tinfix(tinfix("foo", "::", "bar"), "==", tinfix("baz", "::", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right lower precedence than middle/left, no parens") {
+    val code = "foo |: bar == baz |: qux"
+    val layout = "foo |: (bar == baz) |: qux"
+    val tree = tinfix("foo", "|:", tinfix(tinfix("bar", "==", "baz"), "|:", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: sides/right lower precedence than middle/left: parens") {
+    val code = "(foo |: bar) == (baz |: qux)"
+    val layout = "(foo |: bar) == (baz |: qux)"
+    val tree = tinfix(tinfix("foo", "|:", "bar"), "==", tinfix("baz", "|:", "qux"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: mix 1") {
+    val code = "foo :: (bar == baz) :: qux == xuq *: (zab +: rab) * oof"
+    val layout = "(foo :: (bar == baz) :: qux) == (xuq *: zab +: rab) * oof"
+    val tree = tinfix(
+      tinfix("foo", "::", tinfix(tinfix("bar", "==", "baz"), "::", "qux")),
+      "==",
+      tinfix(tinfix("xuq", "*:", tinfix("zab", "+:", "rab")), "*", "oof")
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: mix 2") {
+    val code = "foo :: (bar == baz) :: (qux == xuq) *: (zab +: rab) * oof"
+    val layout = "foo :: (bar == baz) :: (((qux == xuq) *: zab +: rab) * oof)"
+    val tree = tinfix(
+      "foo",
+      "::",
+      tinfix(
+        tinfix("bar", "==", "baz"),
+        "::",
+        tinfix(tinfix(tinfix("qux", "==", "xuq"), "*:", tinfix("zab", "+:", "rab")), "*", "oof")
+      )
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+  }
+
+  test("infix assoc and precedence: mix 3") {
+    val code = "(foo :: bar) == (baz :: qux) == (xuq *: zab) +: (rab * oof)"
+    val layout = "(foo :: bar) == (baz :: qux) == ((xuq *: zab) +: (rab * oof))"
+    val tree = tinfix(
+      tinfix(tinfix("foo", "::", "bar"), "==", tinfix("baz", "::", "qux")),
+      "==",
+      tinfix(tinfix("xuq", "*:", "zab"), "+:", tinfix("rab", "*", "oof"))
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
