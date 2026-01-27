@@ -318,10 +318,9 @@ object TreeSyntax {
         val sg = InfixExpr(t)
         val args = t.argClause.values match {
           case (arg: Term) :: Nil if (arg match {
-                case _: Term.AnonymousFunction | _: Lit.Unit => false
-                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.If | _: Term.Match |
-                    _: Term.ApplyInfix | _: Term.QuotedMacroExpr | _: Term.SplicedMacroExpr |
-                    _: Term.SplicedMacroPat | _: Term.Apply | _: Term.Placeholder => true
+                case _: Lit.Unit => false
+                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.Apply | _: Term.Placeholder |
+                    _: Term.MatchLike | _: Term.ApplyInfix | _: Term.MacroLike | _: Term.If => true
                 case _ => false
               }) => p(sg, arg)
           case _ => printApplyArgs(t.argClause, "")
@@ -404,18 +403,10 @@ object TreeSyntax {
         val paramsSyntax = printParams(t.paramClause, needParens = false)
         m(Expr, s(paramsSyntax, " ", kw(arrow), " ", p(Expr, t.body)))
       case t: Term.PolyFunction => m(Expr, t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body))
-      case Term.QuotedMacroExpr(Term.Block(stats)) => stats match {
-          case head :: Nil => s("'{ ", head, " }")
-          case other => s("'{", other, n("}"))
-        }
-      case t: Term.QuotedMacroExpr => m(SimpleExpr, s("'", p(Expr, t.body)))
       case t: Term.QuotedMacroType => s("'[ ", t.tpe, " ]")
-      case Term.SplicedMacroExpr(Term.Block(stats)) => stats match {
-          case head :: Nil => s("${ ", head, " }")
-          case other => s("${", other, n("}"))
-        }
-      case Term.SplicedMacroPat(pat) => s("${ ", pat, " }")
-      case t: Term.SplicedMacroExpr => m(SimpleExpr, s("$", p(Expr, t.body)))
+      case t: Term.QuotedMacroExpr => printMacroExprBody(t.body, "'")
+      case t: Term.SplicedMacroExpr => printMacroExprBody(t.body, "$")
+      case t: Term.SplicedMacroPat => s("${ ", t.pat, " }")
       case t: Pat.Macro => m(SimplePattern, s(t.body))
       case t: Type.Macro => m(SimpleTyp, s(t.body))
       case t: Term.PartialFunction => m(SimpleExpr, s("{", t.cases, n("}")))
@@ -965,6 +956,14 @@ object TreeSyntax {
     private def printSelect(t: Term.SelectLike, sep: String, bqExpr: Boolean = false) = {
       val expr = printSelectLhs(t.qual, backquote = bqExpr)
       m(Path, s(expr, sep, t.name))
+    }
+
+    private def printMacroExprBody(t: Term, prefix: String) = {
+      val body = t match {
+        case Term.Block(stat :: Nil) => s("{ ", stat, " }")
+        case body => p(Expr, body)
+      }
+      m(SimpleExpr, s(prefix, body))
     }
 
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
