@@ -412,14 +412,32 @@ object Term {
       @newField("4.4.0")
       mods: List[Mod] = Nil
   ) extends Term with Tree.WithCond with Stat.WithMods
+
+  @branch
+  trait MacroLike extends Term {
+    def body: Tree
+  }
+  @branch
+  trait QuotedMacroLike extends MacroLike {
+    def body: Tree
+  }
+  @branch
+  trait SplicedMacroLike extends MacroLike {
+    def body: Tree
+  }
+
   @ast
-  class QuotedMacroExpr(body: Term) extends Term
+  class QuotedMacroExpr(body: Term) extends QuotedMacroLike
   @ast
-  class QuotedMacroType(tpe: Type) extends Term
+  class QuotedMacroType(tpe: Type) extends QuotedMacroLike {
+    final def body = tpe
+  }
   @ast
-  class SplicedMacroExpr(body: Term) extends Term
+  class SplicedMacroExpr(body: Term) extends SplicedMacroLike
   @ast
-  class SplicedMacroPat(pat: Pat) extends Term
+  class SplicedMacroPat(pat: Pat) extends SplicedMacroLike {
+    final def body = pat
+  }
 
   @branch
   trait MatchLike extends Term with Tree.WithCasesBlock {

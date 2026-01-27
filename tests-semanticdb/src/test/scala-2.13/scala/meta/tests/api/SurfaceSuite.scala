@@ -464,6 +464,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Term.FunctionTerm
          |scala.meta.Term.If
          |scala.meta.Term.Interpolate
+         |scala.meta.Term.MacroLike
          |scala.meta.Term.Match
          |scala.meta.Term.MatchLike
          |scala.meta.Term.Name
@@ -475,6 +476,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Term.Placeholder
          |scala.meta.Term.PolyFunction
          |scala.meta.Term.QuotedMacroExpr
+         |scala.meta.Term.QuotedMacroLike
          |scala.meta.Term.QuotedMacroType
          |scala.meta.Term.Ref
          |scala.meta.Term.Repeated
@@ -484,6 +486,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Term.SelectMatch
          |scala.meta.Term.SelectPostfix
          |scala.meta.Term.SplicedMacroExpr
+         |scala.meta.Term.SplicedMacroLike
          |scala.meta.Term.SplicedMacroPat
          |scala.meta.Term.Super
          |scala.meta.Term.This
