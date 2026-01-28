@@ -2,9 +2,11 @@ package scala.meta.tests.parsers.dotty
 
 import scala.meta._
 
+import scala.language.implicitConversions
+
 class MacroSuite extends BaseDottySuite {
 
-  implicit val parseBlock: String => Stat = code => blockStat(code)(dialects.Scala3)
+  implicit def parseBlock(code: String)(implicit dialect: Dialect): Stat = blockStat(code)
 
   /**
    * All examples based on dotty documentation:
@@ -368,6 +370,40 @@ class MacroSuite extends BaseDottySuite {
       lit(0)
     )
     runTestAssert[Stat](code)(tree)
+  }
+
+  test("'foo with modified dialects") {
+    val code = "'foo"
+    val treeWithSymbol = lit(Symbol("foo"))
+    val treeWithQuote = Term.QuotedMacroExpr(tname("foo"))
+
+    locally {
+      implicit val dialect: Dialect = dialects.Scala3.withAllowSpliceAndQuote(false)
+        .withAllowSymbolLiterals(false)
+      val error =
+        """|<input>:1: error: Symbol literals are no longer allowed
+           |'foo
+           |^""".stripMargin
+      runTestError[Stat](code, error)
+    }
+    locally {
+      implicit val dialect: Dialect = dialects.Scala3.withAllowSpliceAndQuote(false)
+        .withAllowSymbolLiterals(true)
+      runTestAssert[Stat](code)(treeWithSymbol)
+    }
+    locally {
+      implicit val dialect: Dialect = dialects.Scala3.withAllowSymbolLiterals(false)
+        .withAllowSpliceAndQuote(true)
+      runTestAssert[Stat](code)(treeWithQuote)
+    }
+    locally {
+      implicit val dialect: Dialect = dialects.Scala3.withAllowSymbolLiterals(true)
+        .withAllowSpliceAndQuote(true)
+      runTestAssert[Stat](code)(treeWithQuote)
+    }
+
+    // default scala3
+    runTestAssert[Stat](code)(treeWithQuote)
   }
 
 }
