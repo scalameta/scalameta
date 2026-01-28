@@ -1,5 +1,6 @@
 package scala.meta.tests.parsers.dotty
 
+import org.scalameta.invariants
 import scala.meta._
 
 import scala.language.implicitConversions
@@ -396,11 +397,9 @@ class MacroSuite extends BaseDottySuite {
         .withAllowSpliceAndQuote(true)
       runTestAssert[Stat](code)(treeWithQuote)
     }
-    locally {
-      implicit val dialect: Dialect = dialects.Scala3.withAllowSymbolLiterals(true)
-        .withAllowSpliceAndQuote(true)
-      runTestAssert[Stat](code)(treeWithSymbol)
-    }
+    locally(intercept[invariants.InvariantFailedException](
+      dialects.Scala3.withAllowSymbolLiterals(true).withAllowSpliceAndQuote(true)
+    ))
 
     // default scala3
     runTestAssert[Stat](code)(treeWithQuote)

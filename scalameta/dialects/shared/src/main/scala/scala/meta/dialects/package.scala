@@ -76,6 +76,9 @@ package object dialects {
   implicit val ParadiseTypelevel212: Dialect = Typelevel212.withAllowInlineMods(true)
 
   implicit val Scala30: Dialect = Scala213
+    // first disable deprecated flags
+    .withAllowSymbolLiterals(false).withAllowProcedureSyntax(false).withAllowBinaryLiterals(false)
+    .withAllowDoWhile(false)
     // there 3 different ways to specify vargs, some will be removed in future Scala 3 versions
     .withAllowAtForExtractorVarargs(true) // both @ and : work currently for Scala 3
     .withAllowColonForExtractorVarargs(true) // both @ and : work currently for Scala 3
@@ -91,9 +94,8 @@ package object dialects {
     .withAllowPolymorphicFunctions(true).withAllowMatchAsOperator(true).withAllowTypeMatch(true)
     .withAllowInfixMods(true).withAllowDependentFunctionTypes(true).withAllowAllTypedPatterns(true)
     .withAllowAsForImportRename(true).withAllowStarWildcardImport(true)
-    .withAllowProcedureSyntax(false).withAllowDoWhile(false).withAllowStarAsTypePlaceholder(true)
-    .withUseInfixTypePrecedence(true).withAllowInfixOperatorAfterNL(true)
-    .withAllowBinaryLiterals(false).withAllowQuietSyntax(true).withAllowSymbolLiterals(false)
+    .withUseInfixTypePrecedence(true).withAllowInfixOperatorAfterNL(true).withAllowQuietSyntax(true)
+    .withAllowStarAsTypePlaceholder(true)
 
   implicit val Scala31: Dialect = Scala30.withAllowErasedDefs(true)
 

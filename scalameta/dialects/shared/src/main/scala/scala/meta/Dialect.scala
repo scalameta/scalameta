@@ -1,5 +1,6 @@
 package scala.meta
 
+import org.scalameta.invariants
 import scala.meta.Dialect.UnquoteType
 import scala.meta.dialects._
 import scala.meta.internal.dialects._
@@ -373,12 +374,16 @@ final class Dialect private[meta] (
     privateCopy(allowPolymorphicFunctions = newValue)
   def withAllowTypeMatch(newValue: Boolean): Dialect = privateCopy(allowTypeMatch = newValue)
   def withAllowInfixMods(newValue: Boolean): Dialect = privateCopy(allowInfixMods = newValue)
-  def withAllowSpliceAndQuote(newValue: Boolean): Dialect =
+  def withAllowSpliceAndQuote(newValue: Boolean): Dialect = {
+    if (newValue) invariants.require(!this.allowSymbolLiterals)
     privateCopy(allowSpliceAndQuote = newValue)
+  }
   def withAllowQuotedTypeVariables(newValue: Boolean): Dialect =
     privateCopy(allowQuotedTypeVariables = newValue)
-  def withAllowSymbolLiterals(newValue: Boolean): Dialect =
+  def withAllowSymbolLiterals(newValue: Boolean): Dialect = {
+    if (newValue) invariants.require(!this.allowSpliceAndQuote)
     privateCopy(allowSymbolLiterals = newValue)
+  }
   def withAllowDependentFunctionTypes(newValue: Boolean): Dialect =
     privateCopy(allowDependentFunctionTypes = newValue)
   def withAllowPostfixStarVarargSplices(newValue: Boolean): Dialect =
