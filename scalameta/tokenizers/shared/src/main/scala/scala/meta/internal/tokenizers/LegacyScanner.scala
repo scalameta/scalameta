@@ -394,10 +394,17 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
         fetchDoubleQuote()
       case '\'' =>
-        def fetchCharLit(): Unit = {
-          getLitChar()
-          charLitOr(setInvalidToken(curr)("unclosed character literal"))
-        }
+        def unclosed(): Unit = setInvalidToken(curr)("unclosed character literal")
+        def unsupported(): Unit = setInvalidToken(curr)(
+          if (dialect.allowSpliceAndQuote) "Macro quote must be followed by brace or bracket"
+          else "Symbol literals are no longer allowed"
+        )
+        def symLitOr(getRest: => Unit)(orElse: => Unit): Unit =
+          if (dialect.allowSymbolLiterals) {
+            putCharAndNext()
+            getRest
+            token = SYMBOLLIT
+          } else orElse
         def fetchSingleQuote() = {
           nextRawChar()
           if (isUnquoteDollar()) {
@@ -406,12 +413,18 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
           if (ch == LF && !wasMultiChar)
             setInvalidToken(curr)("can't use unescaped LF in character literals")
-          else if (dialect.allowSpliceAndQuote)
-            if (isEscapeChar || peekRawChar().ch == '\'') fetchCharLit()
-            else setTokStrVal(MACROQUOTE)
-          else if (isIdentifierStart(ch)) nextCharLitOrSym(getIdentRest)
-          else if (isOperatorPart(ch) && !isEscapeChar) nextCharLitOrSym(getOperatorRest)
-          else fetchCharLit()
+          else if (isEscapeChar || peekRawChar().ch == '\'') {
+            getLitChar()
+            if (ch == '\'') {
+              nextChar()
+              setTokStrVal(CHARLIT)
+            } else unclosed()
+          } else if (isIdentifierStart(ch)) symLitOr(getIdentRest())(
+            if (dialect.allowSpliceAndQuote) setTokStrVal(MACROQUOTE) else unsupported()
+          )
+          else if (isOperatorPart(ch)) symLitOr(getOperatorRest())(unsupported())
+          else if (dialect.allowSpliceAndQuote) setTokStrVal(MACROQUOTE)
+          else unclosed()
         }
         fetchSingleQuote()
       case '.' =>
@@ -841,24 +854,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         } else setNumberInt()
       } else setNumberInteger()
   }
-
-  /**
-   * Parse character literal if current character is followed by \', or follow with given op and
-   * return a symbol literal token
-   */
-  private def nextCharLitOrSym(op: () => Unit): Unit = {
-    putCharAndNext()
-    charLitOr {
-      op()
-      token = SYMBOLLIT
-    }
-  }
-
-  private def charLitOr(orElse: => Unit): Unit =
-    if (ch == '\'') {
-      nextChar()
-      setTokStrVal(CHARLIT)
-    } else orElse
 
   private def getXml(): Boolean = {
     // 1. Collect positions of scala expressions inside this xml literal.

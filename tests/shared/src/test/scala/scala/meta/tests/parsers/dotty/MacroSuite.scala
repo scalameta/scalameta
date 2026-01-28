@@ -383,7 +383,7 @@ class MacroSuite extends BaseDottySuite {
       val error =
         """|<input>:1: error: Symbol literals are no longer allowed
            |'foo
-           |^""".stripMargin
+           | ^""".stripMargin
       runTestError[Stat](code, error)
     }
     locally {
@@ -399,7 +399,7 @@ class MacroSuite extends BaseDottySuite {
     locally {
       implicit val dialect: Dialect = dialects.Scala3.withAllowSymbolLiterals(true)
         .withAllowSpliceAndQuote(true)
-      runTestAssert[Stat](code)(treeWithQuote)
+      runTestAssert[Stat](code)(treeWithSymbol)
     }
 
     // default scala3

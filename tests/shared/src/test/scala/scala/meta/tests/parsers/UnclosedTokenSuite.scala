@@ -44,7 +44,7 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[ParseException](
       """|<input>:1: error: unclosed character literal
          | '.,
-         |   ^""".stripMargin.lf2nl
+         |  ^""".stripMargin.lf2nl
     )(stat(
       """| '.,
          |""".stripMargin
