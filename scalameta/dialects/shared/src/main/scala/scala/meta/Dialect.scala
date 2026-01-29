@@ -178,6 +178,8 @@ final class Dialect private[meta] (
     val allowNamedTuples: Boolean,
     // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html?
     val allowImprovedTypeClassesSyntax: Boolean,
+    // https://github.com/scala/scala/pull/8282
+    val treatUnicodeEscapesAsOrdinary: Boolean,
 
     // NOTE: add new fields above this line
     private[meta] val unquoteParentDialect: Dialect,
@@ -285,6 +287,7 @@ final class Dialect private[meta] (
     allowCaptureChecking = false,
     allowNamedTuples = false,
     allowImprovedTypeClassesSyntax = false,
+    treatUnicodeEscapesAsOrdinary = false,
     // NOTE(olafur): declare the default value for new fields above this comment.
     unquoteParentDialect = null,
     unquoteType = UnquoteType.None
@@ -448,6 +451,9 @@ final class Dialect private[meta] (
   def withAllowImprovedTypeClassesSyntax(newValue: Boolean): Dialect =
     privateCopy(allowImprovedTypeClassesSyntax = newValue)
 
+  def withTreatUnicodeEscapesAsOrdinary(newValue: Boolean): Dialect =
+    privateCopy(treatUnicodeEscapesAsOrdinary = newValue)
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -518,6 +524,7 @@ final class Dialect private[meta] (
       allowCaptureChecking: Boolean = this.allowCaptureChecking,
       allowNamedTuples: Boolean = this.allowNamedTuples,
       allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax,
+      treatUnicodeEscapesAsOrdinary: Boolean = this.treatUnicodeEscapesAsOrdinary,
       // NOTE(olafur): add the next parameter above this comment.
       unquoteType: UnquoteType = UnquoteType.None
   ): Dialect = {
@@ -592,6 +599,7 @@ final class Dialect private[meta] (
       allowCaptureChecking = allowCaptureChecking,
       allowNamedTuples = allowNamedTuples,
       allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax,
+      treatUnicodeEscapesAsOrdinary = treatUnicodeEscapesAsOrdinary,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
       unquoteParentDialect = if (notForUnquote) null else this
@@ -687,6 +695,7 @@ final class Dialect private[meta] (
       this.allowPureFunctions == that.allowPureFunctions &&
       this.allowCaptureChecking == that.allowCaptureChecking &&
       this.allowNamedTuples == that.allowNamedTuples &&
+      this.treatUnicodeEscapesAsOrdinary == that.treatUnicodeEscapesAsOrdinary &&
       this.allowImprovedTypeClassesSyntax == that.allowImprovedTypeClassesSyntax
 
   @deprecated("Use withX method instead", "4.3.11")
