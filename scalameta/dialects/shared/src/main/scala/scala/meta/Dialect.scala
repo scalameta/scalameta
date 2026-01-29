@@ -9,10 +9,6 @@ import scala.meta.internal.dialects._
  * A dialect is used to configure what Scala syntax is allowed during tokenization and parsing.
  */
 final class Dialect private[meta] (
-    private[meta] val unquoteParentDialect: Dialect,
-    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
-    // If yes, they will be parsed as patterns or terms.
-    private[meta] val unquoteType: UnquoteType,
     // Are `&` intersection types supported by this dialect?
     @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
     private[meta] val allowAndTypes: Boolean, // unused
@@ -181,7 +177,13 @@ final class Dialect private[meta] (
     // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html
     val allowNamedTuples: Boolean,
     // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html?
-    val allowImprovedTypeClassesSyntax: Boolean
+    val allowImprovedTypeClassesSyntax: Boolean,
+
+    // NOTE: add new fields above this line
+    private[meta] val unquoteParentDialect: Dialect,
+    // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
+    // If yes, they will be parsed as patterns or terms.
+    private[meta] val unquoteType: UnquoteType
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -214,8 +216,6 @@ final class Dialect private[meta] (
       allowXmlLiterals: Boolean,
       toplevelSeparator: String // unused
   ) = this(
-    unquoteParentDialect = null,
-    unquoteType = UnquoteType.None,
     allowAndTypes = true, // unused
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
     allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
@@ -284,8 +284,10 @@ final class Dialect private[meta] (
     allowPureFunctions = false,
     allowCaptureChecking = false,
     allowNamedTuples = false,
-    allowImprovedTypeClassesSyntax = false
+    allowImprovedTypeClassesSyntax = false,
     // NOTE(olafur): declare the default value for new fields above this comment.
+    unquoteParentDialect = null,
+    unquoteType = UnquoteType.None
   )
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
@@ -451,7 +453,6 @@ final class Dialect private[meta] (
   // the body inside curly braces.
 
   private[this] def privateCopy(
-      unquoteType: UnquoteType = UnquoteType.None,
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
       allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs: Boolean = this.allowColonForExtractorVarargs,
@@ -516,8 +517,9 @@ final class Dialect private[meta] (
       allowPureFunctions: Boolean = this.allowPureFunctions,
       allowCaptureChecking: Boolean = this.allowCaptureChecking,
       allowNamedTuples: Boolean = this.allowNamedTuples,
-      allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax
+      allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax,
       // NOTE(olafur): add the next parameter above this comment.
+      unquoteType: UnquoteType = UnquoteType.None
   ): Dialect = {
     val notForUnquote = unquoteType eq UnquoteType.None
     val that = new Dialect(
