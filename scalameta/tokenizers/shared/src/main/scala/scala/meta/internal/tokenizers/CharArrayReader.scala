@@ -76,6 +76,7 @@ private[meta] case class CharArrayReader(
   }
 
   final def wasMultiChar: Boolean = begCharOffset < endCharOffset - 1
+  final def wasEscapedMultiChar: Boolean = wasMultiChar && dialect.treatUnicodeEscapesAsOrdinary
 
   private[tokenizers] def isNumberSeparator(): Boolean = looksLikeNumberSeparator().contains(true)
 
