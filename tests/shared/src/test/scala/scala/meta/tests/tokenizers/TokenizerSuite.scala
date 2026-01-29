@@ -2158,12 +2158,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val struct =
       """|BOF [0..0)
          |KwVal [0..3)
-         |Space [3..4)
-         |Ident(foo) [4..19)
-         |Space [19..20)
-         |Equals [20..21)
-         |Space [21..22)
-         |Constant.Int(0) [22..23)
+         |Invalid(unclosed quoted identifier) [4..23)
          |LF [23..24)
          |EOF [24..24)
          |""".stripMargin.nl2lf
@@ -2179,12 +2174,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val struct =
       """|BOF [0..0)
          |KwVal [0..3)
-         |Space [3..4)
-         |Ident(foo) [4..19)
-         |Space [19..20)
-         |Equals [20..21)
-         |Space [21..22)
-         |Constant.Int(0) [22..23)
+         |Invalid(unclosed quoted identifier) [4..23)
          |LF [23..24)
          |EOF [24..24)
          |""".stripMargin.nl2lf
@@ -2221,12 +2211,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val struct =
       """|BOF [0..0)
          |KwVal [0..3)
-         |Space [3..4)
-         |Ident(foo) [4..14)
-         |Space [14..15)
-         |Equals [15..16)
-         |Space [16..17)
-         |Constant.Int(0) [17..18)
+         |Invalid(unclosed quoted identifier) [4..18)
          |LF [18..19)
          |EOF [19..19)
          |""".stripMargin.nl2lf
@@ -2242,12 +2227,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val struct =
       """|BOF [0..0)
          |KwVal [0..3)
-         |Space [3..4)
-         |Ident(foo) [4..14)
-         |Space [14..15)
-         |Equals [15..16)
-         |Space [16..17)
-         |Constant.Int(0) [17..18)
+         |Invalid(unclosed quoted identifier) [4..18)
          |LF [18..19)
          |EOF [19..19)
          |""".stripMargin.nl2lf
@@ -2345,10 +2325,12 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val struct =
       """|BOF [0..0)
          |KwVal [0..3)
-         |Invalid(empty quoted identifier) [4..11)
          |Space [3..4)
-         |Ident(foo) [11..14)
-         |Invalid(unclosed quoted identifier) [14..19)
+         |Ident(`foo) [4..15)
+         |Space [15..16)
+         |Equals [16..17)
+         |Space [17..18)
+         |Constant.Int(0) [18..19)
          |LF [19..20)
          |EOF [20..20)
          |""".stripMargin.nl2lf
@@ -2364,10 +2346,12 @@ class TokenizerSuite extends BaseTokenizerSuite {
     val struct =
       """|BOF [0..0)
          |KwVal [0..3)
-         |Invalid(empty quoted identifier) [4..11)
          |Space [3..4)
-         |Ident(foo) [11..14)
-         |Invalid(unclosed quoted identifier) [14..19)
+         |Ident(`foo) [4..15)
+         |Space [15..16)
+         |Equals [16..17)
+         |Space [17..18)
+         |Constant.Int(0) [18..19)
          |LF [19..20)
          |EOF [20..20)
          |""".stripMargin.nl2lf
@@ -2401,11 +2385,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     val struct =
       """|BOF [0..0)
-         |Constant.String() [0..7)
-         |Interpolation.Id(foo) [7..10)
-         |Interpolation.Start(\\u0022) [10..16)
-         |Interpolation.Part() [16..16)
-         |Interpolation.End(") [16..17)
+         |Constant.String("foo") [0..17)
          |LF [17..18)
          |EOF [18..18)
          |""".stripMargin.nl2lf.replace("\\\\", "\\")
@@ -2420,11 +2400,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     val struct =
       """|BOF [0..0)
-         |Constant.String() [0..7)
-         |Interpolation.Id(foo) [7..10)
-         |Interpolation.Start(\\u0022) [10..16)
-         |Interpolation.Part() [16..16)
-         |Interpolation.End(") [16..17)
+         |Constant.String("foo") [0..17)
          |LF [17..18)
          |EOF [18..18)
          |""".stripMargin.nl2lf.replace("\\\\", "\\")
@@ -2454,7 +2430,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     val struct =
       """|BOF [0..0)
-         |Constant.String(foo) [0..29)
+         |Constant.String(""foo"") [0..29)
          |LF [29..30)
          |EOF [30..30)
          |""".stripMargin.nl2lf
@@ -2469,7 +2445,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     val struct =
       """|BOF [0..0)
-         |Constant.String(foo) [0..29)
+         |Constant.String(""foo"") [0..29)
          |LF [29..30)
          |EOF [30..30)
          |""".stripMargin.nl2lf
@@ -2589,7 +2565,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     val struct =
       """|BOF [0..0)
-         |Constant.Char(f) [0..8)
+         |Invalid(unclosed character literal) [2..2)
+         |Invalid(unclosed character literal) [2..8)
          |LF [8..9)
          |EOF [9..9)
          |""".stripMargin.nl2lf
@@ -2604,7 +2581,8 @@ class TokenizerSuite extends BaseTokenizerSuite {
 
     val struct =
       """|BOF [0..0)
-         |Constant.Char(f) [0..8)
+         |Invalid(unclosed character literal) [2..2)
+         |Invalid(unclosed character literal) [2..8)
          |LF [8..9)
          |EOF [9..9)
          |""".stripMargin.nl2lf

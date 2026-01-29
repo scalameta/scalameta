@@ -68,8 +68,6 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       skipNestedComments()
   }
 
-  private def isAtEnd = endCharOffset >= buf.length
-
   /**
    * A character buffer for literals
    */
@@ -361,9 +359,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           if (token == INTERPOLATIONID) {
             nextRawChar()
             offset = begCharOffset
-            if (ch == '"') {
+            if (ch == '"' && !wasEscapedMultiChar) {
               nextChar()
-              if (ch == '"') {
+              if (ch == '"' && !wasEscapedMultiChar) {
                 nextRawChar()
                 offset = begCharOffset
                 getStringPart(multiLine = true)
@@ -381,9 +379,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           } else {
             noQuasiDoubleQuoteDQ()
             nextChar()
-            if (ch == '"') {
+            if (ch == '"' && !wasEscapedMultiChar) {
               nextChar()
-              if (ch == '"') {
+              if (ch == '"' && !wasEscapedMultiChar) {
                 nextRawChar()
                 getMultilineStringLit()
               } else {
@@ -413,9 +411,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
           if (ch == LF && !wasMultiChar)
             setInvalidToken(curr)("can't use unescaped LF in character literals")
-          else if (isEscapeChar || peekRawChar().ch == '\'') {
+          else if (isEscapeChar || wasEscapedMultiChar || peekRawChar().ch == '\'') {
             getLitChar()
-            if (ch == '\'') {
+            if (ch == '\'' && !wasEscapedMultiChar) {
               nextChar()
               setTokStrVal(CHARLIT)
             } else unclosed()
@@ -463,7 +461,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         nextChar()
         token = RBRACKET
       case SU =>
-        if (isAtEnd) {
+        if (endCharOffset >= buf.length) {
           // NOTE: sometimes EOF's offset is `input.chars.length - 1`, and that might mess things up
           offset = chars.length
           token = EOF
@@ -739,15 +737,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     else putCharAndNext()
 
   @tailrec
-  private def getLitChars(delimiter: Char): Boolean = {
-    @inline
-    def naturalBreak = (ch == SU || ch == CR || ch == LF) && !wasMultiChar
-    ch == delimiter || !isAtEnd && !naturalBreak && {
+  private def getLitChars(delimiter: Char): Boolean = ch == delimiter && !wasEscapedMultiChar ||
+    (ch != SU && ch != CR && ch != LF || wasMultiChar) && {
       val offset = endCharOffset
       getLitChar()
       offset != endCharOffset && getLitChars(delimiter)
     }
-  }
 
   @tailrec
   private def readDigits(base: Int, prevSeparatorOffset: Int = -1): Unit =
