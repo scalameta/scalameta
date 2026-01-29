@@ -2114,17 +2114,545 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |""".stripMargin.replace("'''", "\"\"\"")
 
     val struct =
-      s"""|BOF [0..0)
-          |LF [0..1)
-          |KwVal [1..4)
-          |Invalid(illegal unicode codepoint: 0x3002) [5..6)
-          |MultiHS(3) [4..7)
-          |Equals [7..8)
-          |Space [8..9)
-          |Constant.Int(123) [9..12)
-          |MultiNL(2) [12..14)
-          |EOF [14..14)
-          |""".stripMargin.nl2lf
+      """|BOF [0..0)
+         |LF [0..1)
+         |KwVal [1..4)
+         |Invalid(illegal unicode codepoint: 0x3002) [5..6)
+         |MultiHS(3) [4..7)
+         |Equals [7..8)
+         |Space [8..9)
+         |Constant.Int(123) [9..12)
+         |MultiNL(2) [12..14)
+         |EOF [14..14)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 1: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|val \\u0060foo\\u0060 = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..19)
+         |Space [19..20)
+         |Equals [20..21)
+         |Space [21..22)
+         |Constant.Int(0) [22..23)
+         |LF [23..24)
+         |EOF [24..24)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 1: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|val \\u0060foo\\u0060 = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..19)
+         |Space [19..20)
+         |Equals [20..21)
+         |Space [21..22)
+         |Constant.Int(0) [22..23)
+         |LF [23..24)
+         |EOF [24..24)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 1: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|val \\u0060foo\\u0060 = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..19)
+         |Space [19..20)
+         |Equals [20..21)
+         |Space [21..22)
+         |Constant.Int(0) [22..23)
+         |LF [23..24)
+         |EOF [24..24)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 2: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|val `foo\\u0060 = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..14)
+         |Space [14..15)
+         |Equals [15..16)
+         |Space [16..17)
+         |Constant.Int(0) [17..18)
+         |LF [18..19)
+         |EOF [19..19)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 2: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|val `foo\\u0060 = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..14)
+         |Space [14..15)
+         |Equals [15..16)
+         |Space [16..17)
+         |Constant.Int(0) [17..18)
+         |LF [18..19)
+         |EOF [19..19)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 2: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|val `foo\\u0060 = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..14)
+         |Space [14..15)
+         |Equals [15..16)
+         |Space [16..17)
+         |Constant.Int(0) [17..18)
+         |LF [18..19)
+         |EOF [19..19)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 3: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|val \\u0060foo` = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..14)
+         |Space [14..15)
+         |Equals [15..16)
+         |Space [16..17)
+         |Constant.Int(0) [17..18)
+         |LF [18..19)
+         |EOF [19..19)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 3: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|val \\u0060foo` = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..14)
+         |Space [14..15)
+         |Equals [15..16)
+         |Space [16..17)
+         |Constant.Int(0) [17..18)
+         |LF [18..19)
+         |EOF [19..19)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 3: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|val \\u0060foo` = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Space [3..4)
+         |Ident(foo) [4..14)
+         |Space [14..15)
+         |Equals [15..16)
+         |Space [16..17)
+         |Constant.Int(0) [17..18)
+         |LF [18..19)
+         |EOF [19..19)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 4: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|val `\\u0060foo` = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Invalid(empty quoted identifier) [4..11)
+         |Space [3..4)
+         |Ident(foo) [11..14)
+         |Invalid(unclosed quoted identifier) [14..19)
+         |LF [19..20)
+         |EOF [20..20)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 4: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|val `\\u0060foo` = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Invalid(empty quoted identifier) [4..11)
+         |Space [3..4)
+         |Ident(foo) [11..14)
+         |Invalid(unclosed quoted identifier) [14..19)
+         |LF [19..20)
+         |EOF [20..20)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes backquote 4: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|val `\\u0060foo` = 0
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |KwVal [0..3)
+         |Invalid(empty quoted identifier) [4..11)
+         |Space [3..4)
+         |Ident(foo) [11..14)
+         |Invalid(unclosed quoted identifier) [14..19)
+         |LF [19..20)
+         |EOF [20..20)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes double-quote 1: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|"\\u0022foo\\u0022"
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String() [0..7)
+         |Interpolation.Id(foo) [7..10)
+         |Interpolation.Start(\\u0022) [10..16)
+         |Interpolation.Part() [16..16)
+         |Interpolation.End(") [16..17)
+         |LF [17..18)
+         |EOF [18..18)
+         |""".stripMargin.nl2lf.replace("\\\\", "\\")
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes double-quote 1: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|"\\u0022foo\\u0022"
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String() [0..7)
+         |Interpolation.Id(foo) [7..10)
+         |Interpolation.Start(\\u0022) [10..16)
+         |Interpolation.Part() [16..16)
+         |Interpolation.End(") [16..17)
+         |LF [17..18)
+         |EOF [18..18)
+         |""".stripMargin.nl2lf.replace("\\\\", "\\")
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes double-quote 1: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|"\\u0022foo\\u0022"
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String() [0..7)
+         |Interpolation.Id(foo) [7..10)
+         |Interpolation.Start(\\u0022) [10..16)
+         |Interpolation.Part() [16..16)
+         |Interpolation.End(") [16..17)
+         |LF [17..18)
+         |EOF [18..18)
+         |""".stripMargin.nl2lf.replace("\\\\", "\\")
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes double-quote 2: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|"\\u0022\\u0022foo\\u0022\\u0022"
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String(foo) [0..29)
+         |LF [29..30)
+         |EOF [30..30)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes double-quote 2: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|"\\u0022\\u0022foo\\u0022\\u0022"
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String(foo) [0..29)
+         |LF [29..30)
+         |EOF [30..30)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes double-quote 2: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|"\\u0022\\u0022foo\\u0022\\u0022"
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String(foo) [0..29)
+         |LF [29..30)
+         |EOF [30..30)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes triple-quote 1: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|'''\\u0022foo\\u0022'''
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String("foo") [0..21)
+         |LF [21..22)
+         |EOF [22..22)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes triple-quote 1: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|'''\\u0022foo\\u0022'''
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String("foo") [0..21)
+         |LF [21..22)
+         |EOF [22..22)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes triple-quote 1: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|'''\\u0022foo\\u0022'''
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.String("foo") [0..21)
+         |LF [21..22)
+         |EOF [22..22)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 1: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|'\\u0027'
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(') [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 1: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|'\\u0027'
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(') [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 1: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|'\\u0027'
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(') [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 2: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|'f\\u0027
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(f) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 2: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|'f\\u0027
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(f) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 2: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|'f\\u0027
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(f) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 3: 2.12") {
+    implicit val dialect: Dialect = dialects.Scala212
+    val code =
+      """|\\u0027f'
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(f) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 3: 2.13") {
+    implicit val dialect: Dialect = dialects.Scala213
+    val code =
+      """|\\u0027f'
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(f) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
+    assertTokenizedAsStructureLines(code, struct)
+  }
+
+  test("unicode escapes single-quote 3: 3.0") {
+    implicit val dialect: Dialect = dialects.Scala30
+    val code =
+      """|\\u0027f'
+         |""".stripMargin.replace("'''", "\"\"\"").replace("\\\\", "\\")
+
+    val struct =
+      """|BOF [0..0)
+         |Constant.Char(f) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin.nl2lf
     assertTokenizedAsStructureLines(code, struct)
   }
 
