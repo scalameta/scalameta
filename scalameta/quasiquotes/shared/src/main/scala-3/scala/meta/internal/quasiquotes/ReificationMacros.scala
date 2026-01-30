@@ -370,7 +370,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                       )
                       else Unapply(
                         TypeApply(
-                          Select.unique('{ +: }.asTerm, "unapply"),
+                          Select.unique('+:.asTerm, "unapply"),
                           List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])
                         ),
                         Nil,
@@ -404,7 +404,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                       TypedOrTest(
                         Unapply(
                           TypeApply(
-                            Select.unique('{ :+ }.asTerm, "unapply"),
+                            Select.unique(':+.asTerm, "unapply"),
                             List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])
                           ),
                           Nil,
@@ -418,7 +418,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                 val targs = List(TypeTree.of[T])
                 if mode.isTerm then
                   Select.overloaded(
-                    '{ List }.asTerm,
+                    'List.asTerm,
                     "apply",
                     List(TypeRepr.of[T]),
                     args.asInstanceOf[List[Term]]
@@ -426,7 +426,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                 else
                   TypedOrTest(
                     Unapply(
-                      TypeApply(Select.unique('{ List }.asTerm, "unapplySeq"), List(TypeTree.of[T])),
+                      TypeApply(Select.unique('List.asTerm, "unapplySeq"), List(TypeTree.of[T])),
                       Nil,
                       args
                     ),
@@ -441,16 +441,12 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
         if (tripleDotQuasis.isEmpty) {
           val args = treess.map(liftTrees)
           if mode.isTerm then
-            Select.overloaded(
-              '{ List }.asTerm,
-              "apply",
-              List(TypeRepr.of[Any]),
-              args.asInstanceOf[List[Term]]
-            )
+            Select
+              .overloaded('List.asTerm, "apply", List(TypeRepr.of[Any]), args.asInstanceOf[List[Term]])
           else
             TypedOrTest(
               Unapply(
-                TypeApply(Select.unique('{ List }.asTerm, "unapplySeq"), List(TypeTree.of[Any])),
+                TypeApply(Select.unique('List.asTerm, "unapplySeq"), List(TypeTree.of[Any])),
                 Nil,
                 args
               ),
@@ -521,8 +517,8 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
 
       private val liftPartialOrigin: (Int, Int) => Expr[Origin.Partial] =
         if (mode.hasHoles) // direct syntax will not make much sense, need to regenerate
-          (beg, end) => '{ Origin.ParsedSpliced(${ psourceExpr }, ${ Expr(beg) }, ${ Expr(end) }) }
-        else (beg, end) => '{ Origin.Parsed(${ psourceExpr }, ${ Expr(beg) }, ${ Expr(end) }) }
+          (beg, end) => '{ Origin.ParsedSpliced($psourceExpr, ${ Expr(beg) }, ${ Expr(end) }) }
+        else (beg, end) => '{ Origin.Parsed($psourceExpr, ${ Expr(beg) }, ${ Expr(end) }) }
 
       def liftOrigin(origin: Origin): internalQuotes.reflect.Tree = origin match {
         case x: Origin.Partial => liftPartialOrigin(x.begTokenIdx, x.endTokenIdx).asTerm
@@ -616,7 +612,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
           _.tpe match
             case AppliedType(tpe, content) if tpe =:= TypeRepr.of[Option] => content
         )
-        val lst = Select.overloaded('{ List }.asTerm, "apply", List(TypeRepr.of[Option[Any]]), args)
+        val lst = Select.overloaded('List.asTerm, "apply", List(TypeRepr.of[Option[Any]]), args)
           .asExprOf[List[Option[Any]]]
 
         val n = args.length
