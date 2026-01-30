@@ -26,6 +26,6 @@ addSbtPlugin("org.scala-debugger" % "sbt-jdi-tools"    % "1.1.1")
 addSbtPlugin("org.scala-js"       % "sbt-scalajs"      % "1.20.1")
 addSbtPlugin("org.scala-native"   % "sbt-scala-native" % "0.5.10")
 addSbtPlugin("org.scalameta"      % "sbt-mdoc"         % "2.8.2")
-addSbtPlugin("org.scalameta"      % "sbt-munit"        % "1.2.1")
+addSbtPlugin("org.scalameta"      % "sbt-munit"        % "1.2.2")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.8")
