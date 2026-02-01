@@ -562,18 +562,16 @@ class InfixSuite extends BaseDottySuite {
               )
             ),
             tinfix(
-              tinfix(
+              Term.ApplyInfix.createWithComments(
                 Term.ApplyUnary.createWithComments(
                   tname("!"),
                   tselect("in", "isNewLine"),
                   endComment = Seq("// a newline token means the expression is finished")
                 ),
                 "&&",
-                Term.ApplyUnary.createWithComments(
-                  tname("!"),
-                  tname("migrateTo3"),
-                  endComment = Seq("// old syntax")
-                )
+                Nil,
+                List(Term.ApplyUnary(tname("!"), tname("migrateTo3"))),
+                endComment = Seq("// old syntax")
               ),
               "&&",
               tname("canContinue")

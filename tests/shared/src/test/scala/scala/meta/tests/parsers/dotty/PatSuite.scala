@@ -176,7 +176,7 @@ class PatSuite extends ParseSuite {
     val layout =
       """|withFoo {
          |  case foo @ given Foo =>
-         |    import foo.*
+         |    import foo.* // Works fine if I remove this line
          |    x()
          |}
          |""".stripMargin
@@ -185,7 +185,13 @@ class PatSuite extends ParseSuite {
       Term.PartialFunction(List(Case(
         Pat.Bind(patvar("foo"), Pat.Given("Foo")),
         None,
-        blk(Import(List(Importer("foo", List(Importee.Wildcard())))), tapply("x"))
+        blk(
+          Import.createWithComments(
+            List(Importer("foo", List(Importee.Wildcard()))),
+            endComment = Seq("// Works fine if I remove this line")
+          ),
+          tapply("x")
+        )
       )))
     )
     runTestAssert[Stat](code, layout)(tree)

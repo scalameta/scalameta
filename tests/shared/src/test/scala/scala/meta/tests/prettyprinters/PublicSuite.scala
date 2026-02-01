@@ -25,7 +25,9 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.Tree.structure (parsed)") {
     val tree = "foo + bar // baz".parse[Term].get
-    assertTree(tree)(tinfix(tname("foo"), "+", tnameComments("bar")()("// baz")))
+    val expected = Term.ApplyInfix
+      .createWithComments(tname("foo"), "+", Nil, List(tname("bar")), endComment = Seq("// baz"))
+    assertTree(tree)(expected)
   }
 
   test("scala.meta.Tree.syntax (parsed)") {

@@ -54,6 +54,15 @@ trait InternalTree extends Product {
   def begComment: Option[Tree.Comments]
   def endComment: Option[Tree.Comments]
 
+  private[meta] def privateSetOrigin(
+      origin: Origin,
+      begComment: Option[Tree.Comments],
+      endComment: Option[Tree.Comments]
+  ): Tree = privateCopy(origin = origin, begComment = begComment, endComment = endComment)
+
+  private[meta] def privateSetOrigin(tree: Tree): Tree =
+    privateSetOrigin(tree.origin, tree.begComment, tree.endComment)
+
   // ==============================================================
   // Tokens
   // ==============================================================
