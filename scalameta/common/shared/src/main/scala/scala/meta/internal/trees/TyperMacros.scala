@@ -3,7 +3,7 @@ package internal
 package trees
 
 import org.scalameta.adt.{Reflection => AdtReflection}
-import org.scalameta.internal.MacroHelpers
+import org.scalameta.internal.{AdtHelpers, MacroHelpers}
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
@@ -38,18 +38,18 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
   def productPrefix[T](implicit T: c.WeakTypeTag[T]): c.Tree = q"${T.tpe.typeSymbol.asLeaf.prefix}"
 
   def loadField(f: c.Tree, s: c.Tree): c.Tree = {
-    val q"this.$finternalName" = f
-    val fname = TermName(finternalName.toString.stripPrefix("_"))
     def lazyLoad(fn: c.Tree => c.Tree) = {
-      val assertionMessage =
-        s"internal error when initializing ${c.internal.enclosingOwner.owner.name}.$fname"
+      val q"this.$finternalName" = f
+      val ownerName = c.internal.enclosingOwner.owner.name
+      val externalName = AdtHelpers.getterName(finternalName.toString)
+      val assertionMessage = s"internal error when initializing $ownerName.$externalName"
       q"""
         if ($f == null) {
           // there's not much sense in using org.scalameta.invariants.require here
           // because when the assertion trips, the tree is most likely in inconsistent state
           // which will either lead to useless printouts or maybe even worse errors
           _root_.scala.Predef.require(this.privatePrototype != null, $assertionMessage)
-          $f = ${fn(q"this.privatePrototype.$fname")}
+          $f = ${fn(q"this.privatePrototype.${TermName(externalName)}")}
         }
       """
     }

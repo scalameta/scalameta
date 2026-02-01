@@ -1,6 +1,7 @@
 package org.scalameta.adt
 
 import org.scalameta.adt.{Metadata => AdtMetadata}
+import org.scalameta.internal.AdtHelpers
 import scala.meta.internal.trees.{Metadata => AstMetadata}
 
 import scala.annotation.tailrec
@@ -134,7 +135,7 @@ trait Reflection {
   class Field(val sym: Symbol) {
     if (!sym.isField(isPrivateOK = true)) sys.error(s"$sym is not a field")
     def owner: Leaf = sym.owner.asLeaf
-    def name: TermName = TermName(sym.name.toString.stripPrefix("_"))
+    def name: TermName = TermName(AdtHelpers.getterName(sym.name.toString))
     def tpe: Type = sym.info.finalResultType
     override def toString = s"field ${owner.prefix}.$name: $tpe" +
       (if (sym.isAuxiliaryField) " (auxiliary)" else "")

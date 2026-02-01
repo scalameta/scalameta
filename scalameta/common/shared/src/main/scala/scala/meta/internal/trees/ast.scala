@@ -2,7 +2,7 @@ package scala.meta
 package internal
 package trees
 
-import org.scalameta.internal.MacroCompat
+import org.scalameta.internal.{AdtHelpers, MacroCompat}
 
 import scala.annotation.{StaticAnnotation, tailrec}
 import scala.collection.mutable.ListBuffer
@@ -800,14 +800,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     }
   }
 
-  private def internalize(name: String): TermName = TermName(s"_${name.stripPrefix("_")}")
+  private def internalize(name: String): TermName = TermName(AdtHelpers.privateName(name))
   private def internalize(name: TermName): TermName = internalize(name.toString)
   private def internalize(vr: ValOrDefDef): TermName = internalize(vr.name)
-  private def setterName(name: String): TermName =
-    TermName(s"set${name.stripPrefix("_").capitalize}")
+  private def setterName(name: String): TermName = TermName(AdtHelpers.setterName(name))
   private def setterName(name: TermName): TermName = setterName(name.toString)
   private def setterName(vr: ValOrDefDef): TermName = setterName(vr.name)
-  private def getterName(name: String): TermName = TermName(s"${name.stripPrefix("_")}")
+  private def getterName(name: String): TermName = TermName(AdtHelpers.getterName(name))
   private def getterName(name: TermName): TermName = getterName(name.toString)
   private def getterName(vr: ValOrDefDef): TermName = getterName(vr.name)
 
