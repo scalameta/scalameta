@@ -34,8 +34,11 @@ private[meta] trait Api {
   }
 
   implicit class XtensionTreeLike[T <: Tree](tree: T) {
-    private[meta] def withOriginRecursive(origin: trees.Origin): T = tree
-      .transform { case t: Tree => t.withOrigin(origin) }.withOrigin(origin).asInstanceOf[T]
+    private[meta] def withOriginRecursive(origin: trees.Origin): T = {
+      tree.traverse { case t: Tree => t.privateSetOrigin(origin) }
+      tree.privateSetOrigin(origin)
+      tree
+    }
 
     def withDialectIfRootAndNotSet(implicit dialect: Dialect): T =
       if (tree.privateParent ne null) tree // must set on root

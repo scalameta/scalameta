@@ -23,21 +23,10 @@ trait InternalTree extends Product {
   // ==============================================================
 
   private[meta] def privatePrototype: Tree
-  private[meta] def privateParent: Tree
-  private[meta] def privateCopy(
-      prototype: Tree = this,
-      parent: Tree = this.privateParent,
-      destination: String = null,
-      origin: Origin = this.origin,
-      begComment: Option[Tree.Comments] = this.begComment,
-      endComment: Option[Tree.Comments] = this.endComment
-  ): Tree
-
-  // ==============================================================
-  // Getters for pieces of internal state defined above.
-  // ==============================================================
 
   def parent: Option[Tree] = Option(privateParent)
+  private[meta] def privateParent: Tree
+  private[meta] def privateSetParentOrCopy(parent: Tree, destination: String = null): Tree
 
   // NOTE: InternalTree inherits traditional productXXX methods from Product
   // and also adds a new method called productFields.
@@ -54,13 +43,19 @@ trait InternalTree extends Product {
   def begComment: Option[Tree.Comments]
   def endComment: Option[Tree.Comments]
 
+  private[meta] def privateCopyOrigin(
+      origin: Origin,
+      begComment: Option[Tree.Comments] = this.begComment,
+      endComment: Option[Tree.Comments] = this.endComment
+  ): Tree
+
   private[meta] def privateSetOrigin(
       origin: Origin,
-      begComment: Option[Tree.Comments],
-      endComment: Option[Tree.Comments]
-  ): Tree = privateCopy(origin = origin, begComment = begComment, endComment = endComment)
+      begComment: Option[Tree.Comments] = this.begComment,
+      endComment: Option[Tree.Comments] = this.endComment
+  ): Unit
 
-  private[meta] def privateSetOrigin(tree: Tree): Tree =
+  private[meta] def privateSetOrigin(tree: Tree): Unit =
     privateSetOrigin(tree.origin, tree.begComment, tree.endComment)
 
   // ==============================================================
@@ -133,7 +128,7 @@ trait InternalTree extends Product {
 
 trait InternalTreeXtensions {
   private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
-    def withOrigin(origin: Origin): T = tree.privateCopy(origin = origin).asInstanceOf[T]
+    def withOrigin(origin: Origin): T = tree.privateCopyOrigin(origin = origin).asInstanceOf[T]
 
     def withDialectNonRecursiveIfNotSet(implicit dialect: Dialect): T =
       if (tree.origin ne Origin.None) tree else withOrigin(Origin.DialectOnly(dialect))
