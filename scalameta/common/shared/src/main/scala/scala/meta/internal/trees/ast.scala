@@ -194,7 +194,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
         paramss1 += params.map { p =>
           val mods1 = p.mods.mkMutable.unPrivate.unOverride.unDefault
-          q"$mods1 val ${internalize(p.name)}: ${p.tpt}"
+          q"$mods1 val ${internalize(p)}: ${p.tpt}"
         }
 
         // step 6: implement the unimplemented methods in InternalTree (part 1)
@@ -208,7 +208,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // This method is private[meta] because the state that it's managing is not supposed to be touched
         // by the users of the framework.
         val privateCopyArgs = params
-          .map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p.name)})")
+          .map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p)})")
         val privateCopyParentChecks =
           if (parentChecks.isEmpty) q""
           else
@@ -746,6 +746,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
   private def internalize(name: String): TermName = TermName(s"_${name.stripPrefix("_")}")
   private def internalize(name: TermName): TermName = internalize(name.toString)
+  private def internalize(vr: ValOrDefDef): TermName = internalize(vr.name)
   private def setterName(name: String): TermName =
     TermName(s"set${name.stripPrefix("_").capitalize}")
   private def setterName(name: TermName): TermName = setterName(name.toString)
