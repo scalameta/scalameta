@@ -396,6 +396,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       (start, (if (tokens(end).is[AtEOLorF]) nonSpaceEnd else end) + 1)
     }
     val (start, endExcl) = getPosRange()
+    val origin = asOrigin(start, endExcl)
 
     val (begComment, endComment) =
       if (!options.captureComments) (None, None)
@@ -506,11 +507,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         (begComment, endComment)
       }
 
-    body.privateCopy(
-      origin = asOrigin(start, endExcl),
-      begComment = begComment,
-      endComment = endComment
-    ).asInstanceOf[T]
+    body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
+      .asInstanceOf[T]
   }
 
   def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
@@ -4603,7 +4601,8 @@ object ScalametaParser {
 
   }
 
-  private def copyPos[T <: Tree](tree: Tree)(body: => T): T = body.withOrigin(tree.origin)
+  private def copyPos[T <: Tree](tree: Tree)(body: => T): T = body.privateSetOrigin(tree)
+    .asInstanceOf[T]
 
   @inline
   private def quasi[T <: Tree](rank: Int, tree: Tree)(implicit astInfo: AstInfo[T]): T with Quasi =

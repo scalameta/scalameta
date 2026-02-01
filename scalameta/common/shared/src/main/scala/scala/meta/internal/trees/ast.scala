@@ -697,7 +697,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 ev.quasi(rank, nested.become[T])
               case _ =>
                 throw new Exception("complex ellipses are not supported yet")
-            }).withOrigin(this.origin): T with $QuasiClass
+            }).privateSetOrigin(this).asInstanceOf[T]
           }
           """
         else mstats1 +=
