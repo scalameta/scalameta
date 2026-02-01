@@ -51,7 +51,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val name = TypeName(descriptivePrefix + "Impl")
         val q"$mmods object $mname extends { ..$mearlydefns } with ..$mparents { $mself => ..$mstats }" =
           mdef
-        val paramss1 = ListBuffer[List[ValDef]]() // payload params
+        val ctorParamss = ListBuffer[List[ValDef]]() // payload params
         val iself = noSelfType
         val self = aself
         val istats1 = ListBuffer[Tree]()
@@ -193,13 +193,18 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val withCommentsCall = fullCtorCallFromPartialPrivateParams(commentParams)
 
         // step 5: turn all parameters into vars, create getters and setters
-        params.foreach { p =>
-          istats1 += declareGetter(p, DEFERRED, astFieldAnnot :: Nil)
-          stats1 += defineGetter(p, if (p.mods.hasFlag(OVERRIDE)) OVERRIDE else NoFlags)
-        }
-        paramss1 += params.map { p =>
+        def getCtorParam(p: ValOrDefDef) = {
           val mods1 = p.mods.mkMutable.unPrivate.unOverride.unDefault
           q"$mods1 val ${internalize(p)}: ${p.tpt}"
+        }
+        ctorParamss += privateParams.map { p =>
+          stats1 += q"${p.mods} def ${p.name}: ${p.tpt} = this.${internalize(p)}"
+          getCtorParam(p)
+        }
+        ctorParamss += params.map { p =>
+          istats1 += declareGetter(p, DEFERRED, astFieldAnnot :: Nil)
+          stats1 += defineGetter(p, if (p.mods.hasFlag(OVERRIDE)) OVERRIDE else NoFlags)
+          getCtorParam(p)
         }
 
         // step 6: implement the unimplemented methods in InternalTree (part 1)
@@ -726,7 +731,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         mstats1 += q"object internal { final val Latest = $latestTermName }"
 
         mstats1 +=
-          q"$mods1 class $name[..$tparams] $ctorMods(...${privateParams +: paramss1}) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+          q"$mods1 class $name[..$tparams] $ctorMods(...$ctorParamss) extends { ..$earlydefns } with ..$parents1 { $self => ..$stats1 }"
+        mstats1 += q"private[meta] object ${name.toTermName} { }" // TODO: was MiMa, remove in 4.15
 
         val res = ListBuffer.empty[ImplDef]
 
