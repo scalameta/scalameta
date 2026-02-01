@@ -80,7 +80,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           .abort(cdef.pos, "@leaf classes must define a non-empty parameter list")
         if (rawparamss.lengthCompare(1) > 0) c
           .abort(cdef.pos, "@leaf classes must define a single parameter list")
-        val params = rawparamss.head
+        val params: List[ValDef] = rawparamss.head
 
         // step 1a: identify modified fields of the class
         val (versionedParams, paramsVersions) =
@@ -138,9 +138,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val privateFields = getPrivateFields(iname)
         val privateFieldsList = privateFields.asList
         val privateParams = privateFieldsList.map(_.field)
+
+        val prototypeParam = privateFields.prototype.field
+        val parentParam = privateFields.parent.field
+        val originParam = privateFields.origin.field
         val begCommentParam = privateFields.begComment.field
         val endCommentParam = privateFields.endComment.field
         val commentParams = List(begCommentParam, endCommentParam)
+
         val privateApplyParamsBuilder = new ListBuffer[ValOrDefDef] // so we can continue appending
         var privateFieldsVersion: Version = null
         val privateApplyParamssBuilder = IndexedSeq.newBuilder[(Version, List[ValOrDefDef])]
@@ -165,7 +170,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
             privateApplyParamsBuilder += p
 
-            if (f eq privateFields.origin) privateBodyForCopyBuilder +=
+            if (p eq originParam) privateBodyForCopyBuilder +=
               q"val ${p.name} = $OriginModule.DialectOnly.fromOrigin(this.${p.name})"
           }
         }
@@ -207,8 +212,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // Compare this with the `copy` method (described below), which additionally flushes the private state.
         // This method is private[meta] because the state that it's managing is not supposed to be touched
         // by the users of the framework.
-        val privateCopyArgs = params
-          .map(p => q"$CommonTyperMacrosModule.initField(this.${internalize(p)})")
         val privateCopyParentChecks =
           if (parentChecks.isEmpty) q""
           else
@@ -224,26 +227,30 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               ..$parentChecks
             }
             """
+        def getPrivateCopyArg(p: ValOrDefDef) =
+          q"$CommonTyperMacrosModule.initField(this.${internalize(p)})"
+        def getPrivateCopyPrivateArg(p: ValOrDefDef) = p match {
+          case `prototypeParam` => q"prototype.asInstanceOf[${p.tpt}]"
+          case `parentParam` => q"parent"
+          case `originParam` => q"origin"
+          case `begCommentParam` => q"begComment"
+          case `endCommentParam` => q"endComment"
+        }
         stats1 +=
           q"""
             private[meta] def privateCopy(
                 prototype: $TreeClass = this,
-                parent: ${privateFields.parent.field.tpt} = ${privateFields.parent.field.name},
+                parent: ${parentParam.tpt} = ${parentParam.name},
                 destination: $StringClass = null,
-                origin: ${privateFields.origin.field.tpt} = ${privateFields.origin.field.name},
+                origin: ${originParam.tpt} = ${originParam.name},
                 begComment: ${begCommentParam.tpt} = this.${begCommentParam.name},
                 endComment: ${endCommentParam.tpt} = this.${endCommentParam.name}
             ): Tree = {
               $privateCopyParentChecks
               $DataTyperMacrosModule.nullCheck(origin)
               new $name(
-                ${privateFields.prototype.field.name} =
-                  prototype.asInstanceOf[${privateFields.prototype.field.tpt}],
-                ${privateFields.parent.field.name} = parent,
-                ${privateFields.origin.field.name} = origin,
-                ${privateFields.begComment.field.name} = begComment,
-                ${privateFields.endComment.field.name} = endComment
-              )(..$privateCopyArgs)
+                ..${privateParams.map(getPrivateCopyPrivateArg)}
+              )(..${params.map(getPrivateCopyArg)})
             }
           """
 
@@ -426,7 +433,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         privateApplyParamss.last._2
           .foreach(f => internalBody += q"$DataTyperMacrosModule.nullCheck(${f.name})")
         val privateParamCtorArgs = privateParams.map(p =>
-          if (p eq privateFields.origin.field)
+          if (p eq originParam)
             q"""
                $OriginModule.first(
                  alternativeOrigin,
@@ -472,7 +479,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           mstats1 +=
             q"""
             def _ctor(..$fullCtorParamDefns): $iname = {
-              val alternativeOrigin = origin
+              val alternativeOrigin = ${originParam.name}
               ..$internalBody
             }
             """
@@ -493,7 +500,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             q"""
             def _ctor(..$fullCtorParamDefns)(implicit dialect: $DialectClass): $iname = {
               val alternativeOrigin =
-                $OriginModule.first(origin, implicitly[$OriginModule.DialectOnly])
+                $OriginModule.first(${originParam.name}, implicitly[$OriginModule.DialectOnly])
               ..$internalBody
             }
             """
