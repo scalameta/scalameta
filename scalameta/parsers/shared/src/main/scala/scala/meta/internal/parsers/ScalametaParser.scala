@@ -508,7 +508,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
 
     body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
-      .asInstanceOf[T]
+    body
   }
 
   def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
@@ -4601,8 +4601,10 @@ object ScalametaParser {
 
   }
 
-  private def copyPos[T <: Tree](tree: Tree)(body: => T): T = body.privateSetOrigin(tree)
-    .asInstanceOf[T]
+  private def copyPos[T <: Tree](tree: Tree)(body: T): T = {
+    body.privateSetOrigin(tree)
+    body
+  }
 
   @inline
   private def quasi[T <: Tree](rank: Int, tree: Tree)(implicit astInfo: AstInfo[T]): T with Quasi =

@@ -232,10 +232,55 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               ..$parentChecks
             }
             """
+        stats1 += {
+          val parentInternal = internalize(parentParam)
+          q"""
+            private[meta] def privateSetParentOrCopy(
+                parent: ${parentParam.tpt},
+                destination: $StringClass = null
+            ): Tree = {
+              if (parent eq this.$parentInternal) this
+              else {
+                $privateCopyParentChecks
+                if ((destination ne null) && (this.$parentInternal eq null)) {
+                  this.$parentInternal = parent
+                  this
+                } else
+                  privateCopy(parent = parent)
+              }
+            }
+          """
+        }
+
+        stats1 +=
+          q"""
+            private[meta] def privateSetOrigin(
+                origin: ${originParam.tpt},
+                begComment: ${begCommentParam.tpt} = this.${begCommentParam.name},
+                endComment: ${endCommentParam.tpt} = this.${endCommentParam.name}
+            ): $UnitClass = {
+              $DataTyperMacrosModule.nullCheck(origin)
+              this.${internalize(originParam)} = origin
+              this.${internalize(begCommentParam)} = begComment
+              this.${internalize(endCommentParam)} = endComment
+            }
+          """
+        stats1 +=
+          q"""
+            private[meta] def privateCopyOrigin(
+                origin: ${originParam.tpt},
+                begComment: ${begCommentParam.tpt} = this.${begCommentParam.name},
+                endComment: ${endCommentParam.tpt} = this.${endCommentParam.name}
+            ): Tree = {
+              $DataTyperMacrosModule.nullCheck(origin)
+              privateCopy(origin = origin, begComment = begComment, endComment = endComment)
+            }
+          """
+
         def getPrivateCopyArg(p: ValOrDefDef) =
           q"$CommonTyperMacrosModule.initField(this.${internalize(p)})"
         def getPrivateCopyPrivateArg(p: ValOrDefDef) = p match {
-          case `prototypeParam` => q"prototype.asInstanceOf[${p.tpt}]"
+          case `prototypeParam` => q"this"
           case `parentParam` => q"parent"
           case `originParam` => q"origin"
           case `begCommentParam` => q"begComment"
@@ -243,16 +288,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
         stats1 +=
           q"""
-            private[meta] def privateCopy(
-                prototype: $TreeClass = this,
+            private def privateCopy(
                 parent: ${parentParam.tpt} = ${parentParam.name},
-                destination: $StringClass = null,
                 origin: ${originParam.tpt} = ${originParam.name},
                 begComment: ${begCommentParam.tpt} = this.${begCommentParam.name},
                 endComment: ${endCommentParam.tpt} = this.${endCommentParam.name}
             ): Tree = {
-              $privateCopyParentChecks
-              $DataTyperMacrosModule.nullCheck(origin)
               new $name(
                 ..${privateParams.map(getPrivateCopyPrivateArg)}
               )(..${params.map(getPrivateCopyArg)})
@@ -702,14 +743,16 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         if (isQuasi) stats1 +=
           q"""
           def become[T <: $TreeClass](implicit ev: $AstInfoClass[T]): T = {
-            (this match {
+            val res = this match {
               case $mname(0, tree) =>
                 ev.quasi(0, tree)
               case $mname(rank, nested @ $mname(0, tree)) =>
                 ev.quasi(rank, nested.become[T])
               case _ =>
                 throw new Exception("complex ellipses are not supported yet")
-            }).privateSetOrigin(this).asInstanceOf[T]
+            }
+            res.privateSetOrigin(this)
+            res
           }
           """
         else mstats1 +=
