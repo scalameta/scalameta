@@ -480,6 +480,23 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
     }.evaluated
   ).dependsOn(testsSemanticdb)
 
+lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
+  .enablePlugins(JmhPlugin).settings(
+    sharedSettings,
+    crossScalaVersions := LatestScala2Versions,
+    nonPublishableSettings,
+    buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
+    buildInfoPackage := "scala.meta.internal.bench",
+    Jmh / resourceDirectory := (Compile / resourceDirectory).value,
+    Jmh / fullClasspath ++= (scalameta.jvm / Compile / fullClasspath).value,
+    Jmh / run := Def.inputTaskDyn {
+      val buf = List.newBuilder[String]
+      buf += "org.openjdk.jmh.Main"
+      buf ++= spaceDelimited("<arg>").parsed
+      (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
+    }.evaluated
+  ).dependsOn(scalameta.jvm)
+
 // ==========================================
 // Settings
 // ==========================================
