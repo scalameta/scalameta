@@ -64,12 +64,7 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
-    // TODO: Type.Capturing is experimental, remove these after release
-    exclude[IncompatibleResultTypeProblem]("Type#Capturing.caps"),
-    exclude[IncompatibleMethTypeProblem]("Type#Capturing.copy"),
-    exclude[DirectMissingMethodProblem]("Type#Capturing.copy$default$2"),
-    exclude[IncompatibleMethTypeProblem]("Type#Capturing.apply"),
-    exclude[IncompatibleMethTypeProblem]("Type#Capturing#Initial.apply")
     // Tree
+    exclude[DirectMissingMethodProblem]("*._ctor*")
   )
 }
