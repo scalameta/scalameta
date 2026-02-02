@@ -65,6 +65,9 @@ object Mima {
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
     // Tree
+    // TODO: remove after release; made _ctor package-private, as intended, and changed signature
+    exclude[IncompatibleMethTypeProblem]("*._ctor"),
+    exclude[IncompatibleResultTypeProblem]("*._ctor$default$2"),
     exclude[DirectMissingMethodProblem]("*._ctor*")
   )
 }
