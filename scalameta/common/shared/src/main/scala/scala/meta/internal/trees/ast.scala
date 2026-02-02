@@ -235,14 +235,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 += {
           val parentInternal = internalize(parentParam)
           q"""
-            private[meta] def privateSetParentOrCopy(
+            private[meta] def storeFieldInParent(
                 parent: $TreeClass,
-                destination: $StringClass = null
+                destination: $StringClass
             ): Tree = {
               if (this.$parentInternal.contains(parent)) this
               else {
                 $privateCopyParentChecks
-                if ((destination ne null) && (this.$parentInternal.isEmpty)) {
+                if (this.$parentInternal.isEmpty) {
                   this.$parentInternal = $SomeModule(parent)
                   this
                 } else
@@ -251,6 +251,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }
           """
         }
+        stats1 +=
+          q"""
+            private[meta] def loadFieldForParent(parent: $TreeClass): $name = {
+              privateCopy(parent = $SomeModule(parent))
+            }
+          """
 
         stats1 +=
           q"""
@@ -271,7 +277,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 origin: ${originParam.tpt},
                 begComment: ${begCommentParam.tpt} = this.${begCommentParam.name},
                 endComment: ${endCommentParam.tpt} = this.${endCommentParam.name}
-            ): Tree = {
+            ): $name = {
               $DataTyperMacrosModule.nullCheck(origin)
               privateCopy(origin = origin, begComment = begComment, endComment = endComment)
             }
@@ -293,7 +299,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 origin: ${originParam.tpt} = ${originParam.name},
                 begComment: ${begCommentParam.tpt} = this.${begCommentParam.name},
                 endComment: ${endCommentParam.tpt} = this.${endCommentParam.name}
-            ): Tree = {
+            ): $name = {
               new $name(
                 ..${privateParams.map(getPrivateCopyPrivateArg)}
               )(..${params.map(getPrivateCopyArg)})

@@ -54,7 +54,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       """
     }
     def copySubtree(subtree: c.Tree, subtp: c.Type) =
-      q"$subtree.privateSetParentOrCopy(parent = this).asInstanceOf[$subtp]"
+      q"$subtree.loadFieldForParent(parent = this).asInstanceOf[$subtp]"
     f.tpe.finalResultType match {
       case AnyTpe() => q"()"
       case PrimitiveTpe() => q"()"
@@ -71,7 +71,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
 
   def storeField(f: c.Tree, v: c.Tree, s: c.Tree): c.Tree = {
     def copySubtree(subtree: c.Tree, subtp: c.Type) =
-      q"$subtree.privateSetParentOrCopy(parent = node, destination = $s).asInstanceOf[$subtp]"
+      q"$subtree.storeFieldInParent(parent = node, destination = $s).asInstanceOf[$subtp]"
     f.tpe.finalResultType match {
       case AnyTpe() => q"()"
       case PrimitiveTpe() => q"()"
