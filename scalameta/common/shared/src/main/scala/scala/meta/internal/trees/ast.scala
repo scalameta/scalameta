@@ -524,7 +524,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         if (isTopLevel) {
           mstats1 +=
             q"""
-            def _ctor(..$fullCtorParamDefns): $iname = {
+            private[meta] def _ctor(..$fullCtorParamDefns): $iname = {
               val alternativeOrigin = ${originParam.name}
               ..$internalBody
             }
@@ -544,7 +544,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         } else {
           mstats1 +=
             q"""
-            def _ctor(..$fullCtorParamDefns)(implicit dialect: $DialectClass): $iname = {
+            private[meta] def _ctor(..$fullCtorParamDefns)(implicit dialect: $DialectClass): $iname = {
               val alternativeOrigin =
                 $OriginModule.first(${originParam.name}, implicitly[$OriginModule.DialectOnly])
               ..$internalBody
