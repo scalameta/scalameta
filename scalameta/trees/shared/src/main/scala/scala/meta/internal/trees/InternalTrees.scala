@@ -24,8 +24,7 @@ trait InternalTree extends Product {
 
   private[meta] def privatePrototype: Tree
 
-  def parent: Option[Tree] = Option(privateParent)
-  private[meta] def privateParent: Tree
+  def parent: Option[Tree]
   private[meta] def privateSetParentOrCopy(parent: Tree, destination: String = null): Tree
 
   // NOTE: InternalTree inherits traditional productXXX methods from Product

@@ -236,17 +236,17 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           val parentInternal = internalize(parentParam)
           q"""
             private[meta] def privateSetParentOrCopy(
-                parent: ${parentParam.tpt},
+                parent: $TreeClass,
                 destination: $StringClass = null
             ): Tree = {
-              if (parent eq this.$parentInternal) this
+              if (this.$parentInternal.contains(parent)) this
               else {
                 $privateCopyParentChecks
-                if ((destination ne null) && (this.$parentInternal eq null)) {
-                  this.$parentInternal = parent
+                if ((destination ne null) && (this.$parentInternal.isEmpty)) {
+                  this.$parentInternal = $SomeModule(parent)
                   this
                 } else
-                  privateCopy(parent = parent)
+                  privateCopy(parent = $SomeModule(parent))
               }
             }
           """

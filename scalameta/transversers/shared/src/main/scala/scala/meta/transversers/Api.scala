@@ -41,7 +41,7 @@ private[meta] trait Api {
     }
 
     def withDialectIfRootAndNotSet(implicit dialect: Dialect): T =
-      if (tree.privateParent ne null) tree // must set on root
+      if (tree.parent.nonEmpty) tree // must set on root
       else if (tree.origin ne trees.Origin.None) tree // only if not set
       else withOriginRecursive(trees.Origin.DialectOnly(dialect))
   }
