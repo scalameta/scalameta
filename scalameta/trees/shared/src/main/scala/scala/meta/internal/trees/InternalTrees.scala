@@ -121,9 +121,8 @@ trait InternalTree extends Product {
   // See https://github.com/scalameta/scalameta/pull/907#discussion_r120090447.
   // ==============================================================
 
-  protected def checkFields(x: Any): Unit = ()
+  protected def checkFields(f: => Boolean): Unit = ()
   protected def checkField(field: Tree, requirement: Boolean): Unit = ()
-  protected def checkParent(x: Any): Unit = ()
 }
 
 trait InternalTreeXtensions {

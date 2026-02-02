@@ -203,19 +203,31 @@ object Name {
   @ast
   class Anonymous() extends Name {
     def value = ""
-    checkParent(ParentChecks.NameAnonymous)
+    private def checkParent(destination: String): Boolean = parent.exists {
+      case _: Ctor | _: Init | _: Self | _: Term.Param | _: Type.Param => destination == "name"
+      case _: Mod.Private | _: Mod.Protected => destination == "within"
+      case _: Term.This | _: Term.Super | _: Stat.GivenLike => true
+      case _: Defn.ExtensionGroup | _: Defn.RepeatedEnumCase => true
+      case _ => false
+    }
   }
   @ast
   class This extends Name {
     def value = "this"
-    checkParent(ParentChecks.NameThis)
+    private def checkParent(destination: String): Boolean = parent.exists {
+      case _: Ctor.Secondary | _: Self => destination == "name"
+      case _ => false
+    }
   }
   @ast
   class Indeterminate(value: JString @nonEmpty) extends Name
   @ast
   class Placeholder() extends Name {
     def value = "_"
-    checkParent(ParentChecks.NamePlaceholder)
+    private def checkParent(destination: String): Boolean = parent.exists {
+      case _: Term.Param | _: Type.Param | _: Self => destination == "name"
+      case _ => false
+    }
   }
 
   implicit class ImplicitName(private val name: Name) extends AnyVal {
@@ -330,7 +342,7 @@ object Term {
   @ast
   class Anonymous() extends sm.Name with Term.Ref {
     def value = ""
-    checkParent(ParentChecks.AnonymousImport)
+    private def checkParent(destination: String): Boolean = parent.is[Importer]
   }
   @branch
   trait SelectLike extends Term.Ref with Pat {
@@ -381,7 +393,8 @@ object Term {
   @ast
   class Assign(lhs: Term, rhs: Term) extends Term with Tree.WithBody {
     checkField(lhs, lhs.isInstanceOf[Term.Ref] || lhs.isInstanceOf[Term.Apply])
-    checkParent(ParentChecks.TermAssign)
+    private def checkParent(destination: String): Boolean = !rhs.is[Term.Repeated] ||
+      parent.exists(ParentChecks.termArgument(_, destination))
     override def body: Tree = rhs
   }
   @ast
@@ -400,7 +413,11 @@ object Term {
   }
   @ast
   class Block(stats: List[Stat]) extends Term with Tree.Block with Tree.WithStats {
-    checkParent(ParentChecks.TermBlock)
+    private def checkParent(destination: String): Boolean = stats.forall {
+      case _: Decl => true
+      case _: Export => parent.is[Defn.ExtensionGroup]
+      case x => x.isBlockStat
+    }
   }
   @ast
   class EndMarker(name: Term.Name) extends Term
@@ -554,7 +571,10 @@ object Term {
   class Eta(expr: Term) extends Term
   @ast
   class Repeated(expr: Term) extends Term with Tree.Repeated {
-    checkParent(ParentChecks.TermRepeated)
+    private def checkParent(destination: String): Boolean = parent.exists {
+      case _: Term.Tuple => destination == "args"
+      case p => ParentChecks.termArgument(p, destination)
+    }
     final def body: Term = expr
   }
   @ast
@@ -709,7 +729,12 @@ object Type {
   @ast
   class Lambda(tparamClause: ParamClause, tpe: Type)
       extends Type with Tree.WithTParamClause with Member.Function {
-    checkParent(ParentChecks.TypeLambda)
+    private def checkParent(destination: String): Boolean = parent.exists {
+      case _: Type | _: Defn.Type | _: Type.Bounds | _: Term.ApplyType | _: Type.Param |
+          _: Term.Param | _: Type.ArgClause | _: Decl.Given | _: Defn.Given | _: Defn.GivenAlias =>
+        true
+      case _ => false
+    }
     @replacedField("4.6.0")
     final def tparams: List[Param] = tparamClause.values
     override def paramClause: Member.SyntaxValuesClause = tparamClause
@@ -721,7 +746,7 @@ object Type {
   class Macro(body: Term) extends Type with Tree.WithBody
   @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3") @ast
   private[meta] class Method(paramClauses: Seq[Term.ParamClause], tpe: Type) extends Type {
-    checkParent(ParentChecks.TypeMethod)
+    private def checkParent(destination: String): Boolean = parent.isAny[Type, Defn.Type]
     @replacedField("4.6.0")
     final def paramss: List[List[Term.Param]] = paramClauses.map(_.values).toList
   }
@@ -780,22 +805,36 @@ object Type {
   }
   @ast
   class ByName(tpe: Type) extends ByNameType {
-    checkParent(ParentChecks.TypeByName)
+    private def checkParent(destination: String): Boolean = ParentChecks
+      .typeArgument(this, destination)
   }
   @ast
   class PureByName(tpe: Type) extends ByNameType {
-    checkParent(ParentChecks.TypeByName)
+    private def checkParent(destination: String): Boolean = ParentChecks
+      .typeArgument(this, destination)
   }
 
   @ast
   class Repeated(tpe: Type) extends Type with Tree.Repeated {
-    checkParent(ParentChecks.TypeRepeated)
+    private def checkParent(destination: String): Boolean = ParentChecks
+      .typeArgument(this, destination)
     final def body: Type = tpe
   }
   @ast
   class Var(name: Name) extends Type with Member.Type {
     checkFields(name.value(0).isLower)
-    checkParent(ParentChecks.TypeVar)
+    private def checkParent(destination: String): Boolean = {
+      @tailrec
+      def loop(tree: Option[Tree]): Boolean = tree match {
+        case Some(tree: Type) => loop(tree.parent)
+        case Some(tree: Type.ArgClause) => loop(tree.parent)
+        case Some(_: Pat.Typed) => true
+        case Some(tree: Term.ApplyType) => tree.parent.isOpt[Pat.Extract]
+        case Some(_) => false
+        case None => true
+      }
+      loop(Some(this))
+    }
   }
 
   @branch
@@ -894,13 +933,25 @@ object Pat {
   class Var(name: Term.Name) extends Pat with Member.Term {
     // NOTE: can't do this check here because of things like `val X = 2`
     // checkFields(name.value(0).isLower)
-    checkParent(ParentChecks.PatVar)
+    private def checkParent(destination: String): Boolean = parent.exists {
+      case _: Pat.Bind => true
+      case _: Decl.Val | _: Decl.Var | _: Defn.Val | _: Defn.Var => destination == "pats"
+      case _: Enumerator.Assign => destination == "pat"
+      case _ =>
+        val value = name.value
+        value.isEmpty || !value(0).isUpper
+    }
   }
   @ast
   class Wildcard() extends Pat
   @ast
   class SeqWildcard() extends Pat {
-    checkParent(ParentChecks.PatSeqWildcard)
+    private def checkParent(destination: String): Boolean = parent.exists {
+      case _: Pat.Bind => destination == "rhs"
+      case _: Pat.ArgClause => true
+      case _: Pat.Interpolate | _: Pat.Xml => destination == "args"
+      case _ => false
+    }
   }
   @ast
   class Bind(lhs: Pat, rhs: Pat) extends Pat {
@@ -1224,13 +1275,13 @@ object Defn {
       ctor: Ctor.Primary,
       inits: List[Init]
   ) extends Defn with Member.Term with Stat.WithMods with Tree.WithTParamClause with Stat.WithCtor {
-    checkParent(ParentChecks.EnumCase)
+    private def checkParent(destination: String): Boolean = ParentChecks.EnumCase(this, destination)
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast
   class RepeatedEnumCase(mods: List[Mod], cases: List[Term.Name]) extends Defn with Stat.WithMods {
-    checkParent(ParentChecks.EnumCase)
+    private def checkParent(destination: String): Boolean = ParentChecks.EnumCase(this, destination)
   }
   @ast
   class GivenAlias(
@@ -1431,7 +1482,8 @@ object Ctor {
 @ast
 class Init(tpe: Type, name: Name, argClauses: Seq[Term.ArgClause]) extends Ref {
   checkFields(tpe.isConstructable)
-  checkParent(ParentChecks.Init)
+  private def checkParent(destination: String): Boolean = !tpe.is[Type.Singleton] ||
+    parent.is[Ctor.Block] && destination == "init"
   @replacedField("4.6.0")
   final def argss: List[List[Term]] = argClauses.map(_.values).toList
 }
