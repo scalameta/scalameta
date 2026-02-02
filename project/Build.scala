@@ -1,15 +1,8 @@
 package org.scalameta
 package build
 
-import sbt.Keys._
 import sbt._
 import sbt.plugins._
-
-import java.lang.ProcessBuilder._
-import java.nio.file.Files._
-import java.nio.file._
-
-import scala.collection.JavaConverters._
 
 object Build extends AutoPlugin {
   override def requires: Plugins = JvmPlugin
@@ -17,40 +10,41 @@ object Build extends AutoPlugin {
 
   import autoImport._
   object autoImport {
-    trait BenchSuite {
-      def initCommands: List[String] = List("bench/clean", "wow " + Versions.LatestScala212)
+    trait BenchSemanticdbSuite {
+      def initCommands: List[String] =
+        List("benchSemanticdb/clean", "wow " + Versions.LatestScala212)
+
+      private def toCommands(benches: Seq[String]): List[String] =
+        if (benches.isEmpty) Nil else List(benches.mkString("benchSemanticdb/jmh:run ", " ", ""))
 
       def metacpBenches: List[String]
-      def metacpCommands: List[String] =
-        if (metacpBenches.isEmpty) Nil else List("bench/jmh:run " + metacpBenches.mkString(" "))
+      def metacpCommands: List[String] = toCommands(metacpBenches)
 
       def scalacBenches: List[String]
-      def scalacCommands: List[String] =
-        if (scalacBenches.isEmpty) Nil else List("bench/jmh:run " + scalacBenches.mkString(" "))
+      def scalacCommands: List[String] = toCommands(scalacBenches)
 
       def scalametaBenches: List[String]
-      def scalametaCommands: List[String] =
-        if (scalametaBenches.isEmpty) Nil else List("bench/jmh:run " + scalametaBenches.mkString(" "))
+      def scalametaCommands: List[String] = toCommands(scalametaBenches)
 
       final def command: String = {
         val benchCommands = metacpCommands ++ scalacCommands ++ scalametaCommands
-        (initCommands ++ benchCommands).map(c => s";$c ").mkString("")
+        (initCommands ++ benchCommands).mkString("; ", "; ", "")
       }
     }
 
-    object benchLSP extends BenchSuite {
+    object benchLSP extends BenchSemanticdbSuite {
       def metacpBenches = List("Metacp")
       def scalacBenches = List("ScalacBaseline")
       def scalametaBenches = List("ScalametaBaseline")
     }
 
-    object benchAll extends BenchSuite {
+    object benchAll extends BenchSemanticdbSuite {
       def metacpBenches = List("Metacp")
       def scalacBenches = List("Scalac")
       def scalametaBenches = List("Scalameta")
     }
 
-    object benchQuick extends BenchSuite {
+    object benchQuick extends BenchSemanticdbSuite {
       def metacpBenches = List("Metacp")
       def scalacBenches = Nil
       def scalametaBenches = List("ScalametaBaseline")
