@@ -97,13 +97,19 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         var needCopies = !isQuasi
         val importsBuilder = List.newBuilder[Import]
         val checkFieldsBuilder = List.newBuilder[(Tree, Tree)]
-        val checkParentsBuilder = List.newBuilder[Tree]
+        var hasCheckParent = false
 
         stats.foreach {
           case x: Import => importsBuilder += x
           case x: DefDef if !isQuasi && x.name == TermName("copy") =>
             istats1 += x
             needCopies = false
+          case x: DefDef if x.name == TermName("checkParent") =>
+            if (!isQuasi) {
+              if (!x.mods.hasFlag(Flag.PRIVATE)) c.abort(x.pos, "parent check must be private")
+              hasCheckParent = true
+              stats1 += x
+            }
           case x: ValOrDefDef =>
             if (x.mods.hasFlag(Flag.ABSTRACT) || x.rhs.isEmpty) c
               .abort(x.pos, "definition without a value")
@@ -114,7 +120,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             if (x.mods.hasFlag(Flag.FINAL)) istats1 += p else quasiExtraAbstractDefs += p
           case q"checkFields($arg)" => checkFieldsBuilder += (null: Tree) -> arg
           case q"checkField($field, $check)" => checkFieldsBuilder += field -> check
-          case x @ q"checkParent($what)" => checkParentsBuilder += x
           case x =>
             val error =
               "only checkFields(...), checkParent(...) and definitions are allowed in @ast classes"
@@ -122,7 +127,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         }
         val imports = importsBuilder.result()
         val fieldChecks = checkFieldsBuilder.result()
-        val parentChecks = checkParentsBuilder.result()
 
         istats1 ++= imports
         mstats1 ++= imports
@@ -218,20 +222,14 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // This method is private[meta] because the state that it's managing is not supposed to be touched
         // by the users of the framework.
         val privateCopyParentChecks =
-          if (parentChecks.isEmpty) q""
-          else
+          if (hasCheckParent)
             q"""
-            if (destination != null) {
-              def checkParent(fn: ($name, $TreeClass, $StringClass) => $BooleanClass): $UnitClass = {
-                val parentCheckOk = fn(this, parent, destination)
-                if (!parentCheckOk) {
-                  val parentPrefix = parent.productPrefix
-                  _root_.org.scalameta.invariants.require(parentCheckOk && _root_.org.scalameta.debug(this, parentPrefix, destination))
-                }
-              }
-              ..$parentChecks
-            }
+              def parentDesc = parent.productPrefix // can't debug parent, it's incomplete
+              _root_.org.scalameta.invariants.require(
+                tree.checkParent(destination) && _root_.org.scalameta.debug(parentDesc)
+              )
             """
+          else q""
         stats1 += {
           val parentInternal = internalize(parentParam)
           q"""
@@ -239,15 +237,16 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 parent: $TreeClass,
                 destination: $StringClass
             ): Tree = {
-              if (this.$parentInternal.contains(parent)) this
-              else {
-                $privateCopyParentChecks
-                if (this.$parentInternal.isEmpty) {
+              val tree =
+                this.$parentInternal.fold {
                   this.$parentInternal = $SomeModule(parent)
                   this
-                } else
-                  privateCopy(parent = $SomeModule(parent))
-              }
+                } { p =>
+                  if (p eq parent) this
+                  else privateCopy(parent = $SomeModule(parent))
+                }
+              $privateCopyParentChecks
+              tree
             }
           """
         }
