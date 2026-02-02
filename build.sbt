@@ -460,7 +460,7 @@ lazy val communitytest = project.in(file("community-test"))
   .settings(sharedTestSettings, crossScalaVersions := LatestScala2Versions).dependsOn(scalameta.jvm)
 
 /* ======================== BENCHES ======================== */
-lazy val bench = project.in(file("bench/suite")).enablePlugins(BuildInfoPlugin)
+lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
     sharedSettings,
     crossScalaVersions := LatestScala2Versions,
