@@ -5,12 +5,15 @@ import scala.meta.internal._
 import scala.meta.io._
 import scala.meta.tokenizers.TokenizerOptions
 
+import java.lang.{StringBuilder => JSB}
 import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.{file => nio}
 
 sealed trait Input extends Product with Serializable with inputs.InternalInput {
   def chars: Array[Char]
   def text: String = new String(chars)
+
+  private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit
 
   private[meta] def tokenizerOptions: TokenizerOptions = implicitly[TokenizerOptions]
   def withoutTokenizerOptions: Input = this
@@ -36,17 +39,33 @@ object Input {
   case object None extends Text {
     protected val value = ""
     override def toString = "Input.None"
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = sb.append(toString)
   }
 
   final case class String(value: Predef.String) extends Text {
-    override def toString = s"""Input.String("$value")"""
+    override def toString = s"""str($value)"""
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = {
+      sb.append("str")
+      getStringSlice(value, beg, end)
+    }
+  }
+
+  private def getStringSlice(value: Predef.String, beg: Int, end: Int)(implicit sb: JSB): Unit = {
+    val begAdj = 0.max(beg - 10)
+    val endAdj = value.length.min(end + 10)
+    sb.append('(')
+    if (begAdj > 0) sb.append("... ")
+    sb.append(value, begAdj, endAdj)
+    if (endAdj < value.length) sb.append(" ...")
+    sb.append(')')
   }
 
   final case class Stream(stream: java.io.InputStream, charset: Charset) extends Text {
     override protected lazy val value: Predef.String =
       new Predef.String(io.InputStreamIO.readBytes(stream), charset)
     protected def writeReplace(): AnyRef = new Stream.SerializationProxy(this)
-    override def toString = s"""Input.Stream(<stream>, Charset.forName("${charset.name}"))"""
+    override def toString = s"""stream[${charset.name}]"""
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = sb.append(toString)
   }
   object Stream {
     @SerialVersionUID(1L)
@@ -72,8 +91,8 @@ object Input {
   final case class File(path: AbsolutePath, charset: Charset) extends Text {
     override protected lazy val value: Predef.String = io.FileIO.slurp(path, charset)
     protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString =
-      s"""Input.File(new File("${path.syntax}"), Charset.forName("${charset.name}"))"""
+    override def toString = s"""file:${path.syntax}[${charset.name}]"""
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = sb.append(toString)
   }
   object File {
     def apply(path: AbsolutePath): Input.File = apply(path, Charset.forName("UTF-8"))
@@ -102,7 +121,11 @@ object Input {
   }
 
   final case class VirtualFile(path: Predef.String, value: Predef.String) extends Text {
-    override def toString = s"""Input.VirtualFile("$path", "$value")"""
+    override def toString = s"""virtfile:$path($value)"""
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = {
+      sb.append("virtfile:").append(path)
+      getStringSlice(value, beg, end)
+    }
   }
 
   // NOTE: `start` and `end` are String.substring-style,
@@ -110,16 +133,33 @@ object Input {
   // Therefore Slice.end can point to the last character of input plus one.
   final case class Slice(input: Input, start: Int, end: Int) extends Text {
     override protected lazy val value: Predef.String = input.text.substring(start, end)
-    override def toString = s"Input.Slice($input, $start, $end)"
+    override def toString = {
+      implicit val sb = new JSB
+      getInputSlice(input, start, end)
+      sb.toString
+    }
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = input
+      .toStringSlice(start + beg, start + end)
+  }
+
+  private[meta] def getInputSlice(input: Input, beg: Int, end: Int)(implicit sb: JSB): Unit = {
+    sb.append('[').append(beg).append(',').append(end).append(") in ")
+    input.toStringSlice(beg, end)
   }
 
   final case class Ammonite(input: Input) extends Proxy {
-    override def toString = s"Input.Ammonite($input)"
+    override def toString = "ammonite:" + input.toString
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = {
+      sb.append("ammonite:")
+      input.toStringSlice(beg, end)
+    }
   }
 
   final case class WithTokenizerOptions private[meta] (input: Input, options: TokenizerOptions)
       extends Proxy {
-    override def toString = s"Input.WithTokenizerOptions($input, $tokenizerOptions)"
+    override def toString = input.toString
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = input
+      .toStringSlice(beg, end)
     override private[meta] def tokenizerOptions = options
     override def withoutTokenizerOptions: Input = input
     override def withTokenizerOptions(implicit options: TokenizerOptions): Input =
