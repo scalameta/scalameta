@@ -2391,4 +2391,41 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(quoted)(blk(tname("Foo"), lit("any message")))
   }
 
+  test("#4481: quasiquote with ellipsis") {
+    val terms = List(q"Foo")
+    val quoted: Tree = q"""..$terms; "any message""""
+
+    assertTokensAsStructureLines(
+      quoted.tokens,
+      """|BOF [0..0)
+         |Dot [0..1)
+         |Dot [1..2)
+         |Ident($terms) [2..10)
+         |Semicolon [10..11)
+         |Space [11..12)
+         |Constant.String(any message) [12..25)
+         |""".stripMargin
+    )
+    val pos = quoted.pos
+    assertNoDiff(pos.toString, """[0,25) in str(..`$terms`; "any message")""")
+    assertNoDiff(pos.text, """..`$terms`; "any message"""")
+    assertPositions(
+      quoted,
+      """|<stats1>Lit.String  </stats1> [11::12)
+         |""".stripMargin,
+      showPosition = true,
+      showFieldName = true
+    )
+
+    val syntax =
+      """|{
+         |  Foo
+         |   
+         |}
+         |""".stripMargin
+    assertNoDiff(quoted.text, syntax)
+    assertNoDiff(quoted.syntax, syntax)
+    assertNoDiff(quoted.reprint, syntax)
+    assertTree(quoted)(blk(tname("Foo"), lit("any message")))
+  }
 }
