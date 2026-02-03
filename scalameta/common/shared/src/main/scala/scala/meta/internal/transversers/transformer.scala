@@ -87,8 +87,8 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       ..$transformedFields
       if (same) $treeName
       else {
-        val newTree = $constructor(..${transformedFields.map(_.name)})
-        newTree
+        $constructor(..${transformedFields.map(_.name)})
+          .withOrigin($OriginModule.PartialProxy($treeName.origin))
       }
     """
   }

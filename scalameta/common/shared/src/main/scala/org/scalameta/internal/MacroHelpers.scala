@@ -51,6 +51,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   lazy val CommonTyperMacrosBundle = hygienicRef[scala.meta.internal.trees.CommonTyperMacrosBundle]
   lazy val AstInfoClass = tq"_root_.scala.meta.internal.trees.AstInfo"
   lazy val QuasiClass = tq"_root_.scala.meta.internal.trees.Quasi"
+  lazy val OriginModule = q"_root_.scala.meta.trees.Origin"
   lazy val TokenMetadataModule = hygienicRef(scala.meta.internal.tokens.Metadata)
   lazy val BooleanClass = hygienicRef[scala.Boolean]
   lazy val IntClass = hygienicRef[scala.Int]
