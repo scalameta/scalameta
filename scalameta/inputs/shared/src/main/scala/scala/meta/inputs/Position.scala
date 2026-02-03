@@ -16,7 +16,11 @@ trait InputRange {
   def end: Int
   def text: String
 
-  override def toString = s"[$start..$end) in $input"
+  override def toString = {
+    implicit val sb = new java.lang.StringBuilder
+    Input.getInputSlice(input, start, end)
+    sb.toString
+  }
 }
 
 sealed trait Position extends InputRange {

@@ -11,14 +11,14 @@ class InfrastructureSuite extends TreeSuiteBase {
     val dialect = this.dialect.unquoteTerm(multiline = false)
     val q = dialect("$hello").parse[Term].get.asInstanceOf[Term.Quasi]
     assertTree(q.become[Type])(Type.Quasi(0, tname("hello")))
-    assertEquals(q.become[Type].pos.toString, """[0..6) in Input.String("$hello")""")
+    assertEquals(q.become[Type].pos.toString, """[0,6) in str($hello)""")
   }
 
   test("become for Quasi-1") {
     val dialect = this.dialect.unquoteTerm(multiline = false)
     val Term.Block(List(q: Stat.Quasi)) = dialect("..$hello").parse[Stat].get
     assertTree(q.become[Type])(Type.Quasi(1, Type.Quasi(0, tname("hello"))))
-    assertEquals(q.become[Type].pos.toString, """[0..8) in Input.String("..$hello")""")
+    assertEquals(q.become[Type].pos.toString, """[0,8) in str(..$hello)""")
   }
 
   test("copy parent") {

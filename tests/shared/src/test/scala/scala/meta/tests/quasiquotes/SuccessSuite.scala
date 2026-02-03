@@ -2369,7 +2369,7 @@ class SuccessSuite extends TreeSuiteBase {
          |""".stripMargin
     )
     val pos = quoted.pos
-    assertNoDiff(pos.toString, """[0..31) in Input.String("`${fooTypes(0)}`; "any message"")""")
+    assertNoDiff(pos.toString, """[0,31) in str(`${fooTypes(0)}`; "any message")""")
     assertNoDiff(pos.text, """`${fooTypes(0)}`; "any message"""")
     assertPositions(
       quoted,

@@ -158,17 +158,14 @@ class PublicSuite extends TreeSuiteBase {
     val input2 = Input.File(path, Charset.forName("UTF-8"))
     input1 match { case _: Input.File => }
     input2 match { case _: Input.File => }
-    assertEquals(
-      input1.toString,
-      s"""Input.File(new File("$syntax"), Charset.forName("ISO-8859-1"))"""
-    )
-    assertEquals(input2.toString, s"""Input.File(new File("$syntax"), Charset.forName("UTF-8"))""")
+    assertEquals(input1.toString, s"""file:$syntax[ISO-8859-1]""")
+    assertEquals(input2.toString, s"""file:$syntax[UTF-8]""")
   }
 
   test("scala.meta.inputs.Input.Slice.toString") {
     val input = Input.Slice(Input.String("foo"), 0, 2)
     input match { case _: Input.Slice => }
-    assertEquals(input.toString, """Input.Slice(Input.String("foo"), 0, 2)""")
+    assertEquals(input.toString, """[0,2) in str(foo)""")
   }
 
   test("scala.meta.inputs.Input.Stream.toString") {
@@ -178,26 +175,26 @@ class PublicSuite extends TreeSuiteBase {
     val input2 = Input.Stream(stream, Charset.forName("UTF-8"))
     input1 match { case _: Input.Stream => }
     input2 match { case _: Input.Stream => }
-    assertEquals(input1.toString, """Input.Stream(<stream>, Charset.forName("ISO-8859-1"))""")
-    assertEquals(input2.toString, """Input.Stream(<stream>, Charset.forName("UTF-8"))""")
+    assertEquals(input1.toString, """stream[ISO-8859-1]""")
+    assertEquals(input2.toString, """stream[UTF-8]""")
   }
 
   test("scala.meta.inputs.Input.String.toString") {
     val input = Input.String("foo")
     input match { case _: Input.String => }
-    assertEquals(input.toString, """Input.String("foo")""")
+    assertEquals(input.toString, """str(foo)""")
   }
 
   test("scala.meta.inputs.Input.VirtualFile.toString") {
     val input = Input.VirtualFile("foo.scala", "foo")
     input match { case _: Input.VirtualFile => }
-    assertEquals(input.toString, s"""Input.VirtualFile("foo.scala", "foo")""")
+    assertEquals(input.toString, s"""virtfile:foo.scala(foo)""")
   }
 
   test("scala.meta.inputs.Input.Ammonite.toString") {
     val input = Input.Ammonite(Input.None)
     input match { case _: Input.Ammonite => }
-    assertEquals(input.toString, s"""Input.Ammonite(Input.None)""")
+    assertEquals(input.toString, s"""ammonite:Input.None""")
   }
 
   test("scala.meta.inputs.Position.None.toString")(
@@ -206,7 +203,7 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.inputs.Position.Range.toString")("foo + bar".parse[Term].get match {
     case Term.ApplyInfix(lhs, _, _, _) =>
-      assertEquals(lhs.pos.toString, """[0..3) in Input.String("foo + bar")""")
+      assertEquals(lhs.pos.toString, """[0,3) in str(foo + bar)""")
   })
 
   test("scala.meta.parsers.ParseException.toString")(intercept[ParseException](
