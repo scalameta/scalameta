@@ -2398,20 +2398,20 @@ class SuccessSuite extends TreeSuiteBase {
     assertTokensAsStructureLines(
       quoted.tokens,
       """|BOF [0..0)
-         |Dot [0..1)
-         |Dot [1..2)
-         |Ident($terms) [2..10)
-         |Semicolon [10..11)
-         |Space [11..12)
-         |Constant.String(any message) [12..25)
+         |Comment( .. ) [0..8)
+         |Ident($terms) [8..16)
+         |Semicolon [16..17)
+         |Space [17..18)
+         |Constant.String(any message) [18..31)
+         |EOF [31..31)
          |""".stripMargin
     )
     val pos = quoted.pos
-    assertNoDiff(pos.toString, """[0,25) in str(..`$terms`; "any message")""")
-    assertNoDiff(pos.text, """..`$terms`; "any message"""")
+    assertNoDiff(pos.toString, """[0,31) in str(/* .. */`$terms`; "any message")""")
+    assertNoDiff(pos.text, """/* .. */`$terms`; "any message"""")
     assertPositions(
       quoted,
-      """|<stats1>Lit.String  </stats1> [11::12)
+      """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
          |""".stripMargin,
       showPosition = true,
       showFieldName = true
@@ -2420,7 +2420,7 @@ class SuccessSuite extends TreeSuiteBase {
     val syntax =
       """|{
          |  Foo
-         |   
+         |  "any message"
          |}
          |""".stripMargin
     assertNoDiff(quoted.text, syntax)

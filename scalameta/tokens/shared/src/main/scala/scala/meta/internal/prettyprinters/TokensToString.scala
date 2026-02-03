@@ -40,6 +40,7 @@ object TokensToString {
             }
           }) idx += 1
         sb.append('`')
+      case t: Token.Ellipsis => sb.append("/* ").append(chars, t.start, t.len).append(" */")
       case t => sb.append(chars, t.start, t.len)
     }
     sb.toString
