@@ -130,6 +130,8 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.inputs.Input.Stream *
          |scala.meta.inputs.Input.String *
          |scala.meta.inputs.Input.Text *
+         |scala.meta.inputs.Input.Uri *
+         |scala.meta.inputs.Input.UriLike *
          |scala.meta.inputs.Input.VirtualFile *
          |scala.meta.inputs.Input.WithTokenizerOptions *
          |scala.meta.inputs.InputException *

@@ -4,14 +4,14 @@ import scala.meta.internal.io.{FileIO, PathIO, PlatformPathIO}
 
 import java.io._
 import java.net._
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Path, Paths}
 import java.nio.{file => nio}
 
 /** Wrapper around an absolute nio.Path. */
 sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   require(toNIO.isAbsolute, s"$toNIO is not absolute!")
   def toFile: File = toNIO.toFile
-  def toURI: URI = toURI(Files.isDirectory(toNIO))
+  def toURI: URI = toURI(FileIO.isDirectory(this))
   def toURI(isDirectory: Boolean): URI = {
     val uri = toNIO.toUri
     if (isDirectory && uri.getPath != null && !uri.getPath.endsWith("/"))
@@ -56,6 +56,7 @@ object AbsolutePath {
     if (path.isAbsolute) new AbsolutePath(path) {} else cwd.resolve(path.toString)
   def fromAbsoluteUri(uri: URI)(implicit cwd: AbsolutePath): AbsolutePath = {
     require(uri.isAbsolute, "This method only works on absolute URIs at present.") // Limitation of Paths.get(URI)
-    apply(Paths.get(uri))(cwd)
+    fromUri(uri)
   }
+  def fromUri(uri: URI): AbsolutePath = new AbsolutePath(Paths.get(uri)) {}
 }

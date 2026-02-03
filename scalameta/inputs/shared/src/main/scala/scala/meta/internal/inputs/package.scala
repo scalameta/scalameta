@@ -68,6 +68,7 @@ package object inputs {
       case Input.None => "<none>"
       case proxy: Input.Proxy => proxy.input.syntax
       case Input.File(path, _) => path.toString
+      case x: Input.UriLike => x.uri.toString
       case Input.VirtualFile(path, _) => path
       case _ => "<input>"
     }
