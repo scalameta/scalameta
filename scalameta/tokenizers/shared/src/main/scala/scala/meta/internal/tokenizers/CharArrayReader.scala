@@ -2,10 +2,7 @@ package scala.meta
 package internal
 package tokenizers
 
-import scala.meta.inputs._
 import scala.meta.internal.tokens.Chars._
-
-import scala.annotation.tailrec
 
 private[meta] case class CharArrayReader(
     buf: Array[Char],
@@ -21,13 +18,10 @@ private[meta] case class CharArrayReader(
     private var lastLineStartOffset: Int = 0
 ) {
 
-  import CharArrayReader._
+  import CharArrayReader.NextChar
 
   /** Advance one character; reducing CR;LF pairs to just LF */
-  final def nextChar(): Unit = {
-    nextRawChar()
-    checkRawChar()
-  }
+  final def nextChar(): Unit = setNextRawCharAndCheck(peekRawChar)
 
   private def checkRawChar(): Unit = checkLineEnd()
 
@@ -49,26 +43,27 @@ private[meta] case class CharArrayReader(
    * Advance one character, leaving CR;LF pairs intact. This is for use in multi-line strings, so
    * there are no "potential line ends" here.
    */
-  final def nextRawChar(): Unit = setNextRawChar(peekRawChar())
+  final def nextRawChar(): Unit = setNextRawChar(peekRawChar)
 
   @inline
-  private[tokenizers] def setNextRawChar(nextChar: NextChar): Unit =
-    setNextRawChar(endCharOffset, nextChar)
+  private[tokenizers] def setNextRawChar(nch: NextChar): Unit = setNextRawChar(endCharOffset, nch)
 
-  private[tokenizers] def setNextRawChar(peekEndOffset: Int, nextChar: NextChar): Unit = {
-    ch = nextChar.ch
+  private[tokenizers] def setNextRawCharAndCheck(nch: NextChar): Unit = {
+    setNextRawChar(nch)
+    checkRawChar()
+  }
+
+  private[tokenizers] def setNextRawChar(peekEndOffset: Int, nch: NextChar): Unit = {
+    ch = nch.ch
     if (begCharOffset < peekEndOffset) begCharOffset = peekEndOffset
-    if (peekEndOffset < nextChar.end) endCharOffset = nextChar.end
+    if (peekEndOffset < nch.end) endCharOffset = nch.end
   }
 
   @inline
-  final def peekRawChar(): NextChar = peekRawChar(endCharOffset)
+  final def peekRawChar: NextChar = peekRawChar(endCharOffset)
 
   @inline
   final def peekRawChar(offset: Int): NextChar = CharArrayReader.readRawChar(buf, offset)
-
-  @inline
-  final def peekNonWhitespace(): NextChar = findNonWhitespace(buf, ch, endCharOffset)
 
   private def checkLineEnd(): Unit = if (ch == LF || ch == FF) {
     lastLineStartOffset = lineStartOffset
@@ -135,14 +130,5 @@ object CharArrayReader {
       }
       NextChar(hi, hiEnd)
     }
-
-  def findNonWhitespace(buf: Array[Char], ch: Int, offset: Int): NextChar =
-    findNonWhitespace(buf, NextChar(ch, offset))
-
-  @tailrec
-  def findNonWhitespace(buf: Array[Char], nextChar: NextChar): NextChar = nextChar.ch match {
-    case ' ' | '\t' => findNonWhitespace(buf, readRawChar(buf, nextChar.end))
-    case _ => nextChar
-  }
 
 }

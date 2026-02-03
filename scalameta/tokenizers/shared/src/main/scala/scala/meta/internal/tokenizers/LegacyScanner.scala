@@ -411,7 +411,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
           }
           if (ch == LF && !wasMultiChar)
             setInvalidToken(curr)("can't use unescaped LF in character literals")
-          else if (isEscapeChar || wasEscapedMultiChar || peekRawChar().ch == '\'') {
+          else if (isEscapeChar || wasEscapedMultiChar || peekRawChar.ch == '\'') {
             getLitChar()
             if (ch == '\'' && !wasEscapedMultiChar) {
               nextChar()
@@ -429,11 +429,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         nextChar()
         if (isDigit()) setFractionOnDot()
         else if (unquoteDialect != null && ch == '.') {
-          base = 0
-          while (ch == '.') {
-            base += 1
+          base = 1
+          while ({
             nextChar()
-          }
+            ch == '.'
+          }) base += 1
           token = ELLIPSIS
         } else token = DOT
       case ';' =>
@@ -523,11 +523,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       putCharAndNext()
       getOperatorRest()
     case '/' =>
-      val peekNextChar = peekRawChar().ch
-      if (peekNextChar == '/' || peekNextChar == '*') finishNamed()
-      else {
-        putCharAndNext()
-        getOperatorRest()
+      val nch = peekRawChar
+      nch.ch match {
+        case '/' | '*' => finishNamed()
+        case _ =>
+          putChar(ch)
+          setNextRawCharAndCheck(nch)
+          getOperatorRest()
       }
     case _ =>
       if (isSpecial(ch)) {
@@ -541,9 +543,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     // Skip the first dollar and move on to whatever we've been doing:
     // starting or continuing tokenization of an identifier,
     // or continuing reading a string literal, or whatever.
-    val nextChar = peekRawChar()
-    val skip = nextChar.ch == '$'
-    if (skip) setNextRawChar(nextChar)
+    val nch = peekRawChar
+    val skip = nch.ch == '$'
+    if (skip) setNextRawChar(nch)
     !skip
   }
   @inline
@@ -829,22 +831,20 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       setStrVal()
     }
 
-    def setNumberInteger() =
+    def setNumberInteger() = {
       if (ch == 'l' || ch == 'L') {
         nextChar()
         token = LONGLIT
-        setNumberInt()
-      } else {
-        checkNoLetter()
-        setNumberInt()
-      }
+      } else checkNoLetter()
+      setNumberInt()
+    }
 
     if (base != 10) setNumberInteger()
     else if (!setFractionExponentAndTypeSuffix())
       if (ch == '.') {
-        val nextChar = peekRawChar()
-        if (CharArrayReader.isDigit(nextChar.ch)) {
-          setNextRawChar(nextChar)
+        val nch = peekRawChar
+        if (CharArrayReader.isDigit(nch.ch)) {
+          setNextRawChar(nch)
           setFractionOnDot()
         } else setNumberInt()
       } else setNumberInteger()
