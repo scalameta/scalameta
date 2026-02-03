@@ -65,6 +65,8 @@ object Mima {
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
     // Tree
+    // XXX: this was a private class, not sure why mima complained
+    exclude[MissingClassProblem]("inputs.Input$File$SerializationProxy"),
     // TODO: remove after release; made _ctor package-private, as intended, and changed signature
     exclude[IncompatibleMethTypeProblem]("*._ctor"),
     exclude[IncompatibleResultTypeProblem]("*._ctor$default$2"),

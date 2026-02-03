@@ -6,6 +6,7 @@ import scala.meta.io._
 import scala.meta.tokenizers.TokenizerOptions
 
 import java.lang.{StringBuilder => JSB}
+import java.net.URI
 import java.nio.charset.{Charset, StandardCharsets}
 import java.nio.{file => nio}
 
@@ -88,11 +89,9 @@ object Input {
     }
   }
 
-  final case class File(path: AbsolutePath, charset: Charset) extends Text {
+  final case class File(path: AbsolutePath, charset: Charset) extends UriLike {
+    override private[meta] val uri = path.toURI
     override protected lazy val value: Predef.String = io.FileIO.slurp(path, charset)
-    protected def writeReplace(): AnyRef = new File.SerializationProxy(this)
-    override def toString = s"""file:${path.syntax}[${charset.name}]"""
-    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = sb.append(toString)
   }
   object File {
     def apply(path: AbsolutePath): Input.File = apply(path, Charset.forName("UTF-8"))
@@ -100,20 +99,38 @@ object Input {
     def apply(file: java.io.File): Input.File = apply(AbsolutePath(file))
     def apply(path: nio.Path, charset: Charset): Input.File = apply(AbsolutePath(path), charset)
     def apply(path: nio.Path): Input.File = apply(AbsolutePath(path))
+  }
 
+  final case class Uri(uri: java.net.URI, charset: Charset) extends UriLike {
+    override protected lazy val value: Predef.String =
+      new Predef.String(io.FileIO.readAllBytes(uri), charset)
+  }
+
+  sealed trait UriLike extends Text {
+    private[meta] val uri: URI
+    private[meta] val charset: Charset
+    protected def writeReplace(): AnyRef = new UriLike.SerializationProxy(this)
+    override def toString = s"""$uri[${charset.name}]"""
+    private[meta] def toStringSlice(beg: Int, end: Int)(implicit sb: JSB): Unit = sb.append(toString)
+  }
+
+  object UriLike {
     @SerialVersionUID(1L)
     private class SerializationProxy(
         @transient
-        private var orig: File
+        private var orig: UriLike
     ) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
-        out.writeObject(orig.path)
+        out.writeObject(orig.uri)
         out.writeObject(orig.charset.name)
       }
       private def readObject(in: java.io.ObjectInputStream): Unit = {
-        val file = in.readObject.asInstanceOf[java.io.File]
+        val path = in.readObject.asInstanceOf[URI]
         val charset = Charset.forName(in.readObject.asInstanceOf[Predef.String])
-        orig = File(file, charset)
+        orig = path.getScheme match {
+          case "file" => File(AbsolutePath.fromUri(path), charset)
+          case _ => Uri(path, charset)
+        }
       }
       private def readResolve(): AnyRef = orig
       override def toString = s"""Proxy($orig)"""

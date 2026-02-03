@@ -1,7 +1,8 @@
 package scala.meta.tests
 package prettyprinters
 
-import scala.meta._
+import scala.meta.inputs._
+import scala.meta.{Input => _, Position => _, _}
 
 import java.io._
 import java.nio.charset.Charset
@@ -153,13 +154,24 @@ class PublicSuite extends TreeSuiteBase {
 
   test("scala.meta.inputs.Input.File.toString") {
     val path = RelativePath("hello.scala").toAbsolute
-    val syntax = path.syntax
     val input1 = Input.File(path, Charset.forName("latin1"))
     val input2 = Input.File(path, Charset.forName("UTF-8"))
     input1 match { case _: Input.File => }
     input2 match { case _: Input.File => }
-    assertEquals(input1.toString, s"""file:$syntax[ISO-8859-1]""")
-    assertEquals(input2.toString, s"""file:$syntax[UTF-8]""")
+    val syntax = path.toURI.toString
+    assertEquals(input1.toString, s"$syntax[ISO-8859-1]")
+    assertEquals(input2.toString, s"$syntax[UTF-8]")
+  }
+
+  test("scala.meta.inputs.Input.Uri.toString") {
+    val uri = RelativePath("hello.scala").toAbsolute.toURI
+    val input1 = Input.Uri(uri, Charset.forName("latin1"))
+    val input2 = Input.Uri(uri, Charset.forName("UTF-8"))
+    input1 match { case _: Input.Uri => }
+    input2 match { case _: Input.Uri => }
+    val syntax = uri.toString
+    assertEquals(input1.toString, s"$syntax[ISO-8859-1]")
+    assertEquals(input2.toString, s"$syntax[UTF-8]")
   }
 
   test("scala.meta.inputs.Input.Slice.toString") {
