@@ -21,7 +21,6 @@ trait CommonNamerMacros extends MacroHelpers {
   lazy val ClassOfMethod = q"_root_.scala.Predef.classOf"
   lazy val AstAnnotation = tq"_root_.scala.meta.internal.trees.ast"
   lazy val OriginClass = tq"_root_.scala.meta.trees.Origin"
-  lazy val OriginModule = q"_root_.scala.meta.trees.Origin"
   lazy val DialectClass = tq"_root_.scala.meta.Dialect"
   lazy val CommentsClass = tq"_root_.scala.meta.Tree.Comments"
 

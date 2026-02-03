@@ -111,6 +111,21 @@ object Origin {
     }
   }
 
-  private[meta] def first(one: Origin, two: Origin): Origin = if (one ne None) one else two
+  @adt.leaf
+  class PartialProxy(origin: Partial) extends Origin {
+    override val position: Position = Position.None
+    override def dialectOpt: Option[Dialect] = origin.dialectOpt
+    override private[meta] def inputOpt: Option[Input] = origin.inputOpt
+    override private[meta] val textOpt: Option[String] = scala.None
+    override private[meta] val tokensOpt: Option[Tokens] = scala.None
+  }
+  object PartialProxy {
+    def apply(origin: Origin): Origin = origin match {
+      case origin: Partial => new PartialProxy(origin)
+      case origin => origin // includes None, DialectOnly, PartialProxy
+    }
+  }
+
+  private[meta] def first(one: Origin, two: => Origin): Origin = if (one ne None) one else two
 
 }

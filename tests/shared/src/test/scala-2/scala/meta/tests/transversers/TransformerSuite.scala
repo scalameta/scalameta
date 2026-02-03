@@ -48,8 +48,7 @@ class TransformerSuite extends TreeSuiteBase {
     val tree0: Tree = q"x + y"
     val tree1 = tree0.transform { case Term.Name(s) => Term.Name(s + s) }
     assertEquals(tree1.toString, "xx ++ yy")
-    assertEquals(tree1.origin.inputOpt, None)
-    assertNotEquals(tree0.origin.inputOpt, None)
+    assertEquals(tree1.origin.inputOpt, tree0.origin.inputOpt)
   }
 
   test("dotty-derives-transform") {
@@ -64,7 +63,6 @@ class TransformerSuite extends TreeSuiteBase {
     val afterTree = beforeTree.transform { case Type.Name("OldName") => Type.Name("NewName") }
 
     assertEquals(afterTree.toString, after)
-    assertEquals(afterTree.origin.inputOpt, None)
-    assertNotEquals(beforeTree.origin.inputOpt, None)
+    assertEquals(afterTree.origin.inputOpt, beforeTree.origin.inputOpt)
   }
 }

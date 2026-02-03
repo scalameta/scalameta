@@ -127,10 +127,16 @@ trait InternalTree extends Product {
 
 trait InternalTreeXtensions {
   private[meta] implicit class XtensionOriginTree[T <: Tree](tree: T) {
-    def withOrigin(origin: Origin): T = tree.privateCopyOrigin(origin = origin).asInstanceOf[T]
+    def withOrigin(origin: Origin): T =
+      if (tree.origin eq Origin.None) {
+        tree.privateSetOrigin(origin)
+        tree
+      } else tree.privateCopyOrigin(origin = origin).asInstanceOf[T]
 
-    def withDialectNonRecursiveIfNotSet(implicit dialect: Dialect): T =
-      if (tree.origin ne Origin.None) tree else withOrigin(Origin.DialectOnly(dialect))
+    def withDialectNonRecursiveIfNotSet(implicit dialect: Dialect): T = {
+      if (tree.origin eq Origin.None) tree.privateSetOrigin(Origin.DialectOnly(dialect))
+      tree
+    }
 
     def hasComments: Boolean = tree.begComment.nonEmpty || tree.endComment.nonEmpty
 

@@ -175,7 +175,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             privateApplyParamsBuilder += p
 
             if (p eq originParam) privateBodyForCopyBuilder +=
-              q"val ${p.name} = $OriginModule.DialectOnly.fromOrigin(this.${p.name})"
+              q"val ${p.name} = $OriginModule.PartialProxy(this.${p.name})"
           }
         }
         flushPrivateApplyParamssBuilder()
