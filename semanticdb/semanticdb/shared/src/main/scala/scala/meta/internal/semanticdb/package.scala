@@ -14,9 +14,6 @@ package object semanticdb {
   val NoTree = Tree.Empty
   val NoAccess = Access.Empty
 
-  private[meta] val AnnotationTree = Annotation
-  private[meta] type AnnotationTree = Annotation
-
   implicit class XtensionSemanticdbSymbolInformation(private val info: SymbolInformation)
       extends AnyVal {
     def isScala: Boolean = isLang(l.SCALA)

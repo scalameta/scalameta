@@ -126,7 +126,7 @@ message StructuralType {
 
 message AnnotatedType {
   reserved 2;
-  repeated Annotation annotations = 3;
+  repeated AnnotationTree annotations = 3;
   Type tpe = 1;
 }
 
@@ -316,7 +316,7 @@ message SymbolInformation {
   int32 properties = 4;
   string display_name = 5;
   Signature signature = 17;
-  repeated Annotation annotations = 13;
+  repeated AnnotationTree annotations = 13;
   Access access = 18;
   repeated string overridden_symbols = 19;
   Documentation documentation = 20;
@@ -335,7 +335,7 @@ message Documentation {
 }
 
 // TODO; rename to AnnotationTree
-message Annotation {
+message AnnotationTree {
   Type tpe = 1;
   repeated Tree arguments = 2;
 }
@@ -420,7 +420,7 @@ message Tree {
     SelectTree select_tree = 7;
     TypeApplyTree type_apply_tree = 8;
     AssignTree assign_tree = 9;
-    Annotation annotation_tree = 10;
+    AnnotationTree annotation_tree = 10;
   }
 }
 
