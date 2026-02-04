@@ -57,14 +57,26 @@ trait SymbolInformationOps {
       def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
       if (sym.isPackage) ()
       else if (sym.isJava) {
-        if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
+        if (sym.isAbstractOverride) {
+          flip(p.ABSTRACT)
+          flip(p.OVERRIDE)
+        } else {
+          if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
+          if (sym.isOverride) flip(p.OVERRIDE)
+        }
         // NOTE: Scalap doesn't expose JAVA_ENUM.
         if (sym.isFinal /* || sym.isJavaEnum */ ) flip(p.FINAL)
         // NOTE: Scalap doesn't expose JAVA_ENUM.
         // if (sym.isJavaEnum) flip(p.ENUM)
         if (sym.isStatic) flip(p.STATIC)
       } else {
-        if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
+        if (sym.isAbstractOverride) {
+          flip(p.ABSTRACT)
+          flip(p.OVERRIDE)
+        } else {
+          if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
+          if (sym.isOverride) flip(p.OVERRIDE)
+        }
         if (sym.isFinal || sym.isModule) flip(p.FINAL)
         if (sym.isSealed) flip(p.SEALED)
         if (sym.isImplicit) flip(p.IMPLICIT)

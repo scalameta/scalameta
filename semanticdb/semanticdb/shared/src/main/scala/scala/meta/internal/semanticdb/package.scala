@@ -39,6 +39,9 @@ package object semanticdb {
     def isTrait: Boolean = isKind(k.TRAIT)
 
     def isAbstract: Boolean = hasProperty(p.ABSTRACT)
+    def isOverride: Boolean = hasProperty(p.OVERRIDE)
+    def isAbstractOverride: Boolean = hasProperties(in = p.ABSTRACT.value | p.OVERRIDE.value)
+    def isAbstractNoOverride: Boolean = hasProperties(in = p.ABSTRACT.value, out = p.OVERRIDE.value)
     def isFinal: Boolean = hasProperty(p.FINAL)
     def isSealed: Boolean = hasProperty(p.SEALED)
     def isImplicit: Boolean = hasProperty(p.IMPLICIT)
@@ -76,6 +79,8 @@ package object semanticdb {
     private def isKind(kind: k): Boolean = info.kind eq kind
     @inline
     private def isLang(lang: l): Boolean = info.language eq lang
+    @inline
+    private def hasProperties(in: Int, out: Int = 0): Boolean = (info.properties & (in | out)) == in
     @inline
     private def hasAnyProperties(bitmask: Int): Boolean = (info.properties & bitmask) != 0
     @inline

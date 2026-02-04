@@ -63,13 +63,25 @@ trait SymbolInformationOps {
       def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
       if (gsym.hasFlag(gf.PACKAGE)) ()
       else if (gsym.hasFlag(gf.JAVA)) {
-        if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
+        if (gsym.hasFlag(gf.ABSOVERRIDE)) {
+          flip(p.ABSTRACT)
+          flip(p.OVERRIDE)
+        } else {
+          if (isAbstractClass || kind.isInterface || isAbstractMethod) flip(p.ABSTRACT)
+          if (gsym.hasFlag(gf.OVERRIDE)) flip(p.OVERRIDE)
+        }
         if (gsym.hasFlag(gf.FINAL) || gsym.hasFlag(gf.JAVA_ENUM)) flip(p.FINAL)
         if (gsym.hasFlag(gf.JAVA_ENUM)) flip(p.ENUM)
         if (gsym.hasFlag(gf.STATIC) && !gsym.hasFlag(gf.INTERFACE)) flip(p.STATIC)
         if (gsym.isDefaultMethod) flip(p.DEFAULT)
       } else {
-        if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
+        if (gsym.hasFlag(gf.ABSOVERRIDE)) {
+          flip(p.ABSTRACT)
+          flip(p.OVERRIDE)
+        } else {
+          if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
+          if (gsym.hasFlag(gf.OVERRIDE)) flip(p.OVERRIDE)
+        }
         if (gsym.hasFlag(gf.FINAL) || isObject) flip(p.FINAL)
         if (gsym.hasFlag(gf.SEALED)) flip(p.SEALED)
         if (gsym.hasFlag(gf.IMPLICIT)) flip(p.IMPLICIT)
