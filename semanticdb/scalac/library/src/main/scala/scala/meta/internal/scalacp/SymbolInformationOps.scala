@@ -152,16 +152,14 @@ trait SymbolInformationOps {
       }
 
     private val syntheticAnnotationsSymbols = Set("scala/reflect/macros/internal/macroImpl#")
-    private def syntheticAnnotations(annot: s.Annotation): Boolean = annot.tpe match {
-      case s.TypeRef(_, sym, _) => syntheticAnnotationsSymbols.contains(sym)
-      case _ => false
-    }
 
     private def annotations: List[s.Annotation] = {
-      val annots = sym.attributes.map(attribute => s.Annotation(attribute.typeRef.toSemanticTpe))
-        .toList
-
-      annots.filterNot(syntheticAnnotations)
+      val builder = List.newBuilder[s.Annotation]
+      sym.attributes.foreach(_.typeRef.toSemanticTpe match {
+        case s.TypeRef(_, sym, _) if syntheticAnnotationsSymbols.contains(sym) =>
+        case tpe => builder += s.Annotation(tpe)
+      })
+      builder.result()
     }
 
     private def access: s.Access = kind match {
