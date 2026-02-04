@@ -1,8 +1,7 @@
 package scala.meta.contrib.implicits
 
 trait implicits
-    extends CommentExtensions
-    with Converters
+    extends Converters
     with Equality
     with ReplaceExtensions
     with ExtractExtensions
