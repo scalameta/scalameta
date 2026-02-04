@@ -155,11 +155,9 @@ trait SymbolInformationOps {
         else ssig
       }
 
-    private def annotations: List[s.Annotation] = {
-      val ganns = gsym.annotations
-        .filter(gann => gann.atp.typeSymbol != definitions.MacroImplAnnotation)
-      ganns.map(_.toSemantic)
-    }
+    private def annotations: List[s.Annotation] = gsym.annotations.flatMap(gann =>
+      if (gann.atp.typeSymbol == definitions.MacroImplAnnotation) None else Some(gann.toSemantic)
+    )
 
     private def access: s.Access = kind match {
       case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE | k
