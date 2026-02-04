@@ -106,4 +106,41 @@ class VarargParameterSuite extends ParseSuite {
     check(code)(tree)
   }
 
+  test("#4492 with varargs") {
+    val code2 = "method1((_: Seq[Int]): _*)"
+    val code3 = "method1((_: Seq[Int])*)"
+    val error2 =
+      """|invariant failed:
+         |when verifying tree.checkParent(destination).&&(org.scalameta.`package`.debug(parentDesc))
+         |found that tree.checkParent(destination) is false
+         |where destination = body
+         |where parentDesc = Term.AnonymousFunction
+         |where tree = (_: Seq[Int]): _*
+         |""".stripMargin
+    val error3 =
+      """|invariant failed:
+         |when verifying tree.checkParent(destination).&&(org.scalameta.`package`.debug(parentDesc))
+         |found that tree.checkParent(destination) is false
+         |where destination = body
+         |where parentDesc = Term.AnonymousFunction
+         |where tree = (_: Seq[Int])*
+         |""".stripMargin
+    import org.scalameta.invariants.InvariantFailedException
+    locally {
+      implicit val dialect: Dialect = dialects.Scala213
+      interceptMessage[InvariantFailedException](error2)(code2.parse[Stat])
+      val layout = "method1((_: Seq[Int]) `*`)"
+      val tree3 = tapply(
+        "method1",
+        Term.AnonymousFunction(tpostfix(Term.Ascribe(Term.Placeholder(), papply("Seq", "Int")), "*"))
+      )
+      runTestAssert[Stat](code3, layout)(tree3)
+    }
+    locally {
+      implicit val dialect: Dialect = dialects.Scala3
+      interceptMessage[InvariantFailedException](error2)(code2.parse[Stat])
+      interceptMessage[InvariantFailedException](error3)(code3.parse[Stat])
+    }
+  }
+
 }
