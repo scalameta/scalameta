@@ -155,7 +155,7 @@ trait SymbolInformationOps {
         else ssig
       }
 
-    private def annotations: List[s.Annotation] = gsym.annotations.flatMap(gann =>
+    private def annotations: List[s.AnnotationTree] = gsym.annotations.flatMap(gann =>
       if (gann.atp.typeSymbol == definitions.MacroImplAnnotation) None else Some(gann.toSemantic)
     )
 

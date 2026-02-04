@@ -153,11 +153,11 @@ trait SymbolInformationOps {
 
     private val syntheticAnnotationsSymbols = Set("scala/reflect/macros/internal/macroImpl#")
 
-    private def annotations: List[s.Annotation] = {
-      val builder = List.newBuilder[s.Annotation]
+    private def annotations: List[s.AnnotationTree] = {
+      val builder = List.newBuilder[s.AnnotationTree]
       sym.attributes.foreach(_.typeRef.toSemanticTpe match {
         case s.TypeRef(_, sym, _) if syntheticAnnotationsSymbols.contains(sym) =>
-        case tpe => builder += s.Annotation(tpe)
+        case tpe => builder += s.AnnotationTree(tpe)
       })
       builder.result()
     }
