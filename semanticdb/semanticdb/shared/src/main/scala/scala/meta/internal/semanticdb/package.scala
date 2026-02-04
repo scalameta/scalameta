@@ -19,43 +19,46 @@ package object semanticdb {
 
   implicit class XtensionSemanticdbSymbolInformation(private val info: SymbolInformation)
       extends AnyVal {
-    def isScala: Boolean = info.language == l.SCALA
-    def isJava: Boolean = info.language == l.JAVA
-    def isLocal: Boolean = info.kind == k.LOCAL
-    def isField: Boolean = info.kind == k.FIELD
-    def isMethod: Boolean = info.kind == k.METHOD
-    def isConstructor: Boolean = info.kind == k.CONSTRUCTOR
-    def isMacro: Boolean = info.kind == k.MACRO
-    def isType: Boolean = info.kind == k.TYPE
-    def isParameter: Boolean = info.kind == k.PARAMETER
-    def isSelfParameter: Boolean = info.kind == k.SELF_PARAMETER
-    def isTypeParameter: Boolean = info.kind == k.TYPE_PARAMETER
-    def isObject: Boolean = info.kind == k.OBJECT
-    def isPackage: Boolean = info.kind == k.PACKAGE
-    def isPackageObject: Boolean = info.kind == k.PACKAGE_OBJECT
-    def isClass: Boolean = info.kind == k.CLASS
-    def isInterface: Boolean = info.kind == k.INTERFACE
-    def isTrait: Boolean = info.kind == k.TRAIT
-    def isAbstract: Boolean = (info.properties & p.ABSTRACT.value) != 0
-    def isFinal: Boolean = (info.properties & p.FINAL.value) != 0
-    def isSealed: Boolean = (info.properties & p.SEALED.value) != 0
-    def isImplicit: Boolean = (info.properties & p.IMPLICIT.value) != 0
-    def isLazy: Boolean = (info.properties & p.LAZY.value) != 0
-    def isCase: Boolean = (info.properties & p.CASE.value) != 0
-    def isCovariant: Boolean = (info.properties & p.COVARIANT.value) != 0
-    def isContravariant: Boolean = (info.properties & p.CONTRAVARIANT.value) != 0
-    def isVal: Boolean = (info.properties & p.VAL.value) != 0
-    def isVar: Boolean = (info.properties & p.VAR.value) != 0
-    def isStatic: Boolean = (info.properties & p.STATIC.value) != 0
-    def isPrimary: Boolean = (info.properties & p.PRIMARY.value) != 0
-    def isEnum: Boolean = (info.properties & p.ENUM.value) != 0
-    def isDefault: Boolean = (info.properties & p.DEFAULT.value) != 0
-    def isGiven: Boolean = (info.properties & p.GIVEN.value) != 0
-    def isInline: Boolean = (info.properties & p.INLINE.value) != 0
-    def isOpen: Boolean = (info.properties & p.OPEN.value) != 0
-    def isTransparent: Boolean = (info.properties & p.TRANSPARENT.value) != 0
-    def isInfix: Boolean = (info.properties & p.INFIX.value) != 0
-    def isOpaque: Boolean = (info.properties & p.OPAQUE.value) != 0
+    def isScala: Boolean = isLang(l.SCALA)
+    def isJava: Boolean = isLang(l.JAVA)
+
+    def isLocal: Boolean = isKind(k.LOCAL)
+    def isField: Boolean = isKind(k.FIELD)
+    def isMethod: Boolean = isKind(k.METHOD)
+    def isConstructor: Boolean = isKind(k.CONSTRUCTOR)
+    def isMacro: Boolean = isKind(k.MACRO)
+    def isType: Boolean = isKind(k.TYPE)
+    def isParameter: Boolean = isKind(k.PARAMETER)
+    def isSelfParameter: Boolean = isKind(k.SELF_PARAMETER)
+    def isTypeParameter: Boolean = isKind(k.TYPE_PARAMETER)
+    def isObject: Boolean = isKind(k.OBJECT)
+    def isPackage: Boolean = isKind(k.PACKAGE)
+    def isPackageObject: Boolean = isKind(k.PACKAGE_OBJECT)
+    def isClass: Boolean = isKind(k.CLASS)
+    def isInterface: Boolean = isKind(k.INTERFACE)
+    def isTrait: Boolean = isKind(k.TRAIT)
+
+    def isAbstract: Boolean = hasProperty(p.ABSTRACT)
+    def isFinal: Boolean = hasProperty(p.FINAL)
+    def isSealed: Boolean = hasProperty(p.SEALED)
+    def isImplicit: Boolean = hasProperty(p.IMPLICIT)
+    def isLazy: Boolean = hasProperty(p.LAZY)
+    def isCase: Boolean = hasProperty(p.CASE)
+    def isCovariant: Boolean = hasProperty(p.COVARIANT)
+    def isContravariant: Boolean = hasProperty(p.CONTRAVARIANT)
+    def isVal: Boolean = hasProperty(p.VAL)
+    def isVar: Boolean = hasProperty(p.VAR)
+    def isStatic: Boolean = hasProperty(p.STATIC)
+    def isPrimary: Boolean = hasProperty(p.PRIMARY)
+    def isEnum: Boolean = hasProperty(p.ENUM)
+    def isDefault: Boolean = hasProperty(p.DEFAULT)
+    def isGiven: Boolean = hasProperty(p.GIVEN)
+    def isInline: Boolean = hasProperty(p.INLINE)
+    def isOpen: Boolean = hasProperty(p.OPEN)
+    def isTransparent: Boolean = hasProperty(p.TRANSPARENT)
+    def isInfix: Boolean = hasProperty(p.INFIX)
+    def isOpaque: Boolean = hasProperty(p.OPAQUE)
+
     def isPrivate: Boolean = info.access.isInstanceOf[PrivateAccess]
     def isPrivateThis: Boolean = info.access.isInstanceOf[PrivateThisAccess]
     def isPrivateWithin: Boolean = info.access.isInstanceOf[PrivateWithinAccess]
@@ -68,6 +71,15 @@ package object semanticdb {
       case ProtectedWithinAccess(symbol) => Some(symbol)
       case _ => None
     }
+
+    @inline
+    private def isKind(kind: k): Boolean = info.kind eq kind
+    @inline
+    private def isLang(lang: l): Boolean = info.language eq lang
+    @inline
+    private def hasAnyProperties(bitmask: Int): Boolean = (info.properties & bitmask) != 0
+    @inline
+    private def hasProperty(prop: p): Boolean = hasAnyProperties(prop.value)
   }
 
   implicit class XtensionSemanticdbScope(private val scope: Scope) extends AnyVal {
