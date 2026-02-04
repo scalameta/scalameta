@@ -471,13 +471,13 @@ and `declarations`. Declarations are modelled by a [Scope](#scope).
 ```protobuf
 message AnnotatedType {
   reserved 2;
-  repeated Annotation annotations = 3;
+  repeated AnnotationTree annotations = 3;
   Type tpe = 1;
 }
 ```
 
 `AnnotatedType` represents a type `tpe` annotated by one or more
-[Annotations](#annotation).
+[AnnotationTrees](#annotation-tree).
 
 ```protobuf
 message ExistentialType {
@@ -598,7 +598,7 @@ message SymbolInformation {
   int32 properties = 4;
   string display_name = 5;
   Signature signature = 17;
-  repeated Annotation annotations = 13;
+  repeated AnnotationTree annotations = 13;
   Access access = 18;
   repeated string overridden_symbols = 19;
   Documentation documentation = 20;
@@ -839,7 +839,7 @@ definitions have which display and symbol names in supported languages.
 See [Languages](#languages) for more information on which definitions have which
 signatures in supported languages.
 
-`annotation`. [Annotations](#annotation) of the corresponding definition.
+`annotation`. [AnnotationTree](#annotationtree) of the corresponding definition.
 
 `access`. [Access](#access) modifier of the corresponding definition.
 
@@ -866,16 +866,16 @@ message Documentation {
 `Documentation` represents the documentation associated with a [Symbol](#symbol). The `format` fields
 specifies the format of the text stored in `message`.
 
-### Annotation (protobuf)
+### AnnotationTree
 
 ```protobuf
-message Annotation {
+message AnnotationTree {
   Type tpe = 1;
   repeated Tree arguments = 2;
 }
 ```
 
-An `Annotation` represents an annotation with arguments, if any. The
+An `AnnotationTree` represents an annotation with arguments, if any. The
 `arguments` would normally be `AssignTree` in Java where the parameters
 generally are required to be assignment expressions, or else any other
 `Tree`.
@@ -1500,7 +1500,7 @@ message SymbolInformation {
   int32 properties = 4;
   string display_name = 5;
   Signature signature = 17;
-  repeated Annotation annotations = 13;
+  repeated AnnotationTree annotations = 13;
   Access access = 18;
   Documentation documentation = 20;
 }
@@ -2407,16 +2407,16 @@ package object symbols and object symbols are:
 
 <a name="scala-annotation"></a>
 
-### Annotation (Scala)
+### AnnotationTree
 
 ```protobuf
-message Annotation {
+message AnnotationTree {
   Type tpe = 1;
   repeated Tree arguments = 2;
 }
 ```
 
-In Scala, [Annotation](#annotation-protobuf) represents annotations [\[23\]][23].
+In Scala, [Annotation](#annotationtree) represents annotations [\[23\]][23].
 
 <table>
   <tr>
@@ -2424,13 +2424,13 @@ In Scala, [Annotation](#annotation-protobuf) represents annotations [\[23\]][23]
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>Annotation(TypeRef(None, &lt;NoArgs#&gt;, List()), None)</code></td>
+    <td><code>AnnotationTree(TypeRef(None, &lt;NoArgs#&gt;, List()), None)</code></td>
     <td><code>@NoArgs</code></td>
   </tr>
   <tr>
     <td>
       <code>
-        Annotation(TypeRef(None, &lt;StringArg#&gt;, List()),
+        AnnotationTree(TypeRef(None, &lt;StringArg#&gt;, List()),
         List(AssignTree(IdTree(&lt;StringArg#value().&gt;),
           LiteralTree(StringConstant("arg")))))
       </code>
@@ -2440,7 +2440,7 @@ In Scala, [Annotation](#annotation-protobuf) represents annotations [\[23\]][23]
   <tr>
     <td>
       <code>
-        Annotation(TypeRef(None, &lt;ArrayArg#&gt;, List()),
+        AnnotationTree(TypeRef(None, &lt;ArrayArg#&gt;, List()),
         List(AssignTree(IdTree(&lt;ArrayArg#value().&gt;),
           ApplyTree(IdTree(&lt;scala/Array#&gt;), List())))
       </code>
@@ -2450,7 +2450,7 @@ In Scala, [Annotation](#annotation-protobuf) represents annotations [\[23\]][23]
   <tr>
     <td>
       <code>
-        Annotation(TypeRef(None, &lt;EnumConstArg#&gt;, List()),
+        AnnotationTree(TypeRef(None, &lt;EnumConstArg#&gt;, List()),
         List(AssignTree(IdTree(&lt;EnumConstArg#value().&gt;),
           SelectTree(IdTree(&lt;X#&gt;), IdTree(&lt;X#CONST.&gt;))))
       </code>
@@ -3140,7 +3140,7 @@ message SymbolInformation {
   int32 properties = 4;
   string display_name = 5;
   Signature signature = 17;
-  repeated Annotation annotations = 13;
+  repeated AnnotationTree annotations = 13;
   Access access = 18;
   Documentation documentation = 20;
 }
@@ -3641,16 +3641,16 @@ modelled in [Scala symbols](#scala-symbol).
 
 <a name="java-annotation"></a>
 
-### Annotation (Java)
+### AnnotationTree
 
 ```protobuf
-message Annotation {
+message AnnotationTree {
   Type tpe = 1;
   repeated Tree arguments = 2;
 }
 ```
 
-In Java, [`Annotation`](#annotation-protobuf) represents a typed syntax tree of the JLS annotation
+In Java, `AnnotationTree` represents a typed syntax tree of the JLS annotation
 construct [\[93\]][93].
 
 <table>
@@ -3659,13 +3659,13 @@ construct [\[93\]][93].
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>Annotation(TypeRef(None, &lt;NoArgs#&gt;, List()), None)</code></td>
+    <td><code>AnnotationTree(TypeRef(None, &lt;NoArgs#&gt;, List()), None)</code></td>
     <td><code>@NoArgs</code></td>
   </tr>
   <tr>
     <td>
       <code>
-        Annotation(TypeRef(None, &lt;StringArg#&gt;, List()),
+        AnnotationTree(TypeRef(None, &lt;StringArg#&gt;, List()),
         List(AssignTree(IdTree(&lt;StringArg#value().&gt;),
           LiteralTree(StringConstant("arg")))))
       </code>
@@ -3675,7 +3675,7 @@ construct [\[93\]][93].
   <tr>
     <td>
       <code>
-        Annotation(TypeRef(None, &lt;ArrayArg#&gt;, List()),
+        AnnotationTree(TypeRef(None, &lt;ArrayArg#&gt;, List()),
         List(AssignTree(IdTree(&lt;ArrayArg#value().&gt;),
           ApplyTree(IdTree(&lt;scala/Array#&gt;), List())))
       </code>
@@ -3685,7 +3685,7 @@ construct [\[93\]][93].
   <tr>
     <td>
       <code>
-        Annotation(TypeRef(None, &lt;EnumConstArg#&gt;, List()),
+        AnnotationTree(TypeRef(None, &lt;EnumConstArg#&gt;, List()),
         List(AssignTree(IdTree(&lt;EnumConstArg#value().&gt;),
           SelectTree(IdTree(&lt;X#&gt;), IdTree(&lt;X#CONST.&gt;))))
       </code>
@@ -3695,7 +3695,7 @@ construct [\[93\]][93].
   <tr>
     <td>
       <code>
-        Annotation(TypeRef(None, &lt;Get#&gt;, List()),
+        AnnotationTree(TypeRef(None, &lt;Get#&gt;, List()),
         List(AssignTree(IdTree(&lt;Get#route().&gt;),
           LiteralTree(StringConstant("/")))))
       </code>
@@ -3705,9 +3705,9 @@ construct [\[93\]][93].
   <tr>
     <td>
       <code>
-        Annotation(TypeRef(None, &lt;A#&gt;, List()),
+        AnnotationTree(TypeRef(None, &lt;A#&gt;, List()),
         List(AssignTree(IdTree(&lt;A#value().&gt;),
-          Annotation(TypeRef(None, &lt;B#&gt;, List()),
+          AnnotationTree(TypeRef(None, &lt;B#&gt;, List()),
             None))))
       </code>
     </td>
