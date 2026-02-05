@@ -688,7 +688,7 @@ class TermSuite extends ParseSuite {
     tname("field-names"),
     tname("~>"),
     Nil,
-    List(AnonymousFunction(Apply(tname("private"), List(Repeated(Placeholder())))))
+    List(Apply(tname("private"), List(Repeated(AnonymousFunction(Placeholder())))))
   )))
 
   test("(a, b, c)")(assertTerm("(a, b, c)")(Term.Tuple(List(tname("a"), tname("b"), tname("c")))))
