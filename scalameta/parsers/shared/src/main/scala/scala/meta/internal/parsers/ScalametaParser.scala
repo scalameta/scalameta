@@ -1804,7 +1804,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           exprOtherRest(t, startPos, location, allowRepeated)
       }
     }
-    if (location.anonFuncOK) maybeAnonymousFunction(res) else res
+    maybeAnonymousFunction(res, location)
   }
 
   private def exprOtherRest(
@@ -4568,8 +4568,12 @@ object ScalametaParser {
   @inline
   private def toBlockRaw(stats: List[Stat]): Term.Block = Term.Block(stats)
 
-  private def maybeAnonymousFunction(t: Term): Term = {
-    val ok = PlaceholderChecks.hasPlaceholder(t, includeArg = false)
+  private def maybeAnonymousFunction(
+      t: Term,
+      location: Location = NoStat,
+      includeArg: => Boolean = false
+  ): Term = {
+    val ok = location.anonFuncOK && PlaceholderChecks.hasPlaceholder(t, includeArg = includeArg)
     if (ok) copyPos(t)(Term.AnonymousFunction(t)) else t
   }
 
