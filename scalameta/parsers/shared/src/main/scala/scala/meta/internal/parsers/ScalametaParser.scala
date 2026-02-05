@@ -1818,7 +1818,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def repeatedTerm(t: Term, nextTokens: () => Unit): Term =
       if (allowRepeated) addPos {
         nextTokens()
-        Term.Repeated(t)
+        Term.Repeated(maybeAnonymousFunction(t, location, includeArg = true))
       }
       else syntaxError("repeated argument not allowed here", at = currToken)
     @tailrec

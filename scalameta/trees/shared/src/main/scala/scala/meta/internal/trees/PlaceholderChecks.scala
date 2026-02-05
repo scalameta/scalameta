@@ -66,9 +66,6 @@ object PlaceholderChecks {
       case t: Term.New =>
         queue += t.init
         iter
-      case t: Term.Repeated =>
-        queue += t.expr
-        iter
       case t: Term.AnonymousFunction => t.ne(tree) && queue.nonEmpty && iter
       case t => t.children.exists(isPlaceholder) || queue.nonEmpty && iter
     }
