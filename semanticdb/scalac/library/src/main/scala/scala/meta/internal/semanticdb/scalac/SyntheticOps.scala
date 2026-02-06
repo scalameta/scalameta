@@ -22,6 +22,8 @@ trait SyntheticOps {
       case gTree: g.Select => gTree.toSemanticId
       case gTree: g.Ident => gTree.toSemanticId
       case gTree: g.This => gTree.toSemanticId
+      case AssignOrNamedArg(lhs, rhs) => s
+          .AssignTree(lhs = lhs.toSemanticTree, rhs = rhs.toSemanticTree)
       case gTree: g.Typed if gTree.hasAttachment[g.analyzer.MacroExpansionAttachment] =>
         val expandeeTree = gTree.attachments.get[g.analyzer.MacroExpansionAttachment].get.expandee
         val beforeExpansion =

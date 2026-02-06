@@ -338,6 +338,11 @@ message Annotation {
   Type tpe = 1;
 }
 
+message AssignTree {
+  Tree lhs = 1;
+  Tree rhs = 2;
+}
+
 message Access {
   oneof sealed_value {
     PrivateAccess private_access = 1;
@@ -412,6 +417,7 @@ message Tree {
     OriginalTree original_tree = 6;
     SelectTree select_tree = 7;
     TypeApplyTree type_apply_tree = 8;
+    AssignTree assign_tree = 9;
   }
 }
 

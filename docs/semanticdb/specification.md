@@ -877,6 +877,17 @@ message Annotation {
 `Annotation` represents annotations. See [Languages](#languages) for information
 on how annotations in supported languages map onto this data structure.
 
+### AssignTree
+
+```protobuf
+message AssignTree {
+  Tree lhs = 1;
+  Tree rhs = 2;
+}
+```
+
+An `AssignTree` represents an assignment expression.
+
 ### Access
 
 ```protobuf

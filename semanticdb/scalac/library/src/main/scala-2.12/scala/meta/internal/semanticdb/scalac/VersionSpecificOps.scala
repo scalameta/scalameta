@@ -19,4 +19,11 @@ trait VersionSpecificOps {
   def getSyntheticSAMClass(gt: g.Function): Option[g.Symbol] = gt.attachments.get[global.SAMFunction]
     .map(_.synthCls)
 
+  object AssignOrNamedArg {
+    def unapply(gtree: g.Tree): Option[(g.Tree, g.Tree)] = gtree match {
+      case gtree: g.AssignOrNamedArg => Some((gtree.lhs, gtree.rhs))
+      case _ => None
+    }
+  }
+
 }
