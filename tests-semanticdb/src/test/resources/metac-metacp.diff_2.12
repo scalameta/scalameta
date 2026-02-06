@@ -1239,6 +1239,18 @@ example/ValPattern#x$2.
 +  private_this_access {
 
 
+==============
+example/X.x().
+==============
+--- metac
++++ metacp
+       symbol: "scala/deprecated#"
+-  arguments {
+-  arguments {
+ language: SCALA
+ signature {
+
+
 =============================
 flags/p/package.X.canEqual().
 =============================
@@ -1414,6 +1426,7 @@ types/Test.C#annType1.
 -                type_ref {
 -                  prefix {
 -                  symbol: "scala/Int#"
+-          arguments {
 
 
 ======================

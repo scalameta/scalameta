@@ -40,6 +40,9 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
   class TreePrinter(notes: InfoNotes, originalRange: Option[Range]) extends InfoPrinter(notes) {
 
     def pprint(tree: Tree): Unit = tree match {
+      case tree: AnnotationTree =>
+        pprint(tree.tpe)
+        rep("(", tree.arguments, ", ", ")")(pprint)
       case tree: ApplyTree =>
         pprint(tree.function)
         out.print("(")

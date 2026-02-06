@@ -866,16 +866,19 @@ message Documentation {
 `Documentation` represents the documentation associated with a [Symbol](#symbol). The `format` fields
 specifies the format of the text stored in `message`.
 
-### Annotation
+### Annotation (protobuf)
 
 ```protobuf
 message Annotation {
   Type tpe = 1;
+  repeated Tree arguments = 2;
 }
 ```
 
-`Annotation` represents annotations. See [Languages](#languages) for information
-on how annotations in supported languages map onto this data structure.
+An `Annotation` represents an annotation with arguments, if any. The
+`arguments` would normally be `AssignTree` in Java where the parameters
+generally are required to be assignment expressions, or else any other
+`Tree`.
 
 ### AssignTree
 
@@ -2404,15 +2407,16 @@ package object symbols and object symbols are:
 
 <a name="scala-annotation"></a>
 
-### Annotation
+### Annotation (Scala)
 
 ```protobuf
 message Annotation {
   Type tpe = 1;
+  repeated Tree arguments = 2;
 }
 ```
 
-In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
+In Scala, [Annotation](#annotation-protobuf) represents annotations [\[23\]][23].
 
 <table>
   <tr>
@@ -2420,12 +2424,38 @@ In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>Annotation(&lt;ann&gt;)</code></td>
-    <td>Definition annotation, e.g. <code>@ann def m: T</code>.</td>
+    <td><code>Annotation(TypeRef(None, &lt;NoArgs#&gt;, List()), None)</code></td>
+    <td><code>@NoArgs</code></td>
   </tr>
   <tr>
-    <td><code>Annotation(&lt;ann&gt;)</code></td>
-    <td>Type annotation, e.g. <code>T @ann</code>.</td>
+    <td>
+      <code>
+        Annotation(TypeRef(None, &lt;StringArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;StringArg#value().&gt;),
+          LiteralTree(StringConstant("arg")))))
+      </code>
+    </td>
+    <td><code>@StringArgs("arg")</code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        Annotation(TypeRef(None, &lt;ArrayArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;ArrayArg#value().&gt;),
+          ApplyTree(IdTree(&lt;scala/Array#&gt;), List())))
+      </code>
+    </td>
+    <td><code>@ArrayArg(Array())</code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        Annotation(TypeRef(None, &lt;EnumConstArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;EnumConstArg#value().&gt;),
+          SelectTree(IdTree(&lt;X#&gt;), IdTree(&lt;X#CONST.&gt;))))
+      </code>
+    </td>
+    <td><code>@EnumConstArg(X.CONST)</code></td>
   </tr>
   <tr>
     <td>Not supported</td>
@@ -2433,9 +2463,6 @@ In Scala, [Annotation](#annotation) represents annotations [\[23\]][23].
   </tr>
 </table>
 
-- At the moment, `Annotation` can't represent annotation arguments, which means
-  that the annotation in `@ann(x, y, z) def m: T` is represented as
-  `Annotation(<ann>)`. We may improve on this in the future.
 - At the moment, SemanticDB cannot represent expressions, which means that it
   cannot represent expression annotations as well. We do not plan to add support
   for expressions in SemanticDB, so it is highly unlikely that expression
@@ -3614,17 +3641,17 @@ modelled in [Scala symbols](#scala-symbol).
 
 <a name="java-annotation"></a>
 
-### Annotation
+### Annotation (Java)
 
 ```protobuf
 message Annotation {
   Type tpe = 1;
+  repeated Tree arguments = 2;
 }
 ```
 
-In Java, [Annotation](#annotation) represents `access_flags` in the JVMS `class`
-file format [\[92\]][92] but not the actual annotations [\[93\]][93]. We may
-improve on this in the future.
+In Java, [`Annotation`](#annotation-protobuf) represents a typed syntax tree of the JLS annotation
+construct [\[93\]][93].
 
 <table>
   <tr>
@@ -3632,15 +3659,60 @@ improve on this in the future.
     <td><b>Explanation</b></td>
   </tr>
   <tr>
-    <td><code>Annotation(TypeRef(None, &lt;scala/annotation/strictfp&gt;, List()))</code></td>
-    <td>
-      Declared <code>strictfp</code>; floating-point mode is FP-strict e.g. <code>strictfp class MyClass</code>. Note that this is the default mode as of JDK17, so this deprecated annotation is no longer emitted for JDK17+ bytecode.
-    </td>
+    <td><code>Annotation(TypeRef(None, &lt;NoArgs#&gt;, List()), None)</code></td>
+    <td><code>@NoArgs</code></td>
   </tr>
   <tr>
-    <td>Not supported</td>
-    <td>JLS annotations <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-9.html#jls-9.7">[93]</a></td>
+    <td>
+      <code>
+        Annotation(TypeRef(None, &lt;StringArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;StringArg#value().&gt;),
+          LiteralTree(StringConstant("arg")))))
+      </code>
+    </td>
+    <td><code>@StringArgs("arg")</code></td>
   </tr>
+  <tr>
+    <td>
+      <code>
+        Annotation(TypeRef(None, &lt;ArrayArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;ArrayArg#value().&gt;),
+          ApplyTree(IdTree(&lt;scala/Array#&gt;), List())))
+      </code>
+    </td>
+    <td><code>@ArrayArg({})</code></code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        Annotation(TypeRef(None, &lt;EnumConstArg#&gt;, List()),
+        List(AssignTree(IdTree(&lt;EnumConstArg#value().&gt;),
+          SelectTree(IdTree(&lt;X#&gt;), IdTree(&lt;X#CONST.&gt;))))
+      </code>
+    </td>
+    <td><code>@EnumConstArg(X.CONST)</code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        Annotation(TypeRef(None, &lt;Get#&gt;, List()),
+        List(AssignTree(IdTree(&lt;Get#route().&gt;),
+          LiteralTree(StringConstant("/")))))
+      </code>
+    </td>
+    <td><code>@Get(route = "/")</code></td>
+  </tr>
+  <tr>
+    <td>
+      <code>
+        Annotation(TypeRef(None, &lt;A#&gt;, List()),
+        List(AssignTree(IdTree(&lt;A#value().&gt;),
+          Annotation(TypeRef(None, &lt;B#&gt;, List()),
+            None))))
+      </code>
+    </td>
+    <td><code>@A(@B)</code></td>
+  </tr>  
 </table>
 
 <a name="java-access"></a>

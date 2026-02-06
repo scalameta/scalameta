@@ -168,7 +168,7 @@ trait SymbolInformationOps {
       }
 
     private def annotations: List[s.AnnotationTree] = gsym.annotations.flatMap(gann =>
-      if (gann.atp.typeSymbol == definitions.MacroImplAnnotation) None else Some(gann.toSemantic)
+      if (gann.symbol == definitions.MacroImplAnnotation) None else Some(gann.toSemantic)
     )
 
     private def access: s.Access = kind match {

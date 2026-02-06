@@ -1544,6 +1544,7 @@ types/Test.C#annType1.
 -                type_ref {
 -                  prefix {
 -                  symbol: "scala/Int#"
+-          arguments {
 
 
 ======================
