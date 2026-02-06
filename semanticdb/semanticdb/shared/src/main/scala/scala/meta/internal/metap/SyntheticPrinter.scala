@@ -46,6 +46,10 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
         if (SymbolInformation.Property.GIVEN.in(tree.properties)) out.print("using ")
         rep(tree.arguments, ", ")(pprint)
         out.print(")")
+      case tree: AssignTree =>
+        pprint(tree.lhs)
+        out.print(" = ")
+        pprint(tree.rhs)
       case tree: FunctionTree =>
         out.print("{")
         rep("(", tree.parameters, ", ", ") => ")(pprint)

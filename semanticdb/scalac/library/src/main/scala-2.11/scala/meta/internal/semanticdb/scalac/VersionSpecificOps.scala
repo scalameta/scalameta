@@ -27,4 +27,11 @@ trait VersionSpecificOps {
   // TODO: move the other specializations back to TextDocumentOps when 2.11 is retired
   def getSyntheticSAMClass(gt: g.Function): Option[g.Symbol] = None
 
+  object AssignOrNamedArg {
+    def unapply(gtree: g.Tree): Option[(g.Tree, g.Tree)] = gtree match {
+      case gtree: g.AssignOrNamedArg => Some((gtree.lhs, gtree.rhs))
+      case _ => None
+    }
+  }
+
 }
