@@ -135,20 +135,22 @@ package object semanticdb {
 
   implicit class XtensionSemanticdbConstantCompanion(private val const: Constant.type)
       extends AnyVal {
-    def apply(value: Any): Constant = value match {
-      case () => UnitConstant()
-      case value: Boolean => BooleanConstant(value)
-      case value: Byte => ByteConstant(value.toInt)
-      case value: Short => ShortConstant(value.toInt)
-      case value: Char => CharConstant(value.toInt)
-      case value: Int => IntConstant(value)
-      case value: Long => LongConstant(value)
-      case value: Float => FloatConstant(value)
-      case value: Double => DoubleConstant(value)
-      case value: String => StringConstant(value)
-      case null => NullConstant()
-      case _ => sys.error(s"unsupported value ${value.getClass} $value")
+    def opt(value: Any): Option[Constant] = value match {
+      case () => Some(UnitConstant())
+      case value: Boolean => Some(BooleanConstant(value))
+      case value: Byte => Some(ByteConstant(value.toInt))
+      case value: Short => Some(ShortConstant(value.toInt))
+      case value: Char => Some(CharConstant(value.toInt))
+      case value: Int => Some(IntConstant(value))
+      case value: Long => Some(LongConstant(value))
+      case value: Float => Some(FloatConstant(value))
+      case value: Double => Some(DoubleConstant(value))
+      case value: String => Some(StringConstant(value))
+      case null => Some(NullConstant())
+      case _ => None
     }
+    def apply(value: Any): Constant = opt(value)
+      .getOrElse(sys.error(s"unsupported value ${value.getClass} $value"))
   }
 
   implicit class XtensionSemanticdbTree(private val tree: Tree) extends AnyVal {
