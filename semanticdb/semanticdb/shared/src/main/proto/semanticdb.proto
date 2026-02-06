@@ -334,8 +334,10 @@ message Documentation {
   Format format = 2;
 }
 
+// TODO; rename to AnnotationTree
 message Annotation {
   Type tpe = 1;
+  repeated Tree arguments = 2;
 }
 
 message AssignTree {
@@ -418,6 +420,7 @@ message Tree {
     SelectTree select_tree = 7;
     TypeApplyTree type_apply_tree = 8;
     AssignTree assign_tree = 9;
+    Annotation annotation_tree = 10;
   }
 }
 

@@ -167,10 +167,14 @@ trait SymbolInformationOps {
 
     private def annotations: List[s.AnnotationTree] = {
       val builder = List.newBuilder[s.AnnotationTree]
-      sym.attributes.foreach(_.typeRef.toSemanticTpe match {
-        case s.TypeRef(_, sym, _) if syntheticAnnotationsSymbols.contains(sym) =>
-        case tpe => builder += s.AnnotationTree(tpe)
-      })
+      def asTree(obj: Any) = s.Constant.opt(obj).fold[s.Tree](s.NoTree)(s.LiteralTree.apply)
+      sym.attributes.foreach(attr =>
+        attr.typeRef.toSemanticTpe match {
+          case s.TypeRef(_, sym, _) if syntheticAnnotationsSymbols.contains(sym) =>
+          case tpe => builder +=
+              s.AnnotationTree(tpe, attr.values.map(x => s.AssignTree(s.IdTree(x._1), asTree(x._2))))
+        }
+      )
       builder.result()
     }
 
