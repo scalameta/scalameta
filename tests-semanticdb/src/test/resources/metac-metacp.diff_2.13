@@ -158,23 +158,6 @@ advanced/Test.s3.
                      display_name: "x"
 
 
-==============
-annot/Alias.A#
-==============
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/meta/param#"
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/meta/param#"
-
-
 ====================
 classes/C1#equals().
 ====================
@@ -218,18 +201,6 @@ classes/C3#canEqual().
 +++ metacp
    public_access {
 -overridden_symbols: "scala/Equals#canEqual()."
-
-
-============================
-classes/C3#copy$default$1().
-============================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
 ====================
@@ -337,18 +308,6 @@ classes/C4#canEqual().
 -overridden_symbols: "scala/Equals#canEqual()."
 
 
-============================
-classes/C4#copy$default$1().
-============================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
 ====================
 classes/C4#equals().
 ====================
@@ -432,18 +391,6 @@ classes/C6#canEqual().
 +++ metacp
    public_access {
 -overridden_symbols: "scala/Equals#canEqual()."
-
-
-============================
-classes/C6#copy$default$1().
-============================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
 ====================
@@ -542,18 +489,6 @@ classes/C6.toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
-==============================
-classes/Chain.tst$default$2().
-==============================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
 ====================
 classes/N.anonClass.
 ====================
@@ -622,23 +557,6 @@ example/B#foo().
 
 
 ======================================
-example/InstrumentTyper#AnnotatedType#
-======================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/meta/param#"
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/meta/param#"
-
-
-======================================
 example/InstrumentTyper#existential().
 ======================================
 --- metac
@@ -677,54 +595,6 @@ example/Issue1872.x$1.
 +  private_this_access {
 
 
-====================================
-example/Issue2116#check$default$1().
-====================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-====================================
-example/Issue2116#check$default$2().
-====================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-============================================
-example/Issue2144.Test.`<init>$default$2`().
-============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-============================================
-example/Issue2144.Test.`<init>$default$3`().
-============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
 ========================================
 example/Issue2882.FooFailure#canEqual().
 ========================================
@@ -732,18 +602,6 @@ example/Issue2882.FooFailure#canEqual().
 +++ metacp
    public_access {
 -overridden_symbols: "scala/Equals#canEqual()."
-
-
-==============================================
-example/Issue2882.FooFailure#copy$default$1().
-==============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
 ======================================
@@ -855,30 +713,6 @@ example/Methods#m13().(x)
 +        symbol: "scala/Int#"
 
 
-================================
-example/Methods#m19$default$2().
-================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-================================
-example/Methods#m19$default$3().
-================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
 ============================================================
 example/NamedApplyBlockCaseClassConstruction.Msg#canEqual().
 ============================================================
@@ -886,42 +720,6 @@ example/NamedApplyBlockCaseClassConstruction.Msg#canEqual().
 +++ metacp
    public_access {
 -overridden_symbols: "scala/Equals#canEqual()."
-
-
-==================================================================
-example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$1().
-==================================================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-==================================================================
-example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$2().
-==================================================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-==================================================================
-example/NamedApplyBlockCaseClassConstruction.Msg#copy$default$3().
-==================================================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
 ==========================================================
@@ -1000,30 +798,6 @@ example/NamedApplyBlockCaseClassConstruction.Msg#toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
-======================================================================
-example/NamedApplyBlockCaseClassConstruction.Msg.`<init>$default$2`().
-======================================================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-===================================================================
-example/NamedApplyBlockCaseClassConstruction.Msg.apply$default$2().
-===================================================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
 =========================================================
 example/NamedApplyBlockCaseClassConstruction.Msg.apply().
 =========================================================
@@ -1044,42 +818,6 @@ example/NamedApplyBlockCaseClassConstruction.Msg.toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
-===============================================
-example/NamedApplyBlockMethods.foo$default$1().
-===============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-===============================================
-example/NamedApplyBlockMethods.foo$default$2().
-===============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
-===============================================
-example/NamedApplyBlockMethods.foo$default$3().
-===============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
-
-
 =======================================
 example/NamedArguments#User#canEqual().
 =======================================
@@ -1087,18 +825,6 @@ example/NamedArguments#User#canEqual().
 +++ metacp
    public_access {
 -overridden_symbols: "scala/Equals#canEqual()."
-
-
-=============================================
-example/NamedArguments#User#copy$default$1().
-=============================================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "scala/annotation/unchecked/uncheckedVariance#"
 
 
 =====================================
@@ -1535,33 +1261,11 @@ types/Test.C#annType1.
 ======================
 --- metac
 +++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "types/ann#"
--              type_arguments {
--                type_ref {
--                  prefix {
--                  symbol: "scala/Int#"
--          arguments {
-
-
-======================
-types/Test.C#annType2.
-======================
---- metac
-+++ metacp
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "types/ann1#"
-         annotations {
-           tpe {
--            type_ref {
--              prefix {
--              symbol: "types/ann2#"
+           arguments {
++            literal_tree {
++              constant {
++                int_constant {
++                  value: 42
 
 
 ===========================
