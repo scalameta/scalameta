@@ -9,11 +9,12 @@ import scala.meta.metacp._
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class Scalacp private (
+    val node: ScalaSigNode,
     val symbolIndex: SymbolIndex,
     val settings: Settings,
     val reporter: Reporter
 ) extends AnnotationOps with SymbolInformationOps with SymbolOps with TypeOps {
-  def parse(node: ScalaSigNode): ClassfileInfos = {
+  def parse: ClassfileInfos = {
     val sinfos = node.scalaSig.symbols.toList.flatMap {
       case sym: SymbolInfoSymbol => this.sinfos(sym)
       case _ => Nil
@@ -40,9 +41,5 @@ object Scalacp {
       classpathIndex: ClasspathIndex,
       settings: Settings,
       reporter: Reporter
-  ): ClassfileInfos = {
-    val symbolIndex = SymbolIndex(classpathIndex)
-    val scalacp = new Scalacp(symbolIndex, settings, reporter)
-    scalacp.parse(node)
-  }
+  ): ClassfileInfos = new Scalacp(node, SymbolIndex(classpathIndex), settings, reporter).parse
 }
