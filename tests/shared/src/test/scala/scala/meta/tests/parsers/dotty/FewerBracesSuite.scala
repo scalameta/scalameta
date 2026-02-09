@@ -2554,4 +2554,82 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4497") {
+    val layout =
+      """|foo {
+         |  bar
+         |} match {
+         |  case bar =>
+         |}
+         |""".stripMargin
+    val tree = tmatch(tapply("foo", blk("bar")), Case(patvar("bar"), None, blk()))
+
+    val codeWithBlank =
+      """|foo:
+         |    bar
+         |
+         |match
+         |    case bar =>
+         |""".stripMargin
+    val codeWithoutBlank =
+      """|foo:
+         |    bar
+         |match
+         |    case bar =>
+         |""".stripMargin
+
+    val errorWithBlank =
+      """|<input>:4: error: illegal start of definition `match`
+         |match
+         |^""".stripMargin
+    runTestError[Stat](codeWithBlank, errorWithBlank)
+
+    runTestAssert[Stat](codeWithoutBlank, layout)(tree)
+  }
+
+  test("#4497 within braces") {
+    val layout =
+      """|{
+         |  foo {
+         |    bar
+         |  }
+         |} match {
+         |  case bar =>
+         |}
+         |""".stripMargin
+    val tree = tmatch(blk(tapply("foo", blk("bar"))), Case(patvar("bar"), None, blk()))
+
+    val codeWithBlankBefore =
+      """|{
+         |  foo:
+         |    bar
+         |
+         |}
+         |match
+         |    case bar =>
+         |""".stripMargin
+    val codeWithBlankAfter =
+      """|{
+         |  foo:
+         |    bar
+         |
+         |}
+         |
+         |match
+         |    case bar =>
+         |""".stripMargin
+    val codeWithoutBlank =
+      """|{
+         |  foo:
+         |    bar
+         |}
+         |match
+         |    case bar =>
+         |""".stripMargin
+
+    runTestAssert[Stat](codeWithBlankBefore, layout)(tree)
+    runTestAssert[Stat](codeWithBlankAfter, layout)(tree)
+    runTestAssert[Stat](codeWithoutBlank, layout)(tree)
+  }
+
 }
