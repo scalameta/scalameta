@@ -3306,4 +3306,74 @@ class Scala3PositionSuite extends BasePositionSuite {
     )
   }
 
+  test("#4497") {
+    assertTokenizedAsStructureLines(
+      """|foo:
+         |    bar
+         |
+         |match
+         |    case bar =>
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Ident(foo) [0..3)
+         |Colon [3..4)
+         |Indentation.Indent [4..4)
+         |Ident(bar) [9..12)
+         |Indentation.Outdent [13..13)
+         |LFLF [13..14)
+         |KwMatch [14..19)
+         |Indentation.Indent [19..19)
+         |KwCase [24..28)
+         |Ident(bar) [29..32)
+         |RightArrow [33..35)
+         |Indentation.Outdent [35..35)
+         |EOF [36..36)
+         |""".stripMargin
+    )
+  }
+
+  checkPositions[Stat](
+    """|{
+       |  foo:
+       |    bar
+       |
+       |}
+       |
+       |match
+       |    case bar =>
+       |""".stripMargin,
+    """|<expr>Term.Block {
+       |  foo:
+       |    bar
+       |
+       |}</expr> [0:{...:19)
+       |<stats0>Term.Apply foo:
+       |    bar</stats0> [4:foo:...:16)
+       |<values0>Term.Block :
+       |    bar</values0> [7<:...>16)
+       |<casesBlock>Term.CasesBlock case bar =></casesBlock> [31:case bar =>:42)
+       |<cases0>Case case bar =></cases0> [31:case bar =>:42)
+       |<body>Term.Block     case bar =>@@</body> [42::42)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |LeftBrace [0..1)
+       |Ident(foo) [4..7)
+       |Colon [7..8)
+       |Indentation.Indent [8..8)
+       |Ident(bar) [13..16)
+       |Indentation.Outdent [17..17)
+       |LFLF [17..18)
+       |RightBrace [18..19)
+       |KwMatch [21..26)
+       |Indentation.Indent [26..26)
+       |KwCase [31..35)
+       |Ident(bar) [36..39)
+       |RightArrow [40..42)
+       |Indentation.Outdent [42..42)
+       |EOF [43..43)
+       |""".stripMargin,
+    showPosition = true,
+    showFieldName = true
+  )
+
 }
