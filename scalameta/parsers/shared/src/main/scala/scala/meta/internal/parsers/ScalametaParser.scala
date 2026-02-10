@@ -2597,7 +2597,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     inParensOnOpenOr(currToken match {
       case t @ Ellipsis(2) => (ellipsis[Term](t) :: Nil).reduceWith(Term.ArgClause(_))
       case x =>
-        val using = x.text == soft.KwUsing.name && mightStartStat(peekToken, closeDelimOK = false)
+        val using = x.text == soft.KwUsing.name && mightStartStat(peekToken)
         val mod = if (using) Some(atCurPosNext(Mod.Using())) else None
         argumentExprsInParens(location).reduceWith(Term.ArgClause(_, mod))
     })(Term.ArgClause(Nil))
@@ -4480,7 +4480,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _ if isIdentOrExprIntro(currToken) =>
         stat(expr(location = BlockStat, allowRepeated = allowRepeated))
       case t: Ellipsis => ellipsis[Stat](t, 1)
-      case t if !mightStartStat(t, closeDelimOK = false) => null
+      case t if !mightStartStat(t) => null
       case t => syntaxError("illegal start of statement", at = t)
     }
 

@@ -203,7 +203,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def unapply(token: Token) = apply(token)
   }
 
-  def mightStartStat(token: Token, closeDelimOK: Boolean): Boolean = token match {
+  def mightStartStat(token: Token, closeDelimOK: Boolean = false): Boolean = token match {
     case _: KwCatch | _: KwElse | _: KwExtends | _: KwFinally | _: KwForsome | _: KwMatch |
         _: KwWith | _: KwYield | _: Comma | _: Colon | _: Dot | _: Equals | _: Semicolon | _: Hash |
         _: RightArrow | _: LeftArrow | _: Subtype | _: Supertype | _: Viewbound | _: AtEOLorF =>
@@ -383,7 +383,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       else if (head eq null) Left(xs)
       else {
         if (currNonTrivial) last.next = currRef(xs)
-        else if (multiEOL && mightStartStat(next, closeDelimOK = false))
+        else if (multiEOL && mightStartStat(next))
           last.next = eofRefAt(xs, last.pointPos, multiEOL = true)
         Right((head, last))
       }
