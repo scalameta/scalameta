@@ -383,7 +383,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       else if (head eq null) Left(xs)
       else {
         if (currNonTrivial) last.next = currRef(xs)
-        else if (multiEOL) last.next = eofRefAt(xs, last.pointPos, multiEOL = true)
+        else if (multiEOL && mightStartStat(next, closeDelimOK = false))
+          last.next = eofRefAt(xs, last.pointPos, multiEOL = true)
         Right((head, last))
       }
 
@@ -817,7 +818,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
           /**
            * Indent is needed in the following cases:
-           *   - Indetation on new line is greater and previous token can start indentation and
+           *   - Indentation on new line is greater and previous token can start indentation and
            *     token can start indentation
            *   - Indentation on the new line is the same and the next token is the first `case`
            *     clause in match. Example:

@@ -2280,7 +2280,6 @@ class Scala3PositionSuite extends BasePositionSuite {
        |RightArrow [93..95)
        |Ident(qux) [96..99)
        |Indentation.Outdent [114..114)
-       |LFLF [114..138)
        |RightBrace [140..141)
        |Indentation.Outdent [141..141)
        |EOF [142..142)
@@ -2452,7 +2451,6 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Ident(qux) [114..117)
        |Indentation.Outdent [135..135)
        |Indentation.Outdent [150..150)
-       |LFLF [150..174)
        |RightBrace [176..177)
        |Indentation.Outdent [177..177)
        |EOF [178..178)
@@ -2644,7 +2642,6 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [149..149)
        |Indentation.Outdent [162..162)
        |Indentation.Outdent [173..173)
-       |LFLF [173..182)
        |RightBrace [182..183)
        |EOF [184..184)
        |""".stripMargin,
@@ -2833,7 +2830,6 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [161..161)
        |Indentation.Outdent [172..172)
        |Indentation.Outdent [180..180)
-       |LFLF [180..181)
        |EOF [181..181)
        |""".stripMargin,
     showFieldName = true
@@ -2875,7 +2871,6 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Ident(*) [53..54)
        |Constant.Int(2) [55..56)
        |Indentation.Outdent [68..68)
-       |LFLF [68..69)
        |EOF [69..69)
        |""".stripMargin,
     showFieldName = true
@@ -3320,7 +3315,6 @@ class Scala3PositionSuite extends BasePositionSuite {
          |Indentation.Indent [4..4)
          |Ident(bar) [9..12)
          |Indentation.Outdent [13..13)
-         |LFLF [13..14)
          |KwMatch [14..19)
          |Indentation.Indent [19..19)
          |KwCase [24..28)
@@ -3362,7 +3356,6 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Indent [8..8)
        |Ident(bar) [13..16)
        |Indentation.Outdent [17..17)
-       |LFLF [17..18)
        |RightBrace [18..19)
        |KwMatch [21..26)
        |Indentation.Indent [26..26)
