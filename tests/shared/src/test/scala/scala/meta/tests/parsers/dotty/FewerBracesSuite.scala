@@ -2578,12 +2578,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |    case bar =>
          |""".stripMargin
 
-    val errorWithBlank =
-      """|<input>:4: error: illegal start of definition `match`
-         |match
-         |^""".stripMargin
-    runTestError[Stat](codeWithBlank, errorWithBlank)
-
+    runTestAssert[Stat](codeWithBlank, layout)(tree)
     runTestAssert[Stat](codeWithoutBlank, layout)(tree)
   }
 
