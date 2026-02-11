@@ -2651,4 +2651,117 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("sfmt #5217 with param name and break") {
+    val code =
+      """|fooB(
+         |  b =
+         |    fooC:
+         |      2
+         |    + 1
+         |)
+         |""".stripMargin
+    val layout =
+      """|fooB(b = fooC {
+         |  2
+         |} + 1)
+         |""".stripMargin
+    val tree = tapply("fooB", Term.Assign("b", tinfix(tapply("fooC", blk(lit(2))), "+", lit(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt #5217 with param name, no break, parens, no indent") {
+    val code =
+      """|fooB(
+         |  b = fooC(2)
+         |  + 1
+         |)
+         |""".stripMargin
+    val layout = "fooB(b = fooC(2) + 1)"
+    val tree = tapply("fooB", Term.Assign("b", tinfix(tapply("fooC", lit(2)), "+", lit(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt #5217 with param name, no break, no indent") {
+    val code =
+      """|fooB(
+         |  b = fooC:
+         |      2
+         |  + 1
+         |)
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `)` expected but `identifier` found
+         |  + 1
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("sfmt #5217 with param name, no break, parens and indent") {
+    val code =
+      """|fooB(
+         |  b = fooC(2)
+         |    + 1
+         |)
+         |""".stripMargin
+    val layout = "fooB(b = fooC(2) + 1)"
+    val tree = tapply("fooB", Term.Assign("b", tinfix(tapply("fooC", lit(2)), "+", lit(1))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt #5217 with param name, no break and indent") {
+    val code =
+      """|fooB(
+         |  b = fooC:
+         |      2
+         |    + 1
+         |)
+         |""".stripMargin
+    val layout =
+      """|fooB(b = fooC {
+         |  2 + 1
+         |})
+         |""".stripMargin
+    val tree = tapply("fooB", Term.Assign("b", tapply("fooC", blk(tinfix(lit(2), "+", lit(1))))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt #5217 without param name") {
+    val code =
+      """|fooB(
+         |    fooC:
+         |      2
+         |    + 1
+         |)
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `)` expected but `identifier` found
+         |    + 1
+         |    ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("sfmt #5217 without param name, no indent, parens") {
+    val code =
+      """|fooB(
+         |    fooC(2)
+         |    + 1
+         |)
+         |""".stripMargin
+    val layout = "fooB(fooC(2) + 1)"
+    val tree = tapply("fooB", tinfix(tapply("fooC", lit(2)), "+", lit(1)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("sfmt #5217 without param name, indent, parens") {
+    val code =
+      """|fooB(
+         |    fooC(2)
+         |      + 1
+         |)
+         |""".stripMargin
+    val layout = "fooB(fooC(2) + 1)"
+    val tree = tapply("fooB", tinfix(tapply("fooC", lit(2)), "+", lit(1)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
