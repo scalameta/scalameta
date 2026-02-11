@@ -464,7 +464,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
     def nonTrivial(sepRegions: List[SepRegion]) = curr match {
       case _: EOF => getAtEof(sepRegions)
-      case _: Comma =>
+      case _: Comma | _: Semicolon =>
         if (inParens(sepRegions)) {
           def swapWithOutdents(tokenRef: TokenRef) = {
             @tailrec
