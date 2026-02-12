@@ -2295,6 +2295,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
       val resOpt = currToken match {
         case lf: InfixLF => getLeadingInfix(lf)(Term.Name.apply)(getNextRhs(emptyTypeArgs))
+        case _: KwMatch if dialect.allowMatchAsOperator =>
+          val op = atCurPosNext(Term.Name("match"))
+          val lhs = getPrevLhs(op)
+          Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
         case _ if prev[Indentation.Outdent] => None
         case t: Unquote =>
           val op = unquote[Term.Name](t)
@@ -2302,10 +2306,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case t: Ident if !(allowRepeated && soft.StarSplice(t) && peek[RightParen, Comma]) =>
           val op = atCurPosNext(Term.Name(t.value))
           Some(getPostfixOrNextRhs(op))
-        case _: KwMatch if dialect.allowMatchAsOperator =>
-          val op = atCurPosNext(Term.Name("match"))
-          val lhs = getPrevLhs(op)
-          Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
         case _ => None
       }
       resOpt match {
