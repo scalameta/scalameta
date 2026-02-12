@@ -2689,11 +2689,13 @@ class FewerBracesSuite extends BaseDottySuite {
          |  + 1
          |)
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `)` expected but `identifier` found
-         |  + 1
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|fooB(b = fooC {
+         |  2
+         |} + 1)
+         |""".stripMargin
+    val tree = tapply("fooB", Term.Assign("b", tinfix(tapply("fooC", blk(lit(2))), "+", lit(1))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("sfmt #5217 with param name, no break, parens and indent") {
@@ -2733,11 +2735,13 @@ class FewerBracesSuite extends BaseDottySuite {
          |    + 1
          |)
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `)` expected but `identifier` found
-         |    + 1
-         |    ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|fooB(fooC {
+         |  2
+         |} + 1)
+         |""".stripMargin
+    val tree = tapply("fooB", tinfix(tapply("fooC", blk(lit(2))), "+", lit(1)))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("sfmt #5217 without param name, no indent, parens") {

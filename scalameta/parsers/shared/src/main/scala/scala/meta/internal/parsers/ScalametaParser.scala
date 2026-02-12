@@ -153,6 +153,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   @inline
   def peekToken = in.peekToken
 
+  @inline
+  def inRegionParen: Boolean = in.currRegions match {
+    case (_: RegionParen) :: _ => true
+    case _ => false
+  }
+
   def next() = {
     in.next()
     currToken match {
@@ -2299,7 +2305,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           val op = atCurPosNext(Term.Name("match"))
           val lhs = getPrevLhs(op)
           Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
-        case _ if prev[Indentation.Outdent] => None
+        case _ if prev[Indentation.Outdent] && !inRegionParen => None
         case t: Unquote =>
           val op = unquote[Term.Name](t)
           Some(getPostfixOrNextRhs(op))
@@ -2469,8 +2475,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) = {
         val bodyOpt =
           if (nextIfIndentAhead()) Some(blockExprOnIndent())
-          else if (!okSingleLine) None
-          else if (in.currRegions.headOption.exists(_.isInstanceOf[RegionParen])) None
+          else if (!okSingleLine || inRegionParen) None
           else next(Some(expr()))
         bodyOpt.map(body => autoEndPos(paramPos)(f(params, body)))
       }
