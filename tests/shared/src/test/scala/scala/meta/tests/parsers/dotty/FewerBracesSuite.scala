@@ -2639,15 +2639,15 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|{
-         |  foo {
+         |  (foo {
          |    bar
          |  } match {
          |    case baz =>
-         |  }
-         |  1
+         |  }) + 1
          |}
          |""".stripMargin
-    val tree = blk(tmatch(tapply("foo", blk("bar")), Case(patvar("baz"), None, blk())), lit(1))
+    val tree =
+      blk(tinfix(tmatch(tapply("foo", blk("bar")), Case(patvar("baz"), None, blk())), "+", lit(1)))
     runTestAssert[Stat](code, layout)(tree)
   }
 
