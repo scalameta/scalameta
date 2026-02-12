@@ -2611,6 +2611,40 @@ Synthetics:
 [5:22..5:22):  => *.apply
   apply => scala/StringContext.apply().
 
+semanticdb/integration/src/main/scala/example/Issue4505.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue4505.scala
+Text => non-empty
+Language => Scala
+Symbols => 5 entries
+Occurrences => 9 entries
+
+Symbols:
+example/Issue4505. => final object Issue4505 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue4505.A# => @AnnotationWithEnum class A extends AnyRef { +1 decls }
+  AnnotationWithEnum => example/Issue4505J#AnnotationWithEnum#
+  AnyRef => scala/AnyRef#
+example/Issue4505.A#`<init>`(). => primary ctor <init>()
+example/Issue4505.B# => @AnnotationWithClass class B extends AnyRef { +1 decls }
+  AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+  AnyRef => scala/AnyRef#
+example/Issue4505.B#`<init>`(). => primary ctor <init>()
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:16): Issue4505 <= example/Issue4505.
+[4:9..4:19): Issue4505J => example/Issue4505J#
+[6:3..6:21): AnnotationWithEnum => example/Issue4505J#AnnotationWithEnum#
+[7:8..7:9): A <= example/Issue4505.A#
+[7:9..7:9):  <= example/Issue4505.A#`<init>`().
+[9:3..9:22): AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+[10:8..10:9): B <= example/Issue4505.B#
+[10:9..10:9):  <= example/Issue4505.B#`<init>`().
+
 semanticdb/integration/src/main/scala/example/Issue5939Metals.scala
 -------------------------------------------------------------------
 

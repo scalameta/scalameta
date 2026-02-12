@@ -2284,6 +2284,69 @@ example/Issue2882.FooFailure.unapply(). => method unapply(x$0: FooFailure): Opti
 example/Issue2882.FooFailure.unapply().(x$0) => param x$0: FooFailure
   FooFailure => example/Issue2882.FooFailure#
 
+example/Issue4505.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue4505.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+example/Issue4505. => final object Issue4505 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue4505.A# => @AnnotationWithEnum class A extends AnyRef { +1 decls }
+  AnnotationWithEnum => example/Issue4505J#AnnotationWithEnum#
+  AnyRef => scala/AnyRef#
+example/Issue4505.A#`<init>`(). => primary ctor <init>()
+example/Issue4505.B# => @AnnotationWithClass class B extends AnyRef { +1 decls }
+  AnnotationWithClass => example/Issue4505J#AnnotationWithClass#
+  AnyRef => scala/AnyRef#
+example/Issue4505.B#`<init>`(). => primary ctor <init>()
+
+example/Issue4505J.class
+------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue4505J.class
+Text => empty
+Language => Java
+Symbols => 12 entries
+
+Symbols:
+example/Issue4505J# => class Issue4505J extends Object { +4 decls }
+  Object => java/lang/Object#
+example/Issue4505J#AnnotationEnum# => final static enum class AnnotationEnum extends Enum[AnnotationEnum] { +4 decls }
+  Enum => java/lang/Enum#
+  AnnotationEnum => example/Issue4505J#AnnotationEnum#
+example/Issue4505J#AnnotationEnum#Val1. => final static enum field Val1: AnnotationEnum
+  AnnotationEnum => example/Issue4505J#AnnotationEnum#
+example/Issue4505J#AnnotationEnum#`<init>`(). => private ctor <init>()
+example/Issue4505J#AnnotationEnum#valueOf(). => static method valueOf(name: String): AnnotationEnum
+  name => example/Issue4505J#AnnotationEnum#valueOf().(name)
+  String => java/lang/String#
+  AnnotationEnum => example/Issue4505J#AnnotationEnum#
+example/Issue4505J#AnnotationEnum#valueOf().(name) => param name: String
+  String => java/lang/String#
+example/Issue4505J#AnnotationEnum#values(). => static method values(): Array[AnnotationEnum]
+  Array => scala/Array#
+  AnnotationEnum => example/Issue4505J#AnnotationEnum#
+example/Issue4505J#AnnotationWithClass# => abstract static interface AnnotationWithClass extends Object with Annotation { +1 decls }
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+example/Issue4505J#AnnotationWithClass#value(). => abstract method value(): Class[local_wildcard]
+  Class => java/lang/Class#
+  local_wildcard => local_wildcard
+example/Issue4505J#AnnotationWithEnum# => abstract static interface AnnotationWithEnum extends Object with Annotation { +1 decls }
+  Object => java/lang/Object#
+  Annotation => java/lang/annotation/Annotation#
+example/Issue4505J#AnnotationWithEnum#value(). => abstract method value(): AnnotationEnum
+  AnnotationEnum => example/Issue4505J#AnnotationEnum#
+example/Issue4505J#`<init>`(). => ctor <init>()
+
 example/local$minusfile.class
 -----------------------------
 

@@ -3,6 +3,7 @@ package scala.meta.internal.scalacp
 import scala.meta.internal.{semanticdb => s}
 
 import scala.tools.scalap.scalax.rules.scalasig._
+import scala.tools.scalap.scalax.rules.~
 
 trait AnnotationOps {
   self: Scalacp =>
@@ -35,18 +36,35 @@ trait AnnotationOps {
 
   }
 
+  private def toTree(obj: Any): s.Tree = obj match {
+    case x: ExternalSymbol => toTree(ConstantType(x).toSemanticTpe)
+    case x: Symbol => s.IdTree(x.toSemantic)
+    case x: Type => toTree(x.toSemanticTpe)
+    case _ => s.Constant.opt(obj).fold[s.Tree](s.NoTree)(s.LiteralTree.apply)
+  }
+
+  private def toTree(obj: s.Type): s.Tree = obj match {
+    case x: s.ConstantType => s.LiteralTree(x.constant)
+    case x: s.SingleType => typeToTree(x.prefix, x.symbol)
+    case x: s.TypeRef =>
+      val func = typeToTree(x.prefix, x.symbol)
+      if (x.typeArguments.isEmpty) func else s.TypeApplyTree(func, x.typeArguments)
+    case _ => s.NoTree
+  }
+
+  private def typeToTree(prefix: s.Type, symbol: String): s.Tree = {
+    val pre = toTree(prefix)
+    val sym = s.IdTree(symbol)
+    if (pre eq s.NoTree) sym else s.SelectTree(pre, Some(sym))
+  }
+
+  private def pairToTree(obj: String ~ Any): s.AssignTree = s
+    .AssignTree(s.IdTree(obj._1), toTree(obj._2))
+
 }
 
 object AnnotationOps {
 
-  import scala.tools.scalap.scalax.rules.~
-
   private val syntheticAnnotationsSymbols = Set("scala/reflect/macros/internal/macroImpl#")
-
-  private def toTree(obj: Any): s.Tree = s.Constant.opt(obj)
-    .fold[s.Tree](s.NoTree)(s.LiteralTree.apply)
-
-  private def pairToTree(obj: String ~ Any): s.AssignTree = s
-    .AssignTree(s.IdTree(obj._1), toTree(obj._2))
 
 }
