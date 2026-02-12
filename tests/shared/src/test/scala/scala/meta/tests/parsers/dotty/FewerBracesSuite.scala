@@ -2627,4 +2627,28 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](codeWithoutBlank, layout)(tree)
   }
 
+  test("match and infix after outdent") {
+    val code =
+      """|{
+         |  foo:
+         |    bar
+         |  match
+         |    case baz =>
+         |  + 1
+         |}
+         |""".stripMargin
+    val layout =
+      """|{
+         |  foo {
+         |    bar
+         |  } match {
+         |    case baz =>
+         |  }
+         |  1
+         |}
+         |""".stripMargin
+    val tree = blk(tmatch(tapply("foo", blk("bar")), Case(patvar("baz"), None, blk())), lit(1))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
