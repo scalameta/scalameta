@@ -530,7 +530,8 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       """|{
          |  def toBeContinued(altToken: Token): Boolean = {
-         |    inline def canContinue = !in.canStartStatTokens.contains(in.token) || followedByToken(altToken)
+         |    inline def canContinue = !in.canStartStatTokens.contains(in.token) // not statement, so take as continued expr
+         |      || followedByToken(altToken) // scan ahead to see whether we find a `then` or `do`
          |    !in.isNewLine // a newline token means the expression is finished
          |      && !migrateTo3 // old syntax
          |      && canContinue
@@ -547,19 +548,21 @@ class InfixSuite extends BaseDottySuite {
           List(List(tparam("altToken", "Token"))),
           Some(pname("Boolean")),
           blk(
-            Defn.Def(
+            Defn.Def.createWithComments(
               List(Mod.Inline()),
               tname("canContinue"),
-              None,
+              Nil,
               None,
               tinfix(
-                Term.ApplyUnary(
+                Term.ApplyUnary.createWithComments(
                   tname("!"),
-                  tapply(tselect("in", "canStartStatTokens", "contains"), tselect("in", "token"))
+                  tapply(tselect("in", "canStartStatTokens", "contains"), tselect("in", "token")),
+                  endComment = Seq("// not statement, so take as continued expr")
                 ),
                 "||",
                 tapply(tname("followedByToken"), tname("altToken"))
-              )
+              ),
+              endComment = Seq("// scan ahead to see whether we find a `then` or `do`")
             ),
             tinfix(
               Term.ApplyInfix.createWithComments(

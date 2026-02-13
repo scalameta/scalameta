@@ -343,7 +343,7 @@ class DefnSuite extends ParseSuite {
          |  case `object`: ScObject =>
          |    `object`.allFunctionsByName(ScFunction.CommonNames.Apply).nonEmpty
          |  case `class` @ ScClass(`type`) =>
-         |    isCaseOrInScala3File(`class`)
+         |    isCaseOrInScala3File(`class`) // SCL-19992, SCL-21187
          |  case _ =>
          |    false
          |}
@@ -367,10 +367,11 @@ class DefnSuite extends ParseSuite {
             "nonEmpty"
           )
         ),
-        Case(
+        Case.createWithComments(
           Pat.Bind(patvar("class"), Pat.Extract(tname("ScClass"), List(tname("type")))),
           None,
-          tapply(tname("isCaseOrInScala3File"), tname("class"))
+          tapply(tname("isCaseOrInScala3File"), tname("class")),
+          endComment = Seq("// SCL-19992, SCL-21187")
         ),
         Case(patwildcard, None, lit(false))
       )
