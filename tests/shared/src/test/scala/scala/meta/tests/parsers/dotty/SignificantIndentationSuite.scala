@@ -1529,7 +1529,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin,
       """|enum Namespace(val uri: String | Null) {
          |  case xhtml extends Namespace // Defn.EnumCase ends here
-         |    ("http://www.w3.org/1999/xhtml")
+         |    ("http://www.w3.org/1999/xhtml") // str
          |}
          |""".stripMargin
     )(Defn.Enum(
@@ -1537,7 +1537,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       pname("Namespace"),
       Nil,
       ctorp(tparam(List(Mod.ValParam()), "uri", pinfix("String", "|", pname("Null")))),
-      tpl(Defn.EnumCase(
+      tpl(Defn.EnumCase.createWithComments(
         Nil,
         tname("xhtml"),
         Nil,
@@ -1545,7 +1545,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
         List(init(
           Type.Name.createWithComments("Namespace", endComment = Seq("// Defn.EnumCase ends here")),
           List(str("http://www.w3.org/1999/xhtml"))
-        ))
+        )),
+        endComment = Seq("// str")
       ))
     ))
   }
@@ -1777,14 +1778,21 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tpl(
         List(init("Foo")),
-        Template.Body.createWithComments(
+        Template.Body(
           None,
           List(
-            Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+            Defn.Def.createWithComments(
+              Nil,
+              tname("foo"),
+              Nil,
+              Nil,
+              Some(pname("Int")),
+              tname("???"),
+              begComment = Seq("/* comment */"),
+              endComment = None
+            ),
             Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
-          ),
-          begComment = Seq("/* comment */"),
-          endComment = None
+          )
         )
       )
     ))
@@ -1805,14 +1813,21 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tpl(
         List(init("Foo")),
-        Template.Body.createWithComments(
+        Template.Body(
           None,
           List(
-            Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tname("???")),
+            Defn.Def.createWithComments(
+              Nil,
+              tname("foo"),
+              Nil,
+              Nil,
+              Some(pname("Int")),
+              tname("???"),
+              begComment = Seq("/* multi\n   line\n   comment */"),
+              endComment = None
+            ),
             Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???"))
-          ),
-          begComment = Seq("/* multi\n   line\n   comment */"),
-          endComment = None
+          )
         )
       )
     ))

@@ -429,8 +429,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           }
         }
 
+        val bodyIsBlock = body.is[Tree.Block]
+
         val begComment =
-          if (start < minChildBeg) {
+          if (tokens(start).start < minChildBeg) {
             val begBuf = new ListBuffer[Tree.Comment]
             var idx = start - 1
             var pending = 0
@@ -472,10 +474,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 case _ => false
               }) idx -= 1
             asComments(begBuf)
-          } else minChild.begComment
+          } else if (bodyIsBlock) None // braceless
+          else minChild.begComment
 
+        val isEndBraceless = bodyIsBlock &&
+          tokens.skipIf(_.is[HTrivia], endExcl, endPos + 1) <= endPos
         val endComment =
-          if (endExcl > maxChildEnd) {
+          if (isEndBraceless) None
+          else if (tokens(endExcl - 1).end > maxChildEnd) {
             val endBuf = new ListBuffer[Tree.Comment]
             var idx = endExcl
             while (tokens.getOpt(idx) match {
