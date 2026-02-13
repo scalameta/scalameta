@@ -142,7 +142,16 @@ object Tree extends InternalTreeXtensions {
   }
 
   @ast
-  class Comment(parts: List[Lit.String] @nonEmpty) extends Tree
+  class Comment(parts: List[Lit.String] @nonEmpty) extends Tree {
+    final def isScaladoc: Boolean = parts.headOption
+      .exists(x => x.value.length > 4 && x.value.startsWith("/**"))
+    final def isSingleline: Boolean = parts.headOption.exists(_.value.startsWith("//"))
+    final def isMultiline: Boolean = parts.headOption.exists { x =>
+      val part = x.value
+      val len = part.length
+      (len == 4 || len > 4 && part.charAt(2) != '*') && part.startsWith("/*")
+    }
+  }
 
   @ast
   class Comments(values: List[Comment] @nonEmpty) extends Tree
