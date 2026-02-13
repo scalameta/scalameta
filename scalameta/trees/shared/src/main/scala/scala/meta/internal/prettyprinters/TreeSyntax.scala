@@ -816,6 +816,12 @@ object TreeSyntax {
       case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
 
       case t: Stat.Block => if (t.stats.isEmpty) s("{}") else s("{", t.stats, n("}"))
+
+      case t: Tree.Comment => printComment(t)
+      // in reality, this shouldn't really be called directly as it might be printed incorrectly
+      case t: Tree.Comments =>
+        val isTrailing = t.parent.exists(_.endComment.contains(t))
+        if (isTrailing) printEndComments(t) else printBegComments(t)
     }
 
     private def givenCond(pcg: Member.ParamClauseGroup): Show.Result = {
@@ -989,23 +995,32 @@ object TreeSyntax {
   def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = (new SyntaxInstances)
     .syntaxTree[T].apply(x)
 
-  private def printComments(tree: Tree, f: Tree => Option[Tree.Comments]): List[Show.Result] =
-    f(tree) match {
-      case Some(tc) // skip if the parent refers to the same comments
-          if tc.values.nonEmpty && tree.parent.flatMap(f).forall(ptc =>
-            (tc ne ptc) &&
-              ((tc.origin, ptc.origin) match {
-                case (otc: Origin.Partial, optc: Origin.Partial) =>
-                  otc.begTokenIdx != optc.begTokenIdx || otc.endTokenIdx != optc.endTokenIdx
-                case _ => true
-              })
-          ) => tc.values.map(x => r(x.parts.map(_.value)))
-      case _ => Nil
-    }
+  private def printComments(
+      tree: Tree,
+      f: Tree => Option[Tree.Comments],
+      out: Tree.Comments => Show.Result
+  ): Show.Result = f(tree) match {
+    case Some(tc) // skip if the parent refers to the same comments
+        if tc.values.nonEmpty && tree.parent.flatMap(f).forall(ptc =>
+          (tc ne ptc) &&
+            ((tc.origin, ptc.origin) match {
+              case (otc: Origin.Partial, optc: Origin.Partial) =>
+                otc.begTokenIdx != optc.begTokenIdx || otc.endTokenIdx != optc.endTokenIdx
+              case _ => true
+            })
+        ) => out(tc)
+    case _ => s()
+  }
+
+  private def printComment(t: Tree.Comment): Show.Result = r(t.parts.map(_.value))
+  private def printBegComments(t: Tree.Comments): Show.Result =
+    r(s(), "", n())(t.values.map(x => n(printComment(x))): _*)
+  private def printEndComments(t: Tree.Comments): Show.Result =
+    r(" ", " ", n())(t.values.map(printComment): _*)
 
   private[prettyprinters] def withComments(tree: Tree)(syntax: Show.Result): Show.Result = s(
-    r(s(), "", n())(printComments(tree, _.begComment).map(n): _*),
+    printComments(tree, _.begComment, printBegComments),
     syntax,
-    r(" ", " ", n())(printComments(tree, _.endComment): _*)
+    printComments(tree, _.endComment, printEndComments)
   )
 }
