@@ -3160,4 +3160,20 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("semicolon within lambda as arg in parens") {
+    val code =
+      """|transformAfter(
+         |  phase,
+         |  sd =>
+         |    sd.setFlag(flags);
+         |    sd
+         |)
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `)` expected but `;` found
+         |    sd.setFlag(flags);
+         |                     ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
