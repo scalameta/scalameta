@@ -2768,7 +2768,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       else syntaxError("val in for comprehension must be followed by assignment", at = currToken)
 
     if (hasEq) next() else accept[LeftArrow]
-    val rhs = expr()
+    val rhs = if (at[Indentation.Indent]) blockOnIndent() else expr()
 
     autoEndPos(startPos)(
       if (hasEq) Enumerator.Val(pat, rhs)

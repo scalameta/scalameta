@@ -3169,11 +3169,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    sd
          |)
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `)` expected but `;` found
-         |    sd.setFlag(flags);
-         |                     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|transformAfter(phase, sd => {
+         |  sd.setFlag(flags)
+         |  sd
+         |})
+         |""".stripMargin
+    val tree = tapply(
+      "transformAfter",
+      "phase",
+      tfunc(tparam("sd"))(blk(tapply(tselect("sd", "setFlag"), "flags"), "sd"))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
