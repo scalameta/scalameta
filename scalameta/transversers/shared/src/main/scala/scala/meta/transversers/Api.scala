@@ -46,11 +46,3 @@ private[meta] trait Api {
       else withOriginRecursive(trees.Origin.DialectOnly(dialect))
   }
 }
-
-private[meta] trait Aliases {
-  type Transformer = scala.meta.transversers.Transformer
-  // there's no term Transformer, so we don't have a term alias here
-
-  type Traverser = scala.meta.transversers.Traverser
-  // there's no term Traverser, so we don't have a term alias here
-}

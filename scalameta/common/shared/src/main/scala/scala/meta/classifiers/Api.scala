@@ -38,5 +38,3 @@ private[meta] trait Api {
     def isAnyOpt[U1: C, U2: C, U3: C, U4: C]: Boolean = x.forall(_.isAny[U1, U2, U3, U4])
   }
 }
-
-private[meta] trait Aliases {}

@@ -29,17 +29,3 @@ private[meta] trait Api {
     }
   }
 }
-
-private[meta] trait Aliases {
-  type Parsed[+T] = scala.meta.parsers.Parsed[T]
-  object Parsed {
-    type Success[+T] = scala.meta.parsers.Parsed.Success[T]
-    val Success = scala.meta.parsers.Parsed.Success
-
-    type Error = scala.meta.parsers.Parsed.Error
-    val Error = scala.meta.parsers.Parsed.Error
-  }
-
-  type ParseException = scala.meta.parsers.ParseException
-  lazy val ParseException = scala.meta.parsers.ParseException
-}
