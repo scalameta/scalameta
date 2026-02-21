@@ -1,3 +1,3 @@
 package scala.meta
 
-package object io extends io.Api
+package object io

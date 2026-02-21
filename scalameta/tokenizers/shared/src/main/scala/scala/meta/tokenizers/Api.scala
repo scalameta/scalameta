@@ -29,17 +29,3 @@ private[meta] trait Api {
     }
   }
 }
-
-private[meta] trait Aliases {
-  type Tokenized = scala.meta.tokenizers.Tokenized
-  object Tokenized {
-    type Success = scala.meta.tokenizers.Tokenized.Success
-    val Success = scala.meta.tokenizers.Tokenized.Success
-
-    type Error = scala.meta.tokenizers.Tokenized.Error
-    val Error = scala.meta.tokenizers.Tokenized.Error
-  }
-
-  type TokenizeException = scala.meta.tokenizers.TokenizeException
-  lazy val TokenizeException = scala.meta.tokenizers.TokenizeException
-}
