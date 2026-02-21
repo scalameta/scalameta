@@ -23,47 +23,40 @@ package object meta
     with trees.Aliases
     with VersionSpecificApis {
 
-  implicit class XtensionDialectApply(private val dialect: scala.meta.Dialect) extends AnyVal {
-    def apply[T](inputLike: T)(implicit
-        convert: scala.meta.common.Convert[T, scala.meta.inputs.Input]
-    ): (scala.meta.Dialect, scala.meta.inputs.Input) = (dialect, convert(inputLike))
-    def apply(token: scala.meta.tokens.Token): (scala.meta.Dialect, scala.meta.tokens.Token) =
-      (dialect, token)
-    def apply(tokens: scala.meta.tokens.Tokens): (scala.meta.Dialect, scala.meta.tokens.Tokens) =
-      (dialect, tokens)
-    def apply(tree: scala.meta.Tree): (scala.meta.Dialect, scala.meta.Tree) = (dialect, tree)
+  implicit class XtensionDialectApply(private val dialect: Dialect) extends AnyVal {
+    def apply[T](value: T)(implicit
+        convert: common.Convert[T, inputs.Input]
+    ): (Dialect, inputs.Input) = (dialect, convert(value))
+    def apply(value: tokens.Token): (Dialect, tokens.Token) = (dialect, value)
+    def apply(value: tokens.Tokens): (Dialect, tokens.Tokens) = (dialect, value)
+    def apply(value: Tree): (Dialect, Tree) = (dialect, value)
   }
-  implicit class XtensionDialectTokenSyntax(
-      private val dialectToken: (scala.meta.Dialect, scala.meta.tokens.Token)
-  ) extends AnyVal {
+  implicit class XtensionDialectTokenSyntax(private val dialectToken: (Dialect, tokens.Token))
+      extends AnyVal {
     def syntax: String = {
       implicit val (dialect, token) = dialectToken
       token.syntax
     }
   }
-  implicit class XtensionDialectTokensSyntax(
-      private val dialectTokens: (scala.meta.Dialect, scala.meta.tokens.Tokens)
-  ) extends AnyVal {
+  implicit class XtensionDialectTokensSyntax(private val dialectTokens: (Dialect, tokens.Tokens))
+      extends AnyVal {
     def syntax: String = {
       implicit val (dialect, tokens) = dialectTokens
       tokens.syntax
     }
-    def tokenize(implicit
-        tokenize: scala.meta.tokenizers.Tokenize
-    ): scala.meta.tokenizers.Tokenized = {
+    def tokenize(implicit tokenize: tokenizers.Tokenize): tokenizers.Tokenized = {
       val (dialect, tokens) = dialectTokens
       val input = Tokens.tokensToInput(tokens)
       tokenize.apply(input, dialect)
     }
-    def parse[U](implicit parse: scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U] = {
+    def parse[U](implicit parse: parsers.Parse[U]): parsers.Parsed[U] = {
       val (dialect, tokens) = dialectTokens
       val input = Tokens.tokensToInput(tokens)
       parse.apply(input, dialect)
     }
   }
-  implicit class XtensionDialectTreeSyntax(
-      private val dialectTree: (scala.meta.Dialect, scala.meta.Tree)
-  ) extends AnyVal {
+  implicit class XtensionDialectTreeSyntax(private val dialectTree: (Dialect, Tree))
+      extends AnyVal {
     def syntax: String = {
       implicit val (dialect, tree) = dialectTree
       tree.syntax
