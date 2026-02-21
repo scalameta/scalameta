@@ -97,8 +97,3 @@ private[meta] trait Api extends ApiLowPriority {
   implicit def statValuesToPkgBodyWithDialect(v: List[Stat])(implicit dialect: Dialect): Pkg.Body =
     Pkg.Body(v)
 }
-
-private[meta] trait Aliases {
-  // NOTE: all trees are defined immediately in the scala.meta package,
-  // so we don't need to alias them here.
-}

@@ -31,11 +31,3 @@ private[meta] trait Api {
   @quasiquote[Source]("source")
   implicit class XtensionQuasiquoteSource(ctx: StringContext)
 }
-
-private[meta] trait Aliases {
-  type Lift[O, I] = scala.meta.quasiquotes.Lift[O, I]
-  lazy val Lift = scala.meta.quasiquotes.Lift
-
-  type Unlift[I, O] = scala.meta.quasiquotes.Unlift[I, O]
-  lazy val Unlift = scala.meta.quasiquotes.Unlift
-}

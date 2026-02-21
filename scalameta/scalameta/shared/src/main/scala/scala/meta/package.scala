@@ -4,24 +4,76 @@ import scala.reflect.ClassTag
 
 package object meta
     extends classifiers.Api
-    with classifiers.Aliases
-    with dialects.Api
-    with dialects.Aliases
     with parsers.Api
-    with parsers.Aliases
     with prettyprinters.Api
-    with prettyprinters.Aliases
-    with io.Api
-    with io.Aliases
-    with inputs.Api
-    with inputs.Aliases
     with tokenizers.Api
-    with tokenizers.Aliases
     with tokens.Api
-    with tokens.Aliases
     with trees.Api
-    with trees.Aliases
     with VersionSpecificApis {
+
+  /*
+   * aliases
+   */
+
+  // inputs
+
+  type Input = inputs.Input
+  val Input = inputs.Input
+
+  type Position = inputs.Position
+  val Position = inputs.Position
+
+  // io
+
+  type AbsolutePath = io.AbsolutePath
+  val AbsolutePath = io.AbsolutePath
+
+  type RelativePath = io.RelativePath
+  val RelativePath = io.RelativePath
+
+  type Classpath = io.Classpath
+  val Classpath = io.Classpath
+
+  // parsers
+
+  type Parsed[+T] = parsers.Parsed[T]
+  val Parsed = parsers.Parsed
+
+  type ParseException = parsers.ParseException
+  val ParseException = parsers.ParseException
+
+  // prettyprinters
+
+  type Structure[T] = prettyprinters.Structure[T]
+  type Syntax[T] = prettyprinters.Syntax[T]
+
+  // quasiquotes
+
+  type Lift[O, I] = quasiquotes.Lift[O, I]
+  val Lift = quasiquotes.Lift
+
+  type Unlift[I, O] = quasiquotes.Unlift[I, O]
+  val Unlift = quasiquotes.Unlift
+
+  // tokenizers
+
+  type Tokenized = tokenizers.Tokenized
+  val Tokenized = tokenizers.Tokenized
+
+  type TokenizeException = tokenizers.TokenizeException
+  val TokenizeException = tokenizers.TokenizeException
+
+  // tokens
+
+  type Token = tokens.Token
+  val Token = tokens.Token
+
+  type Tokens = tokens.Tokens
+  val Tokens = tokens.Tokens
+
+  /*
+   * extensions
+   */
 
   implicit class XtensionDialectApply(private val dialect: Dialect) extends AnyVal {
     def apply[T](value: T)(implicit
@@ -84,4 +136,5 @@ package object meta
         case _ => tree.reparseAs[A]
       }
   }
+
 }

@@ -65,14 +65,26 @@ class SurfaceSuite extends FunSuite {
     assertNoDiff(
       diagnostic,
       """|
+         |scala.meta.AbsolutePath
          |scala.meta.AnyDecimal
+         |scala.meta.Classpath
          |scala.meta.Dialect
+         |scala.meta.Input
+         |scala.meta.Lift
          |scala.meta.Name.ImplicitName
+         |scala.meta.ParseException
+         |scala.meta.Parsed
+         |scala.meta.Position
+         |scala.meta.RelativePath
+         |scala.meta.Token
+         |scala.meta.TokenizeException
+         |scala.meta.Tokenized
+         |scala.meta.Tokens
          |scala.meta.Tree
          |scala.meta.Tree.ImplicitOptionTree
          |scala.meta.Tree.ImplicitTree
          |scala.meta.Type.ParamBoundsCtor
-         |scala.meta.VersionSpecificApis
+         |scala.meta.Unlift
          |scala.meta.XtensionDialectApply
          |scala.meta.XtensionDialectTokenSyntax
          |scala.meta.XtensionDialectTokensSyntax

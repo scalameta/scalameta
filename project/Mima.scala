@@ -64,15 +64,16 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
-    exclude[DirectMissingMethodProblem]("Dialect.<init>$default$14"),
-    exclude[DirectMissingMethodProblem]("Dialect.<init>$default$12"),
-    exclude[DirectMissingMethodProblem]("Dialect.<init>$default$10"),
+    exclude[MissingTypesProblem]("package$"),
+    exclude[DirectMissingMethodProblem]("package.*"),
+    exclude[IncompatibleResultTypeProblem]("package.*"),
+    exclude[MissingTypesProblem]("inputs.package$"),
+    exclude[MissingClassProblem]("inputs.Aliases$*"),
+    exclude[MissingTypesProblem]("io.package$"),
+    exclude[MissingClassProblem]("parsers.Aliases$*"),
+    exclude[MissingClassProblem]("tokenizers.Aliases$*"),
+    exclude[MissingClassProblem]("tokens.Aliases$*"),
+    exclude[MissingTypesProblem]("VersionSpecificApis")
     // Tree
-    // XXX: this was a private class, not sure why mima complained
-    exclude[MissingClassProblem]("inputs.Input$File$SerializationProxy"),
-    // TODO: remove after release; made _ctor package-private, as intended, and changed signature
-    exclude[IncompatibleMethTypeProblem]("*._ctor"),
-    exclude[IncompatibleResultTypeProblem]("*._ctor$default$2"),
-    exclude[DirectMissingMethodProblem]("*._ctor*")
   )
 }

@@ -1,4 +1,10 @@
 package scala.meta
 
-trait VersionSpecificApis
-    extends transversers.Api with transversers.Aliases with quasiquotes.Api with quasiquotes.Aliases
+private[meta] trait VersionSpecificApis extends transversers.Api with quasiquotes.Api {
+
+  // transversers
+
+  type Transformer = transversers.Transformer
+  type Traverser = transversers.Traverser
+
+}

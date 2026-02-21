@@ -14,11 +14,3 @@ private[meta] trait Api {
     def structure: String = style(x).toString
   }
 }
-
-private[meta] trait Aliases {
-  type Structure[T] = scala.meta.prettyprinters.Structure[T]
-  // there's no term Structure, so we don't have a term alias here
-
-  type Syntax[T] = scala.meta.prettyprinters.Syntax[T]
-  // there's no term Syntax, so we don't have a term alias here
-}
