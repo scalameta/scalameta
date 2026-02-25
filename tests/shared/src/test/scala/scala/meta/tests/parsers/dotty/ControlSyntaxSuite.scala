@@ -4338,4 +4338,13 @@ class ControlSyntaxSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4515") {
+    val code = "def f(b: Boolean): Int => Int = if (b) (a: Int) => a else identity"
+    val error =
+      """|<input>:1: error: `;` expected but `=>` found
+         |def f(b: Boolean): Int => Int = if (b) (a: Int) => a else identity
+         |                                                ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
