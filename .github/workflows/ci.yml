@@ -36,14 +36,14 @@ jobs:
           - '2.12.21'
           - '2.13.18'
           - '3.3.7'
-          - '3.8.2'
+          - '3.8.3-RC1'
         java:
           - '8'
           - '17'
         exclude:
           # Scala since 3.8.0 is compiled with JDK 17
           - java: '8'
-            scala: '3.8.2'
+            scala: '3.8.3-RC1'
     steps:
       - uses: actions/checkout@v6
         with:
