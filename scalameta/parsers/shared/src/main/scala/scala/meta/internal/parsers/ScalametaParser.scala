@@ -1691,6 +1691,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       if (acceptIfAfterOptNL[T]) (simpleExpr, None)
       else {
         // let's consider case when something can continue cond or start body
+        val argPos = currIndex
         val argsOrInitBody = currToken match {
           case _: LeftParen => Some(inParensOrTupleOrUnitExpr(allowRepeated = false))
           case _: LeftBrace => Some(blockExprOnBrace())
@@ -1706,7 +1707,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         }
         complexExpr.getOrElse {
           if (argsOrInitBody.isEmpty) newLinesOpt()
-          simpleExpr -> argsOrInitBody.map(t => exprAfterSimpleInit(t, t.begIndex, canApply = true))
+          simpleExpr -> argsOrInitBody.map(exprAfterSimpleInit(_, argPos, canApply = true))
         }
       }
     }

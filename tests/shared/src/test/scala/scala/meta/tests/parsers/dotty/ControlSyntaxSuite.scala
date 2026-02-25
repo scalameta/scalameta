@@ -4340,11 +4340,15 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("#4515") {
     val code = "def f(b: Boolean): Int => Int = if (b) (a: Int) => a else identity"
-    val error =
-      """|<input>:1: error: `;` expected but `=>` found
-         |def f(b: Boolean): Int => Int = if (b) (a: Int) => a else identity
-         |                                                ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Defn.Def(
+      Nil,
+      "f",
+      Nil,
+      List(List(tparam("b", "Boolean"))),
+      Some(pfunc("Int")("Int")),
+      Term.If("b", tfunc(tparam("a", "Int"))("a"), "identity", Nil)
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
 }
