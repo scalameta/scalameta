@@ -574,17 +574,20 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           case _ :: rs => OutdentInfo(null, rs)
           case _ => null
         }
-      case _: RightArrow => currRef(sepRegions match {
-          case (_: RegionCaseExpr) :: rs =>
-            // add case region for `match {` to calculate proper indentation
-            // for statements in indentation dialects
-            val bodyIndent = rs match {
-              case (ri: RegionIndent) :: _ => ri.indent
-              case _ => nextIndent
-            }
-            new RegionCaseBody(bodyIndent, curr) :: rs
-          case _ => sepRegions
-        })
+      case _: RightArrow => currRef(
+          sepRegions match {
+            case (_: RegionCaseExpr) :: rs =>
+              // add case region for `match {` to calculate proper indentation
+              // for statements in indentation dialects
+              val bodyIndent = rs match {
+                case (ri: RegionIndent) :: _ => ri.indent
+                case _ => nextIndent
+              }
+              new RegionCaseBody(bodyIndent, curr) :: rs
+            case RegionColonMaybeFewerBraces :: rs => rs
+            case _ => sepRegions
+          }
+        )
       case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
         currRef(RegionWhile(next) :: sepRegions)
@@ -616,6 +619,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         currRef(RegionDefMark :: sepRegions)
       case _: Colon => sepRegions match {
           case RegionDefMark :: rs => currRef(RegionDefType :: rs)
+          case (_: RegionCaseExprGuard) :: _ if dialect.allowFewerBraces =>
+            // to distinguish `=>` from lambda and end of case expr
+            currRef(RegionColonMaybeFewerBraces :: sepRegions)
           case _ => currRef(sepRegions)
         }
       case _: Equals => sepRegions match {
@@ -874,6 +880,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     if (!couldBeFewerBraces()) None
                     else Some(Right(lastWhitespaceToken(sepRegions, nextIndent)))
                   case (_: RegionGivenDecl) :: rs => emitIndent(RegionTemplateBody :: rs)
+                  case RegionColonMaybeFewerBraces :: rs => emitIndent(rs)
                   case _ => next match {
                       // RefineDcl
                       case _: KwVal | _: KwDef | _: KwType | _: Semicolon => emitIndent(sepRegions)

@@ -2777,11 +2777,16 @@ class FewerBracesSuite extends BaseDottySuite {
          |=>
          |  2
          |""".stripMargin
-    val error =
-      """|<input>:4: error: `=>` expected but `outdent` found
-         |  true
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|a match {
+         |  case n if foo {
+         |    b => true
+         |  } => 2
+         |}
+         |""".stripMargin
+    val tree =
+      tmatch("a", Case(patvar("n"), Some(tapply("foo", blk(tfunc(tparam("b"))(lit(true))))), lit(2)))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4518 no indents in match, and fb lambda: case param") {
@@ -2820,11 +2825,16 @@ class FewerBracesSuite extends BaseDottySuite {
          |=>
          |  2
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `outdent` found
-         |if foo: b => true
-         |                 ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|a match {
+         |  case n if foo {
+         |    b => true
+         |  } => 2
+         |}
+         |""".stripMargin
+    val tree =
+      tmatch("a", Case(patvar("n"), Some(tapply("foo", blk(tfunc(tparam("b"))(lit(true))))), lit(2)))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4518 no indents in match, and fb lambda: case param, one-liner") {
