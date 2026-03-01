@@ -39,6 +39,8 @@ final class RegionCaseExprGuard(override val indent: Int) extends RegionCaseExpr
 final class RegionCaseBody(override val indent: Int, val arrow: Token)
     extends SepRegionNonIndented with CanProduceLF
 
+case object RegionColonMaybeFewerBraces extends RegionNonDelimNonIndented with CanProduceLF
+
 sealed trait RegionHasParamMark extends RegionNonDelimNonIndented
 
 sealed trait RegionDefDecl extends RegionNonDelimNonIndented
