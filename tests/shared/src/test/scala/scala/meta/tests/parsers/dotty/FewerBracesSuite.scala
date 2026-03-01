@@ -2768,4 +2768,78 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4518 no indents in match, and fb lambda: simple param") {
+    val code =
+      """|a match
+         |case n
+         |if foo: b =>
+         |  true
+         |=>
+         |  2
+         |""".stripMargin
+    val error =
+      """|<input>:4: error: `=>` expected but `outdent` found
+         |  true
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#4518 no indents in match, and fb lambda: case param") {
+    val code =
+      """|a match
+         |case n
+         |if foo:
+         |  case b =>
+         |    true
+         |=>
+         |  2
+         |""".stripMargin
+    val layout =
+      """|a match {
+         |  case n if foo {
+         |    case b => true
+         |  } => 2
+         |}
+         |""".stripMargin
+    val tree = tmatch(
+      "a",
+      Case(
+        patvar("n"),
+        Some(tapply("foo", Term.PartialFunction(List(Case(patvar("b"), None, lit(true)))))),
+        lit(2)
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("#4518 no indents in match, and fb lambda: simple param, one-liner") {
+    val code =
+      """|a match
+         |case n
+         |if foo: b => true
+         |=>
+         |  2
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `outdent` found
+         |if foo: b => true
+         |                 ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
+  test("#4518 no indents in match, and fb lambda: case param, one-liner") {
+    val code =
+      """|a match
+         |case n
+         |if foo: case b => true
+         |=>
+         |  2
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `=>` expected but `:` found
+         |if foo: case b => true
+         |      ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
