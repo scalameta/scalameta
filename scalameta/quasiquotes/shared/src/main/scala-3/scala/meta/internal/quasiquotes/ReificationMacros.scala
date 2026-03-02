@@ -521,8 +521,8 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
 
       private val liftPartialOrigin: (Int, Int) => Expr[Origin.Partial] =
         if (mode.hasHoles) // direct syntax will not make much sense, need to regenerate
-          (beg, end) => '{ Origin.ParsedSpliced(${ psourceExpr }, ${ Expr(beg) }, ${ Expr(end) }) }
-        else (beg, end) => '{ Origin.Parsed(${ psourceExpr }, ${ Expr(beg) }, ${ Expr(end) }) }
+          (beg, end) => '{ Origin.ParsedSpliced($psourceExpr, ${ Expr(beg) }, ${ Expr(end) }) }
+        else (beg, end) => '{ Origin.Parsed($psourceExpr, ${ Expr(beg) }, ${ Expr(end) }) }
 
       def liftOrigin(origin: Origin): internalQuotes.reflect.Tree = origin match {
         case x: Origin.Partial => liftPartialOrigin(x.begTokenIdx, x.endTokenIdx).asTerm

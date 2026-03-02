@@ -29,11 +29,11 @@ object TreeSyntax {
 
       seq += "|" -> Seq(classTag[Pat.ExtractInfix])
 
-      if (dialect.allowExtensionMethods) seq += "extension" ->
-        Seq(classTag[Term.Apply], classTag[Term.ApplyUsing])
+      if (dialect.allowExtensionMethods) seq +=
+        "extension" -> Seq(classTag[Term.Apply], classTag[Term.ApplyUsing])
 
-      if (dialect.allowInlineMods) seq += "inline" ->
-        Seq(classTag[Term.Apply], classTag[Term.ApplyUsing], classTag[Term.ApplyInfix])
+      if (dialect.allowInlineMods) seq +=
+        "inline" -> Seq(classTag[Term.Apply], classTag[Term.ApplyUsing], classTag[Term.ApplyInfix])
 
       if (dialect.allowStarWildcardImport) seq += "*" -> Seq(classTag[Importee])
       if (dialect.allowStarAsTypePlaceholder) {
@@ -99,9 +99,9 @@ object TreeSyntax {
         def lexicalDelimiter(codepoint: Int): Boolean = Set[Int]('`', '\'', '"', '.', ';', ',')
           .contains(codepoint)
         def lexicalOperator(codepoint: Int): Boolean = isSpecial(codepoint) ||
-          '\u0020' <= codepoint && codepoint <= '\u007E' && !(lexicalWhitespace(codepoint) ||
-            lexicalLetter(codepoint) || lexicalDigit(codepoint) || lexicalParentheses(codepoint) ||
-            lexicalDelimiter(codepoint))
+          '\u0020' <= codepoint && codepoint <= '\u007E' &&
+          !(lexicalWhitespace(codepoint) || lexicalLetter(codepoint) || lexicalDigit(codepoint) ||
+            lexicalParentheses(codepoint) || lexicalDelimiter(codepoint))
 
         sealed trait OperatorState
         case object Accepted extends OperatorState

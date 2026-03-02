@@ -75,8 +75,8 @@ trait CommonNamerMacros extends MacroHelpers {
     }
     val stubbedMembers = new mutable.HashSet[String]
     def markStubbedMemberName(name: TermName): Boolean = stubbedMembers.add(name.toString)
-    def addStubbedMemberWithName(name: TermName): Unit =
-      if (markStubbedMemberName(name)) qstats += q"def $name = $stub"
+    def addStubbedMemberWithName(name: TermName): Unit = if (markStubbedMemberName(name)) qstats +=
+      q"def $name = $stub"
 
     params.foreach(x => addStubbedMemberWithName(x.name))
     extraStubs.foreach(x => addStubbedMemberWithName(TermName(x)))
@@ -84,8 +84,8 @@ trait CommonNamerMacros extends MacroHelpers {
     def isAbstract(x: ValOrDefDefApi): Boolean = x.rhs.isEmpty ||
       x.mods.hasFlag(Flag.ABSTRACT | Flag.OVERRIDE)
     extraAbstractDefs.foreach {
-      case x: ValDefApi => if (isAbstract(x))
-          if (markStubbedMemberName(x.name)) qstats += q"override def ${x.name} = $stub"
+      case x: ValDefApi => if (isAbstract(x)) if (markStubbedMemberName(x.name)) qstats +=
+          q"override def ${x.name} = $stub"
       case x: DefDefApi => if (isAbstract(x))
           if (x.tparams.nonEmpty || x.vparamss.nonEmpty || markStubbedMemberName(x.name)) qstats +=
             q"override def ${x.name}[..${x.tparams}](...${x.vparamss}) = $stub"
