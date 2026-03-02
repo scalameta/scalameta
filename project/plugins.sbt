@@ -14,7 +14,7 @@ addSbtPlugin("com.github.sbt" % "sbt-unidoc"     % "0.6.1")
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.2")
 
 addSbtPlugin("com.thesamet" % "sbt-protoc"      % "1.0.8")
-addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.4")
+addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.5")
 
 addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.2.0")
 addSbtPlugin("io.get-coursier"    % "sbt-shading"     % "2.1.5")
