@@ -421,7 +421,7 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
 lazy val sharedTestSettings = Def.settings(
   sharedSettings,
   nonPublishableSettings,
-  testFrameworks := List(new TestFramework("munit.Framework")),
+  testFrameworks := List(TestFrameworks.MUnit),
   dependencyOverrides ++=
     { if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value) },
   libraryDependencies += {
