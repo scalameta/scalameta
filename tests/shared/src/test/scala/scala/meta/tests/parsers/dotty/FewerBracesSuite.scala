@@ -2852,4 +2852,24 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
   }
 
+  test("#4525") {
+    val code =
+      """|def test =
+         |  a.flatMap: b =>
+         |    c
+         |      .map: d =>
+         |        1
+         |
+         |    if true then
+         |      1
+         |      2
+         |    else 3
+         |""".stripMargin
+    val error =
+      """|<input>:2: error: `outdent` expected but `=>` found
+         |  a.flatMap: b =>
+         |               ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
