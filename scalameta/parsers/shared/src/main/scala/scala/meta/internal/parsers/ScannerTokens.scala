@@ -783,7 +783,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               r: SepRegionIndented,
               rs: List[SepRegion],
               ctrlOnly: Boolean
-          ): OutdentInfo = rs match {
+          ): OutdentInfo = dropRegionLine(nextIndent + 1, rs) match {
             case RegionTry :: xs =>
               if (nextIndent < r.indent || nextIndent == r.indent && next.isAny[KwCatch, KwFinally]) {
                 val done = noOutdent(xs)
@@ -794,12 +794,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               OutdentInfo(r, if (rc.isTerminatingToken(next)) rs else xs)
             case _ if ctrlOnly => null // we stop here
             case RegionTemplateBody :: xs => OutdentInfo(r, xs)
-            case _ if (prev match {
+            case xs if (prev match {
                   // then  [else]  [do]  catch  [finally]  [yield]  match
                   case _: KwElse | _: KwDo | _: KwFinally | _: KwYield => false
                   // exclude leading infix op
-                  case _ => !isIndented(rs, nextIndent) || canBeLeadingInfix != LeadingInfix.Yes
-                }) => OutdentInfo(r, rs)
+                  case _ => !isIndented(xs, nextIndent) || canBeLeadingInfix != LeadingInfix.Yes
+                }) => OutdentInfo(r, xs)
             case _ => null
           }
           def getOutdentInfo(sepRegions: List[SepRegion]) = sepRegions match {

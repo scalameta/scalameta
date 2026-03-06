@@ -2865,11 +2865,31 @@ class FewerBracesSuite extends BaseDottySuite {
          |      2
          |    else 3
          |""".stripMargin
-    val error =
-      """|<input>:2: error: `outdent` expected but `=>` found
-         |  a.flatMap: b =>
-         |               ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def test = a.flatMap { b =>
+         |  c.map {
+         |    d => 1
+         |  }
+         |  if (true) {
+         |    1
+         |    2
+         |  } else 3
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      "test",
+      Nil,
+      None,
+      tapply(
+        tselect("a", "flatMap"),
+        blk(tfunc(tparam("b"))(blk(
+          tapply(tselect("c", "map"), blk(tfunc(tparam("d"))(lit(1)))),
+          Term.If(lit(true), blk(lit(1), lit(2)), lit(3), Nil)
+        )))
+      )
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
