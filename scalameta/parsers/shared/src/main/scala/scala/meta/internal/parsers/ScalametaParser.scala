@@ -687,7 +687,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         if (value.isEmpty || value.charAt(0) != '$') None
         else if (value.length > 1)
           if (QuotedSpliceContext.isInside())
-            Some(autoPos(macroIdent(value.substring(1), Term.SplicedMacroExpr.apply)))
+            Some(autoPos(Term.SplicedMacroExpr(termName(value.substring(1)))))
           else None
         else peekToken match {
           case _: LeftBrace => Some(autoPos {
@@ -696,7 +696,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               else Term.SplicedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
             })
           case t: Ident if t.value.nonEmpty && QuotedSpliceContext.isInside() =>
-            Some(autoPos(next(macroIdent(t.value, Term.SplicedMacroExpr.apply))))
+            Some(autoPos(next(Term.SplicedMacroExpr(termName(t)))))
           case _ => None
         }
       } else None
@@ -708,7 +708,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       currToken match {
         case _: LeftBrace => Term.QuotedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
         case _: LeftBracket => Term.QuotedMacroType(inBracketsOnOpen(typeBlock()))
-        case t: Ident => macroIdent(t.value, Term.QuotedMacroExpr.apply)
+        case t: Ident => Term.QuotedMacroExpr(termName(t))
         case t => syntaxError("Macro quote must be followed by id, brace or bracket", at = t)
       }
     }))
@@ -2405,8 +2405,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case x: Failure[_] => x
     }
   }
-
-  private def macroIdent(ident: String, f: Term.Name => Term): Term = f(termName(ident))
 
   @tailrec
   private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
