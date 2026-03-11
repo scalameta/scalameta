@@ -177,6 +177,28 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat]("${ `'x` }")(backquoted)
   }
 
+  test("macro-quote-this-within-splice: ${ 'this }") {
+    val code = "${ 'this }"
+    runTestError[Stat](
+      code,
+      """|<input>:1: error: Macro quote must be followed by id, brace or bracket
+         |${ 'this }
+         |    ^""".stripMargin
+    )
+    runTestError[Stat](
+      "$ { 'this }",
+      """|<input>:1: error: Macro quote must be followed by id, brace or bracket
+         |$ { 'this }
+         |     ^""".stripMargin
+    )
+    runTestError[Stat](
+      "$ { ' this }",
+      """|<input>:1: error: Macro quote must be followed by id, brace or bracket
+         |$ { ' this }
+         |      ^""".stripMargin
+    )
+  }
+
   test("macro-splice-id-within-quote: '{ $x }") {
     val code = "'{ $x }"
     val tree = Term.QuotedMacroExpr(blk(Term.SplicedMacroExpr(tname("x"))))
@@ -187,6 +209,20 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat]("'{ $ `x` }", code)(tree)
     val backquoted = Term.QuotedMacroExpr(blk(tname("$x")))
     runTestAssert[Stat]("'{ `$x` }")(backquoted)
+  }
+
+  test("macro-splice-this-within-quote: '{ $this }") {
+    val code = "'{ $this }"
+    val layout = "'{ $`this` }"
+    val tree = Term.QuotedMacroExpr(blk(Term.SplicedMacroExpr(tname("this"))))
+    runTestAssert[Stat](code, layout)(tree)
+    runTestAssert[Stat]("' { $this }", layout)(tree)
+    runTestError[Stat](
+      "' { $ this }",
+      """|<input>:1: error: `}` expected but `this` found
+         |' { $ this }
+         |      ^""".stripMargin
+    )
   }
 
   test("macro-splice-id-within-splice: ${ $x }") {
@@ -403,6 +439,41 @@ class MacroSuite extends BaseDottySuite {
 
     // default scala3
     runTestAssert[Stat](code)(treeWithQuote)
+  }
+
+  test("'this with modified dialects") {
+    val code = "'this"
+    val treeWithSymbol = lit(Symbol("this"))
+    val errorNoThis =
+      """|<input>:1: error: Macro quote must be followed by id, brace or bracket
+         |'this
+         | ^""".stripMargin
+
+    locally {
+      implicit val dialect: Dialect = dialects.Scala3.withAllowSpliceAndQuote(false)
+        .withAllowSymbolLiterals(false)
+      val error =
+        """|<input>:1: error: Symbol literals are no longer allowed
+           |'this
+           | ^""".stripMargin
+      runTestError[Stat](code, error)
+    }
+    locally {
+      implicit val dialect: Dialect = dialects.Scala3.withAllowSpliceAndQuote(false)
+        .withAllowSymbolLiterals(true)
+      runTestAssert[Stat](code)(treeWithSymbol)
+    }
+    locally {
+      implicit val dialect: Dialect = dialects.Scala3.withAllowSymbolLiterals(false)
+        .withAllowSpliceAndQuote(true)
+      runTestError[Stat](code, errorNoThis)
+    }
+    locally(intercept[invariants.InvariantFailedException](
+      dialects.Scala3.withAllowSymbolLiterals(true).withAllowSpliceAndQuote(true)
+    ))
+
+    // default scala3
+    runTestError[Stat](code, errorNoThis)
   }
 
 }
