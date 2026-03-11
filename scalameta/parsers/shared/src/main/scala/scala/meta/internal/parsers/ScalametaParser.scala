@@ -683,13 +683,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private object MacroSplicedIdent {
     final def unapply(tok: Ident): Option[Term] =
       if (dialect.allowSpliceAndQuote) {
-        def asTerm(ident: String, isBackquoted: Boolean) =
-          if (isBackquoted || ident != "this") termName(ident) else anonThis()
         val value = tok.text
         if (value.isEmpty || value.charAt(0) != '$') None
         else if (value.length > 1)
-          if (QuotedSpliceContext.isInside())
-            Some(autoPos(Term.SplicedMacroExpr(asTerm(value.substring(1), isBackquoted = false))))
+          if (QuotedSpliceContext.isInside()) Some(autoPos(Term.SplicedMacroExpr {
+            val ident = value.substring(1)
+            if (ident == "this") anonThis() else termName(ident)
+          }))
           else None
         else peekToken match {
           case _: LeftBrace => Some(autoPos {
@@ -698,7 +698,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               else Term.SplicedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
             })
           case t: Ident if t.value.nonEmpty && QuotedSpliceContext.isInside() =>
-            Some(autoPos(next(Term.SplicedMacroExpr(asTerm(t.value, isBackquoted = t.isBackquoted)))))
+            Some(autoPos(next(Term.SplicedMacroExpr(termName(t)))))
           case t: KwThis if QuotedSpliceContext.isInside() =>
             Some(autoPos(next(Term.SplicedMacroExpr(anonThis()))))
           case _ => None
