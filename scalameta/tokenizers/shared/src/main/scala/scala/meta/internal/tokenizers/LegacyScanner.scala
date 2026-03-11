@@ -615,7 +615,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         val done = isUnquote ||
           ((ch: @switch) match {
             case '$' => false
-            case '"' if dialect.allowInterpolationDolarQuoteEscape => false
+            case '"' => !dialect.allowInterpolationDolarQuoteEscape
             case _ => true
           })
         if (done) {
