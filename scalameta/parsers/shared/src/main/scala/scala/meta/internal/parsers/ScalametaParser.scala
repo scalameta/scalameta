@@ -1370,10 +1370,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     implicit object AllowedTypeName extends AllowedName[Type.Name]
   }
 
-  private def identName[T <: Tree](ident: Ident, ctor: String => T): T =
-    atCurPosNext(ctor(ident.value))
+  private def identName[T <: Tree](ident: String, ctor: String => T): T = atCurPosNext(ctor(ident))
   private def name[T <: Tree: AllowedName: AstInfo](ctor: String => T): T = currToken match {
-    case t: Ident => identName(t, ctor)
+    case t: Ident => identName(t.value, ctor)
     case t: Unquote => unquote[T](t)
     case _ => syntaxErrorExpected[Ident]
   }
@@ -1381,8 +1380,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def termName(): Term.Name = name(Term.Name(_))
   def typeName(): Type.Name = name(Type.Name(_))
   private def nameAsType(t: Name): Type.Name = copyPos(t)(Type.Name(t.value))
-  private def termName(t: Ident): Term.Name = identName(t, Term.Name.apply)
-  private def typeName(t: Ident): Type.Name = identName(t, Type.Name.apply)
+  private def termName(ident: String): Term.Name = identName(ident, Term.Name.apply)
+  private def termName(t: Ident): Term.Name = termName(t.value)
+  private def typeName(t: Ident): Type.Name = identName(t.value, Type.Name.apply)
   @inline
   private def anonNameRaw(): Name.Anonymous = Name.Anonymous()
   @inline
@@ -2309,7 +2309,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val resOpt = currToken match {
         case lf: InfixLF => getLeadingInfix(lf)(Term.Name.apply)(getNextRhs(emptyTypeArgs))
         case _: KwMatch if dialect.allowMatchAsOperator =>
-          val op = atCurPosNext(Term.Name("match"))
+          val op = termName("match")
           val lhs = getPrevLhs(op)
           Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
         case _ if prev[Indentation.Outdent] && !inRegionParen => None
@@ -2317,7 +2317,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           val op = unquote[Term.Name](t)
           Some(getPostfixOrNextRhs(op))
         case t: Ident if !(allowRepeated && soft.StarSplice(t) && peek[RightParen, Comma]) =>
-          val op = atCurPosNext(Term.Name(t.value))
+          val op = termName(t)
           Some(getPostfixOrNextRhs(op))
         case _ => None
       }
@@ -2406,7 +2406,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def macroIdent(ident: String, f: Term.Name => Term): Term = f(atCurPosNext(Term.Name(ident)))
+  private def macroIdent(ident: String, f: Term.Name => Term): Term = f(termName(ident))
 
   @tailrec
   private def simpleExprRest(t: Term, canApply: Boolean, startPos: Int): Term = {
@@ -3357,7 +3357,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           else getParam(anonNameAt(name), Some(name.become[Type]))
         case _ if !peek[Colon] => getParam(anonName(), Some(getParamType))
         case t: Ident =>
-          val name = atCurPosNext(Term.Name(t.value))
+          val name = termName(t)
           accept[Colon]
           getParam(name, Some(getParamType))
         case _ => syntaxErrorExpected[Ident]
@@ -3580,10 +3580,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def endMarker(): Stat = autoPos {
     assert(currToken.text == "end")
     next()
-    Term.EndMarker(atCurPosNext(Term.Name(currToken match {
+    Term.EndMarker(termName(currToken match {
       case t: Ident => t.value
       case t => t.text
-    })))
+    }))
   }
 
   def patDefOrDcl(mods: List[Mod]): Stat = autoEndPos(mods) {
