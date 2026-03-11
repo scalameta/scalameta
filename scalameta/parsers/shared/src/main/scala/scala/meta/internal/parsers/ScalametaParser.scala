@@ -683,11 +683,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private object MacroSplicedIdent {
     final def unapply(tok: Ident): Option[Term] =
       if (dialect.allowSpliceAndQuote) {
+        def asTerm(ident: String, isBackquoted: Boolean) =
+          if (isBackquoted || ident != "this") termName(ident) else anonThis()
         val value = tok.text
         if (value.isEmpty || value.charAt(0) != '$') None
         else if (value.length > 1)
           if (QuotedSpliceContext.isInside())
-            Some(autoPos(Term.SplicedMacroExpr(termName(value.substring(1)))))
+            Some(autoPos(Term.SplicedMacroExpr(asTerm(value.substring(1), isBackquoted = false))))
           else None
         else peekToken match {
           case _: LeftBrace => Some(autoPos {
@@ -696,22 +698,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               else Term.SplicedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
             })
           case t: Ident if t.value.nonEmpty && QuotedSpliceContext.isInside() =>
-            Some(autoPos(next(Term.SplicedMacroExpr(termName(t)))))
+            Some(autoPos(next(Term.SplicedMacroExpr(asTerm(t.value, isBackquoted = t.isBackquoted)))))
+          case t: KwThis if QuotedSpliceContext.isInside() =>
+            Some(autoPos(next(Term.SplicedMacroExpr(anonThis()))))
           case _ => None
         }
       } else None
   }
 
   private object MacroQuoted {
-    final def unapply(tok: MacroQuote): Some[Term] = QuotedSpliceContext.within(Some(autoPos {
+    private def get: Term.QuotedMacroLike = QuotedSpliceContext.within {
       next()
       currToken match {
         case _: LeftBrace => Term.QuotedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
         case _: LeftBracket => Term.QuotedMacroType(inBracketsOnOpen(typeBlock()))
         case t: Ident => Term.QuotedMacroExpr(termName(t))
+        case _: KwThis => Term.QuotedMacroExpr(anonThis())
         case t => syntaxError("Macro quote must be followed by id, brace or bracket", at = t)
       }
-    }))
+    }
+    final def unapply(tok: MacroQuote): Some[Term] = Some(autoPos(get))
   }
 
   private object InfixTypeIdent {
