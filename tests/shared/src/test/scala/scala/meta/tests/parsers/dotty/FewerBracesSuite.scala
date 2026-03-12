@@ -2899,11 +2899,13 @@ class FewerBracesSuite extends BaseDottySuite {
          |    bar()
          |)
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `)` expected but `(` found
-         |    bar()
-         |       ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|new String(foo {
+         |  bar()
+         |})
+         |""".stripMargin
+    val tree = Term.New(init("String", List(tapply("foo", blk(tapply("bar"))))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
