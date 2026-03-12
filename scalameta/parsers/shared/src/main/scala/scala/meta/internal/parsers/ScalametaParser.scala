@@ -1169,11 +1169,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       ))
 
     @inline
-    private def infixTypeRest(
-        t: Type,
-        inMatchType: Boolean = false,
-        inGivenSig: Boolean = false
-    ): Type =
+    def infixTypeRest(t: Type, inMatchType: Boolean = false, inGivenSig: Boolean = false): Type =
       if (dialect.useInfixTypePrecedence)
         infixTypeRestWithPrecedence(t, inMatchType = inMatchType, inGivenSig = inGivenSig)
       else infixTypeRestImpl(t, identity, inMatchType = inMatchType, inGivenSig = inGivenSig)
@@ -3734,7 +3730,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
       else if (pcg.paramClauses.nonEmpty) None // too hard to convert to init, re-parse
       else if (!name.isAnonymous) {
-        val tpe = convertNameTypeParamClauseToType(nameAsType(name), pcg.tparamClause)
+        val tpeInit = convertNameTypeParamClauseToType(nameAsType(name), pcg.tparamClause)
+        val tpe = outPattern.infixTypeRest(tpeInit, inGivenSig = true)
         val anon = anonNameAt(name)
         if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
           givenSigAfterArrow(anon, convertTypeToTermParamClause(tpe))
