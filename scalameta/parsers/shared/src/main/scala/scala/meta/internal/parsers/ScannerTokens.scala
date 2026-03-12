@@ -449,7 +449,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
 
     def getTemplateInherit(sepRegions: List[SepRegion]): TokenRef = currRef(sepRegions match {
-      case RegionTemplateMark :: rs => RegionTemplateInherit :: rs
+      case (_: RegionTemplateMark) :: rs => RegionTemplateInherit :: rs
       case _ => sepRegions
     })
 
@@ -502,8 +502,9 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         })
       case _: KwPackage if dialect.allowSignificantIndentation && !next.is[KwObject] =>
         currRef(RegionTemplateMark :: sepRegions)
-      case _: KwObject | _: KwClass | _: KwTrait | _: KwNew
-          if dialect.allowSignificantIndentation => currRef(RegionTemplateMark :: sepRegions)
+      case _: KwObject | _: KwClass | _: KwTrait if dialect.allowSignificantIndentation =>
+        currRef(RegionTemplateMark :: sepRegions)
+      case _: KwNew if dialect.allowSignificantIndentation => currRef(RegionNewMark :: sepRegions)
       case _: KwTry if !isPrevEndMarker() => currRef(RegionTry :: dropRegionLine(sepRegions))
       case _: KwMatch if !isPrevEndMarker() => getCaseIntro(sepRegions)
       case _: KwCatch => getCaseIntro(dropWhile(sepRegions)(_ ne RegionTry))
@@ -543,7 +544,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: LeftBrace =>
         val lbRegions = sepRegions match {
           case (r: RegionGivenDecl) :: rs if r.kw ne prevToken => RegionTemplateBody :: rs
-          case RegionTemplateMark :: rs => RegionTemplateBody :: rs
+          case (_: RegionTemplateMark) :: rs => RegionTemplateBody :: rs
           case RegionTemplateInherit :: rs if !prev.is[KwExtends] => RegionTemplateBody :: rs
           case _ => sepRegions
         }
@@ -710,7 +711,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           // `[`, `=` and `#` are covered by CantStartStat
           case RegionDefType :: xs => if (next.is[LeftParen]) None else strip(xs)
           // `extends` and `with` are covered by canEndStat() and CantStartStat
-          case RegionTemplateMark :: xs => if (blankBraceOr(!derives(next))) strip(xs) else None
+          case (_: RegionTemplateMark) :: xs =>
+            if (blankBraceOr(!derives(next))) strip(xs) else None
           case RegionTemplateInherit :: xs =>
             if (blankBraceOr(!derives(next) && !derives(prev))) strip(xs) else None
           case RegionTry :: xs
