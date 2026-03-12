@@ -2913,8 +2913,12 @@ class FewerBracesSuite extends BaseDottySuite {
       """|this:
          |  bar
          |""".stripMargin
-    val layout = "this: bar"
-    val tree = Term.Ascribe(Term.This(anon), "bar")
+    val layout =
+      """|this {
+         |  bar
+         |}
+         |""".stripMargin
+    val tree = tapply(Term.This(anon), blk("bar"))
     runTestAssert[Stat](code, layout)(tree)
   }
 
