@@ -872,7 +872,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
                     case (_: RegionBracket | _: RegionHasParamMark) :: _ => false
                     case (_: RegionParen) :: (_: RegionHasParamMark) :: _ => false
                     case _ => true
-                  }) && getPrevToken(prevPos).isAny[Ident, CloseDelim]
+                  }) && getPrevToken(prevPos).isAny[Ident, CloseDelim, KwThis]
                 sepRegions match {
                   case (_: RegionTemplateDecl) :: rs =>
                     if (exceedsIndent) emitIndent(RegionTemplateBody :: rs)
