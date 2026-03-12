@@ -2892,4 +2892,18 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("#4531") {
+    val code =
+      """|new String(
+         |  foo:
+         |    bar()
+         |)
+         |""".stripMargin
+    val error =
+      """|<input>:3: error: `)` expected but `(` found
+         |    bar()
+         |       ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
