@@ -1059,11 +1059,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code =
       """|given A[Int] & B[Int] = new A[Int] with B[Int] {}
          |""".stripMargin
-    val error =
-      """|<input>:1: error: `;` expected but `identifier` found
-         |given A[Int] & B[Int] = new A[Int] with B[Int] {}
-         |             ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "given (A[Int] & B[Int]) = new A[Int] with B[Int]"
+    val tree = Defn.GivenAlias(
+      Nil,
+      anon,
+      Nil,
+      pinfix(papply("A", "Int"), "&", papply("B", "Int")),
+      Term.NewAnonymous(tpl(List(init(papply("A", "Int")), init(papply("B", "Int"))), tplBody()))
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
