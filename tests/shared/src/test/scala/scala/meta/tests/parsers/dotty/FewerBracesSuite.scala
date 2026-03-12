@@ -2908,4 +2908,14 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("fewer braces: this") {
+    val code =
+      """|this:
+         |  bar
+         |""".stripMargin
+    val layout = "this: bar"
+    val tree = Term.Ascribe(Term.This(anon), "bar")
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
