@@ -1055,4 +1055,15 @@ class GivenSyntax36Suite extends BaseDottySuite {
     ))
   }
 
+  test("#4532") {
+    val code =
+      """|given A[Int] & B[Int] = new A[Int] with B[Int] {}
+         |""".stripMargin
+    val error =
+      """|<input>:1: error: `;` expected but `identifier` found
+         |given A[Int] & B[Int] = new A[Int] with B[Int] {}
+         |             ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
 }
