@@ -2343,8 +2343,8 @@ class SuccessSuite extends TreeSuiteBase {
       """
     assertTree(tree)(tapply(
       "foo",
-      lit(0),
-      Lit.Int.createWithComments(1, begComment = List("/* c1 */", "/* real content c */", "/* c2 */"))
+      Lit.Int.createWithComments(0, endComment = List("/* c1 */", "/* real content c */", "/* c2 */")),
+      lit(1)
     ))
   }
 

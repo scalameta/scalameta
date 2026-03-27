@@ -436,6 +436,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             val begBuf = new ListBuffer[Tree.Comment]
             var idx = start - 1
             var pending = 0
+            var hadEOL = false
             while (tokens.getOpt(idx) match {
                 case Some(t: Comment) =>
                   begBuf.prepend(asComment(t, idx))
@@ -466,11 +467,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   }) {}
                   true
                 case Some(_: AtEOL) =>
+                  hadEOL = true
                   pending = 0
                   true
                 case Some(_: HSpace) => true
                 case Some(t) =>
-                  if (t.isAny[Ident, CloseDelim] || body.is[Term.Block]) begBuf.remove(0, pending)
+                  if (t.isAny[Ident, CloseDelim] || body.is[Term.Block] || hadEOL && t.is[Comma])
+                    begBuf.remove(0, pending)
                   false
                 case _ => false
               }) idx -= 1
@@ -513,6 +516,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   }) {}
                   true
                 case Some(_: HSpace) => true
+                case Some(_: Comma) => tokens.findNot(_.is[HTrivia], idx + 1).exists(_.is[AtEOL])
                 case _ => false
               }) idx += 1
             asComments(endBuf)
