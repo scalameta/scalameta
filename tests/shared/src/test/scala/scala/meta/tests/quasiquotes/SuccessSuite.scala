@@ -2325,8 +2325,10 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("comments: multi-line: literal") {
     val content = q""""real content""""
-    assertTree(q"0 /* $content has been unquoted */")(
-      Lit.Int.createWithComments(0, endComment = Seq("/* real content has been unquoted */"))
+    val begComment = List("/* real content bc */", "/* bc2 */")
+    val endComment = List("/* real content ec */", "/* ec1 */")
+    assertTree(q"/* bc1 */ /* $content bc */ /* bc2 */ 0 /* ec1 */ /* $content ec */ /* ec2 */")(
+      Lit.Int.createWithComments(0, begComment = begComment, endComment = endComment)
     )
   }
 
