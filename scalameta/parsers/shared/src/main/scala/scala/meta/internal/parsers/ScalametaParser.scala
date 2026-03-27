@@ -459,10 +459,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                       case Some(t: CommentUnquote) =>
                         parts.prepend(asString(t, idx))
                         true
-                      case _ => false
+                      case _ =>
+                        idx += 1
+                        false
                     }
                   }) {}
-                  idx += 1
                   true
                 case Some(_: AtEOL) =>
                   pending = 0
@@ -497,7 +498,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                     tokens.getOpt(idx) match {
                       case Some(t: CommentEnd) =>
                         parts.append(asString(t, idx))
-                        endBuf.prepend(asComment(parts.toList, begIdx, idx + 1))
+                        endBuf.append(asComment(parts.toList, begIdx, idx + 1))
                         false
                       case Some(t: CommentPart) =>
                         parts.append(asString(t, idx))
@@ -505,10 +506,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                       case Some(t: CommentUnquote) =>
                         parts.append(asString(t, idx))
                         true
-                      case _ => false
+                      case _ =>
+                        idx -= 1
+                        false
                     }
                   }) {}
-                  idx -= 1
                   true
                 case Some(_: HSpace) => true
                 case _ => false
