@@ -2332,6 +2332,37 @@ class SuccessSuite extends TreeSuiteBase {
     )
   }
 
+  test("comments: multi-line: with comma and eol") {
+    val content = q""""real content""""
+    val tree =
+      q"""
+         foo(
+           0, /* c1 */ /* $content c */ /* c2 */
+           1
+         )
+      """
+    assertTree(tree)(tapply(
+      "foo",
+      lit(0),
+      Lit.Int.createWithComments(1, begComment = List("/* c1 */", "/* real content c */", "/* c2 */"))
+    ))
+  }
+
+  test("comments: multi-line: with comma and no eol") {
+    val content = q""""real content""""
+    val tree =
+      q"""
+         foo(
+           0, /* c1 */ /* $content c */ /* c2 */ 1
+         )
+      """
+    assertTree(tree)(tapply(
+      "foo",
+      lit(0),
+      Lit.Int.createWithComments(1, begComment = List("/* c1 */", "/* real content c */", "/* c2 */"))
+    ))
+  }
+
   test("comments: single-line: definition") {
     val content = q""""real content""""
     val tree = Defn.Val.createWithComments(
