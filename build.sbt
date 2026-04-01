@@ -199,12 +199,17 @@ lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).set
 lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
   moduleName := "common",
   sharedSettings,
-  libraryDependencies += {
-    val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.4"
-    "com.lihaoyi" %%% "sourcecode" % sourceCodeVersion
+  libraryDependencies ++= {
+    // On Scala 2.13, sourcecode is inlined to avoid depending on a external 2.13 library in
+    // our scala3 artifacts.
+    if (scalaBinaryVersion.value == "2.13") Nil
+    else {
+      val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.4"
+      List("com.lihaoyi" %%% "sourcecode" % sourceCodeVersion)
+    }
   },
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
-  enableMacros,
+  enableHardcoreMacros,
   buildInfoPackage := "scala.meta.internal",
   buildInfoKeys := Seq[BuildInfoKey](version),
   crossScalaVersions := EarliestScala2Versions

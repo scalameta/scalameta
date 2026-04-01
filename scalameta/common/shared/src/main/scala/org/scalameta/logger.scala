@@ -1,5 +1,7 @@
 package org.scalameta
 
+import scala.meta.internal.sourcecode
+
 class FileLine(val file: sourcecode.File, val line: sourcecode.Line) extends Ordered[FileLine] {
   override def toString: String = {
     val shortFilename = file.value.replaceAll("(.*/|\\.scala)", "")
