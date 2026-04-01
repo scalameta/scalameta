@@ -208,6 +208,7 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
       List("com.lihaoyi" %%% "sourcecode" % sourceCodeVersion)
     }
   },
+  Compile / doc / scalacOptions ++= Seq("-skip-packages", "scala.meta.internal.sourcecode"),
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
   enableHardcoreMacros,
   buildInfoPackage := "scala.meta.internal",
