@@ -1792,6 +1792,6 @@ class ScaladocParserSuite extends FunSuite {
 }
 
 object ScaladocParserSuite {
-  implicit def tupleToTextPartInfo(tuple: (TextPart, Boolean)): TextPartInfo = TextPartInfo
-    .tupled(tuple)
+  implicit def tupleToTextPartInfo(tuple: (TextPart, Boolean)): TextPartInfo =
+    TextPartInfo(tuple._1, tuple._2)
 }

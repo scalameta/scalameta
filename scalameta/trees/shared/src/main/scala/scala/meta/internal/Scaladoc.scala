@@ -95,17 +95,17 @@ object Scaladoc {
 
     private def hyphens(len: Int): String = "-" * len
 
-    final case object Left extends Align {
+    case object Left extends Align {
       override def leftPad(pad: Int): Int = 0
       override def syntax(len: Int): String = ":" + hyphens(1 + len)
     }
 
-    final case object Right extends Align {
+    case object Right extends Align {
       override def leftPad(pad: Int): Int = pad
       override def syntax(len: Int): String = hyphens(1 + len) + ":"
     }
 
-    final case object Center extends Align {
+    case object Center extends Align {
       override def leftPad(pad: Int): Int = pad / 2
       override def syntax(len: Int): String = ":" + hyphens(len) + ":"
     }
