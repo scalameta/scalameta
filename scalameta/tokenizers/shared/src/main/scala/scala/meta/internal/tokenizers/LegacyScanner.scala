@@ -162,7 +162,10 @@ class LegacyScanner(input: Input, dialect: Dialect) {
     nextChar()
     if (bof && '#' == ch && !wasMultiChar && buf(endCharOffset) == '!') {
       next.offset = begCharOffset
-      do putCharAndNext() while (ch != CR && ch != LF && ch != FF && ch != SU)
+      while ({
+        putCharAndNext()
+        ch != CR && ch != LF && ch != FF && ch != SU
+      }) {}
       next.strVal = getAndResetCBuf()
       next.endOffset = begCharOffset
       next.token = SHEBANG
@@ -589,29 +592,32 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   private def finishStringLit() = setTokStrVal(STRINGLIT)
 
-  @scala.annotation.tailrec
   private def getStringPart(multiLine: Boolean): Unit = {
-    def unclosedLiteralError() = {
+    def unclosedLiteralError(): Boolean = {
       finishStringLit()
       val what = if (multiLine) "multi" else "single"
       setInvalidToken(next)(s"unclosed $what-line string interpolation")
+      false
     }
 
-    if (wasMultiChar) {
+    def keepGoing(): Boolean = {
       putCharAndNextRaw()
-      getStringPart(multiLine)
-    } else (ch: @switch) match {
+      true
+    }
+
+    def readSingleChar: Boolean = (ch: @switch) match {
       case '"' =>
-        if (multiLine) { if (!canFinishMultilineStringLit(withoutQuotes = true)) getStringPart(true) }
+        if (multiLine) !canFinishMultilineStringLit(withoutQuotes = true)
         else {
           endOffset = begCharOffset
           nextChar()
           finishStringLit()
+          false
         }
-      case '\\' if !multiLine =>
+      case '\\' =>
         putCharAndNextRaw()
-        if (ch == '"' || ch == '\\') putCharAndNextRaw()
-        getStringPart(multiLine)
+        if (!multiLine) if (ch == '"' || ch == '\\') putCharAndNextRaw()
+        true
       case '$' =>
         val dollarOffset = begCharOffset
         val isUnquote = isUnquoteNextNoDollar()
@@ -626,21 +632,22 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (done) {
           setTokStrVal(STRINGPART)
           endOffset = dollarOffset
-        } else {
-          putCharAndNextRaw()
-          getStringPart(multiLine)
-        }
+          false
+        } else keepGoing()
       case SU => unclosedLiteralError()
-      case CR | LF if !multiLine => unclosedLiteralError()
-      case _ =>
-        putCharAndNextRaw()
-        getStringPart(multiLine)
+      case CR | LF => if (multiLine) keepGoing() else unclosedLiteralError()
+      case _ => keepGoing()
     }
+
+    while (if (wasMultiChar) keepGoing() else readSingleChar) {}
   }
 
   private def getStringSplice(): Unit = {
     def identifier() = {
-      do putCharAndNextRaw() while (isUnicodeIdentifierPart(ch))
+      while ({
+        putCharAndNextRaw()
+        isUnicodeIdentifierPart(ch)
+      }) {}
       curr.setIdentifier(getAndResetCBuf(), dialect)(x =>
         if (x.token != IDENTIFIER && x.token != THIS) {
           val message = "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected"

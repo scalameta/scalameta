@@ -18,69 +18,69 @@ class XmlParser(dialect: Dialect) {
   val blockParser = new ScalaExprPositionParser(dialect)
 
   def splicePositions: List[blockParser.XmlTokenRange] = blockParser.splicePositions
-  def Patterns[_: P]: P0 = Fail
+  def Patterns[A: P]: P0 = Fail
 
-  def S[_: P]: P0 = P(CharsWhileIn("\t\n\r "))
-  def XmlExpr[_: P]: P0 = P(Xml.XmlContent.rep(min = 1, sep = S.?))
-  def XmlPattern[_: P]: P0 = P(Xml.ElemPattern)
+  def S[A: P]: P0 = P(CharsWhileIn("\t\n\r "))
+  def XmlExpr[A: P]: P0 = P(Xml.XmlContent.rep(min = 1, sep = S.?))
+  def XmlPattern[A: P]: P0 = P(Xml.ElemPattern)
 
   private[this] object Xml {
-    def Element[_: P] = P(TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag)) // FIXME tag must be balanced
-    def TagHeader[_: P] = P("<" ~ Name ~/ (S ~ Attribute).rep ~ S.?)
-    def ETag[_: P] = P("</" ~ Name ~ S.? ~ ">")
+    def Element[A: P] = P(TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag)) // FIXME tag must be balanced
+    def TagHeader[A: P] = P("<" ~ Name ~/ (S ~ Attribute).rep ~ S.?)
+    def ETag[A: P] = P("</" ~ Name ~ S.? ~ ">")
 
-    def Attribute[_: P] = P(Name ~/ Eq ~/ AttValue)
-    def Eq[_: P] = P(S.? ~ "=" ~ S.?)
-    def AttValue[_: P] =
+    def Attribute[A: P] = P(Name ~/ Eq ~/ AttValue)
+    def Eq[A: P] = P(S.? ~ "=" ~ S.?)
+    def AttValue[A: P] =
       P("\"" ~/ (CharQ | Reference).rep ~ "\"" | "'" ~/ (CharA | Reference).rep ~ "'" | ScalaExpr)
 
-    def Content[_: P] = P((CharData | Reference | ScalaExpr | XmlContent).rep)
-    def XmlContent[_: P]: P0 = P(Unparsed | CDSect | PI | Comment | Element)
+    def Content[A: P] = P((CharData | Reference | ScalaExpr | XmlContent).rep)
+    def XmlContent[A: P]: P0 = P(Unparsed | CDSect | PI | Comment | Element)
 
-    def ScalaExpr[_: P] = P("{" ~ blockParser.blockRun(implicitly[P[_]]) ~ "}")
+    def ScalaExpr[A: P] = P("{" ~ blockParser.blockRun(implicitly[P[_]]) ~ "}")
 
-    def Unparsed[_: P] = P(UnpStart ~/ UnpData ~ UnpEnd)
-    def UnpStart[_: P] = P("<xml:unparsed" ~/ (S ~ Attribute).rep ~ S.? ~ ">")
-    def UnpEnd[_: P] = P("</xml:unparsed>")
-    def UnpData[_: P] = P((!UnpEnd ~ Char).rep)
+    def Unparsed[A: P] = P(UnpStart ~/ UnpData ~ UnpEnd)
+    def UnpStart[A: P] = P("<xml:unparsed" ~/ (S ~ Attribute).rep ~ S.? ~ ">")
+    def UnpEnd[A: P] = P("</xml:unparsed>")
+    def UnpData[A: P] = P((!UnpEnd ~ Char).rep)
 
-    def CDSect[_: P] = P(CDStart ~/ CData ~ CDEnd)
-    def CDStart[_: P] = P("<![CDATA[")
-    def CData[_: P] = P((!"]]>" ~ Char).rep)
-    def CDEnd[_: P] = P("]]>")
+    def CDSect[A: P] = P(CDStart ~/ CData ~ CDEnd)
+    def CDStart[A: P] = P("<![CDATA[")
+    def CData[A: P] = P((!"]]>" ~ Char).rep)
+    def CDEnd[A: P] = P("]]>")
 
-    def Comment[_: P] = P("<!--" ~/ ComText ~ "-->")
-    def ComText[_: P] = P((!"-->" ~ Char).rep)
+    def Comment[A: P] = P("<!--" ~/ ComText ~ "-->")
+    def ComText[A: P] = P((!"-->" ~ Char).rep)
 
-    def PI[_: P] = P("<?" ~ Name ~ S.? ~ PIProcText ~ "?>")
-    def PIProcText[_: P] = P((!"?>" ~ Char).rep)
+    def PI[A: P] = P("<?" ~ Name ~ S.? ~ PIProcText ~ "?>")
+    def PIProcText[A: P] = P((!"?>" ~ Char).rep)
 
-    def Reference[_: P] = P(EntityRef | CharRef)
-    def EntityRef[_: P] = P("&" ~ Name ~/ ";")
-    def CharRef[_: P] = P("&#" ~ Num ~ ";" | "&#x" ~ HexNum ~ ";")
-    def Num[_: P] = P(CharIn("0-9").rep)
-    def HexNum[_: P] = P(CharIn("0-9", "a-f", "A-F").rep)
+    def Reference[A: P] = P(EntityRef | CharRef)
+    def EntityRef[A: P] = P("&" ~ Name ~/ ";")
+    def CharRef[A: P] = P("&#" ~ Num ~ ";" | "&#x" ~ HexNum ~ ";")
+    def Num[A: P] = P(CharIn("0-9").rep)
+    def HexNum[A: P] = P(CharIn("0-9", "a-f", "A-F").rep)
 
-    def CharData[_: P] = P((CharB | "{{" | "}}").rep(1))
+    def CharData[A: P] = P((CharB | "{{" | "}}").rep(1))
 
-    def Char[_: P] = P(AnyChar)
-    def Char1[_: P] = P(!("<" | "&") ~ Char)
-    def CharQ[_: P] = P(!"\"" ~ Char1)
-    def CharA[_: P] = P(!"'" ~ Char1)
-    def CharB[_: P] = P(!("{" | "}") ~ Char1)
+    def Char[A: P] = P(AnyChar)
+    def Char1[A: P] = P(!("<" | "&") ~ Char)
+    def CharQ[A: P] = P(!"\"" ~ Char1)
+    def CharA[A: P] = P(!"'" ~ Char1)
+    def CharB[A: P] = P(!("{" | "}") ~ Char1)
 
     // discard result
-    def Name[_: P]: P0 = P(NameStart ~ NameChar.rep).!.filter(_.last != ':').opaque("Name").map(_ => ())
-    def NameStart[_: P] = P(CharPred(isNameStart))
-    def NameChar[_: P] = P(CharPred(isNameChar))
+    def Name[A: P]: P0 = P(NameStart ~ NameChar.rep).!.filter(_.last != ':').opaque("Name").map(_ => ())
+    def NameStart[A: P] = P(CharPred(isNameStart))
+    def NameChar[A: P] = P(CharPred(isNameChar))
 
-    def ElemPattern[_: P]: P0 = P(TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag))
-    def TagPHeader[_: P] = P("<" ~ Name ~ S.?)
+    def ElemPattern[A: P]: P0 = P(TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag))
+    def TagPHeader[A: P] = P("<" ~ Name ~ S.?)
 
-    def ContentP[_: P]: P0 = P((CharDataP | ScalaPatterns | ElemPattern).rep)
-    def ScalaPatterns[_: P] = P("{" ~ Patterns ~ "}")
+    def ContentP[A: P]: P0 = P((CharDataP | ScalaPatterns | ElemPattern).rep)
+    def ScalaPatterns[A: P] = P("{" ~ Patterns ~ "}")
     // matches weirdness of scalac parser on xml reference.
-    def CharDataP[_: P] = P("&" ~ CharData.? | CharData)
+    def CharDataP[A: P] = P("&" ~ CharData.? | CharData)
 
     // ======================================================
     // From `scala.xml.parsing.TokenTests`

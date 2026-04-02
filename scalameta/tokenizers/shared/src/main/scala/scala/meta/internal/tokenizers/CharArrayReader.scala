@@ -122,7 +122,10 @@ object CharArrayReader {
       !evenSlashPrefix) return (c, firstOffset)
 
     var escapedOffset = firstOffset // offset after an escaped character
-    do escapedOffset += 1 while (escapedOffset < buf.length && buf(escapedOffset) == 'u')
+    while ({
+      escapedOffset += 1
+      escapedOffset < buf.length && buf(escapedOffset) == 'u'
+    }) {}
 
     // need 4 digits
     if (escapedOffset + 3 >= buf.length) return (c, firstOffset)
