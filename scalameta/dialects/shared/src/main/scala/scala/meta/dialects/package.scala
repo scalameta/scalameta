@@ -109,26 +109,3 @@ package object dialects {
   implicit val Dotty: Dialect = Scala3
 
 }
-
-// NOTE: Need this code in this very file in order to avoid issues with knownDirectSubclasses.
-// Without this, compilation order may unexpectedly affect compilation success.
-private[meta] trait DialectLiftables {
-  val c: scala.reflect.macros.blackbox.Context
-
-  import c.universe._
-  private val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
-
-  implicit lazy val liftDialect: Liftable[Dialect] = Liftable { dialect =>
-    Dialect.standards.find(_._2 == dialect) match {
-      case Some((name, _)) => q"_root_.scala.meta.dialects.`package`.${TermName(name)}"
-      case _ =>
-        val fields = dialect.productIterator.toList.map {
-          case null => q"null"
-          case f: Boolean => q"$f"
-          case f: String => q"$f"
-          case f => sys.error(s"unsupported field $f of type ${f.getClass}")
-        }
-        q"_root_.scala.meta.Dialect(..$fields)"
-    }
-  }
-}
