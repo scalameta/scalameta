@@ -1,12 +1,13 @@
 package scala.meta.tests.tokenizers
 
 import scala.meta._
-import scala.meta.tests.TestHelpers._
 import scala.meta.tests.parsers.MoreHelpers._
 import scala.meta.tokenizers.TokenizerOptions
 import scala.meta.tokens.Token._
 
 class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
+
+  import TokenizerSuite._
 
   override protected implicit val dialect: Dialect = dialects.Scala211
   override protected implicit def tokenizerOptions: TokenizerOptions =
@@ -2363,21 +2364,23 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
            |""".stripMargin
       )
     },
-    TestCase((
-      "unicode escapes single-quote 3",
-      """|\\u0027f'
-         |""".stripMargin,
-      """|BOF [0..0)
-         |Constant.Char(f) [0..8)
-         |LF [8..9)
-         |EOF [9..9)
-         |""".stripMargin,
-      """|BOF [0..0)
-         |Constant.Char(f) [0..8)
-         |LF [8..9)
-         |EOF [9..9)
-         |""".stripMargin
-    )),
+    TestCase {
+      (
+        "unicode escapes single-quote 3",
+        """|\\u0027f'
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.Char(f) [0..8)
+           |LF [8..9)
+           |EOF [9..9)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.Char(f) [0..8)
+           |LF [8..9)
+           |EOF [9..9)
+           |""".stripMargin
+      )
+    },
     TestCase((
       "#4546: char literal",
       """|'\\u0061'
@@ -2566,11 +2569,12 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
          |EOF [7..7)
          |""".stripMargin
     ))
-  ).foreach { case c @ TestCase((title, codeTemplate, struct212, struct213)) =>
+  ).foreach { c =>
+    val TestTokenizedWithDialects(title, code, exp212, exp213, exp3) = c.obj
     implicit val loc: munit.Location = c.loc
-    testTokenizedStructLinesEscaped(s"$title (2.12)", dialects.Scala212)(codeTemplate, struct212)
-    testTokenizedStructLinesEscaped(s"$title (2.13)", dialects.Scala213)(codeTemplate, struct213)
-    testTokenizedStructLinesEscaped(s"$title (3.0)", dialects.Scala30)(codeTemplate, struct213)
+    testTokenizedStructLinesEscaped(s"$title (2.12)", dialects.Scala212)(code, exp212)
+    testTokenizedStructLinesEscaped(s"$title (2.13)", dialects.Scala213)(code, exp213)
+    testTokenizedStructLinesEscaped(s"$title (3.0)", dialects.Scala30)(code, exp3)
   }
 
 }
