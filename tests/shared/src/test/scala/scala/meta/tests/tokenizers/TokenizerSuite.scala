@@ -2294,6 +2294,194 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |LF [8..9)
          |EOF [9..9)
          |""".stripMargin
+    )),
+    TestCase((
+      "#4546: char literal",
+      """|'\\u0061'
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Constant.Char(a) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Constant.Char(a) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin
+    )),
+    TestCase {
+      (
+        "#4546: double-quote unicode-like",
+        """|"\\u0061"
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String(a) [0..8)
+           |LF [8..9)
+           |EOF [9..9)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String(a) [0..8)
+           |LF [8..9)
+           |EOF [9..9)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "#4546: double-quote with escaped quote",
+        """|"\\u0022"
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String(\n) [0..9)
+           |Invalid(unclosed multi-line string literal) [9..9)
+           |EOF [9..9)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String(") [0..8)
+           |LF [8..9)
+           |EOF [9..9)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "#4546: double-quote 's' interpolation unicode-like",
+        """|s"\\u0061"
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Interpolation.Id(s) [0..1)
+           |Interpolation.Start(") [1..2)
+           |Interpolation.Part(a) [2..8)
+           |Interpolation.End(") [8..9)
+           |LF [9..10)
+           |EOF [10..10)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Interpolation.Id(s) [0..1)
+           |Interpolation.Start(") [1..2)
+           |Interpolation.Part(a) [2..8)
+           |Interpolation.End(") [8..9)
+           |LF [9..10)
+           |EOF [10..10)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "#4546: double-quote 'f' interpolation unicode-like",
+        """|s"\\u0061"
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Interpolation.Id(s) [0..1)
+           |Interpolation.Start(") [1..2)
+           |Interpolation.Part(a) [2..8)
+           |Interpolation.End(") [8..9)
+           |LF [9..10)
+           |EOF [10..10)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Interpolation.Id(s) [0..1)
+           |Interpolation.Start(") [1..2)
+           |Interpolation.Part(a) [2..8)
+           |Interpolation.End(") [8..9)
+           |LF [9..10)
+           |EOF [10..10)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "#4546: double-quote raw interpolation unicode-like",
+        """|raw"\\u0061"
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Interpolation.Id(raw) [0..3)
+           |Interpolation.Start(") [3..4)
+           |Interpolation.Part(a) [4..10)
+           |Interpolation.End(") [10..11)
+           |LF [11..12)
+           |EOF [12..12)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Interpolation.Id(raw) [0..3)
+           |Interpolation.Start(") [3..4)
+           |Interpolation.Part(a) [4..10)
+           |Interpolation.End(") [10..11)
+           |LF [11..12)
+           |EOF [12..12)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "#4546: double-quote custom interpolation unicode-like",
+        """|any"\\u0061"
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Interpolation.Id(any) [0..3)
+           |Interpolation.Start(") [3..4)
+           |Interpolation.Part(a) [4..10)
+           |Interpolation.End(") [10..11)
+           |LF [11..12)
+           |EOF [12..12)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Interpolation.Id(any) [0..3)
+           |Interpolation.Start(") [3..4)
+           |Interpolation.Part(a) [4..10)
+           |Interpolation.End(") [10..11)
+           |LF [11..12)
+           |EOF [12..12)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "#4546: triple quote unicode-like",
+        """|'''\\u0061'''
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String(a) [0..12)
+           |LF [12..13)
+           |EOF [13..13)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String(a) [0..12)
+           |LF [12..13)
+           |EOF [13..13)
+           |""".stripMargin
+      )
+    },
+    TestCase((
+      "#4546: backquote unicode-like",
+      """|`\\u0061`
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Ident(a) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Ident(a) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin
+    )),
+    TestCase((
+      "#4546: elsewhere unicode-like",
+      """|\\u0061
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Ident(a) [0..6)
+         |LF [6..7)
+         |EOF [7..7)
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Ident(a) [0..6)
+         |LF [6..7)
+         |EOF [7..7)
+         |""".stripMargin
     ))
   ).foreach { case c @ TestCase((title, codeTemplate, struct212, struct213)) =>
     implicit val loc: munit.Location = c.loc
