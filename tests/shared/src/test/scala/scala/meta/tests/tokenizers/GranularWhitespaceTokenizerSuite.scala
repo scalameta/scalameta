@@ -1,13 +1,14 @@
 package scala.meta.tests.tokenizers
 
 import scala.meta._
+import scala.meta.tests.TestHelpers._
 import scala.meta.tests.parsers.MoreHelpers._
 import scala.meta.tokenizers.TokenizerOptions
 import scala.meta.tokens.Token._
 
 class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
 
-  private implicit val dialect: Dialect = dialects.Scala211
+  override protected implicit val dialect: Dialect = dialects.Scala211
   override protected implicit def tokenizerOptions: TokenizerOptions =
     new TokenizerOptions(groupWhitespace = false)
 
@@ -136,574 +137,562 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     assertTokenizedAsStructureLines(code, struct)
   }
 
-  test("showRaw without comments - easy") {
-    assertTokenizedAsStructureLines(
-      "class C  {\t val x = 2}\n\n",
-      """
-        |BOF [0..0)
-        |KwClass [0..5)
-        |Space [5..6)
-        |Ident(C) [6..7)
-        |Space [7..8)
-        |Space [8..9)
-        |LeftBrace [9..10)
-        |Tab [10..11)
-        |Space [11..12)
-        |KwVal [12..15)
-        |Space [15..16)
-        |Ident(x) [16..17)
-        |Space [17..18)
-        |Equals [18..19)
-        |Space [19..20)
-        |Constant.Int(2) [20..21)
-        |RightBrace [21..22)
-        |LF [22..23)
-        |LF [23..24)
-        |EOF [24..24)
-        |""".stripMargin
-    )
-  }
+  testTokenizedStructLines("showRaw without comments - easy")(
+    "class C  {\t val x = 2}\n\n",
+    """
+      |BOF [0..0)
+      |KwClass [0..5)
+      |Space [5..6)
+      |Ident(C) [6..7)
+      |Space [7..8)
+      |Space [8..9)
+      |LeftBrace [9..10)
+      |Tab [10..11)
+      |Space [11..12)
+      |KwVal [12..15)
+      |Space [15..16)
+      |Ident(x) [16..17)
+      |Space [17..18)
+      |Equals [18..19)
+      |Space [19..20)
+      |Constant.Int(2) [20..21)
+      |RightBrace [21..22)
+      |LF [22..23)
+      |LF [23..24)
+      |EOF [24..24)
+      |""".stripMargin
+  )
 
-  test("tokenized-wrong-number-braces1") {
-    assertTokenizedAsStructureLines(
-      "class C  {\t val x = 2}}\n",
-      """|BOF [0..0)
-         |KwClass [0..5)
-         |Space [5..6)
-         |Ident(C) [6..7)
-         |Space [7..8)
-         |Space [8..9)
-         |LeftBrace [9..10)
-         |Tab [10..11)
-         |Space [11..12)
-         |KwVal [12..15)
-         |Space [15..16)
-         |Ident(x) [16..17)
-         |Space [17..18)
-         |Equals [18..19)
-         |Space [19..20)
-         |Constant.Int(2) [20..21)
-         |RightBrace [21..22)
-         |RightBrace [22..23)
-         |LF [23..24)
-         |EOF [24..24)
-         |""".stripMargin
-    )
-  }
+  testTokenizedStructLines("tokenized-wrong-number-braces1")(
+    "class C  {\t val x = 2}}\n",
+    """|BOF [0..0)
+       |KwClass [0..5)
+       |Space [5..6)
+       |Ident(C) [6..7)
+       |Space [7..8)
+       |Space [8..9)
+       |LeftBrace [9..10)
+       |Tab [10..11)
+       |Space [11..12)
+       |KwVal [12..15)
+       |Space [15..16)
+       |Ident(x) [16..17)
+       |Space [17..18)
+       |Equals [18..19)
+       |Space [19..20)
+       |Constant.Int(2) [20..21)
+       |RightBrace [21..22)
+       |RightBrace [22..23)
+       |LF [23..24)
+       |EOF [24..24)
+       |""".stripMargin
+  )
 
-  test("tokenized-wrong-number-braces2") {
-    assertTokenizedAsStructureLines(
-      "class C  {{\t val x = 2}\n{}",
-      """|BOF [0..0)
-         |KwClass [0..5)
-         |Space [5..6)
-         |Ident(C) [6..7)
-         |Space [7..8)
-         |Space [8..9)
-         |LeftBrace [9..10)
-         |LeftBrace [10..11)
-         |Tab [11..12)
-         |Space [12..13)
-         |KwVal [13..16)
-         |Space [16..17)
-         |Ident(x) [17..18)
-         |Space [18..19)
-         |Equals [19..20)
-         |Space [20..21)
-         |Constant.Int(2) [21..22)
-         |RightBrace [22..23)
-         |LF [23..24)
-         |LeftBrace [24..25)
-         |RightBrace [25..26)
-         |EOF [26..26)
-         |""".stripMargin
-    )
-  }
+  testTokenizedStructLines("tokenized-wrong-number-braces2")(
+    "class C  {{\t val x = 2}\n{}",
+    """|BOF [0..0)
+       |KwClass [0..5)
+       |Space [5..6)
+       |Ident(C) [6..7)
+       |Space [7..8)
+       |Space [8..9)
+       |LeftBrace [9..10)
+       |LeftBrace [10..11)
+       |Tab [11..12)
+       |Space [12..13)
+       |KwVal [13..16)
+       |Space [16..17)
+       |Ident(x) [17..18)
+       |Space [18..19)
+       |Equals [19..20)
+       |Space [20..21)
+       |Constant.Int(2) [21..22)
+       |RightBrace [22..23)
+       |LF [23..24)
+       |LeftBrace [24..25)
+       |RightBrace [25..26)
+       |EOF [26..26)
+       |""".stripMargin
+  )
 
-  test("showRaw without comments - hard") {
-    assertTokenizedAsStructureLines(
-      """|class C {
-         |  val x1a = 2
-         |  val x1b = 0x002
-         |  val x1c = 0x002a
-         |  val x2a = 2l
-         |  val x2b = 2L
-         |  val x2c = 0x002l
-         |  val x2d = 0x002L
-         |  val x2e = 0x002al
-         |  val x2f = 0x002aL
-         |  val x3a = 2f
-         |  val x3b = 2.0F
-         |  val x4a = 2d
-         |  val x4b = 2.0D
-         |  val x4c = 2.0
-         |  val x5a = 'a'
-         |  val x5b = '\b'
-         |  val x5c = '"'
-         |  val x5d = '\"'
-         |  val x6 = 'a
-         |  val x7a = ""
-         |  val x7b = "\b"
-         |  val x7c = "c"
-         |  val x7d = "\""
-         |  val x7e = QQQQQQ
-         |  val x7f = QQQf\nQQQ
-         |  val hello = 42
-         |  val `world` = 42
-         |}""".stripMargin.tq(),
-      """
-        |BOF [0..0)
-        |KwClass [0..5)
-        |Space [5..6)
-        |Ident(C) [6..7)
-        |Space [7..8)
-        |LeftBrace [8..9)
-        |LF [9..10)
-        |Space [10..11)
-        |Space [11..12)
-        |KwVal [12..15)
-        |Space [15..16)
-        |Ident(x1a) [16..19)
-        |Space [19..20)
-        |Equals [20..21)
-        |Space [21..22)
-        |Constant.Int(2) [22..23)
-        |LF [23..24)
-        |Space [24..25)
-        |Space [25..26)
-        |KwVal [26..29)
-        |Space [29..30)
-        |Ident(x1b) [30..33)
-        |Space [33..34)
-        |Equals [34..35)
-        |Space [35..36)
-        |Constant.Int(2) [36..41)
-        |LF [41..42)
-        |Space [42..43)
-        |Space [43..44)
-        |KwVal [44..47)
-        |Space [47..48)
-        |Ident(x1c) [48..51)
-        |Space [51..52)
-        |Equals [52..53)
-        |Space [53..54)
-        |Constant.Int(42) [54..60)
-        |LF [60..61)
-        |Space [61..62)
-        |Space [62..63)
-        |KwVal [63..66)
-        |Space [66..67)
-        |Ident(x2a) [67..70)
-        |Space [70..71)
-        |Equals [71..72)
-        |Space [72..73)
-        |Constant.Long(2) [73..75)
-        |LF [75..76)
-        |Space [76..77)
-        |Space [77..78)
-        |KwVal [78..81)
-        |Space [81..82)
-        |Ident(x2b) [82..85)
-        |Space [85..86)
-        |Equals [86..87)
-        |Space [87..88)
-        |Constant.Long(2) [88..90)
-        |LF [90..91)
-        |Space [91..92)
-        |Space [92..93)
-        |KwVal [93..96)
-        |Space [96..97)
-        |Ident(x2c) [97..100)
-        |Space [100..101)
-        |Equals [101..102)
-        |Space [102..103)
-        |Constant.Long(2) [103..109)
-        |LF [109..110)
-        |Space [110..111)
-        |Space [111..112)
-        |KwVal [112..115)
-        |Space [115..116)
-        |Ident(x2d) [116..119)
-        |Space [119..120)
-        |Equals [120..121)
-        |Space [121..122)
-        |Constant.Long(2) [122..128)
-        |LF [128..129)
-        |Space [129..130)
-        |Space [130..131)
-        |KwVal [131..134)
-        |Space [134..135)
-        |Ident(x2e) [135..138)
-        |Space [138..139)
-        |Equals [139..140)
-        |Space [140..141)
-        |Constant.Long(42) [141..148)
-        |LF [148..149)
-        |Space [149..150)
-        |Space [150..151)
-        |KwVal [151..154)
-        |Space [154..155)
-        |Ident(x2f) [155..158)
-        |Space [158..159)
-        |Equals [159..160)
-        |Space [160..161)
-        |Constant.Long(42) [161..168)
-        |LF [168..169)
-        |Space [169..170)
-        |Space [170..171)
-        |KwVal [171..174)
-        |Space [174..175)
-        |Ident(x3a) [175..178)
-        |Space [178..179)
-        |Equals [179..180)
-        |Space [180..181)
-        |Constant.Float(2) [181..183)
-        |LF [183..184)
-        |Space [184..185)
-        |Space [185..186)
-        |KwVal [186..189)
-        |Space [189..190)
-        |Ident(x3b) [190..193)
-        |Space [193..194)
-        |Equals [194..195)
-        |Space [195..196)
-        |Constant.Float(2.0) [196..200)
-        |LF [200..201)
-        |Space [201..202)
-        |Space [202..203)
-        |KwVal [203..206)
-        |Space [206..207)
-        |Ident(x4a) [207..210)
-        |Space [210..211)
-        |Equals [211..212)
-        |Space [212..213)
-        |Constant.Double(2) [213..215)
-        |LF [215..216)
-        |Space [216..217)
-        |Space [217..218)
-        |KwVal [218..221)
-        |Space [221..222)
-        |Ident(x4b) [222..225)
-        |Space [225..226)
-        |Equals [226..227)
-        |Space [227..228)
-        |Constant.Double(2.0) [228..232)
-        |LF [232..233)
-        |Space [233..234)
-        |Space [234..235)
-        |KwVal [235..238)
-        |Space [238..239)
-        |Ident(x4c) [239..242)
-        |Space [242..243)
-        |Equals [243..244)
-        |Space [244..245)
-        |Constant.Double(2.0) [245..248)
-        |LF [248..249)
-        |Space [249..250)
-        |Space [250..251)
-        |KwVal [251..254)
-        |Space [254..255)
-        |Ident(x5a) [255..258)
-        |Space [258..259)
-        |Equals [259..260)
-        |Space [260..261)
-        |Constant.Char(a) [261..264)
-        |LF [264..265)
-        |Space [265..266)
-        |Space [266..267)
-        |KwVal [267..270)
-        |Space [270..271)
-        |Ident(x5b) [271..274)
-        |Space [274..275)
-        |Equals [275..276)
-        |Space [276..277)
-        |Constant.Char(\b) [277..281)
-        |LF [281..282)
-        |Space [282..283)
-        |Space [283..284)
-        |KwVal [284..287)
-        |Space [287..288)
-        |Ident(x5c) [288..291)
-        |Space [291..292)
-        |Equals [292..293)
-        |Space [293..294)
-        |Constant.Char(") [294..297)
-        |LF [297..298)
-        |Space [298..299)
-        |Space [299..300)
-        |KwVal [300..303)
-        |Space [303..304)
-        |Ident(x5d) [304..307)
-        |Space [307..308)
-        |Equals [308..309)
-        |Space [309..310)
-        |Constant.Char(") [310..314)
-        |LF [314..315)
-        |Space [315..316)
-        |Space [316..317)
-        |KwVal [317..320)
-        |Space [320..321)
-        |Ident(x6) [321..323)
-        |Space [323..324)
-        |Equals [324..325)
-        |Space [325..326)
-        |Constant.Symbol(a) [326..328)
-        |LF [328..329)
-        |Space [329..330)
-        |Space [330..331)
-        |KwVal [331..334)
-        |Space [334..335)
-        |Ident(x7a) [335..338)
-        |Space [338..339)
-        |Equals [339..340)
-        |Space [340..341)
-        |Constant.String() [341..343)
-        |LF [343..344)
-        |Space [344..345)
-        |Space [345..346)
-        |KwVal [346..349)
-        |Space [349..350)
-        |Ident(x7b) [350..353)
-        |Space [353..354)
-        |Equals [354..355)
-        |Space [355..356)
-        |Constant.String(\b) [356..360)
-        |LF [360..361)
-        |Space [361..362)
-        |Space [362..363)
-        |KwVal [363..366)
-        |Space [366..367)
-        |Ident(x7c) [367..370)
-        |Space [370..371)
-        |Equals [371..372)
-        |Space [372..373)
-        |Constant.String(c) [373..376)
-        |LF [376..377)
-        |Space [377..378)
-        |Space [378..379)
-        |KwVal [379..382)
-        |Space [382..383)
-        |Ident(x7d) [383..386)
-        |Space [386..387)
-        |Equals [387..388)
-        |Space [388..389)
-        |Constant.String(") [389..393)
-        |LF [393..394)
-        |Space [394..395)
-        |Space [395..396)
-        |KwVal [396..399)
-        |Space [399..400)
-        |Ident(x7e) [400..403)
-        |Space [403..404)
-        |Equals [404..405)
-        |Space [405..406)
-        |Constant.String() [406..412)
-        |LF [412..413)
-        |Space [413..414)
-        |Space [414..415)
-        |KwVal [415..418)
-        |Space [418..419)
-        |Ident(x7f) [419..422)
-        |Space [422..423)
-        |Equals [423..424)
-        |Space [424..425)
-        |Constant.String(f\\n) [425..434)
-        |LF [434..435)
-        |Space [435..436)
-        |Space [436..437)
-        |KwVal [437..440)
-        |Space [440..441)
-        |Ident(hello) [441..446)
-        |Space [446..447)
-        |Equals [447..448)
-        |Space [448..449)
-        |Constant.Int(42) [449..451)
-        |LF [451..452)
-        |Space [452..453)
-        |Space [453..454)
-        |KwVal [454..457)
-        |Space [457..458)
-        |Ident(world) [458..465)
-        |Space [465..466)
-        |Equals [466..467)
-        |Space [467..468)
-        |Constant.Int(42) [468..470)
-        |LF [470..471)
-        |RightBrace [471..472)
-        |EOF [472..472)
-        |""".stripMargin.tq()
-    )
-  }
+  testTokenizedStructLines("showRaw without comments - hard")(
+    """|class C {
+       |  val x1a = 2
+       |  val x1b = 0x002
+       |  val x1c = 0x002a
+       |  val x2a = 2l
+       |  val x2b = 2L
+       |  val x2c = 0x002l
+       |  val x2d = 0x002L
+       |  val x2e = 0x002al
+       |  val x2f = 0x002aL
+       |  val x3a = 2f
+       |  val x3b = 2.0F
+       |  val x4a = 2d
+       |  val x4b = 2.0D
+       |  val x4c = 2.0
+       |  val x5a = 'a'
+       |  val x5b = '\b'
+       |  val x5c = '"'
+       |  val x5d = '\"'
+       |  val x6 = 'a
+       |  val x7a = ""
+       |  val x7b = "\b"
+       |  val x7c = "c"
+       |  val x7d = "\""
+       |  val x7e = QQQQQQ
+       |  val x7f = QQQf\nQQQ
+       |  val hello = 42
+       |  val `world` = 42
+       |}""".stripMargin.tq(),
+    """
+      |BOF [0..0)
+      |KwClass [0..5)
+      |Space [5..6)
+      |Ident(C) [6..7)
+      |Space [7..8)
+      |LeftBrace [8..9)
+      |LF [9..10)
+      |Space [10..11)
+      |Space [11..12)
+      |KwVal [12..15)
+      |Space [15..16)
+      |Ident(x1a) [16..19)
+      |Space [19..20)
+      |Equals [20..21)
+      |Space [21..22)
+      |Constant.Int(2) [22..23)
+      |LF [23..24)
+      |Space [24..25)
+      |Space [25..26)
+      |KwVal [26..29)
+      |Space [29..30)
+      |Ident(x1b) [30..33)
+      |Space [33..34)
+      |Equals [34..35)
+      |Space [35..36)
+      |Constant.Int(2) [36..41)
+      |LF [41..42)
+      |Space [42..43)
+      |Space [43..44)
+      |KwVal [44..47)
+      |Space [47..48)
+      |Ident(x1c) [48..51)
+      |Space [51..52)
+      |Equals [52..53)
+      |Space [53..54)
+      |Constant.Int(42) [54..60)
+      |LF [60..61)
+      |Space [61..62)
+      |Space [62..63)
+      |KwVal [63..66)
+      |Space [66..67)
+      |Ident(x2a) [67..70)
+      |Space [70..71)
+      |Equals [71..72)
+      |Space [72..73)
+      |Constant.Long(2) [73..75)
+      |LF [75..76)
+      |Space [76..77)
+      |Space [77..78)
+      |KwVal [78..81)
+      |Space [81..82)
+      |Ident(x2b) [82..85)
+      |Space [85..86)
+      |Equals [86..87)
+      |Space [87..88)
+      |Constant.Long(2) [88..90)
+      |LF [90..91)
+      |Space [91..92)
+      |Space [92..93)
+      |KwVal [93..96)
+      |Space [96..97)
+      |Ident(x2c) [97..100)
+      |Space [100..101)
+      |Equals [101..102)
+      |Space [102..103)
+      |Constant.Long(2) [103..109)
+      |LF [109..110)
+      |Space [110..111)
+      |Space [111..112)
+      |KwVal [112..115)
+      |Space [115..116)
+      |Ident(x2d) [116..119)
+      |Space [119..120)
+      |Equals [120..121)
+      |Space [121..122)
+      |Constant.Long(2) [122..128)
+      |LF [128..129)
+      |Space [129..130)
+      |Space [130..131)
+      |KwVal [131..134)
+      |Space [134..135)
+      |Ident(x2e) [135..138)
+      |Space [138..139)
+      |Equals [139..140)
+      |Space [140..141)
+      |Constant.Long(42) [141..148)
+      |LF [148..149)
+      |Space [149..150)
+      |Space [150..151)
+      |KwVal [151..154)
+      |Space [154..155)
+      |Ident(x2f) [155..158)
+      |Space [158..159)
+      |Equals [159..160)
+      |Space [160..161)
+      |Constant.Long(42) [161..168)
+      |LF [168..169)
+      |Space [169..170)
+      |Space [170..171)
+      |KwVal [171..174)
+      |Space [174..175)
+      |Ident(x3a) [175..178)
+      |Space [178..179)
+      |Equals [179..180)
+      |Space [180..181)
+      |Constant.Float(2) [181..183)
+      |LF [183..184)
+      |Space [184..185)
+      |Space [185..186)
+      |KwVal [186..189)
+      |Space [189..190)
+      |Ident(x3b) [190..193)
+      |Space [193..194)
+      |Equals [194..195)
+      |Space [195..196)
+      |Constant.Float(2.0) [196..200)
+      |LF [200..201)
+      |Space [201..202)
+      |Space [202..203)
+      |KwVal [203..206)
+      |Space [206..207)
+      |Ident(x4a) [207..210)
+      |Space [210..211)
+      |Equals [211..212)
+      |Space [212..213)
+      |Constant.Double(2) [213..215)
+      |LF [215..216)
+      |Space [216..217)
+      |Space [217..218)
+      |KwVal [218..221)
+      |Space [221..222)
+      |Ident(x4b) [222..225)
+      |Space [225..226)
+      |Equals [226..227)
+      |Space [227..228)
+      |Constant.Double(2.0) [228..232)
+      |LF [232..233)
+      |Space [233..234)
+      |Space [234..235)
+      |KwVal [235..238)
+      |Space [238..239)
+      |Ident(x4c) [239..242)
+      |Space [242..243)
+      |Equals [243..244)
+      |Space [244..245)
+      |Constant.Double(2.0) [245..248)
+      |LF [248..249)
+      |Space [249..250)
+      |Space [250..251)
+      |KwVal [251..254)
+      |Space [254..255)
+      |Ident(x5a) [255..258)
+      |Space [258..259)
+      |Equals [259..260)
+      |Space [260..261)
+      |Constant.Char(a) [261..264)
+      |LF [264..265)
+      |Space [265..266)
+      |Space [266..267)
+      |KwVal [267..270)
+      |Space [270..271)
+      |Ident(x5b) [271..274)
+      |Space [274..275)
+      |Equals [275..276)
+      |Space [276..277)
+      |Constant.Char(\b) [277..281)
+      |LF [281..282)
+      |Space [282..283)
+      |Space [283..284)
+      |KwVal [284..287)
+      |Space [287..288)
+      |Ident(x5c) [288..291)
+      |Space [291..292)
+      |Equals [292..293)
+      |Space [293..294)
+      |Constant.Char(") [294..297)
+      |LF [297..298)
+      |Space [298..299)
+      |Space [299..300)
+      |KwVal [300..303)
+      |Space [303..304)
+      |Ident(x5d) [304..307)
+      |Space [307..308)
+      |Equals [308..309)
+      |Space [309..310)
+      |Constant.Char(") [310..314)
+      |LF [314..315)
+      |Space [315..316)
+      |Space [316..317)
+      |KwVal [317..320)
+      |Space [320..321)
+      |Ident(x6) [321..323)
+      |Space [323..324)
+      |Equals [324..325)
+      |Space [325..326)
+      |Constant.Symbol(a) [326..328)
+      |LF [328..329)
+      |Space [329..330)
+      |Space [330..331)
+      |KwVal [331..334)
+      |Space [334..335)
+      |Ident(x7a) [335..338)
+      |Space [338..339)
+      |Equals [339..340)
+      |Space [340..341)
+      |Constant.String() [341..343)
+      |LF [343..344)
+      |Space [344..345)
+      |Space [345..346)
+      |KwVal [346..349)
+      |Space [349..350)
+      |Ident(x7b) [350..353)
+      |Space [353..354)
+      |Equals [354..355)
+      |Space [355..356)
+      |Constant.String(\b) [356..360)
+      |LF [360..361)
+      |Space [361..362)
+      |Space [362..363)
+      |KwVal [363..366)
+      |Space [366..367)
+      |Ident(x7c) [367..370)
+      |Space [370..371)
+      |Equals [371..372)
+      |Space [372..373)
+      |Constant.String(c) [373..376)
+      |LF [376..377)
+      |Space [377..378)
+      |Space [378..379)
+      |KwVal [379..382)
+      |Space [382..383)
+      |Ident(x7d) [383..386)
+      |Space [386..387)
+      |Equals [387..388)
+      |Space [388..389)
+      |Constant.String(") [389..393)
+      |LF [393..394)
+      |Space [394..395)
+      |Space [395..396)
+      |KwVal [396..399)
+      |Space [399..400)
+      |Ident(x7e) [400..403)
+      |Space [403..404)
+      |Equals [404..405)
+      |Space [405..406)
+      |Constant.String() [406..412)
+      |LF [412..413)
+      |Space [413..414)
+      |Space [414..415)
+      |KwVal [415..418)
+      |Space [418..419)
+      |Ident(x7f) [419..422)
+      |Space [422..423)
+      |Equals [423..424)
+      |Space [424..425)
+      |Constant.String(f\\n) [425..434)
+      |LF [434..435)
+      |Space [435..436)
+      |Space [436..437)
+      |KwVal [437..440)
+      |Space [440..441)
+      |Ident(hello) [441..446)
+      |Space [446..447)
+      |Equals [447..448)
+      |Space [448..449)
+      |Constant.Int(42) [449..451)
+      |LF [451..452)
+      |Space [452..453)
+      |Space [453..454)
+      |KwVal [454..457)
+      |Space [457..458)
+      |Ident(world) [458..465)
+      |Space [465..466)
+      |Equals [466..467)
+      |Space [467..468)
+      |Constant.Int(42) [468..470)
+      |LF [470..471)
+      |RightBrace [471..472)
+      |EOF [472..472)
+      |""".stripMargin.tq()
+  )
 
-  test("showRaw without comments - insane") {
-    assertTokenizedAsStructureLines(
-      """|class C {
-         |  q""
-         |  q"$b + 2"
-         |  q"${b} + 2"
-         |  q"class $X"
-         |  q"class ${X}"
-         |  qQQQQQQ
-         |  qQQQ$d + 2QQQ
-         |  qQQQ${d} + 2QQQ
-         |  qQQQclass $YQQQ
-         |  qQQQclass ${Y}QQQ
-         |}""".stripMargin.tq(),
-      """
-        |BOF [0..0)
-        |KwClass [0..5)
-        |Space [5..6)
-        |Ident(C) [6..7)
-        |Space [7..8)
-        |LeftBrace [8..9)
-        |LF [9..10)
-        |Space [10..11)
-        |Space [11..12)
-        |Interpolation.Id(q) [12..13)
-        |Interpolation.Start(") [13..14)
-        |Interpolation.Part() [14..14)
-        |Interpolation.End(") [14..15)
-        |LF [15..16)
-        |Space [16..17)
-        |Space [17..18)
-        |Interpolation.Id(q) [18..19)
-        |Interpolation.Start(") [19..20)
-        |Interpolation.Part() [20..20)
-        |Interpolation.SpliceStart [20..21)
-        |Ident(b) [21..22)
-        |Interpolation.SpliceEnd [22..22)
-        |Interpolation.Part( + 2) [22..26)
-        |Interpolation.End(") [26..27)
-        |LF [27..28)
-        |Space [28..29)
-        |Space [29..30)
-        |Interpolation.Id(q) [30..31)
-        |Interpolation.Start(") [31..32)
-        |Interpolation.Part() [32..32)
-        |Interpolation.SpliceStart [32..33)
-        |LeftBrace [33..34)
-        |Ident(b) [34..35)
-        |RightBrace [35..36)
-        |Interpolation.SpliceEnd [36..36)
-        |Interpolation.Part( + 2) [36..40)
-        |Interpolation.End(") [40..41)
-        |LF [41..42)
-        |Space [42..43)
-        |Space [43..44)
-        |Interpolation.Id(q) [44..45)
-        |Interpolation.Start(") [45..46)
-        |Interpolation.Part(class ) [46..52)
-        |Interpolation.SpliceStart [52..53)
-        |Ident(X) [53..54)
-        |Interpolation.SpliceEnd [54..54)
-        |Interpolation.Part() [54..54)
-        |Interpolation.End(") [54..55)
-        |LF [55..56)
-        |Space [56..57)
-        |Space [57..58)
-        |Interpolation.Id(q) [58..59)
-        |Interpolation.Start(") [59..60)
-        |Interpolation.Part(class ) [60..66)
-        |Interpolation.SpliceStart [66..67)
-        |LeftBrace [67..68)
-        |Ident(X) [68..69)
-        |RightBrace [69..70)
-        |Interpolation.SpliceEnd [70..70)
-        |Interpolation.Part() [70..70)
-        |Interpolation.End(") [70..71)
-        |LF [71..72)
-        |Space [72..73)
-        |Space [73..74)
-        |Interpolation.Id(q) [74..75)
-        |Interpolation.Start(QQQ) [75..78)
-        |Interpolation.Part() [78..78)
-        |Interpolation.End(QQQ) [78..81)
-        |LF [81..82)
-        |Space [82..83)
-        |Space [83..84)
-        |Interpolation.Id(q) [84..85)
-        |Interpolation.Start(QQQ) [85..88)
-        |Interpolation.Part() [88..88)
-        |Interpolation.SpliceStart [88..89)
-        |Ident(d) [89..90)
-        |Interpolation.SpliceEnd [90..90)
-        |Interpolation.Part( + 2) [90..94)
-        |Interpolation.End(QQQ) [94..97)
-        |LF [97..98)
-        |Space [98..99)
-        |Space [99..100)
-        |Interpolation.Id(q) [100..101)
-        |Interpolation.Start(QQQ) [101..104)
-        |Interpolation.Part() [104..104)
-        |Interpolation.SpliceStart [104..105)
-        |LeftBrace [105..106)
-        |Ident(d) [106..107)
-        |RightBrace [107..108)
-        |Interpolation.SpliceEnd [108..108)
-        |Interpolation.Part( + 2) [108..112)
-        |Interpolation.End(QQQ) [112..115)
-        |LF [115..116)
-        |Space [116..117)
-        |Space [117..118)
-        |Interpolation.Id(q) [118..119)
-        |Interpolation.Start(QQQ) [119..122)
-        |Interpolation.Part(class ) [122..128)
-        |Interpolation.SpliceStart [128..129)
-        |Ident(Y) [129..130)
-        |Interpolation.SpliceEnd [130..130)
-        |Interpolation.Part() [130..130)
-        |Interpolation.End(QQQ) [130..133)
-        |LF [133..134)
-        |Space [134..135)
-        |Space [135..136)
-        |Interpolation.Id(q) [136..137)
-        |Interpolation.Start(QQQ) [137..140)
-        |Interpolation.Part(class ) [140..146)
-        |Interpolation.SpliceStart [146..147)
-        |LeftBrace [147..148)
-        |Ident(Y) [148..149)
-        |RightBrace [149..150)
-        |Interpolation.SpliceEnd [150..150)
-        |Interpolation.Part() [150..150)
-        |Interpolation.End(QQQ) [150..153)
-        |LF [153..154)
-        |RightBrace [154..155)
-        |EOF [155..155)
-        |""".stripMargin.tq()
-    )
-  }
+  testTokenizedStructLines("showRaw without comments - insane")(
+    """|class C {
+       |  q""
+       |  q"$b + 2"
+       |  q"${b} + 2"
+       |  q"class $X"
+       |  q"class ${X}"
+       |  qQQQQQQ
+       |  qQQQ$d + 2QQQ
+       |  qQQQ${d} + 2QQQ
+       |  qQQQclass $YQQQ
+       |  qQQQclass ${Y}QQQ
+       |}""".stripMargin.tq(),
+    """
+      |BOF [0..0)
+      |KwClass [0..5)
+      |Space [5..6)
+      |Ident(C) [6..7)
+      |Space [7..8)
+      |LeftBrace [8..9)
+      |LF [9..10)
+      |Space [10..11)
+      |Space [11..12)
+      |Interpolation.Id(q) [12..13)
+      |Interpolation.Start(") [13..14)
+      |Interpolation.Part() [14..14)
+      |Interpolation.End(") [14..15)
+      |LF [15..16)
+      |Space [16..17)
+      |Space [17..18)
+      |Interpolation.Id(q) [18..19)
+      |Interpolation.Start(") [19..20)
+      |Interpolation.Part() [20..20)
+      |Interpolation.SpliceStart [20..21)
+      |Ident(b) [21..22)
+      |Interpolation.SpliceEnd [22..22)
+      |Interpolation.Part( + 2) [22..26)
+      |Interpolation.End(") [26..27)
+      |LF [27..28)
+      |Space [28..29)
+      |Space [29..30)
+      |Interpolation.Id(q) [30..31)
+      |Interpolation.Start(") [31..32)
+      |Interpolation.Part() [32..32)
+      |Interpolation.SpliceStart [32..33)
+      |LeftBrace [33..34)
+      |Ident(b) [34..35)
+      |RightBrace [35..36)
+      |Interpolation.SpliceEnd [36..36)
+      |Interpolation.Part( + 2) [36..40)
+      |Interpolation.End(") [40..41)
+      |LF [41..42)
+      |Space [42..43)
+      |Space [43..44)
+      |Interpolation.Id(q) [44..45)
+      |Interpolation.Start(") [45..46)
+      |Interpolation.Part(class ) [46..52)
+      |Interpolation.SpliceStart [52..53)
+      |Ident(X) [53..54)
+      |Interpolation.SpliceEnd [54..54)
+      |Interpolation.Part() [54..54)
+      |Interpolation.End(") [54..55)
+      |LF [55..56)
+      |Space [56..57)
+      |Space [57..58)
+      |Interpolation.Id(q) [58..59)
+      |Interpolation.Start(") [59..60)
+      |Interpolation.Part(class ) [60..66)
+      |Interpolation.SpliceStart [66..67)
+      |LeftBrace [67..68)
+      |Ident(X) [68..69)
+      |RightBrace [69..70)
+      |Interpolation.SpliceEnd [70..70)
+      |Interpolation.Part() [70..70)
+      |Interpolation.End(") [70..71)
+      |LF [71..72)
+      |Space [72..73)
+      |Space [73..74)
+      |Interpolation.Id(q) [74..75)
+      |Interpolation.Start(QQQ) [75..78)
+      |Interpolation.Part() [78..78)
+      |Interpolation.End(QQQ) [78..81)
+      |LF [81..82)
+      |Space [82..83)
+      |Space [83..84)
+      |Interpolation.Id(q) [84..85)
+      |Interpolation.Start(QQQ) [85..88)
+      |Interpolation.Part() [88..88)
+      |Interpolation.SpliceStart [88..89)
+      |Ident(d) [89..90)
+      |Interpolation.SpliceEnd [90..90)
+      |Interpolation.Part( + 2) [90..94)
+      |Interpolation.End(QQQ) [94..97)
+      |LF [97..98)
+      |Space [98..99)
+      |Space [99..100)
+      |Interpolation.Id(q) [100..101)
+      |Interpolation.Start(QQQ) [101..104)
+      |Interpolation.Part() [104..104)
+      |Interpolation.SpliceStart [104..105)
+      |LeftBrace [105..106)
+      |Ident(d) [106..107)
+      |RightBrace [107..108)
+      |Interpolation.SpliceEnd [108..108)
+      |Interpolation.Part( + 2) [108..112)
+      |Interpolation.End(QQQ) [112..115)
+      |LF [115..116)
+      |Space [116..117)
+      |Space [117..118)
+      |Interpolation.Id(q) [118..119)
+      |Interpolation.Start(QQQ) [119..122)
+      |Interpolation.Part(class ) [122..128)
+      |Interpolation.SpliceStart [128..129)
+      |Ident(Y) [129..130)
+      |Interpolation.SpliceEnd [130..130)
+      |Interpolation.Part() [130..130)
+      |Interpolation.End(QQQ) [130..133)
+      |LF [133..134)
+      |Space [134..135)
+      |Space [135..136)
+      |Interpolation.Id(q) [136..137)
+      |Interpolation.Start(QQQ) [137..140)
+      |Interpolation.Part(class ) [140..146)
+      |Interpolation.SpliceStart [146..147)
+      |LeftBrace [147..148)
+      |Ident(Y) [148..149)
+      |RightBrace [149..150)
+      |Interpolation.SpliceEnd [150..150)
+      |Interpolation.Part() [150..150)
+      |Interpolation.End(QQQ) [150..153)
+      |LF [153..154)
+      |RightBrace [154..155)
+      |EOF [155..155)
+      |""".stripMargin.tq()
+  )
 
-  test("showRaw with comments - easy") {
-    assertTokenizedAsStructureLines(
-      "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n",
-      """
-        |BOF [0..0)
-        |KwClass [0..5)
-        |Space [5..6)
-        |Ident(C) [6..7)
-        |Space [7..8)
-        |Space [8..9)
-        |Comment(hello world) [9..24)
-        |LeftBrace [24..25)
-        |Tab [25..26)
-        |Space [26..27)
-        |KwVal [27..30)
-        |Space [30..31)
-        |Ident(x) [31..32)
-        |Space [32..33)
-        |Equals [33..34)
-        |Space [34..35)
-        |Constant.Int(2) [35..36)
-        |RightBrace [36..37)
-        |LF [37..38)
-        |Comment(bye-bye world) [38..53)
-        |LF [53..54)
-        |EOF [54..54)
-        |""".stripMargin
-    )
-  }
+  testTokenizedStructLines("showRaw with comments - easy")(
+    "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n",
+    """
+      |BOF [0..0)
+      |KwClass [0..5)
+      |Space [5..6)
+      |Ident(C) [6..7)
+      |Space [7..8)
+      |Space [8..9)
+      |Comment(hello world) [9..24)
+      |LeftBrace [24..25)
+      |Tab [25..26)
+      |Space [26..27)
+      |KwVal [27..30)
+      |Space [30..31)
+      |Ident(x) [31..32)
+      |Space [32..33)
+      |Equals [33..34)
+      |Space [34..35)
+      |Constant.Int(2) [35..36)
+      |RightBrace [36..37)
+      |LF [37..38)
+      |Comment(bye-bye world) [38..53)
+      |LF [53..54)
+      |EOF [54..54)
+      |""".stripMargin
+  )
 
-  test("showRaw with comments - tricky")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("showRaw with comments - tricky")(
     "x ~/**/y",
     """
       |BOF [0..0)
@@ -714,25 +703,25 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Ident(y) [7..8)
       |EOF [8..8)
       |""".stripMargin
-  ))
+  )
 
-  test("showRaw with comments - skip unicode escape 1")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("showRaw with comments - skip unicode escape 1")(
     "// Note: '\\u000A' = '\\n'",
     """|BOF [0..0)
        |Comment( Note: '\\u000A' = '\\n') [0..24)
        |EOF [24..24)
        |""".stripMargin
-  ))
+  )
 
-  test("showRaw with comments - skip unicode escape 2")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("showRaw with comments - skip unicode escape 2")(
     "/* Note: '\\u000A' = '\\n' */",
     """|BOF [0..0)
        |Comment( Note: '\\u000A' = '\\n' ) [0..27)
        |EOF [27..27)
        |""".stripMargin
-  ))
+  )
 
-  test("interpolation start & end - episode 01")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 01")(
     "q\"\"",
     """
       |BOF [0..0)
@@ -742,9 +731,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(") [2..3)
       |EOF [3..3)
       |""".stripMargin
-  ))
+  )
 
-  test("interpolation start & end - episode 02")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 02")(
     "q\"\";",
     """
       |BOF [0..0)
@@ -755,9 +744,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Semicolon [3..4)
       |EOF [4..4)
       |""".stripMargin
-  ))
+  )
 
-  test("interpolation start & end - episode 03")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 03")(
     "q\"a\"",
     """
       |BOF [0..0)
@@ -767,9 +756,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(") [3..4)
       |EOF [4..4)
       |""".stripMargin
-  ))
+  )
 
-  test("interpolation start & end - episode 04")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 04")(
     "q\"a\";",
     """
       |BOF [0..0)
@@ -780,9 +769,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Semicolon [4..5)
       |EOF [5..5)
       |""".stripMargin
-  ))
+  )
 
-  test("interpolation start & end - episode 05")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 05")(
     "q\"\"\"\"\"\"",
     """
       |BOF [0..0)
@@ -792,9 +781,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(QQQ) [4..7)
       |EOF [7..7)
       |""".stripMargin.tq()
-  ))
+  )
 
-  test("interpolation start & end - episode 06")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 06")(
     "q\"\"\"\"\"\";",
     """
       |BOF [0..0)
@@ -805,9 +794,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Semicolon [7..8)
       |EOF [8..8)
       |""".stripMargin.tq()
-  ))
+  )
 
-  test("interpolation start & end - episode 07")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 07")(
     "q\"\"\"a\"\"\"",
     """
       |BOF [0..0)
@@ -817,9 +806,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(QQQ) [5..8)
       |EOF [8..8)
       |""".stripMargin.tq()
-  ))
+  )
 
-  test("interpolation start & end - episode 08")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 08")(
     "q\"\"\"a\"\"\";",
     """
       |BOF [0..0)
@@ -830,9 +819,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Semicolon [8..9)
       |EOF [9..9)
       |""".stripMargin.tq()
-  ))
+  )
 
-  test("interpolation start & end - episode 09")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("interpolation start & end - episode 09")(
     "q\"a\"\r\n",
     """
       |BOF [0..0)
@@ -843,44 +832,40 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |CRLF [4..6)
       |EOF [6..6)
       |""".stripMargin
-  ))
+  )
 
-  test("interpolation-underscore") {
-    assertTokenizedAsStructureLines(
-      """s"checking redundancy in $_match"""",
-      """|BOF [0..0)
-         |Interpolation.Id(s) [0..1)
-         |Interpolation.Start(") [1..2)
-         |Interpolation.Part(checking redundancy in ) [2..25)
-         |Interpolation.SpliceStart [25..26)
-         |Ident(_match) [26..32)
-         |Interpolation.SpliceEnd [32..32)
-         |Interpolation.Part() [32..32)
-         |Interpolation.End(") [32..33)
-         |EOF [33..33)
-         |""".stripMargin
-    )
-  }
+  testTokenizedStructLines("interpolation-underscore")(
+    """s"checking redundancy in $_match"""",
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(") [1..2)
+       |Interpolation.Part(checking redundancy in ) [2..25)
+       |Interpolation.SpliceStart [25..26)
+       |Ident(_match) [26..32)
+       |Interpolation.SpliceEnd [32..32)
+       |Interpolation.Part() [32..32)
+       |Interpolation.End(") [32..33)
+       |EOF [33..33)
+       |""".stripMargin
+  )
 
-  test("$this") {
-    assertTokenizedAsStructureLines(
-      "q\"$this\"",
-      """
-        |BOF [0..0)
-        |Interpolation.Id(q) [0..1)
-        |Interpolation.Start(") [1..2)
-        |Interpolation.Part() [2..2)
-        |Interpolation.SpliceStart [2..3)
-        |KwThis [3..7)
-        |Interpolation.SpliceEnd [7..7)
-        |Interpolation.Part() [7..7)
-        |Interpolation.End(") [7..8)
-        |EOF [8..8)
-        |""".stripMargin
-    )
-  }
+  testTokenizedStructLines("$this")(
+    "q\"$this\"",
+    """
+      |BOF [0..0)
+      |Interpolation.Id(q) [0..1)
+      |Interpolation.Start(") [1..2)
+      |Interpolation.Part() [2..2)
+      |Interpolation.SpliceStart [2..3)
+      |KwThis [3..7)
+      |Interpolation.SpliceEnd [7..7)
+      |Interpolation.Part() [7..7)
+      |Interpolation.End(") [7..8)
+      |EOF [8..8)
+      |""".stripMargin
+  )
 
-  test("monocle 1")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("monocle 1")(
     "x => x",
     """
       |BOF [0..0)
@@ -891,9 +876,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Ident(x) [5..6)
       |EOF [6..6)
       |""".stripMargin
-  ))
+  )
 
-  test("monocle 2")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("monocle 2")(
     "x ⇒ x",
     """
       |BOF [0..0)
@@ -904,57 +889,53 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Ident(x) [4..5)
       |EOF [5..5)
       |""".stripMargin
-  ))
+  )
 
-  test("monocle 3") {
-    assertTokenizedAsStructureLines(
-      "for (x <- xs) println(x)",
-      """
-        |BOF [0..0)
-        |KwFor [0..3)
-        |Space [3..4)
-        |LeftParen [4..5)
-        |Ident(x) [5..6)
-        |Space [6..7)
-        |LeftArrow [7..9)
-        |Space [9..10)
-        |Ident(xs) [10..12)
-        |RightParen [12..13)
-        |Space [13..14)
-        |Ident(println) [14..21)
-        |LeftParen [21..22)
-        |Ident(x) [22..23)
-        |RightParen [23..24)
-        |EOF [24..24)
-        |""".stripMargin
-    )
-  }
+  testTokenizedStructLines("monocle 3")(
+    "for (x <- xs) println(x)",
+    """
+      |BOF [0..0)
+      |KwFor [0..3)
+      |Space [3..4)
+      |LeftParen [4..5)
+      |Ident(x) [5..6)
+      |Space [6..7)
+      |LeftArrow [7..9)
+      |Space [9..10)
+      |Ident(xs) [10..12)
+      |RightParen [12..13)
+      |Space [13..14)
+      |Ident(println) [14..21)
+      |LeftParen [21..22)
+      |Ident(x) [22..23)
+      |RightParen [23..24)
+      |EOF [24..24)
+      |""".stripMargin
+  )
 
-  test("monocle 4") {
-    assertTokenizedAsStructureLines(
-      "for (x ← xs) println(x)",
-      """
-        |BOF [0..0)
-        |KwFor [0..3)
-        |Space [3..4)
-        |LeftParen [4..5)
-        |Ident(x) [5..6)
-        |Space [6..7)
-        |LeftArrow [7..8)
-        |Space [8..9)
-        |Ident(xs) [9..11)
-        |RightParen [11..12)
-        |Space [12..13)
-        |Ident(println) [13..20)
-        |LeftParen [20..21)
-        |Ident(x) [21..22)
-        |RightParen [22..23)
-        |EOF [23..23)
-        |""".stripMargin
-    )
-  }
+  testTokenizedStructLines("monocle 4")(
+    "for (x ← xs) println(x)",
+    """
+      |BOF [0..0)
+      |KwFor [0..3)
+      |Space [3..4)
+      |LeftParen [4..5)
+      |Ident(x) [5..6)
+      |Space [6..7)
+      |LeftArrow [7..8)
+      |Space [8..9)
+      |Ident(xs) [9..11)
+      |RightParen [11..12)
+      |Space [12..13)
+      |Ident(println) [13..20)
+      |LeftParen [20..21)
+      |Ident(x) [21..22)
+      |RightParen [22..23)
+      |EOF [23..23)
+      |""".stripMargin
+  )
 
-  test("-2147483648")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("-2147483648")(
     "-2147483648",
     """
       |BOF [0..0)
@@ -962,9 +943,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Constant.Int(2147483648) [1..11)
       |EOF [11..11)
       |""".stripMargin.tq()
-  ))
+  )
 
-  test("simple xml literal - 1")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("simple xml literal - 1")(
     "<foo>bar</foo>",
     """
       |BOF [0..0)
@@ -973,9 +954,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Xml.End [14..14)
       |EOF [14..14)
       |""".stripMargin.tq()
-  ))
+  )
 
-  test("simple xml literal - 2")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("simple xml literal - 2")(
     "<foo>bar</foo> ",
     """
       |BOF [0..0)
@@ -985,29 +966,27 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
       |Space [14..15)
       |EOF [15..15)
       |""".stripMargin.tq()
-  ))
+  )
 
-  test("incomplete xml literal - 1") {
-    assertTokenizedAsStructureLines(
-      """|val a = 
-         |  <foo>bar</fo>""".stripMargin,
-      """|BOF [0..0)
-         |KwVal [0..3)
-         |Space [3..4)
-         |Ident(a) [4..5)
-         |Space [5..6)
-         |Equals [6..7)
-         |Space [7..8)
-         |LF [8..9)
-         |Space [9..10)
-         |Space [10..11)
-         |Xml.Start [11..11)
-         |Xml.Part(<foo>bar</fo>) [11..24)
-         |Xml.End [24..24)
-         |EOF [24..24)
-         |""".stripMargin.tq()
-    )
-  }
+  testTokenizedStructLines("incomplete xml literal - 1")(
+    """|val a = 
+       |  <foo>bar</fo>""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Space [3..4)
+       |Ident(a) [4..5)
+       |Space [5..6)
+       |Equals [6..7)
+       |Space [7..8)
+       |LF [8..9)
+       |Space [9..10)
+       |Space [10..11)
+       |Xml.Start [11..11)
+       |Xml.Part(<foo>bar</fo>) [11..24)
+       |Xml.End [24..24)
+       |EOF [24..24)
+       |""".stripMargin.tq()
+  )
 
   test("incomplete xml literal - 2") {
     val code =
@@ -1043,25 +1022,25 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     )(code.asInput.parseRule(_.entrypointStat()))
   }
 
-  test("unsupported xml literal - 3 plus/no space") {
-    assertTokenizedAsStructureLines(
-      """|a+<foo>bar</foo>
-         |""".stripMargin,
-      """|BOF [0..0)
-         |Ident(a) [0..1)
-         |Ident(+<) [1..3)
-         |Ident(foo) [3..6)
-         |Ident(>) [6..7)
-         |Ident(bar) [7..10)
-         |Ident(</) [10..12)
-         |Ident(foo) [12..15)
-         |Ident(>) [15..16)
-         |LF [16..17)
-         |EOF [17..17)
-         |""".stripMargin.tq(),
-      dialects.Scala213.withAllowXmlLiterals(false)
-    )
-  }
+  testTokenizedStructLines(
+    "unsupported xml literal - 3 plus/no space",
+    dialects.Scala213.withAllowXmlLiterals(false)
+  )(
+    """|a+<foo>bar</foo>
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Ident(a) [0..1)
+       |Ident(+<) [1..3)
+       |Ident(foo) [3..6)
+       |Ident(>) [6..7)
+       |Ident(bar) [7..10)
+       |Ident(</) [10..12)
+       |Ident(foo) [12..15)
+       |Ident(>) [15..16)
+       |LF [16..17)
+       |EOF [17..17)
+       |""".stripMargin.tq()
+  )
 
   test("parsed trees don't have BOF/EOF in their tokens") {
     val tree = "foo + bar".asInput.parse[Term].get
@@ -1417,21 +1396,20 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
         ) =>
   })
 
-  test("Interpolated string - escape, unclosed") {
-    val struct =
-      """|BOF [0..0)
-         |Interpolation.Id(s) [0..1)
-         |Interpolation.Start(") [1..2)
-         |Interpolation.Part(\\\\) [2..4)
-         |Interpolation.End(") [4..5)
-         |Interpolation.Id(Hello) [5..10)
-         |Interpolation.Start(") [10..11)
-         |Interpolation.Part() [11..11)
-         |Invalid(unclosed single-line string interpolation) [11..11)
-         |Interpolation.End() [11..11)
-         |EOF [11..11)""".stripMargin
-    assertTokenizedAsStructureLines("""s"\\"Hello"""", struct)
-  }
+  testTokenizedStructLines("Interpolated string - escape, unclosed")(
+    """s"\\"Hello"""",
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(") [1..2)
+       |Interpolation.Part(\\\\) [2..4)
+       |Interpolation.End(") [4..5)
+       |Interpolation.Id(Hello) [5..10)
+       |Interpolation.Start(") [10..11)
+       |Interpolation.Part() [11..11)
+       |Invalid(unclosed single-line string interpolation) [11..11)
+       |Interpolation.End() [11..11)
+       |EOF [11..11)""".stripMargin
+  )
 
   test("Multiline interpolated string - ignore escape")(
     assertTokens("raw\"\"\"\\$host\\$share\\\"\"\"") {
@@ -1460,7 +1438,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     assertEquals(tokenize(code).toString, code)
   }
 
-  test("#3328 2")(assertTokenizedAsStructureLines(
+  testTokenizedStructLines("#3328 2")(
     "val \uD835\uDF11: Double",
     s"""
        |BOF [0..0)
@@ -1472,7 +1450,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
        |Ident(Double) [8..14)
        |EOF [14..14)
        |""".stripMargin
-  ))
+  )
 
   test("#3402") {
     val code = "val MIN_HIGH_SURROGATE = '\\uD800'"
@@ -1814,340 +1792,597 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
     }
   }
 
-  test("scala3 code using CRLF") {
-    val code =
-      """|object A:
-         |  foo.map:
-         |    bar
-         |    + baz
-         |  for
-         |    a <- foo
-         |    b <- bar
-         |  yield
-         |    a + b
-         |""".stripMargin
-    val struct =
-      """|BOF [0..0)
-         |KwObject [0..6)
-         |Space [6..7)
-         |Ident(A) [7..8)
-         |Colon [8..9)
-         |CRLF [9..11)
-         |Space [11..12)
-         |Space [12..13)
-         |Ident(foo) [13..16)
-         |Dot [16..17)
-         |Ident(map) [17..20)
-         |Colon [20..21)
-         |CRLF [21..23)
-         |Space [23..24)
-         |Space [24..25)
-         |Space [25..26)
-         |Space [26..27)
-         |Ident(bar) [27..30)
-         |CRLF [30..32)
-         |Space [32..33)
-         |Space [33..34)
-         |Space [34..35)
-         |Space [35..36)
-         |Ident(+) [36..37)
-         |Space [37..38)
-         |Ident(baz) [38..41)
-         |CRLF [41..43)
-         |Space [43..44)
-         |Space [44..45)
-         |KwFor [45..48)
-         |CRLF [48..50)
-         |Space [50..51)
-         |Space [51..52)
-         |Space [52..53)
-         |Space [53..54)
-         |Ident(a) [54..55)
-         |Space [55..56)
-         |LeftArrow [56..58)
-         |Space [58..59)
-         |Ident(foo) [59..62)
-         |CRLF [62..64)
-         |Space [64..65)
-         |Space [65..66)
-         |Space [66..67)
-         |Space [67..68)
-         |Ident(b) [68..69)
-         |Space [69..70)
-         |LeftArrow [70..72)
-         |Space [72..73)
-         |Ident(bar) [73..76)
-         |CRLF [76..78)
-         |Space [78..79)
-         |Space [79..80)
-         |KwYield [80..85)
-         |CRLF [85..87)
-         |Space [87..88)
-         |Space [88..89)
-         |Space [89..90)
-         |Space [90..91)
-         |Ident(a) [91..92)
-         |Space [92..93)
-         |Ident(+) [93..94)
-         |Space [94..95)
-         |Ident(b) [95..96)
-         |CRLF [96..98)
-         |EOF [98..98)
-         |""".stripMargin
-    assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
-  }
+  testTokenizedStructLines("scala3 code using CRLF", dialects.Scala3)(
+    """|object A:
+       |  foo.map:
+       |    bar
+       |    + baz
+       |  for
+       |    a <- foo
+       |    b <- bar
+       |  yield
+       |    a + b
+       |""".stripMargin.replace("\n", "\r\n"),
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Space [6..7)
+       |Ident(A) [7..8)
+       |Colon [8..9)
+       |CRLF [9..11)
+       |Space [11..12)
+       |Space [12..13)
+       |Ident(foo) [13..16)
+       |Dot [16..17)
+       |Ident(map) [17..20)
+       |Colon [20..21)
+       |CRLF [21..23)
+       |Space [23..24)
+       |Space [24..25)
+       |Space [25..26)
+       |Space [26..27)
+       |Ident(bar) [27..30)
+       |CRLF [30..32)
+       |Space [32..33)
+       |Space [33..34)
+       |Space [34..35)
+       |Space [35..36)
+       |Ident(+) [36..37)
+       |Space [37..38)
+       |Ident(baz) [38..41)
+       |CRLF [41..43)
+       |Space [43..44)
+       |Space [44..45)
+       |KwFor [45..48)
+       |CRLF [48..50)
+       |Space [50..51)
+       |Space [51..52)
+       |Space [52..53)
+       |Space [53..54)
+       |Ident(a) [54..55)
+       |Space [55..56)
+       |LeftArrow [56..58)
+       |Space [58..59)
+       |Ident(foo) [59..62)
+       |CRLF [62..64)
+       |Space [64..65)
+       |Space [65..66)
+       |Space [66..67)
+       |Space [67..68)
+       |Ident(b) [68..69)
+       |Space [69..70)
+       |LeftArrow [70..72)
+       |Space [72..73)
+       |Ident(bar) [73..76)
+       |CRLF [76..78)
+       |Space [78..79)
+       |Space [79..80)
+       |KwYield [80..85)
+       |CRLF [85..87)
+       |Space [87..88)
+       |Space [88..89)
+       |Space [89..90)
+       |Space [90..91)
+       |Ident(a) [91..92)
+       |Space [92..93)
+       |Ident(+) [93..94)
+       |Space [94..95)
+       |Ident(b) [95..96)
+       |CRLF [96..98)
+       |EOF [98..98)
+       |""".stripMargin
+  )
 
-  test("code with Shebang line") {
-    val code =
-      """|#!/usr/bin/env foo bar && qux >/dev/null
-         |package foo
-         |
-         |import bar
-         |
-         |class Baz()
-         |""".stripMargin
-    val struct =
-      """|BOF [0..0)
-         |Shebang [0..40)
-         |CRLF [40..42)
-         |KwPackage [42..49)
-         |Space [49..50)
-         |Ident(foo) [50..53)
-         |CRLF [53..55)
-         |CRLF [55..57)
-         |KwImport [57..63)
-         |Space [63..64)
-         |Ident(bar) [64..67)
-         |CRLF [67..69)
-         |CRLF [69..71)
-         |KwClass [71..76)
-         |Space [76..77)
-         |Ident(Baz) [77..80)
-         |LeftParen [80..81)
-         |RightParen [81..82)
-         |CRLF [82..84)
-         |EOF [84..84)
-         |""".stripMargin
-    assertTokenizedAsStructureLines(code.replace("\n", "\r\n"), struct, dialects.Scala3)
-  }
+  testTokenizedStructLines("code with Shebang line", dialects.Scala3)(
+    """|#!/usr/bin/env foo bar && qux >/dev/null
+       |package foo
+       |
+       |import bar
+       |
+       |class Baz()
+       |""".stripMargin.replace("\n", "\r\n"),
+    """|BOF [0..0)
+       |Shebang [0..40)
+       |CRLF [40..42)
+       |KwPackage [42..49)
+       |Space [49..50)
+       |Ident(foo) [50..53)
+       |CRLF [53..55)
+       |CRLF [55..57)
+       |KwImport [57..63)
+       |Space [63..64)
+       |Ident(bar) [64..67)
+       |CRLF [67..69)
+       |CRLF [69..71)
+       |KwClass [71..76)
+       |Space [76..77)
+       |Ident(Baz) [77..80)
+       |LeftParen [80..81)
+       |RightParen [81..82)
+       |CRLF [82..84)
+       |EOF [84..84)
+       |""".stripMargin
+  )
 
-  test("code with non-matching braces 1") {
-    val code =
-      """|object a {
-         |  def foo = {
-         |    val a = q"bar${qux}"
-         |""".stripMargin
-    val struct =
-      """|BOF [0..0)
-         |KwObject [0..6)
-         |Space [6..7)
-         |Ident(a) [7..8)
-         |Space [8..9)
-         |LeftBrace [9..10)
-         |LF [10..11)
-         |Space [11..12)
-         |Space [12..13)
-         |KwDef [13..16)
-         |Space [16..17)
-         |Ident(foo) [17..20)
-         |Space [20..21)
-         |Equals [21..22)
-         |Space [22..23)
-         |LeftBrace [23..24)
-         |LF [24..25)
-         |Space [25..26)
-         |Space [26..27)
-         |Space [27..28)
-         |Space [28..29)
-         |KwVal [29..32)
-         |Space [32..33)
-         |Ident(a) [33..34)
-         |Space [34..35)
-         |Equals [35..36)
-         |Space [36..37)
-         |Interpolation.Id(q) [37..38)
-         |Interpolation.Start(") [38..39)
-         |Interpolation.Part(bar) [39..42)
-         |Interpolation.SpliceStart [42..43)
-         |LeftBrace [43..44)
-         |Ident(qux) [44..47)
-         |RightBrace [47..48)
-         |Interpolation.SpliceEnd [48..48)
-         |Interpolation.Part() [48..48)
-         |Interpolation.End(") [48..49)
-         |LF [49..50)
-         |EOF [50..50)
-         |""".stripMargin
-    assertTokenizedAsStructureLines(code, struct, dialects.Scala3)
-  }
+  testTokenizedStructLines("code with non-matching braces 1", dialects.Scala3)(
+    """|object a {
+       |  def foo = {
+       |    val a = q"bar${qux}"
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Space [6..7)
+       |Ident(a) [7..8)
+       |Space [8..9)
+       |LeftBrace [9..10)
+       |LF [10..11)
+       |Space [11..12)
+       |Space [12..13)
+       |KwDef [13..16)
+       |Space [16..17)
+       |Ident(foo) [17..20)
+       |Space [20..21)
+       |Equals [21..22)
+       |Space [22..23)
+       |LeftBrace [23..24)
+       |LF [24..25)
+       |Space [25..26)
+       |Space [26..27)
+       |Space [27..28)
+       |Space [28..29)
+       |KwVal [29..32)
+       |Space [32..33)
+       |Ident(a) [33..34)
+       |Space [34..35)
+       |Equals [35..36)
+       |Space [36..37)
+       |Interpolation.Id(q) [37..38)
+       |Interpolation.Start(") [38..39)
+       |Interpolation.Part(bar) [39..42)
+       |Interpolation.SpliceStart [42..43)
+       |LeftBrace [43..44)
+       |Ident(qux) [44..47)
+       |RightBrace [47..48)
+       |Interpolation.SpliceEnd [48..48)
+       |Interpolation.Part() [48..48)
+       |Interpolation.End(") [48..49)
+       |LF [49..50)
+       |EOF [50..50)
+       |""".stripMargin
+  )
 
-  test("code with non-matching braces 2") {
-    val code =
-      """|object a {
-         |  def foo = {
-         |    val a = "b"
-         |  }
-         |  }
-         |}
-         |""".stripMargin
-    val struct =
-      """|BOF [0..0)
-         |KwObject [0..6)
-         |Space [6..7)
-         |Ident(a) [7..8)
-         |Space [8..9)
-         |LeftBrace [9..10)
-         |LF [10..11)
-         |Space [11..12)
-         |Space [12..13)
-         |KwDef [13..16)
-         |Space [16..17)
-         |Ident(foo) [17..20)
-         |Space [20..21)
-         |Equals [21..22)
-         |Space [22..23)
-         |LeftBrace [23..24)
-         |LF [24..25)
-         |Space [25..26)
-         |Space [26..27)
-         |Space [27..28)
-         |Space [28..29)
-         |KwVal [29..32)
-         |Space [32..33)
-         |Ident(a) [33..34)
-         |Space [34..35)
-         |Equals [35..36)
-         |Space [36..37)
-         |Constant.String(b) [37..40)
-         |LF [40..41)
-         |Space [41..42)
-         |Space [42..43)
-         |RightBrace [43..44)
-         |LF [44..45)
-         |Space [45..46)
-         |Space [46..47)
-         |RightBrace [47..48)
-         |LF [48..49)
-         |RightBrace [49..50)
-         |LF [50..51)
-         |EOF [51..51)
-         |""".stripMargin
-    assertTokenizedAsStructureLines(code, struct, dialects.Scala3)
-  }
+  testTokenizedStructLines("code with non-matching braces 2", dialects.Scala3)(
+    """|object a {
+       |  def foo = {
+       |    val a = "b"
+       |  }
+       |  }
+       |}
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Space [6..7)
+       |Ident(a) [7..8)
+       |Space [8..9)
+       |LeftBrace [9..10)
+       |LF [10..11)
+       |Space [11..12)
+       |Space [12..13)
+       |KwDef [13..16)
+       |Space [16..17)
+       |Ident(foo) [17..20)
+       |Space [20..21)
+       |Equals [21..22)
+       |Space [22..23)
+       |LeftBrace [23..24)
+       |LF [24..25)
+       |Space [25..26)
+       |Space [26..27)
+       |Space [27..28)
+       |Space [28..29)
+       |KwVal [29..32)
+       |Space [32..33)
+       |Ident(a) [33..34)
+       |Space [34..35)
+       |Equals [35..36)
+       |Space [36..37)
+       |Constant.String(b) [37..40)
+       |LF [40..41)
+       |Space [41..42)
+       |Space [42..43)
+       |RightBrace [43..44)
+       |LF [44..45)
+       |Space [45..46)
+       |Space [46..47)
+       |RightBrace [47..48)
+       |LF [48..49)
+       |RightBrace [49..50)
+       |LF [50..51)
+       |EOF [51..51)
+       |""".stripMargin
+  )
 
-  test("code with incomplete interpolation") {
-    val code =
-      """|object a {
-         |  def foo = s"b$"
-         |}
-         |""".stripMargin
+  testTokenizedStructLines("code with incomplete interpolation: 2.13", dialects.Scala213)(
+    """|object a {
+       |  def foo = s"b$"
+       |}
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Space [6..7)
+       |Ident(a) [7..8)
+       |Space [8..9)
+       |LeftBrace [9..10)
+       |LF [10..11)
+       |Space [11..12)
+       |Space [12..13)
+       |KwDef [13..16)
+       |Space [16..17)
+       |Ident(foo) [17..20)
+       |Space [20..21)
+       |Equals [21..22)
+       |Space [22..23)
+       |Interpolation.Id(s) [23..24)
+       |Interpolation.Start(") [24..25)
+       |Interpolation.Part(b) [25..26)
+       |Interpolation.SpliceStart [26..27)
+       |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [27..27)
+       |Constant.String() [27..27)
+       |Interpolation.SpliceEnd [28..28)
+       |Interpolation.Part(\n) [28..29)
+       |Interpolation.End() [29..29)
+       |RightBrace [29..30)
+       |LF [30..31)
+       |EOF [31..31)
+       |""".stripMargin
+  )
 
-    // scala213
-    val struct213 =
-      """|BOF [0..0)
-         |KwObject [0..6)
-         |Space [6..7)
-         |Ident(a) [7..8)
-         |Space [8..9)
-         |LeftBrace [9..10)
-         |LF [10..11)
-         |Space [11..12)
-         |Space [12..13)
-         |KwDef [13..16)
-         |Space [16..17)
-         |Ident(foo) [17..20)
-         |Space [20..21)
-         |Equals [21..22)
-         |Space [22..23)
-         |Interpolation.Id(s) [23..24)
-         |Interpolation.Start(") [24..25)
-         |Interpolation.Part(b) [25..26)
-         |Interpolation.SpliceStart [26..27)
-         |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [27..27)
-         |Constant.String() [27..27)
-         |Interpolation.SpliceEnd [28..28)
-         |Interpolation.Part(\n) [28..29)
-         |Interpolation.End() [29..29)
-         |RightBrace [29..30)
-         |LF [30..31)
-         |EOF [31..31)
-         |""".stripMargin
-    assertTokenizedAsStructureLines(code, struct213, dialects.Scala213)
+  testTokenizedStructLines("code with incomplete interpolation: 3", dialects.Scala3)(
+    """|object a {
+       |  def foo = s"b$"
+       |}
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwObject [0..6)
+       |Space [6..7)
+       |Ident(a) [7..8)
+       |Space [8..9)
+       |LeftBrace [9..10)
+       |LF [10..11)
+       |Space [11..12)
+       |Space [12..13)
+       |KwDef [13..16)
+       |Space [16..17)
+       |Ident(foo) [17..20)
+       |Space [20..21)
+       |Equals [21..22)
+       |Space [22..23)
+       |Interpolation.Id(s) [23..24)
+       |Interpolation.Start(") [24..25)
+       |Interpolation.Part(b") [25..28)
+       |Invalid(unclosed single-line string interpolation) [28..28)
+       |Interpolation.End() [28..28)
+       |LF [28..29)
+       |RightBrace [29..30)
+       |LF [30..31)
+       |EOF [31..31)
+       |""".stripMargin
+  )
 
-    // scala3
-    val struct3 =
-      """|BOF [0..0)
-         |KwObject [0..6)
-         |Space [6..7)
-         |Ident(a) [7..8)
-         |Space [8..9)
-         |LeftBrace [9..10)
-         |LF [10..11)
-         |Space [11..12)
-         |Space [12..13)
-         |KwDef [13..16)
-         |Space [16..17)
-         |Ident(foo) [17..20)
-         |Space [20..21)
-         |Equals [21..22)
-         |Space [22..23)
-         |Interpolation.Id(s) [23..24)
-         |Interpolation.Start(") [24..25)
-         |Interpolation.Part(b") [25..28)
-         |Invalid(unclosed single-line string interpolation) [28..28)
-         |Interpolation.End() [28..28)
-         |LF [28..29)
-         |RightBrace [29..30)
-         |LF [30..31)
-         |EOF [31..31)
-         |""".stripMargin
-    assertTokenizedAsStructureLines(code, struct3, dialects.Scala3)
-  }
+  testTokenizedStructLines(
+    "code with double-quote string within single-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = false)
+  )(
+    " \"...\" ",
+    """|BOF [0..0)
+       |Space [0..1)
+       |Constant.String(...) [1..6)
+       |Invalid(double quotes are not allowed in single-line quasiquotes) [1..1)
+       |Space [6..7)
+       |EOF [7..7)
+       |""".stripMargin
+  )
 
-  test("code with double-quote string within single-line quasiquotes") {
-    val code = " \"...\" "
-    val struct =
-      """|BOF [0..0)
-         |Space [0..1)
-         |Constant.String(...) [1..6)
-         |Invalid(double quotes are not allowed in single-line quasiquotes) [1..1)
-         |Space [6..7)
-         |EOF [7..7)
-         |""".stripMargin
-    assertTokenizedAsStructureLines(code, struct, dialects.Scala213.unquoteTerm(multiline = false))
-  }
+  testTokenizedStructLines(
+    "code with interpolation within single-line quasiquotes",
+    dialects.Scala213.unquoteTerm(multiline = false)
+  )(
+    " s\"...\" ",
+    """|BOF [0..0)
+       |Space [0..1)
+       |Interpolation.Id(s) [1..2)
+       |Invalid(double quotes are not allowed in single-line quasiquotes) [2..2)
+       |Interpolation.Start(") [2..3)
+       |Interpolation.Part(...) [3..6)
+       |Interpolation.End(") [6..7)
+       |Space [7..8)
+       |EOF [8..8)
+       |""".stripMargin
+  )
 
-  test("code with interpolation within single-line quasiquotes") {
-    val code = " s\"...\" "
-    val struct =
-      """|BOF [0..0)
-         |Space [0..1)
-         |Interpolation.Id(s) [1..2)
-         |Invalid(double quotes are not allowed in single-line quasiquotes) [2..2)
-         |Interpolation.Start(") [2..3)
-         |Interpolation.Part(...) [3..6)
-         |Interpolation.End(") [6..7)
-         |Space [7..8)
-         |EOF [8..8)
-         |""".stripMargin
-    assertTokenizedAsStructureLines(code, struct, dialects.Scala213.unquoteTerm(multiline = false))
-  }
+  testTokenizedStructLines("interpolator with $ character")(
+    """s"$$$foo$$"""",
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(") [1..2)
+       |Interpolation.Part($) [2..4)
+       |Interpolation.SpliceStart [4..5)
+       |Ident(foo) [5..8)
+       |Interpolation.SpliceEnd [8..8)
+       |Interpolation.Part($) [8..10)
+       |Interpolation.End(") [10..11)
+       |EOF [11..11) 
+       |""".stripMargin
+  )
 
-  test("interpolator with $ character") {
-    val code = """s"$$$foo$$""""
-    val struct =
+  testTokenizedStructLines("broken-interpolator")(
+    """|
+       |s'''|Available languages (default = $):
+       |verilog - Verilog or SystemVerilog dialects
+       |vhdl    - VHDL dialects
+       |
+       |Available Verilog/SystemVerilog dialects (default = $defaultDialect):
+       |v2001   - Verilog 2001
+       |sv2005  - 
+       |'''.stripMargin
+       |""".stripMargin,
+    """|BOF [0..0)
+       |LF [0..1)
+       |Interpolation.Id(s) [1..2)
+       |Interpolation.Start(''') [2..5)
+       |Interpolation.Part(|Available languages (default = ) [5..37)
+       |Interpolation.SpliceStart [37..38)
+       |Invalid(Not one of: `$'_, `$$', `$'ident, `$'this, `$'BlockExpr) [38..38)
+       |Interpolation.SpliceEnd [38..38)
+       |Interpolation.Part():\nverilog - Verilog or SystemVerilog dialects\nvhdl    - VHDL dialects\n\nAvailable Verilog/SystemVerilog dialects (default = ) [38..162)
+       |Interpolation.SpliceStart [162..163)
+       |Ident(defaultDialect) [163..177)
+       |Interpolation.SpliceEnd [177..177)
+       |Interpolation.Part():\nv2001   - Verilog 2001\nsv2005  - \n) [177..214)
+       |Interpolation.End(''') [214..217)
+       |Dot [217..218)
+       |Ident(stripMargin) [218..229)
+       |LF [229..230)
+       |EOF [230..230)
+       |""".stripMargin.replace("'''", "\"\"\"")
+  )
+
+  testTokenizedStructLines("unexpected-character")(
+    """|
+       |val 。 = 123
+       |
+       |""".stripMargin,
+    """|BOF [0..0)
+       |LF [0..1)
+       |KwVal [1..4)
+       |Invalid(illegal unicode codepoint: 0x3002) [5..6)
+       |Space [4..5)
+       |Space [6..7)
+       |Equals [7..8)
+       |Space [8..9)
+       |Constant.Int(123) [9..12)
+       |LF [12..13)
+       |LF [13..14)
+       |EOF [14..14)
+       |""".stripMargin
+  )
+
+  Seq(
+    //    TestCase(("", "", "", "")),
+    //    TestCase(("", "", "", "")),
+    TestCase {
+      (
+        "unicode escapes backquote 1",
+        """|val \\u0060foo\\u0060 = 0
+           |""".stripMargin,
+        """|BOF [0..0)
+           |KwVal [0..3)
+           |Space [3..4)
+           |Ident(foo) [4..19)
+           |Space [19..20)
+           |Equals [20..21)
+           |Space [21..22)
+           |Constant.Int(0) [22..23)
+           |LF [23..24)
+           |EOF [24..24)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |KwVal [0..3)
+           |Invalid(unclosed quoted identifier) [4..23)
+           |Space [3..4)
+           |LF [23..24)
+           |EOF [24..24)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "unicode escapes backquote 2",
+        """|val `foo\\u0060 = 0
+           |""".stripMargin,
+        """|BOF [0..0)
+           |KwVal [0..3)
+           |Space [3..4)
+           |Ident(foo) [4..14)
+           |Space [14..15)
+           |Equals [15..16)
+           |Space [16..17)
+           |Constant.Int(0) [17..18)
+           |LF [18..19)
+           |EOF [19..19)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |KwVal [0..3)
+           |Invalid(unclosed quoted identifier) [4..18)
+           |Space [3..4)
+           |LF [18..19)
+           |EOF [19..19)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "unicode escapes backquote 3",
+        """|val \\u0060foo` = 0
+           |""".stripMargin,
+        """|BOF [0..0)
+           |KwVal [0..3)
+           |Space [3..4)
+           |Ident(foo) [4..14)
+           |Space [14..15)
+           |Equals [15..16)
+           |Space [16..17)
+           |Constant.Int(0) [17..18)
+           |LF [18..19)
+           |EOF [19..19)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |KwVal [0..3)
+           |Space [3..4)
+           |Ident(foo) [4..14)
+           |Space [14..15)
+           |Equals [15..16)
+           |Space [16..17)
+           |Constant.Int(0) [17..18)
+           |LF [18..19)
+           |EOF [19..19)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "unicode escapes backquote 4",
+        """|val `\\u0060foo` = 0
+           |""".stripMargin,
+        """|BOF [0..0)
+           |KwVal [0..3)
+           |Invalid(empty quoted identifier) [4..11)
+           |Space [3..4)
+           |Ident(foo) [11..14)
+           |Invalid(unclosed quoted identifier) [14..19)
+           |LF [19..20)
+           |EOF [20..20)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |KwVal [0..3)
+           |Space [3..4)
+           |Ident(`foo) [4..15)
+           |Space [15..16)
+           |Equals [16..17)
+           |Space [17..18)
+           |Constant.Int(0) [18..19)
+           |LF [19..20)
+           |EOF [20..20)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "unicode escapes double-quote 1",
+        """|"\\u0022foo\\u0022"
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String() [0..7)
+           |Interpolation.Id(foo) [7..10)
+           |Interpolation.Start(\\u0022) [10..16)
+           |Interpolation.Part() [16..16)
+           |Interpolation.End(") [16..17)
+           |LF [17..18)
+           |EOF [18..18)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String("foo") [0..17)
+           |LF [17..18)
+           |EOF [18..18)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "unicode escapes double-quote 2",
+        """|"\\u0022\\u0022foo\\u0022\\u0022"
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String(foo) [0..29)
+           |LF [29..30)
+           |EOF [30..30)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String(""foo"") [0..29)
+           |LF [29..30)
+           |EOF [30..30)
+           |""".stripMargin
+      )
+    },
+    TestCase {
+      (
+        "unicode escapes triple-quote 1",
+        """|'''\\u0022foo\\u0022'''
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String("foo") [0..21)
+           |LF [21..22)
+           |EOF [22..22)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.String("foo") [0..21)
+           |LF [21..22)
+           |EOF [22..22)
+           |""".stripMargin
+      )
+    },
+    TestCase((
+      "unicode escapes single-quote 1",
+      """|'\\u0027'
+         |""".stripMargin,
       """|BOF [0..0)
-         |Interpolation.Id(s) [0..1)
-         |Interpolation.Start(") [1..2)
-         |Interpolation.Part($) [2..4)
-         |Interpolation.SpliceStart [4..5)
-         |Ident(foo) [5..8)
-         |Interpolation.SpliceEnd [8..8)
-         |Interpolation.Part($) [8..10)
-         |Interpolation.End(") [10..11)
-         |EOF [11..11) 
-         |""".stripMargin.nl2lf
-    assertTokenizedAsStructureLines(code, struct)
+         |Constant.Char(') [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Constant.Char(') [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin
+    )),
+    TestCase {
+      (
+        "unicode escapes single-quote 2",
+        """|'f\\u0027
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Constant.Char(f) [0..8)
+           |LF [8..9)
+           |EOF [9..9)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Invalid(unclosed character literal) [2..2)
+           |Invalid(unclosed character literal) [2..8)
+           |LF [8..9)
+           |EOF [9..9)
+           |""".stripMargin
+      )
+    },
+    TestCase((
+      "unicode escapes single-quote 3",
+      """|\\u0027f'
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Constant.Char(f) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin,
+      """|BOF [0..0)
+         |Constant.Char(f) [0..8)
+         |LF [8..9)
+         |EOF [9..9)
+         |""".stripMargin
+    ))
+  ).foreach { case c @ TestCase((title, codeTemplate, struct212, struct213)) =>
+    implicit val loc: munit.Location = c.loc
+    testTokenizedStructLinesEscaped(s"$title (2.12)", dialects.Scala212)(codeTemplate, struct212)
+    testTokenizedStructLinesEscaped(s"$title (2.13)", dialects.Scala213)(codeTemplate, struct213)
+    testTokenizedStructLinesEscaped(s"$title (3.0)", dialects.Scala30)(codeTemplate, struct213)
   }
 
 }
