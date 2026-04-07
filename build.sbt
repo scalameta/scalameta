@@ -209,7 +209,7 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
   buildInfoKeys := Seq[BuildInfoKey](version),
   crossScalaVersions := EarliestScala2Versions
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
-  .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
+  .configureCross(crossPlatformShading).enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
 
 lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
   .configureCross(crossPlatformPublishSettings).settings(
