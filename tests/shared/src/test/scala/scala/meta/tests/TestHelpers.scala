@@ -39,4 +39,6 @@ object TestHelpers {
     builder.result()
   }
 
+  case class TestCase[A](obj: A)(implicit val loc: munit.Location)
+
 }
