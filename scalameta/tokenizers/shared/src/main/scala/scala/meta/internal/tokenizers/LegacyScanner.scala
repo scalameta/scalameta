@@ -220,8 +220,9 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   private final def fetchToken(): Unit = {
     sepRegions match {
       case STRINGLIT :: tail => // STRINGPART follows STRINGLIT in multiline interpolation
-        return if (token == STRINGPART) getStringSplice()
+        if (token == STRINGPART) getStringSplice()
         else getStringPart(multiLine = tail.headOption.contains(STRINGPART))
+        return
       case _ =>
     }
     if (fetchXmlPart()) return
@@ -357,7 +358,8 @@ class LegacyScanner(input: Input, dialect: Dialect) {
       case '"' =>
         def fetchDoubleQuote(): Unit =
           if (token == INTERPOLATIONID) {
-            nextRawChar()
+            val allowUnicodeEscape = strVal == "s" || strVal == "f"
+            withAllowUnicodeEscape(nextRawChar())(allow = allowUnicodeEscape)
             offset = begCharOffset
             if (ch == '"' && !wasEscapedMultiChar) {
               nextChar()
@@ -373,12 +375,12 @@ class LegacyScanner(input: Input, dialect: Dialect) {
                 strVal = ""
               }
             } else {
-              getStringPart(multiLine = false)
+              withAllowUnicodeEscape(getStringPart(multiLine = false))(allow = allowUnicodeEscape)
               pushSepRegions(STRINGLIT) // indicate single line string part
             }
           } else {
             noQuasiDoubleQuoteDQ()
-            nextChar()
+            withAllowUnicodeEscape(nextChar())(allow = true)
             if (ch == '"' && !wasEscapedMultiChar) {
               nextChar()
               if (ch == '"' && !wasEscapedMultiChar) {
@@ -388,7 +390,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
                 token = STRINGLIT
                 strVal = ""
               }
-            } else getStringLit()
+            } else withAllowUnicodeEscape(getStringLit())(allow = true)
           }
         fetchDoubleQuote()
       case '\'' =>
@@ -404,7 +406,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
             token = SYMBOLLIT
           } else orElse
         def fetchSingleQuote() = {
-          nextRawChar()
+          withAllowUnicodeEscape(nextRawChar())(allow = true)
           if (isUnquoteDollar()) {
             setInvalidToken(next)("can't unquote into character literals")
             nextRawChar()
@@ -495,8 +497,11 @@ class LegacyScanner(input: Input, dialect: Dialect) {
 
   @tailrec
   private def getBackquotedIdent(): Unit = {
-    nextChar()
-    if (getLitChars('`')) {
+    val ok = withAllowUnicodeEscape {
+      nextChar()
+      getLitChars('`')
+    }(allow = true)
+    if (ok) {
       nextChar()
       finishNamed(isBackquoted = true)
       if (strVal.isEmpty) curr.setInvalidToken("empty quoted identifier")
