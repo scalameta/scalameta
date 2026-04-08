@@ -2188,8 +2188,15 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
            |""".stripMargin,
         """|BOF [0..0)
            |KwVal [0..3)
-           |Invalid(unclosed quoted identifier) [4..23)
            |Space [3..4)
+           |Ident(\) [4..5)
+           |Ident(u0060foo) [5..13)
+           |Ident(\) [13..14)
+           |Ident(u0060) [14..19)
+           |Space [19..20)
+           |Equals [20..21)
+           |Space [21..22)
+           |Constant.Int(0) [22..23)
            |LF [23..24)
            |EOF [24..24)
            |""".stripMargin
@@ -2239,11 +2246,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
         """|BOF [0..0)
            |KwVal [0..3)
            |Space [3..4)
-           |Ident(foo) [4..14)
-           |Space [14..15)
-           |Equals [15..16)
-           |Space [16..17)
-           |Constant.Int(0) [17..18)
+           |Ident(\) [4..5)
+           |Ident(u0060foo) [5..13)
+           |Invalid(unclosed quoted identifier) [13..18)
            |LF [18..19)
            |EOF [19..19)
            |""".stripMargin
@@ -2325,7 +2330,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
            |EOF [22..22)
            |""".stripMargin,
         """|BOF [0..0)
-           |Constant.String("foo") [0..21)
+           |Constant.String(\\\\u0022foo\\\\u0022) [0..21)
            |LF [21..22)
            |EOF [22..22)
            |""".stripMargin
@@ -2357,8 +2362,17 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
            |EOF [9..9)
            |""".stripMargin,
         """|BOF [0..0)
-           |Invalid(unclosed character literal) [2..2)
-           |Invalid(unclosed character literal) [2..8)
+           |Constant.Symbol(f) [0..2)
+           |Ident(\) [2..3)
+           |Ident(u0027) [3..8)
+           |LF [8..9)
+           |EOF [9..9)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |MacroQuote [0..1)
+           |Ident(f) [1..2)
+           |Ident(\) [2..3)
+           |Ident(u0027) [3..8)
            |LF [8..9)
            |EOF [9..9)
            |""".stripMargin
@@ -2375,7 +2389,9 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
            |EOF [9..9)
            |""".stripMargin,
         """|BOF [0..0)
-           |Constant.Char(f) [0..8)
+           |Ident(\) [0..1)
+           |Ident(u0027f) [1..7)
+           |Invalid(can't use unescaped LF in character literals) [8..8)
            |LF [8..9)
            |EOF [9..9)
            |""".stripMargin
@@ -2492,7 +2508,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
         """|BOF [0..0)
            |Interpolation.Id(raw) [0..3)
            |Interpolation.Start(") [3..4)
-           |Interpolation.Part(a) [4..10)
+           |Interpolation.Part(\\\\u0061) [4..10)
            |Interpolation.End(") [10..11)
            |LF [11..12)
            |EOF [12..12)
@@ -2515,7 +2531,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
         """|BOF [0..0)
            |Interpolation.Id(any) [0..3)
            |Interpolation.Start(") [3..4)
-           |Interpolation.Part(a) [4..10)
+           |Interpolation.Part(\\\\u0061) [4..10)
            |Interpolation.End(") [10..11)
            |LF [11..12)
            |EOF [12..12)
@@ -2533,7 +2549,7 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
            |EOF [13..13)
            |""".stripMargin,
         """|BOF [0..0)
-           |Constant.String(a) [0..12)
+           |Constant.String(\\\\u0061) [0..12)
            |LF [12..13)
            |EOF [13..13)
            |""".stripMargin
@@ -2554,21 +2570,24 @@ class GranularWhitespaceTokenizerSuite extends BaseTokenizerSuite {
          |EOF [9..9)
          |""".stripMargin
     )),
-    TestCase((
-      "#4546: elsewhere unicode-like",
-      """|\\u0061
-         |""".stripMargin,
-      """|BOF [0..0)
-         |Ident(a) [0..6)
-         |LF [6..7)
-         |EOF [7..7)
-         |""".stripMargin,
-      """|BOF [0..0)
-         |Ident(a) [0..6)
-         |LF [6..7)
-         |EOF [7..7)
-         |""".stripMargin
-    ))
+    TestCase {
+      (
+        "#4546: elsewhere unicode-like",
+        """|\\u0061
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Ident(a) [0..6)
+           |LF [6..7)
+           |EOF [7..7)
+           |""".stripMargin,
+        """|BOF [0..0)
+           |Ident(\) [0..1)
+           |Ident(u0061) [1..6)
+           |LF [6..7)
+           |EOF [7..7)
+           |""".stripMargin
+      )
+    }
   ).foreach { c =>
     val TestTokenizedWithDialects(title, code, exp212, exp213, exp3) = c.obj
     implicit val loc: munit.Location = c.loc

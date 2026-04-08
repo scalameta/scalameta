@@ -18,7 +18,17 @@ private[meta] case class CharArrayReader(
     private var lastLineStartOffset: Int = 0
 ) {
 
+  // see details in https://github.com/scala/scala/pull/8282
+  private var noUnicodeEscape: Boolean = dialect.treatUnicodeEscapesAsOrdinary
+
   import CharArrayReader.NextChar
+
+  final def withAllowUnicodeEscape[A](body: => A)(allow: => Boolean): A =
+    if (noUnicodeEscape && allow) {
+      noUnicodeEscape = false
+      try body
+      finally noUnicodeEscape = true
+    } else body
 
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = setNextRawCharAndCheck(peekRawChar)
@@ -63,7 +73,8 @@ private[meta] case class CharArrayReader(
   final def peekRawChar: NextChar = peekRawChar(endCharOffset)
 
   @inline
-  final def peekRawChar(offset: Int): NextChar = CharArrayReader.readRawChar(buf, offset)
+  final def peekRawChar(offset: Int): NextChar = CharArrayReader
+    .readRawChar(buf, offset, noUnicodeEscape = noUnicodeEscape)
 
   private def checkLineEnd(): Unit = if (ch == LF || ch == FF) {
     lastLineStartOffset = lineStartOffset
@@ -93,7 +104,11 @@ object CharArrayReader {
   private[tokenizers] def isDigit(ch: Int): Boolean = ch >= '0' && ch <= '9'
 
   /** Read next char interpreting \\uxxxx escapes; doesn't mutate internal state */
-  private def readUnicodeChar(buf: Array[Char], offset: Int): (Char, Int) = {
+  private def readUnicodeChar(
+      buf: Array[Char],
+      offset: Int,
+      noUnicodeEscape: Boolean
+  ): (Char, Int) = {
     val c = buf(offset)
     val firstOffset = offset + 1 // offset after a single character
 
@@ -103,8 +118,8 @@ object CharArrayReader {
       (firstOffset - p) % 2 == 0
     }
 
-    if (c != '\\' || firstOffset >= buf.length || buf(firstOffset) != 'u' || !evenSlashPrefix)
-      return (c, firstOffset)
+    if (noUnicodeEscape || c != '\\' || firstOffset >= buf.length || buf(firstOffset) != 'u' ||
+      !evenSlashPrefix) return (c, firstOffset)
 
     var escapedOffset = firstOffset // offset after an escaped character
     do escapedOffset += 1 while (escapedOffset < buf.length && buf(escapedOffset) == 'u')
@@ -120,12 +135,12 @@ object CharArrayReader {
     (code.toChar, escapedOffset)
   }
 
-  final def readRawChar(buf: Array[Char], offset: Int): NextChar =
+  final def readRawChar(buf: Array[Char], offset: Int, noUnicodeEscape: Boolean): NextChar =
     if (offset >= buf.length) noNextChar
     else {
-      val (hi, hiEnd) = readUnicodeChar(buf, offset)
+      val (hi, hiEnd) = readUnicodeChar(buf, offset, noUnicodeEscape = noUnicodeEscape)
       if (hiEnd < buf.length && Character.isHighSurrogate(hi)) {
-        val (lo, loEnd) = readUnicodeChar(buf, hiEnd)
+        val (lo, loEnd) = readUnicodeChar(buf, hiEnd, noUnicodeEscape = noUnicodeEscape)
         if (Character.isLowSurrogate(lo)) return NextChar(Character.toCodePoint(hi, lo), loEnd)
       }
       NextChar(hi, hiEnd)
