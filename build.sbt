@@ -103,7 +103,15 @@ lazy val nativeSettings = Seq(
   crossScalaVersions := List(LatestScala213, LatestScala212),
   scalaVersion := LatestScala213,
   bspEnabled := false,
-  nativeConfig ~= { _.withMode(scalanative.build.Mode.releaseFast) }
+  nativeConfig ~= {
+    _.withMode(scalanative.build.Mode.releaseFast)
+    /*
+      .withServiceProviders(Map(
+        "scala.meta.tokenizers.Tokenize" ->
+          Seq("scala.meta.internal.tokenizers.ScalametaTokenizer$AsTokenize$")
+      ))
+     */
+  }
 )
 
 val allPlatforms = Seq(JSPlatform, JVMPlatform, NativePlatform)
