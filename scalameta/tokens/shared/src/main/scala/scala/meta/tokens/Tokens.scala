@@ -1,7 +1,6 @@
 package scala.meta
 package tokens
 
-import org.scalameta.data._
 import org.scalameta.internal.ScalaCompat.IndexedSeqOptimized
 import scala.meta.common._
 import scala.meta.inputs._
@@ -24,11 +23,6 @@ import scala.reflect.ClassTag
 // Tree.tokens and follow-up inspections of the resulting Tokens collection.
 // As a result, I've changed both the constructor of Tokens and the factory method of Tokens to private[meta].
 // We can afford that because we no longer have APIs that take adhoc token streams.
-//
-// NOTE: `start` and `end` are String.substring-style,
-// i.e. `start` is inclusive and `end` is not.
-// Therefore `end` can point to the last token plus one.
-@data
 class Tokens private (private val tokens: Array[Token], private val start: Int, val length: Int)
     extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
   @inline
@@ -36,7 +30,6 @@ class Tokens private (private val tokens: Array[Token], private val start: Int, 
   def apply(idx: Int): Token =
     if (idx >= 0 && idx < length) get(idx)
     else throw new NoSuchElementException(s"token $idx out of $length")
-  def end: Int = start + length // for MIMA compat
 
   def getOpt(idx: Int): Option[Token] = if (idx >= 0 && idx < length) Some(get(idx)) else None
 

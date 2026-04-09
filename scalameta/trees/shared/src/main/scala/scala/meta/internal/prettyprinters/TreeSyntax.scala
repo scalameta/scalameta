@@ -301,7 +301,7 @@ object TreeSyntax {
         m(SimpleExpr1, s(p(SimpleExpr1, t.fun), nosp(withComments(t.argClause)(args))))
       case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targClause))
       case t: Term.ApplyInfix =>
-        val sg = InfixExpr(t)
+        val sg = new InfixExpr(t)
         val args = t.argClause.values match {
           case (arg: Term) :: Nil if (arg match {
                 case _: Lit.Unit => false
@@ -425,7 +425,7 @@ object TreeSyntax {
       case t: Type.ArgClause => nosp(r("[", ", ", "]")(t.values.map(p(Typ, _)): _*))
       case t: Type.Apply => m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
       case t: Type.ApplyInfix =>
-        val sg = InfixTyp(t)
+        val sg = new InfixTyp(t)
         m(sg, s(p(sg, t.lhs), " ", t.op, " ", p(sg, t.rhs)))
       case t: Type.FuncParamClause => t.values match {
           case arg :: Nil if (arg match {
@@ -522,7 +522,7 @@ object TreeSyntax {
       case t: Pat.ArgClause => m(SimplePattern, s("(", r(t.values, ", "), ")"))
       case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
       case t: Pat.ExtractInfix =>
-        val pop = InfixPat(t)
+        val pop = new InfixPat(t)
         val rhs = t.argClause match {
           case Pat.ArgClause(pat :: Nil) if !pat.is[Lit.Unit] => s(p(pop, pat))
           case pats => s(pats)

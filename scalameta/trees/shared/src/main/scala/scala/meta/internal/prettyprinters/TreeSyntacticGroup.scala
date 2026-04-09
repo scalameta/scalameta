@@ -1,8 +1,6 @@
 package scala.meta
 package internal.prettyprinters
 
-import org.scalameta.adt.{branch, leaf, root}
-import org.scalameta.invariants._
 import scala.meta.classifiers._
 
 // NOTE: these groups closely follow non-terminals in the grammar spec from SLS, except for:
@@ -11,130 +9,100 @@ import scala.meta.classifiers._
 // 3) `Pattern2 ::= varid ['@' Pattern3]` has become `Pattern2 ::= varid ['@' AnyPattern3]` due to implementational reasons
 // 4) `Type ::= ... | InfixType [ExistentialClause]` has become `Type ::= ... | AnyInfixType [ExistentialClause]` due to implementational reasons
 // 5) `FunctionArgTypes ::= InfixType | ...` has become `Type ::= AnyInfixType | ...` due to implementational reasons
-@root
-trait TreeSyntacticGroup {
+sealed trait TreeSyntacticGroup {
   def categories: Int
   def precedence: Int
 }
 
 object TreeSyntacticGroup {
-  @branch
   trait InfixGroup extends TreeSyntacticGroup {
     def ai: Member.Infix
   }
 
-  @branch
   trait SimpleGroup extends TreeSyntacticGroup {
     def precedence = 60
   }
 
   // types
   private val typeCategory = 0x1
-  @branch
   trait TypeGroup extends TreeSyntacticGroup {
     def categories: Int = typeCategory
   }
-  @leaf
   object ParamTyp extends TypeGroup {
     def precedence = 0
   }
-  @leaf
   object Typ extends TypeGroup {
     def precedence = 10
   }
-  @leaf
   object AnyInfixTyp extends TypeGroup {
     def precedence = 15
   }
-  @leaf
-  class InfixTyp(ai: Type.ApplyInfix) extends TypeGroup with InfixGroup {
+  class InfixTyp(val ai: Type.ApplyInfix) extends TypeGroup with InfixGroup {
     def precedence = 20
   }
-  @leaf
   object RefineTyp extends TypeGroup {
     def precedence = 30
   }
-  @leaf
   object WithTyp extends TypeGroup {
     def precedence = 35
   }
-  @leaf
   object AnnotTyp extends TypeGroup {
     def precedence = 40
   }
-  @leaf
   object SimpleTyp extends TypeGroup with SimpleGroup
 
   // terms / expressions
   private val exprCategory = 0x2
-  @branch
   trait ExprGroup extends TreeSyntacticGroup {
     def categories: Int = exprCategory
   }
-  @leaf
   object Expr extends ExprGroup {
     def precedence = 0
   }
-  @leaf
   object Expr1 extends ExprGroup {
     def precedence = 10
   }
-  @leaf
   object PostfixExpr extends ExprGroup {
     def precedence = 20
   }
-  @leaf
-  class InfixExpr(ai: Term.ApplyInfix) extends ExprGroup with InfixGroup {
+  class InfixExpr(val ai: Term.ApplyInfix) extends ExprGroup with InfixGroup {
     def precedence = 30
   }
-  @leaf
   object PrefixExpr extends ExprGroup {
     def precedence = 40
   }
-  @leaf
   object SimpleExpr extends ExprGroup {
     def precedence = 50
   }
-  @leaf
   object SimpleExpr1 extends ExprGroup with SimpleGroup
 
   // patterns
   private val patCategory = 0x4
-  @branch
   trait PatGroup extends TreeSyntacticGroup {
     def categories: Int = patCategory
   }
-  @leaf
   object Pattern extends PatGroup {
     def precedence = 0
   }
-  @leaf
   object Pattern1 extends PatGroup {
     def precedence = 10
   }
-  @leaf
   object Pattern2 extends PatGroup {
     def precedence = 20
   }
-  @leaf
   object AnyPattern3 extends PatGroup {
     def precedence = 25
   }
-  @leaf
-  class InfixPat(ai: Pat.ExtractInfix) extends PatGroup with InfixGroup {
+  class InfixPat(val ai: Pat.ExtractInfix) extends PatGroup with InfixGroup {
     def precedence = 30
   }
-  @leaf
   object SimplePattern extends PatGroup with SimpleGroup
 
-  @branch
   trait AllSimpleGroup extends ExprGroup with PatGroup with TypeGroup with SimpleGroup {
     override def categories: Int = typeCategory | exprCategory | patCategory
   }
 
-  @leaf
   object Literal extends AllSimpleGroup
-  @leaf
   object Path extends AllSimpleGroup
 
   def opNeedsParens(
