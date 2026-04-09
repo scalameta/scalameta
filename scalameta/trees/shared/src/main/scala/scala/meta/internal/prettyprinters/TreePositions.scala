@@ -2,29 +2,22 @@ package scala.meta
 package internal
 package prettyprinters
 
-import org.scalameta.adt._
 import scala.meta.inputs._
 import scala.meta.prettyprinters._
 
 import scala.Console._
 import scala.annotation.implicitNotFound
 
-@root
 trait PositionStyle
 object PositionStyle {
-  @leaf
   object BlackAndWhite extends PositionStyle
-  @leaf
   object Colorful extends PositionStyle
   implicit val default: PositionStyle = BlackAndWhite
 }
 
-@root
 trait SliceStyle
 object SliceStyle {
-  @leaf
   object Hide extends SliceStyle
-  @leaf
   object Show extends SliceStyle
   implicit val default: SliceStyle = Hide
 }

@@ -1,13 +1,10 @@
 package scala.meta
 package tokenizers
 
-import org.scalameta.adt._
-import org.scalameta.data._
 import scala.meta.inputs._
 import scala.meta.tokens._
 
-@root
-trait Tokenized {
+sealed trait Tokenized {
 
   def fold[A](fe: Tokenized.Error => A, ft: Tokens => A): A = this match {
     case x: Tokenized.Success => ft(x.tokens)
@@ -24,18 +21,15 @@ trait Tokenized {
 }
 
 object Tokenized {
-  @leaf
-  class Success(tokens: Tokens) extends Tokenized {
+  case class Success(tokens: Tokens) extends Tokenized {
     override def toString = tokens.toString
   }
-  @leaf
-  class Error(pos: Position, message: String, details: Exception) extends Tokenized {
+  case class Error(pos: Position, message: String, details: Exception) extends Tokenized {
     override def toString = details.toString
   }
 }
 
-@data
-class TokenizeException(pos: Position, shortMessage: String)
+case class TokenizeException(pos: Position, shortMessage: String)
     extends InputException(pos, shortMessage) {
   override def toString = getMessage
 }

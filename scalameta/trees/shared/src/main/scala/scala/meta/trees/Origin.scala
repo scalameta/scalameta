@@ -1,14 +1,12 @@
 package scala.meta.trees
 
-import org.scalameta.adt
 import scala.meta.Dialect
 import scala.meta.common._
 import scala.meta.inputs._
 import scala.meta.tokenizers._
 import scala.meta.tokens._
 
-@adt.root
-trait Origin extends Optional {
+sealed trait Origin extends Optional {
   def position: Position
   def dialectOpt: Option[Dialect]
   private[meta] def inputOpt: Option[Input]
@@ -17,7 +15,6 @@ trait Origin extends Optional {
 }
 
 object Origin {
-  @adt.none
   object None extends Origin {
     val position: Position = Position.None
     val dialectOpt: Option[Dialect] = scala.None
@@ -27,13 +24,11 @@ object Origin {
   }
 
   // `begTokenIdx` and `endTokenIdx` are half-open interval of index range
-  @adt.branch
   trait Partial extends Origin {
     val begTokenIdx: Int
     val endTokenIdx: Int
   }
 
-  @adt.branch
   trait ParsedPartial extends Partial {
     val source: ParsedSource
 
@@ -58,15 +53,14 @@ object Origin {
     def tokens: Tokens = allInputTokens().slice(begTokenIdx, endTokenIdx)
   }
 
-  @adt.leaf
-  class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int) extends ParsedPartial {
+  case class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)
+      extends ParsedPartial {
     private[meta] def textOpt: Option[String] = Some(text)
     @inline
     def text: String = position.text
   }
 
-  @adt.leaf
-  class ParsedSpliced(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)
+  case class ParsedSpliced(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)
       extends ParsedPartial {
     private[meta] def textOpt: Option[String] = scala.None
   }
@@ -77,7 +71,6 @@ object Origin {
     def tokens = tokenized.get
   }
 
-  @adt.leaf
   class DialectOnly(dialect: Dialect) extends Origin {
     val position: Position = Position.None
     def dialectOpt: Option[Dialect] = Some(dialect)
@@ -87,6 +80,8 @@ object Origin {
   }
 
   object DialectOnly {
+    def apply(dialect: Dialect): DialectOnly = new DialectOnly(dialect)
+
     implicit def fromDialect(implicit dialect: Dialect): DialectOnly = new DialectOnly(dialect)
 
     private[meta] def fromOrigin(origin: Origin): Origin = origin.dialectOpt
@@ -111,7 +106,6 @@ object Origin {
     }
   }
 
-  @adt.leaf
   class PartialProxy(origin: Partial) extends Origin {
     override val position: Position = Position.None
     override def dialectOpt: Option[Dialect] = origin.dialectOpt
