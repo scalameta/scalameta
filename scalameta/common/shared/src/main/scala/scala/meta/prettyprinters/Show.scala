@@ -3,7 +3,6 @@ package prettyprinters
 
 import org.scalameta.internal.ScalaCompat.EOL
 
-import scala.language.experimental.macros
 import scala.language.implicitConversions
 
 trait Show[-T] {
@@ -183,12 +182,11 @@ private[meta] object Show {
     def apply(input: T): Result = f(input)
   }
 
-  def mkseq(xs: Result*): Result = xs.filter(_ ne None) match {
+  def sequence(xs: Result*): Result = xs.filter(_ ne None) match {
     case Seq() => None
     case Seq(head) => head
     case res => Sequence(res: _*)
   }
-  def sequence[T](xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.sequence
 
   def indent(res: Result): Result = if (res eq None) None else Indent(res)
 
@@ -212,26 +210,30 @@ private[meta] object Show {
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
 
   def meta(data: Any, res: Result): Result = if (res eq None) None else Meta(data, res)
-  def meta[T](data: Any, xs: T*): Result = macro scala.meta.internal.prettyprinters.ShowMacros.meta
+  def meta(data: Any, res: Result*): Result = meta(data, sequence(res: _*))
 
   // wrap if non-empty
-  def wrap(x: Result, suffix: => String): Result = if (x eq None) None else mkseq(x, suffix)
-  def wrap(prefix: => String, x: Result): Result = if (x eq None) None else mkseq(prefix, x)
+  def wrap(x: Result, suffix: => String): Result = if (x eq None) None else sequence(x, suffix)
+  def wrap(prefix: => String, x: Result): Result = if (x eq None) None else sequence(prefix, x)
   def wrap(prefix: => Result, res: Result, suffix: => Result): Result =
-    if (res eq None) None else mkseq(prefix, res, suffix)
+    if (res eq None) None else sequence(prefix, res, suffix)
 
   // wrap if cond, even if value ends up being none
-  def wrap(x: Result, suffix: => String, cond: Boolean): Result = if (cond) mkseq(x, suffix) else x
-  def wrap(prefix: => String, x: Result, cond: Boolean): Result = if (cond) mkseq(prefix, x) else x
+  def wrap(x: Result, suffix: => String, cond: Boolean): Result =
+    if (cond) sequence(x, suffix) else x
+  def wrap(prefix: => String, x: Result, cond: Boolean): Result =
+    if (cond) sequence(prefix, x) else x
   def wrap(prefix: => Result, x: Result, suffix: => Result, cond: Boolean): Result =
-    if (cond) mkseq(prefix, x, suffix) else x
+    if (cond) sequence(prefix, x, suffix) else x
 
   def opt(x: => Result, cond: Boolean): Result = if (cond) x else None
   def opt[T](x: Option[T])(implicit show: Show[T]): Result = x.fold[Result](None)(show.apply)
-  def opt[T: Show](x: Option[T], suffix: => Result): Result = x.fold[Result](None)(mkseq(_, suffix))
-  def opt[T: Show](prefix: => Result, x: Option[T]): Result = x.fold[Result](None)(mkseq(prefix, _))
+  def opt[T: Show](x: Option[T], suffix: => Result): Result = x
+    .fold[Result](None)(sequence(_, suffix))
+  def opt[T: Show](prefix: => Result, x: Option[T]): Result = x
+    .fold[Result](None)(sequence(prefix, _))
   def opt[T: Show](prefix: => Result, x: Option[T], suffix: => Result): Result = x
-    .fold[Result](None)(mkseq(prefix, _, suffix))
+    .fold[Result](None)(sequence(prefix, _, suffix))
 
   def alt(a: Result, b: => Result): Result = if (a ne None) a else b
 
