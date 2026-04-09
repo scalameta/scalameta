@@ -11,7 +11,10 @@ trait Tokenize {
 object Tokenize {
 
   val global = new SingletonReference[Tokenize](UndefinedTokenize)
-  implicit def scalametaTokenize: Tokenize = global.value
+  implicit def scalametaTokenize: Tokenize = {
+    val obj = global.value
+    if (obj ne UndefinedTokenize) obj else PlatformCompat.loadTokenize.getOrElse(obj)
+  }
 
   def getOpt: Option[Tokenize] = {
     val obj = scalametaTokenize

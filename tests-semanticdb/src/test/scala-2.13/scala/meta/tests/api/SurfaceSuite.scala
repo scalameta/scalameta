@@ -183,6 +183,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.quasiquotes.Lift
          |scala.meta.quasiquotes.Unlift
          |scala.meta.tokenizers
+         |scala.meta.tokenizers.PlatformCompat *
          |scala.meta.tokenizers.Tokenize *
          |scala.meta.tokenizers.TokenizeException
          |scala.meta.tokenizers.Tokenized
