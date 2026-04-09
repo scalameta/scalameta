@@ -3,7 +3,7 @@ package internal
 package parsers
 
 import org.scalameta._
-import org.scalameta.invariants._
+import org.scalameta.invariants.InvariantFailedException
 import scala.meta.classifiers._
 import scala.meta.inputs._
 import scala.meta.internal.parsers.Absolutize._
