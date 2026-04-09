@@ -1,7 +1,7 @@
 package scala.meta.internal.javacp
 
 import org.scalameta.collections._
-import org.scalameta.internal.ScalaCompat._
+import scala.meta.internal.SemanticCompat._
 import scala.meta.internal.classpath.{ClasspathIndex, MissingSymbolException}
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._

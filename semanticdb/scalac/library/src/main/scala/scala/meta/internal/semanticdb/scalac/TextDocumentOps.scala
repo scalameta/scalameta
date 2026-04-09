@@ -1,6 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
-import org.scalameta.internal.ScalaCompat._
+import scala.meta.internal.SemanticCompat._
 import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Implicits._
