@@ -43,7 +43,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
       token match {
         case t: Token.HSpace => whitespaceTokenizer.pushHS(t)
         case t: Token.EOL => whitespaceTokenizer.pushVS(t)
-        case t => unreachable(debug(t), "not a whitespace token")
+        case _ =>
       }
       getToken(next) match {
         case nt: Token.Whitespace => emitTokenWhitespace(nt)

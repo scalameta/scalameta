@@ -3,8 +3,6 @@ package internal
 package prettyprinters
 
 import org.scalameta.internal.ScalaCompat.EOL
-import org.scalameta.invariants._
-import org.scalameta.{debug, unreachable}
 import scala.meta.classifiers._
 import scala.meta.inputs.Position
 import scala.meta.internal.tokens.Chars._
@@ -156,21 +154,10 @@ object TreeSyntax {
           })
       }
       def thisLocationAlsoAcceptsPatVars(p: Tree): Boolean = p match {
-        case p: Term.Name => unreachable
-        case _: Term.SelectLike => false
-        case p: Pat.Wildcard => unreachable
-        case p: Pat.Var => false
-        case p: Pat.Repeated => false
-        case p: Pat.Bind => true
-        case p: Pat.Alternative => true
+        case _: Pat.Bind | _: Pat.Alternative | _: Pat.Tuple => true
         case p: Pat.ArgClause => p.values.contains(t)
-        case p: Pat.Tuple => true
-        case p: Pat.Extract => false
         case p: Pat.ExtractInfix => p.lhs eq t
-        case p: Pat.Assign => false
         case p: Pat.Interpolate => p.args.contains(t)
-        case p: Pat.Typed => unreachable
-        case p: Pat => unreachable
         case p: Case => p.pat eq t
         case p: Defn.Val => p.pats.contains(t)
         case p: Defn.Var => p.pats.contains(t)
@@ -221,8 +208,7 @@ object TreeSyntax {
         case Some(p: Pkg.Body) => p.stats.lengthCompare(1) == 0 && isOnlyChildOfOnlyChild(p)
         case Some(p: Pkg) => isOnlyChildOfOnlyChild(p)
         case Some(p: Source) => p.stats.lengthCompare(1) == 0
-        case Some(p) => unreachable(debug(p))
-        case None => true
+        case _ => true
       }
       !isOnlyChildOfOnlyChild(t)
     }
@@ -503,7 +489,6 @@ object TreeSyntax {
       case t: Type.Param =>
         def isVariant(m: Mod) = m.is[Mod.Variant]
         val mods = t.mods.filterNot(isVariant)
-        require(t.mods.length - mods.length <= 1)
         val variance = o(t.mods.find(isVariant))
         val bounds = printBounds(t.bounds, t.vbounds)
         s(w(mods, " "), variance, t.name, t.tparamClause, bounds)

@@ -1,6 +1,5 @@
 package scala.meta.tests.parsers.dotty
 
-import org.scalameta.invariants
 import scala.meta._
 
 import scala.language.implicitConversions
@@ -413,7 +412,7 @@ class MacroSuite extends BaseDottySuite {
         .withAllowSpliceAndQuote(true)
       runTestAssert[Stat](code)(treeWithQuote)
     }
-    locally(intercept[invariants.InvariantFailedException](
+    locally(intercept[IllegalArgumentException](
       dialects.Scala3.withAllowSymbolLiterals(true).withAllowSpliceAndQuote(true)
     ))
 
@@ -445,7 +444,7 @@ class MacroSuite extends BaseDottySuite {
         .withAllowSpliceAndQuote(true)
       runTestAssert[Stat](code)(treeWithQuote)
     }
-    locally(intercept[invariants.InvariantFailedException](
+    locally(intercept[IllegalArgumentException](
       dialects.Scala3.withAllowSymbolLiterals(true).withAllowSpliceAndQuote(true)
     ))
 
