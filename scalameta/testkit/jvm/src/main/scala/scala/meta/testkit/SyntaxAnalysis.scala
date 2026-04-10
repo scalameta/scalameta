@@ -1,6 +1,6 @@
 package scala.meta.testkit
 
-import org.scalameta.collections._
+import org.scalameta.collections.Conversions._
 import scala.meta._
 
 import java.util.concurrent.CopyOnWriteArrayList

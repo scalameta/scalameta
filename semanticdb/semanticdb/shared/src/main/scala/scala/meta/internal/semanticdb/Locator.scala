@@ -1,6 +1,6 @@
 package scala.meta.internal.semanticdb
 
-import org.scalameta.collections._
+import org.scalameta.collections.Conversions._
 
 import java.nio.file._
 import java.util.jar._

@@ -1,6 +1,6 @@
 package scala.meta.internal.bench
 
-import org.scalameta.collections._
+import org.scalameta.collections.Conversions._
 
 import java.nio.file._
 

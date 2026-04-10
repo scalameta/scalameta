@@ -29,3 +29,5 @@ private[collections] trait Conversions {
     def toScala: Iterator[T] = obj.asScala
   }
 }
+
+object Conversions extends Conversions

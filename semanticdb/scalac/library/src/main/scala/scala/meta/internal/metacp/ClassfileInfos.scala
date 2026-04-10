@@ -1,6 +1,6 @@
 package scala.meta.internal.metacp
 
-import org.scalameta.collections._
+import org.scalameta.collections.Conversions._
 import scala.meta.cli._
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.FileIO
