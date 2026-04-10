@@ -196,6 +196,18 @@ lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).set
 ).dependsOn(scala3TreeLiftsMacro)
 
 /* ======================== SCALAMETA ======================== */
+lazy val common2 = crossProject(allPlatforms: _*).in(file("scalameta/common2")).settings(
+  moduleName := "common2",
+  sharedSettings,
+  enableMacros,
+  buildInfoPackage := "scala.meta.internal",
+  buildInfoKeys := Seq[BuildInfoKey](version),
+  crossScalaVersions := EarliestScala2Versions
+).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
+  .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
+  // remove before v4.16.1
+  .settings(mimaPreviousArtifacts := Set.empty)
+
 lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
   moduleName := "common",
   sharedSettings,
@@ -205,11 +217,11 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
   },
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
   enableMacros,
-  buildInfoPackage := "scala.meta.internal",
-  buildInfoKeys := Seq[BuildInfoKey](version),
-  crossScalaVersions := EarliestScala2Versions
+  crossScalaVersions := EarliestScalaVersions
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
-  .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
+  .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings).dependsOn(common2)
+  // remove before v4.16.1
+  .settings(mimaPreviousArtifacts := Set.empty)
 
 lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
   .configureCross(crossPlatformPublishSettings).settings(
@@ -219,13 +231,27 @@ lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
     crossScalaVersions := EarliestScala2Versions
   ).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
+lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).settings(
+  moduleName := "trees2",
+  sharedSettings,
+  crossScalaVersions := EarliestScala2Versions,
+  // NOTE: uncomment this to update ast.md
+  // scalacOptions += "-Xprint:typer",
+  enableHardcoreMacros,
+  mergedModule(projects2 = { base =>
+    val scalameta = base / "scalameta"
+    List("tokenizers2", "tokens2", "dialects2", "inputs2").map(scalameta / _)
+  })
+).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
+  .nativeSettings(nativeSettings).dependsOn(common2, io)
+  // remove before v4.16.1
+  .settings(mimaPreviousArtifacts := Set.empty)
+
 lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
   moduleName := "trees",
   sharedSettings,
   description := "Scalameta abstract syntax trees",
-  crossScalaVersions := EarliestScala2Versions,
-  // NOTE: uncomment this to update ast.md
-  // scalacOptions += "-Xprint:typer",
+  crossScalaVersions := EarliestScalaVersions,
   enableHardcoreMacros,
   libraryDependencies ++= {
     val fastparseVersion =
@@ -235,13 +261,15 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
       else "3.1.1"
     List("com.lihaoyi" %%% "fastparse" % fastparseVersion)
   },
-  mergedModule(projects2 = { base =>
+  mergedModule(projects = { base =>
     val scalameta = base / "scalameta"
-    List("tokenizers", "tokens", "dialects", "inputs").map(scalameta / _)
+    List("tokenizers").map(scalameta / _)
   })
 ) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
-  .configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
-  .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(common, io)
+  .configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
+  .nativeSettings(nativeSettings).dependsOn(common, io, trees2)
+  // remove before v4.16.1
+  .settings(mimaPreviousArtifacts := Set.empty)
 
 lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).settings(
   moduleName := "parsers",
@@ -262,7 +290,7 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
       } else Seq()
     )
   }.taskValue
-).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
+).configureCross(crossPlatformPublishSettings, crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
     commonJsSettings,
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
@@ -306,8 +334,8 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
   description := "Scalameta umbrella module that includes all public APIs",
   crossScalaVersions := EarliestScalaVersions,
   mergedModule(base => List(base / "scalameta" / "contrib"))
-).configureCross(crossPlatformPublishSettings).configureCross(crossPlatformShading)
-  .jsSettings(commonJsSettings).nativeSettings(nativeSettings).dependsOn(parsers)
+).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
+  .nativeSettings(nativeSettings).dependsOn(parsers)
 
 /* ======================== TESTS ======================== */
 lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(
@@ -448,7 +476,10 @@ lazy val testSettings = Def.settings(
     "latestScala213Version" -> LatestScala213,
     "databaseSourcepath" -> (ThisBuild / baseDirectory).value.getAbsolutePath,
     "resourcesDirectory" -> (Test / resourceDirectory).value.getAbsolutePath,
-    "commonJVMClassDirectory" -> (common.jvm / Compile / classDirectory).value.getAbsolutePath,
+    "classDirectories" -> Seq(
+      (common2.jvm / Compile / classDirectory).value.getAbsolutePath,
+      (common.jvm / Compile / classDirectory).value.getAbsolutePath
+    ),
     "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
     "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value
   ),
@@ -713,6 +744,7 @@ lazy val publishableSettings = Def.settings(
 lazy val nonPublishableSettings = Seq(
   publish / skip := true,
   mimaPreviousArtifacts := Set.empty,
+  mimaPreviousClassfiles := Map.empty,
   Compile / packageDoc / publishArtifact := false,
   Compile / doc / sources := Seq.empty,
   publishArtifact := false,

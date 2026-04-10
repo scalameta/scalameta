@@ -18,8 +18,11 @@ final case class Classpath(entries: List[AbsolutePath]) {
 object Classpath {
   def apply(entry: AbsolutePath): Classpath = new Classpath(List(entry))
 
-  def apply(value: String): Classpath =
-    new Classpath(value.split(pathSeparator).map(AbsolutePath(_)).toList)
+  private def parse(value: String) = value.split(pathSeparator).map(AbsolutePath(_)).toList
+
+  def apply(value: String): Classpath = new Classpath(parse(value))
+
+  def apply(value: String*): Classpath = new Classpath(value.flatMap(parse).toList)
 
   def apply(entry: Path): Classpath = Classpath(AbsolutePath(entry))
 }

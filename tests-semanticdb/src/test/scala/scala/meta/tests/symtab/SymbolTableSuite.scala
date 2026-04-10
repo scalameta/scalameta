@@ -9,11 +9,12 @@ import scala.meta.tests.metacp.Library
 import munit.FunSuite
 
 class SymbolTableSuite extends FunSuite {
-  private val classpath = Classpath(BuildInfo.databaseClasspath) ++
-    Classpath(BuildInfo.commonJVMClassDirectory) ++ Library.scalaLibrary.classpath()
+  private val classpath = Library.scalaLibrary.classpath() ++
+    Classpath(BuildInfo.databaseClasspath +: BuildInfo.classDirectories: _*)
+
   private val globalSymtab = GlobalSymbolTable(classpath, includeJdk = true)
 
-  def checkNotExists(symbol: String): Unit = {
+  def checkNotExists(symbol: String)(implicit loc: munit.Location): Unit = {
     val name = if (symbol.isEmpty) "<nosymbol>" else symbol
     test(name) {
       val obtained = globalSymtab.info(symbol)
@@ -21,11 +22,12 @@ class SymbolTableSuite extends FunSuite {
     }
   }
 
-  def check(symbol: String)(f: s.SymbolInformation => Boolean): Unit = test(symbol) {
-    val obtained = globalSymtab.info(symbol)
-    assert(obtained.nonEmpty, symbol)
-    assert(f(obtained.get), obtained.get.toProtoString)
-  }
+  def check(symbol: String)(f: s.SymbolInformation => Boolean)(implicit loc: munit.Location): Unit =
+    test(symbol) {
+      val obtained = globalSymtab.info(symbol)
+      assert(obtained.nonEmpty, symbol)
+      assert(f(obtained.get), obtained.get.toProtoString)
+    }
 
   // jar classpath entries
   check("_empty_/")(_.isPackage)

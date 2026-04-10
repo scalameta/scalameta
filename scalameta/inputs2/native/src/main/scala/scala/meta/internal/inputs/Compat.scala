@@ -1,4 +1,4 @@
-package scala.meta.internal.tokenizers
+package scala.meta.internal.inputs
 
 import scala.collection.mutable
 
