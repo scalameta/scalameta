@@ -736,39 +736,40 @@ object Dialect extends InternalDialect {
     allowTypeLambdas = allowTypeLambdas,
     allowXmlLiterals = allowXmlLiterals
   )
-  private lazy val standardPairs = Seq[sourcecode.Text[Dialect]](
-    Dotty,
-    Scala3Future,
-    Scala3,
-    Scala30,
-    Scala31,
-    Scala32,
-    Scala33,
-    Scala34,
-    Scala35,
-    Scala36,
-    Scala37,
-    Scala38,
-    Paradise211,
-    Paradise212,
-    ParadiseTypelevel211,
-    ParadiseTypelevel212,
-    Sbt0136,
-    Sbt0137,
-    Sbt1,
-    Scala210,
-    Scala211,
-    Scala212,
-    Scala213,
-    Scala213Source3,
-    Scala212Source3,
-    Typelevel211,
-    Typelevel212
+
+  private[meta] lazy val standards: Map[String, Dialect] = Map(
+    "Dotty" -> Dotty,
+    "Scala3Future" -> Scala3Future,
+    "Scala3" -> Scala3,
+    "Scala30" -> Scala30,
+    "Scala31" -> Scala31,
+    "Scala32" -> Scala32,
+    "Scala33" -> Scala33,
+    "Scala34" -> Scala34,
+    "Scala35" -> Scala35,
+    "Scala36" -> Scala36,
+    "Scala37" -> Scala37,
+    "Scala38" -> Scala38,
+    "Paradise211" -> Paradise211,
+    "Paradise212" -> Paradise212,
+    "ParadiseTypelevel211" -> ParadiseTypelevel211,
+    "ParadiseTypelevel212" -> ParadiseTypelevel212,
+    "Sbt0136" -> Sbt0136,
+    "Sbt0137" -> Sbt0137,
+    "Sbt1" -> Sbt1,
+    "Scala210" -> Scala210,
+    "Scala211" -> Scala211,
+    "Scala212" -> Scala212,
+    "Scala213" -> Scala213,
+    "Scala213Source3" -> Scala213Source3,
+    "Scala212Source3" -> Scala212Source3,
+    "Typelevel211" -> Typelevel211,
+    "Typelevel212" -> Typelevel212
   )
-  private[meta] lazy val standards: Map[String, Dialect] = standardPairs
-    .map(x => x.source -> x.value).toMap
-  private[meta] lazy val inverseStandards: Map[Dialect, String] = standardPairs
-    .map(x => x.value -> x.source).toMap
+  private[meta] lazy val inverseStandards: Map[Dialect, String] = standards.view.map(_.swap)
+    .groupBy(_._1).map { case (k, v) =>
+      k -> v.map(_._2).toSeq.sorted(Ordering.String.reverse).head
+    }
 
   private[meta] sealed trait UnquoteType {
     // Are multiline programs allowed?
