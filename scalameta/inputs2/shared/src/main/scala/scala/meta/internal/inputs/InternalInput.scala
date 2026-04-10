@@ -3,7 +3,6 @@ package inputs
 
 import scala.meta.Dialect
 import scala.meta.inputs._
-import scala.meta.internal.tokenizers.Compat
 import scala.meta.tokens.Tokens
 
 import scala.collection.mutable
