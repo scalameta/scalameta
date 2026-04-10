@@ -1,6 +1,6 @@
 package scala.meta.internal
 
-import org.scalameta.collections._
+import org.scalameta.collections.Conversions._
 import scala.meta.internal.classpath._
 import scala.meta.internal.scalacp.{ScalaSigAttribute, ScalaSigNode}
 import scala.meta.io.AbsolutePath

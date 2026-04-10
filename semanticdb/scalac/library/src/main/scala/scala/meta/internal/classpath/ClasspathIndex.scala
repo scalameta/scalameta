@@ -1,6 +1,6 @@
 package scala.meta.internal.classpath
 
-import org.scalameta.collections._
+import org.scalameta.collections.Conversions._
 import scala.meta.internal.io.PathIO
 import scala.meta.io.{AbsolutePath, Classpath}
 

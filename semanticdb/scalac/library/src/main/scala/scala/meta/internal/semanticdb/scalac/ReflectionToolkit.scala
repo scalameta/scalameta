@@ -1,6 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
-import org.scalameta.collections._
+import org.scalameta.collections.Conversions._
 
 import scala.reflect.ClassTag
 import scala.reflect.macros.Attachments
