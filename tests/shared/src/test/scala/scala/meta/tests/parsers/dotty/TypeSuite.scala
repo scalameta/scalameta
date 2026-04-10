@@ -526,6 +526,23 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
 
+  // https://github.com/scalameta/scalameta/issues/4561
+  test("into-enum") {
+    implicit val dialect: Dialect = dialects.Scala3Future
+    val code =
+      """|into enum Foo:
+         |  case Bar
+         |""".stripMargin
+    val tree = Defn.Enum(
+      List(Mod.Into()),
+      pname("Foo"),
+      Nil,
+      ctor,
+      tpl(Defn.EnumCase(Nil, tname("Bar"), Nil, ctor, Nil))
+    )
+    runTestAssert[Stat](code, assertLayout = Some("into enum Foo { case Bar }"))(tree)
+  }
+
   test("into-object") {
     implicit val dialect: Dialect = dialects.Scala3Future
     val code = "into object Test"

@@ -124,7 +124,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def nextIsClassOrObjectorOpaqueType: Boolean = {
       val next = getNextIndex(index)
       tokens(next) match {
-        case _: KwClass | _: KwType | _: KwTrait => true
+        case _: KwClass | _: KwType | _: KwTrait | _: KwEnum => true
         case otherwise => isModifier(next)
       }
     }
