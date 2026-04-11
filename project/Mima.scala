@@ -72,6 +72,7 @@ object Mima {
     exclude[DirectMissingMethodProblem]("trees.Origin#*.*"),
 
     exclude[DirectMissingMethodProblem]("tokenizers.TokenizerOptions.*"),
+    exclude[IncompatibleResultTypeProblem]("tokenizers.TokenizerOptions.<init>*"),
     exclude[IncompatibleResultTypeProblem]("tokenizers.TokenizerOptions.global"),
     exclude[DirectMissingMethodProblem]("parsers.ParserOptions.*"),
     exclude[IncompatibleResultTypeProblem]("parsers.ParserOptions.global"),

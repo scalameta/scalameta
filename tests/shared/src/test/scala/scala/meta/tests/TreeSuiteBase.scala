@@ -3,6 +3,7 @@ package scala.meta.tests
 import org.scalameta.internal.ScalaCompat
 import scala.meta._
 import scala.meta.internal.inputs._
+import scala.meta.internal.tokenizers.ScalametaTokenizer
 import scala.meta.tests.parsers.CommonTrees
 import scala.meta.tokenizers.{Tokenize, TokenizerOptions}
 import scala.meta.trees.Origin
@@ -174,8 +175,9 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       conv: TestHelpers.Tokenize
   ): Unit = assertTokenizedAsSyntax(code, expected, dialect)
 
-  protected def tokenize(code: String)(implicit dialect: Dialect): Tokens = Tokenize
-    .scalametaTokenize.apply(Input.String(code).withTokenizerOptions, dialect).get
+  protected def tokenize(code: String)(implicit dialect: Dialect): Tokens = tokenizerOptions
+    .tokenize.orElse(Tokenize.getOpt).getOrElse(ScalametaTokenizer.AsTokenize)
+    .apply(Input.String(code).withTokenizerOptions, dialect).get
 
   /**
    * Position tests assert that the position of tree nodes enclose the expected source range.

@@ -324,7 +324,8 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
 }
 
 object ScalametaTokenizer {
-  def toTokenize: Tokenize = new Tokenize {
+
+  object AsTokenize extends Tokenize {
     def apply(input: Input, dialect: Dialect): Tokenized = {
       def tokenize = {
         implicit val options: TokenizerOptions = input.tokenizerOptions
@@ -336,4 +337,7 @@ object ScalametaTokenizer {
       }
     }
   }
+
+  def register(): Unit = Tokenize.global.value = AsTokenize
+
 }

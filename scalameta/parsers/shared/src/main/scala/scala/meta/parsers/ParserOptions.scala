@@ -1,6 +1,7 @@
 package scala.meta.parsers
 
 import scala.meta.internal.SingletonReference
+import scala.meta.internal.tokenizers.ScalametaTokenizer
 
 final class ParserOptions private[meta] (
     // options which control parsing
@@ -13,6 +14,8 @@ final class ParserOptions private[meta] (
 }
 
 object ParserOptions {
+  ScalametaTokenizer.register()
+
   val default: ParserOptions = new ParserOptions()
   val global: SingletonReference[ParserOptions] = new SingletonReference(default)
 
