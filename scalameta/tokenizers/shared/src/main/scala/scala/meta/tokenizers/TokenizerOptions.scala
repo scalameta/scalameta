@@ -1,6 +1,6 @@
 package scala.meta.tokenizers
 
-import scala.util.DynamicVariable
+import scala.meta.internal.SingletonReference
 
 final class TokenizerOptions private[meta] (
     // options which control how tokens are emitted
@@ -14,7 +14,7 @@ final class TokenizerOptions private[meta] (
 
 object TokenizerOptions {
   val default: TokenizerOptions = new TokenizerOptions()
-  val global: DynamicVariable[TokenizerOptions] = new DynamicVariable(default)
+  val global: SingletonReference[TokenizerOptions] = new SingletonReference(default)
 
   implicit def implicitTokenizerOptions: TokenizerOptions = global.value
 }

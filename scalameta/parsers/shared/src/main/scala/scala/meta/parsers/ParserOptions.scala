@@ -1,6 +1,6 @@
 package scala.meta.parsers
 
-import scala.util.DynamicVariable
+import scala.meta.internal.SingletonReference
 
 final class ParserOptions private[meta] (
     // options which control parsing
@@ -14,7 +14,7 @@ final class ParserOptions private[meta] (
 
 object ParserOptions {
   val default: ParserOptions = new ParserOptions()
-  val global: DynamicVariable[ParserOptions] = new DynamicVariable(default)
+  val global: SingletonReference[ParserOptions] = new SingletonReference(default)
 
   implicit def implicitParseOptions: ParserOptions = global.value
 }
