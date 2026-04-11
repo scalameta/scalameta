@@ -5,8 +5,6 @@ package object tokenizers {
   type Offset = Int
   type LegacyToken = Int
 
-  class UnexpectedInputEndException(val ltd: LegacyTokenData) extends Exception
-
   private val baseKeywords = Set(
     "abstract",
     "case",
