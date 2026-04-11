@@ -71,6 +71,9 @@ object Mima {
     exclude[MissingClassProblem]("trees.Origin$*"),
     exclude[DirectMissingMethodProblem]("trees.Origin#*.*"),
 
+    exclude[DirectMissingMethodProblem]("tokenizers.TokenizerOptions.*"),
+    exclude[DirectMissingMethodProblem]("parsers.ParserOptions.*"),
+
     exclude[MissingTypesProblem]("package$"),
     exclude[DirectMissingMethodProblem]("package.*"),
     exclude[IncompatibleResultTypeProblem]("package.*"),
