@@ -66,7 +66,7 @@ object Origin {
   }
 
   class ParsedSource(val input: Input)(implicit val dialect: Dialect) {
-    lazy val tokenized = implicitly[Tokenize].apply(input, dialect)
+    lazy val tokenized = input.tokenizerOptions.getTokenize.apply(input, dialect)
     @inline
     def tokens = tokenized.get
   }
