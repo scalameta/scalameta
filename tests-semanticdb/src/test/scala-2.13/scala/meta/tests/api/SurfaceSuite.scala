@@ -175,6 +175,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.parsers.Parsed.Success *
          |scala.meta.parsers.ParserOptions *
          |scala.meta.prettyprinters
+         |scala.meta.prettyprinters.Reprint *
          |scala.meta.prettyprinters.Show *
          |scala.meta.prettyprinters.Structure
          |scala.meta.prettyprinters.Syntax
@@ -272,6 +273,7 @@ class SurfaceSuite extends FunSuite {
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAny(implicit XtensionClassifiable.this.C[U1], XtensionClassifiable.this.C[U2], XtensionClassifiable.this.C[U3], XtensionClassifiable.this.C[U4]): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isAnyOf(XtensionClassifiable.this.C[_]*): Boolean
          |* T(implicit scala.meta.classifiers.Classifiable[T]).isNot(implicit XtensionClassifiable.this.C[U]): Boolean
+         |* T(implicit scala.meta.prettyprinters.Reprint[T]).reprint: String
          |* T(implicit scala.meta.prettyprinters.Structure[T]).structure: String
          |* T(implicit scala.meta.prettyprinters.Syntax[T]).syntax: String
          |* T.parse(implicit scala.meta.common.Convert[T,scala.meta.inputs.Input], scala.meta.parsers.Parse[U], scala.meta.Dialect): scala.meta.parsers.Parsed[U]

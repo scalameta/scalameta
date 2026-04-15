@@ -44,6 +44,8 @@ object Tree extends InternalTreeXtensions {
   implicit def showStructure[T <: Tree]: Structure[T] = TreeStructure.apply[T]
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] =
     Syntax[T](TreeSyntax.syntax)
+  implicit def showReprint[T <: Tree](implicit dialect: Dialect): Reprint[T] =
+    Reprint[T](TreeSyntax.reprint)
 
   @branch
   /** brace- or indent-delimited container of statements */
