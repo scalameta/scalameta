@@ -2,6 +2,7 @@ package scala.meta
 
 import org.scalameta.invariants._
 import scala.meta.classifiers._
+import scala.meta.internal.prettyprinters._
 import scala.meta.internal.trees.Metadata.{newField, replacedField, replacesFields}
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
@@ -40,10 +41,9 @@ object Tree extends InternalTreeXtensions {
   }
 
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
-  implicit def showStructure[T <: Tree]: Structure[T] = internal.prettyprinters.TreeStructure
-    .apply[T]
-  implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] = internal.prettyprinters
-    .TreeSyntax.apply[T](dialect)
+  implicit def showStructure[T <: Tree]: Structure[T] = TreeStructure.apply[T]
+  implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] =
+    Syntax[T](TreeSyntax.syntax)
 
   @branch
   /** brace- or indent-delimited container of statements */
