@@ -975,7 +975,15 @@ object TreeSyntax {
       case _ => reprint(x)
     }
 
-  def original(x: Tree): Show.Result = s(x.pos.text)
+  def original(x: Tree): Show.Result = w(
+    printComments(x, _.begComment, tc => w(n(), tc.text, n())),
+    x.pos.text,
+    printComments(x, _.endComment, tc => w(" ", tc.text, n())),
+    x.origin match {
+      case o: Origin.ParsedPartial => o.begTokenIdx > 0 && !x.is[Source]
+      case _ => true
+    }
+  )
   def reprint(x: Tree)(implicit dialect: Dialect): Show.Result = (new SyntaxInstances).reprint(x)
 
   private def printComments(
