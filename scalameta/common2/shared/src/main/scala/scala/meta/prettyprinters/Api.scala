@@ -10,6 +10,9 @@ private[meta] trait Api {
   implicit class XtensionSyntax[T](x: T)(implicit style: Syntax[T]) {
     def syntax: String = style(x).toString
   }
+  implicit class XtensionReprint[T](x: T)(implicit style: Reprint[T]) {
+    def reprint: String = style(x).toString
+  }
   implicit class XtensionStructure[T](x: T)(implicit style: Structure[T]) {
     def structure: String = style(x).toString
   }
