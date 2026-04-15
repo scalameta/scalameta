@@ -129,7 +129,7 @@ class ImportSuite extends ParseSuite {
               endComment = Seq("// c2")
             )
             checkTree(head, layout)(tree)
-            assertNoDiff(head.original, "import a.b.{c => d}")
+            assertNoDiff(head.original, layout)
           case _ => fail(s"Expected one stat: ${obtained.structure}")
         }
     }
@@ -159,7 +159,7 @@ class ImportSuite extends ParseSuite {
                       Seq("// This comment is ambiguous and not linked to a specific import")
                   )
                   checkTree(one, layout)(tree)
-                  assertNoDiff(one.original, "import y.Y")
+                  assertNoDiff(one.original, layout)
                 }
                 locally {
                   val layout =
