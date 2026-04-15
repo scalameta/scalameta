@@ -520,7 +520,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 case _ => false
               }) idx += 1
             asComments(endBuf)
-          } else maxChild.endComment
+          } else if (bodyIsBlock) None // let the child own it
+          else maxChild.endComment
 
         (begComment, endComment)
       }

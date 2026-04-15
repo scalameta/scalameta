@@ -121,11 +121,12 @@ class ImportSuite extends ParseSuite {
           case head :: Nil =>
             val layout =
               """|// c1
-                 |import a.b.{c => d}
+                 |import a.b.{c => d} // c2
                  |""".stripMargin
             val tree = Import.createWithComments(
               List(Importer(tselect("a", "b"), List(Importee.Rename(meta.Name("c"), meta.Name("d"))))),
-              begComment = Seq("// c1")
+              begComment = Seq("// c1"),
+              endComment = Seq("// c2")
             )
             checkTree(head, layout)(tree)
             assertNoDiff(head.original, "import a.b.{c => d}")
