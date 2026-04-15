@@ -236,7 +236,7 @@ object TreeSyntax {
     }
 
     // Branches
-    implicit def syntaxTree[T <: Tree]: Syntax[T] = AsTreeSyntax {
+    private def showTree(t: Tree): Show.Result = t match {
       // Bottom
       case t: Quasi =>
         implicit val unquoteDialect: Dialect = dialect.unquoteParentDialect
@@ -959,26 +959,24 @@ object TreeSyntax {
 
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 
-    private def AsTreeSyntax[T <: Tree](f: T => Show.Result): Syntax[T] = new Syntax[T] {
-      def apply(tree: T): Show.Result = withComments(tree)(f(tree))
-    }
+    def reprint(tree: Tree): Show.Result = withComments(tree)(showTree(tree))
+
+    implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax[T](reprint)
 
   }
 
-  def apply[T <: Tree](implicit dialect: Dialect): Syntax[T] =
+  def syntax(x: Tree)(implicit dialect: Dialect): Show.Result =
     // NOTE: This is the current state of the art of smart prettyprinting.
     // If we prettyprint a tree that's just been parsed with the same dialect,
     // then we retain formatting. Otherwise, we don't, even in the tiniest.
     // I expect to improve on this in the nearest future, because we had it much better until recently.
-    Syntax((x: T) =>
-      x.origin match {
-        case o: Origin.Parsed if o.dialect.isEquivalentTo(dialect) => s(o.text)
-        case _ => reprint(x)
-      }
-    )
+    x.origin match {
+      case o: Origin.Parsed if o.dialect.isEquivalentTo(dialect) => original(x)
+      case _ => reprint(x)
+    }
 
-  def reprint[T <: Tree](x: T)(implicit dialect: Dialect): Show.Result = (new SyntaxInstances)
-    .syntaxTree[T].apply(x)
+  def original(x: Tree): Show.Result = s(x.pos.text)
+  def reprint(x: Tree)(implicit dialect: Dialect): Show.Result = (new SyntaxInstances).reprint(x)
 
   private def printComments(
       tree: Tree,
