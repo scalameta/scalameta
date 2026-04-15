@@ -2,7 +2,6 @@ package scala.meta.tests
 package parsers
 
 import scala.meta.Name.{Anonymous, Indeterminate}
-import scala.meta.parsers.ParseException
 import scala.meta.{Name => _, _}
 
 class ImportSuite extends ParseSuite {
@@ -110,4 +109,29 @@ class ImportSuite extends ParseSuite {
       templStat("import a.b.c.{ given }")
     }(expectedWithoutWildcard)
   }
+
+  test("import with comments") {
+    val code =
+      """|// c1
+         |import a.b.{c => d} // c2
+         |""".stripMargin
+    code.parse[Source] match {
+      case x: Parsed.Error => fail(x.message)
+      case Parsed.Success(obtained) => obtained.stats match {
+          case head :: Nil =>
+            val layout =
+              """|// c1
+                 |import a.b.{c => d}
+                 |""".stripMargin
+            val tree = Import.createWithComments(
+              List(Importer(tselect("a", "b"), List(Importee.Rename(meta.Name("c"), meta.Name("d"))))),
+              begComment = Seq("// c1")
+            )
+            checkTree(head, layout)(tree)
+            assertNoDiff(head.original, "import a.b.{c => d}")
+          case _ => fail(s"Expected one stat: ${obtained.structure}")
+        }
+    }
+  }
+
 }
