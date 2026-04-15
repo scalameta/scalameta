@@ -6,8 +6,5 @@ import scala.meta.prettyprinters._
 import scala.meta.tokens._
 
 object TokensSyntax {
-  import Show.{repeat => r}
-
-  def apply[T <: Tokens](dialect: Dialect): Syntax[T] =
-    Syntax(xs => r(xs.toList.map(x => TokenSyntax.apply[Token](dialect).apply(x)), ""))
+  def apply[T <: Tokens]: Syntax[T] = Syntax(xs => Show.repeat(xs.map(TokenSyntax.show), ""))
 }
