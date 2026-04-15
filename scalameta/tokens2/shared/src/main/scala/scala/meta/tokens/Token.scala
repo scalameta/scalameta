@@ -353,8 +353,7 @@ object Token {
 
   implicit def classifiable[T <: Token]: Classifiable[T] = null
   implicit def showStructure[T <: Token]: Structure[T] = TokenStructure.apply[T]
-  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax
-    .apply[T](dialect)
+  implicit def showSyntax[T <: Token](implicit dialect: Dialect): Syntax[T] = TokenSyntax.apply[T]
 
   val pureFunctionArrow = "->"
   val pureContextFunctionArrow = "?->"

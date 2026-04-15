@@ -6,5 +6,6 @@ import scala.meta.prettyprinters._
 import scala.meta.tokens._
 
 object TokenSyntax {
-  def apply[T <: Token](dialect: Dialect): Syntax[T] = Syntax(x => Show.asis(x.text))
+  private[meta] def show[T <: Token](token: T): Show.Result = Show.asis(token.text)
+  def apply[T <: Token]: Syntax[T] = Syntax(show)
 }

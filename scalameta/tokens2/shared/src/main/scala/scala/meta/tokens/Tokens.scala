@@ -223,8 +223,7 @@ object Tokens {
   implicit val listTokenToInput: Convert[List[Token], Input] =
     Convert(tokens => convertTokensToInput(Tokens(tokens.toArray)))
   implicit def showStructure[T <: Tokens]: Structure[T] = TokensStructure.apply[T]
-  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] = TokensSyntax
-    .apply[T](dialect)
+  implicit def showSyntax[T <: Tokens](implicit dialect: Dialect): Syntax[T] = TokensSyntax.apply[T]
 
   private[meta] def skipFullIf(
       tokens: Array[Token],

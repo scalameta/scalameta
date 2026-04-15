@@ -5,8 +5,5 @@ package prettyprinters
 import scala.meta.tokens.Token
 
 object TokenToString {
-  def apply(token: Token) = {
-    val prettyprinter = TokenSyntax[Token](token.dialect)
-    prettyprinter(token).toString
-  }
+  def apply(token: Token): String = TokenSyntax.show(token).toString
 }
