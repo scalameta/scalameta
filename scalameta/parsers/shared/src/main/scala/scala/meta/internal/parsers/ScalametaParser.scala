@@ -119,10 +119,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val builder = List.newBuilder[Source]
 
     doWhile(builder += parseRuleAfterBOF(parseSourceImpl()))(currToken match {
-      case t: Token.EOF if t.end < input.chars.length =>
+      case t: EOF if t.end < input.chars.length =>
         in.next()
-        accept[Token.At]
-        accept[Token.BOF]
+        accept[At]
+        accept[BOF]
         true
       case _ => false
     })
@@ -162,7 +162,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def next() = {
     in.next()
     currToken match {
-      case t: Token.Invalid => reporter.syntaxError(t.error, at = t)
+      case t: Invalid => reporter.syntaxError(t.error, at = t)
       case _ =>
     }
   }
@@ -727,7 +727,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   private object InfixTypeIdent {
-    def unapply(tok: Token.Ident): Boolean = tok.text match {
+    def unapply(tok: Ident): Boolean = tok.text match {
       case soft.KwPureFunctionLikeArrow() => false
       case "*" => // we assume that this is a type specification for a vararg parameter
         peekToken match {
@@ -1066,15 +1066,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     private def typeCaptures(needCaret: Boolean, allowCaptures: Boolean): Option[Type.Captures] =
       if (allowCaptures && dialect.allowCaptureChecking) {
         def ifCaret[A](thenPart: => A, elsePart: => A): A = currToken match {
-          case t: Token.Ident if t.text == "^" =>
+          case t: Ident if t.text == "^" =>
             next()
             thenPart
           case _ => elsePart
         }
         def capturesOnBrace(): Option[Type.Captures] =
-          if (!acceptOpt[Token.LeftBrace]) None
+          if (!acceptOpt[LeftBrace]) None
           else Some(autoEndPos(prevIndex)(Type.CapturesSet(
-            if (acceptOpt[Token.RightBrace]) Nil
+            if (acceptOpt[RightBrace]) Nil
             else inBracesAfterOpen(commaSeparated(path() match {
               case x: Term.Name => ifCaret(autoEndPos(x)(Term.CapSetName(x.value)), x)
               case x => x
@@ -1308,7 +1308,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           else syntaxError(s"$dialect doesn't support literal types", at = path())
         case Unary(unary) if dialect.allowLiteralTypes && tryAhead[Literal] =>
           autoEndPos(prevIndex)(rawLiteral(unary))
-        case t: Token.Ident if !inMatchType =>
+        case t: Ident if !inMatchType =>
           t.text match {
             case soft.QuestionMarkAsTypeWildcard() => wildcardType()
             case soft.StarAsTypePlaceholder(value) =>
@@ -2744,7 +2744,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
     doWhile {
       enums += enumerator(isFirst = enums.isEmpty)
-      while (at[Token.KwIf]) enums += enumeratorGuardOnIf()
+      while (at[KwIf]) enums += enumeratorGuardOnIf()
     }(
       if (StatSep(currToken)) nextIf(notEnumsEnd(peekToken))
       else isImplicitStatSep() && notEnumsEnd(currToken)
@@ -3395,7 +3395,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _ =>
         val name = currToken match {
           case t: Ident => peekToken match {
-              case p: Token.Ident if dialect.allowCaptureChecking && p.text == "^" =>
+              case p: Ident if dialect.allowCaptureChecking && p.text == "^" =>
                 autoPos {
                   nextTwice()
                   Type.CapSetName(t.value)
@@ -4700,7 +4700,7 @@ object ScalametaParser {
   }
 
   private object TParamVariant {
-    def unapply(ident: Token.Ident): Option[Mod.Variant] = TParamVariantStr.unapply(ident.text)
+    def unapply(ident: Ident): Option[Mod.Variant] = TParamVariantStr.unapply(ident.text)
   }
 
   private case class GivenSig(
