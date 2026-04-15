@@ -248,4 +248,30 @@ object Tokens {
     i
   }
 
+  /**
+   * Merges into sorted sequence of non-overlapping token slices, merging overlapping segments.
+   */
+  def merge(tokens: Tokens*): Seq[Tokens] = tokens.sortBy(_.start) match {
+    case first +: tail if tail.nonEmpty =>
+      var head = first
+      var lastend = first.end
+      val out = Seq.newBuilder[Tokens]
+      def flush(): Unit = out += {
+        if (head.end == lastend) head else Tokens(head.tokens, head.start, lastend)
+      }
+      tail.foreach { x =>
+        val nextend = x.end
+        if (lastend < nextend) {
+          if (skipFullIf(x.tokens, _.isInstanceOf[Token.Whitespace], lastend, x.start) < x.start) {
+            flush()
+            head = x
+          }
+          lastend = nextend
+        }
+      }
+      flush()
+      out.result()
+    case _ => tokens
+  }
+
 }

@@ -2,6 +2,7 @@ package scala.meta.tests
 package trees
 
 import scala.meta._
+import scala.meta.internal.inputs._
 
 class TokensSuite extends TreeSuiteBase {
 
@@ -60,4 +61,107 @@ class TokensSuite extends TreeSuiteBase {
     val tree = dialects.Scala211("{ val inline = 42 }").parse[Term].get
     assertEquals(tree.syntax, "{ val inline = 42 }")
   }
+
+  test("merge") {
+    """|// cl1
+       |import p1.a1 // ct1
+       |
+       |// cl2.1
+       |// cl2.2
+       |import p2.a2 /* ct2.1 */ /* ct2.2 */
+       |
+       |
+       |   import p3.a3 // ct3
+       |// ct4
+       |""".stripMargin.parse[Source] match {
+      case x: Parsed.Error => fail(s"Failed to parse: ${x.pos.formatMessage("error", x.message)}")
+      case Parsed.Success(tree) if tree.stats.lengthCompare(3) != 0 =>
+        fail(s"Expected 3 stats: ${tree.structure}")
+      case Parsed.Success(tree) =>
+        def getTokens(stats: Tree*): IndexedSeq[Tokens] = {
+          val res = IndexedSeq.newBuilder[Tokens]
+          stats.foreach { s =>
+            res += s.tokens
+            s.begComment.foreach(res += _.tokens)
+            s.endComment.foreach(res += _.tokens)
+          }
+          res.result()
+        }
+        val stats = tree.stats.toIndexedSeq
+        val merged3 =
+          """|// cl1
+             |import p1.a1 // ct1
+             |
+             |// cl2.1
+             |// cl2.2
+             |import p2.a2 /* ct2.1 */ /* ct2.2 */
+             |
+             |
+             |   import p3.a3 // ct3
+             |""".stripMargin
+        getTokens(stats: _*).permutations.foreach(x =>
+          Tokens.merge(x: _*) match {
+            case Seq(one) =>
+              assertEquals((1, 37), (one.start, one.length))
+              assertNoDiff(one.syntax, merged3)
+            case x => fail(x.mkString(s"Expected one range, got ${x.length}: [\n", "\n], [\n", "\n]"))
+          }
+        )
+        getTokens(stats(2), stats(1)).permutations.foreach { x =>
+          Tokens.merge(x: _*) match {
+            case Seq(one) =>
+              assertEquals((12, 26), (one.start, one.length))
+              assertNoDiff(
+                one.syntax,
+                """|// cl2.1
+                   |// cl2.2
+                   |import p2.a2 /* ct2.1 */ /* ct2.2 */
+                   |
+                   |
+                   |   import p3.a3 // ct3
+                   |""".stripMargin
+              )
+            case x => fail(x.mkString(s"Expected one range, got ${x.length}: [\n", "\n], [\n", "\n]"))
+          }
+        }
+        getTokens(stats(0), stats(1)).permutations.foreach { x =>
+          Tokens.merge(x: _*) match {
+            case Seq(one) =>
+              assertEquals((1, 24), (one.start, one.length))
+              assertNoDiff(
+                one.syntax,
+                """|// cl1
+                   |import p1.a1 // ct1
+                   |
+                   |// cl2.1
+                   |// cl2.2
+                   |import p2.a2 /* ct2.1 */ /* ct2.2 */
+                   |""".stripMargin
+              )
+            case x => fail(x.mkString(s"Expected one range, got ${x.length}: [\n", "\n], [\n", "\n]"))
+          }
+        }
+        getTokens(stats(0), stats(2)).permutations.foreach { x =>
+          Tokens.merge(x: _*) match {
+            case Seq(one, two) =>
+              assertEquals((1, 9), (one.start, one.length))
+              assertNoDiff(
+                one.syntax,
+                """|// cl1
+                   |import p1.a1 // ct1
+                   |""".stripMargin
+              )
+              assertEquals((31, 7), (two.start, two.length))
+              assertNoDiff(
+                two.syntax,
+                """|import p3.a3 // ct3
+                   |""".stripMargin
+              )
+            case x =>
+              fail(x.mkString(s"Expected two ranges, got ${x.length}: [\n", "\n], [\n", "\n]"))
+          }
+        }
+    }
+  }
+
 }
