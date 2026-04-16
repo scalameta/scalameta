@@ -56,7 +56,7 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
     val lo = 0.max(from.min(length))
     val len = 0.max(until.min(length) - lo)
     val dst = new Array[Token](len)
-    System.arraycopy(tokens, lo, dst, 0, len)
+    System.arraycopy(tokens, start + lo, dst, 0, len)
     dst
   }
 

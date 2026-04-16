@@ -22,10 +22,10 @@ class TokensSuite extends TreeSuiteBase {
     assertEquals(9, tokens.length)
     val slice17 = tokens.slice(1, 7)
     assertEquals(slice17.syntax, "foo + bar ")
-    assertEquals(Tokens(slice17.arraySlice(1, 4)).syntax, "foo +")
+    assertEquals(Tokens(slice17.arraySlice(1, 4)).syntax, " + ")
     val slice510 = tokens.slice(5, 10)
     assertEquals(slice510.syntax, "bar // baz")
-    assertEquals(Tokens(slice510.arraySlice(1, 4)).syntax, "foo +")
+    assertEquals(Tokens(slice510.arraySlice(1, 4)).syntax, " // baz")
   }
 
   test("Tree.tokens: manual") {
