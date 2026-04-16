@@ -6,7 +6,7 @@ import scala.meta.inputs.Input
 import scala.meta.tokens._
 
 object TokensToString {
-  def apply(tokens: Tokens) = {
+  def apply(tokens: Iterable[Token]) = {
     val sb = new StringBuilder
     tokens.foreach(t => sb.append(t.text))
     sb.result()

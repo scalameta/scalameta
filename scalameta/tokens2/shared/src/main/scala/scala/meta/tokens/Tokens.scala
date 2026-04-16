@@ -23,8 +23,9 @@ import scala.reflect.ClassTag
 // Tree.tokens and follow-up inspections of the resulting Tokens collection.
 // As a result, I've changed both the constructor of Tokens and the factory method of Tokens to private[meta].
 // We can afford that because we no longer have APIs that take adhoc token streams.
-class Tokens private (private val tokens: Array[Token], private val start: Int, val length: Int)
+class Tokens private (private[meta] val tokens: Array[Token], val start: Int, val length: Int)
     extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
+  def end: Int = start + length
   @inline
   private def get(idx: Int): Token = tokens(start + idx)
   def apply(idx: Int): Token =
