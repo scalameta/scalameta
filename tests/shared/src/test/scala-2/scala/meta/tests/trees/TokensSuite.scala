@@ -16,7 +16,15 @@ class TokensSuite extends TreeSuiteBase {
   test("Tree.tokens: parsed, different dialect") {
     val tree = dialects.Scala210("foo + bar // baz").parse[Term].get
     assertEquals(tree.syntax, "foo + bar // baz" + EOL)
-    assertEquals(tree.tokens.syntax, "foo + bar // baz")
+    val tokens = tree.tokens
+    assertEquals(tokens.syntax, "foo + bar // baz")
+    assertEquals(9, tokens.length)
+    val slice17 = tokens.slice(1, 7)
+    assertEquals(slice17.syntax, "foo + bar ")
+    assertEquals(Tokens(slice17.arraySlice(1, 4)).syntax, "foo +")
+    val slice510 = tokens.slice(5, 10)
+    assertEquals(slice510.syntax, "bar // baz")
+    assertEquals(Tokens(slice510.arraySlice(1, 4)).syntax, "foo +")
   }
 
   test("Tree.tokens: manual") {
