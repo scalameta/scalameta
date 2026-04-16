@@ -135,4 +135,45 @@ class ImportSuite extends ParseSuite {
     }
   }
 
+  test("package over imports with comments") {
+    val code =
+      """|package test.organizeImports
+         |
+         |// This comment is ambiguous and not linked to a specific import
+         |import y.Y
+         |import x.X
+         |""".stripMargin
+    code.parse[Source] match {
+      case x: Parsed.Error => fail(x.message)
+      case Parsed.Success(obtained) => obtained.stats match {
+          case (pkg: Pkg) :: Nil => pkg.stats match {
+              case one :: two :: Nil =>
+                locally {
+                  val layout =
+                    """|// This comment is ambiguous and not linked to a specific import
+                       |import y.Y
+                       |""".stripMargin
+                  val tree = Import.createWithComments(
+                    List(Importer("y", List(Importee.Name(meta.Name("Y"))))),
+                    begComment =
+                      Seq("// This comment is ambiguous and not linked to a specific import")
+                  )
+                  checkTree(one, layout)(tree)
+                  assertNoDiff(one.original, "import y.Y")
+                }
+                locally {
+                  val layout =
+                    """|import x.X
+                       |""".stripMargin
+                  val tree = Import(List(Importer("x", List(Importee.Name(meta.Name("X"))))))
+                  checkTree(two, layout)(tree)
+                  assertNoDiff(two.original, layout)
+                }
+              case x => fail(s"Not a package with 2 stats: ${pkg.structure}")
+            }
+          case x => fail(s"Not a source with package: ${x.structure}")
+        }
+    }
+  }
+
 }
