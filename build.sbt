@@ -205,8 +205,6 @@ lazy val common2 = crossProject(allPlatforms: _*).in(file("scalameta/common2")).
   crossScalaVersions := EarliestScala2Versions
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
-  // remove before v4.16.1
-  .settings(mimaPreviousArtifacts := Set.empty)
 
 lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
   moduleName := "common",
@@ -220,8 +218,6 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
   crossScalaVersions := EarliestScalaVersions
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings).dependsOn(common2)
-  // remove before v4.16.1
-  .settings(mimaPreviousArtifacts := Set.empty)
 
 lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
   .configureCross(crossPlatformPublishSettings).settings(
@@ -244,8 +240,6 @@ lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).se
   })
 ).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
   .nativeSettings(nativeSettings).dependsOn(common2, io)
-  // remove before v4.16.1
-  .settings(mimaPreviousArtifacts := Set.empty)
 
 lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
   moduleName := "trees",
@@ -268,8 +262,6 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
 ) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
   .configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
   .nativeSettings(nativeSettings).dependsOn(common, io, trees2)
-  // remove before v4.16.1
-  .settings(mimaPreviousArtifacts := Set.empty)
 
 lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).settings(
   moduleName := "parsers",

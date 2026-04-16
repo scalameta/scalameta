@@ -64,29 +64,6 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
-    exclude[MissingTypesProblem]("tokenizers.Tokenized*"),
-    exclude[MissingTypesProblem]("tokens.Tokens*"),
-    exclude[DirectMissingMethodProblem]("tokens.Tokens.*"),
-    exclude[MissingTypesProblem]("trees.Origin*"),
-    exclude[MissingClassProblem]("trees.Origin$*"),
-    exclude[DirectMissingMethodProblem]("trees.Origin#*.*"),
-
-    exclude[DirectMissingMethodProblem]("tokenizers.TokenizerOptions.*"),
-    exclude[IncompatibleResultTypeProblem]("tokenizers.TokenizerOptions.<init>*"),
-    exclude[IncompatibleResultTypeProblem]("tokenizers.TokenizerOptions.global"),
-    exclude[DirectMissingMethodProblem]("parsers.ParserOptions.*"),
-    exclude[IncompatibleResultTypeProblem]("parsers.ParserOptions.global"),
-
-    exclude[MissingTypesProblem]("package$"),
-    exclude[DirectMissingMethodProblem]("package.*"),
-    exclude[IncompatibleResultTypeProblem]("package.*"),
-    exclude[MissingTypesProblem]("inputs.package$"),
-    exclude[MissingClassProblem]("inputs.Aliases$*"),
-    exclude[MissingTypesProblem]("io.package$"),
-    exclude[MissingClassProblem]("parsers.Aliases$*"),
-    exclude[MissingClassProblem]("tokenizers.Aliases$*"),
-    exclude[MissingClassProblem]("tokens.Aliases$*"),
-    exclude[MissingTypesProblem]("VersionSpecificApis")
     // Tree
   )
 }
