@@ -10,16 +10,22 @@ import munit._
 
 class JSFacadeSuite extends FunSuite {
 
-  private[this] val d = js.Dictionary
-  private[this] val a = js.Array
+  private[this] def d(pairs: (String, Any)*): js.Dictionary[Any] = {
+    val obj = js.Dictionary[Any]()
+    pairs.foreach { case (k, v) => obj.update(k, v) }
+    obj
+  }
+  private[this] def a[A](xs: A*): js.Array[A] = js.Array(xs: _*)
   private[this] def pos(s: Int, e: Int) = d("start" -> s, "end" -> e)
 
-  private[this] def toJSON(a: js.Dictionary[Any]): String = js.JSON
+  private[this] def lit[A](tpe: String, value: A, syntax: String, pos: js.Dictionary[_]) =
+    d("type" -> tpe, "pos" -> pos, "value" -> value, "syntax" -> syntax)
+
+  private[this] def toJSON(a: js.Dictionary[_]): String = js.JSON
     .stringify(a.asInstanceOf[js.Any], space = 2)
 
-  private[this] def check(a: js.Dictionary[Any], b: js.Dictionary[Any])(implicit
-      loc: munit.Location
-  ) = assertEquals(toJSON(a), toJSON(b))
+  private[this] def check(a: js.Dictionary[_], b: js.Dictionary[_])(implicit loc: munit.Location) =
+    assertEquals(toJSON(a), toJSON(b))
 
   test("parseSource") {
     val code =
@@ -111,13 +117,10 @@ class JSFacadeSuite extends FunSuite {
           )
         )
       }
-    ).asInstanceOf[js.Dictionary[Any]]
+    )
 
     check(parsed, expected)
   }
-
-  private[this] def lit[A](tpe: String, value: A, syntax: String, pos: js.Dictionary[Int]) =
-    d("type" -> tpe, "pos" -> pos, "value" -> value, "syntax" -> syntax)
 
   test("parse Lit.Int") {
     val parsed = JSFacade.parseStat("42")
@@ -172,7 +175,6 @@ class JSFacadeSuite extends FunSuite {
   test("parse Name") {
     val parsed = JSFacade.parseStat("foo")
     val expected = d("type" -> "Term.Name", "pos" -> pos(0, 3), "value" -> "foo")
-      .asInstanceOf[js.Dictionary[Any]]
     check(parsed, expected)
   }
 
@@ -190,7 +192,7 @@ class JSFacadeSuite extends FunSuite {
       )),
       "decltpe" -> d("type" -> "Lit.Int", "pos" -> pos(7, 8), "value" -> 1, "syntax" -> "1"),
       "rhs" -> d("type" -> "Lit.Int", "pos" -> pos(11, 12), "value" -> 1, "syntax" -> "1")
-    ).asInstanceOf[js.Dictionary[Any]]
+    )
     check(parsedDefaultDialect, expected)
   }
 
@@ -201,7 +203,7 @@ class JSFacadeSuite extends FunSuite {
          |  2,
          |)""".stripMargin
     val parsedDefaultDialect = JSFacade.parseStat(code, js.Dictionary("dialect" -> "wrong"))
-    val expected = d("error" -> "'wrong' is not a valid dialect.").asInstanceOf[js.Dictionary[Any]]
+    val expected = d("error" -> "'wrong' is not a valid dialect.")
     check(parsedDefaultDialect, expected)
   }
 
@@ -221,7 +223,7 @@ class JSFacadeSuite extends FunSuite {
         "pos" -> pos(4, 17),
         "values" -> a(lit("Lit.Int", 1, "1", pos(8, 9)), lit("Lit.Int", 2, "2", pos(13, 14)))
       )
-    ).asInstanceOf[js.Dictionary[Any]]
+    )
     check(parsedDefaultDialect, expected)
   }
 

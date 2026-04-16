@@ -78,7 +78,14 @@ Global / resolvers +=
   "scala-integration".at("https://scala-ci.typesafe.com/artifactory/scala-integration/")
 
 val commonJsSettings = Seq(
-  crossScalaVersions := List(LatestScala213ForJS, LatestScala212),
+  crossScalaVersions := crossScalaVersions.value.flatMap(v =>
+    CrossVersion.binaryScalaVersion(v) match {
+      case "2.12" => Some(LatestScala212)
+      case "2.13" => Some(LatestScala213ForJS)
+      case "3" => Some(v)
+      case _ => None
+    }
+  ).distinct,
   scalaVersion := LatestScala213ForJS,
   bspEnabled := false,
   scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
@@ -389,8 +396,15 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   .jvmSettings(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0")
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
-lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testSettings).jvmSettings(
+lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
+  testSettings,
   crossScalaVersions := AllScalaVersions,
+  scalacOptions ++= {
+    if (isScala3.value)
+      List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
+    else Nil
+  }
+).jvmSettings(
   libraryDependencies ++=
     { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
   dependencyOverrides += {
@@ -402,11 +416,6 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testS
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
       "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0" % Test
     )
-    else Nil
-  },
-  scalacOptions ++= {
-    if (isScala3.value)
-      List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
     else Nil
   }
 ).jsSettings(
