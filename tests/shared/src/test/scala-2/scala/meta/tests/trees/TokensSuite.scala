@@ -16,7 +16,7 @@ class TokensSuite extends TreeSuiteBase {
 
   test("Tree.tokens: parsed, different dialect") {
     val tree = dialects.Scala210("foo + bar // baz").parse[Term].get
-    assertEquals(tree.syntax, "foo + bar // baz" + EOL)
+    assertEquals(tree.toString, "foo + bar // baz")
     val tokens = tree.tokens
     assertEquals(tokens.syntax, "foo + bar // baz")
     assertEquals(9, tokens.length)
