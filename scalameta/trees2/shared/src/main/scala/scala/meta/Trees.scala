@@ -43,9 +43,11 @@ object Tree extends InternalTreeXtensions {
   implicit def classifiable[T <: Tree]: Classifiable[T] = null
   implicit def showStructure[T <: Tree]: Structure[T] = TreeStructure.apply[T]
   implicit def showSyntax[T <: Tree](implicit dialect: Dialect): Syntax[T] =
-    Syntax[T](TreeSyntax.syntax)
-  implicit def showReprint[T <: Tree](implicit dialect: Dialect): Reprint[T] =
-    Reprint[T](TreeSyntax.reprint)
+    Syntax[T](TreeSyntax.syntax(_, comments = false))
+  implicit def showReprint[T <: Tree](implicit dialect: Dialect): Reprint[T] = new Reprint[T] {
+    override def apply(obj: T, withComments: Boolean, useOriginal: Boolean): String = TreeSyntax
+      .syntax(obj, comments = withComments, useOriginal = useOriginal).toString
+  }
 
   @branch
   /** brace- or indent-delimited container of statements */

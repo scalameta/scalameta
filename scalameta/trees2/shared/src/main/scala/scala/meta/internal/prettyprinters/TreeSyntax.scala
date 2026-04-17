@@ -18,7 +18,7 @@ object TreeSyntax {
   import Show.{alt, blank, function => fn, indent => i, meta => m, newline => n, nosplit => nosp,
     opt => o, repeat => r, sequence => s, space => sp, wrap => w}
 
-  private final class SyntaxInstances(implicit dialect: Dialect) {
+  private final class SyntaxInstances(comments: Boolean)(implicit dialect: Dialect) {
     val keywords = tokenizers.keywords(dialect)
     import TreeSyntacticGroup._
 
@@ -961,30 +961,29 @@ object TreeSyntax {
 
     def reprint(tree: Tree): Show.Result = withComments(tree)(showTree(tree))
 
+    def withComments(tree: Tree)(res: Show.Result): Show.Result =
+      if (comments) TreeSyntax.withComments(tree)(res) else res
+
     implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax[T](reprint)
 
   }
 
-  def syntax(x: Tree)(implicit dialect: Dialect): Show.Result =
-    // NOTE: This is the current state of the art of smart prettyprinting.
-    // If we prettyprint a tree that's just been parsed with the same dialect,
-    // then we retain formatting. Otherwise, we don't, even in the tiniest.
-    // I expect to improve on this in the nearest future, because we had it much better until recently.
-    x.origin match {
-      case o: Origin.Parsed if o.dialect.isEquivalentTo(dialect) => original(x)
-      case _ => reprint(x)
-    }
+  def syntax(x: Tree, comments: Boolean = true, useOriginal: Boolean = true)(implicit
+      dialect: Dialect
+  ): Show.Result = x.origin match {
+    case o: Origin.Parsed if useOriginal && o.dialect.isEquivalentTo(dialect) =>
+      original(x, o, comments = comments)
+    case _ => reprint(x, comments = comments)
+  }
 
-  def original(x: Tree): Show.Result = w(
+  def original(x: Tree, o: Origin.ParsedPartial, comments: Boolean = true): Show.Result = w(
     printComments(x, _.begComment, tc => w(n(), tc.text, n())),
     x.pos.text,
     printComments(x, _.endComment, tc => w(" ", tc.text, n())),
-    x.origin match {
-      case o: Origin.ParsedPartial => o.begTokenIdx > 0 && !x.is[Source]
-      case _ => true
-    }
+    comments && o.begTokenIdx > 0 && !x.is[Source]
   )
-  def reprint(x: Tree)(implicit dialect: Dialect): Show.Result = (new SyntaxInstances).reprint(x)
+  def reprint(x: Tree, comments: Boolean = true)(implicit dialect: Dialect): Show.Result =
+    new SyntaxInstances(comments = comments).reprint(x)
 
   private def printComments(
       tree: Tree,
