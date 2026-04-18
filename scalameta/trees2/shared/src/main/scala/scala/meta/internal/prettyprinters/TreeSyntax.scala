@@ -765,7 +765,22 @@ object TreeSyntax {
         else s(t.name, " ", kw("=>"), " ", kw("_"))
       case _: Importee.Wildcard => if (dialect.allowStarWildcardImport) kw("*") else kw("_")
       case t: Importer =>
-        if (t.ref.isNot[Term.Anonymous]) s(t.ref, ".", t.importees) else s(t.importees)
+        val importees = t.importees match {
+          case imp :: Nil
+              if dialect.allowAsForImportRename || !imp.isAny[Importee.Rename, Importee.Unimport] =>
+            s(imp)
+          case imps => t.origin match {
+              case x: Origin.ParsedPartial if t.ref.pos.endLine == x.position.endLine =>
+                val useSpace = imps.head.tokens.getWideOpt(-1).exists(_.is[Token.Trivia]) || {
+                  val ltokens = imps.last.tokens
+                  ltokens.getWideOpt(ltokens.length).exists(_.is[Token.Trivia])
+                }
+                val space = o(" ", useSpace)
+                s("{", space, r(imps, ", "), space, "}")
+              case _ => s("{", r(imps.map(i(_)), ","), n("}"))
+            }
+        }
+        if (t.ref.is[Term.Anonymous]) importees else s(t.ref, ".", importees)
       case t: Import => s(kw("import"), " ", r(t.importers, ", "))
       case t: Export => s(kw("export"), " ", r(t.importers, ", "))
 
@@ -870,16 +885,6 @@ object TreeSyntax {
     }
     implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax(r(_))
     implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax(o(kw(": "), _))
-    implicit def syntaxImportee: Syntax[Seq[Importee]] = Syntax {
-      case Seq(t: Importee.Name) => s(t)
-      case Seq(t: Importee.Wildcard) => s(t)
-      case Seq(t: Importee.GivenAll) => s(t)
-      case Seq(t: Importee.Given) => s(t)
-      case Seq(t: Importee.Rename) if dialect.allowAsForImportRename => s(t)
-      case Seq(t: Importee.Unimport) if dialect.allowAsForImportRename => s(t)
-      case Seq(t: Importee.Rename) => s("{", t, "}")
-      case importees => s("{ ", r(importees, ", "), " }")
-    }
 
     implicit def syntaxCases: Syntax[Seq[CaseTree]] = Syntax(cases => r(cases.map(i(_))))
 
