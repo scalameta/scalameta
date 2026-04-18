@@ -1879,7 +1879,7 @@ class SuccessSuite extends TreeSuiteBase {
 
   test("1 q\"import ..importers\"") {
     val importers = List(importer"foo.bar", importer"bar.{baz, _}")
-    assertEquals(q"import ..$importers".syntax, "import foo.bar, bar.{ baz, _ }")
+    assertEquals(q"import ..$importers".syntax, "import foo.bar, bar.{baz, _}")
   }
 
   test("2 q\"import ..importers\"") {
@@ -1890,7 +1890,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("1 importer\"ref.{..importees}\"") {
     val ref = q"bar"
     val importees = List(importee"baz", importee"_")
-    assertEquals(importer"$ref.{..$importees}".syntax, "bar.{ baz, _ }")
+    assertEquals(importer"$ref.{..$importees}".syntax, "bar.{baz, _}")
   }
 
   test("2 importer\"ref. ..importees\"") {
@@ -1905,7 +1905,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("3 importer\"ref.{..importees}\"") {
     val ref = q"bar.a"
     val importees = List(importee"baz", importee"_")
-    assertEquals(importer"$ref.{..$importees}".syntax, "bar.a.{ baz, _ }")
+    assertEquals(importer"$ref.{..$importees}".syntax, "bar.a.{baz, _}")
   }
 
   test("1 importee\"iname\"") {

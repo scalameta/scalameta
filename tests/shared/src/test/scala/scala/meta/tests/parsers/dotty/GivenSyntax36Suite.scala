@@ -942,12 +942,16 @@ class GivenSyntax36Suite extends BaseDottySuite {
     val code =
       """|object a:
          |  import scala.util.chaining.given
-         |  import scala.util.control.{ControlThrowable, NonFatal}
+         |  import scala.util.control.{
+         |     ControlThrowable, NonFatal}
          |""".stripMargin
     val layout =
       """|object a {
          |  import scala.util.chaining.given
-         |  import scala.util.control.{ ControlThrowable, NonFatal }
+         |  import scala.util.control.{
+         |    ControlThrowable,
+         |    NonFatal
+         |  }
          |}
          |""".stripMargin
     val tree = Defn.Object(
