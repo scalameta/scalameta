@@ -26,8 +26,8 @@ trait InputRange {
 sealed trait Position extends InputRange {
   def startLine: Int
   def startColumn: Int
-  def endLine: Int
-  def endColumn: Int
+  def endLine: Int // exclusive
+  def endColumn: Int // exclusive
 
   final def isEmpty: Boolean = start >= end
 }
@@ -46,10 +46,8 @@ object Position {
   }
 
   final case class Range(input: Input, start: Int, end: Int) extends Position {
-    lazy val startLine: Int = input.offsetToLine(start)
-    def startColumn: Int = start - input.lineToOffset(startLine)
-    lazy val endLine: Int = input.offsetToLine(end)
-    def endColumn: Int = end - input.lineToOffset(endLine)
+    lazy val (startLine, startColumn) = input.offsetToLineAndColumn(start)
+    lazy val (endLine, endColumn) = input.offsetToLineAndColumn(end)
     lazy val text = if (isEmpty) "" else new String(input.chars, start, end - start)
   }
 
@@ -62,28 +60,11 @@ object Position {
     def inclusive(input: Input, start: Int, end: Int): Range = new Range(input, start, end + 1)
 
     def apply(input: Input, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int): Range = {
-      require(startLine <= endLine)
-
-      def lineOffsetAndLength(line: Int): (Int, Int) = {
-        val off = input.lineToOffset(line)
-        (off, input.lineToOffset(line + 1) - off - 1)
-      }
-
-      val (endLineOff, endLineLen) = {
-        val inputEndOff = input.chars.length
-        val inputLastLine = input.offsetToLine(inputEndOff)
-        if (inputLastLine == endLine) {
-          val inputLastLineOff = input.lineToOffset(inputLastLine)
-          (inputLastLineOff, inputEndOff - inputLastLineOff)
-        } else lineOffsetAndLength(endLine)
-      }
-
-      val (begLineOff, begLineLen) =
-        if (endLine == startLine) (endLineOff, endLineLen) else lineOffsetAndLength(startLine)
-
+      val (begLineOff, begLineLen) = input.lineToOffsetAndLength(startLine)
+      val (endLineOff, endLineLen) =
+        if (endLine == startLine) (begLineOff, begLineLen) else input.lineToOffsetAndLength(endLine)
       val beg = getPositionOffset(begLineOff, startColumn, begLineLen)
       val end = getPositionOffset(endLineOff, endColumn, endLineLen)
-
       exclusive(input, beg, end)
     }
   }
