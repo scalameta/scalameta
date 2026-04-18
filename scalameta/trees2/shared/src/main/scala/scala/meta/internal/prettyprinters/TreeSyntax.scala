@@ -758,27 +758,46 @@ object TreeSyntax {
       case t: Importee.Given => s(kw("given"), " ", t.tpe)
       case t: Importee.GivenAll => s(kw("given"))
       case t: Importee.Rename =>
-        if (dialect.allowAsForImportRename) s(t.name, " ", kw("as"), " ", t.rename)
-        else s(t.name, " ", kw("=>"), " ", t.rename)
+        val arrow = if (dialect.allowAsForImportRename) "as" else "=>"
+        s(t.name, " ", kw(arrow), " ", t.rename)
       case t: Importee.Unimport =>
-        if (dialect.allowAsForImportRename) s(t.name, " ", kw("as"), " ", kw("_"))
-        else s(t.name, " ", kw("=>"), " ", kw("_"))
+        val arrow = if (dialect.allowAsForImportRename) "as" else "=>"
+        s(t.name, " ", kw(arrow), " ", kw("_"))
       case _: Importee.Wildcard => if (dialect.allowStarWildcardImport) kw("*") else kw("_")
       case t: Importer =>
         val importees = t.importees match {
           case imp :: Nil
               if dialect.allowAsForImportRename || !imp.isAny[Importee.Rename, Importee.Unimport] =>
             s(imp)
-          case imps => t.origin match {
-              case x: Origin.ParsedPartial if t.ref.pos.endLine == x.position.endLine =>
-                val useSpace = imps.head.tokens.getWideOpt(-1).exists(_.is[Token.Trivia]) || {
-                  val ltokens = imps.last.tokens
-                  ltokens.getWideOpt(ltokens.length).exists(_.is[Token.Trivia])
-                }
-                val space = o(" ", useSpace)
-                s("{", space, r(imps, ", "), space, "}")
-              case _ => s("{", r(imps.map(i(_)), ","), n("}"))
+          case imps =>
+            def getLine(x: Importee): Int = if (x.parent.contains(t)) x.pos.startLine else -1
+            val oneline = {
+              val lines = imps.iterator.map(getLine).filter(_ >= 0)
+              !lines.hasNext || {
+                val line = lines.next()
+                lines.forall(_ == line)
+              }
             }
+            if (oneline) {
+              def lspace: Boolean = {
+                val imp = imps.head
+                getLine(imp) >= 0 && {
+                  val tokens = imp.tokens
+                  val idx = tokens.rskipWideIf(_.is[Token.Trivia], -1)
+                  idx < -1 && tokens.getWideOpt(idx).exists(_.is[Token.LeftBrace])
+                }
+              }
+              def rspace: Boolean = {
+                val imp = imps.last
+                getLine(imp) >= 0 && {
+                  val tokens = imp.tokens
+                  val idx = tokens.skipWideIf(_.is[Token.Trivia], tokens.length)
+                  idx > tokens.length && tokens.getWideOpt(idx).exists(_.is[Token.RightBrace])
+                }
+              }
+              val space = o(" ", lspace || rspace)
+              s("{", space, r(imps, ", "), space, "}")
+            } else s("{", r(imps.map(i(_)), ","), n("}"))
         }
         if (t.ref.is[Term.Anonymous]) importees else s(t.ref, ".", importees)
       case t: Import => s(kw("import"), " ", r(t.importers, ", "))
@@ -981,7 +1000,7 @@ object TreeSyntax {
     case _ => reprint(x, comments = comments)
   }
 
-  def original(x: Tree, o: Origin.ParsedPartial, comments: Boolean = true): Show.Result = w(
+  def original(x: Tree, o: Origin.Parsed, comments: Boolean = true): Show.Result = w(
     printComments(x, _.begComment, tc => w(n(), tc.text, n())),
     x.pos.text,
     printComments(x, _.endComment, tc => w(" ", tc.text, n())),

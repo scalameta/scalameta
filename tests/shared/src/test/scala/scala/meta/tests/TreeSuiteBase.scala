@@ -108,7 +108,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   protected implicit class implicitTree[T <: Tree](tree: T) {
     import scala.meta.internal.prettyprinters._
     def original: String = tree.origin match {
-      case o: Origin.ParsedPartial => TreeSyntax.original(tree, o).toString
+      case o: Origin.Parsed => TreeSyntax.original(tree, o).toString
       case _ => tree.text
     }
     def reprint(implicit dialect: Dialect): String = TreeSyntax.reprint(tree).toString
