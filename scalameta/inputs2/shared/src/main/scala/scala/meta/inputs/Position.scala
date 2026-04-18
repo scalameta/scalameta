@@ -58,6 +58,9 @@ object Position {
     private def getPositionOffset(lineOffset: Int, lineColumn: Int, lineLength: Int): Int =
       lineOffset + math.min(lineColumn, lineLength)
 
+    def exclusive(input: Input, start: Int, end: Int): Range = new Range(input, start, end)
+    def inclusive(input: Input, start: Int, end: Int): Range = new Range(input, start, end + 1)
+
     def apply(input: Input, startLine: Int, startColumn: Int, endLine: Int, endColumn: Int): Range = {
       require(startLine <= endLine)
 
@@ -81,7 +84,7 @@ object Position {
       val beg = getPositionOffset(begLineOff, startColumn, begLineLen)
       val end = getPositionOffset(endLineOff, endColumn, endLineLen)
 
-      Position.Range(input, beg, end)
+      exclusive(input, beg, end)
     }
   }
 }
