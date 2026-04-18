@@ -28,6 +28,8 @@ sealed trait Position extends InputRange {
   def startColumn: Int
   def endLine: Int // exclusive
   def endColumn: Int // exclusive
+  def lastLine: Int // inclusive
+  def lastColumn: Int // inclusive
 
   final def isEmpty: Boolean = start >= end
 }
@@ -41,6 +43,8 @@ object Position {
     def end = -1
     def endLine = -1
     def endColumn = -1
+    def lastLine = -1
+    def lastColumn = -1
     def text = ""
     override def toString = "Position.None"
   }
@@ -49,6 +53,11 @@ object Position {
     lazy val (startLine, startColumn) = input.offsetToLineAndColumn(start)
     lazy val (endLine, endColumn) = input.offsetToLineAndColumn(end)
     lazy val text = if (isEmpty) "" else new String(input.chars, start, end - start)
+    def lastLine: Int = if (endColumn > 0) endLine else endLine - 1
+    def lastColumn: Int =
+      if (endColumn > 0) endColumn - 1
+      else if (endLine > 0) input.lineToOffsetAndLength(endLine - 1)._2 - 1
+      else 0
   }
 
   object Range {
