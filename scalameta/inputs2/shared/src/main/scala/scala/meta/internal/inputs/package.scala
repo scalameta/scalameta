@@ -28,11 +28,8 @@ package object inputs {
   implicit class XtensionPosition(private val pos: Position) extends AnyVal {
     def lineContent: String = {
       val input = pos.input
-      val start = input.lineToOffset(pos.startLine)
-      if (start < input.chars.length) {
-        val end = input.lineToOffset(pos.startLine + 1)
-        new String(input.chars, start, end - start).stripLineEnd
-      } else ""
+      val (start, len) = input.lineToOffsetAndLength(pos.startLine)
+      if (len <= 0) "" else new String(input.chars, start, len).stripLineEnd
     }
     def formatMessage(severity: String, message: String): String = {
       // WONTFIX: https://github.com/scalameta/scalameta/issues/383

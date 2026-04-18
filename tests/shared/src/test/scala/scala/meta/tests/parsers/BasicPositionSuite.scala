@@ -151,9 +151,9 @@ class BasicPositionSuite extends BasePositionSuite {
     val x = Position.Range(input, 0, 2, 0, 11)
     assertEquals(x.text, "val x = 2")
     val x2 = Position.Range(input, 0, 2, 0, Int.MaxValue)
-    assertEquals(x2.text, "val x = 2 // line 0")
+    assertEquals(x2.text, "val x = 2 // line 0\n")
     val empty = Position.Range(input, 1, 0, 1, Int.MaxValue)
-    assertEquals(empty.text, "")
+    assertEquals(empty.text, "\n")
     val last = Position.Range(input, 2, 0, 2, Int.MaxValue)
     assertEquals(last.text, "            // line 2")
   }
