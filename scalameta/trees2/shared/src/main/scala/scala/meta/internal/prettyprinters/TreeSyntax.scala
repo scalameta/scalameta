@@ -770,7 +770,7 @@ object TreeSyntax {
               if dialect.allowAsForImportRename || !imp.isAny[Importee.Rename, Importee.Unimport] =>
             s(imp)
           case imps =>
-            def getLine(x: Importee): Int = if (x.parent.contains(t)) x.pos.startLine else -1
+            def getLine(x: Importee): Int = x.pos.startLine
             val oneline = {
               val lines = imps.iterator.map(getLine).filter(_ >= 0)
               !lines.hasNext || {
