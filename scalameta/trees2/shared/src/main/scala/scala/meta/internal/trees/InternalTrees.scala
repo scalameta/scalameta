@@ -9,6 +9,8 @@ import scala.meta.tokens.Token._
 import scala.meta.tokens._
 import scala.meta.trees.{Error, Origin}
 
+import scala.annotation.tailrec
+
 // NOTE: Methods that start with "private" are NOT intended to be called outside scala.meta.
 // Calling these methods from hosts will compile (because hosts are in meta), but is strongly discouraged.
 trait InternalTree extends Product {
@@ -23,6 +25,12 @@ trait InternalTree extends Product {
   // ==============================================================
 
   private[meta] def privatePrototype: Tree
+  def prototype: Option[Tree] = Option(privatePrototype)
+  @tailrec
+  final def originalPrototype(): Tree = privatePrototype match {
+    case null => this
+    case x => x.originalPrototype()
+  }
 
   def parent: Option[Tree]
   private[meta] def loadFieldForParent(parent: Tree): Tree
@@ -42,6 +50,7 @@ trait InternalTree extends Product {
 
   def begComment: Option[Tree.Comments]
   def endComment: Option[Tree.Comments]
+  final def hasComments: Boolean = begComment.nonEmpty || endComment.nonEmpty
 
   private[meta] def privateCopyOrigin(
       origin: Origin,
@@ -138,8 +147,6 @@ trait InternalTreeXtensions {
       if (tree.origin eq Origin.None) tree.privateSetOrigin(Origin.DialectOnly(dialect))
       tree
     }
-
-    def hasComments: Boolean = tree.begComment.nonEmpty || tree.endComment.nonEmpty
 
   }
 }
