@@ -230,8 +230,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               )
             """
           else q""
-        stats1 += {
-          val parentInternal = internalize(parentParam)
+        val parentInternal = internalize(parentParam)
+        stats1 +=
           q"""
             private[meta] def storeFieldInParent(
                 parent: $TreeClass,
@@ -249,11 +249,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               tree
             }
           """
-        }
         stats1 +=
           q"""
             private[meta] def loadFieldForParent(parent: $TreeClass): $name = {
-              privateCopy(parent = $SomeModule(parent))
+              if (this.$parentInternal.contains(parent)) this
+              else privateCopy(parent = $SomeModule(parent))
             }
           """
 
