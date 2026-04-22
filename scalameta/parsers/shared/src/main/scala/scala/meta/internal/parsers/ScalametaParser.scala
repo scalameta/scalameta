@@ -451,8 +451,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                     tokens.getOpt(idx) match {
                       case Some(t: CommentStart) =>
                         parts.prepend(asString(t, idx))
-                        begBuf.prepend(asComment(parts.toList, idx, endIdx))
-                        pending += 1
                         false
                       case Some(t: CommentPart) =>
                         parts.prepend(asString(t, idx))
@@ -465,11 +463,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                         false
                     }
                   }) {}
+                  begBuf.prepend(asComment(parts.toList, idx, endIdx))
+                  pending += 1
                   true
-                case Some(_: AtEOL) =>
-                  hadEOL = true
-                  pending = 0
-                  true
+                case Some(_: AtEOL) => !(hadEOL && pending == 0) && {
+                    hadEOL = true
+                    pending = 0
+                    true
+                  }
                 case Some(_: HSpace) => true
                 case Some(t) =>
                   if (t.isAny[Ident, CloseDelim] || body.is[Term.Block] || hadEOL && t.is[Comma])
@@ -501,7 +502,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                     tokens.getOpt(idx) match {
                       case Some(t: CommentEnd) =>
                         parts.append(asString(t, idx))
-                        endBuf.append(asComment(parts.toList, begIdx, idx + 1))
                         false
                       case Some(t: CommentPart) =>
                         parts.append(asString(t, idx))
@@ -514,6 +514,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                         false
                     }
                   }) {}
+                  endBuf.append(asComment(parts.toList, begIdx, idx + 1))
                   true
                 case Some(_: HSpace) => true
                 case Some(_: Comma) => tokens.findNot(_.is[HTrivia], idx + 1).exists(_.is[AtEOL])
