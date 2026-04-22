@@ -185,13 +185,12 @@ class ImportSuite extends ParseSuite {
          |// detached comment after
          |""".stripMargin
     val layout =
-      """|// detached comment before
-         |// attached comment
+      """|// attached comment
          |import y.Y
          |""".stripMargin
     val tree = Source(List(Import.createWithComments(
       List(Importer("y", List(Importee.Name(meta.Name("Y"))))),
-      begComment = Seq("// detached comment before", "// attached comment")
+      begComment = Seq("// attached comment")
     )))
     parseAndCheckTree[Source](code, layout)(tree)
   }
