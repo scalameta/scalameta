@@ -7,7 +7,7 @@ object Versions {
   val Scala213Versions = getVersions2(13, 15 to 18)
   val Scala3Versions = getVersions3(3 -> 7, 8 -> 3)
   val Scala2ReleaseCandidates = getReleaseCandidates(2)
-  val Scala3ReleaseCandidates = getReleaseCandidates(3)
+  val Scala3ReleaseCandidates = getReleaseCandidates(3, (8, 4, "RC2"))
   val LatestScala211 = Scala211Versions.head
   val LatestScala212 = Scala212Versions.head
   val LatestScala213 = Scala213Versions.head
@@ -21,7 +21,7 @@ object Versions {
   val AllScalaVersions = AllScala2Versions ++ Scala3Versions ++ Scala3ReleaseCandidates
   val EarliestScala2Versions = Seq(EarliestScala213, EarliestScala212, EarliestScala211) ++
     Scala2ReleaseCandidates
-  val EarliestScalaVersions = (EarliestScala2Versions :+ EarliestScala3) ++ Scala3ReleaseCandidates
+  val EarliestScalaVersions = (EarliestScala2Versions :+ EarliestScala3)
   val LatestScala2Versions = Seq(LatestScala213, LatestScala212, LatestScala211)
 
   private def getVersions[A](prefix: String, suffixes: Seq[A]) = {
