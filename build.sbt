@@ -90,7 +90,8 @@ val commonJsSettings = Seq(
   bspEnabled := false,
   scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
   scalacOptions ++= {
-    if (isSnapshot.value) Seq.empty
+    // scala3 specifically will invoke scala3TreeLiftsCodeGen which is a JVM project
+    if (isSnapshot.value || !isPlatform(JSPlatform).value) Seq.empty
     else {
       val localDir = (ThisBuild / baseDirectory).value.toURI.toString
       val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
