@@ -95,7 +95,8 @@ val commonJsSettings = Seq(
     else {
       val localDir = (ThisBuild / baseDirectory).value.toURI.toString
       val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
-      Seq(s"-P:scalajs:mapSourceURI:$localDir->$githubDir/v${version.value}/")
+      val prefix = if (isScala3.value) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
+      Seq(s"$prefix:$localDir->$githubDir/v${version.value}/")
     }
   }
 )
