@@ -176,4 +176,24 @@ class ImportSuite extends ParseSuite {
     }
   }
 
+  test("import with detached comment") {
+    val code =
+      """|// detached comment before
+         |
+         |// attached comment
+         |import y.Y
+         |// detached comment after
+         |""".stripMargin
+    val layout =
+      """|// detached comment before
+         |// attached comment
+         |import y.Y
+         |""".stripMargin
+    val tree = Source(List(Import.createWithComments(
+      List(Importer("y", List(Importee.Name(meta.Name("Y"))))),
+      begComment = Seq("// detached comment before", "// attached comment")
+    )))
+    parseAndCheckTree[Source](code, layout)(tree)
+  }
+
 }
