@@ -136,8 +136,11 @@ lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/s
     moduleName := "semanticdb-shared",
     sharedSettings,
     publishJVMSettings,
-    libraryDependencies += "org.scala-lang" % "scalap" % scalaVersion.value,
-    crossScalaVersions := EarliestScala2Versions,
+    libraryDependencies += {
+      val ver = if (isScala3.value) EarliestScala213 else scalaVersion.value
+      "org.scala-lang" % "scalap" % ver
+    },
+    crossScalaVersions := EarliestScalaVersions,
     protobufSettings,
     description := "Library defining SemanticDB data structures"
   ).dependsOn(scalameta).nativeSettings(nativeSettings).jsSettings(commonJsSettings)
