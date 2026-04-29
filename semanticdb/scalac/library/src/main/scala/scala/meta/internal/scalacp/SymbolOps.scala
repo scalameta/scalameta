@@ -14,7 +14,8 @@ import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolOps {
-  _: Scalacp =>
+  self: Scalacp =>
+
   lazy val symbolCache = new mutable.HashMap[Symbol, String]
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
     def toSemantic: String = {
