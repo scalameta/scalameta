@@ -13,17 +13,11 @@ trait ReporterOps {
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
     def hijackedDiagnostics: List[(gPosition, Int, String)] = g.reporter match {
       case r: StoreReporter =>
-        object RelevantMessage {
-          def unapply(info: r.Info): Option[(gPosition, Int, String)] = {
-            if (info.pos.source != unit.source) return None
-            Some((info.pos, info.severity.id, info.msg))
-          }
-        }
         val infos = r.infos
-        val toDrop = returnedMessagesByPath.getOrElse(unit, 0)
-        returnedMessagesByPath.put(unit, infos.size)
-        infos.iterator.drop(toDrop) // drop messages that have been reported before.
-          .collect { case RelevantMessage(pos, severity, msg) => (pos, severity, msg) }.toList
+        // drop messages that have been reported before.
+        val toDrop = returnedMessagesByPath.put(unit, infos.size).getOrElse(0)
+        infos.iterator.drop(toDrop).filter(_.pos.source == unit.source)
+          .map(info => (info.pos, info.severity.id, info.msg)).toList
       case _ => Nil
     }
   }
