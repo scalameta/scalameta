@@ -82,7 +82,7 @@ object Javacp {
     val classParents =
       if (isJavaLangObject) Nil else classSignature.parents.map(_.toSemanticTpe(classScope))
 
-    node.fields.toScala.filterNot(_.access.hasFlag(o.ACC_SYNTHETIC)).foreach { field: FieldNode =>
+    node.fields.toScala.filterNot(_.access.hasFlag(o.ACC_SYNTHETIC)).foreach { field => /* FieldNode */
       if (isOuterClassReference(field))
         // Drop the constructor argument that holds the reference to the outer class.
         ()
@@ -106,7 +106,7 @@ object Javacp {
     }
 
     val methodSignatures = node.methods.toScala.filterNot(_.access.hasFlag(o.ACC_SYNTHETIC))
-      .map { method: MethodNode =>
+      .map { method /* MethodNode */ =>
         val signature = JavaTypeSignature.parse(
           if (method.signature == null) method.desc else method.signature,
           new MethodSignatureVisitor
@@ -248,7 +248,7 @@ object Javacp {
   // ClassNode.innerClasses includes all inner classes of a compilation unit, both nested inner classes as well
   // as enclosing outer classes. Anonymous classes are distinguished by InnerClassNode.innerName == null.
   private def isAnonymousClass(node: ClassNode): Boolean = node.innerClasses.toScala
-    .exists { ic: InnerClassNode => ic.name == node.name && ic.innerName == null }
+    .exists(ic /* InnerClassNode */ => ic.name == node.name && ic.innerName == null)
 
   private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type = sig match {
     case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
@@ -283,7 +283,7 @@ object Javacp {
     // public abstract class Recursive<
     //           A extends Recursive <A, B>,
     //           B extends Recursive.Inner <A , B>>
-    val infos = typeParameters.all.map { typeParameter: TypeParameter =>
+    val infos = typeParameters.all.map { typeParameter /* TypeParameter */ =>
       val symbol = Symbols.Global(ownerSymbol, d.TypeParameter(typeParameter.identifier))
       nextScope = nextScope.enter(typeParameter.identifier, symbol)
       TypeParameterInfo(typeParameter, symbol)
