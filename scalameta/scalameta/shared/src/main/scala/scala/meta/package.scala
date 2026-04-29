@@ -9,6 +9,8 @@ package object meta
     with tokenizers.Api
     with tokens.Api
     with trees.Api
+    with transversers.Api
+    with quasiquotes.Api
     with VersionSpecificApis {
 
   /*

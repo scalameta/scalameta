@@ -1,14 +1,8 @@
 package scala.meta
 package transversers
 
-private[meta] trait Api {
+private[meta] trait Api extends VersionSpecificApis {
   implicit class XtensionCollectionLikeUI(tree: Tree) {
-    def transform(fn: PartialFunction[Tree, Tree]): Tree = {
-      object transformer extends Transformer {
-        override def apply(tree: Tree): Tree = super.apply(fn.applyOrElse(tree, identity[Tree]))
-      }
-      transformer(tree)
-    }
 
     def traverse(fn: PartialFunction[Tree, Unit]): Unit = {
       object traverser extends SimpleTraverser {
