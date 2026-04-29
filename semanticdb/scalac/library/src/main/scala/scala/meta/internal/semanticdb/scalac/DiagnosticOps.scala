@@ -1,16 +1,18 @@
 package scala.meta.internal.semanticdb.scalac
 
-import org.scalameta.unreachable
 import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.{semanticdb => s}
 
+import scala.reflect.internal.Reporter
 import scala.{meta => m}
 
 trait DiagnosticOps {
   self: SemanticdbOps =>
   implicit class XtensionCompilationUnitDiagnostics(unit: g.CompilationUnit) {
     def reportedDiagnostics(mstarts: collection.Map[Int, m.Name]): List[s.Diagnostic] = unit
-      .hijackedDiagnostics.map { case (gpos, gseverity, text) =>
+      .hijackedDiagnostics.map { info =>
+        val text = info.msg
+        val gpos = info.pos
         val mpos: m.Position =
           // NOTE: The caret in unused import warnings points to Importee.pos, but
           // the message position start/end point to the enclosing Import.pos.
@@ -23,11 +25,11 @@ trait DiagnosticOps {
               else gpos.toMeta
           }
           else gpos.toMeta
-        val sseverity = gseverity match {
-          case 0 => s.Diagnostic.Severity.INFORMATION
-          case 1 => s.Diagnostic.Severity.WARNING
-          case 2 => s.Diagnostic.Severity.ERROR
-          case _ => unreachable
+
+        val sseverity = info.severity match {
+          case Reporter.INFO => s.Diagnostic.Severity.INFORMATION
+          case Reporter.WARNING => s.Diagnostic.Severity.WARNING
+          case Reporter.ERROR => s.Diagnostic.Severity.ERROR
         }
         s.Diagnostic(Some(mpos.toRange), sseverity, text)
       }

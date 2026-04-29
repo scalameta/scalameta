@@ -1,7 +1,6 @@
 package scala.meta.internal.semanticdb.scalac
 
 import scala.collection.mutable
-import scala.reflect.internal.util.{Position => gPosition}
 import scala.tools.nsc.reporters.StoreReporter
 
 trait ReporterOps {
@@ -11,19 +10,12 @@ trait ReporterOps {
   // duplicate messages. The key is System.identityHashCode to keep memory usage low.
   private val returnedMessagesByPath = mutable.Map.empty[g.CompilationUnit, Int]
   implicit class XtensionCompilationUnitReporter(unit: g.CompilationUnit) {
-    def hijackedDiagnostics: List[(gPosition, Int, String)] = g.reporter match {
+    def hijackedDiagnostics: List[StoreReporter.Info] = g.reporter match {
       case r: StoreReporter =>
-        object RelevantMessage {
-          def unapply(info: r.Info): Option[(gPosition, Int, String)] = {
-            if (info.pos.source != unit.source) return None
-            Some((info.pos, info.severity.id, info.msg))
-          }
-        }
         val infos = r.infos
-        val toDrop = returnedMessagesByPath.getOrElse(unit, 0)
-        returnedMessagesByPath.put(unit, infos.size)
-        infos.iterator.drop(toDrop) // drop messages that have been reported before.
-          .collect { case RelevantMessage(pos, severity, msg) => (pos, severity, msg) }.toList
+        // drop messages that have been reported before.
+        val toDrop = returnedMessagesByPath.put(unit, infos.size).getOrElse(0)
+        infos.iterator.drop(toDrop).filter(_.pos.source == unit.source).toList
       case _ => Nil
     }
   }
