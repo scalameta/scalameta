@@ -290,8 +290,8 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   enableHardcoreMacros,
   crossScalaVersions := EarliestScalaVersions,
   mergedModule(
-    base => List(base / "scalameta" / "quasiquotes"),
-    base => List(base / "scalameta" / "transversers")
+    base => List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers"),
+    base => List(base / "scalameta" / "transversers2")
   ),
   Compile / sourceGenerators += Def.taskDyn {
     val outFile = (Compile / sourceManaged).value / "generated" / "TreeLifts.scala"

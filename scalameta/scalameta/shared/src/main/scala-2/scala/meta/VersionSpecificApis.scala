@@ -1,6 +1,6 @@
 package scala.meta
 
-private[meta] trait VersionSpecificApis extends transversers.Api with quasiquotes.Api {
+private[meta] trait VersionSpecificApis {
 
   // transversers
 
