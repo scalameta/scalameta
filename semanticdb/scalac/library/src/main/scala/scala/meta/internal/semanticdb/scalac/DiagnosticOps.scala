@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb.scalac
 
-import org.scalameta.unreachable
 import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.{semanticdb => s}
 
@@ -27,7 +26,7 @@ trait DiagnosticOps {
           case 0 => s.Diagnostic.Severity.INFORMATION
           case 1 => s.Diagnostic.Severity.WARNING
           case 2 => s.Diagnostic.Severity.ERROR
-          case _ => unreachable
+          case _ => s.Diagnostic.Severity.UNKNOWN_SEVERITY
         }
         s.Diagnostic(Some(mpos.toRange), sseverity, text)
       }
