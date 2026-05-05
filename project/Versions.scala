@@ -5,7 +5,7 @@ object Versions {
   val Scala211Versions = getVersions2(11, 12 to 12)
   val Scala212Versions = getVersions2(12, 18 to 21)
   val Scala213Versions = getVersions2(13, 15 to 18)
-  val Scala3Versions = getVersions3(3 -> 7, 8 -> 3)
+  val Scala3Versions = "3.3.8-RC1" +: getVersions3(8 -> 3)
   val Scala2ReleaseCandidates = getReleaseCandidates(2)
   val Scala3ReleaseCandidates = getReleaseCandidates(3)
   val LatestScala211 = Scala211Versions.head
@@ -15,7 +15,7 @@ object Versions {
   val EarliestScala211 = Scala211Versions.last
   val EarliestScala212 = Scala212Versions.last
   val EarliestScala213 = Scala213Versions.last
-  val EarliestScala3 = Scala3Versions.last
+  val EarliestScala3 = "3.3.8-RC1"
   val AllScala2Versions = Scala213Versions ++ Scala212Versions ++ Scala211Versions ++
     Scala2ReleaseCandidates
   val AllScalaVersions = AllScala2Versions ++ Scala3Versions ++ Scala3ReleaseCandidates
