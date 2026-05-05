@@ -7,10 +7,10 @@ class SingleAbstractMethod/*<=example.SingleAbstractMethod#*/ {
   }
   def withSAM/*<=example.SingleAbstractMethod#withSAM().*/(a/*<=example.SingleAbstractMethod#withSAM().(a)*/: SAM/*=>example.SingleAbstractMethod#SAM#*/) = a/*=>example.SingleAbstractMethod#withSAM().(a)*/.foo/*=>example.SingleAbstractMethod#SAM#foo().*/(0)
 
-  withSAM/*=>example.SingleAbstractMethod#withSAM().*/(_ + 1/*<=local0*/)
-  withSAM/*=>example.SingleAbstractMethod#withSAM().*/((x: Int) => x - 1/*<=local2*/)
+  withSAM/*=>example.SingleAbstractMethod#withSAM().*/(_ + 1/*<=local0*//*<=local1*/)
+  withSAM/*=>example.SingleAbstractMethod#withSAM().*/((x: Int) => x - 1/*<=local2*//*<=local3*/)
 
   def funcSAM/*<=example.SingleAbstractMethod#funcSAM().*/(y/*<=example.SingleAbstractMethod#funcSAM().(y)*/: Int/*=>scala.Int#*/) = y/*=>example.SingleAbstractMethod#funcSAM().(y)*/ */*=>scala.Int#`*`(+3).*/ 2
-  withSAM/*=>example.SingleAbstractMethod#withSAM().*/(funcSAM/*=>example.SingleAbstractMethod#funcSAM().*//*<=local4*/)
+  withSAM/*=>example.SingleAbstractMethod#withSAM().*/(funcSAM/*=>example.SingleAbstractMethod#funcSAM().*//*<=local5*//*<=local6*/)
 
 }
