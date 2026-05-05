@@ -52,6 +52,8 @@ trait TextDocumentOps {
       clearSymbolPointsCache()
       val occurrences = emptyOccurrenceMap()
       val samoccurrences = emptyOccurrenceMap()
+      // SAM methods share positions with their classes.
+      val sammethodoccurrences = emptyOccurrenceMap()
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ListBuffer[s.Synthetic]()
       val syntheticTreeCache = new mutable.HashMap[g.Tree, Option[s.Synthetic]]
@@ -85,12 +87,23 @@ trait TextDocumentOps {
 
       def addSamOccurrence(gt: g.Function) = getSyntheticSAMClass(gt).foreach { sam =>
         val gsym = gt.symbol
+        // Get the only declared method of the SAM class.
+        // Remove its position to create a new local on every call.
+        val gsymMethod = sam.info.decls.elems.sym.setPos(g.NoPosition)
         def atPos(mpos: m.Position): Unit = gsym.toSemantic match {
           case Symbols.None =>
           case ssym =>
             samoccurrences.update(mpos, (ssym, Role.DEFINITION))
             if (!shouldNotSaveSymbol(sam) && !shouldNotSaveSemanticSymbol(ssym))
               saveSymbolFromSemantic(sam, ssym)
+
+            gsymMethod.toSemantic match {
+              case Symbols.None =>
+              case ssymMethod =>
+                sammethodoccurrences.update(mpos, (ssymMethod, Role.DEFINITION))
+                if (!shouldNotSaveSymbol(gsymMethod) && !shouldNotSaveSemanticSymbol(ssymMethod))
+                  saveSymbolFromSemantic(gsymMethod, ssymMethod)
+            }
         }
         val gpos = gt.pos
         if (gpos.isDefined && (gsym ne null)) {
@@ -648,7 +661,7 @@ trait TextDocumentOps {
       val finalOccurrences = {
         val buf = List.newBuilder[s.SymbolOccurrence]
         for {
-          map <- Iterator(occurrences, mpatoccurrences, samoccurrences)
+          map <- Iterator(occurrences, mpatoccurrences, samoccurrences, sammethodoccurrences)
           (pos, (sym, role)) <- map
           flatSym <- sym.asMulti
         } buf += s.SymbolOccurrence(Some(pos.toRange), flatSym, role)

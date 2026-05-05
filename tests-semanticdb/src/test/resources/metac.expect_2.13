@@ -73,8 +73,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala-2.13/example/SingleAbstractMethod.scala
 Text => non-empty
 Language => Scala
-Symbols => 13 entries
-Occurrences => 30 entries
+Symbols => 16 entries
+Occurrences => 33 entries
 
 Symbols:
 example/SingleAbstractMethod# => class SingleAbstractMethod extends AnyRef { +4 decls }
@@ -101,14 +101,23 @@ example/SingleAbstractMethod#withSAM().(a) => param a: SAM
 local0 => class $anon extends Object with SAM { +1 decls }
   Object => java/lang/Object#
   SAM => example/SingleAbstractMethod#SAM#
+local1 => method foo(a: Int): Int <: example/SingleAbstractMethod#SAM#foo().
+  a => example/SingleAbstractMethod#SAM#foo().(a)
+  Int => scala/Int#
 local2 => class $anon extends Object with SAM { +1 decls }
   Object => java/lang/Object#
   SAM => example/SingleAbstractMethod#SAM#
-local3 => param x: Int
+local3 => method foo(a: Int): Int <: example/SingleAbstractMethod#SAM#foo().
+  a => example/SingleAbstractMethod#SAM#foo().(a)
   Int => scala/Int#
-local4 => class $anon extends Object with SAM { +1 decls }
+local4 => param x: Int
+  Int => scala/Int#
+local5 => class $anon extends Object with SAM { +1 decls }
   Object => java/lang/Object#
   SAM => example/SingleAbstractMethod#SAM#
+local6 => method foo(a: Int): Int <: example/SingleAbstractMethod#SAM#foo().
+  a => example/SingleAbstractMethod#SAM#foo().(a)
+  Int => scala/Int#
 
 Occurrences:
 [0:8..0:15): example <= example/
@@ -126,12 +135,14 @@ Occurrences:
 [7:26..7:29): foo => example/SingleAbstractMethod#SAM#foo().
 [9:2..9:9): withSAM => example/SingleAbstractMethod#withSAM().
 [9:10..9:15): _ + 1 <= local0
+[9:10..9:15): _ + 1 <= local1
 [9:12..9:13): + => scala/Int#`+`(+4).
 [10:2..10:9): withSAM => example/SingleAbstractMethod#withSAM().
 [10:10..10:27): (x: Int) => x - 1 <= local2
-[10:11..10:12): x <= local3
+[10:10..10:27): (x: Int) => x - 1 <= local3
+[10:11..10:12): x <= local4
 [10:14..10:17): Int => scala/Int#
-[10:22..10:23): x => local3
+[10:22..10:23): x => local4
 [10:24..10:25): - => scala/Int#`-`(+3).
 [12:6..12:13): funcSAM <= example/SingleAbstractMethod#funcSAM().
 [12:14..12:15): y <= example/SingleAbstractMethod#funcSAM().(y)
@@ -140,7 +151,8 @@ Occurrences:
 [12:26..12:27): * => scala/Int#`*`(+3).
 [13:2..13:9): withSAM => example/SingleAbstractMethod#withSAM().
 [13:10..13:17): funcSAM => example/SingleAbstractMethod#funcSAM().
-[13:10..13:17): funcSAM <= local4
+[13:10..13:17): funcSAM <= local5
+[13:10..13:17): funcSAM <= local6
 
 semanticdb/integration/src/main/scala/example/Access.scala
 ----------------------------------------------------------
