@@ -83,15 +83,27 @@ trait TextDocumentOps {
       def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
         addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
 
+      def setSamOccurrence(
+          gsymForSsym: g.Symbol,
+          gsym: g.Symbol,
+          mpos: m.Position,
+          role: Role,
+          map: mutable.Map[m.Position, Occurrence]
+      ): Boolean = {
+        val ssym = gsymForSsym.toSemantic
+        val ok = ssym ne Symbols.None
+        if (ok) {
+          map.update(mpos, (ssym, role))
+          if (!shouldNotSaveSymbol(gsym) && !shouldNotSaveSemanticSymbol(ssym))
+            saveSymbolFromSemantic(gsym, ssym)
+        }
+        ok
+      }
+
       def addSamOccurrence(gt: g.Function) = getSyntheticSAMClass(gt).foreach { sam =>
         val gsym = gt.symbol
-        def atPos(mpos: m.Position): Unit = gsym.toSemantic match {
-          case Symbols.None =>
-          case ssym =>
-            samoccurrences.update(mpos, (ssym, Role.DEFINITION))
-            if (!shouldNotSaveSymbol(sam) && !shouldNotSaveSemanticSymbol(ssym))
-              saveSymbolFromSemantic(sam, ssym)
-        }
+        def atPos(mpos: m.Position): Unit =
+          setSamOccurrence(gsym, sam, mpos, Role.DEFINITION, samoccurrences)
         val gpos = gt.pos
         if (gpos.isDefined && (gsym ne null)) {
           val gstart = gpos.start
