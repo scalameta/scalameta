@@ -52,6 +52,8 @@ trait TextDocumentOps {
       clearSymbolPointsCache()
       val occurrences = emptyOccurrenceMap()
       val samoccurrences = emptyOccurrenceMap()
+      // SAM methods share positions with their classes.
+      val sammethodoccurrences = emptyOccurrenceMap()
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ListBuffer[s.Synthetic]()
       val syntheticTreeCache = new mutable.HashMap[g.Tree, Option[s.Synthetic]]
@@ -95,7 +97,7 @@ trait TextDocumentOps {
             }
             ok
           }
-          set(sam, samoccurrences)
+          set(sam, samoccurrences) && set(sam.info.decls.elems.sym, sammethodoccurrences)
         }
         val gsym = gt.symbol
         val gpos = gt.pos
@@ -654,7 +656,7 @@ trait TextDocumentOps {
       val finalOccurrences = {
         val buf = List.newBuilder[s.SymbolOccurrence]
         for {
-          map <- Iterator(occurrences, mpatoccurrences, samoccurrences)
+          map <- Iterator(occurrences, mpatoccurrences, samoccurrences, sammethodoccurrences)
           (pos, (sym, role)) <- map
           flatSym <- sym.asMulti
         } buf += s.SymbolOccurrence(Some(pos.toRange), flatSym, role)
