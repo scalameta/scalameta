@@ -1,12 +1,9 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.{semanticdb => s}
-
-import java.util.HashMap
 
 import scala.annotation.tailrec
 import scala.collection.mutable
@@ -28,27 +25,28 @@ trait SymbolOps {
 
   private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
-    def toSemantic: String = {
-      def uncached(sym: g.Symbol): String = {
-        if (sym == null || sym == g.NoSymbol) return Symbols.None
-        if (sym.isOverloaded) return Symbols.Multi(sym.alternatives.map(_.toSemantic))
-        if (sym.isModuleClass) return sym.asClass.module.toSemantic
-        if (sym.isTypeSkolem) return sym.deSkolemize.toSemantic
-        if (sym.isSemanticdbLocal) return freshSymbol(sym)
+    private[semanticdb] def toSemanticUncached: String = {
+      if (sym == null || sym == g.NoSymbol) return Symbols.None
+      if (sym.isOverloaded) return Symbols.Multi(sym.alternatives.map(_.toSemantic))
+      if (sym.isModuleClass) return sym.asClass.module.toSemantic
+      if (sym.isTypeSkolem) return sym.deSkolemize.toSemantic
+      if (sym.isSemanticdbLocal) return freshSymbol(sym)
 
-        val owner = sym.owner.toSemantic
-        val desc =
-          if (sym.isValMethod) d.Term(sym.symbolName)
-          else if (sym.isMethod || sym.isUsefulField) d.Method(sym.symbolName, sym.disambiguator)
-          else if (sym.isTypeParameter) d.TypeParameter(sym.symbolName)
-          else if (sym.isValueParameter) d.Parameter(sym.symbolName)
-          else if (sym.isType || sym.isJavaClass) d.Type(sym.symbolName)
-          else if (sym.hasPackageFlag) d.Package(sym.symbolName)
-          else d.Term(sym.symbolName)
-        Symbols.Global(owner, desc)
-      }
+      val owner = sym.owner.toSemantic
+      val desc =
+        if (sym.isValMethod) d.Term(sym.symbolName)
+        else if (sym.isMethod || sym.isUsefulField) d.Method(sym.symbolName, sym.disambiguator)
+        else if (sym.isTypeParameter) d.TypeParameter(sym.symbolName)
+        else if (sym.isValueParameter) d.Parameter(sym.symbolName)
+        else if (sym.isType || sym.isJavaClass) d.Type(sym.symbolName)
+        else if (sym.hasPackageFlag) d.Package(sym.symbolName)
+        else d.Term(sym.symbolName)
+      Symbols.Global(owner, desc)
+    }
+
+    def toSemantic: String = {
       def defaultValue =
-        try uncached(sym)
+        try toSemanticUncached
         catch {
           case NonFatal(e) if isInteractiveCompiler =>
             // happens regularly for broken code with the pc, see
