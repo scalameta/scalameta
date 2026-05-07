@@ -1,15 +1,12 @@
 package scala.meta.tests
 package semanticdb
 
-import scala.meta._
 import scala.meta.cli._
 import scala.meta.internal.io._
-import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb._
-import scala.meta.internal.{semanticdb => s, semanticidx => i}
 import scala.meta.io.{AbsolutePath, Classpath}
 import scala.meta.tests.cli.CliTestUtils
-import scala.meta.tests.metacp.{Library, MetacpOps}
+import scala.meta.tests.metacp.MetacpOps
 
 import java.io._
 import java.nio.charset.StandardCharsets._
@@ -96,7 +93,6 @@ trait ExpectHelpers extends munit.Assertions {
       original: String,
       revised: String
   ): String = {
-    import scala.collection.JavaConverters._
     val originalLines = original.split("\n").toSeq.asJava
     val revisedLines = revised.split("\n").toSeq.asJava
     val OnlyCurlyBrace = "\\s+}".r
@@ -115,11 +111,11 @@ trait ExpectHelpers extends munit.Assertions {
     diff
   }
 
-  protected def loadMiniSymtab(path: Path): Map[String, s.SymbolInformation] = {
+  protected def loadMiniSymtab(path: Path): Map[String, SymbolInformation] = {
     for {
       file <- FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator
       if PathIO.extension(file.toNIO) == "semanticdb"
-      doc <- s.TextDocuments.parseFrom(file.readAllBytes).documents
+      doc <- TextDocuments.parseFrom(file.readAllBytes).documents
       sym <- doc.symbols
     } yield sym.symbol -> sym
   }.toMap
@@ -199,7 +195,7 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
       javasym <- {
         if (sym.symbol.contains("com.javacp"))
           // metac references to java defined symbols in com.javacp must have a corresponding metacp entry.
-          Some(metacp.getOrElse(sym.symbol, s.SymbolInformation()))
+          Some(metacp.getOrElse(sym.symbol, SymbolInformation()))
         else metacp.get(sym.symbol)
       }
     } yield {
