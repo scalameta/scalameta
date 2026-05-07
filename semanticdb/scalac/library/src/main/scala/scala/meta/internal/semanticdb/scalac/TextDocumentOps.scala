@@ -83,29 +83,23 @@ trait TextDocumentOps {
       def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
         addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
 
-      def setSamOccurrence(
-          gsymForSsym: g.Symbol,
-          gsym: g.Symbol,
-          mpos: m.Position,
-          role: Role,
-          map: mutable.Map[m.Position, Occurrence]
-      ): Boolean = {
-        val ssym = gsymForSsym.toSemantic
-        val ok = ssym ne Symbols.None
-        if (ok) {
-          map.update(mpos, (ssym, role))
-          if (!shouldNotSaveSymbol(gsym) && !shouldNotSaveSemanticSymbol(ssym))
-            saveSymbolFromSemantic(gsym, ssym)
-        }
-        ok
-      }
-
       def addSamOccurrence(gt: g.Function) = getSyntheticSAMClass(gt).foreach { sam =>
+        def atPos(mpos: m.Position): Unit = {
+          def set(gsym: g.Symbol, map: mutable.Map[m.Position, Occurrence]): Boolean = {
+            // SAM symbols aren't reusable and share position with lambda
+            val ssym = freshSymbolRaw(gsym)
+            val ok = ssym ne Symbols.None
+            if (ok) {
+              map.update(mpos, (ssym, Role.DEFINITION))
+              saveSymbolFromSemantic(gsym, ssym)
+            }
+            ok
+          }
+          set(sam, samoccurrences)
+        }
         val gsym = gt.symbol
-        def atPos(mpos: m.Position): Unit =
-          setSamOccurrence(gsym, sam, mpos, Role.DEFINITION, samoccurrences)
         val gpos = gt.pos
-        if (gpos.isDefined && (gsym ne null)) {
+        if (gpos.isDefined && (gsym ne null) && !config.symbols.isNone) {
           val gstart = gpos.start
           mfuncs.get(gstart).fold(mstarts.get(gstart).foreach { name =>
             val mpos = name.pos
