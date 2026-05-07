@@ -217,20 +217,22 @@ trait SymbolOps {
   private lazy val idCache = new mutable.HashMap[String, Int]
   private lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
-    @tailrec
-    def loop(sym: g.Symbol): m.Input = sym.pos.source match {
-      case GNoSourceFile => if (sym == g.NoSymbol) m.Input.None else loop(sym.owner)
-      case src => src.toInput
-    }
-    val minput = loop(sym)
-    if (minput == m.Input.None) Symbols.None
-    else {
-      val conflict = if (sym.pos.isDefined) pointsCache.getOrElseUpdate(sym.pos.point, sym) else sym
-      // Use conflicting symbol instead of this local symbol.
-      // This can happen for example in for comprehensions when the same binder
-      // results in multiple parameter symbols for each flatMap/withFilter/map/foreach.
-      if (conflict != sym && conflict.name == sym.name) conflict.toSemantic
-      else Symbols.Local(idCache.updateWithRemap(minput.text)(_.fold(0)(_ + 1)))
-    }
+    val pos = sym.pos
+    val conflict = if (pos.isDefined) pointsCache.getOrElseUpdate(pos.point, sym) else sym
+    // Use conflicting symbol instead of this local symbol.
+    // This can happen for example in for comprehensions when the same binder
+    // results in multiple parameter symbols for each flatMap/withFilter/map/foreach.
+    if (conflict != sym && conflict.name == sym.name) conflict.toSemantic else freshSymbolRaw(sym)
   }
+
+  @tailrec
+  private[semanticdb] final def freshSymbolRaw(sym: g.Symbol): String =
+    if (sym == g.NoSymbol) Symbols.None
+    else sym.pos.source match {
+      case GNoSourceFile => freshSymbolRaw(sym.owner)
+      case src =>
+        val minput = src.toInput
+        if (minput == m.Input.None) Symbols.None
+        else Symbols.Local(idCache.updateWithRemap(minput.text)(_.fold(0)(_ + 1)))
+    }
 }
