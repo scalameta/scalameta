@@ -3285,13 +3285,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   ): List[Term.ParamClause] = listBy[Term.ParamClause] { paramss =>
     first.foreach(paramss += _)
     while ({
-      val clause = termParamClauseOnParen(ellipsisMaxRank = ellipsisMaxRank)
-      paramss += clause
-      val hasModImplicit = clause match {
-        case _: Quasi => false
-        case x => x.mod.exists(_.is[Mod.Implicit])
-      }
-      !hasModImplicit && isAfterOptNewLine[LeftParen]
+      paramss += termParamClauseOnParen(ellipsisMaxRank = ellipsisMaxRank)
+      isAfterOptNewLine[LeftParen]
     }) {}
   }
 
