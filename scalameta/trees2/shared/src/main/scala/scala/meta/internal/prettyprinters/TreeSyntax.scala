@@ -892,14 +892,13 @@ object TreeSyntax {
     implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax(r(_, " "))
     private def printParams(t: Term.ParamClause, needParens: Boolean = true): Show.Result = {
       val v = t.values
-      val (useParens, mod) = v match {
-        case head +: tail =>
-          val modOpt = t.mod
-          val useParens = needParens || tail.nonEmpty ||
-            modOpt.fold(head.decltpe.isDefined)(!_.is[Mod.Implicit])
-          (useParens, o(modOpt, " "))
-        case _ => (true, Show.None)
+      val modOpt = t.mod
+      val useParens = v match {
+        case head +: tail => needParens || tail.nonEmpty ||
+          modOpt.fold(head.decltpe.isDefined)(!_.is[Mod.Implicit])
+        case _ => true
       }
+      val mod = o(modOpt, " ")
       w("(", s(mod, r(v.map(printParam(_, mod.isEmpty)), ", ")), ")", useParens)
     }
     implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax(r(_))
