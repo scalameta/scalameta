@@ -543,7 +543,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Nil,
       ctorp(
         Mod.Implicit(),
-        tparam(List(Mod.Override(), Mod.Implicit(), Mod.ValParam()), "x", "Int"),
+        tparam(List(Mod.Implicit(), Mod.Override(), Mod.ValParam()), "x", "Int"),
         tparam(List(Mod.Final(), Mod.Implicit(), Mod.VarParam()), "y", "String")
       ),
       tplNoBody()
@@ -578,7 +578,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Nil,
       ctorp(
         Mod.Implicit(),
-        tparam(List(Mod.Private(anon), Mod.Implicit(), Mod.ValParam()), "x", "Int"),
+        tparam(List(Mod.Implicit(), Mod.Private(anon), Mod.ValParam()), "x", "Int"),
         tparam(List(Mod.Implicit(), Mod.Final(), Mod.ValParam()), "y", "String"),
         tparam(List(Mod.Protected(anon), Mod.Implicit(), Mod.VarParam()), "z", "Boolean")
       ),

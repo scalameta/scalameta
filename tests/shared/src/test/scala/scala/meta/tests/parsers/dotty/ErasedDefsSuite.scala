@@ -70,7 +70,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       tname("turnedOn"),
       Nil,
-      List(tparam(List(Mod.Erased(), Mod.Using()), "ev", papply("IsOff", "S")) :: Nil),
+      List(tparam(List(Mod.Using(), Mod.Erased()), "ev", papply("IsOff", "S")) :: Nil),
       Some(papply("Machine", "On")),
       Term.New(init(papply("Machine", "On")))
     ))

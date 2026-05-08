@@ -3333,19 +3333,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     mod.foreach { mod =>
       val clazz = mod.getClass
       mods.find(_.getClass eq clazz) match {
-        case None => mods += mod
+        case None => mods.prepend(mod)
         case Some(x) => if (paramIdx == 0) syntaxError("repeated modifier", at = x)
       }
     }
 
-    val varOrVarParamMod = currToken match {
-      case _: KwVal => Some(atCurPosNext(Mod.ValParam()))
-      case _: KwVar => Some(atCurPosNext(Mod.VarParam()))
-      case _ =>
-        if (hasExplicitMods) syntaxErrorExpected[KwVal]
-        None
+    currToken match {
+      case _: KwVal => mods += atCurPosNext(Mod.ValParam())
+      case _: KwVar => mods += atCurPosNext(Mod.VarParam())
+      case _ => if (hasExplicitMods) syntaxErrorExpected[KwVal]
     }
-    varOrVarParamMod.foreach(mods += _)
 
     def endParamQuasi = at[RightParen, Comma]
     def getParamType: Type = paramType()
