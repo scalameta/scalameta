@@ -568,6 +568,24 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     ))
   }
 
+  test("#1837 class C(implicit private val x: Int, implicit final val y: String, protected implicit var z: Boolean)") {
+    checkTree(
+      templStat("class C(implicit private val x: Int, implicit final val y: String, protected implicit var z: Boolean)"),
+      "class C(implicit private val x: Int, final val y: String, protected var z: Boolean)"
+    )(Defn.Class(
+      Nil,
+      pname("C"),
+      Nil,
+      ctorp(
+        Mod.Implicit(),
+        tparam(List(Mod.Private(anon), Mod.Implicit(), Mod.ValParam()), "x", "Int"),
+        tparam(List(Mod.Implicit(), Mod.Final(), Mod.ValParam()), "y", "String"),
+        tparam(List(Mod.Protected(anon), Mod.Implicit(), Mod.VarParam()), "z", "Boolean")
+      ),
+      tplNoBody()
+    ))
+  }
+
   test("class C(var x: Int)")(
     assertEquals(templStat("class C(var x: Int)").reprint, "class C(var x: Int)")
   )
