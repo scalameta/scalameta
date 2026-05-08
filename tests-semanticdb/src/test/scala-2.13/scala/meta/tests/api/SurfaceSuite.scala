@@ -290,7 +290,29 @@ class SurfaceSuite extends FunSuite {
          |* scala.meta.Name.equals(Any): Boolean
          |* scala.meta.Name.hashCode(): Int
          |* scala.meta.Name.isAnonymous: Boolean
-         |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,T]): List[T]
+         |* scala.meta.Tree.bfs(scala.meta.Tree => Unit): Unit
+         |* scala.meta.Tree.bfsCollect(PartialFunction[scala.meta.Tree,A]): List[A]
+         |* scala.meta.Tree.bfsCollect(scala.meta.Tree => Option[A]): List[A]
+         |* scala.meta.Tree.bfsCollectEach(PartialFunction[scala.meta.Tree,Iterable[A]]): List[A]
+         |* scala.meta.Tree.bfsCollectEach(scala.meta.Tree => Iterable[A]): List[A]
+         |* scala.meta.Tree.bfsCollectFirst(PartialFunction[scala.meta.Tree,A]): Option[A]
+         |* scala.meta.Tree.bfsExists(scala.meta.Tree => Boolean): Boolean
+         |* scala.meta.Tree.bfsFind(scala.meta.Tree => Boolean): Option[scala.meta.Tree]
+         |* scala.meta.Tree.bfsForall(scala.meta.Tree => Boolean): Boolean
+         |* scala.meta.Tree.bfsIf(PartialFunction[scala.meta.Tree,Unit]): Unit
+         |* scala.meta.Tree.bfsIf(scala.meta.Tree => Boolean): Unit
+         |* scala.meta.Tree.collect(PartialFunction[scala.meta.Tree,A]): List[A]
+         |* scala.meta.Tree.dfs(scala.meta.Tree => Unit): Unit
+         |* scala.meta.Tree.dfsCollect(PartialFunction[scala.meta.Tree,A]): List[A]
+         |* scala.meta.Tree.dfsCollect(scala.meta.Tree => Option[A]): List[A]
+         |* scala.meta.Tree.dfsCollectEach(PartialFunction[scala.meta.Tree,Iterable[A]]): List[A]
+         |* scala.meta.Tree.dfsCollectEach(scala.meta.Tree => Iterable[A]): List[A]
+         |* scala.meta.Tree.dfsCollectFirst(PartialFunction[scala.meta.Tree,A]): Option[A]
+         |* scala.meta.Tree.dfsExists(scala.meta.Tree => Boolean): Boolean
+         |* scala.meta.Tree.dfsFind(scala.meta.Tree => Boolean): Option[scala.meta.Tree]
+         |* scala.meta.Tree.dfsForall(scala.meta.Tree => Boolean): Boolean
+         |* scala.meta.Tree.dfsIf(PartialFunction[scala.meta.Tree,Unit]): Unit
+         |* scala.meta.Tree.dfsIf(scala.meta.Tree => Boolean): Unit
          |* scala.meta.Tree.equals(Any): Boolean
          |* scala.meta.Tree.hashCode(): Int
          |* scala.meta.Tree.maybeParseAs(implicit scala.reflect.ClassTag[A], scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]

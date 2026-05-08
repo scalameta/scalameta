@@ -8,66 +8,24 @@ import scala.language.higherKinds
 
 object TreeOps {
 
-  class SimpleTraverser {
-    def apply(tree: Tree): Unit = tree.children.foreach(apply)
-  }
+  def contains[F[x <: Tree] <: TreeEquality[x]](
+      tree: Tree
+  )(toFind: Tree)(implicit conv: Tree => F[Tree], eqEv: Equal[F[Tree]]): Boolean =
+    exists(tree)(_.isEqual[F](toFind))
 
-  def contains[F[x <: Tree] <: TreeEquality[x]](tree: Tree)(
-      toFind: Tree
-  )(implicit conv: Tree => F[Tree], eqEv: Equal[F[Tree]]): Boolean = find(tree)(_.isEqual[F](toFind))
-    .nonEmpty
+  def find(tree: Tree)(f: Tree => Boolean): Option[Tree] = tree.dfsFind(f)
 
-  def find(tree: Tree)(f: Tree => Boolean): Option[Tree] =
-    collectFirst(tree) { case x if f(x) => x }
+  def forall(tree: Tree)(f: Tree => Boolean): Boolean = tree.dfsForall(f)
 
-  def forall(tree: Tree)(f: Tree => Boolean): Boolean = find(tree)(t => !f(t)).isEmpty
+  def exists(tree: Tree)(f: Tree => Boolean): Boolean = tree.dfsExists(f)
 
-  def exists(tree: Tree)(f: Tree => Boolean): Boolean = find(tree)(t => f(t)).isDefined
+  def collectFirst[B](tree: Tree)(pf: PartialFunction[Tree, B]): Option[B] = tree.dfsCollectFirst(pf)
 
-  def collectFirst[B](tree: Tree)(pf: PartialFunction[Tree, B]): Option[B] = {
-    var result = Option.empty[B]
-    object traverser extends SimpleTraverser {
-      override def apply(t: Tree): Unit =
-        if (result.isEmpty && pf.isDefinedAt(t)) result = Some(pf(t))
-        else if (result.isEmpty) super.apply(t)
-    }
-    traverser(tree)
-    result
-  }
+  def foreach(tree: Tree)(f: Tree => Unit): Unit = tree.dfs(f)
 
-  def foreach(tree: Tree)(f: Tree => Unit): Unit = {
-    object traverser extends SimpleTraverser {
-      override def apply(t: Tree): Unit = {
-        f(t)
-        super.apply(t)
-      }
-    }
-    traverser(tree)
-  }
+  def descendants(tree: Tree): List[Tree] = tree.dfsCollect(t => if (t ne tree) Some(t) else None)
 
-  def descendants(tree: Tree): List[Tree] = {
-    val builder = List.newBuilder[Tree]
-    object traverser extends SimpleTraverser {
-      override def apply(t: Tree): Unit = {
-        if (t ne tree) builder += t
-        super.apply(t)
-      }
-    }
-    traverser(tree)
-    builder.result()
-  }
-
-  def collect[B](tree: Tree)(pf: PartialFunction[Tree, B]): List[B] = {
-    val builder = List.newBuilder[B]
-    object traverser extends SimpleTraverser {
-      override def apply(t: Tree): Unit = {
-        if (pf.isDefinedAt(t)) builder += pf(t)
-        super.apply(t)
-      }
-    }
-    traverser(tree)
-    builder.result()
-  }
+  def collect[B](tree: Tree)(pf: PartialFunction[Tree, B]): List[B] = tree.dfsCollect(pf)
 
   @tailrec
   final def ancestors(tree: Tree, accum: List[Tree] = Nil): List[Tree] = tree.parent match {
