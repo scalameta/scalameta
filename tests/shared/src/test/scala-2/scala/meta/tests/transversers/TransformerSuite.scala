@@ -65,4 +65,17 @@ class TransformerSuite extends TreeSuiteBase {
     assertEquals(afterTree.toString, after)
     assertEquals(afterTree.origin.inputOpt, beforeTree.origin.inputOpt)
   }
+
+  test("#1200") {
+    var i = 0
+    val fn: PartialFunction[Tree, Tree] = {
+      case q"A" if {
+            i += 1
+            i < 2
+          } => q"B"
+    }
+    i = 0
+    q"A".transform(fn)
+  }
+
 }
