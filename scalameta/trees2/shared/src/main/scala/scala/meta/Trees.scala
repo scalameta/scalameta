@@ -597,13 +597,13 @@ object Term {
   class ParamClause(values: List[Param], mod: Option[Mod.ParamsType] = None)
       extends Member.ParamClause
   object ParamClause {
-    @tailrec
-    private[meta] def getMod(v: Seq[Param]): Option[Mod.ParamsType] = v match {
-      case head +: tail =>
-        if (isQuasi(head)) getMod(tail)
-        else head.mods.collectFirst { case x: Mod.ParamsType => x }.filter {
-          case _: Mod.Implicit => tail.forall(x => isQuasiOr(x, x.mods.exists(_.is[Mod.Implicit])))
-          case _ => true
+    private[meta] def getMod(v: List[Param]): Option[Mod.ParamsType] = v match {
+      case head :: tail if !isQuasi(head) =>
+        head.mods match {
+          case (mod: Mod.ParamsType) :: _
+              if !mod.is[Mod.Implicit] ||
+                tail.forall(x => isQuasiOr(x, x.mods.exists(_.is[Mod.Implicit]))) => Some(mod)
+          case _ => None
         }
       case _ => None
     }

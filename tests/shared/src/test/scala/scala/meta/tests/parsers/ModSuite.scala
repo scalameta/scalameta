@@ -583,11 +583,21 @@ class ModSuite extends ParseSuite {
 
   test("#4601 1: protected implicit") {
     val code = "class FmtTest(protected implicit val viewConfig: String)(implicit z: Double)"
-    val error =
-      """|<input>:1: error: unexpected opening parenthesis
-         |class FmtTest(protected implicit val viewConfig: String)(implicit z: Double)
-         |                                                        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val tree = Defn.Class(
+      Nil,
+      pname("FmtTest"),
+      Nil,
+      ctorp(
+        List(tparam(
+          List(Mod.Protected(Name.Anonymous()), Mod.Implicit(), Mod.ValParam()),
+          "viewConfig",
+          "String"
+        )),
+        List(tparam(List(Mod.Implicit()), "z", "Double"))
+      ),
+      tplNoBody()
+    )
+    runTestAssert[Stat](code)(tree)
   }
 
 }
