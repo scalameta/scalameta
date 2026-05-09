@@ -12,8 +12,7 @@ import scala.util.Properties
 import munit.FunSuite
 
 class InteractiveSuite extends FunSuite {
-  val option =
-    if (ScalaVersion.version.startsWith("2.11")) "-Ywarn-unused-import" else "-Ywarn-unused:imports"
+  val option = "-Ywarn-unused:imports"
   val compiler: Global = newCompiler(scalacOptions = option :: Nil)
   def check(
       original: String,

@@ -17,7 +17,7 @@ this guide, you will learn how to
 ## Installation
 
 Add a dependency to Scalameta in your build to get started. Scalameta supports
-Scala 2.11, Scala 2.12, Scala 2.13, Scala.js and Scala Native.
+Scala 2.12, Scala 2.13, Scala 3, Scala.js and Scala Native.
 
 ### sbt
 
