@@ -44,7 +44,7 @@ object JSFs extends js.Any {
   def readFile(
       path: String,
       encoding: String,
-      callback: js.Function2[js.Error, String, Unit]
+      callback: js.Function2[js.Error, String, Unit],
   ): Unit = js.native
 
   /** Writes file contents using blocking apis */
@@ -58,7 +58,7 @@ object JSFs extends js.Any {
       path: String,
       data: String,
       encoding: String,
-      callback: js.Function1[js.Error, Unit]
+      callback: js.Function1[js.Error, Unit],
   ): Unit = js.native
 
   /** Returns an array of filenames excluding '.' and '..'. */
@@ -76,7 +76,7 @@ object JSFs extends js.Any {
       path: String, // real path
       link: String, // link path
       /** type is file, dir, junction (windows) */
-      `type`: js.UndefOr[String] = js.undefined
+      `type`: js.UndefOr[String] = js.undefined,
   ): Unit = js.native
 
   /** Synchronously creates a directory. */
@@ -187,7 +187,7 @@ object JSIO {
         promise.tryFailure(new RuntimeException(err match {
           case e: js.Error => e.message
           case _ => err.toString
-        }))
+        })),
     )
 
     promise.future

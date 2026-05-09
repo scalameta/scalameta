@@ -30,7 +30,7 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
           case otherLookup => otherLookup
         }
       case _ => MissingLookup
-    }
+    },
   )
 
   private implicit class XtensionSymbolOps(sym: Symbol) {

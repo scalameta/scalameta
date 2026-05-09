@@ -26,7 +26,7 @@ class LitSuite extends ParseSuite {
   test("-9223372036854775808L")(assertTree(term("-9223372036854775808L"))(lit(-9223372036854775808L)))
 
   test("42.42")(
-    matchSubStructure[Stat]("42.42", { case t: Lit.Double => assertEquals(t.format, "42.42") })
+    matchSubStructure[Stat]("42.42", { case t: Lit.Double => assertEquals(t.format, "42.42") }),
   )
 
   test("42.0f")(matchSubStructure[Stat]("42.42f", { case Lit(42.42f) => () }))
@@ -65,7 +65,7 @@ class LitSuite extends ParseSuite {
 
     assertTree(term("raw\"\"\"\"\"\"\"\""))(Term.Interpolate(tname("raw"), List(str("\"\"")), Nil))
     assertTree(
-      term("raw\"\"\"\"\"\"\"\"\"\"\"\"\"")
+      term("raw\"\"\"\"\"\"\"\"\"\"\"\"\""),
     )(Term.Interpolate(tname("raw"), List(str("\"\"\"\"\"\"\"")), Nil))
   }
 
@@ -88,12 +88,12 @@ class LitSuite extends ParseSuite {
       pname("Foo"),
       Nil,
       EmptyCtor(),
-      tpl(Defn.Def(Nil, tname("negate"), Nil, Nil, Some(pname("-")), tname("-")))
+      tpl(Defn.Def(Nil, tname("negate"), Nil, Nil, Some(pname("-")), tname("-"))),
     ))
   }
 
   test("simple-expression-parse-error")(
-    intercept[parsers.ParseException](templStat("def neg: Unit = 2 + throw"))
+    intercept[parsers.ParseException](templStat("def neg: Unit = 2 + throw")),
   )
 
   test("binary literals") {
@@ -213,7 +213,7 @@ class LitSuite extends ParseSuite {
     val tree = tinfix(
       tname("behavior"),
       "of",
-      tapply(tname("something"), blk(tinfix(tname("a"), "shouldBe", tname("b"))))
+      tapply(tname("something"), blk(tinfix(tname("a"), "shouldBe", tname("b")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -227,7 +227,7 @@ class LitSuite extends ParseSuite {
     val tree = tinfix(
       tname("behavior"),
       "of",
-      tapply(str("..."), blk(tinfix(tname("a"), "shouldBe", tname("b"))))
+      tapply(str("..."), blk(tinfix(tname("a"), "shouldBe", tname("b")))),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -250,7 +250,7 @@ class LitSuite extends ParseSuite {
       "0x8000000000000000L",
       lit(-9223372036854775808L),
       -9223372036854775808L,
-      "-9223372036854775808L"
+      "-9223372036854775808L",
     ),
     ("3.4028235e38f", flt("3.4028235E+38"), Float.MaxValue, "3.4028235E+38f"),
     ("-3.4028235e38f", flt("-3.4028235E+38"), Float.MinValue, "-3.4028235E+38f"),
@@ -258,13 +258,13 @@ class LitSuite extends ParseSuite {
       "1.7976931348623157e+308d",
       dbl("1.7976931348623157E+308"),
       Double.MaxValue,
-      "1.7976931348623157E+308d"
+      "1.7976931348623157E+308d",
     ),
     (
       "-1.7976931348623157e+308d",
       dbl("-1.7976931348623157E+308"),
       Double.MinValue,
-      "-1.7976931348623157E+308d"
+      "-1.7976931348623157E+308d",
     ),
     ("1e-500d", dbl("1E-500"), 0d, "1E-500d"),
     ("-1E-500d", dbl("-1E-500"), 0d, "-1E-500d"),
@@ -286,13 +286,13 @@ class LitSuite extends ParseSuite {
       "1.7976931348623158e+308",
       fltXL("1.7976931348623158", "+308"),
       dec("1.7976931348623158", "+308"),
-      "1.7976931348623158e+308"
+      "1.7976931348623158e+308",
     ),
     (
       "-1.7976931348623158e+308",
       lit("-", fltXL("1.7976931348623158", "+308")),
       ("-", dec("1.7976931348623158", "+308")),
-      "-1.7976931348623158e+308"
+      "-1.7976931348623158e+308",
     ),
     ("1e10_0000_000_000", fltXL("1", "100000000000"), dec("1", "100000000000"), "1e100000000000"),
     ("1_000_000_000_000", intXL(1000000000000L), BigInt(1000000000000L), "1000000000000"),
@@ -300,14 +300,14 @@ class LitSuite extends ParseSuite {
       "1_000_000_000_000_000_000",
       intXL("1000000000000000000"),
       BigInt("1000000000000000000"),
-      "1000000000000000000"
+      "1000000000000000000",
     ),
     ("0b111111111111111111111111111111110", intXL(8589934590L), BigInt(8589934590L), "8589934590"),
     (
       "-0b111111111111111111111111111111110",
       intXL(-8589934590L),
       BigInt(-8589934590L),
-      "-8589934590"
+      "-8589934590",
     ),
     ("2147483648", intXL(2147483648L), BigInt(2147483648L), "2147483648"),
     ("-2147483649", intXL(-2147483649L), BigInt(-2147483649L), "-2147483649"),
@@ -315,7 +315,7 @@ class LitSuite extends ParseSuite {
     ("-0xffffffff0", intXL(-68719476720L), BigInt(-68719476720L), "-68719476720"),
     ("0b00101010", lit(42), 42, "42"),
     ("0B_0010_1010", lit(42), 42, "42"),
-    ("0b_0010_1010L", lit(42L), 42L, "42L")
+    ("0b_0010_1010L", lit(42L), 42L, "42L"),
   ).foreach { case (code, tree: Lit, number, syntax) =>
     test(s"numeric literal ok scala213: $code") {
       implicit val dialect: Dialect = dialects.Scala213
@@ -328,7 +328,7 @@ class LitSuite extends ParseSuite {
     ("0.f", tselect(lit(0), "f")),
     ("1.0 + 2.0f", tinfix(lit(1d), "+", lit(2f))),
     ("1d + 2f", tinfix(lit(1d), "+", lit(2f))),
-    ("0b01.toString", tselect(lit(1), "toString"))
+    ("0b01.toString", tselect(lit(1), "toString")),
   ).foreach { case (code, tree: Tree) =>
     test(s"expr with numeric literal ok scala213: $code")(runTestAssert[Stat](code, None)(tree))
   }
@@ -338,104 +338,104 @@ class LitSuite extends ParseSuite {
       "9223372036854775808L",
       """|<input>:1: error: integer number out of range for Long
          |9223372036854775808L
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "-9223372036854775809L",
       """|<input>:1: error: integer number out of range for Long
          |-9223372036854775809L
-         | ^""".stripMargin
+         | ^""".stripMargin,
     ),
     (
       "0xffffffffffffffff0L",
       """|<input>:1: error: integer number out of range for Long
          |0xffffffffffffffff0L
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "-0xffffffffffffffff0L",
       """|<input>:1: error: integer number out of range for Long
          |-0xffffffffffffffff0L
-         | ^""".stripMargin
+         | ^""".stripMargin,
     ),
     (
       "1_000_000_000_000_000_000_000l",
       """|<input>:1: error: integer number out of range for Long
          |1_000_000_000_000_000_000_000l
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "00",
       """|<input>:1: error: Non-zero integral values may not have a leading zero.
          |00
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "00l",
       """|<input>:1: error: Non-zero integral values may not have a leading zero.
          |00l
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "0b01d",
       """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b01d
-         |    ^""".stripMargin
+         |    ^""".stripMargin,
     ),
     (
       "0b01f",
       """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b01f
-         |    ^""".stripMargin
+         |    ^""".stripMargin,
     ),
     (
       "0b0123",
       """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b0123
-         |    ^""".stripMargin
+         |    ^""".stripMargin,
     ),
     (
       "0b01.2",
       """|<input>:1: error: `;` expected but `double constant` found
          |0b01.2
-         |    ^""".stripMargin
+         |    ^""".stripMargin,
     ),
     (
       "1. + 2.",
       """|<input>:1: error: `;` expected but `integer constant` found
          |1. + 2.
-         |     ^""".stripMargin
+         |     ^""".stripMargin,
     ),
     (
       ".f",
       """|<input>:1: error: illegal start of definition `.`
          |.f
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "3.4028236e38f",
       """|<input>:1: error: floating-point value out of range for Float
          |3.4028236e38f
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "-3.4028236e38f",
       """|<input>:1: error: floating-point value out of range for Float
          |-3.4028236e38f
-         | ^""".stripMargin
+         | ^""".stripMargin,
     ),
     (
       "1.7976931348623158e+308d",
       """|<input>:1: error: floating-point value out of range for Double
          |1.7976931348623158e+308d
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "-1.7976931348623158e+308d",
       """|<input>:1: error: floating-point value out of range for Double
          |-1.7976931348623158e+308d
-         | ^""".stripMargin
-    )
+         | ^""".stripMargin,
+    ),
   ).foreach { case (code, error) =>
     test(s"numeric literal fail scala213: $code")(runTestError[Stat](code, error))
   }

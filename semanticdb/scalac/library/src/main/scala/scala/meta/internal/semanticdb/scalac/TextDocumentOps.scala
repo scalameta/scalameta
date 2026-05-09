@@ -390,7 +390,7 @@ trait TextDocumentOps {
               case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
                 val sels = gtree.selectors.flatMap(sel =>
                   if (sel.name == g.nme.WILDCARD) Nil
-                  else mstarts.get(sel.namePos).map(mname => (sel.name, mname))
+                  else mstarts.get(sel.namePos).map(mname => (sel.name, mname)),
                 )
                 sels.foreach { case (gname, mname) =>
                   val gexpr = gtree.expr
@@ -462,7 +462,7 @@ trait TextDocumentOps {
               case t: g.Function =>
                 addSamOccurrence(t)
                 t.vparams.foreach(p =>
-                  if (!(p.symbol.isSynthetic || p.name.decoded.startsWith("x$"))) traverse(p)
+                  if (!(p.symbol.isSynthetic || p.name.decoded.startsWith("x$"))) traverse(p),
                 )
                 traverse(t.body)
                 tryFindMtree(t)
@@ -547,7 +547,7 @@ trait TextDocumentOps {
               val v = res
               v.foreach(s => if (s.range.isDefined) synthetics += s)
               v
-            }
+            },
           )
 
         def getCached(gt: g.Tree): Option[s.Synthetic] = cached(gt) {
@@ -676,7 +676,7 @@ trait TextDocumentOps {
         symbols = finalSymbols.sortBy(_.symbol),
         occurrences = finalOccurrences.sortBy(_.range),
         diagnostics = diagnostics.sortBy(_.range),
-        synthetics = synthetics.toScalaSeq.sortBy(_.range)
+        synthetics = synthetics.toScalaSeq.sortBy(_.range),
       )
     }
   }

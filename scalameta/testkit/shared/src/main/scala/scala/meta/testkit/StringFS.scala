@@ -35,7 +35,7 @@ object StringFS {
   def fromString(
       layout: String,
       root: AbsolutePath = AbsolutePath(Files.createTempDirectory("scalameta")),
-      charset: Charset = StandardCharsets.UTF_8
+      charset: Charset = StandardCharsets.UTF_8,
   ): AbsolutePath = {
     if (layout.trim.nonEmpty) layout.split("(?=\n/)").foreach { row =>
       row.stripPrefix("\n").split("\n", 2).toList match {
@@ -46,7 +46,7 @@ object StringFS {
             file.toNIO,
             contents.getBytes(charset),
             StandardOpenOption.CREATE,
-            StandardOpenOption.TRUNCATE_EXISTING
+            StandardOpenOption.TRUNCATE_EXISTING,
           )
         case els =>
           throw new IllegalArgumentException(s"Unable to split argument info path/contents! \n$els")
@@ -78,7 +78,7 @@ object StringFS {
   def asString(
       root: AbsolutePath,
       includePath: RelativePath => Boolean = _ => true,
-      charset: Charset = StandardCharsets.UTF_8
+      charset: Charset = StandardCharsets.UTF_8,
   ): String = FileIO.listAllFilesRecursively(root).files.filter(includePath).sortBy(_.toNIO)
     .map { path =>
       val contents = FileIO.slurp(root.resolve(path), charset)

@@ -13,7 +13,7 @@ object Structure {
   }
 
   implicit def structureList[T: Structure]: Structure[List[T]] = Structure(xs =>
-    Sequence(Str("List("), r(xs.map(x => implicitly[Structure[T]].apply(x)), ", "), Str(")"))
+    Sequence(Str("List("), r(xs.map(x => implicitly[Structure[T]].apply(x)), ", "), Str(")")),
   )
 
   implicit def structureOption[T: Structure]: Structure[Option[T]] = Structure {

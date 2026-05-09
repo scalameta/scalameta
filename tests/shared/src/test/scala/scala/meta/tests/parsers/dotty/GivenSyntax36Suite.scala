@@ -14,7 +14,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       List(pparam("A", bounds(cb = List(Type.BoundsAlias("mm", "Monoid"))))),
       List(List(tparam("xs", "A"))),
       Some("A"),
-      "???"
+      "???",
     ))
   }
 
@@ -33,8 +33,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
         "showMax",
         List(pparam("X", bounds(cb = List("Ordering", "Show")))),
         List(List(tparam("x", "X"), tparam("y", "X"))),
-        "String"
-      ))
+        "String",
+      )),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -51,11 +51,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
         "showMax",
         List(pparam(
           "X",
-          bounds(cb = List(Type.BoundsAlias("ordering", "Ordering"), Type.BoundsAlias("show", "Show")))
+          bounds(cb = List(Type.BoundsAlias("ordering", "Ordering"), Type.BoundsAlias("show", "Show"))),
         )),
         List(List(tparam("x", "X"), tparam("y", "X"))),
-        "String"
-      ))
+        "String",
+      )),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -71,8 +71,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
            |  type Element
            |  given Ord[Element] = compiletime.deferred
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Trait(
       Nil,
       pname("Sorted"),
@@ -80,24 +80,24 @@ class GivenSyntax36Suite extends BaseDottySuite {
       ctor,
       tpl(
         Decl.Type(Nil, pname("Element"), Nil, noBounds),
-        Defn.GivenAlias(Nil, anon, None, papply("Ord", "Element"), tselect("compiletime", "deferred"))
-      )
+        Defn.GivenAlias(Nil, anon, None, papply("Ord", "Element"), tselect("compiletime", "deferred")),
+      ),
     ))
   }
 
   test("poly-function")(
     runTestAssert[Stat](
       """|type Comparer = [X: Ord] => (x: X, y: X) => Boolean
-         |""".stripMargin
+         |""".stripMargin,
     )(Defn.Type(
       Nil,
       pname("Comparer"),
       Nil,
       ppolyfunc(
-        pparam("X", bounds(cb = List("Ord")))
+        pparam("X", bounds(cb = List("Ord"))),
       )(pfunc(Type.TypedParam("x", "X", Nil), Type.TypedParam("y", "X", Nil))("Boolean")),
-      noBounds
-    ))
+      noBounds,
+    )),
   )
 
   test("poly-function-val") {
@@ -106,21 +106,21 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |  ord.compare(x, y) < 0
          |""".stripMargin,
       assertLayout =
-        Some("val less: Comparer = [X: Ord as ord] => (x: X, y: X) => ord.compare(x, y) < 0")
+        Some("val less: Comparer = [X: Ord as ord] => (x: X, y: X) => ord.compare(x, y) < 0"),
     )(Defn.Val(
       Nil,
       List(patvar("less")),
       Some("Comparer"),
       tpolyfunc(
-        pparam("X", bounds(cb = List(Type.BoundsAlias("ord", "Ord"))))
+        pparam("X", bounds(cb = List(Type.BoundsAlias("ord", "Ord")))),
       )(tfunc(tparam("x", "X"), tparam("y", "X"))(
-        tinfix(tapply(tselect("ord", "compare"), "x", "y"), "<", lit(0))
-      ))
+        tinfix(tapply(tselect("ord", "compare"), "x", "y"), "<", lit(0)),
+      )),
     ))
   }
 
   val body = tplBody(
-    Defn.Def(Nil, "compare", Nil, List(List(tparam("x", "Int"), tparam("y", "Int"))), None, "???")
+    Defn.Def(Nil, "compare", Nil, List(List(tparam("x", "Int"), tparam("y", "Int"))), None, "???"),
   )
 
   test("given")(
@@ -128,8 +128,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       """|given Ord[Int] with
          |   def compare(x: Int, y: Int) = ???
          |""".stripMargin,
-      assertLayout = Some("given Ord[Int] with { def compare(x: Int, y: Int) = ??? }")
-    )(Defn.Given(Nil, anon, None, tpl(List(init(papply("Ord", "Int"))), body)))
+      assertLayout = Some("given Ord[Int] with { def compare(x: Int, y: Int) = ??? }"),
+    )(Defn.Given(Nil, anon, None, tpl(List(init(papply("Ord", "Int"))), body))),
   )
 
   val bodyBounds = tpl(
@@ -140,8 +140,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       List(List(tparam("x", papply("List", "A")), tparam("y", papply("List", "A")))),
       None,
-      "???"
-    ))
+      "???",
+    )),
   )
 
   test("given-context")(
@@ -150,8 +150,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |  def compare(x: List[A], y: List[A]) = ???
          |""".stripMargin,
       assertLayout =
-        Some("given [A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
-    )(Defn.Given(Nil, anon, List(pparam("A", bounds(cb = List("Ord")))), Nil, bodyBounds))
+        Some("given [A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }"),
+    )(Defn.Given(Nil, anon, List(pparam("A", bounds(cb = List("Ord")))), Nil, bodyBounds)),
   )
 
   test("given-context-using") {
@@ -160,14 +160,14 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |  def compare(x: List[A], y: List[A]) = ???
          |""".stripMargin,
       assertLayout = Some(
-        "given [A](using Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }"
-      )
+        "given [A](using Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }",
+      ),
     )(Defn.Given(
       Nil,
       anon,
       List(pparam("A")),
       List(List(tparamUsing("", papply("Ord", "A")))),
-      bodyBounds
+      bodyBounds,
     ))
   }
 
@@ -177,17 +177,17 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |  def compare(x: List[A], y: List[A]) = ???
          |""".stripMargin,
       assertLayout =
-        Some("given [A](using ord: Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
+        Some("given [A](using ord: Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }"),
     )(Defn.Given(
       Nil,
       anon,
       List(pparam("A")),
       List(List(tparamUsing("ord", papply("Ord", "A")))),
-      bodyBounds
+      bodyBounds,
     ))
   }
   test("given-simple-alias")(runTestAssert[Stat]("given Ord[Int] = IntOrd()")(
-    Defn.GivenAlias(Nil, anon, None, papply("Ord", "Int"), tapply("IntOrd"))
+    Defn.GivenAlias(Nil, anon, None, papply("Ord", "Int"), tapply("IntOrd")),
   ))
 
   test("given-alias-context-bound")(
@@ -197,8 +197,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       papply("Ord", papply("List", "A")),
-      tapplytype("ListOrd", "A")
-    ))
+      tapplytype("ListOrd", "A"),
+    )),
   )
 
   test("given-alias-context-param")(
@@ -208,12 +208,12 @@ class GivenSyntax36Suite extends BaseDottySuite {
       List(pparam("A")),
       List(List(tparamUsing("", papply("Ord", "A")))),
       papply("Ord", papply("List", "A")),
-      tapplytype("ListOrd", "A")
-    ))
+      tapplytype("ListOrd", "A"),
+    )),
   )
 
   test("given-by-name")(runTestAssert[Stat]("given [DummySoItsByName]: Context = curCtx")(
-    Defn.GivenAlias(Nil, anon, List(pparam("DummySoItsByName")), Nil, "Context", "curCtx")
+    Defn.GivenAlias(Nil, anon, List(pparam("DummySoItsByName")), Nil, "Context", "curCtx"),
   ))
 
   test("given-named")(
@@ -221,8 +221,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       """|given intOrd: Ord[Int] with
          |   def compare(x: Int, y: Int) = ???
          |""".stripMargin,
-      assertLayout = Some("given intOrd: Ord[Int] with { def compare(x: Int, y: Int) = ??? }")
-    )(Defn.Given(Nil, "intOrd", None, tpl(List(init(papply("Ord", "Int"))), body)))
+      assertLayout = Some("given intOrd: Ord[Int] with { def compare(x: Int, y: Int) = ??? }"),
+    )(Defn.Given(Nil, "intOrd", None, tpl(List(init(papply("Ord", "Int"))), body))),
   )
 
   test("given-context-named") {
@@ -231,8 +231,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |  def compare(x: List[A], y: List[A]) = ???
          |""".stripMargin,
       assertLayout = Some(
-        "given listOrd[A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }"
-      )
+        "given listOrd[A: Ord]: Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }",
+      ),
     )(Defn.Given(Nil, "listOrd", List(pparam("A", bounds(cb = List("Ord")))), Nil, bodyBounds))
   }
 
@@ -242,13 +242,13 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |  def compare(x: List[A], y: List[A]) = ???
          |""".stripMargin,
       assertLayout =
-        Some("given listOrd[A](using Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
+        Some("given listOrd[A](using Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }"),
     )(Defn.Given(
       Nil,
       "listOrd",
       List(pparam("A")),
       List(List(tparamUsing("", papply("Ord", "A")))),
-      bodyBounds
+      bodyBounds,
     ))
   }
 
@@ -258,18 +258,18 @@ class GivenSyntax36Suite extends BaseDottySuite {
          |  def compare(x: List[A], y: List[A]) = ???
          |""".stripMargin,
       assertLayout =
-        Some("given listOrd[A](using ord: Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }")
+        Some("given listOrd[A](using ord: Ord[A]): Ord[List[A]] with { def compare(x: List[A], y: List[A]) = ??? }"),
     )(Defn.Given(
       Nil,
       "listOrd",
       List(pparam("A")),
       List(List(tparamUsing("ord", papply("Ord", "A")))),
-      bodyBounds
+      bodyBounds,
     ))
   }
 
   test("given-simple-alias-named")(runTestAssert[Stat]("given intOrd: Ord[Int] = IntOrd()")(
-    Defn.GivenAlias(Nil, "intOrd", None, papply("Ord", "Int"), tapply("IntOrd"))
+    Defn.GivenAlias(Nil, "intOrd", None, papply("Ord", "Int"), tapply("IntOrd")),
   ))
 
   test("given-alias-context-bound-named")(
@@ -279,8 +279,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
       papply("Ord", papply("List", "A")),
-      tapplytype("ListOrd", "A")
-    ))
+      tapplytype("ListOrd", "A"),
+    )),
   )
 
   test("given-alias-context-param-named")(
@@ -290,17 +290,17 @@ class GivenSyntax36Suite extends BaseDottySuite {
       List(pparam("A")),
       List(List(tparamUsing("", papply("Ord", "A")))),
       papply("Ord", papply("List", "A")),
-      tapplytype("ListOrd", "A")
-    ))
+      tapplytype("ListOrd", "A"),
+    )),
   )
 
   test("given-by-name-named")(
     runTestAssert[Stat]("given context[DummySoItsByName]: Context = curCtx")(
-      Defn.GivenAlias(Nil, "context", List(pparam("DummySoItsByName")), Nil, "Context", "curCtx")
-    )
+      Defn.GivenAlias(Nil, "context", List(pparam("DummySoItsByName")), Nil, "Context", "curCtx"),
+    ),
   )
   test("given-abstract-named")(
-    runTestAssert[Stat]("given context: Context")(Decl.Given(Nil, "context", None, "Context"))
+    runTestAssert[Stat]("given context: Context")(Decl.Given(Nil, "context", None, "Context")),
   )
 
   // https://docs3.scala-lang.org/sips/sips/typeclasses-syntax.html#7-cleanup-of-given-syntax
@@ -316,7 +316,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       anon,
       Nil,
-      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -332,7 +332,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       anon,
       Nil,
-      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -347,7 +347,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       "ord",
       Nil,
-      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -363,7 +363,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       "ord",
       Nil,
-      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", "Int"))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -380,7 +380,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -397,7 +397,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -413,7 +413,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tname("ord"),
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -430,7 +430,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tname("ord"),
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -447,7 +447,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -464,7 +464,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -480,7 +480,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tname("ord"),
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -497,7 +497,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tname("ord"),
       List(pparam("A", bounds(cb = List("Ord")))),
       Nil,
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -514,7 +514,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       List(pparam("A")),
       List(List(tparam("ord", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -531,7 +531,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       List(pparam("A")),
       List(List(tparam("ord", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -547,7 +547,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tname("ord"),
       List(pparam("A")),
       List(List(tparam("ord", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -564,7 +564,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tname("ord"),
       List(pparam("A")),
       List(List(tparam("ord", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -581,7 +581,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       List(pparam("A")),
       List(List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -598,7 +598,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       List(pparam("A")),
       List(List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -614,7 +614,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tname("ord"),
       List(pparam("A")),
       List(List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -631,7 +631,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       tname("ord"),
       List(pparam("A")),
       List(List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -649,7 +649,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       "ord",
       Nil,
       List(List(tparam("", Type.Lambda(List(pparam("A")), papply("Ord", "A"))))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -666,7 +666,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       "ord",
       Nil,
       List(List(tparam("", Type.Lambda(List(pparam(Nil, "A")), papply("Ord", "A"))))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -683,9 +683,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       List(List(tparam(
         "",
-        ppolyfunc(pparam(Nil, "A"))(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A"))))
+        ppolyfunc(pparam(Nil, "A"))(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A")))),
       ))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -703,9 +703,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       List(List(tparam(
         "",
-        ppolyfunc(pparam(Nil, "A"))(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A"))))
+        ppolyfunc(pparam(Nil, "A"))(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A")))),
       ))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -723,8 +723,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       tpl(
         List(init(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A"))))),
-        List(Defn.Def(Nil, "foo", Nil, None, "???"))
-      )
+        List(Defn.Def(Nil, "foo", Nil, None, "???")),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -743,8 +743,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       tpl(
         List(init(pfunc(papply("Ord", "A"))(papply("Ord", papply("List", "A"))))),
-        List(Defn.Def(Nil, "foo", Nil, None, "???"))
-      )
+        List(Defn.Def(Nil, "foo", Nil, None, "???")),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -762,7 +762,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       "ord",
       Nil,
       List(List(tparam("a", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -779,7 +779,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       "ord",
       Nil,
       List(List(tparam("a", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -795,7 +795,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       List(List(tparam("a", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -812,7 +812,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       List(List(tparam("a", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -830,7 +830,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       "ord",
       Nil,
       List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -847,7 +847,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       "ord",
       Nil,
       List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -863,7 +863,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -880,7 +880,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -898,7 +898,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       List(List(tparam("", "A")), List(tparam("", papply("Ord", "A")))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -915,7 +915,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       List(List(tparam("a", pfunc("A")(papply("Ord", "A"))))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -933,7 +933,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       List(List(tparam("a", pfunc("A")(papply("Ord", "A"))))),
-      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???")))
+      tpl(List(init(papply("Ord", papply("List", "A")))), List(Defn.Def(Nil, "foo", Nil, None, "???"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -958,9 +958,9 @@ class GivenSyntax36Suite extends BaseDottySuite {
         Import(List(Importer(tselect("scala", "util", "chaining"), List(Importee.GivenAll())))),
         Import(List(Importer(
           tselect("scala", "util", "control"),
-          List(Importee.Name(Name("ControlThrowable")), Importee.Name(Name("NonFatal")))
-        )))
-      )
+          List(Importee.Name(Name("ControlThrowable")), Importee.Name(Name("NonFatal"))),
+        ))),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -982,8 +982,8 @@ class GivenSyntax36Suite extends BaseDottySuite {
       "a",
       tpl(
         Decl.Given(Nil, "TreeMethods", Nil, "TreeMethods"),
-        Defn.Trait(Nil, pname("TreeMethods"), Nil, ctor, tplNoBody())
-      )
+        Defn.Trait(Nil, pname("TreeMethods"), Nil, ctor, tplNoBody()),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -996,7 +996,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       List(List(tparam("", papply("List", "Int")))),
-      tpl(List(init("Object")), Nil)
+      tpl(List(init("Object")), Nil),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1031,11 +1031,11 @@ class GivenSyntax36Suite extends BaseDottySuite {
             blk(Term.ForYield(
               Term
                 .EnumeratorsBlock(List(Enumerator.Generator(patvar("i"), tinfix(lit(0), "to", lit(10))))),
-              tname("i")
-            ))
-          )
-        )
-      )
+              tname("i"),
+            )),
+          ),
+        ),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1046,13 +1046,13 @@ class GivenSyntax36Suite extends BaseDottySuite {
       Nil,
       anon,
       List(Member.ParamClauseGroup(List(pparam("T")), List(List(tparamUsing("ord", papply("Ord", "T")))))),
-      papply("Ord", papply("Set", "T"))
+      papply("Ord", papply("Set", "T")),
     ))
     runTestAssert[Stat]("given (using Ord[String]): Ord[Int]")(Decl.GivenAnonymous(
       Nil,
       anon,
       List(Member.ParamClauseGroup(Nil, List(List(tparamUsing("", papply("Ord", "String")))))),
-      papply("Ord", "Int")
+      papply("Ord", "Int"),
     ))
   }
 
@@ -1066,7 +1066,7 @@ class GivenSyntax36Suite extends BaseDottySuite {
       anon,
       Nil,
       pinfix(papply("A", "Int"), "&", papply("B", "Int")),
-      Term.NewAnonymous(tpl(List(init(papply("A", "Int")), init(papply("B", "Int"))), tplBody()))
+      Term.NewAnonymous(tpl(List(init(papply("A", "Int")), init(papply("B", "Int"))), tplBody())),
     )
     runTestAssert[Stat](code, layout)(tree)
   }

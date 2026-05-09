@@ -45,7 +45,7 @@ class LegacyTokenData {
   private def toBigInt(
       prevToken: Token,
       maxBitLength: Int,
-      what: String
+      what: String,
   ): Either[String, Either[BigInt, BigInt]] =
     try {
       val value = BigInt(strVal, base)
@@ -86,7 +86,7 @@ class LegacyTokenData {
   }
 
   def setIdentifier(ident: String, dialect: Dialect, check: Boolean = true)(
-      fCheck: LegacyTokenData => Unit
+      fCheck: LegacyTokenData => Unit,
   ): Unit = {
     strVal = ident
     token = IDENTIFIER

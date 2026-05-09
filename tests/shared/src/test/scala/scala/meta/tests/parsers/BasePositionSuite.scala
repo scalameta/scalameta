@@ -10,7 +10,7 @@ abstract class BasePositionSuite extends ParseSuite {
   import scala.meta.tests.parsers.MoreHelpers._
 
   def checkPositions[T <: Tree: Parse](
-      code: TestOptions
+      code: TestOptions,
   )(implicit loc: Location, dialect: Dialect): Unit = checkPositions[T](code, "")
 
   /**
@@ -51,7 +51,7 @@ abstract class BasePositionSuite extends ParseSuite {
       expected: String,
       expectedTokens: String = "",
       showPosition: Boolean = false,
-      showFieldName: Boolean = false
+      showFieldName: Boolean = false,
   )(implicit loc: Location, dialect: Dialect): Unit = test(code) {
     if (expectedTokens.nonEmpty) assertTokenizedAsStructureLines(code.name, expectedTokens)
     val tree = code.name.asInput.parse[T]

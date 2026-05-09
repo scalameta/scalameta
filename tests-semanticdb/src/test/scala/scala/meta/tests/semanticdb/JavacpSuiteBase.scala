@@ -8,7 +8,7 @@ abstract class JavacpSuiteBase extends FunSuite {
   private val infos = MetacMetacpDiffExpect.metacpSymbols
 
   def checkOrder(name: String, symbol: String, filter: String => Boolean, expected: List[String])(
-      implicit loc: munit.Location
+      implicit loc: munit.Location,
   ): Unit = test(name) {
     val info = infos(symbol)
     val ClassSignature(_, _, _, Some(declarations)) = info.signature

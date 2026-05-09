@@ -73,6 +73,6 @@ object PlatformFileIO {
   }
   def jarRootPath(jarFile: AbsolutePath): AbsolutePath = throw new UnsupportedOperationException()
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
-      f: AbsolutePath => T
+      f: AbsolutePath => T,
   ): T = throw new UnsupportedOperationException()
 }

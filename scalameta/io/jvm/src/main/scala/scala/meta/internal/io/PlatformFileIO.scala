@@ -26,7 +26,7 @@ object PlatformFileIO {
   }
 
   def write[A](path: AbsolutePath, msg: A, openOptions: OpenOption*)(implicit
-      osio: OutputStreamIO[A]
+      osio: OutputStreamIO[A],
   ): Unit = {
     Files.createDirectories(path.toNIO.getParent)
     val os = Files.newOutputStream(path.toNIO, openOptions: _*)
@@ -60,7 +60,7 @@ object PlatformFileIO {
   }
 
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
-      f: AbsolutePath => T
+      f: AbsolutePath => T,
   ): T = {
     val fs = newJarFileSystem(path, create)
     val root = AbsolutePath(fs.getPath("/"))

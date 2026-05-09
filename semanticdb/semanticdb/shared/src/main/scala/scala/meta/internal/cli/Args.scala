@@ -11,6 +11,6 @@ object Args {
       val argPath = Paths.get(arg.substring(1))
       val argText = new String(Files.readAllBytes(argPath), UTF_8)
       argText.split(EOL).map(_.trim).filter(_.nonEmpty).toList
-    } else List(arg)
+    } else List(arg),
   )
 }

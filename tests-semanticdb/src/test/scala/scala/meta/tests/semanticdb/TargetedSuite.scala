@@ -19,7 +19,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  <<bar>>(children = 4)(3)
        |}
        |""".stripMargin,
-    (_, second) => assertEquals(second, "a/Curry.bar().")
+    (_, second) => assertEquals(second, "a/Curry.bar()."),
   )
 
   targeted(
@@ -34,7 +34,7 @@ class TargetedSuite extends SemanticdbSuite {
     { (_, copy, age) =>
       assertEquals(copy, "b/User#copy().")
       assertEquals(age, "b/User#copy().(age)")
-    }
+    },
   )
 
   // Checks def macros that we can't test in expect tests because expect tests have no dependencies.
@@ -73,7 +73,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[8:9..8:10): x => e/x.x.
        |[8:11..8:16): value => scala/meta/Term.Name#value().
        |[8:17..8:19): == => java/lang/Object#`==`().
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   targeted(
@@ -89,7 +89,7 @@ class TargetedSuite extends SemanticdbSuite {
     { (db, j) =>
       val denot = db.symbols.find(_.symbol == j).get
       assert(denot.symbol.startsWith("local"))
-    }
+    },
   )
 
   targeted(
@@ -104,7 +104,7 @@ class TargetedSuite extends SemanticdbSuite {
       assertEquals(foo1, "g/ao.foo.")
       assertEquals(foo2, "g/ao.foo().")
       assertEquals(foo3, "g/ao.foo(+1).")
-    }
+    },
   )
 
   targeted(
@@ -119,7 +119,7 @@ class TargetedSuite extends SemanticdbSuite {
       assertEquals(foo1, "h/ao.foo().")
       assertEquals(local, "h/ao.local.")
       assertEquals(c, "h/ao.foo().(c)")
-    }
+    },
   )
 
   targeted(
@@ -137,7 +137,7 @@ class TargetedSuite extends SemanticdbSuite {
       assertEquals(local2, "i/ao.local.")
       assertEquals(c1, "i/ao.foo().(c)")
       assertEquals(c2, "i/ao.foo().(c)")
-    }
+    },
   )
 
   targeted(
@@ -151,7 +151,7 @@ class TargetedSuite extends SemanticdbSuite {
     (doc, msg, bodyText) => {
       assertEquals(msg, "j/ao.Msg.")
       assertEquals(bodyText, "j/ao.bodyText.")
-    }
+    },
   )
 
   targeted(
@@ -167,7 +167,7 @@ class TargetedSuite extends SemanticdbSuite {
     (doc, foo, c) => {
       assertEquals(foo, "k/target#foo().")
       assertEquals(c, "k/target#foo().(c)")
-    }
+    },
   )
 
   targeted(
@@ -190,14 +190,14 @@ class TargetedSuite extends SemanticdbSuite {
       assertEquals(overriddenSymbols("l/Child#method()."), None)
       assertEquals(
         overriddenSymbols("l/Max.method()."),
-        Some(List("l/Parent#method().", "l/GrandParent#method()."))
+        Some(List("l/Parent#method().", "l/GrandParent#method().")),
       )
       assertEquals(
         overriddenSymbols("l/Max.toString()."),
-        Some(List("java/lang/Object#toString().", "scala/Any#toString()."))
+        Some(List("java/lang/Object#toString().", "scala/Any#toString().")),
       )
 
-    }
+    },
   )
 
   targeted(
@@ -217,7 +217,7 @@ class TargetedSuite extends SemanticdbSuite {
       assertEquals(double, "m/ImplicitConversion.a.")
       assertEquals(float, "m/ImplicitConversion.a.")
       assertEquals(toInt, "scala/Int#toLong().")
-    }
+    },
   )
 
   targeted(
@@ -234,7 +234,7 @@ class TargetedSuite extends SemanticdbSuite {
     (_, foo1, foo2) => {
       assertEquals(foo1, "n/ForCompWithFilter.foo.")
       assertEquals(foo2, "n/ForCompWithFilter.foo.")
-    }
+    },
   )
 
   targeted(
@@ -244,7 +244,7 @@ class TargetedSuite extends SemanticdbSuite {
        |  val Some(<<a>>) = Some(123)
        |}
        |""".stripMargin,
-    (_, foo1) => assertEquals(foo1, "o/O.a.")
+    (_, foo1) => assertEquals(foo1, "o/O.a."),
   )
 
   test("named-args") {
@@ -304,7 +304,7 @@ class TargetedSuite extends SemanticdbSuite {
            |local1 => val local x$2: String
            |  String => scala/Predef.String#
            |
-           |Occurrences:""".stripMargin
+           |Occurrences:""".stripMargin,
       )
 
     val expected212 = expectedPrevious213
@@ -314,7 +314,7 @@ class TargetedSuite extends SemanticdbSuite {
            |""".stripMargin,
         """|local0 => val local x$1: String
            |  String => java/lang/String#
-           |""".stripMargin
+           |""".stripMargin,
       ) +
       """|
          |Diagnostics:
@@ -331,14 +331,14 @@ class TargetedSuite extends SemanticdbSuite {
         ScalaVersion.Full("2.13.16") -> expectedPrevious213,
         ScalaVersion.Scala212 -> expected212,
         ScalaVersion.Scala211 -> expected212,
-        ScalaVersion.Scala213 -> expected
+        ScalaVersion.Scala213 -> expected,
       ),
-      expected
+      expected,
     )
     assertEquals(
       computePayloadFromSnippet(code).linesIterator.drop(3).filter(!_.startsWith("Uri => "))
         .mkString("", "\n", "\n"),
-      expectedCompat
+      expectedCompat,
     )
   }
 
@@ -368,7 +368,7 @@ class TargetedSuite extends SemanticdbSuite {
            |Occurrences:
            |[0:6..0:19): AmbiguousMend <= _empty_/AmbiguousMend#
            |[1:6..1:7): x <= _empty_/AmbiguousMend#x().
-           |""".stripMargin
+           |""".stripMargin,
       )
     }
   }

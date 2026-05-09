@@ -39,7 +39,7 @@ class ExpectSuite extends FunSuite {
           """|com/javacp/Test#strictfpMethod(). => @strictfp private[javacp] method strictfpMethod(): Unit
              |  strictfp => scala/annotation/strictfp#""".stripMargin,
           "com/javacp/Test#strictfpMethod(). => private[javacp] method strictfpMethod(): Unit"
-            .stripMargin
+            .stripMargin,
         )
       else loadExpected
     this.assertNoDiff(loadObtained, expected)
@@ -91,7 +91,7 @@ trait ExpectHelpers extends munit.Assertions {
       originalTitle: String,
       revisedTitle: String,
       original: String,
-      revised: String
+      revised: String,
   ): String = {
     val originalLines = original.split("\n").toSeq.asJava
     val revisedLines = revised.split("\n").toSeq.asJava
@@ -102,7 +102,7 @@ trait ExpectHelpers extends munit.Assertions {
         revisedTitle,
         originalLines,
         DiffUtils.diff(originalLines, revisedLines),
-        3
+        3,
       ).asScala
       if (lines.lengthCompare(2) > 0) lines.remove(2) // remove lines like "@@ -3,18 +3,16 @@"
       lines.filterNot(line => OnlyCurlyBrace.findFirstIn(line).isDefined)
@@ -223,13 +223,13 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
   // Presevering the source ordering of declarations is important for documentation tools
   // so we should eventually stop sorting them here.
   private def sortDeclarations(
-      symtab: Map[String, SymbolInformation]
+      symtab: Map[String, SymbolInformation],
   ): Map[String, SymbolInformation] = symtab.map { case (key, sym) =>
     val newSymbol = sym.signature match {
       case c: ClassSignature if sym.language.isJava =>
         val sortedJavaDeclarations = c.declarations.get.symlinks.sorted
         sym.copy(signature =
-          c.copy(declarations = Some(c.declarations.get.copy(symlinks = sortedJavaDeclarations)))
+          c.copy(declarations = Some(c.declarations.get.copy(symlinks = sortedJavaDeclarations))),
         )
       case _ => sym
     }
@@ -257,7 +257,7 @@ object MetacpUndefined extends ExpectHelpers {
       // that have no SymbolInformation. It's expected that references to the packages
       // scala/ and java/ package have no SymbolInformation because we only process
       // databaseClasspath, scala-library and the JDK are only --dependency-classpath.
-      symbol.startsWith("scala/") || symbol.startsWith("java/") || symbol == "local_wildcard"
+      symbol.startsWith("scala/") || symbol.startsWith("java/") || symbol == "local_wildcard",
     )
     interesting.toSeq.sorted.mkString("", "\n", "\n")
   }
@@ -303,7 +303,7 @@ object SaveManifestTest {
         jos.putNextEntry(new JarEntry(classes.relativize(classfile).toString))
         jos.write(Files.readAllBytes(classfile))
         jos.closeEntry()
-      }
+      },
     )
 
     val emptySemanticdbRelPath =

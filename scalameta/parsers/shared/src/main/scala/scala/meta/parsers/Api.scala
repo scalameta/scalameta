@@ -9,7 +9,7 @@ private[meta] trait Api {
     def parse[U](implicit
         convert: Convert[T, Input],
         parse: Parse[U],
-        dialect: Dialect
+        dialect: Dialect,
     ): Parsed[U] = (dialect, convert(inputLike)).parse[U]
   }
   implicit class XtensionParsersDialectInput(dialect: Dialect) {

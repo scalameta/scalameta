@@ -17,25 +17,25 @@ class PrintSuite extends PrintSuiteBase {
 
   checkInfo(
     "scala/Predef.assert(+1).",
-    """scala/Predef.assert(+1). => @elidable @inline final method assert(assertion: Boolean, message: => Any): Unit"""
+    """scala/Predef.assert(+1). => @elidable @inline final method assert(assertion: Boolean, message: => Any): Unit""",
   )
   checkInfo("scala/Any#", """scala/Any# => abstract class Any { +10 decls }""")
   checkInfo(
     "java/util/Collections#singletonList().",
-    """java/util/Collections#singletonList(). => static method singletonList[T](param0: T): List[T]"""
+    """java/util/Collections#singletonList(). => static method singletonList[T](param0: T): List[T]""",
   )
 
   checkSynthetics(
     "List(1).map(_ + 2)",
     """|[2:0..2:11): List(1).map => *[Int]
        |[2:0..2:4): List => *.apply[Int]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkTrees(
     "List(1).map(_ + 2)",
     """|orig(List(1).map)[Int]
        |orig(List).apply[Int]
-       |""".stripMargin
+       |""".stripMargin,
   )
 }

@@ -108,14 +108,14 @@ object TreeSyntacticGroup {
   def opNeedsParens(
       outerPrecedence: Int,
       innerPrecedence: Int,
-      ifSamePrecedence: => Boolean
+      ifSamePrecedence: => Boolean,
   ): Boolean = {
     val diffPrecedence = outerPrecedence - innerPrecedence
     diffPrecedence > 0 || diffPrecedence == 0 && ifSamePrecedence
   }
 
   def opNeedsParens(outerOp: Name, innerOp: Name, isLhs: => Boolean)(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Boolean = {
     val outerIsLeftAssoc = outerOp.isLeftAssoc
     @inline
@@ -130,7 +130,7 @@ object TreeSyntacticGroup {
     opNeedsParens(outer.op, inner.op, outer.lhs eq inner)
 
   def groupNeedsParens(outer: TreeSyntacticGroup, inner: TreeSyntacticGroup)(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Boolean = {
     require((outer.categories & inner.categories) != 0)
     (outer, inner) match {

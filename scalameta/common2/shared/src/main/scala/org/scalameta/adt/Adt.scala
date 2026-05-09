@@ -46,7 +46,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
           mods @ Modifiers(flags, privateWithin, anns),
           name,
           tparams,
-          Template(parents, self, stats)
+          Template(parents, self, stats),
         ) = cdef
         val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
         val classRef = typeRef(cdef, requireHk = false, requireWildcards = true)
@@ -65,7 +65,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
           Modifiers(flags1, privateWithin, anns1),
           name,
           tparams,
-          Template(parents1, self, stats1.toList)
+          Template(parents1, self, stats1.toList),
         )
         val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
         List(cdef1, mdef1)
@@ -86,7 +86,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
           mods @ Modifiers(flags, privateWithin, anns),
           name,
           tparams,
-          Template(parents, self, stats)
+          Template(parents, self, stats),
         ) = cdef
         val ModuleDef(mmods, mname, Template(mparents, mself, mstats)) = mdef
         val classRef = typeRef(cdef, requireHk = false, requireWildcards = true)
@@ -103,7 +103,7 @@ class AdtNamerMacros(val c: Context) extends MacroHelpers {
           Modifiers(flags1, privateWithin, anns1),
           name,
           tparams,
-          Template(parents, self, stats1.toList)
+          Template(parents, self, stats1.toList),
         )
         val mdef1 = ModuleDef(mmods, mname, Template(mparents, mself, mstats1.toList))
         List(cdef1, mdef1)

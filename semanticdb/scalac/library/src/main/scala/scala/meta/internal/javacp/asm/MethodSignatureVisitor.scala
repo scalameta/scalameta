@@ -20,7 +20,7 @@ class MethodSignatureVisitor
         case cts: ClassTypeSignature => ThrowsSignature.ClassType(cts)
         case tvs: TypeVariableSignature => ThrowsSignature.TypeVariable(tvs)
         case els => throw new IllegalArgumentException(s"Expected ThrowsSignature, obtained $els")
-      }
+      },
     )
   }
 

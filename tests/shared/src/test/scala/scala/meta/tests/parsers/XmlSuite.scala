@@ -34,7 +34,7 @@ class XmlSuite extends ParseSuite {
        |Xml.Part(<foo>bar</foo>) [0..14)
        |Xml.End [14..14)
        |EOF [14..14)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkToken(
     "<foo>{bar}</foo> ",
@@ -50,7 +50,7 @@ class XmlSuite extends ParseSuite {
        |Xml.End [16..16)
        |Space [16..17)
        |EOF [17..17)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkToken(
     "<b>{1}{2}</b>",
@@ -71,7 +71,7 @@ class XmlSuite extends ParseSuite {
        |Xml.Part(</b>) [9..13)
        |Xml.End [13..13)
        |EOF [13..13)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkToken(
     """<foo>{"{" + `{`}</foo>""",
@@ -90,7 +90,7 @@ class XmlSuite extends ParseSuite {
        |Xml.Part(</foo>) [16..22)
        |Xml.End [22..22)
        |EOF [22..22)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkToken(
     "<foo/>{1}",
@@ -102,7 +102,7 @@ class XmlSuite extends ParseSuite {
        |Constant.Int(1) [7..8)
        |RightBrace [8..9)
        |EOF [9..9)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   private val trickyXml =
@@ -174,7 +174,7 @@ class XmlSuite extends ParseSuite {
        |LF [106..107)
        |RightBrace [107..108)
        |EOF [108..108)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   test("deconstruct")(assertTree(term(trickyXml))(blk(
@@ -184,8 +184,8 @@ class XmlSuite extends ParseSuite {
       None,
       Term.Xml(
         List(str("<div href="), str(">Hello "), str("</div>")),
-        List(blk(tinfix(str("/"), "+", tname("url"))), blk(tname("name")))
-      )
+        List(blk(tinfix(str("/"), "+", tname("url"))), blk(tname("name"))),
+      ),
     ),
     Defn.Val(
       Nil,
@@ -193,10 +193,10 @@ class XmlSuite extends ParseSuite {
       None,
       Term.Xml(
         List(str("<h1>"), str("</h1>")),
-        blk(tinfix(tname("msg"), "infix", tname("upper"))) :: Nil
-      )
+        blk(tinfix(tname("msg"), "infix", tname("upper"))) :: Nil,
+      ),
     ),
-    Defn.Val(Nil, List(patvar("y")), None, int(2))
+    Defn.Val(Nil, List(patvar("y")), None, int(2)),
   )))
 
   checkOKs(
@@ -303,7 +303,7 @@ class XmlSuite extends ParseSuite {
     "<a>&#;</a>",
     "<a>&#x;</a>",
     "<a>]]></a>",
-    "<a/>{0}"
+    "<a/>{0}",
   )
   // checkOK("""<a b="&:;"/>""") // FIXME
   // checkOK("""<a b="&:a;"/>""") //FIXME
@@ -326,7 +326,7 @@ class XmlSuite extends ParseSuite {
     "e match { case <a>{}</a> => ??? }",
     "<a>}</a>",
     "<a>{</a>",
-    "<a>}{</a>"
+    "<a>}{</a>",
 //    "<a></b>", // FIXME: Should not parse
   )
 
@@ -351,8 +351,8 @@ class XmlSuite extends ParseSuite {
       None,
       tmatch(
         tname("e"),
-        Case(Pat.Xml(List(lit("<title>"), lit("</title>")), List(Pat.SeqWildcard())), None, blk())
-      )
+        Case(Pat.Xml(List(lit("<title>"), lit("</title>")), List(Pat.SeqWildcard())), None, blk()),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }

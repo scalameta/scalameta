@@ -9,7 +9,7 @@ object Implicits {
       startLine = pos.startLine,
       startCharacter = pos.startColumn,
       endLine = pos.endLine,
-      endCharacter = pos.endColumn
+      endCharacter = pos.endColumn,
     )
   }
 
@@ -19,7 +19,7 @@ object Implicits {
       startLine = range.startLine,
       startColumn = range.startCharacter,
       endLine = range.endLine,
-      endColumn = range.endCharacter
+      endColumn = range.endCharacter,
     )
     def toSemanticOriginal: OriginalTree = OriginalTree(range = Some(range))
   }

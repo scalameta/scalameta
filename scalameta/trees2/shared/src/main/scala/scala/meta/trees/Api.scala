@@ -30,67 +30,67 @@ private[meta] trait ApiLowPriority {
 private[meta] trait Api extends ApiLowPriority {
   implicit def typeParamClauseToValues(v: Type.ParamClause): List[Type.Param] = v.values
   implicit def typeValuesToParamClauseWithDialect(v: List[Type.Param])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Type.ParamClause = Type.ParamClause(v)
 
   implicit def termParamClauseToValues(v: Term.ParamClause): List[Term.Param] = v.values
   implicit def termValuesToParamClauseWithDialect(v: List[Term.Param])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Term.ParamClause = Term.ParamClause(v, Term.ParamClause.getMod(v))
   implicit def termListValuesToListParamClauseWithDialect(v: List[List[Term.Param]])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): List[Term.ParamClause] = v.map(termValuesToParamClauseWithDialect)
 
   implicit def typeArgsToValues(v: Type.ArgClause): List[Type] = v.values
   implicit def typeValuesToArgClauseWithDialect(v: List[Type])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Type.ArgClause = Type.ArgClause(v)
 
   implicit def typeFuncParamsToValues(v: Type.FuncParamClause): List[Type] = v.values
   implicit def typeValuesToFuncParamClauseWithDialect(v: List[Type])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Type.FuncParamClause = Type.FuncParamClause(v)
 
   implicit def termArgsToValues(v: Term.ArgClause): List[Term] = v.values
   implicit def termValuesToArgClauseWithDialect(v: List[Term])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Term.ArgClause = Term.ArgClause(v, None)
   implicit def termListValuesToListArgClauseWithDialect(v: List[List[Term]])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): List[Term.ArgClause] = v.map(termValuesToArgClauseWithDialect)
 
   implicit def patArgsToValues(v: Pat.ArgClause): List[Pat] = v.values
   implicit def patValuesToArgClauseWithDialect(v: List[Pat])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Pat.ArgClause = Pat.ArgClause(v)
   implicit def patListValuesToListArgClauseWithDialect(v: List[List[Pat]])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): List[Pat.ArgClause] = v.map(patValuesToArgClauseWithDialect)
 
   implicit def typeCasesBlockToValues(v: Type.CasesBlock): List[TypeCase] = v.cases
   implicit def typeCaseValuesToCasesBlockWithDialect(v: List[TypeCase])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Type.CasesBlock = Type.CasesBlock(v)
 
   implicit def casesBlockToValues(v: Term.CasesBlock): List[Case] = v.cases
   implicit def caseValuesToCasesBlockWithDialect(v: List[Case])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Term.CasesBlock = Term.CasesBlock(v)
   implicit def caseValuesToOptionCasesBlockWithDialect(v: List[Case])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Option[Term.CasesBlock] = if (v.isEmpty) None else Some(Term.CasesBlock(v))
 
   implicit def enumsBlockToValues(v: Term.EnumeratorsBlock): List[Enumerator] = v.enums
   implicit def enumValuesToEnumsBlockWithDialect(v: List[Enumerator])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Term.EnumeratorsBlock = Term.EnumeratorsBlock(v)
 
   implicit def statsBlockToValues(v: Stat.Block): List[Stat] = v.stats
   implicit def statValuesToStatBlockWithDialect(v: List[Stat])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Stat.Block = Stat.Block(v)
   implicit def statValuesToOptionStatBlockWithDialect(v: List[Stat])(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Option[Stat.Block] = if (v.isEmpty) None else Some(Stat.Block(v))
 
   implicit def pkgBodyToValues(v: Pkg.Body): List[Stat] = v.stats

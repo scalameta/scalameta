@@ -12,7 +12,7 @@ trait SymbolOpsCompat {
       g.termNames.toInt,
       g.termNames.toLong,
       g.termNames.toFloat,
-      g.termNames.toDouble
+      g.termNames.toDouble,
     )
 
     // See comment in scala-2.13/.../SymbolOpsCompat.scala

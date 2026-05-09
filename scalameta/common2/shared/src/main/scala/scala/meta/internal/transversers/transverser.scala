@@ -73,7 +73,7 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
       else if (l <:< TermAdt) termBuilder += l
       else if (l <:< TypeAdt) typeBuilder += l
       else if (l <:< DefnAdt) defnBuilder += l
-      else restBuilder += l
+      else restBuilder += l,
     )
 
     val termPriority = Seq("Term.Name", "Term.Apply", "Lit", "Term.Param", "Term.ApplyInfix")

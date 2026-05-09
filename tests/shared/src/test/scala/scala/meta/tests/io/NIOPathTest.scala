@@ -79,7 +79,7 @@ class NIOPathTest extends FunSuite {
   }
   test(".relativize(Path)")(assertEquals(abs.relativize(abs.resolve("qux")), Paths.get("qux")))
   test("file.toUri")(
-    assert(file.toUri.getPath.endsWith("build.sbt"))
+    assert(file.toUri.getPath.endsWith("build.sbt")),
     // NOTE: Paths API seems to work inconsistently under Scala Native.
     // [info] - .toUri *** FAILED ***
     // [info]   "/Users/eburmako/Projects/scalameta/project" did not end with "project/" (NIOPathTest.scala:84)
@@ -94,11 +94,11 @@ class NIOPathTest extends FunSuite {
         Files.createDirectories(hello.toNIO)
         assert(hello.toURI.toString.endsWith("hello"))
       }
-    }
+    },
   )
 
   test(".toAbsolutePath")(
-    assert(file.toAbsolutePath.endsWith(file))
+    assert(file.toAbsolutePath.endsWith(file)),
     // NOTE: Paths API seems to work inconsistently under Scala Native.
     // [info] - .toAbsolutePath *** FAILED ***
     // [info]   /bar/foo did not equal //bar/foo (NIOPathTest.scala:88)
@@ -124,14 +124,14 @@ class NIOPathTest extends FunSuite {
       ("c:/foo/bar///baz", "c:\\", 3, Seq("foo", "bar", "baz")),
       ("c:\\foo\\\\bar\\baz", "c:\\", 3, Seq("foo", "bar", "baz")),
       ("foo\\bar\\baz", null, 3, Seq("foo", "bar", "baz")),
-      ("\\\\foo\\bar\\baz", "\\\\foo\\bar\\", 1, Seq("baz"))
+      ("\\\\foo\\bar\\baz", "\\\\foo\\bar\\", 1, Seq("baz")),
     )
     else Seq(
       ("//foo/bar//baz/", "/", 3, Seq("foo", "bar", "baz")),
       ("//foo/bar///baz", "/", 3, Seq("foo", "bar", "baz")),
       ("/foo/bar/baz/", "/", 3, Seq("foo", "bar", "baz")),
       ("/foo/bar/baz", "/", 3, Seq("foo", "bar", "baz")),
-      ("foo/bar////baz", null, 3, Seq("foo", "bar", "baz"))
+      ("foo/bar////baz", null, 3, Seq("foo", "bar", "baz")),
     )
   pathsWithNames.foreach { case (file, root, cnt, names) =>
     test(s".getName: $file -> [${names.mkString(",")}]") {

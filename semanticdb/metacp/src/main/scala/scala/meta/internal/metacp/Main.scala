@@ -21,7 +21,7 @@ class Main(settings: Settings, reporter: Reporter) {
 
   val classpathIndex = ClasspathIndex(
     settings.classpath ++ settings.dependencyClasspath ++ detectJavacp,
-    includeJdk = settings.includeJdk
+    includeJdk = settings.includeJdk,
   )
   private val missingSymbols = mutable.Set.empty[String]
 
@@ -64,7 +64,7 @@ class Main(settings: Settings, reporter: Reporter) {
 
     if (missingSymbols.nonEmpty) reporter.err.println(
       "NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. " +
-        "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar."
+        "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.",
     )
 
     reporter.out.println("{")

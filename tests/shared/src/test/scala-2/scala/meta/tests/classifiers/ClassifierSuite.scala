@@ -40,9 +40,9 @@ class ClassifierSuite extends FunSuite {
       """
       import scala.meta._
       (??? : Unclassifiable).is[Derived]
-    """
+    """,
     ),
-    "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable"
+    "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable",
   ))
 
   test("unclassifiable typeclass")(assertEquals(
@@ -52,9 +52,9 @@ class ClassifierSuite extends FunSuite {
       (??? : Unclassifiable).is[Manual]
       (??? : Unclassifiable).is[Auto1]
       (??? : Unclassifiable).is[Auto2]
-    """
+    """,
     ),
-    "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable"
+    "value is is not a member of org.scalameta.tests.classifiers.Unclassifiable",
   ))
 
   test("classifiable inheritance") {
@@ -63,9 +63,9 @@ class ClassifierSuite extends FunSuite {
         """
       import scala.meta._
       (??? : MyToken).is[MyIdent]
-    """
+    """,
       ),
-      "don't know how to check whether org.scalameta.tests.classifiers.MyToken is org.scalameta.tests.classifiers.MyIdent"
+      "don't know how to check whether org.scalameta.tests.classifiers.MyToken is org.scalameta.tests.classifiers.MyIdent",
     )
 
     assertEquals(
@@ -73,9 +73,9 @@ class ClassifierSuite extends FunSuite {
         """
       import scala.meta._
       (??? : MyIdent).is[MyIdent]
-    """
+    """,
       ),
-      "don't know how to check whether org.scalameta.tests.classifiers.MyIdent is org.scalameta.tests.classifiers.MyIdent"
+      "don't know how to check whether org.scalameta.tests.classifiers.MyIdent is org.scalameta.tests.classifiers.MyIdent",
     )
   }
 

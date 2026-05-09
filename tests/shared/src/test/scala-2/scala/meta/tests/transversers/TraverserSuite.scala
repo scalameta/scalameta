@@ -62,7 +62,7 @@ class TraverserSuite extends TreeSuiteBase {
          |x
          |x
          |???
-         |""".stripMargin
+         |""".stripMargin,
     )
   }
 }

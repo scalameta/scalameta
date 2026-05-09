@@ -2,7 +2,7 @@ case class ShadedDependency(
     groupID: String,
     artifactID: String,
     namespace: String,
-    isPlatformSpecific: Boolean
+    isPlatformSpecific: Boolean,
 )
 
 object ShadedDependency {
@@ -12,7 +12,7 @@ object ShadedDependency {
 
   val all = Seq(
     ShadedDependency("com.lihaoyi", "geny", "geny", true),
-    ShadedDependency("com.lihaoyi", "fastparse", "fastparse", true)
+    ShadedDependency("com.lihaoyi", "fastparse", "fastparse", true),
   )
 
 }

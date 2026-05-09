@@ -9,7 +9,7 @@ import scala.meta.internal.{semanticdb => s}
 object Synthetics {
   def setterInfos(
       getterInfo: s.SymbolInformation,
-      linkMode: LinkMode
+      linkMode: LinkMode,
   ): List[s.SymbolInformation] = {
     val getterSym = getterInfo.symbol
     val setterSym =
@@ -32,7 +32,7 @@ object Synthetics {
       displayName = "x$1",
       signature = paramSig,
       annotations = Nil,
-      access = s.NoAccess
+      access = s.NoAccess,
     )
 
     val setterSig = {
@@ -51,7 +51,7 @@ object Synthetics {
       displayName = getterInfo.displayName + "_=",
       signature = setterSig,
       annotations = getterInfo.annotations,
-      access = getterInfo.access
+      access = getterInfo.access,
     )
 
     linkMode match {

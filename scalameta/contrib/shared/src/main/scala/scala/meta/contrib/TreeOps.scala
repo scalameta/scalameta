@@ -9,7 +9,7 @@ import scala.language.higherKinds
 object TreeOps {
 
   def contains[F[x <: Tree] <: TreeEquality[x]](
-      tree: Tree
+      tree: Tree,
   )(toFind: Tree)(implicit conv: Tree => F[Tree], eqEv: Equal[F[Tree]]): Boolean =
     exists(tree)(_.isEqual[F](toFind))
 

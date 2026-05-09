@@ -13,11 +13,11 @@ trait SyntheticOps {
     def toSemanticTree: s.Tree = gTree match {
       case gTree: g.Apply => s.ApplyTree(
           function = gTree.fun.toSemanticQualifierTree,
-          arguments = gTree.args.map(_.toSemanticTree)
+          arguments = gTree.args.map(_.toSemanticTree),
         )
       case gTree: g.TypeApply => s.TypeApplyTree(
           function = gTree.fun.toSemanticQualifierTree,
-          typeArguments = gTree.args.map(_.tpe.toSemanticTpe)
+          typeArguments = gTree.args.map(_.tpe.toSemanticTpe),
         )
       case gTree: g.Select => gTree.toSemanticId
       case gTree: g.Ident => gTree.toSemanticId

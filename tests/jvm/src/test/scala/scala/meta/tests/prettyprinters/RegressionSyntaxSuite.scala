@@ -11,7 +11,7 @@ class RegressionSyntaxSuite extends ParseSuite {
       testOpts: TestOptions,
       code: String,
       expected: String,
-      newDialect: Dialect = dialects.Scala213
+      newDialect: Dialect = dialects.Scala213,
   )(implicit dialect: Dialect) = test(testOpts) {
     val obtained = code.parse[Stat].get
     val reprintedCode = obtained.reprint(newDialect)

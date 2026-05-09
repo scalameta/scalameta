@@ -113,7 +113,7 @@ class TokensSuite extends TreeSuiteBase {
               assertEquals((1, 37), (one.start, one.length))
               assertNoDiff(one.syntax, merged3)
             case x => fail(x.mkString(s"Expected one range, got ${x.length}: [\n", "\n], [\n", "\n]"))
-          }
+          },
         )
         getTokens(stats(2), stats(1)).permutations.foreach { x =>
           Tokens.merge(x: _*) match {
@@ -127,7 +127,7 @@ class TokensSuite extends TreeSuiteBase {
                    |
                    |
                    |   import p3.a3 // ct3
-                   |""".stripMargin
+                   |""".stripMargin,
               )
             case x => fail(x.mkString(s"Expected one range, got ${x.length}: [\n", "\n], [\n", "\n]"))
           }
@@ -144,7 +144,7 @@ class TokensSuite extends TreeSuiteBase {
                    |// cl2.1
                    |// cl2.2
                    |import p2.a2 /* ct2.1 */ /* ct2.2 */
-                   |""".stripMargin
+                   |""".stripMargin,
               )
             case x => fail(x.mkString(s"Expected one range, got ${x.length}: [\n", "\n], [\n", "\n]"))
           }
@@ -157,13 +157,13 @@ class TokensSuite extends TreeSuiteBase {
                 one.syntax,
                 """|// cl1
                    |import p1.a1 // ct1
-                   |""".stripMargin
+                   |""".stripMargin,
               )
               assertEquals((31, 7), (two.start, two.length))
               assertNoDiff(
                 two.syntax,
                 """|import p3.a3 // ct3
-                   |""".stripMargin
+                   |""".stripMargin,
               )
             case x =>
               fail(x.mkString(s"Expected two ranges, got ${x.length}: [\n", "\n], [\n", "\n]"))

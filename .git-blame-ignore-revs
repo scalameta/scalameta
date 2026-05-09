@@ -14,3 +14,6 @@ f8e0a2b3ee89c4dd7da94aefe2732bfc8a19f80c
 
 # Scala Steward: Reformat with scalafmt 3.10.7
 e87e56075da52034557212b07f91145ca8cffadd
+
+# scalafmt: enabled trailing commas
+0bcf128e753cdd6ae0d99d11eecd69511a6724b4

@@ -72,7 +72,7 @@ object Input {
     @SerialVersionUID(1L)
     private class SerializationProxy(
         @transient
-        private var orig: Stream
+        private var orig: Stream,
     ) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
         out.writeObject(orig.chars)
@@ -118,7 +118,7 @@ object Input {
     @SerialVersionUID(1L)
     private class SerializationProxy(
         @transient
-        private var orig: UriLike
+        private var orig: UriLike,
     ) extends Serializable {
       private def writeObject(out: java.io.ObjectOutputStream): Unit = {
         out.writeObject(orig.uri)

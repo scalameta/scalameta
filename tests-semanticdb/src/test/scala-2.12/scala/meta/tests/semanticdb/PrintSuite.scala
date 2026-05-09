@@ -17,12 +17,12 @@ class PrintSuite extends PrintSuiteBase {
 
   checkInfo(
     "scala/Predef.assert(+1).",
-    """scala/Predef.assert(+1). => @inline @elidable final method assert(assertion: Boolean, message: => Any): Unit"""
+    """scala/Predef.assert(+1). => @inline @elidable final method assert(assertion: Boolean, message: => Any): Unit""",
   )
   checkInfo("scala/Any#", """scala/Any# => abstract class Any { +10 decls }""")
   checkInfo(
     "java/util/Collections#singletonList().",
-    """java/util/Collections#singletonList(). => static method singletonList[T](param0: T): List[T]"""
+    """java/util/Collections#singletonList(). => static method singletonList[T](param0: T): List[T]""",
   )
 
   checkSynthetics(
@@ -30,7 +30,7 @@ class PrintSuite extends PrintSuiteBase {
     """|[2:0..2:11): List(1).map => *[Int, List[Int]]
        |[2:0..2:18): List(1).map(_ + 2) => *(List.canBuildFrom[Int])
        |[2:0..2:4): List => *.apply[Int]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkTrees(
@@ -38,7 +38,7 @@ class PrintSuite extends PrintSuiteBase {
     """|orig(List(1).map)[Int, List[Int]]
        |orig(List(1).map(_ + 2))(List.canBuildFrom[Int])
        |orig(List).apply[Int]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkSynthetics(
@@ -49,7 +49,7 @@ class PrintSuite extends PrintSuiteBase {
        |""".stripMargin,
     """|[4:4..4:9): xs.to => *(List.canBuildFrom[Int])
        |[4:4..4:9): xs.to => *[List]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
 }

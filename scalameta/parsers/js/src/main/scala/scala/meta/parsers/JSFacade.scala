@@ -84,7 +84,7 @@ object JSFacade {
               "error" -> x.message,
               "pos" -> toPosition(x.pos),
               "lineNumber" -> x.pos.startLine,
-              "columnNumber" -> x.pos.startColumn
+              "columnNumber" -> x.pos.startColumn,
             )
         }
     }

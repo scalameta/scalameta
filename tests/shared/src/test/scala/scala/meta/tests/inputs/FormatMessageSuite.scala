@@ -23,7 +23,7 @@ class FormatMessageSuite extends TreeSuiteBase {
        |<input>:1: error: foo
        |
        |^
-       |""".stripMargin.lf2nl
+       |""".stripMargin.lf2nl,
   )
 
   test("\n")(
@@ -34,7 +34,7 @@ class FormatMessageSuite extends TreeSuiteBase {
        |<input>:2: error: foo
        |
        |^
-       |""".stripMargin.lf2nl
+       |""".stripMargin.lf2nl,
   )
 
   test("foo")(
@@ -51,7 +51,7 @@ class FormatMessageSuite extends TreeSuiteBase {
        |<input>:1: error: foo
        |foo
        |   ^
-       |""".stripMargin.lf2nl
+       |""".stripMargin.lf2nl,
   )
 
   test("foo\n")(
@@ -71,7 +71,7 @@ class FormatMessageSuite extends TreeSuiteBase {
        |<input>:2: error: foo
        |
        |^
-       |""".stripMargin.lf2nl
+       |""".stripMargin.lf2nl,
   )
 
   test("foo\nbar") {

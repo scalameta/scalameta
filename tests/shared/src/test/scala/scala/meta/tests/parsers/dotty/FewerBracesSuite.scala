@@ -16,8 +16,8 @@ class FewerBracesSuite extends BaseDottySuite {
            |  val fileNames = files.values
            |  filenames
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Val(
       Nil,
       List(patvar("firstLine")),
@@ -26,9 +26,9 @@ class FewerBracesSuite extends BaseDottySuite {
         tselect(tapply(tselect("files", "get"), tname("fileName")), "fold"),
         blk(
           Defn.Val(Nil, List(patvar("fileNames")), None, tselect("files", "values")),
-          tname("filenames")
-        )
-      )
+          tname("filenames"),
+        ),
+      ),
     ))
   }
   test("simple-comment") {
@@ -45,12 +45,12 @@ class FewerBracesSuite extends BaseDottySuite {
          |    line */
          |  indentedCode
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )(Defn.Val(
       Nil,
       List(patvar("firstLine")),
       None,
-      tapply(tname("map"), blk(tnameComments("indentedCode")("/*\n    line\n    line */")()))
+      tapply(tname("map"), blk(tnameComments("indentedCode")("/*\n    line\n    line */")())),
     ))
   }
 
@@ -63,14 +63,14 @@ class FewerBracesSuite extends BaseDottySuite {
         """|val firstLine = files.map {
            |  a => a
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Val(
       Nil,
       List(patvar("firstLine")),
       None,
-      tapply(tselect("files", "map"), blk(tfunc(tparam("a"))(tname("a"))))
-    ))
+      tapply(tselect("files", "map"), blk(tfunc(tparam("a"))(tname("a")))),
+    )),
   )
 
   test("advanced-same-line") {
@@ -82,13 +82,13 @@ class FewerBracesSuite extends BaseDottySuite {
         """|val firstLine = files.map {
            |  (a, b) => a
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Val(
       Nil,
       List(patvar("firstLine")),
       None,
-      tapply(tselect("files", "map"), blk(tfunc(tparam("a"), tparam("b"))(tname("a"))))
+      tapply(tselect("files", "map"), blk(tfunc(tparam("a"), tparam("b"))(tname("a")))),
     ))
   }
 
@@ -106,7 +106,7 @@ class FewerBracesSuite extends BaseDottySuite {
       Nil,
       List(patvar("firstLine")),
       None,
-      tapply(tselect("files", "map"), blk(tpolyfunc(pparam("a"), pparam("b"))(tname("a"))))
+      tapply(tselect("files", "map"), blk(tpolyfunc(pparam("a"), pparam("b"))(tname("a")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -121,16 +121,16 @@ class FewerBracesSuite extends BaseDottySuite {
         """|val firstLine = files.map {
            |  case (a, b) => a
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Val(
       Nil,
       List(patvar("firstLine")),
       None,
       tapply(
         tselect("files", "map"),
-        Term.PartialFunction(List(Case(Pat.Tuple(List(patvar("a"), patvar("b"))), None, tname("a"))))
-      )
+        Term.PartialFunction(List(Case(Pat.Tuple(List(patvar("a"), patvar("b"))), None, tname("a")))),
+      ),
     ))
   }
 
@@ -152,8 +152,8 @@ class FewerBracesSuite extends BaseDottySuite {
            |  }
            |  def hello = ???
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Def(
       Nil,
       tname("main"),
@@ -169,12 +169,12 @@ class FewerBracesSuite extends BaseDottySuite {
             tselect("files", "map"),
             Term.PartialFunction(List(
               Case(Pat.Extract(tname("A"), List(patvar("a"))), None, tname("a")),
-              Case(Pat.Extract(tname("B"), List(patvar("b"))), None, tname("b"))
-            ))
-          )
+              Case(Pat.Extract(tname("B"), List(patvar("b"))), None, tname("b")),
+            )),
+          ),
         ),
-        Defn.Def(Nil, tname("hello"), Nil, Nil, None, tname("???"))
-      )
+        Defn.Def(Nil, tname("hello"), Nil, Nil, None, tname("???")),
+      ),
     ))
   }
 
@@ -196,8 +196,8 @@ class FewerBracesSuite extends BaseDottySuite {
            |    123
            |  }
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Def(
       Nil,
       tname("O"),
@@ -206,8 +206,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       blk(
         Defn.Val(Nil, List(patvar("firstLine")), None, tapply(tselect("files", "fold"), blk(int(123)))),
-        Defn.Val(Nil, List(patvar("secondLine")), None, tapply(tselect("files", "fold"), blk(int(123))))
-      )
+        Defn.Val(Nil, List(patvar("secondLine")), None, tapply(tselect("files", "fold"), blk(int(123)))),
+      ),
     ))
   }
 
@@ -223,8 +223,8 @@ class FewerBracesSuite extends BaseDottySuite {
            |  val file = Path.userHome / ".credentials"
            |  file
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Def(
       Nil,
       tname("O"),
@@ -238,11 +238,11 @@ class FewerBracesSuite extends BaseDottySuite {
             Nil,
             List(patvar("file")),
             None,
-            tinfix(tselect("Path", "userHome"), "/", str(".credentials"))
+            tinfix(tselect("Path", "userHome"), "/", str(".credentials")),
           ),
-          tname("file")
-        )
-      )
+          tname("file"),
+        ),
+      ),
     ))
   }
 
@@ -264,8 +264,8 @@ class FewerBracesSuite extends BaseDottySuite {
            |    (a, b) => a
            |  }
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Def(
       Nil,
       tname("O"),
@@ -278,9 +278,9 @@ class FewerBracesSuite extends BaseDottySuite {
         None,
         tapply(
           tselect(tapply(tselect("files", "fold"), blk(int(123))), "apply"),
-          blk(tfunc(tparam("a"), tparam("b"))(tname("a")))
-        )
-      ))
+          blk(tfunc(tparam("a"), tparam("b"))(tname("a"))),
+        ),
+      )),
     ))
   }
 
@@ -294,8 +294,8 @@ class FewerBracesSuite extends BaseDottySuite {
         """|def O = List((1, (List(""), 3))).map {
            |  (a: (Int, (List[String], Int))) => a._1 + 1
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Def(
       Nil,
       tname("O"),
@@ -306,18 +306,18 @@ class FewerBracesSuite extends BaseDottySuite {
         tselect(
           tapply(
             tname("List"),
-            Term.Tuple(List(int(1), Term.Tuple(List(tapply(tname("List"), str("")), int(3)))))
+            Term.Tuple(List(int(1), Term.Tuple(List(tapply(tname("List"), str("")), int(3))))),
           ),
-          "map"
+          "map",
         ),
         blk(
           tfunc(tparam(
             Nil,
             "a",
-            Type.Tuple(List(pname("Int"), Type.Tuple(List(papply("List", "String"), pname("Int")))))
-          ))(tinfix(tselect("a", "_1"), "+", int(1)))
-        )
-      )
+            Type.Tuple(List(pname("Int"), Type.Tuple(List(papply("List", "String"), pname("Int"))))),
+          ))(tinfix(tselect("a", "_1"), "+", int(1))),
+        ),
+      ),
     ))
   }
 
@@ -336,8 +336,8 @@ class FewerBracesSuite extends BaseDottySuite {
            |}.filter {
            |  (y: Int) => y > 0
            |}(0)
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Val(
       Nil,
       List(patvar("a")),
@@ -346,12 +346,12 @@ class FewerBracesSuite extends BaseDottySuite {
         tapply(
           tselect(
             tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix(tname("x"), "*", tname("x"))))),
-            "filter"
+            "filter",
           ),
-          blk(tfunc(tparam("y", "Int"))(tinfix(tname("y"), ">", int(0))))
+          blk(tfunc(tparam("y", "Int"))(tinfix(tname("y"), ">", int(0)))),
         ),
-        int(0)
-      )
+        int(0),
+      ),
     ))
   }
 
@@ -367,9 +367,9 @@ class FewerBracesSuite extends BaseDottySuite {
            |    22
            |  }
            |}
-           |""".stripMargin
-      )
-    )(Defn.Class(Nil, pname("C"), Nil, EmptyCtor(), tpl(tapply(tname("f"), blk(int(22))))))
+           |""".stripMargin,
+      ),
+    )(Defn.Class(Nil, pname("C"), Nil, EmptyCtor(), tpl(tapply(tname("f"), blk(int(22)))))),
   )
 
   test("no-indent") {
@@ -387,11 +387,11 @@ class FewerBracesSuite extends BaseDottySuite {
            |}.filter {
            |  x => x
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(tapply(
       tselect(tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tname("x")))), "filter"),
-      blk(tfunc(tparam("x"))(tname("x")))
+      blk(tfunc(tparam("x"))(tname("x"))),
     ))
   }
 
@@ -409,8 +409,8 @@ class FewerBracesSuite extends BaseDottySuite {
            |  val first = arr(0)
            |  first != 1
            |}) println("invalid arr")
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Term.If(
       tinfix(
         tselect("arr", "isEmpty"),
@@ -419,13 +419,13 @@ class FewerBracesSuite extends BaseDottySuite {
           tname("locally"),
           blk(
             Defn.Val(Nil, List(patvar("first")), None, tapply(tname("arr"), int(0))),
-            tinfix(tname("first"), "!=", int(1))
-          )
-        )
+            tinfix(tname("first"), "!=", int(1)),
+          ),
+        ),
       ),
       tapply(tname("println"), str("invalid arr")),
       Lit.Unit(),
-      Nil
+      Nil,
     ))
   }
   // Cannot chain any braceless lambdas without `.`
@@ -444,8 +444,8 @@ class FewerBracesSuite extends BaseDottySuite {
            |    x == y
            |  }
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Def(
       Nil,
       tname("test24"),
@@ -454,8 +454,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       blk(
         tinfix(tinfix(tname("x"), "<", tname("y")), "or", tinfix(tname("x"), ">", tname("y"))),
-        tapply(tname("or"), blk(tinfix(tname("x"), "==", tname("y"))))
-      )
+        tapply(tname("or"), blk(tinfix(tname("x"), "==", tname("y")))),
+      ),
     ))
   }
 
@@ -469,7 +469,7 @@ class FewerBracesSuite extends BaseDottySuite {
        |""".stripMargin,
     """|<input>:3: error: illegal start of definition `.`
        |    .filter: (y: Int) =>
-       |    ^""".stripMargin
+       |    ^""".stripMargin,
   ))
 
   test("#3164 empty argument 1")(runTestError[Stat](
@@ -478,7 +478,7 @@ class FewerBracesSuite extends BaseDottySuite {
        |""".stripMargin,
     """|<input>:2: error: expected fewer-braces method body
        |  test("foo"):
-       |             ^""".stripMargin
+       |             ^""".stripMargin,
   ))
 
   test("#3164 empty argument 2")(runTestError[Stat](
@@ -488,7 +488,7 @@ class FewerBracesSuite extends BaseDottySuite {
        |""".stripMargin,
     """|<input>:2: error: expected fewer-braces method body
        |  foo :
-       |      ^""".stripMargin
+       |      ^""".stripMargin,
   ))
 
   test("#3164 empty argument 3")(
@@ -502,9 +502,9 @@ class FewerBracesSuite extends BaseDottySuite {
            |  foo {
            |    bar
            |  }
-           |}""".stripMargin
-      )
-    )(Defn.Object(Nil, tname("a"), tpl(tapply(tname("foo"), blk(tname("bar"))))))
+           |}""".stripMargin,
+      ),
+    )(Defn.Object(Nil, tname("a"), tpl(tapply(tname("foo"), blk(tname("bar")))))),
   )
 
   test("#3164 empty argument 4")(
@@ -513,8 +513,8 @@ class FewerBracesSuite extends BaseDottySuite {
          |  foo
          |  : bar
          |""".stripMargin,
-      Some("object a { foo: bar }")
-    )(Defn.Object(Nil, tname("a"), tpl(Term.Ascribe(tname("foo"), pname("bar")))))
+      Some("object a { foo: bar }"),
+    )(Defn.Object(Nil, tname("a"), tpl(Term.Ascribe(tname("foo"), pname("bar"))))),
   )
 
   test("#3296") {
@@ -564,8 +564,8 @@ class FewerBracesSuite extends BaseDottySuite {
       tpl(tinfix(
         tapply(tname("List"), int(1), int(2), int(3)),
         "foreach",
-        blk(tfunc(tparam("x", None))(tapply(tname("println"), tname("x"))))
-      ))
+        blk(tfunc(tparam("x", None))(tapply(tname("println"), tname("x")))),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -588,8 +588,8 @@ class FewerBracesSuite extends BaseDottySuite {
       tpl(tinfix(
         tname("ids"),
         "foreach",
-        blk(tfunc(tparam("x", None))(tapply(tname("println"), tname("x"))))
-      ))
+        blk(tfunc(tparam("x", None))(tapply(tname("println"), tname("x")))),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -616,8 +616,8 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("MyApp"),
       tpl(
         tinfix(tname("ids"), "map", blk(tfunc(tparam("x", None))(tapply(tname("foo"), tname("x"))))),
-        tapply(tname("map"), blk(tfunc(tparam("x", None))(tapply(tname("bar"), tname("x")))))
-      )
+        tapply(tname("map"), blk(tfunc(tparam("x", None))(tapply(tname("bar"), tname("x"))))),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -643,9 +643,9 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("ids"),
         "map",
         blk(tfunc(tparam("x", None))(
-          blk(tapply(tname("foo"), tname("x")), tapply(tname("bar"), tname("x")))
-        ))
-      ))
+          blk(tapply(tname("foo"), tname("x")), tapply(tname("bar"), tname("x"))),
+        )),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -665,7 +665,7 @@ class FewerBracesSuite extends BaseDottySuite {
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
-      tpl(tinfix(tapply(tname("List"), int(1), int(2), int(3)), "foreach", blk(tname("println"))))
+      tpl(tinfix(tapply(tname("List"), int(1), int(2), int(3)), "foreach", blk(tname("println")))),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -707,7 +707,7 @@ class FewerBracesSuite extends BaseDottySuite {
     val tree = Defn.Object(
       Nil,
       tname("MyApp"),
-      tpl(tinfix(tname("ids"), "map", blk(tname("foo"))), tapply(tname("map"), blk(tname("bar"))))
+      tpl(tinfix(tname("ids"), "map", blk(tname("foo"))), tapply(tname("map"), blk(tname("bar")))),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -740,12 +740,12 @@ class FewerBracesSuite extends BaseDottySuite {
           ">>>",
           tapply(
             tselect("b", "map"),
-            blk(tname("foo"), tapply(tname("bar"), tname("baz"), tname("qux")))
-          )
+            blk(tname("foo"), tapply(tname("bar"), tname("baz"), tname("qux"))),
+          ),
         ),
         ">>>",
-        tname("c")
-      ))
+        tname("c"),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -770,10 +770,10 @@ class FewerBracesSuite extends BaseDottySuite {
       tinfix(
         tname("a"),
         ">>>",
-        tapply(tselect("b", "map"), blk(tname("foo"), tapply(tname("bar"), tname("baz"), tname("qux"))))
+        tapply(tselect("b", "map"), blk(tname("foo"), tapply(tname("bar"), tname("baz"), tname("qux")))),
       ),
       ">>>",
-      tname("c")
+      tname("c"),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -868,10 +868,10 @@ class FewerBracesSuite extends BaseDottySuite {
       tinfix(
         tapply(tselect("foo", "bar"), blk(tname("arg"))),
         "++",
-        tapply(tname("baz"), blk(tname("arg")))
+        tapply(tname("baz"), blk(tname("arg"))),
       ),
       "++",
-      tname("qux")
+      tname("qux"),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -897,10 +897,10 @@ class FewerBracesSuite extends BaseDottySuite {
       tinfix(
         tapply(tselect("foo", "bar"), blk(tname("arg"))),
         "++",
-        tapply(tname("baz"), blk(tname("arg")))
+        tapply(tname("baz"), blk(tname("arg"))),
       ),
       "++",
-      tname("qux")
+      tname("qux"),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -933,11 +933,11 @@ class FewerBracesSuite extends BaseDottySuite {
         tinfix(
           tapply(tselect("foo", "bar"), blk(tname("arg"))),
           "++",
-          tapply(tname("baz"), blk(tname("arg")))
+          tapply(tname("baz"), blk(tname("arg"))),
         ),
         "++",
-        tname("qux")
-      ))
+        tname("qux"),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -969,11 +969,11 @@ class FewerBracesSuite extends BaseDottySuite {
         tinfix(
           tapply(tselect("foo", "bar"), blk(tname("arg"))),
           "++",
-          tapply(tname("baz"), blk(tname("arg")))
+          tapply(tname("baz"), blk(tname("arg"))),
         ),
         "++",
-        tname("qux")
-      ))
+        tname("qux"),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -998,10 +998,10 @@ class FewerBracesSuite extends BaseDottySuite {
       tinfix(
         tapply(tselect("foo", "bar"), blk(tname("arg"))),
         "++",
-        tapply(tname("baz"), blk(tname("arg")))
+        tapply(tname("baz"), blk(tname("arg"))),
       ),
       "++",
-      tname("qux")
+      tname("qux"),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1026,10 +1026,10 @@ class FewerBracesSuite extends BaseDottySuite {
       tinfix(
         tapply(tselect("foo", "bar"), blk(tname("arg"))),
         "++",
-        tapply(tname("baz"), blk(tname("arg")))
+        tapply(tname("baz"), blk(tname("arg"))),
       ),
       "++",
-      tname("qux")
+      tname("qux"),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1061,11 +1061,11 @@ class FewerBracesSuite extends BaseDottySuite {
         tinfix(
           tapply(tselect("foo", "bar"), blk(tname("arg"))),
           "++",
-          tapply(tname("baz"), blk(tname("arg")))
+          tapply(tname("baz"), blk(tname("arg"))),
         ),
         "++",
-        tname("qux")
-      ))
+        tname("qux"),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1096,11 +1096,11 @@ class FewerBracesSuite extends BaseDottySuite {
         tinfix(
           tapply(tselect("foo", "bar"), blk(tname("arg"))),
           "++",
-          tapply(tname("baz"), blk(tname("arg")))
+          tapply(tname("baz"), blk(tname("arg"))),
         ),
         "++",
-        tname("qux")
-      ))
+        tname("qux"),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1136,9 +1136,9 @@ class FewerBracesSuite extends BaseDottySuite {
         blk(tinfix(
           tname("arg1"),
           "++",
-          tapply(tname("abc"), blk(tinfix(tname("arg2"), "++", tapply(tname("abc"), blk(tname("arg3"))))))
-        ))
-      )
+          tapply(tname("abc"), blk(tinfix(tname("arg2"), "++", tapply(tname("abc"), blk(tname("arg3")))))),
+        )),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1174,9 +1174,9 @@ class FewerBracesSuite extends BaseDottySuite {
         blk(tinfix(
           tname("arg1"),
           "++",
-          tapply(tname("abc"), blk(tinfix(tname("arg2"), "++", tapply(tname("abc"), blk(tname("arg3"))))))
-        ))
-      )
+          tapply(tname("abc"), blk(tinfix(tname("arg2"), "++", tapply(tname("abc"), blk(tname("arg3")))))),
+        )),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1217,9 +1217,9 @@ class FewerBracesSuite extends BaseDottySuite {
         blk(tinfix(
           tname("arg1"),
           "++",
-          tapply(tname("abc"), blk(tinfix(tname("arg2"), "++", tapply(tname("abc"), blk(tname("arg3"))))))
-        ))
-      ))
+          tapply(tname("abc"), blk(tinfix(tname("arg2"), "++", tapply(tname("abc"), blk(tname("arg3")))))),
+        )),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1255,9 +1255,9 @@ class FewerBracesSuite extends BaseDottySuite {
         blk(tinfix(
           tinfix(tname("arg1"), "++", tapply(tname("abc"), blk(tname("arg2")))),
           "++",
-          tapply(tname("abc"), blk(tname("arg3")))
-        ))
-      )
+          tapply(tname("abc"), blk(tname("arg3"))),
+        )),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1294,9 +1294,9 @@ class FewerBracesSuite extends BaseDottySuite {
         blk(tinfix(
           tinfix(tname("arg1"), "++", tapply(tname("abc"), blk(tname("arg2")))),
           "++",
-          tapply(tname("abc"), blk(tname("arg3")))
-        ))
-      )
+          tapply(tname("abc"), blk(tname("arg3"))),
+        )),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1337,9 +1337,9 @@ class FewerBracesSuite extends BaseDottySuite {
         blk(tinfix(
           tinfix(tname("arg1"), "++", tapply(tname("abc"), blk(tname("arg2")))),
           "++",
-          tapply(tname("abc"), blk(tname("arg3")))
-        ))
-      ))
+          tapply(tname("abc"), blk(tname("arg3"))),
+        )),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1380,11 +1380,11 @@ class FewerBracesSuite extends BaseDottySuite {
         tinfix(
           tapply(tname("abc"), blk(tname("arg1"))),
           tnameComments("++")()("/* c1 */", "// c2"),
-          tapply(tname("abc"), blk(tname("arg2")))
+          tapply(tname("abc"), blk(tname("arg2"))),
         ),
         tnameComments("++")()("/*\n        c3\n        */"),
-        tapply(tname("abc"), blk(tname("arg3")))
-      )
+        tapply(tname("abc"), blk(tname("arg3"))),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1418,8 +1418,8 @@ class FewerBracesSuite extends BaseDottySuite {
       tinfix(
         tapply(tname("abc"), blk(tname("arg1"))),
         tnameComments("++")()("/*\n   c2\n    */"),
-        tapply(tname("abc"), blk(tname("arg2")))
-      )
+        tapply(tname("abc"), blk(tname("arg2"))),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1454,8 +1454,8 @@ class FewerBracesSuite extends BaseDottySuite {
       tinfix(
         tapply(tname("abc"), blk(tname("arg1"))),
         tnameComments("++")()("/*\n       c2\n    */"),
-        tapply(tname("abc"), blk(tname("arg2")))
-      )
+        tapply(tname("abc"), blk(tname("arg2"))),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -1477,7 +1477,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1499,7 +1499,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1521,7 +1521,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1543,7 +1543,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1560,7 +1560,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1577,7 +1577,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Implicit()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1599,7 +1599,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1621,7 +1621,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1643,7 +1643,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1666,7 +1666,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1688,7 +1688,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1711,7 +1711,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1744,7 +1744,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1761,7 +1761,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapplyUsing(tname("foo"), Term.Ascribe(tname("bar"), pfunc(pname("Int"))(pname("baz"))))
+      tapplyUsing(tname("foo"), Term.Ascribe(tname("bar"), pfunc(pname("Int"))(pname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1794,7 +1794,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1816,7 +1816,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Using()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1841,9 +1841,9 @@ class FewerBracesSuite extends BaseDottySuite {
       tapply(
         tname("foo"),
         blk(
-          tfunc(tparam(List(Mod.Using()), "bar", pfunc(pname("Int"))(pname("String"))))(tname("baz"))
-        )
-      )
+          tfunc(tparam(List(Mod.Using()), "bar", pfunc(pname("Int"))(pname("String"))))(tname("baz")),
+        ),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1867,8 +1867,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tapply(
         tname("foo"),
-        blk(tfunc(tparam(Nil, "using", pfunc(pname("Int"))(pname("String"))))(tname("baz")))
-      )
+        blk(tfunc(tparam(Nil, "using", pfunc(pname("Int"))(pname("String"))))(tname("baz"))),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1892,8 +1892,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tapply(
         tname("foo"),
-        blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"), tparam("baz", "String"))(tname("qux")))
-      )
+        blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"), tparam("baz", "String"))(tname("qux"))),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1917,8 +1917,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tapply(
         tname("foo"),
-        blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"), tparam("using", "String"))(tname("qux")))
-      )
+        blk(tfunc(tparam(List(Mod.Using()), "bar", "Int"), tparam("using", "String"))(tname("qux"))),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1940,7 +1940,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1962,7 +1962,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -1984,7 +1984,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2007,7 +2007,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2029,7 +2029,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2052,7 +2052,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar", "Int"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar", "Int"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2069,7 +2069,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz")))
+      tapply(tname("foo"), tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2090,7 +2090,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2112,7 +2112,7 @@ class FewerBracesSuite extends BaseDottySuite {
       tname("a"),
       Nil,
       None,
-      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz"))))
+      tapply(tname("foo"), blk(tfunc(tparam(List(Mod.Erased()), "bar"))(tname("baz")))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2137,9 +2137,9 @@ class FewerBracesSuite extends BaseDottySuite {
       tapply(
         tname("foo"),
         blk(
-          tfunc(tparam(List(Mod.Erased()), "bar", pfunc(pname("Int"))(pname("String"))))(tname("baz"))
-        )
-      )
+          tfunc(tparam(List(Mod.Erased()), "bar", pfunc(pname("Int"))(pname("String"))))(tname("baz")),
+        ),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2165,10 +2165,10 @@ class FewerBracesSuite extends BaseDottySuite {
         tname("foo"),
         blk(
           tfunc(tparam(List(Mod.Erased()), "bar", "Int"), tparam(List(Mod.Erased()), "baz", "String"))(
-            tname("qux")
-          )
-        )
-      )
+            tname("qux"),
+          ),
+        ),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2229,9 +2229,9 @@ class FewerBracesSuite extends BaseDottySuite {
       tapply(
         tapply(tname("bar")),
         blk(tfunc(tparam("loader"))(
-          tapply(tname("baz"), blk(tapply(tname("loader"), blk(tfunc(tparam("_"))(tname("qux"))))))
-        ))
-      )
+          tapply(tname("baz"), blk(tapply(tname("loader"), blk(tfunc(tparam("_"))(tname("qux")))))),
+        )),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2254,7 +2254,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val tree = tapply(
       tselect(tapply(tselect("arg", "fn1"), blk(tfunc(tparam("_"))(lit("FOO1")))), "fn2"),
-      blk(tfunc(tparam("_"))(lit("FOO2")))
+      blk(tfunc(tparam("_"))(lit("FOO2"))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2292,7 +2292,7 @@ class FewerBracesSuite extends BaseDottySuite {
     val tree = Defn.ExtensionGroup(
       List(pparam("B", bounds(cb = List("Seq")))),
       List(List(tparam("b", "Int"))),
-      Defn.Def(Nil, "foo", Nil, None, "b")
+      Defn.Def(Nil, "foo", Nil, None, "b"),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2346,8 +2346,8 @@ class FewerBracesSuite extends BaseDottySuite {
       None,
       tapply(
         tselect(tapply("List", str("")), "map"),
-        Term.PartialFunction(List(Case(patvar("x"), None, tselect("x", "trim"))))
-      )
+        Term.PartialFunction(List(Case(patvar("x"), None, tselect("x", "trim")))),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2404,7 +2404,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val tree = tapply(
       tselect("xs", "map"),
-      blk(tfunc(tparam(List(Mod.Implicit()), "x"))(tinfix("x", "+", lit(1))))
+      blk(tfunc(tparam(List(Mod.Implicit()), "x"))(tinfix("x", "+", lit(1)))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2420,7 +2420,7 @@ class FewerBracesSuite extends BaseDottySuite {
          |""".stripMargin
     val tree = tapply(
       tselect("xs", "map"),
-      blk(tfunc(tparam(List(Mod.Implicit()), "x", "Int"))(tinfix("x", "+", lit(1))))
+      blk(tfunc(tparam(List(Mod.Implicit()), "x", "Int"))(tinfix("x", "+", lit(1)))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2444,9 +2444,9 @@ class FewerBracesSuite extends BaseDottySuite {
       blk(tfunc(tparam("x"))(tapply(
         "fooY",
         blk(tfunc(tparam("y"))(
-          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z"))))
-        ))
-      )))
+          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z")))),
+        )),
+      ))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2471,9 +2471,9 @@ class FewerBracesSuite extends BaseDottySuite {
       blk(tfunc(tparam("x"))(tapply(
         "fooY",
         blk(tfunc(tparam("y"))(
-          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z"))))
-        ))
-      )))
+          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z")))),
+        )),
+      ))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2499,9 +2499,9 @@ class FewerBracesSuite extends BaseDottySuite {
       blk(tfunc(tparam("x"))(tapply(
         "fooY",
         blk(tfunc(tparam("y"))(
-          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z"))))
-        ))
-      )))
+          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z")))),
+        )),
+      ))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2528,9 +2528,9 @@ class FewerBracesSuite extends BaseDottySuite {
       blk(tfunc(tparam("x"))(tapply(
         "fooY",
         blk(tfunc(tparam("y"))(
-          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z"))))
-        ))
-      )))
+          tapply("fooZ", blk(tfunc(tparam("z"))(tinfix(tinfix("x", "+", "y"), "+", "z")))),
+        )),
+      ))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2811,8 +2811,8 @@ class FewerBracesSuite extends BaseDottySuite {
       Case(
         patvar("n"),
         Some(tapply("foo", Term.PartialFunction(List(Case(patvar("b"), None, lit(true)))))),
-        lit(2)
-      )
+        lit(2),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -2885,9 +2885,9 @@ class FewerBracesSuite extends BaseDottySuite {
         tselect("a", "flatMap"),
         blk(tfunc(tparam("b"))(blk(
           tapply(tselect("c", "map"), blk(tfunc(tparam("d"))(lit(1)))),
-          Term.If(lit(true), blk(lit(1), lit(2)), lit(3), Nil)
-        )))
-      )
+          Term.If(lit(true), blk(lit(1), lit(2)), lit(3), Nil),
+        ))),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }

@@ -71,7 +71,7 @@ abstract class SemanticdbSuite extends FunSuite {
     val diagnostics = errors.map(error =>
       s"""|<input>:${error.pos.line}:${error.pos.column}: error ${error.msg}
           |${error.pos.lineContent}
-          |${error.pos.lineCaret}""".stripMargin
+          |${error.pos.lineCaret}""".stripMargin,
     )
     if (errors.nonEmpty) fail(diagnostics.mkString("\n"))
   }
@@ -136,10 +136,10 @@ abstract class SemanticdbSuite extends FunSuite {
     computeSectionFromPayload(computePayloadFromSnippet(code), sectionName)
 
   def checkSection(code: String, expected: String, section: String)(implicit
-      loc: munit.Location
+      loc: munit.Location,
   ): Unit = checkSection(code, code, expected, section)
   def checkSection(name: TestOptions, code: String, expected: String, section: String)(implicit
-      loc: munit.Location
+      loc: munit.Location,
   ): Unit = test(name) {
     val obtained = computeDatabaseSectionFromSnippet(code, section)
     assertNoDiff(obtained, expected)
@@ -150,7 +150,7 @@ abstract class SemanticdbSuite extends FunSuite {
 
   def diagnostics(code: String, expected: String)(implicit loc: munit.Location): Unit =
     throw new UnsupportedOperationException(
-      "SemanticdbSuite is not able to test against diagnostics. Use ExpectSuite instead."
+      "SemanticdbSuite is not able to test against diagnostics. Use ExpectSuite instead.",
     )
 
   def symbols(code: String, expected: String)(implicit loc: munit.Location): Unit =
@@ -160,7 +160,7 @@ abstract class SemanticdbSuite extends FunSuite {
     checkSection(code, expected, "Synthetics")
 
   private def computeDatabaseAndOccurrencesFromMarkup(
-      markup: String
+      markup: String,
   ): (s.TextDocument, List[String]) = {
     val chevrons = "<<(.*?)>>".r
     val ps0 = chevrons.findAllIn(markup).matchData.map(m => (m.start, m.end)).toList
@@ -205,7 +205,7 @@ abstract class SemanticdbSuite extends FunSuite {
     }
 
   def targeted(markup: String, fn: (s.TextDocument, String) => Unit)(implicit
-      hack: OverloadHack2
+      hack: OverloadHack2,
   ): Unit = test(markup) {
     val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
     occurrences match {
@@ -215,7 +215,7 @@ abstract class SemanticdbSuite extends FunSuite {
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String) => Unit)(implicit
-      hack: OverloadHack3
+      hack: OverloadHack3,
   ): Unit = test(markup) {
     val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
     occurrences match {
@@ -225,7 +225,7 @@ abstract class SemanticdbSuite extends FunSuite {
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String, String) => Unit)(implicit
-      hack: OverloadHack4
+      hack: OverloadHack4,
   ): Unit = test(markup) {
     val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
     occurrences match {
@@ -235,7 +235,7 @@ abstract class SemanticdbSuite extends FunSuite {
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String, String, String) => Unit)(
-      implicit hack: OverloadHack5
+      implicit hack: OverloadHack5,
   ): Unit = test(markup) {
     val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
     occurrences match {
@@ -245,7 +245,7 @@ abstract class SemanticdbSuite extends FunSuite {
   }
 
   def targeted(markup: String, fn: (s.TextDocument, String, String, String, String, String) => Unit)(
-      implicit hack: OverloadHack5
+      implicit hack: OverloadHack5,
   ): Unit = test(markup) {
     val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
     occurrences match {
@@ -256,7 +256,7 @@ abstract class SemanticdbSuite extends FunSuite {
 
   def targeted(
       markup: String,
-      fn: (s.TextDocument, String, String, String, String, String, String) => Unit
+      fn: (s.TextDocument, String, String, String, String, String, String) => Unit,
   )(implicit hack: OverloadHack5): Unit = test(markup) {
     val (database, occurrences) = computeDatabaseAndOccurrencesFromMarkup(markup)
     occurrences match {

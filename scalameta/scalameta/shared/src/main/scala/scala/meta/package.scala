@@ -79,7 +79,7 @@ package object meta
 
   implicit class XtensionDialectApply(private val dialect: Dialect) extends AnyVal {
     def apply[T](value: T)(implicit
-        convert: common.Convert[T, inputs.Input]
+        convert: common.Convert[T, inputs.Input],
     ): (Dialect, inputs.Input) = (dialect, convert(value))
     def apply(value: tokens.Token): (Dialect, tokens.Token) = (dialect, value)
     def apply(value: tokens.Tokens): (Dialect, tokens.Tokens) = (dialect, value)
@@ -120,7 +120,7 @@ package object meta
   implicit class XtensionTree(private val tree: Tree) extends AnyVal {
     def maybeParseAs[A <: Tree: ClassTag](implicit
         dialect: Dialect,
-        parse: parsers.Parse[A]
+        parse: parsers.Parse[A],
     ): Parsed[A] = tree match {
       case t: A => t.maybeParse
       case _ => reparseAs[A]

@@ -31,7 +31,7 @@ package object metacp {
       } yield ScalaSigNode(node.name + ".class", scalaSig)
     private def fromScalaSigAnnotation: Option[ScalaSig] = Option(node.visibleAnnotations).flatMap {
       _.toScala.iterator.filter(annot =>
-        annot.desc == Main.SCALA_SIG_ANNOTATION || annot.desc == Main.SCALA_LONG_SIG_ANNOTATION
+        annot.desc == Main.SCALA_SIG_ANNOTATION || annot.desc == Main.SCALA_LONG_SIG_ANNOTATION,
       ).map(_.values.toScala).collectFirst { case collection.Seq("bytes", anyBytes) =>
         val baos = new ByteArrayOutputStream()
         val bytes: Array[Byte] = anyBytes match {
@@ -73,7 +73,7 @@ package object metacp {
         Array(ScalaSigAttribute),
         // NOTE(olafur): don't use SKIP_DEBUG field since it strips away Java
         // method parameter names since 2.12.11.
-        SKIP_CODE | SKIP_FRAMES
+        SKIP_CODE | SKIP_FRAMES,
       )
       node
     } finally in.close()

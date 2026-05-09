@@ -440,7 +440,7 @@ object Term {
       thenp: Term,
       elsep: Term,
       @newField("4.4.0")
-      mods: List[Mod] = Nil
+      mods: List[Mod] = Nil,
   ) extends Term with Tree.WithCond with Stat.WithMods
 
   @branch
@@ -481,7 +481,7 @@ object Term {
       expr: Term,
       casesBlock: CasesBlock,
       @newField("4.4.5")
-      mods: List[Mod] = Nil
+      mods: List[Mod] = Nil,
   ) extends MatchLike {
     @replacedField("4.9.9")
     override final def cases: List[Case] = casesBlock.cases
@@ -686,7 +686,7 @@ object Type {
   class Function(
       @replacesFields("4.6.0", FuncParamClause)
       paramClause: FuncParamClause,
-      res: Type
+      res: Type,
   ) extends FunctionType {
     @replacedField("4.6.0")
     override final def params: List[Type] = paramClause.values
@@ -705,7 +705,7 @@ object Type {
   class ContextFunction(
       @replacesFields("4.6.0", FuncParamClause)
       paramClause: FuncParamClause,
-      res: Type
+      res: Type,
   ) extends FunctionType {
     @replacedField("4.6.0")
     override final def params: List[Type] = paramClause.values
@@ -803,7 +803,7 @@ object Type {
       @newField("4.12.3")
       context: List[sm.Type] = Nil,
       @newField("4.12.3")
-      view: List[Type] = Nil
+      view: List[Type] = Nil,
   ) extends Tree
   object Bounds {
     val empty: Bounds = Bounds(None, None)
@@ -862,7 +862,7 @@ object Type {
       name: Name,
       typ: Type,
       @newField("4.7.8")
-      mods: List[Mod] = Nil
+      mods: List[Mod] = Nil,
   ) extends FunctionParamOrArg with Member.Type {
     override def nameOpt: Option[Name] = Some(name)
     override def tpe: Type = typ
@@ -889,7 +889,7 @@ object Type {
       name: meta.Name,
       tparamClause: ParamClause,
       @replacesFields("4.12.3", ParamBoundsCtor)
-      bounds: Bounds
+      bounds: Bounds,
   ) extends Member.Param with Tree.WithTParamClause {
     @replacedField("4.6.0")
     final def tparams: List[Param] = tparamClause.values
@@ -928,7 +928,7 @@ object Type {
   @ast
   class Capturing(
       tpe: Type,
-      caps: Captures // [cap]tures or [cap]abilities
+      caps: Captures, // [cap]tures or [cap]abilities
   ) extends Type
 
   def fresh(): Type.Name = fresh("fresh")
@@ -1018,7 +1018,7 @@ object Pat {
   class Macro(body: Term) extends Pat with Tree.WithBody {
     checkField(
       body,
-      body.isInstanceOf[Term.QuotedMacroExpr] || body.isInstanceOf[Term.QuotedMacroType]
+      body.isInstanceOf[Term.QuotedMacroExpr] || body.isInstanceOf[Term.QuotedMacroType],
     )
   }
   @ast
@@ -1076,18 +1076,18 @@ object Member {
       toTparams(paramClauseGroups.headOption)
 
     private[meta] def toParamss(
-        paramClauseGroup: Option[ParamClauseGroup]
+        paramClauseGroup: Option[ParamClauseGroup],
     ): List[List[sm.Term.Param]] = paramClauseGroup
       .fold(List.empty[List[sm.Term.Param]])(_.paramClauses.map(_.values))
     private[meta] def toParamss(
-        paramClauseGroups: List[ParamClauseGroup]
+        paramClauseGroups: List[ParamClauseGroup],
     ): List[List[sm.Term.Param]] = toParamss(paramClauseGroups.headOption)
   }
 
   private[meta] object ParamClauseGroupCtor {
     def apply(
         tparams: List[sm.Type.Param],
-        paramss: List[List[sm.Term.Param]]
+        paramss: List[List[sm.Term.Param]],
     ): Option[ParamClauseGroup] =
       if (tparams.isEmpty && paramss.isEmpty) None
       else Some(ParamClauseGroup(tparamClause = tparams, paramClauses = paramss))
@@ -1096,14 +1096,14 @@ object Member {
   private[meta] object ParamClauseGroupsCtorGiven {
     def apply(
         tparams: List[sm.Type.Param],
-        sparams: List[List[sm.Term.Param]]
+        sparams: List[List[sm.Term.Param]],
     ): List[Member.ParamClauseGroup] = ParamClauseGroupsCtor(tparams, sparams)
   }
 
   private[meta] object ParamClauseGroupsCtor {
     def apply(
         tparams: List[sm.Type.Param],
-        paramss: List[List[sm.Term.Param]]
+        paramss: List[List[sm.Term.Param]],
     ): List[ParamClauseGroup] =
       if (tparams.isEmpty && paramss.isEmpty) Nil
       else ParamClauseGroup(tparamClause = tparams, paramClauses = paramss) :: Nil
@@ -1157,7 +1157,7 @@ object Decl {
       @replacesFields("4.6.0", Member.ParamClauseGroupsCtor)
       @replacesFields("4.7.3", Member.ParamClauseGroupsCtor)
       paramClauseGroups: List[Member.ParamClauseGroup],
-      decltpe: sm.Type
+      decltpe: sm.Type,
   ) extends Decl
       with Member.Term
       with Stat.WithMods
@@ -1178,7 +1178,7 @@ object Decl {
       mods: List[Mod],
       name: sm.Type.Name,
       tparamClause: sm.Type.ParamClause,
-      bounds: sm.Type.Bounds
+      bounds: sm.Type.Bounds,
   ) extends Decl with Stat.TypeDef {
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values
@@ -1196,7 +1196,7 @@ object Decl {
       mods: List[Mod],
       name: Name.Anonymous,
       paramClauseGroups: List[Member.ParamClauseGroup],
-      decltpe: sm.Type
+      decltpe: sm.Type,
   ) extends GivenLike
   @ast
   class Given(
@@ -1205,7 +1205,7 @@ object Decl {
       @replacesFields("4.6.0", Member.ParamClauseGroupsCtorGiven)
       @replacesFields("4.12.0", Member.ParamClauseGroupsCtor)
       paramClauseGroups: List[Member.ParamClauseGroup],
-      decltpe: sm.Type
+      decltpe: sm.Type,
   ) extends GivenLike with Member.Term with Tree.WithParamClauseGroup {
     @replacedField("4.6.0", pos = 2)
     final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroups)
@@ -1238,12 +1238,12 @@ object Defn {
       pats: List[Pat] @nonEmpty,
       decltpe: Option[sm.Type],
       @replacesFields("4.7.2", VarRhsCtor)
-      body: Term
+      body: Term,
   ) extends Defn with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpeOpt with Tree.WithBody {
     checkFields(
       if (body.isInstanceOf[Term.Placeholder]) decltpe.nonEmpty &&
       pats.forall(_.isInstanceOf[Pat.Var])
-      else !pats.exists(_.isInstanceOf[Term.Name])
+      else !pats.exists(_.isInstanceOf[Term.Name]),
     )
     @replacedField("4.7.2")
     final def rhs: Option[Term] = VarRhsCtor.toOpt(body)
@@ -1255,7 +1255,7 @@ object Defn {
       @replacesFields("4.6.0", Member.ParamClauseGroupsCtorGiven)
       @replacesFields("4.12.0", Member.ParamClauseGroupsCtor)
       paramClauseGroups: List[Member.ParamClauseGroup],
-      templ: Template
+      templ: Template,
   ) extends Defn with Stat.GivenLike with Tree.WithParamClauseGroup with Stat.WithTemplate {
     @replacedField("4.6.0", pos = 2)
     final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroups)
@@ -1270,7 +1270,7 @@ object Defn {
       name: sm.Type.Name,
       tparamClause: sm.Type.ParamClause,
       ctor: Ctor.Primary,
-      templ: Template
+      templ: Template,
   ) extends Defn
       with Member.Type
       with Stat.WithMods
@@ -1286,7 +1286,7 @@ object Defn {
       name: Term.Name,
       tparamClause: sm.Type.ParamClause,
       ctor: Ctor.Primary,
-      inits: List[Init]
+      inits: List[Init],
   ) extends Defn with Member.Term with Stat.WithMods with Tree.WithTParamClause with Stat.WithCtor {
     private def checkParent(destination: String): Boolean = ParentChecks.EnumCase(this, destination)
     @replacedField("4.6.0")
@@ -1304,7 +1304,7 @@ object Defn {
       @replacesFields("4.12.0", Member.ParamClauseGroupsCtor)
       paramClauseGroups: List[Member.ParamClauseGroup],
       decltpe: sm.Type,
-      body: Term
+      body: Term,
   ) extends Defn
       with Stat.GivenLike
       with Tree.WithParamClauseGroup
@@ -1321,7 +1321,7 @@ object Defn {
   class ExtensionGroup(
       @replacesFields("4.6.0", Member.ParamClauseGroupCtor)
       paramClauseGroup: Option[Member.ParamClauseGroup],
-      body: Stat
+      body: Stat,
   ) extends Defn with Tree.WithParamClauseGroup with Tree.WithBody {
     @replacedField("4.6.0", pos = 0)
     final def tparams: List[sm.Type.Param] = Member.ParamClauseGroup.toTparams(paramClauseGroup)
@@ -1337,7 +1337,7 @@ object Defn {
       @replacesFields("4.7.3", Member.ParamClauseGroupsCtor)
       paramClauseGroups: List[Member.ParamClauseGroup],
       decltpe: Option[sm.Type],
-      body: Term
+      body: Term,
   ) extends Defn
       with Member.Term
       with Stat.WithMods
@@ -1362,7 +1362,7 @@ object Defn {
       @replacesFields("4.7.3", Member.ParamClauseGroupsCtor)
       paramClauseGroups: List[Member.ParamClauseGroup],
       decltpe: Option[sm.Type],
-      body: Term
+      body: Term,
   ) extends Defn
       with Member.Term
       with Stat.WithMods
@@ -1386,7 +1386,7 @@ object Defn {
       tparamClause: sm.Type.ParamClause,
       body: sm.Type,
       @newField("4.4.0")
-      bounds: sm.Type.Bounds = sm.Type.Bounds.empty
+      bounds: sm.Type.Bounds = sm.Type.Bounds.empty,
   ) extends Defn with Stat.TypeDef with Tree.WithBody {
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values
@@ -1397,7 +1397,7 @@ object Defn {
       name: sm.Type.Name,
       tparamClause: sm.Type.ParamClause,
       ctor: Ctor.Primary,
-      templ: Template
+      templ: Template,
   ) extends Defn
       with Member.Type
       with Stat.WithMods
@@ -1413,7 +1413,7 @@ object Defn {
       name: sm.Type.Name,
       tparamClause: sm.Type.ParamClause,
       ctor: Ctor.Primary,
-      templ: Template
+      templ: Template,
   ) extends Defn
       with Member.Type
       with Stat.WithMods
@@ -1479,7 +1479,7 @@ object Ctor {
       name: Name,
       paramClauses: Seq[Term.ParamClause] @nonEmpty,
       @replacesFields("4.9.9", BlockCtor)
-      body: Block
+      body: Block,
   ) extends Ctor with Stat with Stat.WithMods with Tree.WithParamClauses with Tree.WithStats {
     @replacedField("4.6.0")
     final def paramss: List[List[Term.Param]] = paramClauses.map(_.values).toList
@@ -1526,7 +1526,7 @@ class Template(
     @replacesFields("4.9.9", Template.BodyCtor)
     body: Template.Body,
     @newField("4.4.0")
-    derives: List[Type] = Nil
+    derives: List[Type] = Nil,
 ) extends Tree with Tree.WithStats {
   checkFields(inits.isEmpty || earlyClause.forall(x => isQuasiOr(x, x.stats.forall(_.isEarlyStat))))
   @replacedField("4.9.9")

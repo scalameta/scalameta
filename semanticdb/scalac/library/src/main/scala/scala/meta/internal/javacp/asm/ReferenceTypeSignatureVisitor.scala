@@ -20,7 +20,7 @@ class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[Referen
     else simpleClassTypeSignatures.result() match {
       case Nil => None
       case simpleClass :: suffix => Some(
-          ClassTypeSignature(simpleClass.result(), suffix.map(s => ClassTypeSignatureSuffix(s.result())))
+          ClassTypeSignature(simpleClass.result(), suffix.map(s => ClassTypeSignatureSuffix(s.result()))),
         )
     }
 

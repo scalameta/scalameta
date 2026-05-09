@@ -7,15 +7,15 @@ class InfixSuite extends BaseDottySuite {
   test("simple-modifier")(
     runTestAssert[Stat](
       """|infix def a(param: Int) = param
-         |""".stripMargin
+         |""".stripMargin,
     )(Defn.Def(
       List(Mod.Infix()),
       tname("a"),
       Nil,
       List(List(tparam("param", "Int"))),
       None,
-      tname("param")
-    ))
+      tname("param"),
+    )),
   )
   test("infix-type-complex") {
     runTestAssert[Stat](
@@ -28,8 +28,8 @@ class InfixSuite extends BaseDottySuite {
            |  infix type or[X, Y]
            |  infix def x(a: Int): String or Int = 1
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Class(
       Nil,
       pname("A"),
@@ -43,19 +43,19 @@ class InfixSuite extends BaseDottySuite {
           Nil,
           List(List(tparam("a", "Int"))),
           Some(pinfix("String", "or", pname("Int"))),
-          int(1)
-        )
-      )
+          int(1),
+        ),
+      ),
     ))
 
   }
 
   test("infix-class")(runTestAssert[Stat]("infix class A[B, C]")(
-    Defn.Class(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody())
+    Defn.Class(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody()),
   ))
 
   test("infix-trait")(runTestAssert[Stat]("infix trait A[B, C]")(
-    Defn.Trait(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody())
+    Defn.Trait(List(Mod.Infix()), pname("A"), List(pparam("B"), pparam("C")), ctor, tplNoBody()),
   ))
 
   test("infix-identifier")(
@@ -65,8 +65,8 @@ class InfixSuite extends BaseDottySuite {
       Nil,
       List(List(tparam("infix", "infix"))),
       Some(pname("infix")),
-      Term.NewAnonymous(tpl(List(init("infix")), Nil))
-    ))
+      Term.NewAnonymous(tpl(List(init("infix")), Nil)),
+    )),
   )
 
   test("extension-method")(
@@ -80,10 +80,10 @@ class InfixSuite extends BaseDottySuite {
           Nil,
           List(List(tparam("other", "Int"))),
           Some(pname("Int")),
-          int(0)
-        )
-      )
-    )
+          int(0),
+        ),
+      ),
+    ),
   )
 
   test("issue-2880 1") {
@@ -101,8 +101,8 @@ class InfixSuite extends BaseDottySuite {
            |  b.add()
            |  input_< ~> filtering ~> removeItems.in0 ~> removeItems
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(tapply(
       tname("Flow"),
       blk(
@@ -111,12 +111,12 @@ class InfixSuite extends BaseDottySuite {
           tinfix(
             tinfix(tname("input_<"), "~>", tname("filtering")),
             "~>",
-            tselect("removeItems", "in0")
+            tselect("removeItems", "in0"),
           ),
           "~>",
-          tname("removeItems")
-        )
-      )
+          tname("removeItems"),
+        ),
+      ),
     ))
   }
 
@@ -138,8 +138,8 @@ class InfixSuite extends BaseDottySuite {
            |    input_< ~> filtering ~> removeItems1 ~> removeItems2
            |  }
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(tapply(
       tname("Flow"),
       blk(Defn.Def(
@@ -152,10 +152,10 @@ class InfixSuite extends BaseDottySuite {
           tinfix(
             tinfix(tinfix(tname("input_<"), "~>", tname("filtering")), "~>", tname("removeItems1")),
             "~>",
-            tname("removeItems2")
-          )
-        )
-      ))
+            tname("removeItems2"),
+          ),
+        ),
+      )),
     ))
   }
 
@@ -167,14 +167,14 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|val str = "hello" ++ " world" ++ "!"
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Val(
       Nil,
       List(patvar("str")),
       None,
-      tinfix(tinfix(str("hello"), "++", str(" world")), "++", str("!"))
-    ))
+      tinfix(tinfix(str("hello"), "++", str(" world")), "++", str("!")),
+    )),
   )
 
   test("scala3 infix syntax 2") {
@@ -187,8 +187,8 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|def condition = x > 0 || xs.exists(_ > 0) || xs.isEmpty
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Def(
       Nil,
       tname("condition"),
@@ -200,12 +200,12 @@ class InfixSuite extends BaseDottySuite {
           "||",
           tapply(
             tselect("xs", "exists"),
-            Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0)))
-          )
+            Term.AnonymousFunction(tinfix(Term.Placeholder(), ">", int(0))),
+          ),
         ),
         "||",
-        tselect("xs", "isEmpty")
-      )
+        tselect("xs", "isEmpty"),
+      ),
     ))
   }
 
@@ -220,9 +220,9 @@ class InfixSuite extends BaseDottySuite {
         """|{
            |  freezing | boiling
            |}
-           |""".stripMargin
-      )
-    )(blk(tinfix(tname("freezing"), "|", tname("boiling"))))
+           |""".stripMargin,
+      ),
+    )(blk(tinfix(tname("freezing"), "|", tname("boiling")))),
   )
 
   test("scala3 infix syntax 3.2")(
@@ -237,8 +237,8 @@ class InfixSuite extends BaseDottySuite {
          |  freezing
          |  |boiling
          |}
-         |""".stripMargin
-    )(blk("freezing", tpostfix("|", "boiling")))
+         |""".stripMargin,
+    )(blk("freezing", tpostfix("|", "boiling"))),
   )
 
   test("scala3 infix syntax 3.2.1")(
@@ -253,8 +253,8 @@ class InfixSuite extends BaseDottySuite {
          |  freezing
          |  |boiling
          |}
-         |""".stripMargin
-    )(blk("freezing", tpostfix("|", "boiling")))
+         |""".stripMargin,
+    )(blk("freezing", tpostfix("|", "boiling"))),
   )
 
   test("scala3 infix syntax 3.2.2")(
@@ -269,8 +269,8 @@ class InfixSuite extends BaseDottySuite {
          |  freezing
          |  `|`!
          |}
-         |""".stripMargin
-    )(blk("freezing", tpostfix("|", "!")))
+         |""".stripMargin,
+    )(blk("freezing", tpostfix("|", "!"))),
   )
 
   test("scala3 infix syntax 3.2.3")(
@@ -285,8 +285,8 @@ class InfixSuite extends BaseDottySuite {
          |  freezing
          |  `|`!
          |}
-         |""".stripMargin
-    )(blk("freezing", tpostfix("|", "!")))
+         |""".stripMargin,
+    )(blk("freezing", tpostfix("|", "!"))),
   )
 
   test("scala3 infix syntax 3.2.4")(
@@ -301,8 +301,8 @@ class InfixSuite extends BaseDottySuite {
          |  freezing
          |  `|`|
          |}
-         |""".stripMargin
-    )(blk("freezing", tpostfix("|", "|")))
+         |""".stripMargin,
+    )(blk("freezing", tpostfix("|", "|"))),
   )
 
   test("scala3 infix syntax 3.2.5")(
@@ -317,8 +317,8 @@ class InfixSuite extends BaseDottySuite {
          |  freezing
          |  `|`|
          |}
-         |""".stripMargin
-    )(blk("freezing", tpostfix("|", "|")))
+         |""".stripMargin,
+    )(blk("freezing", tpostfix("|", "|"))),
   )
 
   test("scala3 infix syntax 3.3")(
@@ -333,9 +333,9 @@ class InfixSuite extends BaseDottySuite {
         """|{
            |  freezing | boiling
            |}
-           |""".stripMargin
-      )
-    )(blk(tinfix(tname("freezing"), "|", tname("boiling"))))
+           |""".stripMargin,
+      ),
+    )(blk(tinfix(tname("freezing"), "|", tname("boiling")))),
   )
 
   test("scala3 infix syntax 3.4") {
@@ -364,7 +364,7 @@ class InfixSuite extends BaseDottySuite {
        |""".stripMargin,
     """|error: Invalid indented leading infix operator found
        |    |
-       |    ^""".stripMargin
+       |    ^""".stripMargin,
   ))
 
   test("scala3 infix syntax 3.6 comment") {
@@ -410,7 +410,7 @@ class InfixSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     val tree = blk(
-      tinfix(tname("freezing"), tnameComments("|")("// c1", "/*\n    c2\n  */")(), tname("boiling"))
+      tinfix(tname("freezing"), tnameComments("|")("// c1", "/*\n    c2\n  */")(), tname("boiling")),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -438,7 +438,7 @@ class InfixSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     val tree = blk(
-      tinfix(tname("freezing"), tnameComments("|")("// c1", "/*\n    c2\n  */")(), tname("boiling"))
+      tinfix(tname("freezing"), tnameComments("|")("// c1", "/*\n    c2\n  */")(), tname("boiling")),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -455,9 +455,9 @@ class InfixSuite extends BaseDottySuite {
            |  freezing
            |  !boiling
            |}
-           |""".stripMargin
-      )
-    )(blk(tname("freezing"), Term.ApplyUnary(tname("!"), tname("boiling"))))
+           |""".stripMargin,
+      ),
+    )(blk(tname("freezing"), Term.ApplyUnary(tname("!"), tname("boiling")))),
   )
 
   test("scala3 infix syntax 5.1") {
@@ -478,12 +478,12 @@ class InfixSuite extends BaseDottySuite {
            |    case 0 => 1
            |  }
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(blk(
       tapply(tname("println"), str("hello")),
       tname("???"),
-      tmatch(tname("???"), Case(int(0), None, int(1)))
+      tmatch(tname("???"), Case(int(0), None, int(1))),
     ))
   }
 
@@ -509,7 +509,7 @@ class InfixSuite extends BaseDottySuite {
     val tree = blk(
       tapply(tname("println"), str("hello")),
       tname("???"),
-      tmatch(tname("???"), Case(int(0), None, int(1)))
+      tmatch(tname("???"), Case(int(0), None, int(1))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -538,7 +538,7 @@ class InfixSuite extends BaseDottySuite {
          |  }
          |  end toBeContinued
          |}
-         |""".stripMargin
+         |""".stripMargin,
     ) {
       blk(
         Defn.Def(
@@ -557,31 +557,31 @@ class InfixSuite extends BaseDottySuite {
                 Term.ApplyUnary.createWithComments(
                   tname("!"),
                   tapply(tselect("in", "canStartStatTokens", "contains"), tselect("in", "token")),
-                  endComment = Seq("// not statement, so take as continued expr")
+                  endComment = Seq("// not statement, so take as continued expr"),
                 ),
                 "||",
-                tapply(tname("followedByToken"), tname("altToken"))
+                tapply(tname("followedByToken"), tname("altToken")),
               ),
-              endComment = Seq("// scan ahead to see whether we find a `then` or `do`")
+              endComment = Seq("// scan ahead to see whether we find a `then` or `do`"),
             ),
             tinfix(
               Term.ApplyInfix.createWithComments(
                 Term.ApplyUnary.createWithComments(
                   tname("!"),
                   tselect("in", "isNewLine"),
-                  endComment = Seq("// a newline token means the expression is finished")
+                  endComment = Seq("// a newline token means the expression is finished"),
                 ),
                 "&&",
                 Nil,
                 List(Term.ApplyUnary(tname("!"), tname("migrateTo3"))),
-                endComment = Seq("// old syntax")
+                endComment = Seq("// old syntax"),
               ),
               "&&",
-              tname("canContinue")
-            )
-          )
+              tname("canContinue"),
+            ),
+          ),
         ),
-        Term.EndMarker(tname("toBeContinued"))
+        Term.EndMarker(tname("toBeContinued")),
       )
     }
   }
@@ -595,8 +595,8 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin,
       Some(
         """|val httpRoutes2 = (MetricsApp() ++ HomeApp() ++ GreetingApp()) @@ Middleware.cors(corsConfig) @@ Middleware.metrics(MetricsApp.pathLabelMapper) @@ Middleware.debug
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Val(
       Nil,
       List(patvar("httpRoutes2")),
@@ -607,17 +607,17 @@ class InfixSuite extends BaseDottySuite {
             tinfix(
               tinfix(tapply(tname("MetricsApp")), "++", tapply(tname("HomeApp"))),
               "++",
-              tapply(tname("GreetingApp"))
+              tapply(tname("GreetingApp")),
             ),
             "@@",
-            tapply(tselect("Middleware", "cors"), tname("corsConfig"))
+            tapply(tselect("Middleware", "cors"), tname("corsConfig")),
           ),
           "@@",
-          tapply(tselect("Middleware", "metrics"), tselect("MetricsApp", "pathLabelMapper"))
+          tapply(tselect("Middleware", "metrics"), tselect("MetricsApp", "pathLabelMapper")),
         ),
         "@@",
-        tselect("Middleware", "debug")
-      )
+        tselect("Middleware", "debug"),
+      ),
     ))
   }
 
@@ -659,12 +659,12 @@ class InfixSuite extends BaseDottySuite {
           tinfix(
             tinfix(tapply(tname("abc"), tname("arg1")), "++", tapply(tname("abc"), tname("arg2"))),
             "++",
-            tapply(tname("abc"), tname("arg3"))
+            tapply(tname("abc"), tname("arg3")),
           ),
           "++",
-          tapply(tname("abc"), tname("arg4"))
-        )
-      ))
+          tapply(tname("abc"), tname("arg4")),
+        ),
+      )),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -690,8 +690,8 @@ class InfixSuite extends BaseDottySuite {
       tpl(tinfix(
         tapply(tselect("foo", "map"), blk(tfunc(tparam("i"))(tinfix(tname("i"), "+", int(1))))),
         "*>",
-        tname("bar")
-      ))
+        tname("bar"),
+      )),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -732,17 +732,17 @@ class InfixSuite extends BaseDottySuite {
               tapply(
                 tselect("foo", "map"),
                 blk(tfunc(tparam("i"))(
-                  tinfix(tinfix(tinfix(tname("i"), "+", int(1)), "+", int(2)), "+", int(3))
-                ))
+                  tinfix(tinfix(tinfix(tname("i"), "+", int(1)), "+", int(2)), "+", int(3)),
+                )),
               ),
               "*>",
-              tname("bar")
+              tname("bar"),
             ),
-            tname("baz")
-          )
+            tname("baz"),
+          ),
         ),
-        tname("qux")
-      )
+        tname("qux"),
+      ),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -783,8 +783,8 @@ class InfixSuite extends BaseDottySuite {
       tpl(tinfix(
         tinfix(tname("buffer"), "+=", Term.New(init("Object", Nil))),
         "+=",
-        Term.New(init("Object"))
-      ))
+        Term.New(init("Object")),
+      )),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -842,12 +842,12 @@ class InfixSuite extends BaseDottySuite {
           "+=",
           Term.NewAnonymous(tpl(
             List(init("Object", Nil), init("Foo")),
-            List(Defn.Def(Nil, tname("toString"), Nil, List(Nil), None, lit("foo")))
-          ))
+            List(Defn.Def(Nil, tname("toString"), Nil, List(Nil), None, lit("foo"))),
+          )),
         ),
         "+=",
-        Term.New(init("Object"))
-      ))
+        Term.New(init("Object")),
+      )),
     )
     runTestAssert[Stat](code, layout)(tree)
   }

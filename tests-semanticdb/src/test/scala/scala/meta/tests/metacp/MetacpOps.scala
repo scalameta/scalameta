@@ -15,7 +15,7 @@ object MetacpOps {
       for {
         doc <- docs.documents
         sym <- doc.symbols
-      } allSymbols += sym.symbol
+      } allSymbols += sym.symbol,
     )
     allSymbols
   }
@@ -101,7 +101,7 @@ object MetacpOps {
       } {
         val references = collectAllSymbolReferences(sym)
         errors ++= references.filterNot(isPersistedGlobalSymbol)
-      }
+      },
     )
     errors
   }

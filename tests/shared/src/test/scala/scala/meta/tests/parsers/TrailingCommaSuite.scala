@@ -10,7 +10,7 @@ class TrailingCommaSuite extends ParseSuite {
     """trait ValDcl { val foo, bar, = 23 }""",
     """trait VarDcl { var foo, bar, = 23 }""",
     """trait VarDef { var foo, bar, = _ }""",
-    """trait PatDef { val Foo(foo), Bar(bar), = bippy }"""
+    """trait PatDef { val Foo(foo), Bar(bar), = bippy }""",
   )
 
   // Negative tests
@@ -28,7 +28,7 @@ class TrailingCommaSuite extends ParseSuite {
     """trait SimplePattern { val (foo, bar, ) = null: Any }""",
     """trait ImportSelectors { import foo.{ Ev0, Ev1, } }""",
     """trait Import { import foo.Ev0, foo.Ev1, }""",
-    """trait SimpleExpr2 { (23, ) }"""
+    """trait SimpleExpr2 { (23, ) }""",
   )
   checkOKsWithSyntax(
     """trait SimpleType2 { def f: (Int, ) }""" -> "trait SimpleType2 { def f: Int }",
@@ -47,7 +47,7 @@ class TrailingCommaSuite extends ParseSuite {
     """|trait ClassParams2 {
        |  final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1, )
        |}""".stripMargin ->
-      "trait ClassParams2 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }"
+      "trait ClassParams2 { final class C(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) }",
   )
   // Positive tests
   checkOKs(
@@ -204,6 +204,6 @@ class TrailingCommaSuite extends ParseSuite {
        |    b: String, // a comment
        |  )
        |}
-       |""".stripMargin
+       |""".stripMargin,
   )
 }

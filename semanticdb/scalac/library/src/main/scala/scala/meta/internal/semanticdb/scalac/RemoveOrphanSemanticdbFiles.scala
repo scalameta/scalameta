@@ -35,7 +35,7 @@ object RemoveOrphanSemanticdbFiles {
           if (isEmpty) Files.delete(dir)
           FileVisitResult.CONTINUE
         }
-      }
+      },
     )
   }
 }

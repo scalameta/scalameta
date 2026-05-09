@@ -52,7 +52,7 @@ sealed trait ReferenceTypeSignature extends JavaTypeSignature
 
 case class ClassTypeSignature(
     simpleClassTypeSignature: SimpleClassTypeSignature,
-    classTypeSignatureSuffix: List[ClassTypeSignatureSuffix]
+    classTypeSignatureSuffix: List[ClassTypeSignatureSuffix],
 ) extends ReferenceTypeSignature with ThrowsSignature {
   override def print(sb: StringBuilder): Unit = {
     sb.append('L')
@@ -113,7 +113,7 @@ case object WildcardTypeArgument extends TypeArgument {
 }
 case class ReferenceTypeArgument(
     wildcard: Option[WildcardIndicator],
-    referenceTypeSignature: ReferenceTypeSignature
+    referenceTypeSignature: ReferenceTypeSignature,
 ) extends TypeArgument {
   override def print(sb: StringBuilder): Unit = {
     wildcard match {
@@ -145,7 +145,7 @@ case class ClassTypeSignatureSuffix(simpleClassTypeSignature: SimpleClassTypeSig
 case class ClassSignature(
     typeParameters: Option[TypeParameters],
     superclassSignature: ClassTypeSignature,
-    superinterfaceSignatures: List[ClassTypeSignature]
+    superinterfaceSignatures: List[ClassTypeSignature],
 ) extends Printable {
   def parents: List[ClassTypeSignature] = superclassSignature :: superinterfaceSignatures
   override def print(sb: StringBuilder): Unit = {
@@ -161,7 +161,7 @@ object ClassSignature {
   def simple(superClass: String, interfaces: List[String]): ClassSignature = ClassSignature(
     None,
     ClassTypeSignature.simple(superClass),
-    interfaces.map(ClassTypeSignature.simple)
+    interfaces.map(ClassTypeSignature.simple),
   )
 }
 
@@ -178,7 +178,7 @@ case class TypeParameters(head: TypeParameter, tail: List[TypeParameter]) extend
 case class TypeParameter(
     identifier: String,
     classBound: ClassBound,
-    interfaceBounds: List[InterfaceBound]
+    interfaceBounds: List[InterfaceBound],
 ) extends Printable {
   def upperBounds: List[ReferenceTypeSignature] = classBound match {
     case ClassBound(Some(sig)) => sig :: interfaceBounds.map(_.referenceTypeSignature)
@@ -212,7 +212,7 @@ case class MethodSignature(
     typeParameters: Option[TypeParameters],
     params: List[JavaTypeSignature],
     result: JavaTypeSignature,
-    throws: List[ThrowsSignature]
+    throws: List[ThrowsSignature],
 ) extends Printable {
   override def print(sb: StringBuilder): Unit = {
     typeParameters match {

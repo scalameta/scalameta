@@ -41,7 +41,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
       adt: Adt,
       defName: TermName,
       localName: TermName,
-      body: Tree
+      body: Tree,
   ): Option[Tree] = {
     // NOTE: See #277 and #405 to understand why this special-casing is necessary.
     def specialcaseTermApply: Tree =

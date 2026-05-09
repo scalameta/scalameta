@@ -16,9 +16,9 @@ class LanguageExtensionsSuite extends BaseDottySuite {
         List(Mod.Tracked(), Mod.ValParam()),
         Term.Name("size"),
         Some(Type.Name("Int")),
-        None
+        None,
       )),
-      tplNoBody()
+      tplNoBody(),
     )
     runTestAssert[Stat](code)(tree)
   }

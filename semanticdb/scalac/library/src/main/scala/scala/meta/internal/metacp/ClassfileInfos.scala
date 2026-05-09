@@ -17,14 +17,14 @@ import scala.tools.asm.tree.ClassNode
 final case class ClassfileInfos(
     relativeUri: String,
     language: s.Language,
-    infos: List[s.SymbolInformation]
+    infos: List[s.SymbolInformation],
 ) {
   def toTextDocuments: s.TextDocuments = {
     val semanticdbDocument = s.TextDocument(
       schema = s.Schema.SEMANTICDB4,
       uri = relativeUri,
       language = language,
-      symbols = infos
+      symbols = infos,
     )
     s.TextDocuments(List(semanticdbDocument))
   }
@@ -42,7 +42,7 @@ object ClassfileInfos {
       node: ClassNode,
       classpathIndex: ClasspathIndex,
       settings: Settings,
-      reporter: Reporter
+      reporter: Reporter,
   ): Option[ClassfileInfos] = node.scalaSig match {
     case Some(scalaSig) => Some(Scalacp.parse(scalaSig, classpathIndex, settings, reporter))
     case None =>

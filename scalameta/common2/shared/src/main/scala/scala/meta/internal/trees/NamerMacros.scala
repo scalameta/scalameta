@@ -53,7 +53,7 @@ trait CommonNamerMacros extends MacroHelpers {
       name: TypeName,
       parents: List[Tree],
       params: List[ValDef] = Nil,
-      extraAbstractDefs: Iterable[Tree] = Nil
+      extraAbstractDefs: Iterable[Tree] = Nil,
   )(extraStubs: String*): ClassDef = {
     val qmods = Modifiers(NoFlags, TypeName("meta"), List(q"new $AstAnnotation"))
     val qparents = tq"$name" +: tq"$QuasiClass" +: parents.map(mkQuasiParent)
@@ -113,7 +113,7 @@ trait CommonNamerMacros extends MacroHelpers {
       parent: PrivateField,
       origin: PrivateField,
       begComment: PrivateField,
-      endComment: PrivateField
+      endComment: PrivateField,
   ) {
     def asList = prototype :: parent :: origin :: begComment :: endComment :: Nil
   }
@@ -121,19 +121,19 @@ trait CommonNamerMacros extends MacroHelpers {
   protected def getPrivateFields(iname: TypeName): PrivateFields = PrivateFields(
     prototype = PrivateField(
       q"@$TransientAnnotation private[meta] override val privatePrototype: $iname = null",
-      version = null
+      version = null,
     ),
     parent =
       PrivateField(q"override val parent: $OptionClass[$TreeClass] = $NoneModule", version = null),
     origin = PrivateField(q"override val origin: $OriginClass = $OriginModule.None", Version.zero),
     begComment = PrivateField(
       q"override val begComment: $OptionClass[$CommentsClass] = $NoneModule",
-      Version(4, 14, 2)
+      Version(4, 14, 2),
     ),
     endComment = PrivateField(
       q"override val endComment: $OptionClass[$CommentsClass] = $NoneModule",
-      Version(4, 14, 2)
-    )
+      Version(4, 14, 2),
+    ),
   )
 
 }

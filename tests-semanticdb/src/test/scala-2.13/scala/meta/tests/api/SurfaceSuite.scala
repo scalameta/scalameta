@@ -213,7 +213,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.trees.Origin.ParsedSpliced *
          |scala.meta.trees.Origin.Partial *
          |scala.meta.trees.Origin.PartialProxy *
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )
   }
 
@@ -324,7 +324,7 @@ class SurfaceSuite extends FunSuite {
          |* scala.meta.tokens.Token.isBackquoted: Boolean
          |* scala.meta.tokens.Token.isIdentSymbolicInfixOperator: Boolean
          |* scala.meta.tokens.Token.isSymbolicInfixOperator: Boolean
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )
   }
 
@@ -617,7 +617,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Type.Wildcard
          |scala.meta.Type.With
          |scala.meta.TypeCase
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )
   }
 
@@ -730,7 +730,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.tokens.Token.Xml.SpliceEnd
          |scala.meta.tokens.Token.Xml.SpliceStart
          |scala.meta.tokens.Token.Xml.Start
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )
   }
 }

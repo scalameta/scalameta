@@ -44,7 +44,7 @@ class RemoveOrphanSemantidbFilesSuite extends FunSuite {
     val config = SemanticdbConfig.default.copy(
       sourceroot = AbsolutePath(sourceroot),
       targetroot = AbsolutePath(targetroot),
-      fileFilter = FileFilter(".*", "Hello")
+      fileFilter = FileFilter(".*", "Hello"),
     )
 
     val hello = Paths.get("src").resolve("Hello.scala")

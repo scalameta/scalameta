@@ -27,8 +27,8 @@ class TreeOpsSuite extends TreeSuiteBase {
            |)""".stripMargin.lf2nl,
         """Pat.Var(Term.Name("x"))""",
         """Term.Name("x")""",
-        """Lit.Int(2)"""
-      )
+        """Lit.Int(2)""",
+      ),
     )
   }
 

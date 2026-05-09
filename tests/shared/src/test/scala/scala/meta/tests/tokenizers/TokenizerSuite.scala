@@ -15,7 +15,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     new TokenizerOptions(groupWhitespace = true)
 
   test("showCode without comments - simple")(
-    assertTokenizedAsSyntax("class C  {\t val x = 2}\n\n", "class C  {\t val x = 2}\n\n")
+    assertTokenizedAsSyntax("class C  {\t val x = 2}\n\n", "class C  {\t val x = 2}\n\n"),
   )
 
   test("showcode without comments - hard") {
@@ -81,7 +81,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |  val hello = 42
         |  val `world` = 42
         |}
-        |""".stripMargin.tq()
+        |""".stripMargin.tq(),
     )
   }
 
@@ -114,13 +114,13 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |  qQQQclass $YQQQ
         |  qQQQclass ${Y}QQQ
         |}
-        |""".stripMargin.tq()
+        |""".stripMargin.tq(),
     )
   }
 
   test("showCode with comments - easy")(assertTokenizedAsSyntax(
     "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n",
-    "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n"
+    "class C  /*hello world*/{\t val x = 2}\n//bye-bye world\n",
   ))
 
   test("showCode with comments - tricky") {
@@ -159,7 +159,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |RightBrace [21..22)
       |MultiNL(2) [22..24)
       |EOF [24..24)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("tokenized-wrong-number-braces1")(
@@ -182,7 +182,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |RightBrace [22..23)
        |LF [23..24)
        |EOF [24..24)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("tokenized-wrong-number-braces2")(
@@ -207,7 +207,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |LeftBrace [24..25)
        |RightBrace [25..26)
        |EOF [26..26)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("showRaw without comments - hard")(
@@ -493,7 +493,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |LF [470..471)
       |RightBrace [471..472)
       |EOF [472..472)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("showRaw without comments - insane")(
@@ -619,7 +619,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |LF [153..154)
       |RightBrace [154..155)
       |EOF [155..155)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("showRaw with comments - easy")(
@@ -645,7 +645,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Comment(bye-bye world) [38..53)
       |LF [53..54)
       |EOF [54..54)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("showRaw with comments - tricky")(
@@ -658,7 +658,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Comment() [3..7)
       |Ident(y) [7..8)
       |EOF [8..8)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("showRaw with comments - skip unicode escape 1")(
@@ -666,7 +666,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Comment( Note: '\\u000A' = '\\n') [0..24)
        |EOF [24..24)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("showRaw with comments - skip unicode escape 2")(
@@ -674,7 +674,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Comment( Note: '\\u000A' = '\\n' ) [0..27)
        |EOF [27..27)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("interpolation start & end - episode 01")(
@@ -686,7 +686,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.Part() [2..2)
       |Interpolation.End(") [2..3)
       |EOF [3..3)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("interpolation start & end - episode 02")(
@@ -699,7 +699,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(") [2..3)
       |Semicolon [3..4)
       |EOF [4..4)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("interpolation start & end - episode 03")(
@@ -711,7 +711,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.Part(a) [2..3)
       |Interpolation.End(") [3..4)
       |EOF [4..4)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("interpolation start & end - episode 04")(
@@ -724,7 +724,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(") [3..4)
       |Semicolon [4..5)
       |EOF [5..5)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("interpolation start & end - episode 05")(
@@ -736,7 +736,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.Part() [4..4)
       |Interpolation.End(QQQ) [4..7)
       |EOF [7..7)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("interpolation start & end - episode 06")(
@@ -749,7 +749,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(QQQ) [4..7)
       |Semicolon [7..8)
       |EOF [8..8)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("interpolation start & end - episode 07")(
@@ -761,7 +761,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.Part(a) [4..5)
       |Interpolation.End(QQQ) [5..8)
       |EOF [8..8)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("interpolation start & end - episode 08")(
@@ -774,7 +774,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(QQQ) [5..8)
       |Semicolon [8..9)
       |EOF [9..9)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("interpolation start & end - episode 09")(
@@ -787,7 +787,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.End(") [3..4)
       |CRLF [4..6)
       |EOF [6..6)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("interpolation-underscore")(
@@ -802,7 +802,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Interpolation.Part() [32..32)
        |Interpolation.End(") [32..33)
        |EOF [33..33)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("$this")(
@@ -818,7 +818,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Interpolation.Part() [7..7)
       |Interpolation.End(") [7..8)
       |EOF [8..8)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("monocle 1")(
@@ -831,7 +831,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Space [4..5)
       |Ident(x) [5..6)
       |EOF [6..6)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("monocle 2")(
@@ -844,7 +844,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Space [3..4)
       |Ident(x) [4..5)
       |EOF [5..5)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("monocle 3")(
@@ -866,7 +866,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Ident(x) [22..23)
       |RightParen [23..24)
       |EOF [24..24)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("monocle 4")(
@@ -888,7 +888,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Ident(x) [21..22)
       |RightParen [22..23)
       |EOF [23..23)
-      |""".stripMargin
+      |""".stripMargin,
   )
 
   testTokenizedStructLines("-2147483648")(
@@ -898,7 +898,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Ident(-) [0..1)
       |Constant.Int(2147483648) [1..11)
       |EOF [11..11)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("simple xml literal - 1")(
@@ -909,7 +909,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Xml.Part(<foo>bar</foo>) [0..14)
       |Xml.End [14..14)
       |EOF [14..14)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("simple xml literal - 2")(
@@ -921,7 +921,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       |Xml.End [14..14)
       |Space [14..15)
       |EOF [15..15)
-      |""".stripMargin.tq()
+      |""".stripMargin.tq(),
   )
 
   testTokenizedStructLines("incomplete xml literal - 1")(
@@ -939,7 +939,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Xml.Part(<foo>bar</fo>) [11..24)
        |Xml.End [24..24)
        |EOF [24..24)
-       |""".stripMargin.tq()
+       |""".stripMargin.tq(),
   )
 
   test("incomplete xml literal - 2") {
@@ -952,7 +952,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|<input>:3: error: malformed xml literal, expected:
          |Expected ("{{" | "}}" | "&" | "&#" | "&#x" | "{" | "<xml:unparsed" | "<![CDATA[" | "<!--" | "</"):3:29, found "<?\n"
          |  val b = <baz qux="...">cde<?
-         |                            ^""".stripMargin.lf2nl
+         |                            ^""".stripMargin.lf2nl,
     )(code.asInput.parseRule(_.entrypointStat()))
   }
 
@@ -962,7 +962,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     interceptMessage[ParseException](
       """|<input>:1: error: xml literals are not supported
          |<foo>bar</foo>
-         |^""".stripMargin.lf2nl
+         |^""".stripMargin.lf2nl,
     )(code.asInput.parseRule(_.entrypointStat()))
   }
 
@@ -972,13 +972,13 @@ class TokenizerSuite extends BaseTokenizerSuite {
     interceptMessage[ParseException](
       """|<input>:1: error: xml literals are not supported
          |val a = <foo>bar</foo>
-         |        ^""".stripMargin.lf2nl
+         |        ^""".stripMargin.lf2nl,
     )(code.asInput.parseRule(_.entrypointStat()))
   }
 
   testTokenizedStructLines(
     "unsupported xml literal - 3 plus/no space",
-    dialects.Scala213.withAllowXmlLiterals(false)
+    dialects.Scala213.withAllowXmlLiterals(false),
   )(
     """|a+<foo>bar</foo>
        |""".stripMargin,
@@ -993,7 +993,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Ident(>) [15..16)
        |LF [16..17)
        |EOF [17..17)
-       |""".stripMargin.tq()
+       |""".stripMargin.tq(),
   )
 
   test("parsed trees don't have BOF/EOF in their tokens") {
@@ -1001,7 +1001,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assert(tree.pos != Position.None)
     assertEquals(
       tree.tokens.structure,
-      "Tokens(BOF [0..0), Ident(foo) [0..3), Space [3..4), Ident(+) [4..5), Space [5..6), Ident(bar) [6..9), EOF [9..9))"
+      "Tokens(BOF [0..0), Ident(foo) [0..3), Space [3..4), Ident(+) [4..5), Space [5..6), Ident(bar) [6..9), EOF [9..9))",
     )
   }
 
@@ -1013,7 +1013,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assertEquals(tree.tokens.structure, tokensStructure)
     assertEquals(
       tokensStructure,
-      "Tokens(BOF [0..0), Ident(foo) [0..3), Space [3..4), Ident(+) [4..5), Space [5..6), Ident(bar) [6..9), EOF [9..9))"
+      "Tokens(BOF [0..0), Ident(foo) [0..3), Space [3..4), Ident(+) [4..5), Space [5..6), Ident(bar) [6..9), EOF [9..9))",
     )
   }
 
@@ -1042,7 +1042,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         assertEquals(crlf.text, "\r\n")
         assertEquals(part.len, 3)
         assertEquals(crlf.len, 2)
-    }
+    },
   )
 
   test("Interpolated tree parsed succesfully with windows newline, with LF escaped") {
@@ -1057,7 +1057,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
         |Interpolation.End(") [6..7)
         |LF [7..8)
         |EOF [14..14)
-        |""".stripMargin
+        |""".stripMargin,
     )
   }
 
@@ -1066,7 +1066,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
       case Tokens(bof, _, _, _, part: Interpolation.Part, _, lf: LF, eof) =>
         assertEquals(part.value, "foo")
         assertEquals(lf.syntax, "\n")
-    }
+    },
   )
 
   test("Interpolated with quote escape 1") {
@@ -1083,7 +1083,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
             Interpolation.SpliceEnd(),
             Interpolation.Part("\" in quotes"),
             Interpolation.End(),
-            EOF()
+            EOF(),
           ) =>
     }
 
@@ -1102,7 +1102,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Constant.String( in quotes) [11..21)
          |EOF [22..22)
          |""".stripMargin,
-      dialects.Scala212
+      dialects.Scala212,
     )
   }
 
@@ -1121,7 +1121,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |RightParen [23..24)
          |EOF [24..24)
          |""".stripMargin,
-      dialects.Scala212
+      dialects.Scala212,
     )
 
     assertTokenizedAsStructureLines(
@@ -1136,7 +1136,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |RightParen [23..24)
          |EOF [24..24)
          |""".stripMargin,
-      dialects.Scala3
+      dialects.Scala3,
     )
   }
 
@@ -1168,7 +1168,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
             Interpolation.SpliceEnd(),
             Interpolation.Part(""),
             Interpolation.End(),
-            EOF()
+            EOF(),
           ) =>
     }
     assertTokens("s\"$enum\"", dialects.Scala213) {
@@ -1182,7 +1182,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
             Interpolation.SpliceEnd(),
             Interpolation.Part(""),
             Interpolation.End(),
-            EOF()
+            EOF(),
           ) =>
     }
     assertTokenizedAsStructureLines(
@@ -1199,7 +1199,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Interpolation.End(") [7..8)
          |EOF [8..8)
          |""".stripMargin,
-      dialects.Scala3
+      dialects.Scala3,
     )
   }
 
@@ -1214,7 +1214,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
             Ident("a"),
             Space(),
             RightBrace(),
-            EOF()
+            EOF(),
           ) =>
     }
 
@@ -1228,7 +1228,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
             Ident("a"),
             Space(),
             RightBrace(),
-            EOF()
+            EOF(),
           ) =>
     }
   }
@@ -1242,12 +1242,12 @@ class TokenizerSuite extends BaseTokenizerSuite {
     "0x_1234",
     "0b_0101",
     "123_456__789",
-    "0x__123_456__789"
+    "0x__123_456__789",
   ).foreach(value =>
     test(s"numeric literal separator ok scala213: $value") {
       implicit val dialect: Dialect = dialects.Scala213
       tokenize(value) // no exception
-    }
+    },
   )
 
   Seq(
@@ -1255,74 +1255,74 @@ class TokenizerSuite extends BaseTokenizerSuite {
       "123_456_",
       """|<input>:1: error: trailing number separator
          |123_456_
-         |       ^""".stripMargin
+         |       ^""".stripMargin,
     ),
     (
       "123_456_L",
       """|<input>:1: error: trailing number separator
          |123_456_L
-         |       ^""".stripMargin
+         |       ^""".stripMargin,
     ),
     (
       "3_14_E-2",
       """|<input>:1: error: trailing number separator
          |3_14_E-2
-         |    ^""".stripMargin
+         |    ^""".stripMargin,
     ),
     (
       "3_14E-_2",
       """|<input>:1: error: leading number separator
          |3_14E-_2
-         |      ^""".stripMargin
+         |      ^""".stripMargin,
     ),
     (
       "3_14E",
       """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
          |3_14E
-         |     ^""".stripMargin
+         |     ^""".stripMargin,
     ),
     (
       "3_14E_2",
       """|<input>:1: error: leading number separator
          |3_14E_2
-         |     ^""".stripMargin
+         |     ^""".stripMargin,
     ),
     (
       "3_14E_F",
       """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
          |3_14E_F
-         |     ^""".stripMargin
+         |     ^""".stripMargin,
     ),
     (
       "3_14ef",
       """|<input>:1: error: Invalid literal floating-point number, exponent not followed by integer
          |3_14ef
-         |     ^""".stripMargin
+         |     ^""".stripMargin,
     ),
     (
       "3_14E-2_",
       """|<input>:1: error: trailing number separator
          |3_14E-2_
-         |       ^""".stripMargin
+         |       ^""".stripMargin,
     ),
     (
       "3.1_4_",
       """|<input>:1: error: trailing number separator
          |3.1_4_
-         |     ^""".stripMargin
+         |     ^""".stripMargin,
     ),
     (
       "3.1_4_d",
       """|<input>:1: error: trailing number separator
          |3.1_4_d
-         |     ^""".stripMargin
+         |     ^""".stripMargin,
     ),
     (
       "3.1_4_dd",
       """|<input>:1: error: trailing number separator
          |3.1_4_dd
-         |     ^""".stripMargin
-    )
+         |     ^""".stripMargin,
+    ),
   ).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala213: $value") {
       implicit val dialect: Dialect = dialects.Scala213
@@ -1334,7 +1334,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
     "1_024",
     """|<input>:1: error: numeric separators are not allowed
        |1_024
-       | ^""".stripMargin
+       | ^""".stripMargin,
   )).foreach { case (value, error) =>
     test(s"numeric literal separator fail scala212: $value") {
       implicit val dialect: Dialect = dialects.Scala212
@@ -1361,7 +1361,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
           Interpolation.SpliceEnd(),
           Interpolation.Part(""),
           Interpolation.End(),
-          EOF()
+          EOF(),
         ) =>
   })
 
@@ -1377,7 +1377,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Interpolation.Part() [11..11)
        |Invalid(unclosed single-line string interpolation) [11..11)
        |Interpolation.End() [11..11)
-       |EOF [11..11)""".stripMargin
+       |EOF [11..11)""".stripMargin,
   )
 
   test("Multiline interpolated string - ignore escape")(
@@ -1396,9 +1396,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
             Interpolation.SpliceEnd(),
             Interpolation.Part("\\"),
             Interpolation.End(),
-            EOF()
+            EOF(),
           ) =>
-    }
+    },
   )
 
   test("#3328") {
@@ -1418,7 +1418,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Space [7..8)
        |Ident(Double) [8..14)
        |EOF [14..14)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   test("#3402") {
@@ -1443,56 +1443,56 @@ class TokenizerSuite extends BaseTokenizerSuite {
       """|BOF [0..0)
          |Constant.Double(0) [0..2)
          |EOF [2..2)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0.0",
       """|BOF [0..0)
          |Constant.Double(0.0) [0..3)
          |EOF [3..3)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "00e0",
       """|BOF [0..0)
          |Constant.Double(0) [0..4)
          |EOF [4..4)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "00e0f",
       """|BOF [0..0)
          |Constant.Float(0) [0..5)
          |EOF [5..5)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0xe1",
       """|BOF [0..0)
          |Constant.Int(225) [0..4)
          |EOF [4..4)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0xd",
       """|BOF [0..0)
          |Constant.Int(13) [0..3)
          |EOF [3..3)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0f",
       """|BOF [0..0)
          |Constant.Float(0) [0..2)
          |EOF [2..2)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0.0f",
       """|BOF [0..0)
          |Constant.Float(0.0) [0..4)
          |EOF [4..4)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0.f",
@@ -1501,7 +1501,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Dot [1..2)
          |Ident(f) [2..3)
          |EOF [3..3)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       ".f",
@@ -1509,7 +1509,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Dot [0..1)
          |Ident(f) [1..2)
          |EOF [2..2)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "1. + 2.",
@@ -1522,7 +1522,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Constant.Int(2) [5..6)
          |Dot [6..7)
          |EOF [7..7)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "1.0 + 2.0f",
@@ -1533,7 +1533,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Space [5..6)
          |Constant.Float(2.0) [6..10)
          |EOF [10..10)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "1d + 2f",
@@ -1544,56 +1544,56 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Space [4..5)
          |Constant.Float(2) [5..7)
          |EOF [7..7)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0xf",
       """|BOF [0..0)
          |Constant.Int(15) [0..3)
          |EOF [3..3)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0",
       """|BOF [0..0)
          |Constant.Int(0) [0..1)
          |EOF [1..1)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0l",
       """|BOF [0..0)
          |Constant.Long(0) [0..2)
          |EOF [2..2)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0L",
       """|BOF [0..0)
          |Constant.Long(0) [0..2)
          |EOF [2..2)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0x80000000",
       """|BOF [0..0)
          |Constant.Int(2147483648) [0..10)
          |EOF [10..10)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0x8000000000000000L",
       """|BOF [0..0)
          |Constant.Long(9223372036854775808) [0..19)
          |EOF [19..19)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "3.4028235e38f",
       """|BOF [0..0)
          |Constant.Float(3.4028235E+38) [0..13)
          |EOF [13..13)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "-3.4028235e38f",
@@ -1601,14 +1601,14 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Ident(-) [0..1)
          |Constant.Float(3.4028235E+38) [1..14)
          |EOF [14..14)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "1.7976931348623157e+308d",
       """|BOF [0..0)
          |Constant.Double(1.7976931348623157E+308) [0..24)
          |EOF [24..24)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "-1.7976931348623157e+308d",
@@ -1616,28 +1616,28 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Ident(-) [0..1)
          |Constant.Double(1.7976931348623157E+308) [1..25)
          |EOF [25..25)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0b00101010",
       """|BOF [0..0)
          |Constant.Int(42) [0..10)
          |EOF [10..10)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0B_0010_1010",
       """|BOF [0..0)
          |Constant.Int(42) [0..12)
          |EOF [12..12)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0b_0010_1010L",
       """|BOF [0..0)
          |Constant.Long(42) [0..13)
          |EOF [13..13)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0b01.2",
@@ -1645,7 +1645,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Constant.Int(1) [0..4)
          |Constant.Double(0.2) [4..6)
          |EOF [6..6)
-         |""".stripMargin
+         |""".stripMargin,
     ),
     (
       "0b01.toString",
@@ -1654,11 +1654,11 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Dot [4..5)
          |Ident(toString) [5..13)
          |EOF [13..13)
-         |""".stripMargin
-    )
+         |""".stripMargin,
+    ),
   ).foreach { case (code, value) =>
     test(s"numeric literal ok scala213: $code")(
-      assertTokenizedAsStructureLines(code, value, dialects.Scala213)
+      assertTokenizedAsStructureLines(code, value, dialects.Scala213),
     )
   }
 
@@ -1667,56 +1667,56 @@ class TokenizerSuite extends BaseTokenizerSuite {
       "00",
       """|<input>:1: error: Non-zero integral values may not have a leading zero.
          |00
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "00l",
       """|<input>:1: error: Non-zero integral values may not have a leading zero.
          |00l
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "0b01d",
       """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b01d
-         |    ^""".stripMargin
+         |    ^""".stripMargin,
     ),
     (
       "0b01f",
       """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b01f
-         |    ^""".stripMargin
+         |    ^""".stripMargin,
     ),
     (
       "0b0123",
       """|<input>:1: error: Invalid literal number, followed by identifier character
          |0b0123
-         |    ^""".stripMargin
+         |    ^""".stripMargin,
     ),
     (
       "3.4028236e38f",
       """|<input>:1: error: floating-point value out of range for Float
          |3.4028236e38f
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "-3.4028236e38f",
       """|<input>:1: error: floating-point value out of range for Float
          |-3.4028236e38f
-         | ^""".stripMargin
+         | ^""".stripMargin,
     ),
     (
       "1.7976931348623158e+308d",
       """|<input>:1: error: floating-point value out of range for Double
          |1.7976931348623158e+308d
-         |^""".stripMargin
+         |^""".stripMargin,
     ),
     (
       "-1.7976931348623158e+308d",
       """|<input>:1: error: floating-point value out of range for Double
          |-1.7976931348623158e+308d
-         | ^""".stripMargin
-    )
+         | ^""".stripMargin,
+    ),
   ).foreach { case (code, error) =>
     test(s"numeric literal fail scala213: $code") {
       implicit val dialect: Dialect = dialects.Scala213
@@ -1727,32 +1727,32 @@ class TokenizerSuite extends BaseTokenizerSuite {
   Seq(
     // regular or half-surrogate char codes
     55297,
-    56375
+    56375,
   ).foreach(ch =>
     test(s"#3690 any character with char code $ch") {
       implicit val dialect = dialects.Scala213
       tokenize(
         s"""|"${ch.toChar}"
-            |""".stripMargin
+            |""".stripMargin,
       ) match {
         case Tokens(_: BOF, Constant.String(str), _: LF, _: EOF) =>
           assertEquals(str.length, 1)
           assertEquals(str, s"${ch.toChar}")
         case tokens => fail(s"unexpected tokens: ${tokens.structure}")
       }
-    }
+    },
   )
 
   Seq(
     // full-surrogate char code pairs
     (55297, 56375),
-    (0xdbff, 0xdfff)
+    (0xdbff, 0xdfff),
   ).foreach { case (hi, lo) =>
     test(s"#3690 full-surrogate with char codes $hi and $lo") {
       implicit val dialect = dialects.Scala213
       tokenize(
         s"""|"${hi.toChar}${lo.toChar}"
-            |""".stripMargin
+            |""".stripMargin,
       ) match {
         case Tokens(_: BOF, Constant.String(str), _: LF, _: EOF) =>
           assertEquals(str, s"${hi.toChar}${lo.toChar}")
@@ -1820,7 +1820,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Ident(b) [95..96)
        |CRLF [96..98)
        |EOF [98..98)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("code with Shebang line", dialects.Scala3)(
@@ -1849,7 +1849,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |RightParen [81..82)
        |CRLF [82..84)
        |EOF [84..84)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("code with non-matching braces 1", dialects.Scala3)(
@@ -1892,7 +1892,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Interpolation.End(") [48..49)
        |LF [49..50)
        |EOF [50..50)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("code with non-matching braces 2", dialects.Scala3)(
@@ -1937,7 +1937,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |RightBrace [49..50)
        |LF [50..51)
        |EOF [51..51)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("code with incomplete interpolation: 2.13", dialects.Scala213)(
@@ -1971,7 +1971,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |RightBrace [29..30)
        |LF [30..31)
        |EOF [31..31)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("code with incomplete interpolation: 3", dialects.Scala3)(
@@ -2002,12 +2002,12 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |RightBrace [29..30)
        |LF [30..31)
        |EOF [31..31)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines(
     "code with double-quote string within single-line quasiquotes",
-    dialects.Scala213.unquoteTerm(multiline = false)
+    dialects.Scala213.unquoteTerm(multiline = false),
   )(
     " \"...\" ",
     """|BOF [0..0)
@@ -2016,12 +2016,12 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Invalid(double quotes are not allowed in single-line quasiquotes) [1..1)
        |Space [6..7)
        |EOF [7..7)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines(
     "code with interpolation within single-line quasiquotes",
-    dialects.Scala213.unquoteTerm(multiline = false)
+    dialects.Scala213.unquoteTerm(multiline = false),
   )(
     " s\"...\" ",
     """|BOF [0..0)
@@ -2033,7 +2033,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Interpolation.End(") [6..7)
        |Space [7..8)
        |EOF [8..8)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("interpolator with $ character")(
@@ -2048,7 +2048,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Interpolation.Part($) [8..10)
        |Interpolation.End(") [10..11)
        |EOF [11..11) 
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   testTokenizedStructLines("broken-interpolator")(
@@ -2080,7 +2080,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Ident(stripMargin) [218..229)
        |LF [229..230)
        |EOF [230..230)
-       |""".stripMargin.replace("'''", "\"\"\"")
+       |""".stripMargin.replace("'''", "\"\"\""),
   )
 
   testTokenizedStructLines("unexpected-character")(
@@ -2098,7 +2098,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
        |Constant.Int(123) [9..12)
        |MultiNL(2) [12..14)
        |EOF [14..14)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   Seq(
@@ -2133,7 +2133,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Constant.Int(0) [22..23)
            |LF [23..24)
            |EOF [24..24)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2157,7 +2157,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Invalid(unclosed quoted identifier) [4..18)
            |LF [18..19)
            |EOF [19..19)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2184,7 +2184,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Invalid(unclosed quoted identifier) [13..18)
            |LF [18..19)
            |EOF [19..19)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2211,7 +2211,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Constant.Int(0) [18..19)
            |LF [19..20)
            |EOF [20..20)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2232,7 +2232,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Constant.String("foo") [0..17)
            |LF [17..18)
            |EOF [18..18)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2249,7 +2249,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Constant.String(""foo"") [0..29)
            |LF [29..30)
            |EOF [30..30)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2266,7 +2266,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Constant.String(\\\\u0022foo\\\\u0022) [0..21)
            |LF [21..22)
            |EOF [22..22)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase((
@@ -2282,7 +2282,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Constant.Char(') [0..8)
          |LF [8..9)
          |EOF [9..9)
-         |""".stripMargin
+         |""".stripMargin,
     )),
     TestCase {
       (
@@ -2308,7 +2308,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Ident(u0027) [3..8)
            |LF [8..9)
            |EOF [9..9)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2327,7 +2327,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Invalid(can't use unescaped LF in character literals) [8..8)
            |LF [8..9)
            |EOF [9..9)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase((
@@ -2343,7 +2343,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Constant.Char(a) [0..8)
          |LF [8..9)
          |EOF [9..9)
-         |""".stripMargin
+         |""".stripMargin,
     )),
     TestCase {
       (
@@ -2359,7 +2359,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Constant.String(a) [0..8)
            |LF [8..9)
            |EOF [9..9)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2376,7 +2376,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Constant.String(") [0..8)
            |LF [8..9)
            |EOF [9..9)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2399,7 +2399,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Interpolation.End(") [8..9)
            |LF [9..10)
            |EOF [10..10)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2422,7 +2422,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Interpolation.End(") [8..9)
            |LF [9..10)
            |EOF [10..10)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2445,7 +2445,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Interpolation.End(") [10..11)
            |LF [11..12)
            |EOF [12..12)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2468,7 +2468,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Interpolation.End(") [10..11)
            |LF [11..12)
            |EOF [12..12)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase {
@@ -2485,7 +2485,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Constant.String(\\\\u0061) [0..12)
            |LF [12..13)
            |EOF [13..13)
-           |""".stripMargin
+           |""".stripMargin,
       )
     },
     TestCase((
@@ -2501,7 +2501,7 @@ class TokenizerSuite extends BaseTokenizerSuite {
          |Ident(a) [0..8)
          |LF [8..9)
          |EOF [9..9)
-         |""".stripMargin
+         |""".stripMargin,
     )),
     TestCase {
       (
@@ -2518,9 +2518,9 @@ class TokenizerSuite extends BaseTokenizerSuite {
            |Ident(u0061) [1..6)
            |LF [6..7)
            |EOF [7..7)
-           |""".stripMargin
+           |""".stripMargin,
       )
-    }
+    },
   ).foreach { c =>
     val TestTokenizedWithDialects(title, code, exp212, exp213, exp3) = c.obj
     implicit val loc: munit.Location = c.loc
@@ -2537,7 +2537,7 @@ object TokenizerSuite {
       code: String,
       exp212: String,
       exp213: String,
-      exp3: String
+      exp3: String,
   )
 
   import scala.language.implicitConversions

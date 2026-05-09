@@ -17,7 +17,7 @@ class InteractiveSuite extends FunSuite {
   def check(
       original: String,
       expected: String,
-      compat: List[(ScalaVersion.Version, String)] = List.empty
+      compat: List[(ScalaVersion.Version, String)] = List.empty,
   )(implicit loc: munit.Location): Unit = test(logger.revealWhitespace(original)) {
     val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
     val document = toTextDocument(compiler, original, options)
@@ -78,13 +78,13 @@ class InteractiveSuite extends FunSuite {
     11,
     """|[3:17..3:22): scala => scala/
        |[3:23..3:27): List => scala/package.List.""".stripMargin,
-    "apply => scala/collection/IterableFactory#apply()."
+    "apply => scala/collection/IterableFactory#apply().",
   )
 
   val expectedPrevious = expected(
     10,
     "[3:23..3:27): List => scala/collection/immutable/List.",
-    "apply => scala/collection/immutable/List.apply()."
+    "apply => scala/collection/immutable/List.apply().",
   )
 
   check(
@@ -98,7 +98,7 @@ class InteractiveSuite extends FunSuite {
     // Note that scala don't resolve to a symbol, this is a sign that the
     // typer hijacking is not working as expected with interactive.Global.
     expectedPrevious,
-    compat = List(ScalaVersion.Scala213 -> expectedLatest)
+    compat = List(ScalaVersion.Scala213 -> expectedLatest),
   )
 
   // This tests a case where SymbolOps.toSemantic crashes
@@ -135,6 +135,6 @@ class InteractiveSuite extends FunSuite {
        |
        |Diagnostics:
        |[2:13..2:15) [error] not found: type In
-       |""".stripMargin
+       |""".stripMargin,
   )
 }

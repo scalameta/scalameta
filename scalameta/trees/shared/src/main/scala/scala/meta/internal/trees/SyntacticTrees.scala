@@ -21,7 +21,7 @@ object Syntactic {
       @tailrec
       private final def unapplyImpl(
           tree: Term,
-          prev: List[Term.ArgClause]
+          prev: List[Term.ArgClause],
       ): (Term, List[Term.ArgClause]) = tree match {
         case t: Term.Apply => unapplyImpl(t.fun, t.argClause :: prev)
         case _ => (tree, prev)

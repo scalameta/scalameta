@@ -22,12 +22,12 @@ case class NodeNIOPath(filename: String) extends Path {
   override def getNameCount: Int = parts.length
   override def getName(idx: Int): Path = NodeNIOPath(
     if (idx < parts.length) parts(idx)
-    else throw new IllegalArgumentException(s"Path doesn't contain part #$idx: $filename")
+    else throw new IllegalArgumentException(s"Path doesn't contain part #$idx: $filename"),
   )
   override def subpath(beg: Int, end: Int): Path = {
     require(
       0 <= beg && beg < end && end <= parts.length,
-      s"0 <= $beg && $beg < $end && $end <= ${parts.length}"
+      s"0 <= $beg && $beg < $end && $end <= ${parts.length}",
     )
     val sb = new StringBuilder
     for (idx <- beg until end) {

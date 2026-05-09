@@ -6,7 +6,7 @@ import scala.collection.immutable.ListMap
 
 final class Result private (
     val status: ListMap[AbsolutePath, Option[AbsolutePath]],
-    val scalaLibrarySynthetics: Option[AbsolutePath]
+    val scalaLibrarySynthetics: Option[AbsolutePath],
 ) {
   def isSuccess: Boolean = status.forall(_._2.nonEmpty)
 
@@ -19,6 +19,6 @@ final class Result private (
 object Result {
   def apply(
       status: ListMap[AbsolutePath, Option[AbsolutePath]],
-      scalaLibrarySynthetics: Option[AbsolutePath]
+      scalaLibrarySynthetics: Option[AbsolutePath],
   ): Result = new Result(status, scalaLibrarySynthetics)
 }

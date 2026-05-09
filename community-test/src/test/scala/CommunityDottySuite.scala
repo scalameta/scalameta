@@ -45,14 +45,14 @@ class CommunityDottySuite extends FunSuite {
       excluded: List[String],
       checkedFiles: Int,
       dialect: Dialect,
-      dialectAlt: Option[Dialect] = None
+      dialectAlt: Option[Dialect] = None,
   )
   case class TestStats(
       checkedFiles: Int,
       errors: Int,
       lastError: Option[Throwable],
       timeTaken: Long,
-      linesParsed: Int
+      linesParsed: Int,
   )
 
   final val InitTestStats = TestStats(0, 0, None, 0, 0)
@@ -62,7 +62,7 @@ class CommunityDottySuite extends FunSuite {
     s1.errors + s2.errors,
     s1.lastError.orElse(s2.lastError),
     s1.timeTaken + s2.timeTaken,
-    s1.linesParsed + s2.linesParsed
+    s1.linesParsed + s2.linesParsed,
   )
 
   val communityBuilds = List(
@@ -79,7 +79,7 @@ class CommunityDottySuite extends FunSuite {
     sparkBuild("v2.4.8", dialects.Scala213, 3165),
     sparkBuild("v3.4.1", dialects.Scala213, 4491),
     // latest commit from 30.03.2021
-    munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213, 102)
+    munitBuild("06346adfe3519c384201eec531762dad2f4843dc", dialects.Scala213, 102),
   )
 
   for (build <- communityBuilds) test(s"community-build-${build.name}-${build.commit}")(check(build))
@@ -128,7 +128,7 @@ class CommunityDottySuite extends FunSuite {
     }
 
   def checkAbsPath(absPath: Path, absPathString: String)(implicit
-      build: CommunityBuild
+      build: CommunityBuild,
   ): TestStats = {
     val fileContent = Input.File(absPath)
     implicit val dialect: Dialect =

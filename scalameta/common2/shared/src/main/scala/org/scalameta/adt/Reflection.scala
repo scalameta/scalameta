@@ -154,7 +154,7 @@ trait Reflection {
     if (roots.isEmpty && sym.isLeaf) fail(s"rootless leaf is disallowed")
     else if (roots.length > 1) fail(
       s"multiple roots for a $designation: " + roots.map(_.fullName).init.mkString(", ") + " and " +
-        roots.last.fullName
+        roots.last.fullName,
     )
     val root = roots.headOption.getOrElse(NoSymbol)
     sym.baseClasses.map(_.asClass).foreach { bsym =>

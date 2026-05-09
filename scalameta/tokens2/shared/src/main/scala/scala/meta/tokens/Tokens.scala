@@ -230,7 +230,7 @@ object Tokens {
       tokens: Array[Token],
       p: Token => Boolean,
       rangeBeg: Int,
-      rangeEnd: Int
+      rangeEnd: Int,
   ): Int = {
     var i = rangeBeg
     while (i < rangeEnd && p(tokens(i))) i += 1
@@ -241,7 +241,7 @@ object Tokens {
       tokens: Array[Token],
       p: Token => Boolean,
       rangeBeg: Int,
-      rangeEnd: Int
+      rangeEnd: Int,
   ): Int = {
     var i = rangeBeg
     while (i > rangeEnd && p(tokens(i))) i -= 1

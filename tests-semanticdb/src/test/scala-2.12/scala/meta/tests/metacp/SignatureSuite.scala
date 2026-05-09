@@ -53,7 +53,7 @@ class SignatureSuite extends FunSuite {
     if (failingSignatures.nonEmpty) {
       Files.write(
         java.nio.file.Paths.get("signatures.txt"),
-        failingSignatures.mkString("\n").getBytes(StandardCharsets.UTF_8)
+        failingSignatures.mkString("\n").getBytes(StandardCharsets.UTF_8),
       )
       fail("failures! See signatures.txt")
     }
@@ -74,7 +74,7 @@ class SignatureSuite extends FunSuite {
   def checkClass(node: ClassNode): List[(String, () => Unit)] =
     if (node.signature == null) Nil
     else List(
-      (node.signature, { () => assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor) })
+      (node.signature, { () => assertSignatureRoundtrip(node.signature, new ClassSignatureVisitor) }),
     )
 
   def checkAllSignatures(node: ClassNode): List[(String, () => Unit)] = checkFields(node) :::

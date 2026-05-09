@@ -167,7 +167,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
       mods: List[Mod],
       s: String,
       params: List[Type.Param] = Nil,
-      bounds: Type.Bounds = noBounds
+      bounds: Type.Bounds = noBounds,
   ): Type.Param = {
     val nameTree = nameOr(s, pnameOrCapset)
     Type.Param(mods, nameTree, params, bounds)
@@ -227,7 +227,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
       lo: Type = null,
       hi: Type = null,
       cb: List[Type] = Nil,
-      vb: List[Type] = Nil
+      vb: List[Type] = Nil,
   ): Type.Bounds = Type.Bounds(Option(lo), Option(hi), cb, vb)
 
   final def pwildcard(bounds: Type.Bounds): Type.Wildcard = Type.Wildcard(bounds)

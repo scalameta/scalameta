@@ -31,7 +31,7 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
         val qmodule = {
           val qtypesLub = lub(qtypes.map(qtype =>
             try c.typecheck(qtype.duplicate, c.TYPEmode).tpe
-            catch { case c.TypecheckException(pos, msg) => c.abort(pos.asInstanceOf[c.Position], msg) }
+            catch { case c.TypecheckException(pos, msg) => c.abort(pos.asInstanceOf[c.Position], msg) },
           ))
           q"""
             object ${TermName(qname)} {
@@ -45,14 +45,14 @@ class QuasiquoteMacros(val c: Context) extends MacroHelpers {
           val qmonadicResult = qtypes.map(qtype =>
             q"""
               _root_.scala.Predef.implicitly[Parse[$qtype]].apply(input, dialect)
-            """
+            """,
           ).reduce((acc, curr) =>
             q"""
               ($acc) match {
                 case _: Parsed.Error => $curr
                 case x => x
               }
-            """
+            """,
           )
           q"""
             private[meta] def parse(input: _root_.scala.meta.inputs.Input, dialect: _root_.scala.meta.Dialect) = {

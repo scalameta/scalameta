@@ -26,7 +26,7 @@ class TransformerSuite extends TreeSuiteBase {
       """|{
          |  def foo(y: y)(y: Int) = y + y + 1
          |  class C(y: y) { def bar(y: y) = ??? }
-         |}""".stripMargin.lf2nl
+         |}""".stripMargin.lf2nl,
     )
   }
 

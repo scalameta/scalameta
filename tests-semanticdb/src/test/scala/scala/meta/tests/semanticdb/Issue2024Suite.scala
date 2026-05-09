@@ -20,6 +20,6 @@ class Issue2024Suite extends SemanticdbSuite {
       assertEquals(impl1, "a/root.impl.")
       assertEquals(impl2, "a/root.impl.")
       assertEquals(impl3, "a/root.impl.")
-    }
+    },
   )
 }

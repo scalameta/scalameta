@@ -26,7 +26,7 @@ object Javacp {
       node: ClassNode,
       classpathIndex: ClasspathIndex,
       access: Int,
-      scope: Scope
+      scope: Scope,
   ): collection.Seq[s.SymbolInformation] = {
 
     val buf = ArrayBuffer.empty[s.SymbolInformation]
@@ -37,7 +37,7 @@ object Javacp {
         kind: s.SymbolInformation.Kind,
         displayName: String,
         sig: s.Signature,
-        access: Int
+        access: Int,
     ): s.SymbolInformation = {
       val info = s.SymbolInformation(
         symbol = symbol,
@@ -47,7 +47,7 @@ object Javacp {
         displayName = displayName,
         signature = sig,
         annotations = sannotations(access),
-        access = saccess(access, symbol, kind)
+        access = saccess(access, symbol, kind),
       )
       buf += info
       info
@@ -91,14 +91,14 @@ object Javacp {
         val fieldDisplayName = field.name
         val fieldSignature = JavaTypeSignature.parse(
           if (field.signature == null) field.desc else field.signature,
-          new FieldSignatureVisitor
+          new FieldSignatureVisitor,
         )
         val fieldInfo = addInfo(
           fieldSymbol,
           k.FIELD,
           fieldDisplayName,
           s.ValueSignature(fieldSignature.toSemanticTpe(classScope)),
-          field.access
+          field.access,
         )
 
         decls += fieldInfo.symbol
@@ -109,7 +109,7 @@ object Javacp {
       .map { method /* MethodNode */ =>
         val signature = JavaTypeSignature.parse(
           if (method.signature == null) method.desc else method.signature,
-          new MethodSignatureVisitor
+          new MethodSignatureVisitor,
         )
         MethodInfo(method, signature)
       }
@@ -194,7 +194,7 @@ object Javacp {
               k.PARAMETER,
               paramDisplayName,
               s.ValueSignature(paramTpe),
-              o.ACC_PUBLIC
+              o.ACC_PUBLIC,
             )
           }
 
@@ -208,7 +208,7 @@ object Javacp {
         val methodSig = s.MethodSignature(
           typeParameters = Some(s.Scope(methodTypeParameters.map(_.symbol))),
           parameterLists = List(s.Scope(parameters.map(_.symbol))),
-          returnType = returnType
+          returnType = returnType,
         )
 
         val methodInfo =
@@ -233,7 +233,7 @@ object Javacp {
       typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
       parents = classParents,
       self = s.NoType,
-      declarations = Some(s.Scope(decls.toScalaSeq))
+      declarations = Some(s.Scope(decls.toScalaSeq)),
     )
 
     addInfo(classSymbol, classKind, classDisplayName, classSig, classAccess)
@@ -262,7 +262,7 @@ object Javacp {
           styperef(
             prefix = accum,
             symbol = symbol,
-            args = s.simpleClassTypeSignature.typeArguments.toSemanticTpe(scope)
+            args = s.simpleClassTypeSignature.typeArguments.toSemanticTpe(scope),
           ) -> symbol
         }
       result
@@ -275,7 +275,7 @@ object Javacp {
   private def addTypeParameters(
       typeParameters: TypeParameters,
       ownerSymbol: String,
-      scope: Scope
+      scope: Scope,
   ): (Scope, List[s.SymbolInformation]) = {
     var nextScope = scope
     // Enter all type variables before computing types for right hand side type parameter bounds.
@@ -293,7 +293,7 @@ object Javacp {
   private def addTypeParameter(
       typeParameter: TypeParameterInfo,
       ownerSymbol: String,
-      scope: Scope
+      scope: Scope,
   ): s.SymbolInformation = {
     val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_, scope))
     val upperBounds = typeParameters match {
@@ -308,7 +308,7 @@ object Javacp {
       language = l.JAVA,
       kind = k.TYPE_PARAMETER,
       displayName = displayName,
-      signature = sig
+      signature = sig,
     )
   }
 
@@ -395,7 +395,7 @@ object Javacp {
   private def styperef(
       symbol: String,
       args: List[s.Type] = Nil,
-      prefix: s.Type = s.NoType
+      prefix: s.Type = s.NoType,
   ): s.Type = s.TypeRef(prefix, symbol, args)
 
   private implicit class XtensionTypeArgument(private val self: TypeArgument) extends AnyVal {

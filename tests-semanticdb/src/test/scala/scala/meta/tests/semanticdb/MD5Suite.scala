@@ -49,7 +49,7 @@ class MD5Suite extends FunSuite {
       assertEquals(
         doc.md5,
         fromFile,
-        "TextDocument.md5 does not match fileMD5(Paths.get(TextDocument.uri))"
+        "TextDocument.md5 does not match fileMD5(Paths.get(TextDocument.uri))",
       )
       assert(!md5Fingerprints.contains(doc.md5), "Fingerprint was not unique")
       md5Fingerprints += doc.md5

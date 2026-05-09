@@ -12,7 +12,7 @@ class OffsetLineColumnSuite extends FunSuite {
       val content = Input.String(s)
       val len = content.chars.length
       val points = (0 until len).flatMap(i =>
-        Seq(Position.Range.exclusive(content, i, i), Position.Range.inclusive(content, i, i))
+        Seq(Position.Range.exclusive(content, i, i), Position.Range.inclusive(content, i, i)),
       ) :+ Position.Range.exclusive(content, len, len)
       val sb = new StringBuilder
       points.foreach { p =>
@@ -31,14 +31,14 @@ class OffsetLineColumnSuite extends FunSuite {
 
   test("")(
     """|[0, 0) -> [0:0, -1:0] end=(0:0)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   test("\n")(
     """|[0, 0) -> [0:0, -1:0] end=(0:0)
        |[0, 1) -> [0:0, 0:0] end=(1:0)
        |[1, 1) -> [1:0, 0:0] end=(1:0)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   test("foo")(
@@ -49,7 +49,7 @@ class OffsetLineColumnSuite extends FunSuite {
        |[2, 2) -> [0:2, 0:1] end=(0:2)
        |[2, 3) -> [0:2, 0:2] end=(0:3)
        |[3, 3) -> [0:3, 0:2] end=(0:3)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   test("foo\n") {

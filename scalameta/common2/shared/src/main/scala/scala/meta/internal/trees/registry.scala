@@ -26,7 +26,7 @@ class RegistryMacros(val c: Context) extends AstReflection with MacroHelpers {
         val ModuleDef(
           mods @ Modifiers(flags, privateWithin, anns),
           name,
-          Template(parents, self, stats)
+          Template(parents, self, stats),
         ) = mdef
         val enclosingUnit = c.asInstanceOf[{ def enclosingUnit: { def body: Tree } }].enclosingUnit
           .body

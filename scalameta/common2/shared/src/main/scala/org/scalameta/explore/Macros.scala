@@ -20,7 +20,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
           "scala.Enumeration",
           "scala.math",
           "scala.Int",
-          "scala.meta.inline.Api"
+          "scala.meta.inline.Api",
         )
         banned.exists(prefix => sym.fullName.startsWith(prefix))
       }
@@ -69,7 +69,7 @@ class ExploreMacros(val c: Context) extends MacroHelpers {
 
   private def staticClassesObjectsAndVals(
       pkg: Symbol,
-      onlyImmediatelyAccessible: Boolean
+      onlyImmediatelyAccessible: Boolean,
   ): List[Symbol] = {
     val visited = Set[Symbol]()
 

@@ -8,7 +8,7 @@ private[parsers] class TokenRef private (
     val pos: Int,
     val nextPos: Int,
     val pointPos: Int,
-    var next: TokenRef = null
+    var next: TokenRef = null,
 ) {
   def withRegions(regions: List[SepRegion]): TokenRef =
     if (regions eq this.regions) this else new TokenRef(regions, token, pos, nextPos, pointPos)
@@ -23,6 +23,6 @@ private[parsers] object TokenRef {
       pos: Int,
       nextPos: Int,
       pointPos: Int,
-      next: TokenRef = null
+      next: TokenRef = null,
   ): TokenRef = new TokenRef(regions, token, pos, nextPos, pointPos, next)
 }

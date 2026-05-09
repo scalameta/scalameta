@@ -38,8 +38,8 @@ commands += Command.command("releaseSemanticdb")(s =>
     "semanticdbMetac",
     "semanticdbMetap",
     "semanticdbMetacp",
-    "semanticdbScalacCore"
-  ).map(s => s + "/publishSigned") ::: s
+    "semanticdbScalacCore",
+  ).map(s => s + "/publishSigned") ::: s,
 )
 commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s)
 commands += Command.command("download-scala-library") { s =>
@@ -47,7 +47,7 @@ commands += Command.command("download-scala-library") { s =>
   IO.unzipURL(
     url(s"https://github.com/scala/scala/archive/v$LatestScala213.zip"),
     toDirectory = out,
-    filter = s"scala-$LatestScala213/src/library/*"
+    filter = s"scala-$LatestScala213/src/library/*",
   )
   s
 }
@@ -56,16 +56,16 @@ commands += Command.command("save-expect")(s =>
     s"++$version" :: "semanticdbScalacPlugin/compile" :: "semanticdbIntegration/clean" ::
       "semanticdbIntegration/compile" ::
       "testsSemanticdb/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
-  }
+  },
 )
 commands += Command.command("save-manifest")(s =>
-  "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s
+  "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
 )
 def helloContributor(): Unit = println(
   """Welcome to the Scalameta build! You probably don't want to run `sbt test` since
     |that will take a long time to complete.  More likely, you want to run `testsJVM/test`.
     |For more productivity tips, please read CONTRIBUTING.md.
-    |""".stripMargin
+    |""".stripMargin,
 )
 test := helloContributor()
 test / aggregate := false
@@ -84,7 +84,7 @@ val commonJsSettings = Seq(
       case "2.13" => Some(LatestScala213ForJS)
       case "3" => Some(v)
       case _ => None
-    }
+    },
   ).distinct,
   scalaVersion := LatestScala213ForJS,
   bspEnabled := false,
@@ -98,7 +98,7 @@ val commonJsSettings = Seq(
       val prefix = if (isScala3.value) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
       Seq(s"$prefix:$localDir->$githubDir/v${version.value}/")
     }
-  }
+  },
 )
 
 lazy val nativeSettings = Seq(
@@ -113,7 +113,7 @@ lazy val nativeSettings = Seq(
           Seq("scala.meta.internal.tokenizers.ScalametaTokenizer$AsTokenize$")
       ))
      */
-  }
+  },
 )
 
 val allPlatforms = Seq(JSPlatform, JVMPlatform, NativePlatform)
@@ -128,7 +128,7 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   buildInfoPackage := "scala.meta.internal.semanticdb.scalac",
   buildInfoKeys := Seq[BuildInfoKey](scalaVersion),
   description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
-  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
 ).dependsOn(semanticdbShared.jvm, io.jvm).enablePlugins(BuildInfoPlugin)
 
 lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/semanticdb"))
@@ -142,7 +142,7 @@ lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/s
     },
     crossScalaVersions := EarliestScalaVersions,
     protobufSettings,
-    description := "Library defining SemanticDB data structures"
+    description := "Library defining SemanticDB data structures",
   ).dependsOn(scalameta).nativeSettings(nativeSettings).jsSettings(commonJsSettings)
 
 lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).settings(
@@ -167,7 +167,7 @@ lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).s
         case _ => node
       }
     }).transform(node).head
-  }
+  },
 ).dependsOn(semanticdbScalacCore)
 
 lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
@@ -178,7 +178,7 @@ lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
   mimaPreviousArtifacts := Set.empty,
   description := "Scalac 2.x launcher that generates SemanticDB on compile",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-  mainClass := Some("scala.meta.cli.Metac")
+  mainClass := Some("scala.meta.cli.Metac"),
 ).dependsOn(semanticdbScalacPlugin)
 
 lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
@@ -188,7 +188,7 @@ lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   description := "Prints SemanticDB files",
-  mainClass := Some("scala.meta.cli.Metap")
+  mainClass := Some("scala.meta.cli.Metap"),
 ).dependsOn(semanticdbShared.jvm)
 
 lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
@@ -198,7 +198,7 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   description := "Generates SemanticDB files for a classpath",
-  mainClass := Some("scala.meta.cli.Metacp")
+  mainClass := Some("scala.meta.cli.Metacp"),
 ).dependsOn(semanticdbScalacCore)
 
 /* ============== CODEGEN FOR SCALA 3 QUASIQUOTES ============= */
@@ -206,13 +206,13 @@ lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).sett
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
   enableMacros,
-  nonPublishableSettings
+  nonPublishableSettings,
 ).dependsOn(trees.jvm, common.jvm)
 
 lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).settings(
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
-  nonPublishableSettings
+  nonPublishableSettings,
 ).dependsOn(scala3TreeLiftsMacro)
 
 /* ======================== SCALAMETA ======================== */
@@ -222,7 +222,7 @@ lazy val common2 = crossProject(allPlatforms: _*).in(file("scalameta/common2")).
   enableMacros,
   buildInfoPackage := "scala.meta.internal",
   buildInfoKeys := Seq[BuildInfoKey](version),
-  crossScalaVersions := EarliestScala2Versions
+  crossScalaVersions := EarliestScala2Versions,
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
 
@@ -232,7 +232,7 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
   libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.4",
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
   enableMacros,
-  crossScalaVersions := EarliestScalaVersions
+  crossScalaVersions := EarliestScalaVersions,
 ).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
   .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings).dependsOn(common2)
 
@@ -241,7 +241,7 @@ lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
     moduleName := "io",
     sharedSettings,
     description := "Scalameta IO abstractions",
-    crossScalaVersions := EarliestScala2Versions
+    crossScalaVersions := EarliestScala2Versions,
   ).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
 
 lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).settings(
@@ -254,7 +254,7 @@ lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).se
   mergedModule(projects2 = { base =>
     val scalameta = base / "scalameta"
     List("tokenizers2", "tokens2", "dialects2", "inputs2").map(scalameta / _)
-  })
+  }),
 ).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
   .nativeSettings(nativeSettings).dependsOn(common2, io)
 
@@ -273,7 +273,7 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   mergedModule(projects = { base =>
     val scalameta = base / "scalameta"
     List("tokenizers").map(scalameta / _)
-  })
+  }),
 ) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
   .configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
   .nativeSettings(nativeSettings).dependsOn(common, io, trees2)
@@ -286,7 +286,7 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   crossScalaVersions := EarliestScalaVersions,
   mergedModule(
     base => List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers"),
-    base => List(base / "scalameta" / "transversers2")
+    base => List(base / "scalameta" / "transversers2"),
   ),
   Compile / sourceGenerators += Def.taskDyn {
     val outFile = (Compile / sourceManaged).value / "generated" / "TreeLifts.scala"
@@ -294,9 +294,9 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
       if (scalaVersion.value.startsWith("3")) {
         (Compile / (scala3TreeLiftsCodeGen / run)).toTask(" " + outFile.getAbsolutePath).value
         Seq(outFile)
-      } else Seq()
+      } else Seq(),
     )
-  }.taskValue
+  }.taskValue,
 ).configureCross(crossPlatformPublishSettings, crossPlatformShading)
   .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
     commonJsSettings,
@@ -310,13 +310,13 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
     npmPackageStage := org.scalajs.sbtplugin.Stage.FullOpt,
     npmPackageAdditionalNpmConfig :=
       Map("homepage" -> _root_.io.circe.Json.fromString("https://scalameta.org/")),
-    npmPackageREADME := Some(file("README.npm.md"))
+    npmPackageREADME := Some(file("README.npm.md")),
   ).nativeSettings(nativeSettings).dependsOn(trees)
 
 def mergedModule(
     projects: File => List[File] = _ => Nil,
     projects2: File => List[File] = _ => Nil,
-    projects3: File => List[File] = _ => Nil
+    projects3: File => List[File] = _ => Nil,
 ): List[Setting[_]] = List {
   Compile / unmanagedSourceDirectories ++= {
     val base = (ThisBuild / baseDirectory).value
@@ -340,7 +340,7 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
   sharedSettings,
   description := "Scalameta umbrella module that includes all public APIs",
   crossScalaVersions := EarliestScalaVersions,
-  mergedModule(base => List(base / "scalameta" / "contrib"))
+  mergedModule(base => List(base / "scalameta" / "contrib")),
 ).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
   .nativeSettings(nativeSettings).dependsOn(parsers)
 
@@ -358,7 +358,7 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
   scalacOptions ++= {
     if (scalaVersion.value >= "2.13.14") Seq(
       // "-Xsource:3",
-      "-Xsource-features:leading-infix"
+      "-Xsource-features:leading-infix",
     )
     else Nil
   },
@@ -374,7 +374,7 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
       "-P:semanticdb:failures:error", // fail fast during development.
       "-P:semanticdb:exclude:Exclude.scala",
       s"-P:semanticdb:sourceroot:${(ThisBuild / baseDirectory).value}",
-      "-P:semanticdb:synthetics:on"
+      "-P:semanticdb:synthetics:on",
     )
   },
   Compile / javaHome := {
@@ -384,14 +384,14 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
       if (System.getProperty("java.version").startsWith("1.8")) home.getParentFile else home
     Some(actualHome)
   },
-  javacOptions += "-parameters"
+  javacOptions += "-parameters",
 ).dependsOn(semanticdbIntegrationMacros, semanticdbScalacPlugin)
 
 lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-macros")).settings(
   sharedSettings,
   crossScalaVersions := AllScala2Versions,
   nonPublishableSettings,
-  enableMacros
+  enableMacros,
 )
 
 lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).settings(
@@ -399,7 +399,7 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   sharedSettings,
   crossScalaVersions := EarliestScalaVersions,
   hasLargeIntegrationTests,
-  description := "Testing utilities for scalameta APIs"
+  description := "Testing utilities for scalameta APIs",
 ).dependsOn(scalameta, io).configureCross(crossPlatformPublishSettings)
   .jvmSettings(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0")
   .jsSettings(commonJsSettings).nativeSettings(nativeSettings)
@@ -411,7 +411,7 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
     if (isScala3.value)
       List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
     else Nil
-  }
+  },
 ).jvmSettings(
   libraryDependencies ++=
     { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
@@ -419,16 +419,16 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
   libraryDependencies ++= {
     if (isScala213.value) List(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
-      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0" % Test
+      "org.scala-lang.modules" %% "scala-parallel-collections" % "1.2.0" % Test,
     )
     else Nil
-  }
+  },
 ).jsSettings(
   commonJsSettings,
-  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
 ).nativeSettings(
   nativeSettings,
-  nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) }
+  nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) },
 ).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
 
 lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
@@ -441,7 +441,7 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
     (Test / fullClasspath).value
   },
   // Needed because some tests rely on the --usejavacp option
-  Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
+  Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
 ).dependsOn(
   scalameta.jvm,
   testkit.jvm,
@@ -449,7 +449,7 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   semanticdbMetac,
   semanticdbMetacp,
   semanticdbMetap,
-  semanticdbIntegration
+  semanticdbIntegration,
 ).enablePlugins(BuildInfoPlugin)
 
 lazy val sharedTestSettings = Def.settings(
@@ -458,7 +458,7 @@ lazy val sharedTestSettings = Def.settings(
   testFrameworks := List(TestFrameworks.MUnit),
   dependencyOverrides ++=
     { if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value) },
-  libraryDependencies += "org.scalameta" %%% "munit" % munit.sbtmunit.BuildInfo.munitVersion
+  libraryDependencies += "org.scalameta" %%% "munit" % munit.sbtmunit.BuildInfo.munitVersion,
 )
 
 lazy val testSettings = Def.settings(
@@ -478,12 +478,12 @@ lazy val testSettings = Def.settings(
     "resourcesDirectory" -> (Test / resourceDirectory).value.getAbsolutePath,
     "classDirectories" -> Seq(
       (common2.jvm / Compile / classDirectory).value.getAbsolutePath,
-      (common.jvm / Compile / classDirectory).value.getAbsolutePath
+      (common.jvm / Compile / classDirectory).value.getAbsolutePath,
     ),
     "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
-    "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value
+    "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value,
   ),
-  buildInfoPackage := "scala.meta.tests"
+  buildInfoPackage := "scala.meta.tests",
 )
 
 lazy val communitytest = project.in(file("community-test"))
@@ -508,7 +508,7 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
       buf += "-p"
       buf += s"semanticdbScalacJar=$semanticdbScalacJar"
       (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
-    }.evaluated
+    }.evaluated,
   ).dependsOn(testsSemanticdb)
 
 lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
@@ -525,7 +525,7 @@ lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(Buil
       buf += "org.openjdk.jmh.Main"
       buf ++= spaceDelimited("<arg>").parsed
       (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
-    }.evaluated
+    }.evaluated,
   ).dependsOn(scalameta.jvm)
 
 // ==========================================
@@ -543,7 +543,7 @@ def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
 //   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
 def isPlatform(platform: Platform) = Def.settingDyn(
   if (crossProjectPlatform.?.value.isEmpty) Def.setting(platform == JVMPlatform)
-  else Def.setting(crossProjectPlatform.value == platform)
+  else Def.setting(crossProjectPlatform.value == platform),
 )
 
 lazy val sharedSettings = Def.settings(
@@ -575,7 +575,7 @@ lazy val sharedSettings = Def.settings(
       "-Wconf:msg=.*no longer supported for vararg splices.*:silent",
       "-Wconf:msg=.*Implicit parameters should be provided.*:silent",
       "-Wconf:msg=.* deprecated.*:silent", // covers several
-      "-Wconf:cat=deprecation:silent"
+      "-Wconf:cat=deprecation:silent",
     )
     else Nil
   },
@@ -587,7 +587,7 @@ lazy val sharedSettings = Def.settings(
   updateOptions := updateOptions.value.withCachedResolution(true),
   ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger,
   evictionErrorLevel := sbt.util.Level.Warn,
-  incOptions := incOptions.value.withLogRecompileOnMacro(false)
+  incOptions := incOptions.value.withLogRecompileOnMacro(false),
 )
 
 lazy val mergeSettings = Def.settings(
@@ -619,7 +619,7 @@ lazy val mergeSettings = Def.settings(
       val oldStrategy = (assembly / assemblyMergeStrategy).value
       oldStrategy(x)
   },
-  mimaCurrentClassfiles := (Compile / Keys.`package`).value
+  mimaCurrentClassfiles := (Compile / Keys.`package`).value,
 )
 
 lazy val protobufSettings = Def.settings(
@@ -632,8 +632,8 @@ lazy val protobufSettings = Def.settings(
     generator = PB.gens.plugin("scala"),
     outputPath = (Compile / sourceManaged).value / "protobuf",
     options = scalapb.gen(flatPackage =
-      true // Don't append filename to package
-    )._2
+      true, // Don't append filename to package
+    )._2,
   )),
   Compile / PB.protoSources := Seq(file("semanticdb/semanticdb/shared/src/main/proto")),
   PB.additionalDependencies := Nil,
@@ -647,10 +647,10 @@ lazy val protobufSettings = Def.settings(
       ("com.thesamet.scalapb" % "protoc-gen-scala" % scalapbVersion % "protobuf").artifacts(
         if (scala.util.Properties.isWin)
           Artifact("protoc-gen-scala", PB.ProtocPlugin, "bat", "windows")
-        else Artifact("protoc-gen-scala", PB.ProtocPlugin, "sh", "unix")
-      )
+        else Artifact("protoc-gen-scala", PB.ProtocPlugin, "sh", "unix"),
+      ),
     )
-  }
+  },
 )
 
 lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
@@ -735,7 +735,7 @@ lazy val publishableSettings = Def.settings(
         <name>Denys Shabalin</name>
         <url>http://den.sh</url>
       </developer>
-    </developers>
+    </developers>,
 )
 
 lazy val nonPublishableSettings = Seq(
@@ -746,7 +746,7 @@ lazy val nonPublishableSettings = Seq(
   Compile / doc / sources := Seq.empty,
   publishArtifact := false,
   PgpKeys.publishSigned := {},
-  publish := {}
+  publish := {},
 )
 
 def compatibilityPolicyViolation(ticket: String) = Seq(mimaPreviousArtifacts := Set.empty)
@@ -762,7 +762,7 @@ lazy val fullCrossVersionSettings = Seq(
     val base = (Compile / sourceDirectory).value
     val versionDir = scalaVersion.value.replaceAll("-.*", "")
     base / ("scala-" + versionDir)
-  }
+  },
 )
 
 lazy val hasLargeIntegrationTests =
@@ -798,7 +798,7 @@ def exposePaths(projectName: String, config: Configuration) = {
       val classpath = defaultValue.files.map(_.getAbsolutePath)
       System.setProperty(prefix + "classes", classpath.mkString(java.io.File.pathSeparator))
       defaultValue
-    }
+    },
   )
 }
 
@@ -829,20 +829,20 @@ lazy val docs = project.in(file("scalameta-docs")).settings(
   mdocVariables := Map(
     "VERSION" -> version.value.replaceFirst("\\+.*", ""),
     "SCALA_BINARY_VERSION" -> scalaBinaryVersion.value,
-    "SCALA_VERSION" -> scalaVersion.value
+    "SCALA_VERSION" -> scalaVersion.value,
   ),
   mdocOut := (ThisBuild / baseDirectory).value / "website" / "target" / "docs",
-  mimaPreviousArtifacts := Set.empty
+  mimaPreviousArtifacts := Set.empty,
 ).enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
 
 lazy val shadingSettings = Def.settings(
   shadedDependencies ++= ShadedDependency.all.map(x =>
     if (x.isPlatformSpecific) x.groupID %%% x.artifactID % "foo"
-    else x.groupID %% x.artifactID % "foo"
+    else x.groupID %% x.artifactID % "foo",
   ).toSet,
   shadingRules ++=
     ShadedDependency.all.map(x => ShadingRule.moveUnder(x.namespace, "scala.meta.shaded.internal")),
-  validNamespaces ++= Set("org", "scala", "java")
+  validNamespaces ++= Set("org", "scala", "java"),
 )
 
 def platformPublishSettings(platform: sbtcrossproject.Platform) =

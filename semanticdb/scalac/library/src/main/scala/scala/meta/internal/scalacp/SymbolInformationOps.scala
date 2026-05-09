@@ -194,7 +194,7 @@ trait SymbolInformationOps {
       displayName = displayName,
       signature = sig(linkMode),
       annotations = annotations,
-      access = access
+      access = access,
     )
   }
 }

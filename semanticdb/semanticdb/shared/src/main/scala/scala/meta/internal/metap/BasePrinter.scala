@@ -10,7 +10,7 @@ abstract class BasePrinter(
     val settings: Settings,
     val reporter: Reporter,
     val doc: TextDocument,
-    val symtab: PrinterSymtab
+    val symtab: PrinterSymtab,
 ) {
   def out: PrintStream = reporter.out
 

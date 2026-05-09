@@ -19,7 +19,7 @@ case class SemanticdbConfig(
     symbols: SymbolMode,
     diagnostics: BinaryMode,
     synthetics: BinaryMode,
-    overrides: BinaryMode
+    overrides: BinaryMode,
 ) {
   private[scalac] lazy val realSourceRoot = sourceroot.toNIO.toRealPath()
 
@@ -37,7 +37,7 @@ case class SemanticdbConfig(
       "symbols" -> symbols.name,
       "diagnostics" -> diagnostics.name,
       "synthetics" -> synthetics.name,
-      "overrides" -> overrides.name
+      "overrides" -> overrides.name,
     ).map { case (k, v) => s"-P:$p:$k:$v" }.mkString(" ")
   }
 
@@ -57,7 +57,7 @@ object SemanticdbConfig {
     symbols = SymbolMode.All,
     diagnostics = BinaryMode.On,
     synthetics = BinaryMode.Off,
-    overrides = BinaryMode.On
+    overrides = BinaryMode.On,
   )
 
   private val prefix = "-P:semanticdb:"
@@ -88,7 +88,7 @@ object SemanticdbConfig {
       scalacOptions: List[String],
       errFn: String => Unit,
       reporter: Reporter,
-      base: SemanticdbConfig
+      base: SemanticdbConfig,
   ): SemanticdbConfig = {
     def deprecated(option: String, instead: String): Unit = reporter
       .warning(NoPosition, s"$prefix$option is deprecated. Use -$prefix$instead instead.")

@@ -15,7 +15,7 @@ import scala.meta.io.AbsolutePath
 final case class ClasspathFile(
     path: AbsolutePath,
     enclosingJar: Option[AbsolutePath],
-    enclosingManifestJar: Option[ClasspathFile]
+    enclosingManifestJar: Option[ClasspathFile],
 ) {
   def pathOnDisk: AbsolutePath = enclosingJar.getOrElse(path)
 }

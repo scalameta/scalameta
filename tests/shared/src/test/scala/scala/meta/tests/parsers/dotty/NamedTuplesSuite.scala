@@ -5,7 +5,7 @@ import scala.meta._
 class NamedTuplesSuite extends BaseDottySuite {
 
   test("simple-named-term")(runTestAssert[Stat]("(a = 123, b = \"123\")")(Term.Tuple(
-    List(Term.Assign(tname("a"), lit(123)), Term.Assign(tname("b"), lit("123")))
+    List(Term.Assign(tname("a"), lit(123)), Term.Assign(tname("b"), lit("123"))),
   )))
 
   test("complex-named-term")(
@@ -14,14 +14,14 @@ class NamedTuplesSuite extends BaseDottySuite {
       Term.Assign(tname("b"), lit("123")),
       Term.Assign(
         tname("c"),
-        Term.Tuple(List(Term.Assign(tname("a"), lit(123)), Term.Assign(tname("d"), lit(2.01d))))
-      )
-    )))
+        Term.Tuple(List(Term.Assign(tname("a"), lit(123)), Term.Assign(tname("d"), lit(2.01d)))),
+      ),
+    ))),
   )
 
   test("simple-named-type")(runTestAssert[Type]("(a: Int, b: String)")(Type.Tuple(List(
     Type.TypedParam(pname("a"), pname("Int"), Nil),
-    Type.TypedParam(pname("b"), pname("String"), Nil)
+    Type.TypedParam(pname("b"), pname("String"), Nil),
   ))))
 
   test("simple-named-type-assign")(runTestAssert[Stat]("type T = (a: Int, b: String)")(Defn.Type(
@@ -30,9 +30,9 @@ class NamedTuplesSuite extends BaseDottySuite {
     Nil,
     Type.Tuple(List(
       Type.TypedParam(pname("a"), pname("Int"), Nil),
-      Type.TypedParam(pname("b"), pname("String"), Nil)
+      Type.TypedParam(pname("b"), pname("String"), Nil),
     )),
-    noBounds
+    noBounds,
   )))
 
   test("named-tuple-summon") {
@@ -50,10 +50,10 @@ class NamedTuplesSuite extends BaseDottySuite {
           "<:<",
           Type.Tuple(List(
             Type.TypedParam(pname("x"), pname("Int"), Nil),
-            Type.TypedParam(pname("y"), pname("String"), Nil)
-          ))
-        )
-      )
+            Type.TypedParam(pname("y"), pname("String"), Nil),
+          )),
+        ),
+      ),
     ))
   }
 
@@ -65,11 +65,11 @@ class NamedTuplesSuite extends BaseDottySuite {
         pname("c"),
         Type.Tuple(List(
           Type.TypedParam(pname("a"), pname("Int"), Nil),
-          Type.TypedParam(pname("d"), pname("Double"), Nil)
+          Type.TypedParam(pname("d"), pname("Double"), Nil),
         )),
-        Nil
-      )
-    )))
+        Nil,
+      ),
+    ))),
   )
 
   test("simple-named-pattern")(
@@ -77,15 +77,15 @@ class NamedTuplesSuite extends BaseDottySuite {
       """|a match {
          |  case (a = 123, b = "123") =>
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )(tmatch(
       tname("a"),
       Case(
         Pat.Tuple(List(Pat.Assign(tname("a"), lit(123)), Pat.Assign(tname("b"), lit("123")))),
         None,
-        blk()
-      )
-    ))
+        blk(),
+      ),
+    )),
   )
 
   test("complex-named-pattern")(
@@ -93,7 +93,7 @@ class NamedTuplesSuite extends BaseDottySuite {
       """|a match {
          |  case (a = 123, b = (c = "123", d = 123)) =>
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )(tmatch(
       tname("a"),
       Case(
@@ -101,13 +101,13 @@ class NamedTuplesSuite extends BaseDottySuite {
           Pat.Assign(tname("a"), lit(123)),
           Pat.Assign(
             tname("b"),
-            Pat.Tuple(List(Pat.Assign(tname("c"), lit("123")), Pat.Assign(tname("d"), lit(123))))
-          )
+            Pat.Tuple(List(Pat.Assign(tname("c"), lit("123")), Pat.Assign(tname("d"), lit(123)))),
+          ),
         )),
         None,
-        blk()
-      )
-    ))
+        blk(),
+      ),
+    )),
   )
 
   test("extractor with named fields: all") {
@@ -121,8 +121,8 @@ class NamedTuplesSuite extends BaseDottySuite {
       Case(
         patextract(tname("Foo"), Pat.Assign("name", patvar("nme")), Pat.Assign("id", lit(123))),
         None,
-        blk()
-      )
+        blk(),
+      ),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -138,8 +138,8 @@ class NamedTuplesSuite extends BaseDottySuite {
       Case(
         patextract(tname("Foo"), Pat.Assign("x", patvar("y")), patvar("z"), Pat.Repeated("rest")),
         None,
-        blk()
-      )
+        blk(),
+      ),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -150,7 +150,7 @@ class NamedTuplesSuite extends BaseDottySuite {
       Nil,
       List(patextract("Foo", Pat.Assign("name", patvar("name")), Pat.Assign("id", patvar("id")))),
       None,
-      tapply("Foo", Term.Assign("name", lit("123")), Term.Assign("id", lit(456)))
+      tapply("Foo", Term.Assign("name", lit("123")), Term.Assign("id", lit(456))),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -160,10 +160,10 @@ class NamedTuplesSuite extends BaseDottySuite {
     val tree = Case(
       Pat.Tuple(List(
         Pat.Assign("a", lit(123)),
-        Pat.Assign("b", Pat.Tuple(List(Pat.Assign("c", lit("123")), Pat.Assign("d", lit(123)))))
+        Pat.Assign("b", Pat.Tuple(List(Pat.Assign("c", lit("123")), Pat.Assign("d", lit(123))))),
       )),
       None,
-      blk()
+      blk(),
     )
     runTestAssert[Case](code)(tree)
   }
@@ -222,7 +222,7 @@ class NamedTuplesSuite extends BaseDottySuite {
     val tree = Case(
       Pat.Tuple(List(Pat.Assign("a", lit(123)), Pat.Assign("b", Pat.Assign("c", lit(123))))),
       None,
-      blk()
+      blk(),
     )
     runTestAssert[Case](code, layout)(tree)
   }
@@ -233,10 +233,10 @@ class NamedTuplesSuite extends BaseDottySuite {
     val layout = """case (a = 123, b = (c = 123)) =>"""
     val tree = Case(
       Pat.Tuple(
-        List(Pat.Assign("a", lit(123)), Pat.Assign("b", Pat.Tuple(List(Pat.Assign("c", lit(123))))))
+        List(Pat.Assign("a", lit(123)), Pat.Assign("b", Pat.Tuple(List(Pat.Assign("c", lit(123)))))),
       ),
       None,
-      blk()
+      blk(),
     )
     runTestAssert[Case](code, layout)(tree)
   }

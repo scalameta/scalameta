@@ -19,7 +19,7 @@ object MoreHelpers {
       Nil,
       "Expected all trees to have non-empty `.origin`.\n" +
         "To fix this failure, update ScalametaParser to use `autoPos()` where the trees below got constructed.\n" +
-        "Pro tip: you may also want to add a PositionSuite test for this tree node to verify that the position you set is correct."
+        "Pro tip: you may also want to add a PositionSuite test for this tree node to verify that the position you set is correct.",
     )
     tree
   }
@@ -30,21 +30,21 @@ object MoreHelpers {
     def applyRule[T <: Tree](rule: ScalametaParser => T)(implicit
         dialect: Dialect,
         tokenizerOptions: TokenizerOptions,
-        parserOptions: ParserOptions
+        parserOptions: ParserOptions,
     ): T = asInput.applyRule(rule)
     def parseRule[T <: Tree](rule: ScalametaParser => T)(implicit
         dialect: Dialect,
         tokenizerOptions: TokenizerOptions,
-        parserOptions: ParserOptions
+        parserOptions: ParserOptions,
     ): T = asInput.parseRule(rule)
   }
   implicit class XtensionInput(private val input: Input) extends AnyVal {
     def applyRule[T <: Tree](
-        rule: ScalametaParser => T
+        rule: ScalametaParser => T,
     )(implicit dialect: Dialect, options: ParserOptions): T =
       requireNonEmptyOrigin(rule(new ScalametaParser(input)))
     def parseRule[T <: Tree](
-        rule: ScalametaParser => T
+        rule: ScalametaParser => T,
     )(implicit dialect: Dialect, options: ParserOptions): T = applyRule(_.parseRule(rule))
   }
 }

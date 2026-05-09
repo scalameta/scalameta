@@ -6,7 +6,7 @@ import munit.FunSuite
 
 class PathIOSuite extends FunSuite {
   def check(path: String, expectedDir: String, expectedName: String)(implicit
-      loc: munit.Location
+      loc: munit.Location,
   ): Unit = test(path) {
     val obtainedDir = PathIO.dirname(path)
     assertEquals(obtainedDir, expectedDir, "Unexpected dirName")

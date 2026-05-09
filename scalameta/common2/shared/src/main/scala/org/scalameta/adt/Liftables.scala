@@ -72,7 +72,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
               case _ => Nil
             }
             val args = fields.map(f =>
-              q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
+              q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})",
               // NOTE: we can't really use AssignOrNamedArg here, sorry
               // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
               // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
@@ -85,7 +85,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
                 val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames)
                   .getOrElse(c.abort(
                     c.enclosingPosition,
-                    s"no latest version ${adt.sym.fullName}: $moduleNames"
+                    s"no latest version ${adt.sym.fullName}: $moduleNames",
                   ))
                 latestAfterVersion :: Nil
               } else Nil
@@ -102,7 +102,7 @@ class LiftableMacros(val c: Context) extends AdtReflection {
         matcher.tparams,
         matcher.vparamss,
         matcher.tpt,
-        body
+        body,
       )
     }
     val clauses = adts.map { case (adt, name) =>

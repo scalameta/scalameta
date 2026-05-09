@@ -13,7 +13,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
   implicit val dialect: Dialect = dialects.Scala211
 
   private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String = null)(implicit
-      loc: munit.Location
+      loc: munit.Location,
   ): Unit = {
     val stat = statStr.trim // make sure no trailing newlines
     def testWithSuffix(suffix: String): Unit = test(s"${loc.line}: $stat [$suffix]") {
@@ -42,19 +42,19 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     testWithSuffix(
       """|{
          |  a
-         |}""".stripMargin
+         |}""".stripMargin,
     )
     testWithSuffix(
       """|{
          |  a
          |} + {
          |  b
-         |}""".stripMargin
+         |}""".stripMargin,
     )
     testWithSuffix(
       """|{
          |  a
-         |}.b""".stripMargin
+         |}.b""".stripMargin,
     )
   }
 
@@ -85,16 +85,16 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       s"$k Foo extends { val foo = 1 } with Bar",
       s"""|$k Foo extends {
           |  val foo = 1
-          |} with Bar""".stripMargin
-    )
+          |} with Bar""".stripMargin,
+    ),
   )
   testBlockAfterClass(k =>
     testBlockNoNL(
       s"$k Foo extends { val foo = 1 } with Bar { val bar = 2 }",
       s"""|$k Foo extends {
           |  val foo = 1
-          |} with Bar { val bar = 2 }""".stripMargin
-    )
+          |} with Bar { val bar = 2 }""".stripMargin,
+    ),
   )
   testBlockAddNL("this")
   testBlockAddNL("Foo")

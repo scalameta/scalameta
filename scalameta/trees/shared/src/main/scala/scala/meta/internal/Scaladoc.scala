@@ -134,7 +134,7 @@ object Scaladoc {
   sealed abstract class TagType(
       val tag: String,
       val hasLabel: Boolean = false,
-      val optDesc: Boolean = true
+      val optDesc: Boolean = true,
   )
 
   /**
@@ -278,7 +278,7 @@ object Scaladoc {
       Deprecated,
       Migration,
       InheritDoc,
-      Documentable
+      Documentable,
     )
 
     lazy val tagTypeMap = predefined.map(x => x.tag -> x).toMap

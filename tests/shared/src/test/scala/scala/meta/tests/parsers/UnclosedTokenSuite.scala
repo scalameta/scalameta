@@ -12,80 +12,80 @@ class UnclosedTokenSuite extends ParseSuite {
     interceptMessage[ParseException](
       """|<input>:1: error: unclosed single-line string interpolation
          | s"start   
-         |           ^""".stripMargin.lf2nl
-    )(stat(""" s"start   """))
+         |           ^""".stripMargin.lf2nl,
+    )(stat(""" s"start   """)),
   )
 
   test("unclosed-string-2")(
     interceptMessage[ParseException](
       """|<input>:1: error: unclosed string literal
          | x"${1 + " 
-         |         ^""".stripMargin.lf2nl
-    )(stat(""" x"${1 + " """))
+         |         ^""".stripMargin.lf2nl,
+    )(stat(""" x"${1 + " """)),
   )
 
   test("unclosed-escape")(
     interceptMessage[ParseException](
       """|<input>:1: error: unclosed string literal
          | "start \" 
-         | ^""".stripMargin.lf2nl
-    )(stat(""" "start \" """))
+         | ^""".stripMargin.lf2nl,
+    )(stat(""" "start \" """)),
   )
 
   test("unclosed-interpolation")(
     interceptMessage[ParseException](
       """|<input>:1: error: `}` expected but `end of file` found
          | s"${1+ 
-         |        ^""".stripMargin.lf2nl
-    )(stat(""" s"${1+ """))
+         |        ^""".stripMargin.lf2nl,
+    )(stat(""" s"${1+ """)),
   )
 
   test("unclosed-char")(
     interceptMessage[ParseException](
       """|<input>:1: error: unclosed character literal
          | '.,
-         |  ^""".stripMargin.lf2nl
+         |  ^""".stripMargin.lf2nl,
     )(stat(
       """| '.,
-         |""".stripMargin
-    ))
+         |""".stripMargin,
+    )),
   )
 
   test("unclosed-char-with-NL")(
     interceptMessage[ParseException](
       """|<input>:1: error: can't use unescaped LF in character literals
          | '
-         |  ^""".stripMargin.lf2nl
+         |  ^""".stripMargin.lf2nl,
     )(stat(
       """| '
          |abc
-         |""".stripMargin
-    ))
+         |""".stripMargin,
+    )),
   )
 
   test("unclosed-multi-string-literal")(
     interceptMessage[ParseException](
       s"""|<input>:4: error: unclosed multi-line string literal
           |
-          |^""".stripMargin.lf2nl
+          |^""".stripMargin.lf2nl,
     )(stat(
       s"""|""\"
           |foo
           |""
-          |""".stripMargin
-    ))
+          |""".stripMargin,
+    )),
   )
 
   test("unclosed-comment")(
     interceptMessage[ParseException](
       """|<input>:2: error: unclosed comment
          | * foo
-         |      ^""".stripMargin.lf2nl
+         |      ^""".stripMargin.lf2nl,
     )(stat(
       """|/*
          | * foo
-         |""".stripMargin
-    ))
+         |""".stripMargin,
+    )),
   )
 
 }

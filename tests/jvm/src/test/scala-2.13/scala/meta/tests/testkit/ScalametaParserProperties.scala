@@ -50,7 +50,7 @@ object ScalametaParserProperties {
       file.jFile.parse[Source] match {
         case Parsed.Success(s) => onParseSuccess(s)
         case e: Parsed.Error => onParseError(file, e)
-      }
+      },
     )
   }
 
@@ -71,7 +71,7 @@ class ScalametaParserPropertyTest extends FunSuite {
     val prettyPrinterBroken = result.count(_._2.kind == PrettyPrinterBroken)
     println(
       s"""|Parser broken: $parserBroken
-          |Pretty printer broken: $prettyPrinterBroken""".stripMargin
+          |Pretty printer broken: $prettyPrinterBroken""".stripMargin,
     )
     assert(parserBroken <= 4)
     assert(prettyPrinterBroken <= 1888)

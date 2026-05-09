@@ -5,7 +5,7 @@ import scala.meta.internal.SingletonReference
 final class TokenizerOptions private[meta] (
     // options which control how tokens are emitted
     val groupWhitespace: Boolean = false,
-    val tokenize: Option[Tokenize] = None
+    val tokenize: Option[Tokenize] = None,
 ) {
   def getTokenize(implicit tokenize: Tokenize): Tokenize = this.tokenize.getOrElse(tokenize)
 
@@ -14,7 +14,7 @@ final class TokenizerOptions private[meta] (
 
   private def privateCopy(
       tokenize: Option[Tokenize] = this.tokenize,
-      groupWhitespace: Boolean = this.groupWhitespace
+      groupWhitespace: Boolean = this.groupWhitespace,
   ): TokenizerOptions = new TokenizerOptions(tokenize = tokenize, groupWhitespace = groupWhitespace)
 }
 

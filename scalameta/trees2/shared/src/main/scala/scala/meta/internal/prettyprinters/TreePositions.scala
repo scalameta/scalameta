@@ -33,7 +33,7 @@ object Positions {
 
   implicit def positionsTree[T <: Tree: Syntax](implicit
       positionStyle: PositionStyle,
-      sliceStyle: SliceStyle
+      sliceStyle: SliceStyle,
   ): Positions[T] = Positions { x =>
     def loopTree(x: Tree): Show.Result = {
       implicit class XtensionString(s: String) {
@@ -50,7 +50,7 @@ object Positions {
         case el: ::[_] => s(
             "List(".colored(color),
             r(el.map(el => loopField(el, color)), ", ".colored(color)),
-            ")".colored(color)
+            ")".colored(color),
           )
         case el: None.type => s("None".colored(color))
         case el: Some[_] => s("Some(".colored(color), loopField(el.get, color), ")".colored(color))

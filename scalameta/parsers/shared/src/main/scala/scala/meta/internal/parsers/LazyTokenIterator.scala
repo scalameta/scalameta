@@ -16,7 +16,7 @@ object LazyTokenIterator {
 private[parsers] class LazyTokenIterator private (
     private val scannerTokens: ScannerTokens,
     private var prev: TokenRef,
-    private var curr: TokenRef
+    private var curr: TokenRef,
 ) extends TokenIterator {
 
   import scannerTokens._

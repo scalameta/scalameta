@@ -38,55 +38,55 @@ private[meta] trait Api {
   // unapply methods
   extension (stringContext: scala.StringContext)
     @annotation.compileTimeOnly(
-      ".q should not be called directly. Use q\"...\" string interpolation."
+      ".q should not be called directly. Use q\"...\" string interpolation.",
     )
     def q: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".param should not be called directly. Use param\"...\" string interpolation."
+      ".param should not be called directly. Use param\"...\" string interpolation.",
     )
     def param: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".t should not be called directly. Use t\"...\" string interpolation."
+      ".t should not be called directly. Use t\"...\" string interpolation.",
     )
     def t: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".tparam should not be called directly. Use tparam\"...\" string interpolation."
+      ".tparam should not be called directly. Use tparam\"...\" string interpolation.",
     )
     def tparam: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".p should not be called directly. Use p\"...\" string interpolation."
+      ".p should not be called directly. Use p\"...\" string interpolation.",
     )
     def p: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".init should not be called directly. Use init\"...\" string interpolation."
+      ".init should not be called directly. Use init\"...\" string interpolation.",
     )
     def init: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".self should not be called directly. Use self\"...\" string interpolation."
+      ".self should not be called directly. Use self\"...\" string interpolation.",
     )
     def self: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".template should not be called directly. Use template\"...\" string interpolation."
+      ".template should not be called directly. Use template\"...\" string interpolation.",
     )
     def template: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".mod should not be called directly. Use mod\"...\" string interpolation."
+      ".mod should not be called directly. Use mod\"...\" string interpolation.",
     )
     def mod: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".enumerator should not be called directly. Use enumerator\"...\" string interpolation."
+      ".enumerator should not be called directly. Use enumerator\"...\" string interpolation.",
     )
     def enumerator: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".importer should not be called directly. Use importer\"...\" string interpolation."
+      ".importer should not be called directly. Use importer\"...\" string interpolation.",
     )
     def importer: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".importee should not be called directly. Use importee\"...\" string interpolation."
+      ".importee should not be called directly. Use importee\"...\" string interpolation.",
     )
     def importee: QuasiquoteUnapply = ???
     @annotation.compileTimeOnly(
-      ".source should not be called directly. Use source\"...\" string interpolation."
+      ".source should not be called directly. Use source\"...\" string interpolation.",
     )
     def source: QuasiquoteUnapply = ???
 
@@ -148,7 +148,7 @@ private[meta] object Api {
       input: inputs.Input,
       dialect: Dialect,
       parserA: Parse[A],
-      parserB: Parse[B]
+      parserB: Parse[B],
   ) = parse[A].orElse(parse[B]).get
 
   def parseAny[A <: Tree](implicit input: inputs.Input, dialect: Dialect, parser: Parse[A]) =

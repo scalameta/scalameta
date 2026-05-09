@@ -32,7 +32,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
   }
 
   def interfaceToApi[I, A](
-      interface: c.Tree
+      interface: c.Tree,
   )(implicit I: c.WeakTypeTag[I], A: c.WeakTypeTag[A]): c.Tree = q"$interface.asInstanceOf[$A]"
 
   def productPrefix[T](implicit T: c.WeakTypeTag[T]): c.Tree = q"${T.tpe.typeSymbol.asLeaf.prefix}"

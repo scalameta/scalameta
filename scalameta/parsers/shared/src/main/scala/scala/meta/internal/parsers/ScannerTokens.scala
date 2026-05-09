@@ -279,7 +279,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       prevPos: Int,
       currPos: Int,
       outdent: Int,
-      okBlank: Boolean
+      okBlank: Boolean,
   ): Int = {
     @tailrec
     def iter(i: Int, pos: Int, indent: Int, numEOL: Int = 0): Int =
@@ -329,7 +329,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       prevToken: Token,
       prevPos: Int,
       currPos: Int,
-      sepRegionsOrig: List[SepRegion]
+      sepRegionsOrig: List[SepRegion],
   ): TokenRef = {
     val prev = if (prevPos >= 0) tokens(prevPos) else null
     val curr = tokens(currPos)
@@ -362,7 +362,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         wasDone: Boolean = false,
         head: TokenRef = null,
         last: TokenRef = null,
-        multiEOL: Boolean = false
+        multiEOL: Boolean = false,
     )(implicit f: List[SepRegion] => OutdentInfo): Either[List[SepRegion], (TokenRef, TokenRef)] =
       if (!wasDone) f(xs) match {
         case null => mkOutdentsOpt(xs, true, head, last, multiEOL)
@@ -389,12 +389,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       }
 
     def mkOutdentsT[A](xs: List[SepRegion], multiEOL: Boolean = false)(lt: List[SepRegion] => A)(
-        rt: (TokenRef, TokenRef) => A
+        rt: (TokenRef, TokenRef) => A,
     )(implicit f: List[SepRegion] => OutdentInfo): A = mkOutdentsOpt(xs, multiEOL = multiEOL)
       .fold(lt, rt.tupled)
 
     def mkOutdents(xs: List[SepRegion], multiEOL: Boolean = false)(implicit
-        f: List[SepRegion] => OutdentInfo
+        f: List[SepRegion] => OutdentInfo,
     ): TokenRef = mkOutdentsT(xs, multiEOL)(currRef)((x, _) => x)
 
     def currRef(regions: List[SepRegion]): TokenRef = currAndNextRef(regions, null)
@@ -414,7 +414,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     def outdentThenCurrRef(
         ri: RegionIndent,
         rs: List[SepRegion],
-        rn: Option[SepRegion] = None
+        rn: Option[SepRegion] = None,
     ): TokenRef = {
       val ref = mkOutdentTo(ri, rs)
       ref.next = currRef(rn.fold(rs)(_ :: rs))
@@ -585,7 +585,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
               new RegionCaseBody(bodyIndent, curr) :: rs
             case RegionColonMaybeFewerBraces :: rs => rs
             case _ => sepRegions
-          }
+          },
         )
       case _: KwFor if !isPrevEndMarker() => currRef(RegionFor(next) :: sepRegions)
       case _: KwWhile if dialect.allowQuietSyntax && !isPrevEndMarker() =>
@@ -782,7 +782,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
           def getOutdentOnIndent(
               r: SepRegionIndented,
               rs: List[SepRegion],
-              ctrlOnly: Boolean
+              ctrlOnly: Boolean,
           ): OutdentInfo = dropRegionLine(nextIndent + 1, rs) match {
             case RegionTry :: xs =>
               if (nextIndent < r.indent || nextIndent == r.indent && next.isAny[KwCatch, KwFinally]) {
@@ -1016,7 +1016,7 @@ object ScannerTokens {
   private[parsers] case class OutdentInfo(
       outdent: SepRegionIndented,
       regions: List[SepRegion],
-      done: Boolean = false
+      done: Boolean = false,
   )
 
   private[parsers] def multilineCommentIndent(t: Comment): Int = {

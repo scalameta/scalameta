@@ -40,7 +40,7 @@ object Lift {
     Lift(_.map(lift.apply))
 
   implicit def liftListViaImplicit[O <: Tree, I <: Tree](implicit
-      conv: List[O] => I
+      conv: List[O] => I,
   ): Lift[List[O], I] = Lift(conv)
 
 }

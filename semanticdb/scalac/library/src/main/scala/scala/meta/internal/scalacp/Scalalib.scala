@@ -17,7 +17,7 @@ object Scalalib {
     Scalalib.anyRefClass,
     Scalalib.nothingClass,
     Scalalib.nullClass,
-    Scalalib.singletonTrait
+    Scalalib.singletonTrait,
   )
   private def anyClass: ClassfileInfos = {
     val symbols = List(
@@ -27,7 +27,7 @@ object Scalalib {
         "equals",
         Nil,
         List("that" -> "scala/Any#"),
-        "scala/Boolean#"
+        "scala/Boolean#",
       ),
       builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
       builtinMethod("Any", List(p.FINAL), "!=", Nil, List("that" -> "scala/Any#"), "scala/Boolean#"),
@@ -44,8 +44,8 @@ object Scalalib {
         "asInstanceOf",
         List("A"),
         Nil,
-        "scala/Any#asInstanceOf().[A]"
-      )
+        "scala/Any#asInstanceOf().[A]",
+      ),
     )
     builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.flatten)
   }
@@ -62,7 +62,7 @@ object Scalalib {
         "eq",
         Nil,
         List("that" -> "scala/AnyRef#"),
-        "scala/Boolean#"
+        "scala/Boolean#",
       ),
       builtinMethod(
         "AnyRef",
@@ -70,7 +70,7 @@ object Scalalib {
         "ne",
         Nil,
         List("that" -> "scala/AnyRef#"),
-        "scala/Boolean#"
+        "scala/Boolean#",
       ),
       builtinMethod(
         "AnyRef",
@@ -78,8 +78,8 @@ object Scalalib {
         "synchronized",
         List("T"),
         List("body" -> "scala/AnyRef#synchronized().[T]"),
-        "scala/AnyRef#synchronized().[T]"
-      )
+        "scala/AnyRef#synchronized().[T]",
+      ),
     )
     builtin(k.CLASS, Nil, "AnyRef", List("scala/Any#"), symbols.flatten)
   }
@@ -100,7 +100,7 @@ object Scalalib {
       props: List[s.SymbolInformation.Property],
       className: String,
       bases: List[String],
-      symbols: List[s.SymbolInformation]
+      symbols: List[s.SymbolInformation],
   ): ClassfileInfos = {
     val parents = bases.map(base => s.TypeRef(s.NoType, base, Nil))
     val symbol = Symbols.Global(scalaPackage, d.Type(className))
@@ -112,7 +112,7 @@ object Scalalib {
       properties = p.PRIMARY.value,
       displayName = dn.Constructor,
       signature = ctorSig,
-      access = s.PublicAccess()
+      access = s.PublicAccess(),
     )
     val builtinSig = {
       val tparams = Some(s.Scope(Nil))
@@ -127,7 +127,7 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       displayName = className,
       signature = builtinSig,
-      access = s.PublicAccess()
+      access = s.PublicAccess(),
     )
     val infos = builtin :: (if (kind.isClass) ctor :: symbols else symbols)
     val relativeUri = "scala/" + NameTransformer.encode(className) + ".class"
@@ -141,7 +141,7 @@ object Scalalib {
       methodName: String,
       tparamDsls: List[String],
       paramDsls: List[(String, String)],
-      retTpeSymbol: String
+      retTpeSymbol: String,
   ): List[s.SymbolInformation] = {
     val classSymbol = Symbols.Global(scalaPackage, d.Type(className))
     val methodSymbol = Symbols.Global(classSymbol, d.Method(methodName, "()"))
@@ -155,7 +155,7 @@ object Scalalib {
         properties = 0,
         displayName = tparamName,
         signature = tparamSig,
-        access = s.NoAccess
+        access = s.NoAccess,
       )
     }
     val params = paramDsls.map { case (paramName, paramTpeSymbol) =>
@@ -167,7 +167,7 @@ object Scalalib {
         kind = k.PARAMETER,
         properties = 0,
         displayName = paramName,
-        signature = paramSig
+        signature = paramSig,
       )
     }
     val methodSig = {
@@ -182,7 +182,7 @@ object Scalalib {
       properties = props.foldLeft(0)((acc, prop) => acc | prop.value),
       displayName = methodName,
       signature = methodSig,
-      access = s.PublicAccess()
+      access = s.PublicAccess(),
     )
     List(method) ++ tparams ++ params
   }

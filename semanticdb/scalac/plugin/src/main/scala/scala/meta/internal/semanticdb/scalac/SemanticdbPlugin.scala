@@ -30,7 +30,7 @@ class SemanticdbPlugin(val global: Global) extends Plugin with SemanticdbPipelin
     if (isAmmonite) PathIO.workingDirectory.resolve("out/semanticdb-scalac")
     else AbsolutePath(
       global.settings.outputDirs.getSingleOutput.flatMap(so => Option(so.file))
-        .map(_.getAbsolutePath).getOrElse(global.settings.d.value)
+        .map(_.getAbsolutePath).getOrElse(global.settings.d.value),
     )
 
 }

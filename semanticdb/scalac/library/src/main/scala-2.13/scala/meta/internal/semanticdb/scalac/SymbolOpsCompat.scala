@@ -12,7 +12,7 @@ trait SymbolOpsCompat {
       g.termNames.toInt,
       g.termNames.toLong,
       g.termNames.toFloat,
-      g.termNames.toDouble
+      g.termNames.toDouble,
     )
 
     // Returns true if the `this.sym` resolves to a primitive conversion method like toInt/toLong

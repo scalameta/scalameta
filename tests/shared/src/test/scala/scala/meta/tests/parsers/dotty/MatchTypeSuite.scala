@@ -12,15 +12,15 @@ class MatchTypeSuite extends BaseDottySuite {
          |  case String => Char
          |  case Array[t] => t
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )(Defn.Type(
       Nil,
       pname("Elem"),
       List(pparam("X")),
       Type.Match(
         pname("X"),
-        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t")))
-      )
+        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t"))),
+      ),
     ))
   }
 
@@ -37,16 +37,16 @@ class MatchTypeSuite extends BaseDottySuite {
            |  case String => Char
            |  case Array[t] => t
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Type(
       Nil,
       pname("Elem"),
       List(pparam("X")),
       Type.Match(
         pname("X"),
-        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t")))
-      )
+        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t"))),
+      ),
     ))
   }
 
@@ -55,13 +55,13 @@ class MatchTypeSuite extends BaseDottySuite {
       """|type Head[X <: Tuple] = X match {
          |  case (x1, ?) => x1
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )(Defn.Type(
       Nil,
       pname("Head"),
       List(pparam("X", hiBound("Tuple"))),
-      Type.Match(pname("X"), List(TypeCase(Type.Tuple(List(pname("x1"), pwildcard)), pname("x1"))))
-    ))
+      Type.Match(pname("X"), List(TypeCase(Type.Tuple(List(pname("x1"), pwildcard)), pname("x1")))),
+    )),
   )
 
   test("recursive")(
@@ -70,7 +70,7 @@ class MatchTypeSuite extends BaseDottySuite {
          |  case Unit => 0
          |  case x *: xs => S[Len[xs]]
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )(Defn.Type(
       Nil,
       pname("Len"),
@@ -79,11 +79,11 @@ class MatchTypeSuite extends BaseDottySuite {
         pname("X"),
         List(
           TypeCase(pname("Unit"), int(0)),
-          TypeCase(pinfix("x", "*:", pname("xs")), papply("S", papply("Len", "xs")))
-        )
+          TypeCase(pinfix("x", "*:", pname("xs")), papply("S", papply("Len", "xs"))),
+        ),
       ),
-      hiBound("Int")
-    ))
+      hiBound("Int"),
+    )),
   )
 
   test("concat") {
@@ -92,7 +92,7 @@ class MatchTypeSuite extends BaseDottySuite {
          |  case Unit => Y
          |  case x1 *: xs1 => x1 *: Concat[xs1, Y]
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )(Defn.Type(
       Nil,
       pname("Concat"),
@@ -101,10 +101,10 @@ class MatchTypeSuite extends BaseDottySuite {
         pname("X"),
         List(
           TypeCase(pname("Unit"), pname("Y")),
-          TypeCase(pinfix("x1", "*:", pname("xs1")), pinfix("x1", "*:", papply("Concat", "xs1", "Y")))
-        )
+          TypeCase(pinfix("x1", "*:", pname("xs1")), pinfix("x1", "*:", papply("Concat", "xs1", "Y"))),
+        ),
       ),
-      hiBound("Tuple")
+      hiBound("Tuple"),
     ))
   }
 
@@ -120,16 +120,16 @@ class MatchTypeSuite extends BaseDottySuite {
            |  case String => Char
            |  case Array[t] => t
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Type(
       Nil,
       pname("Elem"),
       List(pparam("X")),
       Type.Match(
         pname("X"),
-        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t")))
-      )
+        List(TypeCase(pname("String"), pname("Char")), TypeCase(papply("Array", "t"), pname("t"))),
+      ),
     ))
   }
   test("double-newline") {
@@ -148,8 +148,8 @@ class MatchTypeSuite extends BaseDottySuite {
            |    case ? => Left
            |  }
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Object(
       Nil,
       tname("match_types"),
@@ -159,10 +159,10 @@ class MatchTypeSuite extends BaseDottySuite {
         List(pparam("Left"), pparam("Right")),
         Type.Match(
           pname("Left"),
-          List(TypeCase(pname("Unit"), pname("Right")), TypeCase(pname("?"), pname("Left")))
+          List(TypeCase(pname("Unit"), pname("Right")), TypeCase(pname("?"), pname("Left"))),
         ),
-        noBounds
-      ))
+        noBounds,
+      )),
     ))
   }
 
@@ -185,8 +185,8 @@ class MatchTypeSuite extends BaseDottySuite {
            |    case ? => L
            |  }
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Object(
       Nil,
       tname("match_types"),
@@ -200,11 +200,11 @@ class MatchTypeSuite extends BaseDottySuite {
             TypeCase(Type.AnonymousLambda(papply("Foo", Type.AnonymousParam(None))), pname("L")),
             TypeCase(papply("Bar", pwildcard), pname("L")),
             TypeCase(Type.PatWildcard(), pname("R")),
-            TypeCase(pname("?"), pname("L"))
-          )
+            TypeCase(pname("?"), pname("L")),
+          ),
         ),
-        noBounds
-      ))
+        noBounds,
+      )),
     ))
   }
 
@@ -225,9 +225,9 @@ class MatchTypeSuite extends BaseDottySuite {
       papply(
         "A",
         Type
-          .Lambda(List(pparam("T")), Type.Match(pname("T"), List(TypeCase(Type.PatWildcard(), "Int"))))
+          .Lambda(List(pparam("T")), Type.Match(pname("T"), List(TypeCase(Type.PatWildcard(), "Int")))),
       ),
-      noBounds
+      noBounds,
     )
 
     runTestAssert[Stat](code, layout)(tree)

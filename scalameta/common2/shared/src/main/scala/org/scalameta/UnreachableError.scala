@@ -18,7 +18,7 @@ object UnreachableError {
         sb.append(EOL)
         ExceptionHelpers.formatDebuggees(sb, debuggees)
         sb.result()
-      }
+      },
     )
   }
 }

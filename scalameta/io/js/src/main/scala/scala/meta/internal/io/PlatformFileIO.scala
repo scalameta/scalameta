@@ -58,7 +58,7 @@ object PlatformFileIO {
         curr += 1
       }
       ListFiles(path, builder.result())
-    }
+    },
   )
 
   def isFile(path: AbsolutePath): Boolean = JSIO.isFile(path.toString)
@@ -77,6 +77,6 @@ object PlatformFileIO {
     throw new UnsupportedOperationException("Can't expand jar file in Scala.js")
 
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
-      f: AbsolutePath => T
+      f: AbsolutePath => T,
   ): T = throw new UnsupportedOperationException("Can't expand jar file in Scala.js")
 }
