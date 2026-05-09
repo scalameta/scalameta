@@ -23,10 +23,10 @@ class DerivesSuite extends BaseDottySuite {
         slf,
         List(
           Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
-          Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
+          Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil),
         ),
-        List(pname("Eq"), pname("Ordering"), pname("Show"))
-      )
+        List(pname("Eq"), pname("Ordering"), pname("Show")),
+      ),
     ))
 
   }
@@ -37,7 +37,7 @@ class DerivesSuite extends BaseDottySuite {
          |  case Branch
          |  case Leaf
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )(Defn.Enum(
       Nil,
       pname("Tree"),
@@ -49,10 +49,10 @@ class DerivesSuite extends BaseDottySuite {
         slf,
         List(
           Defn.EnumCase(Nil, tname("Branch"), Nil, ctor, Nil),
-          Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil)
+          Defn.EnumCase(Nil, tname("Leaf"), Nil, ctor, Nil),
         ),
-        List(pname("Eq"), pselect("scala", "derives", "Ordering"), pname("Show"))
-      )
+        List(pname("Eq"), pselect("scala", "derives", "Ordering"), pname("Show")),
+      ),
     ))
 
   }
@@ -69,8 +69,8 @@ class DerivesSuite extends BaseDottySuite {
            |  def hello() = ""
            |  def bye() = ""
            |}
-           |""".stripMargin
-      )
+           |""".stripMargin,
+      ),
     )(Defn.Class(
       List(Mod.Case()),
       pname("Node"),
@@ -82,10 +82,10 @@ class DerivesSuite extends BaseDottySuite {
         slf,
         List(
           Defn.Def(Nil, tname("hello"), Nil, List(List()), None, str("")),
-          Defn.Def(Nil, tname("bye"), Nil, List(List()), None, str(""))
+          Defn.Def(Nil, tname("bye"), Nil, List(List()), None, str("")),
         ),
-        List(pname("Eq"))
-      )
+        List(pname("Eq")),
+      ),
     ))
 
   }
@@ -97,7 +97,7 @@ class DerivesSuite extends BaseDottySuite {
          |      AVeryLongName2,
          |      AVeryLongName3
          |""".stripMargin,
-      assertLayout = Some("class A derives AVeryLongName1, AVeryLongName2, AVeryLongName3")
+      assertLayout = Some("class A derives AVeryLongName1, AVeryLongName2, AVeryLongName3"),
     )(Defn.Class(
       Nil,
       pname("A"),
@@ -108,8 +108,8 @@ class DerivesSuite extends BaseDottySuite {
         Nil,
         slf,
         Nil,
-        List(pname("AVeryLongName1"), pname("AVeryLongName2"), pname("AVeryLongName3"))
-      )
+        List(pname("AVeryLongName1"), pname("AVeryLongName2"), pname("AVeryLongName3")),
+      ),
     ))
   }
 
@@ -125,8 +125,8 @@ class DerivesSuite extends BaseDottySuite {
         Nil,
         slf,
         List(Defn.Def(Nil, tname("a"), Nil, Nil, None, tname("???"))),
-        List(papply("Alpha", "T"), papply("Epsilon", "T"))
-      )
+        List(papply("Alpha", "T"), papply("Epsilon", "T")),
+      ),
     )
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -135,7 +135,7 @@ class DerivesSuite extends BaseDottySuite {
          |  def a = ???
          |}
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -146,7 +146,7 @@ class DerivesSuite extends BaseDottySuite {
          |  def a = ???
          |}
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
   }
 
@@ -162,8 +162,8 @@ class DerivesSuite extends BaseDottySuite {
         Nil,
         slf,
         List(Defn.Def(Nil, tname("a"), Nil, Nil, None, tname("???"))),
-        List(papply("Alpha", "T"), papply("Epsilon", "T"))
-      )
+        List(papply("Alpha", "T"), papply("Epsilon", "T")),
+      ),
     )
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -171,7 +171,7 @@ class DerivesSuite extends BaseDottySuite {
          |      Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -180,7 +180,7 @@ class DerivesSuite extends BaseDottySuite {
          |      Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -189,7 +189,7 @@ class DerivesSuite extends BaseDottySuite {
          |   Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
   }
 
@@ -205,8 +205,8 @@ class DerivesSuite extends BaseDottySuite {
         List(init(papply("Alpha", "T"))),
         slf,
         List(Defn.Def(Nil, tname("a"), Nil, None, tname("???"))),
-        List(papply("Epsilon", "T"))
-      )
+        List(papply("Epsilon", "T")),
+      ),
     )
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -214,7 +214,7 @@ class DerivesSuite extends BaseDottySuite {
          |    derives Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -224,7 +224,7 @@ class DerivesSuite extends BaseDottySuite {
          |      Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -234,7 +234,7 @@ class DerivesSuite extends BaseDottySuite {
          |   Epsilon[T]:
          |  def a = ???
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
   }
 
@@ -250,8 +250,8 @@ class DerivesSuite extends BaseDottySuite {
         List(init(papply("Alpha", "T"))),
         slf,
         List(tapply(tname("require"), bool(true))),
-        List(papply("Epsilon", "T"))
-      )
+        List(papply("Epsilon", "T")),
+      ),
     )
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -259,7 +259,7 @@ class DerivesSuite extends BaseDottySuite {
          |    derives Epsilon[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -269,7 +269,7 @@ class DerivesSuite extends BaseDottySuite {
          |      Epsilon[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -279,7 +279,7 @@ class DerivesSuite extends BaseDottySuite {
          |   Epsilon[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
   }
 
@@ -295,8 +295,8 @@ class DerivesSuite extends BaseDottySuite {
         List(init(papply("Alpha", "T")), init(papply("Epsilon", "T"))),
         slf,
         List(tapply(tname("require"), bool(true))),
-        Nil
-      )
+        Nil,
+      ),
     )
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -304,7 +304,7 @@ class DerivesSuite extends BaseDottySuite {
          |    with Epsilon[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -314,7 +314,7 @@ class DerivesSuite extends BaseDottySuite {
          |      Epsilon[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -324,7 +324,7 @@ class DerivesSuite extends BaseDottySuite {
          |   Epsilon[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
   }
 
@@ -340,15 +340,15 @@ class DerivesSuite extends BaseDottySuite {
         List(init(papply("Alpha", "T"))),
         slf,
         List(tapply(tname("require"), bool(true))),
-        Nil
-      )
+        Nil,
+      ),
     )
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
          |    extends Alpha[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -356,7 +356,7 @@ class DerivesSuite extends BaseDottySuite {
          |      Alpha[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat](
       """|class A[T](a: Int, b: Int)
@@ -364,7 +364,7 @@ class DerivesSuite extends BaseDottySuite {
          |   Alpha[T]:
          |  require(true)
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
   }
 
@@ -386,17 +386,17 @@ class DerivesSuite extends BaseDottySuite {
         slf,
         List(
           Defn.Def(Nil, tname("derives"), Nil, List(Nil), None, tname("???")),
-          tapply(tname("derives"))
+          tapply(tname("derives")),
         ),
-        Nil
-      )
+        Nil,
+      ),
     )
     runTestAssert[Stat]( // no newline
       """|class A:
          |  def derives() = ???
          |  derives()
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
     runTestAssert[Stat]( // with newline
       """|class A:
@@ -404,7 +404,7 @@ class DerivesSuite extends BaseDottySuite {
          |    derives() = ???
          |  derives()
          |""".stripMargin,
-      Some(layout)
+      Some(layout),
     )(tree)
   }
 

@@ -30,7 +30,7 @@ trait SyntheticPrinter extends BasePrinter with RangePrinter with SymbolInformat
           out.print(info.displayName)
           out.print(" => ")
           out.println(info.symbol)
-        }
+        },
       )
     }
   }

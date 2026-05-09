@@ -15,14 +15,14 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ParamClause [X@@] =>> (X, X)
        |Type.Bounds [X@@] =>> (X, X)
        |Type.Tuple (X, X)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "[_] =>> Unit",
     """|Type.ParamClause [_]
        |Type.ParamClause [_@@] =>> Unit
        |Type.Bounds [_@@] =>> Unit
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("inline def f = 1")
   checkPositions[Stat](
@@ -31,7 +31,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Ctor.Primary open trait a@@
        |Template open trait a@@
        |Template.Body open trait a@@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -53,7 +53,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Defn.Def def isZero = i == 0
        |Term.ApplyInfix i == 0
        |Type.ArgClause extension [A, B](i: A)(using a: F[A], G[B]) def isZero = i == @@0
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -74,7 +74,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Defn.Def def isOne = i == 1
        |Term.ApplyInfix i == 1
        |Type.ArgClause   def isOne = i == @@1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // This tests exists to document the symmetry between positions for
@@ -86,7 +86,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.ParamClause (implicit a: A, b: B)
        |Term.Param a: A
        |Term.Param b: B
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -99,7 +99,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Template extends A with B { case Monday, Tuesday }
        |Template.Body { case Monday, Tuesday }
        |Defn.RepeatedEnumCase case Monday, Tuesday
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "class Day[T](e: T) extends A with B { val Monday = 42 }",
@@ -111,7 +111,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Template extends A with B { val Monday = 42 }
        |Template.Body { val Monday = 42 }
        |Defn.Val val Monday = 42
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "inline given intOrd: Ord[Int] with Eq[Int] with { def f(): Int = 1 }",
@@ -127,7 +127,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Member.ParamClauseGroup ()
        |Type.ParamClause inline given intOrd: Ord[Int] with Eq[Int] with { def f@@(): Int = 1 }
        |Term.ParamClause ()
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|given intOrd: Ord[Int] with Eq[Int] with
@@ -152,7 +152,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |<tparamClause>Type.ParamClause   def f@@(): Int = 1</tparamClause>
        |<paramClauses0>Term.ParamClause ()</paramClauses0>
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
   checkPositions[Stat](
     """|object A{
@@ -167,7 +167,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Decl.Given inline given intOrd: Ord[Int]
        |Type.Apply Ord[Int]
        |Type.ArgClause [Int]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|object A{
@@ -182,7 +182,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Defn.GivenAlias given intOrd: Ord[Int] = intOrd
        |Type.Apply Ord[Int]
        |Type.ArgClause [Int]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|object A {
@@ -196,18 +196,18 @@ class Scala3PositionSuite extends BasePositionSuite {
        |}
        |Export export a.b
        |Importer a.b
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "export A.{ b, c, d, _ }",
     """|Importer A.{ b, c, d, _ }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "export a.{given Int}",
     """|Importer a.{given Int}
        |Importee.Given given Int
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "import Instances.{ im, given Ordering[?] }",
@@ -217,13 +217,13 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [?]
        |Type.Wildcard ?
        |Type.Bounds import Instances.{ im, given Ordering[?@@] }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "import File.given",
     """|Importer File.given
        |Importee.GivenAll given
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type]("A & B")
   checkPositions[Type]("A | B")
@@ -246,7 +246,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.Apply Array[t]
        |Type.ArgClause [t]
        |Type.Bounds type T @@= A match {
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|for case a: TP <- iter if cnd do
@@ -255,14 +255,14 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Enumerator.CaseGenerator case a: TP <- iter
        |Pat.Typed a: TP
        |Enumerator.Guard if cnd
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "infix def a(param: Int) = param",
     """|Member.ParamClauseGroup (param: Int)
        |Type.ParamClause infix def a@@(param: Int) = param
        |Term.ParamClause (param: Int)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "infix type or[X, Y]",
@@ -272,13 +272,13 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ParamClause infix type or[X, Y@@]
        |Type.Bounds infix type or[X, Y@@]
        |Type.Bounds infix type or[X, Y]@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "def fn: Unit = inline if cond then truep",
     """|Term.If inline if cond then truep
        |Lit.Unit def fn: Unit = inline if cond then truep@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|x match {
@@ -291,7 +291,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Pat.Macro '{ a }
        |Term.QuotedMacroExpr '{ a }
        |Term.Block { a }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|x match {
@@ -304,7 +304,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Pat.Extract List(xs*)
        |Pat.ArgClause (xs*)
        |Pat.Repeated xs*
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "val extractor: (e: Entry, f: Other) => e.Key = extractKey",
@@ -313,7 +313,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.TypedParam e: Entry
        |Type.TypedParam f: Other
        |Type.Select e.Key
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "type F0 = [T] => List[T] ?=> Option[T]",
@@ -329,7 +329,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.Apply Option[T]
        |Type.ArgClause [T]
        |Type.Bounds type F0 @@= [T] => List[T] ?=> Option[T]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|inline def g: Any = inline x match {
@@ -349,7 +349,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Tuple (x, x)
        |Case case x: Double => x
        |Pat.Typed x: Double
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "class Alpha[T] derives Gamma[T], Beta[T]",
@@ -363,7 +363,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [T]
        |Type.Apply Beta[T]
        |Type.ArgClause [T]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|object O {
@@ -413,7 +413,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Importer a.b.C as _
        |Term.Select a.b
        |Importee.Unimport C as _
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -438,7 +438,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Defn.Def def b: String =
        |    "b"
        |Lit.String "b"
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -473,7 +473,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.CasesBlock case a =>
        |Case case a =>
        |Term.Block        case a =>@@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -531,7 +531,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |         st2
        |Term.Block st1
        |         st2
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -555,7 +555,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Block   case bb =>@@
        |Term.Block cc
        |  dd
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -570,7 +570,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |  
        |  private given x: X = ???
        |Defn.GivenAlias private given x: X = ???
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -600,7 +600,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Block {
        |    42
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -623,7 +623,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.ParamClause (z: String)
        |Term.Block fx
        |      gx
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -650,7 +650,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Apply gx(s)
        |Term.ArgClause (s)
        |Lit.String "yo"
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -681,7 +681,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Apply gx(s)
        |Term.ArgClause (s)
        |Lit.String "yo"
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -706,7 +706,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Pat.Typed _: Enum
        |Case case _: Singleton => xs
        |Pat.Typed _: Singleton
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -725,7 +725,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |}
        |Term.ApplyInfix x * x
        |Type.ArgClause   x * @@x
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -733,7 +733,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Term.ParamClause (using _: C)
        |Term.Param using _: C
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -756,7 +756,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Block gx
        |    fx
        |Lit.Unit     fx@@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -802,7 +802,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |      // c1
        |Term.Block gx
        |      // c2
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -851,7 +851,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |      gx
        |Term.Block fx
        |      // c1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // do not add LF to end of input
@@ -898,7 +898,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |      // c1
        |Term.Block gx
        |      // c2
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // do not add LF to end of input
@@ -948,7 +948,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |      gx
        |Term.Block fx
        |      // c1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -999,7 +999,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |      gx
        |Term.Block fx
        |      // c1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1047,7 +1047,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |      gx
        |Term.Block fx
        |      // c1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // do not add LF to end of input
@@ -1071,7 +1071,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Template extends ClassificationValue
        |        with ConstantText
        |Template.Body         with ConstantText@@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1085,7 +1085,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Case case (false, false) => (baz, qux)
        |Pat.Tuple (false, false)
        |Term.Tuple (baz, qux)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1100,7 +1100,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Case case (false, false) => (baz, qux)
        |Pat.Tuple (false, false)
        |Term.Tuple (baz, qux)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1121,7 +1121,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Case case (false, true) => (baz, qux)
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1141,7 +1141,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Case case (false, true) => (baz, qux)
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1157,7 +1157,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Case case (false, true) => (baz, qux)
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1173,7 +1173,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Case case (false, true) => (baz, qux)
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1190,7 +1190,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Case case (false, true) => (baz, qux)
        |Pat.Tuple (false, true)
        |Term.Tuple (baz, qux)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1207,7 +1207,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Defn.Type type T = String
        |Type.ParamClause val x: (C { type U = T } { type T @@= String }) # U
        |Type.Bounds val x: (C { type U = T } { type T @@= String }) # U
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1222,7 +1222,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ParamClause   type T@@>: Null
        |Type.Bounds >: Null
        |Type.Bounds type A @@= AnyRef with
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -1238,7 +1238,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ParamClause   type T@@>: Null
        |Type.Bounds >: Null
        |Type.Bounds type A @@= AnyRef:
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Type](
@@ -1247,7 +1247,7 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|Type.FuncParamClause (x: X, y: Y)
        |Type.TypedParam x: X
        |Type.TypedParam y: Y
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Type](
@@ -1257,7 +1257,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.Repeated X*
        |Type.ByName => Y*
        |Type.Repeated Y*
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3219
@@ -1265,7 +1265,7 @@ class Scala3PositionSuite extends BasePositionSuite {
     "(10) + 1 toInt",
     """|Term.ApplyInfix (10) + 1
        |Type.ArgClause (10) + @@1 toInt
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|if (10) + 1 == 11 then
@@ -1276,7 +1276,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause if (10) + @@1 == 11 then
        |Type.ArgClause if (10) + 1 == @@11 then
        |Lit.Unit @@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3319
@@ -1290,7 +1290,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause   bar foreach@@:
        |Term.Block :
        |    baz
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """|val foo =
@@ -1308,7 +1308,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Param baz
        |Term.Apply println(baz)
        |Term.ArgClause (baz)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 1
@@ -1318,7 +1318,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |}
        |""".stripMargin,
     """|Defn.Val val a = 1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 2
@@ -1330,7 +1330,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Defn.Val val b =
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 2.1
@@ -1347,7 +1347,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Block {
        |    1 // comment
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 3
@@ -1359,7 +1359,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Defn.Val val b = // comment1
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 3.1
@@ -1376,7 +1376,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Block {
        |    1 // comment2
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 4
@@ -1390,7 +1390,7 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|Defn.Val val b =
        |    // comment1
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 4.1
@@ -1410,7 +1410,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    // comment1
        |    1 // comment2
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 5
@@ -1422,7 +1422,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Defn.Val val b = // comment
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 5.1
@@ -1439,7 +1439,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Term.Block {
        |    1
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 6
@@ -1453,7 +1453,7 @@ class Scala3PositionSuite extends BasePositionSuite {
     """|Defn.Val val b =
        |    // comment
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 6.1
@@ -1473,7 +1473,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    // comment
        |    1
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 7
@@ -1489,7 +1489,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    // comment
        |Term.Block 1
        |    // comment
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 7.1
@@ -1509,7 +1509,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    1
        |    // comment
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 8
@@ -1525,7 +1525,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    // comment2
        |Term.Block 1
        |    // comment2
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 8.1
@@ -1545,7 +1545,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    1
        |    // comment2
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 9
@@ -1563,7 +1563,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    // comment2
        |Term.Block 1
        |    // comment2
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 9.1
@@ -1586,7 +1586,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |    1
        |    // comment2
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Term](
@@ -1633,7 +1633,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [61..61)
        |EOF [62..62)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Term](
@@ -1650,7 +1650,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |<argClause>Term.ArgClause ()</argClause>
        |<elsep>Lit.Unit @@</elsep>
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Stat](
@@ -1701,7 +1701,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [58..58)
        |EOF [59..59)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Term](
@@ -1729,7 +1729,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |RightBrace [46..47)
        |EOF [48..48)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Term](
@@ -1761,7 +1761,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |RightBrace [50..51)
        |EOF [52..52)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Term](
@@ -1795,7 +1795,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |RightBrace [52..53)
        |EOF [54..54)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   // comment at end of match but not before case outdent
@@ -1872,7 +1872,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [121..121)
        |EOF [122..122)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   // comment at end of match and also at end of case
@@ -1952,7 +1952,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [123..123)
        |EOF [124..124)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Source](
@@ -1989,7 +1989,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |<templ>Template   // c3@@</templ>
        |<body>Template.Body   // c3@@</body>
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Source](
@@ -2031,7 +2031,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |<templ>Template   class Baz@@</templ>
        |<body>Template.Body   class Baz@@</body>
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Source](
@@ -2091,7 +2091,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [82..82)
        |EOF [83..83)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Source](
@@ -2165,7 +2165,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |RightBrace [89..90)
        |EOF [91..91)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Source](
@@ -2284,7 +2284,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [141..141)
        |EOF [142..142)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Source](
@@ -2455,7 +2455,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [177..177)
        |EOF [178..178)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Source](
@@ -2645,7 +2645,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |RightBrace [182..183)
        |EOF [184..184)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Source](
@@ -2832,7 +2832,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [180..180)
        |EOF [181..181)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Stat](
@@ -2873,7 +2873,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [68..68)
        |EOF [69..69)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Stat](
@@ -2945,7 +2945,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Indentation.Outdent [137..137)
        |EOF [138..138)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Stat](
@@ -3012,7 +3012,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Ident(xyz) [134..137)
        |EOF [138..138)
        |""".stripMargin,
-    showFieldName = true
+    showFieldName = true,
   )
 
   checkPositions[Stat](
@@ -3064,7 +3064,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |EOF [64..64)
        |""".stripMargin,
     showPosition = true,
-    showFieldName = true
+    showFieldName = true,
   )
 
   // given 3.6+
@@ -3080,7 +3080,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Template.Body :
        |  def foo = ???
        |Defn.Def def foo = ???
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3098,7 +3098,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |  def foo = ???
        |}
        |Defn.Def def foo = ???
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3106,7 +3106,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Type.Apply Ord[Int]
        |Type.ArgClause [Int]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3121,7 +3121,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3136,7 +3136,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3153,7 +3153,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3170,7 +3170,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3190,7 +3190,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3216,7 +3216,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3234,7 +3234,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3251,7 +3251,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[A]]
        |Type.Apply List[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -3277,7 +3277,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Type.ArgClause [List[B]]
        |Type.Apply List[B]
        |Type.ArgClause [B]
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   locally {
@@ -3297,7 +3297,7 @@ class Scala3PositionSuite extends BasePositionSuite {
          |Term.Apply List(1, 2, 3) [38:List(1, 2, 3):51)
          |Term.ArgClause (1, 2, 3) [42:(1, 2, 3):51)
          |""".stripMargin,
-      showPosition = true
+      showPosition = true,
     )
   }
 
@@ -3322,7 +3322,7 @@ class Scala3PositionSuite extends BasePositionSuite {
          |RightArrow [33..35)
          |Indentation.Outdent [35..35)
          |EOF [36..36)
-         |""".stripMargin
+         |""".stripMargin,
     )
   }
 
@@ -3366,7 +3366,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |EOF [43..43)
        |""".stripMargin,
     showPosition = true,
-    showFieldName = true
+    showFieldName = true,
   )
 
 }

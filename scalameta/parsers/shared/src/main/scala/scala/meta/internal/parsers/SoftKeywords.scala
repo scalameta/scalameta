@@ -26,7 +26,7 @@ class SoftKeywords(dialect: Dialect) {
   object KwPureFunctionLikeArrow
       extends IsWithPred(
         dialect.allowPureFunctions,
-        x => x == Token.pureFunctionArrow || x == Token.pureContextFunctionArrow
+        x => x == Token.pureFunctionArrow || x == Token.pureContextFunctionArrow,
       )
 
   object StarSplice extends IsWithName(dialect.allowPostfixStarVarargSplices, "*")
@@ -38,7 +38,7 @@ class SoftKeywords(dialect: Dialect) {
           case "+*" => Some(Some(Mod.Covariant()))
           case "-*" => Some(Some(Mod.Contravariant()))
           case _ => None
-        }
+        },
       )
   object QuestionMarkAsTypeWildcard extends IsWithName(dialect.allowQuestionMarkAsTypeWildcard, "?")
 

@@ -9,62 +9,62 @@ class PackageSuite extends ParseSuite {
   implicit val dialect: Dialect = dialects.Scala211
 
   test("class C")(
-    assertTree(source("class C"))(Source(Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil))
+    assertTree(source("class C"))(Source(Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil)),
   )
 
   test("package foo; class C")(assertTree(source("package foo; class C"))(Source(
-    Pkg(tname("foo"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil
+    Pkg(tname("foo"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil,
   )))
 
   test("package foo { class C }")(assertTree(source("package foo { class C }"))(Source(
-    Pkg(tname("foo"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil
+    Pkg(tname("foo"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil,
   )))
 
   test("package foo.bar; class C")(assertTree(source("package foo.bar; class C"))(Source(
-    Pkg(tselect("foo", "bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil
+    Pkg(tselect("foo", "bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil,
   )))
 
   test("package foo.bar { class C }")(assertTree(source("package foo.bar { class C }"))(Source(
-    Pkg(tselect("foo", "bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil
+    Pkg(tselect("foo", "bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil,
   )))
 
   test("package foo; package bar; class C")(
     assertTree(source("package foo; package bar; class C"))(Source(
       Pkg(
         tname("foo"),
-        Pkg(tname("bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil
-      ) :: Nil
-    ))
+        Pkg(tname("bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil,
+      ) :: Nil,
+    )),
   )
 
   test("package foo { package bar { class C } }")(
     assertTree(source("package foo { package bar { class C } }"))(Source(
       Pkg(
         tname("foo"),
-        Pkg(tname("bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil
-      ) :: Nil
-    ))
+        Pkg(tname("bar"), Class(Nil, pname("C"), Nil, ctor, tplNoBody()) :: Nil) :: Nil,
+      ) :: Nil,
+    )),
   )
 
   test("package foo {}; package bar {}")(assertTree(source("package foo {}; package bar {}"))(Source(
-    Pkg(tname("foo"), Nil) :: Pkg(tname("bar"), Nil) :: Nil
+    Pkg(tname("foo"), Nil) :: Pkg(tname("bar"), Nil) :: Nil,
   )))
 
   test("package object foo")(assertTree(source("package object foo"))(Source(
-    Pkg.Object(Nil, tname("foo"), tplNoBody()) :: Nil
+    Pkg.Object(Nil, tname("foo"), tplNoBody()) :: Nil,
   )))
 
   test("import foo.bar; package object baz")(
     assertTree(source("import foo.bar; package object baz"))(Source(
       Import(Importer(tname("foo"), Importee.Name(Name.Indeterminate("bar")) :: Nil) :: Nil) ::
-        Pkg.Object(Nil, tname("baz"), tplNoBody()) :: Nil
-    ))
+        Pkg.Object(Nil, tname("baz"), tplNoBody()) :: Nil,
+    )),
   )
 
   test("package foo; package bar; package baz")(
     assertTree(source("package foo; package bar; package baz"))(Source(
-      List(Pkg(tname("foo"), List(Pkg(tname("bar"), List(Pkg(tname("baz"), List()))))))
-    ))
+      List(Pkg(tname("foo"), List(Pkg(tname("bar"), List(Pkg(tname("baz"), List())))))),
+    )),
   )
 
   test("package { in newline") {
@@ -80,16 +80,16 @@ class PackageSuite extends ParseSuite {
          |    { }
          |  }
          |}
-         |""".stripMargin
+         |""".stripMargin,
     ))(Source(List(Pkg(
       tnameComments("foo")()("// foo package left brace in newline"),
       Pkg.Body.createWithComments(
         List(Pkg(
           tnameComments("bar")()("/* also in newline */"),
-          Pkg.Body.createWithComments(List(Pkg(tname("baz"), List())), begComment = Seq("// open"))
+          Pkg.Body.createWithComments(List(Pkg(tname("baz"), List())), begComment = Seq("// open")),
         )),
-        begComment = Seq("/* still okay */")
-      )
+        begComment = Seq("/* still okay */"),
+      ),
     ))))
   }
 
@@ -112,8 +112,8 @@ class PackageSuite extends ParseSuite {
       tname("foo"),
       List(
         Import(List(Importer(tname("bar"), List(Importee.Name(Name("baz")))))),
-        Defn.Class(Nil, pname("Qux"), Nil, ctorp(Nil), tplNoBody())
-      )
+        Defn.Class(Nil, pname("Qux"), Nil, ctorp(Nil), tplNoBody()),
+      ),
     )))
     runTestAssert[Source](code, layout)(tree)
   }

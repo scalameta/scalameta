@@ -25,7 +25,7 @@ object SyntaxAnalysis {
    *   The aggregate sum of all analysis results.
    */
   def run[T](
-      corpus: GenTraversableOnce[CorpusFile]
+      corpus: GenTraversableOnce[CorpusFile],
   )(f: CorpusFile => List[T]): mutable.Buffer[(CorpusFile, T)] = Phase.run("syntax analysis") {
     val results = new CopyOnWriteArrayList[(CorpusFile, T)]
     val counter = new AtomicInteger()
@@ -48,7 +48,7 @@ object SyntaxAnalysis {
           stack.foreach(println)
           val i = errors.incrementAndGet()
           if (i > 10) throw new IllegalStateException(
-            "Too many unexpected errors (printed to console), fix your analysis."
+            "Too many unexpected errors (printed to console), fix your analysis.",
           )
       }
     }
@@ -57,7 +57,7 @@ object SyntaxAnalysis {
   }
 
   def onParsed[A](corpus: GenIterable[CorpusFile])(
-      f: Source => List[A]
+      f: Source => List[A],
   ): mutable.Buffer[(CorpusFile, A)] = SyntaxAnalysis.run[A](corpus)(_.jFile.parse[Source] match {
     case parsers.Parsed.Success(ast: Source) => f(ast)
     case _ => Nil

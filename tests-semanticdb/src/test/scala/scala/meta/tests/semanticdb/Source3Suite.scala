@@ -19,7 +19,7 @@ class Source3Suite extends FunSuite {
   def check(
       original: String,
       expected: String,
-      compat: List[(ScalaVersion.Version, String)] = List.empty
+      compat: List[(ScalaVersion.Version, String)] = List.empty,
   )(implicit loc: munit.Location): Unit = test(logger.revealWhitespace(original)) {
     val options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
     val document = toTextDocument(compiler, original, options)
@@ -84,8 +84,8 @@ class Source3Suite extends FunSuite {
     expected,
     compat = List(
       ScalaVersion.Scala212 ->
-        expected.replace("scala/package.List.", "scala/collection/immutable/List.")
-    )
+        expected.replace("scala/package.List.", "scala/collection/immutable/List."),
+    ),
   )
 
 }

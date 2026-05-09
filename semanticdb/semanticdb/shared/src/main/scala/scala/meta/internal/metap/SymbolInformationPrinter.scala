@@ -28,7 +28,7 @@ trait SymbolInformationPrinter extends BasePrinter {
           out.print(info.displayName)
           out.print(" => ")
           out.println(info.symbol)
-        }
+        },
       )
     }
   }

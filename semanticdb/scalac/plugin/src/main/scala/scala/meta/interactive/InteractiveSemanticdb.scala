@@ -39,7 +39,7 @@ object InteractiveSemanticdb extends VersionCompilerOps {
       compiler: Global,
       code: String,
       filename: String,
-      timeout: Long
+      timeout: Long,
   ): s.TextDocument = toTextDocument(compiler, code, filename, timeout, Nil)
 
   /**
@@ -65,7 +65,7 @@ object InteractiveSemanticdb extends VersionCompilerOps {
       code: String,
       filename: String,
       timeout: Long,
-      options: List[String]
+      options: List[String],
   ): s.TextDocument = {
     val unit = addCompilationUnit(compiler, code, filename)
     // reload seems to be necessary before askLoadedType.
@@ -103,7 +103,7 @@ object InteractiveSemanticdb extends VersionCompilerOps {
   def addCompilationUnit(
       global: Global,
       code: String,
-      filename: String
+      filename: String,
   ): global.RichCompilationUnit = {
     val unit = global.newCompilationUnit(code, filename)
     val richUnit = new global.RichCompilationUnit(unit.source)

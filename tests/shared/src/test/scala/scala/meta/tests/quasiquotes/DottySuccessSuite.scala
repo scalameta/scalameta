@@ -35,15 +35,15 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertTrees(paramss(0): _*)(cparam)
     assertTrees(paramss(1): _*)(
       tparam(List(Mod.Using()), "", "Context"),
-      tparam(List(Mod.Using()), "x", "Int")
+      tparam(List(Mod.Using()), "x", "Int"),
     )
     assertTrees(paramss(2): _*)(
       tparam(List(Mod.Using()), "y", "String"),
-      tparam(List(Mod.Using()), "", "File")
+      tparam(List(Mod.Using()), "", "File"),
     )
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
     )
   }
 
@@ -62,15 +62,15 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertTrees(paramss(0): _*)(cparam)
     assertTrees(paramss(1): _*)(
       tparam(List(Mod.Using()), "", "Context"),
-      tparam(List(Mod.Using()), "x", "Int")
+      tparam(List(Mod.Using()), "x", "Int"),
     )
     assertTrees(paramss(2): _*)(
       tparam(List(Mod.Using()), "y", "String"),
-      tparam(List(Mod.Using()), "", "File")
+      tparam(List(Mod.Using()), "", "File"),
     )
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
     )
   }
 
@@ -88,7 +88,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertTrees(params: _*)(cparam)
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
     )
   }
 
@@ -106,7 +106,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertTrees(params: _*)(cparam)
 
     assertTrees(stats: _*)(
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
     )
   }
 
@@ -126,7 +126,7 @@ class DottySuccessSuite extends TreeSuiteBase {
 
     assertTrees(stats: _*)(
       Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(1)),
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
     )
   }
 
@@ -146,7 +146,7 @@ class DottySuccessSuite extends TreeSuiteBase {
 
     assertTrees(stats: _*)(
       Defn.Def(Nil, Term.Name("crb"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(1)),
-      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2))
+      Defn.Def(Nil, Term.Name("crc"), Nil, Nil, Some(Type.Name("Int")), Lit.Int(2)),
     )
   }
 
@@ -156,7 +156,7 @@ class DottySuccessSuite extends TreeSuiteBase {
 
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "(y: Int)")(paramsExpected: _*)
     assertTree(q"..$mods def $name(...$paramss): $tpe")(
-      Decl.Def(Nil, Term.Name("f"), pcg(paramsExpected: _*) :: Nil, Type.Name("Unit"))
+      Decl.Def(Nil, Term.Name("f"), pcg(paramsExpected: _*) :: Nil, Type.Name("Unit")),
     )
   }
 
@@ -169,7 +169,7 @@ class DottySuccessSuite extends TreeSuiteBase {
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "(y: Int)")(paramsExpected: _*)
     assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe")(
       Decl
-        .Def(Nil, Term.Name("f"), pcg(tparamsExpected, paramsExpected: _*) :: Nil, Type.Name("Unit"))
+        .Def(Nil, Term.Name("f"), pcg(tparamsExpected, paramsExpected: _*) :: Nil, Type.Name("Unit")),
     )
   }
 
@@ -181,7 +181,7 @@ class DottySuccessSuite extends TreeSuiteBase {
 
     checkTreesWithSyntax(paramss: _*)("(x: Int)", "[A](y: Int)", "[B]")(pcGroups: _*)
     assertTree(q"..$mods def $name(....$paramss): $tpe")(
-      Decl.Def(Nil, Term.Name("f"), pcGroups, Type.Name("Unit"))
+      Decl.Def(Nil, Term.Name("f"), pcGroups, Type.Name("Unit")),
     )
   }
 
@@ -198,7 +198,7 @@ class DottySuccessSuite extends TreeSuiteBase {
          |Space [17..18)
          |Constant.String(any message) [18..31)
          |EOF [31..31)
-         |""".stripMargin
+         |""".stripMargin,
     )
     val pos = quoted.pos
     assertNoDiff(pos.toString, """[0,31) in str(`${fooTypes(0)}`; "any message")""")
@@ -208,7 +208,7 @@ class DottySuccessSuite extends TreeSuiteBase {
       """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
          |""".stripMargin,
       showPosition = true,
-      showFieldName = true
+      showFieldName = true,
     )
 
     val syntax =
@@ -237,7 +237,7 @@ class DottySuccessSuite extends TreeSuiteBase {
          |Space [17..18)
          |Constant.String(any message) [18..31)
          |EOF [31..31)
-         |""".stripMargin
+         |""".stripMargin,
     )
     val pos = quoted.pos
     assertNoDiff(pos.toString, """[0,31) in str(/* .. */`$terms`; "any message")""")
@@ -247,7 +247,7 @@ class DottySuccessSuite extends TreeSuiteBase {
       """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
          |""".stripMargin,
       showPosition = true,
-      showFieldName = true
+      showFieldName = true,
     )
 
     val syntax =

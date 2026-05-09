@@ -29,6 +29,6 @@ object FileIO {
   def jarRootPath(jarFile: AbsolutePath): AbsolutePath = PlatformFileIO.jarRootPath(jarFile)
 
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
-      f: AbsolutePath => T
+      f: AbsolutePath => T,
   ): T = PlatformFileIO.withJarFileSystem[T](path, create, close)(f)
 }

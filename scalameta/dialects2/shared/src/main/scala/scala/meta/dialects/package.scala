@@ -5,7 +5,7 @@ package object dialects {
     allowAtForExtractorVarargs = true,
     allowCaseClassWithoutParameterList = true,
     allowInlineIdents = true,
-    allowXmlLiterals = true // Not even deprecated yet, so we need to support xml literals
+    allowXmlLiterals = true, // Not even deprecated yet, so we need to support xml literals
   )
 
   implicit val Scala211: Dialect = Scala210.withAllowCaseClassWithoutParameterList(false)

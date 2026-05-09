@@ -46,7 +46,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
       adt: Adt,
       defName: String,
       localName: TermName,
-      body: String
+      body: String,
   ): Option[String] = {
     def specialcaseTermApply: String =
       s"""|
@@ -114,7 +114,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
               val moduleNames = adt.sym.companion.info.decls
                 .flatMap(x => if (x.isModule) Some(x.name.toString) else None)
               val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse(
-                c.abort(c.enclosingPosition, s"no latest version ${adt.sym.fullName}: $moduleNames")
+                c.abort(c.enclosingPosition, s"no latest version ${adt.sym.fullName}: $moduleNames"),
               )
               latestAfterVersion :: Nil
             } else Nil

@@ -121,7 +121,7 @@ object ScaladocParser {
         // Heading description and delimiter
         (title.! ~ delim ~ &(nl)).map(x => Heading(level, x.trim))
       }
-    }
+    },
   )
 
   private def linkParser[$: P]: P[Link] = P {
@@ -138,7 +138,7 @@ object ScaladocParser {
       def mdCodeBlockPrefix = if (offset <= getMdOffsetMax(mdOffset)) mdCodeBlockFence else Fail
       dedented | CharIn("@=") | codePrefix ~ nl | mdCodeBlockPrefix | tableSep | tableDelim |
         listPrefix ~ &(" ")
-    }
+    },
   )
 
   private def textParser[$: P](indent: Int, mdOffset: Int = 0): P[Text] = P {
@@ -211,7 +211,7 @@ object ScaladocParser {
   private def listItemParser[$: P](indent: Int, mdOffset: Int, prefix: String) = P(
     (textParser(indent, mdOffset) ~ embeddedTermsParser(indent, mdOffset)).map { case (x, terms) =>
       ListItem(prefix, x, terms)
-    }
+    },
   )
 
   private def tableParser[$: P]: P[Table] = P {

@@ -20,64 +20,64 @@ class MacroSuite extends BaseDottySuite {
    *   - `SplicedMacroExpr`: `${ ... }` OR `$ident`
    */
   test("parse-single-quote-character")(
-    runTestAssert[Stat]("val a = 'c'")(Defn.Val(Nil, List(patvar("a")), None, lit('c')))
+    runTestAssert[Stat]("val a = 'c'")(Defn.Val(Nil, List(patvar("a")), None, lit('c'))),
   )
 
   test("parse-single-quote-space")(runTestAssert[Stat]("' { 'ax }", assertLayout = Some("'{ 'ax }"))(
-    Term.QuotedMacroExpr(blk(Term.QuotedMacroExpr(tname("ax"))))
+    Term.QuotedMacroExpr(blk(Term.QuotedMacroExpr(tname("ax")))),
   ))
 
   test("macro-quote-expr: '{ 'ax }")(
-    runTestAssert[Stat]("'{ 'ax }")(Term.QuotedMacroExpr(blk(Term.QuotedMacroExpr(tname("ax")))))
+    runTestAssert[Stat]("'{ 'ax }")(Term.QuotedMacroExpr(blk(Term.QuotedMacroExpr(tname("ax"))))),
   )
 
   test("macro-quote-expr: '{ 'a + 'b }")(runTestAssert[Stat]("'{ 'a + 'b }")(Term.QuotedMacroExpr(
-    blk(tinfix(Term.QuotedMacroExpr(tname("a")), "+", Term.QuotedMacroExpr(tname("b"))))
+    blk(tinfix(Term.QuotedMacroExpr(tname("a")), "+", Term.QuotedMacroExpr(tname("b")))),
   )))
 
   test("macro-quote-expr: '{ 'a + 'b + 'c }")(
     runTestAssert[Stat]("'{ 'a + 'b + 'c }")(Term.QuotedMacroExpr(blk(tinfix(
       tinfix(Term.QuotedMacroExpr(tname("a")), "+", Term.QuotedMacroExpr(tname("b"))),
       "+",
-      Term.QuotedMacroExpr(tname("c"))
-    ))))
+      Term.QuotedMacroExpr(tname("c")),
+    )))),
   )
 
   test("macro-quote-expr: '{ Int.MinValue }")(
-    runTestAssert[Stat]("'{ Int.MinValue }")(Term.QuotedMacroExpr(blk(tselect("Int", "MinValue"))))
+    runTestAssert[Stat]("'{ Int.MinValue }")(Term.QuotedMacroExpr(blk(tselect("Int", "MinValue")))),
   )
 
   test("macro-quote-expr: '{ (x: T) => 'x }")(runTestAssert[Stat]("'{ (x: T) => 'x }")(
-    Term.QuotedMacroExpr(blk(tfunc(tparam("x", "T"))(Term.QuotedMacroExpr(tname("x")))))
+    Term.QuotedMacroExpr(blk(tfunc(tparam("x", "T"))(Term.QuotedMacroExpr(tname("x"))))),
   ))
 
   test("macro-quote-expr: f('{ 2 })")(
-    runTestAssert[Stat]("f('{ 2 })")(tapply(tname("f"), Term.QuotedMacroExpr(blk(int(2)))))
+    runTestAssert[Stat]("f('{ 2 })")(tapply(tname("f"), Term.QuotedMacroExpr(blk(int(2))))),
   )
 
   test("macro-quote-expr: if (b) '{ true } else '{ false }")(
     runTestAssert[Stat]("if (b) '{ true } else '{ false }")(
-      Term.If(tname("b"), Term.QuotedMacroExpr(blk(bool(true))), Term.QuotedMacroExpr(blk(bool(false))))
-    )
+      Term.If(tname("b"), Term.QuotedMacroExpr(blk(bool(true))), Term.QuotedMacroExpr(blk(bool(false)))),
+    ),
   )
 
   test("macro-quote-expr: '{ val y = a; ${ env } }")(
     runTestAssert[Stat]("'{ val y = a; ${ env } }", assertLayout = None)(Term.QuotedMacroExpr(
-      blk(Defn.Val(Nil, List(patvar("y")), None, tname("a")), Term.SplicedMacroExpr(blk(tname("env"))))
-    ))
+      blk(Defn.Val(Nil, List(patvar("y")), None, tname("a")), Term.SplicedMacroExpr(blk(tname("env")))),
+    )),
   )
 
   test("macro-quote-expr: x match { case 'c => 1 }") {
     val layoutMatchSimple = "x match {\n  case 'c => 1\n}"
     runTestAssert[Stat]("x match { case 'c => 1 }", assertLayout = Some(layoutMatchSimple))(
-      tmatch(tname("x"), Case(Pat.Macro(Term.QuotedMacroExpr(tname("c"))), None, int(1)))
+      tmatch(tname("x"), Case(Pat.Macro(Term.QuotedMacroExpr(tname("c"))), None, int(1))),
     )
   }
 
   test("macro-quote-expr: x match { case '{ a } => 1 }") {
     val layoutMatchComplex = "x match {\n  case '{ a } => 1\n}"
     runTestAssert[Stat]("x match { case '{ a } => 1 }", assertLayout = Some(layoutMatchComplex))(
-      Term.Match(tname("x"), List(Case(Pat.Macro(Term.QuotedMacroExpr(blk(tname("a")))), None, int(1))))
+      Term.Match(tname("x"), List(Case(Pat.Macro(Term.QuotedMacroExpr(blk(tname("a")))), None, int(1)))),
     )
   }
 
@@ -85,16 +85,16 @@ class MacroSuite extends BaseDottySuite {
     val layoutMatchWithSplice = s"x match {\n  case '{ $${ bind @ '{ a } } } => 1\n}"
     runTestAssert[Stat](
       s"x match { case '{ $${bind@'{a}} } => 1 }",
-      assertLayout = Some(layoutMatchWithSplice)
+      assertLayout = Some(layoutMatchWithSplice),
     )(tmatch(
       tname("x"),
       Case(
         Pat.Macro(Term.QuotedMacroExpr(blk(
-          Term.SplicedMacroPat(Pat.Bind(patvar("bind"), Pat.Macro(Term.QuotedMacroExpr(blk(tname("a"))))))
+          Term.SplicedMacroPat(Pat.Bind(patvar("bind"), Pat.Macro(Term.QuotedMacroExpr(blk(tname("a")))))),
         ))),
         None,
-        int(1)
-      )
+        int(1),
+      ),
     ))
   }
 
@@ -103,15 +103,15 @@ class MacroSuite extends BaseDottySuite {
       """|tpr.asType match {
          |  case '[ t ] =>
          |    getTypeTree[t]
-         |}""".stripMargin
+         |}""".stripMargin,
     )(tmatch(
       tselect("tpr", "asType"),
       Case(
         Pat.Macro(Term.QuotedMacroType(pname("t"))),
         None,
-        tapplytype(tname("getTypeTree"), pname("t"))
-      )
-    ))
+        tapplytype(tname("getTypeTree"), pname("t")),
+      ),
+    )),
   )
 
   test("macro-quote-multiline") {
@@ -124,22 +124,22 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(Term.QuotedMacroExpr(blk(
       tinfix(int(1), "+", int(3)),
       tinfix(Term.QuotedMacroExpr(tname("x")), "+", int(3)),
-      tname("zzz")
+      tname("zzz"),
     )))
   }
 
   test("macro-quote-type: '[ Map[Int, String] ]")(
-    runTestAssert[Stat]("'[ Map[Int, String] ]")(Term.QuotedMacroType(papply("Map", "Int", "String")))
+    runTestAssert[Stat]("'[ Map[Int, String] ]")(Term.QuotedMacroType(papply("Map", "Int", "String"))),
   )
 
   test("macro-quote-type: '[ List[${ summon[Type[T]] }] ]")(
     runTestAssert[Stat]("'[ List[${ summon[Type[T]] }] ]")(Term.QuotedMacroType(
-      papply("List", Type.Macro(Term.SplicedMacroExpr(blk(tapplytype("summon", papply("Type", "T"))))))
-    ))
+      papply("List", Type.Macro(Term.SplicedMacroExpr(blk(tapplytype("summon", papply("Type", "T")))))),
+    )),
   )
 
   test("macro-quote-type: '[ Show[$tp] ]")(runTestAssert[Stat]("'[ Show[$tp] ]")(
-    Term.QuotedMacroType(papply("Show", Type.Macro(Term.SplicedMacroExpr(tname("tp")))))
+    Term.QuotedMacroType(papply("Show", Type.Macro(Term.SplicedMacroExpr(tname("tp"))))),
   ))
 
   test("macro-quote-id-by-itself: 'x") {
@@ -218,7 +218,7 @@ class MacroSuite extends BaseDottySuite {
   }
 
   test("macro-splice: ${ powerCode('x) }")(runTestAssert[Stat]("${ powerCode('x) }")(
-    Term.SplicedMacroExpr(blk(tapply(tname("powerCode"), Term.QuotedMacroExpr(tname("x")))))
+    Term.SplicedMacroExpr(blk(tapply(tname("powerCode"), Term.QuotedMacroExpr(tname("x"))))),
   ))
 
   test("macro-splice: ${ val x = 'y; println(d); 1 }") {
@@ -227,16 +227,16 @@ class MacroSuite extends BaseDottySuite {
       Term.SplicedMacroExpr(blk(
         Defn.Val(Nil, List(patvar("x")), None, Term.QuotedMacroExpr(tname("y"))),
         tapply(tname("println"), tname("d")),
-        int(1)
-      ))
+        int(1),
+      )),
     )
   }
 
   test("macro-splice: ${ assertImpl('{ x != $y }) }")(
     runTestAssert[Stat]("${ assertImpl('{ x != $y }) }")(Term.SplicedMacroExpr(blk(tapply(
       tname("assertImpl"),
-      Term.QuotedMacroExpr(blk(tinfix(tname("x"), "!=", Term.SplicedMacroExpr(tname("y")))))
-    ))))
+      Term.QuotedMacroExpr(blk(tinfix(tname("x"), "!=", Term.SplicedMacroExpr(tname("y"))))),
+    )))),
   )
 
   test("macro-splice-multiline") {
@@ -249,7 +249,7 @@ class MacroSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(Term.SplicedMacroExpr(blk(
       Defn.Val(Nil, List(patvar("x")), None, Term.QuotedMacroExpr(tname("y"))),
       tapply(tname("println"), tname("d")),
-      int(1)
+      int(1),
     )))
   }
 
@@ -265,7 +265,7 @@ class MacroSuite extends BaseDottySuite {
       pname("$F2"),
       Nil,
       ppolyfunc(pparam("$T"))(pfunc(pname("$T"))(papply("Option", "$T"))),
-      noBounds
+      noBounds,
     ))
   }
 
@@ -275,44 +275,44 @@ class MacroSuite extends BaseDottySuite {
         tapplytype(tname("ClassTag"), pname("T")),
         Term.SplicedMacroExpr(blk(tapply(
           tname("Expr"),
-          tapplytype(tselect("ct", "runtimeClass", "asInstanceOf"), papply("Class", "T"))
-        )))
-      )))
-    )
+          tapplytype(tselect("ct", "runtimeClass", "asInstanceOf"), papply("Class", "T")),
+        ))),
+      ))),
+    ),
   )
 
   test("macro-quote-complex: 2") {
     runTestAssert[Stat]("'{ ${ summon[H].toExpr(tup.head) } *: ${ summon[T].toExpr(tup.tail) } }")(
       Term.QuotedMacroExpr(blk(tinfix(
         Term.SplicedMacroExpr(blk(
-          tapply(tselect(tapplytype(tname("summon"), pname("H")), "toExpr"), tselect("tup", "head"))
+          tapply(tselect(tapplytype(tname("summon"), pname("H")), "toExpr"), tselect("tup", "head")),
         )),
         "*:",
         Term.SplicedMacroExpr(blk(
-          tapply(tselect(tapplytype(tname("summon"), pname("T")), "toExpr"), tselect("tup", "tail"))
-        ))
-      )))
+          tapply(tselect(tapplytype(tname("summon"), pname("T")), "toExpr"), tselect("tup", "tail")),
+        )),
+      ))),
     )
   }
 
   test("simpler")(
     runTestAssert[Stat](
       "'{ val x: Int = ${ (q2) ?=> a } }",
-      assertLayout = Some("'{ val x: Int = ${ q2 ?=> a } }")
+      assertLayout = Some("'{ val x: Int = ${ q2 ?=> a } }"),
     )(Term.QuotedMacroExpr(blk(Defn.Val(
       Nil,
       List(patvar("x")),
       Some(pname("Int")),
-      Term.SplicedMacroExpr(blk(tctxfunc(tparam("q2"))(tname("a"))))
-    ))))
+      Term.SplicedMacroExpr(blk(tctxfunc(tparam("q2"))(tname("a")))),
+    )))),
   )
 
   test("no-name") {
     runTestAssert[Stat]("'{ val x: Int = $ }")(Term.QuotedMacroExpr(blk(
-      Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), tname("$"))
+      Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), tname("$")),
     )))
     runTestAssert[Stat]("${ val x: Int = $ }")(Term.SplicedMacroExpr(blk(
-      Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), tname("$"))
+      Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), tname("$")),
     )))
   }
 
@@ -325,7 +325,7 @@ class MacroSuite extends BaseDottySuite {
   test("#3610 2") {
     val code = "'[ type t = Int; List[t] ]"
     val tree = Term.QuotedMacroType(
-      Type.Block(List(Defn.Type(Nil, pname("t"), Nil, pname("Int"), noBounds)), papply("List", "t"))
+      Type.Block(List(Defn.Type(Nil, pname("t"), Nil, pname("Int"), noBounds)), papply("List", "t")),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -334,7 +334,7 @@ class MacroSuite extends BaseDottySuite {
     val code = "'[ type tail <: Tuple; *:[Int, tail] ]"
     val tree = Term.QuotedMacroType(Type.Block(
       List(Decl.Type(Nil, pname("tail"), Nil, bounds(hi = "Tuple"))),
-      papply("*:", "Int", "tail")
+      papply("*:", "Int", "tail"),
     ))
     runTestAssert[Stat](code)(tree)
   }
@@ -361,11 +361,11 @@ class MacroSuite extends BaseDottySuite {
     val tree = tapply(
       tapplytype(
         tpolyfunc(
-          pparam("B")
+          pparam("B"),
         )(tfunc(tparam("c", "B"))(tapply(tapplytype(tname("fn"), pname("B")), tname("c")))),
-        pname("Int")
+        pname("Int"),
       ),
-      lit(0)
+      lit(0),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -379,11 +379,11 @@ class MacroSuite extends BaseDottySuite {
     val tree = tapply(
       tapplytype(
         blk(tpolyfunc(pparam("B"))(
-          tfunc(tparam("c", "B"))(tapply(tapplytype(tname("fn"), pname("B")), tname("c")))
+          tfunc(tparam("c", "B"))(tapply(tapplytype(tname("fn"), pname("B")), tname("c"))),
         )),
-        pname("Int")
+        pname("Int"),
       ),
-      lit(0)
+      lit(0),
     )
     runTestAssert[Stat](code)(tree)
   }
@@ -413,7 +413,7 @@ class MacroSuite extends BaseDottySuite {
       runTestAssert[Stat](code)(treeWithQuote)
     }
     locally(intercept[IllegalArgumentException](
-      dialects.Scala3.withAllowSymbolLiterals(true).withAllowSpliceAndQuote(true)
+      dialects.Scala3.withAllowSymbolLiterals(true).withAllowSpliceAndQuote(true),
     ))
 
     // default scala3
@@ -445,7 +445,7 @@ class MacroSuite extends BaseDottySuite {
       runTestAssert[Stat](code)(treeWithQuote)
     }
     locally(intercept[IllegalArgumentException](
-      dialects.Scala3.withAllowSymbolLiterals(true).withAllowSpliceAndQuote(true)
+      dialects.Scala3.withAllowSymbolLiterals(true).withAllowSpliceAndQuote(true),
     ))
 
     // default scala3

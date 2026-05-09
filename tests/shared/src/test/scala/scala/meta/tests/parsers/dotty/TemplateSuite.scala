@@ -32,11 +32,11 @@ class TemplateSuite extends BaseDottySuite {
         List(Init(
           Type.Apply(Type.Name("F"), Type.ArgClause(List(Type.Name("Int")))),
           Name.Anonymous(),
-          Seq.empty[Term.ArgClause]
+          Seq.empty[Term.ArgClause],
         )),
         Template.Body(None, Nil),
-        Nil
-      )
+        Nil,
+      ),
     )
     checkStat(code, "trait B extends F[Int]")(tree)
     checkStat(code2, "trait B extends F[Int]")(tree)

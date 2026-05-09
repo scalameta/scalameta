@@ -18,7 +18,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       pname("ClassWithErasedEv"),
       Nil,
       ctorp(tparam(List(Mod.Erased()), "ev", "Ev"), tparam("x", "Int")),
-      tplNoBody()
+      tplNoBody(),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -31,7 +31,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(List(tparam(List(Mod.Erased()), "ev", "Ev"), tparam("x", "Int"))),
       Some(pname("Int")),
-      tinfix(tname("x"), "+", int(2))
+      tinfix(tname("x"), "+", int(2)),
     ))
   }
 
@@ -41,14 +41,14 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(patvar("lambdaWithErasedEv")),
       Some(pfunc(Type.FunctionArg(List(Mod.Erased()), pname("Ev")), pname("Int"))(pname("Int"))),
-      tfunc(tparam(List(Mod.Erased()), "ev"), tparam("x"))(tinfix(tname("x"), "+", int(2)))
+      tfunc(tparam(List(Mod.Erased()), "ev"), tparam("x"))(tinfix(tname("x"), "+", int(2))),
     ))
   }
 
   test("erased val") {
     val code = "erased val erasedEvidence: Ev = null"
     runTestAssert[Stat](code)(
-      Defn.Val(List(Mod.Erased()), List(patvar("erasedEvidence")), Some(pname("Ev")), Lit.Null())
+      Defn.Val(List(Mod.Erased()), List(patvar("erasedEvidence")), Some(pname("Ev")), Lit.Null()),
     )
   }
 
@@ -60,7 +60,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(List(tparam("x", "Int"), tparam(List(Mod.Erased()), "ev", "Ev"))),
       Some(pname("Int")),
-      tname("???")
+      tname("???"),
     ))
   }
 
@@ -72,7 +72,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(tparam(List(Mod.Using(), Mod.Erased()), "ev", papply("IsOff", "S")) :: Nil),
       Some(papply("Machine", "On")),
-      Term.New(init(papply("Machine", "On")))
+      Term.New(init(papply("Machine", "On"))),
     ))
   }
 
@@ -88,7 +88,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       anon,
       None,
       papply("IsEmpty", "Empty"),
-      Term.New(init(papply("IsEmpty", "Empty")))
+      Term.New(init(papply("IsEmpty", "Empty"))),
     ))
   }
 
@@ -99,7 +99,7 @@ class ErasedDefsSuite extends BaseDottySuite {
          |}""".stripMargin
     runTestAssert[Stat](code)(tapply(
       tselect(tapply(tname("List"), int(1), int(2), int(3)), "map"),
-      blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "i", "Int"))(tname("i")))
+      blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "i", "Int"))(tname("i"))),
     ))
   }
 
@@ -109,7 +109,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(patvar("fun")),
       None,
-      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context"))(tselect("ctx", "open"))
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context"))(tselect("ctx", "open")),
     ))
   }
 
@@ -119,7 +119,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(patvar("fun")),
       None,
-      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx"))(tselect("ctx", "open"))
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx"))(tselect("ctx", "open")),
     ))
   }
 
@@ -129,7 +129,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(patvar("fun")),
       None,
-      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context"))(tselect("ctx", "open"))
+      tfunc(tparam(List(Mod.Using(), Mod.Erased()), "_", "Context"))(tselect("ctx", "open")),
     ))
   }
 
@@ -141,7 +141,7 @@ class ErasedDefsSuite extends BaseDottySuite {
          |""".stripMargin
     runTestAssert[Stat](code)(tapply(
       tname("LazyBody"),
-      blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context"))(int(3)))
+      blk(tfunc(tparam(List(Mod.Using(), Mod.Erased()), "ctx", "Context"))(int(3))),
     ))
   }
 
@@ -151,7 +151,7 @@ class ErasedDefsSuite extends BaseDottySuite {
       Nil,
       List(patvar("extractor")),
       Some(pfunc(Type.TypedParam(pname("e"), pname("Entry"), List(Mod.Erased())))(pselect("e", "Key"))),
-      tname("extractKey")
+      tname("extractKey"),
     ))
   }
 

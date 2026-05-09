@@ -12,7 +12,7 @@ final class Scalacp private (
     val node: ScalaSigNode,
     val symbolIndex: SymbolIndex,
     val settings: Settings,
-    val reporter: Reporter
+    val reporter: Reporter,
 ) extends AnnotationOps with SymbolInformationOps with SymbolOps with TypeOps {
   def parse: ClassfileInfos = {
     val sinfos = node.scalaSig.symbols.toList.flatMap {
@@ -40,6 +40,6 @@ object Scalacp {
       node: ScalaSigNode,
       classpathIndex: ClasspathIndex,
       settings: Settings,
-      reporter: Reporter
+      reporter: Reporter,
   ): ClassfileInfos = new Scalacp(node, SymbolIndex(classpathIndex), settings, reporter).parse
 }

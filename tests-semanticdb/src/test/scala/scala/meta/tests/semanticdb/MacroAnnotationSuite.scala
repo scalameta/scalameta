@@ -22,7 +22,7 @@ class MacroAnnotationSuite extends SemanticdbSuite {
       assert(symbols.contains("a/A#productElement()."))
       assert(symbols.contains("a/A.unapply()."))
       assert(symbols.contains("a/A.apply()."))
-    }
+    },
   )
 
 }

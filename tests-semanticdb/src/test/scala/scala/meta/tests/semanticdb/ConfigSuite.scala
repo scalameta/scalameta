@@ -29,7 +29,7 @@ class ConfigSuite extends FunSuite {
       scalacArgs: List[String],
       input: String,
       fn: s.TextDocument => Unit,
-      targetroot: AbsolutePath = generateTargetroot()
+      targetroot: AbsolutePath = generateTargetroot(),
   )(implicit loc: munit.Location): Unit = test(topt) {
     val sourceroot = StringFS.fromString(input)
     val (metacIsSuccess, metacOut, metacErr) = CliTestUtils.withReporter { reporter =>
@@ -40,8 +40,8 @@ class ConfigSuite extends FunSuite {
           "-P:semanticdb:sourceroot:" + sourceroot.toString,
           "-cp",
           Library.scalaLibrary.classpath().syntax,
-          sourceroot.resolve(A).toString
-        )
+          sourceroot.resolve(A).toString,
+        ),
       )
       Metac.process(settings, reporter)
     }
@@ -73,9 +73,9 @@ class ConfigSuite extends FunSuite {
         symbols,
         """|local0
            |local1
-           |""".stripMargin
+           |""".stripMargin,
       )
-    }
+    },
   )
 
   check(
@@ -86,7 +86,7 @@ class ConfigSuite extends FunSuite {
        |object A {
        |}
        |""".stripMargin,
-    doc => assert(doc.symbols.isEmpty)
+    doc => assert(doc.symbols.isEmpty),
   )
 
   check(
@@ -110,7 +110,7 @@ class ConfigSuite extends FunSuite {
            |""".stripMargin
 
       assertNoDiff(obtained, expected)
-    }
+    },
   )
 
   private val customTargetroot = generateTargetroot()
@@ -124,7 +124,7 @@ class ConfigSuite extends FunSuite {
       val Seq(occurrence) = doc.occurrences
       assertEquals(occurrence.symbol, "_empty_/A.")
     },
-    targetroot = customTargetroot
+    targetroot = customTargetroot,
   )
 
   check(
@@ -133,7 +133,7 @@ class ConfigSuite extends FunSuite {
     """|/A.scala
        |object A
        |""".stripMargin,
-    doc => assert(doc.md5.isEmpty)
+    doc => assert(doc.md5.isEmpty),
   )
 
   check(
@@ -144,7 +144,7 @@ class ConfigSuite extends FunSuite {
        |   List(1).map(_ + 1)
        |}
        |""".stripMargin,
-    doc => assert(doc.synthetics.isEmpty)
+    doc => assert(doc.synthetics.isEmpty),
   )
 
   check(
@@ -155,7 +155,7 @@ class ConfigSuite extends FunSuite {
        |   List(1).map(_ + 1)
        |}
        |""".stripMargin,
-    doc => assert(doc.synthetics.nonEmpty)
+    doc => assert(doc.synthetics.nonEmpty),
   )
 
 }

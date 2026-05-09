@@ -11,15 +11,15 @@ class JavacpSuite extends JavacpSuiteBase {
     List(
       "com/javacp/MetacJava#overload().",
       "com/javacp/MetacJava#overload(+2).",
-      "com/javacp/MetacJava#overload(+1)."
-    )
+      "com/javacp/MetacJava#overload(+1).",
+    ),
   )
 
   checkOrder(
     "fields",
     "com/javacp/Test#",
     s => s.desc.value == "Int" || s.desc.value == "Long" || s.desc.value == "Float",
-    List("com/javacp/Test#Int.", "com/javacp/Test#Long.", "com/javacp/Test#Float.")
+    List("com/javacp/Test#Int.", "com/javacp/Test#Long.", "com/javacp/Test#Float."),
   )
 
 }

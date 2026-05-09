@@ -22,7 +22,7 @@ abstract class PrintSuiteBase extends FunSuite {
       name: String,
       original: String,
       expected: String,
-      fn: s.TextDocument => Unit
+      fn: s.TextDocument => Unit,
   ): Unit = test(name) {
     val wrapped =
       s"""
@@ -33,7 +33,7 @@ $original
     val doc = InteractiveSemanticdb.toTextDocument(
       compiler = compiler,
       code = wrapped,
-      options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on")
+      options = List("-P:semanticdb:synthetics:on", "-P:semanticdb:text:on"),
     )
     fn(doc)
   }
@@ -79,7 +79,7 @@ $original
         val obtained = doc.synthetics
           .map(synthetic => Print.synthetic(Format.Compact, doc, synthetic, printerSymtab))
         assertNoDiff(obtained.mkString("\n"), expected)
-      }
+      },
     )
 
   def checkTrees(original: String, expected: String)(implicit loc: munit.Location): Unit =
@@ -91,7 +91,7 @@ $original
         val obtained = doc.synthetics
           .map(synthetic => Print.tree(Format.Compact, doc, synthetic.tree, printerSymtab))
         assertNoDiff(obtained.mkString("\n"), expected)
-      }
+      },
     )
 
 }

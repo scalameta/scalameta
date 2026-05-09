@@ -23,7 +23,7 @@ class MetacScalaLibrary extends FunSuite {
     assume(!Properties.isWin, "Test is not checked on windows")
     assume(
       Files.isDirectory(MetacScalaLibrary.library),
-      s"${MetacScalaLibrary.library} is not a directory! Run `sbt download-scala-library`"
+      s"${MetacScalaLibrary.library} is not a directory! Run `sbt download-scala-library`",
     )
     val exit = MetacScalaLibrary.process(Array())
     require(exit == 0, "failed to compile scala-library")
@@ -38,7 +38,7 @@ object MetacScalaLibrary {
   def process(args: Array[String]): Int = {
     assert(
       Files.isDirectory(library),
-      s"$library is not a directory! Run `sbt download-scala-library`"
+      s"$library is not a directory! Run `sbt download-scala-library`",
     )
     val classpath = ClasspathUtils.getClassPathEntries(this.getClass.getClassLoader).map(_.toString)
       .filter(_.contains("scala-library")).mkString(File.pathSeparator)

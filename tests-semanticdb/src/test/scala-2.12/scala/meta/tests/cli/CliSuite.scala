@@ -22,7 +22,7 @@ class CliSuite extends FunSuite {
          |  def main(args: Array[String]): Unit = {
          |    println("hello world")
          |  }
-         |}""".stripMargin.getBytes(UTF_8)
+         |}""".stripMargin.getBytes(UTF_8),
     )
     val target = Files.createTempDirectory("target_")
     val semanticdb = target.resolve("META-INF/semanticdb/HelloWorld.scala.semanticdb")
@@ -38,7 +38,7 @@ class CliSuite extends FunSuite {
         "-P:semanticdb:text:on",
         "-d",
         target.toString,
-        scalaFile.toString
+        scalaFile.toString,
       )
       val settings = scala.meta.metac.Settings().withScalacArgs(scalacArgs)
       val reporter = Reporter()
@@ -90,7 +90,7 @@ class CliSuite extends FunSuite {
          |[1:23..1:29): String => scala/Predef.String#
          |[1:33..1:37): Unit => scala/Unit#
          |[2:4..2:11): println => scala/Predef.println(+1).
-         |""".stripMargin
+         |""".stripMargin,
     )
     assert(err.isEmpty)
   }
@@ -101,7 +101,7 @@ class CliSuite extends FunSuite {
          |object Left { def right = 42 }
          |/not_sourceroot_/Right.scala
          |object Right { def left = 41 }
-         |""".stripMargin
+         |""".stripMargin,
     ).toNIO
     val sourceroot = projectroot.resolve("sourceroot_")
     val notSourceroot = projectroot.resolve("not_sourceroot_")
@@ -120,7 +120,7 @@ class CliSuite extends FunSuite {
         "-d",
         target.toString,
         inSourcerootScala.toString,
-        notInSourcerootScala.toString
+        notInSourcerootScala.toString,
       )
       val settings = scala.meta.metac.Settings().withScalacArgs(scalacArgs)
       val reporter = Reporter()

@@ -11,7 +11,7 @@ class Scala211Suite extends ParseSuite {
     def failWithMessage(code: String) = {
       val error = intercept[ParseException](templStat(code))
       assert(error.getMessage.contains(
-        "case classes must have a parameter list; try 'case class A()' or 'case object A'"
+        "case classes must have a parameter list; try 'case class A()' or 'case object A'",
       ))
     }
 

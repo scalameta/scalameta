@@ -12,7 +12,7 @@ object InvariantFailedException {
       invariant: String,
       clue: String,
       failures: List[String],
-      debuggees: Map[String, Any]
+      debuggees: Map[String, Any],
   ): Nothing = {
     val clueStr = if (clue eq null) "" else s" ($clue)"
     val sb = new StringBuilder()
@@ -20,7 +20,7 @@ object InvariantFailedException {
       s"""|invariant failed$clueStr:
           |when verifying $invariant
           |found that ${failures.mkString(s"\nand also ")}
-          |""".stripMargin.replace("\n", EOL)
+          |""".stripMargin.replace("\n", EOL),
     )
     ExceptionHelpers.formatDebuggees(sb, debuggees)
     throw new InvariantFailedException(sb.result())

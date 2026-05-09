@@ -400,7 +400,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         def unclosed(): Unit = setInvalidToken(curr)("unclosed character literal")
         def unsupported(): Unit = setInvalidToken(curr)(
           if (dialect.allowSpliceAndQuote) "Macro quote must be followed by brace or bracket"
-          else "Symbol literals are no longer allowed"
+          else "Symbol literals are no longer allowed",
         )
         def symLitOr(getRest: => Unit)(orElse: => Unit): Unit =
           if (dialect.allowSymbolLiterals) {
@@ -423,7 +423,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
               setTokStrVal(CHARLIT)
             } else unclosed()
           } else if (isIdentifierStart(ch)) symLitOr(getIdentRest())(
-            if (dialect.allowSpliceAndQuote) setTokStrVal(MACROQUOTE) else unsupported()
+            if (dialect.allowSpliceAndQuote) setTokStrVal(MACROQUOTE) else unsupported(),
           )
           else if (isOperatorPart(ch)) symLitOr(getOperatorRest())(unsupported())
           else if (dialect.allowSpliceAndQuote) setTokStrVal(MACROQUOTE)
@@ -652,7 +652,7 @@ class LegacyScanner(input: Input, dialect: Dialect) {
         if (x.token != IDENTIFIER && x.token != THIS) {
           val message = "invalid unquote: `$'ident, `$'BlockExpr, `$'this or `$'_ expected"
           setInvalidToken(next, offset)(message)
-        }
+        },
       )
     }
 

@@ -5,7 +5,7 @@ import scala.meta.internal.tokenizers.ScalametaTokenizer
 
 final class ParserOptions private[meta] (
     // options which control parsing
-    val captureComments: Boolean = true
+    val captureComments: Boolean = true,
 ) {
   def withCaptureComments(value: Boolean): ParserOptions = privateCopy(captureComments = value)
 

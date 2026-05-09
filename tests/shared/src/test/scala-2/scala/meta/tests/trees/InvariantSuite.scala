@@ -91,7 +91,7 @@ class InvariantSuite extends TreeSuiteBase {
          |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
          |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
          |where args = List((()))
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )(tuple)
   }
 
@@ -113,7 +113,7 @@ class InvariantSuite extends TreeSuiteBase {
          |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
          |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
          |where args = List((()))
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )(tuple)
   }
 
@@ -135,7 +135,7 @@ class InvariantSuite extends TreeSuiteBase {
          |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
          |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
          |where args = List((()))
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )(tuple)
   }
 

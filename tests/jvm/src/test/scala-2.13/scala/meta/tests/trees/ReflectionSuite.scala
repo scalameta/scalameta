@@ -35,8 +35,8 @@ class ReflectionSuite extends TreeSuiteBase {
         "field Term.If.cond: scala.meta.Term",
         "field Term.If.thenp: scala.meta.Term",
         "field Term.If.elsep: scala.meta.Term",
-        "field Term.If.mods: List[scala.meta.Mod]"
-      )
+        "field Term.If.mods: List[scala.meta.Mod]",
+      ),
     )
     assertEquals(
       iff.allFields.map(_.toString),
@@ -47,8 +47,8 @@ class ReflectionSuite extends TreeSuiteBase {
         "field Term.If.cond: scala.meta.Term",
         "field Term.If.thenp: scala.meta.Term",
         "field Term.If.elsep: scala.meta.Term",
-        "field Term.If.mods: List[scala.meta.Mod]"
-      )
+        "field Term.If.mods: List[scala.meta.Mod]",
+      ),
     )
   }
 
@@ -56,7 +56,7 @@ class ReflectionSuite extends TreeSuiteBase {
     val iff = symbolOf[scala.meta.Term.Name].asLeaf
     assertEquals(
       iff.fields.map(_.toString),
-      List("field Term.Name.value: String @org.scalameta.invariants.nonEmpty")
+      List("field Term.Name.value: String @org.scalameta.invariants.nonEmpty"),
     )
     assertEquals(
       iff.allFields.map(_.toString),
@@ -64,8 +64,8 @@ class ReflectionSuite extends TreeSuiteBase {
         "field Term.Name.origin: scala.meta.trees.Origin",
         "field Term.Name.begComment: Option[meta.Tree.Comments]",
         "field Term.Name.endComment: Option[meta.Tree.Comments]",
-        "field Term.Name.value: String @org.scalameta.invariants.nonEmpty"
-      )
+        "field Term.Name.value: String @org.scalameta.invariants.nonEmpty",
+      ),
     )
   }
 
@@ -79,7 +79,7 @@ class ReflectionSuite extends TreeSuiteBase {
     // NOTE: we can't just do `duplicateRelevantFieldTpes.distinct`, because that doesn't account for `=:=`
     val distinctRelevantFieldTpes = ListBuffer[Type]()
     duplicateRelevantFieldTpes.foreach(tpe =>
-      if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe
+      if (!distinctRelevantFieldTpes.exists(_ =:= tpe)) distinctRelevantFieldTpes += tpe,
     )
     val obtained = distinctRelevantFieldTpes.sortBy(_.toString).mkString(EOL)
     assertNoDiff(
@@ -156,7 +156,7 @@ class ReflectionSuite extends TreeSuiteBase {
          |scala.meta.Type.CasesBlock
          |scala.meta.Type.FuncParamClause
          |scala.meta.Type.Name
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )
   }
 }

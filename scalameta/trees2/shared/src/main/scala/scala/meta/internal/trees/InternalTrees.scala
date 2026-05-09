@@ -55,13 +55,13 @@ trait InternalTree extends Product {
   private[meta] def privateCopyOrigin(
       origin: Origin,
       begComment: Option[Tree.Comments] = this.begComment,
-      endComment: Option[Tree.Comments] = this.endComment
+      endComment: Option[Tree.Comments] = this.endComment,
   ): Tree
 
   private[meta] def privateSetOrigin(
       origin: Origin,
       begComment: Option[Tree.Comments] = this.begComment,
-      endComment: Option[Tree.Comments] = this.endComment
+      endComment: Option[Tree.Comments] = this.endComment,
   ): Unit
 
   private[meta] def privateSetOrigin(tree: Tree): Unit =
@@ -76,8 +76,8 @@ trait InternalTree extends Product {
 
   def tokens: Tokens = tokensOpt.getOrElse(
     throw new Error.MissingDialectException(
-      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.tokenizeFor`."
-    )
+      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.tokenizeFor`.",
+    ),
   )
 
   def tokenizeFor(dialect: Dialect): Tokens =
@@ -89,11 +89,11 @@ trait InternalTree extends Product {
   private[meta] def retokenize(implicit
       tokenize: Tokenize,
       dialect: Dialect,
-      tokenizerOptions: TokenizerOptions
+      tokenizerOptions: TokenizerOptions,
   ): Tokens = retokenizeFor(dialect)
 
   private[meta] def retokenizeFor(
-      dialect: Dialect
+      dialect: Dialect,
   )(implicit tokenize: Tokenize, tokenizerOptions: TokenizerOptions): Tokens = this match {
     case Lit.String(value) =>
       val input = Input.VirtualFile("<InternalTrees.tokens>", value)
@@ -104,7 +104,7 @@ trait InternalTree extends Product {
 
   private[meta] def textAsInput(implicit
       dialect: Dialect,
-      tokenizerOptions: TokenizerOptions
+      tokenizerOptions: TokenizerOptions,
   ): Input = Input.VirtualFile("<InternalTrees.text>", printSyntaxFor(dialect))
     .withTokenizerOptions(tokenizerOptions)
 
@@ -114,8 +114,8 @@ trait InternalTree extends Product {
 
   def text: String = textOpt.getOrElse(
     throw new Error.MissingDialectException(
-      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.printSyntaxFor`."
-    )
+      "Tree missing a dialect; update root tree `.withDialectIfRootAndNotSet` first, or call `.printSyntaxFor`.",
+    ),
   )
 
   def printSyntaxFor(dialect: Dialect): String =

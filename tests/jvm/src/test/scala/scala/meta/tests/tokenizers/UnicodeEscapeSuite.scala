@@ -13,7 +13,7 @@ class UnicodeEscapeSuite extends BaseTokenizerSuite {
   // as 6 characters instead of one.
   val tests = new String(
     InputStreamIO.readBytes(this.getClass.getClassLoader.getResourceAsStream("unicode.txt")),
-    StandardCharsets.UTF_8
+    StandardCharsets.UTF_8,
   )
 
   // asserts that tokenize(code).syntax == code

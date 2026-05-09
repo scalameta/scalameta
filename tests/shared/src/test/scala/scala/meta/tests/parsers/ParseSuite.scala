@@ -62,12 +62,12 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
     stats.foreach(checkError)
   def checkOK(stat: String, syntax: String = "")(implicit
       dialect: Dialect,
-      loc: munit.Location
+      loc: munit.Location,
   ): Unit = test(logger.revealWhitespace(stat).take(50))(assertSyntax(syntax)(templStat(stat)))
   final def checkOKs(stats: String*)(implicit dialect: Dialect, loc: munit.Location): Unit = stats
     .foreach(checkOK(_))
   final def checkOKsWithSyntax(
-      pairs: (String, String)*
+      pairs: (String, String)*,
   )(implicit dialect: Dialect, loc: munit.Location): Unit = pairs.foreach { case (stat, syntax) =>
     checkOK(stat, syntax)
   }
@@ -75,24 +75,24 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   protected def checkParsedTree[T <: Tree](
       code: String,
       f: ScalametaParser => T,
-      syntax: String = null
+      syntax: String = null,
   )(tree: Tree)(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkTree(parseRule(code, f), TestHelpers.getSyntax(code, syntax))(tree)
 
   protected def checkStat(code: String, syntax: String = null)(
-      tree: Tree
+      tree: Tree,
   )(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkParsedTree(code, _.entrypointStat(), syntax)(tree)
 
   protected def runTestError[T <: Tree](code: String, expected: String)(implicit
       parser: String => T,
-      loc: munit.Location
+      loc: munit.Location,
   ): Unit = {
     val error = intercept[inputs.InputException] {
       val result = parser(code)
       throw new ParseException(
         Position.None,
-        s"Statement $code should not parse! Got result ${result.structure}"
+        s"Statement $code should not parse! Got result ${result.structure}",
       )
     }
     val obtained = error.getMessage().nl2lf
@@ -101,7 +101,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
 
   protected def matchSubStructure[T <: Tree](
       code: String,
-      expected: PartialFunction[Tree, Unit]
+      expected: PartialFunction[Tree, Unit],
   )(implicit parser: String => T, loc: munit.Location): Unit = {
     val obtained = parser(code)
     expected.lift(obtained).getOrElse(fail(s"Got unexpected tree: ${obtained.structure}"))
@@ -114,7 +114,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
    *   runTestAssert(code, assertLayout)(expected)
    */
   protected def runTestAssert[T <: Tree](code: String, assertLayout: Option[String])(
-      expected: Tree
+      expected: Tree,
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit =
     runTestAssert[T](code, assertLayout.getOrElse(""))(expected)
 
@@ -140,7 +140,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
    *   Function used to convert code into structured tree
    */
   protected def runTestAssert[T <: Tree](code: String, assertLayout: String = null)(
-      expected: Tree
+      expected: Tree,
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit = {
     val struct = expected.structure
     parseAndCheckTreeWithSyntaxAndStruct[T](code, assertLayout, struct, "Original")
@@ -148,7 +148,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
   }
 
   protected def parseAndCheckTree[T <: Tree](code: String, syntax: String = null)(
-      expected: Tree
+      expected: Tree,
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit =
     parseAndCheckTreeWithSyntaxAndStruct[T](code, syntax, expected.structure)
 
@@ -156,11 +156,11 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       code: String,
       syntax: String,
       struct: String,
-      extraClue: String = ""
+      extraClue: String = "",
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): String = {
     val obtained: T = parser(code)
     val reprinted = assertSyntaxWithClue(obtained)(syntax)(
-      TestHelpers.getMessageWithExtraClue("tree syntax not equal", extraClue) + "\n" + struct
+      TestHelpers.getMessageWithExtraClue("tree syntax not equal", extraClue) + "\n" + struct,
     )
     assertStruct(obtained, extraClue)(struct)
     reprinted
@@ -170,7 +170,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
       code: String,
       syntax: String,
       struct: String,
-      extraClue: String = ""
+      extraClue: String = "",
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Option[String] = {
     val codeLF = code.replaceAll("\\r+\\n", "\n")
     val expectedSyntax = TestHelpers.getSyntax(codeLF, syntax)
@@ -189,7 +189,7 @@ class ParseSuite extends TreeSuiteBase with CommonTrees {
 
   protected def checkWithOriginalSyntax[T <: Tree](tree: T, originalOpt: String = null)(
       reprinted: String,
-      reprintedFails: String = null
+      reprintedFails: String = null,
   )(implicit loc: munit.Location, parser: String => T, dialect: Dialect): Unit = {
     val original = Option(originalOpt).getOrElse(reprinted)
     assertOriginalSyntax(tree, original)

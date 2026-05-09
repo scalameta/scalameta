@@ -61,7 +61,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(p"case $x @ $y => ")(Case(
       Pat.Bind(patvar("x"), Pat.Extract(tname("List"), List(int(1), int(2), int(3)))),
       None,
-      blk()
+      blk(),
     ))
   }
 
@@ -77,7 +77,7 @@ class SuccessSuite extends TreeSuiteBase {
     val term = q"x"
     val terms = List(q"y", q"z")
     assertTree(q"foo($term, ..$terms, $term)")(
-      tapply(tname("foo"), tname("x"), tname("y"), tname("z"), tname("x"))
+      tapply(tname("foo"), tname("x"), tname("y"), tname("z"), tname("x")),
     )
   }
 
@@ -106,7 +106,7 @@ class SuccessSuite extends TreeSuiteBase {
     val a = tparam"+A"
     val b = t"B"
     assertTree(q"type $name[$a] = $b")(
-      Defn.Type(Nil, pname("List"), List(pparam(List(Mod.Covariant()), "A")), pname("B"), noBounds)
+      Defn.Type(Nil, pname("List"), List(pparam(List(Mod.Covariant()), "A")), pname("B"), noBounds),
     )
   }
 
@@ -242,7 +242,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpes = List(t"T", t"U")
     val exprs = List(q"1", q"b")
     assertTree(q"$expr $name[..$tpes] (..$exprs)")(
-      tinfix(tname("x"), "method", List(pname("T"), pname("U")), int(1), tname("b"))
+      tinfix(tname("x"), "method", List(pname("T"), pname("U")), int(1), tname("b")),
     )
   }
 
@@ -341,7 +341,7 @@ class SuccessSuite extends TreeSuiteBase {
     val exprs = List(List(q"a", q"b"))
     val expr2 = q"bar"
     assertTree(q"$expr1(...$exprs) = $expr2")(
-      Term.Assign(tapply(tname("foo"), tname("a"), tname("b")), tname("bar"))
+      Term.Assign(tapply(tname("foo"), tname("a"), tname("b")), tname("bar")),
     )
   }
 
@@ -361,7 +361,7 @@ class SuccessSuite extends TreeSuiteBase {
     val exprs2 = List(q"c")
     val expr2 = q"bar"
     assertTree(q"$expr1(..$exprs1)(..$exprs2) = $expr2")(
-      Term.Assign(tapply(tapply(tname("foo"), tname("a"), tname("b")), tname("c")), tname("bar"))
+      Term.Assign(tapply(tapply(tname("foo"), tname("a"), tname("b")), tname("c")), tname("bar")),
     )
   }
 
@@ -373,7 +373,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("2 q\"(x, y: Int)\"") {
     val x = q"x: X"
     assertTree(q"($x, y: Int)")(Term.Tuple(
-      List(Term.Ascribe(tname("x"), pname("X")), Term.Ascribe(tname("y"), pname("Int")))
+      List(Term.Ascribe(tname("x"), pname("X")), Term.Ascribe(tname("y"), pname("Int"))),
     ))
   }
 
@@ -388,7 +388,7 @@ class SuccessSuite extends TreeSuiteBase {
     val r = q"1"
     assertTree(q"f($q, y: Y) = $r")(Term.Assign(
       tapply(tname("f"), Term.Ascribe(tname("x"), pname("X")), Term.Ascribe(tname("y"), pname("Y"))),
-      int(1)
+      int(1),
     ))
   }
 
@@ -436,7 +436,7 @@ class SuccessSuite extends TreeSuiteBase {
     val mods = List(mod"@w", mod"@e")
     assertTree(q"foo: @q ..@$mods @r")(Term.Annotate(
       tname("foo"),
-      List(Mod.Annot(init("q")), Mod.Annot(init("w")), Mod.Annot(init("e")), Mod.Annot(init("r")))
+      List(Mod.Annot(init("q")), Mod.Annot(init("w")), Mod.Annot(init("e")), Mod.Annot(init("r"))),
     ))
   }
 
@@ -456,14 +456,14 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(params.toString, "List(x: Int, y: String)")
     assertTrees(params: _*)(
       Term.Ascribe(tname("x"), pname("Int")),
-      Term.Ascribe(tname("y"), pname("String"))
+      Term.Ascribe(tname("y"), pname("String")),
     )
   }
 
   test("2 val q\"(..params)\" = q\"(x: Int, y: String)\"") {
     val params = List(q"x: Int", q"y: String")
     assertTree(q"(..$params)")(Term.Tuple(
-      List(Term.Ascribe(tname("x"), pname("Int")), Term.Ascribe(tname("y"), pname("String")))
+      List(Term.Ascribe(tname("x"), pname("Int")), Term.Ascribe(tname("y"), pname("String"))),
     ))
   }
 
@@ -472,7 +472,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(statz.toString, "List(val a = x, val b = y)")
     assertTrees(statz: _*)(
       Defn.Val(Nil, List(patvar("a")), None, tname("x")),
-      Defn.Val(Nil, List(patvar("b")), None, tname("y"))
+      Defn.Val(Nil, List(patvar("b")), None, tname("y")),
     )
     assertTree(astat)(Defn.Val(Nil, List(patvar("c")), None, tname("z")))
   }
@@ -481,7 +481,7 @@ class SuccessSuite extends TreeSuiteBase {
     val stats = List(q"val x = 1", q"val y = 2")
     assertTree(q"{ ..$stats }")(blk(
       Defn.Val(Nil, List(patvar("x")), None, int(1)),
-      Defn.Val(Nil, List(patvar("y")), None, int(2))
+      Defn.Val(Nil, List(patvar("y")), None, int(2)),
     ))
   }
 
@@ -497,7 +497,7 @@ class SuccessSuite extends TreeSuiteBase {
     val expr2 = q"a"
     val expr3 = q"b"
     assertTree(q"if ($expr1) $expr2 else $expr3")(
-      Term.If(tinfix(int(1), ">", int(2)), tname("a"), tname("b"), Nil)
+      Term.If(tinfix(int(1), ">", int(2)), tname("a"), tname("b"), Nil),
     )
   }
 
@@ -521,11 +521,11 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(expr)(tname("foo"))
     assertWithOriginalSyntax(casez: _*)("case bar => baz;", "case _ => foo")(
       "case bar => baz",
-      "case _ => foo"
+      "case _ => foo",
     )
     assertTrees(casez: _*)(
       Case(patvar("bar"), None, tname("baz")),
-      Case(patwildcard, None, tname("foo"))
+      Case(patwildcard, None, tname("foo")),
     )
   }
 
@@ -533,7 +533,7 @@ class SuccessSuite extends TreeSuiteBase {
     val expr = q"foo"
     val casez = List(p"case a => b", p"case q => w")
     assertTree(q"$expr match { ..case $casez }")(
-      tmatch(tname("foo"), Case(patvar("a"), None, tname("b")), Case(patvar("q"), None, tname("w")))
+      tmatch(tname("foo"), Case(patvar("a"), None, tname("b")), Case(patvar("q"), None, tname("w"))),
     )
   }
 
@@ -543,7 +543,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(expr)(tname("foo"))
     assertWithOriginalSyntax(cases: _*)("case _ => bar;", "case 1 => 2;")(
       "case _ => bar",
-      "case 1 => 2"
+      "case 1 => 2",
     )
     assertTrees(cases: _*)(Case(patwildcard, None, tname("bar")), Case(int(1), None, int(2)))
     assertTree(case1)(Case(patvar("a"), None, tname("b")))
@@ -564,10 +564,10 @@ class SuccessSuite extends TreeSuiteBase {
           Case(patvar("a"), None, tname("b")),
           Case(patwildcard, None, tname("bar")),
           Case(int(1), None, int(2)),
-          Case(patvar("q"), None, tname("w"))
+          Case(patvar("q"), None, tname("w")),
         ),
-        Some(tname("baz"))
-      )
+        Some(tname("baz")),
+      ),
     )
   }
 
@@ -590,7 +590,7 @@ class SuccessSuite extends TreeSuiteBase {
     val exprr = q"pf"
     val expropt = q"{ bar }"
     assertTree(q"try $expr catch $exprr finally $expropt")(
-      Term.TryWithHandler(blk(tname("foo")), tname("pf"), Some(blk(tname("bar"))))
+      Term.TryWithHandler(blk(tname("foo")), tname("pf"), Some(blk(tname("bar")))),
     )
   }
 
@@ -622,21 +622,21 @@ class SuccessSuite extends TreeSuiteBase {
     val e = param"z: Z"
     val r = q"1"
     assertTree(q"(..$q, y: Y, $e) => $r")(
-      tfunc(tparam("x", "X"), tparam("y", "Y"), tparam("z", "Z"))(int(1))
+      tfunc(tparam("x", "X"), tparam("y", "Y"), tparam("z", "Z"))(int(1)),
     )
   }
 
   test("1 q\"{ ..case cases }\"") {
     val q"{ ..case $cases }" = q"{ case i: Int => i + 1 }"
     assertTrees(cases: _*)(
-      Case(Pat.Typed(patvar("i"), pname("Int")), None, tinfix(tname("i"), "+", int(1)))
+      Case(Pat.Typed(patvar("i"), pname("Int")), None, tinfix(tname("i"), "+", int(1))),
     )
   }
 
   test("2 q\"{ ..case cases }\"") {
     val cases = List(p"case i: Int => i + 1")
     assertTree(q"{ ..case $cases }")(Term.PartialFunction(List(
-      Case(Pat.Typed(patvar("i"), pname("Int")), None, tinfix(tname("i"), "+", int(1)))
+      Case(Pat.Typed(patvar("i"), pname("Int")), None, tinfix(tname("i"), "+", int(1))),
     )))
   }
 
@@ -670,7 +670,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(enumerators.toString, "List(x <- xs, y <- ys)")
     assertTrees(enumerators: _*)(
       Enumerator.Generator(patvar("x"), tname("xs")),
-      Enumerator.Generator(patvar("y"), tname("ys"))
+      Enumerator.Generator(patvar("y"), tname("ys")),
     )
     assertTree(cond)(tname("bar"))
     assertTree(enum1)(Enumerator.Generator(patvar("a"), tname("as")))
@@ -685,9 +685,9 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"for (..$ab) foo")(Term.For(
       List(
         Enumerator.Generator(patvar("a"), tname("as")),
-        Enumerator.Generator(patvar("b"), tname("bs"))
+        Enumerator.Generator(patvar("b"), tname("bs")),
       ),
-      tname("foo")
+      tname("foo"),
     ))
   }
 
@@ -697,7 +697,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(enumerators.toString, "List(x <- xs, y <- ys)")
     assertTrees(enumerators: _*)(
       Enumerator.Generator(patvar("x"), tname("xs")),
-      Enumerator.Generator(patvar("y"), tname("ys"))
+      Enumerator.Generator(patvar("y"), tname("ys")),
     )
     assertTree(expr)(tapply(tname("foo"), tname("x"), tname("y")))
   }
@@ -709,9 +709,9 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"for (..$ab) yield foo")(Term.ForYield(
       List(
         Enumerator.Generator(patvar("a"), tname("as")),
-        Enumerator.Generator(patvar("b"), tname("bs"))
+        Enumerator.Generator(patvar("b"), tname("bs")),
       ),
-      tname("foo")
+      tname("foo"),
     ))
   }
 
@@ -744,12 +744,12 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"new {..$stats; val b = 4} with $a {$self1 => ..$statz}")(Term.NewAnonymous(Template(
       List(
         Defn.Val(Nil, List(patvar("a")), None, int(2)),
-        Defn.Val(Nil, List(patvar("b")), None, int(4))
+        Defn.Val(Nil, List(patvar("b")), None, int(4)),
       ),
       List(init("A")),
       self("self", "A"),
       List(Defn.Val(Nil, List(patvar("b")), None, int(3))),
-      Nil
+      Nil,
     )))
   }
 
@@ -884,7 +884,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(stats.toString, "{ val a: A; val b: B }")
     assertTrees(stats: _*)(
       Decl.Val(Nil, List(patvar("a")), pname("A")),
-      Decl.Val(Nil, List(patvar("b")), pname("B"))
+      Decl.Val(Nil, List(patvar("b")), pname("B")),
     )
   }
 
@@ -893,7 +893,7 @@ class SuccessSuite extends TreeSuiteBase {
     val stats = List(q"val a: A", q"val b: B")
     assertTree(t"$tpe { ..$stats }")(Type.Refine(
       Some(Type.With(pname("X"), pname("Y"))),
-      List(Decl.Val(Nil, List(patvar("a")), pname("A")), Decl.Val(Nil, List(patvar("b")), pname("B")))
+      List(Decl.Val(Nil, List(patvar("a")), pname("A")), Decl.Val(Nil, List(patvar("b")), pname("B"))),
     ))
   }
 
@@ -903,7 +903,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(stats.toString, "{ val a: A; val b: B }")
     assertTrees(stats: _*)(
       Decl.Val(Nil, List(patvar("a")), pname("A")),
-      Decl.Val(Nil, List(patvar("b")), pname("B"))
+      Decl.Val(Nil, List(patvar("b")), pname("B")),
     )
   }
 
@@ -912,7 +912,7 @@ class SuccessSuite extends TreeSuiteBase {
     val stats = List(q"val a:A", q"val b:B")
     assertTree(t"$tpe forSome { ..$stats }")(Type.Existential(
       pname("X"),
-      List(Decl.Val(Nil, List(patvar("a")), pname("A")), Decl.Val(Nil, List(patvar("b")), pname("B")))
+      List(Decl.Val(Nil, List(patvar("a")), pname("A")), Decl.Val(Nil, List(patvar("b")), pname("B"))),
     ))
   }
 
@@ -927,7 +927,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpe = t"X"
     val annots = List(mod"@a", mod"@b")
     assertTree(t"$tpe ..@$annots")(
-      Type.Annotate(pname("X"), List(Mod.Annot(init("a")), Mod.Annot(init("b"))))
+      Type.Annotate(pname("X"), List(Mod.Annot(init("a")), Mod.Annot(init("b")))),
     )
   }
 
@@ -942,7 +942,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tparams = List(tparam"T")
     val tpe = t"(T, T)"
     assertTree(t"[..$tparams] =>> $tpe")(
-      Type.Lambda(List(pparam("T")), Type.Tuple(List(pname("T"), pname("T"))))
+      Type.Lambda(List(pparam("T")), Type.Tuple(List(pname("T"), pname("T")))),
     )
   }
 
@@ -1060,7 +1060,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpes = List(t"A", t"B")
     val pats = List(q"Q", q"W")
     assertTree(p"$ref[..$tpes](..$pats)")(
-      Pat.Extract(tapplytype(tname("x"), pname("A"), pname("B")), List(tname("Q"), tname("W")))
+      Pat.Extract(tapplytype(tname("x"), pname("A"), pname("B")), List(tname("Q"), tname("W"))),
     )
   }
 
@@ -1069,7 +1069,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpes = List(t"`A`", t"B")
     val pats = List(p"`Q`", q"W")
     assertTree(p"$ref[..$tpes](..$pats)")(
-      Pat.Extract(tapplytype(tname("x"), pname("A"), pname("B")), List(tname("Q"), tname("W")))
+      Pat.Extract(tapplytype(tname("x"), pname("A"), pname("B")), List(tname("Q"), tname("W"))),
     )
   }
 
@@ -1081,7 +1081,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpes = List(t"A", t"B")
     val pats = List(q"Q", q"W")
     assertTree(p"$ref[..$tpes](..$pats)")(
-      Pat.Extract(tapplytype(tselect("x", "a"), pname("A"), pname("B")), List(tname("Q"), tname("W")))
+      Pat.Extract(tapplytype(tselect("x", "a"), pname("A"), pname("B")), List(tname("Q"), tname("W"))),
     )
   }
 
@@ -1164,7 +1164,7 @@ class SuccessSuite extends TreeSuiteBase {
   }
 
   test("1 p\"_*\"")(assertTree(p"case List(_*) =>")(
-    Case(Pat.Extract(tname("List"), List(Pat.SeqWildcard())), None, blk())
+    Case(Pat.Extract(tname("List"), List(Pat.SeqWildcard())), None, blk()),
   ))
 
   test("2 p\"_*\"")(assertTree(p"_*")(Pat.SeqWildcard()))
@@ -1193,7 +1193,7 @@ class SuccessSuite extends TreeSuiteBase {
     val pats = List(p"x", p"y")
     val tpe = t"T"
     assertTree(q"..$mods val ..$pats: $tpe")(
-      Decl.Val(List(Mod.Private(anon), Mod.Final()), List(patvar("x"), patvar("y")), pname("T"))
+      Decl.Val(List(Mod.Private(anon), Mod.Final()), List(patvar("x"), patvar("y")), pname("T")),
     )
   }
 
@@ -1211,7 +1211,7 @@ class SuccessSuite extends TreeSuiteBase {
     val pats = List(p"x", p"y")
     val tpe = t"T"
     assertTree(q"..$mods var ..$pats: $tpe")(
-      Decl.Var(List(Mod.Private(anon), Mod.Final()), List(patvar("x"), patvar("y")), pname("T"))
+      Decl.Var(List(Mod.Private(anon), Mod.Final()), List(patvar("x"), patvar("y")), pname("T")),
     )
   }
 
@@ -1224,7 +1224,7 @@ class SuccessSuite extends TreeSuiteBase {
     checkTree(tparams, "[T, W]")(ppc(pparam("T"), pparam("W")))
     assertEquals(paramss.lengthCompare(1), 0)
     checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause(
-      List(tparam("x", "X"), tparam("y", "Y"))
+      List(tparam("x", "X"), tparam("y", "Y")),
     ))
     assertTree(tpe)(pname("R"))
   }
@@ -1240,7 +1240,7 @@ class SuccessSuite extends TreeSuiteBase {
       tname("m"),
       List(pparam("T"), pparam("W")),
       List(List(tparam("x", "X"), tparam("x", "Y"))),
-      pname("R")
+      pname("R"),
     ))
   }
 
@@ -1266,7 +1266,7 @@ class SuccessSuite extends TreeSuiteBase {
       List(Mod.Private(anon), Mod.Final()),
       pname("T"),
       List(pparam("T"), pparam("W")),
-      bounds("A", "A")
+      bounds("A", "A"),
     ))
   }
 
@@ -1289,7 +1289,7 @@ class SuccessSuite extends TreeSuiteBase {
       List(Mod.Private(anon), Mod.Final()),
       List(patvar("x"), patvar("y")),
       Some(pname("T")),
-      tname("t")
+      tname("t"),
     ))
   }
 
@@ -1312,7 +1312,7 @@ class SuccessSuite extends TreeSuiteBase {
       List(Mod.Private(anon), Mod.Final()),
       List(patvar("x"), patvar("y")),
       Some(pname("T")),
-      Some(tname("t"))
+      Some(tname("t")),
     ))
   }
 
@@ -1324,7 +1324,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(name)(tname("m"))
     checkTree(tparams, "[T, W]")(ppc(pparam("T"), pparam("W")))
     checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause(
-      List(tparam("x", "X"), tparam("y", "Y"))
+      List(tparam("x", "X"), tparam("y", "Y")),
     ))
     assertTree(tpeopt)(Some(pname("R")))
     assertTree(expr)(tname("r"))
@@ -1343,7 +1343,7 @@ class SuccessSuite extends TreeSuiteBase {
       List(pparam("T"), pparam("W")),
       List(List(tparam("x", "X"), tparam("x", "Y"))),
       Some(pname("R")),
-      tname("r")
+      tname("r"),
     ))
   }
 
@@ -1355,7 +1355,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(name)(tname("m"))
     checkTree(tparams, "[T, W]")(ppc(pparam("T"), pparam("W")))
     checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause(
-      List(tparam("x", "X"), tparam("y", "Y"))
+      List(tparam("x", "X"), tparam("y", "Y")),
     ))
     assertTree(tpeopt)(Some(pname("R")))
     assertTree(expr)(tname("r"))
@@ -1374,7 +1374,7 @@ class SuccessSuite extends TreeSuiteBase {
       List(pparam("T"), pparam("W")),
       List(List(tparam("x", "X"), tparam("x", "Y"))),
       Some(pname("R")),
-      tname("r")
+      tname("r"),
     ))
   }
 
@@ -1398,7 +1398,7 @@ class SuccessSuite extends TreeSuiteBase {
       pname("Q"),
       List(pparam("T"), pparam("W")),
       pname("R"),
-      noBounds
+      noBounds,
     ))
   }
 
@@ -1412,7 +1412,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tparams)(ppc(pparam("T"), pparam("W")))
     assertTree(mod)(Mod.Private(anon))
     checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause(
-      List(tparam("x", "X"), tparam("y", "Y"))
+      List(tparam("x", "X"), tparam("y", "Y")),
     ))
     assertTree(template)(tplNoBody(init("Y")))
   }
@@ -1427,11 +1427,11 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tparams)(ppc(pparam("T"), pparam("W")))
     assertTree(mod)(Mod.Protected(anon))
     checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause(
-      List(tparam("x", "X"), tparam("y", "Y"))
+      List(tparam("x", "X"), tparam("y", "Y")),
     ))
     assertTree(template)(tpl(
       Defn.Def(Nil, tname("m1"), Nil, Nil, None, int(42)),
-      Defn.Def(Nil, tname("m2"), Nil, Nil, None, int(666))
+      Defn.Def(Nil, tname("m2"), Nil, Nil, None, int(666)),
     ))
   }
 
@@ -1447,7 +1447,7 @@ class SuccessSuite extends TreeSuiteBase {
       pname("Q"),
       List(pparam("T"), pparam("W")),
       Ctor.Primary(List(Mod.Protected(anon)), anon, List(List(tparam("x", "X"), tparam("x", "Y")))),
-      tpl(List(init("F")), List(Defn.Def(Nil, tname("m"), Nil, Nil, None, int(42))))
+      tpl(List(init("F")), List(Defn.Def(Nil, tname("m"), Nil, Nil, None, int(42)))),
     ))
   }
 
@@ -1471,7 +1471,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tparams)(ppc(pparam("T"), pparam("W")))
     assertTree(template)(tpl(
       Defn.Def(Nil, tname("m1"), Nil, Nil, None, int(42)),
-      Defn.Def(Nil, tname("m2"), Nil, Nil, None, int(666))
+      Defn.Def(Nil, tname("m2"), Nil, Nil, None, int(666)),
     ))
   }
 
@@ -1485,7 +1485,7 @@ class SuccessSuite extends TreeSuiteBase {
       pname("Q"),
       List(pparam("T"), pparam("W")),
       EmptyCtor(),
-      tpl(List(init("F")), List(Defn.Def(Nil, tname("m"), Nil, Nil, None, int(42))))
+      tpl(List(init("F")), List(Defn.Def(Nil, tname("m"), Nil, Nil, None, int(42)))),
     ))
   }
 
@@ -1505,7 +1505,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(name)(tname("Q"))
     assertTree(template)(tpl(
       Defn.Def(Nil, tname("m1"), Nil, Nil, None, int(42)),
-      Defn.Def(Nil, tname("m2"), Nil, Nil, None, int(666))
+      Defn.Def(Nil, tname("m2"), Nil, Nil, None, int(666)),
     ))
   }
 
@@ -1516,7 +1516,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"..$mods object $name $template")(Defn.Object(
       List(Mod.Private(anon), Mod.Final()),
       tname("Q"),
-      tpl(List(init("F")), List(Defn.Def(Nil, tname("m"), Nil, Nil, None, int(42))))
+      tpl(List(init("F")), List(Defn.Def(Nil, tname("m"), Nil, Nil, None, int(42)))),
     ))
   }
 
@@ -1532,7 +1532,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(name)(tname("Q"))
     assertTree(template)(tpl(
       Defn.Def(Nil, tname("m1"), Nil, Nil, None, int(42)),
-      Defn.Def(Nil, tname("m2"), Nil, Nil, None, int(666))
+      Defn.Def(Nil, tname("m2"), Nil, Nil, None, int(666)),
     ))
   }
 
@@ -1542,7 +1542,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"package object $name $template")(Pkg.Object(
       Nil,
       tname("Q"),
-      tpl(List(init("F")), List(Defn.Def(Nil, tname("m"), Nil, Nil, None, int(42))))
+      tpl(List(init("F")), List(Defn.Def(Nil, tname("m"), Nil, Nil, None, int(42)))),
     ))
   }
 
@@ -1552,7 +1552,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(stats.toString, "{ class A; object B }")
     assertTree(stats)(Pkg.Body(List(
       Defn.Class(Nil, pname("A"), Nil, ctor, tplNoBody()),
-      Defn.Object(Nil, tname("B"), tplNoBody())
+      Defn.Object(Nil, tname("B"), tplNoBody()),
     )))
   }
 
@@ -1563,8 +1563,8 @@ class SuccessSuite extends TreeSuiteBase {
       tname("p"),
       List(
         Defn.Class(Nil, pname("A"), Nil, ctor, tplNoBody()),
-        Defn.Object(Nil, tname("B"), tplNoBody())
-      )
+        Defn.Object(Nil, tname("B"), tplNoBody()),
+      ),
     ))
   }
 
@@ -1578,8 +1578,8 @@ class SuccessSuite extends TreeSuiteBase {
       tselect("p", "a"),
       List(
         Defn.Class(Nil, pname("A"), Nil, ctor, tplNoBody()),
-        Defn.Object(Nil, tname("B"), tplNoBody())
-      )
+        Defn.Object(Nil, tname("B"), tplNoBody()),
+      ),
     ))
   }
 
@@ -1588,7 +1588,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private)")
     assertTrees(mods: _*)(Mod.Private(anon))
     checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause(
-      List(tparam("x", "X"), tparam("y", "Y"))
+      List(tparam("x", "X"), tparam("y", "Y")),
     ))
   }
 
@@ -1596,7 +1596,7 @@ class SuccessSuite extends TreeSuiteBase {
     val mods = List(mod"private")
     val paramss = List(List(param"x: X", param"x: Y"))
     assertTree(q"..$mods def this(...$paramss)")(
-      Ctor.Primary(List(Mod.Private(anon)), anon, List(List(tparam("x", "X"), tparam("x", "Y"))))
+      Ctor.Primary(List(Mod.Private(anon)), anon, List(List(tparam("x", "X"), tparam("x", "Y")))),
     )
   }
 
@@ -1606,7 +1606,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(mods.toString, "List(private, final)")
     assertTrees(mods: _*)(Mod.Private(anon), Mod.Final())
     checkTreesWithSyntax(paramss: _*)("(x: X, y: Y)")(Term.ParamClause(
-      List(tparam("x", "X"), tparam("y", "Y"))
+      List(tparam("x", "X"), tparam("y", "Y")),
     ))
     assertTree(tinit)(init(Type.Singleton(Term.This(anon)), List(tname("foo"), tname("bar"))))
   }
@@ -1620,7 +1620,7 @@ class SuccessSuite extends TreeSuiteBase {
       Name.This(),
       List(List(tparam("x", "X"), tparam("x", "Y"))),
       init("C", List(tname("foo"), tname("bar"))),
-      Nil
+      Nil,
     ))
   }
 
@@ -1638,7 +1638,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpeopt = t"X"
     val expropt = q"42"
     assertTree(param"..$mods $paramname: $tpeopt = $expropt")(
-      Term.Param(List(Mod.Private(anon), Mod.Final()), tname("x"), Some(pname("X")), Some(int(42)))
+      Term.Param(List(Mod.Private(anon), Mod.Final()), tname("x"), Some(pname("X")), Some(int(42))),
     )
   }
 
@@ -1667,7 +1667,7 @@ class SuccessSuite extends TreeSuiteBase {
     val tpes1 = List(t"T with Y")
     val tpes2 = List(t"U with I")
     assertTree(
-      tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2"
+      tparam"..$mods $tparamname[..$tparams] >: $tpeopt1 <: $tpeopt2 <% ..$tpes1 : ..$tpes2",
     )(pparam(
       List(Mod.Covariant()),
       "Z",
@@ -1676,8 +1676,8 @@ class SuccessSuite extends TreeSuiteBase {
         "E",
         "R",
         cb = List(Type.With(pname("U"), pname("I"))),
-        vb = List(Type.With(pname("T"), pname("Y")))
-      )
+        vb = List(Type.With(pname("T"), pname("Y"))),
+      ),
     ))
   }
 
@@ -1704,7 +1704,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("2 init\"this(...exprss)\"") {
     val exprss = List(List(q"40"), List(q"2"))
     assertTree(init"this(...$exprss)")(
-      init(Type.Singleton(Term.This(anon)), List(int(40)), List(int(2)))
+      init(Type.Singleton(Term.This(anon)), List(int(40)), List(int(2))),
     )
   }
 
@@ -1741,7 +1741,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(stats1.toString, "Some({ val a = 2; val b = 2 })")
     assertTree(stats1)(Some(stats(
       Defn.Val(Nil, List(patvar("a")), None, int(2)),
-      Defn.Val(Nil, List(patvar("b")), None, int(2))
+      Defn.Val(Nil, List(patvar("b")), None, int(2)),
     )))
     assertEquals(inits.toString, "List(T, U)")
     assertTrees(inits: _*)(init("T"), init("U"))
@@ -1749,7 +1749,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(stats2.toString, "List(def m = 2, def n = 2)")
     assertTrees(stats2: _*)(
       Defn.Def(Nil, tname("m"), Nil, Nil, None, int(2)),
-      Defn.Def(Nil, tname("n"), Nil, Nil, None, int(2))
+      Defn.Def(Nil, tname("n"), Nil, Nil, None, int(2)),
     )
   }
 
@@ -1761,15 +1761,15 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(template"{ ..$stats1 } with ..$inits { $self1 => ..$stats2 }")(Template(
       List(
         Defn.Val(Nil, List(patvar("a")), None, int(2)),
-        Defn.Val(Nil, List(patvar("b")), None, int(2))
+        Defn.Val(Nil, List(patvar("b")), None, int(2)),
       ),
       List(init("T"), init("U")),
       self("self", "S"),
       List(
         Defn.Def(Nil, tname("m"), Nil, Nil, None, int(2)),
-        Defn.Def(Nil, tname("n"), Nil, Nil, None, int(2))
+        Defn.Def(Nil, tname("n"), Nil, Nil, None, int(2)),
       ),
-      Nil
+      Nil,
     ))
   }
 
@@ -1949,7 +1949,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertWithOriginalSyntax(stats: _*)("class A { val a = 'a'}")("class A { val a = 'a' }")
     assertTrees(stats: _*)(
       Defn
-        .Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(Defn.Val(Nil, List(patvar("a")), None, lit('a'))))
+        .Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(Defn.Val(Nil, List(patvar("a")), None, lit('a')))),
     )
   }
 
@@ -1959,7 +1959,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertWithOriginalSyntax(stats: _*)("class A { val a = 'a'}")("class A { val a = 'a' }")
     assertTrees(stats: _*)(
       Defn
-        .Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(Defn.Val(Nil, List(patvar("a")), None, lit('a'))))
+        .Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(Defn.Val(Nil, List(patvar("a")), None, lit('a')))),
     )
   }
 
@@ -1967,7 +1967,7 @@ class SuccessSuite extends TreeSuiteBase {
     val stats = List(q"class A { val x = 1 }", q"object B")
     assertTree(source"..$stats")(Source(List(
       Defn.Class(Nil, pname("A"), Nil, ctor, tpl(Defn.Val(Nil, List(patvar("x")), None, int(1)))),
-      Defn.Object(Nil, tname("B"), tplNoBody())
+      Defn.Object(Nil, tname("B"), tplNoBody()),
     )))
   }
 
@@ -1996,7 +1996,7 @@ class SuccessSuite extends TreeSuiteBase {
     checkTree(tparams, "")(noPpc)
     checkTreesWithSyntax(paramss: _*)("(x: Int)")(tpc(tparam("x", "Int")))
     assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs")(
-      Defn.Def(Nil, tname("f"), Nil, List(List(tparam("x", "Int"))), None, tname("???"))
+      Defn.Def(Nil, tname("f"), Nil, List(List(tparam("x", "Int"))), None, tname("???")),
     )
   }
 
@@ -2005,7 +2005,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tparams)(ppc(pparam("A")))
     checkTreesWithSyntax(paramss: _*)("(x: Int)")(tpc(tparam("x", "Int")))
     assertTree(q"..$mods def $name[..$tparams](...$paramss): $tpe = $rhs")(
-      Defn.Def(Nil, tname("f"), List(pparam("A")), List(List(tparam("x", "Int"))), None, tname("???"))
+      Defn.Def(Nil, tname("f"), List(pparam("A")), List(List(tparam("x", "Int"))), None, tname("???")),
     )
   }
 
@@ -2017,7 +2017,7 @@ class SuccessSuite extends TreeSuiteBase {
       pname("C"),
       Nil,
       EmptyCtor(),
-      tpl(Defn.Def(List(Mod.Private(anon)), tname("x"), Nil, Nil, None, int(2)))
+      tpl(Defn.Def(List(Mod.Private(anon)), tname("x"), Nil, Nil, None, int(2))),
     ))
   }
 
@@ -2036,7 +2036,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(q"class C extends $parent".syntax, "class C extends _root_.scala.AnyVal")
     assert(
       q"class C extends $parent with $parent".syntax ==
-        "class C extends _root_.scala.AnyVal with _root_.scala.AnyVal"
+        "class C extends _root_.scala.AnyVal with _root_.scala.AnyVal",
     )
   }
 
@@ -2047,14 +2047,14 @@ class SuccessSuite extends TreeSuiteBase {
       """|{
          |  class C
          |  class C
-         |}""".stripMargin.lf2nl
+         |}""".stripMargin.lf2nl,
     )
     assertEquals(
       q"{ $stat; $stat }".syntax,
       """|{
          |  class C
          |  class C
-         |}""".stripMargin.lf2nl
+         |}""".stripMargin.lf2nl,
     )
   }
 
@@ -2074,7 +2074,7 @@ class SuccessSuite extends TreeSuiteBase {
          |  def foo = bar
          |  println("another stat")
          |  def baz: Unit = {}
-         |}""".stripMargin.lf2nl
+         |}""".stripMargin.lf2nl,
     )
   }
 
@@ -2120,7 +2120,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("#468 - primary constructor III") {
     val q"case class A(..$params)" = q"case class A(a: Int, b: String)"
     checkTreesWithSyntax(params)("(a: Int, b: String)")(Term.ParamClause(
-      List(tparam("a", "Int"), tparam("b", "String"))
+      List(tparam("a", "Int"), tparam("b", "String")),
     ))
   }
 
@@ -2129,7 +2129,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(paramss.length, 2)
     checkTreesWithSyntax(paramss: _*)("(a: Int)", "(b: String)")(
       tpc(tparam("a", "Int")),
-      tpc(tparam("b", "String"))
+      tpc(tparam("b", "String")),
     )
   }
 
@@ -2147,7 +2147,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("#468 - function parameter list III") {
     val q"def foo(..$params): Int = a" = q"def foo(a: Int, b: String): Int = a"
     checkTreesWithSyntax(params)("(a: Int, b: String)")(Term.ParamClause(
-      List(tparam("a", "Int"), tparam("b", "String"))
+      List(tparam("a", "Int"), tparam("b", "String")),
     ))
   }
 
@@ -2156,7 +2156,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(paramss.length, 2)
     checkTreesWithSyntax(paramss: _*)("(a: Int)", "(b: String)")(
       tpc(tparam("a", "Int")),
-      tpc(tparam("b", "String"))
+      tpc(tparam("b", "String")),
     )
   }
 
@@ -2208,7 +2208,7 @@ class SuccessSuite extends TreeSuiteBase {
          |  x
          |  y
          |  z
-         |}""".stripMargin.lf2nl
+         |}""".stripMargin.lf2nl,
     )
   }
 
@@ -2231,7 +2231,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("#2841 non-empty, no extends") {
     val q"..$mods object $ename $template" = q"object X extends Y { def foo }"
     assertTree(template)(
-      tpl(List(init("Y")), List(Decl.Def(Nil, tname("foo"), Nil, Nil, pname("Unit"))))
+      tpl(List(init("Y")), List(Decl.Def(Nil, tname("foo"), Nil, Nil, pname("Unit")))),
     )
     assertEquals(mods, Nil)
   }
@@ -2302,7 +2302,7 @@ class SuccessSuite extends TreeSuiteBase {
 
     def assertOriginType(obtained: Tree, expected: Class[_ <: Origin]): Unit = assertEquals(
       obtained.origin.getClass.asInstanceOf[Class[Origin]],
-      expected.asInstanceOf[Class[Origin]]
+      expected.asInstanceOf[Class[Origin]],
     )
 
     assertOriginType(valX, classOf[Origin.Parsed])
@@ -2319,7 +2319,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("comments: single-line: literal") {
     val content = q""""real content""""
     assertTree(q"0 // $content has been unquoted")(
-      Lit.Int.createWithComments(0, endComment = Seq("// real content has been unquoted"))
+      Lit.Int.createWithComments(0, endComment = Seq("// real content has been unquoted")),
     )
   }
 
@@ -2328,7 +2328,7 @@ class SuccessSuite extends TreeSuiteBase {
     val begComment = List("/* bc1 */", "/* real content bc */", "/* bc2 */")
     val endComment = List("/* ec1 */", "/* real content ec */", "/* ec2 */")
     assertTree(q"/* bc1 */ /* $content bc */ /* bc2 */ 0 /* ec1 */ /* $content ec */ /* ec2 */")(
-      Lit.Int.createWithComments(0, begComment = begComment, endComment = endComment)
+      Lit.Int.createWithComments(0, begComment = begComment, endComment = endComment),
     )
   }
 
@@ -2344,7 +2344,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tree)(tapply(
       "foo",
       Lit.Int.createWithComments(0, endComment = List("/* c1 */", "/* real content c */", "/* c2 */")),
-      lit(1)
+      lit(1),
     ))
   }
 
@@ -2359,7 +2359,7 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tree)(tapply(
       "foo",
       lit(0),
-      Lit.Int.createWithComments(1, begComment = List("/* c1 */", "/* real content c */", "/* c2 */"))
+      Lit.Int.createWithComments(1, begComment = List("/* c1 */", "/* real content c */", "/* c2 */")),
     ))
   }
 
@@ -2370,7 +2370,7 @@ class SuccessSuite extends TreeSuiteBase {
       List(Pat.Var(Term.Name("foo"))),
       None,
       lit(0),
-      endComment = Seq("// real content has been unquoted")
+      endComment = Seq("// real content has been unquoted"),
     )
     assertTree(q"val foo = 0 // $content has been unquoted")(tree)
   }
@@ -2382,7 +2382,7 @@ class SuccessSuite extends TreeSuiteBase {
       List(Pat.Var(Term.Name("foo"))),
       None,
       lit(0),
-      endComment = Seq("/* real content has been unquoted */")
+      endComment = Seq("/* real content has been unquoted */"),
     )
     assertTree(q"val foo = 0 /* $content has been unquoted */")(tree)
   }
@@ -2399,7 +2399,7 @@ class SuccessSuite extends TreeSuiteBase {
          |Space [17..18)
          |Constant.String(any message) [18..31)
          |EOF [31..31)
-         |""".stripMargin
+         |""".stripMargin,
     )
     val pos = quoted.pos
     assertNoDiff(pos.toString, """[0,31) in str(`${fooTypes(0)}`; "any message")""")
@@ -2409,7 +2409,7 @@ class SuccessSuite extends TreeSuiteBase {
       """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
          |""".stripMargin,
       showPosition = true,
-      showFieldName = true
+      showFieldName = true,
     )
 
     val syntax =
@@ -2437,7 +2437,7 @@ class SuccessSuite extends TreeSuiteBase {
          |Space [17..18)
          |Constant.String(any message) [18..31)
          |EOF [31..31)
-         |""".stripMargin
+         |""".stripMargin,
     )
     val pos = quoted.pos
     assertNoDiff(pos.toString, """[0,31) in str(/* .. */`$terms`; "any message")""")
@@ -2447,7 +2447,7 @@ class SuccessSuite extends TreeSuiteBase {
       """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
          |""".stripMargin,
       showPosition = true,
-      showFieldName = true
+      showFieldName = true,
     )
 
     val syntax =

@@ -9,7 +9,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("literalTypes") {
     assertEquals(
       dialects.Scala3("val a: \"42\" = \"42\"").parse[Stat].get.syntax,
-      "val a: \"42\" = \"42\""
+      "val a: \"42\" = \"42\"",
     )
     assertEquals(pat("_: 42").reprint, "_: 42")
     assertEquals(pat("_: 42f").reprint, "_: 42f")
@@ -24,7 +24,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("case List[_](xs @ _*): scala31") {
     implicit val dialect = dialects.Scala31
     checkTree(pat("List[_](xs @ _*)"), "List[_](xs @ _*)")(
-      Pat.Extract(tapplytype(tname("List"), pwildcard), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard())))
+      Pat.Extract(tapplytype(tname("List"), pwildcard), List(Pat.Bind(patvar("xs"), Pat.SeqWildcard()))),
     )
   }
 
@@ -32,50 +32,50 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     implicit val dialect = dialects.Scala3Future
     checkTree(pat("List[_](xs @ _*)"), "List[_](xs @ _*)")(Pat.Extract(
       tapplytype(tname("List"), Type.AnonymousParam(None)),
-      List(Pat.Bind(patvar("xs"), Pat.SeqWildcard()))
+      List(Pat.Bind(patvar("xs"), Pat.SeqWildcard())),
     ))
   }
 
   test("#2699 method declaration with multiple named 'using' params")(assertEquals(
     templStat("def foo(x: Int)(using y: String, z: Boolean): String").reprint,
-    "def foo(x: Int)(using y: String, z: Boolean): String"
+    "def foo(x: Int)(using y: String, z: Boolean): String",
   ))
 
   test("#2699 method definition with multiple named 'using' params")(assertEquals(
     templStat("def foo(x: Int)(using y: String, z: Boolean) = x").reprint,
-    "def foo(x: Int)(using y: String, z: Boolean) = x"
+    "def foo(x: Int)(using y: String, z: Boolean) = x",
   ))
 
   test("#2699 primary constructor with multiple named 'using' params")(assertEquals(
     templStat("class C(x: Int)(using y: String, z: Boolean)").reprint,
-    "class C(x: Int)(using y: String, z: Boolean)"
+    "class C(x: Int)(using y: String, z: Boolean)",
   ))
 
   test("#2699 secondary constructor with multiple named 'using' params")(assertEquals(
     templStat("class C(x: Int) { def this(x: String)(using y: String, z: Boolean) = this(x.toInt) }")
       .reprint,
-    "class C(x: Int) { def this(x: String)(using y: String, z: Boolean) = this(x.toInt) }"
+    "class C(x: Int) { def this(x: String)(using y: String, z: Boolean) = this(x.toInt) }",
   ))
 
   test("#2699 method declaration with multiple anonymous 'using' params")(assertEquals(
     templStat("def foo(x: Int)(using String, Boolean): String").reprint,
-    "def foo(x: Int)(using String, Boolean): String"
+    "def foo(x: Int)(using String, Boolean): String",
   ))
 
   test("#2699 method definition with multiple anonymous 'using' params")(assertEquals(
     templStat("def foo(x: Int)(using String, Boolean) = x").reprint,
-    "def foo(x: Int)(using String, Boolean) = x"
+    "def foo(x: Int)(using String, Boolean) = x",
   ))
 
   test("#2699 primary constructor with multiple anonymous 'using' params")(assertEquals(
     templStat("class C(x: Int)(using String, Boolean)").reprint,
-    "class C(x: Int)(using String, Boolean)"
+    "class C(x: Int)(using String, Boolean)",
   ))
 
   test("#2699 secondary constructor with multiple anonymous 'using' params")(assertEquals(
     templStat("class C(x: Int) { def this(x: String)(using String, Boolean) = this(x.toInt) }")
       .reprint,
-    "class C(x: Int) { def this(x: String)(using String, Boolean) = this(x.toInt) }"
+    "class C(x: Int) { def this(x: String)(using String, Boolean) = this(x.toInt) }",
   ))
 
   test("#4348 type pattern match with backquotes") {
@@ -95,8 +95,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Term.PartialFunction(List(Case(
         Pat.Tuple(List(Pat.Given(papply("ActorContext", "t")), Pat.Wildcard())),
         None,
-        tselect("Behaviors", "empty")
-      )))
+        tselect("Behaviors", "empty"),
+      ))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -118,8 +118,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       Term.PartialFunction(List(Case(
         Pat.Tuple(List(Pat.Given(papply("ActorContext", Type.Var("t"))), Pat.Wildcard())),
         None,
-        tselect("Behaviors", "empty")
-      )))
+        tselect("Behaviors", "empty"),
+      ))),
     )
     runTestAssert[Stat](layout, layout)(tree)
   }

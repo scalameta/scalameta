@@ -62,7 +62,7 @@ trait InputOps {
           val uri = URLEncoder.encode(gfile.path, UTF_8.name)
           m.Input.VirtualFile(uri, gsource.content.mkString)
         case _ => m.Input.None
-      }
+      },
     )
   }
 
@@ -106,7 +106,7 @@ private object InputOps {
         // We could attempt to return a ".." URI, but java.net doesn't provide facilities for that. While nio's Path
         // does contain facilities for that, such relative paths cannot then be used to produce a percent-encoded,
         // relative URI. It doesn't seem worth fighting this battle at the moment, so:
-        sys.error(s"'$file' is not located within sourceroot '${config.sourceroot}'.")
+        sys.error(s"'$file' is not located within sourceroot '${config.sourceroot}'."),
       )
 
   }

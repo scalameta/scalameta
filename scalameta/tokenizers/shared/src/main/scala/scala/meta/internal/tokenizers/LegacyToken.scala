@@ -192,6 +192,6 @@ object LegacyToken {
     "then" -> THEN,
     "enum" -> ENUM,
     "given" -> GIVEN,
-    "export" -> EXPORT
+    "export" -> EXPORT,
   )
 }

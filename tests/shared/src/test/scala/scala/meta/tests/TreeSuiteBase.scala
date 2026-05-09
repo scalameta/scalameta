@@ -18,19 +18,19 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   def emptyArgClause = Seq.empty[Term.ArgClause]
 
   protected def assertStruct(obtained: Tree, extraClue: String = "")(
-      expected: String
+      expected: String,
   )(implicit loc: Location): Unit = {
     def msg = TestHelpers.getMessageWithExtraClue("tree structure not equal", extraClue)
     assertNoDiff(obtained.structure, expected, msg)
   }
 
   protected def assertTree(obtained: Tree, extraClue: String = "")(expected: Tree)(implicit
-      loc: Location
+      loc: Location,
   ): Unit = assertTreeStruct(obtained, extraClue)(expected, expected.structure)
 
   protected def assertTreeStruct(
       obtained: Tree,
-      extraClue: String = ""
+      extraClue: String = "",
   )(expected: Tree, expectedStruct: String)(implicit loc: Location): Unit = {
     assertStruct(obtained, extraClue)(expectedStruct)
     expected.origin match {
@@ -46,24 +46,24 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   }
 
   protected def assertTree(
-      obtained: Option[Tree]
+      obtained: Option[Tree],
   )(expected: Option[Tree])(implicit loc: Location): Unit = (obtained, expected) match {
     case (Some(o), Some(e)) => assertTree(o)(e)
     case _ => assertEquals(obtained, expected)
   }
 
   protected def assertSyntax(
-      syntax: String
+      syntax: String,
   )(obtained: Tree)(implicit loc: Location, dialect: Dialect): String =
     assertSyntaxWithClue(obtained)(syntax)(obtained.structure)
 
   protected def assertSyntax(obtained: Tree, syntax: String = null)(
-      expected: Tree
+      expected: Tree,
   )(implicit loc: Location, dialect: Dialect): String =
     assertSyntaxWithClue(obtained, syntax)(expected, expected.structure)
 
   protected def assertSyntaxWithClue(
-      obtained: Tree
+      obtained: Tree,
   )(syntax: String)(clue: => Any)(implicit loc: Location, dialect: Dialect): String = {
     val reprinted = obtained.reprint
     if (syntax.nonEmpty) assertNoDiff(reprinted, syntax, clue)
@@ -72,12 +72,12 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected def assertSyntaxWithClue(
       obtained: Tree,
-      syntax: String = null
+      syntax: String = null,
   )(expected: Tree, clue: => Any)(implicit loc: Location, dialect: Dialect): String =
     assertSyntaxWithClue(obtained)(TestHelpers.getSyntax(expected.reprint, syntax))(clue)
 
   protected def checkTree(obtained: Tree, syntax: String = null)(
-      expected: Tree
+      expected: Tree,
   )(implicit loc: Location, dialect: Dialect): Unit = {
     val expectedStruct = expected.structure
     assertTreeStruct(obtained)(expected, expectedStruct)
@@ -85,21 +85,21 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   }
 
   protected def checkTrees(
-      obtained: Tree*
+      obtained: Tree*,
   )(expected: Tree*)(implicit loc: Location, dialect: Dialect): Unit = {
     assertEquals(obtained.length, expected.length)
     obtained.zip(expected).foreach { case (o, e) => checkTree(o)(e) }
   }
 
   protected def checkTreesWithSyntax(
-      obtained: Tree*
+      obtained: Tree*,
   )(syntax: String*)(expected: Tree*)(implicit loc: Location, dialect: Dialect): Unit = {
     assertEquals(obtained.length, syntax.length)
     checkTreesWithSyntax(obtained.zip(syntax): _*)(expected: _*)
   }
 
   protected def checkTreesWithSyntax(
-      obtained: (Tree, String)*
+      obtained: (Tree, String)*,
   )(expected: Tree*)(implicit loc: Location, dialect: Dialect): Unit = {
     assertEquals(obtained.length, expected.length)
     obtained.zip(expected).foreach { case ((o, s), e) => checkTree(o, s)(e) }
@@ -125,7 +125,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
 
   protected def assertWithOriginalSyntax(tree: Tree, original: String, reprinted: String)(implicit
       loc: Location,
-      dialect: Dialect
+      dialect: Dialect,
   ): Unit = {
     val struct = tree.structure
     assertNoDiff(tree.reprint, reprinted, struct)
@@ -133,7 +133,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   }
 
   protected def assertWithOriginalSyntax(
-      trees: Tree*
+      trees: Tree*,
   )(original: String*)(reprinted: String*)(implicit loc: Location, dialect: Dialect): Unit = {
     assertEquals(trees.length, original.length)
     assertEquals(trees.length, reprinted.length)
@@ -143,13 +143,13 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   }
 
   protected def assertTokensAsStructureLines(tokens: Iterable[Token], expected: String)(implicit
-      loc: Location
+      loc: Location,
   ): Unit = assertNoDiff(TestHelpers.tokensAsStructureLines(tokens.iterator), expected)
 
   protected def assertTokenizedAsStructureLines(
       code: String,
       expected: String,
-      dialect: Dialect
+      dialect: Dialect,
   )(implicit loc: Location, conv: TestHelpers.Tokenize): Unit = {
     implicit val implicitDialect: Dialect = dialect
     assertTokensAsStructureLines(conv(code), expected)
@@ -158,16 +158,16 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   protected def assertTokenizedAsStructureLines(code: String, expected: String)(implicit
       loc: Location,
       dialect: Dialect,
-      conv: TestHelpers.Tokenize
+      conv: TestHelpers.Tokenize,
   ): Unit = assertTokenizedAsStructureLines(code, expected, dialect)
 
   def assertTokensAsSyntax(tokens: Iterable[Token], expected: String)(implicit
-      loc: Location
+      loc: Location,
   ): Unit = assertNoDiff(TestHelpers.tokensAsSyntax(tokens.iterator), expected)
 
   def assertTokenizedAsSyntax(code: String, expected: String, dialect: Dialect)(implicit
       loc: Location,
-      conv: TestHelpers.Tokenize
+      conv: TestHelpers.Tokenize,
   ): Unit = {
     implicit val implicitDialect: Dialect = dialect
     assertTokensAsSyntax(conv(code), expected)
@@ -176,7 +176,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
   def assertTokenizedAsSyntax(code: String, expected: String)(implicit
       loc: Location,
       dialect: Dialect,
-      conv: TestHelpers.Tokenize
+      conv: TestHelpers.Tokenize,
   ): Unit = assertTokenizedAsSyntax(code, expected, dialect)
 
   protected def tokenize(code: String)(implicit dialect: Dialect): Tokens = tokenizerOptions
@@ -221,7 +221,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
       expected: String,
       showPosition: Boolean = false,
       showFieldName: Boolean = false,
-      skipFullTree: Boolean = true
+      skipFullTree: Boolean = true,
   )(implicit loc: Location): Unit = {
     val sb = new StringBuilder
     TestHelpers.foreach(tree) {
@@ -258,7 +258,7 @@ abstract class TreeSuiteBase extends FunSuite with CommonTrees {
               case (name, `t`) => name
               case (name, Some(`t`)) => name
               case (name, IterableIndex(idx)) => s"$name$idx"
-            }
+            },
           ).orElse(Some("?"))
           else None
         nameOpt.foreach(x => sb.append('<').append(x).append('>'))

@@ -58,7 +58,7 @@ package object tokenizers {
     "#",
     "@",
     "\u21D2",
-    "\u2190"
+    "\u2190",
   )
 
   def keywords(dialect: Dialect) = {

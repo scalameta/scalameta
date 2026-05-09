@@ -51,7 +51,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
           def mkByneed = Modifiers(
             mods.flags,
             mods.privateWithin,
-            mods.annotations :+ q"new $AdtMetadataModule.byNeedField"
+            mods.annotations :+ q"new $AdtMetadataModule.byNeedField",
           )
         }
         def needs(name: Name, companion: Boolean, duplicate: Boolean) = {
@@ -88,7 +88,7 @@ class DataMacros(val c: Context) extends MacroHelpers {
           def unapply(tree: ValDef): Option[(Modifiers, TermName, Tree, Tree)] = tree.tpt match {
             case Annotated(
                   Apply(Select(New(Ident(TypeName("byNeed"))), termNames.CONSTRUCTOR), List()),
-                  tpt
+                  tpt,
                 ) =>
               if (Vararg.unapply(tree.tpt).nonEmpty) c
                 .abort(cdef.pos, "vararg parameters cannot be by-need")

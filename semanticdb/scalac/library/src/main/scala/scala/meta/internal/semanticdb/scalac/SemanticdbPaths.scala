@@ -16,7 +16,7 @@ object SemanticdbPaths {
   def toScala(
       semanticdb: AbsolutePath,
       sourceroot: AbsolutePath,
-      targetroot: AbsolutePath
+      targetroot: AbsolutePath,
   ): AbsolutePath = sourceroot.resolve(toScala(semanticdb.toRelative(targetroot)))
 
   def toScala(path: RelativePath): RelativePath = {

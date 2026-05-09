@@ -12,7 +12,7 @@ object ScalaSigAttribute extends Attribute(Main.SCALA_SIG) {
       len: Int,
       buf: Array[Char],
       codeOff: Int,
-      labels: Array[Label]
+      labels: Array[Label],
   ): Attribute = {
     val bytecode = new ByteCode(cr.b, off, len)
     val scalaSig = ScalaSigAttributeParsers.parse(bytecode)

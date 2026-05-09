@@ -27,8 +27,8 @@ class MetacpErrorSuite extends FunSuite {
           "3.2.0",
           // Scalameta has public signatures that reference scala-reflect APIs even if scala-reflect not
           // declared as a provided dependency in pom.xml.
-          provided = Nil
-        ).classpath()
+          provided = Nil,
+        ).classpath(),
       )
       Metacp.process(scalametaSettings, reporter)
     }
@@ -43,7 +43,7 @@ class MetacpErrorSuite extends FunSuite {
          |missing symbol: scala.reflect.macros.Universe
          |missing symbol: scala.reflect.macros.blackbox
          |missing symbol: scala.reflect.macros.whitebox
-         |""".stripMargin
+         |""".stripMargin,
     )
   }
 
@@ -69,14 +69,14 @@ class MetacpErrorSuite extends FunSuite {
           |  },
           |  "scalaLibrarySynthetics": ""
           |}
-          |""".stripMargin
+          |""".stripMargin,
     )
 
     assertNoDiff(
       err,
       s"""|missing symbol: scala in $tmp
           |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
-          |""".stripMargin
+          |""".stripMargin,
     )
   }
 
@@ -97,13 +97,13 @@ class MetacpErrorSuite extends FunSuite {
           |  },
           |  "scalaLibrarySynthetics": ""
           |}
-          |""".stripMargin
+          |""".stripMargin,
     )
     assertNoDiff(
       err,
       s"""|missing symbol: scala in ${AbsolutePath(manifest)}
           |NOTE. To fix 'missing symbol' errors please provide a complete --classpath or --dependency-classpath. The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.
-          |""".stripMargin
+          |""".stripMargin,
     )
     // TODO(olafurpg) fix this assertion before merging PR!
     // assert(!Files.list(output).iterator.hasNext)
@@ -128,7 +128,7 @@ class MetacpErrorSuite extends FunSuite {
       err,
       s"""|broken signature for _empty_/A#: missing symbol: scala
           |broken signature for _empty_/A#b().: missing symbol: <empty>.B
-          |""".stripMargin
+          |""".stripMargin,
     )
   }
 }

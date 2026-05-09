@@ -168,7 +168,7 @@ trait SymbolInformationOps {
       }
 
     private def annotations: List[s.AnnotationTree] = gsym.annotations.flatMap(gann =>
-      if (gann.symbol == definitions.MacroImplAnnotation) None else Some(gann.toSemantic)
+      if (gann.symbol == definitions.MacroImplAnnotation) None else Some(gann.toSemantic),
     )
 
     private def access: s.Access = kind match {
@@ -203,7 +203,7 @@ trait SymbolInformationOps {
       overriddenSymbols = overriddenSymbols,
       signature = sig(linkMode),
       annotations = annotations,
-      access = access
+      access = access,
     )
     def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation =
       toSymbolInfo(linkMode, gsym.ssym)

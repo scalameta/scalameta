@@ -11,7 +11,7 @@ class TokensPositionSuite extends BasePositionSuite {
     "`a` <- b",
     """|Pat.Var `a`
        |Term.Name `a`
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Enumerator]("a = 1")
   checkPositions[Enumerator]("if x")
@@ -19,7 +19,7 @@ class TokensPositionSuite extends BasePositionSuite {
     "case `a` =>",
     """|Term.Name `a`
        |Term.Block case `a` =>@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Case](
     "case `a` :: `b` :: _ =>",
@@ -28,14 +28,14 @@ class TokensPositionSuite extends BasePositionSuite {
        |Pat.ExtractInfix `b` :: _
        |Term.Name `b`
        |Term.Block case `a` :: `b` :: _ =>@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Case](
     "case a b `c` =>",
     """|Pat.ExtractInfix a b `c`
        |Term.Name `c`
        |Term.Block case a b `c` =>@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Case](
     "case _ op (a | b) =>",
@@ -43,25 +43,25 @@ class TokensPositionSuite extends BasePositionSuite {
        |Pat.ArgClause (a | b)
        |Pat.Alternative a | b
        |Term.Block case _ op (a | b) =>@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Case](
     "case x `.y` () =>",
     """|Pat.ExtractInfix x `.y` ()
        |Term.Name `.y`
        |Term.Block case x `.y` () =>@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Case](
     "case a if p =>",
     """|Term.Block case a if p =>@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Case]("case _ => ()")
   checkPositions[Case](
     "case _ => {}",
     """|Term.Block {}
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Type]("B")
@@ -72,23 +72,23 @@ class TokensPositionSuite extends BasePositionSuite {
   checkPositions[Type](
     "F[T]",
     """|Type.ArgClause [T]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type]("K Map V")
   checkPositions[Type](
     "() => B",
     """|Type.FuncParamClause ()
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "A => B",
     """|Type.FuncParamClause A
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "(A, B) => C",
     """|Type.FuncParamClause (A, B)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type]("(A, B)")
   checkPositions[Type]("A with B")
@@ -97,18 +97,18 @@ class TokensPositionSuite extends BasePositionSuite {
     "A { def f: B }",
     """|Stat.Block { def f: B }
        |Decl.Def def f: B
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "A{}",
     """|Stat.Block {}
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "{ def f: B }",
     """|Stat.Block { def f: B }
        |Decl.Def def f: B
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "A forSome { type T }",
@@ -116,32 +116,32 @@ class TokensPositionSuite extends BasePositionSuite {
        |Decl.Type type T
        |Type.ParamClause A forSome { type T @@}
        |Type.Bounds A forSome { type T @@}
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "T @A",
     """|Mod.Annot @A
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "_",
     """|Type.Bounds _@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "_ >: A <: B",
     """|Type.Bounds >: A <: B
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "_ <: B",
     """|Type.Bounds <: B
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type](
     "_ >: A",
     """|Type.Bounds >: A
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Type]("=> T")
   checkPositions[Type]("Any*")
@@ -154,7 +154,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Type.Bounds <% B[A]
        |Type.Apply B[A]
        |Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "def f[A: B]: C",
@@ -163,7 +163,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Type.Param A: B
        |Type.ParamClause def f[A@@: B]: C
        |Type.Bounds : B
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "def f[A : B : C]: D",
@@ -172,30 +172,30 @@ class TokensPositionSuite extends BasePositionSuite {
        |Type.Param A : B : C
        |Type.ParamClause def f[A @@: B : C]: D
        |Type.Bounds : B : C
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
     "(a): @A",
     """|Mod.Annot @A
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(f)((((a))))",
     """|Term.ArgClause ((((a))))
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(f)((a))",
     """|Term.ArgClause ((a))
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(f)({ case a => a })",
     """|Term.ArgClause ({ case a => a })
        |Term.PartialFunction { case a => a }
        |Case case a => a
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "foo { implicit a => { b }: C }",
@@ -205,26 +205,26 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Param implicit a
        |Term.Ascribe { b }: C
        |Term.Block { b }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(f)({ x })",
     """|Term.ArgClause ({ x })
        |Term.Block { x }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(a) op (b)",
     """|Type.ArgClause (a) op @@(b)
        |Term.ArgClause (b)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(a, b) op (c, d)",
     """|Term.Tuple (a, b)
        |Type.ArgClause (a, b) op @@(c, d)
        |Term.ArgClause (c, d)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(a, b) op ((c, d))",
@@ -232,33 +232,33 @@ class TokensPositionSuite extends BasePositionSuite {
        |Type.ArgClause (a, b) op @@((c, d))
        |Term.ArgClause ((c, d))
        |Term.Tuple (c, d)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "1 + 1",
     """|Type.ArgClause 1 + @@1
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "a f ()",
     """|Type.ArgClause a f @@()
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "a f (b)",
     """|Type.ArgClause a f @@(b)
        |Term.ArgClause (b)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(f) [A,B]",
     """|Type.ArgClause [A,B]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(f) [A]",
     """|Type.ArgClause [A]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("- (a)")
   checkPositions[Stat]("(a): (A)")
@@ -267,69 +267,69 @@ class TokensPositionSuite extends BasePositionSuite {
   checkPositions[Stat](
     "do {d} while (p)",
     """|Term.Block {d}
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("(f) _")
   checkPositions[Stat](
     "for { x <- xs } (f)",
     """|Term.EnumeratorsBlock { x <- xs }
        |Enumerator.Generator x <- xs
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "for { x <- xs } yield (f)",
     """|Term.EnumeratorsBlock { x <- xs }
        |Enumerator.Generator x <- xs
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "((a), (b)) => (a)",
     """|Term.ParamClause ((a), (b))
        |Term.Param a
        |Term.Param b
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("if (p) (t) else (f)")
   checkPositions[Stat](
     "if (p) (t)",
     """|Lit.Unit if (p) (t)@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "if (p) if (p2) t",
     """|Term.If if (p2) t
        |Lit.Unit if (p) if (p2) t@@
        |Lit.Unit if (p) if (p2) t@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "if (p) {}",
     """|Term.Block {}
        |Lit.Unit if (p) {}@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     """ s"start ${(a)} end"""",
     """|Term.Block {(a)}
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "(a) match { case x => x }",
     """|Term.CasesBlock { case x => x }
        |Case case x => x
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "new (A)",
     """|Init (A)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "new (A){}",
     """|Template (A){}
        |Init (A)
        |Template.Body {}
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "def f(a: A = (da)): A",
@@ -337,26 +337,26 @@ class TokensPositionSuite extends BasePositionSuite {
        |Type.ParamClause def f@@(a: A = (da)): A
        |Term.ParamClause (a: A = (da))
        |Term.Param a: A = (da)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "{ case x => x; case y => y }",
     """|Case case x => x;
        |Case case y => y
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "f((x): _*)",
     """|Term.ArgClause ((x): _*)
        |Term.Repeated (x): _*
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("return (a)")
   checkPositions[Stat]("(a).b")
   checkPositions[Stat](
     "a.super[B].c",
     """|Term.Super a.super[B]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("a.this")
   checkPositions[Stat]("throw (e)")
@@ -366,7 +366,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Case case x => x;
        |Case case y => y
        |Term.Block { }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "try (f) catch { case x => (x); case y => y } finally { }",
@@ -374,13 +374,13 @@ class TokensPositionSuite extends BasePositionSuite {
        |Case case x => (x);
        |Case case y => y
        |Term.Block { }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("try ()")
   checkPositions[Stat](
     "try (true, false)",
     """|Term.Tuple (true, false)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "try {1 + 2}.toString",
@@ -388,42 +388,42 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Block {1 + 2}
        |Term.ApplyInfix 1 + 2
        |Type.ArgClause try {1 + @@2}.toString
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "try (a.b).c",
     """|Term.Select (a.b).c
        |Term.Select a.b
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "try (f) catch (h) finally { }",
     """|Term.Block { }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "try (true, false) catch (h) finally (1, 2)",
     """|Term.Tuple (true, false)
        |Term.Tuple (1, 2)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "try (a.b).c catch (h) finally (1, 2)",
     """|Term.Select (a.b).c
        |Term.Select a.b
        |Term.Tuple (1, 2)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("((a), (b))")
   checkPositions[Stat](
     "while (p) {d}",
     """|Term.Block {d}
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "<a>b{c}d</a>",
     """|Term.Block {c}
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("(x)")
   checkPositions[Stat]("(_)")
@@ -432,48 +432,48 @@ class TokensPositionSuite extends BasePositionSuite {
     "package a",
     """|Pkg package a
        |Pkg.Body package a@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Source](
     "package a.b",
     """|Pkg package a.b
        |Term.Select a.b
        |Pkg.Body package a.b@@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
     "import a.b",
     """|Importer a.b
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "import a.b, c.d",
     """|Importer a.b
        |Importer c.d
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "import a._",
     """|Importer a._
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "import a.{ b, c }",
     """|Importer a.{ b, c }
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "import a.{ b => c }",
     """|Importer a.{ b => c }
        |Importee.Rename b => c
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "import a.{ b => _ }",
     """|Importer a.{ b => _ }
        |Importee.Unimport b => _
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // Decl
@@ -484,7 +484,7 @@ class TokensPositionSuite extends BasePositionSuite {
     "type T",
     """|Type.ParamClause type T@@
        |Type.Bounds type T@@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -500,7 +500,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Type.Singleton this
        |Term.This this
        |Term.ArgClause ()
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("def f = macro m")
   checkPositions[Stat](
@@ -510,30 +510,30 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.ParamClause (b: B)
        |Template class A private (b: B)@@
        |Template.Body class A private (b: B)@@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
     "@tailrec def f = 1",
     """|Mod.Annot @tailrec
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "@tailrec def f = 1",
     """|Mod.Annot @tailrec
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "@a def b = 1",
     """|Mod.Annot @a
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "@a(1) def b = 1",
     """|Mod.Annot @a(1)
        |Init a(1)
        |Term.ArgClause (1)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "@(a @b) def x = 1",
@@ -541,7 +541,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Init (a @b)
        |Type.Annotate a @b
        |Mod.Annot @b
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "@(a @b(1, 2)(3)) def x = 1",
@@ -552,17 +552,17 @@ class TokensPositionSuite extends BasePositionSuite {
        |Init b(1, 2)(3)
        |Term.ArgClause (1, 2)
        |Term.ArgClause (3)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "private[foo] val a = 1",
     """|Mod.Private private[foo]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "protected[foo] val a = 1",
     """|Mod.Protected protected[foo]
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("implicit val a = 1")
   checkPositions[Stat]("final val a = 1")
@@ -572,14 +572,14 @@ class TokensPositionSuite extends BasePositionSuite {
        |Ctor.Primary sealed trait a@@
        |Template sealed trait a@@
        |Template.Body sealed trait a@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("override def f = 1")
   checkPositions[Stat](
     "case object B",
     """|Template case object B@@
        |Template.Body case object B@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "abstract class A",
@@ -587,7 +587,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Ctor.Primary abstract class A@@
        |Template abstract class A@@
        |Template.Body abstract class A@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "class A[+ T]",
@@ -599,7 +599,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Ctor.Primary class A[+ T]@@
        |Template class A[+ T]@@
        |Template.Body class A[+ T]@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "class A[- T]",
@@ -611,7 +611,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Ctor.Primary class A[- T]@@
        |Template class A[- T]@@
        |Template.Body class A[- T]@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat]("lazy val a = 1")
   checkPositions[Stat](
@@ -623,7 +623,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Mod.ValParam val
        |Template class A(val b: B)@@
        |Template.Body class A(val b: B)@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "class A(var b: B)",
@@ -634,7 +634,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Mod.VarParam var
        |Template class A(var b: B)@@
        |Template.Body class A(var b: B)@@
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -644,7 +644,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Template { self: B => }
        |Template.Body { self: B => }
        |Self self: B =>
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "trait A { _: B => }",
@@ -653,7 +653,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Template { _: B => }
        |Template.Body { _: B => }
        |Self _: B =>
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "trait A { self => }",
@@ -662,7 +662,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Template { self => }
        |Template.Body { self => }
        |Self self =>
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "trait A { this: B => }",
@@ -671,14 +671,14 @@ class TokensPositionSuite extends BasePositionSuite {
        |Template { this: B => }
        |Template.Body { this: B => }
        |Self this: B =>
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
     "new A {}",
     """|Template A {}
        |Template.Body {}
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Stat](
     "new { val a = 1 } with A {}",
@@ -686,14 +686,14 @@ class TokensPositionSuite extends BasePositionSuite {
        |Stat.Block { val a = 1 }
        |Defn.Val val a = 1
        |Template.Body {}
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Case](
     "case `1` =>",
     """|Term.Name `1`
        |Term.Block case `1` =>@@
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Pat]("a @ A")
   checkPositions[Pat]("_")
@@ -703,7 +703,7 @@ class TokensPositionSuite extends BasePositionSuite {
   checkPositions[Pat](
     "E(a, b)",
     """|Pat.ArgClause (a, b)
-       |""".stripMargin
+       |""".stripMargin,
   )
   checkPositions[Pat]("a E b")
   checkPositions[Pat]("""s"start ${(a)} end"""", "Pat.Var (a)")
@@ -733,7 +733,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Type.With X with B with C
        |Type.With X with B
        |Defn.Def def foo: Boolean = true
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -761,7 +761,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Type.With X with B with C
        |Type.With X with B
        |Defn.Def def foo: Boolean = true
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -778,14 +778,14 @@ class TokensPositionSuite extends BasePositionSuite {
        |Defn.Def private [this] def foo: Int = ???
        |Mod.Private private [this]
        |Term.This this
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
     """|(_: X) => 42
        |""".stripMargin,
     """|Term.ParamClause (_: X)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
@@ -793,14 +793,14 @@ class TokensPositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Term.ParamClause _
        |Term.Param _
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Stat](
     """|q"x $this x"
        |""".stripMargin,
     """|Term.This this
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Term](
@@ -809,7 +809,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Apply a.b(c)
        |Term.Select a.b
        |Term.ArgClause (c)
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Term](
@@ -819,7 +819,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Match a match { case foo => foo }
        |Term.CasesBlock { case foo => foo }
        |Case case foo => foo
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   checkPositions[Term](
@@ -830,7 +830,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Match a match { case foo => foo }
        |Term.CasesBlock { case foo => foo }
        |Case case foo => foo
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3219
@@ -838,7 +838,7 @@ class TokensPositionSuite extends BasePositionSuite {
     "(10) + 1 toInt",
     """|Term.ApplyInfix (10) + 1
        |Type.ArgClause (10) + @@1 toInt
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 1
@@ -848,7 +848,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |}
        |""".stripMargin,
     """|Defn.Val val a = 1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 2
@@ -860,7 +860,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Defn.Val val b =
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 2.1
@@ -877,7 +877,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Block {
        |    1 // comment
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 3
@@ -889,7 +889,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Defn.Val val b = // comment1
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 3.1
@@ -906,7 +906,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Block {
        |    1 // comment2
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 4
@@ -920,7 +920,7 @@ class TokensPositionSuite extends BasePositionSuite {
     """|Defn.Val val b =
        |    // comment1
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 4.1
@@ -940,7 +940,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |    // comment1
        |    1 // comment2
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 5
@@ -952,7 +952,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Defn.Val val b = // comment
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 5.1
@@ -969,7 +969,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |Term.Block {
        |    1
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 6
@@ -983,7 +983,7 @@ class TokensPositionSuite extends BasePositionSuite {
     """|Defn.Val val b =
        |    // comment
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 6.1
@@ -1003,7 +1003,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |    // comment
        |    1
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 7
@@ -1016,7 +1016,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Defn.Val val b =
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 7.1
@@ -1036,7 +1036,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |    1
        |    // comment
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 8
@@ -1049,7 +1049,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |""".stripMargin,
     """|Defn.Val val b = // comment1
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 8.1
@@ -1069,7 +1069,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |    1
        |    // comment2
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 9
@@ -1084,7 +1084,7 @@ class TokensPositionSuite extends BasePositionSuite {
     """|Defn.Val val b =
        |    // comment1
        |    1
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #3689 9.1
@@ -1107,7 +1107,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |    1
        |    // comment2
        |  }
-       |""".stripMargin
+       |""".stripMargin,
   )
 
   // #4208
@@ -1132,7 +1132,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |<body>Term.Block @@}</body> [46::46)
        |""".stripMargin,
     showPosition = true,
-    showFieldName = true
+    showFieldName = true,
   )
 
 }

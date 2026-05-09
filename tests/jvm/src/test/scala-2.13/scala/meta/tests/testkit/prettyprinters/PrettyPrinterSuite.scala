@@ -23,7 +23,7 @@ class PrettyPrinterSuite extends FunSuite {
           s"""|Not Structurally equal: ${err.toString}:
               |before: ${before.structure}
               |after : ${after.structure}
-              |""".stripMargin
+              |""".stripMargin,
         )
       case _ => Nil
     }

@@ -15,7 +15,7 @@ private[meta] case class CharArrayReader(
     /** The start offset of the current line */
     var lineStartOffset: Int = 0,
     /** The start offset of the line before the current one */
-    private var lastLineStartOffset: Int = 0
+    private var lastLineStartOffset: Int = 0,
 ) {
 
   // see details in https://github.com/scala/scala/pull/8282
@@ -107,7 +107,7 @@ object CharArrayReader {
   private def readUnicodeChar(
       buf: Array[Char],
       offset: Int,
-      noUnicodeEscape: Boolean
+      noUnicodeEscape: Boolean,
   ): (Char, Int) = {
     val c = buf(offset)
     val firstOffset = offset + 1 // offset after a single character

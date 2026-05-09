@@ -94,7 +94,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
       catch {
         case ex: Exception => c.abort(
             c.macroApplication.pos,
-            s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}"
+            s"fatal error initializing quasiquote macro: ${showRaw(c.macroApplication)}",
           )
       }
     val metaInput = {
@@ -248,7 +248,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
                     if (isTerm) q"$currElement +: $alreadyLiftedList"
                     else pq"$currElement +: $alreadyLiftedList"
                   },
-                  Nil
+                  Nil,
                 )
               else {
                 require(prefix.isEmpty && debug(trees, acc, prefix))
@@ -277,7 +277,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
           else c.abort(
             tripleDotQuasis(0).pos,
             "implementation restriction: can't mix ...$ with anything else in parameter lists." +
-              EOL + "See https://github.com/scalameta/scalameta/issues/406 for details."
+              EOL + "See https://github.com/scalameta/scalameta/issues/406 for details.",
           )
         else c.abort(tripleDotQuasis(1).pos, Messages.QuasiquoteAdjacentEllipsesInPattern(2))
       }
@@ -349,7 +349,7 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         val $sourceName = new $OriginModule.ParsedSource(
           _root_.scala.meta.inputs.Input.String(${TokensToString.quasi(meta.tokens, input)})
         )
-      """
+      """,
     ).filter(_ ne null)
     mode match {
       case Mode.Term(_, _) =>

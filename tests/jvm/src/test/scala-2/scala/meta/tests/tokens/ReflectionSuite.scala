@@ -60,7 +60,7 @@ class ReflectionSuite extends TreeSuiteBase {
          |Token.Xml.SpliceEnd
          |Token.Xml.SpliceStart
          |Token.Xml.Start
-         |""".stripMargin.lf2nl
+         |""".stripMargin.lf2nl,
     )
   }
 }

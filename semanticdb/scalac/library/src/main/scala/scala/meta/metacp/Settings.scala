@@ -16,7 +16,7 @@ final class Settings private (
     val usejavacp: Boolean,
     val includeJdk: Boolean,
     val stubBrokenSignatures: Boolean,
-    val logBrokenSignatures: Boolean
+    val logBrokenSignatures: Boolean,
 ) {
   private def this() = this(
     out = Settings.defaultOut,
@@ -28,7 +28,7 @@ final class Settings private (
     usejavacp = false,
     includeJdk = false,
     stubBrokenSignatures = false,
-    logBrokenSignatures = false
+    logBrokenSignatures = false,
   )
 
   def withOut(out: AbsolutePath): Settings = copy(out = out)
@@ -66,7 +66,7 @@ final class Settings private (
       usejavacp: Boolean = usejavacp,
       includeJdk: Boolean = includeJdk,
       stubBrokenSignatures: Boolean = stubBrokenSignatures,
-      logBrokenSignatures: Boolean = logBrokenSignatures
+      logBrokenSignatures: Boolean = logBrokenSignatures,
   ): Settings = new Settings(
     out = out,
     classpath = classpath,
@@ -77,7 +77,7 @@ final class Settings private (
     usejavacp = usejavacp,
     includeJdk = includeJdk,
     stubBrokenSignatures = stubBrokenSignatures,
-    logBrokenSignatures = logBrokenSignatures
+    logBrokenSignatures = logBrokenSignatures,
   )
 }
 

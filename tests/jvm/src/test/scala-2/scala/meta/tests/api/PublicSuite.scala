@@ -11,9 +11,9 @@ class PublicSuite extends FunSuite {
     typecheckError(
       """
              q"hello"
-           """
+           """,
     ),
-    "value q is not a member of StringContext"
+    "value q is not a member of StringContext",
   ))
 
   test("quasiquotes without static dialect") {
@@ -24,9 +24,9 @@ class PublicSuite extends FunSuite {
              import scala.meta._
              implicit val dialect: scala.meta.Dialect = ???
              q"hello"
-           """
+           """,
       ),
-      s"dialect of type scala.meta.Dialect is not supported by quasiquotes (to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.$currentDialect)"
+      s"dialect of type scala.meta.Dialect is not supported by quasiquotes (to fix this, import something from scala.meta.dialects, e.g. scala.meta.dialects.$currentDialect)",
     )
   }
 
@@ -36,18 +36,18 @@ class PublicSuite extends FunSuite {
              import scala.meta._
              import scala.meta.dialects.Scala211
              q"hello"
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("InputLike.parse without import")(assertEquals(
     typecheckError(
       """
              "".parse[scala.meta.Term]
-           """
+           """,
     ),
-    "value parse is not a member of String"
+    "value parse is not a member of String",
   ))
 
   test("InputLike.parse without input-likeness")(assertEquals(
@@ -55,9 +55,9 @@ class PublicSuite extends FunSuite {
       """
              import scala.meta._
              1.parse[Term]
-           """
+           """,
     ),
-    "don't know how to convert Int to scala.meta.inputs.Input"
+    "don't know how to convert Int to scala.meta.inputs.Input",
   ))
 
   test("InputLike.parse without parseability")(assertEquals(
@@ -66,9 +66,9 @@ class PublicSuite extends FunSuite {
              import scala.meta._
              import scala.meta.dialects.Scala211
              "".parse[Int]
-           """
+           """,
     ),
-    "don't know how to parse into Int"
+    "don't know how to parse into Int",
   ))
 
   test("InputLike.parse when everything's correct (static dialect)")(assertEquals(
@@ -77,9 +77,9 @@ class PublicSuite extends FunSuite {
              import scala.meta._
              import scala.meta.dialects.Scala211
              "".parse[Term]
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("InputLike.parse when everything's correct (dynamic dialect)")(assertEquals(
@@ -88,9 +88,9 @@ class PublicSuite extends FunSuite {
              import scala.meta._
              implicit val dialect: scala.meta.Dialect = ???
              "".parse[Term]
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("InputLike.parse with various input types") {
@@ -108,7 +108,7 @@ class PublicSuite extends FunSuite {
              (??? : Array[Char]).parse[Term]
            """
       },
-      ""
+      "",
     )
   }
 
@@ -117,27 +117,27 @@ class PublicSuite extends FunSuite {
     typecheckError(
       """
              scala.meta.dialects.Scala211("").parse[scala.meta.Term]
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("Dialect.parse without input-likeness")(assertEquals(
     typecheckError(
       """
              scala.meta.dialects.Scala211(1).parse[scala.meta.Term]
-           """
+           """,
     ),
-    "don't know how to convert Int to scala.meta.inputs.Input"
+    "don't know how to convert Int to scala.meta.inputs.Input",
   ))
 
   test("Dialect.parse without parseability")(assertEquals(
     typecheckError(
       """
              scala.meta.dialects.Scala211("").parse[Int]
-           """
+           """,
     ),
-    "don't know how to parse into Int"
+    "don't know how to parse into Int",
   ))
 
   test("Dialect.parse with various input types") {
@@ -151,7 +151,7 @@ class PublicSuite extends FunSuite {
              scala.meta.dialects.Scala211(??? : Array[Char]).parse[scala.meta.Term]
            """
       },
-      ""
+      "",
     )
   }
 
@@ -159,9 +159,9 @@ class PublicSuite extends FunSuite {
     typecheckError(
       """
              "".tokenize
-           """
+           """,
     ),
-    "value tokenize is not a member of String"
+    "value tokenize is not a member of String",
   ))
 
   test("tokenize without input-likeness")(assertEquals(
@@ -169,9 +169,9 @@ class PublicSuite extends FunSuite {
       """
              import scala.meta._
              1.tokenize
-           """
+           """,
     ),
-    "don't know how to convert Int to scala.meta.inputs.Input"
+    "don't know how to convert Int to scala.meta.inputs.Input",
   ))
 
   test("tokenize when everything's correct (static dialect)")(assertEquals(
@@ -180,9 +180,9 @@ class PublicSuite extends FunSuite {
              import scala.meta._
              import scala.meta.dialects.Scala211
              "".tokenize
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("tokenize when everything's correct (dynamic dialect)")(assertEquals(
@@ -191,9 +191,9 @@ class PublicSuite extends FunSuite {
              import scala.meta._
              implicit val dialect: scala.meta.Dialect = ???
              "".tokenize
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("tokenize with various input types") {
@@ -207,9 +207,9 @@ class PublicSuite extends FunSuite {
              (??? : java.io.File).tokenize
              (??? : Tokens).tokenize
              (??? : Array[Char]).tokenize
-           """
+           """,
       ),
-      ""
+      "",
     )
   }
 
@@ -218,27 +218,27 @@ class PublicSuite extends FunSuite {
     typecheckError(
       """
              scala.meta.dialects.Scala211("").tokenize
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("Dialect.tokenize without input-likeness")(assertEquals(
     typecheckError(
       """
              scala.meta.dialects.Scala211(1).tokenize
-           """
+           """,
     ),
-    "don't know how to convert Int to scala.meta.inputs.Input"
+    "don't know how to convert Int to scala.meta.inputs.Input",
   ))
 
   test("Dialect.tokenize when everything's correct")(assertEquals(
     typecheckError(
       """
              scala.meta.dialects.Scala211("").tokenize
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("Dialect.tokenize with various input types") {
@@ -252,7 +252,7 @@ class PublicSuite extends FunSuite {
              scala.meta.dialects.Scala211(??? : Array[Char]).tokenize
            """
       },
-      ""
+      "",
     )
   }
 
@@ -260,9 +260,9 @@ class PublicSuite extends FunSuite {
     typecheckError(
       """
              (??? : scala.meta.Tree).show[Syntax]
-           """
+           """,
     ),
-    "not found: type Syntax"
+    "not found: type Syntax",
   ))
 
   test("show[Syntax] when everything's correct (static dialect)")(assertEquals(
@@ -272,9 +272,9 @@ class PublicSuite extends FunSuite {
              import scala.meta.dialects.Scala211
              (??? : Tree).show[Syntax]
              (??? : Tree).syntax
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("show[Syntax] when everything's correct (dynamic dialect)")(assertEquals(
@@ -285,18 +285,18 @@ class PublicSuite extends FunSuite {
              (??? : Tree).show[Syntax]
              (??? : Tree).syntax
              dialect(??? : Tree).syntax
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("show[Structure] without import")(assertEquals(
     typecheckError(
       """
              (??? : scala.meta.Tree).show[Structure]
-           """
+           """,
     ),
-    "not found: type Structure"
+    "not found: type Structure",
   ))
 
   test("show[Structure] when everything's correct")(assertEquals(
@@ -305,9 +305,9 @@ class PublicSuite extends FunSuite {
              import scala.meta._
              (??? : Tree).show[Structure]
              (??? : Tree).structure
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("Token.is[T] without import")(assertEquals(
@@ -315,9 +315,9 @@ class PublicSuite extends FunSuite {
       """
              (??? : scala.meta.Token).is[scala.meta.Token]
              (??? : scala.meta.Token).is[scala.meta.Token.Ident]
-           """
+           """,
     ),
-    ""
+    "",
   ))
 
   test("Tree.is[T] without import")(assertEquals(
@@ -325,8 +325,8 @@ class PublicSuite extends FunSuite {
       """
              (??? : scala.meta.Tree).is[scala.meta.Tree]
              (??? : scala.meta.Tree).is[scala.meta.Type]
-           """
+           """,
     ),
-    ""
+    "",
   ))
 }

@@ -24,7 +24,7 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
-      skipFullTree = false
+      skipFullTree = false,
     )
   }
 
@@ -45,7 +45,7 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
-      skipFullTree = false
+      skipFullTree = false,
     )
   }
 
@@ -57,7 +57,7 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
-      skipFullTree = false
+      skipFullTree = false,
     )
   }
 
@@ -69,7 +69,7 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
-      skipFullTree = false
+      skipFullTree = false,
     )
   }
 
@@ -85,7 +85,7 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
          |Space [17..18)
          |Constant.String(any message) [18..31)
          |EOF [31..31)
-         |""".stripMargin
+         |""".stripMargin,
     )
     val pos = quoted.pos
     assertNoDiff(pos.toString, """[0,31) in str(`${fooTypes(0)}`; "any message")""")
@@ -95,7 +95,7 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
       """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
          |""".stripMargin,
       showPosition = true,
-      showFieldName = true
+      showFieldName = true,
     )
 
     val syntax =

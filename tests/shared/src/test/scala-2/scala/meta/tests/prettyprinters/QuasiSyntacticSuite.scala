@@ -15,7 +15,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
         """.syntax,
       """|class A { class B }
          |          type C = A#B
-         |        """.stripMargin.lf2nl
+         |        """.stripMargin.lf2nl,
     )
     // With lambda trick
     assertNoDiff(
@@ -26,7 +26,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       """|
          |      def foo[F[_]]: Unit = ???
          |      foo[({ type T[A] = Either[Int, A] })#T]
-         |        """.stripMargin.lf2nl
+         |        """.stripMargin.lf2nl,
     )
   }
 
@@ -109,7 +109,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("Term.Apply(_, List(Term.Function(...))) #572, #574")(assertWithOriginalSyntax(
     q"foo { implicit i: Int => () }",
     "foo { implicit i: Int => () }",
-    "foo {\n  implicit i: Int => ()\n}"
+    "foo {\n  implicit i: Int => ()\n}",
   ))
 
   test("macro defs #581") {
@@ -118,7 +118,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("Importee.Rename")(
-    assertWithOriginalSyntax(q"import a.{b=>c}", "import a.{b=>c}", "import a.{b => c}")
+    assertWithOriginalSyntax(q"import a.{b=>c}", "import a.{b=>c}", "import a.{b => c}"),
   )
 
   test("backquote importees when needed - scalafix #1337") {
@@ -127,7 +127,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("show[Structure] should uppercase long literals suffix: '2l' -> '2L'")(
-    assertTree(q"val x = 1l")(q"val x = 1L")
+    assertTree(q"val x = 1l")(q"val x = 1L"),
   )
 
   test("show[Structure] should lowercase float literals suffix: '0.01F' -> '0.01f'") {
@@ -163,11 +163,11 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   test("#931 val `a b` = 2")(
-    assertWithOriginalSyntax(q"val `a b` = 2", "val `a b` = 2", "val `a b` = 2")
+    assertWithOriginalSyntax(q"val `a b` = 2", "val `a b` = 2", "val `a b` = 2"),
   )
 
   test("#2097 val `macro` = 42")(
-    assertWithOriginalSyntax(q"val `macro` = 42", "val `macro` = 42", "val `macro` = 42")
+    assertWithOriginalSyntax(q"val `macro` = 42", "val `macro` = 42", "val `macro` = 42"),
   )
 
   test("#1661 Names outside: Must start with either a letter or an operator") {
@@ -215,10 +215,10 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat("list map Foo.bar")(q"list map (Foo.bar)")
   }
   test("1826 ApplyInfix parentheses on multiple Select")(
-    checkStat("list map (_.foo.bar)")(q"list map (_.foo.bar)")
+    checkStat("list map (_.foo.bar)")(q"list map (_.foo.bar)"),
   )
   test("#1826 ApplyInfix parentheses on tuple")(
-    checkStat("list map ((_, foo))")(q"list map ((_, foo))")
+    checkStat("list map ((_, foo))")(q"list map ((_, foo))"),
   )
   test("#1826 ApplyInfix parentheses on Apply") {
     checkStat("list map (_.->(foo))")(q"list map (_.->(foo))")
@@ -229,7 +229,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat("list map a.diff.bar(foo)")(q"list map a.diff.bar(foo)")
   }
   test("#1826 ApplyInfix parentheses on Function")(
-    checkStat("list map (_ => foo)")(q"list map (_ => foo)")
+    checkStat("list map (_ => foo)")(q"list map (_ => foo)"),
   )
   test("#1826 ApplyInfix parentheses on ApplyInfix function") {
     checkStat("list map (_ diff foo)")(q"list map (_ diff foo)")
@@ -242,7 +242,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat("list map a -> foo")(q"list map (a -> foo)")
   }
   test("1826 ApplyInfix parentheses on Term.Match")(
-    checkStat(s"list map (_ match {$EOL  case 1 => 2$EOL})")(q"list map (_ match { case 1 => 2})")
+    checkStat(s"list map (_ match {$EOL  case 1 => 2$EOL})")(q"list map (_ match { case 1 => 2})"),
   )
 
   test("#1839 ApplyInfix parentheses on Term.Placeholder") {
@@ -259,12 +259,12 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       "def f: B => B => A" -> q"def f: B => B => A",
       "def f: B => A" -> q"def f: B => A",
       "def f: (B => B) => A => A" -> q"def f: (B => B) => A => A",
-      "def f: (B => B) => (A => A) => A" -> q"def f: (B => B) => (A => A) => A"
+      "def f: (B => B) => (A => A) => A" -> q"def f: (B => B) => (A => A) => A",
     ).foreach { case (code, expected) => checkStat(code, code)(expected) }
   }
 
   test("#1864 Terms with leading numerics are backquoted")(
-    checkStat("""val `123foo` = "hello"""")(q""" val `123foo` = "hello" """)
+    checkStat("""val `123foo` = "hello"""")(q""" val `123foo` = "hello" """),
   )
 
   test("#1868 Term.Eta preserves structure") {
@@ -275,53 +275,53 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   test("#2447 Pat.Bind on tname")(checkStat("{\n  case x @ Y => x\n}")(q"{ case x @ Y => x }"))
 
   test("#2447 Pat.Bind on tname backticks")(
-    checkStat("{\n  case x @ `y` => x\n}")(q"{ case x @ `y` => x }")
+    checkStat("{\n  case x @ `y` => x\n}")(q"{ case x @ `y` => x }"),
   )
 
   test("#1843 anonymous functions 1")(checkTree(q"list foo (_ fun (_.bar))")(tinfix(
     tname("list"),
     "foo",
     Term.AnonymousFunction(
-      tinfix(Term.Placeholder(), "fun", Term.AnonymousFunction(tselect(Term.Placeholder(), "bar")))
-    )
+      tinfix(Term.Placeholder(), "fun", Term.AnonymousFunction(tselect(Term.Placeholder(), "bar"))),
+    ),
   )))
 
   test("#1843 anonymous functions 2")(checkTree(q"list foo (_ fun _.bar)")(tinfix(
     tname("list"),
     "foo",
-    Term.AnonymousFunction(tinfix(Term.Placeholder(), "fun", tselect(Term.Placeholder(), "bar")))
+    Term.AnonymousFunction(tinfix(Term.Placeholder(), "fun", tselect(Term.Placeholder(), "bar"))),
   )))
 
   test("#2717 anonymous function with unary")(checkTree(q"xs span { !separates(_) }")(tinfix(
     tname("xs"),
     "span",
     blk(
-      Term.AnonymousFunction(Term.ApplyUnary(tname("!"), tapply(tname("separates"), Term.Placeholder())))
-    )
+      Term.AnonymousFunction(Term.ApplyUnary(tname("!"), tapply(tname("separates"), Term.Placeholder()))),
+    ),
   )))
 
   test("anonymous function with new")(checkTree(q"foo map (new foo(_))")(
-    tinfix(tname("foo"), "map", Term.AnonymousFunction(Term.New(init("foo", List(Term.Placeholder())))))
+    tinfix(tname("foo"), "map", Term.AnonymousFunction(Term.New(init("foo", List(Term.Placeholder()))))),
   ))
 
   test("anonymous function with select")(checkTree(q"foo map (foo(_).bar)")(tinfix(
     tname("foo"),
     "map",
-    Term.AnonymousFunction(tselect(tapply(tname("foo"), Term.Placeholder()), "bar"))
+    Term.AnonymousFunction(tselect(tapply(tname("foo"), Term.Placeholder()), "bar")),
   )))
 
   test("anonymous function with apply type")(checkTree(q"foo map (_.foo[A])")(tinfix(
     tname("foo"),
     "map",
-    Term.AnonymousFunction(tapplytype(tselect(Term.Placeholder(), "foo"), pname("A")))
+    Term.AnonymousFunction(tapplytype(tselect(Term.Placeholder(), "foo"), pname("A"))),
   )))
 
   test("#2317 init block")(
     checkStat(
       """new Foo({
         |  str => str.length
-        |})""".stripMargin
-    )(q"new Foo({str => str.length})")
+        |})""".stripMargin,
+    )(q"new Foo({str => str.length})"),
   )
 
   test("#1917 init lambda")(checkStat("new Foo((a: Int) => a + 1)")(q"new Foo((a: Int) => a + 1)"))
@@ -335,7 +335,7 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
     assertEquals(
       arg1.tokens.structure,
-      "Tokens(LeftBrace [5..6), Ident(b) [6..7), RightBrace [7..8))"
+      "Tokens(LeftBrace [5..6), Ident(b) [6..7), RightBrace [7..8))",
     )
 
     assertEquals(part2.tokens.structure, "Tokens(Xml.Part(</h1>) [8..13))")
@@ -345,10 +345,10 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     checkStat(
       """def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) {
         |  cleaners: _*
-        |}""".stripMargin
+        |}""".stripMargin,
     )(
-      q"def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) { cleaners: _* }"
-    )
+      q"def withJsoup(html: Html)(cleaners: HtmlCleaner*): Html = withJsoup(html.body) { cleaners: _* }",
+    ),
   )
 
   test("#2708 term lassoc")(
@@ -358,13 +358,13 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             (()) == (())
             () == () == ()
             (()) == (()) == (())
-          }"""
+          }""",
     )(blk(
       tinfix(Lit.Unit(), "=="),
       tinfix(Lit.Unit(), "==", Lit.Unit()),
       tinfix(tinfix(Lit.Unit(), "=="), "=="),
-      tinfix(tinfix(Lit.Unit(), "==", Lit.Unit()), "==", Lit.Unit())
-    ))
+      tinfix(tinfix(Lit.Unit(), "==", Lit.Unit()), "==", Lit.Unit()),
+    )),
   )
 
   test("#2708 term rassoc")(
@@ -374,13 +374,13 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             (()) :: (())
             () :: () :: ()
             (()) :: (()) :: (())
-          }"""
+          }""",
     )(blk(
       tinfix(Lit.Unit(), "::"),
       tinfix(Lit.Unit(), "::", Lit.Unit()),
       tinfix(Lit.Unit(), "::", tinfix(Lit.Unit(), "::")),
-      tinfix(Lit.Unit(), "::", tinfix(Lit.Unit(), "::", Lit.Unit()))
-    ))
+      tinfix(Lit.Unit(), "::", tinfix(Lit.Unit(), "::", Lit.Unit())),
+    )),
   )
 
   test("#2708 pat lassoc") {
@@ -390,13 +390,13 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             case (()) == (()) =>
             case () == () == () =>
             case (()) == (()) == (()) =>
-          }"""
+          }""",
     )(tmatch(
       tname("foo"),
       Case(patinfix(Lit.Unit(), "=="), None, blk()),
       Case(patinfix(Lit.Unit(), "==", Lit.Unit()), None, blk()),
       Case(patinfix(patinfix(Lit.Unit(), "=="), "=="), None, blk()),
-      Case(patinfix(patinfix(Lit.Unit(), "==", Lit.Unit()), "==", Lit.Unit()), None, blk())
+      Case(patinfix(patinfix(Lit.Unit(), "==", Lit.Unit()), "==", Lit.Unit()), None, blk()),
     ))
   }
 
@@ -407,30 +407,30 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
             case (()) :: (()) =>
             case () :: () :: () =>
             case (()) :: (()) :: (()) =>
-          }"""
+          }""",
     )(tmatch(
       tname("foo"),
       Case(patinfix(Lit.Unit(), "::"), None, blk()),
       Case(patinfix(Lit.Unit(), "::", Lit.Unit()), None, blk()),
       Case(patinfix(Lit.Unit(), "::", patinfix(Lit.Unit(), "::")), None, blk()),
-      Case(patinfix(Lit.Unit(), "::", patinfix(Lit.Unit(), "::", Lit.Unit())), None, blk())
+      Case(patinfix(Lit.Unit(), "::", patinfix(Lit.Unit(), "::", Lit.Unit())), None, blk()),
     ))
   }
 
   test("pat infix: _ op (a | b)")(checkTree(p"_ op (a | b)", "_ op (a | b)")(
-    patinfix(patwildcard, "op", Pat.Alternative(patvar("a"), patvar("b")))
+    patinfix(patwildcard, "op", Pat.Alternative(patvar("a"), patvar("b"))),
   ))
 
   test("pat infix: _ * (a + b)")(checkTree(p"_ * (a + b)", "_ * (a + b)")(
-    patinfix(patwildcard, "*", patinfix(patvar("a"), "+", patvar("b")))
+    patinfix(patwildcard, "*", patinfix(patvar("a"), "+", patvar("b"))),
   ))
 
   test("term infix: _ * (a + b)")(checkTree(q"_ * (a + b)", "_ * (a + b)")(Term.AnonymousFunction(
-    tinfix(Term.Placeholder(), "*", tinfix(tname("a"), "+", tname("b")))
+    tinfix(Term.Placeholder(), "*", tinfix(tname("a"), "+", tname("b"))),
   )))
 
   test("term infix: 1 + (2 / 3) * 4")(checkTree(q"1 + (2 / 3) * 4", "1 + 2 / 3 * 4")(
-    tinfix(int(1), "+", tinfix(tinfix(int(2), "/", int(3)), "*", int(4)))
+    tinfix(int(1), "+", tinfix(tinfix(int(2), "/", int(3)), "*", int(4))),
   ))
 
   test("term infix: 1 + { 2 / 3 } * 4")(
@@ -438,8 +438,8 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       q"1 + { 2 / 3 } * 4",
       """|1 + {
          |  2 / 3
-         |} * 4""".stripMargin
-    )(tinfix(int(1), "+", tinfix(blk(tinfix(int(2), "/", int(3))), "*", int(4))))
+         |} * 4""".stripMargin,
+    )(tinfix(int(1), "+", tinfix(blk(tinfix(int(2), "/", int(3))), "*", int(4)))),
   )
 
   test("term infix: { 2 / 3 } + 4")(
@@ -447,8 +447,8 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       q"{ 2 / 3 } + 4",
       """|{
          |  2 / 3
-         |} + 4""".stripMargin
-    )(tinfix(blk(tinfix(int(2), "/", int(3))), "+", int(4)))
+         |} + 4""".stripMargin,
+    )(tinfix(blk(tinfix(int(2), "/", int(3))), "+", int(4))),
   )
 
   test("term anon func: foo.bar(_: Int, _: String)")(
@@ -456,9 +456,9 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
       tapply(
         tselect("foo", "bar"),
         Term.Ascribe(Term.Placeholder(), pname("Int")),
-        Term.Ascribe(Term.Placeholder(), pname("String"))
-      )
-    ))
+        Term.Ascribe(Term.Placeholder(), pname("String")),
+      ),
+    )),
   )
 
 }

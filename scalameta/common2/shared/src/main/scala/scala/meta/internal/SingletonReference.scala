@@ -17,6 +17,6 @@ class SingletonReference[A](init: A) {
 object SingletonReference {
   private class Ref[A](
       @volatile
-      var ref: A
+      var ref: A,
   )
 }

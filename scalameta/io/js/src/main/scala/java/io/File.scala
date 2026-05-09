@@ -11,7 +11,7 @@ class File(path: String) {
   def this(parent: File, child: String) = this(parent.getPath, child)
   def this(uri: URI) = this(
     if (uri.getScheme != "file") throw new IllegalArgumentException("URI scheme is not \"file\"")
-    else uri.getPath
+    else uri.getPath,
   )
   def toPath: Path = NodeNIOPath(path)
   def toURI: URI = {

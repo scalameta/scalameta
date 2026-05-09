@@ -184,7 +184,7 @@ final class Dialect private[meta] (
     private[meta] val unquoteParentDialect: Dialect = null,
     // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
     // If yes, they will be parsed as patterns or terms.
-    private[meta] val unquoteType: UnquoteType = UnquoteType.None
+    private[meta] val unquoteType: UnquoteType = UnquoteType.None,
 ) extends Product with Serializable {
 
   // NOTE(olafur) checklist for adding a new dialect field in a binary compatible way:
@@ -215,7 +215,7 @@ final class Dialect private[meta] (
       allowTypeLambdas: Boolean,
       allowViewBounds: Boolean, // unused
       allowXmlLiterals: Boolean,
-      toplevelSeparator: String // unused
+      toplevelSeparator: String, // unused
   ) = this(
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
     allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
@@ -230,7 +230,7 @@ final class Dialect private[meta] (
     allowTrailingCommas = allowTrailingCommas,
     allowTraitParameters = allowTraitParameters,
     allowTypeLambdas = allowTypeLambdas,
-    allowXmlLiterals = allowXmlLiterals
+    allowXmlLiterals = allowXmlLiterals,
   )
 
   // Are unquotes ($x) and splices (..$xs, ...$xss) allowed?
@@ -466,7 +466,7 @@ final class Dialect private[meta] (
       allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax,
       treatUnicodeEscapesAsOrdinary: Boolean = this.treatUnicodeEscapesAsOrdinary,
       // NOTE(olafur): add the next parameter above this comment.
-      unquoteType: UnquoteType = UnquoteType.None
+      unquoteType: UnquoteType = UnquoteType.None,
   ): Dialect = {
     val notForUnquote = unquoteType eq UnquoteType.None
     val that = new Dialect(
@@ -537,7 +537,7 @@ final class Dialect private[meta] (
       treatUnicodeEscapesAsOrdinary = treatUnicodeEscapesAsOrdinary,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
-      unquoteParentDialect = if (notForUnquote) null else this
+      unquoteParentDialect = if (notForUnquote) null else this,
     )
     val equivalent = notForUnquote && isEquivalentToInternal(that)
     if (equivalent) this else that
@@ -655,7 +655,7 @@ final class Dialect private[meta] (
       allowTypeLambdas: Boolean = this.allowTypeLambdas,
       allowViewBounds: Boolean = true, // unused
       allowXmlLiterals: Boolean = this.allowXmlLiterals,
-      toplevelSeparator: String = "" // unused
+      toplevelSeparator: String = "", // unused
   ): Dialect = privateCopy(
     unquoteType = UnquoteType.None,
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
@@ -671,7 +671,7 @@ final class Dialect private[meta] (
     allowTrailingCommas = allowTrailingCommas,
     allowTraitParameters = allowTraitParameters,
     allowTypeLambdas = allowTypeLambdas,
-    allowXmlLiterals = allowXmlLiterals
+    allowXmlLiterals = allowXmlLiterals,
   )
 
   private[meta] def unquoteParentOrThis(): Dialect =
@@ -719,7 +719,7 @@ object Dialect extends InternalDialect {
       allowViewBounds: Boolean,
       allowXmlLiterals: Boolean,
       @deprecated("toplevelSeparator has never been used", ">4.4.35")
-      toplevelSeparator: String // unused
+      toplevelSeparator: String, // unused
   ): Dialect = new Dialect(
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
     allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
@@ -734,7 +734,7 @@ object Dialect extends InternalDialect {
     allowTrailingCommas = allowTrailingCommas,
     allowTraitParameters = allowTraitParameters,
     allowTypeLambdas = allowTypeLambdas,
-    allowXmlLiterals = allowXmlLiterals
+    allowXmlLiterals = allowXmlLiterals,
   )
 
   private[meta] lazy val standards: Map[String, Dialect] = Map(
@@ -764,7 +764,7 @@ object Dialect extends InternalDialect {
     "Scala213Source3" -> Scala213Source3,
     "Scala212Source3" -> Scala212Source3,
     "Typelevel211" -> Typelevel211,
-    "Typelevel212" -> Typelevel212
+    "Typelevel212" -> Typelevel212,
   )
   private[meta] lazy val inverseStandards: Map[Dialect, String] = standards.view.map(_.swap)
     .groupBy(_._1).map { case (k, v) =>

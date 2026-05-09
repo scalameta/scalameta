@@ -84,14 +84,14 @@ class JSFacadeSuite extends FunSuite {
                                   "values" -> a(d(
                                     "type" -> "Type.Name",
                                     "pos" -> pos(37, 43),
-                                    "value" -> "String"
-                                  ))
-                                )
-                              )
+                                    "value" -> "String",
+                                  )),
+                                ),
+                              ),
                             )
-                          }
+                          },
                         )
-                      }
+                      },
                     )
                   },
                   "decltpe" -> d("type" -> "Type.Name", "pos" -> pos(47, 51), "value" -> "Unit"),
@@ -106,17 +106,17 @@ class JSFacadeSuite extends FunSuite {
                         "type" -> "Lit.String",
                         "pos" -> pos(66, 80),
                         "value" -> "Hello, World",
-                        "syntax" -> """"Hello, World""""
-                      ))
-                    )
-                  )
+                        "syntax" -> """"Hello, World"""",
+                      )),
+                    ),
+                  ),
                 )
-              }
+              },
             ),
-            "derives" -> a()
-          )
+            "derives" -> a(),
+          ),
         )
-      }
+      },
     )
 
     check(parsed, expected)
@@ -188,10 +188,10 @@ class JSFacadeSuite extends FunSuite {
       "pats" -> a(d(
         "type" -> "Pat.Var",
         "pos" -> pos(4, 5),
-        "name" -> d("type" -> "Term.Name", "pos" -> pos(4, 5), "value" -> "x")
+        "name" -> d("type" -> "Term.Name", "pos" -> pos(4, 5), "value" -> "x"),
       )),
       "decltpe" -> d("type" -> "Lit.Int", "pos" -> pos(7, 8), "value" -> 1, "syntax" -> "1"),
-      "rhs" -> d("type" -> "Lit.Int", "pos" -> pos(11, 12), "value" -> 1, "syntax" -> "1")
+      "rhs" -> d("type" -> "Lit.Int", "pos" -> pos(11, 12), "value" -> 1, "syntax" -> "1"),
     )
     check(parsedDefaultDialect, expected)
   }
@@ -221,8 +221,8 @@ class JSFacadeSuite extends FunSuite {
       "argClause" -> d(
         "type" -> "Term.ArgClause",
         "pos" -> pos(4, 17),
-        "values" -> a(lit("Lit.Int", 1, "1", pos(8, 9)), lit("Lit.Int", 2, "2", pos(13, 14)))
-      )
+        "values" -> a(lit("Lit.Int", 1, "1", pos(8, 9)), lit("Lit.Int", 2, "2", pos(13, 14))),
+      ),
     )
     check(parsedDefaultDialect, expected)
   }

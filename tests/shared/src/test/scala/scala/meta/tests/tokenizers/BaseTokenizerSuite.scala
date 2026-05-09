@@ -14,7 +14,7 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
   }
 
   def assertTokens(code: String, dialect: Dialect = this.dialect)(
-      expected: PartialFunction[Tokens, Unit]
+      expected: PartialFunction[Tokens, Unit],
   )(implicit location: munit.Location) = {
     implicit val implicitDialect = dialect
     val obtained = tokenize(code)
@@ -24,7 +24,7 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
   def assertLegacyScannedAsStringLines(
       code: String,
       expected: String,
-      dialect: Dialect = this.dialect
+      dialect: Dialect = this.dialect,
   )(implicit loc: Location): Unit = {
     import scala.meta.internal.tokenizers._
     import scala.meta.tests.parsers.MoreHelpers._
@@ -43,7 +43,7 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
 
   protected def testTokenizedStructLines(
       options: munit.TestOptions,
-      testDialect: Dialect = dialect
+      testDialect: Dialect = dialect,
   )(codeTemplate: String, expected: String)(implicit loc: munit.Location): Unit = test(options) {
     implicit val dialect: Dialect = testDialect
     assertTokenizedAsStructureLines(codeTemplate.replace("'''", "\"\"\""), expected.nl2lf)
@@ -51,11 +51,11 @@ abstract class BaseTokenizerSuite extends TreeSuiteBase {
 
   protected def testTokenizedStructLinesEscaped(
       options: munit.TestOptions,
-      testDialect: Dialect = dialect
+      testDialect: Dialect = dialect,
   )(codeTemplate: String, expected: String)(implicit loc: munit.Location): Unit =
     testTokenizedStructLines(options, testDialect)(
       codeTemplate.replace("\\\\", "\\"),
-      expected.replace("\\\\", "\\")
+      expected.replace("\\\\", "\\"),
     )
 
 }

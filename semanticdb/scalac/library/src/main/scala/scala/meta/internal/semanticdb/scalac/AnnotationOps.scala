@@ -11,7 +11,7 @@ trait AnnotationOps {
       if (gann.args.nonEmpty) gann.args.map(_.toSemanticTree)
       else gann.assocs.map { case (gname, garg) =>
         s.AssignTree(s.IdTree(gname.toString()), toTree(garg))
-      }
+      },
     )
   }
 

@@ -11,7 +11,7 @@ class SemanticdbReporter(underlying: FilteringReporter)
       pos: Position,
       msg: String,
       severity: Severity,
-      actions: List[CodeAction]
+      actions: List[CodeAction],
   ): Unit = {
     super.doReport(pos, msg, severity, actions)
     underlying.doReport(pos, msg, severity, actions)

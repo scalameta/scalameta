@@ -222,9 +222,9 @@ package object trees {
         var hadRepeated = false
         pc.values.exists(v =>
           try hadRepeated
-          finally hadRepeated = !v.is[Quasi] && v.decltpe.is[Type.Repeated]
+          finally hadRepeated = !v.is[Quasi] && v.decltpe.is[Type.Repeated],
         )
-      }
+      },
     )
   }
 

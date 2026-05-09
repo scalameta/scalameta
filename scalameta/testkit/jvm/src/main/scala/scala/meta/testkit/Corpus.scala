@@ -73,8 +73,8 @@ object Corpus {
         "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/HtmlPage.scala",
         "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/page/Template.scala",
         // transformer fails with StackOverflow - https://github.com/scalameta/scalameta/issues/2509
-        "target/repos/kafka/core/src/main/scala/kafka/server/KafkaConfig.scala"
-      ).exists(x.startsWith)
+        "target/repos/kafka/core/src/main/scala/kafka/server/KafkaConfig.scala",
+      ).exists(x.startsWith),
   )
 
   /** If necessary, downloads and extracts the corpus files */
@@ -111,8 +111,8 @@ object Corpus {
     val repos = createReposDir(corpus)
     val files = Option(repos.listFiles()).getOrElse(
       throw new IllegalStateException(
-        s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry."
-      )
+        s"${repos.getAbsolutePath} is not a directory! Please delete if it's a file and retry.",
+      ),
     )
     files.iterator.flatMap { repo =>
       val commit = FileOps.readFile(new File(repo, "COMMIT")).trim

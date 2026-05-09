@@ -20,7 +20,7 @@ object ModuleID {
     moduleId.split(":") match {
       case Array(org, name, rev) => ModuleID(org, name, rev) :: Nil
       case _ => Nil
-    }
+    },
   ).toList
 }
 object Jars {
@@ -31,13 +31,13 @@ object Jars {
       out: PrintStream = System.out,
       // If true, fetches the -sources.jar files instead of regular jar with classfiles.
       fetchSourceJars: Boolean = false,
-      provided: List[ModuleID] = Nil
+      provided: List[ModuleID] = Nil,
   ): List[AbsolutePath] = fetch(ModuleID(org, artifact, version) :: provided, out, fetchSourceJars)
 
   def fetch(
       modules: Iterable[ModuleID],
       out: PrintStream,
-      fetchSourceJars: Boolean
+      fetchSourceJars: Boolean,
   ): List[AbsolutePath] = Fetch().addDependencies(modules.map(_.toCoursier).toList: _*)
     .addClassifiers((if (fetchSourceJars) Classifier.sources :: Nil else Nil): _*)
     .addRepositories(MavenRepository("https://scala-ci.typesafe.com/artifactory/scala-integration/"))

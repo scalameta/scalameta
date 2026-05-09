@@ -15,7 +15,7 @@ class ChildrenSuite extends ParseSuite {
          |  import bar.baz.one
          |  import bar.baz.two
          |}
-         |""".stripMargin
+         |""".stripMargin,
     )
     assertEquals(tree.children.length, 4)
     assertEquals(tree.children(0).productPrefix, "Type.Name")
@@ -36,7 +36,7 @@ class ChildrenSuite extends ParseSuite {
     }
     assert(
       containsBinaryCompatFields,
-      "Binary compatible fields should be contained in the children method"
+      "Binary compatible fields should be contained in the children method",
     )
   }
 }

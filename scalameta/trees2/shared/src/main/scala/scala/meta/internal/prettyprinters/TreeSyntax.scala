@@ -329,11 +329,11 @@ object TreeSyntax {
         t match {
           case Block(
                 Function
-                  .Initial(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil
+                  .Initial(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil,
               ) if mods.exists(_.is[Mod.Implicit]) =>
             block(s("implicit ", name, o(": ", tptopt), " =>"), stats)
           case Block(
-                Function.Initial(Term.Param(_, name: Name, None, _) :: Nil, Block(stats)) :: Nil
+                Function.Initial(Term.Param(_, name: Name, None, _) :: Nil, Block(stats)) :: Nil,
               ) => block(s(name, " =>"), stats)
           case Block(Function.Initial(params, Block(stats)) :: Nil) =>
             block(s("(", r(params, ", "), ") =>"), stats)
@@ -353,8 +353,8 @@ object TreeSyntax {
             t.cond,
             ") ",
             p(Expr, t.thenp, force = needParens),
-            if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s()
-          )
+            if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s(),
+          ),
         )
       case t: Term.SelectMatch if dialect.allowMatchAsOperator =>
         val mods = t.mods
@@ -377,8 +377,8 @@ object TreeSyntax {
             " ",
             if (needParensAroundExpr) s("(", i(showExpr), n(")")) else showExpr,
             t.catchClause.fold(s())(x => s(" ", kw("catch"), " ", x)),
-            t.finallyp.fold(s())(finallyp => s(" ", kw("finally"), " ", finallyp))
-          )
+            t.finallyp.fold(s())(finallyp => s(" ", kw("finally"), " ", finallyp)),
+          ),
         )
       case t: Term.AnonymousFunction => s(t.body)
       case t: Term.FunctionTerm =>
@@ -556,15 +556,15 @@ object TreeSyntax {
           Literal,
           s(
             "ByteLiterals.",
-            if (value == 0) "Zero" else if (value > 0) "Plus" + value else "Minus" + value
-          )
+            if (value == 0) "Zero" else if (value > 0) "Plus" + value else "Minus" + value,
+          ),
         )
       case Lit.Short(value) => m(
           Literal,
           s(
             "ShortLiterals.",
-            if (value == 0) "Zero" else if (value > 0) "Plus" + value else "Minus" + value
-          )
+            if (value == 0) "Zero" else if (value > 0) "Plus" + value else "Minus" + value,
+          ),
         )
       case Lit.Int(value) => m(Literal, s(value.toString))
       case Lit.Long(value) => m(Literal, s(value.toString + "L"))
@@ -622,20 +622,20 @@ object TreeSyntax {
           " ",
           kw("="),
           " ",
-          t.body
+          t.body,
         )
       case t: Defn.Class => r(" ")(
           t.mods,
           kw("class"),
           s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
-          t.templ
+          t.templ,
         )
       case t: Defn.Trait =>
         if (dialect.allowTraitParameters || t.ctor.mods.isEmpty) r(" ")(
           t.mods,
           kw("trait"),
           s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
-          t.templ
+          t.templ,
         )
         else throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
 
@@ -686,8 +686,8 @@ object TreeSyntax {
           case Some(p: Defn.Given) =>
             val isNew = givenSigUsesNewSyntax(p.paramClauseGroups)(
               t.inits.forall(_.argClauses.isEmpty) && !t.body.origin.tokensOpt.forall(
-                _.rfindWideNot(_.is[Token.Trivia], -1).is[Token.KwWith] // still old syntax
-              )
+                _.rfindWideNot(_.is[Token.Trivia], -1).is[Token.KwWith], // still old syntax
+              ),
             )
             if (isNew) Decl.Given else Defn.Given
           case Some(_: Term.NewAnonymous) => Term.NewAnonymous
@@ -849,7 +849,7 @@ object TreeSyntax {
     }
 
     private def givenSigUsesNewSyntax(
-        pcgs: List[Member.ParamClauseGroup]
+        pcgs: List[Member.ParamClauseGroup],
     )(ifEmpty: => Boolean): Boolean = dialect.allowImprovedTypeClassesSyntax &&
       (pcgs match {
         case Nil => ifEmpty
@@ -923,7 +923,7 @@ object TreeSyntax {
     private def printFunctionLikeType(
         t: Type.FunctionLikeType,
         params: Show.Result,
-        arrow: String
+        arrow: String,
     ): Show.Result = {
       val caps = t.parent match {
         case Some(p: Type.Capturing) if p.tpe eq t => s(p.caps)
@@ -992,7 +992,7 @@ object TreeSyntax {
   }
 
   def syntax(x: Tree, comments: Boolean = true, useOriginal: Boolean = true)(implicit
-      dialect: Dialect
+      dialect: Dialect,
   ): Show.Result = x.origin match {
     case o: Origin.Parsed if useOriginal && o.dialect.isEquivalentTo(dialect) =>
       original(x, o, comments = comments)
@@ -1003,7 +1003,7 @@ object TreeSyntax {
     printComments(x, _.begComment, tc => w(n(), tc.text, n())),
     x.pos.text,
     printComments(x, _.endComment, tc => w(" ", tc.text, n())),
-    comments && o.begTokenIdx > 0 && !x.is[Source]
+    comments && o.begTokenIdx > 0 && !x.is[Source],
   )
   def reprint(x: Tree, comments: Boolean = true)(implicit dialect: Dialect): Show.Result =
     new SyntaxInstances(comments = comments).reprint(x)
@@ -1011,7 +1011,7 @@ object TreeSyntax {
   private def printComments(
       tree: Tree,
       f: Tree => Option[Tree.Comments],
-      out: Tree.Comments => Show.Result
+      out: Tree.Comments => Show.Result,
   ): Show.Result = f(tree) match {
     case Some(tc) // skip if the parent refers to the same comments
         if tc.values.nonEmpty && tree.parent.flatMap(f).forall(ptc =>
@@ -1020,7 +1020,7 @@ object TreeSyntax {
               case (otc: Origin.Partial, optc: Origin.Partial) =>
                 otc.begTokenIdx != optc.begTokenIdx || otc.endTokenIdx != optc.endTokenIdx
               case _ => true
-            })
+            }),
         ) => out(tc)
     case _ => s()
   }
@@ -1034,6 +1034,6 @@ object TreeSyntax {
   private[prettyprinters] def withComments(tree: Tree)(syntax: Show.Result): Show.Result = s(
     printComments(tree, _.begComment, printBegComments),
     syntax,
-    printComments(tree, _.endComment, printEndComments)
+    printComments(tree, _.endComment, printEndComments),
   )
 }

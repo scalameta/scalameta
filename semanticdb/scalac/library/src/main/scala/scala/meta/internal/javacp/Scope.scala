@@ -13,7 +13,7 @@ class Scope(bindings: Map[String, String]) {
     name,
     // FIXME: fix https://github.com/scalameta/scalameta/issues/1365
     // There are still a handful of cases in spark-sql where resolution fails for some reason.
-    name
+    name,
   )
 
   /** Returns new scope where name resolves to symbol, shadowing previous binding of name if any */

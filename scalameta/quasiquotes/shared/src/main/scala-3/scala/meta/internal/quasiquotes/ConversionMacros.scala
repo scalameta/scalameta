@@ -38,7 +38,7 @@ object ConversionMacros {
   def unliftApplyImpl[O: Type](using Quotes)(inside: Expr[Any]) = new ConversionMacros(using quotes)
     .unliftApply[O](inside)
   def unliftUnapplyImpl[O: Type](using Quotes)(inside: Expr[Any]) = new ConversionMacros(using
-    quotes
+    quotes,
   ).unliftUnapply[O](inside)
 }
 

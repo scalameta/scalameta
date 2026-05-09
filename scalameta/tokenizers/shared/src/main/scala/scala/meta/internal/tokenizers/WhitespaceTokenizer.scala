@@ -18,7 +18,7 @@ object WhitespaceTokenizer {
 
   def apply(input: Input, dialect: Dialect)(implicit
       options: TokenizerOptions,
-      tokens: java.util.Collection[Token]
+      tokens: java.util.Collection[Token],
   ): WhitespaceTokenizer =
     if (options.groupWhitespace) new Grouping(input, dialect) else new Granular
 
@@ -34,7 +34,7 @@ object WhitespaceTokenizer {
     private val bufVS = new ListBuffer[Token.EOL] // consecutive EOL, without embedded horizontal space
 
     private def flushWS[A <: Token](
-        buf: ListBuffer[A]
+        buf: ListBuffer[A],
     )(f: (Int, Int, List[A]) => Token.Whitespace): Unit = buf.lastOption.foreach { last =>
       if (buf.length == 1) tokens.add(last)
       else {

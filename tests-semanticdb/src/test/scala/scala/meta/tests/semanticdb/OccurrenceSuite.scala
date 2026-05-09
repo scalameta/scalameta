@@ -19,7 +19,7 @@ class OccurrenceSuite extends FunSuite {
     assertNoDiff(body.obtained, body.expected)
 
   ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212 || ScalaVersion.is213)(
-    OccurrenceSuite.testCases.foreach(t => test(t.name)(t.body.fold(fail(_), testBody)))
+    OccurrenceSuite.testCases.foreach(t => test(t.name)(t.body.fold(fail(_), testBody))),
   )
 }
 
@@ -45,7 +45,7 @@ object OccurrenceSuite {
       val expectpathOpt = Utils.getFirstAbsResourceOpt(
         forVer(BuildInfo.scalaVersion),
         forVer(BuildInfo.scalaBinaryVersion),
-        relpathstr
+        relpathstr,
       )
       new TestCase(relpath.toURI(false).toString)(
         expectpathOpt.toRight(s"// missing expect file: $relpathstr\n").right.map { expectpath =>
@@ -62,12 +62,12 @@ object OccurrenceSuite {
               ScalaVersion.Full("2.13.15") -> expectedPrevious213,
               ScalaVersion.Full("2.13.14") -> expectedPrevious213,
               ScalaVersion.Scala212 -> expectedPrevious213,
-              ScalaVersion.Scala211 -> expectedPrevious213
+              ScalaVersion.Scala211 -> expectedPrevious213,
             ),
-            expected
+            expected,
           )
           TestBody(obtained, expectedCompat, expectpath)
-        }
+        },
       )
     }
   }

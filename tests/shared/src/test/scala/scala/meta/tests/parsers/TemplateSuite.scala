@@ -22,15 +22,15 @@ class TemplateSuite extends ParseSuite {
   }
 
   test("trait T {}")(
-    assertTree(templStat("trait T {}"))(Trait(Nil, pname("T"), Nil, EmptyCtor(), EmptyTemplate()))
+    assertTree(templStat("trait T {}"))(Trait(Nil, pname("T"), Nil, EmptyCtor(), EmptyTemplate())),
   )
 
   test("trait F[T]")(
-    assertTree(templStat("trait F[T]"))(Trait(Nil, pname("F"), pparam("T") :: Nil, ctor, tplNoBody()))
+    assertTree(templStat("trait F[T]"))(Trait(Nil, pname("F"), pparam("T") :: Nil, ctor, tplNoBody())),
   )
 
   test("trait A extends B")(assertTree(templStat("trait A extends B"))(
-    Trait(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody(init("B")))
+    Trait(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody(init("B"))),
   ))
 
   test("trait Inner <: { val x : Int = 3 }")(
@@ -39,8 +39,8 @@ class TemplateSuite extends ParseSuite {
       pname("Inner"),
       Nil,
       EmptyCtor(),
-      tpl(Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), int(3)))
-    ))
+      tpl(Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), int(3))),
+    )),
   )
 
   test("trait A extends { val x: Int } with B")(
@@ -53,27 +53,27 @@ class TemplateSuite extends ParseSuite {
         Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), int(2)) :: Nil,
         init("B") :: Nil,
         EmptySelf(),
-        Nil
-      )
-    ))
+        Nil,
+      ),
+    )),
   )
 
   test("trait A extends { self: B => }")(assertTree(templStat("trait A { self: B => }"))(
-    Trait(Nil, pname("A"), Nil, EmptyCtor(), tpl(self("self", "B")))
+    Trait(Nil, pname("A"), Nil, EmptyCtor(), tpl(self("self", "B"))),
   ))
 
   test("trait T { def x: Int }")(assertTree(templStat("trait T { def x: Int }"))(
-    Trait(Nil, pname("T"), Nil, EmptyCtor(), tpl(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int"))))
+    Trait(Nil, pname("T"), Nil, EmptyCtor(), tpl(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int")))),
   ))
 
   test("class C")(assertTree(templStat("class C"))(Class(Nil, pname("C"), Nil, ctor, tplNoBody())))
 
   test("class C[T]")(
-    assertTree(templStat("class C[T]"))(Class(Nil, pname("C"), pparam("T") :: Nil, ctor, tplNoBody()))
+    assertTree(templStat("class C[T]"))(Class(Nil, pname("C"), pparam("T") :: Nil, ctor, tplNoBody())),
   )
 
   test("class A extends B")(assertTree(templStat("class A extends B"))(
-    Class(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody(init("B")))
+    Class(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody(init("B"))),
   ))
 
   test("class A extends { val x: Int } with B")(
@@ -86,29 +86,29 @@ class TemplateSuite extends ParseSuite {
         Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), int(2)) :: Nil,
         init("B") :: Nil,
         EmptySelf(),
-        Nil
-      )
-    ))
+        Nil,
+      ),
+    )),
   )
 
   test("class A extends { self: B => }")(assertTree(templStat("class A { self: B => }"))(
-    Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(self("self", "B")))
+    Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(self("self", "B"))),
   ))
 
   test("class A { this => }")(assertTree(templStat("class A { this => }"))(
-    Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(self(Name.This())))
+    Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(self(Name.This()))),
   ))
 
   test("class A { _ => }")(assertTree(templStat("class A { this => }"))(
-    Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(self(Name.This())))
+    Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(self(Name.This()))),
   ))
 
   test("class C { def x: Int }")(assertTree(templStat("class C { def x: Int }"))(
-    Class(Nil, pname("C"), Nil, EmptyCtor(), tpl(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int"))))
+    Class(Nil, pname("C"), Nil, EmptyCtor(), tpl(Decl.Def(Nil, tname("x"), Nil, Nil, pname("Int")))),
   ))
 
   test("class C(x: Int)")(assertTree(templStat("class C(x: Int)"))(
-    Class(Nil, pname("C"), Nil, ctorp(tparam("x", "Int")), tplNoBody())
+    Class(Nil, pname("C"), Nil, ctorp(tparam("x", "Int")), tplNoBody()),
   ))
 
   test("class C private(x: Int)")(assertTree(templStat("class C private(x: Int)"))(Class(
@@ -116,19 +116,19 @@ class TemplateSuite extends ParseSuite {
     pname("C"),
     Nil,
     Ctor.Primary(Mod.Private(anon) :: Nil, anon, (tparam("x", "Int") :: Nil) :: Nil),
-    tplNoBody()
+    tplNoBody(),
   )))
 
   test("class C(val x: Int)")(assertTree(templStat("class C(val x: Int)"))(
-    Class(Nil, pname("C"), Nil, ctorp(tparam(Mod.ValParam() :: Nil, "x", "Int")), tplNoBody())
+    Class(Nil, pname("C"), Nil, ctorp(tparam(Mod.ValParam() :: Nil, "x", "Int")), tplNoBody()),
   ))
 
   test("class C(var x: Int)")(assertTree(templStat("class C(var x: Int)"))(
-    Class(Nil, pname("C"), Nil, ctorp(tparam(Mod.VarParam() :: Nil, "x", "Int")), tplNoBody())
+    Class(Nil, pname("C"), Nil, ctorp(tparam(Mod.VarParam() :: Nil, "x", "Int")), tplNoBody()),
   ))
 
   test("class C(implicit x: Int)")(assertTree(templStat("class C(implicit x: Int)"))(
-    Class(Nil, pname("C"), Nil, ctorp(tparam(Mod.Implicit() :: Nil, "x", "Int")), tplNoBody())
+    Class(Nil, pname("C"), Nil, ctorp(tparam(Mod.Implicit() :: Nil, "x", "Int")), tplNoBody()),
   ))
 
   test("class C(override val x: Int)")(assertTree(templStat("class C(override val x: Int)"))(Class(
@@ -136,7 +136,7 @@ class TemplateSuite extends ParseSuite {
     pname("C"),
     Nil,
     ctorp(tparam(List(Mod.Override(), Mod.ValParam()), "x", "Int")),
-    tplNoBody()
+    tplNoBody(),
   )))
 
   test("case class C(x: Int)(y: => Int)")(
@@ -145,18 +145,18 @@ class TemplateSuite extends ParseSuite {
       pname("C"),
       Nil,
       ctorp(tparam("x", "Int") :: Nil, tparam("y", Type.ByName(pname("Int"))) :: Nil),
-      tplNoBody()
-    ))
+      tplNoBody(),
+    )),
   )
 
   test("object O")(assertTree(templStat("object O"))(Object(Nil, tname("O"), tplNoBody())))
 
   test("case object O")(
-    assertTree(templStat("case object O"))(Object(Mod.Case() :: Nil, tname("O"), tplNoBody()))
+    assertTree(templStat("case object O"))(Object(Mod.Case() :: Nil, tname("O"), tplNoBody())),
   )
 
   test("object A extends B")(
-    assertTree(templStat("object A extends B"))(Object(Nil, tname("A"), tplNoBody(init("B"))))
+    assertTree(templStat("object A extends B"))(Object(Nil, tname("A"), tplNoBody(init("B")))),
   )
 
   test("object A extends { val x: Int } with B")(
@@ -167,13 +167,13 @@ class TemplateSuite extends ParseSuite {
         Defn.Val(Nil, List(patvar("x")), Some(pname("Int")), int(2)) :: Nil,
         init("B") :: Nil,
         EmptySelf(),
-        Nil
-      )
-    ))
+        Nil,
+      ),
+    )),
   )
 
   test("object A extends { self: B => }")(
-    assertTree(templStat("object A { self: B => }"))(Object(Nil, tname("A"), tpl(self("self", "B"))))
+    assertTree(templStat("object A { self: B => }"))(Object(Nil, tname("A"), tpl(self("self", "B")))),
   )
 
   test("trait B extends A.type") {
@@ -215,11 +215,11 @@ class TemplateSuite extends ParseSuite {
         List(Init(
           Type.Apply(Type.Name("F"), Type.ArgClause(List(Type.Name("Int")))),
           Name.Anonymous(),
-          Seq.empty[Term.ArgClause]
+          Seq.empty[Term.ArgClause],
         )),
         Template.Body(None, Nil),
-        Nil
-      )
+        Nil,
+      ),
     )
     checkStat(code, "trait B extends F[Int]")(tree)
     checkStat(code2, "trait B extends F[Int]")(tree)
@@ -260,8 +260,8 @@ class TemplateSuite extends ParseSuite {
       tpl(
         Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(Nil), tplNoBody()),
         blk(tapplytype(tname("deriveEncoder"), pname("Foo"))),
-        blk(tapplytype(tname("deriveEncoder"), pname("Foo")))
-      )
+        blk(tapplytype(tname("deriveEncoder"), pname("Foo"))),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }
@@ -300,8 +300,8 @@ class TemplateSuite extends ParseSuite {
       tpl(
         Defn.Class(List(Mod.Case()), pname("Foo"), Nil, ctorp(), tplNoBody(init("Bar"))),
         blk(tapplytype(tname("deriveEncoder"), pname("Foo"))),
-        blk(tapplytype(tname("deriveEncoder"), pname("Foo")))
-      )
+        blk(tapplytype(tname("deriveEncoder"), pname("Foo"))),
+      ),
     )
     runTestAssert[Stat](code, Some(layout))(tree)
   }

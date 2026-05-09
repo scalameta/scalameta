@@ -25,7 +25,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
   private class Mstats(
       val primary: ListBuffer[Tree] = ListBuffer.empty[Tree],
-      val lowPrio: ListBuffer[Tree] = ListBuffer.empty[Tree]
+      val lowPrio: ListBuffer[Tree] = ListBuffer.empty[Tree],
   )
 
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees {
@@ -86,7 +86,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val (versionedParams, paramsVersions) =
           if (isQuasi) (Nil, Nil) else getVersionedParams(params, stats)
         val replacedFields = versionedParams.flatMap(_.replaced.flatMap(field =>
-          field.oldDefs.map { case (oldDef, _) => field.version -> oldDef }
+          field.oldDefs.map { case (oldDef, _) => field.version -> oldDef },
         ))
         val mstatsPerVersion = paramsVersions.map(ver => (ver, new Mstats()))
         def paramsForVersion(v: Version): List[ValDef] =
@@ -315,7 +315,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         def addCopy(
             paramsToCopy: List[ValOrDefDef],
             withDefault: Boolean,
-            version: Option[Version] = None
+            version: Option[Version] = None,
         ): Unit = {
           val mods =
             getDeferredModifiers(version.fold(List.empty[Tree])(v => getDeprecatedAnno(v) :: Nil))
@@ -331,7 +331,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             istatsAdd(q"$mods def copyWithComments(..$copyWithCommentsParams): $iname")
 
           val privateCopyParams = version.flatMap(v =>
-            privateApplyParamss.reverseIterator.collectFirst { case (pv, pp) if pv < v => pp }
+            privateApplyParamss.reverseIterator.collectFirst { case (pv, pp) if pv < v => pp },
           ).getOrElse(privateApplyParamss.last._2)
           val args = (privateCopyParams ++ paramsToCopy).map(getParamArg)
 
@@ -469,7 +469,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 hasErrors = true
                 c.error(
                   tree.pos,
-                  "cannot refer to parent in @ast field checks; use checkParent instead"
+                  "cannot refer to parent in @ast field checks; use checkParent instead",
                 )
               case _ => super.traverse(tree)
             }
@@ -491,7 +491,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                  $OriginModule.DialectOnly.getFromArgs(..$internalArgs)
                )
              """
-          else getParamArg(p)
+          else getParamArg(p),
         )
         internalBody +=
           q"""
@@ -860,7 +860,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private class VersionedParam(
       val param: ValDef,
       val appended: Option[Version],
-      val replaced: Seq[ReplacedField]
+      val replaced: Seq[ReplacedField],
   ) {
     appended.foreach(aver =>
       replaced.headOption.foreach(rfield =>
@@ -869,10 +869,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           c.abort(
             param.pos,
             s"$aver [@newField for ${param.name}] must must precede " +
-              s"${rfield.version} [@replacedField for ${oldDef.name}]"
+              s"${rfield.version} [@replacedField for ${oldDef.name}]",
           )
-        }
-      )
+        },
+      ),
     )
 
     def getApplyDeclDefnBefore(version: Version): (List[(ValDef, Int)], Option[ValDef]) = {
@@ -904,7 +904,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
   private def getVersionedParams(
       params: List[ValDef],
-      stats: List[Tree]
+      stats: List[Tree],
   ): (List[VersionedParam], List[Version]) = {
     val appendedFields: Map[String, Version] = getNewFieldVersions(params)
     val replacedFields: Map[String, Seq[ReplacedField]] = ReplacedField.getMap(params, stats)
@@ -963,7 +963,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
       val version: Version,
       val newVal: ValDef,
       ctor: Tree,
-      val oldDefs: List[(ValOrDefDef, Int)]
+      val oldDefs: List[(ValOrDefDef, Int)],
   ) {
     def newValDefn: ValDef = {
       def bodyForSingleOldDef(oldDef: ValOrDefDef) =
@@ -1045,7 +1045,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         case _ => None
       }
       iter(oldDef.rhs).getOrElse(
-        c.abort(oldDef.pos, s"@replacedField: can't find new field name (${showRaw(oldDef.rhs)})")
+        c.abort(oldDef.pos, s"@replacedField: can't find new field name (${showRaw(oldDef.rhs)})"),
       )
     }
   }
@@ -1093,7 +1093,7 @@ object AstNamerMacros {
           if (v > maxVersion) {
             maxName = Some(name)
             maxVersion = v
-          }
+          },
         )
     }
     maxName

@@ -34,8 +34,8 @@ class CtrlExprJVMSuite extends BaseDottySuite {
         Nil,
         List(Nil),
         Some(pname("Unit")),
-        blk(generateIfsTree(nestedNum))
-      ))
+        blk(generateIfsTree(nestedNum)),
+      )),
     )))
 
     runTestAssert[Source](code)(tree)

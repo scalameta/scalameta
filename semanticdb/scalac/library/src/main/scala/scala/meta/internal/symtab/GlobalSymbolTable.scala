@@ -52,7 +52,7 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
         val info = SymbolInformation(
           symbol = symbol,
           kind = SymbolInformation.Kind.PACKAGE,
-          displayName = symbol.desc.value
+          displayName = symbol.desc.value,
         )
         Some(info)
       } else None

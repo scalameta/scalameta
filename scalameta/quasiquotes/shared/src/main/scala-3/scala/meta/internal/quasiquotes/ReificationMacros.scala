@@ -37,53 +37,53 @@ object ReificationMacros {
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.TypeParam)
       .asExprOf[scala.meta.Type.Param]
   def caseOrPatternImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Tree] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.CaseOrPattern)
       .asExprOf[scala.meta.Tree]
   def initImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Init] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Init)
       .asExprOf[scala.meta.Init]
   def selfImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Self] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Self)
       .asExprOf[scala.meta.Self]
   def templateImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Template] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Template)
       .asExprOf[scala.meta.Template]
   def modImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Mod] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Mod)
       .asExprOf[scala.meta.Mod]
   def enumeratorImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Enumerator] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Enumerator)
       .asExprOf[scala.meta.Enumerator]
   def importerImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Importer] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Importer)
       .asExprOf[scala.meta.Importer]
   def importeeImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Importee] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Importee)
       .asExprOf[scala.meta.Importee]
   def sourceImpl(using
-      Quotes
+      Quotes,
   )(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]): Expr[scala.meta.Source] =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Source)
       .asExprOf[scala.meta.Source]
 
   def unapplyImpl(using
-      Quotes
+      Quotes,
   )(scCallExpr: Expr[QuasiquoteUnapply], scrutineeExpr: Expr[Any]): Expr[Any] =
     val (stringContext, quasiquoteType) = scCallExpr match
       case '{ ($sc: StringContext).q } => (sc, QuasiquoteType.Stat)
@@ -137,7 +137,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
       posEnd: Int,
       tpe: Option[TypeRepr],
       var symbol: Option[Symbol],
-      var reifier: Option[Term]
+      var reifier: Option[Term],
   )
 
   lazy val ListClass = TypeRepr.of[scala.List]
@@ -145,7 +145,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
   def expandUnapply(
       strCtx: Expr[StringContext],
       unapplySelector: Expr[Any],
-      qType: QuasiquoteType
+      qType: QuasiquoteType,
   ): Expr[Any] = {
     given strCtxExpr: Expr[StringContext] = strCtx
     expand(qType, extractModePattern(unapplySelector))
@@ -154,7 +154,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
   def expandApply(
       strCtx: Expr[StringContext],
       args: Expr[Seq[Any]],
-      qType: QuasiquoteType
+      qType: QuasiquoteType,
   ): Expr[Any] = {
     given strCtxExpr: Expr[StringContext] = strCtx
     expand(qType, extractModeTerm(args))
@@ -183,7 +183,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
   }
 
   private def extractModeTerm(
-      argsExpr: Expr[Seq[Any]]
+      argsExpr: Expr[Seq[Any]],
   )(using strCtxExpr: Expr[StringContext]): Mode = {
     val Varargs(args) = argsExpr: @unchecked
     val argsIter = args.iterator
@@ -202,7 +202,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
   }
 
   private def extractModePattern(
-      selectorExpr: Expr[Any]
+      selectorExpr: Expr[Any],
   )(using strCtxExpr: Expr[StringContext]): Mode = {
     val '{ StringContext(${ Varargs(parts) }: _*) } = strCtxExpr: @unchecked
     val partPosIter = parts.iterator.map(_.asTerm.pos)
@@ -259,7 +259,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
         _.asTerm.tpe match
           case termRef @ TermRef(prefix, _) => // TermRef(scala.meta.Dialect, method current)
             instantiateStandardDialect(prefix.memberType(termRef.termSymbol).termSymbol)
-          case _ => None
+          case _ => None,
       )
 
       standardDialectReference.orElse(standardDialectSingleton).getOrElse {
@@ -273,7 +273,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
     (
       if (mode.isTerm) underlyingDialect.unquoteTerm(mode.multiline)
       else underlyingDialect.unquotePat(mode.multiline),
-      dialectExpr.get
+      dialectExpr.get,
     )
   }
   private def instantiateParser(qType: QuasiquoteType): MetaParser = {
@@ -302,7 +302,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
       mode: Mode,
       qType: QuasiquoteType,
       dialectExpr: Expr[Dialect],
-      input: Input
+      input: Input,
   ): Expr[Any] = {
     val pendingQuasis = mutable.Stack[Quasi]()
 
@@ -328,16 +328,16 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
             if mode.isTerm then
               Apply(
                 TypeApply(Select.unique('{ scala.Some }.asTerm, "apply"), List(TypeTree.of[T])),
-                List(liftTree(otherTree).asInstanceOf[Term])
+                List(liftTree(otherTree).asInstanceOf[Term]),
               )
             else
               TypedOrTest(
                 Unapply(
                   TypeApply(Select.unique(Ref(defn.SomeModule), "unapply"), List(TypeTree.of[T])),
                   Nil,
-                  List(liftTree(otherTree))
+                  List(liftTree(otherTree)),
                 ),
-                TypeTree.of[Some[T]]
+                TypeTree.of[Some[T]],
               )
           case None => '{ scala.None }.asTerm match
               case Inlined(_, _, none) => none
@@ -364,18 +364,18 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                       if (mode.isTerm) Apply(
                         TypeApply(
                           Select.unique(alreadyLiftedList.asInstanceOf[Term], "+:"),
-                          List(TypeTree.of[T])
+                          List(TypeTree.of[T]),
                         ),
-                        List(currElement.asInstanceOf[Term])
+                        List(currElement.asInstanceOf[Term]),
                       )
                       else Unapply(
                         TypeApply(
                           Select.unique('{ +: }.asTerm, "unapply"),
-                          List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])
+                          List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]]),
                         ),
                         Nil,
-                        List(currElement, alreadyLiftedList)
-                      )
+                        List(currElement, alreadyLiftedList),
+                      ),
                     )
                   }
                   loop(rest, acc, Nil)
@@ -383,7 +383,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                   Predef.require(prefix.isEmpty && debug(trees, acc, prefix))
                   val tree = Apply(
                     TypeApply(Select.unique(x, "++"), List(TypeTree.of[T])),
-                    List(liftQuasi(quasi).asInstanceOf[Term])
+                    List(liftQuasi(quasi).asInstanceOf[Term]),
                   )
                   loop(rest, Some(tree), Nil)
                 case _ => report
@@ -398,19 +398,19 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                     if mode.isTerm then
                       Apply(
                         TypeApply(Select.unique(x.asInstanceOf[Term], ":+"), List(TypeTree.of[T])),
-                        List(otherTree.asInstanceOf[Term])
+                        List(otherTree.asInstanceOf[Term]),
                       )
                     else
                       TypedOrTest(
                         Unapply(
                           TypeApply(
                             Select.unique('{ :+ }.asTerm, "unapply"),
-                            List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]])
+                            List(TypeTree.of[T], TypeTree.of[List], TypeTree.of[List[T]]),
                           ),
                           Nil,
-                          List(x, otherTree)
+                          List(x, otherTree),
                         ),
-                        TypeTree.of[List[Any]]
+                        TypeTree.of[List[Any]],
                       )
                   loop(rest, Some(tree), Nil)
             case _ => acc.getOrElse {
@@ -421,16 +421,16 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                     '{ List }.asTerm,
                     "apply",
                     List(TypeRepr.of[T]),
-                    args.asInstanceOf[List[Term]]
+                    args.asInstanceOf[List[Term]],
                   )
                 else
                   TypedOrTest(
                     Unapply(
                       TypeApply(Select.unique('{ List }.asTerm, "unapplySeq"), List(TypeTree.of[T])),
                       Nil,
-                      args
+                      args,
                     ),
-                    TypeTree.of[List[T]]
+                    TypeTree.of[List[T]],
                   )
               }
           }
@@ -445,22 +445,22 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
               '{ List }.asTerm,
               "apply",
               List(TypeRepr.of[Any]),
-              args.asInstanceOf[List[Term]]
+              args.asInstanceOf[List[Term]],
             )
           else
             TypedOrTest(
               Unapply(
                 TypeApply(Select.unique('{ List }.asTerm, "unapplySeq"), List(TypeTree.of[Any])),
                 Nil,
-                args
+                args,
               ),
-              TypeTree.of[List[Any]]
+              TypeTree.of[List[Any]],
             )
         } else if (tripleDotQuasis.length == 1)
           if (treess.flatten.length == 1) liftQuasi(tripleDotQuasis(0))
           else report.errorAndAbort(
             "implementation restriction: can't mix ...$ with anything else in parameter lists." +
-              EOL + "See https://github.com/scalameta/scalameta/issues/406 for details."
+              EOL + "See https://github.com/scalameta/scalameta/issues/406 for details.",
           )
         else report.errorAndAbort(Messages.QuasiquoteAdjacentEllipsesInPattern(2))
       }
@@ -493,20 +493,20 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                   Symbol.spliceOwner,
                   hole.name,
                   Flags.EmptyFlags,
-                  inferredPt.asInstanceOf[TypeRepr]
+                  inferredPt.asInstanceOf[TypeRepr],
                 )
                 val reifier = hole.tpe match
                   case Some(tpe) => Select.overloaded(
                       '{ scala.meta.internal.quasiquotes.Unlift }.asTerm,
                       "unapply",
                       List(tpe.asInstanceOf[TypeRepr]),
-                      List(Ref(symbol))
+                      List(Ref(symbol)),
                     )
                   case None => Select.overloaded(
                       '{ scala.meta.internal.quasiquotes.Unlift }.asTerm,
                       "unapply",
                       List(inferredPt.asInstanceOf[TypeRepr]),
-                      List(Ref(symbol))
+                      List(Ref(symbol)),
                     )
                 hole.symbol = Some(symbol).asInstanceOf[Option[rei.internalQuotes.reflect.Symbol]]
                 hole.reifier = Some(reifier).asInstanceOf[Option[rei.internalQuotes.reflect.Term]]
@@ -614,7 +614,7 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
         val args = holes.map(hole => hole.reifier.get.asInstanceOf[Term])
         val argsContents = args.flatMap(
           _.tpe match
-            case AppliedType(tpe, content) if tpe =:= TypeRepr.of[Option] => content
+            case AppliedType(tpe, content) if tpe =:= TypeRepr.of[Option] => content,
         )
         val lst = Select.overloaded('{ List }.asTerm, "apply", List(TypeRepr.of[Option[Any]]), args)
           .asExprOf[List[Option[Any]]]
@@ -632,9 +632,9 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
               Ref(defn.TupleClass(n).companionModule),
               "apply",
               argsContents,
-              args.map(arg => '{ ${ arg.asExprOf[Option[Any]] }.get }.asTerm)
+              args.map(arg => '{ ${ arg.asExprOf[Option[Any]] }.get }.asTerm),
             ).asExpr,
-            false
+            false,
           )
         returned.asTerm.tpe.asType match
           case '[t] =>
@@ -656,8 +656,8 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
                 input.asTerm,
                 List(
                   CaseDef(pattern, None, thenp(input).asTerm),
-                  CaseDef(Wildcard(), None, elsep.asTerm)
-                )
+                  CaseDef(Wildcard(), None, elsep.asTerm),
+                ),
               )
               if (isBooleanExtractor) matchTerm.asExprOf[Boolean] else matchTerm.asExprOf[Option[t]]
             }
@@ -667,11 +667,11 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
             val internalResult =
               if (isBooleanExtractor) Block(
                 valDefsAsStatements,
-                '{ ${ matchp(unapplySelector) }.asInstanceOf[Boolean] }.asTerm
+                '{ ${ matchp(unapplySelector) }.asInstanceOf[Boolean] }.asTerm,
               ).asExprOf[Boolean]
               else Block(
                 valDefsAsStatements,
-                '{ ${ matchp(unapplySelector) }.asInstanceOf[Option[t]] }.asTerm
+                '{ ${ matchp(unapplySelector) }.asInstanceOf[Option[t]] }.asTerm,
               ).asExprOf[Option[t]]
 
             if (sys.props("quasiquote.debug") != null) println(internalResult)

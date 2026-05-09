@@ -20,7 +20,7 @@ class ApiExtensionsSuite extends TreeSuiteBase {
          |)""".stripMargin.lf2nl,
       """Pat.Var(Term.Name("x"))""",
       """Term.Name("x")""",
-      """Lit.Int(2)"""
+      """Lit.Int(2)""",
     )
     def dfsTraverse = {
       val buf = new ListBuffer[String]
@@ -46,7 +46,7 @@ class ApiExtensionsSuite extends TreeSuiteBase {
          |)""".stripMargin.lf2nl,
       """Pat.Var(Term.Name("x"))""",
       """Lit.Int(2)""",
-      """Term.Name("x")"""
+      """Term.Name("x")""",
     )
     def bfsTraverse = {
       val buf = new ListBuffer[String]

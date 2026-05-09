@@ -106,7 +106,7 @@ object ClasspathIndex {
           val element = entries.nextElement()
           if (!element.getName.startsWith("META-INF")) {
             val parent = getClassdir(
-              if (element.isDirectory) element.getName else PathIO.dirname(element.getName)
+              if (element.isDirectory) element.getName else PathIO.dirname(element.getName),
             )
             val inJar = CompressedClassfile(element, file)
             addMember(parent, PathIO.basename(element.getName), inJar)
@@ -141,7 +141,7 @@ object ClasspathIndex {
         }
         override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult =
           if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE else FileVisitResult.CONTINUE
-      }
+      },
     )
   }
 }

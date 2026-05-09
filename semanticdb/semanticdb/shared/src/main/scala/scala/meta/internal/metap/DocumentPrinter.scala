@@ -9,7 +9,7 @@ class DocumentPrinter(
     settings: Settings,
     reporter: Reporter,
     doc: TextDocument,
-    symtab: PrinterSymtab
+    symtab: PrinterSymtab,
 ) extends BasePrinter(settings, reporter, doc, symtab)
     with SymbolInformationPrinter
     with OccurrencePrinter
