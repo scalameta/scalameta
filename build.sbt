@@ -229,10 +229,7 @@ lazy val common2 = crossProject(allPlatforms: _*).in(file("scalameta/common2")).
 lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
   moduleName := "common",
   sharedSettings,
-  libraryDependencies += {
-    val sourceCodeVersion = if (isScala211.value) "0.3.1" else "0.4.4"
-    "com.lihaoyi" %%% "sourcecode" % sourceCodeVersion
-  },
+  libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.4",
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
   enableMacros,
   crossScalaVersions := EarliestScalaVersions
@@ -269,9 +266,7 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   enableHardcoreMacros,
   libraryDependencies ++= {
     val fastparseVersion =
-      if (isScala211.value) "3.0.2"
-      else if (VersionNumber(scalaVersion.value).matchesSemVer(SemanticSelector("<2.13.14")))
-        "3.1.0"
+      if (VersionNumber(scalaVersion.value).matchesSemVer(SemanticSelector("<2.13.14"))) "3.1.0"
       else "3.1.1"
     List("com.lihaoyi" %%% "fastparse" % fastparseVersion)
   },
@@ -420,10 +415,7 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
 ).jvmSettings(
   libraryDependencies ++=
     { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
-  dependencyOverrides += {
-    val scalaXmlVersion = if (isScala211.value) "1.3.0" else "2.4.0"
-    "org.scala-lang.modules" %%% "scala-xml" % scalaXmlVersion
-  },
+  dependencyOverrides += "org.scala-lang.modules" %%% "scala-xml" % "2.4.0",
   libraryDependencies ++= {
     if (isScala213.value) List(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
@@ -466,10 +458,7 @@ lazy val sharedTestSettings = Def.settings(
   testFrameworks := List(TestFrameworks.MUnit),
   dependencyOverrides ++=
     { if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value) },
-  libraryDependencies += {
-    val munitV = if (isScala211.value) "1.0.0-M10" else munit.sbtmunit.BuildInfo.munitVersion
-    "org.scalameta" %%% "munit" % munitV
-  }
+  libraryDependencies += "org.scalameta" %%% "munit" % munit.sbtmunit.BuildInfo.munitVersion
 )
 
 lazy val testSettings = Def.settings(
@@ -478,10 +467,7 @@ lazy val testSettings = Def.settings(
     val base = (Compile / baseDirectory).value
     List(base / "src" / "test" / ("scala-" + scalaVersion.value))
   },
-  libraryDependencies += {
-    val coursierVersion = if (isScala211.value) "2.0.0-RC5-6" else "2.1.24"
-    ("io.get-coursier" %% "coursier" % coursierVersion).cross(CrossVersion.for3Use2_13)
-  },
+  libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.24" cross CrossVersion.for3Use2_13,
   exposePaths("tests", Test),
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
@@ -547,7 +533,6 @@ lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(Buil
 // ==========================================
 
 def isScalaBinaryVersion(version: String) = Def.setting(scalaBinaryVersion.value == version)
-lazy val isScala211 = isScalaBinaryVersion("2.11")
 lazy val isScala213 = isScalaBinaryVersion("2.13")
 lazy val isScala3 = isScalaBinaryVersion("3")
 def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
@@ -654,10 +639,8 @@ lazy val protobufSettings = Def.settings(
   PB.additionalDependencies := Nil,
   libraryDependencies ++= {
     val scalapbVersion =
-      if (isScala211.value) "0.9.8"
       // for SIP-51, freeze version to the latest ScalaPB built against the earliest Scala 2.13.x version we support
-      else if (scalaVersion.value == "2.13.15") "0.11.17"
-      else scalapb.compiler.Version.scalapbVersion
+      if (scalaVersion.value == "2.13.15") "0.11.17" else scalapb.compiler.Version.scalapbVersion
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion % "protobuf",
@@ -774,8 +757,7 @@ lazy val fullCrossVersionSettings = Seq(
   Compile / unmanagedSourceDirectories += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
-    // Unfortunately, it only includes directories like "scala_2.11" or "scala_2.12",
-    // not "scala_2.11.8" or "scala_2.12.1" that we need.
+    // Unfortunately, it only includes directories like "scala_2.13", not "scala_2.13.18" that we need.
     // That's why we have to work around here.
     val base = (Compile / sourceDirectory).value
     val versionDir = scalaVersion.value.replaceAll("-.*", "")
@@ -854,18 +836,12 @@ lazy val docs = project.in(file("scalameta-docs")).settings(
 ).enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
 
 lazy val shadingSettings = Def.settings(
-  shadedDependencies ++= {
-    if (isScala211.value) Set.empty
-    else ShadedDependency.all.map(x =>
-      if (x.isPlatformSpecific) x.groupID %%% x.artifactID % "foo"
-      else x.groupID %% x.artifactID % "foo"
-    ).toSet
-  },
-  shadingRules ++= {
-    if (isScala211.value) Seq.empty
-    else ShadedDependency.all
-      .map(x => ShadingRule.moveUnder(x.namespace, "scala.meta.shaded.internal"))
-  },
+  shadedDependencies ++= ShadedDependency.all.map(x =>
+    if (x.isPlatformSpecific) x.groupID %%% x.artifactID % "foo"
+    else x.groupID %% x.artifactID % "foo"
+  ).toSet,
+  shadingRules ++=
+    ShadedDependency.all.map(x => ShadingRule.moveUnder(x.namespace, "scala.meta.shaded.internal")),
   validNamespaces ++= Set("org", "scala", "java")
 )
 

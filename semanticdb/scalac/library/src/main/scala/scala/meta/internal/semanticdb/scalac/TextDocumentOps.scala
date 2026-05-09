@@ -85,30 +85,32 @@ trait TextDocumentOps {
       def addOccurrence(mpos: m.Position, gsym: g.Symbol, role: Role): Unit =
         addOccurrenceFromSemantic(mpos, gsym.toSemantic, role)
 
-      def addSamOccurrence(gt: g.Function) = getSyntheticSAMClass(gt).foreach { sam =>
-        def atPos(mpos: m.Position): Unit = {
-          def set(gsym: g.Symbol, map: mutable.Map[m.Position, Occurrence]): Boolean = {
-            // SAM symbols aren't reusable and share position with lambda
-            val ssym = freshSymbolRaw(gsym)
-            val ok = ssym ne Symbols.None
-            if (ok) {
-              map.update(mpos, (ssym, Role.DEFINITION))
-              saveSymbolFromSemantic(gsym, ssym)
+      def addSamOccurrence(gt: g.Function) = gt.attachments.get[global.SAMFunction]
+        .foreach { samf =>
+          val sam = samf.synthCls
+          def atPos(mpos: m.Position): Unit = {
+            def set(gsym: g.Symbol, map: mutable.Map[m.Position, Occurrence]): Boolean = {
+              // SAM symbols aren't reusable and share position with lambda
+              val ssym = freshSymbolRaw(gsym)
+              val ok = ssym ne Symbols.None
+              if (ok) {
+                map.update(mpos, (ssym, Role.DEFINITION))
+                saveSymbolFromSemantic(gsym, ssym)
+              }
+              ok
             }
-            ok
+            set(sam, samoccurrences) && set(sam.info.decls.elems.sym, sammethodoccurrences)
           }
-          set(sam, samoccurrences) && set(sam.info.decls.elems.sym, sammethodoccurrences)
+          val gsym = gt.symbol
+          val gpos = gt.pos
+          if (gpos.isDefined && (gsym ne null) && !config.symbols.isNone) {
+            val gstart = gpos.start
+            mfuncs.get(gstart).fold(mstarts.get(gstart).foreach { name =>
+              val mpos = name.pos
+              if (mpos.end == gpos.end) atPos(mpos)
+            })(atPos)
+          }
         }
-        val gsym = gt.symbol
-        val gpos = gt.pos
-        if (gpos.isDefined && (gsym ne null) && !config.symbols.isNone) {
-          val gstart = gpos.start
-          mfuncs.get(gstart).fold(mstarts.get(gstart).foreach { name =>
-            val mpos = name.pos
-            if (mpos.end == gpos.end) atPos(mpos)
-          })(atPos)
-        }
-      }
 
       def addPatOccurrenceFromSemantic(mpos: m.Position, ssym: String): Unit =
         if (ssym != Symbols.None) mpatoccurrences.update(mpos, (ssym, Role.DEFINITION))

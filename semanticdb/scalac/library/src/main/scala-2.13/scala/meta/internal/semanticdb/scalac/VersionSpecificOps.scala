@@ -16,9 +16,6 @@ trait VersionSpecificOps {
       .get[g.analyzer.NamedApplyInfo].map(Some(_))
   }
 
-  def getSyntheticSAMClass(gt: g.Function): Option[g.Symbol] = gt.attachments.get[global.SAMFunction]
-    .map(_.synthCls)
-
   object AssignOrNamedArg {
     def unapply(gtree: g.Tree): Option[(g.Tree, g.Tree)] = gtree match {
       case gtree: g.NamedArg => Some((gtree.lhs, gtree.rhs))

@@ -2,27 +2,22 @@ package org.scalameta
 package build
 
 object Versions {
-  val Scala211Versions = getVersions2(11, 12 to 12)
   val Scala212Versions = getVersions2(12, 18 to 21)
   val Scala213Versions = getVersions2(13, 15 to 18)
   val Scala3Versions = getVersions3(3 -> 7, 8 -> 3)
   val Scala2ReleaseCandidates = getReleaseCandidates(2)
   val Scala3ReleaseCandidates = getReleaseCandidates(3)
-  val LatestScala211 = Scala211Versions.head
   val LatestScala212 = Scala212Versions.head
   val LatestScala213 = Scala213Versions.head
   val LatestScala213ForJS = LatestScala213
-  val EarliestScala211 = Scala211Versions.last
   val EarliestScala212 = Scala212Versions.last
   val EarliestScala213 = Scala213Versions.last
   val EarliestScala3 = Scala3Versions.last
-  val AllScala2Versions = Scala213Versions ++ Scala212Versions ++ Scala211Versions ++
-    Scala2ReleaseCandidates
+  val AllScala2Versions = Scala213Versions ++ Scala212Versions ++ Scala2ReleaseCandidates
   val AllScalaVersions = AllScala2Versions ++ Scala3Versions ++ Scala3ReleaseCandidates
-  val EarliestScala2Versions = Seq(EarliestScala213, EarliestScala212, EarliestScala211) ++
-    Scala2ReleaseCandidates
+  val EarliestScala2Versions = Seq(EarliestScala213, EarliestScala212) ++ Scala2ReleaseCandidates
   val EarliestScalaVersions = (EarliestScala2Versions :+ EarliestScala3) ++ Scala3ReleaseCandidates
-  val LatestScala2Versions = Seq(LatestScala213, LatestScala212, LatestScala211)
+  val LatestScala2Versions = Seq(LatestScala213, LatestScala212)
 
   private def getVersions[A](prefix: String, suffixes: Seq[A]) = {
     if (suffixes.length > 4)

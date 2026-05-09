@@ -104,15 +104,10 @@ class ConfigSuite extends FunSuite {
     { doc =>
       val obtained = doc.symbols.map(i => i.symbol + " " + i.displayName).sorted.mkString("\n")
       val expected =
-        if (BuildInfo.scalaBinaryVersion == "2.11") // different result
-          """|_empty_/A. A
-             |_empty_/A.x. x
-             |""".stripMargin
-        else
-          """|_empty_/A. A
-             |_empty_/A.x. x
-             |local0 y
-             |""".stripMargin
+        """|_empty_/A. A
+           |_empty_/A.x. x
+           |local0 y
+           |""".stripMargin
 
       assertNoDiff(obtained, expected)
     }
