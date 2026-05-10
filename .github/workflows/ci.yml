@@ -62,7 +62,7 @@ jobs:
       - name: Test Parser on ${{ matrix.scala }} using Native
         run: sbt ++${{ matrix.scala }} testsNative/test
       - name: Test Semanticdb on ${{ matrix.scala }}
-        if: ${{ !startsWith(matrix.scala, '3.') }}
+        if: ${{ startsWith(matrix.scala, '2.') }}
         run: sbt ++${{ matrix.scala }} testsSemanticdb/test
   testOlderScalaOnJVM:
     runs-on: ubuntu-latest
