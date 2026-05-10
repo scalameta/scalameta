@@ -102,8 +102,6 @@ val commonJsSettings = Seq(
 )
 
 lazy val nativeSettings = Seq(
-  crossScalaVersions := List(LatestScala213, LatestScala212),
-  scalaVersion := LatestScala213,
   bspEnabled := false,
   nativeConfig ~= {
     _.withMode(scalanative.build.Mode.releaseFast)
