@@ -4,11 +4,10 @@ import org.scalameta.collections.Conversions._
 import scala.meta.internal.io.PathIO
 import scala.meta.io.{AbsolutePath, Classpath}
 
+import java.io.IOException
 import java.net.URI
-import java.nio.file.attribute.BasicFileAttributes
-import java.nio.file.{FileSystems, FileVisitResult, Files, Path, SimpleFileVisitor}
+import java.nio.file._
 import java.util.jar.JarFile
-import java.util.zip.ZipException
 
 import scala.collection.mutable
 import scala.util.Properties
@@ -99,7 +98,7 @@ object ClasspathIndex {
       val file = jarpath.toFile
       val jar =
         try new JarFile(file)
-        catch { case zex: ZipException => return () }
+        catch { case _: IOException => return }
       try {
         val entries = jar.entries()
         while (entries.hasMoreElements) {
@@ -126,7 +125,10 @@ object ClasspathIndex {
     private def expandDirEntry(root: AbsolutePath): Unit = Files.walkFileTree(
       root.toNIO,
       new SimpleFileVisitor[Path] {
-        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+        override def visitFile(
+            file: Path,
+            attrs: attribute.BasicFileAttributes,
+        ): FileVisitResult = {
           val name = file.getFileName.toString
           if (name.endsWith(".class")) {
             val relpath = AbsolutePath(file).toRelative(root)
@@ -139,7 +141,10 @@ object ClasspathIndex {
           }
           super.visitFile(file, attrs)
         }
-        override def preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult =
+        override def preVisitDirectory(
+            dir: Path,
+            attrs: attribute.BasicFileAttributes,
+        ): FileVisitResult =
           if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE else FileVisitResult.CONTINUE
       },
     )
