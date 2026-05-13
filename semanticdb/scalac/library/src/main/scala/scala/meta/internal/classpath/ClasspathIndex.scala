@@ -40,6 +40,7 @@ object ClasspathIndex {
 
   private final class Builder(classpath: Classpath, includeJdk: Boolean) {
     private val dirs = mutable.Map.empty[String, Classdir]
+    private val visitedJars = mutable.Set.empty[AbsolutePath]
 
     def result(): ClasspathIndex = {
       val root = Classdir("/")
@@ -96,6 +97,7 @@ object ClasspathIndex {
     }
 
     private def expandJarEntry(jarpath: AbsolutePath): Unit = {
+      if (!visitedJars.add(jarpath)) return
       val file = jarpath.toFile
       val jar =
         try new JarFile(file)

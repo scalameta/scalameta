@@ -59,9 +59,7 @@ class ClasspathIndexSuite extends FunSuite {
 
   test("self-referencing jar does not cause StackOverflowError") {
     val classpath = Classpath(Paths.get(getClass().getResource("/self-ref.jar").toURI()))
-    try {
-      ClasspathIndex(classpath)
-      fail("should have thrown StackOverflowError")
-    } catch { case _: StackOverflowError => }
+    val index = ClasspathIndex(classpath)
+    assert(index.getClassfile("A.class").isDefined)
   }
 }
