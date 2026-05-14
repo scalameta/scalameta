@@ -19,7 +19,7 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
 
   private val settings = Settings()
   private val reporter = Reporter().withSilentOut().withSilentErr()
-  private val classpathIndex = ClasspathIndex(classpath, includeJdk)
+  private val classpathIndex = ClasspathIndex(classpath, includeJdk, reporter)
   private val symbolCache = TrieMap.empty[String, SymbolInformation]
   Scalalib.synthetics.foreach(enter)
 
