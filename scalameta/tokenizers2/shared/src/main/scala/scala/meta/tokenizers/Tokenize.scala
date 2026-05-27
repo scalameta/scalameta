@@ -16,6 +16,12 @@ object Tokenize {
     if (obj ne UndefinedTokenize) obj else PlatformCompat.loadTokenize.getOrElse(obj)
   }
 
+  def trySetLoaded(cl: ClassLoader): Boolean = {
+    val obj = PlatformCompat.loadTokenize(cl)
+    obj.foreach(global.value = _)
+    obj.isDefined
+  }
+
   def getOpt: Option[Tokenize] = {
     val obj = scalametaTokenize
     if (obj eq UndefinedTokenize) None else Some(obj)
