@@ -62,22 +62,17 @@ object Scala {
     def isParameter: Boolean = !isNone && !isMulti && symbol.last == ')'
     def isTypeParameter: Boolean = !isNone && !isMulti && symbol.last == ']'
     def ownerChain: List[String] = {
-      val buf = List.newBuilder[String]
-      def loop(symbol: String): Unit = if (!symbol.isNone) {
-        loop(symbol.owner)
-        buf += symbol
-      }
-      loop(symbol)
-      buf.result()
+      @tailrec
+      def loop(symbol: String, res: List[String]): List[String] =
+        if (symbol.isNone) res else loop(symbol.owner, symbol :: res)
+      loop(symbol, Nil)
     }
     def owner: String =
-      if (isGlobal)
-        if (isRootPackage) Symbols.None
-        else {
-          val rest = DescriptorParser(symbol)._2
-          if (rest.nonEmpty) rest else Symbols.RootPackage
-        }
-      else Symbols.None
+      if (!isGlobal || isRootPackage) Symbols.None
+      else {
+        val rest = DescriptorParser(symbol)._2
+        if (rest.nonEmpty) rest else Symbols.RootPackage
+      }
     def desc: Descriptor = if (isGlobal) DescriptorParser(symbol)._1 else d.None
   }
 
