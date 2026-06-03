@@ -120,31 +120,30 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   }
 
   object TreeTpe {
-    def unapply(tpe: Type): Boolean = tpe <:< c.mirror.staticClass("scala.meta.Tree").asType.toType
+    private val TreeSymbol = c.mirror.staticClass("scala.meta.Tree")
+    def unapply(tpe: Type): Boolean = tpe <:< TreeSymbol.asType.toType
+
+    def getSoleTreeArg(tpe: Type): Option[Type] = tpe.typeArgs match {
+      case tpe :: Nil if unapply(tpe) => Some(tpe)
+      case _ => None
+    }
   }
 
   object OptionTreeTpe {
+    private val OptionSymbol = c.mirror.staticClass("scala.Option")
     def unapply(tpe: Type): Option[Type] =
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) tpe.typeArgs match {
-        case (tpe @ TreeTpe()) :: Nil => Some(tpe)
-        case _ => None
-      }
-      else None
+      if (tpe.typeSymbol == OptionSymbol) TreeTpe.getSoleTreeArg(tpe) else None
   }
 
   object ListTreeTpe {
+    private val ListSymbol = c.mirror.staticClass("scala.collection.immutable.List")
     def unapply(tpe: Type): Option[Type] =
-      if (isListSymbol(tpe.typeSymbol)) tpe.typeArgs match {
-        case (tpe @ TreeTpe()) :: Nil => Some(tpe)
-        case _ => None
-      }
-      else None
-  }
+      if (isListSymbol(tpe.typeSymbol)) TreeTpe.getSoleTreeArg(tpe) else None
 
-  private def isListSymbol(sym: Symbol): Boolean =
-    sym == c.mirror.staticClass("scala.collection.immutable.List") || {
+    private def isListSymbol(sym: Symbol): Boolean = sym == ListSymbol || {
       val typeSeq = typeOf[Seq[_]]
       sym == typeSeq.typeSymbol || typeSeq.baseClasses.contains(sym)
     }
+  }
 
 }

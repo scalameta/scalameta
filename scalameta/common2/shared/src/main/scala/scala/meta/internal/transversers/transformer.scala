@@ -37,7 +37,7 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
           val $fromopt = $input
           $fromopt match {
             case $SomeModule($from) =>
-              val $to = ${nested(q"$from", tpe.typeArgs.head)}
+              val $to = ${nested(q"$from", tpe)}
               if ($from eq $to) $fromopt
               else $SomeModule($to)
             case $NoneModule =>
@@ -47,13 +47,12 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     }
     def listTransformer(input: Tree, tpe: Type, nested: (Tree, Type) => Tree): Tree = {
       val fromlist = c.freshName(TermName("fromlist"))
-      val elemTpe = tpe.typeArgs.head
       q"""
           val $fromlist = $input
           var samelist = true
-          val tolist = $ListModule.newBuilder[$elemTpe]
+          val tolist = $ListModule.newBuilder[$tpe]
           $fromlist.foreach { src =>
-            val dst = ${nested(q"src", elemTpe)}
+            val dst = ${nested(q"src", tpe)}
             if (src ne dst) samelist = false
             tolist += dst
           }
@@ -64,8 +63,8 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     val fname = q"$treeName.${f.name}"
     val rhs = f.tpe match {
       case tpe @ TreeTpe() => treeTransformer(fname, tpe)
-      case tpe @ OptionTreeTpe(_) => optionTransformer(fname, tpe, treeTransformer)
-      case tpe @ ListTreeTpe(_) => listTransformer(fname, tpe, treeTransformer)
+      case OptionTreeTpe(tpe) => optionTransformer(fname, tpe, treeTransformer)
+      case ListTreeTpe(tpe) => listTransformer(fname, tpe, treeTransformer)
       case _ => fname
     }
     q"val ${TermName(f.name.toString + "1")} = $rhs"
