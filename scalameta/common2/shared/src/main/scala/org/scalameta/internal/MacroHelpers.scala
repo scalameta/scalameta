@@ -141,24 +141,6 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
       else None
   }
 
-  object OptionListTreeTpe {
-    def unapply(tpe: Type): Option[Type] =
-      if (tpe.typeSymbol == c.mirror.staticClass("scala.Option")) tpe.typeArgs match {
-        case ListTreeTpe(tpe) :: Nil => Some(tpe)
-        case _ => None
-      }
-      else None
-  }
-
-  object ListListTreeTpe {
-    def unapply(tpe: Type): Option[Type] =
-      if (isListSymbol(tpe.typeSymbol)) tpe.typeArgs match {
-        case ListTreeTpe(tpe) :: Nil => Some(tpe)
-        case _ => None
-      }
-      else None
-  }
-
   private def isListSymbol(sym: Symbol): Boolean =
     sym == c.mirror.staticClass("scala.collection.immutable.List") || {
       val typeSeq = typeOf[Seq[_]]

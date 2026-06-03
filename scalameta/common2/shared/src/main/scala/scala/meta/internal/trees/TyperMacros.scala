@@ -61,10 +61,6 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case tpe @ TreeTpe() => lazyLoad(pf => q"${copySubtree(pf, tpe)}")
       case OptionTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
       case ListTreeTpe(tpe) => lazyLoad(pf => q"$pf.map(el => ${copySubtree(q"el", tpe)})")
-      case OptionListTreeTpe(tpe) =>
-        lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
-      case ListListTreeTpe(tpe) =>
-        lazyLoad(pf => q"$pf.map(_.map(el => ${copySubtree(q"el", tpe)}))")
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -78,8 +74,6 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case tpe @ TreeTpe() => q"$f = ${copySubtree(v, tpe)}"
       case OptionTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
       case ListTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
-      case OptionListTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
-      case ListListTreeTpe(tpe) => q"$f = $v.map(_.map(el => ${copySubtree(q"el", tpe)}))"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
   }
@@ -89,8 +83,6 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     case TreeTpe() => q"null"
     case OptionTreeTpe(tpe) => q"null"
     case ListTreeTpe(tpe) => q"null"
-    case OptionListTreeTpe(tpe) => q"null"
-    case ListListTreeTpe(tpe) => q"null"
     case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
   }
 
@@ -103,7 +95,7 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     }
     val leaf = T.tpe.typeSymbol.asLeaf
     val allAnalyzedFields = leaf.fields
-    val acc = allAnalyzedFields.foldLeft(q"": Tree) { (acc, f) =>
+    val acc = allAnalyzedFields.foldLeft(q"": Tree)((acc, f) =>
       f.tpe match {
         case TreeTpe() =>
           streak :+= q"this.${f.sym}"
@@ -114,15 +106,9 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
         case ListTreeTpe(_) =>
           val acc1 = flushStreak(acc)
           q"$acc1 ++ this.${f.sym}"
-        case OptionListTreeTpe(_) =>
-          val acc1 = flushStreak(acc)
-          q"$acc1 ++ this.${f.sym}.getOrElse(_root_.scala.collection.immutable.Nil)"
-        case ListListTreeTpe(_) =>
-          val acc1 = flushStreak(acc)
-          q"$acc1 ++ this.${f.sym}.flatten"
         case _ => acc
-      }
-    }
+      },
+    )
     flushStreak(acc)
   }
 }

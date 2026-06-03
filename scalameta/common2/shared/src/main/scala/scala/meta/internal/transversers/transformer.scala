@@ -66,10 +66,6 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
       case tpe @ TreeTpe() => treeTransformer(fname, tpe)
       case tpe @ OptionTreeTpe(_) => optionTransformer(fname, tpe, treeTransformer)
       case tpe @ ListTreeTpe(_) => listTransformer(fname, tpe, treeTransformer)
-      case tpe @ OptionListTreeTpe(_) =>
-        optionTransformer(fname, tpe, listTransformer(_, _, treeTransformer))
-      case tpe @ ListListTreeTpe(_) =>
-        listTransformer(fname, tpe, listTransformer(_, _, treeTransformer))
       case _ => fname
     }
     q"val ${TermName(f.name.toString + "1")} = $rhs"
