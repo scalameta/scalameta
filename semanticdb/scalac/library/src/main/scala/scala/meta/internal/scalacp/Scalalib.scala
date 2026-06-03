@@ -113,6 +113,8 @@ object Scalalib {
       displayName = dn.Constructor,
       signature = ctorSig,
       access = s.PublicAccess(),
+      annotations = Nil,
+      overriddenSymbols = Nil,
     )
     val builtinSig = {
       val tparams = Some(s.Scope(Nil))
@@ -128,6 +130,8 @@ object Scalalib {
       displayName = className,
       signature = builtinSig,
       access = s.PublicAccess(),
+      annotations = Nil,
+      overriddenSymbols = Nil,
     )
     val infos = builtin :: (if (kind.isClass) ctor :: symbols else symbols)
     val relativeUri = "scala/" + NameTransformer.encode(className) + ".class"
@@ -152,10 +156,11 @@ object Scalalib {
         symbol = tparamSymbol,
         language = l.SCALA,
         kind = k.TYPE_PARAMETER,
-        properties = 0,
         displayName = tparamName,
         signature = tparamSig,
         access = s.NoAccess,
+        annotations = Nil,
+        overriddenSymbols = Nil,
       )
     }
     val params = paramDsls.map { case (paramName, paramTpeSymbol) =>
@@ -165,9 +170,10 @@ object Scalalib {
         symbol = paramSymbol,
         language = l.SCALA,
         kind = k.PARAMETER,
-        properties = 0,
         displayName = paramName,
         signature = paramSig,
+        annotations = Nil,
+        overriddenSymbols = Nil,
       )
     }
     val methodSig = {
@@ -183,6 +189,8 @@ object Scalalib {
       displayName = methodName,
       signature = methodSig,
       access = s.PublicAccess(),
+      annotations = Nil,
+      overriddenSymbols = Nil,
     )
     List(method) ++ tparams ++ params
   }

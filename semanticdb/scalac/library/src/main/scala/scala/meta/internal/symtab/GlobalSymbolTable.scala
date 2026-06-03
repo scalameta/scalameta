@@ -53,6 +53,8 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
           symbol = symbol,
           kind = SymbolInformation.Kind.PACKAGE,
           displayName = symbol.desc.value,
+          annotations = Nil,
+          overriddenSymbols = Nil,
         )
         Some(info)
       } else None

@@ -47,6 +47,7 @@ object Javacp {
         displayName = displayName,
         signature = sig,
         annotations = sannotations(access),
+        overriddenSymbols = Nil,
         access = saccess(access, symbol, kind),
       )
       buf += info
@@ -309,6 +310,8 @@ object Javacp {
       kind = k.TYPE_PARAMETER,
       displayName = displayName,
       signature = sig,
+      annotations = Nil,
+      overriddenSymbols = Nil,
     )
   }
 
