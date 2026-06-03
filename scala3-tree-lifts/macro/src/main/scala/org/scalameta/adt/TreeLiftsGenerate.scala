@@ -8,8 +8,8 @@ import scala.language.implicitConversions
 import scala.reflect.macros.blackbox.Context
 
 object TreeLiftsGenerate {
-  def materializeAst[T <: Adt](isPrivateOKExpr: Boolean): String = macro TreeLiftsGenerateMacros
-    .impl[T]
+  def materializeAst[T <: Adt](isPrivateOKExpr: Boolean): List[String] =
+    macro TreeLiftsGenerateMacros.impl[T]
 }
 
 // Generates what Liftables.materializeAdt generates for Scala 2, but for Scala 3.
@@ -18,9 +18,8 @@ object TreeLiftsGenerate {
 // into another macro code, which reference other methods from that macro code.
 // Here, we instead generate a scala file for use as part of the macro, and we
 // expose these methods via the TreeLiftsTrait trait.
-class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonNamerMacros {
-  lazy val u: c.universe.type = c.universe
-  lazy val mirror: u.Mirror = c.mirror
+class TreeLiftsGenerateMacros(val c: Context)
+    extends GenerateHelper with AdtReflection with CommonNamerMacros {
   import c.universe._
 
   lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply"))
@@ -82,7 +81,7 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
     else None
   }
 
-  def impl[T: WeakTypeTag](isPrivateOKExpr: c.Expr[Boolean]): c.Expr[String] = {
+  def impl[T: WeakTypeTag](isPrivateOKExpr: c.Expr[Boolean]): c.Expr[List[String]] = {
     val isPrivateOK = c.eval(isPrivateOKExpr)
     val root = weakTypeOf[T].typeSymbol.asAdt.root
     val unsortedAdts = customAdts(root).getOrElse(root.allLeafs)
@@ -96,11 +95,42 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
     def getArgs(fields: List[TermName]) = fields.map(f => s"$localName.$f").mkString(",")
     val privateArgs = getArgs(privateFields)
     val adts = unsortedAdts.map(adt => adt -> ("lift" + adt.prefix.capitalize.replace(".", "")))
-    val liftAdts = adts.map { case (adt, defName) =>
+
+    val res = Seq.newBuilder[String]
+    res +=
+      """|package scala.meta
+         |package internal
+         |package quasiquotes
+         |
+         |import scala.runtime.ScalaRunTime
+         |import scala.quoted._
+         |import scala.{meta => sm}
+         |import sm.internal.trees.Quasi
+         |import sm.internal.parsers.Absolutize._
+         |import sm.internal.parsers.Messages
+         |import sm.trees.Origin
+         |
+         |import scala.collection.mutable
+         |import scala.annotation.tailrec
+         |import scala.language.implicitConversions
+         |
+         |""".stripMargin
+    res += treeLiftsTrait
+    res +=
+      """|
+         |trait TreeLifts(using quotes: Quotes)(isPatternMode: Boolean, dialectExpr: Expr[Dialect])
+         |  extends ReificationMacros with TreeLiftsTrait
+         |{
+         |  import internalQuotes.reflect._
+         |""".stripMargin
+    res += treeByMode
+    res += termMethods
+
+    adts.foreach { case (adt, defName) =>
       val defaultBody: String = customMatcher(adt, defName, localName).getOrElse {
         def getNamePath(parts: Iterable[String]) = {
           val name = parts.mkString(".")
-          val smname = name.stripPrefix("scala.meta.")
+          val smname = getNameSuffix(name)
           if (smname ne name) "sm." + smname else "_root_." + name
         }
         val nameParts = adt.sym.fullName.split('.')
@@ -123,54 +153,26 @@ class TreeLiftsGenerateMacros(val c: Context) extends AdtReflection with CommonN
         } else getNamePath(nameParts)
       }
       val body = customWrapper(adt, defName, localName, defaultBody).getOrElse(defaultBody)
-      s"def $defName($localName: ${adt.tpe}) = $body"
+      res += s"  def $defName($localName: ${adt.tpe}) = $body\n"
     }
-    val clauses = adts.map { case (adt, name) => s"case y : ${adt.tpe} => $name(y)" }
 
-    val retStr =
-      s"""|package scala.meta
-          |package internal
-          |package quasiquotes
-          |
-          |import scala.runtime.ScalaRunTime
-          |import scala.quoted._
-          |import scala.{meta => sm}
-          |import sm.internal.trees.Quasi
-          |import sm.internal.parsers.Absolutize._
-          |import sm.internal.parsers.Messages
-          |import sm.trees.Origin
-          |
-          |import scala.collection.mutable
-          |import scala.annotation.tailrec
-          |import scala.language.implicitConversions
-          |
-          |$treeLiftsTrait
-          |
-          |trait TreeLifts(using quotes: Quotes)(isPatternMode: Boolean, dialectExpr: Expr[Dialect])
-          |  extends ReificationMacros with TreeLiftsTrait
-          |{
-          |  import internalQuotes.reflect._
-          |$treeByMode
-          |
-          |$termMethods
-          |
-          |  ${liftAdts.mkString("\n  ")}
-          |
-          |  def liftableSubTree0[T <: sm.Tree](y: T)(using Quotes): Tree = y match {
-          |    ${clauses.mkString("\n    ")}
-          |    case _ => sys.error("none of leafs matched " + y.getClass.getSimpleName)
-          |  }
-          |
-          |  private def prohibitName(pat: sm.Tree): _root_.scala.Unit = pat match {
-          |    case q: Quasi if unquotesName(q) =>
-          |      val action = if (q.rank == 0) "unquote" else "splice"
-          |      report.errorAndAbort("can't " + action + " a name here, use a pattern instead (e.g. p\\\"x\\\")")
-          |    case _ =>
-          |  }
-          |}
-          |""".stripMargin
-    val retStrList = Literal(Constant(retStr))
-    c.Expr[String](retStrList)
+    res +=
+      """|  def liftableSubTree0[T <: sm.Tree](y: T)(using Quotes): Tree = y match {
+         |""".stripMargin
+    adts.foreach { case (adt, name) => res += s"    case y : ${adt.tpe} => $name(y)\n" }
+    res +=
+      """|    case _ => sys.error("none of leafs matched " + y.getClass.getSimpleName)
+         |  }
+         |
+         |  private def prohibitName(pat: sm.Tree): _root_.scala.Unit = pat match {
+         |    case q: Quasi if unquotesName(q) =>
+         |      val action = if (q.rank == 0) "unquote" else "splice"
+         |      report.errorAndAbort("can't " + action + " a name here, use a pattern instead (e.g. p\\\"x\\\")")
+         |    case _ =>
+         |  }
+         |}
+         |""".stripMargin
+    mkStringList(res.result(): _*)
   }
 
   // Methods use holes in implementation, for which we do not have access here, so we implement those elsewhere

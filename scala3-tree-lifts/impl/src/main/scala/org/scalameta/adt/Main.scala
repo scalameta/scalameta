@@ -1,18 +1,28 @@
 package org.scalameta.adt
 
-import scala.meta.{Tree => MetaTree}
+import scala.meta.Tree
 
-import java.io.File
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
+
+import scopt.OptionParser
 
 object Main {
-  def main(args: Array[String]): Unit = args.toList match {
-    case path :: Nil if path.endsWith(".scala") =>
-      val jfile = new File(path)
-      jfile.getParentFile.mkdirs()
-      Files.write(jfile.toPath, generateLifts().getBytes())
-    case _ => throw new Exception("File path argument expected.")
+  def main(args: Array[String]): Unit = scoptParser.parse(args, CliOptions()).foreach(_.generate())
+
+  private case class CliOptions(dir: Path = null, treelifts: Option[String] = None) {
+    def generate(): Unit = writeFile(treelifts, TreeLiftsGenerate.materializeAst[Tree](false))
+
+    private def writeFile(pathOpt: Option[String], content: => Iterable[String]): Unit = pathOpt
+      .foreach { path =>
+        val jfile = dir.resolve(path).toFile
+        jfile.getParentFile.mkdirs()
+        Files.write(jfile.toPath, content.mkString.getBytes())
+      }
   }
 
-  def generateLifts(): String = TreeLiftsGenerate.materializeAst[MetaTree](false)
+  private val scoptParser: OptionParser[CliOptions] = new OptionParser[CliOptions]("scala3-codegen") {
+    opt[Path]("dir").action((value, c) => c.copy(dir = value)).required()
+    opt[String]("treelifts").action((value, c) => c.copy(treelifts = Option(value)))
+  }
+
 }
