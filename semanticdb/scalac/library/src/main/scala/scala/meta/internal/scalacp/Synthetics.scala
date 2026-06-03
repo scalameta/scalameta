@@ -28,10 +28,10 @@ object Synthetics {
       symbol = paramSym,
       language = l.SCALA,
       kind = k.PARAMETER,
-      properties = 0,
       displayName = "x$1",
       signature = paramSig,
       annotations = Nil,
+      overriddenSymbols = Nil,
       access = s.NoAccess,
     )
 
@@ -43,15 +43,12 @@ object Synthetics {
       }
       s.MethodSignature(Some(s.Scope()), setterParamss, unit)
     }
-    val setterInfo = s.SymbolInformation(
+    val setterInfo = getterInfo.copy(
       symbol = setterSym,
       language = l.SCALA,
       kind = k.METHOD,
-      properties = getterInfo.properties,
       displayName = getterInfo.displayName + "_=",
       signature = setterSig,
-      annotations = getterInfo.annotations,
-      access = getterInfo.access,
     )
 
     linkMode match {

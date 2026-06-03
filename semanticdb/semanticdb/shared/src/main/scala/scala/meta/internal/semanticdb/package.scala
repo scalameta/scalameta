@@ -88,7 +88,8 @@ package object semanticdb {
     def symbols: List[String] =
       if (scope.symlinks.nonEmpty) scope.symlinks.toList else scope.hardlinks.map(_.symbol).toList
     def infos: List[SymbolInformation] =
-      if (scope.symlinks.nonEmpty) scope.symlinks.map(symbol => SymbolInformation(symbol = symbol))
+      if (scope.symlinks.nonEmpty) scope.symlinks
+        .map(symbol => SymbolInformation(symbol = symbol, annotations = Nil, overriddenSymbols = Nil))
         .toList
       else scope.hardlinks.toList
   }

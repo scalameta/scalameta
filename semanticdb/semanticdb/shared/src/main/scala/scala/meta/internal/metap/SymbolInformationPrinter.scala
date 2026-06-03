@@ -325,7 +325,12 @@ trait SymbolInformationPrinter extends BasePrinter {
       val symtabInfo = noteSymtab.get(sym).orElse(symtab.info(sym))
       val info = symtabInfo.getOrElse {
         val displayName = if (sym.isGlobal) sym.desc.value else sym
-        SymbolInformation(symbol = sym, displayName = displayName)
+        SymbolInformation(
+          symbol = sym,
+          displayName = displayName,
+          annotations = Nil,
+          overriddenSymbols = Nil,
+        )
       }
       visit(info)
     }
