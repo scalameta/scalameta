@@ -565,7 +565,17 @@ trait TextDocumentOps {
             case t: g.TypeApply => getTypeApply(t, isWithinFor = false)
             case t: g.Apply =>
               val res = cachedIfSelect(t.fun)
-              if (res.isEmpty) forApply(t) else None
+              if (res.nonEmpty) None
+              else t.fun match {
+                // infix operator with inferred type args (e.g. `2 :: xs`, `x -> x`): the other
+                // operand sits outside the function `Select` span, so the OriginalTree must wrap the
+                // whole application. Seed the cache so the later standalone TypeApply visit reuses it.
+                case ta: g.TypeApply
+                    if ta.args.headOption.exists(!_.pos.isRange) && isInfixOperator(ta.fun) =>
+                  cached(ta)(getTypeApply(ta, isWithinFor = false, Some(fullInfixRange(t, ta))))
+                  None
+                case _ => forApply(t)
+              }
             case t: g.Select => getSelect(t)
             case _ => None
           }
@@ -592,12 +602,16 @@ trait TextDocumentOps {
           case _ => None
         }
 
-        private def getTypeApply(gt: g.TypeApply, isWithinFor: Boolean): Option[s.Synthetic] = {
+        private def getTypeApply(
+            gt: g.TypeApply,
+            isWithinFor: Boolean,
+            outerPos: Option[s.Range] = None,
+        ): Option[s.Synthetic] = {
           def res(fun: s.Tree) = s.TypeApplyTree(fun, gt.args.map(_.tpe.toSemanticTpe))
           (if (isWithinFor) cachedForApplyFun(gt.fun) else None) match {
             case Some(fun) => syn(res(fun.tree))
             case _ if gt.args.headOption.exists(!_.pos.isRange) =>
-              val pos = gt.fun.toRange
+              val pos = outerPos.getOrElse(gt.fun.toRange)
               def noApply = gt.fun match {
                 case f: g.Apply =>
                   cached(f)(None)
@@ -608,6 +622,24 @@ trait TextDocumentOps {
               syn(pos, res(fun))
             case _ => None
           }
+        }
+
+        // An infix application desugars to `Apply(TypeApply(Select(qual, op), targs), args)`; the
+        // method argument is the operand NOT covered by the `Select` span (`qual` + `op` in source
+        // order). `#1045`: widen the inferred-type-arg sugar's range to cover the whole expression.
+        private def isInfixOperator(fun: g.Tree): Boolean = fun match {
+          case sel: g.Select => sel.name.isOperatorName
+          case _ => false
+        }
+
+        private def fullInfixRange(app: g.Apply, ta: g.TypeApply): s.Range = {
+          // A right-associative operator `a op: b` desugars to `{ val x = a; b.op(x) }`, where the
+          // lifted left operand `a` reaches the Apply as an Ident with a focused (point) position at
+          // its start, so include defined offset positions (via `point`), not just range positions.
+          val positions = (ta.fun :: app :: app.args).map(_.pos).filter(_.isDefined)
+          val start = positions.iterator.map(p => if (p.isRange) p.start else p.point).min
+          val end = positions.iterator.map(p => if (p.isRange) p.end else p.point).max
+          m.Position.Range(app.pos.source.toInput, start, end).toRange
         }
 
         private def getApplyImplicitView(gt: g.ApplyImplicitView, range: s.Range) = s

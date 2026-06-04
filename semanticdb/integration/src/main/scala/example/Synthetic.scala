@@ -14,6 +14,10 @@ class Synthetic {
   val lst = 1 #:: 2 #:: Stream.empty
   lst + "foo"
 
+  // See https://github.com/scalameta/scalameta/issues/1045
+  val ys: List[Int] = Nil
+  2 :: ys
+
   for (x <- 1 to 10; y <- 0 until 10) println(x -> x)
   for (i <- 1 to 10; j <- 0 until 10) yield (i, j)
   for (i <- 1 to 10; j <- 0 until 10 if i % 2 == 0) yield (i, j)
@@ -27,7 +31,9 @@ class Synthetic {
     null.asInstanceOf[Int => Int](2)
   }
 
-  class J[T: Manifest] { val arr = Array.empty[T] }
+  class J[T: Manifest] {
+    val arr = Array.empty[T]
+  }
 
   class F
   implicit val ordering: Ordering[F] = ???
@@ -40,8 +46,7 @@ class Synthetic {
   } println(a)
   for {
     a <- scala.concurrent.Future.successful(1)
-    b <- scala.concurrent.Future.successful(2)
-    if a < b
+    b <- scala.concurrent.Future.successful(2) if a < b
   } yield a
 
 }

@@ -3036,10 +3036,10 @@ Schema => SemanticDB v4
 Uri => example/Synthetic.class
 Text => empty
 Language => Scala
-Symbols => 39 entries
+Symbols => 40 entries
 
 Symbols:
-example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
+example/Synthetic# => class Synthetic extends AnyRef { +13 decls }
   AnyRef => scala/AnyRef#
 example/Synthetic#F# => class F extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
@@ -3137,6 +3137,9 @@ example/Synthetic#x. => val method x: Int
   Int => scala/Int#
 example/Synthetic#xs. => val method xs: Stream[Int]
   Stream => scala/collection/immutable/Stream#
+  Int => scala/Int#
+example/Synthetic#ys. => val method ys: List[Int]
+  List => scala/package.List#
   Int => scala/Int#
 
 example/T.class
