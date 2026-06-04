@@ -199,7 +199,7 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   mainClass := Some("scala.meta.cli.Metacp"),
 ).dependsOn(semanticdbScalacCore)
 
-/* ============== CODEGEN FOR SCALA 3 QUASIQUOTES ============= */
+/* ============== CODEGEN FOR SCALA 3 QUASIQUOTES, TRANSVERSERS ============= */
 lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).settings(
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
@@ -289,7 +289,11 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   ),
   Compile / sourceGenerators += Def.taskDyn {
     if (isScala3.value) {
-      val args = Map("treelifts" -> "TreeLifts.scala")
+      val args = Map(
+        "treelifts" -> "TreeLifts.scala",
+        "traversers" -> "Traversers.scala",
+        "transformers" -> "Transformers.scala",
+      )
       val outDir = (Compile / sourceManaged).value / "generated"
       val argsIter = args.toIterator ++ Iterator("dir" -> outDir.getAbsolutePath)
       val argsString = argsIter.map { case (k, v) => s" --$k=$v" }.mkString

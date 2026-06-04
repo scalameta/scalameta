@@ -73,6 +73,11 @@ package object meta
   type Tokens = tokens.Tokens
   val Tokens = tokens.Tokens
 
+  // transversers
+
+  type Transformer = transversers.Transformer
+  type Traverser = transversers.Traverser
+
   /*
    * extensions
    */
