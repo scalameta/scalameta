@@ -125,49 +125,6 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
         else buf.result()
       }
 
-      def apply(treesopt: $OptionClass[$ListClass[$TreeClass]])(implicit hack: $Hack1Class): $OptionClass[$ListClass[$TreeClass]] = treesopt match {
-        case $SomeModule(trees) =>
-          val trees1 = apply(trees)
-          if (trees eq trees1) treesopt
-          else $SomeModule(trees1)
-        case $NoneModule =>
-          $NoneModule
-      }
-
-      def apply(treesopt: $OptionClass[$SeqClass[$TreeClass]])(implicit hack: $Hack3Class): $OptionClass[$SeqClass[$TreeClass]] =
-        treesopt match {
-          case $SomeModule(trees) =>
-            val trees1 = apply(trees)
-            if (trees eq trees1) treesopt
-            else $SomeModule(trees1)
-          case $NoneModule =>
-            $NoneModule
-        }
-
-      def apply(treess: $ListClass[$ListClass[$TreeClass]])(implicit hack: $Hack2Class): $ListClass[$ListClass[$TreeClass]] = {
-        var same = true
-        val buf = $ListModule.newBuilder[$ListClass[$TreeClass]]
-        treess.foreach { trees =>
-          val trees1 = apply(trees)
-          if (trees ne trees1) same = false
-          buf += trees1
-        }
-        if (same) treess
-        else buf.result()
-      }
-
-      def apply(treess: $SeqClass[$SeqClass[$TreeClass]])(implicit hack: $Hack4Class): $SeqClass[$SeqClass[$TreeClass]] = {
-        var same = true
-        val buf = $SeqModule.newBuilder[$SeqClass[$TreeClass]]
-        treess.foreach { trees =>
-          val trees1 = apply(trees)
-          if (trees ne trees1) same = false
-          buf += trees1
-        }
-        if (same) treess
-        else buf.result()
-      }
-
       private def fail(field: String, from: $TreeClass, to: $TreeClass): $NothingClass = {
         import scala.meta.prettyprinters._
         val errorPrefix = "Invalid transformation of " + field + ": "
