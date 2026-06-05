@@ -14,10 +14,6 @@ class Synthetic/*<=example.Synthetic#*/ {
   val lst/*<=example.Synthetic#lst.*/ = 1 #::/*=>scala.collection.immutable.Stream.Deferrer#`#::`().*/ 2 #::/*=>scala.collection.immutable.Stream.Deferrer#`#::`().*/ Stream/*=>scala.package.Stream.*/.empty/*=>scala.collection.immutable.Stream.empty().*/
   lst/*=>example.Synthetic#lst.*/ +/*=>scala.Predef.any2stringadd#`+`().*/ "foo"
 
-  // See https://github.com/scalameta/scalameta/issues/1045
-  val ys/*<=example.Synthetic#ys.*/: List/*=>scala.package.List#*/[Int/*=>scala.Int#*/] = Nil/*=>scala.package.Nil.*/
-  2 ::/*=>scala.collection.immutable.List#`::`().*/ ys/*=>example.Synthetic#ys.*/
-
   for (x/*<=local3*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; y/*<=local4*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10) println/*=>scala.Predef.println(+1).*/(x/*=>local3*/ ->/*=>scala.Predef.ArrowAssoc#`->`().*/ x/*=>local3*/)
   for (i/*<=local5*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; j/*<=local6*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10) yield (i/*=>local5*/, j/*=>local6*/)
   for (i/*<=local7*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; j/*<=local8*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10 if i/*=>local7*/ %/*=>scala.Int#`%`(+3).*/ 2 ==/*=>scala.Int#`==`(+3).*/ 0) yield (i/*=>local7*/, j/*=>local8*/)
@@ -47,5 +43,8 @@ class Synthetic/*<=example.Synthetic#*/ {
     b/*<=local12*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(2)
     if a/*=>local11*/ </*=>scala.Int#`<`(+3).*/ b/*=>local12*/
   } yield a/*=>local11*/
+
+  // See https://github.com/scalameta/scalameta/issues/1045
+  2 ::/*=>scala.collection.immutable.List#`::`().*/ Nil/*=>scala.package.Nil.*/
 
 }
