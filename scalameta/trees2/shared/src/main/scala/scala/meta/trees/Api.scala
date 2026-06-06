@@ -28,6 +28,24 @@ private[meta] trait ApiLowPriority {
 }
 
 private[meta] trait Api extends ApiLowPriority {
+  implicit class XtensionTreesName(name: Name) {
+
+    /**
+     * A `Name` is a definition when it is the `name` of its enclosing `Member` (a binding site,
+     * e.g. the `x` in `val x = ...`), as opposed to a reference to some other definition.
+     */
+    def isDefinition: Boolean = name.parent match {
+      case Some(parent: Member) => parent.name == name
+      case _ => false
+    }
+
+    /**
+     * A `Name` is a reference when it is a use of a definition (a call site, e.g. the `y` in
+     * `val x = y`) rather than a binding site. Inverse of [[isDefinition]].
+     */
+    def isReference: Boolean = !isDefinition
+  }
+
   implicit def typeParamClauseToValues(v: Type.ParamClause): List[Type.Param] = v.values
   implicit def typeValuesToParamClauseWithDialect(v: List[Type.Param])(implicit
       dialect: Dialect,

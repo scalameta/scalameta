@@ -19,12 +19,6 @@ package object trees {
   }
 
   implicit class XtensionTreesName(private val name: Name) extends AnyVal {
-    def isDefinition: Boolean = name.parent match {
-      case Some(parent: Member) => parent.name == name
-      case _ => false
-    }
-    def isReference: Boolean = !isDefinition
-
     // some heuristic is needed to govern associativity and precedence of unquoted operators
     def isLeftAssoc: Boolean = name.is[Name.Quasi] || name.value.isLeftAssoc
 

@@ -290,6 +290,8 @@ class SurfaceSuite extends FunSuite {
          |* scala.meta.Name.equals(Any): Boolean
          |* scala.meta.Name.hashCode(): Int
          |* scala.meta.Name.isAnonymous: Boolean
+         |* scala.meta.Name.isDefinition: Boolean
+         |* scala.meta.Name.isReference: Boolean
          |* scala.meta.Tree.bfs(scala.meta.Tree => Unit): Unit
          |* scala.meta.Tree.bfsCollect(PartialFunction[scala.meta.Tree,A]): List[A]
          |* scala.meta.Tree.bfsCollect(scala.meta.Tree => Option[A]): List[A]
