@@ -329,4 +329,28 @@ class PublicSuite extends FunSuite {
     ),
     "",
   ))
+
+  // https://github.com/scalameta/scalameta/issues/1193: isReference/isDefinition are public API
+  // (defined in the meta package object), so they resolve via the implicit scope of
+  // scala.meta.Name even without an explicit import.
+  test("Name.isReference/isDefinition without import")(assertEquals(
+    typecheckError(
+      """
+             (??? : scala.meta.Name).isReference
+             (??? : scala.meta.Name).isDefinition
+           """,
+    ),
+    "",
+  ))
+
+  test("Name.isReference/isDefinition when everything's correct")(assertEquals(
+    typecheckError(
+      """
+             import scala.meta._
+             (??? : Name).isReference
+             (??? : Name).isDefinition
+           """,
+    ),
+    "",
+  ))
 }
