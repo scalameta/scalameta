@@ -1,6 +1,8 @@
 package scala.meta.internal.semanticdb
 
 import org.scalameta.collections.Conversions._
+import scala.meta.internal.io.FileIO
+import scala.meta.io.AbsolutePath
 
 import java.io.InputStream
 import java.nio.file._
@@ -14,8 +16,9 @@ class Locator(private val fn: Locator.Visitor) extends AnyVal {
   def apply(path: Path): Unit = Try( // if missing or inaccessible, will throw
     Files.readAttributes(path, classOf[attribute.BasicFileAttributes]),
   ).foreach { attrs =>
-    if (attrs.isDirectory)
-      visitIter(Files.walk(path).iterator.toScala)(identity, Files.newInputStream(_))
+    if (attrs.isDirectory) visitIter( // walk all files
+      FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator,
+    )(_.toNIO, e => Files.newInputStream(e.toNIO))
     else if (path.toString.endsWith(".jar")) {
       val jar = new JarFile(path.toFile)
       try {
