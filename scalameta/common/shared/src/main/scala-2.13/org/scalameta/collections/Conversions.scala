@@ -28,6 +28,10 @@ private[collections] trait Conversions {
   implicit class XtensionJavaIterator[T](obj: ju.Iterator[T]) {
     def toScala: Iterator[T] = obj.asScala
   }
+
+  implicit class XtensionJavaEnumeration[T](obj: ju.Enumeration[T]) {
+    def toScala: Iterator[T] = obj.asScala
+  }
 }
 
 object Conversions extends Conversions
