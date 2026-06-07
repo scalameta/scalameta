@@ -4240,9 +4240,9 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
 Text => non-empty
 Language => Scala
-Symbols => 56 entries
-Occurrences => 113 entries
-Synthetics => 43 entries
+Symbols => 57 entries
+Occurrences => 115 entries
+Synthetics => 44 entries
 
 Symbols:
 example/Synthetic# => class Synthetic extends AnyRef { +12 decls }
@@ -4379,6 +4379,8 @@ local15 => param a: Int
   Int => scala/Int#
 local16 => param b: Int
   Int => scala/Int#
+local17 => val local x$7: Int
+  Int => scala/Int#
 
 Occurrences:
 [0:8..0:15): example <= example/
@@ -4494,6 +4496,8 @@ Occurrences:
 [43:9..43:10): < => scala/Int#`<`(+3).
 [43:11..43:12): b => local16
 [44:10..44:11): a => local15
+[47:4..47:6): :: => scala/collection/immutable/List#`::`().
+[47:7..47:10): Nil => scala/collection/immutable/Nil.
 
 Synthetics:
 [3:2..3:6): List => *.apply[Int]
@@ -4642,6 +4646,8 @@ Synthetics:
 [41:9..41:43): scala.concurrent.Future.successful => *[Int]
   Int => scala/Int#
 [42:9..42:43): scala.concurrent.Future.successful => *[Int]
+  Int => scala/Int#
+[47:4..47:10): :: Nil => *[Int]
   Int => scala/Int#
 
 semanticdb/integration/src/main/scala/example/Traits.scala

@@ -44,4 +44,7 @@ class Synthetic {
     if a < b
   } yield a
 
+  // See https://github.com/scalameta/scalameta/issues/1045
+  2 :: Nil
+
 }
