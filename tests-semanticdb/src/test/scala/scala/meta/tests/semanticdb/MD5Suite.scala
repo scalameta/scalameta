@@ -2,7 +2,7 @@ package scala.meta.tests.semanticdb
 
 import scala.meta.internal.semanticdb.Locator
 import scala.meta.internal.semanticdb.scalac.{Hex, SemanticdbPaths}
-import scala.meta.io.{AbsolutePath, RelativePath}
+import scala.meta.io.AbsolutePath
 import scala.meta.tests.BuildInfo
 
 import java.nio.charset.StandardCharsets
@@ -34,7 +34,7 @@ class MD5Suite extends FunSuite {
 
   private val databaseClasspath: Path = Paths.get(BuildInfo.databaseClasspath)
   Locator(databaseClasspath) { (_, docs) =>
-    val doc = docs.documents.head
+    val doc = docs().documents.head
     test(doc.uri) {
       val fromText = stringMD5(doc.text)
       assertEquals(doc.md5, fromText, "TextDocument.md5 does not match stringMD5(TextDocument.md5)")

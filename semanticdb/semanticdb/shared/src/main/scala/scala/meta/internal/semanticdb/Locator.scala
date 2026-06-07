@@ -2,23 +2,21 @@ package scala.meta.internal.semanticdb
 
 import org.scalameta.collections.Conversions._
 
+import java.io.InputStream
 import java.nio.file._
 import java.util.jar._
 
 object Locator {
-  def apply(paths: List[Path])(fn: (Path, TextDocuments) => Unit): Unit = paths
-    .foreach(path => apply(path)(fn))
+  type Visitor = (Path, () => TextDocuments) => Unit
 
-  def apply(path: Path)(fn: (Path, TextDocuments) => Unit): Unit = if (Files.exists(path))
+  def apply(paths: List[Path])(fn: Visitor): Unit = paths.foreach(path => apply(path)(fn))
+
+  def apply(path: Path)(fn: Visitor): Unit = if (Files.exists(path))
     if (Files.isDirectory(path)) Files.walk(path).iterator().toScala
       .filter(_.toString.endsWith(".semanticdb")).toArray
       // NOTE: nio.file.Path.compareTo is file system specific,
       // and the behavior is different on windows vs. unix
-      .sortBy(_.toString.toLowerCase).foreach { path =>
-        val stream = Files.newInputStream(path)
-        try fn(path, TextDocuments.parseFrom(stream))
-        finally stream.close()
-      }
+      .sortBy(_.toString.toLowerCase).foreach(path => visit(path, Files.newInputStream(path), fn))
     else if (path.toString.endsWith(".jar")) {
       // NOTE: Can't use nio.Files.walk because nio.FileSystems
       // is not supported on Scala Native.
@@ -32,9 +30,7 @@ object Locator {
       val jarEntries = buf.result().sortBy(_.getName.toLowerCase)
       jarEntries.foreach { jarEntry =>
         val path = Paths.get(jarEntry.getName)
-        val stream = jar.getInputStream(jarEntry)
-        try fn(path, TextDocuments.parseFrom(stream))
-        finally stream.close()
+        visit(path, jar.getInputStream(jarEntry), fn)
       }
       val manifest = jar.getManifest
       if (manifest != null) {
@@ -44,10 +40,10 @@ object Locator {
           apply(parentPath.resolve(relativePath))(fn)
         }
       }
-    } else if (path.toString.endsWith(".semanticdb")) {
-      val stream = Files.newInputStream(path)
-      try fn(path, TextDocuments.parseFrom(stream))
-      finally stream.close()
-    } else ()
-  else ()
+    } else if (path.toString.endsWith(".semanticdb")) visit(path, Files.newInputStream(path), fn)
+
+  private def visit(path: Path, stream: InputStream, fn: Visitor): Unit =
+    try fn(path, () => TextDocuments.parseFrom(stream))
+    finally stream.close()
+
 }
