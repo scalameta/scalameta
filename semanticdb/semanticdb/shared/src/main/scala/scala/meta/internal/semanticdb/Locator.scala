@@ -6,44 +6,57 @@ import java.io.InputStream
 import java.nio.file._
 import java.util.jar._
 
+import scala.util.Try
+
+class Locator(private val fn: Locator.Visitor) extends AnyVal {
+  def apply(paths: List[Path]): Unit = paths.foreach(path => apply(path))
+
+  def apply(path: Path): Unit = Try( // if missing or inaccessible, will throw
+    Files.readAttributes(path, classOf[attribute.BasicFileAttributes]),
+  ).foreach { attrs =>
+    if (attrs.isDirectory)
+      visitIter(Files.walk(path).iterator.toScala)(identity, Files.newInputStream(_))
+    else if (path.toString.endsWith(".jar")) {
+      val jar = new JarFile(path.toFile)
+      try {
+        visitIter(jar.entries().toScala)(x => Paths.get(x.getName), jar.getInputStream)
+        Option(jar.getManifest).flatMap(x => Option(x.getMainAttributes.getValue("Class-Path")))
+          .foreach { classPath =>
+            val parent = path.toAbsolutePath.getParent
+            classPath.split(" ").foreach(x => apply(parent.resolve(x)))
+          }
+      } finally jar.close()
+    } else if (Locator.isSemantic(path)) visit(path, Files.newInputStream(path))
+  }
+
+  private def visit(path: Path, stream: InputStream): Unit =
+    try fn(path, () => TextDocuments.parseFrom(stream))
+    finally stream.close()
+
+  private def visitIter[A](
+      iter: Iterator[A],
+  )(getPath: A => Path, getStream: A => InputStream): Unit = {
+    val buf = Seq.newBuilder[(A, Path)]
+    iter.foreach { elem =>
+      val path = getPath(elem)
+      if (Locator.isSemantic(path)) buf += elem -> path
+    }
+    // NOTE: nio.file.Path.compareTo is file system specific,
+    // and the behavior is different on windows vs. unix
+    buf.result().sortBy(_._2.toString.toLowerCase).foreach { case (elem, path) =>
+      visit(path, getStream(elem))
+    }
+  }
+
+}
+
 object Locator {
   type Visitor = (Path, () => TextDocuments) => Unit
 
-  def apply(paths: List[Path])(fn: Visitor): Unit = paths.foreach(path => apply(path)(fn))
+  def apply(paths: List[Path])(fn: Visitor): Unit = new Locator(fn).apply(paths)
 
-  def apply(path: Path)(fn: Visitor): Unit = if (Files.exists(path))
-    if (Files.isDirectory(path)) Files.walk(path).iterator().toScala
-      .filter(_.toString.endsWith(".semanticdb")).toArray
-      // NOTE: nio.file.Path.compareTo is file system specific,
-      // and the behavior is different on windows vs. unix
-      .sortBy(_.toString.toLowerCase).foreach(path => visit(path, Files.newInputStream(path), fn))
-    else if (path.toString.endsWith(".jar")) {
-      // NOTE: Can't use nio.Files.walk because nio.FileSystems
-      // is not supported on Scala Native.
-      val jar = new JarFile(path.toFile)
-      val buf = List.newBuilder[JarEntry]
-      val jarIt = jar.entries()
-      while (jarIt.hasMoreElements) {
-        val jarEntry = jarIt.nextElement()
-        if (jarEntry.getName.endsWith(".semanticdb")) buf += jarEntry
-      }
-      val jarEntries = buf.result().sortBy(_.getName.toLowerCase)
-      jarEntries.foreach { jarEntry =>
-        val path = Paths.get(jarEntry.getName)
-        visit(path, jar.getInputStream(jarEntry), fn)
-      }
-      val manifest = jar.getManifest
-      if (manifest != null) {
-        val classpathAttr = manifest.getMainAttributes.getValue("Class-Path")
-        if (classpathAttr != null) classpathAttr.split(" ").foreach { relativePath =>
-          val parentPath = path.toAbsolutePath.getParent
-          apply(parentPath.resolve(relativePath))(fn)
-        }
-      }
-    } else if (path.toString.endsWith(".semanticdb")) visit(path, Files.newInputStream(path), fn)
+  def apply(path: Path)(fn: Visitor): Unit = new Locator(fn).apply(path)
 
-  private def visit(path: Path, stream: InputStream, fn: Visitor): Unit =
-    try fn(path, () => TextDocuments.parseFrom(stream))
-    finally stream.close()
+  private def isSemantic(path: Path): Boolean = path.toString.endsWith(".semanticdb")
 
 }
