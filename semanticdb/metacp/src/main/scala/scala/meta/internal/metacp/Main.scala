@@ -22,6 +22,7 @@ class Main(settings: Settings, reporter: Reporter) {
   val classpathIndex = ClasspathIndex(
     settings.classpath ++ settings.dependencyClasspath ++ detectJavacp,
     includeJdk = settings.includeJdk,
+    reporter,
   )
   private val missingSymbols = mutable.Set.empty[String]
 

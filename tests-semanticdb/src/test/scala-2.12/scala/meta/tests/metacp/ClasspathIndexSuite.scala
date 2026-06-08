@@ -1,11 +1,13 @@
 package scala.meta.tests.metacp
 
+import scala.meta.cli.Reporter
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.PathIO
 import scala.meta.io.{AbsolutePath, Classpath}
 import scala.meta.tests.BuildInfo
 import scala.meta.tests.semanticdb.ManifestMetacp
 
+import java.io.{ByteArrayOutputStream, PrintStream}
 import java.nio.file.Paths
 
 import munit.FunSuite
@@ -55,5 +57,16 @@ class ClasspathIndexSuite extends FunSuite {
   test("ignore classpath entry for files that are not jar/zip") {
     val classpath = Classpath(Paths.get(getClass().getResource("/metac.index").toURI()))
     val index = ClasspathIndex(classpath)
+  }
+
+  test("self-referencing jar does not cause StackOverflowError") {
+    val classpath = Classpath(Paths.get(getClass().getResource("/self-ref.jar").toURI()))
+    val errStream = new ByteArrayOutputStream()
+    val testReporter = Reporter().withSilentOut().withErr(new PrintStream(errStream))
+    val index = ClasspathIndex(classpath, reporter = testReporter)
+    assert(index.getClassfile("A.class").isDefined)
+    val errOutput = errStream.toString()
+    assert(errOutput.startsWith("warning: classpath cycle detected"), errOutput)
+    assert(errOutput.endsWith("self-ref.jar\n"), errOutput)
   }
 }
