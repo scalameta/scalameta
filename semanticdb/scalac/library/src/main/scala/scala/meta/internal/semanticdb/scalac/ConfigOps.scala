@@ -13,6 +13,7 @@ case class SemanticdbConfig(
     fileFilter: FileFilter,
     sourceroot: AbsolutePath,
     targetroot: AbsolutePath,
+    buildTarget: String,
     cleanup: BinaryMode,
     text: BinaryMode,
     md5: BinaryMode,
@@ -32,6 +33,7 @@ case class SemanticdbConfig(
       "exclude" -> fileFilter.exclude,
       "sourceroot" -> sourceroot,
       "targetroot" -> targetroot,
+      "buildtarget" -> buildTarget,
       "text" -> text.name,
       "cleanup" -> cleanup.name,
       "symbols" -> symbols.name,
@@ -51,6 +53,7 @@ object SemanticdbConfig {
     fileFilter = FileFilter.matchEverything,
     sourceroot = PathIO.workingDirectory,
     targetroot = PathIO.workingDirectory,
+    buildTarget = "",
     text = BinaryMode.Off,
     md5 = BinaryMode.On,
     cleanup = BinaryMode.On,
@@ -68,6 +71,7 @@ object SemanticdbConfig {
   private val SetExclude = "exclude:(.*)".r
   private val SetSourceroot = "sourceroot:(.*)".r
   private val SetTargetroot = "targetroot:(.*)".r
+  private val SetBuildtarget = "buildtarget:(.*)".r
   private val SetText = "text:(.*)".r
   private val SetMd5 = "md5:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
@@ -120,6 +124,7 @@ object SemanticdbConfig {
         }
         config = config.copy(sourceroot = abspath)
       case SetTargetroot(path) => config = config.copy(targetroot = AbsolutePath(path))
+      case SetBuildtarget(target) => config = config.copy(buildTarget = target)
       case SetText(BinaryMode(mode)) => config = config.copy(text = mode)
       case SetMd5(BinaryMode(mode)) => config = config.copy(md5 = mode)
       case SetCleanup(BinaryMode(mode)) => config = config.copy(cleanup = mode)

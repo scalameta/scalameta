@@ -673,6 +673,7 @@ trait TextDocumentOps {
         text = unit.source.toText,
         md5 = unit.source.toMD5,
         language = s.Language.SCALA,
+        buildTarget = config.buildTarget,
         symbols = finalSymbols.sortBy(_.symbol),
         occurrences = finalOccurrences.sortBy(_.range),
         diagnostics = diagnostics.sortBy(_.range),

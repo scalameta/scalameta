@@ -76,6 +76,7 @@ message TextDocument {
   string text = 3;
   string md5 = 11;
   Language language = 10;
+  string build_target = 13;
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
@@ -128,6 +129,16 @@ SemanticDB payload is up-to-date with the file contents on disk.
 `language` defines the [Language](#language) in which the code snippet is
 written. See [Languages](#languages) for the list of supported programming
 languages.
+
+`build_target` optionally identifies the build target that produced this
+document, as provided by the tool that generated the payload (for example, via
+the `-P:semanticdb:buildtarget:<id>` compiler plugin option). When set, it
+should be a stable, URI-like identifier; producers integrated with the
+[Build Server Protocol](https://build-server-protocol.github.io) should use the
+corresponding `BuildTargetIdentifier.uri`. It lets tools distinguish otherwise
+identical documents that originate from different build targets, such as the
+same source compiled for multiple platforms (JVM/JS/Native) or Scala versions.
+When empty, no build target information is available.
 
 Semantic information about code snippets is stored in so called sections -
 repeated fields within `TextDocument` - as described below. These sections are
