@@ -39,9 +39,10 @@ trait TypeOps {
           s.ThisType(ssym)
         // NOTE: There is deliberately no SuperType case. SuperType (`This.super[Mixin]`) is the
         // type of `super` references, an expression-level type that scalac never pickles (pickles
-        // store declaration signatures, not method bodies), and scalap has no SUPERtpe parser -- so
-        // metacp can never receive one. The scalac/TextDocumentOps path handles SuperType because it
-        // walks typed source trees. See https://github.com/scalameta/scalameta/issues/1291.
+        // store declaration signatures, not method bodies), and scalap's pickle reader has no case
+        // for the SUPERtpe pickle tag (scala.reflect.internal.pickling.PickleFormat) -- so metacp
+        // can never receive one. The scalac/TextDocumentOps path handles SuperType because it walks
+        // typed source trees. See https://github.com/scalameta/scalameta/issues/1291.
         case ConstantType(underlying: ExternalSymbol) =>
           // NOTE(olafur): manually construct a term symbol for external Java
           // enum symbols because `underlying.entry.entryType == 9` which by
