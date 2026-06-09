@@ -1,7 +1,6 @@
 package scala.meta.tests.symtab
 
-import scala.meta.internal.semanticdb.{AnnotatedType, ClassSignature, ExistentialType,
-  StructuralType, SymbolInformation, Type, TypeRef, TypeSignature, UniversalType, WithType}
+import scala.meta.internal.semanticdb._
 import scala.meta.internal.symtab.{GlobalSymbolTable, LocalSymbolTable}
 import scala.meta.io.Classpath
 import scala.meta.tests.BuildInfo
@@ -20,11 +19,19 @@ class SubtypingSuite extends FunSuite {
     Classpath(BuildInfo.databaseClasspath +: BuildInfo.classDirectories: _*)
   private val symtab = GlobalSymbolTable(classpath, includeJdk = true)
 
+  // each query runs twice: the cycle-guard `seen` must stay per-call, never hoisted into the
+  // instance, so a repeated call must give the same answer.
   private def isSubtype(child: String, parent: String)(implicit loc: munit.Location): Unit =
-    test(s"$child <: $parent")(assert(symtab.isSubtypeOf(child, parent)))
+    test(s"$child <: $parent") {
+      assert(symtab.isSubtypeOf(child, parent))
+      assert(symtab.isSubtypeOf(child, parent))
+    }
 
   private def isNotSubtype(child: String, parent: String)(implicit loc: munit.Location): Unit =
-    test(s"$child </: $parent")(assert(!symtab.isSubtypeOf(child, parent)))
+    test(s"$child </: $parent") {
+      assert(!symtab.isSubtypeOf(child, parent))
+      assert(!symtab.isSubtypeOf(child, parent))
+    }
 
   isSubtype("scala/Option#", "scala/Option#") // reflexive
   isSubtype("scala/Some#", "scala/Option#") // direct parent
@@ -38,11 +45,12 @@ class SubtypingSuite extends FunSuite {
   isSubtype("scala/MatchError#", "java/lang/Throwable#") // and on up the Java chain
   isSubtype("scala/collection/immutable/List#", "java/io/Serializable#") // -> Java interface
 
+  isSubtype("does/not/Exist#", "does/not/Exist#") // reflexive by symbol equality, even unresolvable
+
   isNotSubtype("scala/Some#", "scala/Int#") // unrelated
   isNotSubtype("scala/Option#", "scala/Some#") // a parent is not a subtype of its child
   isNotSubtype("does/not/Exist#", "scala/Any#") // unknown child
-  isNotSubtype("scala/Option#", "does/not/Exist#") // unknown parent
-  isNotSubtype("does/not/Exist#", "does/not/Exist#") // unknown symbol fails closed, even reflexive
+  isNotSubtype("scala/Option#", "does/not/Exist#") // parent never named in the ancestor chain
 
   test("cycle-safe over LocalSymbolTable") {
     // A extends B, B extends A — the traversal must terminate.
@@ -54,6 +62,17 @@ class SubtypingSuite extends FunSuite {
     assert(local.isSubtypeOf("a/A#", "a/B#"))
     assert(local.isSubtypeOf("a/A#", "a/A#")) // reflexive
     assert(!local.isSubtypeOf("a/A#", "scala/Any#")) // terminates, returns false
+    assert(local.isSubtypeOf("a/A#", "a/B#")) // unchanged after a cycle was hit: `seen` is per-call
+  }
+
+  test("a parent named in the chain matches even when unresolvable") {
+    // A extends B, but B itself is missing from the symbol table (incomplete classpath).
+    val local = LocalSymbolTable(List(SymbolInformation(
+      symbol = "a/A#",
+      signature = ClassSignature(parents = List(TypeRef(symbol = "missing/B#"))),
+    )))
+    assert(local.isSubtypeOf("a/A#", "missing/B#"))
+    assert(!local.isSubtypeOf("a/A#", "missing/C#")) // but not an arbitrary unresolvable symbol
   }
 
   test("follows type aliases whose upper bound is a wrapped type") {
