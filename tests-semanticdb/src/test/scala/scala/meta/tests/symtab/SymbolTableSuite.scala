@@ -83,4 +83,86 @@ class SymbolTableSuite extends FunSuite {
     assert(string.contains("entries"))
   }
 
+  // https://github.com/scalameta/scalameta/issues/1298
+  // `scala.Predef.assert` is overloaded: assert(assertion) and assert(assertion, message).
+  private val assertAlternatives = Set("scala/Predef.assert().", "scala/Predef.assert(+1).")
+
+  test("alternatives: overloaded method returns all same-owner candidates")(assertEquals(
+    globalSymtab.alternatives("scala/Predef.assert().").map(_.toSet),
+    Some(assertAlternatives),
+  ))
+
+  test("alternatives: querying via the resolved overload returns the same candidates")(assertEquals(
+    // proves the issue's use case: scalac resolves to one overload, caller recovers the whole set
+    globalSymtab.alternatives("scala/Predef.assert(+1).").map(_.toSet),
+    Some(assertAlternatives),
+  ))
+
+  test("alternatives: non-overloaded method returns just itself")(assertEquals(
+    globalSymtab.alternatives("scala/Any#asInstanceOf()."),
+    Some(List("scala/Any#asInstanceOf().")),
+  ))
+
+  test("alternatives: method with an unknown owner is None, not a fake singleton")(
+    // "could not inspect" must stay distinct from "no overloads"
+    assertEquals(globalSymtab.alternatives("does/not/Exist#foo()."), None),
+  )
+
+  test("alternatives: a method absent from its owner is None, not fabricated")(
+    // owner (scala/Predef.) resolves, but it declares no such method
+    assertEquals(globalSymtab.alternatives("scala/Predef.thisIsNotAMethod()."), None),
+  )
+
+  test("alternatives: a local symbol is None")(
+    // local overloads can't be inspected from a symbol alone
+    assertEquals(globalSymtab.alternatives("local0"), None),
+  )
+
+  test("alternatives: unresolved multi-symbol returns its members")(assertEquals(
+    globalSymtab.alternatives(";a/B#f().;a/B#f(+1)."),
+    Some(List("a/B#f().", "a/B#f(+1).")),
+  ))
+
+  test("alternatives: empty symbol is None")(assertEquals(globalSymtab.alternatives(""), None))
+
+  test("alternatives: reads overloads from a hardlinked declarations scope") {
+    // GlobalSymbolTable declarations are symlinks; this covers the hardlinks arm of Scope.symbols
+    // and the default method running through Aggregate/Local tables.
+    val foo1 = "_empty_/Box#foo()."
+    val foo2 = "_empty_/Box#foo(+1)."
+    val box = s.SymbolInformation(
+      symbol = "_empty_/Box#",
+      kind = s.SymbolInformation.Kind.CLASS,
+      signature = s.ClassSignature(declarations =
+        Some(s.Scope(hardlinks = List(s.SymbolInformation(foo1), s.SymbolInformation(foo2)))),
+      ),
+    )
+    val symtab = AggregateSymbolTable(List(LocalSymbolTable(List(box)), globalSymtab))
+    assertEquals(symtab.alternatives(foo1), Some(List(foo1, foo2)))
+  }
+
+  test("alternatives: a non-method global symbol is None")(
+    assertEquals(globalSymtab.alternatives("scala/Option#"), None),
+  )
+
+  test("alternatives: an owner without a class signature is None") {
+    // defensive: the owner resolves but its signature can't list method declarations
+    val owner = s.SymbolInformation(
+      symbol = "_empty_/v.",
+      kind = s.SymbolInformation.Kind.METHOD,
+      signature = s.ValueSignature(s.NoType),
+    )
+    val symtab = LocalSymbolTable(List(owner))
+    assertEquals(symtab.alternatives("_empty_/v.foo()."), None)
+  }
+
+  test("alternatives: overloaded constructors are candidates") {
+    val ctors = globalSymtab.alternatives("scala/collection/mutable/StringBuilder#`<init>`().")
+    assert(ctors.exists(_.lengthCompare(1) > 0), ctors.toString)
+    assert(
+      ctors.exists(_.contains("scala/collection/mutable/StringBuilder#`<init>`().")),
+      ctors.toString,
+    )
+  }
+
 }
