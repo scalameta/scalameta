@@ -73,7 +73,7 @@ object Scala {
         val rest = DescriptorParser(symbol)._2
         if (rest.nonEmpty) rest else Symbols.RootPackage
       }
-    def desc: Descriptor = if (isGlobal) DescriptorParser(symbol)._1 else d.None
+    def desc: Descriptor = if (isGlobal) DescriptorParser.desc(symbol) else d.None
   }
 
   sealed trait Descriptor {
@@ -224,12 +224,16 @@ object Scala {
       val desc = parseDescriptor()
       (desc, s.substring(0, i + 1))
     }
+
+    private def descriptorOnly(): Descriptor = {
+      readChar()
+      parseDescriptor()
+    }
   }
 
   private[meta] object DescriptorParser {
-    def apply(symbol: String): (Descriptor, String) = {
-      val parser = new DescriptorParser(symbol)
-      parser.entryPoint()
-    }
+    def apply(symbol: String): (Descriptor, String) = new DescriptorParser(symbol).entryPoint()
+
+    def desc(symbol: String): Descriptor = new DescriptorParser(symbol).descriptorOnly()
   }
 }
