@@ -763,7 +763,7 @@ lazy val fullCrossVersionSettings = Seq(
   Compile / unmanagedSourceDirectories += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
-    // Unfortunately, it only includes directories like "scala_2.13", not "scala_2.13.18" that we need.
+    // Unfortunately, it only includes directories like "scala_2.13", not "scala_3.8.4" that we need.
     // That's why we have to work around here.
     val base = (Compile / sourceDirectory).value
     val versionDir = scalaVersion.value.replaceAll("-.*", "")
