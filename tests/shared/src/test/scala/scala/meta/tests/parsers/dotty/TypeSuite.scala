@@ -513,14 +513,14 @@ class TypeSuite extends BaseDottySuite {
   // https://docs.scala-lang.org/sips/71.html#syntax-changes
 
   test("into-trait") {
-    implicit val dialect: Dialect = dialects.Scala3Future
+    implicit val dialect: Dialect = dialects.Scala38
     val code = "into trait T"
     val tree = Defn.Trait(List(Mod.Into()), pname("T"), Nil, ctor, tplNoBody())
     runTestAssert[Stat](code)(tree)
   }
 
   test("into-class") {
-    implicit val dialect: Dialect = dialects.Scala3Future
+    implicit val dialect: Dialect = dialects.Scala38
     val code = "into class Test"
     val tree = Defn.Class(List(Mod.Into()), pname("Test"), Nil, ctor, tplNoBody())
     runTestAssert[Stat](code)(tree)
@@ -528,7 +528,7 @@ class TypeSuite extends BaseDottySuite {
 
   // https://github.com/scalameta/scalameta/issues/4561
   test("into-enum") {
-    implicit val dialect: Dialect = dialects.Scala3Future
+    implicit val dialect: Dialect = dialects.Scala38
     val code =
       """|into enum Foo:
          |  case Bar
@@ -544,13 +544,13 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("into-object") {
-    implicit val dialect: Dialect = dialects.Scala3Future
+    implicit val dialect: Dialect = dialects.Scala38
     val code = "into object Test"
     runTestError[Stat](code, "error: `;` expected but `object` found")
   }
 
   test("into-def") {
-    implicit val dialect: Dialect = dialects.Scala3Future
+    implicit val dialect: Dialect = dialects.Scala38
     val code =
       """|object Test:
          |  into def foo = 22
@@ -558,7 +558,7 @@ class TypeSuite extends BaseDottySuite {
     runTestError[Stat](code, "error: `;` expected but `def` found")
   }
   test("into-val") {
-    implicit val dialect: Dialect = dialects.Scala3Future
+    implicit val dialect: Dialect = dialects.Scala38
     val code =
       """|object Test:
          |  into val foo = 22
@@ -567,7 +567,7 @@ class TypeSuite extends BaseDottySuite {
   }
 
   test("into-type") {
-    implicit val dialect: Dialect = dialects.Scala3Future
+    implicit val dialect: Dialect = dialects.Scala38
     val code =
       """|object Test:
          |  into opaque type U = Int

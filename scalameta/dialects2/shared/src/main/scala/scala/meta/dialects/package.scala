@@ -100,7 +100,9 @@ package object dialects {
 
   implicit val Scala38: Dialect = Scala37.withAllowParameterTypeConversions(true)
 
-  implicit val Scala3: Dialect = Scala38
+  implicit val Scala39: Dialect = Scala38
+
+  implicit val Scala3: Dialect = Scala39
 
   implicit val Scala3Future: Dialect = Scala3.withAllowUnderscoreAsTypePlaceholder(true)
     .withAllowTrackedParameters(true).withAllowPureFunctions(true).withAllowCaptureChecking(true)
