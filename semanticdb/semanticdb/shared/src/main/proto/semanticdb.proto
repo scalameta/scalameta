@@ -29,6 +29,7 @@ message TextDocument {
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
   repeated Synthetic synthetics = 12;
+  string build_target = 13;
 }
 
 enum Language {
