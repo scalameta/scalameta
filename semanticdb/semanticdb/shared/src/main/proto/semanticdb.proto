@@ -25,11 +25,11 @@ message TextDocument {
   string text = 3;
   string md5 = 11;
   Language language = 10;
-  string build_target = 13;
   repeated SymbolInformation symbols = 5;
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
   repeated Synthetic synthetics = 12;
+  string build_target = 13;
 }
 
 enum Language {

@@ -71,7 +71,7 @@ object SemanticdbConfig {
   private val SetExclude = "exclude:(.*)".r
   private val SetSourceroot = "sourceroot:(.*)".r
   private val SetTargetroot = "targetroot:(.*)".r
-  private val SetBuildtarget = "buildtarget:(.*)".r
+  private val SetBuildtarget = "buildtarget:(.+)".r
   private val SetText = "text:(.*)".r
   private val SetMd5 = "md5:(.*)".r
   private val SetSymbols = "symbols:(.*)".r
