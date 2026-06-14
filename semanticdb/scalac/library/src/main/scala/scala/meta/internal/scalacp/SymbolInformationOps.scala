@@ -55,6 +55,7 @@ trait SymbolInformationOps {
       def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
       def isAbstractMethod = sym.isMethod && sym.isDeferred
       def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
+      if (!sym.isPackage && sym.isSynthetic) flip(p.SYNTHETIC)
       if (sym.isPackage) ()
       else if (sym.isJava) {
         if (sym.isAbstractOverride) {

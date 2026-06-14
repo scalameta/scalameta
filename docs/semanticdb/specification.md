@@ -825,6 +825,18 @@ languages map onto these properties.
     <td><code>OPAQUE</code></td>
     <td>Has an <code>opaque</code> modifier?</td>
   </tr>
+  <tr>
+    <td><code>0x400000</code></td>
+    <td><code>OVERRIDE</code></td>
+    <td>Has an <code>override</code> modifier, or effectively overrides?</td>
+  </tr>
+  <tr>
+    <td><code>0x800000</code></td>
+    <td><code>SYNTHETIC</code></td>
+    <td>Is a compiler-synthesized symbol that does not appear in source code,
+    e.g. members generated for <code>case</code> classes and <code>AnyVal</code>
+    classes?</td>
+  </tr>
 </table>
 
 `display_name`. Display name of the definition, i.e. how this definition should
@@ -1658,6 +1670,8 @@ Notes:
     - If a corresponding local symbol exists, set for the local symbol.
   - `LAZY`: set for all corresponding symbols of `lazy` values.
   - `VAL`: set for all corresponding symbols.
+  - `SYNTHETIC`: set for compiler-synthesized values that are not written in
+    source code, e.g. values introduced by desugaring.
 - Display name for value symbols is equal to the name of the binding introduced
   by the definition [\[70\]][70].
 - If the type of the value is not provided in source code, it is inferred from
@@ -1708,6 +1722,8 @@ Notes:
   - `LAZY`: never set for variable symbols, since variable declarations and
     definitions cannot be `lazy`.
   - `VAR`: set for all corresponding symbols.
+  - `SYNTHETIC`: set for compiler-synthesized variables that are not written in
+    source code, e.g. variables introduced by desugaring.
 
 **Pattern variables** [\[65\]][65] are represented differently depending on
 where they are defined:
@@ -2048,6 +2064,8 @@ Notes:
   - `VAL`: set for `val` parameters of primary constructors.
   - `VAR`: set for `var` parameters of primary constructors.
   - `DEFAULT`: set for parameters with default values.
+  - `SYNTHETIC`: set for parameters of compiler-synthesized methods that are not
+    written in source code.
 - Scalac semantic model does not distinguish parameters in `class C(x: Int)` and
   `class C(private[this] val x: Int)`. As a result, due to implementation
   restrictions `private[this] val` parameters currently don't have the `VAL`
@@ -2150,6 +2168,8 @@ Notes:
   - `ABSTRACT`: set for function declarations.
   - `FINAL`: set for `final` methods.
   - `IMPLICIT`: set for `implicit` methods.
+  - `SYNTHETIC`: set for compiler-synthesized methods that are not written in
+    source code, e.g. the synthetic methods enumerated above.
 - Display name for method symbols is equal to the name of the binding introduced
   by the definition [\[70\]][70].
 - If present, type parameters of methods are represented as described above in
@@ -2346,6 +2366,8 @@ Notes:
   - `SEALED`: set for `sealed` classes.
   - `IMPLICIT`: set for `implicit` classes.
   - `CASE`: set for `case` classes.
+  - `SYNTHETIC`: set for compiler-synthesized classes that are not written in
+    source code, e.g. anonymous classes generated for SAM conversions.
 - Display name for class symbols is equal to the name of the binding introduced
   by the definition [\[70\]][70].
 - We leave the mapping between parent syntax written in source code and
@@ -2382,8 +2404,10 @@ similarly to class definitions (see above). Concretely, the differences between
 object symbols and class symbols are:
 
 - Object symbols are always `FINAL`.
-- Apart from `FINAL`, object symbols only support `CASE` and `IMPLICIT`
-  properties.
+- Apart from `FINAL`, object symbols only support `CASE`, `IMPLICIT` and
+  `SYNTHETIC` properties. `SYNTHETIC` is set for compiler-synthesized objects
+  that are not written in source code, e.g. companion objects generated for
+  `case` classes.
 - Display name for object symbols is equal to the name of the binding introduced
   by the definition [\[70\]][70].
 - Objects don't have type parameters, but we still represent their signatures

@@ -306,6 +306,7 @@ message SymbolInformation {
     INFIX = 0x100000;
     OPAQUE = 0x200000;
     OVERRIDE = 0x400000;
+    SYNTHETIC = 0x800000;
 
     // Intentionally no Protobuf-specific properties for now.
   }
