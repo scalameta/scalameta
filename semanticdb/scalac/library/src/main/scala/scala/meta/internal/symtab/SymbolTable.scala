@@ -1,5 +1,6 @@
 package scala.meta.internal.symtab
 
+import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
 import scala.meta.internal.semanticdb._
 
 import scala.annotation.tailrec
@@ -9,6 +10,46 @@ trait SymbolTable {
 
   /** Returns the SymbolInformation for the given symbol, or None if the symbol is missing. */
   def info(symbol: String): Option[SymbolInformation]
+
+  /**
+   * Returns all same-owner overloads of `symbol` (including `symbol` itself) in declaration order
+   * (the disambiguator sequence: the base overload, then `+1`, `+2`, ...), or `Nil` when the
+   * overload set cannot be determined from this symbol table.
+   *
+   * At a resolved call site scalac picks a single overload, so the occurrence points to one
+   * disambiguated symbol (e.g. `A.foo(+1).`); this recovers the full group declared alongside it
+   * (`A.foo().`, `A.foo(+1).`). See https://github.com/scalameta/scalameta/issues/1298.
+   *
+   * A determined result always contains at least `symbol`, so `Nil` unambiguously means "could not
+   * inspect" — never "no overloads". `Nil` covers the empty symbol, a local or non-method symbol,
+   * and a method whose declaring owner is unavailable here or does not declare it. For an
+   * unresolved multi-symbol, the members are returned.
+   *
+   * Scope: only overloads declared in the *same owner* are returned. Overloads inherited from, or
+   * split across, supertypes are intentionally excluded — a classpath symbol table cannot resolve
+   * them safely: `overriddenSymbols` is `Nil` outside the compiler plugin, so override and overload
+   * are indistinguishable when walking parents, and the full receiver-type candidate set further
+   * needs the call site's static receiver type, which a symbol alone does not carry.
+   */
+  def overloads(symbol: String): List[String] =
+    if (symbol.isMulti) symbol.asMulti
+    else if (symbol.isGlobal) {
+      val (desc, owner) = DescriptorParser(symbol)
+      desc match {
+        case d.Method(name, _) => info(owner).map(_.signature) match {
+            case Some(c: ClassSignature) =>
+              // keep only members that really are same-named methods of this owner, so a symbol
+              // that merely parses like one (but isn't declared here) isn't fabricated into the set
+              val sameName = c.declarations.symbols.filter(_.desc match {
+                case d.Method(`name`, _) => true
+                case _ => false
+              })
+              if (sameName.contains(symbol)) sameName else Nil
+            case _ => Nil
+          }
+        case _ => Nil
+      }
+    } else Nil
 
   /**
    * Tests whether `child` is an erased subtype of `parent`.
