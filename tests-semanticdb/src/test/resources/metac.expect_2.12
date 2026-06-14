@@ -4405,7 +4405,7 @@ local15 => param a: Int
   Int => scala/Int#
 local16 => param b: Int
   Int => scala/Int#
-local17 => val local x$7: Int
+local17 => synthetic val local x$7: Int
   Int => scala/Int#
 
 Occurrences:
