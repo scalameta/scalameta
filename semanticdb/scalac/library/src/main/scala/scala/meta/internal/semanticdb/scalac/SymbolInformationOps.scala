@@ -61,6 +61,9 @@ trait SymbolInformationOps {
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
       def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
+      // NOTE: self parameters carry the synthetic flag even when written in source
+      // (e.g. `self =>`), and the spec grants them no properties, so exclude them.
+      if (!gsym.hasFlag(gf.PACKAGE) && !gsym.isSelfParameter && gsym.isSynthetic) flip(p.SYNTHETIC)
       if (gsym.hasFlag(gf.PACKAGE)) ()
       else if (gsym.hasFlag(gf.JAVA)) {
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
