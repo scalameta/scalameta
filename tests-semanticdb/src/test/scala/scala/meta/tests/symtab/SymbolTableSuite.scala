@@ -85,15 +85,17 @@ class SymbolTableSuite extends FunSuite {
 
   // https://github.com/scalameta/scalameta/issues/1298
   // `scala.Predef.assert` is overloaded: assert(assertion) and assert(assertion, message).
-  private val assertOverloads = Set("scala/Predef.assert().", "scala/Predef.assert(+1).")
+  // Overloads come back in declaration order, matching the disambiguator sequence (the base
+  // overload, then +1, +2, ...).
+  private val assertOverloads = List("scala/Predef.assert().", "scala/Predef.assert(+1).")
 
   test("overloads: overloaded method returns all same-owner candidates")(
-    assertEquals(globalSymtab.overloads("scala/Predef.assert().").toSet, assertOverloads),
+    assertEquals(globalSymtab.overloads("scala/Predef.assert()."), assertOverloads),
   )
 
   test("overloads: querying via the resolved overload returns the same candidates")(assertEquals(
     // proves the issue's use case: scalac resolves to one overload, caller recovers the whole set
-    globalSymtab.overloads("scala/Predef.assert(+1).").toSet,
+    globalSymtab.overloads("scala/Predef.assert(+1)."),
     assertOverloads,
   ))
 

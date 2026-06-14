@@ -12,7 +12,8 @@ trait SymbolTable {
   def info(symbol: String): Option[SymbolInformation]
 
   /**
-   * Returns all same-owner overloads of `symbol` (including `symbol` itself), or `Nil` when the
+   * Returns all same-owner overloads of `symbol` (including `symbol` itself) in declaration order
+   * (the disambiguator sequence: the base overload, then `+1`, `+2`, ...), or `Nil` when the
    * overload set cannot be determined from this symbol table.
    *
    * At a resolved call site scalac picks a single overload, so the occurrence points to one
