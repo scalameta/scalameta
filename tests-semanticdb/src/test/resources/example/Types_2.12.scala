@@ -3,7 +3,7 @@ package types
 import scala.language/*=>scala.language.*/.existentials/*=>scala.language.existentials.*/
 import scala.language/*=>scala.language.*/.higherKinds/*=>scala.language.higherKinds.*/
 
-class ann/*<=types.ann#*/[T/*<=types.ann#[T]*/](x/*<=types.ann#x.*/: T/*=>types.ann#[T]*/) extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*/
+class ann/*<=types.ann#*/[T/*<=types.ann#[T]*/](x/*<=types.ann#x.*//*<=types.ann#`<init>`().(x)*/: T/*=>types.ann#[T]*/) extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*/
 class ann1/*<=types.ann1#*/ extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*/
 class ann2/*<=types.ann2#*/ extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*/
 
@@ -87,7 +87,7 @@ object Test/*<=types.Test.*/ {
       def m1/*<=types.Test.C#ByNameType.m1().*/(x/*<=types.Test.C#ByNameType.m1().(x)*/: => Int/*=>scala.Int#*/): Int/*=>scala.Int#*/ = ???/*=>scala.Predef.`???`().*/
     }
 
-    case class RepeatedType/*<=types.Test.C#RepeatedType#*/(s/*<=types.Test.C#RepeatedType#s.*/: String/*=>java.lang.String#*/*) {
+    case class RepeatedType/*<=types.Test.C#RepeatedType#*/(s/*<=types.Test.C#RepeatedType#s.*//*<=types.Test.C#RepeatedType#`<init>`().(s)*/: String/*=>java.lang.String#*/*) {
       def m1/*<=types.Test.C#RepeatedType#m1().*/(x/*<=types.Test.C#RepeatedType#m1().(x)*/: Int/*=>scala.Int#*/*): Int/*=>scala.Int#*/ = s/*=>types.Test.C#RepeatedType#s.*/.length/*=>scala.collection.SeqLike#length().*/
     }
 

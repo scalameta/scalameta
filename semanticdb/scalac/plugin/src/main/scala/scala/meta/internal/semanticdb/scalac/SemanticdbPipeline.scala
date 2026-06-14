@@ -102,6 +102,7 @@ trait SemanticdbPipeline extends SemanticdbOps {
                 schema = s.Schema.SEMANTICDB4,
                 uri = unit.source.toUri,
                 language = s.Language.SCALA,
+                buildTarget = config.buildTarget,
                 diagnostics = diagnostics,
               )
               sdoc.append(config.targetroot)

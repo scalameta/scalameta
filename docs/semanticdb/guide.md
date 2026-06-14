@@ -255,6 +255,17 @@ and the "Value" column describes the `<value>` component):
     </td>
   </tr>
   <tr>
+    <td><code>buildtarget</code></td>
+    <td>URI or stable identifier</td>
+    <td>
+      Records the build target that produced the document in
+      <code>TextDocument.build_target</code>. When set, should be a stable,
+      URI-like identifier, such as a Build Server Protocol
+      <code>BuildTargetIdentifier.uri</code>.
+    </td>
+    <td>empty (unset)</td>
+  </tr>
+  <tr>
     <td><code>text</code></td>
     <td>
         <code>on</code>,<br/>

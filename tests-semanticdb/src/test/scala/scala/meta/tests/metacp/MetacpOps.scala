@@ -13,7 +13,7 @@ object MetacpOps {
     val allSymbols = mutable.Set.empty[String]
     Locator(classpath.entries.map(_.toNIO))((_, docs) =>
       for {
-        doc <- docs.documents
+        doc <- docs().documents
         sym <- doc.symbols
       } allSymbols += sym.symbol,
     )
@@ -96,7 +96,7 @@ object MetacpOps {
     val errors = mutable.Set.empty[String]
     Locator(classpath.entries.map(_.toNIO))((path, docs) =>
       for {
-        doc <- docs.documents
+        doc <- docs().documents
         sym <- doc.symbols
       } {
         val references = collectAllSymbolReferences(sym)

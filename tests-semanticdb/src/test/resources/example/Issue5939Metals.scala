@@ -2,7 +2,7 @@
 package example
 import scala.language/*=>scala.language.*/.implicitConversions/*=>scala.language.implicitConversions.*/
 
-class AA/*<=example.AA#*/(val f/*<=example.AA#f.*/: Int/*=>scala.Int#*/ => Int/*=>scala.Int#*/)
+class AA/*<=example.AA#*/(val f/*<=example.AA#f.*//*<=example.AA#`<init>`().(f)*/: Int/*=>scala.Int#*/ => Int/*=>scala.Int#*/)
 
 object AA/*<=example.AA.*/ {
   implicit def toF/*<=example.AA.toF().*/(a/*<=example.AA.toF().(a)*/: AA/*=>example.AA#*/): Int/*=>scala.Int#*/ => Int/*=>scala.Int#*/ = a/*=>example.AA.toF().(a)*/.f/*=>example.AA#f.*/

@@ -247,6 +247,27 @@ class TargetedSuite extends SemanticdbSuite {
     (_, foo1) => assertEquals(foo1, "o/O.a."),
   )
 
+  // A `val`/`var` primary-constructor parameter defines both an accessor and the constructor
+  // PARAMETER symbol, so its definition site has two overlapping occurrences (#1327). A plain
+  // member (`y` below) keeps its single occurrence.
+  occurrences(
+    """|package p
+       |class C(val x: Int) {
+       |  val y: Int = x
+       |}
+       |""".stripMargin,
+    """|[0:8..0:9): p <= p/
+       |[1:6..1:7): C <= p/C#
+       |[1:7..1:7):  <= p/C#`<init>`().
+       |[1:12..1:13): x <= p/C#`<init>`().(x)
+       |[1:12..1:13): x <= p/C#x.
+       |[1:15..1:18): Int => scala/Int#
+       |[2:6..2:7): y <= p/C#y.
+       |[2:9..2:12): Int => scala/Int#
+       |[2:15..2:16): x => p/C#x.
+       |""".stripMargin,
+  )
+
   test("named-args") {
     val code =
       """|@deprecated(since = "123")
@@ -260,7 +281,7 @@ class TargetedSuite extends SemanticdbSuite {
          |Text => non-empty
          |Language => Scala
          |Symbols => 6 entries
-         |Occurrences => 14 entries
+         |Occurrences => 15 entries
          |
          |Symbols:
          |_empty_/CLS# => @deprecated class CLS extends AnyRef { +3 decls }
@@ -285,6 +306,7 @@ class TargetedSuite extends SemanticdbSuite {
          |[0:12..0:17): since => scala/deprecated#`<init>`().(since)
          |[1:6..1:9): CLS <= _empty_/CLS#
          |[1:9..1:9):  <= _empty_/CLS#`<init>`().
+         |[1:10..1:14): name <= _empty_/CLS#`<init>`().(name)
          |[1:10..1:14): name <= _empty_/CLS#name.
          |[1:16..1:22): String => scala/Predef.String#
          |[2:6..2:10): this <= _empty_/CLS#`<init>`(+1).
@@ -308,7 +330,7 @@ class TargetedSuite extends SemanticdbSuite {
       )
 
     val expected212 = expectedPrevious213
-      .replace("Occurrences => 14 entries", "Occurrences => 14 entries\nDiagnostics => 1 entries")
+      .replace("Occurrences => 15 entries", "Occurrences => 15 entries\nDiagnostics => 1 entries")
       .replace(
         """|local0 => val local x$1: "123"
            |""".stripMargin,

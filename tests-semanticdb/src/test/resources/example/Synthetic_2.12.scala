@@ -44,4 +44,7 @@ class Synthetic/*<=example.Synthetic#*/ {
     if a/*=>local15*/ </*=>scala.Int#`<`(+3).*/ b/*=>local16*/
   } yield a/*=>local15*/
 
+  // See https://github.com/scalameta/scalameta/issues/1045
+  2 ::/*=>scala.collection.immutable.List#`::`().*/ Nil/*=>scala.collection.immutable.Nil.*/
+
 }

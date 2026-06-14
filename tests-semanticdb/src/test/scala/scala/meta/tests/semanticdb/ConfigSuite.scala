@@ -128,6 +128,24 @@ class ConfigSuite extends FunSuite {
   )
 
   check(
+    "buildtarget:<custom>",
+    List("-P:semanticdb:buildtarget:my-build-target"),
+    """|/A.scala
+       |object A
+       |""".stripMargin,
+    doc => assertEquals(doc.buildTarget, "my-build-target"),
+  )
+
+  check(
+    "buildtarget:<unset>",
+    Nil,
+    """|/A.scala
+       |object A
+       |""".stripMargin,
+    doc => assert(doc.buildTarget.isEmpty),
+  )
+
+  check(
     "md5:off",
     List(s"-P:semanticdb:md5:off"),
     """|/A.scala

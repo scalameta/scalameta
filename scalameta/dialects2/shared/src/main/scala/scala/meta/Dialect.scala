@@ -750,6 +750,7 @@ object Dialect extends InternalDialect {
     "Scala36" -> Scala36,
     "Scala37" -> Scala37,
     "Scala38" -> Scala38,
+    "Scala39" -> Scala39,
     "Paradise211" -> Paradise211,
     "Paradise212" -> Paradise212,
     "ParadiseTypelevel211" -> ParadiseTypelevel211,

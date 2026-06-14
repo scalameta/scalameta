@@ -244,6 +244,22 @@ trait TextDocumentOps {
               setterInfos.foreach(info => symbols(info.symbol) = info)
             }
           }
+          // A `val`/`var` parameter of a primary constructor (and any plain parameter that scalac
+          // turns into a field) gives rise to more than one symbol: the accessor (the getter, or the
+          // underlying field) and the constructor PARAMETER symbol. References resolve to the
+          // accessor (see the #1538 FIXME below), but per
+          // https://github.com/scalameta/scalameta/issues/1327 the definition site covers both, so
+          // we tuck the constructor parameter into a multi-symbol that `finalOccurrences` expands
+          // into a second occurrence sharing the parameter's range.
+          // Scalac keeps no symbol-level link from a param accessor back to the constructor
+          // parameter it stems from, so pairing them by name is the available relation — the same
+          // one the compiler itself uses, and the same one scalacp's SymbolInformationOps uses to
+          // go in the opposite direction.
+          private def withCtorParam(gsym: g.Symbol, ssym: String): String =
+            if (!gsym.isParamAccessor) ssym
+            else gsym.owner.primaryConstructor.info.paramss.flatten
+              .find(_.symbolName == gsym.symbolName)
+              .fold(ssym)(gparam => Symbols.Multi(List(ssym, gparam.toSemantic)))
           private def success(mtree: Option[m.Name], gsym0: => g.Symbol): Unit = mtree
             .foreach(success(_, gsym0))
           private def success(mtree: m.Name, gsym0: g.Symbol): Unit = {
@@ -282,7 +298,7 @@ trait TextDocumentOps {
             if (symbol == Symbols.None) return
 
             todo -= mtree
-            register(symbol)
+            register(if (mtree.isDefinition) withCtorParam(gsym, symbol) else symbol)
 
             def tryWithin(map: mutable.Map[m.Tree, m.Name], gsym0: g.Symbol): Unit = map.get(mtree)
               .foreach { mname =>
@@ -673,6 +689,7 @@ trait TextDocumentOps {
         text = unit.source.toText,
         md5 = unit.source.toMD5,
         language = s.Language.SCALA,
+        buildTarget = config.buildTarget,
         symbols = finalSymbols.sortBy(_.symbol),
         occurrences = finalOccurrences.sortBy(_.range),
         diagnostics = diagnostics.sortBy(_.range),

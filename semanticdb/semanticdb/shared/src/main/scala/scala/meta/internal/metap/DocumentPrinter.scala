@@ -32,6 +32,7 @@ class DocumentPrinter(
       case JAVA => out.println("Language => Java")
       case _ => out.println("Language => Unknown")
     }
+    if (doc.buildTarget.nonEmpty) out.println(s"BuildTarget => ${doc.buildTarget}")
     if (doc.symbols.nonEmpty) out.println(s"Symbols => ${doc.symbols.length} entries")
     if (doc.occurrences.nonEmpty) out.println(s"Occurrences => ${doc.occurrences.length} entries")
     if (doc.diagnostics.nonEmpty) out.println(s"Diagnostics => ${doc.diagnostics.length} entries")

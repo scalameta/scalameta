@@ -2,12 +2,12 @@ package scala.meta.internal.io
 
 import scala.meta.io._
 
+import java.io.IOException
 import java.net.URI
 import java.nio.charset.Charset
-import java.nio.file.{FileSystem, FileSystemAlreadyExistsException, FileSystems, Files, OpenOption,
-  Path}
+import java.nio.file._
+import java.nio.file.attribute.BasicFileAttributes
 import java.util
-import java.util.stream.Collectors
 
 object PlatformFileIO {
 
@@ -46,11 +46,27 @@ object PlatformFileIO {
 
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     val relativeFiles = List.newBuilder[RelativePath]
-    val iter = Files.walk(root.toNIO).iterator()
-    while (iter.hasNext) {
-      val path = iter.next()
-      if (Files.isRegularFile(path)) relativeFiles += RelativePath(root.toNIO.relativize(path))
-    }
+    // FOLLOW_LINKS so a symlink's target attributes are used (symlinked files are listed); note this
+    // also traverses symlinked directories.
+    Files.walkFileTree(
+      root.toNIO,
+      util.EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+      Integer.MAX_VALUE,
+      new SimpleFileVisitor[Path] {
+        override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+          if (attrs.isRegularFile) relativeFiles += RelativePath(root.toNIO.relativize(file))
+          FileVisitResult.CONTINUE
+        }
+        // #1168: skip unreadable paths (AccessDeniedException); FOLLOW_LINKS can also raise
+        // FileSystemLoopException on a symlink cycle, so skip that too. Any other I/O error
+        // propagates, so a partial scan is never reported as complete. postVisitDirectory is left
+        // to SimpleFileVisitor, which likewise rethrows a non-null exception.
+        override def visitFileFailed(file: Path, exc: IOException): FileVisitResult = exc match {
+          case _: AccessDeniedException | _: FileSystemLoopException => FileVisitResult.CONTINUE
+          case _ => throw exc
+        }
+      },
+    )
     ListFiles(root, relativeFiles.result())
   }
 

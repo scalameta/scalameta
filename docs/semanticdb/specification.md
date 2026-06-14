@@ -80,6 +80,7 @@ message TextDocument {
   repeated SymbolOccurrence occurrences = 6;
   repeated Diagnostic diagnostics = 7;
   repeated Synthetic synthetics = 12;
+  string build_target = 13;
 }
 ```
 
@@ -128,6 +129,16 @@ SemanticDB payload is up-to-date with the file contents on disk.
 `language` defines the [Language](#language) in which the code snippet is
 written. See [Languages](#languages) for the list of supported programming
 languages.
+
+`build_target` optionally identifies the build target that produced this
+document, as provided by the tool that generated the payload (for example, via
+the `-P:semanticdb:buildtarget:<id>` compiler plugin option). When set, it
+should be a stable, URI-like identifier; producers integrated with the
+[Build Server Protocol](https://build-server-protocol.github.io) should use the
+corresponding `BuildTargetIdentifier.uri`. It lets tools distinguish otherwise
+identical documents that originate from different build targets, such as the
+same source compiled for multiple platforms (JVM/JS/Native) or Scala versions.
+When empty, no build target information is available.
 
 Semantic information about code snippets is stored in so called sections -
 repeated fields within `TextDocument` - as described below. These sections are
@@ -2429,6 +2440,69 @@ package object symbols and object symbols are:
 **Packages** [\[61\]][61] are not included in the
 ["Symbols"](#symbolinformation) section.
 
+<a name="scala-builtin-symbols"></a>
+
+#### Built-in symbols
+
+A handful of core types from the Scala standard library [\[98\]][98] — `scala.Any`,
+`scala.AnyVal`, `scala.AnyRef`, `scala.Nothing`, `scala.Null` and `scala.Singleton` — are
+defined by the SLS but cannot be recovered from `scala-library.jar` the way ordinary definitions
+are. Most of them have no classfile at all; the one that does (`AnyVal`) carries a classfile
+payload that is not, on its own, a satisfactory description of the symbol. To give these types a
+stable, uniform representation, SemanticDB predeclares the following definitions for the whole
+set:
+
+```scala
+package scala
+
+abstract class Any {
+  def equals(that: Any): Boolean
+  final def ==(that: Any): Boolean
+  final def !=(that: Any): Boolean
+  def hashCode(): Int
+  final def ##(): Int
+  def toString(): String
+  final def getClass(): Class
+  final def isInstanceOf[A](): Boolean
+  final def asInstanceOf[A](): A
+}
+
+abstract class AnyVal extends Any
+
+class AnyRef extends Any {
+  final def eq(that: AnyRef): Boolean
+  final def ne(that: AnyRef): Boolean
+  final def synchronized[T](body: T): T
+}
+
+abstract class Nothing extends Any
+
+abstract class Null extends AnyRef
+
+trait Singleton extends Any
+```
+
+Notes:
+
+- `equals`, `hashCode` and `toString` are `ABSTRACT`; the other methods of `Any` and all methods
+  of `AnyRef` are `FINAL`.
+- `Nothing` and `Null` are additionally `FINAL`.
+- Every built-in class (but not the `Singleton` trait) carries a synthesized primary constructor
+  `<init>()`.
+- `getClass` is given the return type `java/lang/Class#`. Its actual return type cannot be
+  expressed in the SemanticDB type system — it is special-cased by both the Scala and Java
+  compilers — so producers approximate it with the raw `Class` type.
+- `AnyRef` does not declare the members of `java.lang.Object`, nor is its relationship to
+  `Object` otherwise represented. This is a known limitation, tracked in
+  [scalameta/scalameta#1564](https://github.com/scalameta/scalameta/issues/1564).
+
+These definitions are not embedded in the SemanticDB payloads of ordinary source files. They are
+predeclared Scala symbols that producers and consumers are expected to know about. Scalameta's
+`GlobalSymbolTable` preloads them so that references to them resolve, and `metacp` materializes
+them as six standalone `scala/*.class` SemanticDB payloads — packaged in a
+`scala-library-synthetics.jar` for file-based consumers — only when run with
+`--include-scala-library-synthetics` (excluded by default).
+
 <a name="scala-annotation"></a>
 
 ### AnnotationTree
@@ -4001,5 +4075,7 @@ We may improve on this in the future.
 [95]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.8
 [96]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.3
 [97]: https://docs.oracle.com/javase/specs/jls/se8/html/jls-7.html#jls-7.4.2
+[98]:
+  https://www.scala-lang.org/files/archive/spec/2.12/12-the-scala-standard-library.html
 [99]:
   https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#templates
