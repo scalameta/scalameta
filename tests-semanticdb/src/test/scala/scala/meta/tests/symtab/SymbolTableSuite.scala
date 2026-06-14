@@ -162,4 +162,160 @@ class SymbolTableSuite extends FunSuite {
     assert(ctors.contains("scala/collection/mutable/StringBuilder#`<init>`()."), ctors.toString)
   }
 
+  // ---- hierarchy-aware overloads(tpe, name) ----
+
+  // a class `sym` extending `parents`, declaring (symlinks to) the methods `decls`
+  private def synthClass(sym: String, parents: List[String], decls: List[String]) = s
+    .SymbolInformation(
+      symbol = sym,
+      kind = s.SymbolInformation.Kind.CLASS,
+      signature = s.ClassSignature(
+        parents = parents.map(p => s.TypeRef(symbol = p)),
+        declarations = Some(s.Scope(symlinks = decls)),
+      ),
+    )
+
+  // a one-parameter method `sym` whose parameter has type `paramType` (carried inline as a hardlink)
+  private def synthMethod(sym: String, paramType: String) = s.SymbolInformation(
+    symbol = sym,
+    kind = s.SymbolInformation.Kind.METHOD,
+    signature = s.MethodSignature(parameterLists =
+      List(s.Scope(hardlinks =
+        List(s.SymbolInformation(
+          symbol = sym + "(x)",
+          kind = s.SymbolInformation.Kind.PARAMETER,
+          signature = s.ValueSignature(s.TypeRef(symbol = paramType)),
+        )),
+      )),
+    ),
+  )
+
+  test("overloads(tpe, name): inherited and own overloads are both returned, most-derived first") {
+    val symtab = LocalSymbolTable(List(
+      synthClass("_empty_/T#", Nil, List("_empty_/T#foo().")),
+      synthMethod("_empty_/T#foo().", "_empty_/A#"),
+      synthClass("_empty_/C#", List("_empty_/T#"), List("_empty_/C#foo().")),
+      synthMethod("_empty_/C#foo().", "_empty_/B#"),
+    ))
+    assertEquals(symtab.overloads("_empty_/C#", "foo"), List("_empty_/C#foo().", "_empty_/T#foo()."))
+  }
+
+  test("overloads(tpe, name): an override is deduplicated to the most-derived method") {
+    val symtab = LocalSymbolTable(List(
+      synthClass("_empty_/Base#", Nil, List("_empty_/Base#f().")),
+      synthMethod("_empty_/Base#f().", "scala/Int#"),
+      synthClass("_empty_/Sub#", List("_empty_/Base#"), List("_empty_/Sub#f().")),
+      synthMethod("_empty_/Sub#f().", "scala/Int#"), // same erased signature -> override
+    ))
+    assertEquals(symtab.overloads("_empty_/Sub#", "f"), List("_empty_/Sub#f()."))
+  }
+
+  test("overloads(tpe, name): a diamond ancestor is not double-counted") {
+    val symtab = LocalSymbolTable(List(
+      synthClass("_empty_/Top#", Nil, List("_empty_/Top#f().")),
+      synthMethod("_empty_/Top#f().", "scala/Int#"),
+      synthClass("_empty_/L#", List("_empty_/Top#"), Nil),
+      synthClass("_empty_/R#", List("_empty_/Top#"), Nil),
+      synthClass("_empty_/D#", List("_empty_/L#", "_empty_/R#"), Nil),
+    ))
+    assertEquals(symtab.overloads("_empty_/D#", "f"), List("_empty_/Top#f()."))
+  }
+
+  test("overloads(tpe, name): cyclic parents terminate") {
+    val symtab = LocalSymbolTable(List(
+      synthClass("_empty_/A#", List("_empty_/B#"), List("_empty_/A#f().")),
+      synthMethod("_empty_/A#f().", "scala/Int#"),
+      synthClass("_empty_/B#", List("_empty_/A#"), Nil),
+    ))
+    assertEquals(symtab.overloads("_empty_/A#", "f"), List("_empty_/A#f()."))
+  }
+
+  test("overloads(tpe, name): unknown or non-class type is Nil") {
+    assertEquals(globalSymtab.overloads("does/not/T#", "foo"), Nil)
+    // a method symbol is not a type
+    assertEquals(globalSymtab.overloads("scala/Predef.assert().", "assert"), Nil)
+  }
+
+  test("overloads(tpe, name): resolves overloads on a real classpath type")(
+    // exercises the GlobalSymbolTable path end to end (object module-class signature, parameter
+    // symbols resolved via symlinks, erased-signature dedup not wrongly merging the two asserts)
+    assertEquals(
+      globalSymtab.overloads("scala/Predef.", "assert"),
+      List("scala/Predef.assert().", "scala/Predef.assert(+1)."),
+    ),
+  )
+
+  // `trait Base[A] { def foo(a: A) }; class Sub extends Base[String] { def foo(a: subParam) }`
+  private def genericHierarchy(subParam: String) = {
+    def method(sym: String, paramType: String) = s.SymbolInformation(
+      symbol = sym,
+      kind = s.SymbolInformation.Kind.METHOD,
+      signature = s.MethodSignature(parameterLists =
+        List(s.Scope(hardlinks =
+          List(s.SymbolInformation(
+            symbol = sym + "(a)",
+            kind = s.SymbolInformation.Kind.PARAMETER,
+            signature = s.ValueSignature(s.TypeRef(symbol = paramType)),
+          )),
+        )),
+      ),
+    )
+    LocalSymbolTable {
+      List(
+        s.SymbolInformation(
+          symbol = "_empty_/Base#",
+          kind = s.SymbolInformation.Kind.TRAIT,
+          signature = s.ClassSignature(
+            typeParameters = Some(s.Scope(symlinks = List("_empty_/Base#[A]"))),
+            declarations = Some(s.Scope(symlinks = List("_empty_/Base#foo()."))),
+          ),
+        ),
+        s.SymbolInformation(
+          symbol = "_empty_/Base#[A]",
+          kind = s.SymbolInformation.Kind.TYPE_PARAMETER,
+          signature = s.TypeSignature(upperBound = s.TypeRef(symbol = "scala/Any#")),
+        ),
+        method("_empty_/Base#foo().", "_empty_/Base#[A]"), // parameter typed by the type parameter A
+        s.SymbolInformation(
+          symbol = "_empty_/Sub#",
+          kind = s.SymbolInformation.Kind.CLASS,
+          signature = s.ClassSignature(
+            parents = List(s.TypeRef(
+              symbol = "_empty_/Base#",
+              typeArguments = List(s.TypeRef(symbol = "scala/Predef.String#")),
+            )),
+            declarations = Some(s.Scope(symlinks = List("_empty_/Sub#foo()."))),
+          ),
+        ),
+        method("_empty_/Sub#foo().", subParam),
+      )
+    }
+  }
+
+  test("overloads(tpe, name): a generic override is deduplicated via type-argument substitution")(
+    // Sub#foo(String) overrides Base#foo(A) with A := String, so only the most-derived survives
+    assertEquals(
+      genericHierarchy("scala/Predef.String#").overloads("_empty_/Sub#", "foo"),
+      List("_empty_/Sub#foo()."),
+    ),
+  )
+
+  test("overloads(tpe, name): a generic hierarchy keeps genuine overloads")(
+    // Sub#foo(Int) is a real overload of Base#foo(String-after-substitution), so both survive
+    assertEquals(
+      genericHierarchy("scala/Int#").overloads("_empty_/Sub#", "foo").toSet,
+      Set("_empty_/Sub#foo().", "_empty_/Base#foo()."),
+    ),
+  )
+
+  test("overloads(tpe, name): constructors are not inherited") {
+    val symtab = LocalSymbolTable(List(
+      synthClass("_empty_/P#", Nil, List("_empty_/P#`<init>`().")),
+      synthMethod("_empty_/P#`<init>`().", "scala/Int#"),
+      synthClass("_empty_/Q#", List("_empty_/P#"), List("_empty_/Q#`<init>`().")),
+      synthMethod("_empty_/Q#`<init>`().", "scala/Long#"),
+    ))
+    assertEquals(symtab.overloads("_empty_/Q#", "<init>"), List("_empty_/Q#`<init>`()."))
+  }
+
 }
