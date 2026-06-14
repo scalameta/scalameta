@@ -52,6 +52,44 @@ trait SymbolTable {
     } else Nil
 
   /**
+   * Returns all overloads of `name` visible on type `tpe` — its own declarations plus those
+   * inherited across its supertypes — override-deduplicated, most-derived first. `Nil` if `tpe` is
+   * not a resolvable class-like symbol or has no such method.
+   *
+   * This is the hierarchy-aware companion to the single-argument `overloads`: a resolved method
+   * symbol only exposes its own owner's overloads, but the complete candidate set at a call site
+   * spans the receiver type's supertypes (e.g. `trait T { def foo(x: A) }` and
+   * `class C extends T { def foo(x: B) }` — both are candidates on `C`). `tpe` is the receiver type
+   * symbol (e.g. `C#`), which the caller supplies; see
+   * https://github.com/scalameta/scalameta/issues/1298.
+   *
+   * Dedup is by erased parameter signature: an override has the same erased signature as the method
+   * it overrides, so the most-derived one is kept while genuine overloads (different signatures)
+   * all survive. Parent type arguments are substituted before erasing, so a generic override
+   * deduplicates correctly (`trait Base[A] { def foo(a: A) }`, `class Sub extends Base[String] {
+   * override def foo(a: String) }` collapse to one `foo`). A method whose parameter types cannot be
+   * resolved is conservatively kept rather than risk a wrong merge.
+   *
+   * Constructors are not inherited, so for `name == "<init>"` only `tpe`'s own constructors are
+   * returned, not its parents'.
+   *
+   * Caveats: the walk is a simple most-derived-first parent traversal, not full Scala linearization
+   * (enough for override dedup, not for exact resolution order); erasure is symbol-level; and
+   * accessibility/applicability is not applied — final overload resolution is the compiler's job.
+   */
+  def overloads(tpe: String, name: String): List[String] = {
+    // constructors are not inherited, so do not walk parents for the `<init>` name
+    val bases = if (name == "<init>") List(tpe -> Map.empty[String, String]) else linearization(tpe)
+    val seenSignatures = mutable.Set.empty[List[String]]
+    bases.flatMap { case (owner, env) => membersNamed(owner, name).map(_ -> env) }.filter {
+      case (method, env) => erasedSignature(method, env) match {
+          case Some(signature) => seenSignatures.add(signature)
+          case None => true // unresolved parameter types: keep rather than risk a wrong merge
+        }
+    }.map(_._1)
+  }
+
+  /**
    * Tests whether `child` is an erased subtype of `parent`.
    *
    * "Erased" means only symbols are compared and type arguments are ignored — the semantics of
@@ -101,5 +139,103 @@ trait SymbolTable {
 
   private def typeSymbolsFlatten(types: Iterable[Type]): Iterator[String] = types.iterator
     .flatMap(typeSymbols)
+
+  // `tpe` plus its transitive parents, most-derived first and cycle-safe, each paired with the
+  // substitution of its type parameters to erased symbols (so generic overrides compare correctly).
+  // A type always precedes its own ancestors, so dedup-by-first-seen keeps the most-derived method.
+  private def linearization(tpe: String): List[(String, Map[String, String])] = {
+    val seen = mutable.LinkedHashMap.empty[String, Map[String, String]]
+    def loop(sym: String, env: Map[String, String]): Unit = if (!seen.contains(sym)) {
+      seen(sym) = env
+      info(sym).foreach(parentRefs(_).foreach { case (parent, args) =>
+        loop(parent, bindTypeParams(parent, args, env))
+      })
+    }
+    loop(tpe, Map.empty)
+    seen.toList
+  }
+
+  // Parent (symbol, type-arguments) pairs from a class signature, or the alias target for a type.
+  private def parentRefs(sinfo: SymbolInformation): Iterator[(String, Seq[Type])] =
+    sinfo.signature match {
+      case cs: ClassSignature => cs.parents.iterator.flatMap(typeRefs)
+      case ts: TypeSignature => typeRefs(ts.upperBound)
+      case _ => Iterator.empty
+    }
+
+  private def typeRefs(tpe: Type): Iterator[(String, Seq[Type])] = tpe match {
+    case TypeRef(_, symbol, args) => Iterator(symbol -> args)
+    case WithType(types) => types.iterator.flatMap(typeRefs)
+    case IntersectionType(types) => types.iterator.flatMap(typeRefs)
+    case StructuralType(t, _) => typeRefs(t)
+    case AnnotatedType(_, t) => typeRefs(t)
+    case ExistentialType(t, _) => typeRefs(t)
+    case UniversalType(_, t) => typeRefs(t)
+    case _ => Iterator.empty
+  }
+
+  // Map `owner`'s type parameters to the erased symbols of `args` (resolved through the caller's
+  // `env`); unbound when args are missing (raw type), so such parameters erase to their upper bound.
+  private def bindTypeParams(
+      owner: String,
+      args: Seq[Type],
+      env: Map[String, String],
+  ): Map[String, String] =
+    if (args.isEmpty) Map.empty
+    else info(owner).map(_.signature) match {
+      case Some(c: ClassSignature) => c.typeParameters.symbols.iterator.zip(args.iterator)
+          .flatMap { case (param, arg) => headSymbol(arg, env).map(param -> _) }.toMap
+      case _ => Map.empty
+    }
+
+  private def membersNamed(owner: String, name: String): List[String] =
+    info(owner).map(_.signature) match {
+      case Some(c: ClassSignature) => c.declarations.symbols.filter(_.desc match {
+          case d.Method(`name`, _) => true
+          case _ => false
+        })
+      case _ => Nil
+    }
+
+  // The erased parameter-type symbols of `method` under substitution `env`, or None when it is not a
+  // resolvable method or a parameter type can't be reduced (so callers don't merge what they can't
+  // compare).
+  private def erasedSignature(method: String, env: Map[String, String]): Option[List[String]] =
+    info(method).map(_.signature) match {
+      case Some(m: MethodSignature) =>
+        val types = m.parameterLists.iterator.flatMap(paramInfos).map(_.signature match {
+          case v: ValueSignature => headSymbol(v.tpe, env)
+          case _ => None
+        }).toList
+        if (types.forall(_.isDefined)) Some(types.flatten) else None
+      case _ => None
+    }
+
+  private def paramInfos(scope: Scope): Iterator[SymbolInformation] =
+    if (scope.symlinks.nonEmpty) scope.symlinks.iterator.flatMap(info) else scope.hardlinks.iterator
+
+  // Reduce a type to its erased head symbol: unwrap by-name/repeated wrappers, then resolve a type
+  // parameter through `env` (substitution) or, failing that, follow its alias/upper bound.
+  private def headSymbol(tpe: Type, env: Map[String, String]): Option[String] = {
+    @tailrec
+    def resolve(sym: String, fuel: Int): String = env.get(sym) match {
+      case Some(bound) => bound
+      case None if fuel > 0 =>
+        info(sym).map(_.signature) match {
+          case Some(ts: TypeSignature) => typeSymbols(ts.upperBound).toList.headOption match {
+              case Some(next) if next != sym => resolve(next, fuel - 1)
+              case _ => sym
+            }
+          case _ => sym
+        }
+      case None => sym
+    }
+    def head(t: Type): Option[String] = t match {
+      case ByNameType(u) => head(u)
+      case RepeatedType(u) => head(u)
+      case _ => typeSymbols(t).toList.headOption
+    }
+    head(tpe).map(resolve(_, 16))
+  }
 
 }
