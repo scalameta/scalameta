@@ -8,7 +8,6 @@ import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.collection.mutable
-import scala.tools.scalap.scalax.rules.ScalaSigParserError
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolInformationOps {
@@ -158,9 +157,6 @@ trait SymbolInformationOps {
           if (settings.logBrokenSignatures) reporter.err
             .println(s"broken signature for ${sym.ssym}: ${ex.getMessage}")
           if (settings.stubBrokenSignatures) s.NoSignature else throw ex
-        case ScalaSigParserError("Unexpected failure") =>
-          // FIXME: https://github.com/scalameta/scalameta/issues/1494
-          s.NoSignature
       }
 
     private def annotations: List[s.AnnotationTree] = {
