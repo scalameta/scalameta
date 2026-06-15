@@ -143,9 +143,10 @@ trait SymbolTable {
   // A type always precedes its own ancestors, so dedup-by-first-seen keeps the most-derived method.
   private def linearization(tpe: String): List[(String, Map[String, String])] = {
     val seen = mutable.LinkedHashMap.empty[String, Map[String, String]]
-    def loop(sym: String, env: Map[String, String]): Unit = if (!seen.contains(sym)) {
-      seen(sym) = env
-      info(sym).foreach(parentRefs(_).foreach { case (parent, args) =>
+    def loop(sym: String, env: Map[String, String]): Unit = {
+      val size = seen.size
+      seen.getOrElseUpdate(sym, env) // first env wins; recurse only when this was a new entry
+      if (seen.size != size) info(sym).foreach(parentRefs(_).foreach { case (parent, args) =>
         loop(parent, bindTypeParams(parent, args, env))
       })
     }
