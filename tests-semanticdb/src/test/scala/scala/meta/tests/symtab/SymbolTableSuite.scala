@@ -301,10 +301,11 @@ class SymbolTableSuite extends FunSuite {
   )
 
   test("overloads(tpe, name): a generic hierarchy keeps genuine overloads")(
-    // Sub#foo(Int) is a real overload of Base#foo(String-after-substitution), so both survive
+    // Sub#foo(Int) is a real overload of Base#foo(String-after-substitution), so both survive,
+    // most-derived first
     assertEquals(
-      genericHierarchy("scala/Int#").overloads("_empty_/Sub#", "foo").toSet,
-      Set("_empty_/Sub#foo().", "_empty_/Base#foo()."),
+      genericHierarchy("scala/Int#").overloads("_empty_/Sub#", "foo"),
+      List("_empty_/Sub#foo().", "_empty_/Base#foo()."),
     ),
   )
 

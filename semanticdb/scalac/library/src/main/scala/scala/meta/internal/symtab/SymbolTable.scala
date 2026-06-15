@@ -36,17 +36,11 @@ trait SymbolTable {
     else if (symbol.isGlobal) {
       val (desc, owner) = DescriptorParser(symbol)
       desc match {
-        case d.Method(name, _) => info(owner).map(_.signature) match {
-            case Some(c: ClassSignature) =>
-              // keep only members that really are same-named methods of this owner, so a symbol
-              // that merely parses like one (but isn't declared here) isn't fabricated into the set
-              val sameName = c.declarations.symbols.filter(_.desc match {
-                case d.Method(`name`, _) => true
-                case _ => false
-              })
-              if (sameName.contains(symbol)) sameName else Nil
-            case _ => Nil
-          }
+        case d.Method(name, _) =>
+          // keep `owner`'s same-name methods only if `symbol` is actually one of them, so a symbol
+          // that merely parses like a method of `owner` (but isn't declared there) isn't fabricated
+          val sameName = membersNamed(owner, name)
+          if (sameName.contains(symbol)) sameName else Nil
         case _ => Nil
       }
     } else Nil
@@ -81,12 +75,10 @@ trait SymbolTable {
     // constructors are not inherited, so do not walk parents for the `<init>` name
     val bases = if (name == "<init>") List(tpe -> Map.empty[String, String]) else linearization(tpe)
     val seenSignatures = mutable.Set.empty[List[String]]
-    bases.flatMap { case (owner, env) => membersNamed(owner, name).map(_ -> env) }.filter {
-      case (method, env) => erasedSignature(method, env) match {
-          case Some(signature) => seenSignatures.add(signature)
-          case None => true // unresolved parameter types: keep rather than risk a wrong merge
-        }
-    }.map(_._1)
+    bases.flatMap { case (owner, env) =>
+      // an unresolved erased signature (None) keeps the method rather than risk a wrong merge
+      membersNamed(owner, name).filter(erasedSignature(_, env).forall(seenSignatures.add))
+    }
   }
 
   /**
@@ -117,28 +109,34 @@ trait SymbolTable {
     loop(child)
   }
 
-  private def parentSymbols(sinfo: SymbolInformation): Iterator[String] = sinfo.signature match {
-    case cs: ClassSignature => typeSymbolsFlatten(cs.parents)
-    case ts: TypeSignature => typeSymbols(ts.upperBound) // follow type-alias upper bound
-    case _ => Iterator.empty
-  }
+  // Parent (symbol, type-arguments) pairs from a class signature, or the alias target for a type.
+  private def parentRefs(sinfo: SymbolInformation): Iterator[(String, Seq[Type])] =
+    sinfo.signature match {
+      case cs: ClassSignature => typeRefsFlatten(cs.parents)
+      case ts: TypeSignature => typeRefs(ts.upperBound) // follow type-alias upper bound
+      case _ => Iterator.empty
+    }
 
   @tailrec
-  private def typeSymbols(tpe: Type): Iterator[String] = tpe match {
-    case TypeRef(_, symbol, _) => Iterator(symbol)
-    case WithType(types) => typeSymbolsFlatten(types)
-    case IntersectionType(types) => typeSymbolsFlatten(types)
+  private def typeRefs(tpe: Type): Iterator[(String, Seq[Type])] = tpe match {
+    case TypeRef(_, symbol, args) => Iterator(symbol -> args)
+    case WithType(types) => typeRefsFlatten(types)
+    case IntersectionType(types) => typeRefsFlatten(types)
     // unwrap type wrappers to the underlying type(s); e.g. a refined parent is encoded as
     // StructuralType(WithType(...)) (see scalacp/TypeOps.scala).
-    case StructuralType(t, _) => typeSymbols(t)
-    case AnnotatedType(_, t) => typeSymbols(t)
-    case ExistentialType(t, _) => typeSymbols(t)
-    case UniversalType(_, t) => typeSymbols(t)
+    case StructuralType(t, _) => typeRefs(t)
+    case AnnotatedType(_, t) => typeRefs(t)
+    case ExistentialType(t, _) => typeRefs(t)
+    case UniversalType(_, t) => typeRefs(t)
     case _ => Iterator.empty
   }
 
-  private def typeSymbolsFlatten(types: Iterable[Type]): Iterator[String] = types.iterator
-    .flatMap(typeSymbols)
+  private def typeRefsFlatten(types: Iterable[Type]): Iterator[(String, Seq[Type])] = types.iterator
+    .flatMap(typeRefs)
+
+  // symbol-only views, used where type arguments aren't needed (e.g. `isSubtypeOf`)
+  private def parentSymbols(sinfo: SymbolInformation): Iterator[String] = parentRefs(sinfo).map(_._1)
+  private def typeSymbols(tpe: Type): Iterator[String] = typeRefs(tpe).map(_._1)
 
   // `tpe` plus its transitive parents, most-derived first and cycle-safe, each paired with the
   // substitution of its type parameters to erased symbols (so generic overrides compare correctly).
@@ -153,25 +151,6 @@ trait SymbolTable {
     }
     loop(tpe, Map.empty)
     seen.toList
-  }
-
-  // Parent (symbol, type-arguments) pairs from a class signature, or the alias target for a type.
-  private def parentRefs(sinfo: SymbolInformation): Iterator[(String, Seq[Type])] =
-    sinfo.signature match {
-      case cs: ClassSignature => cs.parents.iterator.flatMap(typeRefs)
-      case ts: TypeSignature => typeRefs(ts.upperBound)
-      case _ => Iterator.empty
-    }
-
-  private def typeRefs(tpe: Type): Iterator[(String, Seq[Type])] = tpe match {
-    case TypeRef(_, symbol, args) => Iterator(symbol -> args)
-    case WithType(types) => types.iterator.flatMap(typeRefs)
-    case IntersectionType(types) => types.iterator.flatMap(typeRefs)
-    case StructuralType(t, _) => typeRefs(t)
-    case AnnotatedType(_, t) => typeRefs(t)
-    case ExistentialType(t, _) => typeRefs(t)
-    case UniversalType(_, t) => typeRefs(t)
-    case _ => Iterator.empty
   }
 
   // Map `owner`'s type parameters to the erased symbols of `args` (resolved through the caller's
@@ -217,25 +196,25 @@ trait SymbolTable {
   // Reduce a type to its erased head symbol: unwrap by-name/repeated wrappers, then resolve a type
   // parameter through `env` (substitution) or, failing that, follow its alias/upper bound.
   private def headSymbol(tpe: Type, env: Map[String, String]): Option[String] = {
+    // resolve a type parameter through `env` (substitution), else follow its alias/upper bound;
+    // `seen` guards against alias/type-parameter cycles.
     @tailrec
-    def resolve(sym: String, fuel: Int): String = env.get(sym) match {
+    def resolve(sym: String, seen: Set[String]): String = env.get(sym) match {
       case Some(bound) => bound
-      case None if fuel > 0 =>
-        info(sym).map(_.signature) match {
+      case None => info(sym).map(_.signature) match {
           case Some(ts: TypeSignature) => typeSymbols(ts.upperBound).toList.headOption match {
-              case Some(next) if next != sym => resolve(next, fuel - 1)
+              case Some(next) if !seen(next) => resolve(next, seen + next)
               case _ => sym
             }
           case _ => sym
         }
-      case None => sym
     }
     def head(t: Type): Option[String] = t match {
       case ByNameType(u) => head(u)
       case RepeatedType(u) => head(u)
       case _ => typeSymbols(t).toList.headOption
     }
-    head(tpe).map(resolve(_, 16))
+    head(tpe).map(resolve(_, Set.empty))
   }
 
 }
