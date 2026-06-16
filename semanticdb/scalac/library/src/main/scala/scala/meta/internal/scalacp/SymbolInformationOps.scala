@@ -50,14 +50,17 @@ trait SymbolInformationOps {
     }
 
     private[meta] def properties: Int = {
+      if (sym.isPackage) return 0
       var flags = 0
       def flip(sprop: s.SymbolInformation.Property) = flags |= sprop.value
       def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
       def isAbstractMethod = sym.isMethod && sym.isDeferred
       def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
-      if (!sym.isPackage && sym.isSynthetic) flip(p.SYNTHETIC)
-      if (sym.isPackage) ()
-      else if (sym.isJava) {
+      // NOTE: unlike the scalac plugin, no self-parameter guard is needed here: scalap
+      // doesn't model self parameters (they're local, not stored in scala signatures),
+      // so `kind` never returns SELF_PARAMETER. See the commented-out case in `kind`.
+      if (sym.isSynthetic) flip(p.SYNTHETIC)
+      if (sym.isJava) {
         if (sym.isAbstractOverride) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)

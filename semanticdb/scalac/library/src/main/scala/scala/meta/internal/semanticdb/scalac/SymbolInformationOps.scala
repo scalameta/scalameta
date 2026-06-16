@@ -53,6 +53,7 @@ trait SymbolInformationOps {
     }
 
     private[meta] def properties: Int = {
+      if (gsym.hasFlag(gf.PACKAGE)) return 0
       val kind = this.kind
       var flags = 0
       def flip(prop: s.SymbolInformation.Property): Unit = flags |= prop.value
@@ -63,9 +64,8 @@ trait SymbolInformationOps {
       def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
       // NOTE: self parameters carry the synthetic flag even when written in source
       // (e.g. `self =>`), and the spec grants them no properties, so exclude them.
-      if (!gsym.hasFlag(gf.PACKAGE) && !gsym.isSelfParameter && gsym.isSynthetic) flip(p.SYNTHETIC)
-      if (gsym.hasFlag(gf.PACKAGE)) ()
-      else if (gsym.hasFlag(gf.JAVA)) {
+      if (!gsym.isSelfParameter && gsym.isSynthetic) flip(p.SYNTHETIC)
+      if (gsym.hasFlag(gf.JAVA)) {
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)
