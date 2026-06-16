@@ -203,19 +203,24 @@ trait SymbolTable {
     def resolve(sym: String, seen: Set[String]): String = env.get(sym) match {
       case Some(bound) => bound
       case None => info(sym).map(_.signature) match {
-          case Some(ts: TypeSignature) => typeSymbols(ts.upperBound).toList.headOption match {
+          case Some(ts: TypeSignature) => firstSymbol(typeSymbols(ts.upperBound)) match {
               case Some(next) if !seen(next) => resolve(next, seen + next)
               case _ => sym
             }
           case _ => sym
         }
     }
+    @tailrec
     def head(t: Type): Option[String] = t match {
       case ByNameType(u) => head(u)
       case RepeatedType(u) => head(u)
-      case _ => typeSymbols(t).toList.headOption
+      case _ => firstSymbol(typeSymbols(t))
     }
     head(tpe).map(resolve(_, Set.empty))
   }
+
+  // Iterator has no cross-version `headOption`/`nextOption` (the latter is 2.13-only)
+  private def firstSymbol(symbols: Iterator[String]): Option[String] =
+    if (symbols.hasNext) Some(symbols.next()) else None
 
 }
