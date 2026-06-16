@@ -56,10 +56,6 @@ trait SymbolInformationOps {
       def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
       def isAbstractMethod = sym.isMethod && sym.isDeferred
       def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
-      // NOTE: unlike the scalac plugin, no self-parameter guard is needed here: scalap
-      // doesn't model self parameters (they're local, not stored in scala signatures),
-      // so `kind` never returns SELF_PARAMETER. See the commented-out case in `kind`.
-      if (sym.isSynthetic) flip(p.SYNTHETIC)
       if (sym.isJava) {
         if (sym.isAbstractOverride) {
           flip(p.ABSTRACT)
@@ -74,6 +70,10 @@ trait SymbolInformationOps {
         // if (sym.isJavaEnum) flip(p.ENUM)
         if (sym.isStatic) flip(p.STATIC)
       } else {
+        // SYNTHETIC is emitted for Scala symbols only; marking Java synthetics is
+        // deferred to a follow-up. (No self-parameter guard needed here, unlike the
+        // scalac plugin: scalap doesn't model self parameters — see `kind`.)
+        if (sym.isSynthetic) flip(p.SYNTHETIC)
         if (sym.isAbstractOverride) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)

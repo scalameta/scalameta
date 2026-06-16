@@ -62,9 +62,6 @@ trait SymbolInformationOps {
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
       def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
-      // NOTE: self parameters carry the synthetic flag even when written in source
-      // (e.g. `self =>`), and the spec grants them no properties, so exclude them.
-      if (!gsym.isSelfParameter && gsym.isSynthetic) flip(p.SYNTHETIC)
       if (gsym.hasFlag(gf.JAVA)) {
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
@@ -78,6 +75,11 @@ trait SymbolInformationOps {
         if (gsym.hasFlag(gf.STATIC) && !gsym.hasFlag(gf.INTERFACE)) flip(p.STATIC)
         if (gsym.isDefaultMethod) flip(p.DEFAULT)
       } else {
+        // SYNTHETIC is emitted for Scala symbols only; marking Java synthetics
+        // (e.g. enum values/valueOf) is deferred to a follow-up. Self parameters carry
+        // the synthetic flag even when written in source (`self =>`), but the spec
+        // grants them no properties, so exclude them.
+        if (!gsym.isSelfParameter && gsym.isSynthetic) flip(p.SYNTHETIC)
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)
