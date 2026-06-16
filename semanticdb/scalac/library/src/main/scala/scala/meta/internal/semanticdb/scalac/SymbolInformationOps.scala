@@ -61,7 +61,6 @@ trait SymbolInformationOps {
         !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
-      def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
       if (gsym.hasFlag(gf.JAVA)) {
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
@@ -87,7 +86,7 @@ trait SymbolInformationOps {
           if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
           if (gsym.hasFlag(gf.OVERRIDE)) flip(p.OVERRIDE)
         }
-        if (gsym.hasFlag(gf.FINAL) || isObject) flip(p.FINAL)
+        if (gsym.hasFlag(gf.FINAL) || gsym.isModule) flip(p.FINAL)
         if (gsym.hasFlag(gf.SEALED)) flip(p.SEALED)
         if (gsym.hasFlag(gf.IMPLICIT)) flip(p.IMPLICIT)
         if (gsym.hasFlag(gf.LAZY)) flip(p.LAZY)
