@@ -49,13 +49,13 @@ trait SymbolInformationOps {
     }
 
     private[meta] def properties: Int = {
+      if (sym.isPackage) return 0
       var flags = 0
       def flip(sprop: s.SymbolInformation.Property) = flags |= sprop.value
       def isAbstractClass = sym.isClass && sym.isAbstract && !sym.isTrait
       def isAbstractMethod = sym.isMethod && sym.isDeferred
       def isAbstractType = sym.isType && !sym.isParam && sym.isDeferred
-      if (sym.isPackage) ()
-      else if (sym.isJava) {
+      if (sym.isJava) {
         if (sym.isAbstractOverride) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)
@@ -69,6 +69,10 @@ trait SymbolInformationOps {
         // if (sym.isJavaEnum) flip(p.ENUM)
         if (sym.isStatic) flip(p.STATIC)
       } else {
+        // SYNTHETIC is emitted for Scala symbols only; marking Java synthetics is
+        // deferred to a follow-up. (No self-parameter guard needed here, unlike the
+        // scalac plugin: scalap doesn't model self parameters — see `kind`.)
+        if (sym.isSynthetic) flip(p.SYNTHETIC)
         if (sym.isAbstractOverride) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)

@@ -38,6 +38,7 @@ trait SymbolInformationPrinter extends BasePrinter {
       notes.visit(info)
       rep(info.annotations, " ", " ")(pprint)
       pprint(info.access)
+      if (info.isSynthetic) out.print("synthetic ")
       if (info.isAbstract) out.print("abstract ")
       if (info.isFinal) out.print("final ")
       if (info.isSealed) out.print("sealed ")

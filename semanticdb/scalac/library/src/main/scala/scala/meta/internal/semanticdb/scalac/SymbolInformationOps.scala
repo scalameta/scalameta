@@ -53,6 +53,7 @@ trait SymbolInformationOps {
     }
 
     private[meta] def properties: Int = {
+      if (gsym.hasFlag(gf.PACKAGE)) return 0
       val kind = this.kind
       var flags = 0
       def flip(prop: s.SymbolInformation.Property): Unit = flags |= prop.value
@@ -60,9 +61,7 @@ trait SymbolInformationOps {
         !gsym.hasFlag(gf.JAVA_ENUM)
       def isAbstractMethod = gsym.isMethod && gsym.isDeferred
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
-      def isObject = gsym.isModule && !gsym.hasFlag(gf.PACKAGE)
-      if (gsym.hasFlag(gf.PACKAGE)) ()
-      else if (gsym.hasFlag(gf.JAVA)) {
+      if (gsym.hasFlag(gf.JAVA)) {
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)
@@ -75,6 +74,11 @@ trait SymbolInformationOps {
         if (gsym.hasFlag(gf.STATIC) && !gsym.hasFlag(gf.INTERFACE)) flip(p.STATIC)
         if (gsym.isDefaultMethod) flip(p.DEFAULT)
       } else {
+        // SYNTHETIC is emitted for Scala symbols only; marking Java synthetics
+        // (e.g. enum values/valueOf) is deferred to a follow-up. Self parameters carry
+        // the synthetic flag even when written in source (`self =>`), but the spec
+        // grants them no properties, so exclude them.
+        if (!gsym.isSelfParameter && gsym.isSynthetic) flip(p.SYNTHETIC)
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
           flip(p.ABSTRACT)
           flip(p.OVERRIDE)
@@ -82,7 +86,7 @@ trait SymbolInformationOps {
           if (isAbstractClass || isAbstractMethod || isAbstractType) flip(p.ABSTRACT)
           if (gsym.hasFlag(gf.OVERRIDE)) flip(p.OVERRIDE)
         }
-        if (gsym.hasFlag(gf.FINAL) || isObject) flip(p.FINAL)
+        if (gsym.hasFlag(gf.FINAL) || gsym.isModule) flip(p.FINAL)
         if (gsym.hasFlag(gf.SEALED)) flip(p.SEALED)
         if (gsym.hasFlag(gf.IMPLICIT)) flip(p.IMPLICIT)
         if (gsym.hasFlag(gf.LAZY)) flip(p.LAZY)
