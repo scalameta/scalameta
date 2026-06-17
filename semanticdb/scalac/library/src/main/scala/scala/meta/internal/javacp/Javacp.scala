@@ -38,12 +38,14 @@ object Javacp {
         displayName: String,
         sig: s.Signature,
         access: Int,
+        synthetic: Boolean = false,
     ): s.SymbolInformation = {
+      val syntheticBit = if (synthetic) s.SymbolInformation.Property.SYNTHETIC.value else 0
       val info = s.SymbolInformation(
         symbol = symbol,
         language = l.JAVA,
         kind = kind,
-        properties = sproperties(access, node),
+        properties = sproperties(access, node) | syntheticBit,
         displayName = displayName,
         signature = sig,
         annotations = sannotations(access),
@@ -212,8 +214,22 @@ object Javacp {
           returnType = returnType,
         )
 
-        val methodInfo =
-          addInfo(methodSymbol, methodKind, methodDisplayName, methodSig, method.node.access)
+        // The JLS-mandated enum methods `values`/`valueOf` are compiler-synthesized (not in
+        // source) yet are not flagged ACC_SYNTHETIC in bytecode. Match them by name AND exact
+        // generated descriptor so an unrelated overload (e.g. `valueOf(int)`) isn't misclassified.
+        val isSyntheticEnumMethod = isEnum &&
+          (method.node.name == "values" && method.node.desc == s"()[L${node.name};" ||
+            method.node.name ==
+            "valueOf" && method.node.desc == s"(Ljava/lang/String;)L${node.name};")
+
+        val methodInfo = addInfo(
+          methodSymbol,
+          methodKind,
+          methodDisplayName,
+          methodSig,
+          method.node.access,
+          isSyntheticEnumMethod,
+        )
 
         decls += methodInfo.symbol
     }

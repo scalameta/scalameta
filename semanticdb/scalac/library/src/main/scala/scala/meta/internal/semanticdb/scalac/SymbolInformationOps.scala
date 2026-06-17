@@ -74,9 +74,9 @@ trait SymbolInformationOps {
         if (gsym.hasFlag(gf.STATIC) && !gsym.hasFlag(gf.INTERFACE)) flip(p.STATIC)
         if (gsym.isDefaultMethod) flip(p.DEFAULT)
       } else {
-        // SYNTHETIC is emitted for Scala symbols only; marking Java synthetics
-        // (e.g. enum values/valueOf) is deferred to a follow-up. Self parameters carry
-        // the synthetic flag even when written in source (`self =>`), but the spec
+        // SYNTHETIC is emitted for Scala symbols only here; Java enum values/valueOf are
+        // marked in javacp (metac emits no SymbolInformation for them). Self parameters
+        // carry the synthetic flag even when written in source (`self =>`), but the spec
         // grants them no properties, so exclude them.
         if (!gsym.isSelfParameter && gsym.isSynthetic) flip(p.SYNTHETIC)
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
