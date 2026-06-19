@@ -6,6 +6,7 @@ import scala.meta.internal.semanticdb._
 
 import scala.annotation.tailrec
 import scala.collection.mutable
+import scala.reflect.ClassTag
 
 trait SymbolTable {
 
@@ -165,33 +166,28 @@ trait SymbolTable {
       env: Map[String, String],
   ): Map[String, String] =
     if (args.isEmpty) Map.empty
-    else info(owner).map(_.signature) match {
-      case Some(c: ClassSignature) => c.typeParameters.symbols.iterator.zip(args.iterator)
-          .flatMap { case (param, arg) => headSymbol(arg, env).map(param -> _) }.toMap
-      case _ => Map.empty
-    }
+    else owner.signature[ClassSignature].map(c =>
+      c.typeParameters.symbols.iterator.zip(args.iterator).flatMap { case (param, arg) =>
+        headSymbol(arg, env).map(param -> _)
+      }.toMap,
+    ).getOrElse(Map.empty)
 
-  private def membersNamed(owner: String, name: String): List[String] =
-    info(owner).map(_.signature) match {
-      case Some(c: ClassSignature) => c.declarations.symbols.filter(_.desc match {
-          case d.Method(`name`, _) => true
-          case _ => false
-        })
-      case _ => Nil
-    }
+  private def membersNamed(owner: String, name: String): List[String] = owner
+    .signature[ClassSignature].map(_.declarations.symbols.filter(_.desc match {
+      case d.Method(`name`, _) => true
+      case _ => false
+    })).getOrElse(Nil)
 
   // The erased parameter-type symbols of `method` under substitution `env`, or None when it is not a
   // resolvable method or a parameter type can't be reduced (so callers don't merge what they can't
   // compare).
   private def erasedSignature(method: String, env: Map[String, String]): Option[List[String]] =
-    info(method).map(_.signature) match {
-      case Some(m: MethodSignature) =>
-        val types = m.parameterLists.iterator.flatMap(paramInfos).map(_.signature match {
-          case v: ValueSignature => headSymbol(v.tpe, env)
-          case _ => None
-        }).toList
-        if (types.forall(_.isDefined)) Some(types.flatten) else None
-      case _ => None
+    method.signature[MethodSignature].flatMap { m =>
+      val types = m.parameterLists.iterator.flatMap(paramInfos).map(_.signature match {
+        case v: ValueSignature => headSymbol(v.tpe, env)
+        case _ => None
+      }).toList
+      if (types.forall(_.isDefined)) Some(types.flatten) else None
     }
 
   private def paramInfos(scope: Scope): Iterator[SymbolInformation] =
@@ -207,14 +203,21 @@ trait SymbolTable {
     @tailrec
     def resolve(sym: String): String = env.get(sym) match {
       case Some(bound) => bound
-      case None =>
-        info(sym).map(_.signature).collect { case x: TypeSignature => head(x.upperBound) }
-          .flatten match {
+      case None => sym.signature[TypeSignature].flatMap(x => head(x.upperBound)) match {
           case Some(next) if seen.add(next) => resolve(next)
           case _ => sym
         }
     }
     head(tpe).map(resolve)
+  }
+
+  implicit class XtensionOptionSymbolInformation(private val obj: Option[SymbolInformation]) {
+    def signature[T <: Signature](implicit classTag: ClassTag[T]): Option[T] = obj.map(_.signature)
+      .flatMap(classTag.unapply)
+  }
+
+  implicit class XtensionSymbol(private val symbol: String) {
+    def signature[T <: Signature: ClassTag]: Option[T] = info(symbol).signature[T]
   }
 
 }
