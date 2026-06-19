@@ -199,14 +199,17 @@ trait SymbolTable {
   private def headSymbol(tpe: Type, env: Map[String, String]): Option[String] = {
     // resolve a type parameter through `env` (substitution), else follow its alias/upper bound;
     // `seen` guards against alias/type-parameter cycles.
+    val seen = mutable.Set.empty[String]
     @tailrec
-    def resolve(sym: String, seen: Set[String]): String = env.get(sym) match {
+    def resolve(sym: String): String = env.get(sym) match {
       case Some(bound) => bound
       case None => info(sym).map(_.signature) match {
-          case Some(ts: TypeSignature) => firstSymbol(typeSymbols(ts.upperBound)) match {
-              case Some(next) if !seen(next) => resolve(next, seen + next)
-              case _ => sym
-            }
+          case Some(ts: TypeSignature) =>
+            val bounds = typeSymbols(ts.upperBound)
+            if (bounds.hasNext) {
+              val next = bounds.next()
+              if (seen.add(next)) resolve(next) else sym
+            } else sym
           case _ => sym
         }
     }
@@ -214,13 +217,11 @@ trait SymbolTable {
     def head(t: Type): Option[String] = t match {
       case ByNameType(u) => head(u)
       case RepeatedType(u) => head(u)
-      case _ => firstSymbol(typeSymbols(t))
+      case _ =>
+        val symbols = typeSymbols(t)
+        if (symbols.hasNext) Some(resolve(symbols.next())) else None
     }
-    head(tpe).map(resolve(_, Set.empty))
+    head(tpe)
   }
-
-  // Iterator has no cross-version `headOption`/`nextOption` (the latter is 2.13-only)
-  private def firstSymbol(symbols: Iterator[String]): Option[String] =
-    if (symbols.hasNext) Some(symbols.next()) else None
 
 }
