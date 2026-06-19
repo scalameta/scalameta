@@ -129,6 +129,8 @@ trait SymbolTable {
     case AnnotatedType(_, t) => typeRefs(t)
     case ExistentialType(t, _) => typeRefs(t)
     case UniversalType(_, t) => typeRefs(t)
+    case ByNameType(t) => typeRefs(t)
+    case RepeatedType(t) => typeRefs(t)
     case _ => Iterator.empty
   }
 
@@ -201,23 +203,18 @@ trait SymbolTable {
     // resolve a type parameter through `env` (substitution), else follow its alias/upper bound;
     // `seen` guards against alias/type-parameter cycles.
     val seen = mutable.Set.empty[String]
+    def head(t: Type): Option[String] = typeSymbols(t).nextOption()
     @tailrec
     def resolve(sym: String): String = env.get(sym) match {
       case Some(bound) => bound
-      case None => info(sym).map(_.signature).collect { case ts: TypeSignature =>
-          typeSymbols(ts.upperBound).nextOption()
-        }.flatten match {
+      case None =>
+        info(sym).map(_.signature).collect { case x: TypeSignature => head(x.upperBound) }
+          .flatten match {
           case Some(next) if seen.add(next) => resolve(next)
           case _ => sym
         }
     }
-    @tailrec
-    def head(t: Type): Option[String] = t match {
-      case ByNameType(u) => head(u)
-      case RepeatedType(u) => head(u)
-      case _ => typeSymbols(t).nextOption().map(resolve)
-    }
-    head(tpe)
+    head(tpe).map(resolve)
   }
 
 }
