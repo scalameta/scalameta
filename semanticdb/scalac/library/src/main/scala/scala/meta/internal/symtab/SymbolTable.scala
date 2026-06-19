@@ -1,5 +1,6 @@
 package scala.meta.internal.symtab
 
+import org.scalameta.collections.Conversions._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, _}
 import scala.meta.internal.semanticdb._
 
@@ -203,13 +204,10 @@ trait SymbolTable {
     @tailrec
     def resolve(sym: String): String = env.get(sym) match {
       case Some(bound) => bound
-      case None => info(sym).map(_.signature) match {
-          case Some(ts: TypeSignature) =>
-            val bounds = typeSymbols(ts.upperBound)
-            if (bounds.hasNext) {
-              val next = bounds.next()
-              if (seen.add(next)) resolve(next) else sym
-            } else sym
+      case None => info(sym).map(_.signature).collect { case ts: TypeSignature =>
+          typeSymbols(ts.upperBound).nextOption()
+        }.flatten match {
+          case Some(next) if seen.add(next) => resolve(next)
           case _ => sym
         }
     }
@@ -217,9 +215,7 @@ trait SymbolTable {
     def head(t: Type): Option[String] = t match {
       case ByNameType(u) => head(u)
       case RepeatedType(u) => head(u)
-      case _ =>
-        val symbols = typeSymbols(t)
-        if (symbols.hasNext) Some(resolve(symbols.next())) else None
+      case _ => typeSymbols(t).nextOption().map(resolve)
     }
     head(tpe)
   }
