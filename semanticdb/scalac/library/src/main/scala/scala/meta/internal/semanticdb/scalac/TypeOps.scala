@@ -17,22 +17,21 @@ trait TypeOps {
       // RepeatedType as a type argument. Scoped to `RepeatedParamClass`: a Java repeated
       // (`JavaRepeatedParamClass`, which would widen to `Array[T]`, not `Seq[T]`) only ever occurs
       // in parameter position, so it never reaches here. See scalameta/scalameta#1497.
-      def widenRepeated(garg: g.Type, stpe: s.Type): s.Type = stpe match {
-        case s.RepeatedType(elem) if garg.typeSymbol == g.definitions.RepeatedParamClass =>
-          s.TypeRef(s.NoType, "scala/package.Seq#", elem :: Nil)
-        case other => other
+      def widenRepeated(gtpe: g.Type): s.Type = gtpe match {
+        case RepeatedType(elem, true) => s.TypeRef(s.NoType, "scala/package.Seq#", loop(elem) :: Nil)
+        case _ => loop(gtpe)
       }
       def loop(gtpe: g.Type): s.Type = gtpe match {
         case ByNameType(gtpe) =>
           val stpe = loop(gtpe)
           s.ByNameType(stpe)
-        case RepeatedType(gtpe) =>
+        case RepeatedType(gtpe, _) =>
           val stpe = loop(gtpe)
           s.RepeatedType(stpe)
         case g.TypeRef(gpre, gsym, gargs) =>
           val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gpre)
           val ssym = gsym.ssym
-          val sargs = gargs.map(garg => widenRepeated(garg, loop(garg)))
+          val sargs = gargs.map(widenRepeated)
           s.TypeRef(spre, ssym, sargs)
         case g.SingleType(gpre, gsym) =>
           val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gpre)
@@ -160,9 +159,9 @@ trait TypeOps {
   }
 
   object RepeatedType {
-    def unapply(gtpe: g.Type): Option[g.Type] = gtpe match {
-      case g.TypeRef(_, g.definitions.RepeatedParamClass, garg :: Nil) => Some(garg)
-      case g.TypeRef(_, g.definitions.JavaRepeatedParamClass, garg :: Nil) => Some(garg)
+    def unapply(gtpe: g.Type): Option[(g.Type, Boolean)] = gtpe match {
+      case g.TypeRef(_, g.definitions.RepeatedParamClass, garg :: Nil) => Some(garg -> true)
+      case g.TypeRef(_, g.definitions.JavaRepeatedParamClass, garg :: Nil) => Some(garg -> false)
       case _ => None
     }
   }

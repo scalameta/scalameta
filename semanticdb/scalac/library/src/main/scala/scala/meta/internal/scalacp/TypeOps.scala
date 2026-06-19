@@ -18,9 +18,9 @@ trait TypeOps {
       // RepeatedType as a type argument. The RepeatedType extractor below matches only the Scala
       // `<repeated>` marker (Java varargs in classfiles are read by Javacp, not scalacp), so this
       // only ever widens a Scala repeated -> `Seq[T]`. See scalameta/scalameta#1497.
-      def widenRepeated(stpe: s.Type): s.Type = stpe match {
-        case s.RepeatedType(elem) => s.TypeRef(s.NoType, "scala/package.Seq#", elem :: Nil)
-        case other => other
+      def widenRepeated(tpe: Type): s.Type = tpe match {
+        case RepeatedType(elem) => s.TypeRef(s.NoType, "scala/package.Seq#", loop(elem) :: Nil)
+        case _ => loop(tpe)
       }
       def loop(tpe: Type): s.Type = tpe match {
         case ByNameType(tpe) =>
@@ -32,7 +32,7 @@ trait TypeOps {
         case TypeRefType(pre, sym, args) =>
           val spre = if (tpe.hasTrivialPrefix) s.NoType else loop(pre)
           val ssym = sym.ssym
-          val sargs = args.map(t => widenRepeated(loop(t)))
+          val sargs = args.map(widenRepeated)
           s.TypeRef(spre, ssym, sargs)
         case SingleType(pre, sym) =>
           val spre = if (tpe.hasTrivialPrefix) s.NoType else loop(pre)
