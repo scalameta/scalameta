@@ -96,7 +96,10 @@ class DescriptorSuite extends FunSuite {
   checkToString(Descriptor.Term("a b"), "`a b`.")
   checkToString(Descriptor.Term("+"), "`+`.")
   checkToString(Descriptor.Type(""), "``#")
+  checkToString(Descriptor.Type("::"), "`::`#")
   checkToString(Descriptor.Method("<init>", "()"), "`<init>`().")
+  checkToString(Descriptor.Method("???", "()"), "`???`().")
+  checkToString(Descriptor.Method("value_=", "()"), "`value_=`().")
   checkToString(Descriptor.Term("a;b"), "`a;b`.")
 
   // Names.encode: "" -> ``; valid Java identifiers pass through (including $-led names); anything with
@@ -106,8 +109,14 @@ class DescriptorSuite extends FunSuite {
   checkEncode("Foo123", "Foo123")
   checkEncode("foo_bar", "foo_bar")
   checkEncode("$anonfun", "$anonfun")
+  // A compiler-encoded name is itself a valid Java identifier, so encode leaves it
+  // untouched — which is why producers must decode (e.g. $qmark$qmark$qmark -> ???)
+  // before encoding. See the "Symbol name" rule in docs/semanticdb/specification.md.
+  checkEncode("$qmark$qmark$qmark", "$qmark$qmark$qmark")
   checkEncode("a b", "`a b`")
   checkEncode("+", "`+`")
+  checkEncode("???", "`???`")
+  checkEncode("value_=", "`value_=`")
   checkEncode("1abc", "`1abc`")
   checkEncode("<init>", "`<init>`")
   checkEncode("a;b", "`a;b`")
