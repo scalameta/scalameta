@@ -35,4 +35,20 @@ abstract class JavacpSuiteBase extends FunSuite {
     expected = false,
   )
 
+  // #1492: detection matches the JLS-mandated *signature*, not just the name — a same-named user
+  // overload with a different signature must NOT be synthetic. (Fixture: EnumOverloads, which adds
+  // `valueOf(int)` and `values(String)` overloads alongside the generated `valueOf(String)`/`values()`.)
+  checkSynthetic("enum valueOf(String) is synthetic", "com/javacp/EnumOverloads#valueOf().", true)
+  checkSynthetic("enum values() is synthetic", "com/javacp/EnumOverloads#values().", true)
+  checkSynthetic(
+    "valueOf(int) overload not synthetic",
+    "com/javacp/EnumOverloads#valueOf(+1).",
+    false,
+  )
+  checkSynthetic(
+    "values(String) overload not synthetic",
+    "com/javacp/EnumOverloads#values(+1).",
+    false,
+  )
+
 }
