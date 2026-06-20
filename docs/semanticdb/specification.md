@@ -3489,12 +3489,14 @@ Notes:
   - Enum fields have kind `FIELD`, properties `FINAL`, `STATIC` and `ENUM`, are
     named after the corresponding enum constants, have the type of the enum
     declaration and `PublicAccess` access.
-  - `valueOf` has kind `METHOD`, property `STATIC`, have a method type that goes
-    from a `<String>` parameter to the enum declaration and `PublicAccess`
-    access.
-  - `values` has kind `METHOD`, property `STATIC`, have a method type that goes
-    from an empty parameter list to an array of the enum declaration and
+  - `valueOf` has kind `METHOD`, properties `STATIC` and `SYNTHETIC` (it is
+    compiler-synthesized per JLS and does not appear in source code), have a
+    method type that goes from a `<String>` parameter to the enum declaration and
     `PublicAccess` access.
+  - `values` has kind `METHOD`, properties `STATIC` and `SYNTHETIC` (it is
+    compiler-synthesized per JLS and does not appear in source code), have a
+    method type that goes from an empty parameter list to an array of the enum
+    declaration and `PublicAccess` access.
 - Enum declarations support [all Java access modifiers](#java-access).
 
 **Interface declarations** [\[77\]][77] are represented by a single symbol like
