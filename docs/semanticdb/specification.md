@@ -1312,9 +1312,11 @@ created for which Scala definitions, what their metadata is, etc). See
 - For package object, `package`.
 - For constructor, `<init>`.
 - For anonymous definition, implementation-dependent name.
-- For other definition, the name of the binding introduced by the definition
-  [\[70\]][70]. If the name is not a Java identifier [\[22\]][22], it is wrapped
-  in backticks.
+- For other definition, the decoded source-level name of the binding introduced
+  by the definition [\[70\]][70]. Any compiler- or backend-encoded name must
+  first be decoded — for example, `$qmark$qmark$qmark` is decoded to `???`. If
+  the resulting name is not a Java identifier [\[22\]][22], it is wrapped in
+  backticks.
 
 For example, this is how some of the definitions from the Scala standard library
 must be modelled:
@@ -1326,6 +1328,12 @@ must be modelled:
 - The `T` type parameter of that method: `scala/Predef.implicitly().[T]`
 - The `def contains[A: Ordering](tree: Tree[A, _], x: A): Boolean` method:
   `scala/collection/immutable/RedBlackTree#contains().`
+- The `def ???: Nothing` method: ``scala/Predef.`???`().``
+- The `def ==(that: Any): Boolean` method: ``scala/Any#`==`().``
+- The `::` class: ``scala/collection/immutable/`::`#``
+
+Because `???`, `==`, and `::` are not Java identifiers, their symbol names are
+wrapped in backticks per the rule above.
 
 <a name="scala-type"></a>
 
