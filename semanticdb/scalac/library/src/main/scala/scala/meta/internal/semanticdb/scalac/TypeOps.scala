@@ -10,17 +10,28 @@ trait TypeOps {
   self: SemanticdbOps =>
   implicit class XtensionGTypeSType(gtpe: g.Type) {
     def toSemanticTpe: s.Type = {
+      // A repeated type (`T*`) is only valid in parameter position; scalac widens a Scala repeated
+      // to `scala.Seq[T]` everywhere else (e.g. the synthetic `unapplySeq` return), but leaves it
+      // un-widened in some pickled positions such as a case class's synthetic
+      // `AbstractFunction1[T*, C]` parent. Widen any nested Scala repeated so we never emit a
+      // RepeatedType as a type argument. Scoped to `RepeatedParamClass`: a Java repeated
+      // (`JavaRepeatedParamClass`, which would widen to `Array[T]`, not `Seq[T]`) only ever occurs
+      // in parameter position, so it never reaches here. See scalameta/scalameta#1497.
+      def widenRepeated(gtpe: g.Type): s.Type = gtpe match {
+        case RepeatedType(elem, true) => s.TypeRef(s.NoType, "scala/package.Seq#", loop(elem) :: Nil)
+        case _ => loop(gtpe)
+      }
       def loop(gtpe: g.Type): s.Type = gtpe match {
         case ByNameType(gtpe) =>
           val stpe = loop(gtpe)
           s.ByNameType(stpe)
-        case RepeatedType(gtpe) =>
+        case RepeatedType(gtpe, _) =>
           val stpe = loop(gtpe)
           s.RepeatedType(stpe)
         case g.TypeRef(gpre, gsym, gargs) =>
           val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gpre)
           val ssym = gsym.ssym
-          val sargs = gargs.map(loop)
+          val sargs = gargs.map(widenRepeated)
           s.TypeRef(spre, ssym, sargs)
         case g.SingleType(gpre, gsym) =>
           val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gpre)
@@ -148,9 +159,9 @@ trait TypeOps {
   }
 
   object RepeatedType {
-    def unapply(gtpe: g.Type): Option[g.Type] = gtpe match {
-      case g.TypeRef(_, g.definitions.RepeatedParamClass, garg :: Nil) => Some(garg)
-      case g.TypeRef(_, g.definitions.JavaRepeatedParamClass, garg :: Nil) => Some(garg)
+    def unapply(gtpe: g.Type): Option[(g.Type, Boolean)] = gtpe match {
+      case g.TypeRef(_, g.definitions.RepeatedParamClass, garg :: Nil) => Some(garg -> true)
+      case g.TypeRef(_, g.definitions.JavaRepeatedParamClass, garg :: Nil) => Some(garg -> false)
       case _ => None
     }
   }

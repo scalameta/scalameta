@@ -11,6 +11,17 @@ trait TypeOps {
   self: Scalacp =>
   implicit class XtensionTypeSType(tpe: Type) {
     def toSemanticTpe: s.Type = {
+      // A repeated type (`T*`) is only valid in parameter position; scalac widens it to
+      // `scala.Seq[T]` everywhere else (e.g. the synthetic `unapplySeq` return), but leaves it
+      // un-widened in some pickled positions such as a case class's synthetic
+      // `AbstractFunction1[T*, C]` parent. Widen any nested repeated so we never emit a
+      // RepeatedType as a type argument. The RepeatedType extractor below matches only the Scala
+      // `<repeated>` marker (Java varargs in classfiles are read by Javacp, not scalacp), so this
+      // only ever widens a Scala repeated -> `Seq[T]`. See scalameta/scalameta#1497.
+      def widenRepeated(tpe: Type): s.Type = tpe match {
+        case RepeatedType(elem) => s.TypeRef(s.NoType, "scala/package.Seq#", loop(elem) :: Nil)
+        case _ => loop(tpe)
+      }
       def loop(tpe: Type): s.Type = tpe match {
         case ByNameType(tpe) =>
           val stpe = loop(tpe)
@@ -21,7 +32,7 @@ trait TypeOps {
         case TypeRefType(pre, sym, args) =>
           val spre = if (tpe.hasTrivialPrefix) s.NoType else loop(pre)
           val ssym = sym.ssym
-          val sargs = args.map(loop)
+          val sargs = args.map(widenRepeated)
           s.TypeRef(spre, ssym, sargs)
         case SingleType(pre, sym) =>
           val spre = if (tpe.hasTrivialPrefix) s.NoType else loop(pre)
