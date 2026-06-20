@@ -217,7 +217,7 @@ object Javacp {
         // The JLS-mandated enum methods `values`/`valueOf` are compiler-synthesized (not in
         // source) yet are not flagged ACC_SYNTHETIC in bytecode. Match them by name AND exact
         // generated signature so an unrelated overload (e.g. `valueOf(int)`) isn't misclassified.
-        val enumType = ClassTypeSignature.simple(node.name)
+        def enumType = ClassTypeSignature.simple(node.name)
         val isSyntheticEnumMethod = isEnum &&
           (methodDisplayName match {
             case "values" => method.signature.params.isEmpty &&
