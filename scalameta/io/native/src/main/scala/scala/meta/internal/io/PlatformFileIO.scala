@@ -50,6 +50,8 @@ object PlatformFileIO {
 
   def isDirectory(path: AbsolutePath): Boolean = Files.isDirectory(path.toNIO)
 
+  def exists(path: AbsolutePath): Boolean = Files.exists(path.toNIO)
+
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     // NOTE: Some Java stream APIs aren't yet available in Scala Native,
     // so I had to steal the Scala.js implementation from js/.

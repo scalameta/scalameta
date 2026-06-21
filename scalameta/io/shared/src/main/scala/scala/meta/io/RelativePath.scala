@@ -27,6 +27,18 @@ sealed abstract case class RelativePath(toNIO: Path) {
   def resolve(path: String): RelativePath = resolve(Paths.get(path))
   def resolveSibling(f: String => String): RelativePath =
     RelativePath(toNIO.resolveSibling(f(toNIO.getFileName.toString)))
+
+  /** The parent directory, or None if there is no parent segment. */
+  def parentOpt: Option[RelativePath] = Option(toNIO.getParent).map(p => RelativePath(p))
+
+  /** The parent directory, or the empty relative path if there is no parent segment. */
+  def parent: RelativePath = parentOpt.getOrElse(RelativePath(""))
+
+  /** The last path segment, or "" if the path is empty. */
+  def fileName: String = {
+    val name = toNIO.getFileName
+    if (name == null) "" else name.toString
+  }
 }
 
 object RelativePath {

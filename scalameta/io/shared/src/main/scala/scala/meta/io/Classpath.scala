@@ -7,6 +7,9 @@ final case class Classpath(entries: List[AbsolutePath]) {
 
   def ++(other: Classpath): Classpath = Classpath(entries ++ other.entries)
 
+  /** Keep only the entries matching the predicate. */
+  def filter(f: AbsolutePath => Boolean): Classpath = Classpath(entries.filter(f))
+
   @deprecated("Use .entries instead", "4.0.0")
   private[meta] def shallow: List[AbsolutePath] = entries
 

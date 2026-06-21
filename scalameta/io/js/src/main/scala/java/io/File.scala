@@ -23,7 +23,9 @@ class File(path: String) {
   def isAbsolute: Boolean = toPath.isAbsolute
   def getAbsoluteFile: File = toPath.toAbsolutePath.toFile
   def getAbsolutePath: String = getAbsoluteFile.toString
-  def getParentFile: File = toPath.getParent.toFile
+  // java.io.File.getParentFile returns null when there is no parent; mirror that now that
+  // NodeNIOPath.getParent can return null.
+  def getParentFile: File = Option(toPath.getParent).map(_.toFile).orNull
   def mkdirs(): Unit =
     throw new UnsupportedOperationException("mkdirs() is not supported in Scala.js")
   def getPath: String = path

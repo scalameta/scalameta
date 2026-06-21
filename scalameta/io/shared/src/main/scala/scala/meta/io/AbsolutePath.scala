@@ -41,6 +41,21 @@ sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   def isFile: Boolean = FileIO.isFile(this)
   def isDirectory: Boolean = FileIO.isDirectory(this)
   def readAllBytes: Array[Byte] = FileIO.readAllBytes(this)
+
+  /** True if a file or directory exists at this path. */
+  def exists: Boolean = FileIO.exists(this)
+
+  /** The parent directory, or None if this is a filesystem root. */
+  def parentOpt: Option[AbsolutePath] = Option(toNIO.getParent).map(p => new AbsolutePath(p) {})
+
+  /** The parent directory, or this path unchanged if it is a filesystem root. */
+  def parent: AbsolutePath = parentOpt.getOrElse(this)
+
+  /** The last path segment, or "" if this is a filesystem root. */
+  def fileName: String = {
+    val name = toNIO.getFileName
+    if (name == null) "" else name.toString
+  }
 }
 
 object AbsolutePath {
