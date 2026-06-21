@@ -1111,6 +1111,45 @@ com/javacp/Coin#values(). => synthetic static method values(): Array[Coin]
   Array => scala/Array#
   Coin => com/javacp/Coin#
 
+com/javacp/EnumOverloads.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/EnumOverloads.class
+Text => empty
+Language => Java
+Symbols => 10 entries
+
+Symbols:
+com/javacp/EnumOverloads# => final enum class EnumOverloads extends Enum[EnumOverloads] { +6 decls }
+  Enum => java/lang/Enum#
+  EnumOverloads => com/javacp/EnumOverloads#
+com/javacp/EnumOverloads#ONE. => final static enum field ONE: EnumOverloads
+  EnumOverloads => com/javacp/EnumOverloads#
+com/javacp/EnumOverloads#`<init>`(). => private ctor <init>()
+com/javacp/EnumOverloads#valueOf(). => synthetic static method valueOf(name: String): EnumOverloads
+  name => com/javacp/EnumOverloads#valueOf().(name)
+  String => java/lang/String#
+  EnumOverloads => com/javacp/EnumOverloads#
+com/javacp/EnumOverloads#valueOf().(name) => param name: String
+  String => java/lang/String#
+com/javacp/EnumOverloads#valueOf(+1). => static method valueOf(ordinal: Int): EnumOverloads
+  ordinal => com/javacp/EnumOverloads#valueOf(+1).(ordinal)
+  Int => scala/Int#
+  EnumOverloads => com/javacp/EnumOverloads#
+com/javacp/EnumOverloads#valueOf(+1).(ordinal) => param ordinal: Int
+  Int => scala/Int#
+com/javacp/EnumOverloads#values(). => synthetic static method values(): Array[EnumOverloads]
+  Array => scala/Array#
+  EnumOverloads => com/javacp/EnumOverloads#
+com/javacp/EnumOverloads#values(+1). => static method values(name: String): Int
+  name => com/javacp/EnumOverloads#values(+1).(name)
+  String => java/lang/String#
+  Int => scala/Int#
+com/javacp/EnumOverloads#values(+1).(name) => param name: String
+  String => java/lang/String#
+
 com/javacp/Interface.class
 --------------------------
 
