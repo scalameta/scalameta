@@ -16,7 +16,7 @@ jobs:
           - "communitytest/test"
           - "mima"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up JVM
@@ -45,7 +45,7 @@ jobs:
           - java: '8'
             scala: '3.8.4'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up JVM
@@ -77,7 +77,7 @@ jobs:
           - '2.13.16'
           - '2.13.17'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Set up JVM
@@ -95,7 +95,7 @@ jobs:
     name: Windows tests
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: olafurpg/setup-scala@v14
       - name: Test Parser on Windows using JVM
         run: sbtx testsJVM/test
@@ -110,7 +110,7 @@ jobs:
     name: Scalafmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up JVM
         uses: actions/setup-java@v5
         with:
