@@ -52,10 +52,7 @@ sealed abstract case class AbsolutePath(toNIO: nio.Path) {
   def parent: AbsolutePath = parentOpt.getOrElse(this)
 
   /** The last path segment, or "" if this is a filesystem root. */
-  def fileName: String = {
-    val name = toNIO.getFileName
-    if (name == null) "" else name.toString
-  }
+  def fileName: String = Option(toNIO.getFileName).fold("")(_.toString)
 }
 
 object AbsolutePath {

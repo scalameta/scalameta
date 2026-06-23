@@ -29,16 +29,13 @@ sealed abstract case class RelativePath(toNIO: Path) {
     RelativePath(toNIO.resolveSibling(f(toNIO.getFileName.toString)))
 
   /** The parent directory, or None if there is no parent segment. */
-  def parentOpt: Option[RelativePath] = Option(toNIO.getParent).map(p => RelativePath(p))
+  def parentOpt: Option[RelativePath] = Option(toNIO.getParent).map(RelativePath.apply)
 
   /** The parent directory, or the empty relative path if there is no parent segment. */
   def parent: RelativePath = parentOpt.getOrElse(RelativePath(""))
 
   /** The last path segment, or "" if the path is empty. */
-  def fileName: String = {
-    val name = toNIO.getFileName
-    if (name == null) "" else name.toString
-  }
+  def fileName: String = Option(toNIO.getFileName).fold("")(_.toString)
 }
 
 object RelativePath {

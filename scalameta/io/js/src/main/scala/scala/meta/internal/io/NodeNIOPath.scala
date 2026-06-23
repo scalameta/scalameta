@@ -46,9 +46,11 @@ case class NodeNIOPath(filename: String) extends Path {
   // Follow the java.nio.file.Path contract: null when there is no parent, i.e. no name elements
   // (a filesystem root) or a single relative name element (e.g. "foo"). Node's path.parse instead
   // yields the root or the empty path for those, which would break Option(getParent)-based checks.
-  override def getParent: Path =
-    if (parts.length == 0 || parts.length == 1 && parsed.root.isEmpty) null
-    else NodeNIOPath(parsed.dir)
+  override def getParent: Path = parts.length match {
+    case 0 => null
+    case 1 if parsed.root.isEmpty => null
+    case _ => NodeNIOPath(parsed.dir)
+  }
   override def getFileName: Path = NodeNIOPath(parsed.base)
 
   override def isAbsolute: Boolean = parsed.root.nonEmpty
