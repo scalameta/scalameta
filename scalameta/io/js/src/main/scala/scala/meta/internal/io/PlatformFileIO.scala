@@ -65,6 +65,8 @@ object PlatformFileIO {
 
   def isDirectory(path: AbsolutePath): Boolean = JSIO.isDirectory(path.toString)
 
+  def exists(path: AbsolutePath): Boolean = JSIO.exists(path.toString)
+
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     val builder = List.newBuilder[RelativePath]
     def loop(path: AbsolutePath): Unit =

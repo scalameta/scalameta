@@ -23,6 +23,8 @@ object FileIO {
 
   def isDirectory(path: AbsolutePath): Boolean = PlatformFileIO.isDirectory(path)
 
+  def exists(path: AbsolutePath): Boolean = PlatformFileIO.exists(path)
+
   def listAllFilesRecursively(path: AbsolutePath): ListFiles = PlatformFileIO
     .listAllFilesRecursively(path)
 

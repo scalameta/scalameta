@@ -42,7 +42,11 @@ class NIOPathTest extends FunSuite {
     assertEquals(abs.getFileName.toString, "foo")
     assertEquals(nonNormalizedFile.getFileName.toString, "scalafmt")
   }
-  test(".getParent")(assertEquals(abs.getParent.getFileName.toString, "bar"))
+  test(".getParent") {
+    assertEquals(abs.getParent.getFileName.toString, "bar")
+    assertEquals(Paths.get(rootString).getParent, null) // a filesystem root has no parent
+    assertEquals(file.getParent, null) // a single relative segment has no parent
+  }
   test(".getNameCount") {
     assertEquals(Paths.get(rootString).getNameCount, 0, rootString)
     assertEquals(Paths.get("").getNameCount, 1)

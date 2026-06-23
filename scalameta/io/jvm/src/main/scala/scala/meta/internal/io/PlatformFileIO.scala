@@ -44,6 +44,8 @@ object PlatformFileIO {
 
   def isDirectory(path: AbsolutePath): Boolean = Files.isDirectory(path.toNIO)
 
+  def exists(path: AbsolutePath): Boolean = Files.exists(path.toNIO)
+
   def listAllFilesRecursively(root: AbsolutePath): ListFiles = {
     val relativeFiles = List.newBuilder[RelativePath]
     // FOLLOW_LINKS so a symlink's target attributes are used (symlinked files are listed); note this
