@@ -4353,20 +4353,16 @@ class ControlSyntaxSuite extends BaseDottySuite {
 
   test("#4664 if") {
     val code = "if (a, b) == pair then ???"
-    val error =
-      """|<input>:1: error: `)` expected but `,` found
-         |if (a, b) == pair then ???
-         |     ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "if ((a, b) == pair) ???"
+    val tree = Term.If(tinfix(Term.Tuple(List("a", "b")), "==", "pair"), "???", Lit.Unit(), Nil)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4664 while") {
     val code = "while (a, b) == pair do ???"
-    val error =
-      """|<input>:1: error: `)` expected but `,` found
-         |while (a, b) == pair do ???
-         |        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout = "while ((a, b) == pair) ???"
+    val tree = Term.While(tinfix(Term.Tuple(List("a", "b")), "==", "pair"), "???")
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
