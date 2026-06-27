@@ -891,7 +891,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     makeTupleType(lpPos, body, invalidLiteralUnitType)
   }
 
-  private def inParensOrTupleOrUnitExpr(allowRepeated: Boolean): Term = {
+  private def inParensOrTupleOrUnitExpr(allowRepeated: Boolean = false): Term = {
     val lpPos = currIndex
     val maybeTupleArgs = inParensOnOpenOr(
       commaSeparated(expr(location = PostfixStat, allowRepeated = allowRepeated)),
@@ -1697,13 +1697,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       (cond, None)
     } else {
       val startPos = currIndex
-      val simpleExpr = condExpr()
+      val simpleExpr = inParensOrTupleOrUnitExpr()
       if (acceptIfAfterOptNL[T]) (simpleExpr, None)
       else {
         // let's consider case when something can continue cond or start body
         val argPos = currIndex
         val argsOrInitBody = currToken match {
-          case _: LeftParen => Some(inParensOrTupleOrUnitExpr(allowRepeated = false))
+          case _: LeftParen => Some(inParensOrTupleOrUnitExpr())
           case _: LeftBrace => Some(blockExprOnBrace())
           case _ => None
         }
