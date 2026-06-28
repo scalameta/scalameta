@@ -34,6 +34,13 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
 
   def getOpt(idx: Int): Option[Token] = if (idx >= 0 && idx < length) Some(get(idx)) else None
 
+  /**
+   * Like [[getOpt]] but returns `null` instead of an `Option`, to avoid a `Some` allocation on hot
+   * paths that immediately deconstruct the result (match on the token type, with `case null` for
+   * out-of-range).
+   */
+  private[meta] def getOrNull(idx: Int): Token = if (idx >= 0 && idx < length) get(idx) else null
+
   /** get element in full Tokens relative to start of this slice */
   def getWideOpt(idx: Int): Option[Token] = {
     val wideIdx = start + idx
