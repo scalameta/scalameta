@@ -238,32 +238,39 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
    * current line then a result is a number of whitespace characters counted. Otherwise
    * {{{(-1, -1)}}} is returned.
    *
-   * Returns a tuple2 where:
-   *   - first value is indentation level
-   *   - second is `LF` token index
+   * Returns the indentation level and the `LF` token index packed into a single `Long` (high 32
+   * bits = indentation, low 32 bits = index), to avoid a per-token `Tuple2` allocation on this hot
+   * path. Use [[indentOf]] / [[newlineIndexOf]] to unpack.
    */
-  private[parsers] def countIndentAndNewlineIndex(tokenPosition: Int): (Int, Int) = {
+  private[parsers] def countIndentAndNewlineIndex(tokenPosition: Int): Long = {
     @tailrec
-    def countIndentInternal(pos: Int, acc: Int = 0): (Int, Int) =
-      if (pos < 0) (acc, pos)
+    def countIndentInternal(pos: Int, acc: Int = 0): Long =
+      if (pos < 0) packIndent(acc, pos)
       else {
         val token = tokens(pos)
         token match {
-          case _: AtEOL | _: BOF => (acc, pos)
+          case _: AtEOL | _: BOF => packIndent(acc, pos)
           case c: Comment =>
-            if (AsMultilineComment.isMultiline(c)) (multilineCommentIndent(c), pos)
+            if (AsMultilineComment.isMultiline(c)) packIndent(multilineCommentIndent(c), pos)
             else countIndentInternal(pos - 1)
           case t: HSpace => countIndentInternal(pos - 1, acc + t.len)
-          case _ => (-1, -1)
+          case _ => packIndent(-1, -1)
         }
       }
 
-    if (tokenPosition < 0 || tokens(tokenPosition).is[Whitespace]) (-1, -1)
+    if (tokenPosition < 0 || tokens(tokenPosition).is[Whitespace]) packIndent(-1, -1)
     else countIndentInternal(tokenPosition - 1)
   }
 
+  private def packIndent(indent: Int, newlineIndex: Int): Long = indent.toLong << 32 |
+    newlineIndex.toLong & 0xffffffffL
+  @inline
+  private def indentOf(packed: Long): Int = (packed >> 32).toInt
+  @inline
+  private def newlineIndexOf(packed: Long): Int = packed.toInt
+
   private[parsers] def countIndent(tokenPosition: Int): Int =
-    countIndentAndNewlineIndex(tokenPosition)._1
+    indentOf(countIndentAndNewlineIndex(tokenPosition))
 
   private[parsers] def mkIndentToken(pointPos: Int): Token = {
     val token = tokens(pointPos)
@@ -336,7 +343,15 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     val currNonTrivial = !curr.is[Trivia]
     val nextPos = tokens.indexWhere(!_.is[Trivia], currPos + 1)
     val next = if (nextPos >= 0) tokens(nextPos) else null
-    lazy val (nextIndent, indentPos) = countIndentAndNewlineIndex(nextPos)
+    // Computed eagerly into an immutable `val` (packed into a Long) on purpose:
+    // a `lazy val (nextIndent, indentPos)` tuple pattern is captured by the
+    // nested newline/eof closures below, so its LazyRef/LazyInt holder(s) + the
+    // Tuple2 would be allocated on *every* token advance (a hot path) even when
+    // unused. An eager primitive `val` needs no holder and no boxing when
+    // captured, trading those per-token allocations for a short backward scan.
+    val packedIndent: Long = countIndentAndNewlineIndex(nextPos)
+    def nextIndent: Int = indentOf(packedIndent)
+    def indentPos: Int = newlineIndexOf(packedIndent)
 
     // relax requirement that close delim is on separate line
     def isTrailingComma: Boolean = dialect.allowTrailingCommas && curr.is[Comma] &&
