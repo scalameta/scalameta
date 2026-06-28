@@ -437,25 +437,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             var idx = start - 1
             var pending = 0
             var hadEOL = false
-            while (tokens.getOpt(idx) match {
-                case Some(t: Comment) =>
+            while (tokens.getOrNull(idx) match {
+                case t: Comment =>
                   begBuf.prepend(asComment(t, idx))
                   pending += 1
                   true
-                case Some(endPart: CommentEnd) =>
+                case endPart: CommentEnd =>
                   val endIdx = idx + 1
                   val parts = new ListBuffer[Lit.String]
                   parts.prepend(asString(endPart, idx))
                   while ({
                     idx -= 1
-                    tokens.getOpt(idx) match {
-                      case Some(t: CommentStart) =>
+                    tokens.getOrNull(idx) match {
+                      case t: CommentStart =>
                         parts.prepend(asString(t, idx))
                         false
-                      case Some(t: CommentPart) =>
+                      case t: CommentPart =>
                         parts.prepend(asString(t, idx))
                         true
-                      case Some(t: CommentUnquote) =>
+                      case t: CommentUnquote =>
                         parts.prepend(asString(t, idx))
                         true
                       case _ =>
@@ -466,17 +466,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   begBuf.prepend(asComment(parts.toList, idx, endIdx))
                   pending += 1
                   true
-                case Some(_: AtEOL) => !(hadEOL && pending == 0) && {
+                case _: AtEOL => !(hadEOL && pending == 0) && {
                     hadEOL = true
                     pending = 0
                     true
                   }
-                case Some(_: HSpace) => true
-                case Some(t) =>
+                case _: HSpace => true
+                case null => false
+                case t =>
                   if (t.isAny[Ident, CloseDelim] || body.is[Term.Block] || hadEOL && t.is[Comma])
                     begBuf.remove(0, pending)
                   false
-                case _ => false
               }) idx -= 1
             asComments(begBuf)
           } else if (bodyIsBlock) None // braceless
@@ -489,24 +489,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           else if (tokens(endExcl - 1).end > maxChildEnd) {
             val endBuf = new ListBuffer[Tree.Comment]
             var idx = endExcl
-            while (tokens.getOpt(idx) match {
-                case Some(t: Comment) =>
+            while (tokens.getOrNull(idx) match {
+                case t: Comment =>
                   endBuf.append(asComment(t, idx))
                   true
-                case Some(begPart: CommentStart) =>
+                case begPart: CommentStart =>
                   val begIdx = idx
                   val parts = new ListBuffer[Lit.String]
                   parts.append(asString(begPart, idx))
                   while ({
                     idx += 1
-                    tokens.getOpt(idx) match {
-                      case Some(t: CommentEnd) =>
+                    tokens.getOrNull(idx) match {
+                      case t: CommentEnd =>
                         parts.append(asString(t, idx))
                         false
-                      case Some(t: CommentPart) =>
+                      case t: CommentPart =>
                         parts.append(asString(t, idx))
                         true
-                      case Some(t: CommentUnquote) =>
+                      case t: CommentUnquote =>
                         parts.append(asString(t, idx))
                         true
                       case _ =>
@@ -516,8 +516,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   }) {}
                   endBuf.append(asComment(parts.toList, begIdx, idx + 1))
                   true
-                case Some(_: HSpace) => true
-                case Some(_: Comma) => tokens.findNot(_.is[HTrivia], idx + 1).exists(_.is[AtEOL])
+                case _: HSpace => true
+                case _: Comma => tokens.findNot(_.is[HTrivia], idx + 1).exists(_.is[AtEOL])
                 case _ => false
               }) idx += 1
             asComments(endBuf)
