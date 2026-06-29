@@ -8,6 +8,12 @@ import scala.meta.tokens._
 
 sealed trait Origin extends Optional {
   def position: Position
+  // Start/end character offsets, available without forcing (allocating) `position`
+  // -- consumers that only need offsets (e.g. scalafmt) can avoid the Range alloc.
+  // Default via `position` (cheap for the Position.None singleton); ParsedPartial
+  // overrides to read token offsets directly.
+  def begOffset: Int = position.start
+  def endOffset: Int = position.end
   def dialectOpt: Option[Dialect]
   private[meta] def inputOpt: Option[Input]
   private[meta] def textOpt: Option[String]
@@ -35,12 +41,10 @@ object Origin {
     @inline
     def allInputTokens() = source.tokens
 
-    lazy val position: Position = {
-      val tokens = allInputTokens()
-      val start = tokens(begTokenIdx).start
-      val end = tokens(endTokenIdx - 1).end
-      Position.Range(input, start, end)
-    }
+    override def begOffset: Int = allInputTokens()(begTokenIdx).start
+    override def endOffset: Int = allInputTokens()(endTokenIdx - 1).end
+
+    lazy val position: Position = Position.Range(input, begOffset, endOffset)
 
     def dialectOpt: Option[Dialect] = Some(dialect)
     private[meta] def inputOpt: Option[Input] = Some(input)
