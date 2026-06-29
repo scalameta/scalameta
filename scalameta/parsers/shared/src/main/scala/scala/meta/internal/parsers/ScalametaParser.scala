@@ -424,9 +424,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         var maxChild: Tree = null
         var maxChildEnd = -1
         body.children.foreach { x =>
-          val pos = x.pos
-          val beg = x.begComment.fold(pos)(_.pos).start
-          val end = x.endComment.fold(pos)(_.pos).end
+          // use start/end offsets directly instead of forcing x.pos, which would
+          // allocate a Position.Range per child just to read these two ints
+          val beg = x.begComment.getOrElse(x).begOffset
+          val end = x.endComment.getOrElse(x).endOffset
           if (beg < end) {
             if (beg < minChildBeg) {
               minChild = x

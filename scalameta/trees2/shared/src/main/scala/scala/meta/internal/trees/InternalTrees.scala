@@ -47,6 +47,9 @@ trait InternalTree extends Product {
   def origin: Origin
 
   def pos: Position = origin.position
+  // Cheap offsets that avoid forcing (allocating) `pos`'s Position.
+  def begOffset: Int = origin.begOffset
+  def endOffset: Int = origin.endOffset
 
   def begComment: Option[Tree.Comments]
   def endComment: Option[Tree.Comments]
