@@ -128,24 +128,31 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    *   - STRINGLIT if region is a string interpolation expression starting with '${' (the STRINGLIT
    *     appears twice in succession on the stack iff the expression is a multiline string literal).
    */
-  private var sepRegions: List[LegacyToken] = List()
+  // A primitive int stack. LegacyToken is Int, so a List[LegacyToken] boxed on
+  // every push/pop/match -- ~20% of tokenize CPU was BoxesRunTime.boxToInteger
+  // from here. Top of stack is at index `sepRegionsDepth - 1`.
+  private var sepRegions: Array[Int] = new Array[Int](32)
+  private var sepRegionsDepth: Int = 0
 
-  @inline
-  private def pushSepRegions(sr: LegacyToken) = sepRegions = sr :: sepRegions
-
-  private def popSepRegionsIf(token: LegacyToken) = sepRegions match {
-    case head :: tail if head == token =>
-      sepRegions = tail
-      true
-    case _ => false
+  private def pushSepRegions(sr: LegacyToken): Unit = {
+    if (sepRegionsDepth == sepRegions.length)
+      sepRegions = java.util.Arrays.copyOf(sepRegions, sepRegions.length * 2)
+    sepRegions(sepRegionsDepth) = sr
+    sepRegionsDepth += 1
   }
 
-  @tailrec
-  private def popSepRegionsUntil(token: LegacyToken): Boolean = sepRegions match {
-    case head :: tail =>
-      sepRegions = tail
-      head == token || popSepRegionsUntil(token)
-    case _ => false
+  private def popSepRegionsIf(token: LegacyToken): Boolean = sepRegionsDepth > 0 &&
+    sepRegions(sepRegionsDepth - 1) == token && {
+      sepRegionsDepth -= 1
+      true
+    }
+
+  private def popSepRegionsUntil(token: LegacyToken): Boolean = {
+    while (sepRegionsDepth > 0) {
+      sepRegionsDepth -= 1
+      if (sepRegions(sepRegionsDepth) == token) return true
+    }
+    false
   }
 
   /**
@@ -221,12 +228,13 @@ class LegacyScanner(input: Input, dialect: Dialect) {
    * read next token, filling TokenData fields of Scanner.
    */
   private final def fetchToken(): Unit = {
-    sepRegions match {
-      case STRINGLIT :: tail => // STRINGPART follows STRINGLIT in multiline interpolation
-        if (token == STRINGPART) getStringSplice()
-        else getStringPart(multiLine = tail.headOption.contains(STRINGPART))
-        return
-      case _ =>
+    // STRINGPART follows STRINGLIT in multiline interpolation
+    if (sepRegionsDepth > 0 && sepRegions(sepRegionsDepth - 1) == STRINGLIT) {
+      if (token == STRINGPART) getStringSplice()
+      else getStringPart(multiLine =
+        sepRegionsDepth > 1 && sepRegions(sepRegionsDepth - 2) == STRINGPART,
+      )
+      return
     }
     if (fetchXmlPart()) return
     if (prev.token == COMMENT_UNQUOTE) {
