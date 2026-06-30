@@ -414,10 +414,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
     val origin = asOrigin(start, endExcl)
 
-    val (begComment, endComment) =
-      if (!options.captureComments) (None, None)
-      else if (body.hasComments) (body.begComment, body.endComment)
-      else {
+    // two vars rather than a `(begComment, endComment)` Tuple2 allocated per node
+    // (this method runs for every tree node); they aren't captured by the
+    // children.foreach closure below, so they stay plain locals (no Ref boxing).
+    var begComment: Option[Tree.Comments] = None
+    var endComment: Option[Tree.Comments] = None
+    if (options.captureComments)
+      if (body.hasComments) {
+        begComment = body.begComment
+        endComment = body.endComment
+      } else {
         // we don't use comments attributed to a child
         var minChild: Tree = null
         var minChildBeg = Int.MaxValue
@@ -442,7 +448,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
         val bodyIsBlock = body.is[Tree.Block]
 
-        val begComment =
+        begComment =
           if (tokens(start).start < minChildBeg) {
             val begBuf = new ListBuffer[Tree.Comment]
             var idx = start - 1
@@ -495,7 +501,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
         val isEndBraceless = bodyIsBlock &&
           tokens.skipIf(_.is[HTrivia], endExcl, endPos + 1) <= endPos
-        val endComment =
+        endComment =
           if (isEndBraceless) None
           else if (tokens(endExcl - 1).end > maxChildEnd) {
             val endBuf = new ListBuffer[Tree.Comment]
@@ -534,8 +540,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             asComments(endBuf)
           } else if (bodyIsBlock) None // let the child own it
           else maxChild.endComment
-
-        (begComment, endComment)
       }
 
     body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
