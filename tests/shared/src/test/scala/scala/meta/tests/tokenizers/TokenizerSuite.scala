@@ -18,6 +18,22 @@ class TokenizerSuite extends BaseTokenizerSuite {
     assertTokenizedAsSyntax("class C  {\t val x = 2}\n\n", "class C  {\t val x = 2}\n\n"),
   )
 
+  // consecutive underscores must stay one identifier: getIdentRest checks
+  // isIdentifierPart on the char after a `_`, which can itself be `_`.
+  test("identifier with consecutive underscores")(assertTokens("a__b") {
+    case Tokens(BOF(), id: Ident, EOF()) => assertEquals(id.value, "a__b")
+  })
+
+  test("identifier of only underscores")(assertTokens("__") {
+    case Tokens(BOF(), id: Ident, EOF()) => assertEquals(id.value, "__")
+  })
+
+  // exercises the c >= 128 (non-ASCII) branch of the identifier classifiers,
+  // which the ASCII fast-path defers to the JDK.
+  test("non-ascii (unicode) identifier")(assertTokens("αβγ") {
+    case Tokens(BOF(), id: Ident, EOF()) => assertEquals(id.value, "αβγ")
+  })
+
   test("showcode without comments - hard") {
     assertTokenizedAsSyntax(
       """
