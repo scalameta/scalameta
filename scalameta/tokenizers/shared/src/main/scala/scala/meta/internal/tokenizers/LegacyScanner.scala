@@ -181,21 +181,24 @@ class LegacyScanner(input: Input, dialect: Dialect) {
   }
 
   @inline
-  def nextTokenOrEof(): LegacyTokenData = nextToken { prev.token = PASTEOF }
+  def nextTokenOrEof(): LegacyTokenData = nextToken(throwOnEof = false)
 
   private[tokenizers] def prevToken: LegacyTokenData = prev
 
   /**
    * Produce next token, filling curr TokenData fields of Scanner.
    */
-  def nextToken(): LegacyTokenData = nextToken(throw new UnexpectedInputEndException(prev))
+  def nextToken(): LegacyTokenData = nextToken(throwOnEof = true)
 
-  private def nextToken(onEof: => Unit): LegacyTokenData = {
+  // `throwOnEof` rather than a by-name `onEof: => Unit`: the latter allocated a
+  // Function0 thunk on *every* token (it captures `prev`), even though it only
+  // runs at EOF -- ~25% of tokenize allocation.
+  private def nextToken(throwOnEof: Boolean): LegacyTokenData = {
     val lastToken = prev.token
     // Adapt sepRegions according to last token
     (lastToken: @switch) match {
       case EOF | PASTEOF =>
-        onEof
+        if (throwOnEof) throw new UnexpectedInputEndException(prev) else prev.token = PASTEOF
         return prev
       case LPAREN => pushSepRegions(RPAREN)
       case LBRACKET => pushSepRegions(RBRACKET)
