@@ -20,7 +20,9 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
   def tokenize(): Tokens = {
     scanner.initialize(bof = true)
 
-    implicit val tokens = new ju.ArrayList[Token]()
+    // Presize to avoid repeated ArrayList growth/copy: observed ~2.9 chars/token,
+    // so chars.length / 2 safely exceeds the token count without gross over-alloc.
+    implicit val tokens = new ju.ArrayList[Token](chars.length / 2)
     val whitespaceTokenizer: WhitespaceTokenizer = WhitespaceTokenizer(input, dialect)
 
     @inline
