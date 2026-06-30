@@ -30,10 +30,10 @@ object Keywords {
 
   abstract class IsWithPred(isEnabled: Boolean, pred: String => Boolean)
       extends Function[Token, Boolean] {
-    private def checkEnabled(value: => String): Boolean = pred(value)
-    private val check: (=> String) => Boolean = if (isEnabled) checkEnabled else _ => false
+    // `isEnabled && pred(value)` directly, rather than a `(=> String) => Boolean`
+    // that boxed `token.text` into a per-call Function0 thunk only to force it.
     @inline
-    final def unapply(value: String): Boolean = check(value)
+    final def unapply(value: String): Boolean = isEnabled && pred(value)
     @inline
     final def unapply(token: Token.Ident): Boolean = matches(token)
     @inline
@@ -43,9 +43,10 @@ object Keywords {
     @inline
     final def apply(token: Token): Boolean = matches(token)
     @inline
-    final def matches(token: Token.Ident): Boolean = check(token.text)
+    final def matches(token: Token.Ident): Boolean = isEnabled && pred(token.text)
     @inline
-    final def matches(token: Token): Boolean = identClass.isInstance(token) && check(token.text)
+    final def matches(token: Token): Boolean = isEnabled && identClass.isInstance(token) &&
+      pred(token.text)
   }
 
   abstract class IsWithName(isEnabled: Boolean, val name: String)
