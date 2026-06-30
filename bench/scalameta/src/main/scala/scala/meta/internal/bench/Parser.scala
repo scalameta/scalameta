@@ -1,15 +1,35 @@
 package scala.meta.internal.bench
 
 import scala.meta._
+import scala.meta.tokens.Tokens
 
 import java.util.concurrent.TimeUnit
 
 import org.openjdk.jmh.annotations._
 
 /**
- * To run benchmark:
+ * Benchmarks for the front end: tokenization and parsing.
  *
- * > sbt benchScalameta/jmh:run > possible options (olafurpg): -i 10 -wi 10 -f1 -t1 org.scalameta.*
+ * The phases are intentionally split into separate `@Benchmark` methods so each can be attributed
+ * independently:
+ *   - `tokenize` -- lexing only (String/Input -> Tokens)
+ *   - `parse` -- full parse (String -> Source), includes tokenization
+ *   - `traverse` -- parse + a full tree walk (exercises classifiers/`.is[T]`)
+ *   - `transform` -- parse + a rewriting tree walk (allocates new nodes)
+ *
+ * Recommended runs:
+ * {{{
+ * // wall-clock + per-op allocation (gc.alloc.rate.norm is the stable signal):
+ * sbt 'benchScalameta/Jmh/run -wi 5 -i 10 -f1 -t1 -prof gc ".*ParserBenchmark.*"'
+ *
+ * // allocation flame graph via async-profiler (Homebrew v4.x):
+ * sbt 'benchScalameta/Jmh/run -wi 5 -i 10 -f1 -t1 \
+ *   -prof "async:libPath=/opt/homebrew/lib/libasyncProfiler.dylib;event=alloc;output=flamegraph;dir=/tmp/ap" \
+ *   ".*ParserBenchmark.parse"'
+ *
+ * // CPU flame graph (event=cpu):
+ * sbt 'benchScalameta/Jmh/run ... -prof "async:...;event=cpu;..." ".*parse"'
+ * }}}
  */
 @State(Scope.Benchmark) @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
@@ -17,28 +37,32 @@ import org.openjdk.jmh.annotations._
 abstract class ParserBenchmark(path: String) {
   import dialects.Scala212
 
+  // NOTE: tokens are memoized per (Input, dialect) via `input.tokenCache`, so we
+  // must hand each invocation a FRESH Input (here, the raw String, converted by
+  // the `tokenize`/`parse` extension each call) -- otherwise we'd measure a cache
+  // hit, not the front end. See ScalametaTokenizer#tokenCache.getOrElseUpdate.
   var code: String = _
-  private def doParseCode(): Source = code.parse[Source].get
 
   @Setup
   def setup(): Unit = code = scala.io.Source
     .fromInputStream(getClass.getResourceAsStream(s"/$path"))("UTF-8").getLines().mkString("\n")
 
   @Benchmark
+  def tokenize(): Tokens = code.tokenize.get
+
+  @Benchmark
+  def parse(): Source = code.parse[Source].get
+
+  @Benchmark
   def traverse(): Int = {
     var n = 0
-    doParseCode().traverse { case Term.Name(name) => n += 1 }
+    code.parse[Source].get.traverse { case Term.Name(_) => n += 1 }
     n
   }
 
   @Benchmark
-  def transform(): Tree = doParseCode().transform { case Term.Name(name) =>
+  def transform(): Tree = code.parse[Source].get.transform { case Term.Name(name) =>
     Term.Name(name.toLowerCase)
-  }
-
-  def testMe(): Unit = {
-    setup()
-    transform()
   }
 }
 
