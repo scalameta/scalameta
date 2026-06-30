@@ -41,11 +41,27 @@ object Chars {
   @inline
   def isIdentifierStart(c: Int): Boolean = c == '_' || isIdentifierPart(c)
 
-  /** Can character form part of an alphanumeric Scala identifier? */
-  def isIdentifierPart(c: Int): Boolean = c == '$' || JC.isUnicodeIdentifierPart(c)
+  /**
+   * ASCII letters/digits are identifier parts; fast-path them to avoid the comparatively expensive
+   * `Character.isUnicodeIdentifierPart` on the hot per-char identifier-scanning path (most
+   * identifier chars are ASCII).
+   */
+  @inline
+  private def isAsciiLetterOrDigit(c: Int): Boolean = c >= 'a' && c <= 'z' ||
+    c >= 'A' && c <= 'Z' || c >= '0' && c <= '9'
 
-  @inline // strangely enough, isUnicodeIdentifierPart(SU) returns true!
-  def isUnicodeIdentifierPart(c: Int): Boolean = c != SU && JC.isUnicodeIdentifierPart(c)
+  // Only `[a-zA-Z0-9]` is fast-pathed: every other char (incl. `_`, `$`, control
+  // chars, non-ASCII) is delegated to the JDK, so behavior stays identical to the
+  // original `Character.isUnicodeIdentifierPart`-based classification (which is
+  // what scalac's lexer uses too). The fast path just skips the JDK call for the
+  // common alphanumeric case.
+  /** Can character form part of an alphanumeric Scala identifier? */
+  def isIdentifierPart(c: Int): Boolean = isAsciiLetterOrDigit(c) || c == '$' ||
+    JC.isUnicodeIdentifierPart(c)
+
+  // strangely enough, isUnicodeIdentifierPart(SU) returns true!
+  def isUnicodeIdentifierPart(c: Int): Boolean = isAsciiLetterOrDigit(c) ||
+    c != SU && JC.isUnicodeIdentifierPart(c)
 
   /** Is character a math or other symbol in Unicode? */
   @inline
