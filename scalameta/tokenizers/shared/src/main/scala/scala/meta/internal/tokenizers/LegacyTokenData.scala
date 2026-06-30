@@ -90,16 +90,19 @@ class LegacyTokenData {
   ): Unit = {
     strVal = ident
     token = IDENTIFIER
-    if (check) kw2legacytoken.get(ident).foreach {
-      case ENUM if !dialect.allowEnums =>
-      case GIVEN if !dialect.allowGivenUsing =>
-      case EXPORT if !dialect.allowExportClause =>
-      case THEN if !dialect.allowQuietSyntax =>
-      case TYPELAMBDAARROW if !dialect.allowTypeLambdas =>
-      case CTXARROW if !dialect.allowGivenUsing =>
-      case x =>
-        token = x
-        fCheck(this)
+    if (check) {
+      val kw = kw2legacytoken.get(ident) // Integer or null; null for non-keywords
+      if (kw ne null) kw.intValue match {
+        case ENUM if !dialect.allowEnums =>
+        case GIVEN if !dialect.allowGivenUsing =>
+        case EXPORT if !dialect.allowExportClause =>
+        case THEN if !dialect.allowQuietSyntax =>
+        case TYPELAMBDAARROW if !dialect.allowTypeLambdas =>
+        case CTXARROW if !dialect.allowGivenUsing =>
+        case x =>
+          token = x
+          fCheck(this)
+      }
     }
   }
 

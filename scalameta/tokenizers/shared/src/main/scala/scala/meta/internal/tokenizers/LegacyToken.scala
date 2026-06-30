@@ -135,7 +135,7 @@ object LegacyToken {
   final val ELLIPSIS = 401
   final val MACROQUOTE = 402
 
-  val kw2legacytoken = Map[String, LegacyToken](
+  private val keywordMap = Map[String, LegacyToken](
     "abstract" -> ABSTRACT,
     "case" -> CASE,
     "catch" -> CATCH,
@@ -194,4 +194,12 @@ object LegacyToken {
     "given" -> GIVEN,
     "export" -> EXPORT,
   )
+
+  // A null-returning lookup (Integer or null), checked per identifier token: a
+  // Scala `Map[String, Int].get` allocated a `Some(boxedInt)` for every keyword.
+  val kw2legacytoken: java.util.HashMap[String, Integer] = {
+    val m = new java.util.HashMap[String, Integer](keywordMap.size * 2)
+    keywordMap.foreach { case (k, v) => m.put(k, v) }
+    m
+  }
 }
