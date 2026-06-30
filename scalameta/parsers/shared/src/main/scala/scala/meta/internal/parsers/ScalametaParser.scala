@@ -390,18 +390,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
 
   def atPosWithBody[T <: Tree](startPos: Int, body: T, endPos: Int): T = {
-    def getPosRange(): (Int, Int) = { // uses "return"
-      if (endPos < startPos) return (startPos, startPos)
-      val endExcl = endPos + 1
+    // Compute the token-index range [start, endExcl) inline, without a getPosRange
+    // helper returning a (start, endExcl) Tuple2 (a per-node allocation). start and
+    // endExcl default to startPos and are narrowed by the branches below.
+    var start = startPos
+    var endExcl = startPos
+    if (endPos >= startPos) {
       val nonSpaceEnd = tokens.rskipIf(_.is[Whitespace], endPos, startPos - 1)
-      if (nonSpaceEnd < startPos) return (startPos, if (endPos == startPos) endPos else endExcl)
-      val start = tokens.skipIf(_.is[Trivia], startPos, endExcl)
-      if (start > endPos) return (startPos, nonSpaceEnd + 1)
-      if (!tokens(nonSpaceEnd).is[Comment]) return (start, nonSpaceEnd + 1)
-      val end = tokens.rskipIf(_.is[HTrivia], nonSpaceEnd - 1, start)
-      (start, (if (tokens(end).is[AtEOLorF]) nonSpaceEnd else end) + 1)
+      if (nonSpaceEnd < startPos) endExcl = if (endPos == startPos) endPos else endPos + 1
+      else {
+        val firstNonTrivia = tokens.skipIf(_.is[Trivia], startPos, endPos + 1)
+        if (firstNonTrivia > endPos) endExcl = nonSpaceEnd + 1
+        else {
+          start = firstNonTrivia
+          endExcl =
+            if (!tokens(nonSpaceEnd).is[Comment]) nonSpaceEnd + 1
+            else {
+              val end = tokens.rskipIf(_.is[HTrivia], nonSpaceEnd - 1, firstNonTrivia)
+              (if (tokens(end).is[AtEOLorF]) nonSpaceEnd else end) + 1
+            }
+        }
+      }
     }
-    val (start, endExcl) = getPosRange()
     val origin = asOrigin(start, endExcl)
 
     val (begComment, endComment) =
