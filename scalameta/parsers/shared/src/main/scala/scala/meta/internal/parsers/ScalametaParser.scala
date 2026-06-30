@@ -450,12 +450,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
         begComment =
           if (tokens(start).start < minChildBeg) {
-            val begBuf = new ListBuffer[Tree.Comment]
+            // lazily allocated only if a comment is actually found (the scan runs
+            // for most nodes but finds a leading comment only rarely)
+            var begBuf: ListBuffer[Tree.Comment] = null
             var idx = start - 1
             var pending = 0
             var hadEOL = false
             while (tokens.getOrNull(idx) match {
                 case t: Comment =>
+                  if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
                   begBuf.prepend(asComment(t, idx))
                   pending += 1
                   true
@@ -480,6 +483,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                         false
                     }
                   }) {}
+                  if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
                   begBuf.prepend(asComment(parts.toList, idx, endIdx))
                   pending += 1
                   true
@@ -492,10 +496,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 case null => false
                 case t =>
                   if (t.isAny[Ident, CloseDelim] || body.is[Term.Block] || hadEOL && t.is[Comma])
-                    begBuf.remove(0, pending)
+                    if (begBuf ne null) begBuf.remove(0, pending)
                   false
               }) idx -= 1
-            asComments(begBuf)
+            if (begBuf eq null) None else asComments(begBuf)
           } else if (bodyIsBlock) None // braceless
           else minChild.begComment
 
@@ -504,10 +508,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         endComment =
           if (isEndBraceless) None
           else if (tokens(endExcl - 1).end > maxChildEnd) {
-            val endBuf = new ListBuffer[Tree.Comment]
+            var endBuf: ListBuffer[Tree.Comment] = null // lazily allocated, as begBuf
             var idx = endExcl
             while (tokens.getOrNull(idx) match {
                 case t: Comment =>
+                  if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
                   endBuf.append(asComment(t, idx))
                   true
                 case begPart: CommentStart =>
@@ -531,13 +536,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                         false
                     }
                   }) {}
+                  if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
                   endBuf.append(asComment(parts.toList, begIdx, idx + 1))
                   true
                 case _: HSpace => true
                 case _: Comma => tokens.findNot(_.is[HTrivia], idx + 1).exists(_.is[AtEOL])
                 case _ => false
               }) idx += 1
-            asComments(endBuf)
+            if (endBuf eq null) None else asComments(endBuf)
           } else if (bodyIsBlock) None // let the child own it
           else maxChild.endComment
       }
