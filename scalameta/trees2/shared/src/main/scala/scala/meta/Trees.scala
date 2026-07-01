@@ -24,6 +24,19 @@ trait Tree extends InternalTree {
 }
 
 object Tree extends InternalTreeXtensions {
+
+  /**
+   * A canonical empty-`Tree` singleton, used as a non-`null` sentinel for "no tree" / "no parent".
+   *
+   * It is an ordinary, unattached node, so its `parent` is `None` and it is distinguishable from
+   * every real tree by reference identity (`eq`; `Tree.equals` is `eq`). We reuse [[MultiSource]]
+   * rather than introducing a new node type: it extends only `Tree`, so unlike most leaf nodes
+   * (e.g. `Lit.Unit` is-a `Term`/`Pat`/`Type`) it answers `false` to every `.is[Term]`/`.is[Stat]`/
+   * ... classifier and so can't be mistaken for a real node in a parent walk. Treat it as opaque:
+   * compare with `eq Tree.NoTree`, never inspect its type or contents.
+   */
+  val NoTree: Tree = MultiSource(Nil)
+
   @tailrec
   /** 0th ancestor is the parent */
   private def ancestorImpl(level: Int)(obj: Tree): Option[Tree] = obj.parent match {
@@ -31,8 +44,44 @@ object Tree extends InternalTreeXtensions {
     case pOpt => pOpt
   }
 
+  /** 0th ancestor is the parent */
+  private def ancestorOr(level: Int, obj: Tree, or: Tree): Tree = {
+    var tree = obj
+    while (tree.parent match {
+        case Some(p) =>
+          tree = p
+          level > 0
+        case _ =>
+          tree = or
+          false
+      }) {}
+    tree
+  }
+
   implicit class ImplicitTree[A <: Tree](private val obj: A) extends AnyVal {
     def ancestor(level: Int): Option[Tree] = ancestorImpl(level)(obj)
+
+    def ancestorOrNull(level: Int): Tree = ancestorOr(level, obj, null)
+    def ancestorOrNoTree(level: Int): Tree = ancestorOr(level, obj, NoTree)
+
+    /** The parent `Tree`, or `null` if there is none (also `null` for a `null` receiver). */
+    def parentOrNull: Tree =
+      if (obj eq null) null
+      else obj.parent match {
+        case Some(p) => p
+        case _ => null
+      }
+
+    /**
+     * The parent `Tree`, or the [[NoTree]] sentinel if there is none; never `null`. Since
+     * `NoTree.parentOrNoTree eq NoTree`, walking a chain needs no `null` checks and terminates at
+     * the `NoTree` fixed point. Unlike [[parentOrNull]] it does not guard a `null` receiver: it
+     * never yields `null`, so a chain never calls it on one — do not call it on a literal `null`.
+     */
+    def parentOrNoTree: Tree = obj.parent match {
+      case Some(p) => p
+      case _ => NoTree
+    }
   }
 
   implicit class ImplicitOptionTree[A <: Tree](private val obj: Option[A]) extends AnyVal {

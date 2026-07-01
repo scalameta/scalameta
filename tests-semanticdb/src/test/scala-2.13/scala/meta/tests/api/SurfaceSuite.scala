@@ -246,9 +246,13 @@ class SurfaceSuite extends FunSuite {
          |* (scala.meta.inputs.Input, scala.meta.Dialect).parse(implicit scala.meta.parsers.Parse[U]): scala.meta.parsers.Parsed[U]
          |* (scala.meta.inputs.Input, scala.meta.Dialect).tokenize(implicit scala.meta.tokenizers.Tokenize): scala.meta.tokenizers.Tokenized
          |* A.ancestor(Int): Option[scala.meta.Tree]
+         |* A.ancestorOrNoTree(Int): scala.meta.Tree
+         |* A.ancestorOrNull(Int): scala.meta.Tree
          |* A.equals(Any): Boolean
          |* A.hashCode(): Int
          |* A.maybeParse(implicit scala.meta.Dialect, scala.meta.parsers.Parse[A]): scala.meta.package.Parsed[A]
+         |* A.parentOrNoTree: scala.meta.Tree
+         |* A.parentOrNull: scala.meta.Tree
          |* Option[A].ancestor(Int): Option[scala.meta.Tree]
          |* Option[A].equals(Any): Boolean
          |* Option[A].hashCode(): Int

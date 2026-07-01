@@ -47,6 +47,30 @@ class TreeSuite extends TreeSuiteBase {
 
   test(s"Unary opMap size")(assertEquals(Unary.opMap.size, 4))
 
+  test("parentOrNull/parentOrNoTree walk the parent chain without Option") {
+    val tree = dialects.Scala213("val x = y").parse[Stat].get
+    val name = tree.collect { case n: Term.Name => n }.find(_.value == "y").get
+    // one step up reaches the enclosing tree, matching the Option-based parent
+    assertEquals(name.parentOrNull, name.parent.get)
+    assertEquals(name.parentOrNoTree, name.parent.get)
+    // `y`'s parent is the root `Defn.Val`, whose own parent is missing
+    assert(name.parentOrNull ne null)
+    assertEquals(name.parentOrNull.parentOrNull, null: Tree)
+    assertEquals(name.parentOrNoTree.parentOrNoTree, Tree.NoTree)
+    assertEquals(tree.parentOrNull, null: Tree)
+    assertEquals(tree.parentOrNoTree, Tree.NoTree)
+  }
+
+  test("parentOrNull is null-safe; both bottom out correctly at the root/NoTree fixed point") {
+    // parentOrNull guards a null receiver (its chain can yield null); parentOrNoTree does not
+    assertEquals((null: Tree).parentOrNull, null: Tree)
+    assertEquals(Tree.NoTree.parentOrNull, null: Tree)
+    assertEquals(Tree.NoTree.parentOrNoTree, Tree.NoTree)
+    // the sentinel is inert: it is not any real node category
+    assert(!Tree.NoTree.is[Term])
+    assert(!Tree.NoTree.is[Stat])
+  }
+
   test("#4351 copy preserves dialect: scala3-specific tree with inline") {
     implicit val dialect: Dialect = dialects.Scala3
     val tree = Defn
