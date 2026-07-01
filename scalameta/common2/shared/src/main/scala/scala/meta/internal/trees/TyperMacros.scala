@@ -16,7 +16,8 @@ object CommonTyperMacros {
   def storeField[T](f: T, v: T, s: String): Unit = macro CommonTyperMacrosBundle.storeField
   def initField[T](f: T): T = macro CommonTyperMacrosBundle.initField
   def initParam[T](f: T): T = macro CommonTyperMacrosBundle.initField
-  def children[T, U]: List[U] = macro CommonTyperMacrosBundle.children[T]
+  def childrenCount[T]: Int = macro CommonTyperMacrosBundle.childrenCount[T]
+  def foreachChild[T, U](f: U => Unit): Unit = macro CommonTyperMacrosBundle.foreachChild[T]
 }
 
 class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
@@ -86,29 +87,35 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
   }
 
-  def children[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
-    var streak = List[Tree]()
-    def flushStreak(acc: Tree): Tree = {
-      val result = if (acc.isEmpty) q"$streak" else q"$acc ++ $streak"
-      streak = Nil
-      result
-    }
-    val leaf = T.tpe.typeSymbol.asLeaf
-    val allAnalyzedFields = leaf.fields
-    val acc = allAnalyzedFields.foldLeft(q"": Tree)((acc, f) =>
+  // Sum of: one per single-Tree field (folded into a constant), plus `.size`
+  // for each Option[Tree] field and `.length` for each List[Tree] field. No
+  // collection is materialized -- lets a caller pre-size before foreachChild.
+  def childrenCount[T](implicit T: c.WeakTypeTag[T]): c.Tree = {
+    var base = 0
+    val terms = T.tpe.typeSymbol.asLeaf.fields.flatMap(f =>
       f.tpe match {
         case TreeTpe() =>
-          streak :+= q"this.${f.sym}"
-          acc
-        case OptionTreeTpe(_) =>
-          val acc1 = flushStreak(acc)
-          q"$acc1 ++ this.${f.sym}.toList"
-        case ListTreeTpe(_) =>
-          val acc1 = flushStreak(acc)
-          q"$acc1 ++ this.${f.sym}"
-        case _ => acc
+          base += 1
+          None
+        case OptionTreeTpe(_) => Some(q"this.${f.sym}.size")
+        case ListTreeTpe(_) => Some(q"this.${f.sym}.length")
+        case _ => None
       },
     )
-    flushStreak(acc)
+    terms.foldLeft(q"$base": Tree)((acc, t) => q"$acc + $t")
+  }
+
+  // Applies `f` to each child in field order, visiting Option/List fields
+  // in place -- allocation-free (no intermediate List, unlike `children`).
+  def foreachChild[T](f: c.Tree)(implicit T: c.WeakTypeTag[T]): c.Tree = {
+    val stmts = T.tpe.typeSymbol.asLeaf.fields.flatMap(field =>
+      field.tpe match {
+        case TreeTpe() => Some(q"$f.apply(this.${field.sym})")
+        case OptionTreeTpe(_) => Some(q"this.${field.sym}.foreach($f)")
+        case ListTreeTpe(_) => Some(q"this.${field.sym}.foreach($f)")
+        case _ => None
+      },
+    )
+    q"{ ..$stmts; () }"
   }
 }

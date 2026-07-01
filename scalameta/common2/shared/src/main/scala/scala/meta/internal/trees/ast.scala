@@ -393,9 +393,13 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             q"final override def toString: $StringClass = scala.meta.internal.prettyprinters.TreeToString(this)"
         }
 
-        // step 8: create the children method
+        // step 8: implement foreachChild (allocation-free); `children` and
+        // `childrenCount` derive from it in the base trait (childrenCount is
+        // overridden here to avoid the builder).
         stats1 +=
-          q"def children: $ListClass[$TreeClass] = $CommonTyperMacrosModule.children[$iname, $TreeClass]"
+          q"override def foreachChild(f: $TreeClass => _root_.scala.Unit): _root_.scala.Unit = $CommonTyperMacrosModule.foreachChild[$iname, $TreeClass](f)"
+        stats1 +=
+          q"override def childrenCount: $IntClass = $CommonTyperMacrosModule.childrenCount[$iname]"
 
         // step 9: generate boilerplate required by the @ast infrastructure
         ianns1 += q"new $AstMetadataModule.astClass"

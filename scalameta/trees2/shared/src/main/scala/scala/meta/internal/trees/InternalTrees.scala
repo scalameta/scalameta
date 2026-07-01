@@ -36,6 +36,22 @@ trait InternalTree extends Product {
   private[meta] def loadFieldForParent(parent: Tree): Tree
   private[meta] def storeFieldInParent(parent: Tree, destination: String): Tree
 
+  /**
+   * Applies `f` to each direct child tree, in field order. Implemented per `@ast` node
+   * (allocation-free); `children`/`childrenCount` derive from it.
+   */
+  def foreachChild(f: Tree => Unit): Unit
+  def children: List[Tree] = {
+    val buf = List.newBuilder[Tree]
+    foreachChild(buf += _)
+    buf.result()
+  }
+
+  /**
+   * Number of direct child trees; overridden per `@ast` node to avoid the `children` builder.
+   */
+  def childrenCount: Int = children.length
+
   // NOTE: InternalTree inherits traditional productXXX methods from Product
   // and also adds a new method called productFields.
   // def productPrefix: String
