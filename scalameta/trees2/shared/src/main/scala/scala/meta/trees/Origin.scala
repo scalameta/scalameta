@@ -24,6 +24,7 @@ object Origin {
   object None extends Origin {
     val position: Position = Position.None
     val dialectOpt: Option[Dialect] = scala.None
+    override def isEmpty: Boolean = true
     private[meta] val inputOpt: Option[Input] = scala.None
     private[meta] val textOpt: Option[String] = scala.None
     private[meta] val tokensOpt: Option[Tokens] = scala.None

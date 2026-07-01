@@ -15,8 +15,6 @@ import scala.{meta => sm}
 
 @root
 trait Tree extends InternalTree {
-  def children: List[Tree]
-
   override def canEqual(that: Any): Boolean = that.isInstanceOf[Tree]
   override def equals(that: Any): Boolean = this eq that.asInstanceOf[AnyRef]
   override def hashCode: Int = System.identityHashCode(this)
