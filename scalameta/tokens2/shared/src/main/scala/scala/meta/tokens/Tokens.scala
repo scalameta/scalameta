@@ -47,6 +47,12 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
     if (wideIdx >= 0 && wideIdx < tokens.length) Some(tokens(wideIdx)) else None
   }
 
+  /** Like [[getWideOpt]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  private[meta] def getWideOrNull(idx: Int): Token = {
+    val wideIdx = start + idx
+    if (wideIdx >= 0 && wideIdx < tokens.length) tokens(wideIdx) else null
+  }
+
   override def slice(from: Int, until: Int): Tokens = {
     val lo = start + from.max(0).min(length)
     val len = 0.max(start + until.min(length) - lo)
@@ -80,8 +86,14 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
   override def head: Token = apply(0)
   override def headOption: Option[Token] = if (isEmpty) None else Some(get(0))
 
+  /** Like [[headOption]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  private[meta] def headOrNull: Token = if (isEmpty) null else get(0)
+
   override def last: Token = apply(length - 1)
   override def lastOption: Option[Token] = if (isEmpty) None else Some(get(length - 1))
+
+  /** Like [[lastOption]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  private[meta] def lastOrNull: Token = if (isEmpty) null else get(length - 1)
 
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
 
@@ -105,6 +117,20 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
   def rfindWideNot(p: Token => Boolean, rangeBeg: Int): Option[Token] =
     rfindWideNot(p, rangeBeg, Int.MinValue)
 
+  @inline
+  private[meta] def findNotOrNull(p: Token => Boolean, rangeBeg: Int): Token =
+    findNotOrNull(p, rangeBeg, Int.MaxValue)
+  @inline
+  private[meta] def rfindNotOrNull(p: Token => Boolean, rangeBeg: Int): Token =
+    rfindNotOrNull(p, rangeBeg, Int.MinValue)
+
+  @inline
+  private[meta] def findWideNotOrNull(p: Token => Boolean, rangeBeg: Int): Token =
+    findWideNotOrNull(p, rangeBeg, Int.MaxValue)
+  @inline
+  private[meta] def rfindWideNotOrNull(p: Token => Boolean, rangeBeg: Int): Token =
+    rfindWideNotOrNull(p, rangeBeg, Int.MinValue)
+
   /**
    * Find token not satisfying a given predicate.
    * @param rangeBeg
@@ -121,6 +147,22 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
     getWideOpt(skipWideIf(p, rangeBeg, rangeEnd))
   def rfindWideNot(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Option[Token] =
     getWideOpt(rskipWideIf(p, rangeBeg, rangeEnd))
+
+  /** Like [[findNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  private[meta] def findNotOrNull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Token =
+    getOrNull(skipIf(p, rangeBeg, rangeEnd))
+
+  /** Like [[rfindNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  private[meta] def rfindNotOrNull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Token =
+    getOrNull(rskipIf(p, rangeBeg, rangeEnd))
+
+  /** Like [[findWideNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  private[meta] def findWideNotOrNull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Token =
+    getWideOrNull(skipWideIf(p, rangeBeg, rangeEnd))
+
+  /** Like [[rfindWideNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  private[meta] def rfindWideNotOrNull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Token =
+    getWideOrNull(rskipWideIf(p, rangeBeg, rangeEnd))
 
   /**
    * Skip tokens satisfying a given predicate.
@@ -199,6 +241,12 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
   def findNot(p: Token => Boolean): Option[Token] = {
     val idx = segmentLength(p)
     if (idx < length) Some(get(idx)) else None
+  }
+
+  /** Like [[findNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  private[meta] def findNotOrNull(p: Token => Boolean): Token = {
+    val idx = segmentLength(p)
+    if (idx < length) get(idx) else null
   }
 
   def foreachWithIndex(f: (Token, Int) => Unit): Unit = {

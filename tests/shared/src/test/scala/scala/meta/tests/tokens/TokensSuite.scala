@@ -172,7 +172,9 @@ class TokensApiSuite extends FunSuite {
     val beforeLbeg = tokens.length - beforeLlen
     assertEquals(beforeL.rskipWideIf(notIdent, beforeLbeg, -1), beforeLlen)
     assertEquals(beforeL.getWideOpt(beforeLlen).orNull, afterL.head)
+    assertEquals(beforeL.getWideOrNull(beforeLlen), afterL.head)
     assertEquals(beforeL.rfindWideNot(notIdent, beforeLbeg, -1), Some(afterL.head))
+    assertEquals(beforeL.rfindWideNotOrNull(notIdent, beforeLbeg, -1), afterL.head)
 
     val afterLlen = afterL.length
     val afterLbeg = afterLlen - tokens.length
@@ -186,7 +188,9 @@ class TokensApiSuite extends FunSuite {
     val afterRbeg = afterRlen - tokens.length
     assertEquals(afterR.skipWideIf(notIdent, afterRbeg, tokens.length), -1)
     assertEquals(afterR.getWideOpt(-1).orNull, afterL.head)
+    assertEquals(afterR.getWideOrNull(-1), afterL.head)
     assertEquals(afterR.findWideNot(notIdent, afterRbeg), Some(afterL.head))
+    assertEquals(afterR.findWideNotOrNull(notIdent, afterRbeg), afterL.head)
 
     var lastidx = -1
     tokens.foreachWithIndex { (t, i) =>
@@ -196,6 +200,50 @@ class TokensApiSuite extends FunSuite {
       else if (i == 3) assertEquals(t.text, "foo")
       else if (i == 5) assertEquals(t.text, "=")
     }
+  }
+
+  test("Tokens OrNull accessors match their Option counterparts") {
+    def notIdent(t: Token): Boolean = t.name != "identifier"
+    val tokens = tokenize("val foo = 0")
+
+    // element access, in range and out of range
+    for (i <- -1 to tokens.length) {
+      assertEquals(tokens.getOrNull(i), tokens.getOpt(i).orNull)
+      assertEquals(tokens.getWideOrNull(i), tokens.getWideOpt(i).orNull)
+    }
+
+    assertEquals(tokens.headOrNull, tokens.headOption.orNull)
+    assertEquals(tokens.lastOrNull, tokens.lastOption.orNull)
+
+    // find, both when a match exists and when it does not
+    assertEquals(tokens.findNotOrNull(notIdent), tokens.findNot(notIdent).orNull)
+    assertEquals(tokens.findNotOrNull(_ => true), tokens.findNot(_ => true).orNull)
+    for (beg <- 0 to tokens.length) {
+      assertEquals(tokens.findNotOrNull(notIdent, beg), tokens.findNot(notIdent, beg).orNull)
+      assertEquals(tokens.rfindNotOrNull(notIdent, beg), tokens.rfindNot(notIdent, beg).orNull)
+      assertEquals(tokens.findWideNotOrNull(notIdent, beg), tokens.findWideNot(notIdent, beg).orNull)
+      assertEquals(
+        tokens.rfindWideNotOrNull(notIdent, beg),
+        tokens.rfindWideNot(notIdent, beg).orNull,
+      )
+    }
+  }
+
+  test("Tokens OrNull accessors return null when absent") {
+    val tokens = tokenize("val foo = 0")
+    val empty = tokens.take(0)
+
+    assert(tokens.getOrNull(-1) eq null)
+    assert(tokens.getOrNull(tokens.length) eq null)
+    assert(tokens.getWideOrNull(-tokens.length - 1) eq null)
+
+    assert(empty.headOrNull eq null)
+    assert(empty.lastOrNull eq null)
+
+    // predicate never fails, so nothing is found
+    assert(tokens.findNotOrNull(_ => true) eq null)
+    assert(tokens.findNotOrNull(_ => true, 0) eq null)
+    assert(tokens.rfindNotOrNull(_ => true, tokens.length - 1) eq null)
   }
 
 }
