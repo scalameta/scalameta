@@ -35,7 +35,7 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
   def getOpt(idx: Int): Option[Token] = if (idx >= 0 && idx < length) Some(get(idx)) else None
 
   /**
-   * Like [[getOpt]] but returns `null` instead of an `Option`, to avoid a `Some` allocation on hot
+   * Like `getOpt` but returns `null` instead of an `Option`, to avoid a `Some` allocation on hot
    * paths that immediately deconstruct the result (match on the token type, with `case null` for
    * out-of-range).
    */
@@ -47,7 +47,7 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
     if (wideIdx >= 0 && wideIdx < tokens.length) Some(tokens(wideIdx)) else None
   }
 
-  /** Like [[getWideOpt]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  /** Like `getWideOpt` but returns `null` instead of an `Option`. See `getOrNull`. */
   def getWideOrNull(idx: Int): Token = {
     val wideIdx = start + idx
     if (wideIdx >= 0 && wideIdx < tokens.length) tokens(wideIdx) else null
@@ -86,13 +86,13 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
   override def head: Token = apply(0)
   override def headOption: Option[Token] = if (isEmpty) None else Some(get(0))
 
-  /** Like [[headOption]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  /** Like `headOption` but returns `null` instead of an `Option`. See `getOrNull`. */
   def headOrNull: Token = if (isEmpty) null else get(0)
 
   override def last: Token = apply(length - 1)
   override def lastOption: Option[Token] = if (isEmpty) None else Some(get(length - 1))
 
-  /** Like [[lastOption]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  /** Like `lastOption` but returns `null` instead of an `Option`. See `getOrNull`. */
   def lastOrNull: Token = if (isEmpty) null else get(length - 1)
 
   override def toString = scala.meta.internal.prettyprinters.TokensToString(this)
@@ -148,19 +148,19 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
   def rfindWideNot(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Option[Token] =
     getWideOpt(rskipWideIf(p, rangeBeg, rangeEnd))
 
-  /** Like [[findNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  /** Like `findNot` but returns `null` instead of an `Option`. See `getOrNull`. */
   def findNotOrNull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Token =
     getOrNull(skipIf(p, rangeBeg, rangeEnd))
 
-  /** Like [[rfindNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  /** Like `rfindNot` but returns `null` instead of an `Option`. See `getOrNull`. */
   def rfindNotOrNull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Token =
     getOrNull(rskipIf(p, rangeBeg, rangeEnd))
 
-  /** Like [[findWideNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  /** Like `findWideNot` but returns `null` instead of an `Option`. See `getOrNull`. */
   def findWideNotOrNull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Token =
     getWideOrNull(skipWideIf(p, rangeBeg, rangeEnd))
 
-  /** Like [[rfindWideNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  /** Like `rfindWideNot` but returns `null` instead of an `Option`. See `getOrNull`. */
   def rfindWideNotOrNull(p: Token => Boolean, rangeBeg: Int, rangeEnd: Int): Token =
     getWideOrNull(rskipWideIf(p, rangeBeg, rangeEnd))
 
@@ -243,7 +243,7 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
     if (idx < length) Some(get(idx)) else None
   }
 
-  /** Like [[findNot]] but returns `null` instead of an `Option`. See [[getOrNull]]. */
+  /** Like `findNot` but returns `null` instead of an `Option`. See `getOrNull`. */
   def findNotOrNull(p: Token => Boolean): Token = {
     val idx = segmentLength(p)
     if (idx < length) get(idx) else null
