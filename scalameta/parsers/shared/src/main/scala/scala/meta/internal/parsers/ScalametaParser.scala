@@ -540,7 +540,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   endBuf.append(asComment(parts.toList, begIdx, idx + 1))
                   true
                 case _: HSpace => true
-                case _: Comma => tokens.findNot(_.is[HTrivia], idx + 1).exists(_.is[AtEOL])
+                case _: Comma => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
                 case _ => false
               }) idx += 1
             if (endBuf eq null) None else asComments(endBuf)

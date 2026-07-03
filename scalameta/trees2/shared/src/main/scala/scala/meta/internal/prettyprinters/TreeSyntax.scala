@@ -686,7 +686,7 @@ object TreeSyntax {
           case Some(p: Defn.Given) =>
             val isNew = givenSigUsesNewSyntax(p.paramClauseGroups)(
               t.inits.forall(_.argClauses.isEmpty) && !t.body.origin.tokensOpt.forall(
-                _.rfindWideNot(_.is[Token.Trivia], -1).is[Token.KwWith], // still old syntax
+                _.rfindWideNotOrNull(_.is[Token.Trivia], -1).is[Token.KwWith], // still old syntax
               ),
             )
             if (isNew) Decl.Given else Defn.Given
@@ -784,7 +784,7 @@ object TreeSyntax {
                 getLine(imp) >= 0 && {
                   val tokens = imp.tokens
                   val idx = tokens.rskipWideIf(_.is[Token.Trivia], -1)
-                  idx < -1 && tokens.getWideOpt(idx).exists(_.is[Token.LeftBrace])
+                  idx < -1 && tokens.getWideOrNull(idx).is[Token.LeftBrace]
                 }
               }
               def rspace: Boolean = {
@@ -792,7 +792,7 @@ object TreeSyntax {
                 getLine(imp) >= 0 && {
                   val tokens = imp.tokens
                   val idx = tokens.skipWideIf(_.is[Token.Trivia], tokens.length)
-                  idx > tokens.length && tokens.getWideOpt(idx).exists(_.is[Token.RightBrace])
+                  idx > tokens.length && tokens.getWideOrNull(idx).is[Token.RightBrace]
                 }
               }
               val space = o(" ", lspace || rspace)
@@ -939,9 +939,9 @@ object TreeSyntax {
       case Nil => s()
       case head :: Nil => s(kw(": "), head)
       case cbs @ x :: _
-          if dialect.allowImprovedTypeClassesSyntax &&
-            x.origin.tokensOpt.exists(_.rfindWideNot(_.is[Token.Trivia], -1).is[Token.LeftBrace]) =>
-        s(kw(": "), "{", r(cbs, ", "), "}")
+          if dialect.allowImprovedTypeClassesSyntax && x.origin.tokensOpt.exists(
+            _.rfindWideNotOrNull(_.is[Token.Trivia], -1).is[Token.LeftBrace],
+          ) => s(kw(": "), "{", r(cbs, ", "), "}")
       case cbs => s(kw(": "), r(cbs, ": "))
     }
 
