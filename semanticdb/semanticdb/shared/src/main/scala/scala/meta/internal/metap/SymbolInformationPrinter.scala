@@ -8,6 +8,51 @@ import scala.meta.internal.semanticdb._
 import scala.collection.mutable
 import scala.math.Ordering
 
+object SymbolInformationPrinter {
+
+  // One row per modifier, in print order (shared by both styles).
+  //   prop   the SemanticDB property bit this row renders.
+  //   word   how the property is printed. This is the rule for every style; `defn` and `defnOK`
+  //          are the only exceptions to it.
+  //   defn   an occasional Definition-only deviation from `word`: null (default) keeps `word`,
+  //          so most rows omit this arg; "" drops the modifier, which Definition does not model
+  //          (synthetic, primary, default, given, inline, open, transparent, infix, opaque); any
+  //          other string replaces it (variance prints +/- rather than covariant/contravariant).
+  //   defnOK an extra Definition gate keyed on kind, not property, for the two modifiers Scala
+  //          keeps only in some positions: `abstract` only on classes, `final` only off objects
+  //          (Scala implies it there). Declaration ignores it.
+  private final case class Modifier(
+      prop: Property,
+      word: String,
+      defn: String = null,
+      defnOK: SymbolInformation => Boolean = _ => true,
+  )
+
+  private val modifiers: List[Modifier] = List(
+    Modifier(Property.SYNTHETIC, "synthetic ", ""),
+    Modifier(Property.ABSTRACT, "abstract ", defnOK = _.isClass),
+    Modifier(Property.FINAL, "final ", defnOK = !_.isObject),
+    Modifier(Property.SEALED, "sealed "),
+    Modifier(Property.IMPLICIT, "implicit "),
+    Modifier(Property.LAZY, "lazy "),
+    Modifier(Property.CASE, "case "),
+    Modifier(Property.COVARIANT, "covariant ", "+"),
+    Modifier(Property.CONTRAVARIANT, "contravariant ", "-"),
+    Modifier(Property.VAL, "val "),
+    Modifier(Property.VAR, "var "),
+    Modifier(Property.STATIC, "static "),
+    Modifier(Property.PRIMARY, "primary ", ""),
+    Modifier(Property.ENUM, "enum "),
+    Modifier(Property.DEFAULT, "default ", ""),
+    Modifier(Property.GIVEN, "given ", ""),
+    Modifier(Property.INLINE, "inline ", ""),
+    Modifier(Property.OPEN, "open ", ""),
+    Modifier(Property.TRANSPARENT, "transparent ", ""),
+    Modifier(Property.INFIX, "infix ", ""),
+    Modifier(Property.OPAQUE, "opaque ", ""),
+  )
+}
+
 trait SymbolInformationPrinter extends BasePrinter {
 
   def pprint(info: SymbolInformation): Unit = {
@@ -36,53 +81,7 @@ trait SymbolInformationPrinter extends BasePrinter {
   class InfoPrinter(notes: InfoNotes) {
     def pprint(info: SymbolInformation): Unit = {
       notes.visit(info)
-      rep(info.annotations, " ", " ")(pprint)
-      pprint(info.access)
-      if (info.isSynthetic) out.print("synthetic ")
-      if (info.isAbstract) out.print("abstract ")
-      if (info.isFinal) out.print("final ")
-      if (info.isSealed) out.print("sealed ")
-      if (info.isImplicit) out.print("implicit ")
-      if (info.isLazy) out.print("lazy ")
-      if (info.isCase) out.print("case ")
-      if (info.isCovariant) out.print("covariant ")
-      if (info.isContravariant) out.print("contravariant ")
-      if (info.isVal) out.print("val ")
-      if (info.isVar) out.print("var ")
-      if (info.isStatic) out.print("static ")
-      if (info.isPrimary) out.print("primary ")
-      if (info.isEnum) out.print("enum ")
-      if (info.isDefault) out.print("default ")
-      if (info.isGiven) out.print("given ")
-      if (info.isInline) out.print("inline ")
-      if (info.isOpen) out.print("open ")
-      if (info.isTransparent) out.print("transparent ")
-      if (info.isInfix) out.print("infix ")
-      if (info.isOpaque) out.print("opaque ")
-      info.kind match {
-        case LOCAL => out.print("local ")
-        case FIELD => out.print("field ")
-        case METHOD => out.print("method ")
-        case CONSTRUCTOR => out.print("ctor ")
-        case MACRO => out.print("macro ")
-        case TYPE => out.print("type ")
-        case PARAMETER => out.print("param ")
-        case SELF_PARAMETER => out.print("selfparam ")
-        case TYPE_PARAMETER => out.print("typeparam ")
-        case OBJECT => out.print("object ")
-        case PACKAGE => out.print("package ")
-        case PACKAGE_OBJECT => out.print("package object ")
-        case CLASS => out.print("class ")
-        case TRAIT => out.print("trait ")
-        case INTERFACE => out.print("interface ")
-        case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
-        case _ => out.print(s"${info.kind.toString().toLowerCase} ")
-      }
-      pprint(info.displayName)
-      info.signature match {
-        case NoSignature if info.isSelfParameter => ()
-        case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
-      }
+      printInfo(info, Declaration)
       info.overriddenSymbols match {
         case Nil => ()
         case all => out.print(" <: " + all.mkString(", "))
@@ -231,58 +230,71 @@ trait SymbolInformationPrinter extends BasePrinter {
     }
 
     protected sealed trait SymbolStyle
+    // InfoStyle renders the full symbol information; Reference renders just the display name.
+    // Keeping Reference outside InfoStyle means printInfo cannot be reached with a style that
+    // would silently print a name and signature without modifiers or kind.
+    protected sealed trait InfoStyle extends SymbolStyle
+    protected case object Declaration extends InfoStyle
     protected case object Reference extends SymbolStyle
-    protected case object Definition extends SymbolStyle
+    protected case object Definition extends InfoStyle
 
     protected def pprint(sym: String, style: SymbolStyle): Unit = {
       val info = notes.visit(sym)
       style match {
         case Reference => pprint(info.displayName)
-        case Definition =>
-          // NOTE: I am aware of some degree of duplication with pprint(info).
-          // However, deduplicating these two methods leads to very involved code,
-          // since there are subtle differences in behavior.
-          rep(info.annotations, " ", " ")(pprint)
-          pprint(info.access)
-          if (info.isAbstract && info.isClass) out.print("abstract ")
-          if (info.isFinal && !info.isObject) out.print("final ")
-          if (info.isSealed) out.print("sealed ")
-          if (info.isImplicit) out.print("implicit ")
-          if (info.isLazy) out.print("lazy ")
-          if (info.isCase) out.print("case ")
-          if (info.isCovariant) out.print("+")
-          if (info.isContravariant) out.print("-")
-          if (info.isVal) out.print("val ")
-          if (info.isVar) out.print("var ")
-          if (info.isStatic) out.print("static ")
-          if (info.isPrimary) out.print("")
-          if (info.isEnum) out.print("enum ")
-          if (info.isPrimary) out.print("")
-          info.kind match {
-            case LOCAL => out.print("")
-            case FIELD => out.print("")
-            case METHOD => out.print("def ")
-            case CONSTRUCTOR => out.print("def ")
-            case MACRO => out.print("macro ")
-            case TYPE => out.print("type ")
-            case PARAMETER => out.print("")
-            case SELF_PARAMETER => out.print("")
-            case TYPE_PARAMETER => out.print("")
-            case OBJECT => out.print("object ")
-            case PACKAGE => out.print("package ")
-            case PACKAGE_OBJECT => out.print("package object ")
-            case CLASS => out.print("class ")
-            case TRAIT => out.print("trait ")
-            case INTERFACE => out.print("interface ")
-            case UNKNOWN_KIND | Kind.Unrecognized(_) => out.print("unknown ")
-            case _ => out.print(s"${info.kind.toString().toLowerCase} ")
-          }
-          pprint(info.displayName)
-          info.signature match {
-            case NoSignature if info.isSelfParameter => ()
-            case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
-          }
+        case style: InfoStyle => printInfo(info, style)
       }
+    }
+
+    private def printInfo(info: SymbolInformation, style: InfoStyle): Unit = {
+      rep(info.annotations, " ", " ")(pprint)
+      pprint(info.access)
+      printModifiers(info, style)
+      printKind(info, style)
+      pprint(info.displayName)
+      printSignature(info)
+    }
+
+    // See SymbolInformationPrinter.modifiers for the per-style words. Declaration prints the
+    // SemanticDB word for every set modifier; Definition prints its Scala-like word, skipping
+    // the modifiers it does not model and honouring each modifier's positional guard.
+    private def printModifiers(info: SymbolInformation, style: InfoStyle): Unit = {
+      val props = info.properties
+      SymbolInformationPrinter.modifiers.foreach(m =>
+        if ((props & m.prop.value) != 0) {
+          val word = style match {
+            case Declaration => m.word
+            case Definition if m.defnOK(info) => if (m.defn ne null) m.defn else m.word
+            case _ => ""
+          }
+          if (word.nonEmpty) out.print(word)
+        },
+      )
+    }
+
+    // Declaration prints SemanticDB kind names (method, ctor, param, ...); Definition prints
+    // the closest Scala keyword: `def` for both methods and constructors, and no keyword at
+    // all for locals, fields, params and type params. Only those deltas are style-specific;
+    // every other kind renders identically, so it is spelled out once below.
+    private def printKind(info: SymbolInformation, style: InfoStyle): Unit = {
+      val word = info.kind match {
+        case METHOD | CONSTRUCTOR if style == Definition => "def "
+        case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | TYPE_PARAMETER if style == Definition =>
+          ""
+        case CONSTRUCTOR => "ctor "
+        case PARAMETER => "param "
+        case SELF_PARAMETER => "selfparam "
+        case TYPE_PARAMETER => "typeparam "
+        case PACKAGE_OBJECT => "package object "
+        case UNKNOWN_KIND | _: Kind.Unrecognized => "unknown "
+        case _ => s"${info.kind.name.toLowerCase} "
+      }
+      if (word.nonEmpty) out.print(word)
+    }
+
+    private def printSignature(info: SymbolInformation): Unit = info.signature match {
+      case NoSignature if info.isSelfParameter => ()
+      case _ => opt(info.prefixBeforeTpe, info.signature)(pprint)
     }
 
     private def pprint(name: String): Unit = if (name.nonEmpty) out.print(name) else out.print("<?>")
