@@ -535,6 +535,11 @@ object Term {
   }
   @ast
   class SelectMatch(expr: Term, casesBlock: CasesBlock, mods: List[Mod] = Nil) extends MatchLike
+  // Scala 3 sub-cases: a `match` in a case guard, `case p if e match ...`,
+  // whose sub-cases fall through to the enclosing match when none apply.
+  // https://docs.scala-lang.org/scala3/reference/experimental/sub-cases.html
+  @ast
+  class SubMatch(expr: Term, casesBlock: CasesBlock, mods: List[Mod] = Nil) extends MatchLike
   @branch
   trait TryClause extends Term {
     def expr: Term

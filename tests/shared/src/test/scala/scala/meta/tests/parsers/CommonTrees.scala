@@ -152,6 +152,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def tmatch(lt: Term, cases: Case*): Term.Match = tmatch()(lt, cases: _*)
   final def tselectmatch(lt: Term, cases: Case*): Term.SelectMatch = Term
     .SelectMatch(lt, cases.toList)
+  final def tsubmatch(lt: Term, cases: Case*): Term.SubMatch = Term.SubMatch(lt, cases.toList)
   final def tfunc(params: Term.Param*)(body: Term): Term.Function = Term
     .Function(params.toList, body)
   final def tctxfunc(params: Term.Param*)(body: Term): Term.ContextFunction = Term

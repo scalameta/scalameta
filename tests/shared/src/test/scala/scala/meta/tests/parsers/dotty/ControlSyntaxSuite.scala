@@ -2349,6 +2349,258 @@ class ControlSyntaxSuite extends BaseDottySuite {
     ))
   }
 
+  // Plain nested matches (via case bodies), braceless: a single dedent from the
+  // innermost match closes several indent regions, and the outer `case _` belongs to
+  // the outer match.
+  test("match-nested multi-level dedent") {
+    val code =
+      """|x match
+         |  case a =>
+         |    b match
+         |      case c =>
+         |        d match
+         |          case e => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|x match {
+         |  case a =>
+         |    b match {
+         |      case c =>
+         |        d match {
+         |          case e => 1
+         |        }
+         |    }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(tmatch(
+      tname("x"),
+      Case(
+        patvar("a"),
+        None,
+        tmatch(tname("b"), Case(patvar("c"), None, tmatch(tname("d"), Case(patvar("e"), None, lit(1))))),
+      ),
+      Case(patwildcard, None, lit(2)),
+    ))
+  }
+
+  // --------------------------
+  // MATCH SUB-CASES
+  // https://docs.scala-lang.org/scala3/reference/experimental/sub-cases.html
+  // --------------------------
+
+  // The reported issue: outer match in braces, single sub-case inline.
+  test("sub-case: single inline in braces") {
+    val code =
+      """|d match {
+         |  case Some(m) if m.content match case c: T => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|d match {
+         |  case Some(m) if m.content match {
+         |    case c: T => 1
+         |  }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(tmatch(
+      tname("d"),
+      Case(
+        patextract(tname("Some"), patvar("m")),
+        None,
+        tsubmatch(tselect("m", "content"), Case(Pat.Typed(patvar("c"), pname("T")), None, lit(1))),
+      ),
+      Case(patwildcard, None, lit(2)),
+    ))
+  }
+
+  // Same as above but braceless outer match: the single inline sub-case is delimited
+  // and the dedented `case _` belongs to the outer match.
+  test("sub-case: single inline, braceless outer") {
+    val code =
+      """|d match
+         |  case Some(m) if m.content match case c: T => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|d match {
+         |  case Some(m) if m.content match {
+         |    case c: T => 1
+         |  }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(tmatch(
+      tname("d"),
+      Case(
+        patextract(tname("Some"), patvar("m")),
+        None,
+        tsubmatch(tselect("m", "content"), Case(Pat.Typed(patvar("c"), pname("T")), None, lit(1))),
+      ),
+      Case(patwildcard, None, lit(2)),
+    ))
+  }
+
+  test("sub-case: boolean guard then sub-match in braces") {
+    val code =
+      """|d match {
+         |  case Some(m) if cond if m.content match case c: T => 1
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|d match {
+         |  case Some(m) if cond if m.content match {
+         |    case c: T => 1
+         |  }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(tmatch(
+      tname("d"),
+      Case(
+        patextract(tname("Some"), patvar("m")),
+        Some(tname("cond")),
+        tsubmatch(tselect("m", "content"), Case(Pat.Typed(patvar("c"), pname("T")), None, lit(1))),
+      ),
+      Case(patwildcard, None, lit(2)),
+    ))
+  }
+
+  test("sub-case: indented multi sub-case") {
+    val code =
+      """|d match
+         |  case Some(x) if x.version match
+         |    case Stable(m, n) if m > 2 => 1
+         |    case Legacy => 2
+         |  case _ => 3
+         |""".stripMargin
+    val layout =
+      """|d match {
+         |  case Some(x) if x.version match {
+         |    case Stable(m, n) if m > 2 => 1
+         |    case Legacy => 2
+         |  }
+         |  case _ =>
+         |    3
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(tmatch(
+      tname("d"),
+      Case(
+        patextract(tname("Some"), patvar("x")),
+        None,
+        tsubmatch(
+          tselect("x", "version"),
+          Case(
+            patextract(tname("Stable"), patvar("m"), patvar("n")),
+            Some(tinfix(tname("m"), ">", lit(2))),
+            lit(1),
+          ),
+          Case(tname("Legacy"), None, lit(2)),
+        ),
+      ),
+      Case(patwildcard, None, lit(3)),
+    ))
+  }
+
+  test("sub-case: nested sub-sub-match") {
+    val code =
+      """|x match {
+         |  case a if b match {
+         |    case c if d match {
+         |      case e => 1
+         |    }
+         |  }
+         |  case _ => 2
+         |}
+         |""".stripMargin
+    val layout =
+      """|x match {
+         |  case a if b match {
+         |    case c if d match {
+         |      case e => 1
+         |    }
+         |  }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(tmatch(
+      tname("x"),
+      Case(
+        patvar("a"),
+        None,
+        tsubmatch(
+          tname("b"),
+          Case(patvar("c"), None, tsubmatch(tname("d"), Case(patvar("e"), None, lit(1)))),
+        ),
+      ),
+      Case(patwildcard, None, lit(2)),
+    ))
+  }
+
+  // A match-as-operator expression is still a valid boolean guard when followed by
+  // `=>`; sub-cases must not change that (only a missing `=>`, or a second `if`, turns
+  // the guard `match` into a sub-match). The reprint parenthesizes the guard match.
+  test("sub-case: match-as-operator guard with => stays a guard") {
+    val code = "x match { case foo if bar match { case baz => true } => 1 }"
+    val layout =
+      """|x match {
+         |  case foo if (bar match {
+         |    case baz => true
+         |  }) => 1
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(tmatch(
+      tname("x"),
+      Case(patvar("foo"), Some(tmatch(tname("bar"), Case(patvar("baz"), None, lit(true)))), lit(1)),
+    ))
+  }
+
+  // Braceless nested sub-sub-match: a single dedent from the innermost sub-match to the
+  // outer level closes several sub-match indent regions at once, so the outer `case _`
+  // belongs to the outer match.
+  test("sub-case: nested sub-sub-match, braceless") {
+    val code =
+      """|x match
+         |  case a if b match
+         |    case c if d match
+         |      case e => 1
+         |  case _ => 2
+         |""".stripMargin
+    val layout =
+      """|x match {
+         |  case a if b match {
+         |    case c if d match {
+         |      case e => 1
+         |    }
+         |  }
+         |  case _ =>
+         |    2
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(tmatch(
+      tname("x"),
+      Case(
+        patvar("a"),
+        None,
+        tsubmatch(
+          tname("b"),
+          Case(patvar("c"), None, tsubmatch(tname("d"), Case(patvar("e"), None, lit(1)))),
+        ),
+      ),
+      Case(patwildcard, None, lit(2)),
+    ))
+  }
+
   test("if-then-else with parens in cond and leading infix") {
     runTestAssert[Stat](
       """|def foo =
