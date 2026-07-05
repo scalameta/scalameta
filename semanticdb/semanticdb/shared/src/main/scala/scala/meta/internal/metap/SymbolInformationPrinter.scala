@@ -110,7 +110,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         out.print("protected[")
         pprint(sym, Reference)
         out.print("] ")
-      case NoAccess | PublicAccess() => out.print("")
+      case NoAccess | _: PublicAccess => out.print("")
     }
 
     def pprint(sig: Signature): Unit = sig match {
@@ -289,23 +289,22 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     def pprint(const: Constant): Unit = const match {
       case NoConstant => out.print("<?>")
-      case UnitConstant() => out.print("()")
-      case BooleanConstant(true) => out.print(true)
-      case BooleanConstant(false) => out.print(false)
-      case ByteConstant(value) => out.print(value.toByte)
-      case ShortConstant(value) => out.print(value.toShort)
-      case CharConstant(value) => out.print("'" + value.toChar + "'")
-      case IntConstant(value) => out.print(value)
-      case LongConstant(value) => out.print(s"${value}L")
-      case FloatConstant(value) => out.print(s"${value}f")
-      case DoubleConstant(value) => out.print(value)
-      case StringConstant(value) => out.print("\"" + value + "\"")
-      case NullConstant() => out.print("null")
+      case _: UnitConstant => out.print("()")
+      case x: BooleanConstant => out.print(x.value)
+      case x: ByteConstant => out.print(x.value.toByte)
+      case x: ShortConstant => out.print(x.value.toShort)
+      case x: CharConstant => out.print("'" + x.value.toChar + "'")
+      case x: IntConstant => out.print(x.value)
+      case x: LongConstant => out.print(s"${x.value}L")
+      case x: FloatConstant => out.print(s"${x.value}f")
+      case x: DoubleConstant => out.print(x.value)
+      case x: StringConstant => out.print("\"" + x.value + "\"")
+      case _: NullConstant => out.print("null")
     }
 
     private implicit class InfoOps(info: SymbolInformation) {
       def prefixBeforeTpe: String = info.kind match {
-        case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | UNKNOWN_KIND | Kind.Unrecognized(_) =>
+        case LOCAL | FIELD | PARAMETER | SELF_PARAMETER | UNKNOWN_KIND | _: Kind.Unrecognized =>
           ": "
         case METHOD | CONSTRUCTOR | MACRO | TYPE | TYPE_PARAMETER | OBJECT | PACKAGE |
             PACKAGE_OBJECT | CLASS | TRAIT | INTERFACE => ""
