@@ -33,7 +33,7 @@ case class RegionBracket(override val indent: Int) extends RegionDelimNonIndente
 case class RegionBrace(override val indent: Int) extends RegionDelimNonIndented with CanProduceLF
 
 case object RegionCaseMark extends RegionNonDelimNonIndented
-sealed trait RegionCaseExpr extends SepRegionNonIndented
+sealed trait RegionCaseExpr extends RegionNonDelimNonIndented
 final class RegionCaseExprPat(override val indent: Int) extends RegionCaseExpr
 final class RegionCaseExprGuard(override val indent: Int) extends RegionCaseExpr
 final class RegionCaseBody(override val indent: Int, val arrow: Token)

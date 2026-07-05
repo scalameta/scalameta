@@ -535,6 +535,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.Term.SplicedMacroExpr
          |scala.meta.Term.SplicedMacroLike
          |scala.meta.Term.SplicedMacroPat
+         |scala.meta.Term.SubMatch
          |scala.meta.Term.Super
          |scala.meta.Term.This
          |scala.meta.Term.Throw

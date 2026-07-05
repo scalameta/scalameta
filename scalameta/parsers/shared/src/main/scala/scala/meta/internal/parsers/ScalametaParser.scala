@@ -2715,9 +2715,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         else if (forceSingleExpr) expr(location = BlockStat, allowRepeated = false)
         else blockOnOther()
       }
-      @inline
-      def guard(): Option[Term] = if (at[KwIf]) Some(guardOnIf()) else None
-      Case(pattern(), guard(), caseBody())
+      val pat = pattern()
+      if (!at[KwIf]) Case(pat, None, caseBody())
+      else {
+        // Scala 3 sub-cases: the guard is parsed normally (a trailing `match` becomes a
+        // match-as-operator expression), then disambiguated by what follows -- a second
+        // `if`, or the absence of `=>`, marks the guard `match` as a sub-match. A guard
+        // followed by `=>` stays an ordinary boolean guard (which may itself be a match).
+        def asSubMatch(t: Term.Match) = copyPos(t)(Term.SubMatch(t.expr, t.casesBlock, t.mods))
+        val firstGuard = guardOnIf()
+        if (at[KwIf]) guardOnIf() match {
+          case t: Term.Match => Case(pat, Some(firstGuard), asSubMatch(t))
+          case t => syntaxError("`match` expected", at = t)
+        }
+        else firstGuard match {
+          case t: Term.Match if !at[RightArrow] => Case(pat, None, asSubMatch(t))
+          case _ => Case(pat, Some(firstGuard), caseBody())
+        }
+      }
     }
   }
 

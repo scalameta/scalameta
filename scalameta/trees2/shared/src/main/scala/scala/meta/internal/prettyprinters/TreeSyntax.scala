@@ -808,20 +808,23 @@ object TreeSyntax {
       case t: Case =>
         val ppat = p(Pattern, t.pat)
         val pcond = t.cond.fold(s())(cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)))
-        def isOneLiner(t: Case) = t.stats match {
-          case Nil => true
-          case (_: Lit | _: Term.Name) :: Nil => true
-          case _ => false
+        val prest = t.body match {
+          // Scala 3 sub-cases: the body is a `match` in the guard, printed as
+          // `case p [if cond] if e match ...`, with no `=>`.
+          case b: Term.SubMatch => s(kw("if"), " ", b)
+          case b: Term.Block => s(kw("=>"), b.stats)
+          case b =>
+            def isOneLiner(body: Tree) = body match {
+              case _: Lit | _: Term.Name | Term.Block(Nil) => true
+              case _ => false
+            }
+            def allOneLiner = t.parent match {
+              case Some(p: Term.CasesBlock) => p.cases.forall(x => isOneLiner(x.body))
+              case _ => isOneLiner(b)
+            }
+            s(kw("=>"), if (allOneLiner) s(" ", b) else i(b))
         }
-        def allOneLiner = t.parent match {
-          case Some(p: Term.CasesBlock) => p.cases.forall(isOneLiner)
-          case _ => isOneLiner(t)
-        }
-        val pbody = t.stats match {
-          case stat :: Nil if allOneLiner => s(" ", stat)
-          case stats => s(stats)
-        }
-        s("case ", ppat, pcond, " ", kw("=>"), pbody)
+        s("case ", ppat, pcond, " ", prest)
 
       case t: TypeCase => s("case ", t.pat, " ", kw("=>"), " ", t.body)
 

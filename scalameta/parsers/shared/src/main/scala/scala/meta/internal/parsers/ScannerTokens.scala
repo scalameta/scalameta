@@ -456,7 +456,18 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         case _: KwCase // case follows catch on same line
             if dialect.allowSignificantIndentation && curr.pos.endLine == next.pos.startLine =>
           val regions = markRegions()
-          val nextRegions = RegionIndent(findIndent(sepRegions)) :: regions
+          // Scala 3 sub-cases: a `match` in a case guard yields a single sub-case that
+          // must collapse at the enclosing level (no same-level body-line leniency),
+          // unlike the catch/match-body single-liner; use a deeper indent for it. The
+          // guard region may sit under `RegionIf`s from a chain of boolean `if` guards.
+          @tailrec
+          def getExtraIndent(rs: List[SepRegion]): Int = rs match {
+            case (_: RegionCaseExprGuard) :: _ => 1
+            case (_: RegionIf | _: RegionLine) :: tail => getExtraIndent(tail)
+            case _ => 0
+          }
+          val indent = findIndent(sepRegions) + getExtraIndent(sepRegions)
+          val nextRegions = RegionIndent(indent) :: regions
           currAndNextRef(regions, mkIndent(currPos, nextPos, nextRegions))
         case _: KwCase | _: LeftBrace => currRef(markRegions())
         case _ => currRef(sepRegions)
