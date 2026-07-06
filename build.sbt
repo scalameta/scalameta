@@ -127,6 +127,15 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   buildInfoKeys := Seq[BuildInfoKey](scalaVersion),
   description := "Library to generate SemanticDB from Scalac 2.x internal data structures",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+  // @unroll keeps SemanticdbConfig's synthetic apply/copy/ctor binary-compatible
+  // when fields are added, so mismatched semanticdb-scalac versions (e.g. scalafix
+  // vs. sbt) don't fail with NoSuchMethodError. See #4640.
+  libraryDependencies +=
+    compilerPlugin("com.lihaoyi" % "unroll-plugin" % "0.3.0" cross CrossVersion.full),
+  // exclude scala-library: the annotation pom pins a newer patch that would trip
+  // SIP-51 on the earliest cross-built Scala versions.
+  libraryDependencies +=
+    ("com.lihaoyi" %% "unroll-annotation" % "0.3.0").exclude("org.scala-lang", "scala-library"),
 ).dependsOn(semanticdbShared.jvm, io.jvm).enablePlugins(BuildInfoPlugin)
 
 lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/semanticdb"))

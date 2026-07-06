@@ -7,13 +7,14 @@ import scala.reflect.internal.util.NoPosition
 import scala.tools.nsc.reporters.Reporter
 import scala.util.matching.Regex
 
+import com.lihaoyi.unroll
+
 case class SemanticdbConfig(
     failures: FailureMode,
     profiling: BinaryMode,
     fileFilter: FileFilter,
     sourceroot: AbsolutePath,
     targetroot: AbsolutePath,
-    buildTarget: String,
     cleanup: BinaryMode,
     text: BinaryMode,
     md5: BinaryMode,
@@ -21,6 +22,8 @@ case class SemanticdbConfig(
     diagnostics: BinaryMode,
     synthetics: BinaryMode,
     overrides: BinaryMode,
+    @unroll
+    buildTarget: String = "",
 ) {
   private[scalac] lazy val realSourceRoot = sourceroot.toNIO.toRealPath()
 
@@ -53,7 +56,6 @@ object SemanticdbConfig {
     fileFilter = FileFilter.matchEverything,
     sourceroot = PathIO.workingDirectory,
     targetroot = PathIO.workingDirectory,
-    buildTarget = "",
     text = BinaryMode.Off,
     md5 = BinaryMode.On,
     cleanup = BinaryMode.On,
@@ -61,6 +63,7 @@ object SemanticdbConfig {
     diagnostics = BinaryMode.On,
     synthetics = BinaryMode.Off,
     overrides = BinaryMode.On,
+    buildTarget = "",
   )
 
   private val prefix = "-P:semanticdb:"
