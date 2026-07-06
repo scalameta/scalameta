@@ -612,6 +612,23 @@ lazy val mergeSettings = Def.settings(
   assembly / assemblyJarName :=
     name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
   assembly / assemblyOption ~= { _.withIncludeScala(false) },
+  // Relocate the plugin's internal implementation classes into a per-version
+  // package, so two different semanticdb-scalac versions can coexist on one
+  // -Xplugin classpath (e.g. scalafix's vs. sbt's) without their identically
+  // named internal classes colliding at link time (see #4640). Only the entry
+  // point named in scalac-plugin.xml stays put; shade rules still rewrite its
+  // references (and InteractiveSemanticdb's) to the relocated classes.
+  assembly / assemblyShadeRules := {
+    val pkg = "scala.meta.internal.semanticdb.scalac"
+    val ver = version.value.replaceAll("[^0-9A-Za-z]", "_")
+    Seq(
+      ShadeRule.rename(
+        s"$pkg.SemanticdbPlugin" -> s"$pkg.SemanticdbPlugin",
+        s"$pkg.SemanticdbPlugin$$" -> s"$pkg.SemanticdbPlugin$$",
+        s"$pkg.**" -> s"$pkg.shaded_v$ver.@1",
+      ).inAll,
+    )
+  },
   Compile / Keys.`package` := {
     val slimJar = (Compile / Keys.`package`).value
     val fatJar = new File(crossTarget.value + "/" + (assembly / assemblyJarName).value)
