@@ -1,11 +1,13 @@
 package scala.meta.tests.metacp
 
+import scala.meta.cli.Reporter
 import scala.meta.internal.classpath.ClasspathIndex
 import scala.meta.internal.io.PathIO
 import scala.meta.io.{AbsolutePath, Classpath}
 import scala.meta.tests.BuildInfo
 import scala.meta.tests.semanticdb.ManifestMetacp
 
+import java.io.{ByteArrayOutputStream, PrintStream}
 import java.nio.file.Paths
 
 import munit.FunSuite
@@ -55,5 +57,42 @@ class ClasspathIndexSuite extends FunSuite {
   test("ignore classpath entry for files that are not jar/zip") {
     val classpath = Classpath(Paths.get(getClass().getResource("/metac.index").toURI()))
     val index = ClasspathIndex(classpath)
+  }
+
+  // indexes the given resource jar, returning the index and whatever the
+  // reporter emitted on stderr (warnings about cyclic Class-Path references).
+  def indexResource(name: String): (ClasspathIndex, String) = {
+    val classpath = Classpath(Paths.get(getClass().getResource(name).toURI()))
+    val errStream = new ByteArrayOutputStream()
+    val reporter = Reporter().withSilentOut().withErr(new PrintStream(errStream))
+    val index = ClasspathIndex(classpath, reporter = reporter)
+    (index, errStream.toString())
+  }
+
+  test("self-referencing jar") {
+    // self-ref.jar's manifest lists itself on its Class-Path.
+    def load() = indexResource("/self-ref.jar")
+    try {
+      load()
+      fail("expected a StackOverflowError")
+    } catch { case _: StackOverflowError => }
+  }
+
+  test("mutually-referencing jars") {
+    // cycle-a -> cycle-b -> cycle-c -> cycle-b.
+    def load() = indexResource("/cycle-a.jar")
+    try {
+      load()
+      fail("expected a StackOverflowError")
+    } catch { case _: StackOverflowError => }
+  }
+
+  test("shared (diamond) Class-Path reference") {
+    // diamond-a -> {diamond-b, diamond-c}, diamond-b -> diamond-c: diamond-c is
+    // shared by two paths but not part of a cycle.
+    def load() = indexResource("/diamond-a.jar")
+    val (index, err) = load()
+    assert(index.getClassfile("A.class").isDefined)
+    assert(err.isEmpty, err)
   }
 }
