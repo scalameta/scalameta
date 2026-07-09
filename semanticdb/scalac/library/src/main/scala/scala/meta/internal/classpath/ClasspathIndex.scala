@@ -42,6 +42,9 @@ object ClasspathIndex {
 
   private final class Builder(classpath: Classpath, includeJdk: Boolean, reporter: Reporter) {
     private val dirs = mutable.Map.empty[String, Classdir]
+    // Jars already seen while indexing; seeing one again is taken to be a
+    // cyclic Class-Path reference. Ordered so the chain can be reported.
+    private val seenJars = mutable.LinkedHashSet.empty[AbsolutePath]
 
     def result(): ClasspathIndex = {
       val root = Classdir("/")
@@ -97,7 +100,16 @@ object ClasspathIndex {
         element
     }
 
-    private def expandJarEntry(jarpath: AbsolutePath): Unit = {
+    private def expandJarEntry(jarpath: AbsolutePath): Unit =
+      if (seenJars.add(jarpath)) // try loading it now
+        expandJarEntryImpl(jarpath)
+      else if (null ne reporter) { // cycle in manifest Class-Path references
+        val chain = (seenJars.dropWhile(_ != jarpath).toSeq :+ jarpath).map(_.toNIO.getFileName)
+          .mkString(" -> ")
+        reporter.err.println(s"warning: classpath cycle detected in manifest Class-Path: $chain")
+      }
+
+    private def expandJarEntryImpl(jarpath: AbsolutePath): Unit = {
       val file = jarpath.toFile
       val jar =
         try new JarFile(file)
