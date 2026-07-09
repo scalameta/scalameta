@@ -42,8 +42,12 @@ object ClasspathIndex {
 
   private final class Builder(classpath: Classpath, includeJdk: Boolean, reporter: Reporter) {
     private val dirs = mutable.Map.empty[String, Classdir]
-    // Jars already seen while indexing; seeing one again is taken to be a
-    // cyclic Class-Path reference. Ordered so the chain can be reported.
+    // Jars fully processed; lets a jar referenced from several manifests (a
+    // diamond) be indexed once instead of being mistaken for a cycle.
+    private val doneJars = mutable.Set.empty[AbsolutePath]
+    // Jars on the current manifest Class-Path recursion path; a jar reached
+    // while already on the path is a genuine cycle. Ordered so the offending
+    // chain can be reported.
     private val seenJars = mutable.LinkedHashSet.empty[AbsolutePath]
 
     def result(): ClasspathIndex = {
@@ -100,9 +104,14 @@ object ClasspathIndex {
         element
     }
 
-    private def expandJarEntry(jarpath: AbsolutePath): Unit =
+    private def expandJarEntry(jarpath: AbsolutePath): Unit = if (!doneJars(jarpath))
+      // not yet indexed via another Class-Path
       if (seenJars.add(jarpath)) // try loading it now
-        expandJarEntryImpl(jarpath)
+        try expandJarEntryImpl(jarpath)
+        finally {
+          doneJars += jarpath
+          seenJars -= jarpath
+        }
       else if (null ne reporter) { // cycle in manifest Class-Path references
         val chain = (seenJars.dropWhile(_ != jarpath).toSeq :+ jarpath).map(_.toNIO.getFileName)
           .mkString(" -> ")

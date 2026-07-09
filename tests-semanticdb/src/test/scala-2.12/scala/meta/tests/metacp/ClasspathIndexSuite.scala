@@ -92,8 +92,6 @@ class ClasspathIndexSuite extends FunSuite {
     def load() = indexResource("/diamond-a.jar")
     val (index, err) = load()
     assert(index.getClassfile("A.class").isDefined)
-    // wrong: the naive fix mistakes diamond-c's shared visit for a cycle.
-    assert(err.startsWith("warning: classpath cycle detected"), err)
-    assert(err.endsWith("diamond-c.jar -> diamond-c.jar\n"), err)
+    assert(err.isEmpty, err)
   }
 }
