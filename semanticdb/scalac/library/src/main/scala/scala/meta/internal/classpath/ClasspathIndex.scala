@@ -1,6 +1,7 @@
 package scala.meta.internal.classpath
 
 import org.scalameta.collections.Conversions._
+import scala.meta.cli.Reporter
 import scala.meta.internal.io.PathIO
 import scala.meta.io.{AbsolutePath, Classpath}
 
@@ -33,11 +34,13 @@ final class ClasspathIndex private (classpath: Classpath, val dirs: collection.M
 }
 
 object ClasspathIndex {
-  def apply(classpath: Classpath): ClasspathIndex = new Builder(classpath, false).result()
-  def apply(classpath: Classpath, includeJdk: Boolean): ClasspathIndex =
-    new Builder(classpath, includeJdk).result()
+  def apply(
+      classpath: Classpath,
+      includeJdk: Boolean = false,
+      reporter: Reporter = null,
+  ): ClasspathIndex = new Builder(classpath, includeJdk, reporter).result()
 
-  private final class Builder(classpath: Classpath, includeJdk: Boolean) {
+  private final class Builder(classpath: Classpath, includeJdk: Boolean, reporter: Reporter) {
     private val dirs = mutable.Map.empty[String, Classdir]
 
     def result(): ClasspathIndex = {
