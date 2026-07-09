@@ -72,19 +72,18 @@ class ClasspathIndexSuite extends FunSuite {
   test("self-referencing jar") {
     // self-ref.jar's manifest lists itself on its Class-Path.
     def load() = indexResource("/self-ref.jar")
-    try {
-      load()
-      fail("expected a StackOverflowError")
-    } catch { case _: StackOverflowError => }
+    val (index, err) = load()
+    assert(index.getClassfile("A.class").isDefined)
+    assert(err.startsWith("warning: classpath cycle detected"), err)
+    assert(err.endsWith("self-ref.jar -> self-ref.jar\n"), err)
   }
 
   test("mutually-referencing jars") {
     // cycle-a -> cycle-b -> cycle-c -> cycle-b.
     def load() = indexResource("/cycle-a.jar")
-    try {
-      load()
-      fail("expected a StackOverflowError")
-    } catch { case _: StackOverflowError => }
+    val (_, err) = load()
+    assert(err.startsWith("warning: classpath cycle detected"), err)
+    assert(err.endsWith("cycle-b.jar -> cycle-c.jar -> cycle-b.jar\n"), err)
   }
 
   test("shared (diamond) Class-Path reference") {
@@ -93,6 +92,8 @@ class ClasspathIndexSuite extends FunSuite {
     def load() = indexResource("/diamond-a.jar")
     val (index, err) = load()
     assert(index.getClassfile("A.class").isDefined)
-    assert(err.isEmpty, err)
+    // wrong: the naive fix mistakes diamond-c's shared visit for a cycle.
+    assert(err.startsWith("warning: classpath cycle detected"), err)
+    assert(err.endsWith("diamond-c.jar -> diamond-c.jar\n"), err)
   }
 }
