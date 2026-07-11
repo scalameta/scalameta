@@ -721,11 +721,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           }))
           else None
         else peekToken match {
-          case _: LeftBrace => Some(autoPos {
-              next()
-              if (PatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBracesOnOpen(pattern())))
-              else Term.SplicedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
-            })
+          case _: LeftBrace => Some(
+              autoPos {
+                next()
+                if (PatternContext.isInside()) Term.SplicedMacroPat(autoPos(inBracesOnOpen(pattern())))
+                else Term.SplicedMacroExpr(autoPos(inBracesOnOpen(blockRaw())))
+              },
+            )
           case t: Ident if t.value.nonEmpty && QuotedSpliceContext.isInside() =>
             Some(autoPos(next(Term.SplicedMacroExpr(termName(t)))))
           case t: KwThis if QuotedSpliceContext.isInside() =>
@@ -1157,12 +1159,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     private def typeCaseClauses(): Type.CasesBlock = autoPos {
       def cases() = listBy[TypeCase](allCases =>
         while (at[KwCase]) {
-          allCases += autoPos {
-            next()
-            val pat = infixTypeOrTuple(inMatchType = true)
-            accept[RightArrow]
-            TypeCase(pat, typeIndentedOpt())
-          }
+          allCases +=
+            autoPos {
+              next()
+              val pat = infixTypeOrTuple(inMatchType = true)
+              accept[RightArrow]
+              TypeCase(pat, typeIndentedOpt())
+            }
           newLinesOpt()
         },
       )
@@ -2421,15 +2424,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         Success(blockExprOnIndent())
       case _: KwNew =>
         canApply = false
-        Success(autoPos {
-          next()
-          val tpl = TemplateOwnerContext.within(OwnedByTrait)(template())
-          tpl.inits match {
-            case init :: Nil if !prev[RightBrace] && tpl.earlyClause.isEmpty && tpl.body.isEmpty =>
-              Term.New(init)
-            case _ => Term.NewAnonymous(tpl)
-          }
-        })
+        Success(
+          autoPos {
+            next()
+            val tpl = TemplateOwnerContext.within(OwnedByTrait)(template())
+            tpl.inits match {
+              case init :: Nil
+                  if !prev[RightBrace] && tpl.earlyClause.isEmpty && tpl.body.isEmpty =>
+                Term.New(init)
+              case _ => Term.NewAnonymous(tpl)
+            }
+          },
+        )
       case _ => Failure(ParseException(currToken.pos, "illegal start of simple expression"))
     }) match {
       case Success(x) => Success(simpleExprRest(x, canApply = canApply, startPos = startPos))
@@ -3298,8 +3304,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  def memberParamClauseGroups(): List[Member.ParamClauseGroup] = listBy[Member.ParamClauseGroup](
-    buf =>
+  def memberParamClauseGroups(): List[Member.ParamClauseGroup] =
+    listBy[Member.ParamClauseGroup](buf =>
       while ({
         val pcgOpt = memberParamClauseGroup(isFirst = buf.isEmpty)
         pcgOpt.exists { pcg =>
@@ -3310,7 +3316,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           pcg.paramClauses.lastOption.exists(pc => pc.is[Quasi] || !pc.mod.is[Mod.Implicit])
         }
       }) {},
-  )
+    )
 
   def termParamClauses(): List[Term.ParamClause] =
     if (!isAfterOptNewLine[LeftParen]) Nil else termParamClausesOnParen()

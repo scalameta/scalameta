@@ -306,10 +306,11 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
       val outDir = (Compile / sourceManaged).value / "generated"
       val argsIter = args.toIterator ++ Iterator("dir" -> outDir.getAbsolutePath)
       val argsString = argsIter.map { case (k, v) => s" --$k=$v" }.mkString
-      Def.task {
-        (Compile / (scala3TreeLiftsCodeGen / run)).toTask(argsString).value
-        args.values.map(outDir / _).toSeq
-      }
+      Def
+        .task {
+          (Compile / (scala3TreeLiftsCodeGen / run)).toTask(argsString).value
+          args.values.map(outDir / _).toSeq
+        }
     } else Def.task(Seq.empty[File])
   }.taskValue,
 ).configureCross(crossPlatformPublishSettings, crossPlatformShading)
@@ -535,12 +536,14 @@ lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(Buil
     buildInfoPackage := "scala.meta.internal.bench",
     Jmh / resourceDirectory := (Compile / resourceDirectory).value,
     Jmh / fullClasspath ++= (scalameta.jvm / Compile / fullClasspath).value,
-    Jmh / run := Def.inputTaskDyn {
-      val buf = List.newBuilder[String]
-      buf += "org.openjdk.jmh.Main"
-      buf ++= spaceDelimited("<arg>").parsed
-      (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
-    }.evaluated,
+    Jmh / run :=
+      Def
+        .inputTaskDyn {
+          val buf = List.newBuilder[String]
+          buf += "org.openjdk.jmh.Main"
+          buf ++= spaceDelimited("<arg>").parsed
+          (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
+        }.evaluated,
   ).dependsOn(scalameta.jvm)
 
 // ==========================================

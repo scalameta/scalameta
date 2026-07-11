@@ -768,11 +768,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         else LeadingInfix.No
 
       def getInfixLFIfNeeded(regions: List[SepRegion]) = {
-        def getInfixLF(invalid: Option[String]) = Some(Right {
-          val lf = tokens(indentPos)
-          val out = InfixLF(lf.input, lf.dialect, lf.start, lf.end, invalid)
-          eolRefFor(sepRegionsOrig, out, indentPos)
-        })
+        def getInfixLF(invalid: Option[String]) = Some(
+          Right {
+            val lf = tokens(indentPos)
+            val out = InfixLF(lf.input, lf.dialect, lf.start, lf.end, invalid)
+            eolRefFor(sepRegionsOrig, out, indentPos)
+          },
+        )
         isLeadingInfix(regions) match {
           case LeadingInfix.Yes => getInfixLF(None)
           case LeadingInfix.InvalidArg if (sepRegionsOrig match {

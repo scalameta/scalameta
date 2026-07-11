@@ -211,14 +211,15 @@ package object trees {
   private[meta] def checkValidParamClauses(paramClauses: Iterable[Term.ParamClause]): Boolean = {
     var hadImplicit = false
     !paramClauses.exists(pc =>
-      hadImplicit || !pc.is[Quasi] && {
-        hadImplicit = pc.mod.is[Mod.Implicit]
-        var hadRepeated = false
-        pc.values.exists(v =>
-          try hadRepeated
-          finally hadRepeated = !v.is[Quasi] && v.decltpe.is[Type.Repeated],
-        )
-      },
+      hadImplicit ||
+        !pc.is[Quasi] && {
+          hadImplicit = pc.mod.is[Mod.Implicit]
+          var hadRepeated = false
+          pc.values.exists(v =>
+            try hadRepeated
+            finally hadRepeated = !v.is[Quasi] && v.decltpe.is[Type.Repeated],
+          )
+        },
     )
   }
 
