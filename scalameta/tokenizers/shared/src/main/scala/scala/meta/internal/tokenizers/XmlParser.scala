@@ -13,7 +13,7 @@ import fastparse._
  * [[https://github.com/scalameta/fastparse/pull/1#issuecomment-244940542]] and adapted to more
  * closely match scala-xml and then adapted to fastparse 2.3.1
  */
-class XmlParser(dialect: Dialect) {
+private[meta] class XmlParser(dialect: Dialect) {
 
   val blockParser = new ScalaExprPositionParser(dialect)
 
@@ -130,7 +130,7 @@ class XmlParser(dialect: Dialect) {
  *
  * Doesn't really parse scala expressions, only reads until the curly brace balance hits 0.
  */
-class ScalaExprPositionParser(dialect: Dialect) {
+private[meta] class ScalaExprPositionParser(dialect: Dialect) {
   case class XmlTokenRange(from: Int, to: Int) // from is inclusive, to is exclusive
   private val _splicePositions = List.newBuilder[XmlTokenRange]
   def splicePositions: List[XmlTokenRange] = _splicePositions.result()

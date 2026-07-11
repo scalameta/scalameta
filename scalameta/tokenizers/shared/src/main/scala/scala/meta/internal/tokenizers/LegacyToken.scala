@@ -5,7 +5,7 @@ package tokenizers
 // NOTE: moved to the package object
 // type LegacyToken = Int
 
-object LegacyToken {
+private[meta] object LegacyToken {
   def isIdentifier(code: LegacyToken) = code == IDENTIFIER // used by ide
   def isLiteral(code: LegacyToken) = code >= CHARLIT && code <= INTERPOLATIONID
 

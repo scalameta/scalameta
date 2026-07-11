@@ -94,7 +94,7 @@ private[meta] case class CharArrayReader(
 
 }
 
-object CharArrayReader {
+private[meta] object CharArrayReader {
 
   case class NextChar(ch: Int, end: Int)
 
