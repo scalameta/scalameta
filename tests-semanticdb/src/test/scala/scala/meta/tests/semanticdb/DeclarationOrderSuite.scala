@@ -28,7 +28,7 @@ class DeclarationOrderSuite extends SemanticdbSuite {
        |  object A
        |}
        |""".stripMargin,
-    (doc, x) => assertEquals(declarations(doc, x), List("do1/X.A#", "do1/X.A.", "do1/X.B#")),
+    (doc, x) => assertEquals(declarations(doc, x), List("do1/X.A#", "do1/X.B#", "do1/X.A.")),
   )
 
   // Positive: same with a non-class member between the case class and its companion.
@@ -40,7 +40,7 @@ class DeclarationOrderSuite extends SemanticdbSuite {
        |  object A
        |}
        |""".stripMargin,
-    (doc, x) => assertEquals(declarations(doc, x), List("do2/X.A#", "do2/X.A.", "do2/X.m().")),
+    (doc, x) => assertEquals(declarations(doc, x), List("do2/X.A#", "do2/X.m().", "do2/X.A.")),
   )
 
   // Negative: an adjacent explicit companion is already in source order and must not move.
@@ -101,7 +101,7 @@ class DeclarationOrderSuite extends SemanticdbSuite {
        |  object A
        |}
        |""".stripMargin,
-    (doc, x) => assertEquals(declarations(doc, x), List("do8/X.A#", "do8/X.A.", "do8/X.B#")),
+    (doc, x) => assertEquals(declarations(doc, x), List("do8/X.A#", "do8/X.B#", "do8/X.A.")),
   )
 
   // Positive: two companions whose objects are declared in the reverse order of their classes
@@ -116,7 +116,7 @@ class DeclarationOrderSuite extends SemanticdbSuite {
        |}
        |""".stripMargin,
     (doc, x) =>
-      assertEquals(declarations(doc, x), List("do9/X.A#", "do9/X.A.", "do9/X.B#", "do9/X.B.")),
+      assertEquals(declarations(doc, x), List("do9/X.A#", "do9/X.B#", "do9/X.B.", "do9/X.A.")),
   )
 
   // Negative: the spec layout for a template with ctor params — param fields/getters/setters
