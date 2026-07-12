@@ -3298,8 +3298,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  def memberParamClauseGroups(): List[Member.ParamClauseGroup] = listBy[Member.ParamClauseGroup](
-    buf =>
+  def memberParamClauseGroups(): List[Member.ParamClauseGroup] =
+    listBy[Member.ParamClauseGroup](buf =>
       while ({
         val pcgOpt = memberParamClauseGroup(isFirst = buf.isEmpty)
         pcgOpt.exists { pcg =>
@@ -3310,7 +3310,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           pcg.paramClauses.lastOption.exists(pc => pc.is[Quasi] || !pc.mod.is[Mod.Implicit])
         }
       }) {},
-  )
+    )
 
   def termParamClauses(): List[Term.ParamClause] =
     if (!isAfterOptNewLine[LeftParen]) Nil else termParamClausesOnParen()
