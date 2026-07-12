@@ -2004,6 +2004,78 @@ example/InstrumentTyper#singletonType(). => method singletonType(x: Predef.type)
 example/InstrumentTyper#singletonType().(x) => param x: Predef.type
   Predef => scala/Predef.
 
+example/Issue1544.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1544.class
+Text => empty
+Language => Scala
+Symbols => 24 entries
+
+Symbols:
+example/Issue1544. => final object Issue1544 extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1544.A# => case class A extends AnyRef with Product with Serializable { +11 decls }
+  AnyRef => scala/AnyRef#
+  Product => scala/Product#
+  Serializable => scala/package.Serializable#
+example/Issue1544.A#`<init>`(). => primary ctor <init>()
+example/Issue1544.A#canEqual(). => synthetic method canEqual(x$1: Any): Boolean
+  x$1 => example/Issue1544.A#canEqual().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Issue1544.A#canEqual().(x$1) => synthetic param x$1: Any
+  Any => scala/Any#
+example/Issue1544.A#copy(). => synthetic method copy(): A
+  A => example/Issue1544.A#
+example/Issue1544.A#equals(). => synthetic method equals(x$1: Any): Boolean
+  x$1 => example/Issue1544.A#equals().(x$1)
+  Any => scala/Any#
+  Boolean => scala/Boolean#
+example/Issue1544.A#equals().(x$1) => synthetic param x$1: Any
+  Any => scala/Any#
+example/Issue1544.A#hashCode(). => synthetic method hashCode(): Int
+  Int => scala/Int#
+example/Issue1544.A#productArity(). => synthetic method productArity: Int
+  Int => scala/Int#
+example/Issue1544.A#productElement(). => synthetic method productElement(x$1: Int): Any
+  x$1 => example/Issue1544.A#productElement().(x$1)
+  Int => scala/Int#
+  Any => scala/Any#
+example/Issue1544.A#productElement().(x$1) => synthetic param x$1: Int
+  Int => scala/Int#
+example/Issue1544.A#productElementName(). => synthetic method productElementName(x$1: Int): String
+  x$1 => example/Issue1544.A#productElementName().(x$1)
+  Int => scala/Int#
+  String => java/lang/String#
+example/Issue1544.A#productElementName().(x$1) => synthetic param x$1: Int
+  Int => scala/Int#
+example/Issue1544.A#productIterator(). => synthetic method productIterator: Iterator[Any]
+  Iterator => scala/collection/Iterator#
+  Any => scala/Any#
+example/Issue1544.A#productPrefix(). => synthetic method productPrefix: String
+  String => java/lang/String#
+example/Issue1544.A#toString(). => synthetic method toString(): String
+  String => java/lang/String#
+example/Issue1544.A. => final object A extends AnyRef with Serializable { +3 decls }
+  AnyRef => scala/AnyRef#
+  Serializable => java/io/Serializable#
+example/Issue1544.A.apply(). => synthetic method apply(): A
+  A => example/Issue1544.A#
+example/Issue1544.A.unapply(). => synthetic method unapply(x$0: A): Boolean
+  x$0 => example/Issue1544.A.unapply().(x$0)
+  A => example/Issue1544.A#
+  Boolean => scala/Boolean#
+example/Issue1544.A.unapply().(x$0) => synthetic param x$0: A
+  A => example/Issue1544.A#
+example/Issue1544.A.writeReplace(). => private synthetic method writeReplace(): Object
+  Object => java/lang/Object#
+example/Issue1544.B# => class B extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1544.B#`<init>`(). => primary ctor <init>()
+
 example/Issue1749.class
 -----------------------
 
