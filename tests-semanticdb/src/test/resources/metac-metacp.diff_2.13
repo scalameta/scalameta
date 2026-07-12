@@ -585,6 +585,18 @@ example/InstrumentTyper#existential().
                      display_name: "T"
 
 
+==================
+example/Issue1544.
+==================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "example/Issue1544.A#"
+-      symlinks: "example/Issue1544.B#"
+       symlinks: "example/Issue1544.A."
++      symlinks: "example/Issue1544.B#"
+
+
 ===============================
 example/Issue1544.A#canEqual().
 ===============================
