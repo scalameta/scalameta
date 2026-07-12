@@ -6,7 +6,7 @@ import scala.meta.tokens.Token
 
 import java.math.{MathContext, RoundingMode}
 
-class LegacyTokenData {
+private[meta] class LegacyTokenData {
 
   import LegacyToken._
 
@@ -116,7 +116,7 @@ class LegacyTokenData {
 
 }
 
-object LegacyTokenData {
+private[meta] object LegacyTokenData {
   // add a bit more, JS doesn't handle it well
   private val bigDecimalMaxFloat = BigDecimal
     .binary(Float.MaxValue, new MathContext(8, RoundingMode.UP))

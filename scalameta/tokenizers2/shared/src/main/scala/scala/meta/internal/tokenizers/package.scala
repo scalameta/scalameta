@@ -3,7 +3,7 @@ package internal
 
 package object tokenizers {
   type Offset = Int
-  type LegacyToken = Int
+  private[meta] type LegacyToken = Int
 
   private val baseKeywords = Set(
     "abstract",
