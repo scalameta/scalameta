@@ -53,7 +53,7 @@ Welcome to the Ammonite Repl 2.3.8 (Scala 2.13.5 Java 11.0.7)
 ### Scastie
 
 You can try out Scalameta online with the
-[Scastie playground](scastie.html).
+[Scastie playground](scastie.md).
 
 ## What is a syntax tree?
 
@@ -61,7 +61,7 @@ Syntax trees are a representation of source code that makes it easier to
 programmatically analyze programs. Scalameta has syntax trees that represent
 Scala programs.
 
-![](assets/tree.svg)
+![](../assets/tree.svg)
 
 Scalameta trees are **lossless**, meaning that they represent Scala programs in
 sufficient detail to go from text to trees and vice-versa. Lossless syntax trees
@@ -321,7 +321,7 @@ println(
 ```
 
 To learn more about quasiquotes, consult the
-[quasiquote spec](quasiquotes.html).
+[quasiquote spec](quasiquotes.md).
 
 ## Pattern match trees
 
