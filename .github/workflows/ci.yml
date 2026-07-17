@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         command:
-          - "++2.13.18; download-scala-library; testsSemanticdb/test"
+          - "++2.13.18; download-scala-library"
           - "communitytest/test"
           - "mima"
     steps:
@@ -22,12 +22,12 @@ jobs:
       - name: Set up JVM
         uses: actions/setup-java@v5
         with:
-          java-version: '11'
+          java-version: '25'
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
       - run: sbt '${{ matrix.command }}'
-  testLatestScala:
+  testLatestScala2OnJVM:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -35,15 +35,13 @@ jobs:
         scala:
           - '2.12.21'
           - '2.13.18'
-          - '3.3.8'
-          - '3.8.4'
         java:
+          # Certify the JVM runtimes we support: oldest (floor) through
+          # newest. JS/Native are certified separately (testJsNative);
+          # their toolchain requires JDK 17+, so they don't belong here.
           - '8'
           - '17'
-        exclude:
-          # Scala since 3.8.0 is compiled with JDK 17
-          - java: '8'
-            scala: '3.8.4'
+          - '25'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -57,13 +55,60 @@ jobs:
       - uses: sbt/setup-sbt@v1
       - name: Test Parser on ${{ matrix.scala }} using JVM
         run: sbt ++${{ matrix.scala }} testsJVM/test
+      - name: Test Semanticdb on ${{ matrix.scala }}
+        run: sbt ++${{ matrix.scala }} testsSemanticdb/test
+  testLatestScala3OnJVM:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scala:
+          - '3.3.8'
+          - '3.8.4'
+        java:
+          - '17'
+          - '25'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up JVM
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+          cache: 'sbt'
+      - uses: sbt/setup-sbt@v1
+      - name: Test Parser on ${{ matrix.scala }} using JVM
+        run: sbt ++${{ matrix.scala }} testsJVM/test
+  testJsNative:
+    # JS/Native output is independent of the toolchain JDK (JS runs on
+    # Node, Native emits a binary), so we don't matrix the JDK here — one
+    # modern LTS suffices, and it must be 17+ (older JDKs warn/fail).
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scala:
+          - '2.12.21'
+          - '2.13.18'
+          - '3.3.8'
+          - '3.8.4'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up JVM
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'sbt'
+      - uses: sbt/setup-sbt@v1
       - name: Test Parser on ${{ matrix.scala }} using JS
         run: sbt ++${{ matrix.scala }} testsJS/test
       - name: Test Parser on ${{ matrix.scala }} using Native
         run: sbt ++${{ matrix.scala }} testsNative/test
-      - name: Test Semanticdb on ${{ matrix.scala }}
-        if: ${{ startsWith(matrix.scala, '2.') }}
-        run: sbt ++${{ matrix.scala }} testsSemanticdb/test
   testOlderScalaOnJVM:
     runs-on: ubuntu-latest
     strategy:
