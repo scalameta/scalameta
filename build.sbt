@@ -595,6 +595,11 @@ lazy val sharedSettings = Def.settings(
     else Nil
   },
   scalacOptions ++= Seq("-feature", "-unchecked"),
+  // Target Java 8 bytecode for Scala 2 JVM artifacts regardless of the
+  // build JDK, so releases built on newer JDKs still run on JDK 8. Scala 3
+  // (3.8+) is built with JDK 17 and needs no -release flag.
+  scalacOptions ++=
+    { if (!isScala3.value && isPlatform(JVMPlatform).value) Seq("-release", "8") else Nil },
   Compile / doc / scalacOptions ++=
     { if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups") },
   Test / parallelExecution := false, // hello, reflection sync!!
