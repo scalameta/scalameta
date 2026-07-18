@@ -4,12 +4,9 @@ package transversers
 private[meta] trait Api extends VersionSpecificApis {
   implicit class XtensionCollectionLikeUI(tree: Tree) {
     // legacy calls
-    def transform(fn: PartialFunction[Tree, Tree]): Tree = {
-      object transformer extends Transformer {
-        override def apply(tree: Tree): Tree = super.apply(fn.applyOrElse(tree, identity[Tree]))
-      }
-      transformer(tree)
-    }
+    def transform(fn: PartialFunction[Tree, Tree]): Tree = new Transformer {
+      override protected def transformNode(tree: Tree): Tree = fn.applyOrElse(tree, identity[Tree])
+    }.transform(tree)
     def traverse(f: PartialFunction[Tree, Unit]): Unit = tree.dfs(f.applyOrElse(_, (_: Tree) => ()))
     def collect[A](f: PartialFunction[Tree, A]): List[A] = tree.dfsCollect(f)
   }
