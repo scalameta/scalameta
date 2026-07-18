@@ -40,17 +40,28 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
 
   def loadField(f: c.Tree, s: c.Tree): c.Tree = {
     def lazyLoad(fn: c.Tree => c.Tree) = {
-      val q"this.$finternalName" = f
+      val q"$self.$finternalName" = f
+      val selfTpe = self.tpe
       val ownerName = c.internal.enclosingOwner.owner.name
       val externalName = AdtHelpers.getterName(finternalName.toString)
       val assertionMessage = s"internal error when initializing $ownerName.$externalName"
+      val proto = c.freshName(TermName("proto"))
+      // Walk the privatePrototype chain iteratively to the nearest ancestor whose
+      // field is already materialized, then reparent that value directly onto
+      // `this`. Recursing through the chain instead (via each prototype's getter)
+      // both overflows the stack and rebuilds progressively deeper lazy chains,
+      // making a full traversal O(n^2). The chain is walked via the base-typed
+      // `privatePrototype`, casting to this node's type to reach the field.
       q"""
         if ($f == null) {
           // there's not much sense in using org.scalameta.invariants.require here
           // because when the assertion trips, the tree is most likely in inconsistent state
           // which will either lead to useless printouts or maybe even worse errors
           _root_.scala.Predef.require(this.privatePrototype != null, $assertionMessage)
-          $f = ${fn(q"this.privatePrototype.${TermName(externalName)}")}
+          var $proto: $selfTpe = this
+          do $proto = $proto.privatePrototype.asInstanceOf[$selfTpe]
+          while ($proto.$finternalName == null)
+          $f = ${fn(q"$proto.$finternalName")}
         }
       """
     }
