@@ -72,8 +72,6 @@ object Corpus {
         "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/page/Entity.scala",
         "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/HtmlPage.scala",
         "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/page/Template.scala",
-        // transformer fails with StackOverflow - https://github.com/scalameta/scalameta/issues/2509
-        "target/repos/kafka/core/src/main/scala/kafka/server/KafkaConfig.scala",
       ).exists(x.startsWith),
   )
 
