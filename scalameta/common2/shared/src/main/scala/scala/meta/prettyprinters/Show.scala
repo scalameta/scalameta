@@ -63,8 +63,6 @@ private[meta] object Show {
       }
     }
 
-    def append(fn: CharSequence => Result): Unit = fn(sb).serialize(this)
-
     def appendNoDelay(value: String): Unit = if (delay eq null) append(value) else delay = null
 
     private def blank(newAfterEOL: Int): Unit = {
@@ -77,25 +75,61 @@ private[meta] object Show {
 
     def nl(): Unit = if (afterEOL <= 0) blank(1)
 
-    def nlBefore(obj: Result): Unit = {
-      nl()
-      obj.serialize(this)
-    }
+    private def taskRun(task: => Unit): Result = new Run(() => task)
 
-    def indent(obj: Result): Unit = {
+    // enter an indent scope: indent, and newline, return the restore action
+    private def taskIndent: Result = {
       val prev = indentation.length
       indentation.append("  ")
-      nlBefore(obj)
-      indentation.setLength(prev)
+      nl()
+      taskRun(indentation.setLength(prev))
+    }
+
+    // Iterative render: a deeply nested Result would overflow the stack if each
+    // node recursed into its children's `serialize`. Instead, walk an explicit
+    // task stack -- each task either emits a Result or runs a deferred action
+    // (a child's trailing effect).
+    def serialize(top: Result): Unit = {
+      var stack: List[Result] = top :: Nil
+      while (stack.nonEmpty) {
+        val task = stack.head
+        stack = stack.tail
+        task match {
+          case None => // do nothing
+          case AsIs(value) => appendAsIs(value)
+          case Str(value) => append(value)
+          case Blank => blank()
+          case m: Meta => stack = m.res :: stack
+          case Function(fn) => stack = fn(sb) :: stack
+          case Newline(res) =>
+            nl()
+            stack = res :: stack
+          case Indent(res) => stack = res :: taskIndent :: stack
+          case Space(res, space) =>
+            if (wasNL) stack = taskIndent :: stack else append(space)
+            stack = res :: stack
+          case Wrap(prefix, res, suffix) =>
+            delay(prefix)
+            stack = res :: taskRun(appendNoDelay(suffix)) :: stack
+          case Sequence(xs @ _*) =>
+            val it = xs.reverseIterator
+            while (it.hasNext) stack = it.next() :: stack
+          case Repeat(xs, sep) =>
+            val sepRun = taskRun(delay(sep))
+            stack = taskRun(delay(null)) :: stack
+            val it = xs.reverseIterator // most of the time, walk over IndexedSeq
+            while (it.hasNext) stack = it.next() :: sepRun :: stack
+          case r: Run => r.run()
+        }
+      }
     }
   }
 
   sealed abstract class Result {
     def desc: String
-    def serialize(implicit builder: Serializer): Unit
     override def toString: String = {
-      implicit val builder: Serializer = new Serializer
-      serialize
+      val builder = new Serializer
+      builder.serialize(this)
       builder.result
     }
     final def isEmpty: Boolean = this eq None
@@ -105,77 +139,55 @@ private[meta] object Show {
   final case object None extends Result {
     override def desc: String = "None"
     def headChar: Option[Char] = Option.empty
-    override def serialize(implicit builder: Serializer): Unit = {} // do nothing
   }
   final case class AsIs(value: String) extends Result {
     override def desc: String = s"AsIs($value)"
     def headChar: Option[Char] = value.headOption
-    override def serialize(implicit builder: Serializer): Unit = builder.appendAsIs(value)
   }
   final case class Str(value: String) extends Result {
     override def desc: String = s"Str($value)"
     def headChar: Option[Char] = value.headOption
-    override def serialize(implicit builder: Serializer): Unit = builder.append(value)
   }
   final case class Sequence(xs: Result*) extends Result {
     override def desc: String = s"Sequence(#${xs.length})"
     def headChar: Option[Char] = xs.view.flatMap(_.headChar).headOption
-    override def serialize(implicit builder: Serializer): Unit = xs.foreach(_.serialize)
   }
   final case class Repeat(xs: Seq[Result], sep: String) extends Result {
     override def desc: String = s"Repeat(#${xs.length}, s=$sep)"
     def headChar: Option[Char] = xs.view.flatMap(_.headChar).headOption
-    override def serialize(implicit builder: Serializer): Unit = {
-      xs.foreach { x =>
-        x.serialize
-        builder.delay(sep)
-      }
-      builder.delay(null)
-    }
   }
   final case class Indent(res: Result) extends Result {
     override def desc: String = s"Indent(r=${res.desc})"
     def headChar: Option[Char] = res.headChar
-    override def serialize(implicit builder: Serializer): Unit = builder.indent(res)
   }
   final case class Space(res: Result, space: String) extends Result {
     override def desc: String = s"NoSplit(r=${res.desc})"
     def headChar: Option[Char] = res.headChar
-    override def serialize(implicit builder: Serializer): Unit =
-      if (builder.wasNL) builder.indent(res)
-      else {
-        builder.append(space)
-        res.serialize
-      }
   }
   final case object Blank extends Result {
     override def desc: String = s"Blank()"
     def headChar: Option[Char] = Option.empty
-    override def serialize(implicit builder: Serializer): Unit = builder.blank()
   }
   final case class Newline(res: Result) extends Result {
     override def desc: String = s"Newline(r=${res.desc})"
     def headChar: Option[Char] = Option.empty
-    override def serialize(implicit builder: Serializer): Unit = builder.nlBefore(res)
   }
   final case class Meta(data: Any, res: Result) extends Result {
     override def desc: String = s"Meta(d=$data, r=${res.desc})"
     def headChar: Option[Char] = res.headChar
-    override def serialize(implicit builder: Serializer): Unit = res.serialize
   }
   final case class Wrap(prefix: String, res: Result, suffix: String) extends Result {
     override def desc: String = s"Wrap(p=$prefix, r=${res.desc}, s=$suffix)"
     def headChar: Option[Char] = prefix.headOption.orElse(res.headChar)
-    override def serialize(implicit builder: Serializer): Unit = {
-      builder.delay(prefix)
-      res.serialize
-      builder.appendNoDelay(suffix)
-    }
   }
   final case class Function(fn: CharSequence => Result) extends Result {
     override def desc: String = s"Function(...)"
     def headChar: Option[Char] = Option.empty
-    override def serialize(implicit builder: Serializer): Unit = builder.append(fn)
+  }
+
+  private final class Run(val run: () => Unit) extends Result {
+    override def desc: String = "Run(...)"
+    override def headChar: Option[Char] = Option.empty
   }
 
   def apply[T](f: T => Result): Show[T] = new Show[T] {
