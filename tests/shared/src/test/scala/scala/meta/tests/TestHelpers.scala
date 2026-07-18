@@ -41,4 +41,19 @@ object TestHelpers {
 
   case class TestCase[A](obj: A)(implicit val loc: munit.Location)
 
+  /**
+   * A left-leaning `f.f.….f.x` spine of the given depth. Mirrors the pathological chained
+   * `Select`/`Apply` structure (e.g. Kafka's `KafkaConfig`) that overflows recursive tree
+   * algorithms. Built with a loop, so constructing it is itself stack-safe.
+   */
+  def deepTree(depth: Int): Term = {
+    var t: Term = Term.Name("x")
+    var i = 0
+    while (i < depth) {
+      t = Term.Select(t, Term.Name("f"))
+      i += 1
+    }
+    t
+  }
+
 }
