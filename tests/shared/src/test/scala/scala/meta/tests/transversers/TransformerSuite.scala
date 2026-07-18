@@ -13,14 +13,10 @@ class TransformerSuite extends TreeSuiteBase {
         def bar(x: x) = ???
       }
     """
-    object transformer extends Transformer {
-      override def apply(tree: Tree): Tree = tree match {
-        case Term.Name("x") => Term.Name("y")
-        case Type.Name("x") => Type.Name("y")
-        case _ => super.apply(tree)
-      }
+    val tree1 = tree0.transform {
+      case Term.Name("x") => Term.Name("y")
+      case Type.Name("x") => Type.Name("y")
     }
-    val tree1 = transformer(tree0)
     assertEquals(
       tree1.toString,
       """|{
@@ -38,10 +34,7 @@ class TransformerSuite extends TreeSuiteBase {
         def bar(x: x) = ???
       }
     """
-    object transformer extends Transformer {
-      override def apply(tree: Tree): Tree = if (tree.toString == "x") q"y" else super.apply(tree)
-    }
-    intercept[UnsupportedOperationException](transformer(tree0))
+    intercept[UnsupportedOperationException](tree0.transform { case t if t.toString == "x" => q"y" })
   }
 
   test("Tree.transform") {

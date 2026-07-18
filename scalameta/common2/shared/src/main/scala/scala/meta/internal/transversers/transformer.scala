@@ -13,13 +13,15 @@ class transformer extends StaticAnnotation {
 class TransformerMacros(val c: Context) extends TransverserMacros {
   import c.universe._
 
+  override def applyModifiers: Modifiers = Modifiers(Flag.PROTECTED)
+
   def transformField(treeName: TermName)(f: Field): ValDef = {
     def treeTransformer(input: Tree, tpe: Type): Tree = {
       val from = c.freshName(TermName("from"))
       val to = c.freshName(TermName("to"))
       q"""
           val $from = $input
-          val $to = apply($from)
+          val $to = transformChild($from)
           $to match {
             case $to: ${hygienicRef(tpe.typeSymbol)} =>
               if ($from ne $to) same = false

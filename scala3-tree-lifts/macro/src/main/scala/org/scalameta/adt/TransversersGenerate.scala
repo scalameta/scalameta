@@ -78,7 +78,7 @@ class TransversersGenerateMacros(val c: Context) extends GenerateHelper with Ast
       val fname = f.name.toString
       val code = f.tpe match {
         case tpe @ TreeTpe() =>
-          s"""|          val to = apply(original)
+          s"""|          val to = transformChild(original)
               |          to match {
               |            case to: ${getTpeName(tpe)} =>
               |              if (original ne to) same = false
@@ -90,7 +90,7 @@ class TransversersGenerateMacros(val c: Context) extends GenerateHelper with Ast
         case OptionTreeTpe(tpe) =>
           s"""|          original match {
               |            case Some(from) =>
-              |              apply(from) match {
+              |              transformChild(from) match {
               |                case to: ${getTpeName(tpe)} =>
               |                  if (from eq to) original
               |                  else { same = false; Some(to) }
@@ -105,7 +105,7 @@ class TransversersGenerateMacros(val c: Context) extends GenerateHelper with Ast
           s"""|          var samelist = true
               |          val tolist = List.newBuilder[$elemType]
               |          original.foreach { from =>
-              |            apply(from) match {
+              |            transformChild(from) match {
               |              case to: $elemType =>
               |                if (from ne to) samelist = false
               |                tolist += to
@@ -143,8 +143,8 @@ class TransversersGenerateMacros(val c: Context) extends GenerateHelper with Ast
       s"""|package scala.meta
           |package transversers
           |
-          |abstract class Transformer {
-          |  def apply(tree: scala.meta.Tree): scala.meta.Tree = {
+          |abstract class Transformer extends scala.meta.transversers.TransformerBase {
+          |  protected def apply(tree: scala.meta.Tree): scala.meta.Tree = {
           |    tree match {
           |      case t: scala.meta.Term => applyTerm(t)
           |      case t: scala.meta.Type => applyType(t)

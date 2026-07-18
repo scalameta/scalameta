@@ -28,6 +28,10 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
   def leafHandler(l: Leaf, treeName: TermName): Tree
   def leafHandlerType(): Tree
   def generatedMethods(): Tree
+  // Access of the generated primary `apply`. Public by default (Traverser); the
+  // transformer overrides it to `protected` so `apply` can only be reached via
+  // `transform`.
+  def applyModifiers: Modifiers = Modifiers()
 
   def impl(annottees: Tree*): Tree = annottees.transformAnnottees {
     new ImplTransformer {
@@ -83,7 +87,7 @@ trait TransverserMacros extends MacroHelpers with AstReflection {
     val restTree = getSecondaryApply("Rest", restBuilder.result())()
 
     q"""
-      def apply(tree: $TreeClass): ${leafHandlerType()} = {
+      $applyModifiers def apply(tree: $TreeClass): ${leafHandlerType()} = {
         tree match {
           case t: ${hygienicRef(TermAdt.sym)} => applyTerm(t)
           case t: ${hygienicRef(TypeAdt.sym)} => applyType(t)
