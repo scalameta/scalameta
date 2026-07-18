@@ -86,6 +86,12 @@ jobs:
     # Node, Native emits a binary), so we don't matrix the JDK here — one
     # modern LTS suffices, and it must be 17+ (older JDKs warn/fail).
     runs-on: ubuntu-latest
+    # Scala Native's multithreaded GC uses trap-based (signal/page-fault)
+    # yieldpoints by default, which intermittently time out on CI runners
+    # and make the Native leg flaky. Disabling them at build time falls
+    # back to conditional yieldpoints; no-op for the JS leg.
+    env:
+      SCALANATIVE_GC_TRAP_BASED_YIELDPOINTS: '0'
     strategy:
       fail-fast: false
       matrix:
