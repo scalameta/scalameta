@@ -39,6 +39,20 @@ class StackSafetySuite extends FunSuite {
     assert(renamed ne tree) // the spine was actually rebuilt
   }
 
+  // Unlike the others, this can't be captured upfront: before this fix its
+  // failure is an OutOfMemoryError (the O(n^2) reparenting copies exhaust the
+  // heap) that isn't cleanly catchable, so it is introduced as a positive test.
+  test("deeply nested tree - transform then structural equality") {
+    // EqualProps pattern: transform, then compare the outputs. The
+    // outputs are lazily materialized; traversing them (as isEqual does) must
+    // not overflow or blow up superlinearly.
+    val tree = TestHelpers.deepTree(depth)
+    val rename: PartialFunction[Tree, Tree] = { case Term.Name("f") => Term.Name("g") }
+    def load() = (tree.transform(rename), tree.transform(rename))
+    val (a, b) = load()
+    assert(a.isEqual(b))
+  }
+
   test("deeply nested tree - structure") {
     // build the structure Result rather than rendering it: a deep tree's
     // `.structure` string is O(depth^2) and would exhaust the heap. This
