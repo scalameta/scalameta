@@ -26,18 +26,40 @@ object Structurally {
 
   def equal(a: Tree, b: Tree): Boolean = loopStructure(a, b)
 
-  private def loopStructure(x: Any, y: Any): Boolean = (x, y) match {
-    case (x, y) if x == null || y == null => x == null && y == null
-    case (Some(x), Some(y)) => loopStructure(x, y)
-    case (None, None) => true
-    case (xs: List[_], ys: List[_]) =>
-      xs.length == ys.length && xs.zip(ys).forall { case (x, y) => loopStructure(x, y) }
-    case (x: Tree, y: Tree) =>
-      def sameStructure = x.productPrefix == y.productPrefix &&
-        loopStructure(x.productIterator.toList, y.productIterator.toList)
-
-      sameStructure
-    case _ => x == y
+  // Iterative (deeply nested trees would otherwise overflow the stack).
+  // Children are pushed
+  // onto an explicit worklist instead of recursing; comparison short-circuits
+  // on the first mismatch.
+  private def loopStructure(x0: Any, y0: Any): Boolean = {
+    // Push directly onto `stack` (rather than via a helper def) so it stays a
+    // local var; capturing it in a nested def would lift it to a heap ObjectRef.
+    var stack: List[(Any, Any)] = (x0, y0) :: Nil
+    while (stack.nonEmpty) {
+      val (x, y) = stack.head
+      stack = stack.tail
+      (x, y) match {
+        case (x, y) if x == null || y == null => if (x != null || y != null) return false
+        case (x: Tree, y: Tree) =>
+          if (x.productPrefix != y.productPrefix) return false
+          val xl = x.productArity
+          if (xl != y.productArity) return false
+          var i = 0
+          while (i < xl) {
+            stack = (x.productElement(i), y.productElement(i)) :: stack
+            i += 1
+          }
+        case (Some(x), Some(y)) => stack = (x, y) :: stack
+        case (None, None) =>
+        case (xs: Iterable[_], ys: Iterable[_]) =>
+          val xi = xs.iterator
+          val yi = ys.iterator
+          while (xi.hasNext)
+            if (yi.hasNext) stack = (xi.next(), yi.next()) :: stack else return false
+          if (yi.hasNext) return false
+        case _ => if (x != y) return false
+      }
+    }
+    true
   }
 
   implicit def StructuralEq[A <: Tree]: Equal[Structurally[A]] = new Equal[Structurally[A]] {

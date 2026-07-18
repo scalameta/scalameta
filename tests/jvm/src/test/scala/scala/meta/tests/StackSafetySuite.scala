@@ -28,7 +28,7 @@ class StackSafetySuite extends FunSuite {
     val a = TestHelpers.deepTree(depth)
     val b = TestHelpers.deepTree(depth)
     def load() = a.isEqual(b)
-    expectStackOverflow(load())
+    assert(load())
   }
 
   test("deeply nested tree - transform") {
