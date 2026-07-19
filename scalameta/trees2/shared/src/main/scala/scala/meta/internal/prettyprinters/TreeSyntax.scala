@@ -55,7 +55,7 @@ object TreeSyntax {
             case ig: TreeSyntacticGroup => groupNeedsParens(og, ig)
             case _ => false
           })
-        w("(", x.res, ")", needParens)
+        w("(", x, ")", needParens)
       case res => res
     }
 
@@ -989,10 +989,8 @@ object TreeSyntax {
       case t => p(SimpleExpr, t)
     }
 
-    private def printSelect(t: Term.SelectLike, sep: String, bqExpr: Boolean = false) = {
-      val expr = printSelectLhs(t.qual, backquote = bqExpr)
-      m(Path, s(expr, sep, t.name))
-    }
+    private def printSelect(t: Term.SelectLike, sep: String, bqExpr: Boolean = false) =
+      m(Path, s(printSelectLhs(t.qual, backquote = bqExpr), sep, t.name))
 
     private def printMacroExprBody(t: Term, prefix: String) = {
       val body = t match {
