@@ -59,13 +59,13 @@ class StackSafetySuite extends FunSuite {
     // exercises the construction; the render is covered by the syntax case.
     val tree = TestHelpers.deepTree(depth)
     def load() = implicitly[Structure[Tree]].apply(tree)
-    expectStackOverflow(load())
+    assert(!load().isEmpty)
   }
 
   test("deeply nested tree - syntax") {
     val tree = TestHelpers.deepTree(depth)
     def load() = tree.printSyntaxFor(scala.meta.dialects.Scala213)
-    expectStackOverflow(load())
+    assert(load().endsWith(".f"))
   }
 
 }

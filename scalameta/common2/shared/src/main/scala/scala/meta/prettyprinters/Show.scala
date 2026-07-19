@@ -99,7 +99,7 @@ private[meta] object Show {
           case AsIs(value) => appendAsIs(value)
           case Str(value) => append(value)
           case Blank => blank()
-          case m: Meta => stack = m.res :: stack
+          case m: Deferred => stack = m.res() :: stack
           case Function(fn) => stack = fn(sb) :: stack
           case Newline(res) =>
             nl()
@@ -162,8 +162,12 @@ private[meta] object Show {
   final case class Newline(res: Result) extends Result {
     override def desc: String = s"Newline(r=${res.desc})"
   }
-  final case class Meta(data: Any, res: Result) extends Result {
-    override def desc: String = s"Meta(d=$data, r=${res.desc})"
+  sealed class Deferred(val res: () => Result) extends Result {
+    override def desc: String = s"Deferred(...)"
+  }
+  // `data` can be consulted without materializing `res`
+  final class Meta(val data: Any, res: () => Result) extends Deferred(res) {
+    override def desc: String = s"Meta(d=$data, ...)"
   }
   final case class Wrap(prefix: String, res: Result, suffix: String) extends Result {
     override def desc: String = s"Wrap(p=$prefix, r=${res.desc}, s=$suffix)"
@@ -207,7 +211,11 @@ private[meta] object Show {
   def newline(): Result = Newline(None)
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
 
-  def meta(data: Any, res: Result): Result = if (res eq None) None else Meta(data, res)
+  // body by-name + no eager None-elision: the child render is deferred, and
+  // serialize's `delay` mechanism elides empties dynamically instead.
+  def meta(data: Any, res: => Result): Result = new Meta(data, () => res)
+
+  def defer(res: => Result): Result = new Deferred(() => res)
 
   // wrap if non-empty
   def wrap(x: Result, suffix: => String): Result = if (x eq None) None else sequence(x, suffix)

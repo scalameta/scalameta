@@ -14,7 +14,10 @@ object TreeStructure {
 
   private def anyStructure(x: Any): Show.Result = x match {
     case el: String => s(DoubleQuotes(el))
-    case el: Tree => anyTree(el)
+    // Defer the child's structure so it is built lazily, one level at a time,
+    // by the iterative renderer -- a deep tree would otherwise overflow the
+    // stack while constructing the Result.
+    case el: Tree => Show.defer(anyTree(el))
     case None => s("None")
     case Some(el) => s("Some(", i(anyStructure(el)), n(")"))
     case el: List[_] => iterableStructure(el, "List")
