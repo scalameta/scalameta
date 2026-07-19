@@ -33,8 +33,10 @@ class StackSafetySuite extends FunSuite {
 
   test("deeply nested tree - transform") {
     val tree = TestHelpers.deepTree(depth)
+    // renaming the leaf must rebuild the whole spine without overflowing
     def load() = tree.transform { case Term.Name("x") => Term.Name("y") }
-    expectStackOverflow(load())
+    val renamed = load()
+    assert(renamed ne tree) // the spine was actually rebuilt
   }
 
   test("deeply nested tree - structure") {
