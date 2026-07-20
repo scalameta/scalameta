@@ -11,7 +11,7 @@ object Mima {
   val languageAgnosticCompatibilityPolicy: ProblemFilter = {
     case problem: TemplateProblem =>
       val ref = problem.ref
-      isPublicAndNotExcluded(ref.fullName, ref.isPublic && ref.scopedPrivateSuff.isEmpty)
+      isPublicAndNotExcluded(ref.fullName, ScalametaMimaUtils.isPublic(ref, null))
     case problem: MemberProblem =>
       val ref = problem.ref
       val accessible = ScalametaMimaUtils.isPublic(ref) &&
