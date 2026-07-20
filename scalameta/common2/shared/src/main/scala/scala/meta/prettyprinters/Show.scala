@@ -222,7 +222,6 @@ private[meta] object Show {
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
 
   def meta(data: Any, res: Result): Result = if (res eq None) None else Meta(data, res)
-  def meta(data: Any, res: Result*): Result = meta(data, sequence(res: _*))
 
   // wrap if non-empty
   def wrap(x: Result, suffix: => String): Result = if (x eq None) None else sequence(x, suffix)
