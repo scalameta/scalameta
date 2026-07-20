@@ -257,7 +257,7 @@ object TreeSyntax {
       case t: Name.Indeterminate => printMaybeBackquoted(t)
 
       // Term
-      case t: Term.This => m(Path, w(t.qual, "."), kw("this"))
+      case t: Term.This => m(Path, s(w(t.qual, "."), kw("this")))
       case t: Term.Super => m(Path, s(w(t.thisp, "."), kw("super"), w("[", t.superp, "]")))
       case t: Term.Name => m(Path, printMaybeBackquoted(t))
       case t: Term.CapSetName => m(Path, s(printMaybeBackquoted(t), "^"))
@@ -388,7 +388,7 @@ object TreeSyntax {
         }
         val paramsSyntax = printParams(t.paramClause, needParens = false)
         m(Expr, s(paramsSyntax, " ", kw(arrow), " ", p(Expr, t.body)))
-      case t: Term.PolyFunction => m(Expr, t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body))
+      case t: Term.PolyFunction => m(Expr, s(t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body)))
       case t: Term.QuotedMacroType => s("'[ ", t.tpe, " ]")
       case t: Term.QuotedMacroExpr => printMacroExprBody(t.body, "'")
       case t: Term.SplicedMacroExpr => printMacroExprBody(t.body, "$")
@@ -444,18 +444,18 @@ object TreeSyntax {
       case t: Type.And => s(Type.ApplyInfix(t.lhs, Type.Name("&"), t.rhs))
       case t: Type.Or => s(Type.ApplyInfix(t.lhs, Type.Name("|"), t.rhs))
       case t: Type.Refine =>
-        m(RefineTyp, t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.body)
+        m(RefineTyp, s(t.tpe.map(tpe => s(p(WithTyp, tpe), " ")).getOrElse(s("")), t.body))
       case t: Type.Existential => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("forSome"), " ", t.body))
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
-      case t: Type.Lambda => m(Typ, t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe))
-      case t: Type.PolyFunction => m(Typ, t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe))
+      case t: Type.Lambda => m(Typ, s(t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe)))
+      case t: Type.PolyFunction => m(Typ, s(t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe)))
       case t: Type.Match => m(Type, s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}")))
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
         val useStar = dialect.allowStarAsTypePlaceholder &&
           t.origin.tokensOpt.exists(!_.lastOption.is[Token.Underscore])
         val ph = if (useStar) "*" else "_"
-        m(SimpleTyp, o(t.variant), ph)
+        m(SimpleTyp, s(o(t.variant), ph))
       case t: Type.Wildcard =>
         /* In order not to break existing tools `.syntax` should still return
          * `_` instead `?` unless specifically used.
@@ -463,7 +463,7 @@ object TreeSyntax {
         def questionMarkUsed = t.origin.tokensOpt.exists(!_.headOption.is[Token.Underscore])
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
-        m(SimpleTyp, s(kw(if (useQM) "?" else "_")), t.bounds)
+        m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
       case t: Type.PatWildcard => m(SimpleTyp, kw("_"))
       case t: Type.Placeholder =>
         /* In order not to break existing tools `.syntax` should still return
@@ -481,9 +481,9 @@ object TreeSyntax {
       case t: Type.ByName => printByNameType(t, "=>")
       case t: Type.PureByName => printByNameType(t, Token.pureFunctionArrow)
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
-      case t: Type.FunctionArg => m(ParamTyp, w(t.mods, " "), p(Typ, t.tpe))
-      case t: Type.TypedParam => m(SimpleTyp, w(t.mods, " "), s(t.name.value), ": ", p(Typ, t.typ))
-      case t: Type.Assign => m(SimpleTyp, s(t.name.value), " ", kw("="), " ", p(Typ, t.rhs))
+      case t: Type.FunctionArg => m(ParamTyp, s(w(t.mods, " "), p(Typ, t.tpe)))
+      case t: Type.TypedParam => m(SimpleTyp, s(w(t.mods, " "), t.name.value, ": ", p(Typ, t.typ)))
+      case t: Type.Assign => m(SimpleTyp, s(t.name.value, " ", kw("="), " ", p(Typ, t.rhs)))
       case t: Type.ParamClause => r("[", ", ", "]")(t.values: _*)
       case t: Type.BoundsAlias => m(SimpleTyp, s(t.bounds, " ", "as", " ", t.name))
       case t: Type.Param =>
@@ -505,7 +505,7 @@ object TreeSyntax {
       case _: Pat.Wildcard => m(SimplePattern, kw("_"))
       case a: Pat.Assign => m(SimplePattern, s(a.name, " ", kw("="), " ", a.rhs))
       case _: Pat.SeqWildcard => m(SimplePattern, kw("_*"))
-      case t: Pat.Repeated => m(SimplePattern, t.name, kw("*"))
+      case t: Pat.Repeated => m(SimplePattern, s(t.name, kw("*")))
       case pat: Pat.Given => m(AnyPattern3, s(kw("given"), " ", p(RefineTyp, pat.tpe)))
       case t: Pat.Bind =>
         val separator = t.rhs match {
