@@ -100,7 +100,7 @@ trait SymbolOps {
             val gbuf = List.newBuilder[g.Symbol]
             gdecls.sorted.filter(_.isUsefulSymbolInformation).foreach(gbuf.+=)
             if (sym.isJavaDefined) sym.companionModule.info.decls.filter(_.isUseful).foreach(gbuf.+=)
-            SemanticdbDecls(gbuf.result())
+            SemanticdbDecls(inSourceOrder(gbuf.result()))
           case _ => SemanticdbDecls(Nil)
         }
         loop(sym.info)
@@ -212,6 +212,28 @@ trait SymbolOps {
     def isDefaultParameter: Boolean = sym.hasFlag(gf.DEFAULTPARAM) && sym.hasFlag(gf.PARAM)
     def isDefaultMethod: Boolean = sym.isJavaDefined && sym.owner.isInterface && !sym.isDeferred &&
       !sym.isStatic
+  }
+
+  // Reorder companion objects to their source position (#1544): the namer enters an eagerly-
+  // created companion right after its class, so an explicit `object` declared later keeps that
+  // early slot. Only these modules move; other members keep scalac's scope order.
+  private def inSourceOrder(gsyms: List[g.Symbol]): List[g.Symbol] = {
+    def isReorderable(sym: g.Symbol): Boolean = sym.isModule && !sym.isSynthetic &&
+      !sym.isJavaDefined && sym.pos.isDefined
+    if (!gsyms.exists(isReorderable)) gsyms
+    else {
+      // merge the modules into the other members by source offset
+      val (modules, rest) = gsyms.partition(isReorderable)
+      val others = rest.iterator.buffered
+      val result = List.newBuilder[g.Symbol]
+      modules.sortBy(_.pos.start).foreach { module =>
+        def precedes(other: g.Symbol) = !other.pos.isDefined || other.pos.start <= module.pos.start
+        while (others.hasNext && precedes(others.head)) result += others.next()
+        result += module
+      }
+      result ++= others
+      result.result()
+    }
   }
 
   private lazy val idCache = new mutable.HashMap[String, Int]
