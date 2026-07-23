@@ -630,6 +630,8 @@ lazy val mergeSettings = Def.settings(
       ShadeRule.rename(
         s"$pkg.SemanticdbPlugin" -> s"$pkg.SemanticdbPlugin",
         s"$pkg.SemanticdbPlugin$$" -> s"$pkg.SemanticdbPlugin$$",
+        // Prevent double-shading: if classes are already in the shaded package, keep them as-is.
+        s"$pkg.shaded_v$ver.**" -> s"$pkg.shaded_v$ver.@1",
         s"$pkg.**" -> s"$pkg.shaded_v$ver.@1",
       ).inAll,
     )
