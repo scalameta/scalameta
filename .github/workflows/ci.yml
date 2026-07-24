@@ -27,7 +27,7 @@ jobs:
       - name: Set up JVM
         uses: actions/setup-java@v5
         with:
-          java-version: '25'
+          java-version: '17'
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
@@ -41,10 +41,6 @@ jobs:
           - '2.12.21'
           - '2.13.18'
         java:
-          # Certify the JVM runtimes we support: oldest (floor) through
-          # newest. JS/Native are certified separately (testJsNative);
-          # their toolchain requires JDK 17+, so they don't belong here.
-          - '8'
           - '17'
           - '25'
     steps:
@@ -112,7 +108,7 @@ jobs:
       - name: Set up JVM
         uses: actions/setup-java@v5
         with:
-          java-version: '25'
+          java-version: '17'
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
@@ -139,7 +135,7 @@ jobs:
       - name: Set up JVM
         uses: actions/setup-java@v5
         with:
-          java-version: '8'
+          java-version: '17'
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
@@ -170,7 +166,7 @@ jobs:
       - name: Set up JVM
         uses: actions/setup-java@v5
         with:
-          java-version: '8'
+          java-version: '17'
           distribution: 'temurin'
           cache: 'sbt'
       - run: ./bin/scalafmt --test
