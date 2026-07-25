@@ -151,37 +151,25 @@ jobs:
       - if: ${{ !cancelled() }}
         run: sbt ++${{ env.scala38 }} testsNative/test || sbt ++${{ env.scala38 }} testsNative/test
 
-  post-older-scala: # older 2.12/2.13 patches — parser + semanticdb
+  post-older-scala: # older patches — one leg per slot index (2.12_N + 2.13_N)
     if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        idx: [ '1', '2', '3' ]
     steps:
       - *checkout
       - *jdk
       - *sbt
       - if: ${{ !cancelled() }}
-        run: sbt '++${{ env.scala213_1 }}!; testsJVM/test'
+        run: "sbt '++${{ env[format('scala212_{0}', matrix.idx)] }}!; testsJVM/test'"
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213_1 }} testsSemanticdb/test
+        run: "sbt ++${{ env[format('scala212_{0}', matrix.idx)] }} testsSemanticdb/test"
       - if: ${{ !cancelled() }}
-        run: sbt '++${{ env.scala213_2 }}!; testsJVM/test'
+        run: "sbt '++${{ env[format('scala213_{0}', matrix.idx)] }}!; testsJVM/test'"
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213_2 }} testsSemanticdb/test
-      - if: ${{ !cancelled() }}
-        run: sbt '++${{ env.scala213_3 }}!; testsJVM/test'
-      - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213_3 }} testsSemanticdb/test
-      - if: ${{ !cancelled() }}
-        run: sbt '++${{ env.scala212_1 }}!; testsJVM/test'
-      - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212_1 }} testsSemanticdb/test
-      - if: ${{ !cancelled() }}
-        run: sbt '++${{ env.scala212_2 }}!; testsJVM/test'
-      - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212_2 }} testsSemanticdb/test
-      - if: ${{ !cancelled() }}
-        run: sbt '++${{ env.scala212_3 }}!; testsJVM/test'
-      - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212_3 }} testsSemanticdb/test
+        run: "sbt ++${{ env[format('scala213_{0}', matrix.idx)] }} testsSemanticdb/test"
 
   post-windows: # Windows parser/JS/semanticdb (line-ending sensitivity)
     if: ${{ github.event_name == 'push' }}
