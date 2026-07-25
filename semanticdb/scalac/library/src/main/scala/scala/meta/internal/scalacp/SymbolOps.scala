@@ -97,6 +97,8 @@ trait SymbolOps {
       case NoSymbol => d.None
     }
     def semanticdbDecls: SemanticdbDecls = {
+      // ScalaSig has no source positions, so declarations keep symbol-table order: a companion
+      // eagerly created after its class stays there even if declared later (#1544); metac reorders.
       val decls = sym.children.filter(decl => decl.isUseful && !decl.isTypeParam)
       SemanticdbDecls(decls.toList)
     }
