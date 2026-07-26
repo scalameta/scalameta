@@ -1,6 +1,7 @@
 package scala.meta.tests
 package parsers
 
+import org.scalameta.invariants.InvariantFailedException
 import scala.meta._
 import scala.meta.parsers.ParseException
 
@@ -71,6 +72,11 @@ class TypeSuite extends ParseSuite {
   test("a.T forSome { val a: A }")(assertTpe("a.T forSome { val a: A }")(
     Existential(pselect("a", "T"), Decl.Val(Nil, patvar("a") :: Nil, "A") :: Nil),
   ))
+
+  test("F[T] forSome {}") {
+    val err = intercept[InvariantFailedException](tpe("F[T] forSome {}")).getMessage
+    assert(err.contains("body should be non-empty"), err)
+  }
 
   test("A | B is not a special type")(assertTpe("A | B")(pinfix("A", "|", "B")))
 
