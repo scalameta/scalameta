@@ -34,6 +34,7 @@ object Origin {
   trait Partial extends Origin {
     val begTokenIdx: Int
     val endTokenIdx: Int
+    override def isEmpty: Boolean = begTokenIdx >= endTokenIdx
   }
 
   trait ParsedPartial extends Partial {
@@ -44,6 +45,7 @@ object Origin {
 
     override def begOffset: Int = allInputTokens()(begTokenIdx).start
     override def endOffset: Int = allInputTokens()(endTokenIdx - 1).end
+    override def isEmpty: Boolean = begOffset >= endOffset
 
     lazy val position: Position = Position.Range(input, begOffset, endOffset)
 
