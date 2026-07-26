@@ -784,7 +784,7 @@ object Type {
     override final def stats: List[Stat] = body.stats
   }
   @ast
-  class Existential(tpe: Type, body: Stat.Block @nonEmpty) extends Type with Tree.WithStatsBlock {
+  class Existential(tpe: Type, body: Stat.Block) extends Type with Tree.WithStatsBlock {
     checkField(body, body.stats.forall(_.isExistentialStat))
     @replacedField("4.9.9")
     override final def stats: List[Stat] = body.stats
