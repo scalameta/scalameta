@@ -35,6 +35,7 @@ object TokensToString {
             } else {
               val ch = chars(idx)
               if (Character.isWhitespace(ch)) sb.append(' ') // no newlines
+              else if (ch == '$') sb.append("{$}") // #4711 overzealous linter -Wmacros:after
               else if (ch != '`') sb.append(ch) // no backquotes
               true
             }
