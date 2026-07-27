@@ -15,12 +15,12 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
       """
     assertPositions(
       foo(Type.Name("AAA")),
-      """|<?>Defn.Class class AAA { val a: Int = 1 }</?> [0:...class `$name`:...:55)
-         |<tparamClause>Type.ParamClause         class `$name`@@:</tparamClause> [22::22)
-         |<ctor>Ctor.Primary         class `$name`@@:</ctor> [22::22)
-         |<templ>Template { val a: Int = 1 }</templ> [22<:...>48)
-         |<body>Template.Body { val a: Int = 1 }</body> [22<:...>48)
-         |<stats0>Defn.Val val a: Int = 1</stats0> [34:val a: Int = 1:48)
+      """|<?>Defn.Class class AAA { val a: Int = 1 }</?> [0:...class `{$}name`:...:57)
+         |<tparamClause>Type.ParamClause         class `{$}name`@@:</tparamClause> [24::24)
+         |<ctor>Ctor.Primary         class `{$}name`@@:</ctor> [24::24)
+         |<templ>Template { val a: Int = 1 }</templ> [24<:...>50)
+         |<body>Template.Body { val a: Int = 1 }</body> [24<:...>50)
+         |<stats0>Defn.Val val a: Int = 1</stats0> [36:val a: Int = 1:50)
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
@@ -36,12 +36,12 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
       """
     assertPositions(
       foo(Type.Name("AAA")),
-      """|<?>Defn.Class class AAA { val a: Int = 1 }</?> [0:...class `$name`:...:55)
-         |<tparamClause>Type.ParamClause         class `$name`@@:</tparamClause> [22::22)
-         |<ctor>Ctor.Primary         class `$name`@@:</ctor> [22::22)
-         |<templ>Template { val a: Int = 1 }</templ> [22<:...>48)
-         |<body>Template.Body { val a: Int = 1 }</body> [22<:...>48)
-         |<stats0>Defn.Val val a: Int = 1</stats0> [34:val a: Int = 1:48)
+      """|<?>Defn.Class class AAA { val a: Int = 1 }</?> [0:...class `{$}name`:...:57)
+         |<tparamClause>Type.ParamClause         class `{$}name`@@:</tparamClause> [24::24)
+         |<ctor>Ctor.Primary         class `{$}name`@@:</ctor> [24::24)
+         |<templ>Template { val a: Int = 1 }</templ> [24<:...>50)
+         |<body>Template.Body { val a: Int = 1 }</body> [24<:...>50)
+         |<stats0>Defn.Val val a: Int = 1</stats0> [36:val a: Int = 1:50)
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
@@ -80,19 +80,19 @@ class Scala3SpecificSuccessSuite extends TreeSuiteBase {
     assertTokensAsStructureLines(
       quoted.tokens,
       """|BOF [0..0)
-         |Ident(${fooTypes(0)}) [0..16)
-         |Semicolon [16..17)
-         |Space [17..18)
-         |Constant.String(any message) [18..31)
-         |EOF [31..31)
+         |Ident({$}{fooTypes(0)}) [0..18)
+         |Semicolon [18..19)
+         |Space [19..20)
+         |Constant.String(any message) [20..33)
+         |EOF [33..33)
          |""".stripMargin,
     )
     val pos = quoted.pos
-    assertNoDiff(pos.toString, """[0,31) in str(`${fooTypes(0)}`; "any message")""")
-    assertNoDiff(pos.text, """`${fooTypes(0)}`; "any message"""")
+    assertNoDiff(pos.toString, """[0,33) in str(`{$}{fooTypes(0)}`; "any message")""")
+    assertNoDiff(pos.text, """`{$}{fooTypes(0)}`; "any message"""")
     assertPositions(
       quoted,
-      """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
+      """|<stats1>Lit.String "any message"</stats1> [20:"any message":33)
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,

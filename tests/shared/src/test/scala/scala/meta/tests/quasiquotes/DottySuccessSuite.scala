@@ -193,19 +193,19 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertTokensAsStructureLines(
       quoted.tokens,
       """|BOF [0..0)
-         |Ident(${fooTypes(0)}) [0..16)
-         |Semicolon [16..17)
-         |Space [17..18)
-         |Constant.String(any message) [18..31)
-         |EOF [31..31)
+         |Ident({$}{fooTypes(0)}) [0..18)
+         |Semicolon [18..19)
+         |Space [19..20)
+         |Constant.String(any message) [20..33)
+         |EOF [33..33)
          |""".stripMargin,
     )
     val pos = quoted.pos
-    assertNoDiff(pos.toString, """[0,31) in str(`${fooTypes(0)}`; "any message")""")
-    assertNoDiff(pos.text, """`${fooTypes(0)}`; "any message"""")
+    assertNoDiff(pos.toString, """[0,33) in str(`{$}{fooTypes(0)}`; "any message")""")
+    assertNoDiff(pos.text, """`{$}{fooTypes(0)}`; "any message"""")
     assertPositions(
       quoted,
-      """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
+      """|<stats1>Lit.String "any message"</stats1> [20:"any message":33)
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
@@ -232,19 +232,19 @@ class DottySuccessSuite extends TreeSuiteBase {
       quoted.tokens,
       """|BOF [0..0)
          |Comment( .. ) [0..8)
-         |Ident($terms) [8..16)
-         |Semicolon [16..17)
-         |Space [17..18)
-         |Constant.String(any message) [18..31)
-         |EOF [31..31)
+         |Ident({$}terms) [8..18)
+         |Semicolon [18..19)
+         |Space [19..20)
+         |Constant.String(any message) [20..33)
+         |EOF [33..33)
          |""".stripMargin,
     )
     val pos = quoted.pos
-    assertNoDiff(pos.toString, """[0,31) in str(/* .. */`$terms`; "any message")""")
-    assertNoDiff(pos.text, """/* .. */`$terms`; "any message"""")
+    assertNoDiff(pos.toString, """[0,33) in str(/* .. */`{$}terms`; "any message")""")
+    assertNoDiff(pos.text, """/* .. */`{$}terms`; "any message"""")
     assertPositions(
       quoted,
-      """|<stats1>Lit.String "any message"</stats1> [18:"any message":31)
+      """|<stats1>Lit.String "any message"</stats1> [20:"any message":33)
          |""".stripMargin,
       showPosition = true,
       showFieldName = true,
