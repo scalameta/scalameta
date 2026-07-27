@@ -2461,4 +2461,15 @@ class SuccessSuite extends TreeSuiteBase {
     assertNoDiff(quoted.reprint, syntax)
     assertTree(quoted)(blk(tname("Foo"), lit("any message")))
   }
+
+  test("#4711 unquote in generated origin input") {
+    val terms = List(q"a")
+    val x = terms.head
+    def inputText(tree: Tree): String = tree.origin match {
+      case y: Origin.ParsedSpliced => y.input.text
+      case y => fail(s"origin doesn't match: $y")
+    }
+    assertNoDiff(inputText(q"$x.b"), "`$x`.b")
+    assertNoDiff(inputText(q"${terms(0)}.c"), "`${terms(0)}`.c")
+  }
 }
