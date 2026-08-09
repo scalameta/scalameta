@@ -96,20 +96,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
         var needCopies = !isQuasi
         val importsBuilder = List.newBuilder[Import]
-        val checkFieldsBuilder = List.newBuilder[(Tree, Tree)]
-        var hasCheckParent = false
 
         stats.foreach {
           case x: Import => importsBuilder += x
           case x: DefDef if !isQuasi && x.name == TermName("copy") =>
             istats1 += x
             needCopies = false
-          case x: DefDef if x.name == TermName("checkParent") =>
-            if (!isQuasi) {
-              if (!x.mods.hasFlag(Flag.PRIVATE)) c.abort(x.pos, "parent check must be private")
-              hasCheckParent = true
-              stats1 += x
-            }
           case x: ValOrDefDef =>
             if (x.mods.hasFlag(Flag.ABSTRACT) || x.rhs.isEmpty) c
               .abort(x.pos, "definition without a value")
@@ -118,15 +110,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               q"$mods def ${x.name}: ${x.tpt} = ${x.rhs}"
             }.getOrElse(x)
             if (x.mods.hasFlag(Flag.FINAL)) istats1 += p else quasiExtraAbstractDefs += p
-          case q"checkFields($arg)" => checkFieldsBuilder += (null: Tree) -> arg
-          case q"checkField($field, $check)" => checkFieldsBuilder += field -> check
-          case x =>
-            val error =
-              "only checkFields(...), checkParent(...) and definitions are allowed in @ast classes"
-            c.abort(x.pos, error)
+          case x => c.abort(x.pos, "only definitions are allowed in @ast classes")
         }
         val imports = importsBuilder.result()
-        val fieldChecks = checkFieldsBuilder.result()
 
         istats1 ++= imports
         mstats1 ++= imports
@@ -221,15 +207,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // Compare this with the `copy` method (described below), which additionally flushes the private state.
         // This method is private[meta] because the state that it's managing is not supposed to be touched
         // by the users of the framework.
-        val privateCopyParentChecks =
-          if (hasCheckParent)
-            q"""
-              def parentDesc = parent.productPrefix // can't debug parent, it's incomplete
-              _root_.org.scalameta.invariants.require(
-                tree.checkParent(destination) && _root_.org.scalameta.debug(parentDesc)
-              )
-            """
-          else q""
         val parentInternal = internalize(parentParam)
         stats1 +=
           q"""
@@ -245,7 +222,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                   if (p eq parent) this
                   else privateCopy(parent = $SomeModule(parent))
                 }
-              $privateCopyParentChecks
               tree
             }
           """
@@ -461,29 +437,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           internalBody += q"$DataTyperMacrosModule.emptyCheck($local)"
         }
         internalBody ++= imports
-        fieldChecks.foreach { case (f, x) =>
-          var hasErrors = false
-          object errorChecker extends Traverser {
-            private val nmeParent = TermName("parent")
-            override def traverse(tree: Tree): Unit = tree match {
-              case _: This =>
-                hasErrors = true
-                c.error(tree.pos, "cannot refer to this in @ast field checks")
-              case Ident(`nmeParent`) =>
-                hasErrors = true
-                c.error(
-                  tree.pos,
-                  "cannot refer to parent in @ast field checks; use checkParent instead",
-                )
-              case _ => super.traverse(tree)
-            }
-          }
-          errorChecker.traverse(x)
-          if (!hasErrors) internalBody += {
-            if (f == null) q"$InvariantsRequireMethod($x)"
-            else q"$InvariantsRequireMethod(($f ne null) && $f.isInstanceOf[$QuasiClass] || ($x))"
-          }
-        }
         val paramInits = params.map(p => q"$CommonTyperMacrosModule.initParam(${p.name})")
         privateApplyParamss.last._2
           .foreach(f => internalBody += q"$DataTyperMacrosModule.nullCheck(${f.name})")
