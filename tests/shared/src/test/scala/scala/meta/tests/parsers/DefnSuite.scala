@@ -47,9 +47,13 @@ class DefnSuite extends ParseSuite {
     Defn.Var(Nil, patvar("x") :: Nil, Some(pname("Int")), None),
   ))
 
-  test("var x = _ is not allowed")(intercept[parsers.ParseException](templStat("var x = _")))
+  test("var x = _")(
+    assertTree(templStat("var x = _"))(Defn.Var(Nil, List(patvar("x")), None, Term.Placeholder())),
+  )
 
-  test("val x: Int = _ is not allowed")(intercept[parsers.ParseException](templStat("val x: Int = _")))
+  test("val x: Int = _")(assertTree(templStat("val x: Int = _"))(
+    Defn.Val(Nil, List(patvar("x")), Some("Int"), Term.Placeholder()),
+  ))
 
   test("val (x: Int) = 2")(assertTree(templStat("val (x: Int) = 2"))(
     Defn.Val(Nil, Pat.Typed(patvar("x"), pname("Int")) :: Nil, None, int(2)),

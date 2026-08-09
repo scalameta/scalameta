@@ -603,10 +603,19 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("empty-case-class") {
-    val error = "case classes must have a parameter list"
-    runTestError[Stat]("case class A", error)
-    runTestError[Stat]("case class A[T]", error)
-    runTestError[Stat]("case class A[T] private", error)
+    runTestAssert[Stat]("case class A")(
+      Defn.Class(List(Mod.Case()), pname("A"), Nil, ctor, tplNoBody()),
+    )
+    runTestAssert[Stat]("case class A[T]")(
+      Defn.Class(List(Mod.Case()), pname("A"), List(pparam("T")), ctor, tplNoBody()),
+    )
+    runTestAssert[Stat]("case class A[T] private")(Defn.Class(
+      List(Mod.Case()),
+      pname("A"),
+      List(pparam("T")),
+      Ctor.Primary(Mod.Private(anon) :: Nil, anon, Seq.empty),
+      tplNoBody(),
+    ))
   }
 
   test("trailing-coma")(
@@ -730,21 +739,38 @@ class MinorDottySuite extends BaseDottySuite {
     ))
   }
 
-  test("procedure-syntax")(runTestError[Stat](
-    """|def hello(){
-       |  println("Hello!")
-       |}""".stripMargin,
-    "Procedure syntax is not supported. Convert procedure `hello` to method by adding `: Unit =`",
-  ))
+  test("procedure-syntax") {
+    val code =
+      """|def hello(){
+         |  println("Hello!")
+         |}""".stripMargin
+    val layout =
+      """|def hello(): Unit = {
+         |  println("Hello!")
+         |}
+         |""".stripMargin
+    val tree = Defn
+      .Def(Nil, "hello", Nil, List(Nil), Some("Unit"), blk(tapply("println", lit("Hello!"))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
 
-  test("do-while")(runTestError[Stat](
-    """|def hello() = {
-       |  do {
-       |    i+= 1
-       |  } while (i < 10)
-       |}""".stripMargin,
-    "error: do {...} while (...) syntax is no longer supported",
-  ))
+  test("do-while") {
+    val code =
+      """|def hello() = {
+         |  do {
+         |    i+= 1
+         |  } while (i < 10)
+         |}""".stripMargin
+    val layout =
+      """|def hello() = {
+         |  do {
+         |    i += 1
+         |  } while (i < 10)
+         |}""".stripMargin
+    val body = blk(Term.Do(blk(tinfix("i", "+=", lit(1))), tinfix("i", "<", lit(10))))
+    val tree = Defn.Def(Nil, "hello", Nil, List(Nil), None, body)
+    runTestAssert[Stat](code, layout)(tree)
+  }
 
   test("partial-function-function") {
     runTestAssert[Stat](

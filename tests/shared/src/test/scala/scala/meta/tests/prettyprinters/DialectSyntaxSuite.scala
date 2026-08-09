@@ -100,11 +100,17 @@ class DialectSyntaxSuite extends TreeSuiteBase {
     assert(e.getMessage.contains("doesn't support extractor varargs"))
   }
 
-  test("literal-type pattern requires allowLiteralTypes") {
+  test("literal-type pattern") {
     val tree = Pat.Typed(patvar("x"), lit(1))
-    val e = intercept[UnsupportedOperationException](tree.reprint(dialects.Scala211))
-    assert(e.getMessage.contains("doesn't support literal types"))
-    assertNoDiff(tree.reprint(dialects.Scala213), "x: 1")
+    val syntax = "x: 1"
+    locally {
+      implicit val dialect: Dialect = dialects.Scala211
+      assertSyntax(syntax)(tree)
+    }
+    locally {
+      implicit val dialect: Dialect = dialects.Scala213
+      assertSyntax(syntax)(tree)
+    }
   }
 
   // C. no-origin fallbacks of token-sniffing branches (cf. RegressionSyntaxSuite): hand-built

@@ -7,20 +7,13 @@ class Scala211Suite extends ParseSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
-  test("case classes without a parameter list are not allowed") {
-    def failWithMessage(code: String) = {
-      val error = intercept[ParseException](templStat(code))
-      assert(error.getMessage.contains(
-        "case classes must have a parameter list; try 'case class A()' or 'case object A'",
-      ))
-    }
-
-    failWithMessage("case class A")
-    failWithMessage("case class A[T]")
-    failWithMessage("case class A[T] private")
+  test("case classes without a parameter list") {
+    templStat("case class A")
+    templStat("case class A[T]")
+    templStat("case class A[T] private")
   }
 
-  test("case classes with an empty parameter list are allowed") {
+  test("case classes with an empty parameter list") {
     templStat("case class A()")
     templStat("case class A @Inject() ()")
     templStat("case class A private ()")

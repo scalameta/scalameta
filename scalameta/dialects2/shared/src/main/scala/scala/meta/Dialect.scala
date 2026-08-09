@@ -15,7 +15,8 @@ final class Dialect private[meta] (
     val allowAtForExtractorVarargs: Boolean = false,
     // Can case classes be declared without a parameter list?
     // Deprecated in 2.10, not supported in 2.11 and newer.
-    val allowCaseClassWithoutParameterList: Boolean = false,
+    @deprecated("unused", ">4.17.3")
+    val allowCaseClassWithoutParameterList: Boolean = false, // unused
     // Are extractor varargs specified using colons, i.e. is `case Extractor(xs: _*)` legal or not?
     val allowColonForExtractorVarargs: Boolean = false,
     // treatment of "a b ()" changed from 2.12 (empty args, aka "nullary") to 2.13 (a Unit arg)
@@ -137,9 +138,11 @@ final class Dialect private[meta] (
     // Scala 3 wildcard imports can be specified as `import a.b.*`
     val allowStarWildcardImport: Boolean = false,
     // Scala 3 no longer allows def hello(){} - `=` is always needed
-    val allowProcedureSyntax: Boolean = true,
+    @deprecated("unused", ">4.17.3")
+    val allowProcedureSyntax: Boolean = true, // unused
     // Scala 3 no longer allows `do {...} while(...)`
-    val allowDoWhile: Boolean = true,
+    @deprecated("unused", ">4.17.3")
+    val allowDoWhile: Boolean = true, // unused
     /* Kind-project support
      * works under -Xsource3 flag
      * https://github.com/scala/scala/pull/9605
@@ -243,8 +246,8 @@ final class Dialect private[meta] (
   private[meta] def withAllowAndTypes(newValue: Boolean): Dialect = this
   def withAllowAtForExtractorVarargs(newValue: Boolean): Dialect =
     privateCopy(allowAtForExtractorVarargs = newValue)
-  def withAllowCaseClassWithoutParameterList(newValue: Boolean): Dialect =
-    privateCopy(allowCaseClassWithoutParameterList = newValue)
+  @deprecated("unused", ">4.17.3")
+  def withAllowCaseClassWithoutParameterList(newValue: Boolean): Dialect = this
   def withAllowColonForExtractorVarargs(newValue: Boolean): Dialect =
     privateCopy(allowColonForExtractorVarargs = newValue)
   def withAllowEmptyInfixArgs(newValue: Boolean): Dialect =
@@ -339,9 +342,10 @@ final class Dialect private[meta] (
     privateCopy(allowAsForImportRename = newValue)
   def withAllowStarWildcardImport(newValue: Boolean): Dialect =
     privateCopy(allowStarWildcardImport = newValue)
-  def withAllowProcedureSyntax(newValue: Boolean): Dialect =
-    privateCopy(allowProcedureSyntax = newValue)
-  def withAllowDoWhile(newValue: Boolean): Dialect = privateCopy(allowDoWhile = newValue)
+  @deprecated("unused", ">4.17.3")
+  def withAllowProcedureSyntax(newValue: Boolean): Dialect = this
+  @deprecated("unused", ">4.17.3")
+  def withAllowDoWhile(newValue: Boolean): Dialect = this
 
   def withAllowPlusMinusUnderscoreAsIdent(newValue: Boolean): Dialect =
     privateCopy(allowPlusMinusUnderscoreAsIdent = newValue)
@@ -400,7 +404,6 @@ final class Dialect private[meta] (
 
   private[this] def privateCopy(
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
-      allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs: Boolean = this.allowColonForExtractorVarargs,
       allowEmptyInfixArgs: Boolean = this.allowEmptyInfixArgs,
       allowEnums: Boolean = this.allowEnums,
@@ -446,8 +449,6 @@ final class Dialect private[meta] (
       allowAllTypedPatterns: Boolean = this.allowAllTypedPatterns,
       allowAsForImportRename: Boolean = this.allowAsForImportRename,
       allowStarWildcardImport: Boolean = this.allowStarWildcardImport,
-      allowProcedureSyntax: Boolean = this.allowProcedureSyntax,
-      allowDoWhile: Boolean = this.allowDoWhile,
       allowPlusMinusUnderscoreAsIdent: Boolean = this.allowPlusMinusUnderscoreAsIdent,
       allowUnderscoreAsTypePlaceholder: Boolean = this.allowUnderscoreAsTypePlaceholder,
       allowStarAsTypePlaceholder: Boolean = this.allowStarAsTypePlaceholder,
@@ -471,7 +472,6 @@ final class Dialect private[meta] (
     val notForUnquote = unquoteType eq UnquoteType.None
     val that = new Dialect(
       allowAtForExtractorVarargs = allowAtForExtractorVarargs,
-      allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
       allowColonForExtractorVarargs = allowColonForExtractorVarargs,
       allowEmptyInfixArgs = allowEmptyInfixArgs,
       allowEnums = allowEnums,
@@ -516,8 +516,6 @@ final class Dialect private[meta] (
       allowAllTypedPatterns = allowAllTypedPatterns,
       allowAsForImportRename = allowAsForImportRename,
       allowStarWildcardImport = allowStarWildcardImport,
-      allowProcedureSyntax = allowProcedureSyntax,
-      allowDoWhile = allowDoWhile,
       allowPlusMinusUnderscoreAsIdent = allowPlusMinusUnderscoreAsIdent,
       allowUnderscoreAsTypePlaceholder = allowUnderscoreAsTypePlaceholder,
       allowStarAsTypePlaceholder = allowStarAsTypePlaceholder,
@@ -570,7 +568,6 @@ final class Dialect private[meta] (
   private def isEquivalentToInternal(that: Dialect): Boolean =
     // do not include deprecated values in this comparison
     this.allowAtForExtractorVarargs == that.allowAtForExtractorVarargs &&
-      this.allowCaseClassWithoutParameterList == that.allowCaseClassWithoutParameterList &&
       this.allowColonForExtractorVarargs == that.allowColonForExtractorVarargs &&
       this.allowEmptyInfixArgs == that.allowEmptyInfixArgs && this.allowEnums == that.allowEnums &&
       this.allowImplicitByNameParameters == that.allowImplicitByNameParameters &&
@@ -613,8 +610,6 @@ final class Dialect private[meta] (
       this.allowAllTypedPatterns == that.allowAllTypedPatterns &&
       this.allowAsForImportRename == that.allowAsForImportRename &&
       this.allowStarWildcardImport == that.allowStarWildcardImport &&
-      this.allowProcedureSyntax == that.allowProcedureSyntax &&
-      this.allowDoWhile == that.allowDoWhile &&
       this.allowPlusMinusUnderscoreAsIdent == that.allowPlusMinusUnderscoreAsIdent &&
       this.allowUnderscoreAsTypePlaceholder == that.allowUnderscoreAsTypePlaceholder &&
       this.allowStarAsTypePlaceholder == that.allowStarAsTypePlaceholder &&
@@ -637,7 +632,7 @@ final class Dialect private[meta] (
   private[meta] def copy(
       allowAndTypes: Boolean = true, // unused
       allowAtForExtractorVarargs: Boolean = this.allowAtForExtractorVarargs,
-      allowCaseClassWithoutParameterList: Boolean = this.allowCaseClassWithoutParameterList,
+      allowCaseClassWithoutParameterList: Boolean = false, // unused
       allowColonForExtractorVarargs: Boolean = this.allowColonForExtractorVarargs,
       allowEnums: Boolean = this.allowEnums,
       allowImplicitByNameParameters: Boolean = this.allowImplicitByNameParameters,
@@ -659,7 +654,6 @@ final class Dialect private[meta] (
   ): Dialect = privateCopy(
     unquoteType = UnquoteType.None,
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
-    allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
     allowColonForExtractorVarargs = allowColonForExtractorVarargs,
     allowEnums = allowEnums,
     allowImplicitByNameParameters = allowImplicitByNameParameters,
@@ -697,7 +691,8 @@ object Dialect extends InternalDialect {
       @deprecated("allowAndTypes unneeded, infix types are supported", "4.5.1")
       allowAndTypes: Boolean, // unused
       allowAtForExtractorVarargs: Boolean,
-      allowCaseClassWithoutParameterList: Boolean,
+      @deprecated("unused", ">4.17.3")
+      allowCaseClassWithoutParameterList: Boolean, // unused
       allowColonForExtractorVarargs: Boolean,
       allowEnums: Boolean,
       allowImplicitByNameParameters: Boolean,
@@ -722,7 +717,6 @@ object Dialect extends InternalDialect {
       toplevelSeparator: String, // unused
   ): Dialect = new Dialect(
     allowAtForExtractorVarargs = allowAtForExtractorVarargs,
-    allowCaseClassWithoutParameterList = allowCaseClassWithoutParameterList,
     allowColonForExtractorVarargs = allowColonForExtractorVarargs,
     allowEnums = allowEnums,
     allowImplicitByNameParameters = allowImplicitByNameParameters,

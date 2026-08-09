@@ -76,13 +76,7 @@ class TypeSuite extends ParseSuite {
 
   test("A | B is not a special type")(assertTpe("A | B")(pinfix("A", "|", "B")))
 
-  test("42.type") {
-    intercept[ParseException] {
-      implicit val dialect = dialects.Scala211
-      tpe("42")
-    }
-
-    implicit val dialect = dialects.Scala3
+  private def test42(implicit dialect: Dialect): Unit = test(s"42.type [$dialect]") {
 
     def matchSubStructureTyp3(typ: String, func: PartialFunction[Tree, Unit])(implicit
         loc: munit.Location,
@@ -106,6 +100,9 @@ class TypeSuite extends ParseSuite {
     assertNoDiff(exceptionScala2.shortMessage, "illegal literal type (), use Unit instead")
 
   }
+
+  test42(dialects.Scala3)
+  test42(dialects.Scala211)
 
   test("plus-minus-then-underscore-source3") {
     implicit val dialect = dialects.Scala213Source3
