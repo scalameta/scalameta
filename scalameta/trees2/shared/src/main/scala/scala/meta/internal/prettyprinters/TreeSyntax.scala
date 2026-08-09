@@ -12,6 +12,7 @@ import scala.meta.tokens._
 import scala.meta.trees.Origin
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ListBuffer
 import scala.reflect.{ClassTag, classTag}
 
 object TreeSyntax {
@@ -276,23 +277,36 @@ object TreeSyntax {
         def needBraces(id: String, nextPart: String): Boolean =
           !Character.isUnicodeIdentifierStart(id.head) ||
             nextPart.headOption.exists(Character.isUnicodeIdentifierPart)
-
-        val parts = t.parts.map { case Lit(part: String) => part.replace("$", "$$") }
-        val zipped = parts.zip(t.args).zip(parts.tail).map {
-          case ((part, id: Name), next) if !guessIsBackquoted(id) && !needBraces(id.value, next) =>
-            s(part, "$", id.value)
-          case ((part, arg), _) => s(part, "$", w("{", p(Expr, arg), "}", !arg.is[Term.Block]))
+        var needQuote = false
+        val zipped = new ListBuffer[Show.Result]()
+        val partsIter = t.parts.iterator.map { case Lit.String(part) => part.replace("$", "$$") }
+          .buffered
+        val argsIter = t.args.iterator
+        def arg = argsIter.next() match {
+          case id: Name if !guessIsBackquoted(id) && !needBraces(id.value, partsIter.head) =>
+            s(id.value)
+          case arg => printBracedExpr(arg)
         }
-        val quote = if (parts.exists(s => s.contains("\n") || s.contains("\""))) "\"\"\"" else "\""
-        m(SimpleExpr1, s(t.prefix, quote, r(zipped), parts.last, quote))
+        while (partsIter.hasNext) {
+          val part = partsIter.next()
+          needQuote ||= part.contains("\n") || part.contains("\"")
+          val notLast = partsIter.hasNext && argsIter.hasNext
+          zipped += { if (notLast) s(part, "$", arg) else s(part) }
+        }
+        val quote = if (needQuote) "\"\"\"" else "\""
+        m(SimpleExpr1, s(t.prefix, quote, r(zipped.result()), quote))
       case t: Term.Xml =>
         if (!dialect.allowXmlLiterals)
           throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
-        val parts = t.parts.map { case Lit(part: String) => part }
-        val zipped = parts.zip(t.args).map { case (part, arg) =>
-          s(part, w("{", p(Expr, arg), "}", !arg.is[Term.Block]))
+        val zipped = new ListBuffer[Show.Result]()
+        val partsIter = t.parts.iterator.map { case Lit.String(part) => part }
+        val argsIter = t.args.iterator
+        while (partsIter.hasNext) {
+          val part = partsIter.next()
+          val notLast = partsIter.hasNext && argsIter.hasNext
+          zipped += { if (notLast) s(part, printBracedExpr(argsIter.next())) else s(part) }
         }
-        m(SimpleExpr1, s(r(zipped), parts.last))
+        m(SimpleExpr1, r(zipped.result()))
 
       case t: Term.ArgClause => nosp(s("(", o(t.mod, " "), r(t.values, ", "), ")"))
       case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
@@ -531,19 +545,32 @@ object TreeSyntax {
       case t: Pat.Interpolate =>
         /** @see LegacyScanner.getStringPart, when ch == '$' */
         def needBraces(id: String): Boolean = !Character.isUnicodeIdentifierStart(id.head)
-        val parts = t.parts.map { case Lit(part: String) => part }
-        val zipped = parts.zip(t.args).map {
-          case (part, id: Name) if !guessIsBackquoted(id) && !needBraces(id.value) =>
-            s(part, "$", id.value)
-          case (part, arg) => s(part, "$", w("{", arg, "}", !arg.is[Term.Block]))
+
+        val zipped = new ListBuffer[Show.Result]()
+        val partsIter = t.parts.iterator.map { case Lit.String(part) => part }
+        val argsIter = t.args.iterator
+        def arg = argsIter.next() match {
+          case id: Name if !guessIsBackquoted(id) && !needBraces(id.value) => s(id.value)
+          case arg => printBracedExpr(arg)
         }
-        m(SimplePattern, s(t.prefix, "\"", r(zipped), parts.last, "\""))
+        while (partsIter.hasNext) {
+          val part = partsIter.next()
+          val notLast = partsIter.hasNext && argsIter.hasNext
+          zipped += { if (notLast) s(part, "$", arg) else s(part) }
+        }
+        m(SimplePattern, s(t.prefix, "\"", r(zipped.result()), "\""))
       case t: Pat.Xml =>
         if (!dialect.allowXmlLiterals)
           throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
-        val parts = t.parts.map { case Lit(part: String) => part }
-        val zipped = parts.zip(t.args).map { case (part, arg) => s(part, "{", arg, "}") }
-        m(SimplePattern, s(r(zipped), parts.last))
+        val zipped = new ListBuffer[Show.Result]()
+        val partsIter = t.parts.iterator.map { case Lit.String(part) => part }
+        val argsIter = t.args.iterator
+        while (partsIter.hasNext) {
+          val part = partsIter.next()
+          val notLast = partsIter.hasNext && argsIter.hasNext
+          zipped += { if (notLast) s(part, printBracedExpr(argsIter.next())) else s(part) }
+        }
+        m(SimplePattern, r(zipped.result()))
       case Pat.Typed(lhs, rhs: Lit) =>
         if (dialect.allowLiteralTypes)
           m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
@@ -672,7 +699,11 @@ object TreeSyntax {
 
       // Init
       case t: Init =>
-        s(if (t.tpe.is[Type.Singleton]) kw("this") else p(RefineTyp, t.tpe), t.argClauses)
+        val tpe = t.tpe match {
+          case Type.Singleton(ref @ Term.This(_: Name.Anonymous)) => ref
+          case tpe => tpe
+        }
+        s(p(RefineTyp, tpe), t.argClauses)
 
       // Self
       case t: Self => w(s(t.name, t.decltpe), " =>")
@@ -999,6 +1030,10 @@ object TreeSyntax {
       }
       m(SimpleExpr, s(prefix, body))
     }
+
+    private def printBracedExpr(t: Show.Result, useBraces: Boolean = true): Show.Result =
+      w("{", t, "}", useBraces)
+    private def printBracedExpr(t: Term): Show.Result = printBracedExpr(p(Expr, t), !t.is[Term.Block])
 
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 
