@@ -917,11 +917,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val maybeTupleArgs = inParensOnOpenOr(
       commaSeparated(expr(location = PostfixStat, allowRepeated = allowRepeated)),
     )(Nil)
-    if (maybeTupleArgs.lengthCompare(1) > 0) maybeTupleArgs.foreach {
-      case arg: Term.Repeated =>
-        syntaxError("repeated argument not allowed here", at = arg.tokens.last)
-      case _ =>
-    }
     makeTupleTerm(x => getTupleSingleTerm(maybeAnonymousFunction(x)))(lpPos, maybeTupleArgs)
   }
 
@@ -1326,11 +1321,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           next()
           Type.AnonymousParam(None)
         case _: Underscore => wildcardType()
-        case _: Literal =>
-          if (dialect.allowLiteralTypes) literal()
-          else syntaxError(s"$dialect doesn't support literal types", at = path())
-        case Unary(unary) if dialect.allowLiteralTypes && tryAhead[Literal] =>
-          autoEndPos(prevIndex)(rawLiteral(unary))
+        case _: Literal => literal()
+        case Unary(unary) if tryAhead[Literal] => autoEndPos(prevIndex)(rawLiteral(unary))
         case t: Ident if !inMatchType =>
           t.text match {
             case soft.QuestionMarkAsTypeWildcard() => wildcardType()
@@ -1517,9 +1509,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         })
       case Constant.Char(value) => Left(Lit.Char(value))
       case Constant.String(value) => Left(Lit.String(value))
-      case t: Constant.Symbol =>
-        if (dialect.allowSymbolLiterals) Left(Lit.Symbol(t.value))
-        else syntaxError("Symbol literals are no longer allowed", at = t)
+      case t: Constant.Symbol => Left(Lit.Symbol(t.value))
       case x: BooleanConstant => unary match {
           case unary: Unary.Logical => Right(Lit.Boolean(unary(x.value)))
           case _ => Left(Lit.Boolean(x.value))
@@ -1802,15 +1792,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           next()
           val (cond, body) = condExprWithBody[KwDo]
           Term.While(cond, body)
-        case _: KwDo if dialect.allowDoWhile =>
+        case _: KwDo =>
           next()
           val body = expr()
           skipAllStatSep()
           accept[KwWhile]
           val cond = condExpr()
           Term.Do(body, cond)
-        case _: KwDo =>
-          syntaxError("do {...} while (...) syntax is no longer supported", at = currToken)
         case _: KwFor =>
           next()
           def enumList =
@@ -1859,12 +1847,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   ): Term = {
     @inline
     def addPos[T <: Tree](body: T) = autoEndPos(startPos)(body)
-    def repeatedTerm(t: Term, nextTokens: () => Unit): Term =
-      if (allowRepeated) addPos {
-        nextTokens()
-        Term.Repeated(maybeAnonymousFunction(t, location, includeArg = true))
-      }
-      else syntaxError("repeated argument not allowed here", at = currToken)
+    def repeatedTerm(t: Term, nextTokens: () => Unit): Term = addPos {
+      nextTokens()
+      Term.Repeated(maybeAnonymousFunction(t, location, includeArg = true))
+    }
     @tailrec
     def iter(t: Term): Term = currToken match {
       case _: Equals => t match {
@@ -2201,10 +2187,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case Term.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Term.Assign] => arg
         case x => x
       }
-
-      if (lhs.is[Term.Repeated])
-        syntaxError("repeated argument not allowed here", at = lhs.tokens.last)
-
       atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, toArgClause(rhs)))
     }
   }
@@ -2598,18 +2580,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val isBrace = at[LeftBrace]
     if (!isBrace && !at[LeftParen]) prefixExpr(allowRepeated = false)
     else {
-      def findRep(args: List[Term]): Option[Term.Repeated] = args.collectFirst {
-        case Term.Assign(_, rep: Term.Repeated) => rep
-        case rep: Term.Repeated => rep
-      }
       val lpPos = currIndex
       val args =
         if (isBrace) checkNoTripleDot(blockExprOnBrace(allowRepeated = true)) :: Nil
         else inParensOnOpenOr(argumentExprsInParens(location))(Nil)
-      def getRest() = {
-        findRep(args).foreach(x => syntaxError("repeated argument not allowed here", at = x))
-        simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
-      }
+      def getRest() = simpleExprRest(makeTupleTerm(lpPos, args), canApply = true, startPos = lpPos)
       currToken match {
         case _: Dot | _: OpenDelim | _: Underscore => getRest()
         // see ArgumentExprs in:
@@ -2800,26 +2775,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def entrypointEnumerator(): Enumerator = enumerator()
 
-  private def generator(): Enumerator with Tree.WithBody = {
-    val startPos = currIndex
-    val hasVal = acceptOpt[KwVal]
+  private def generator(): Enumerator with Tree.WithBody = autoPos {
+    if (acceptOpt[KwVal])
+      deprecationWarning("val keyword in for comprehension is deprecated", at = prevToken)
     val isCase = acceptOpt[KwCase]
 
     val pat = noSeq.pattern1(isForComprehension = true)
-    val hasEq = at[Equals]
-
-    if (hasVal)
-      if (hasEq) deprecationWarning("val keyword in for comprehension is deprecated", at = currToken)
-      else syntaxError("val in for comprehension must be followed by assignment", at = currToken)
-
-    if (hasEq) next() else accept[LeftArrow]
+    val hasEq = acceptOpt[Equals]
+    if (!hasEq) accept[LeftArrow]
     val rhs = if (at[Indentation.Indent]) blockOnIndent() else expr()
 
-    autoEndPos(startPos)(
-      if (hasEq) Enumerator.Val(pat, rhs)
-      else if (isCase) Enumerator.CaseGenerator(pat, rhs)
-      else Enumerator.Generator(pat, rhs),
-    )
+    if (hasEq) Enumerator.Val(pat, rhs)
+    else if (isCase) Enumerator.CaseGenerator(pat, rhs)
+    else Enumerator.Generator(pat, rhs)
   }
 
   /* -------- PATTERNS ------------------------------------------- */
@@ -2894,8 +2862,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           typed()
         case _: Pat.Var =>
           next()
-          if (!dialect.allowColonForExtractorVarargs && at[Underscore] && isStar(peekToken))
-            syntaxError(s"$dialect does not support var: _*", at = p)
           getSeqWildcard(dialect.allowColonForExtractorVarargs, typed(), Pat.Bind(p, _))
         case _: Pat.Wildcard =>
           next()
@@ -3256,15 +3222,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   /* -------- PARAMETERS ------------------------------------------- */
 
-  @tailrec
-  private def onlyLastParameterCanBeRepeated(params: List[Term.Param]): Unit = params match {
-    case p :: tail if tail.nonEmpty =>
-      if (!p.is[Term.Param.Quasi] && p.decltpe.is[Type.Repeated])
-        syntaxError("*-parameter must come last", p)
-      onlyLastParameterCanBeRepeated(tail)
-    case _ =>
-  }
-
   private def memberParamClauseGroupOnParen(): Member.ParamClauseGroup = {
     val tparams = emptyTypeParams
     autoPos(termParamClausesOnParen(ellipsisMaxRank = 3) match {
@@ -3328,10 +3285,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def termParamClauseOnParen(ellipsisMaxRank: Int = 2): Term.ParamClause = autoPos {
     def reduceParams(params: List[Term.Param], mod: Option[Mod.ParamsType] = None) = params
-      .reduceWith { x =>
-        onlyLastParameterCanBeRepeated(x)
-        toParamClause(mod)(x)
-      }
+      .reduceWith(toParamClause(mod))
     def parseParams(mod: Option[Mod.ParamsType] = None) = {
       val params = commaSeparatedWithIndex(termParam(mod = mod))
       reduceParams(params, mod)
@@ -3363,10 +3317,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     mod.foreach { mod =>
       val clazz = mod.getClass
-      mods.find(_.getClass eq clazz) match {
-        case None => mods.prepend(mod)
-        case Some(x) => if (paramIdx == 0) syntaxError("repeated modifier", at = x)
-      }
+      if (mods.forall(_.getClass ne clazz)) mods.prepend(mod)
     }
 
     currToken match {
@@ -3577,10 +3528,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       annotsBuf(buf, skipNewLines = true)
       modifiersBuf(buf)
     }
-    defOrDclOrSecondaryCtor(mods) match {
-      case s if s.isTemplateStat => s
-      case other => syntaxError("is not a valid template statement", at = other)
-    }
+    defOrDclOrSecondaryCtor(mods)
   }
 
   def defOrDclOrSecondaryCtor(mods: List[Mod]): Stat = {
@@ -3633,18 +3581,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     if (acceptOpt[Equals]) {
       val rhs = expr()
-      if (rhs.is[Term.Placeholder] && (tpOpt.isEmpty || isVal || !lhs.forall(_.is[Pat.Var])))
-        syntaxError("unbound placeholder parameter", at = currToken)
       if (isVal) Defn.Val(mods, lhs, tpOpt, rhs) else Defn.Var(mods, lhs, tpOpt, rhs)
-    } else {
-      lhs.foreach(x =>
-        if (!x.is[Quasi] && !x.is[Pat.Var])
-          syntaxError("pattern definition may not be abstract", at = x),
-      )
-      tpOpt.fold(syntaxError("declaration requires a type", at = currToken))(tp =>
-        if (isVal) Decl.Val(mods, lhs, tp) else Decl.Var(mods, lhs, tp),
-      )
-    }
+    } else tpOpt.fold(syntaxError("declaration requires a type", at = currToken))(tp =>
+      if (isVal) Decl.Val(mods, lhs, tp) else Decl.Var(mods, lhs, tp),
+    )
   }
 
   /**
@@ -3931,9 +3871,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     def procedureSyntaxDeclType: Type = {
       val hint = s"Convert procedure `$name` to method by adding `: Unit =`."
-      if (dialect.allowProcedureSyntax)
-        deprecationWarning(s"Procedure syntax is deprecated. $hint", at = name)
-      else syntaxError(s"Procedure syntax is not supported. $hint", at = name)
+      deprecationWarning(s"Procedure syntax is deprecated. $hint", at = name)
       atCurPosEmpty(Type.Name("Unit"))
     }
 
@@ -3996,17 +3934,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val typeParams = typeParamClauseOpt()
     val modCase = mods.has[Mod.Case]
 
-    TemplateOwnerContext.within(if (modCase) OwnedByCaseClass else OwnedByClass) {
-      val ctor = primaryCtor()
-
-      if (modCase && !dialect.allowCaseClassWithoutParameterList && ctor.paramClauses.isEmpty)
-        syntaxError(
-          s"case classes must have a parameter list; try 'case class $className()' or 'case object $className'",
-          at = currToken,
-        )
-
-      Defn.Class(mods, className, typeParams, ctor, templateOpt())
-    }
+    TemplateOwnerContext.within(if (modCase) OwnedByCaseClass else OwnedByClass)(
+      Defn.Class(mods, className, typeParams, primaryCtor(), templateOpt()),
+    )
   }
 
   // EnumDef           ::=  id ClassConstr InheritClauses EnumBody
@@ -4283,10 +4213,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val body = templateBodyOnLeftBrace()
       if (at[KwWith] && body.selfOpt.isEmpty) {
         val edefs = body.stats
-        edefs.foreach {
-          case _: Quasi | _: Defn.Val | _: Defn.Var | _: Defn.Type =>
-          case other => syntaxError("not a valid early definition", at = other)
-        }
         next()
         val parents = templateParents(afterExtend)
         val early = copyPos(body)(toStatsBlockRaw(edefs))
@@ -4375,12 +4301,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def existentialTypeOnForSome(t: Type): Type.Existential = {
     next()
-    val statsClause = toStatsBlock(currIndex) {
-      val stats = inBraces(refineStatSeq())
-      stats
-        .foreach(x => if (!x.isExistentialStat) syntaxError("not a legal existential clause", at = x))
-      stats
-    }
+    val statsClause = toStatsBlock(currIndex)(inBraces(refineStatSeq()))
     atPos(t, statsClause)(Type.Existential(t, statsClause))
   }
 
@@ -4458,8 +4379,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def templateStatSeq(): Template.Body = {
     val selfTreeOpt = tryParse(selfEither().right.toOption)
-    if (TemplateOwnerContext.owner eq OwnedByGiven) selfTreeOpt
-      .foreach(_.decltpe.foreach(x => syntaxError("given cannot have a self type", at = x)))
     val stats = listBy[Stat] { buf =>
       def getStats() = statSeqBuf(buf, templateStat)
       val wasIndented = getStats() // some stats could be indented relative to self-type
@@ -4482,10 +4401,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def cond(tok: Token): Boolean = !StatSeqEnd(tok) && {
       def fail(err: String) = syntaxError(err, at = tok)
       if (tok.is[Ellipsis]) stats += ellipsis[Stat](tok.asInstanceOf[Ellipsis], 1)
-      else if (isDclIntro(currIndex)) {
-        val stat = defOrDclOrSecondaryCtor(Nil)
-        if (stat.isRefineStat) stats += stat else fail("is not a valid refinement declaration")
-      } else if (ReturnTypeContext.isInside()) fail(
+      else if (isDclIntro(currIndex)) stats += defOrDclOrSecondaryCtor(Nil)
+      else if (ReturnTypeContext.isInside()) fail(
         "illegal start of declaration (possible cause: missing `=' in front of current method body)",
       )
       else fail("illegal start of declaration")
@@ -4504,12 +4421,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case _: Mod.Implicit | _: Mod.Lazy | _: Mod.Inline | _: Mod.Infix | _: Mod.Annot => true
         case _ => false
       }) defOrDclOrSecondaryCtor(mods)
-    else tmplDef(mods) match {
-      case stat: Decl.Type if dialect.allowTypeInBlock => stat
-      case stat: Decl.Type => syntaxError("is not a valid block statement", at = stat)
-      case stat if stat.isBlockStat => stat
-      case other => syntaxError("is not a valid block statement", at = other)
-    }
+    else tmplDef(mods)
   }
 
   def blockStatSeq(allowRepeated: Boolean = false): List[Stat] = listBy[Stat] { stats =>
@@ -4541,11 +4453,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         acceptIfExtendedStatSep()
       }
     }) {}
-
-    if (allowRepeated && stats.length > 1) stats.foreach {
-      case t: Term.Repeated => syntaxError("repeated argument not allowed here", at = t)
-      case _ =>
-    }
   }
 
   private def toPkgBody(startPos: Int)(stats: List[Stat]): Pkg.Body =

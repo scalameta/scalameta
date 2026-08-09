@@ -122,10 +122,12 @@ class GivenUsingSuite extends BaseDottySuite {
     Defn.Given(Nil, tname("intOrd"), Nil, Nil, tpl(List(init(papply("Ord", "Int"))), self("current"))),
   ))
 
-  test("given-selftype-error")(runTestError(
-    "given intOrd: Ord[Int] with { current: Ord[Int] => }",
-    "given cannot have a self type",
-  ))
+  test("given-selftype") {
+    val code = "given intOrd: Ord[Int] with { current: Ord[Int] => }"
+    val templ = tpl(List(init(papply("Ord", "Int"))), Self("current", Some(papply("Ord", "Int"))))
+    val tree = Defn.Given(Nil, "intOrd", Nil, templ)
+    runTestAssert[Stat](code)(tree)
+  }
 
   test("given-generic-named")(
     runTestAssert[Stat]("given listOrd[T]: Ord[List[T]] with { def f(): Int = 1 }")(Defn.Given(

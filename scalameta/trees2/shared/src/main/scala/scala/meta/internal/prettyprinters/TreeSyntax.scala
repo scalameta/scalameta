@@ -548,9 +548,7 @@ object TreeSyntax {
         val partsArgs = printPartsArgs(partsIter, t.args, "xml literal")(printBracedExpr(_))
         m(SimplePattern, partsArgs)
       case Pat.Typed(lhs, rhs: Lit) =>
-        if (dialect.allowLiteralTypes)
-          m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
-        else throw new UnsupportedOperationException(s"$dialect doesn't support literal types")
+        m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
       case t: Pat.Typed => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(RefineTyp, t.rhs)))
 
       // Lit

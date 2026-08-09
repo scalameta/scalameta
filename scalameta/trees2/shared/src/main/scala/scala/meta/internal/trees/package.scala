@@ -100,33 +100,11 @@ package object trees {
       case _: Pkg.Object => true
       case _ => false
     }
-    def isTemplateStat: Boolean = stat match {
-      case _: Stat.Quasi => true
-      case _: Import => true
-      case _: Export => true
-      case _: Term => true
-      case _: Decl => true
-      case _: Defn => true
-      case _: Ctor.Secondary => true
-      case _ => false
-    }
     def isBlockStat: Boolean = stat match {
       case _: Stat.Quasi => true
       case _: Import => true
       case _: Term => true
       case _: Defn => true
-      case _: Decl.Type => true
-      case _ => false
-    }
-    def isRefineStat: Boolean = stat match {
-      case _: Stat.Quasi => true
-      case _: Decl => true
-      case _: Defn.Type => true
-      case _ => false
-    }
-    def isExistentialStat: Boolean = stat match {
-      case _: Stat.Quasi => true
-      case _: Decl.Val => true
       case _: Decl.Type => true
       case _ => false
     }

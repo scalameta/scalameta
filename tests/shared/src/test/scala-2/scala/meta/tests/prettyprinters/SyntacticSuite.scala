@@ -239,9 +239,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(tpe("Foo | Bar").reprint, "Foo | Bar")
   }
 
-  test("literalTypes")(
-    intercept[ParseException](dialects.Scala211("val a : 42 = 42").parse[Stat].get.reprint),
-  )
+  test("literalTypes") {
+    implicit val dialect: Dialect = dialects.Scala211
+    assertEquals(stat("val a : 42 = 42").reprint, "val a: 42 = 42")
+  }
 
   test("packages") {
     assertEquals(source("package foo.bar; class C").reprint, s"package foo.bar${EOL}class C")
@@ -945,13 +946,10 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     tapply(tapply(tname("foo"), tname("bar")), blk(Term.Repeated(tname("baz")))),
   ))
 
-  test("#1063 bad") {
-    val thrown = intercept[ParseException](term("foo(bar) { val baz = qux; baz: _* }"))
-    assertEquals(
-      thrown.getMessage.substring(0, 52),
-      "<input>:1: error: repeated argument not allowed here",
-    )
-  }
+  test("#1063 bad")(checkTree(term("foo(bar) { val baz = qux; baz: _* }"))(tapply(
+    tapply("foo", "bar"),
+    blk(Defn.Val(Nil, List(patvar("baz")), None, "qux"), Term.Repeated("baz")),
+  )))
 
   test("#1384 char no unescaped LF") {
     val expr = "('\n')"

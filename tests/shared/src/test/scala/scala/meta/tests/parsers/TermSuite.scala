@@ -443,9 +443,11 @@ class TermSuite extends ParseSuite {
     )),
   )
 
-  test("a + (bs: _*) * c")(intercept[ParseException](term("a + (bs: _*) * c")))
+  test("a + (bs: _*) * c")(
+    assertTerm("a + (bs: _*) * c")(tinfix("a", "+", tinfix(Term.Repeated("bs"), "*", "c"))),
+  )
 
-  test("a + b: _*")(intercept[ParseException](term("a + b: _*")))
+  test("a + b: _*")(assertTerm("a + b: _*")(Term.Repeated(tinfix("a", "+", "b"))))
 
   test("foo(a + b: _*)")(assertTerm("foo(a + b: _*)")(
     tapply(tname("foo"), Term.Repeated(tinfix(tname("a"), "+", tname("b")))),

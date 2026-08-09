@@ -65,18 +65,20 @@ class VarargParameterSuite extends ParseSuite {
     checkError("def obj(f: Int*): Boolean* = true", "error: `=` expected but `identifier` found"),
   )
 
-  test("error on multiple parameters vararg not last")(
-    checkError("def obj(fa: Int*, fb: String): Boolean = true", "error: *-parameter must come last"),
-  )
+  test("multiple parameters vararg not last")(check("def obj(fa: Int*, fb: String): Boolean = true") {
+    val params = List(tparam("fa", Type.Repeated("Int")), tparam("fb", Type.Name("String")))
+    Defn.Def(Nil, "obj", Nil, List(params), Some("Boolean"), lit(true))
+  })
 
   test("error on repeated byname parameter") {
     checkError("def fx(x: => Int*): Int = 3", "`)` expected but `identifier` found")
     checkError("class Foo(bars: => Int*)", "`)` expected but `identifier` found")
   }
 
-  test("error on multiple vararg parameters")(
-    checkError("def obj(fa: Int*, fb: Int*) = true", "error: *-parameter must come last"),
-  )
+  test("multiple vararg parameters")(check("def obj(fa: Int*, fb: Int*) = true") {
+    val params = List(tparam("fa", Type.Repeated("Int")), tparam("fb", Type.Repeated("Int")))
+    Defn.Def(Nil, "obj", Nil, List(params), None, lit(true))
+  })
 
   test("vararg-like parameters") {
     checkError("def obj(fa: Int, fb: Int`*`) = true", "error: `identifier` expected but `)` found")

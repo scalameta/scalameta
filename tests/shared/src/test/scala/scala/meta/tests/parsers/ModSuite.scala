@@ -521,11 +521,11 @@ class ModSuite extends ParseSuite {
   }
 
   test("repeated parameter modifier on first parameter") {
-    val expected =
-      s"""|error: repeated modifier
-          |class A(implicit implicit val b: B)
-          |                 ^""".stripMargin
-    runTestError[Stat]("class A(implicit implicit val b: B)", expected)
+    val code = "class A(implicit implicit val b: B)"
+    val layout = "class A(implicit val b: B)"
+    val params = ctorp(Mod.Implicit(), tparam(List(Mod.Implicit(), Mod.ValParam()), "b", "B"))
+    val tree = Defn.Class(Nil, pname("A"), Nil, params, tplNoBody())
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("by-name parameter: class with val") {
