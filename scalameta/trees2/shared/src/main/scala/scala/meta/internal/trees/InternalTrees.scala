@@ -144,14 +144,6 @@ trait InternalTree extends Product {
 
   private def textOpt: Option[String] = origin.textOpt.orElse(syntaxTextOpt)
   private lazy val syntaxTextOpt: Option[String] = origin.dialectOpt.map(reprintSyntax)
-
-  // ==============================================================
-  // Intellij-friendly stubs.
-  // See https://github.com/scalameta/scalameta/pull/907#discussion_r120090447.
-  // ==============================================================
-
-  protected def checkFields(f: => Boolean): Unit = ()
-  protected def checkField(field: Tree, requirement: Boolean): Unit = ()
 }
 
 trait InternalTreeXtensions {
