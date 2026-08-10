@@ -190,7 +190,7 @@ object TreeSyntax {
             case _: Type => thisLocationAlsoAcceptsTypeVars(parent)
             case _ => false
           }
-          t.value.head.isLower && patVarIsOk || isEscapableSoftKeyword(t, parent)
+          t.value.isEmpty || t.value.head.isLower && patVarIsOk || isEscapableSoftKeyword(t, parent)
         case _ => false
       }
       cantBeWrittenWithoutBackquotes(t) || t.parent.exists(isAmbiguousInParent(t))
@@ -278,35 +278,23 @@ object TreeSyntax {
           !Character.isUnicodeIdentifierStart(id.head) ||
             nextPart.headOption.exists(Character.isUnicodeIdentifierPart)
         var needQuote = false
-        val zipped = new ListBuffer[Show.Result]()
-        val partsIter = t.parts.iterator.map { case Lit.String(part) => part.replace("$", "$$") }
-          .buffered
-        val argsIter = t.args.iterator
-        def arg = argsIter.next() match {
-          case id: Name if !guessIsBackquoted(id) && !needBraces(id.value, partsIter.head) =>
-            s(id.value)
-          case arg => printBracedExpr(arg)
-        }
-        while (partsIter.hasNext) {
-          val part = partsIter.next()
+        val partsIter = t.parts.iterator.map { case Lit.String(part) =>
           needQuote ||= part.contains("\n") || part.contains("\"")
-          val notLast = partsIter.hasNext && argsIter.hasNext
-          zipped += { if (notLast) s(part, "$", arg) else s(part) }
+          part.replace("$", "$$")
+        }.buffered
+        val partsArgs = printPartsArgs(partsIter, t.args, "interpolate") {
+          case id: Name if !guessIsBackquoted(id) && !needBraces(id.value, partsIter.head) =>
+            s("$", id.value)
+          case arg => s("$", printBracedExpr(arg))
         }
         val quote = if (needQuote) "\"\"\"" else "\""
-        m(SimpleExpr1, s(t.prefix, quote, r(zipped.result()), quote))
+        m(SimpleExpr1, s(t.prefix, quote, partsArgs, quote))
       case t: Term.Xml =>
         if (!dialect.allowXmlLiterals)
           throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
-        val zipped = new ListBuffer[Show.Result]()
         val partsIter = t.parts.iterator.map { case Lit.String(part) => part }
-        val argsIter = t.args.iterator
-        while (partsIter.hasNext) {
-          val part = partsIter.next()
-          val notLast = partsIter.hasNext && argsIter.hasNext
-          zipped += { if (notLast) s(part, printBracedExpr(argsIter.next())) else s(part) }
-        }
-        m(SimpleExpr1, r(zipped.result()))
+        val partsArgs = printPartsArgs(partsIter, t.args, "xml literal")(printBracedExpr(_))
+        m(SimpleExpr1, partsArgs)
 
       case t: Term.ArgClause => nosp(s("(", o(t.mod, " "), r(t.values, ", "), ")"))
       case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
@@ -326,7 +314,9 @@ object TreeSyntax {
           case _ => printApplyArgs(t.argClause, "")
         }
         m(sg, s(p(sg, t.lhs), sp(s(t.op, t.targClause, sp(args)))))
-      case t: Term.ApplyUnary => m(PrefixExpr, s(t.op, p(SimpleExpr, t.arg)))
+      case t: Term.ApplyUnary =>
+        val needSpace = !t.op.value.lastOption.forall(isOperatorPart)
+        m(PrefixExpr, s(w(t.op, " ", needSpace), p(SimpleExpr, t.arg)))
       case t: Term.Assign => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
       case t: Term.Return =>
         m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
@@ -545,32 +535,18 @@ object TreeSyntax {
       case t: Pat.Interpolate =>
         /** @see LegacyScanner.getStringPart, when ch == '$' */
         def needBraces(id: String): Boolean = !Character.isUnicodeIdentifierStart(id.head)
-
-        val zipped = new ListBuffer[Show.Result]()
         val partsIter = t.parts.iterator.map { case Lit.String(part) => part }
-        val argsIter = t.args.iterator
-        def arg = argsIter.next() match {
-          case id: Name if !guessIsBackquoted(id) && !needBraces(id.value) => s(id.value)
-          case arg => printBracedExpr(arg)
+        val partsArgs = printPartsArgs(partsIter, t.args, "interpolate") {
+          case id: Name if !guessIsBackquoted(id) && !needBraces(id.value) => s("$", id.value)
+          case arg => s("$", printBracedExpr(arg))
         }
-        while (partsIter.hasNext) {
-          val part = partsIter.next()
-          val notLast = partsIter.hasNext && argsIter.hasNext
-          zipped += { if (notLast) s(part, "$", arg) else s(part) }
-        }
-        m(SimplePattern, s(t.prefix, "\"", r(zipped.result()), "\""))
+        m(SimplePattern, s(t.prefix, "\"", partsArgs, "\""))
       case t: Pat.Xml =>
         if (!dialect.allowXmlLiterals)
           throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
-        val zipped = new ListBuffer[Show.Result]()
         val partsIter = t.parts.iterator.map { case Lit.String(part) => part }
-        val argsIter = t.args.iterator
-        while (partsIter.hasNext) {
-          val part = partsIter.next()
-          val notLast = partsIter.hasNext && argsIter.hasNext
-          zipped += { if (notLast) s(part, printBracedExpr(argsIter.next())) else s(part) }
-        }
-        m(SimplePattern, r(zipped.result()))
+        val partsArgs = printPartsArgs(partsIter, t.args, "xml literal")(printBracedExpr(_))
+        m(SimplePattern, partsArgs)
       case Pat.Typed(lhs, rhs: Lit) =>
         if (dialect.allowLiteralTypes)
           m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
@@ -1034,6 +1010,20 @@ object TreeSyntax {
     private def printBracedExpr(t: Show.Result, useBraces: Boolean = true): Show.Result =
       w("{", t, "}", useBraces)
     private def printBracedExpr(t: Term): Show.Result = printBracedExpr(p(Expr, t), !t.is[Term.Block])
+
+    private def printPartsArgs[A <: Tree](partsIter: Iterator[String], args: Seq[A], what: String)(
+        f: A => Show.Result,
+    ): Show.Result = {
+      val argsIter = args.iterator
+      val res = Seq.newBuilder[Show.Result]
+      while (partsIter.hasNext) {
+        val part = partsIter.next()
+        val notLast = partsIter.hasNext
+        require(notLast == argsIter.hasNext, s"$what has more parts than args")
+        res += { if (notLast) s(part, f(argsIter.next())) else s(part) }
+      }
+      s(res.result(): _*)
+    }
 
     implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
 
