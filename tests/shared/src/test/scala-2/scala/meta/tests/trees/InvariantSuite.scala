@@ -6,15 +6,22 @@ import scala.meta._
 import scala.meta.dialects.Scala211
 
 class InvariantSuite extends TreeSuiteBase {
+
   test("secondary constructors in templates") {
     val primaryCtor = EmptyCtor()
     val secondaryCtor = Ctor
       .Secondary(Nil, anon, List(List()), init(Type.Singleton(Term.This(anon))), Nil)
     val template = tpl(secondaryCtor)
-    Defn.Class(Nil, pname("test"), Nil, primaryCtor, template)
-    intercept[InvariantFailedException](Defn.Trait(Nil, pname("test"), Nil, primaryCtor, template))
-    intercept[InvariantFailedException](Defn.Object(Nil, tname("test"), template))
-    intercept[InvariantFailedException](Pkg.Object(Nil, tname("test"), template))
+    assertSyntax("class test { def this() = this }")(
+      Defn.Class(Nil, pname("test"), Nil, primaryCtor, template),
+    )
+    assertSyntax("trait test { def this() = this }")(
+      Defn.Trait(Nil, pname("test"), Nil, primaryCtor, template),
+    )
+    assertSyntax("object test { def this() = this }")(Defn.Object(Nil, tname("test"), template))
+    assertSyntax("package object test { def this() = this }")(
+      Pkg.Object(Nil, tname("test"), template),
+    )
   }
 
   test("Lit.Float/Double") {
@@ -25,118 +32,64 @@ class InvariantSuite extends TreeSuiteBase {
   test("Term.Repeated") {
     import scala.meta._
     val xs = q"xs: _*"
-    intercept[InvariantFailedException](q"$xs + $xs")
+    assertSyntax("xs: _* + (xs: _*)")(q"$xs + $xs")
   }
 
   test("Pat.Var") {
     import scala.meta._
     val x = p"X"
-    intercept[InvariantFailedException](p"case $x =>")
+    assertSyntax("case X =>")(p"case $x =>")
   }
 
   test("Type.ByName") {
     import scala.meta._
     val t = t"=> T"
-    intercept[InvariantFailedException](t"List[$t]")
+    assertSyntax("List[=> T]")(t"List[$t]")
   }
 
   test("Type.Repeated") {
     import scala.meta._
     val t = t"T*"
-    intercept[InvariantFailedException](t"List[$t]")
+    assertSyntax("List[(T*)]")(t"List[$t]")
   }
 
   test("Pat.SeqWildcard") {
     import scala.meta._
     val p = p"_*"
-    intercept[InvariantFailedException](p"case $p =>")
+    assertSyntax("case _* =>")(p"case $p =>")
   }
 
   test("Type.Var") {
     import scala.meta._
     val p"$_: List[$tvar]" = p"xs: List[t]"
     assert(tvar.is[Type.Var])
-    intercept[InvariantFailedException](p"x: $tvar")
+    assertSyntax("x: t")(p"x: $tvar")
     val okay1 = t"List[$tvar]"
+    assertSyntax("List[t]")(okay1)
     val okay2 = q"List[$tvar]"
+    assertSyntax("List[t]")(okay2)
     val okay3 = p"$okay2(x, y)"
+    assertSyntax("List[t](x, y)")(okay3)
   }
 
   test("Init") {
     val init = init"this()"
-    intercept[InvariantFailedException](q"new $init")
+    assertSyntax("new this()")(q"new $init")
   }
 
   test("Mod.Private/Protected") {
     val ref = q"foo.bar"
-    intercept[InvariantFailedException](mod"private[$ref]")
-    intercept[InvariantFailedException](mod"protected[$ref]")
+    assertSyntax("private[foo.bar]")(mod"private[$ref]")
+    assertSyntax("protected[foo.bar]")(mod"protected[$ref]")
   }
 
-  test("empty Term.Tuple") {
-    def tuple = Term.Tuple(Nil)
-    interceptMessage[InvariantFailedException] {
-      """|invariant failed (args should be non-empty):
-         |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
-         |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
-         |and also args.nonEmpty is false
-         |where args = List()
-         |""".stripMargin.lf2nl
-    }(tuple)
-  }
-  test("nested Term.Tuple") {
-    def tuple = Term.Tuple(Term.Tuple(Lit.Unit() :: Nil) :: Nil)
-    interceptMessage[InvariantFailedException](
-      """|invariant failed:
-         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
-         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
-         |where args = List((()))
-         |""".stripMargin.lf2nl,
-    )(tuple)
-  }
+  test("empty Term.Tuple")(assertSyntax("()")(Term.Tuple(Nil)))
+  test("nested Term.Tuple")(assertSyntax("((()))")(Term.Tuple(Term.Tuple(Lit.Unit() :: Nil) :: Nil)))
 
-  test("empty Pat.Tuple") {
-    def tuple = Pat.Tuple(Nil)
-    interceptMessage[InvariantFailedException] {
-      """|invariant failed (args should be non-empty):
-         |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
-         |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
-         |and also args.nonEmpty is false
-         |where args = List()
-         |""".stripMargin.lf2nl
-    }(tuple)
-  }
-  test("nested Pat.Tuple") {
-    def tuple = Pat.Tuple(Pat.Tuple(Lit.Unit() :: Nil) :: Nil)
-    interceptMessage[InvariantFailedException](
-      """|invariant failed:
-         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
-         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
-         |where args = List((()))
-         |""".stripMargin.lf2nl,
-    )(tuple)
-  }
+  test("empty Pat.Tuple")(assertSyntax("()")(Pat.Tuple(Nil)))
+  test("nested Pat.Tuple")(assertSyntax("((()))")(Pat.Tuple(Pat.Tuple(Lit.Unit() :: Nil) :: Nil)))
 
-  test("empty Type.Tuple") {
-    def tuple = Type.Tuple(Nil)
-    interceptMessage[InvariantFailedException] {
-      """|invariant failed (args should be non-empty):
-         |when verifying args.!=(null).&&(args.isInstanceOf[scala.meta.internal.trees.Quasi].||(args.nonEmpty))
-         |found that args.isInstanceOf[scala.meta.internal.trees.Quasi] is false
-         |and also args.nonEmpty is false
-         |where args = List()
-         |""".stripMargin.lf2nl
-    }(tuple)
-  }
-  test("nested Type.Tuple") {
-    def tuple = Type.Tuple(Type.Tuple(Lit.Unit() :: Nil) :: Nil)
-    interceptMessage[InvariantFailedException](
-      """|invariant failed:
-         |when verifying scala.meta.internal.trees.ParentChecks.MemberTuple(args)
-         |found that scala.meta.internal.trees.ParentChecks.MemberTuple(args) is false
-         |where args = List((()))
-         |""".stripMargin.lf2nl,
-    )(tuple)
-  }
+  test("empty Type.Tuple")(assertSyntax("()")(Type.Tuple(Nil)))
+  test("nested Type.Tuple")(assertSyntax("((()))")(Type.Tuple(Type.Tuple(Lit.Unit() :: Nil) :: Nil)))
 
 }

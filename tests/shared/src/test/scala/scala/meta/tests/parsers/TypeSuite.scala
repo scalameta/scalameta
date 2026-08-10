@@ -72,6 +72,8 @@ class TypeSuite extends ParseSuite {
     Existential(pselect("a", "T"), Decl.Val(Nil, patvar("a") :: Nil, "A") :: Nil),
   ))
 
+  test("F[T] forSome {}")(assertTpe("F[T] forSome {}")(Existential(papply("F", "T"), Nil)))
+
   test("A | B is not a special type")(assertTpe("A | B")(pinfix("A", "|", "B")))
 
   test("42.type") {

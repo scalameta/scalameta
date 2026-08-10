@@ -94,4 +94,16 @@ class DeclSuite extends ParseSuite {
   test("def f[T]: T")(assertTree(templStat("def f[T]: T"))(
     Decl.Def(Nil, tname("f"), pparam("T") :: Nil, Nil, pname("T")),
   ))
+
+  test("def f: (=> X)")(
+    assertTree(templStat("def f: (=> X)"))(Decl.Def(Nil, tname("f"), Nil, Nil, Type.ByName(pname("X")))),
+  )
+
+  test("def f: (X*)")(
+    assertTree(templStat("def f: (X*)"))(Decl.Def(Nil, tname("f"), Nil, Nil, Type.Repeated(pname("X")))),
+  )
+
+  test("val x: (=> X)")(
+    assertTree(templStat("val x: (=> X)"))(Decl.Val(Nil, List(patvar("x")), Type.ByName(pname("X")))),
+  )
 }

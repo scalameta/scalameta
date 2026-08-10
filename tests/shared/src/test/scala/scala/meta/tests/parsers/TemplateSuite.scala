@@ -176,10 +176,9 @@ class TemplateSuite extends ParseSuite {
     assertTree(templStat("object A { self: B => }"))(Object(Nil, tname("A"), tpl(self("self", "B")))),
   )
 
-  test("trait B extends A.type") {
-    val err = intercept[ParseException](templStat("trait B extends A.type"))
-    assertNoDiff(err.shortMessage, "class type required but A.type found")
-  }
+  test("trait B extends A.type")(runTestAssert[Stat]("trait B extends A.type")(
+    Defn.Trait(Nil, pname("B"), Nil, EmptyCtor(), tplNoBody(init(Type.Singleton("A")))),
+  ))
 
   test("#3142: template with anonymous self type") {
     val code = "class foo { _: Int => }"

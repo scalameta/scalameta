@@ -263,31 +263,16 @@ object Name {
   @ast
   class Anonymous() extends Name {
     def value = ""
-    private def checkParent(destination: String): Boolean = parent.exists {
-      case _: Ctor | _: Init | _: Self | _: Term.Param | _: Type.Param => destination == "name"
-      case _: Mod.Private | _: Mod.Protected => destination == "within"
-      case _: Term.This | _: Term.Super | _: Stat.GivenLike => true
-      case _: Defn.ExtensionGroup | _: Defn.RepeatedEnumCase => true
-      case _ => false
-    }
   }
   @ast
   class This extends Name {
     def value = "this"
-    private def checkParent(destination: String): Boolean = parent.exists {
-      case _: Ctor.Secondary | _: Self => destination == "name"
-      case _ => false
-    }
   }
   @ast
   class Indeterminate(value: JString @nonEmpty) extends Name
   @ast
   class Placeholder() extends Name {
     def value = "_"
-    private def checkParent(destination: String): Boolean = parent.exists {
-      case _: Term.Param | _: Type.Param | _: Self => destination == "name"
-      case _ => false
-    }
   }
 
   implicit class ImplicitName(private val name: Name) extends AnyVal {
@@ -387,7 +372,6 @@ object Term {
   class CasesBlock(cases: List[Case] @nonEmpty) extends Tree.CasesBlock
   @ast
   class EnumeratorsBlock(enums: List[Enumerator] @nonEmpty) extends Tree.Block {
-    checkFields(checkValidEnumerators(enums))
     final def stats: List[Tree] = enums
   }
 
@@ -402,7 +386,6 @@ object Term {
   @ast
   class Anonymous() extends sm.Name with Term.Ref {
     def value = ""
-    private def checkParent(destination: String): Boolean = parent.is[Importer]
   }
   @branch
   trait SelectLike extends Term.Ref with Pat {
@@ -414,13 +397,9 @@ object Term {
   @ast
   class SelectPostfix(qual: Term, name: Term.Name) extends SelectLike
   @ast
-  class Interpolate(prefix: Name, parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
-    checkFields(parts.length == args.length + 1)
-  }
+  class Interpolate(prefix: Name, parts: List[Lit] @nonEmpty, args: List[Term]) extends Term
   @ast
-  class Xml(parts: List[Lit] @nonEmpty, args: List[Term]) extends Term {
-    checkFields(parts.length == args.length + 1)
-  }
+  class Xml(parts: List[Lit] @nonEmpty, args: List[Term]) extends Term
   @ast
   class Apply(fun: Term, argClause: ArgClause) extends Term with Member.Apply {
     @replacedField("4.6.0")
@@ -432,7 +411,7 @@ object Term {
     final def args: List[Term] = argClause.values
   }
   @ast
-  class ApplyType(fun: Term, targClause: Type.ArgClause @nonEmpty) extends Term with Member.Apply {
+  class ApplyType(fun: Term, targClause: Type.ArgClause) extends Term with Member.Apply {
     @replacedField("4.6.0")
     final def targs: List[Type] = targClause.values
     override def argClause: Member.ArgClause = targClause
@@ -447,14 +426,9 @@ object Term {
     override final def arg: Tree = argClause
   }
   @ast
-  class ApplyUnary(op: Name, arg: Term) extends Term.Ref {
-    checkFields(op.isUnaryOp)
-  }
+  class ApplyUnary(op: Name, arg: Term) extends Term.Ref
   @ast
   class Assign(lhs: Term, rhs: Term) extends Term with Tree.WithBody {
-    checkField(lhs, lhs.isInstanceOf[Term.Ref] || lhs.isInstanceOf[Term.Apply])
-    private def checkParent(destination: String): Boolean = !rhs.is[Term.Repeated] ||
-      parent.exists(ParentChecks.termArgument(_, destination))
     override def body: Tree = rhs
   }
   @ast
@@ -464,21 +438,11 @@ object Term {
   @ast
   class Ascribe(expr: Term, tpe: Type) extends Term
   @ast
-  class Annotate(expr: Term, annots: List[Mod.Annot] @nonEmpty) extends Term
+  class Annotate(expr: Term, annots: List[Mod.Annot]) extends Term
   @ast
-  class Tuple(args: List[Term] @nonEmpty) extends Term with Member.Tuple {
-    // tuple may have one element (see scala.Tuple1)
-    // however, this element may not be another single-element Tuple
-    checkFields(ParentChecks.MemberTuple(args))
-  }
+  class Tuple(args: List[Term]) extends Term with Member.Tuple
   @ast
-  class Block(stats: List[Stat]) extends Term with Tree.Block with Tree.WithStats {
-    private def checkParent(destination: String): Boolean = stats.forall {
-      case _: Decl => true
-      case _: Export => parent.is[Defn.ExtensionGroup]
-      case x => x.isBlockStat
-    }
-  }
+  class Block(stats: List[Stat]) extends Term with Tree.Block with Tree.WithStats
   @ast
   class EndMarker(name: Term.Name) extends Term
   @ast
@@ -573,23 +537,15 @@ object Term {
     def params: List[Param] = paramClause.values
     def body: Term
   }
-  private def validateFunctionParams(pc: ParamClause): Boolean = pc.values
-    .forall(x => isQuasiOr(x, !x.name.is[sm.Name.Anonymous] || x.default.isEmpty))
-  private def validateFunctionMod(pc: ParamClause): Boolean = pc.values match {
-    case _ :: Nil => true
-    case x => !pc.mod.is[Mod.Implicit] || x.exists(isQuasi)
-  }
   @ast
   class ContextFunction(paramClause: ParamClause, body: Term) extends FunctionTerm {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
-    checkField(paramClause, validateFunctionParams(paramClause))
   }
   @ast
   class Function(paramClause: ParamClause, body: Term) extends FunctionTerm {
     @replacedField("4.6.0")
     override final def params: List[Param] = paramClause.values
-    checkField(paramClause, validateFunctionParams(paramClause) && validateFunctionMod(paramClause))
   }
   @ast
   class AnonymousFunction(body: Term) extends Term
@@ -636,10 +592,6 @@ object Term {
   class Eta(expr: Term) extends Term
   @ast
   class Repeated(expr: Term) extends Term with Tree.Repeated {
-    private def checkParent(destination: String): Boolean = parent.exists {
-      case _: Term.Tuple => destination == "args"
-      case p => ParentChecks.termArgument(p, destination)
-    }
     final def body: Term = expr
   }
   @ast
@@ -681,15 +633,11 @@ object Type {
   @ast // https://scala-lang.org/api/3.x/docs/docs/reference/experimental/cc.html#capability-polymorphism-1
   class CapSetName(value: JString @nonEmpty) extends sm.Name with Type.Ref
   @ast
-  class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref {
-    checkFields(qual.isPath || qual.isInstanceOf[Term.Super])
-  }
+  class Select(qual: Term.Ref, name: Type.Name) extends Type.Ref
   @ast
   class Project(qual: Type, name: Type.Name) extends Type.Ref
   @ast
-  class Singleton(ref: Term.Ref) extends Type.Ref {
-    checkFields(ref.isPath || ref.isInstanceOf[Term.Super])
-  }
+  class Singleton(ref: Term.Ref) extends Type.Ref
   @ast
   class Apply(tpe: Type, argClause: ArgClause @nonEmpty) extends Type with Member.Apply {
     @replacedField("4.6.0")
@@ -766,11 +714,7 @@ object Type {
   @ast @deprecated("Implicit functions are not supported in any dialect")
   private[meta] class ImplicitFunction(params: List[Type], res: Type) extends Type
   @ast
-  class Tuple(args: List[Type] @nonEmpty) extends Type with Member.Tuple {
-    // tuple may have one element (see scala.Tuple1)
-    // however, this element may not be another single-element Tuple
-    checkFields(ParentChecks.MemberTuple(args))
-  }
+  class Tuple(args: List[Type]) extends Type with Member.Tuple
   @ast
   class With(lhs: Type, rhs: Type) extends Type
   @deprecated("And unused, replaced by ApplyInfix", "4.5.1") @ast
@@ -779,13 +723,11 @@ object Type {
   private[meta] class Or(lhs: Type, rhs: Type) extends Type
   @ast
   class Refine(tpe: Option[Type], body: Stat.Block) extends Type with Tree.WithStatsBlock {
-    checkField(body, body.stats.forall(_.isRefineStat))
     @replacedField("4.9.9")
     override final def stats: List[Stat] = body.stats
   }
   @ast
-  class Existential(tpe: Type, body: Stat.Block @nonEmpty) extends Type with Tree.WithStatsBlock {
-    checkField(body, body.stats.forall(_.isExistentialStat))
+  class Existential(tpe: Type, body: Stat.Block) extends Type with Tree.WithStatsBlock {
     @replacedField("4.9.9")
     override final def stats: List[Stat] = body.stats
   }
@@ -794,12 +736,6 @@ object Type {
   @ast
   class Lambda(tparamClause: ParamClause, tpe: Type)
       extends Type with Tree.WithTParamClause with Member.Function {
-    private def checkParent(destination: String): Boolean = parent.exists {
-      case _: Type | _: Defn.Type | _: Type.Bounds | _: Term.ApplyType | _: Type.Param |
-          _: Term.Param | _: Type.ArgClause | _: Decl.Given | _: Defn.Given | _: Defn.GivenAlias =>
-        true
-      case _ => false
-    }
     @replacedField("4.6.0")
     final def tparams: List[Param] = tparamClause.values
     override def paramClause: Member.SyntaxValuesClause = tparamClause
@@ -811,7 +747,6 @@ object Type {
   class Macro(body: Term) extends Type with Tree.WithBody
   @deprecated("Method type syntax is no longer supported in any dialect", "4.4.3") @ast
   private[meta] class Method(paramClauses: Seq[Term.ParamClause], tpe: Type) extends Type {
-    private def checkParent(destination: String): Boolean = parent.isAny[Type, Defn.Type]
     @replacedField("4.6.0")
     final def paramss: List[List[Term.Param]] = paramClauses.map(_.values).toList
   }
@@ -869,38 +804,16 @@ object Type {
     override def res: Type = tpe
   }
   @ast
-  class ByName(tpe: Type) extends ByNameType {
-    private def checkParent(destination: String): Boolean = ParentChecks
-      .typeArgument(this, destination)
-  }
+  class ByName(tpe: Type) extends ByNameType
   @ast
-  class PureByName(tpe: Type) extends ByNameType {
-    private def checkParent(destination: String): Boolean = ParentChecks
-      .typeArgument(this, destination)
-  }
+  class PureByName(tpe: Type) extends ByNameType
 
   @ast
   class Repeated(tpe: Type) extends Type with Tree.Repeated {
-    private def checkParent(destination: String): Boolean = ParentChecks
-      .typeArgument(this, destination)
     final def body: Type = tpe
   }
   @ast
-  class Var(name: Name) extends Type with Member.Type {
-    checkFields(name.value(0).isLower)
-    private def checkParent(destination: String): Boolean = {
-      @tailrec
-      def loop(tree: Option[Tree]): Boolean = tree match {
-        case Some(tree: Type) => loop(tree.parent)
-        case Some(tree: Type.ArgClause) => loop(tree.parent)
-        case Some(_: Pat.Typed) => true
-        case Some(tree: Term.ApplyType) => tree.parent.isOpt[Pat.Extract]
-        case Some(_) => false
-        case None => true
-      }
-      loop(Some(this))
-    }
-  }
+  class Var(name: Name) extends Type with Member.Type
 
   @branch
   trait FunctionParamOrArg extends Type {
@@ -995,40 +908,17 @@ object Pat {
     override final def pats: List[Pat] = values
   }
   @ast
-  class Var(name: Term.Name) extends Pat with Member.Term {
-    // NOTE: can't do this check here because of things like `val X = 2`
-    // checkFields(name.value(0).isLower)
-    private def checkParent(destination: String): Boolean = parent.exists {
-      case _: Pat.Bind => true
-      case _: Decl.Val | _: Decl.Var | _: Defn.Val | _: Defn.Var => destination == "pats"
-      case _: Enumerator.Assign => destination == "pat"
-      case _ =>
-        val value = name.value
-        value.isEmpty || !value(0).isUpper
-    }
-  }
+  class Var(name: Term.Name) extends Pat with Member.Term
   @ast
   class Wildcard() extends Pat
   @ast
-  class SeqWildcard() extends Pat {
-    private def checkParent(destination: String): Boolean = parent.exists {
-      case _: Pat.Bind => destination == "rhs"
-      case _: Pat.ArgClause => true
-      case _: Pat.Interpolate | _: Pat.Xml => destination == "args"
-      case _ => false
-    }
-  }
+  class SeqWildcard() extends Pat
   @ast
-  class Bind(lhs: Pat, rhs: Pat) extends Pat {
-    checkField(lhs, lhs.isInstanceOf[Pat.Var])
-  }
+  class Bind(lhs: Pat, rhs: Pat) extends Pat
   @ast
   class Alternative(lhs: Pat, rhs: Pat) extends Pat
   @ast
-  class Tuple(args: List[Pat] @nonEmpty) extends Pat with Member.Tuple with Tree.WithPats {
-    // tuple may have one element (see scala.Tuple1)
-    // however, this element may not be another single-element Tuple
-    checkFields(ParentChecks.MemberTuple(args))
+  class Tuple(args: List[Pat]) extends Pat with Member.Tuple with Tree.WithPats {
     override final def pats: List[Pat] = args
   }
   @ast
@@ -1039,7 +929,6 @@ object Pat {
   class Extract(fun: Term, argClause: ArgClause) extends Pat with Member.Apply {
     @replacedField("4.6.0")
     final def args: List[Pat] = argClause.values
-    checkFields(fun.isExtractor)
   }
   @ast
   class ExtractInfix(lhs: Pat, op: Term.Name, argClause: ArgClause) extends Pat with Member.Infix {
@@ -1048,31 +937,17 @@ object Pat {
     override def arg: Tree = argClause
   }
   @ast
-  class Interpolate(prefix: Term.Name, parts: List[Lit] @nonEmpty, args: List[Pat]) extends Pat {
-    checkFields(parts.length == args.length + 1)
-  }
+  class Interpolate(prefix: Term.Name, parts: List[Lit] @nonEmpty, args: List[Pat]) extends Pat
   @ast
-  class Xml(parts: List[Lit] @nonEmpty, args: List[Pat]) extends Pat {
-    checkFields(parts.length == args.length + 1)
-  }
+  class Xml(parts: List[Lit] @nonEmpty, args: List[Pat]) extends Pat
   @ast
-  class Typed(lhs: Pat, rhs: Type) extends Pat {
-    checkFields(rhs match {
-      case _: Type.Var | _: Type.Wildcard | _: Type.AnonymousParam => false
-      case _ => true
-    })
-  }
+  class Typed(lhs: Pat, rhs: Type) extends Pat
   @ast
   class Assign(name: Term.Name, rhs: Pat) extends Pat with Tree.WithBody {
     override def body: Tree = rhs
   }
   @ast
-  class Macro(body: Term) extends Pat with Tree.WithBody {
-    checkField(
-      body,
-      body.isInstanceOf[Term.QuotedMacroExpr] || body.isInstanceOf[Term.QuotedMacroType],
-    )
-  }
+  class Macro(body: Term) extends Pat with Tree.WithBody
   @ast
   class Given(tpe: Type) extends Pat
   def fresh(): Pat.Var = Pat.Var(Term.fresh())
@@ -1117,9 +992,7 @@ object Member {
 
   @ast
   class ParamClauseGroup(tparamClause: sm.Type.ParamClause, paramClauses: List[sm.Term.ParamClause])
-      extends Tree with Tree.WithTParamClause with Tree.WithParamClauses {
-    checkFields(checkValidParamClauses(paramClauses))
-  }
+      extends Tree with Tree.WithTParamClause with Tree.WithParamClauses
 
   object ParamClauseGroup {
     private[meta] def toTparams(paramClauseGroup: Option[ParamClauseGroup]): List[sm.Type.Param] =
@@ -1275,8 +1148,6 @@ object Defn {
   @ast
   class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: Option[sm.Type], rhs: Term)
       extends Defn with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpeOpt with Tree.WithBody {
-    checkFields(!rhs.isInstanceOf[Term.Placeholder])
-    checkFields(!pats.exists(_.isInstanceOf[Term.Name]))
     override def body: Tree = rhs
   }
 
@@ -1292,11 +1163,6 @@ object Defn {
       @replacesFields("4.7.2", VarRhsCtor)
       body: Term,
   ) extends Defn with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpeOpt with Tree.WithBody {
-    checkFields(
-      if (body.isInstanceOf[Term.Placeholder]) decltpe.nonEmpty &&
-      pats.forall(_.isInstanceOf[Pat.Var])
-      else !pats.exists(_.isInstanceOf[Term.Name]),
-    )
     @replacedField("4.7.2")
     final def rhs: Option[Term] = VarRhsCtor.toOpt(body)
   }
@@ -1340,14 +1206,11 @@ object Defn {
       ctor: Ctor.Primary,
       inits: List[Init],
   ) extends Defn with Member.Term with Stat.WithMods with Tree.WithTParamClause with Stat.WithCtor {
-    private def checkParent(destination: String): Boolean = ParentChecks.EnumCase(this, destination)
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast
-  class RepeatedEnumCase(mods: List[Mod], cases: List[Term.Name]) extends Defn with Stat.WithMods {
-    private def checkParent(destination: String): Boolean = ParentChecks.EnumCase(this, destination)
-  }
+  class RepeatedEnumCase(mods: List[Mod], cases: List[Term.Name]) extends Defn with Stat.WithMods
   @ast
   class GivenAlias(
       mods: List[Mod],
@@ -1472,24 +1335,20 @@ object Defn {
       with Tree.WithTParamClause
       with Stat.WithCtor
       with Stat.WithTemplate {
-    checkField(templ, validateTemplateNoCtor(templ))
     @replacedField("4.6.0")
     final def tparams: List[sm.Type.Param] = tparamClause.values
   }
   @ast
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
-      extends Defn with Member.Term with Stat.WithMods with Stat.WithTemplate {
-    checkField(templ, validateTemplateNoCtor(templ))
-  }
-  private[meta] def validateTemplateNoCtor(templ: Template): Boolean = !templ.stats.exists(_.is[Ctor])
+      extends Defn with Member.Term with Stat.WithMods with Stat.WithTemplate
 }
 
 @ast
 class Pkg(ref: Term.Ref, body: Pkg.Body) extends Member.Term with Stat with Tree.WithStats {
-  checkFields(ref.isQualId)
   def name: Term.Name = ref match {
-    case name: Term.Name => name
-    case Term.Select(_, name: Term.Name) => name
+    case ref: Term.Name => ref
+    case ref: Term.Select => ref.name
+    case ref => throw new InvariantFailedException(s"Invalid package name: $ref")
   }
   @replacedField("4.9.9")
   override final def stats: List[Stat] = body.stats
@@ -1497,9 +1356,7 @@ class Pkg(ref: Term.Ref, body: Pkg.Body) extends Member.Term with Stat with Tree
 object Pkg {
   @ast
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
-      extends Member.Term with Stat with Stat.WithMods with Stat.WithTemplate {
-    checkField(templ, Defn.validateTemplateNoCtor(templ))
-  }
+      extends Member.Term with Stat with Stat.WithMods with Stat.WithTemplate
   @ast
   class Body(stats: List[Stat]) extends Tree.Block
 }
@@ -1518,9 +1375,7 @@ object Ctor {
   }
 
   @ast
-  class Block(init: Init, stats: List[Stat]) extends Tree.Block {
-    checkFields(stats.forall(_.isBlockStat))
-  }
+  class Block(init: Init, stats: List[Stat]) extends Tree.Block
   private[meta] object BlockCtor {
     def apply(init: Init, stats: List[Stat]): Block = Block(init = init, stats = stats)
   }
@@ -1546,9 +1401,6 @@ object Ctor {
 // See comments to Ctor.Primary and Ctor.Secondary for justification.
 @ast
 class Init(tpe: Type, name: Name, argClauses: Seq[Term.ArgClause]) extends Ref {
-  checkFields(tpe.isConstructable)
-  private def checkParent(destination: String): Boolean = !tpe.is[Type.Singleton] ||
-    parent.is[Ctor.Block] && destination == "init"
   @replacedField("4.6.0")
   final def argss: List[List[Term]] = argClauses.map(_.values).toList
 }
@@ -1561,7 +1413,6 @@ class Self(name: Name, decltpe: Option[Type]) extends Member with Tree.WithDeclT
 object Template {
   @ast
   class Body(selfOpt: Option[Self], stats: List[Stat]) extends Tree.Block {
-    checkFields(stats.forall(_.isTemplateStat))
     final def isEmpty: Boolean = stats.isEmpty && selfOpt.isEmpty
   }
   private[meta] object BodyCtor {
@@ -1580,7 +1431,6 @@ class Template(
     @newField("4.4.0")
     derives: List[Type] = Nil,
 ) extends Tree with Tree.WithStats {
-  checkFields(inits.isEmpty || earlyClause.forall(x => isQuasiOr(x, x.stats.forall(_.isEarlyStat))))
   @replacedField("4.9.9")
   final def early: List[Stat] = earlyClause match {
     case None => Nil
@@ -1611,13 +1461,9 @@ object Mod {
     def within: Ref
   }
   @ast
-  class Private(within: Ref) extends Mod with WithWithin {
-    checkFields(within.isWithin)
-  }
+  class Private(within: Ref) extends Mod with WithWithin
   @ast
-  class Protected(within: Ref) extends Mod with WithWithin {
-    checkFields(within.isWithin)
-  }
+  class Protected(within: Ref) extends Mod with WithWithin
   @ast
   class Implicit() extends ParamsType
   @ast
@@ -1691,9 +1537,7 @@ class Import(importers: List[Importer] @nonEmpty) extends ImportExportStat
 class Export(importers: List[Importer] @nonEmpty) extends ImportExportStat
 
 @ast
-class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree {
-  checkFields(ref.isPath)
-}
+class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree
 
 @branch
 trait Importee extends Tree with Ref
@@ -1705,19 +1549,11 @@ object Importee {
   @ast
   class GivenAll() extends Importee
   @ast
-  class Name(name: sm.Name) extends Importee {
-    checkField(name, validateNameIndeterminate(name))
-  }
+  class Name(name: sm.Name) extends Importee
   @ast
-  class Rename(name: sm.Name, rename: sm.Name) extends Importee {
-    checkField(name, validateNameIndeterminate(name))
-    checkField(rename, validateNameIndeterminate(rename))
-  }
+  class Rename(name: sm.Name, rename: sm.Name) extends Importee
   @ast
-  class Unimport(name: sm.Name) extends Importee {
-    checkField(name, validateNameIndeterminate(name))
-  }
-  private def validateNameIndeterminate(name: sm.Name): Boolean = name.is[sm.Name.Indeterminate]
+  class Unimport(name: sm.Name) extends Importee
 }
 
 @branch
@@ -1732,11 +1568,7 @@ class Case(pat: Pat, cond: Option[Term], body: Term)
 class TypeCase(pat: Type, body: Type) extends CaseTree
 
 @ast
-class Source(stats: List[Stat]) extends Tree with Tree.WithStats with Tree.Block {
-  // NOTE: This validation has been removed to allow dialects with top-level terms.
-  // Ideally, we should push the validation into a dialect-specific prettyprinter when #220 is fixed.
-  // checkFields(stats.forall(_.isTopLevelStat))
-}
+class Source(stats: List[Stat]) extends Tree with Tree.WithStats with Tree.Block
 
 @ast
 class MultiSource(sources: List[Source]) extends Tree

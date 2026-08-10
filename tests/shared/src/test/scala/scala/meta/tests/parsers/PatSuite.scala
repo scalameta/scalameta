@@ -25,11 +25,7 @@ class PatSuite extends ParseSuite {
 
   test("`a`")(assertPat("`a`")(tname("a")))
 
-  test("a: _") {
-    val err = intercept[InvariantFailedException](pat("a: _")).getMessage
-    assert(err.contains("found that rhs match {"), err)
-    assert(err.contains("} is false"), err)
-  }
+  test("a: _")(assertPat("a: _")(Typed(Var(tname("a")), pwildcard)))
 
   test("a: Int")(assertPat("a: Int")(Typed(Var(tname("a")), pname("Int"))))
 
