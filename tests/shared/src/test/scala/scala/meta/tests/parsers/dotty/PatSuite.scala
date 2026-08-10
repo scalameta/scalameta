@@ -132,17 +132,11 @@ class PatSuite extends ParseSuite {
     Pat.Xml(List(str("<a>"), str("</a>")), List(Bind(Var(tname("ns")), SeqWildcard()))),
   ))
 
-  test("a: _") {
-    val err = intercept[InvariantFailedException](pat("a: _")).getMessage
-    assert(err.contains("found that rhs match {"), err)
-    assert(err.contains("} is false"), err)
-  }
+  test("a: _")(runTestAssert[Pat]("a: _")(Typed(Var(tname("a")), pwildcard)))
 
   test("a: _ scala31") {
     implicit val dialect = dialects.Scala31
-    val err = intercept[InvariantFailedException](pat("a: _")).getMessage
-    assert(err.contains("found that rhs match {"), err)
-    assert(err.contains("} is false"), err)
+    runTestAssert[Pat]("a: _")(Typed(Var(tname("a")), pwildcard))
   }
 
   test("single spread") {

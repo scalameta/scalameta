@@ -215,15 +215,8 @@ class SuccessSuite extends TreeSuiteBase {
   test("4 q\"foo[..tpes]\"") {
     val foo = q"foo"
     val types = List.empty[Type]
-    val error =
-      """|invariant failed (targClause should be non-empty):
-         |when verifying targClause.!=(null).&&(targClause.isInstanceOf[scala.meta.internal.trees.Quasi].||(targClause.nonEmpty))
-         |found that targClause.isInstanceOf[scala.meta.internal.trees.Quasi] is false
-         |and also targClause.nonEmpty is false
-         |where targClause = ''
-         |""".stripMargin.lf2nl
-    interceptMessage[InvariantFailedException](error)(q"$foo[..$types]")
-    interceptMessage[InvariantFailedException](error)(q"$foo[..$types]()")
+    assertTree(q"$foo[..$types]")(tapplytype(tname("foo"), types: _*))
+    assertTree(q"$foo[..$types]()")(tapply(tapplytype(tname("foo"), types: _*)))
   }
 
   test("1 q\"expr name[..tpes] (..exprs)\"") {

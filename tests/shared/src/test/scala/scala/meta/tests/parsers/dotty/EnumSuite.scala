@@ -496,6 +496,28 @@ class EnumSuite extends BaseDottySuite {
     ))
   }
 
+  test("enum case outside an enum") {
+    val code =
+      """|enum A
+         |case X
+         |""".stripMargin
+    runTestAssert[Source](code, Some(code))(Source(List(
+      Defn.Enum(Nil, pname("A"), Nil, ctor, tpl()),
+      Defn.EnumCase(Nil, tname("X"), Nil, ctor, Nil),
+    )))
+  }
+
+  test("repeated enum case outside an enum") {
+    val code =
+      """|enum A
+         |case X, Y
+         |""".stripMargin
+    runTestAssert[Source](code, Some(code))(Source(List(
+      Defn.Enum(Nil, pname("A"), Nil, ctor, tpl()),
+      Defn.RepeatedEnumCase(Nil, List(tname("X"), tname("Y"))),
+    )))
+  }
+
   private def enumWithCase(name: String, enumCase: Stat) = Defn
     .Enum(Nil, pname(name), Nil, EmptyCtor(), tpl(enumCase))
 }

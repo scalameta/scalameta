@@ -9,15 +9,6 @@ import scala.reflect.ClassTag
 
 package object trees {
 
-  implicit class XtensionTreesRef(private val ref: Ref) extends AnyVal {
-    def isWithin: Boolean = ref match {
-      case _: Ref.Quasi => true
-      case _: Name => true
-      case Term.This(_: Name.Anonymous) => true
-      case _ => false
-    }
-  }
-
   implicit class XtensionTreesName(private val name: Name) extends AnyVal {
     // some heuristic is needed to govern associativity and precedence of unquoted operators
     def isLeftAssoc: Boolean = name.is[Name.Quasi] || name.value.isLeftAssoc
@@ -31,7 +22,6 @@ package object trees {
   }
 
   implicit class XtensionTreesString(private val value: String) extends AnyVal {
-    import XtensionTreesString._
 
     // some heuristic is needed to govern associativity and precedence of unquoted operators
     def isLeftAssoc: Boolean = value.last != ':'
@@ -63,16 +53,6 @@ package object trees {
     }
   }
 
-  implicit class XtensionTreesTerm(private val tree: Term) extends AnyVal {
-    @tailrec
-    def isExtractor: Boolean = tree match {
-      case quasi: Term.Quasi => true
-      case ref: Term.Ref => ref.isPath
-      case t: Term.ApplyType => t.fun.isExtractor
-      case _ => false
-    }
-  }
-
   implicit class XtensionTreesTermRef(private val tree: Term.Ref) extends AnyVal {
     @tailrec
     def isQualId: Boolean = tree match {
@@ -88,41 +68,6 @@ package object trees {
       case Term.Select(qual: Term.Ref, _) => qual.isPath
       case _ => false
     }
-  }
-
-  implicit class XtensionTreesType(private val tree: Type) extends AnyVal {
-    def isConstructable: Boolean = tree match {
-      case _: Type.Quasi => true
-      case _: Type.Name => true
-      case _: Type.Select => true
-      case _: Type.Project => true
-      case _: Type.Function => true
-      case _: Type.ContextFunction => true
-      case _: Type.Annotate => true
-      case _: Type.Apply => true
-      case _: Type.ApplyInfix => true
-      case _: Type.Refine => true
-      case _: Type.AnonymousLambda => true
-      case Type.Singleton(Term.This(_: Name.Anonymous)) => true
-      case _ => false
-    }
-  }
-
-  implicit class XtensionHelpersMod(private val mod: Mod) extends AnyVal {
-    def isAccessMod: Boolean = mod match {
-      case _: Mod.Private => true
-      case _: Mod.Protected => true
-      case _ => false
-    }
-    def accessBoundary: Option[Ref] = mod match {
-      case m: Mod.WithWithin => m.within match {
-          case r: Name if r.value.isEmpty => None
-          case r => Some(r)
-        }
-      case _ => None
-    }
-    def isNakedAccessMod: Boolean = isAccessMod && accessBoundary.isEmpty
-    def isQualifiedAccessMod: Boolean = isAccessMod && accessBoundary.nonEmpty
   }
 
   implicit class XtensionTreesMods(private val mods: collection.Iterable[Mod]) extends AnyVal {
@@ -185,13 +130,6 @@ package object trees {
       case _: Decl.Type => true
       case _ => false
     }
-    def isEarlyStat: Boolean = stat match {
-      case _: Stat.Quasi => true
-      case _: Defn.Val => true
-      case _: Defn.Var => true
-      case _: Defn.Type => true
-      case _ => false
-    }
   }
 
   implicit class XtensionTreesCase(private val tree: Case) extends AnyVal {
@@ -207,23 +145,6 @@ package object trees {
     Predef.require(rank >= 0)
     if (rank == 0) clazz else arrayClass(ScalaRunTime.arrayClass(clazz), rank - 1)
   }
-
-  private[meta] def checkValidParamClauses(paramClauses: Iterable[Term.ParamClause]): Boolean = {
-    var hadImplicit = false
-    !paramClauses.exists(pc =>
-      hadImplicit || !pc.is[Quasi] && {
-        hadImplicit = pc.mod.is[Mod.Implicit]
-        var hadRepeated = false
-        pc.values.exists(v =>
-          try hadRepeated
-          finally hadRepeated = !v.is[Quasi] && v.decltpe.is[Type.Repeated],
-        )
-      },
-    )
-  }
-
-  private[meta] def checkValidEnumerators(enums: List[Enumerator]): Boolean =
-    !enums.headOption.isOpt[Enumerator.Guard]
 
   @inline
   private[meta] def isQuasi(tree: Tree): Boolean = tree.isInstanceOf[Quasi]
