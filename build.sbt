@@ -12,7 +12,6 @@ import org.scalajs.linker.interface.StandardConfig
 
 import complete.DefaultParsers._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
-import sbtcrossproject.Platform
 
 def isCI = System.getenv("CI") != null
 
@@ -77,7 +76,15 @@ console := (scalameta.jvm / Compile / console).value
 Global / resolvers +=
   "scala-integration".at("https://scala-ci.typesafe.com/artifactory/scala-integration/")
 
+/**
+ * Which row a setting is being evaluated in. Only the source roots of a merged module need to name
+ * it; everything else gets its platform's settings handed to it directly.
+ */
+val platformAxis = settingKey[Platforms.Platform]("platform this project builds for")
+ThisBuild / platformAxis := Platforms.JVM
+
 val commonJsSettings = Seq(
+  platformAxis := Platforms.JS,
   crossScalaVersions := crossScalaVersions.value.flatMap(v =>
     CrossVersion.binaryScalaVersion(v) match {
       case "2.12" => Some(LatestScala212)
@@ -91,7 +98,7 @@ val commonJsSettings = Seq(
   scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
   scalacOptions ++= {
     // scala3 specifically will invoke scala3TreeLiftsCodeGen which is a JVM project
-    if (isSnapshot.value || !isPlatform(JSPlatform).value) Seq.empty
+    if (isSnapshot.value || !isPlatform(Platforms.JS).value) Seq.empty
     else {
       val localDir = (ThisBuild / baseDirectory).value.toURI.toString
       val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
@@ -102,6 +109,7 @@ val commonJsSettings = Seq(
 )
 
 lazy val nativeSettings = Seq(
+  platformAxis := Platforms.Native,
   bspEnabled := false,
   nativeConfig ~= {
     _.withMode(scalanative.build.Mode.releaseFast)
@@ -348,7 +356,7 @@ def mergedModule(
       res += project / "shared" / "src" / "main" / scalaBinary
       res += project / "shared" / "src" / "main" / scalaMajor
       res += project / "shared" / "src" / "main" / "scala"
-      res += project / crossProjectPlatform.value.identifier / "src" / "main" / "scala"
+      res += project / platformAxis.value.id / "src" / "main" / "scala"
     }
     res.result()
   }
@@ -556,14 +564,7 @@ lazy val isScala213 = isScalaBinaryVersion("2.13")
 lazy val isScala3 = isScalaBinaryVersion("3")
 def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
 
-// NOTE: Here's what I'd like to do, but I can't because of deprecations:
-//   val isJVM = crossPlatform.value == JVMPlatform
-// Here's my second best guess, but it doesn't work due to some reason:
-//   val isJVM = platformDepsCrossVersion.value == CrossVersion.binary
-def isPlatform(platform: Platform) = Def.settingDyn(
-  if (crossProjectPlatform.?.value.isEmpty) Def.setting(platform == JVMPlatform)
-  else Def.setting(crossProjectPlatform.value == platform),
-)
+def isPlatform(platform: Platforms.Platform) = Def.setting(platformAxis.value == platform)
 
 lazy val sharedSettings = Def.settings(
   // version is set dynamically by sbt-dynver, but let's adjust it
@@ -603,7 +604,7 @@ lazy val sharedSettings = Def.settings(
   // build JDK, so releases built on newer JDKs still run on JDK 8. Scala 3
   // (3.8+) is built with JDK 17 and needs no -release flag.
   scalacOptions ++=
-    { if (!isScala3.value && isPlatform(JVMPlatform).value) Seq("-release", "8") else Nil },
+    { if (!isScala3.value && isPlatform(Platforms.JVM).value) Seq("-release", "8") else Nil },
   Compile / doc / scalacOptions ++=
     { if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups") },
   Test / parallelExecution := false, // hello, reflection sync!!
@@ -711,7 +712,7 @@ lazy val publishableSettings = Def.settings(
   pomIncludeRepository := { x => false },
   versionScheme := Some("semver-spec"),
   mimaPreviousArtifacts := {
-    if (organization.value == "org.scalameta" && isPlatform(JVMPlatform).value) {
+    if (organization.value == "org.scalameta" && isPlatform(Platforms.JVM).value) {
       val rxVersion = """^(\d+)\.(\d+)\.(\d+)(.+)?$""".r
       val previousVersion = version.value match {
         case rxVersion(major, "0", "0", suffix) if suffix != null =>
@@ -889,7 +890,8 @@ lazy val shadingSettings = Def.settings(
 )
 
 def platformPublishSettings(platform: sbtcrossproject.Platform) =
-  if (Platforms.shouldBuildPlatform(platform)) publishableSettings else nonPublishableSettings
+  if (Platforms.shouldBuildPlatform(Platforms(platform.identifier))) publishableSettings
+  else nonPublishableSettings
 
 def crossPlatformPublishSettings(project: sbtcrossproject.CrossProject) = project.projects.keys
   .foldLeft(project) { case (res, platform) =>

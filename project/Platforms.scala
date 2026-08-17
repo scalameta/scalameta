@@ -2,18 +2,23 @@ object Platforms {
 
   private val envPlatform = "SCALAMETA_PLATFORM"
 
-  private val platforms: Map[String, sbtcrossproject.Platform] = Map(
-    "jvm" -> sbtcrossproject.JVMPlatform,
-    "js" -> scalajscrossproject.JSPlatform,
-    "native" -> scalanativecrossproject.NativePlatform,
-  )
+  /** The build's own platform axis. */
+  sealed abstract class Platform(val id: String) {
+    override def toString: String = id
+  }
 
-  private val platformOpt = Option(System.getenv(envPlatform)).map(_.trim.toLowerCase)
-    .filter(_.nonEmpty).map(x =>
-      platforms.get(x).getOrElse(throw new NoSuchElementException(s"Platform '$x' is unknown'")),
-    )
+  object JVM extends Platform("jvm")
+  object JS extends Platform("js")
+  object Native extends Platform("native")
 
-  def shouldBuildPlatform(platform: sbtcrossproject.Platform): Boolean = platformOpt.isEmpty ||
-    platformOpt.contains(platform)
+  val all: Seq[Platform] = Seq(JVM, JS, Native)
+
+  def apply(id: String): Platform = all.find(_.id == id)
+    .getOrElse(throw new NoSuchElementException(s"Platform '$id' is unknown"))
+
+  private val selected: Option[Platform] = Option(System.getenv(envPlatform)).map(_.trim.toLowerCase)
+    .filter(_.nonEmpty).map(apply)
+
+  def shouldBuildPlatform(platform: Platform): Boolean = selected.forall(_ == platform)
 
 }
