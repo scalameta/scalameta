@@ -56,8 +56,7 @@ object Extensions {
     bspEnabled := false,
     scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
     scalacOptions ++= {
-      // scala3 specifically will invoke scala3TreeLiftsCodeGen which is a JVM project
-      if (isSnapshot.value || !isPlatform(Platforms.JS).value) Seq.empty
+      if (isSnapshot.value) Seq.empty
       else {
         val localDir = (ThisBuild / baseDirectory).value.toURI.toString
         val githubDir = "https://raw.githubusercontent.com/scalameta/scalameta"
@@ -71,7 +70,7 @@ object Extensions {
     platformAxis := Platforms.Native,
     bspEnabled := false,
     nativeConfig ~= {
-      _.withMode(scalanative.build.Mode.releaseFast)
+      _.withMode(Mode.releaseFast)
       /*
         .withServiceProviders(Map(
           "scala.meta.tokenizers.Tokenize" ->
@@ -89,8 +88,6 @@ object Extensions {
     // built with JDK 17 and needs no -release flag.
     scalacOptions ++= { if (isScala3.value) Nil else Seq("-release", "8") },
   )
-
-  def isPlatform(platform: Platforms.Platform) = Def.setting(platformAxis.value == platform)
 
   lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
   lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
@@ -187,7 +184,6 @@ object Extensions {
   lazy val nonPublishableSettings = Seq(
     publish / skip := true,
     mimaPreviousArtifacts := Set.empty,
-    //  mimaPreviousClassfiles := Map.empty,
     Compile / packageDoc / publishArtifact := false,
     Compile / doc / sources := Seq.empty,
     publishArtifact := false,
@@ -205,20 +201,14 @@ object Extensions {
     validNamespaces ++= Set("org", "scala", "java"),
   )
 
-  def platformPublishSettings(platform: sbtcrossproject.Platform) =
-    if (Platforms.shouldBuildPlatform(Platforms(platform.identifier))) publishableSettings
-    else nonPublishableSettings
-  def crossPlatformPublishSettings(project: sbtcrossproject.CrossProject) = project.projects.keys
-    .foldLeft(project) { case (res, platform) =>
-      val settings = platformPublishSettings(platform)
-      if (settings.isEmpty) res else res.configurePlatform(platform)(_.settings(settings))
-    }
-
   /** A published JVM row, cross-built or not. */
   lazy val publishJvmSettings =
     if (Platforms.shouldBuildPlatform(Platforms.JVM)) Def
       .settings(publishableSettings, jvmMimaSettings)
     else nonPublishableSettings
+
+  def platformPublishSettings(platform: Platforms.Platform) =
+    if (Platforms.shouldBuildPlatform(platform)) publishableSettings else nonPublishableSettings
 
   implicit class CrossProjectExtensions(private val self: CrossProject) extends AnyVal {
 
@@ -236,8 +226,8 @@ object Extensions {
 
     /** Per row, publishable or not, as SCALAMETA_PLATFORM selects. */
     def published: CrossProject = self.jvmSettings(publishJvmSettings)
-      .jsSettings(platformPublishSettings(JSPlatform))
-      .nativeSettings(platformPublishSettings(NativePlatform))
+      .jsSettings(platformPublishSettings(Platforms.JS))
+      .nativeSettings(platformPublishSettings(Platforms.Native))
 
     def shaded: CrossProject =
       if (shadingSettings.isEmpty) self
