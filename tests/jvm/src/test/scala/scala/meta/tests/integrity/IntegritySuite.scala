@@ -3,6 +3,9 @@ package integrity
 
 import java.io.File
 import java.io.File.{pathSeparator, separator}
+import java.util.zip.ZipFile
+
+import scala.collection.JavaConverters._
 
 import munit._
 
@@ -18,24 +21,35 @@ class IntegritySuite extends FunSuite {
       shallow.filter(_.isFile) ++ shallow.filter(_.isDirectory).flatMap(deepfiles)
     }
 
+    // a classpath entry is a directory of classfiles or a jar of them, depending on the sbt version
+    def classfiles(entry: File): List[(String, String)] =
+      if (entry.isDirectory) deepfiles(entry).map(_.getAbsolutePath).filter(_.endsWith(".class"))
+        .map { abspath =>
+          val relpath = abspath.substring(entry.getAbsolutePath.length).stripPrefix(separator)
+          (relpath, abspath)
+        }
+      else if (entry.getName.endsWith(".jar")) {
+        val zip = new ZipFile(entry)
+        try zip.entries.asScala.map(_.getName).filter(_.endsWith(".class"))
+            .map(name => (name.replace("/", separator), s"$entry!$name")).toList
+        finally zip.close()
+      } else Nil
+
     val fullcp = sys.props("sbt.paths.tests.test.classes").split(pathSeparator).toList
     val cp = fullcp.filter(_.contains(separator + "target" + separator))
+    assert(cp.nonEmpty, "no build outputs on the test classpath")
 
     var success = true
     val relpaths = scala.collection.mutable.Map[String, String]()
-    cp.foreach { dir =>
-      val classfiles = deepfiles(new File(dir)).map(_.getAbsolutePath).filter(_.endsWith(".class"))
-      classfiles.foreach { abspath =>
-        var relpath = abspath.substring(dir.length)
-        if (relpath.startsWith(separator)) relpath = relpath.substring(1)
-        relpath = relpath.toLowerCase
-
+    cp.foreach(dir =>
+      classfiles(new File(dir)).foreach { case (relpath0, abspath) =>
+        val relpath = relpath0.toLowerCase
         if (relpaths.contains(relpath)) {
           success = false
           Console.err.println(s"Overlapping classfiles: ${relpaths(relpath)} and $abspath")
         } else relpaths(relpath) = abspath
-      }
-    }
+      },
+    )
 
     if (!success) fail("Detected overlapping classfiles")
   }
