@@ -56,22 +56,22 @@ jobs:
         uses: sbt/setup-sbt@v1
       - &testjvm212
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212 }} testsJVM/test
+        run: sbt '++${{ env.scala212 }}!; tests2_12/testFull'
       - &testsem212
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212 }} testsSemanticdb/test
+        run: sbt '++${{ env.scala212 }}!; testsSemanticdb/testFull'
       - &testjvm213
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213 }} testsJVM/test
+        run: sbt '++${{ env.scala213 }}!; tests/testFull'
       - &testsem213
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213 }} testsSemanticdb/test
+        run: sbt '++${{ env.scala213 }}!; testsSemanticdb/testFull'
       - &testjvm33
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala33 }} testsJVM/test
+        run: sbt '++${{ env.scala33 }}!; tests3/testFull'
       - &testjvm38
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala38 }} testsJVM/test
+        run: sbt '++${{ env.scala38 }}!; tests3/testFull'
 
   # ===== PR gate: 5 balanced JDK-17 workers, run on PR *and* push (~8 min) =====
   pr-mima: # MiMa binary-compatibility (the single heaviest atom)
@@ -92,7 +92,7 @@ jobs:
       - *testjvm212
       - *testsem212
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala38 }} testsJS/test
+        run: sbt '++${{ env.scala38 }}!; testsJS3/testFull'
 
   pr-jvm213-js33-other: # latest 2.13 parser + 3.3 JS + scala-library download
     runs-on: ubuntu-latest
@@ -102,7 +102,7 @@ jobs:
       - *sbt
       - *testjvm213
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala33 }} testsJS/test
+        run: sbt '++${{ env.scala33 }}!; testsJS3/testFull'
       - if: ${{ !cancelled() }}
         run: sbt '++${{ env.scala213 }}; download-scala-library'
   
@@ -115,7 +115,7 @@ jobs:
       - *testjvm33
       - *testsem213
       - if: ${{ !cancelled() }}
-        run: sbt communitytest/test
+        run: sbt communitytest/testFull
       - if: ${{ !cancelled() }}
         run: ./bin/scalafmt --test
 
@@ -127,9 +127,9 @@ jobs:
       - *sbt
       - *testjvm38
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212 }} testsJS/test
+        run: sbt '++${{ env.scala212 }}!; testsJS2_12/testFull'
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213 }} testsJS/test
+        run: sbt '++${{ env.scala213 }}!; testsJS/testFull'
 
   # ===== post-merge superset: deferred axes, added only on push to main =====
   post-native: # flaky Native leg — deferred off the PR gate, retried once
@@ -143,13 +143,13 @@ jobs:
       - *jdk
       - *sbt
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212 }} testsNative/test || sbt ++${{ env.scala212 }} testsNative/test
+        run: sbt '++${{ env.scala212 }}!; testsNative2_12/testFull' || sbt '++${{ env.scala212 }}!; testsNative2_12/testFull'
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213 }} testsNative/test || sbt ++${{ env.scala213 }} testsNative/test
+        run: sbt '++${{ env.scala213 }}!; testsNative/testFull' || sbt '++${{ env.scala213 }}!; testsNative/testFull'
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala33 }} testsNative/test || sbt ++${{ env.scala33 }} testsNative/test
+        run: sbt '++${{ env.scala33 }}!; testsNative3/testFull' || sbt '++${{ env.scala33 }}!; testsNative3/testFull'
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala38 }} testsNative/test || sbt ++${{ env.scala38 }} testsNative/test
+        run: sbt '++${{ env.scala38 }}!; testsNative3/testFull' || sbt '++${{ env.scala38 }}!; testsNative3/testFull'
 
   post-older-scala: # older patches — one leg per slot index (2.12_N + 2.13_N)
     if: ${{ github.event_name == 'push' }}
@@ -163,13 +163,13 @@ jobs:
       - *jdk
       - *sbt
       - if: ${{ !cancelled() }}
-        run: "sbt '++${{ env[format('scala212_{0}', matrix.idx)] }}!; testsJVM/test'"
+        run: "sbt '++${{ env[format('scala212_{0}', matrix.idx)] }}!; tests2_12/testFull'"
       - if: ${{ !cancelled() }}
-        run: "sbt ++${{ env[format('scala212_{0}', matrix.idx)] }} testsSemanticdb/test"
+        run: "sbt '++${{ env[format('scala212_{0}', matrix.idx)] }}!; testsSemanticdb/testFull'"
       - if: ${{ !cancelled() }}
-        run: "sbt '++${{ env[format('scala213_{0}', matrix.idx)] }}!; testsJVM/test'"
+        run: "sbt '++${{ env[format('scala213_{0}', matrix.idx)] }}!; tests/testFull'"
       - if: ${{ !cancelled() }}
-        run: "sbt ++${{ env[format('scala213_{0}', matrix.idx)] }} testsSemanticdb/test"
+        run: "sbt '++${{ env[format('scala213_{0}', matrix.idx)] }}!; testsSemanticdb/testFull'"
 
   post-windows: # Windows parser/JS/semanticdb (line-ending sensitivity)
     if: ${{ github.event_name == 'push' }}
@@ -178,9 +178,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: olafurpg/setup-scala@v14
-      - run: sbtx testsJVM/test
+      - run: sbtx tests/testFull
         shell: bash
-      - run: sbtx testsJS/test
+      - run: sbtx testsJS/testFull
         shell: bash
-      - run: sbtx testsSemanticdb/test
+      - run: sbtx testsSemanticdb/testFull
         shell: bash

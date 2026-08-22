@@ -10,7 +10,6 @@ import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scala.xml.{Node => XmlNode, NodeSeq => XmlNodeSeq, _}
 
 import complete.DefaultParsers._
-import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 def isCI = System.getenv("CI") != null
 
@@ -18,64 +17,69 @@ def isCI = System.getenv("CI") != null
 // Projects
 // ==========================================
 
-sharedSettings
-name := {
-  println(s"[info] Welcome to scalameta ${version.value}")
-  "scalametaRoot"
-}
-nonPublishableSettings
-crossScalaVersions := Nil
-enablePlugins(ScalaUnidocPlugin)
-addCommandAlias("benchAll", benchAll.command)
-addCommandAlias("benchLSP", benchLSP.command)
-addCommandAlias("benchQuick", benchQuick.command)
-commands += Command.command("releaseSemanticdb")(s =>
-  List(
-    "semanticdbSharedJVM",
-    "semanticdbScalacPlugin",
-    "semanticdbMetac",
-    "semanticdbMetap",
-    "semanticdbMetacp",
-    "semanticdbScalacCore",
-  ).map(s => s + "/publishSigned") ::: s,
-)
-commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s)
-commands += Command.command("download-scala-library") { s =>
-  val out = file("target/scala-library")
-  IO.unzipURL(
-    url(s"https://github.com/scala/scala/archive/v$LatestScala213.zip"),
-    toDirectory = out,
-    filter = s"scala-$LatestScala213/src/library/*",
+lazy val scalametaRoot = rootProject.withId("scalameta-root").autoAggregate
+  .enablePlugins(ScalaUnidocPlugin).settings(
+    sharedSettings,
+    name := {
+      println(s"[info] Welcome to scalameta ${version.value}")
+      "scalametaRoot"
+    },
+    nonPublishableSettings,
+    crossScalaVersions := Nil,
+    addCommandAlias("benchAll", benchAll.command),
+    addCommandAlias("benchLSP", benchLSP.command),
+    addCommandAlias("benchQuick", benchQuick.command),
+    commands += Command.command("releaseSemanticdb")(s =>
+      List(
+        "semanticdbShared",
+        "semanticdbScalacPlugin",
+        "semanticdbMetac",
+        "semanticdbMetap",
+        "semanticdbMetacp",
+        "semanticdbScalacCore",
+      ).map(s => s + "/publishSigned") ::: s,
+    ),
+    commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s),
+    commands += Command.command("download-scala-library") { s =>
+      val out = file("target/scala-library")
+      IO.unzipURL(
+        url(s"https://github.com/scala/scala/archive/v$LatestScala213.zip").toURL,
+        toDirectory = out,
+        filter = s"scala-$LatestScala213/src/library/*",
+        preserveLastModified = false,
+      )
+      s
+    },
+    commands += Command.command("save-expect")(s =>
+      List(LatestScala212, LatestScala213).foldLeft(s) { case (s, version) =>
+        s"++$version" :: "semanticdbScalacPlugin/compile" :: "semanticdbIntegration/clean" ::
+          "semanticdbIntegration/compile" ::
+          "testsSemanticdb/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
+      },
+    ),
+    commands += Command.command("save-manifest")(s =>
+      "tests/Test/runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
+    ),
+    // `sbt test` here would take hours; say so rather than starting it
+    Test / test := {
+      helloContributor()
+      TestResult.Passed
+    },
+    Test / testOnly / aggregate := false,
+    Test / test / aggregate := false,
+    packagedArtifacts := Def.uncached(Map.empty),
+    ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject,
+    console := (scalameta.jvm(EarliestScala213) / Compile / console).value,
   )
-  s
-}
-commands += Command.command("save-expect")(s =>
-  List(LatestScala212, LatestScala213).foldLeft(s) { case (s, version) =>
-    s"++$version" :: "semanticdbScalacPlugin/compile" :: "semanticdbIntegration/clean" ::
-      "semanticdbIntegration/compile" ::
-      "testsSemanticdb/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
-  },
-)
-commands += Command.command("save-manifest")(s =>
-  "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
-)
+
 def helloContributor(): Unit = println(
   """Welcome to the Scalameta build! You probably don't want to run `sbt test` since
-    |that will take a long time to complete.  More likely, you want to run `testsJVM/test`.
+    |that will take a long time to complete.  More likely, you want to run `tests/test`.
     |For more productivity tips, please read CONTRIBUTING.md.
     |""".stripMargin,
 )
-test := helloContributor()
-test / aggregate := false
-testOnly := helloContributor()
-testOnly / aggregate := false
-packagedArtifacts := Map.empty
-ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject
-console := (scalameta.jvm / Compile / console).value
 Global / resolvers +=
   "scala-integration".at("https://scala-ci.typesafe.com/artifactory/scala-integration/")
-
-val allPlatforms = Seq(JSPlatform, JVMPlatform, NativePlatform)
 
 /* ======================== SEMANTICDB ======================== */
 lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).settings(
@@ -97,20 +101,19 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   // SIP-51 on the earliest cross-built Scala versions.
   libraryDependencies +=
     ("com.lihaoyi" %% "unroll-annotation" % "0.3.0").exclude("org.scala-lang", "scala-library"),
-).dependsOn(semanticdbShared.jvm, io.jvm).enablePlugins(BuildInfoPlugin)
+).dependsOn(semanticdbShared.jvm(EarliestScala213), io.jvm(EarliestScala213))
+  .enablePlugins(BuildInfoPlugin)
 
-lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/semanticdb"))
-  .settings(
-    moduleName := "semanticdb-shared",
-    sharedSettings,
-    libraryDependencies += {
-      val ver = if (isScala3.value) EarliestScala213 else scalaVersion.value
-      "org.scala-lang" % "scalap" % ver
-    },
-    crossScalaVersions := EarliestScalaVersions,
-    protobufSettings,
-    description := "Library defining SemanticDB data structures",
-  ).dependsOn(scalameta).crossAll.published
+lazy val semanticdbShared = projectMatrix.in(file("semanticdb/semanticdb")).settings(
+  moduleName := "semanticdb-shared",
+  sharedSettings,
+  libraryDependencies += {
+    val ver = if (isScala3.value) EarliestScala213 else scalaVersion.value
+    "org.scala-lang" % "scalap" % ver
+  },
+  protobufSettings,
+  description := "Library defining SemanticDB data structures",
+).dependsOn(scalameta).crossAllPublished(EarliestScalaVersions, EarliestScalaVersions)
 
 lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).settings(
   moduleName := "semanticdb-scalac",
@@ -156,7 +159,7 @@ lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
   mimaPreviousArtifacts := Set.empty,
   description := "Prints SemanticDB files",
   mainClass := Some("scala.meta.cli.Metap"),
-).dependsOn(semanticdbShared.jvm)
+).dependsOn(semanticdbShared.jvm(EarliestScala213))
 
 lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   moduleName := "semanticdb-metacp",
@@ -175,46 +178,41 @@ lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).sett
   scalaVersion := LatestScala213,
   enableMacros,
   nonPublishableSettings,
-).dependsOn(trees.jvm, common.jvm)
+).dependsOn(trees.jvm(EarliestScala213), common.jvm(EarliestScala213))
 
 lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).settings(
   jvmPlatformSettings,
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
-  libraryDependencies += "com.github.scopt" %%% "scopt" % "4.1.0",
+  libraryDependencies += "com.github.scopt" %% "scopt" % "4.1.0",
   nonPublishableSettings,
 ).dependsOn(scala3TreeLiftsMacro)
 
 /* ======================== SCALAMETA ======================== */
-lazy val common2 = crossProject(allPlatforms: _*).in(file("scalameta/common2")).settings(
+lazy val common2 = projectMatrix.in(file("scalameta/common2")).settings(
   moduleName := "common2",
   sharedSettings,
   enableMacros,
   buildInfoPackage := "scala.meta.internal",
   buildInfoKeys := Seq[BuildInfoKey](version),
-  crossScalaVersions := EarliestScala2Versions,
-).crossAll.published.enablePlugins(BuildInfoPlugin)
+).crossAllPublished(EarliestScala2Versions).enablePlugins(BuildInfoPlugin)
 
-lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
+lazy val common = projectMatrix.in(file("scalameta/common")).settings(
   moduleName := "common",
   sharedSettings,
-  libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.4",
+  libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.4.4",
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
   enableMacros,
-  crossScalaVersions := EarliestScalaVersions,
-).crossAll.published.enablePlugins(BuildInfoPlugin).dependsOn(common2)
+).crossAllPublished(EarliestScalaVersions, EarliestScalaVersions).enablePlugins(BuildInfoPlugin)
+  .dependsOn(common2)
 
-lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io")).settings(
-  moduleName := "io",
-  sharedSettings,
-  description := "Scalameta IO abstractions",
-  crossScalaVersions := EarliestScala2Versions,
-).crossAll.published
+lazy val io = projectMatrix.in(file("scalameta/io"))
+  .settings(moduleName := "io", sharedSettings, description := "Scalameta IO abstractions")
+  .crossAllPublished(EarliestScala2Versions)
 
-lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).settings(
+lazy val trees2 = projectMatrix.in(file("scalameta/trees2")).settings(
   moduleName := "trees2",
   sharedSettings,
-  crossScalaVersions := EarliestScala2Versions,
   // NOTE: uncomment this to update ast.md
   // scalacOptions += "-Xprint:typer",
   enableHardcoreMacros,
@@ -222,30 +220,34 @@ lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).se
     val scalameta = base / "scalameta"
     List("tokenizers2", "tokens2", "dialects2", "inputs2").map(scalameta / _)
   }),
-  libraryDependencies += "org.portable-scala" %%% "portable-scala-reflect" % "1.1.3",
-).crossAll.published.shaded.dependsOn(common2, io)
+  // no Scala 3 build of it exists, and a row forced to Scala 3 still needs the annotation
+  libraryDependencies +=
+    ("org.portable-scala" %% "portable-scala-reflect" % "1.1.3").cross(CrossVersion.for3Use2_13),
+).crossAllPublished(EarliestScala2Versions).dependsOn(common2, io)
 
-lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
+// trees is the only module carrying shaded code: its published jar relocates fastparse and geny
+// under scala.meta.shaded.internal, while trees2, parsers and scalameta ship none.
+lazy val trees = projectMatrix.in(file("scalameta/trees")).settings(
   moduleName := "trees",
   sharedSettings,
   description := "Scalameta abstract syntax trees",
-  crossScalaVersions := EarliestScalaVersions,
   enableHardcoreMacros,
   libraryDependencies ++= {
     val fastparseVersion =
       if (VersionNumber(scalaVersion.value).matchesSemVer(SemanticSelector("<2.13.14"))) "3.1.0"
       else "3.1.1"
-    List("com.lihaoyi" %%% "fastparse" % fastparseVersion)
+    List("com.lihaoyi" %% "fastparse" % fastparseVersion)
   },
   mergedModule(projects = { base =>
     val scalameta = base / "scalameta"
     List("tokenizers").map(scalameta / _)
   }),
 ) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
-  .crossAll.published.shaded.dependsOn(common, io, trees2)
+  .crossAllPublished(EarliestScalaVersions, EarliestScalaVersions).shaded
+  .dependsOn(common, io, trees2)
 
 def parsersJsSettings = Def.settings(
-  commonJsSettings,
+  publishJsFor(EarliestScalaVersions),
   // has to agree with the "type" NpmPackage writes into package.json
   scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
   NpmPackage.settings(
@@ -260,12 +262,11 @@ def parsersJsSettings = Def.settings(
   ),
 )
 
-lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).settings(
+lazy val parsers = projectMatrix.in(file("scalameta/parsers")).settings(
   moduleName := "parsers",
   sharedSettings,
   description := "Scalameta APIs for parsing and their baseline implementation",
   enableHardcoreMacros,
-  crossScalaVersions := EarliestScalaVersions,
   mergedModule(
     base => List(base / "scalameta" / "quasiquotes", base / "scalameta" / "transversers"),
     base => List(base / "scalameta" / "transversers2"),
@@ -286,7 +287,9 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
       }
     } else Def.task(Seq.empty[File])
   }.taskValue,
-).crossJvm().crossNative().published.shaded.crossJs(parsersJsSettings).dependsOn(trees)
+).crossJvm(EarliestScalaVersions, publishJvmFor(EarliestScalaVersions))
+  .crossNative(EarliestScalaVersions, publishNativeFor(EarliestScalaVersions))
+  .crossJs(EarliestScalaVersions, parsersJsSettings).dependsOn(trees)
 
 def mergedModule(
     projects: File => List[File] = _ => Nil,
@@ -310,13 +313,12 @@ def mergedModule(
   }
 }
 
-lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta")).settings(
+lazy val scalameta = projectMatrix.in(file("scalameta/scalameta")).settings(
   moduleName := "scalameta",
   sharedSettings,
   description := "Scalameta umbrella module that includes all public APIs",
-  crossScalaVersions := EarliestScalaVersions,
   mergedModule(base => List(base / "scalameta" / "contrib")),
-).crossAll.published.shaded.dependsOn(parsers)
+).crossAllPublished(EarliestScalaVersions, EarliestScalaVersions).dependsOn(parsers)
 
 /* ======================== TESTS ======================== */
 lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(
@@ -337,7 +339,8 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
     else Nil
   },
   scalacOptions ++= {
-    val pluginJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
+    val pluginJar = fileConverter.value
+      .toPath((semanticdbScalacPlugin / Compile / Keys.`package`).value).toAbsolutePath.toString
     val warnUnusedImports = if (isScala213.value) "-Wunused:imports" else "-Ywarn-unused-import"
     Seq(
       s"-Xplugin:$pluginJar",
@@ -368,27 +371,37 @@ lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-m
   enableMacros,
 )
 
-lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).settings(
+lazy val testkit = projectMatrix.in(file("scalameta/testkit")).settings(
   moduleName := "testkit",
   sharedSettings,
-  crossScalaVersions := EarliestScalaVersions,
   hasLargeIntegrationTests,
   description := "Testing utilities for scalameta APIs",
-).dependsOn(scalameta, io).published
-  .crossJvm(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0").crossJs().crossNative()
+).dependsOn(scalameta, io).crossJvm(
+  EarliestScalaVersions,
+  publishJvmFor(EarliestScalaVersions),
+  libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0",
+).crossJs(EarliestScalaVersions, publishJsFor(EarliestScalaVersions))
+  .crossNative(EarliestScalaVersions, publishNativeFor(EarliestScalaVersions))
 
-lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
+lazy val tests = projectMatrix.in(file("tests")).settings(
   testSettings,
-  crossScalaVersions := AllScalaVersions,
   scalacOptions ++= {
     if (isScala3.value)
       List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
     else Nil
   },
 ).crossJvm(
+  EarliestScalaVersions,
+  // A JVM row is built at the earliest patch of its binary version, while munit's pom asks for a
+  // newer one, and sbt 2 will not compile against a scala-library newer than scalaVersion. Only
+  // here: the JS rows are built at the newest patch already, Scala Native pins its own, and the
+  // JVM-only test projects depend on rows built at 2.13.15, so forcing a version on any of them
+  // makes coursier's SameVersion rule reject the graph.
+  dependencyOverrides ++=
+    { if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value) },
   libraryDependencies ++=
     { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
-  dependencyOverrides += "org.scala-lang.modules" %%% "scala-xml" % "2.4.0",
+  dependencyOverrides += "org.scala-lang.modules" %% "scala-xml" % "2.4.0",
   libraryDependencies ++= {
     if (isScala213.value) List(
       "org.scala-lang" % "scala-compiler" % scalaVersion.value % Test,
@@ -396,25 +409,37 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
     )
     else Nil
   },
-).crossJs(scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
-  .crossNative(nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) })
-  .enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
+).crossJs(EarliestScalaVersions, scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
+  .crossNative(
+    EarliestScalaVersions,
+    nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) },
+    // Scala Native's own dependencies require a newer scala-library than the earliest patch this
+    // row compiles at, and unlike the JVM row it cannot be forced back down: coursier's SameVersion
+    // rule refuses. sbt 1 compiled this combination without comment. Nothing here is published, so
+    // the SIP-51 guarantee the check protects is not at stake.
+    allowUnsafeScalaLibUpgrade := true,
+  ).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
 
 lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   crossScalaVersions := AllScala2Versions,
   testSettings,
   jvmPlatformSettings,
-  Test / fullClasspath := {
-    val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
-      .getAbsolutePath
+  scalaVersion := LatestScala213,
+  // only this project uses coursier; on a Scala.js row sbt 2's %% would ask for the Scala.js
+  // build of it and drag a second suffix of fastparse, geny and sourcecode onto the classpath
+  libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.24" cross CrossVersion.for3Use2_13,
+  // sets a system property as a side effect, so it must not be served from sbt 2's cache
+  Test / fullClasspath := Def.uncached {
+    val semanticdbScalacJar = fileConverter.value
+      .toPath((semanticdbScalacPlugin / Compile / Keys.`package`).value).toAbsolutePath.toString
     sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
     (Test / fullClasspath).value
   },
   // Needed because some tests rely on the --usejavacp option
   Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
 ).dependsOn(
-  scalameta.jvm,
-  testkit.jvm,
+  scalameta.jvm(EarliestScala213),
+  testkit.jvm(EarliestScala213),
   semanticdbScalacPlugin,
   semanticdbMetac,
   semanticdbMetacp,
@@ -426,9 +451,7 @@ lazy val sharedTestSettings = Def.settings(
   sharedSettings,
   nonPublishableSettings,
   testFrameworks := List(TestFrameworks.MUnit),
-  dependencyOverrides ++=
-    { if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value) },
-  libraryDependencies += "org.scalameta" %%% "munit" % munit.sbtmunit.BuildInfo.munitVersion,
+  libraryDependencies += "org.scalameta" %% "munit" % munit.sbtmunit.BuildInfo.munitVersion,
 )
 
 lazy val testSettings = Def.settings(
@@ -437,7 +460,6 @@ lazy val testSettings = Def.settings(
     val base = (Compile / baseDirectory).value
     List(base / "src" / "test" / ("scala-" + scalaVersion.value))
   },
-  libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.24" cross CrossVersion.for3Use2_13,
   exposePaths("tests", Test),
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
@@ -447,8 +469,8 @@ lazy val testSettings = Def.settings(
     "databaseSourcepath" -> (ThisBuild / baseDirectory).value.getAbsolutePath,
     "resourcesDirectory" -> (Test / resourceDirectory).value.getAbsolutePath,
     "classDirectories" -> Seq(
-      (common2.jvm / Compile / classDirectory).value.getAbsolutePath,
-      (common.jvm / Compile / classDirectory).value.getAbsolutePath,
+      (common2.jvm(EarliestScala213) / Compile / classDirectory).value.getAbsolutePath,
+      (common.jvm(EarliestScala213) / Compile / classDirectory).value.getAbsolutePath,
     ),
     "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
     "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value,
@@ -456,9 +478,12 @@ lazy val testSettings = Def.settings(
   buildInfoPackage := "scala.meta.tests",
 )
 
-lazy val communitytest = project.in(file("community-test"))
-  .settings(sharedTestSettings, jvmPlatformSettings, crossScalaVersions := LatestScala2Versions)
-  .dependsOn(scalameta.jvm)
+lazy val communitytest = project.in(file("community-test")).settings(
+  sharedTestSettings,
+  jvmPlatformSettings,
+  scalaVersion := LatestScala213,
+  crossScalaVersions := LatestScala2Versions,
+).dependsOn(scalameta.jvm(EarliestScala213))
 
 /* ======================== BENCHES ======================== */
 lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(BuildInfoPlugin)
@@ -471,14 +496,14 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
     buildInfoPackage := "scala.meta.internal.bench",
     Jmh / run := Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
-      val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
-        .getAbsolutePath
+      val semanticdbScalacJar = fileConverter.value
+        .toPath((semanticdbScalacPlugin / Compile / Keys.`package`).value).toAbsolutePath.toString
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
       buf ++= args
       buf += "-p"
       buf += s"semanticdbScalacJar=$semanticdbScalacJar"
-      (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
+      (Jmh / runMain).toTask(s"  ${buf.result().mkString(" ")}")
     }.evaluated,
   ).dependsOn(testsSemanticdb)
 
@@ -490,20 +515,25 @@ lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(Buil
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
     buildInfoPackage := "scala.meta.internal.bench",
     Jmh / resourceDirectory := (Compile / resourceDirectory).value,
-    Jmh / fullClasspath ++= (scalameta.jvm / Compile / fullClasspath).value,
+    Jmh / fullClasspath ++= {
+      // both Append instances match a bare Classpath, so name the type
+      val cp: Classpath = (scalameta.jvm(EarliestScala213) / Compile / fullClasspath).value
+      cp
+    },
     Jmh / run := Def.inputTaskDyn {
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
       buf ++= spaceDelimited("<arg>").parsed
-      (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
+      (Jmh / runMain).toTask(s"  ${buf.result().mkString(" ")}")
     }.evaluated,
-  ).dependsOn(scalameta.jvm)
+  ).dependsOn(scalameta.jvm(EarliestScala213))
 
 // ==========================================
 // Settings
 // ==========================================
 
-lazy val sharedJvmSettings = Def.settings(sharedSettings, jvmPlatformSettings)
+lazy val sharedJvmSettings = Def
+  .settings(sharedSettings, jvmPlatformSettings, scalaVersion := LatestScala213)
 
 lazy val sharedSettings = Def.settings(
   // version is set dynamically by sbt-dynver, but let's adjust it
@@ -520,7 +550,6 @@ lazy val sharedSettings = Def.settings(
     dynverGitDescribeOutput.value.mkVersion(dynVer, curVersion)
   },
   isSnapshot := version.value.endsWith("-SNAPSHOT"), // overrides dynver setting
-  scalaVersion := LatestScala213,
   organization := "org.scalameta",
   libraryDependencies ++= {
     if (isScala213or3.value) Nil
@@ -546,12 +575,14 @@ lazy val sharedSettings = Def.settings(
   updateOptions := updateOptions.value.withCachedResolution(true),
   ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger,
   evictionErrorLevel := sbt.util.Level.Warn,
-  incOptions := incOptions.value.withLogRecompileOnMacro(false),
+  incOptions := Def.uncached(incOptions.value.withLogRecompileOnMacro(false)),
 )
 
 lazy val mergeSettings = Def.settings(
   sharedJvmSettings,
-  assembly / test := {},
+  // sbt-assembly's shade rules refuse to run against exported jars
+  exportJars := false,
+  assembly / test := TestResult.Passed,
   assembly / logLevel := Level.Error,
   assembly / assemblyJarName :=
     name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
@@ -577,17 +608,23 @@ lazy val mergeSettings = Def.settings(
   },
   Compile / Keys.`package` := {
     val slimJar = (Compile / Keys.`package`).value
-    val fatJar = new File(crossTarget.value + "/" + (assembly / assemblyJarName).value)
+    val fatJar = crossTarget.value / (assembly / assemblyJarName).value
     val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
+    IO.copy(
+      List(fatJar -> fileConverter.value.toPath(slimJar).toFile),
+      CopyOptions().withOverwrite(true),
+    )
     slimJar
   },
   Compile / packageBin / packagedArtifact := {
     val temp = (Compile / packageBin / packagedArtifact).value
     val (art, slimJar) = temp
-    val fatJar = new File(crossTarget.value + "/" + (assembly / assemblyJarName).value)
+    val fatJar = crossTarget.value / (assembly / assemblyJarName).value
     val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
+    IO.copy(
+      List(fatJar -> fileConverter.value.toPath(slimJar).toFile),
+      CopyOptions().withOverwrite(true),
+    )
     (art, slimJar)
   },
   assembly / assemblyMergeStrategy := {
@@ -597,15 +634,11 @@ lazy val mergeSettings = Def.settings(
       val oldStrategy = (assembly / assemblyMergeStrategy).value
       oldStrategy(x)
   },
-  mimaCurrentClassfiles := (Compile / Keys.`package`).value,
+  mimaCurrentClassfiles := fileConverter.value.toPath((Compile / Keys.`package`).value).toFile,
 )
 
 lazy val protobufSettings = Def.settings(
-  Compile / packageSrc / mappings ++= {
-    val base = (Compile / sourceManaged).value
-    val files = (Compile / managedSources).value
-    files.map(f => (f, f.relativeTo(base).get.getPath))
-  },
+  // sbt 2 puts managed sources in the sources jar itself; adding them duplicates the entries
   Compile / PB.targets := Seq(protocbridge.Target(
     generator = PB.gens.plugin("scala"),
     outputPath = (Compile / sourceManaged).value / "protobuf",
@@ -620,8 +653,8 @@ lazy val protobufSettings = Def.settings(
       // for SIP-51, freeze version to the latest ScalaPB built against the earliest Scala 2.13.x version we support
       if (scalaVersion.value == "2.13.15") "0.11.17" else "0.11.20"
     Seq(
-      "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
-      "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion % "protobuf",
+      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion,
+      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapbVersion % "protobuf",
       ("com.thesamet.scalapb" % "protoc-gen-scala" % scalapbVersion % "protobuf").artifacts(
         if (scala.util.Properties.isWin)
           Artifact("protoc-gen-scala", PB.ProtocPlugin, "bat", "windows")
@@ -659,25 +692,28 @@ def exposePaths(projectName: String, config: Configuration) = {
       new String(chars)
     }
   val prefix = "sbt.paths." + projectName + "." + uncapitalize(config.name) + "."
+  // these set system properties as a side effect, so they must not be served from sbt 2's cache:
+  // on a hit the body never runs and the tests that read the properties see null
   Seq(
-    config / scalacOptions := {
+    config / scalacOptions := Def.uncached {
       val defaultValue = (config / scalacOptions).value
       System.setProperty(prefix + "options", defaultValue.mkString(" "))
       defaultValue
     },
-    config / sourceDirectory := {
+    config / sourceDirectory := Def.uncached {
       val defaultValue = (config / sourceDirectory).value
       System.setProperty(prefix + "sources", defaultValue.getAbsolutePath)
       defaultValue
     },
-    config / resourceDirectory := {
+    config / resourceDirectory := Def.uncached {
       val defaultValue = (config / resourceDirectory).value
       System.setProperty(prefix + "resources", defaultValue.getAbsolutePath)
       defaultValue
     },
-    config / fullClasspath := {
+    config / fullClasspath := Def.uncached {
       val defaultValue = (config / fullClasspath).value
-      val classpath = defaultValue.files.map(_.getAbsolutePath)
+      val conv = fileConverter.value
+      val classpath = defaultValue.map(x => conv.toPath(x.data).toAbsolutePath.toString)
       System.setProperty(prefix + "classes", classpath.mkString(java.io.File.pathSeparator))
       defaultValue
     },
