@@ -46,13 +46,13 @@ object Extensions {
     platformAxis := Platforms.JS,
     crossScalaVersions := crossScalaVersions.value.flatMap(v =>
       CrossVersion.binaryScalaVersion(v) match {
-        case "2.12" => Some(LatestScala212)
-        case "2.13" => Some(LatestScala213ForJS)
+        case "2.12" => Some(PublishedScala212ForJS)
+        case "2.13" => Some(PublishedScala213ForJS)
         case "3" => Some(v)
         case _ => None
       },
     ).distinct,
-    scalaVersion := LatestScala213ForJS,
+    scalaVersion := PublishedScala213ForJS,
     bspEnabled := false,
     scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
     scalacOptions ++= {
