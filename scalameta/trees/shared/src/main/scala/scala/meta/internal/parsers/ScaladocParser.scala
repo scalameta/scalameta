@@ -315,7 +315,7 @@ object ScaladocParser {
     if (!isScaladoc) None
     else {
       val text = stripTrailingSpaces(CharBuffer.wrap(comment, 3, comment.length - 2))
-      fastparse.parse(text, parser(_)) match {
+      fastparse.parse(text, parser(using _)) match {
         case p: Parsed.Success[Scaladoc] => Some(p.value)
         case _ => None
       }
