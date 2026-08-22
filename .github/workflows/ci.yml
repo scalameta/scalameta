@@ -143,9 +143,9 @@ jobs:
       - *jdk
       - *sbt
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212 }} testsNative/test || sbt ++${{ env.scala212 }} testsNative/test
+        run: sbt ++${{ env.scala212_3 }} testsNative/test || sbt ++${{ env.scala212_3 }} testsNative/test
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213 }} testsNative/test || sbt ++${{ env.scala213 }} testsNative/test
+        run: sbt ++${{ env.scala213_3 }} testsNative/test || sbt ++${{ env.scala213_3 }} testsNative/test
       - if: ${{ !cancelled() }}
         run: sbt ++${{ env.scala33 }} testsNative/test || sbt ++${{ env.scala33 }} testsNative/test
       - if: ${{ !cancelled() }}
