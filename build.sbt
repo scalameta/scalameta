@@ -609,16 +609,16 @@ lazy val protobufSettings = Def.settings(
   Compile / PB.targets := Seq(protocbridge.Target(
     generator = PB.gens.plugin("scala"),
     outputPath = (Compile / sourceManaged).value / "protobuf",
-    options = scalapb.gen(flatPackage =
-      true, // Don't append filename to package
-    )._2,
+    // what scalapb.gen(flatPackage = true) passes to protoc; spelled out so the meta-build needs
+    // no scalapb compilerplugin, whose Scala 3 build wants a different protoc-bridge than sbt-protoc
+    options = Seq("flat_package"),
   )),
   Compile / PB.protoSources := Seq(file("semanticdb/semanticdb/shared/src/main/proto")),
   PB.additionalDependencies := Nil,
   libraryDependencies ++= {
     val scalapbVersion =
       // for SIP-51, freeze version to the latest ScalaPB built against the earliest Scala 2.13.x version we support
-      if (scalaVersion.value == "2.13.15") "0.11.17" else scalapb.compiler.Version.scalapbVersion
+      if (scalaVersion.value == "2.13.15") "0.11.17" else "0.11.20"
     Seq(
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion,
       "com.thesamet.scalapb" %%% "scalapb-runtime" % scalapbVersion % "protobuf",
