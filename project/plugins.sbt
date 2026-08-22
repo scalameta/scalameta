@@ -16,7 +16,6 @@ addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.12.0")
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.8")
 addSbtPlugin("com.typesafe" % "sbt-mima-plugin" % "1.1.6")
 
-addSbtPlugin("io.chrisdavenport" %% "sbt-npm-package" % "0.2.0")
 addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.1.7")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % crossProjectV)

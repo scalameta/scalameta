@@ -21,7 +21,7 @@ jobs:
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
       - name: Publish
-        run: sbt "parsersJS/npmPackageNpmrc; parsersJS/npmPackagePublish"
+        run: sbt parsersJS/npmPackagePublish
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
