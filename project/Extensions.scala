@@ -68,6 +68,15 @@ object Extensions {
 
   lazy val nativeSettings = Seq(
     platformAxis := Platforms.Native,
+    crossScalaVersions := crossScalaVersions.value.flatMap(v =>
+      CrossVersion.binaryScalaVersion(v) match {
+        case "2.12" => Some(PublishedScala212ForNative)
+        case "2.13" => Some(PublishedScala213ForNative)
+        case "3" => Some(v)
+        case _ => None
+      },
+    ).distinct,
+    scalaVersion := PublishedScala213ForNative,
     bspEnabled := false,
     nativeConfig ~= {
       _.withMode(Mode.releaseFast)

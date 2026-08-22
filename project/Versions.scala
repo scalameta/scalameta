@@ -19,15 +19,22 @@ object Versions {
   val PublishedScalaVersions = PublishedScala2 :+ Scala3LTS
 
   /**
-   * A JVM build takes the oldest patch of a Scala 2 line. A JS build takes the newest one, because
-   * Scala.js publishes its compiler plugin for each full Scala version, and a JS build can use only
-   * a patch Scala.js published for. Name the previous patch here when Scala.js has not published
-   * for a new one yet. Scala.js did that after 2.13.16 came out.
+   * Scala.js publishes a compiler plugin for each full Scala version. Scala Native publishes a
+   * compiler plugin and a standard library. A JS build and a Native build can therefore use only a
+   * patch those projects published for.
    *
-   * Scala 3 needs no plugin, because the Scala 3 compiler writes JS itself.
+   * A JVM build takes the oldest patch of a Scala 2 line. A Native build takes the same patch, the
+   * one it publishes from. A JS build takes the newest patch, because Scala.js publishes for recent
+   * patches only. Name the previous patch here when either project has not published for a new one
+   * yet. Scala.js did that after 2.13.16 came out.
+   *
+   * Scala 3 needs no plugin for JS, because the Scala 3 compiler writes JS itself. A Scala 3 build
+   * keeps its own version.
    */
   val PublishedScala212ForJS = LatestScala212
   val PublishedScala213ForJS = LatestScala213
+  val PublishedScala212ForNative = PublishedScala212
+  val PublishedScala213ForNative = PublishedScala213
 
   val AllScala2Versions = Scala213Versions ++ Scala212Versions
   val AllScalaVersions = AllScala2Versions :+ Scala3LTS :+ Scala3Next
