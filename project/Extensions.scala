@@ -32,9 +32,9 @@ object Extensions {
   import Versions._
 
   def isScalaBinaryVersion(version: String) = Def.setting(scalaBinaryVersion.value == version)
+  lazy val isScala212 = isScalaBinaryVersion("2.12")
   lazy val isScala213 = isScalaBinaryVersion("2.13")
   lazy val isScala3 = isScalaBinaryVersion("3")
-  def isScala213or3 = Def.setting(isScala213.value || isScala3.value)
 
   /**
    * Which row a setting is being evaluated in. Only the source roots of a merged module need to

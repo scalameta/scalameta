@@ -14,64 +14,67 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 def isCI = System.getenv("CI") != null
 
+def helloContributor(): Unit = println(
+  """|Welcome to the Scalameta build! You probably don't want to run `sbt test` since
+     |that will take a long time to complete.  More likely, you want to run `testsJVM/test`.
+     |For more productivity tips, please read CONTRIBUTING.md.
+     |""".stripMargin,
+)
+
 // ==========================================
 // Projects
 // ==========================================
 
-sharedSettings
-name := {
-  println(s"[info] Welcome to scalameta ${version.value}")
-  "scalametaRoot"
-}
-nonPublishableSettings
-crossScalaVersions := Nil
-enablePlugins(ScalaUnidocPlugin)
-addCommandAlias("benchAll", benchAll.command)
-addCommandAlias("benchLSP", benchLSP.command)
-addCommandAlias("benchQuick", benchQuick.command)
-commands += Command.command("releaseSemanticdb")(s =>
-  List(
-    "semanticdbSharedJVM",
-    "semanticdbScalacPlugin",
-    "semanticdbMetac",
-    "semanticdbMetap",
-    "semanticdbMetacp",
-    "semanticdbScalacCore",
-  ).map(s => s + "/publishSigned") ::: s,
-)
-commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s)
-commands += Command.command("download-scala-library") { s =>
-  val out = file("target/scala-library")
-  IO.unzipURL(
-    url(s"https://github.com/scala/scala/archive/v$LatestScala213.zip"),
-    toDirectory = out,
-    filter = s"scala-$LatestScala213/src/library/*",
-  )
-  s
-}
-commands += Command.command("save-expect")(s =>
-  List(LatestScala212, LatestScala213).foldLeft(s) { case (s, version) =>
-    s"++$version" :: "semanticdbScalacPlugin/compile" :: "semanticdbIntegration/clean" ::
-      "semanticdbIntegration/compile" ::
-      "testsSemanticdb/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
+def rootSettings = Def.settings(
+  sharedSettings,
+  name := {
+    println(s"[info] Welcome to scalameta ${version.value}")
+    "scalametaRoot"
   },
+  nonPublishableSettings,
+  crossScalaVersions := Nil,
+  addCommandAlias("benchAll", benchAll.command),
+  addCommandAlias("benchLSP", benchLSP.command),
+  addCommandAlias("benchQuick", benchQuick.command),
+  commands += Command.command("releaseSemanticdb")(s =>
+    List(
+      "semanticdbSharedJVM",
+      "semanticdbScalacPlugin",
+      "semanticdbMetac",
+      "semanticdbMetap",
+      "semanticdbMetacp",
+      "semanticdbScalacCore",
+    ).map(s => s + "/publishSigned") ::: s,
+  ),
+  commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s),
+  commands += Command.command("download-scala-library") { s =>
+    val out = file("target/scala-library")
+    val arc = url(s"https://github.com/scala/scala/archive/v$LatestScala213.zip")
+    val pat = s"scala-$LatestScala213/src/library/*"
+    IO.unzipURL(arc, toDirectory = out, filter = pat, preserveLastModified = false)
+    s
+  },
+  commands += Command.command("save-expect")(s =>
+    LatestScala2.foldLeft(s) { case (s, version) =>
+      s"++$version" :: "semanticdbScalacPlugin/compile" :: "semanticdbIntegration/clean" ::
+        "semanticdbIntegration/compile" ::
+        "testsSemanticdb/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
+    },
+  ),
+  commands += Command.command("save-manifest")(s =>
+    "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
+  ),
+  test := helloContributor(),
+  test / aggregate := false,
+  testOnly := helloContributor(),
+  testOnly / aggregate := false,
+  packagedArtifacts := Map.empty,
+  ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject,
+  console := (scalameta.jvm / Compile / console).value,
 )
-commands += Command.command("save-manifest")(s =>
-  "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
-)
-def helloContributor(): Unit = println(
-  """Welcome to the Scalameta build! You probably don't want to run `sbt test` since
-    |that will take a long time to complete.  More likely, you want to run `testsJVM/test`.
-    |For more productivity tips, please read CONTRIBUTING.md.
-    |""".stripMargin,
-)
-test := helloContributor()
-test / aggregate := false
-testOnly := helloContributor()
-testOnly / aggregate := false
-packagedArtifacts := Map.empty
-ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject
-console := (scalameta.jvm / Compile / console).value
+
+rootSettings
+enablePlugins(ScalaUnidocPlugin)
 Global / resolvers +=
   "scala-integration".at("https://scala-ci.typesafe.com/artifactory/scala-integration/")
 
@@ -99,18 +102,20 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
     ("com.lihaoyi" %% "unroll-annotation" % "0.3.0").exclude("org.scala-lang", "scala-library"),
 ).dependsOn(semanticdbShared.jvm, io.jvm).enablePlugins(BuildInfoPlugin)
 
+def semanticdbSharedSettings = Def.settings(
+  moduleName := "semanticdb-shared",
+  sharedSettings,
+  libraryDependencies += {
+    val ver = if (isScala3.value) PublishedScala213 else scalaVersion.value
+    "org.scala-lang" % "scalap" % ver
+  },
+  crossScalaVersions := PublishedScalaVersions,
+  protobufSettings,
+  description := "Library defining SemanticDB data structures",
+)
+
 lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/semanticdb"))
-  .settings(
-    moduleName := "semanticdb-shared",
-    sharedSettings,
-    libraryDependencies += {
-      val ver = if (isScala3.value) PublishedScala213 else scalaVersion.value
-      "org.scala-lang" % "scalap" % ver
-    },
-    crossScalaVersions := PublishedScalaVersions,
-    protobufSettings,
-    description := "Library defining SemanticDB data structures",
-  ).dependsOn(scalameta).crossAll.published
+  .settings(semanticdbSharedSettings).dependsOn(scalameta).crossAll.published
 
 lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).settings(
   moduleName := "semanticdb-scalac",
@@ -231,12 +236,8 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   description := "Scalameta abstract syntax trees",
   crossScalaVersions := PublishedScalaVersions,
   enableHardcoreMacros,
-  libraryDependencies ++= {
-    val fastparseVersion =
-      if (VersionNumber(scalaVersion.value).matchesSemVer(SemanticSelector("<2.13.14"))) "3.1.0"
-      else "3.1.1"
-    List("com.lihaoyi" %%% "fastparse" % fastparseVersion)
-  },
+  libraryDependencies +=
+    "com.lihaoyi" %%% "fastparse" % { if (isScala212.value) "3.1.0" else "3.1.1" },
   mergedModule(projects = { base =>
     val scalameta = base / "scalameta"
     List("tokenizers").map(scalameta / _)
@@ -377,7 +378,7 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
 ).dependsOn(scalameta, io).published
   .crossJvm(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0").crossJs().crossNative()
 
-lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
+def testsSettings = Def.settings(
   testSettings,
   crossScalaVersions := AllScalaVersions,
   scalacOptions ++= {
@@ -385,7 +386,9 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
       List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
     else Nil
   },
-).crossJvm(
+)
+
+def testsJvmSettings = Def.settings(
   libraryDependencies ++=
     { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
   dependencyOverrides += "org.scala-lang.modules" %%% "scala-xml" % "2.4.0",
@@ -396,14 +399,29 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
     )
     else Nil
   },
-).crossJs(scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
-  .crossNative(nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) })
+)
+
+def testsJsSettings = Def.settings(scalaJSLinkerConfig ~= {
+  _.withModuleKind(ModuleKind.CommonJSModule)
+})
+
+def testsNativeSettings = Def.settings(nativeConfig ~= {
+  _.withMode(scalanative.build.Mode.debug).withLinkStubs(true)
+})
+
+lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testsSettings)
+  .crossJvm(testsJvmSettings).crossJs(testsJsSettings).crossNative(testsNativeSettings)
   .enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
 
-lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
+def testsSemanticdbSettings = Def.settings(
   crossScalaVersions := AllScala2Versions,
   testSettings,
   jvmPlatformSettings,
+  dependencyOverrides ++=
+    Seq("scala-library", "scala-compiler", "scalap").map("org.scala-lang" % _ % scalaVersion.value),
+  /* only this project uses coursier. On a Scala.js row sbt 2's %% asks for the Scala.js build of
+   * coursier, which puts a second suffix of fastparse, geny and sourcecode on the classpath. */
+  libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.24" cross CrossVersion.for3Use2_13,
   Test / fullClasspath := {
     val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
       .getAbsolutePath
@@ -412,7 +430,9 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   },
   // Needed because some tests rely on the --usejavacp option
   Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
-).dependsOn(
+)
+
+lazy val testsSemanticdb = project.in(file("tests-semanticdb")).dependsOn(
   scalameta.jvm,
   testkit.jvm,
   semanticdbScalacPlugin,
@@ -420,12 +440,15 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   semanticdbMetacp,
   semanticdbMetap,
   semanticdbIntegration,
-).enablePlugins(BuildInfoPlugin)
+).settings(testsSemanticdbSettings).enablePlugins(BuildInfoPlugin)
 
 lazy val sharedTestSettings = Def.settings(
   sharedSettings,
   nonPublishableSettings,
   testFrameworks := List(TestFrameworks.MUnit),
+  /* munit's pom asks for a newer scala-library than the patch a test project compiles at, and sbt
+   * refuses a scala-library newer than scalaVersion. Every platform needs the pin: JS and Native
+   * compile at a patch of their own. */
   dependencyOverrides ++=
     { if (isScala3.value) Nil else Seq("org.scala-lang" % "scala-library" % scalaVersion.value) },
   libraryDependencies += "org.scalameta" %%% "munit" % munit.sbtmunit.BuildInfo.munitVersion,
@@ -437,7 +460,6 @@ lazy val testSettings = Def.settings(
     val base = (Compile / baseDirectory).value
     List(base / "src" / "test" / ("scala-" + scalaVersion.value))
   },
-  libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.24" cross CrossVersion.for3Use2_13,
   exposePaths("tests", Test),
   buildInfoKeys := Seq[BuildInfoKey](
     scalaVersion,
@@ -523,11 +545,11 @@ lazy val sharedSettings = Def.settings(
   scalaVersion := LatestScala213,
   organization := "org.scalameta",
   libraryDependencies ++= {
-    if (isScala213or3.value) Nil
+    if (!isScala212.value) Nil
     else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
   },
   scalacOptions ++= { if (isScala213.value) List("-Ymacro-annotations") else Nil },
-  scalacOptions ++= { if (isScala213or3.value) List("-Xfatal-warnings") else Nil },
+  scalacOptions ++= { if (isScala212.value) Nil else List("-Xfatal-warnings") },
   scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
   scalacOptions ++= {
     if (isScala3.value) List(
