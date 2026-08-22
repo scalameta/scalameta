@@ -198,9 +198,30 @@ object Extensions {
       val settings = platformPublishSettings(platform)
       if (settings.isEmpty) res else res.configurePlatform(platform)(_.settings(settings))
     }
-  def crossPlatformShading(project: sbtcrossproject.CrossProject) =
-    if (shadingSettings.nonEmpty) project.enablePlugins(ShadingPlugin).settings(shadingSettings)
-    else project
   val publishJVMSettings = platformPublishSettings(JVMPlatform)
+
+  implicit class CrossProjectExtensions(private val self: CrossProject) extends AnyVal {
+
+    def crossJvm(ss: Def.SettingsDefinition*): CrossProject = self.jvmSettings(ss: _*)
+
+    def crossJs(ss: Def.SettingsDefinition*): CrossProject = self
+      .jsSettings((commonJsSettings: Def.SettingsDefinition) +: ss: _*)
+
+    def crossNative(ss: Def.SettingsDefinition*): CrossProject = self
+      .nativeSettings((nativeSettings: Def.SettingsDefinition) +: ss: _*)
+
+    /** Every row gets the settings for the platform it is. */
+    def crossAll: CrossProject = self.crossJvm().crossJs().crossNative()
+
+    /** Per row, publishable or not, as SCALAMETA_PLATFORM selects. */
+    def published: CrossProject = self.jvmSettings(publishJVMSettings)
+      .jsSettings(platformPublishSettings(JSPlatform))
+      .nativeSettings(platformPublishSettings(NativePlatform))
+
+    def shaded: CrossProject =
+      if (shadingSettings.isEmpty) self
+      else self.enablePlugins(ShadingPlugin).settings(shadingSettings)
+
+  }
 
 }
