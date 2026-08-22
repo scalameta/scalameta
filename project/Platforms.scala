@@ -1,3 +1,6 @@
+package org.scalameta
+package build
+
 object Platforms {
 
   private val envPlatform = "SCALAMETA_PLATFORM"

@@ -1,3 +1,6 @@
+package org.scalameta
+package build
+
 case class ShadedDependency(
     groupID: String,
     artifactID: String,
