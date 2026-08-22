@@ -75,14 +75,12 @@ console := (scalameta.jvm / Compile / console).value
 Global / resolvers +=
   "scala-integration".at("https://scala-ci.typesafe.com/artifactory/scala-integration/")
 
-ThisBuild / platformAxis := Platforms.JVM
-
 val allPlatforms = Seq(JSPlatform, JVMPlatform, NativePlatform)
 
 /* ======================== SEMANTICDB ======================== */
 lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).settings(
   moduleName := "semanticdb-scalac-core",
-  sharedSettings,
+  sharedJvmSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
@@ -117,7 +115,7 @@ lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/s
 lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).settings(
   moduleName := "semanticdb-scalac",
   description := "Scalac 2.x compiler plugin that generates SemanticDB on compile",
-  sharedSettings,
+  sharedJvmSettings,
   publishJVMSettings,
   mimaPreviousArtifacts := Set.empty,
   mergeSettings,
@@ -141,7 +139,7 @@ lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).s
 
 lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
   moduleName := "metac", // that was name chosen originally, must keep it
-  sharedSettings,
+  sharedJvmSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
@@ -152,7 +150,7 @@ lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
 
 lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
   moduleName := "semanticdb-metap",
-  sharedSettings,
+  sharedJvmSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
@@ -162,7 +160,7 @@ lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
 
 lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   moduleName := "semanticdb-metacp",
-  sharedSettings,
+  sharedJvmSettings,
   publishJVMSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
@@ -172,6 +170,7 @@ lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
 
 /* ============== CODEGEN FOR SCALA 3 QUASIQUOTES, TRANSVERSERS ============= */
 lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).settings(
+  jvmPlatformSettings,
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
   enableMacros,
@@ -179,6 +178,7 @@ lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).sett
 ).dependsOn(trees.jvm, common.jvm)
 
 lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).settings(
+  jvmPlatformSettings,
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
   libraryDependencies += "com.github.scopt" %%% "scopt" % "4.1.0",
@@ -321,7 +321,7 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
 /* ======================== TESTS ======================== */
 lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(
   description := "Sources to compile to build SemanticDB for tests.",
-  sharedSettings,
+  sharedJvmSettings,
   crossScalaVersions := AllScala2Versions,
   nonPublishableSettings,
   // the sources in this project intentionally produce warnings to test the
@@ -362,7 +362,7 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
 ).dependsOn(semanticdbIntegrationMacros, semanticdbScalacPlugin)
 
 lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-macros")).settings(
-  sharedSettings,
+  sharedJvmSettings,
   crossScalaVersions := AllScala2Versions,
   nonPublishableSettings,
   enableMacros,
@@ -403,6 +403,7 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
 lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   crossScalaVersions := AllScala2Versions,
   testSettings,
+  jvmPlatformSettings,
   Test / fullClasspath := {
     val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
       .getAbsolutePath
@@ -456,12 +457,13 @@ lazy val testSettings = Def.settings(
 )
 
 lazy val communitytest = project.in(file("community-test"))
-  .settings(sharedTestSettings, crossScalaVersions := LatestScala2Versions).dependsOn(scalameta.jvm)
+  .settings(sharedTestSettings, jvmPlatformSettings, crossScalaVersions := LatestScala2Versions)
+  .dependsOn(scalameta.jvm)
 
 /* ======================== BENCHES ======================== */
 lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
-    sharedSettings,
+    sharedJvmSettings,
     crossScalaVersions := LatestScala2Versions,
     nonPublishableSettings,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
@@ -482,7 +484,7 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
 
 lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
-    sharedSettings,
+    sharedJvmSettings,
     crossScalaVersions := LatestScala2Versions,
     nonPublishableSettings,
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
@@ -500,6 +502,8 @@ lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(Buil
 // ==========================================
 // Settings
 // ==========================================
+
+lazy val sharedJvmSettings = Def.settings(sharedSettings, jvmPlatformSettings)
 
 lazy val sharedSettings = Def.settings(
   // version is set dynamically by sbt-dynver, but let's adjust it
@@ -535,11 +539,6 @@ lazy val sharedSettings = Def.settings(
     else Nil
   },
   scalacOptions ++= Seq("-feature", "-unchecked"),
-  // Target Java 8 bytecode for Scala 2 JVM artifacts regardless of the
-  // build JDK, so releases built on newer JDKs still run on JDK 8. Scala 3
-  // (3.8+) is built with JDK 17 and needs no -release flag.
-  scalacOptions ++=
-    { if (!isScala3.value && isPlatform(Platforms.JVM).value) Seq("-release", "8") else Nil },
   Compile / doc / scalacOptions ++=
     { if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups") },
   Test / parallelExecution := false, // hello, reflection sync!!
@@ -551,7 +550,7 @@ lazy val sharedSettings = Def.settings(
 )
 
 lazy val mergeSettings = Def.settings(
-  sharedSettings,
+  sharedJvmSettings,
   assembly / test := {},
   assembly / logLevel := Level.Error,
   assembly / assemblyJarName :=
@@ -701,7 +700,7 @@ def macroDependencies(hardcore: Boolean) = libraryDependencies ++= {
 }
 
 lazy val docs = project.in(file("scalameta-docs")).settings(
-  sharedSettings,
+  sharedJvmSettings,
   crossScalaVersions := List(LatestScala213),
   scalaVersion := LatestScala213,
   nonPublishableSettings,
