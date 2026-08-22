@@ -881,12 +881,12 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
 
   private def getXml(): Boolean = {
     // 1. Collect positions of scala expressions inside this xml literal.
-    import fastparse.Parsed
     val start = offset
     val xmlParser = new XmlParser(dialect)
-    val result: Int = fastparse.parse(input.text, xmlParser.XmlExpr(_), startIndex = start) match {
-      case x: Parsed.Success[_] => x.index
-      case x: Parsed.Failure =>
+    val parsed = fastparse.parse(input.text, xmlParser.XmlExpr(using _), startIndex = start)
+    val result: Int = parsed match {
+      case x: fastparse.Parsed.Success[_] => x.index
+      case x: fastparse.Parsed.Failure =>
         val err = "malformed xml literal, expected:" + EOL + x.extra.trace().terminalsMsg
         setInvalidToken(curr, x.index)(err)
         return false
