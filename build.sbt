@@ -112,8 +112,7 @@ lazy val semanticdbShared = crossProject(allPlatforms: _*).in(file("semanticdb/s
     crossScalaVersions := EarliestScalaVersions,
     protobufSettings,
     description := "Library defining SemanticDB data structures",
-  ).dependsOn(scalameta).nativeSettings(nativeSettings).jsSettings(commonJsSettings)
-  .configureCross(crossPlatformPublishSettings)
+  ).dependsOn(scalameta).crossAll.published
 
 lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).settings(
   moduleName := "semanticdb-scalac",
@@ -194,8 +193,7 @@ lazy val common2 = crossProject(allPlatforms: _*).in(file("scalameta/common2")).
   buildInfoPackage := "scala.meta.internal",
   buildInfoKeys := Seq[BuildInfoKey](version),
   crossScalaVersions := EarliestScala2Versions,
-).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
-  .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings)
+).crossAll.published.enablePlugins(BuildInfoPlugin)
 
 lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).settings(
   moduleName := "common",
@@ -204,16 +202,14 @@ lazy val common = crossProject(allPlatforms: _*).in(file("scalameta/common")).se
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
   enableMacros,
   crossScalaVersions := EarliestScalaVersions,
-).configureCross(crossPlatformPublishSettings).jsSettings(commonJsSettings)
-  .enablePlugins(BuildInfoPlugin).nativeSettings(nativeSettings).dependsOn(common2)
+).crossAll.published.enablePlugins(BuildInfoPlugin).dependsOn(common2)
 
-lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io"))
-  .configureCross(crossPlatformPublishSettings).settings(
-    moduleName := "io",
-    sharedSettings,
-    description := "Scalameta IO abstractions",
-    crossScalaVersions := EarliestScala2Versions,
-  ).jsSettings(commonJsSettings).nativeSettings(nativeSettings)
+lazy val io = crossProject(allPlatforms: _*).in(file("scalameta/io")).settings(
+  moduleName := "io",
+  sharedSettings,
+  description := "Scalameta IO abstractions",
+  crossScalaVersions := EarliestScala2Versions,
+).crossAll.published
 
 lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).settings(
   moduleName := "trees2",
@@ -227,8 +223,7 @@ lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).se
     List("tokenizers2", "tokens2", "dialects2", "inputs2").map(scalameta / _)
   }),
   libraryDependencies += "org.portable-scala" %%% "portable-scala-reflect" % "1.1.3",
-).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
-  .nativeSettings(nativeSettings).dependsOn(common2, io)
+).crossAll.published.shaded.dependsOn(common2, io)
 
 lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
   moduleName := "trees",
@@ -247,8 +242,7 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
     List("tokenizers").map(scalameta / _)
   }),
 ) // NOTE: tokenizers needed for Tree.tokens when Tree.pos.isEmpty
-  .configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
-  .nativeSettings(nativeSettings).dependsOn(common, io, trees2)
+  .crossAll.published.shaded.dependsOn(common, io, trees2)
 
 def parsersJsSettings = Def.settings(
   commonJsSettings,
@@ -292,8 +286,7 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
       }
     } else Def.task(Seq.empty[File])
   }.taskValue,
-).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(parsersJsSettings)
-  .nativeSettings(nativeSettings).dependsOn(trees)
+).crossJvm().crossNative().published.shaded.crossJs(parsersJsSettings).dependsOn(trees)
 
 def mergedModule(
     projects: File => List[File] = _ => Nil,
@@ -323,8 +316,7 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
   description := "Scalameta umbrella module that includes all public APIs",
   crossScalaVersions := EarliestScalaVersions,
   mergedModule(base => List(base / "scalameta" / "contrib")),
-).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
-  .nativeSettings(nativeSettings).dependsOn(parsers)
+).crossAll.published.shaded.dependsOn(parsers)
 
 /* ======================== TESTS ======================== */
 lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(
@@ -382,9 +374,8 @@ lazy val testkit = crossProject(allPlatforms: _*).in(file("scalameta/testkit")).
   crossScalaVersions := EarliestScalaVersions,
   hasLargeIntegrationTests,
   description := "Testing utilities for scalameta APIs",
-).dependsOn(scalameta, io).configureCross(crossPlatformPublishSettings)
-  .jvmSettings(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0")
-  .jsSettings(commonJsSettings).nativeSettings(nativeSettings)
+).dependsOn(scalameta, io).published
+  .crossJvm(libraryDependencies += "org.rauschig" % "jarchivelib" % "1.2.0").crossJs().crossNative()
 
 lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
   testSettings,
@@ -394,7 +385,7 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
       List("-Wconf:msg=pattern binding uses refutable extractor:s", "-Xcheck-macros")
     else Nil
   },
-).jvmSettings(
+).crossJvm(
   libraryDependencies ++=
     { if (!isScala3.value) List("org.scala-lang" % "scala-reflect" % scalaVersion.value) else Nil },
   dependencyOverrides += "org.scala-lang.modules" %%% "scala-xml" % "2.4.0",
@@ -405,13 +396,9 @@ lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(
     )
     else Nil
   },
-).jsSettings(
-  commonJsSettings,
-  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-).nativeSettings(
-  nativeSettings,
-  nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) },
-).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
+).crossJs(scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) })
+  .crossNative(nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) })
+  .enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
 
 lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   crossScalaVersions := AllScala2Versions,
