@@ -263,6 +263,7 @@ lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).se
     val scalameta = base / "scalameta"
     List("tokenizers2", "tokens2", "dialects2", "inputs2").map(scalameta / _)
   }),
+  libraryDependencies += "org.portable-scala" %%% "portable-scala-reflect" % "1.1.3",
 ).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
   .nativeSettings(nativeSettings).dependsOn(common2, io)
 
@@ -450,8 +451,8 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   crossScalaVersions := AllScala2Versions,
   testSettings,
   Test / fullClasspath := {
-    val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
-      .getAbsolutePath
+    val semanticdbScalacJar =
+      (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
     sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
     (Test / fullClasspath).value
   },
@@ -515,8 +516,8 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
     buildInfoPackage := "scala.meta.internal.bench",
     Jmh / run := Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
-      val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
-        .getAbsolutePath
+      val semanticdbScalacJar =
+        (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
       buf ++= args

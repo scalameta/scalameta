@@ -11,6 +11,8 @@ import java.{util => ju}
 
 import scala.annotation.tailrec
 
+import org.portablescala.reflect.annotation.EnableReflectiveInstantiation
+
 class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: TokenizerOptions) {
   import LegacyToken._
 
@@ -327,6 +329,7 @@ class ScalametaTokenizer(input: Input, dialect: Dialect)(implicit options: Token
 
 object ScalametaTokenizer {
 
+  @EnableReflectiveInstantiation
   object AsTokenize extends Tokenize {
     def apply(input: Input, dialect: Dialect): Tokenized = {
       def tokenize = {

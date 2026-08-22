@@ -32,4 +32,9 @@ object Tokenize {
       throw new UnsupportedOperationException("No implementation of Tokenize service is provided")
   }
 
+  private[tokenizers] def loadScalametaTokenizer: Option[Tokenize] = org.portablescala.reflect
+    .Reflect
+    .lookupLoadableModuleClass("scala.meta.internal.tokenizers.ScalametaTokenizer$AsTokenize$")
+    .map(_.loadModule().asInstanceOf[Tokenize])
+
 }
