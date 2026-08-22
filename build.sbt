@@ -81,7 +81,7 @@ val allPlatforms = Seq(JSPlatform, JVMPlatform, NativePlatform)
 lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).settings(
   moduleName := "semanticdb-scalac-core",
   sharedJvmSettings,
-  publishJVMSettings,
+  publishJvmSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   buildInfoPackage := "scala.meta.internal.semanticdb.scalac",
@@ -116,7 +116,7 @@ lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).s
   moduleName := "semanticdb-scalac",
   description := "Scalac 2.x compiler plugin that generates SemanticDB on compile",
   sharedJvmSettings,
-  publishJVMSettings,
+  publishJvmSettings,
   mimaPreviousArtifacts := Set.empty,
   mergeSettings,
   fullCrossVersionSettings,
@@ -140,7 +140,7 @@ lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).s
 lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
   moduleName := "metac", // that was name chosen originally, must keep it
   sharedJvmSettings,
-  publishJVMSettings,
+  publishJvmSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   description := "Scalac 2.x launcher that generates SemanticDB on compile",
@@ -151,7 +151,7 @@ lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
 lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
   moduleName := "semanticdb-metap",
   sharedJvmSettings,
-  publishJVMSettings,
+  publishJvmSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   description := "Prints SemanticDB files",
@@ -161,7 +161,7 @@ lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
 lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
   moduleName := "semanticdb-metacp",
   sharedJvmSettings,
-  publishJVMSettings,
+  publishJvmSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   description := "Generates SemanticDB files for a classpath",

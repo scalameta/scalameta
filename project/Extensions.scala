@@ -95,19 +95,11 @@ object Extensions {
   lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
   lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
   lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
-  lazy val publishableSettings = Def.settings(
-    credentials ++= {
-      val credentialsFile =
-        if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
-      if (credentialsFile != null) List(new FileCredentials(credentialsFile)) else Nil
-    },
-    Compile / publishArtifact := true,
-    Test / publishArtifact := false,
-    publishMavenStyle := true,
-    pomIncludeRepository := { x => false },
-    versionScheme := Some("semver-spec"),
+
+  /** MiMa has predecessors to compare against only on a JVM row that is published. */
+  lazy val jvmMimaSettings = Def.settings {
     mimaPreviousArtifacts := {
-      if (organization.value == "org.scalameta" && isPlatform(Platforms.JVM).value) {
+      if (organization.value == "org.scalameta") {
         val rxVersion = """^(\d+)\.(\d+)\.(\d+)(.+)?$""".r
         val previousVersion = version.value match {
           case rxVersion(major, "0", "0", suffix) if suffix != null =>
@@ -122,7 +114,21 @@ object Extensions {
         previousVersion.map(organization.value % moduleName.value % _ cross crossVersion.value)
           .toSet
       } else Set()
+    }
+  }
+
+  lazy val publishableSettings = Def.settings(
+    mimaPreviousArtifacts := Set.empty,
+    credentials ++= {
+      val credentialsFile =
+        if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
+      if (credentialsFile != null) List(new FileCredentials(credentialsFile)) else Nil
     },
+    Compile / publishArtifact := true,
+    Test / publishArtifact := false,
+    publishMavenStyle := true,
+    pomIncludeRepository := { x => false },
+    versionScheme := Some("semver-spec"),
     mimaBinaryIssueFilters += Mima.languageAgnosticCompatibilityPolicy,
     mimaBinaryIssueFilters += Mima.scalaSpecificCompatibilityPolicy,
     mimaBinaryIssueFilters ++= Mima.apiCompatibilityExceptions,
@@ -207,7 +213,12 @@ object Extensions {
       val settings = platformPublishSettings(platform)
       if (settings.isEmpty) res else res.configurePlatform(platform)(_.settings(settings))
     }
-  val publishJVMSettings = platformPublishSettings(JVMPlatform)
+
+  /** A published JVM row, cross-built or not. */
+  lazy val publishJvmSettings =
+    if (Platforms.shouldBuildPlatform(Platforms.JVM)) Def
+      .settings(publishableSettings, jvmMimaSettings)
+    else nonPublishableSettings
 
   implicit class CrossProjectExtensions(private val self: CrossProject) extends AnyVal {
 
@@ -224,7 +235,7 @@ object Extensions {
     def crossAll: CrossProject = self.crossJvm().crossJs().crossNative()
 
     /** Per row, publishable or not, as SCALAMETA_PLATFORM selects. */
-    def published: CrossProject = self.jvmSettings(publishJVMSettings)
+    def published: CrossProject = self.jvmSettings(publishJvmSettings)
       .jsSettings(platformPublishSettings(JSPlatform))
       .nativeSettings(platformPublishSettings(NativePlatform))
 
