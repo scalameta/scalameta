@@ -81,6 +81,15 @@ object Extensions {
     },
   )
 
+  /** What a JVM row gets whether or not it is cross-built; a JVM-only project takes it by hand. */
+  lazy val jvmPlatformSettings = Def.settings(
+    platformAxis := Platforms.JVM,
+    // Target Java 8 bytecode for Scala 2 JVM artifacts regardless of the build
+    // JDK, so releases built on newer JDKs still run on JDK 8. Scala 3 (3.8+) is
+    // built with JDK 17 and needs no -release flag.
+    scalacOptions ++= { if (isScala3.value) Nil else Seq("-release", "8") },
+  )
+
   def isPlatform(platform: Platforms.Platform) = Def.setting(platformAxis.value == platform)
 
   lazy val adhocRepoUri = sys.props("scalameta.repository.uri")
@@ -202,7 +211,8 @@ object Extensions {
 
   implicit class CrossProjectExtensions(private val self: CrossProject) extends AnyVal {
 
-    def crossJvm(ss: Def.SettingsDefinition*): CrossProject = self.jvmSettings(ss: _*)
+    def crossJvm(ss: Def.SettingsDefinition*): CrossProject = self
+      .jvmSettings((jvmPlatformSettings: Def.SettingsDefinition) +: ss: _*)
 
     def crossJs(ss: Def.SettingsDefinition*): CrossProject = self
       .jsSettings((commonJsSettings: Def.SettingsDefinition) +: ss: _*)
