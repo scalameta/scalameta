@@ -287,6 +287,22 @@ lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).sett
   .configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(commonJsSettings)
   .nativeSettings(nativeSettings).dependsOn(common, io, trees2)
 
+def parsersJsSettings = Def.settings(
+  commonJsSettings,
+  // has to agree with the "type" NpmPackage writes into package.json
+  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+  NpmPackage.settings(
+    pkgName = "scalameta-parsers",
+    pkgDescription = "Library to parse Scala programs",
+    pkgRepository = "https://github.com/scalameta/scalameta",
+    pkgAuthor = "scalameta",
+    pkgLicense = "BSD-3-Clause",
+    pkgKeywords = Seq("scala", "parser"),
+    pkgHomepage = "https://scalameta.org/",
+    pkgReadme = file("README.npm.md"),
+  ),
+)
+
 lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).settings(
   moduleName := "parsers",
   sharedSettings,
@@ -313,21 +329,8 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
       }
     } else Def.task(Seq.empty[File])
   }.taskValue,
-).configureCross(crossPlatformPublishSettings, crossPlatformShading)
-  .jsConfigure(_.enablePlugins(NpmPackagePlugin)).jsSettings(
-    commonJsSettings,
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
-    npmPackageName := "scalameta-parsers",
-    npmPackageDescription := "Library to parse Scala programs",
-    npmPackageRepository := Some("https://github.com/scalameta/scalameta"),
-    npmPackageAuthor := "scalameta",
-    npmPackageLicense := Some("BSD-3-Clause"),
-    npmPackageKeywords := Seq("scala", "parser"),
-    npmPackageStage := org.scalajs.sbtplugin.Stage.FullOpt,
-    npmPackageAdditionalNpmConfig :=
-      Map("homepage" -> _root_.io.circe.Json.fromString("https://scalameta.org/")),
-    npmPackageREADME := Some(file("README.npm.md")),
-  ).nativeSettings(nativeSettings).dependsOn(trees)
+).configureCross(crossPlatformPublishSettings, crossPlatformShading).jsSettings(parsersJsSettings)
+  .nativeSettings(nativeSettings).dependsOn(trees)
 
 def mergedModule(
     projects: File => List[File] = _ => Nil,
@@ -451,8 +454,8 @@ lazy val testsSemanticdb = project.in(file("tests-semanticdb")).settings(
   crossScalaVersions := AllScala2Versions,
   testSettings,
   Test / fullClasspath := {
-    val semanticdbScalacJar =
-      (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
+    val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
+      .getAbsolutePath
     sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
     (Test / fullClasspath).value
   },
@@ -516,8 +519,8 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
     buildInfoPackage := "scala.meta.internal.bench",
     Jmh / run := Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
-      val semanticdbScalacJar =
-        (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
+      val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
+        .getAbsolutePath
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
       buf ++= args
