@@ -89,7 +89,7 @@ def rootSettings = Def.settings(
   commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s),
   commands += Command.command("download-scala-library") { s =>
     val out = file("target/scala-library")
-    val arc = url(s"https://github.com/scala/scala/archive/v$LatestScala213.zip")
+    val arc = uri(s"https://github.com/scala/scala/archive/v$LatestScala213.zip").toURL
     val pat = s"scala-$LatestScala213/src/library/*"
     IO.unzipURL(arc, toDirectory = out, filter = pat, preserveLastModified = false)
     s
@@ -102,7 +102,7 @@ def rootSettings = Def.settings(
     },
   ),
   commands += Command.command("save-manifest")(s =>
-    "tests/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
+    "tests/Test/runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
   ),
   test := helloContributor(),
   test / aggregate := false,
@@ -540,7 +540,7 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
       buf ++= args
       buf += "-p"
       buf += s"semanticdbScalacJar=$semanticdbScalacJar"
-      (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
+      (Jmh / runMain).toTask(s"  ${buf.result().mkString(" ")}")
     }.evaluated,
   ).dependsOn(testsSemanticdb)
 
@@ -557,7 +557,7 @@ lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(Buil
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
       buf ++= spaceDelimited("<arg>").parsed
-      (Jmh / runMain).toTask(s"  ${buf.result.mkString(" ")}")
+      (Jmh / runMain).toTask(s"  ${buf.result().mkString(" ")}")
     }.evaluated,
   ).dependsOn(scalameta.jvm)
 
