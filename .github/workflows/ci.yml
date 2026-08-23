@@ -61,27 +61,20 @@ jobs:
         run: sbt tests3_next/testFull
 
   # ===== PR gate: 5 balanced JDK-17 workers, run on PR *and* push (~8 min) =====
-  pr-mima: # MiMa binary-compatibility (the single heaviest atom)
-    runs-on: ubuntu-latest
-    steps:
-      - *checkout
-      - *jdk
-      - *sbt
-      - if: ${{ !cancelled() }}
-        run: sbt mima
-
-  pr-jvm212-sem212-js38: # latest 2.12 parser+semanticdb + latest-3 JS
+  pr-jvm212-sem212-js38: # 2.12 parser and mima + semanticdb + latest-3 JS
     runs-on: ubuntu-latest
     steps:
       - *checkout
       - *jdk
       - *sbt
       - *testjvm212
+      - if: ${{ !cancelled() }}
+        run: sbt mima2_12
       - *testsem212
       - if: ${{ !cancelled() }}
         run: sbt testsJS3_next/testFull
 
-  pr-jvm213-js33-other: # latest 2.13 parser + 3.3 JS + scala-library download
+  pr-jvm213-js33-other: # 2.13 parser and mima + 3.3 JS + scala-library download
     runs-on: ubuntu-latest
     steps:
       - *checkout
@@ -89,17 +82,24 @@ jobs:
       - *sbt
       - *testjvm213
       - if: ${{ !cancelled() }}
+        run: sbt mima2_13
+      - if: ${{ !cancelled() }}
         run: sbt testsJS3_lts/testFull
       - if: ${{ !cancelled() }}
         run: sbt download-scala-library
+      # the shortest worker of the gate, and it already builds the 2.13 rows scaladoc documents
+      - if: ${{ !cancelled() && github.event_name == 'push' }}
+        run: sbt doc
   
-  pr-jvm33-sem213-other: # 3.3 parser + 2.13 semanticdb + community + scalafmt
+  pr-jvm33-sem213-other: # 3.3 parser and mima + 2.13 semanticdb + community + scalafmt
     runs-on: ubuntu-latest
     steps:
       - *checkout
       - *jdk
       - *sbt
       - *testjvm3lts
+      - if: ${{ !cancelled() }}
+        run: sbt mima3_lts
       - *testsem213
       - if: ${{ !cancelled() }}
         run: sbt communitytest/testFull
