@@ -44,6 +44,18 @@ def scala3Aliases(names: String*) = names.flatMap { name =>
     addCommandAlias(s"${name}3_other", testEach(Scala3PostMerge))
 }
 
+/* Runs mima for every row that builds this version and has a release to compare against. Only a
+ * published JVM row gets a baseline, so the build knows the rows and no list here can go stale. */
+def mimaPublished = Command.single("mimaPublished") { (state, version) =>
+  val extracted = Project.extract(state)
+  val rows = extracted.structure.allProjectRefs.filter(ref =>
+    extracted.getOpt(ref / mimaPreviousArtifacts).exists(_.nonEmpty) &&
+      extracted.getOpt(ref / scalaVersion).contains(version),
+  )
+  state.log.info(s"mima checks ${rows.map(_.project).mkString(", ")}")
+  rows.map(ref => s"${ref.project}/mimaReportBinaryIssues").toList ::: state
+}
+
 def helloContributor(): Unit = println(
   """|Welcome to the Scalameta build! You probably don't want to run `sbt test` since
      |that will take a long time to complete.  More likely, you want to run `tests/test`.
@@ -75,6 +87,10 @@ def rootSettings = Def.settings(
     "testsSemanticdb" -> "testsSemanticdb/testFull",
   ),
   scala3Aliases("tests", "testsJS", "testsNative"),
+  commands += mimaPublished,
+  addCommandAlias("mima2_13", "mimaPublished " + PublishedScala213),
+  addCommandAlias("mima2_12", "mimaPublished " + PublishedScala212),
+  addCommandAlias("mima3_lts", "mimaPublished " + Scala3Published),
   commands += Command.command("releaseSemanticdb")(s =>
     List(
       "semanticdbShared",
@@ -85,7 +101,7 @@ def rootSettings = Def.settings(
       "semanticdbScalacCore",
     ).map(s => s + "/publishSigned") ::: s,
   ),
-  commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: "doc" :: s),
+  commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: s),
   commands += Command.command("download-scala-library") { s =>
     val out = file("target/scala-library")
     val arc = uri(s"https://github.com/scala/scala/archive/v$LatestScala213.zip").toURL
