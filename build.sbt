@@ -454,6 +454,8 @@ lazy val tests = crossProject(allPlatforms: _*).withoutSuffixFor(JVMPlatform).in
   .crossNative(testsNativeSettings).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
 
 def testsSemanticdbSettings = Def.settings(
+  // a test reads a resource as a Path, and cannot read one from inside a jar
+  Test / exportJars := false,
   crossScalaVersions := AllScala2Versions,
   testSettings,
   jvmPlatformSettings,
@@ -613,6 +615,8 @@ lazy val sharedSettings = Def.settings(
 
 lazy val mergeSettings = Def.settings(
   sharedJvmSettings,
+  // sbt-assembly's shade rules fail on an exported jar
+  exportJars := false,
   assembly / test := {},
   assembly / logLevel := Level.Error,
   assembly / assemblyJarName :=
