@@ -14,9 +14,32 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 def isCI = System.getenv("CI") != null
 
+/**
+ * Generates the aliases CI calls: tests2_12_older, testsSemanticdb2_13_latest. A step names a
+ * binary version, 2.12 or 2.13, and asks for its newest patch or for all the older ones.
+ * project/Versions.scala lists the patches, so a new patch changes no workflow file.
+ */
+def patchAliases(patches: Seq[String], forceOlder: Boolean = false)(tasks: (String, String)*) = {
+  val tag = CrossVersion.binaryScalaVersion(patches.head).replace('.', '_')
+  def aliases(which: String, force: Boolean, versions: Seq[String]) = tasks
+    .flatMap { case (name, task) =>
+      val bang = if (force) "!" else ""
+      val cmd = versions.map(v => s"++$v$bang; $task").mkString("; ", "; ", "")
+      addCommandAlias(s"$name${tag}_$which", cmd)
+    }
+  // the older patches run newest first, because that patch is the one most projects use
+  val latest = getLatest(patches)
+  aliases("latest", force = false, Seq(latest)) ++
+    aliases("older", forceOlder, patches.filterNot(_ == latest).reverse)
+}
+
+/** Generates an alias that runs one task at one version: a platform's patch, or a Scala 3 one. */
+def versionAliases(entries: (String, String, String)*) = entries
+  .flatMap { case (name, version, task) => addCommandAlias(name, s"; ++$version; $task") }
+
 def helloContributor(): Unit = println(
   """|Welcome to the Scalameta build! You probably don't want to run `sbt test` since
-     |that will take a long time to complete.  More likely, you want to run `testsJVM/test`.
+     |that will take a long time to complete.  More likely, you want to run `tests/test`.
      |For more productivity tips, please read CONTRIBUTING.md.
      |""".stripMargin,
 )
@@ -36,6 +59,23 @@ def rootSettings = Def.settings(
   addCommandAlias("benchAll", benchAll.command),
   addCommandAlias("benchLSP", benchLSP.command),
   addCommandAlias("benchQuick", benchQuick.command),
+  // a module builds at the patch it publishes from, so an alias forces an older patch onto it.
+  // semanticdb-scalac cross-builds at every patch, so a plain switch reaches it.
+  patchAliases(Scala213Versions, forceOlder = true)("tests" -> "tests/test"),
+  patchAliases(Scala212Versions, forceOlder = true)("tests" -> "tests/test"),
+  patchAliases(Scala213Versions)("testsSemanticdb" -> "testsSemanticdb/test"),
+  patchAliases(Scala212Versions)("testsSemanticdb" -> "testsSemanticdb/test"),
+  versionAliases(
+    ("testsJS2_13", PublishedScala213ForJS, "testsJS/test"),
+    ("testsJS2_12", PublishedScala212ForJS, "testsJS/test"),
+    ("testsNative2_13", PublishedScala213ForNative, "testsNative/test"),
+    ("testsNative2_12", PublishedScala212ForNative, "testsNative/test"),
+  ), {
+    val names = Seq("tests", "testsJS", "testsNative")
+    versionAliases(Scala3Rows.flatMap { case (ver, label) =>
+      names.map(name => (name + label, ver, name + "/test"))
+    }: _*)
+  },
   commands += Command.command("releaseSemanticdb")(s =>
     List(
       "semanticdbSharedJVM",
@@ -62,7 +102,7 @@ def rootSettings = Def.settings(
     },
   ),
   commands += Command.command("save-manifest")(s =>
-    "testsJVM/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
+    "tests/test:runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
   ),
   test := helloContributor(),
   test / aggregate := false,
@@ -409,9 +449,9 @@ def testsNativeSettings = Def.settings(nativeConfig ~= {
   _.withMode(scalanative.build.Mode.debug).withLinkStubs(true)
 })
 
-lazy val tests = crossProject(allPlatforms: _*).in(file("tests")).settings(testsSettings)
-  .crossJvm(testsJvmSettings).crossJs(testsJsSettings).crossNative(testsNativeSettings)
-  .enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
+lazy val tests = crossProject(allPlatforms: _*).withoutSuffixFor(JVMPlatform).in(file("tests"))
+  .settings(testsSettings).crossJvm(testsJvmSettings).crossJs(testsJsSettings)
+  .crossNative(testsNativeSettings).enablePlugins(BuildInfoPlugin).dependsOn(scalameta, testkit)
 
 def testsSemanticdbSettings = Def.settings(
   crossScalaVersions := AllScala2Versions,
