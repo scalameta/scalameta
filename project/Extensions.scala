@@ -5,10 +5,11 @@ import sbt.Keys._
 import sbt._
 
 import scala.scalanative.build.Mode
+import scala.scalanative.sbtplugin.ScalaNativeCrossVersion
 import scala.scalanative.sbtplugin.ScalaNativePlugin.autoImport._
 
-import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import org.scalajs.linker.interface.StandardConfig
+import org.scalajs.sbtplugin.ScalaJSCrossVersion
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 
 import com.jsuereth.sbtpgp.PgpKeys
@@ -16,10 +17,6 @@ import com.typesafe.tools.mima.plugin.MimaPlugin.autoImport._
 
 import coursier.ShadingPlugin
 import coursier.ShadingPlugin.autoImport._
-import sbtcrossproject.CrossPlugin.autoImport._
-import sbtcrossproject.CrossProject
-import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
-import scalanativecrossproject.ScalaNativeCrossPlugin.autoImport._
 
 /**
  * Settings a project gets for the platform it builds for, and the combinators that hand them out.
@@ -44,8 +41,6 @@ object Extensions {
 
   val commonJsSettings = Def.settings(
     platformAxis := Platforms.JS,
-    crossScalaVersions := jsScalaVersions(crossScalaVersions.value),
-    scalaVersion := PublishedScala213ForJS,
     bspEnabled := false,
     scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
     scalacOptions ++= {
@@ -61,8 +56,6 @@ object Extensions {
 
   lazy val nativeSettings = Def.settings(
     platformAxis := Platforms.Native,
-    crossScalaVersions := nativeScalaVersions(crossScalaVersions.value),
-    scalaVersion := PublishedScala213ForNative,
     bspEnabled := false,
     nativeConfig ~= {
       _.withMode(Mode.releaseFast)
@@ -124,7 +117,7 @@ object Extensions {
     mimaBinaryIssueFilters += Mima.languageAgnosticCompatibilityPolicy,
     mimaBinaryIssueFilters += Mima.scalaSpecificCompatibilityPolicy,
     mimaBinaryIssueFilters ++= Mima.apiCompatibilityExceptions,
-    licenses += "BSD" -> url("https://github.com/scalameta/scalameta/blob/main/LICENSE.md"),
+    licenses += License("BSD", uri("https://github.com/scalameta/scalameta/blob/main/LICENSE.md")),
     pomExtra :=
       <url>https://github.com/scalameta/scalameta</url>
       <inceptionYear>2014</inceptionYear>
@@ -187,14 +180,37 @@ object Extensions {
   )
 
   lazy val shadingSettings = Def.settings(
-    shadedDependencies ++= ShadedDependency.all.map(x =>
-      if (x.isPlatformSpecific) x.groupID %%% x.artifactID % "foo"
-      else x.groupID %% x.artifactID % "foo",
-    ).toSet,
+    /* sbt 2 takes the platform from scalaModuleInfo (sbt/sbt#9621), so a CrossVersion that named
+     * the platform here would name it twice */
+    shadedDependencies ++=
+      ShadedDependency.all.map(x => (x.groupID % x.artifactID % "foo").cross(CrossVersion.binary))
+        .toSet,
     shadingRules ++=
       ShadedDependency.all.map(x => ShadingRule.moveUnder(x.namespace, "scala.meta.shaded.internal")),
     validNamespaces ++= Set("org", "scala", "java"),
   )
+
+  /* Two rows of one binary version would write the same artifact name, so only the versions this
+   * build published before the conversion keep the publishing settings. */
+  private def publishFor(platform: Platforms.Platform, versions: Seq[String]): Seq[Setting[?]] =
+    if (!Platforms.shouldBuildPlatform(platform)) nonPublishableSettings
+    else {
+      val keep = Def.setting(versions.contains(scalaVersion.value))
+      Def.settings(
+        publish / skip := !keep.value,
+        publishArtifact := keep.value,
+        publishableSettings,
+        mimaPreviousArtifacts := {
+          if (platform == Platforms.JVM && keep.value) getMimaPreviousArtifacts().value
+          else Set.empty
+        },
+      )
+    }
+
+  def publishJvmFor(versions: Seq[String]) = publishFor(Platforms.JVM, versions)
+  def publishJsFor(versions: Seq[String]) = publishFor(Platforms.JS, jsScalaVersions(versions))
+  def publishNativeFor(versions: Seq[String]) =
+    publishFor(Platforms.Native, nativeScalaVersions(versions))
 
   /** A published JVM row, cross-built or not. */
   lazy val publishJvmSettings =
@@ -203,8 +219,8 @@ object Extensions {
     else nonPublishableSettings
 
   /**
-   * Which patch a Scala.js build uses, given the list a JVM build uses. PublishedScala213ForJS
-   * gives the reason.
+   * Maps the list a JVM row uses to the patch a Scala.js row builds at, see PublishedScala213ForJS.
+   * A row cannot rewrite its own axis, so the build maps it at creation.
    */
   def jsScalaVersions(versions: Seq[String]): Seq[String] = versions.flatMap(v =>
     CrossVersion.binaryScalaVersion(v) match {
@@ -215,7 +231,7 @@ object Extensions {
     },
   ).distinct
 
-  /** The same for a Scala Native build. See PublishedScala213ForNative. */
+  /** Maps the same list to the patch a Native row builds at. See PublishedScala213ForNative. */
   def nativeScalaVersions(versions: Seq[String]): Seq[String] = versions.map(v =>
     CrossVersion.binaryScalaVersion(v) match {
       case "2.12" => PublishedScala212ForNative
@@ -224,32 +240,104 @@ object Extensions {
     },
   ).distinct
 
-  def platformPublishSettings(platform: Platforms.Platform) =
-    if (Platforms.shouldBuildPlatform(platform)) publishableSettings else nonPublishableSettings
+  implicit class ProjectMatrixExtensions(private val self: ProjectMatrix) extends AnyVal {
 
-  implicit class CrossProjectExtensions(private val self: CrossProject) extends AnyVal {
+    def crossJvm(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
+      val (scala2, scala3) = splitScala3(versions)
+      val settings = rowSettings("jvm", jvmPlatformSettings, ss)
+      val proj = self.defaultAxes(bareAxes *).jvmPlatform(scala2, settings)
+      scala3.foldLeft(proj) { case (m, (v, axis, ss)) => m.jvmPlatform(v, axis, settings ++ ss) }
+    }
 
-    def crossJvm(ss: Def.SettingsDefinition*): CrossProject = self
-      .jvmSettings((jvmPlatformSettings: Def.SettingsDefinition) +: ss: _*)
+    def crossJs(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
+      val (scala2, scala3) = splitScala3(versions)
+      val settings = rowSettings("js", commonJsSettings, ss)
+      val proj = self.defaultAxes(bareAxes *).jsPlatform(jsScalaVersions(scala2), settings)
+      scala3.foldLeft(proj) { case (m, (v, axis, ss)) => m.jsPlatform(v, axis, settings ++ ss) }
+    }
 
-    def crossJs(ss: Def.SettingsDefinition*): CrossProject = self
-      .jsSettings((commonJsSettings: Def.SettingsDefinition) +: ss: _*)
+    def crossNative(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
+      val (scala2, scala3) = splitScala3(versions)
+      val settings = rowSettings("native", nativeSettings, ss)
+      val proj = self.defaultAxes(bareAxes *).nativePlatform(nativeScalaVersions(scala2), settings)
+      scala3.foldLeft(proj) { case (m, (v, axis, ss)) => m.nativePlatform(v, axis, settings ++ ss) }
+    }
 
-    def crossNative(ss: Def.SettingsDefinition*): CrossProject = self
-      .nativeSettings((nativeSettings: Def.SettingsDefinition) +: ss: _*)
+    /** Every platform, nothing published. */
+    def crossAll(versions: Seq[String]): ProjectMatrix = self.crossJvm(versions).crossJs(versions)
+      .crossNative(versions)
 
-    /** Every row gets the settings for the platform it is. */
-    def crossAll: CrossProject = self.crossJvm().crossJs().crossNative()
+    /** Every platform, publishing every row it builds. */
+    def crossAllPublished(versions: Seq[String]): ProjectMatrix = self
+      .crossAllPublished(versions, versions)
 
-    /** Per row, publishable or not, as SCALAMETA_PLATFORM selects. */
-    def published: CrossProject = self.jvmSettings(publishJvmSettings)
-      .jsSettings(platformPublishSettings(Platforms.JS))
-      .nativeSettings(platformPublishSettings(Platforms.Native))
+    /** Every platform. SCALAMETA_PLATFORM decides which rows publish. */
+    def crossAllPublished(versions: Seq[String], publish: Seq[String]): ProjectMatrix = self
+      .crossJvm(versions, publishJvmFor(publish)).crossJs(versions, publishJsFor(publish))
+      .crossNative(versions, publishNativeFor(publish))
 
-    def shaded: CrossProject =
+    def shaded: ProjectMatrix =
       if (shadingSettings.isEmpty) self
       else self.enablePlugins(ShadingPlugin).settings(shadingSettings)
 
+    /**
+     * A matrix has one base directory, so each row lists every source directory it reads. An absent
+     * directory is harmless.
+     */
+    private def roots(dirs: String*): Seq[Setting[?]] = {
+      def under(conf: String, leaf: String => Seq[String]) = Def.setting {
+        // a matrix base can be relative, so resolve a source directory against the build root
+        val root = IO.resolve((ThisBuild / baseDirectory).value, self.base)
+        for (dir <- dirs.toList; name <- leaf(scalaBinaryVersion.value)) yield root / dir / "src" /
+          conf / name
+      }
+      def sources(sbv: String) = Seq("scala", "java", s"scala-$sbv", s"scala-${sbv.head}").distinct
+      Def.settings(
+        Compile / unmanagedSourceDirectories ++= under("main", sources).value,
+        Test / unmanagedSourceDirectories ++= under("test", sources).value,
+        Compile / unmanagedResourceDirectories ++= under("main", _ => Seq("resources")).value,
+        Test / unmanagedResourceDirectories ++= under("test", _ => Seq("resources")).value,
+      )
+    }
+
+    private def rowSettings(
+        dir: String,
+        platform: Seq[Setting[?]],
+        ss: Seq[Def.SettingsDefinition],
+    ): Seq[Setting[?]] = platform ++ roots("shared", dir) ++ ss.flatMap(_.settings)
+
+  }
+
+  /**
+   * Names the row that gets the id without a suffix. sbt 2 would leave the Scala 3 JVM row bare and
+   * rename every id CI and the aliases use.
+   */
+  private def bareAxes: Seq[VirtualAxis] = Seq(
+    VirtualAxis.jvm,
+    VirtualAxis.scalaABIVersion(LatestScala213),
+    /* projectMatrix leaves out an axis whose value a default repeats, and it counts two axes as
+     * equal by version — so this default names the binary version and no real one. */
+    VirtualAxis.scalaVersionAxis("3", "3"),
+  )
+
+  /**
+   * Splits a version list into the Scala 2 versions and the Scala 3 ones. Every Scala 3 version
+   * gets a row of its own, keyed by an axis, and only Scala3Published publishes.
+   */
+  private def splitScala3(versions: Seq[String]) = {
+    val s3 = Seq.newBuilder[(Seq[String], Seq[VirtualAxis.ScalaVersionAxis], Seq[Setting[_]])]
+    val s2 = Seq.newBuilder[String]
+    versions.foreach(v =>
+      Scala3RowIds.get(v) match {
+        case Some(id) =>
+          val settings =
+            if (v == Scala3Published) Nil
+            else Def.settings(nonPublishableSettings, allowMismatchScala := true)
+          s3 += ((Seq(v), Seq(VirtualAxis.ScalaVersionAxis(v, id)), settings))
+        case None => s2 += v
+      },
+    )
+    (s2.result(), s3.result())
   }
 
 }
