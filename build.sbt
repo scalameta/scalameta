@@ -314,17 +314,19 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
   ),
   Compile / sourceGenerators += Def.taskDyn {
     if (isScala3.value) {
-      val args = Map(
+      val args = Seq(
         "treelifts" -> "TreeLifts.scala",
         "traversers" -> "Traversers.scala",
         "transformers" -> "Transformers.scala",
       )
       val outDir = (Compile / sourceManaged).value / "generated"
-      val argsIter = args.toIterator ++ Iterator("dir" -> outDir.getAbsolutePath)
-      val argsString = argsIter.map { case (k, v) => s" --$k=$v" }.mkString
+      val opts = s"--dir=${outDir.getAbsolutePath}" +: args.map { case (k, v) => s"--$k=$v" }
+      val config = scala3TreeLiftsCodeGen / Compile
       Def.task {
-        (Compile / (scala3TreeLiftsCodeGen / run)).toTask(argsString).value
-        args.values.map(outDir / _).toSeq
+        val cp = (config / fullClasspath).value.files
+        // runner waits for the process to finish, whereas Compile / runMain doesn't
+        (config / runner).value.run("org.scalameta.adt.Main", cp, opts, streams.value.log).get
+        args.map(outDir / _._2)
       }
     } else Def.task(Seq.empty[File])
   }.taskValue,
