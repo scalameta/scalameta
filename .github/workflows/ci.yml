@@ -38,6 +38,9 @@ jobs:
           cache: 'sbt'
       - &sbt
         uses: sbt/setup-sbt@v1
+        with:
+          # a restored disk cache hung sbt before its first task
+          disk-cache: false
       - &testjvm212
         if: ${{ !cancelled() }}
         run: sbt tests2_12_latest

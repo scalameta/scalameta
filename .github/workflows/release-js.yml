@@ -20,6 +20,8 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
+        with:
+          disk-cache: false
       - name: Publish
         run: sbt parsersJS/npmPackagePublish
         env:
