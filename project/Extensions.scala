@@ -42,16 +42,9 @@ object Extensions {
    */
   val platformAxis = settingKey[Platforms.Platform]("platform this project builds for")
 
-  val commonJsSettings = Seq(
+  val commonJsSettings = Def.settings(
     platformAxis := Platforms.JS,
-    crossScalaVersions := crossScalaVersions.value.flatMap(v =>
-      CrossVersion.binaryScalaVersion(v) match {
-        case "2.12" => Some(PublishedScala212ForJS)
-        case "2.13" => Some(PublishedScala213ForJS)
-        case "3" => Some(v)
-        case _ => None
-      },
-    ).distinct,
+    crossScalaVersions := jsScalaVersions(crossScalaVersions.value),
     scalaVersion := PublishedScala213ForJS,
     bspEnabled := false,
     scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
@@ -66,16 +59,9 @@ object Extensions {
     },
   )
 
-  lazy val nativeSettings = Seq(
+  lazy val nativeSettings = Def.settings(
     platformAxis := Platforms.Native,
-    crossScalaVersions := crossScalaVersions.value.flatMap(v =>
-      CrossVersion.binaryScalaVersion(v) match {
-        case "2.12" => Some(PublishedScala212ForNative)
-        case "2.13" => Some(PublishedScala213ForNative)
-        case "3" => Some(v)
-        case _ => None
-      },
-    ).distinct,
+    crossScalaVersions := nativeScalaVersions(crossScalaVersions.value),
     scalaVersion := PublishedScala213ForNative,
     bspEnabled := false,
     nativeConfig ~= {
@@ -102,33 +88,33 @@ object Extensions {
   lazy val adhocRepoCredentials = sys.props("scalameta.repository.credentials")
   lazy val isCustomRepository = adhocRepoUri != null && adhocRepoCredentials != null
 
-  /** MiMa has predecessors to compare against only on a JVM row that is published. */
-  lazy val jvmMimaSettings = Def.settings {
-    mimaPreviousArtifacts := {
-      if (organization.value == "org.scalameta") {
-        val rxVersion = """^(\d+)\.(\d+)\.(\d+)(.+)?$""".r
-        val previousVersion = version.value match {
-          case rxVersion(major, "0", "0", suffix) if suffix != null =>
-            if (suffix.startsWith("-M")) None else Some(s"$major.0.0")
-          case rxVersion(major, minor, patch, suffix) if suffix != null =>
-            Some(s"$major.$minor.$patch")
-          case rxVersion(major, "0", "0", null) => Some(s"$major.0.0")
-          case rxVersion(major, minor, "0", null) => Some(s"$major.${minor.toInt - 1}.0")
-          case rxVersion(major, minor, patch, null) => Some(s"$major.$minor.0")
-          case _ => sys.error(s"Invalid version number: ${version.value}")
-        }
-        previousVersion.map(organization.value % moduleName.value % _ cross crossVersion.value)
-          .toSet
-      } else Set()
-    }
+  /** The artifact MiMa compares against: the release this module published before. */
+  private def getMimaPreviousArtifacts() = Def.setting {
+    if (organization.value == "org.scalameta") {
+      val rxVersion = """^(\d+)\.(\d+)\.(\d+)(.+)?$""".r
+      val previousVersion = version.value match {
+        case rxVersion(major, "0", "0", suffix) if suffix != null =>
+          if (suffix.startsWith("-M")) None else Some(s"$major.0.0")
+        case rxVersion(major, minor, patch, suffix) if suffix != null =>
+          Some(s"$major.$minor.$patch")
+        case rxVersion(major, "0", "0", null) => Some(s"$major.0.0")
+        case rxVersion(major, minor, "0", null) => Some(s"$major.${minor.toInt - 1}.0")
+        case rxVersion(major, minor, patch, null) => Some(s"$major.$minor.0")
+        case _ => sys.error(s"Invalid version number: ${version.value}")
+      }
+      previousVersion.map(v => (organization.value % moduleName.value % v).cross(crossVersion.value))
+        .toSet
+    } else Set.empty[ModuleID]
   }
+
+  lazy val jvmMimaSettings = Def.settings(mimaPreviousArtifacts := getMimaPreviousArtifacts().value)
 
   lazy val publishableSettings = Def.settings(
     mimaPreviousArtifacts := Set.empty,
     credentials ++= {
       val credentialsFile =
         if (adhocRepoCredentials != null) new File(adhocRepoCredentials) else null
-      if (credentialsFile != null) List(new FileCredentials(credentialsFile)) else Nil
+      if (credentialsFile != null) List(Credentials(credentialsFile)) else Nil
     },
     Compile / publishArtifact := true,
     Test / publishArtifact := false,
@@ -215,6 +201,28 @@ object Extensions {
     if (Platforms.shouldBuildPlatform(Platforms.JVM)) Def
       .settings(publishableSettings, jvmMimaSettings)
     else nonPublishableSettings
+
+  /**
+   * Which patch a Scala.js build uses, given the list a JVM build uses. PublishedScala213ForJS
+   * gives the reason.
+   */
+  def jsScalaVersions(versions: Seq[String]): Seq[String] = versions.flatMap(v =>
+    CrossVersion.binaryScalaVersion(v) match {
+      case "2.12" => Some(PublishedScala212ForJS)
+      case "2.13" => Some(PublishedScala213ForJS)
+      case "3" => Some(v)
+      case _ => None
+    },
+  ).distinct
+
+  /** The same for a Scala Native build. See PublishedScala213ForNative. */
+  def nativeScalaVersions(versions: Seq[String]): Seq[String] = versions.map(v =>
+    CrossVersion.binaryScalaVersion(v) match {
+      case "2.12" => PublishedScala212ForNative
+      case "2.13" => PublishedScala213ForNative
+      case _ => v
+    },
+  ).distinct
 
   def platformPublishSettings(platform: Platforms.Platform) =
     if (Platforms.shouldBuildPlatform(platform)) publishableSettings else nonPublishableSettings
