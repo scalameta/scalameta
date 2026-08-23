@@ -9,24 +9,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Every Scala version lives here — bump in ONE place and all jobs follow.
-# Upgrade:
-#  - replace the previous oldest (scalaX_Y) with the previous latest (scalaX)
-#  - replace the previous latest (scalaX) with the new version
-#  - don't need to reorder scalaX_Y, they are not designed to be monotonic
-env:
-  scala33: '3.3.8'
-  scala38: '3.8.4'
-  # 2.13
-  scala213: '2.13.18'
-  scala213_1: '2.13.17'
-  scala213_2: '2.13.16'
-  scala213_3: '2.13.15'
-  # 2.12
-  scala212: '2.12.21'
-  scala212_1: '2.12.20'
-  scala212_2: '2.12.19'
-  scala212_3: '2.12.18'
+# This file names no Scala version. project/Versions.scala lists them, and a
+# step asks the build for what it needs: the newest patch of 2.12 or 2.13
+# (tests2_13_latest), all the older patches (tests2_12_older), the patch a
+# platform builds at (testsNative2_12), or a Scala 3 version by the label
+# Scala3Rows gives it (tests3_lts, tests3_next). Add or bump a version there
+# and this file stays as it is. `sbt alias` lists what CI can ask for.
 
 # Pre-merge gate (pr-* jobs): only the most critical checks, packed into a
 # few equal-length workers so it finishes about as fast as the work allows.
@@ -56,22 +44,22 @@ jobs:
         uses: sbt/setup-sbt@v1
       - &testjvm212
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212 }} testsJVM/test
+        run: sbt tests2_12_latest
       - &testsem212
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212 }} testsSemanticdb/test
+        run: sbt testsSemanticdb2_12_latest
       - &testjvm213
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213 }} testsJVM/test
+        run: sbt tests2_13_latest
       - &testsem213
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213 }} testsSemanticdb/test
+        run: sbt testsSemanticdb2_13_latest
       - &testjvm33
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala33 }} testsJVM/test
+        run: sbt tests3_lts
       - &testjvm38
         if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala38 }} testsJVM/test
+        run: sbt tests3_next
 
   # ===== PR gate: 5 balanced JDK-17 workers, run on PR *and* push (~8 min) =====
   pr-mima: # MiMa binary-compatibility (the single heaviest atom)
@@ -92,7 +80,7 @@ jobs:
       - *testjvm212
       - *testsem212
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala38 }} testsJS/test
+        run: sbt testsJS3_next
 
   pr-jvm213-js33-other: # latest 2.13 parser + 3.3 JS + scala-library download
     runs-on: ubuntu-latest
@@ -102,9 +90,9 @@ jobs:
       - *sbt
       - *testjvm213
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala33 }} testsJS/test
+        run: sbt testsJS3_lts
       - if: ${{ !cancelled() }}
-        run: sbt '++${{ env.scala213 }}; download-scala-library'
+        run: sbt download-scala-library
   
   pr-jvm33-sem213-other: # 3.3 parser + 2.13 semanticdb + community + scalafmt
     runs-on: ubuntu-latest
@@ -127,9 +115,9 @@ jobs:
       - *sbt
       - *testjvm38
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212 }} testsJS/test
+        run: sbt testsJS2_12
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213 }} testsJS/test
+        run: sbt testsJS2_13
 
   # ===== post-merge superset: deferred axes, added only on push to main =====
   post-native: # flaky Native leg — deferred off the PR gate, retried once
@@ -143,33 +131,29 @@ jobs:
       - *jdk
       - *sbt
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala212_3 }} testsNative/test || sbt ++${{ env.scala212_3 }} testsNative/test
+        run: sbt testsNative2_12 || sbt testsNative2_12
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala213_3 }} testsNative/test || sbt ++${{ env.scala213_3 }} testsNative/test
+        run: sbt testsNative2_13 || sbt testsNative2_13
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala33 }} testsNative/test || sbt ++${{ env.scala33 }} testsNative/test
+        run: sbt testsNative3_lts || sbt testsNative3_lts
       - if: ${{ !cancelled() }}
-        run: sbt ++${{ env.scala38 }} testsNative/test || sbt ++${{ env.scala38 }} testsNative/test
+        run: sbt testsNative3_next || sbt testsNative3_next
 
-  post-older-scala: # older patches — one leg per slot index (2.12_N + 2.13_N)
+  post-older-scala: # every patch but the newest, one leg per binary version
     if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        idx: [ '1', '2', '3' ]
+        binary: [ '2_13', '2_12' ]
     steps:
       - *checkout
       - *jdk
       - *sbt
       - if: ${{ !cancelled() }}
-        run: "sbt '++${{ env[format('scala212_{0}', matrix.idx)] }}!; testsJVM/test'"
+        run: sbt tests${{ matrix.binary }}_older
       - if: ${{ !cancelled() }}
-        run: "sbt ++${{ env[format('scala212_{0}', matrix.idx)] }} testsSemanticdb/test"
-      - if: ${{ !cancelled() }}
-        run: "sbt '++${{ env[format('scala213_{0}', matrix.idx)] }}!; testsJVM/test'"
-      - if: ${{ !cancelled() }}
-        run: "sbt ++${{ env[format('scala213_{0}', matrix.idx)] }} testsSemanticdb/test"
+        run: sbt testsSemanticdb${{ matrix.binary }}_older
 
   post-windows: # Windows parser/JS/semanticdb (line-ending sensitivity)
     if: ${{ github.event_name == 'push' }}
@@ -178,7 +162,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: olafurpg/setup-scala@v14
-      - run: sbtx testsJVM/test
+      - run: sbtx tests/test
         shell: bash
       - run: sbtx testsJS/test
         shell: bash
