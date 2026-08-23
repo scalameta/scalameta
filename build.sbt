@@ -29,7 +29,19 @@ def patchAliases(patches: Seq[String])(tasks: (String, String)*) = {
   }
   // the older patches run newest first, because that patch is the one most projects use
   val latest = getLatest(patches)
-  aliases("latest", Seq(latest)) ++ aliases("older", patches.filterNot(_ == latest).reverse)
+  aliases("latest", Seq(latest)) ++ aliases("other", patches.filterNot(_ == latest).reverse)
+}
+
+/**
+ * Generates two aliases per graph: one runs every Scala 3 row, the other runs the rows past the
+ * pre-merge pair. A version added to Scala3Rows lands in both, so it changes no workflow file.
+ */
+def scala3Aliases(names: String*) = names.flatMap { name =>
+  def testEach(rows: Iterable[(String, String)]) = rows.map { case (_, label) =>
+    s"$name$label/testFull"
+  }.mkString("; ", "; ", "")
+  addCommandAlias(s"${name}3", testEach(Scala3Rows)) ++
+    addCommandAlias(s"${name}3_other", testEach(Scala3PostMerge))
 }
 
 def helloContributor(): Unit = println(
@@ -62,6 +74,7 @@ def rootSettings = Def.settings(
     "tests" -> "tests2_12/testFull",
     "testsSemanticdb" -> "testsSemanticdb/testFull",
   ),
+  scala3Aliases("tests", "testsJS", "testsNative"),
   commands += Command.command("releaseSemanticdb")(s =>
     List(
       "semanticdbShared",

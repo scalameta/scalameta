@@ -9,11 +9,15 @@ object Versions {
   val Scala213Versions = getVersions2(13, 15 to 18)
 
   val Scala3Rows = Seq(
-    // version to build label; only the first one is published; others are tested
+    // version to build label mapping; if you change a build label, adjust build.sbt and CI
+    // the first row is published and checked for mima
+    // the first two are tested in pre-merge for JVM and JS, and in post-merge for Native
+    // NB: use one of these two lines for RC testing, as long as it's not merged
     "3.3.8" -> "3_lts",
     "3.8.4" -> "3_next",
-    // you can add an RC here, e.g. "3.9.0-RC1" -> "3_rc"
+    // lines below will only be tested for JVM in post-merge CI
   )
+  val Scala3PostMerge = Scala3Rows.drop(2)
   val Scala3Published = Scala3Rows.head._1
 
   // returns the RC when this line lists one, and the newest patch otherwise
