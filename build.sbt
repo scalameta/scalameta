@@ -268,8 +268,9 @@ lazy val trees2 = crossProject(allPlatforms: _*).in(file("scalameta/trees2")).se
     List("tokenizers2", "tokens2", "dialects2", "inputs2").map(scalameta / _)
   }),
   libraryDependencies += "org.portable-scala" %%% "portable-scala-reflect" % "1.1.3",
-).crossAll.published.shaded.dependsOn(common2, io)
+).crossAll.published.dependsOn(common2, io)
 
+// the only module that shades: its jar moves fastparse and geny under scala.meta.shaded.internal
 lazy val trees = crossProject(allPlatforms: _*).in(file("scalameta/trees")).settings(
   moduleName := "trees",
   sharedSettings,
@@ -327,7 +328,7 @@ lazy val parsers = crossProject(allPlatforms: _*).in(file("scalameta/parsers")).
       }
     } else Def.task(Seq.empty[File])
   }.taskValue,
-).crossJvm().crossNative().published.shaded.crossJs(parsersJsSettings).dependsOn(trees)
+).crossJvm().crossNative().published.crossJs(parsersJsSettings).dependsOn(trees)
 
 def mergedModule(
     projects: File => List[File] = _ => Nil,
@@ -357,7 +358,7 @@ lazy val scalameta = crossProject(allPlatforms: _*).in(file("scalameta/scalameta
   description := "Scalameta umbrella module that includes all public APIs",
   crossScalaVersions := PublishedScalaVersions,
   mergedModule(base => List(base / "scalameta" / "contrib")),
-).crossAll.published.shaded.dependsOn(parsers)
+).crossAll.published.dependsOn(parsers)
 
 /* ======================== TESTS ======================== */
 lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(
