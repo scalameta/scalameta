@@ -27,6 +27,8 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
       - uses: sbt/setup-sbt@v1
+        with:
+          disk-cache: false
       - name: Publish ${{ github.event.inputs.project }} to Sonatype
         run: sbt -Dbackport.release=1 "ci-release"
         env:
