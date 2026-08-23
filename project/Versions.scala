@@ -14,7 +14,7 @@ object Versions {
     // the first two are tested in pre-merge for JVM and JS, and in post-merge for Native
     // NB: use one of these two lines for RC testing, as long as it's not merged
     "3.3.8" -> "3_lts",
-    "3.8.4" -> "3_next",
+    "3.9.0" -> "3_next",
     // lines below will only be tested for JVM in post-merge CI
   )
   val Scala3PostMerge = Scala3Rows.drop(2)
@@ -76,8 +76,8 @@ object Versions {
     val labels = new mutable.HashSet[String]()
     val builder = Map.newBuilder[String, String]
     Scala3Rows.foreach { case (ver, label) =>
-      if (!versions.add(ver)) throw new Exception(s"Scala 3 version $ver is listed twice")
-      if (!labels.add(label)) throw new Exception(s"Scala 3 label $label is listed twice")
+      if (!versions.add(ver)) throw new Exception(s"Scala 3 version $ver is listed twice:\n${Scala3Rows.mkString("\n")}")
+      if (!labels.add(label)) throw new Exception(s"Scala 3 label $label is listed twice:\n${Scala3Rows.mkString("\n")}")
       builder += ver -> label
     }
     builder.result()
