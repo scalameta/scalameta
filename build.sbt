@@ -441,13 +441,13 @@ def testsJvmSettings = Def.settings(
   },
 )
 
-def testsJsSettings = Def.settings(scalaJSLinkerConfig ~= {
-  _.withModuleKind(ModuleKind.CommonJSModule)
-})
+def testsJsSettings = Def.settings( // JS for tests
+  scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
+)
 
-def testsNativeSettings = Def.settings(nativeConfig ~= {
-  _.withMode(scalanative.build.Mode.debug).withLinkStubs(true)
-})
+def testsNativeSettings = Def.settings( // Native for tests
+  nativeConfig ~= { _.withMode(scalanative.build.Mode.debug).withLinkStubs(true) },
+)
 
 lazy val tests = crossProject(allPlatforms: _*).withoutSuffixFor(JVMPlatform).in(file("tests"))
   .settings(testsSettings).crossJvm(testsJvmSettings).crossJs(testsJsSettings)
