@@ -607,6 +607,12 @@ lazy val sharedSettings = Def.settings(
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
 )
 
+def copyAssemblyJar = Def.task {
+  val fatJar = crossTarget.value / (assembly / assemblyJarName).value
+  val _ = assembly.value
+  fileOf.value.andThen(slimJar => IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true)))
+}
+
 lazy val mergeSettings = Def.settings(
   sharedJvmSettings,
   // sbt-assembly's shade rules fail on an exported jar
@@ -637,17 +643,12 @@ lazy val mergeSettings = Def.settings(
   },
   Compile / Keys.`package` := {
     val slimJar = (Compile / Keys.`package`).value
-    val fatJar = new File(crossTarget.value + "/" + (assembly / assemblyJarName).value)
-    val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
+    copyAssemblyJar.value(slimJar)
     slimJar
   },
   Compile / packageBin / packagedArtifact := {
-    val temp = (Compile / packageBin / packagedArtifact).value
-    val (art, slimJar) = temp
-    val fatJar = new File(crossTarget.value + "/" + (assembly / assemblyJarName).value)
-    val _ = assembly.value
-    IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true))
+    val (art, slimJar) = (Compile / packageBin / packagedArtifact).value
+    copyAssemblyJar.value(slimJar)
     (art, slimJar)
   },
   assembly / assemblyMergeStrategy := {
