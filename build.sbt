@@ -378,21 +378,17 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
     )
     else Nil
   },
-  scalacOptions ++= {
-    val pluginJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value.getAbsolutePath
-    val warnUnusedImports = if (isScala213.value) "-Wunused:imports" else "-Ywarn-unused-import"
-    Seq(
-      s"-Xplugin:$pluginJar",
-      "-Xplugin-require:semanticdb",
-      warnUnusedImports,
-      "-Yrangepos",
-      "-P:semanticdb:text:on", // include text to print occurrences in expect suite
-      "-P:semanticdb:failures:error", // fail fast during development.
-      "-P:semanticdb:exclude:Exclude.scala",
-      s"-P:semanticdb:sourceroot:${(ThisBuild / baseDirectory).value}",
-      "-P:semanticdb:synthetics:on",
-    )
-  },
+  scalacOptions ++= Seq(
+    s"-Xplugin:${semanticdbScalacPluginPackage.value}",
+    "-Xplugin-require:semanticdb",
+    if (isScala213.value) "-Wunused:imports" else "-Ywarn-unused-import",
+    "-Yrangepos",
+    "-P:semanticdb:text:on", // include text to print occurrences in expect suite
+    "-P:semanticdb:failures:error", // fail fast during development.
+    "-P:semanticdb:exclude:Exclude.scala",
+    s"-P:semanticdb:sourceroot:${(ThisBuild / baseDirectory).value}",
+    "-P:semanticdb:synthetics:on",
+  ),
   Compile / javaHome := {
     // force javac to fork by setting javaHome to workaround https://github.com/sbt/zinc/issues/520
     val home = file(sys.props("java.home"))
@@ -466,9 +462,8 @@ def testsSemanticdbSettings = Def.settings(
    * coursier, which puts a second suffix of fastparse, geny and sourcecode on the classpath. */
   libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.24" cross CrossVersion.for3Use2_13,
   Test / fullClasspath := {
-    val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
-      .getAbsolutePath
-    sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") = semanticdbScalacJar
+    sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") =
+      semanticdbScalacPluginPackage.value
     (Test / fullClasspath).value
   },
   // Needed because some tests rely on the --usejavacp option
@@ -536,13 +531,11 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
     buildInfoPackage := "scala.meta.internal.bench",
     Jmh / run := Def.inputTaskDyn {
       val args = spaceDelimited("<arg>").parsed
-      val semanticdbScalacJar = (semanticdbScalacPlugin / Compile / Keys.`package`).value
-        .getAbsolutePath
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
       buf ++= args
       buf += "-p"
-      buf += s"semanticdbScalacJar=$semanticdbScalacJar"
+      buf += s"semanticdbScalacJar=${semanticdbScalacPluginPackage.value}"
       (Jmh / runMain).toTask(s"  ${buf.result().mkString(" ")}")
     }.evaluated,
   ).dependsOn(testsSemanticdb)
@@ -664,7 +657,7 @@ lazy val mergeSettings = Def.settings(
       val oldStrategy = (assembly / assemblyMergeStrategy).value
       oldStrategy(x)
   },
-  mimaCurrentClassfiles := (Compile / Keys.`package`).value,
+  mimaCurrentClassfiles := fileOf.value((Compile / Keys.`package`).value),
 )
 
 lazy val protobufSettings = Def.settings(
@@ -783,3 +776,8 @@ lazy val docs = project.in(file("scalameta-docs")).settings(
   mdocOut := (ThisBuild / baseDirectory).value / "website" / "target" / "docs",
   mimaPreviousArtifacts := Set.empty,
 ).enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
+
+def fileOf = Def.task((file: File) => file)
+
+def semanticdbScalacPluginPackage = Def
+  .task(fileOf.value((semanticdbScalacPlugin / Compile / Keys.`package`).value).getAbsolutePath)
