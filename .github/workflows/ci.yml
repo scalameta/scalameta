@@ -21,6 +21,8 @@ jobs:
   post-jvm-other-jdks:
     if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
+    # without this, GitHub holds a hung job for six hours
+    timeout-minutes: &timeout 45
     strategy:
       fail-fast: false
       matrix:
@@ -66,6 +68,7 @@ jobs:
   # ===== PR gate: 5 balanced JDK-17 workers, run on PR *and* push (~8 min) =====
   pr-jvm212-sem212-js38: # 2.12 parser and mima + semanticdb + latest-3 JS
     runs-on: ubuntu-latest
+    timeout-minutes: *timeout
     steps:
       - *checkout
       - *jdk
@@ -83,6 +86,7 @@ jobs:
 
   pr-jvm213-js33-other: # 2.13 parser and mima + 3.3 JS + scala-library download
     runs-on: ubuntu-latest
+    timeout-minutes: *timeout
     steps:
       - *checkout
       - *jdk
@@ -97,6 +101,7 @@ jobs:
   
   pr-jvm33-sem213-other: # 3.3 parser and mima + 2.13 semanticdb + community + scalafmt
     runs-on: ubuntu-latest
+    timeout-minutes: *timeout
     steps:
       - *checkout
       - *jdk
@@ -116,6 +121,7 @@ jobs:
 
   pr-jvm38-js2: # latest-3 parser + JS on both Scala 2 lines
     runs-on: ubuntu-latest
+    timeout-minutes: *timeout
     steps:
       - *checkout
       - *jdk
@@ -132,6 +138,7 @@ jobs:
   post-native: # flaky Native leg — deferred off the PR gate, retried once
     if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
+    timeout-minutes: *timeout
     # Scala Native's trap-based GC yieldpoints intermittently time out on CI.
     env:
       SCALANATIVE_GC_TRAP_BASED_YIELDPOINTS: '0'
@@ -154,6 +161,7 @@ jobs:
   post-other-scala: # what the gate leaves out: an older 2.x patch, a further Scala 3 row
     if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
+    timeout-minutes: *timeout
     strategy:
       fail-fast: false
       matrix:
@@ -172,6 +180,7 @@ jobs:
     if: ${{ github.event_name == 'push' }}
     name: Windows tests
     runs-on: windows-latest
+    timeout-minutes: *timeout
     steps:
       - uses: actions/checkout@v7
       - *jdk
