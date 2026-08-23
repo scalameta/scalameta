@@ -711,38 +711,30 @@ lazy val fullCrossVersionSettings = Seq(
 lazy val hasLargeIntegrationTests =
   Seq(Test / run / fork := true, Test / run / javaOptions += "-Xss4m")
 
-def exposePaths(projectName: String, config: Configuration) = {
-  def uncapitalize(s: String) =
-    if (s.length == 0) ""
+def exposePaths(projectName: String, config: Configuration) = Def.settings {
+  val uncapitalizedName = {
+    val chars = config.name.toCharArray
+    if (chars.isEmpty) ""
     else {
-      val chars = s.toCharArray
       chars(0) = chars(0).toLower
       new String(chars)
     }
-  val prefix = "sbt.paths." + projectName + "." + uncapitalize(config.name) + "."
-  Seq(
-    config / scalacOptions := {
-      val defaultValue = (config / scalacOptions).value
-      System.setProperty(prefix + "options", defaultValue.mkString(" "))
-      defaultValue
-    },
-    config / sourceDirectory := {
-      val defaultValue = (config / sourceDirectory).value
-      System.setProperty(prefix + "sources", defaultValue.getAbsolutePath)
-      defaultValue
-    },
-    config / resourceDirectory := {
-      val defaultValue = (config / resourceDirectory).value
-      System.setProperty(prefix + "resources", defaultValue.getAbsolutePath)
-      defaultValue
-    },
-    config / fullClasspath := {
-      val defaultValue = (config / fullClasspath).value
-      val classpath = defaultValue.files.map(_.getAbsolutePath)
-      System.setProperty(prefix + "classes", classpath.mkString(java.io.File.pathSeparator))
-      defaultValue
-    },
-  )
+  }
+  val prefix = Seq("sbt", "paths", projectName, uncapitalizedName).mkString("", ".", ".")
+  // The tests run in the build's JVM, so a system property reaches them
+  def setProp[A](label: String, value: A)(f: A => String): A = {
+    System.setProperty(prefix + label, f(value))
+    value
+  }
+  config / fullClasspath := {
+    setProp("sources", (config / sourceDirectory).value)(_.getAbsolutePath)
+    setProp("resources", (config / resourceDirectory).value)(_.getAbsolutePath)
+    setProp("options", (config / scalacOptions).value)(_.mkString(" "))
+    val toFile = fileOf.value
+    setProp("classes", (config / fullClasspath).value)(
+      _.map(x => toFile(x.data).getAbsolutePath).mkString(java.io.File.pathSeparator),
+    )
+  }
 }
 
 lazy val enableMacros = macroDependencies(hardcore = false)
