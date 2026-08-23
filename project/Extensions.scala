@@ -172,6 +172,8 @@ object Extensions {
   lazy val nonPublishableSettings = Seq(
     publish / skip := true,
     mimaPreviousArtifacts := Set.empty,
+    // nothing to compare, and the default task would compile the row to find that out
+    mimaReportBinaryIssues := {},
     Compile / packageDoc / publishArtifact := false,
     Compile / doc / sources := Seq.empty,
     publishArtifact := false,
