@@ -50,10 +50,10 @@ jobs:
       - &testsem213
         if: ${{ !cancelled() }}
         run: sbt testsSemanticdb2_13_latest
-      - &testjvm33
+      - &testjvm3lts
         if: ${{ !cancelled() }}
         run: sbt tests3_lts/testFull
-      - &testjvm38
+      - &testjvm3next
         if: ${{ !cancelled() }}
         run: sbt tests3_next/testFull
 
@@ -96,7 +96,7 @@ jobs:
       - *checkout
       - *jdk
       - *sbt
-      - *testjvm33
+      - *testjvm3lts
       - *testsem213
       - if: ${{ !cancelled() }}
         run: sbt communitytest/testFull
@@ -109,7 +109,7 @@ jobs:
       - *checkout
       - *jdk
       - *sbt
-      - *testjvm38
+      - *testjvm3next
       - if: ${{ !cancelled() }}
         run: sbt testsJS2_12/testFull
       - if: ${{ !cancelled() }}
@@ -135,21 +135,21 @@ jobs:
       - if: ${{ !cancelled() }}
         run: sbt testsNative3_next/testFull || sbt testsNative3_next/testFull
 
-  post-older-scala: # every patch but the newest, one leg per binary version
+  post-other-scala: # what the gate leaves out: an older 2.x patch, a further Scala 3 row
     if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        binary: [ '2_13', '2_12' ]
+        binary: [ '2_13', '2_12', '3' ]
     steps:
       - *checkout
       - *jdk
       - *sbt
       - if: ${{ !cancelled() }}
-        run: sbt tests${{ matrix.binary }}_older
-      - if: ${{ !cancelled() }}
-        run: sbt testsSemanticdb${{ matrix.binary }}_older
+        run: sbt tests${{ matrix.binary }}_other
+      - if: ${{ !cancelled() && startsWith(matrix.binary, '2_') }} # semanticdb is Scala 2 only
+        run: sbt testsSemanticdb${{ matrix.binary }}_other
 
   post-windows: # Windows parser/JS/semanticdb (line-ending sensitivity)
     if: ${{ github.event_name == 'push' }}
