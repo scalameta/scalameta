@@ -27,19 +27,11 @@ object Versions {
   val PublishedScala2 = Seq(PublishedScala212, PublishedScala213)
   // a row publishes only if it builds one of these patches, one per binary version
   val PublishedScalaVersions = PublishedScala2 :+ Scala3Published
+  val TestedScalaVersions = PublishedScalaVersions ++ Scala3Rows.tail.map(_._1)
 
   /**
-   * Scala.js publishes a compiler plugin for each full Scala version. Scala Native publishes a
-   * compiler plugin and a standard library. Both publish them for releases only, so a JS build and
-   * a Native build keep the release an RC replaces.
-   *
-   * A JVM build takes the oldest release of a Scala 2 line. A Native build takes the same release,
-   * the one it publishes from. A JS build takes the newest release, because Scala.js publishes for
-   * recent patches only. Name the previous release here when either project has not published for a
-   * new patch yet. Scala.js did that after 2.13.16 came out.
-   *
-   * Scala 3 needs no plugin for JS, because the Scala 3 compiler writes JS itself. A Scala 3 build
-   * keeps its own version.
+   * Scala.js and Native republish the standard library per full version, and for releases only. A
+   * JS row takes the newest release, because scalajs-library depends on that scala-library.
    */
   private def releases(versions: Seq[String]) = versions.filterNot(_ == Scala2ReleaseCandidate)
   val PublishedScala212ForJS = releases(Scala212Versions).last
@@ -52,17 +44,15 @@ object Versions {
     Scala2ReleaseCandidate.isEmpty || AllScala2Versions.contains(Scala2ReleaseCandidate),
     s"$Scala2ReleaseCandidate is not used, perhaps its minor is not yet listed",
   )
-  val AllScalaVersions = AllScala2Versions ++ Scala3Rows.map(_._1)
 
   // returns versions from oldest to newest
+  // put RC first, as published, so it's fully tested, not just with semanticdb
   private def getVersions2(minor: Int, range: Range) = {
     val prefix = s"2.$minor."
     if (range.length > 4)
       throw new Exception(s"Too many versions for scala-${prefix}x: ${range.length} > 4")
     val ordered = if (range.step > 0) range else range.reverse
     val prod = ordered.map(x => s"$prefix$x")
-    // the RC comes first, in place of the patch its line publishes from. A JVM build then compiles
-    // and tests every module with it. A plain switch reaches the test sources only.
     if (Scala2ReleaseCandidate.startsWith(prefix)) Scala2ReleaseCandidate +: prod else prod
   }
 

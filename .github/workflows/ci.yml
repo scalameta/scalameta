@@ -9,12 +9,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# This file names no Scala version. project/Versions.scala lists them, and a
-# step asks the build for what it needs: the newest patch of 2.12 or 2.13
-# (tests2_13_latest), all the older patches (tests2_12_older), the patch a
-# platform builds at (testsNative2_12), or a Scala 3 version by the label
-# Scala3Rows gives it (tests3_lts, tests3_next). Add or bump a version there
-# and this file stays as it is. `sbt alias` lists what CI can ask for.
+# This file names no Scala version (all listed in project/Versions.scala).
+# `sbt alias` lists what CI can ask for.
 
 # Pre-merge gate (pr-* jobs): only the most critical checks, packed into a
 # few equal-length workers so it finishes about as fast as the work allows.
@@ -56,10 +52,10 @@ jobs:
         run: sbt testsSemanticdb2_13_latest
       - &testjvm33
         if: ${{ !cancelled() }}
-        run: sbt tests3_lts
+        run: sbt tests3_lts/testFull
       - &testjvm38
         if: ${{ !cancelled() }}
-        run: sbt tests3_next
+        run: sbt tests3_next/testFull
 
   # ===== PR gate: 5 balanced JDK-17 workers, run on PR *and* push (~8 min) =====
   pr-mima: # MiMa binary-compatibility (the single heaviest atom)
@@ -80,7 +76,7 @@ jobs:
       - *testjvm212
       - *testsem212
       - if: ${{ !cancelled() }}
-        run: sbt testsJS3_next
+        run: sbt testsJS3_next/testFull
 
   pr-jvm213-js33-other: # latest 2.13 parser + 3.3 JS + scala-library download
     runs-on: ubuntu-latest
@@ -90,7 +86,7 @@ jobs:
       - *sbt
       - *testjvm213
       - if: ${{ !cancelled() }}
-        run: sbt testsJS3_lts
+        run: sbt testsJS3_lts/testFull
       - if: ${{ !cancelled() }}
         run: sbt download-scala-library
   
@@ -103,7 +99,7 @@ jobs:
       - *testjvm33
       - *testsem213
       - if: ${{ !cancelled() }}
-        run: sbt communitytest/test
+        run: sbt communitytest/testFull
       - if: ${{ !cancelled() }}
         run: ./bin/scalafmt --test
 
@@ -115,9 +111,9 @@ jobs:
       - *sbt
       - *testjvm38
       - if: ${{ !cancelled() }}
-        run: sbt testsJS2_12
+        run: sbt testsJS2_12/testFull
       - if: ${{ !cancelled() }}
-        run: sbt testsJS2_13
+        run: sbt testsJS/testFull
 
   # ===== post-merge superset: deferred axes, added only on push to main =====
   post-native: # flaky Native leg — deferred off the PR gate, retried once
@@ -131,13 +127,13 @@ jobs:
       - *jdk
       - *sbt
       - if: ${{ !cancelled() }}
-        run: sbt testsNative2_12 || sbt testsNative2_12
+        run: sbt testsNative2_12/testFull || sbt testsNative2_12/testFull
       - if: ${{ !cancelled() }}
-        run: sbt testsNative2_13 || sbt testsNative2_13
+        run: sbt testsNative/testFull || sbt testsNative/testFull
       - if: ${{ !cancelled() }}
-        run: sbt testsNative3_lts || sbt testsNative3_lts
+        run: sbt testsNative3_lts/testFull || sbt testsNative3_lts/testFull
       - if: ${{ !cancelled() }}
-        run: sbt testsNative3_next || sbt testsNative3_next
+        run: sbt testsNative3_next/testFull || sbt testsNative3_next/testFull
 
   post-older-scala: # every patch but the newest, one leg per binary version
     if: ${{ github.event_name == 'push' }}
@@ -162,9 +158,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: olafurpg/setup-scala@v14
-      - run: sbtx tests/test
+      - run: sbtx tests/testFull
         shell: bash
-      - run: sbtx testsJS/test
+      - run: sbtx testsJS/testFull
         shell: bash
-      - run: sbtx testsSemanticdb/test
+      - run: sbtx testsSemanticdb/testFull
         shell: bash

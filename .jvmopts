@@ -3,5 +3,4 @@
 -Xmx8G
 -XX:ReservedCodeCacheSize=1024m
 -XX:+TieredCompilation
--Dsbt.server.autostart=false
 -Dsbt.io.implicit.relative.glob.conversion=allow
