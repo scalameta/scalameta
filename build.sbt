@@ -484,6 +484,15 @@ def testsSemanticdbSettings = Def.settings(
   Test / exportJars := false,
   crossScalaVersions := AllScala2Versions,
   testSettings,
+  // only the suites in tests-semanticdb read these
+  buildInfoKeys ++= Seq[BuildInfoKey](
+    "classDirectories" -> Seq(
+      (common2.jvm(PublishedScala213) / Compile / classDirectory).value.getAbsolutePath,
+      (common.jvm(PublishedScala213) / Compile / classDirectory).value.getAbsolutePath,
+    ),
+    "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
+    "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value,
+  ),
   jvmPlatformSettings,
   scalaVersion := LatestScala213,
   dependencyOverrides ++= // project switches to older scala library, so pin these artifacts
@@ -531,12 +540,6 @@ lazy val testSettings = Def.settings(
     "latestScala213Version" -> LatestScala213,
     "databaseSourcepath" -> (ThisBuild / baseDirectory).value.getAbsolutePath,
     "resourcesDirectory" -> (Test / resourceDirectory).value.getAbsolutePath,
-    "classDirectories" -> Seq(
-      (common2.jvm(PublishedScala213) / Compile / classDirectory).value.getAbsolutePath,
-      (common.jvm(PublishedScala213) / Compile / classDirectory).value.getAbsolutePath,
-    ),
-    "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
-    "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value,
   ),
   buildInfoPackage := "scala.meta.tests",
 )
