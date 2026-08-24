@@ -13,35 +13,42 @@ import complete.DefaultParsers._
 
 def isCI = System.getenv("CI") != null
 
+def all(seq: Iterable[String]) = seq.mkString("; ", "; ", "")
+/* A forced switch stays in the session, and the steps of one CI job share the sbt server.
+ * reload gives each project its own version back; another ++ sets one for every project. */
+def forVersions(task: String, ver: Seq[String]) = all(ver.map(v => s"++$v!; $task") :+ "reload")
+
 /**
- * Generates the aliases CI calls: tests2_12_older, testsSemanticdb2_13_latest. A step names a
- * binary version, 2.12 or 2.13, and asks for its newest patch or for all the older ones.
- * project/Versions.scala lists the patches, so a new patch changes no workflow file.
- *
- * A JVM row builds at the patch it publishes from, so an alias forces the version onto it. A JS or
- * Native step needs no alias, because every row of those graphs builds at one patch.
+ * Generates the aliases CI calls for 2.12 and 2.13:
+ *   - testsSemanticdb2_12 runs the published patch
+ *   - tests2_12_other and testsSemanticdb2_12_other run the patches above it, lowest first
  */
-def patchAliases(patches: Seq[String])(tasks: (String, String)*) = {
-  val tag = CrossVersion.binaryScalaVersion(patches.head).replace('.', '_')
-  def aliases(which: String, versions: Seq[String]) = tasks.flatMap { case (name, task) =>
-    /* A forced switch stays in the session, and the steps of one CI job share the sbt server.
-     * reload gives each project its own version back; another ++ sets one for every project. */
-    val cmd = (versions.map(v => s"++$v!; $task") :+ "reload").mkString("; ", "; ", "")
-    addCommandAlias(s"$name${tag}_$which", cmd)
+def testAliasesFor(patches: Seq[String]*) = patches.flatten
+  .groupBy(v => CrossVersion.binaryScalaVersion(v).replace('.', '_')).toSeq
+  .flatMap { case (ver, vs) =>
+    val (published, unpublished) = vs.partition(PublishedScalaVersions.contains)
+    val res = Seq.newBuilder[Def.Setting[?]]
+    val other = ver + "_other"
+
+    // tests has a row per published patch, so a switch reaches the others
+    res ++= addCommandAlias(s"tests" + other, forVersions(s"tests$ver/testFull", unpublished))
+
+    // testsSemanticdb has a row per patch, so a step names the row and switches nothing
+    def semanticdb(vs: Seq[String]) = forVersions("testsSemanticdb/testFull", vs)
+    res ++= addCommandAlias(s"testsSemanticdb" + other, semanticdb(unpublished))
+    if (published.nonEmpty) res ++= addCommandAlias("testsSemanticdb" + ver, semanticdb(published))
+
+    res.result()
   }
-  // the older patches run newest first, because that patch is the one most projects use
-  val latest = getLatest(patches)
-  aliases("latest", Seq(latest)) ++ aliases("other", patches.filterNot(_ == latest).reverse)
-}
 
 /**
  * Generates two aliases per graph: one runs every Scala 3 row, the other runs the rows past the
  * pre-merge pair. A version added to Scala3Rows lands in both, so it changes no workflow file.
  */
 def scala3Aliases(names: String*) = names.flatMap { name =>
-  def testEach(rows: Iterable[(String, String)]) = rows.map { case (_, label) =>
+  def testEach(rows: Iterable[(String, String)]) = all(rows.map { case (_, label) =>
     s"$name$label/testFull"
-  }.mkString("; ", "; ", "")
+  })
   addCommandAlias(s"${name}3", testEach(Scala3Rows)) ++
     addCommandAlias(s"${name}3_other", testEach(Scala3PostMerge))
 }
@@ -77,14 +84,7 @@ def rootSettings = Def.settings(
   addCommandAlias("benchAll", benchAll.command),
   addCommandAlias("benchLSP", benchLSP.command),
   addCommandAlias("benchQuick", benchQuick.command),
-  patchAliases(Scala213Versions)(
-    "tests" -> "tests2_13/testFull",
-    "testsSemanticdb" -> "testsSemanticdb/testFull",
-  ),
-  patchAliases(Scala212Versions)(
-    "tests" -> "tests2_12/testFull",
-    "testsSemanticdb" -> "testsSemanticdb/testFull",
-  ),
+  testAliasesFor(Scala213Versions, Scala212Versions),
   scala3Aliases("tests", "testsJS", "testsNative"),
   commands += mimaPublished,
   addCommandAlias("mima2_13", "mimaPublished " + PublishedScala213),
