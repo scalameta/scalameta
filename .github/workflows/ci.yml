@@ -177,5 +177,5 @@ jobs:
         run: sbt testsJS2_13/testFull
         shell: bash
       - if: ${{ !cancelled() }}
-        run: sbt testsSemanticdb/testFull
+        run: sbt testsSemanticdb2_13
         shell: bash

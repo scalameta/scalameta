@@ -2,6 +2,7 @@ package org.scalameta
 package build
 
 import sbt.Keys._
+import sbt.ProjectExtra.given
 import sbt._
 
 import scala.scalanative.build.Mode
@@ -251,6 +252,26 @@ object Extensions {
       scala3.foldLeft(proj) { case (m, (v, axis, ss)) => m.jvmPlatform(v, axis, settings ++ ss) }
     }
 
+    /* semanticdb publishes one artifact per full Scala version, so each patch gets a row of its
+     * own. The row id carries the patch, because two rows of one binary version would collide. */
+    def crossFullJvm(
+        versions: Seq[String],
+        ss: String => Seq[Def.SettingsDefinition] = _ => Nil,
+        deps: Seq[ProjectMatrix] = Nil,
+    ): ProjectMatrix = versions.foldLeft(self.defaultAxes(fullAxes *)) { (matrix, v) =>
+      val pv = getPublishedForScalaVersion(v)
+      /* customRow hands each row its own Project, so a row states the dependency for its own
+       * version. A module published per binary version has one row a full-cross row can name. */
+      val conv = (p: Project) =>
+        p.settings(rowSettings("jvm", jvmPlatformSettings, ss(v))).dependsOn(deps.map(_.jvm(pv)) *)
+      matrix.customRow(
+        autoScalaLibrary = true,
+        scalaVersions = Seq(v),
+        axisValues = Seq(VirtualAxis.jvm, VirtualAxis.ScalaVersionAxis(v, v.replace('.', '_'))),
+        process = conv,
+      )
+    }
+
     def crossJs(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
       val (scala2, scala3) = splitScala3(versions)
       val settings = rowSettings("js", commonJsSettings, ss)
@@ -308,6 +329,10 @@ object Extensions {
         ss: Seq[Def.SettingsDefinition],
     ): Seq[Setting[?]] = platform ++ roots("shared", dir) ++ ss.flatMap(_.settings)
 
+    def jvmCompile(v: String) = self.jvm(v) / Compile
+    def classDir(v: String) = Def.setting((jvmCompile(v) / classDirectory).value.getAbsolutePath)
+    def publishedClassDir(v: String) = classDir(getPublishedForScalaVersion(v))
+
   }
 
   /**
@@ -319,6 +344,16 @@ object Extensions {
     /* projectMatrix leaves out an axis whose value a default repeats, and it counts two axes as
      * equal by version — so this default names the binary version and no real one. */
     VirtualAxis.scalaVersionAxis("3", "3"),
+  )
+
+  /**
+   * projectMatrix adds an axis naming the binary version, and a default swallows an axis of the
+   * same value. These name no real version, so a row keeps the axis that names its patch.
+   */
+  private def fullAxes: Seq[VirtualAxis] = Seq(
+    VirtualAxis.jvm,
+    VirtualAxis.scalaVersionAxis("2.12", "2.12"),
+    VirtualAxis.scalaVersionAxis("2.13", "2.13"),
   )
 
   /**
