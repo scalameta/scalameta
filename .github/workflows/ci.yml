@@ -167,10 +167,15 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: olafurpg/setup-scala@v14
-      - run: sbtx tests/testFull
+      - *jdk
+      - *sbt
+      - *sbt_bootup
+      - if: ${{ !cancelled() }}
+        run: sbt tests/testFull
         shell: bash
-      - run: sbtx testsJS/testFull
+      - if: ${{ !cancelled() }}
+        run: sbt testsJS/testFull
         shell: bash
-      - run: sbtx testsSemanticdb/testFull
+      - if: ${{ !cancelled() }}
+        run: sbt testsSemanticdb/testFull
         shell: bash
