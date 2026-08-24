@@ -24,7 +24,9 @@ def isCI = System.getenv("CI") != null
 def patchAliases(patches: Seq[String])(tasks: (String, String)*) = {
   val tag = CrossVersion.binaryScalaVersion(patches.head).replace('.', '_')
   def aliases(which: String, versions: Seq[String]) = tasks.flatMap { case (name, task) =>
-    val cmd = versions.map(v => s"++$v!; $task").mkString("; ", "; ", "")
+    /* A forced switch stays in the session, and the steps of one CI job share the sbt server.
+     * reload gives each project its own version back; another ++ sets one for every project. */
+    val cmd = (versions.map(v => s"++$v!; $task") :+ "reload").mkString("; ", "; ", "")
     addCommandAlias(s"$name${tag}_$which", cmd)
   }
   // the older patches run newest first, because that patch is the one most projects use
