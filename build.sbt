@@ -69,10 +69,7 @@ def helloContributor(): Unit = println(
 
 def rootSettings = Def.settings(
   sharedSettings,
-  name := {
-    println(s"[info] Welcome to scalameta ${version.value}")
-    "scalametaRoot"
-  },
+  name := "scalametaRoot",
   nonPublishableSettings,
   crossScalaVersions := Nil,
   addCommandAlias("benchAll", benchAll.command),
@@ -119,6 +116,11 @@ def rootSettings = Def.settings(
   commands += Command.command("save-manifest")(s =>
     "tests/Test/runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
   ),
+  // can also be used to ensure sbt server has started
+  commands += Command.command("whoami") { s =>
+    s.log.info(s"Welcome to scalameta ${Project.extract(s).get(version)}")
+    s
+  },
   // `sbt test` at the root would take hours, so print advice instead of running it
   Test / test := {
     helloContributor()
