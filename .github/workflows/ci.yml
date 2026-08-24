@@ -48,16 +48,16 @@ jobs:
         shell: bash
       - &testjvm212
         if: ${{ !cancelled() }}
-        run: sbt tests2_12_latest
+        run: sbt tests2_12/testFull
       - &testsem212
         if: ${{ !cancelled() }}
-        run: sbt testsSemanticdb2_12_latest
+        run: sbt testsSemanticdb2_12
       - &testjvm213
         if: ${{ !cancelled() }}
-        run: sbt tests2_13_latest
+        run: sbt tests2_13/testFull
       - &testsem213
         if: ${{ !cancelled() }}
-        run: sbt testsSemanticdb2_13_latest
+        run: sbt testsSemanticdb2_13
       - &testjvm3lts
         if: ${{ !cancelled() }}
         run: sbt tests3_lts/testFull
