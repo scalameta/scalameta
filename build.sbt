@@ -34,7 +34,7 @@ def testAliasesFor(patches: Seq[String]*) = patches.flatten
     res ++= addCommandAlias(s"tests" + other, forVersions(s"tests$ver/testFull", unpublished))
 
     // testsSemanticdb has a row per patch, so a step names the row and switches nothing
-    def semanticdb(vs: Seq[String]) = forVersions("testsSemanticdb/testFull", vs)
+    def semanticdb(vs: Seq[String]) = all(vs.map(v => s"${testsSemanticdb.jvm(v).id}/testFull"))
     res ++= addCommandAlias(s"testsSemanticdb" + other, semanticdb(unpublished))
     if (published.nonEmpty) res ++= addCommandAlias("testsSemanticdb" + ver, semanticdb(published))
 
@@ -90,15 +90,18 @@ def rootSettings = Def.settings(
   addCommandAlias("mima2_13", "mimaPublished " + PublishedScala213),
   addCommandAlias("mima2_12", "mimaPublished " + PublishedScala212),
   addCommandAlias("mima3_lts", "mimaPublished " + Scala3Published),
-  commands += Command.command("releaseSemanticdb")(s =>
-    List(
-      "semanticdbShared2_13",
-      "semanticdbScalacPlugin",
-      "semanticdbMetac",
-      "semanticdbMetap",
-      "semanticdbMetacp",
-      "semanticdbScalacCore",
-    ).map(s => s + "/publishSigned") ::: s,
+  commands += Command.command("releaseSemanticdb") { s =>
+    val rows = AllScala2Versions.flatMap(semanticdbRows(s))
+    ("semanticdbShared2_13" +: rows).map(_ + "/publishSigned").toList ::: s
+  },
+  /* A backport release names one patch, and every semanticdb artifact carries the full version. */
+  commands += Command.single("releaseSemanticdbFor")((s, version) =>
+    if (AllScala2Versions.contains(version)) semanticdbRows(s)(version).map(_ + "/publishSigned")
+      .toList ::: s
+    else {
+      s.log.error(s"$version is not a version this build validates")
+      s.fail
+    },
   ),
   commands += Command.command("mima")(s => "mimaReportBinaryIssues" :: s),
   commands += Command.command("download-scala-library") { s =>
@@ -110,9 +113,11 @@ def rootSettings = Def.settings(
   },
   commands += Command.command("save-expect")(s =>
     LatestScala2.foldLeft(s) { case (s, version) =>
-      s"++$version" :: "semanticdbScalacPlugin/compile" :: "semanticdbIntegration/clean" ::
-        "semanticdbIntegration/compile" ::
-        "testsSemanticdb/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" :: s
+      s"${semanticdbScalacPlugin.jvm(version).id}/compile" ::
+        s"${semanticdbIntegration.jvm(version).id}/clean" ::
+        s"${semanticdbIntegration.jvm(version).id}/compile" ::
+        s"${testsSemanticdb.jvm(version).id}/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" ::
+        s
     },
   ),
   commands += Command.command("save-manifest")(s =>
@@ -136,7 +141,7 @@ def rootSettings = Def.settings(
   Test / test / aggregate := false,
   packagedArtifacts := Def.uncached(Map.empty),
   ScalaUnidoc / unidoc / unidocProjectFilter := inAnyProject,
-  console := (scalameta.jvm(PublishedScala213) / Compile / console).value,
+  console := (scalameta.jvmCompile(PublishedScala213) / console).value,
 )
 
 lazy val scalametaRoot = rootProject.withId("scalameta-root").autoAggregate
@@ -146,9 +151,9 @@ Global / resolvers +=
   "scala-integration".at("https://scala-ci.typesafe.com/artifactory/scala-integration/")
 
 /* ======================== SEMANTICDB ======================== */
-lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).settings(
+lazy val semanticdbScalacCore = projectMatrix.in(file("semanticdb/scalac/library")).settings(
   moduleName := "semanticdb-scalac-core",
-  sharedJvmSettings,
+  sharedSettings,
   publishJvmSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
@@ -165,8 +170,7 @@ lazy val semanticdbScalacCore = project.in(file("semanticdb/scalac/library")).se
   // SIP-51 on the earliest cross-built Scala versions.
   libraryDependencies +=
     ("com.lihaoyi" %% "unroll-annotation" % "0.3.0").exclude("org.scala-lang", "scala-library"),
-).dependsOn(semanticdbShared.jvm(PublishedScala213), io.jvm(PublishedScala213))
-  .enablePlugins(BuildInfoPlugin)
+).crossFullJvm(AllScala2Versions, deps = Seq(semanticdbShared, io)).enablePlugins(BuildInfoPlugin)
 
 def semanticdbSharedSettings = Def.settings(
   moduleName := "semanticdb-shared",
@@ -183,10 +187,10 @@ lazy val semanticdbShared = projectMatrix.in(file("semanticdb/semanticdb"))
   .settings(semanticdbSharedSettings).dependsOn(scalameta)
   .crossAllPublished(TestedScalaVersions, PublishedScalaVersions)
 
-lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).settings(
+lazy val semanticdbScalacPlugin = projectMatrix.in(file("semanticdb/scalac/plugin")).settings(
   moduleName := "semanticdb-scalac",
   description := "Scalac 2.x compiler plugin that generates SemanticDB on compile",
-  sharedJvmSettings,
+  sharedSettings,
   publishJvmSettings,
   mimaPreviousArtifacts := Set.empty,
   mergeSettings,
@@ -206,38 +210,38 @@ lazy val semanticdbScalacPlugin = project.in(file("semanticdb/scalac/plugin")).s
       }
     }).transform(node).head
   },
-).dependsOn(semanticdbScalacCore)
+).crossFullJvm(AllScala2Versions).dependsOn(semanticdbScalacCore)
 
-lazy val semanticdbMetac = project.in(file("semanticdb/metac")).settings(
+lazy val semanticdbMetac = projectMatrix.in(file("semanticdb/metac")).settings(
   moduleName := "metac", // that was name chosen originally, must keep it
-  sharedJvmSettings,
+  sharedSettings,
   publishJvmSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   description := "Scalac 2.x launcher that generates SemanticDB on compile",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   mainClass := Some("scala.meta.cli.Metac"),
-).dependsOn(semanticdbScalacPlugin)
+).crossFullJvm(AllScala2Versions).dependsOn(semanticdbScalacPlugin)
 
-lazy val semanticdbMetap = project.in(file("semanticdb/metap")).settings(
+lazy val semanticdbMetap = projectMatrix.in(file("semanticdb/metap")).settings(
   moduleName := "semanticdb-metap",
-  sharedJvmSettings,
+  sharedSettings,
   publishJvmSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   description := "Prints SemanticDB files",
   mainClass := Some("scala.meta.cli.Metap"),
-).dependsOn(semanticdbShared.jvm(PublishedScala213))
+).crossFullJvm(AllScala2Versions, deps = Seq(semanticdbShared))
 
-lazy val semanticdbMetacp = project.in(file("semanticdb/metacp")).settings(
+lazy val semanticdbMetacp = projectMatrix.in(file("semanticdb/metacp")).settings(
   moduleName := "semanticdb-metacp",
-  sharedJvmSettings,
+  sharedSettings,
   publishJvmSettings,
   fullCrossVersionSettings,
   mimaPreviousArtifacts := Set.empty,
   description := "Generates SemanticDB files for a classpath",
   mainClass := Some("scala.meta.cli.Metacp"),
-).dependsOn(semanticdbScalacCore)
+).crossFullJvm(AllScala2Versions).dependsOn(semanticdbScalacCore)
 
 /* ============== CODEGEN FOR SCALA 3 QUASIQUOTES, TRANSVERSERS ============= */
 lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).settings(
@@ -383,10 +387,9 @@ lazy val scalameta = projectMatrix.in(file("scalameta/scalameta")).settings(
 ).crossAllPublished(TestedScalaVersions, PublishedScalaVersions).dependsOn(parsers)
 
 /* ======================== TESTS ======================== */
-lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).settings(
+lazy val semanticdbIntegration = projectMatrix.in(file("semanticdb/integration")).settings(
   description := "Sources to compile to build SemanticDB for tests.",
-  sharedJvmSettings,
-  crossScalaVersions := AllScala2Versions,
+  sharedSettings,
   nonPublishableSettings,
   // the sources in this project intentionally produce warnings to test the
   // diagnostics pipeline in semanticdb-scalac.
@@ -401,7 +404,6 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
     else Nil
   },
   scalacOptions ++= Seq(
-    s"-Xplugin:${semanticdbScalacPluginPackage.value}",
     "-Xplugin-require:semanticdb",
     if (isScala213.value) "-Wunused:imports" else "-Ywarn-unused-import",
     "-Yrangepos",
@@ -419,14 +421,13 @@ lazy val semanticdbIntegration = project.in(file("semanticdb/integration")).sett
     Some(actualHome)
   },
   javacOptions += "-parameters",
+).crossFullJvm(
+  AllScala2Versions,
+  v => Seq(scalacOptions += s"-Xplugin:${semanticdbScalacPluginPackage(v).value}"),
 ).dependsOn(semanticdbIntegrationMacros, semanticdbScalacPlugin)
 
-lazy val semanticdbIntegrationMacros = project.in(file("semanticdb/integration-macros")).settings(
-  sharedJvmSettings,
-  crossScalaVersions := AllScala2Versions,
-  nonPublishableSettings,
-  enableMacros,
-)
+lazy val semanticdbIntegrationMacros = projectMatrix.in(file("semanticdb/integration-macros"))
+  .settings(sharedSettings, nonPublishableSettings, enableMacros).crossFullJvm(AllScala2Versions)
 
 lazy val testkit = projectMatrix.in(file("scalameta/testkit")).settings(
   moduleName := "testkit",
@@ -480,21 +481,17 @@ lazy val tests = projectMatrix.in(file("tests")).settings(testsSettings)
   .crossNative(TestedScalaVersions, testsNativeSettings).enablePlugins(BuildInfoPlugin)
   .dependsOn(scalameta, testkit)
 
-def testsSemanticdbSettings = Def.settings(
+def testsSemanticdbSettings(version: String) = Def.settings(
   Test / exportJars := false,
-  crossScalaVersions := AllScala2Versions,
   testSettings,
   // only the suites in tests-semanticdb read these
   buildInfoKeys ++= Seq[BuildInfoKey](
-    "classDirectories" -> Seq(
-      (common2.jvm(PublishedScala213) / Compile / classDirectory).value.getAbsolutePath,
-      (common.jvm(PublishedScala213) / Compile / classDirectory).value.getAbsolutePath,
-    ),
-    "databaseClasspath" -> (semanticdbIntegration / Compile / classDirectory).value.getAbsolutePath,
-    "integrationSourceDirectories" -> (semanticdbIntegration / Compile / sourceDirectories).value,
+    "classDirectories" ->
+      Seq(common2.publishedClassDir(version).value, common.publishedClassDir(version).value),
+    "databaseClasspath" -> semanticdbIntegration.classDir(version).value,
+    "integrationSourceDirectories" -> (semanticdbIntegration.jvmCompile(version) / sourceDirectories)
+      .value,
   ),
-  jvmPlatformSettings,
-  scalaVersion := LatestScala213,
   dependencyOverrides ++= // project switches to older scala library, so pin these artifacts
     Seq("scala-library", "scala-compiler", "scalap").map("org.scala-lang" % _ % scalaVersion.value),
   /* only this project uses coursier. On a Scala.js row sbt 2's %% asks for the Scala.js build of
@@ -502,22 +499,21 @@ def testsSemanticdbSettings = Def.settings(
   libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.24" cross CrossVersion.for3Use2_13,
   Test / fullClasspath := Def.uncached {
     sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") =
-      semanticdbScalacPluginPackage.value
+      semanticdbScalacPluginPackage(version).value
     (Test / fullClasspath).value
   },
   // Needed because some tests rely on the --usejavacp option
   Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
 )
 
-lazy val testsSemanticdb = project.in(file("tests-semanticdb")).dependsOn(
-  scalameta.jvm(PublishedScala213),
-  testkit.jvm(PublishedScala213),
+lazy val testsSemanticdb = projectMatrix.in(file("tests-semanticdb")).dependsOn(
   semanticdbScalacPlugin,
   semanticdbMetac,
   semanticdbMetacp,
   semanticdbMetap,
   semanticdbIntegration,
-).settings(testsSemanticdbSettings).enablePlugins(BuildInfoPlugin)
+).crossFullJvm(AllScala2Versions, v => Seq(testsSemanticdbSettings(v)), Seq(scalameta, testkit))
+  .enablePlugins(BuildInfoPlugin)
 
 lazy val sharedTestSettings = Def.settings(
   sharedSettings,
@@ -566,22 +562,22 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
       buf += "org.openjdk.jmh.Main"
       buf ++= args
       buf += "-p"
-      buf += s"semanticdbScalacJar=${semanticdbScalacPluginPackage.value}"
+      buf += s"semanticdbScalacJar=${semanticdbScalacPluginPackage(LatestScala213).value}"
       (Jmh / runMain).toTask(s"  ${buf.result().mkString(" ")}")
     }.evaluated,
-  ).dependsOn(testsSemanticdb)
+  ).dependsOn(testsSemanticdb.jvm(LatestScala213))
 
 lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
     sharedJvmSettings,
-    crossScalaVersions := LatestScala2,
+    crossScalaVersions := Seq(LatestScala213),
     nonPublishableSettings,
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
     buildInfoPackage := "scala.meta.internal.bench",
     Jmh / resourceDirectory := (Compile / resourceDirectory).value,
     // two Append instances match a bare Classpath, so name the type
     Jmh / fullClasspath ++=
-      { (scalameta.jvm(PublishedScala213) / Compile / fullClasspath).value: Classpath },
+      { (scalameta.jvmCompile(PublishedScala213) / fullClasspath).value: Classpath },
     Jmh / run := Def.inputTaskDyn {
       val buf = List.newBuilder[String]
       buf += "org.openjdk.jmh.Main"
@@ -647,7 +643,7 @@ def copyAssemblyJar = Def.task {
 }
 
 lazy val mergeSettings = Def.settings(
-  sharedJvmSettings,
+  sharedSettings,
   // sbt-assembly's shade rules fail on an exported jar
   exportJars := false,
   assembly / test := TestResult.Passed,
@@ -723,7 +719,6 @@ def compatibilityPolicyViolation(ticket: String) = Seq(mimaPreviousArtifacts := 
 
 lazy val fullCrossVersionSettings = Seq(
   crossVersion := CrossVersion.full,
-  crossScalaVersions := AllScala2Versions,
   Compile / unmanagedSourceDirectories += {
     // NOTE: sbt 0.13.8 provides cross-version support for Scala sources
     // (http://www.scala-sbt.org/0.13/docs/sbt-0.13-Tech-Previews.html#Cross-version+support+for+Scala+sources).
@@ -800,5 +795,15 @@ lazy val docs = project.in(file("scalameta-docs")).settings(
 
 def fileOf = Def.task(fileConverter.value.toPath(_: xsbti.HashedVirtualFileRef).toFile)
 
-def semanticdbScalacPluginPackage = Def
-  .task(fileOf.value((semanticdbScalacPlugin / Compile / Keys.`package`).value).getAbsolutePath)
+/** The rows that publish one artifact per full Scala version. */
+def semanticdbRows(state: State)(version: String) = {
+  val extracted = Project.extract(state)
+  extracted.structure.allProjectRefs.filter(ref =>
+    extracted.getOpt(ref / crossVersion).contains(CrossVersion.full) &&
+      extracted.getOpt(ref / scalaVersion).contains(version),
+  ).map(_.project)
+}
+
+def semanticdbScalacPluginPackage(version: String) = Def.task(
+  fileOf.value((semanticdbScalacPlugin.jvmCompile(version) / Keys.`package`).value).getAbsolutePath,
+)

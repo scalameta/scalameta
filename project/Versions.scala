@@ -33,6 +33,12 @@ object Versions {
   val PublishedScalaVersions = PublishedScala2 :+ Scala3Published
   val TestedScalaVersions = PublishedScalaVersions ++ Scala3Rows.tail.map(_._1)
 
+  def getPublishedForScalaVersion(v: String): String = {
+    val prefix = s"${sbt.CrossVersion.binaryScalaVersion(v)}."
+    PublishedScalaVersions.find(_.startsWith(prefix))
+      .getOrElse(throw new Exception(s"No published version for Scala version $v"))
+  }
+
   /**
    * Scala.js and Native republish the standard library per full version, and for releases only. A
    * JS row takes the newest release, because scalajs-library depends on that scala-library.
