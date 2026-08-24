@@ -41,6 +41,11 @@ jobs:
         with:
           # a restored disk cache hung sbt before its first task
           disk-cache: false
+      # a cold boot downloads sbt and Scala; that failing is not a test failing
+      - &sbt_bootup
+        name: start the sbt server
+        run: sbt whoami
+        shell: bash
       - &testjvm212
         if: ${{ !cancelled() }}
         run: sbt tests2_12_latest
@@ -129,6 +134,7 @@ jobs:
       - *checkout
       - *jdk
       - *sbt
+      - *sbt_bootup
       - if: ${{ !cancelled() }}
         run: sbt testsNative2_12/testFull || sbt testsNative2_12/testFull
       - if: ${{ !cancelled() }}
@@ -149,6 +155,7 @@ jobs:
       - *checkout
       - *jdk
       - *sbt
+      - *sbt_bootup
       - if: ${{ !cancelled() }}
         run: sbt tests${{ matrix.binary }}_other
       - if: ${{ !cancelled() && startsWith(matrix.binary, '2_') }} # semanticdb is Scala 2 only
