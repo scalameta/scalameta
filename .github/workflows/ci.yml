@@ -121,7 +121,7 @@ jobs:
       - if: ${{ !cancelled() }}
         run: sbt testsJS2_12/testFull
       - if: ${{ !cancelled() }}
-        run: sbt testsJS/testFull
+        run: sbt testsJS2_13/testFull
 
   # ===== post-merge superset: deferred axes, added only on push to main =====
   post-native: # flaky Native leg — deferred off the PR gate, retried once
@@ -138,7 +138,7 @@ jobs:
       - if: ${{ !cancelled() }}
         run: sbt testsNative2_12/testFull || sbt testsNative2_12/testFull
       - if: ${{ !cancelled() }}
-        run: sbt testsNative/testFull || sbt testsNative/testFull
+        run: sbt testsNative2_13/testFull || sbt testsNative2_13/testFull
       - if: ${{ !cancelled() }}
         run: sbt testsNative3_lts/testFull || sbt testsNative3_lts/testFull
       - if: ${{ !cancelled() }}
@@ -171,10 +171,10 @@ jobs:
       - *sbt
       - *sbt_bootup
       - if: ${{ !cancelled() }}
-        run: sbt tests/testFull
+        run: sbt tests2_13/testFull
         shell: bash
       - if: ${{ !cancelled() }}
-        run: sbt testsJS/testFull
+        run: sbt testsJS2_13/testFull
         shell: bash
       - if: ${{ !cancelled() }}
         run: sbt testsSemanticdb/testFull

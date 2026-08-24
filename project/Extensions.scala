@@ -311,12 +311,11 @@ object Extensions {
   }
 
   /**
-   * Names the row that gets the id without a suffix. sbt 2 would leave the Scala 3 JVM row bare and
-   * rename every id CI and the aliases use.
+   * The default axes. idSuffix leaves a matching axis out of a row id. Only VirtualAxis.jvm
+   * matches, so a JVM row id has no JVM. Every row id still names the version it builds.
    */
   private def bareAxes: Seq[VirtualAxis] = Seq(
     VirtualAxis.jvm,
-    VirtualAxis.scalaABIVersion(LatestScala213),
     /* projectMatrix leaves out an axis whose value a default repeats, and it counts two axes as
      * equal by version — so this default names the binary version and no real one. */
     VirtualAxis.scalaVersionAxis("3", "3"),

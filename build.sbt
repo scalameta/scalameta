@@ -78,7 +78,7 @@ def rootSettings = Def.settings(
   addCommandAlias("benchLSP", benchLSP.command),
   addCommandAlias("benchQuick", benchQuick.command),
   patchAliases(Scala213Versions)(
-    "tests" -> "tests/testFull",
+    "tests" -> "tests2_13/testFull",
     "testsSemanticdb" -> "testsSemanticdb/testFull",
   ),
   patchAliases(Scala212Versions)(
@@ -92,7 +92,7 @@ def rootSettings = Def.settings(
   addCommandAlias("mima3_lts", "mimaPublished " + Scala3Published),
   commands += Command.command("releaseSemanticdb")(s =>
     List(
-      "semanticdbShared",
+      "semanticdbShared2_13",
       "semanticdbScalacPlugin",
       "semanticdbMetac",
       "semanticdbMetap",
