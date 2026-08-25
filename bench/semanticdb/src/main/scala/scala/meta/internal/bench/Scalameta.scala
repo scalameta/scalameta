@@ -57,8 +57,7 @@ class ScalametaBaseline extends Scalameta {
   override def mkSettings(bs: BenchmarkState): Settings = {
     val settings = super.mkSettings(bs)
     settings.pluginOptions.value ::= s"semanticdb:text:off"
-    settings.pluginOptions.value ::= s"semanticdb:symbols:on"
-    settings.pluginOptions.value ::= s"semanticdb:occurrences:on"
+    settings.pluginOptions.value ::= s"semanticdb:symbols:all"
     settings.pluginOptions.value ::= s"semanticdb:diagnostics:on"
     settings.pluginOptions.value ::= s"semanticdb:synthetics:off"
     settings
