@@ -36,6 +36,9 @@ def testAliasesFor(patches: Seq[String]*) = patches.flatten
     // testsSemanticdb has a row per patch, so a step names the row and switches nothing
     def semanticdb(vs: Seq[String]) = all(vs.map(v => s"${testsSemanticdb.jvm(v).id}/testFull"))
     res ++= addCommandAlias(s"testsSemanticdb" + other, semanticdb(unpublished))
+    /* the newest JDK reads class files the published patch's asm does not, so the job that
+     * names a JDK pairs it with the newest patch rather than the one that publishes */
+    res ++= addCommandAlias(s"testsSemanticdb${ver}_latest", semanticdb(Seq(getLatest(vs))))
     if (published.nonEmpty) res ++= addCommandAlias("testsSemanticdb" + ver, semanticdb(published))
 
     res.result()
