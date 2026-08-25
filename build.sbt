@@ -567,20 +567,17 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
     ).evaluated,
   ).dependsOn(testsSemanticdb.jvm(LatestScala213))
 
-lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
+lazy val bench = projectMatrix.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
-    sharedJvmSettings,
-    scalaVersion := PublishedScala213,
-    crossScalaVersions := Seq(PublishedScala213),
+    sharedSettings,
     nonPublishableSettings,
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
     buildInfoPackage := "scala.meta.internal.bench",
     Jmh / resourceDirectory := (Compile / resourceDirectory).value,
     // two Append instances match a bare Classpath, so name the type
-    Jmh / fullClasspath ++=
-      { (scalameta.jvmCompile(PublishedScala213) / fullClasspath).value: Classpath },
+    Jmh / fullClasspath ++= { (Compile / fullClasspath).value: Classpath },
     Jmh / run := runJmhMain().evaluated,
-  ).dependsOn(scalameta.jvm(PublishedScala213))
+  ).crossJvm(PublishedScala2).dependsOn(scalameta)
 
 // ==========================================
 // Settings
