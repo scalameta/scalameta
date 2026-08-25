@@ -247,21 +247,13 @@ lazy val semanticdbMetacp = projectMatrix.in(file("semanticdb/metacp")).settings
 ).crossFullJvm(AllScala2Versions).dependsOn(semanticdbScalacCore)
 
 /* ============== CODEGEN FOR SCALA 3 QUASIQUOTES, TRANSVERSERS ============= */
-lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).settings(
-  jvmPlatformSettings,
-  crossScalaVersions := List(PublishedScala213),
-  scalaVersion := PublishedScala213,
-  enableMacros,
-  nonPublishableSettings,
-).dependsOn(trees.jvm(PublishedScala213), common.jvm(PublishedScala213))
+lazy val scala3TreeLiftsMacro = projectMatrix.in(file("scala3-tree-lifts/macro"))
+  .settings(enableMacros, nonPublishableSettings).crossJvm(Seq(PublishedScala213))
+  .dependsOn(trees, common)
 
-lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).settings(
-  jvmPlatformSettings,
-  crossScalaVersions := List(PublishedScala213),
-  scalaVersion := PublishedScala213,
-  libraryDependencies += "com.github.scopt" %% "scopt" % "4.1.0",
-  nonPublishableSettings,
-).dependsOn(scala3TreeLiftsMacro)
+lazy val scala3TreeLiftsCodeGen = projectMatrix.in(file("scala3-tree-lifts/impl"))
+  .settings(libraryDependencies += "com.github.scopt" %% "scopt" % "4.1.0", nonPublishableSettings)
+  .crossJvm(Seq(PublishedScala213)).dependsOn(scala3TreeLiftsMacro)
 
 /* ======================== SCALAMETA ======================== */
 lazy val common2 = projectMatrix.in(file("scalameta/common2")).settings(
@@ -346,7 +338,7 @@ lazy val parsers = projectMatrix.in(file("scalameta/parsers")).settings(
       )
       val outDir = (Compile / sourceManaged).value / "generated"
       val opts = s"--dir=${outDir.getAbsolutePath}" +: args.map { case (k, v) => s"--$k=$v" }
-      val config = scala3TreeLiftsCodeGen / Compile
+      val config = scala3TreeLiftsCodeGen.jvmCompile(PublishedScala213)
       Def.task {
         implicit val conv: xsbti.FileConverter = fileConverter.value
         val cp = (config / fullClasspath).value.files
