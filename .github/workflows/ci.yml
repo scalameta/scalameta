@@ -49,15 +49,13 @@ jobs:
       - &testjvm212
         if: ${{ !cancelled() }}
         run: sbt tests2_12/testFull
-      - &testsem212
-        if: ${{ !cancelled() }}
-        run: sbt testsSemanticdb2_12
+      - if: ${{ !cancelled() }}
+        run: sbt testsSemanticdb2_12_latest
       - &testjvm213
         if: ${{ !cancelled() }}
         run: sbt tests2_13/testFull
-      - &testsem213
-        if: ${{ !cancelled() }}
-        run: sbt testsSemanticdb2_13
+      - if: ${{ !cancelled() }}
+        run: sbt testsSemanticdb2_13_latest
       - &testjvm3lts
         if: ${{ !cancelled() }}
         run: sbt tests3_lts/testFull
@@ -75,7 +73,9 @@ jobs:
       - *testjvm212
       - if: ${{ !cancelled() }}
         run: sbt mima2_12
-      - *testsem212
+      - &testsem212
+        if: ${{ !cancelled() }}
+        run: sbt testsSemanticdb2_12
       - if: ${{ !cancelled() }}
         run: sbt testsJS3_next/testFull
 
@@ -105,7 +105,9 @@ jobs:
       - *testjvm3lts
       - if: ${{ !cancelled() }}
         run: sbt mima3_lts
-      - *testsem213
+      - &testsem213
+        if: ${{ !cancelled() }}
+        run: sbt testsSemanticdb2_13
       - if: ${{ !cancelled() }}
         run: sbt communitytest/testFull
       - if: ${{ !cancelled() }}
