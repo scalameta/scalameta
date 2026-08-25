@@ -553,6 +553,15 @@ lazy val communitytest = project.in(file("community-test")).settings(
 ).dependsOn(scalameta.jvm(PublishedScala213))
 
 /* ======================== BENCHES ======================== */
+
+def runJmhMain(extraArgs: Def.Initialize[Task[String]] = Def.task("")) = Def.inputTaskDyn {
+  val args = any.*.string.parsed // capture the rest of arguments as-is, to pass unchanged
+  Def.taskDyn {
+    val extra = extraArgs.value
+    (Jmh / runMain).toTask(s" org.openjdk.jmh.Main$args$extra")
+  }
+}
+
 lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
     sharedJvmSettings,
@@ -561,15 +570,9 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
     buildInfoPackage := "scala.meta.internal.bench",
-    Jmh / run := Def.inputTaskDyn {
-      val args = spaceDelimited("<arg>").parsed
-      val buf = List.newBuilder[String]
-      buf += "org.openjdk.jmh.Main"
-      buf ++= args
-      buf += "-p"
-      buf += s"semanticdbScalacJar=${semanticdbScalacPluginPackage(LatestScala213).value}"
-      (Jmh / runMain).toTask(s"  ${buf.result().mkString(" ")}")
-    }.evaluated,
+    Jmh / run := runJmhMain(
+      Def.task(s" -p semanticdbScalacJar=${semanticdbScalacPluginPackage(LatestScala213).value}"),
+    ).evaluated,
   ).dependsOn(testsSemanticdb.jvm(LatestScala213))
 
 lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
@@ -584,12 +587,7 @@ lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(Buil
     // two Append instances match a bare Classpath, so name the type
     Jmh / fullClasspath ++=
       { (scalameta.jvmCompile(PublishedScala213) / fullClasspath).value: Classpath },
-    Jmh / run := Def.inputTaskDyn {
-      val buf = List.newBuilder[String]
-      buf += "org.openjdk.jmh.Main"
-      buf ++= spaceDelimited("<arg>").parsed
-      (Jmh / runMain).toTask(s"  ${buf.result().mkString(" ")}")
-    }.evaluated,
+    Jmh / run := runJmhMain().evaluated,
   ).dependsOn(scalameta.jvm(PublishedScala213))
 
 // ==========================================
