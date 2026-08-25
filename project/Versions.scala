@@ -33,11 +33,15 @@ object Versions {
   val PublishedScalaVersions = PublishedScala2 :+ Scala3Published
   val TestedScalaVersions = PublishedScalaVersions ++ Scala3Rows.tail.map(_._1)
 
-  def getPublishedForScalaVersion(v: String): String = {
-    val prefix = s"${sbt.CrossVersion.binaryScalaVersion(v)}."
-    PublishedScalaVersions.find(_.startsWith(prefix))
-      .getOrElse(throw new Exception(s"No published version for Scala version $v"))
+  def getForScalaBinaryVersion(v: String, vs: Seq[String]): String = {
+    val prefix = s"$v."
+    vs.find(_.startsWith(prefix)).getOrElse(
+      throw new Exception(vs.mkString(s"No matching version for Scala binary version $v: ", ", ", "")),
+    )
   }
+
+  def getPublishedForScalaVersion(v: String): String =
+    getForScalaBinaryVersion(sbt.CrossVersion.binaryScalaVersion(v), PublishedScalaVersions)
 
   /**
    * Scala.js and Native republish the standard library per full version, and for releases only. A
