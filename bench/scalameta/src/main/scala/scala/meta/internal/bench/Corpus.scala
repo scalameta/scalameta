@@ -23,10 +23,10 @@ import org.openjdk.jmh.infra.Blackhole
  *
  * {{{
  * // per-op allocation over the munit corpus:
- * sbt 'benchScalameta/Jmh/run -wi 3 -i 5 -f1 -t1 -prof gc ".*CorpusBenchmark.*"'
+ * sbt 'bench2_13/Jmh/run -wi 3 -i 5 -f1 -t1 -prof gc ".*CorpusBenchmark.*"'
  *
  * // alloc flame graph over a 1500-file spark sample:
- * sbt 'benchScalameta/Jmh/run -wi 3 -i 5 -f1 -t1 -p corpus=spark -p limit=1500 \
+ * sbt 'bench2_13/Jmh/run -wi 3 -i 5 -f1 -t1 -p corpus=spark -p limit=1500 \
  *   -prof "async:libPath=/opt/homebrew/lib/libasyncProfiler.dylib;event=alloc;output=flamegraph;dir=/tmp/ap" \
  *   ".*CorpusBenchmark.parse"'
  * }}}

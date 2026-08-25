@@ -20,15 +20,15 @@ import org.openjdk.jmh.annotations._
  * Recommended runs:
  * {{{
  * // wall-clock + per-op allocation (gc.alloc.rate.norm is the stable signal):
- * sbt 'benchScalameta/Jmh/run -wi 5 -i 10 -f1 -t1 -prof gc ".*ParserBenchmark.*"'
+ * sbt 'bench2_13/Jmh/run -wi 5 -i 10 -f1 -t1 -prof gc ".*ParserBenchmark.*"'
  *
  * // allocation flame graph via async-profiler (Homebrew v4.x):
- * sbt 'benchScalameta/Jmh/run -wi 5 -i 10 -f1 -t1 \
+ * sbt 'bench2_13/Jmh/run -wi 5 -i 10 -f1 -t1 \
  *   -prof "async:libPath=/opt/homebrew/lib/libasyncProfiler.dylib;event=alloc;output=flamegraph;dir=/tmp/ap" \
  *   ".*ParserBenchmark.parse"'
  *
  * // CPU flame graph (event=cpu):
- * sbt 'benchScalameta/Jmh/run ... -prof "async:...;event=cpu;..." ".*parse"'
+ * sbt 'bench2_13/Jmh/run ... -prof "async:...;event=cpu;..." ".*parse"'
  * }}}
  */
 @State(Scope.Benchmark) @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
