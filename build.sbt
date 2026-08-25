@@ -249,16 +249,16 @@ lazy val semanticdbMetacp = projectMatrix.in(file("semanticdb/metacp")).settings
 /* ============== CODEGEN FOR SCALA 3 QUASIQUOTES, TRANSVERSERS ============= */
 lazy val scala3TreeLiftsMacro = project.in(file("scala3-tree-lifts/macro")).settings(
   jvmPlatformSettings,
-  crossScalaVersions := List(LatestScala213),
-  scalaVersion := LatestScala213,
+  crossScalaVersions := List(PublishedScala213),
+  scalaVersion := PublishedScala213,
   enableMacros,
   nonPublishableSettings,
 ).dependsOn(trees.jvm(PublishedScala213), common.jvm(PublishedScala213))
 
 lazy val scala3TreeLiftsCodeGen = project.in(file("scala3-tree-lifts/impl")).settings(
   jvmPlatformSettings,
-  crossScalaVersions := List(LatestScala213),
-  scalaVersion := LatestScala213,
+  crossScalaVersions := List(PublishedScala213),
+  scalaVersion := PublishedScala213,
   libraryDependencies += "com.github.scopt" %% "scopt" % "4.1.0",
   nonPublishableSettings,
 ).dependsOn(scala3TreeLiftsMacro)
@@ -546,8 +546,10 @@ lazy val testSettings = Def.settings(
 lazy val communitytest = project.in(file("community-test")).settings(
   sharedTestSettings,
   jvmPlatformSettings,
+  /* a dependency of the community build drags in a newer scala-library, and SIP-51 wants the
+   * compiler no older than that, so this one cannot follow the patch it depends on */
   scalaVersion := LatestScala213,
-  crossScalaVersions := LatestScala2,
+  crossScalaVersions := Seq(LatestScala213),
 ).dependsOn(scalameta.jvm(PublishedScala213))
 
 /* ======================== BENCHES ======================== */
@@ -573,7 +575,8 @@ lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(Bu
 lazy val benchScalameta = project.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
     sharedJvmSettings,
-    crossScalaVersions := Seq(LatestScala213),
+    scalaVersion := PublishedScala213,
+    crossScalaVersions := Seq(PublishedScala213),
     nonPublishableSettings,
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
     buildInfoPackage := "scala.meta.internal.bench",
