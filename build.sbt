@@ -68,6 +68,21 @@ def mimaPublished = Command.single("mimaPublished") { (state, version) =>
   rows.map(ref => s"${ref.project}/mimaReportBinaryIssues").toList ::: state
 }
 
+/* Documents the rows a worker has already built, so scaladoc reuses their classes instead of
+ * compiling them again. A row whose doc no artifact carries is left out. */
+def docFor = Command.args("docFor", "<platform> <version>") { (state, args) =>
+  val Seq(prefix, version) = args
+  val extracted = Project.extract(state)
+  val rows = extracted.structure.allProjectRefs.filter(ref =>
+    extracted.getOpt(ref / scalaVersion).contains(version) &&
+      extracted.getOpt(ref / Compile / packageDoc / publishArtifact).contains(true) &&
+      // a platform names the Scala.js or Native major version too, as in sjs1 and native0.5
+      extracted.getOpt(ref / platform).exists(_.startsWith(prefix)),
+  ).map(_.project).sorted
+  state.log.info(s"doc for $prefix $version: ${rows.mkString(", ")}")
+  rows.map(row => s"$row/doc").toList ::: state
+}
+
 def helloContributor(): Unit = println(
   """|Welcome to the Scalameta build! You probably don't want to run `sbt test` since
      |that will take a long time to complete.  More likely, you want to run `tests/test`.
@@ -93,6 +108,11 @@ def rootSettings = Def.settings(
   addCommandAlias("mima2_13", "mimaPublished " + PublishedScala213),
   addCommandAlias("mima2_12", "mimaPublished " + PublishedScala212),
   addCommandAlias("mima3_lts", "mimaPublished " + Scala3Published),
+  commands += docFor,
+  addCommandAlias("doc2_12", "docFor jvm " + PublishedScala212),
+  addCommandAlias("docJS2_13", "docFor sjs " + PublishedScala213ForJS),
+  addCommandAlias("doc3_lts", "docFor jvm " + Scala3Published),
+  addCommandAlias("docNative3_lts", "docFor native " + Scala3Published),
   commands += Command.command("releaseSemanticdb") { s =>
     val rows = AllScala2Versions.flatMap(semanticdbRows(s))
     ("semanticdbShared2_13" +: rows).map(_ + "/publishSigned").toList ::: s
