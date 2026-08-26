@@ -554,18 +554,20 @@ def runJmhMain(extraArgs: Def.Initialize[Task[String]] = Def.task("")) = Def.inp
   }
 }
 
-lazy val benchSemanticdb = project.in(file("bench/semanticdb")).enablePlugins(BuildInfoPlugin)
+lazy val benchSemanticdb = projectMatrix.in(file("bench/semanticdb")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
-    sharedJvmSettings,
-    crossScalaVersions := LatestScala2,
+    sharedSettings,
     nonPublishableSettings,
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
     buildInfoKeys := Seq[BuildInfoKey]("sourceroot" -> (ThisBuild / baseDirectory).value),
     buildInfoPackage := "scala.meta.internal.bench",
-    Jmh / run := runJmhMain(
-      Def.task(s" -p semanticdbScalacJar=${semanticdbScalacPluginPackage(LatestScala213).value}"),
-    ).evaluated,
-  ).dependsOn(testsSemanticdb.jvm(LatestScala213))
+    Jmh / run := runJmhMain(Def.taskDyn {
+      // a hoisted .value cannot read a local, so the version reaches the task as a parameter
+      def arg(v: String) = Def
+        .task(s" -p semanticdbScalacJar=${semanticdbScalacPluginPackage(v).value}")
+      arg(getForScalaBinaryVersion(scalaBinaryVersion.value, LatestScala2))
+    }).evaluated,
+  ).crossJvm(LatestScala2).dependsOn(testsSemanticdb)
 
 lazy val bench = projectMatrix.in(file("bench/scalameta")).enablePlugins(BuildInfoPlugin)
   .enablePlugins(JmhPlugin).settings(
