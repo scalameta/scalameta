@@ -46,7 +46,8 @@ jobs:
       # a cold boot downloads sbt and Scala; that failing is not a test failing
       - &sbt_bootup
         name: start the sbt server
-        run: sbt whoami
+        # the client can read a half-written active.json; a second one reaches the same server
+        run: sbt whoami || sbt whoami
         shell: bash
       - &testjvm212
         if: ${{ !cancelled() }}
@@ -73,6 +74,7 @@ jobs:
       - *checkout
       - *jdk
       - *sbt
+      - *sbt_bootup
       - *testjvm212
       - if: ${{ !cancelled() }}
         run: sbt mima2_12
@@ -91,6 +93,7 @@ jobs:
       - *checkout
       - *jdk
       - *sbt
+      - *sbt_bootup
       - *testjvm213
       - if: ${{ !cancelled() }}
         run: sbt mima2_13
@@ -106,6 +109,7 @@ jobs:
       - *checkout
       - *jdk
       - *sbt
+      - *sbt_bootup
       - *testjvm3lts
       - if: ${{ !cancelled() }}
         run: sbt mima3_lts
@@ -126,6 +130,7 @@ jobs:
       - *checkout
       - *jdk
       - *sbt
+      - *sbt_bootup
       - *testjvm3next
       - if: ${{ !cancelled() }}
         run: sbt testsJS2_12/testFull
