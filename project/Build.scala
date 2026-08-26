@@ -11,10 +11,10 @@ object Build extends AutoPlugin {
   import autoImport._
   object autoImport {
     trait BenchSemanticdbSuite {
-      def initCommands: List[String] = List("benchSemanticdb/clean")
+      def initCommands: List[String] = List("benchSemanticdb2_13/clean")
 
       private def toCommands(benches: Seq[String]): List[String] =
-        if (benches.isEmpty) Nil else List(benches.mkString("benchSemanticdb/Jmh/run ", " ", ""))
+        if (benches.isEmpty) Nil else List(benches.mkString("benchSemanticdb2_13/Jmh/run ", " ", ""))
 
       def metacpBenches: List[String]
       def metacpCommands: List[String] = toCommands(metacpBenches)
