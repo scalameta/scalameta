@@ -28,11 +28,11 @@ object Mima {
   }
 
   private def isPublicAndNotExcluded(fullName: String, accessible: Boolean): Boolean = {
-    def exclude(parts: Seq[String]) = parts.exists {
+    def exclude(parts: Iterable[String]) = parts.exists {
       case "internal" | "contrib" => true
       case _ => false
     }
-    def excludeSemantic(relName: String, parts: Seq[String]) = // semantic packages
+    def excludeSemantic(relName: String, parts: Iterable[String]) = // semantic packages
       relName == "cli.Reporter" || relName == "cli.Reporter$" ||
         parts.headOption.exists(Set("metap", "metacp").contains) ||
         parts.lastOption.exists(Set("Metap", "Metacp").contains)

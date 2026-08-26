@@ -361,7 +361,7 @@ object Extensions {
    * gets a row of its own, keyed by an axis, and only Scala3Published publishes.
    */
   private def splitScala3(versions: Seq[String]) = {
-    val s3 = Seq.newBuilder[(Seq[String], Seq[VirtualAxis.ScalaVersionAxis], Seq[Setting[_]])]
+    val s3 = Seq.newBuilder[(Seq[String], Seq[VirtualAxis.ScalaVersionAxis], Seq[Setting[?]])]
     val s2 = Seq.newBuilder[String]
     versions.foreach(v =>
       Scala3RowIds.get(v) match {
