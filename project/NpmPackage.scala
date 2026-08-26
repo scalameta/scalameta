@@ -44,7 +44,7 @@ object NpmPackage {
       pkgLicense: String,
       pkgKeywords: Seq[String],
       pkgReadme: File,
-  ): Seq[Setting[_]] = Seq(
+  ): Seq[Setting[?]] = Seq(
     // sbt 2 cannot cache a task returning File
     npmPackage := Def.uncached {
       val dir = crossTarget.value / "npm-package"

@@ -168,7 +168,7 @@ lazy val semanticdbScalacCore = projectMatrix.in(file("semanticdb/scalac/library
   // when fields are added, so mismatched semanticdb-scalac versions (e.g. scalafix
   // vs. sbt) don't fail with NoSuchMethodError. See #4640.
   libraryDependencies +=
-    compilerPlugin("com.lihaoyi" % "unroll-plugin" % "0.3.0" cross CrossVersion.full),
+    compilerPlugin(("com.lihaoyi" % "unroll-plugin" % "0.3.0").cross(CrossVersion.full)),
   // exclude scala-library: the annotation pom pins a newer patch that would trip
   // SIP-51 on the earliest cross-built Scala versions.
   libraryDependencies +=
@@ -356,7 +356,7 @@ def mergedModule(
     projects: File => List[File] = _ => Nil,
     projects2: File => List[File] = _ => Nil,
     projects3: File => List[File] = _ => Nil,
-): List[Setting[_]] = List {
+): List[Setting[?]] = List {
   Compile / unmanagedSourceDirectories ++= {
     val base = (ThisBuild / baseDirectory).value
     val scalaBinary = "scala-" + scalaBinaryVersion.value
@@ -491,7 +491,7 @@ def testsSemanticdbSettings(version: String) = Def.settings(
     Seq("scala-library", "scala-compiler", "scalap").map("org.scala-lang" % _ % scalaVersion.value),
   /* only this project uses coursier. On a Scala.js row sbt 2's %% asks for the Scala.js build of
    * coursier, which puts a second suffix of fastparse, geny and sourcecode on the classpath. */
-  libraryDependencies += "io.get-coursier" %% "coursier" % "2.1.24" cross CrossVersion.for3Use2_13,
+  libraryDependencies += ("io.get-coursier" %% "coursier" % "2.1.24").cross(CrossVersion.for3Use2_13),
   Test / fullClasspath := Def.uncached {
     sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") =
       semanticdbScalacPluginPackage(version).value
@@ -606,7 +606,7 @@ lazy val sharedSettings = Def.settings(
   organization := "org.scalameta",
   libraryDependencies ++= {
     if (!isScala212.value) Nil
-    else List(compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full))
+    else List(compilerPlugin(("org.scalamacros" % "paradise" % "2.1.1").cross(CrossVersion.full)))
   },
   scalacOptions ++= { if (isScala213.value) List("-Ymacro-annotations") else Nil },
   scalacOptions ++= { if (isScala212.value) Nil else List("-Xfatal-warnings") },
