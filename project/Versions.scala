@@ -16,6 +16,7 @@ object Versions {
     "3.3.8" -> "3_lts",
     "3.8.4" -> "3_next",
     // lines below will only be tested for JVM in post-merge CI
+    "3.9.0" -> "3_9",
   )
   val Scala3PostMerge = Scala3Rows.drop(2)
   val Scala3Published = Scala3Rows.head._1
