@@ -5,6 +5,8 @@ import scala.meta.internal.Scaladoc
 import java.nio.CharBuffer
 import java.util.regex.Pattern
 
+import scala.annotation.switch
+
 import fastparse.NoWhitespace._
 import fastparse._
 
@@ -30,11 +32,16 @@ object ScaladocParser {
   // a code block is a term, so one starting mid-line also ends the term before it
   private def termEndPeek[$: P] = P(nlOrEndPeek | codeBlockPeek)
 
+  private val noSpace = (c: Char) =>
+    (c: @switch) match {
+      case ' ' | '\t' | '\r' | '\n' => false
+      case _ => true
+    }
   private def space[$: P] = CharIn("\t\r \n")
   private def spacesMin[$: P](min: Int) = CharsWhileIn("\t\r \n", min)
   private def spaces1[$: P] = spacesMin(1)
 
-  private def labelParser[$: P]: P[Unit] = (!space ~ AnyChar).rep(1)
+  private def labelParser[$: P]: P[Unit] = CharsWhile(noSpace, 1)
   private def wordParser[$: P]: P[Word] = P(labelParser.!.map(Word.apply))
 
   private def listPrefixDash[$: P] = P("-")
@@ -153,8 +160,8 @@ object ScaladocParser {
 
   private def textParser[$: P](indent: Int, mdOffset: Int = 0): P[Text] = P {
     def end = P(nl ~/ nextPartParser(indent, mdOffset))
-    def part: P[TextPart] =
-      P(codeExprParser | mdCodeSpanParser | linkParser | enclosedJavaTagParser | wordParser)
+    def nonWordPart = codeExprParser | mdCodeSpanParser | linkParser | enclosedJavaTagParser
+    def part: P[TextPart] = P(&(CharIn("{`[")) ~ nonWordPart | wordParser)
     (hspaces0 ~ NoCut(part) ~ (!end ~ (nl.? ~ hspaces0).! ~ NoCut(part)).rep(0)).map {
       case (part1, parts) =>
         val partInfos = parts.map { case (spaces, part) => TextPartInfo(part, spaces.isEmpty) }
