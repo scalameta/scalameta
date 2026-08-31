@@ -27,6 +27,8 @@ object ScaladocParser {
 
   private def nl[$: P]: P0 = P("\n")
   private def nlOrEndPeek[$: P] = &(End | nl)
+  // a code block is a term, so one starting mid-line also ends the term before it
+  private def termEndPeek[$: P] = P(nlOrEndPeek | codeBlockPeek)
 
   private def space[$: P] = CharIn("\t\r \n")
   private def spacesMin[$: P](min: Int) = CharsWhileIn("\t\r \n", min)
@@ -57,20 +59,28 @@ object ScaladocParser {
   private def linkPrefix[$: P] = P("[[" ~ hspaces0)
   private def linkSuffix[$: P] = P(hspaces0 ~ "]]")
 
-  private def codeLineParser[$: P]: P[String] = P {
-    def codeLineEnd = P(nl | codeSuffix)
-    (!codeLineEnd ~ AnyChar).rep.!
-  }
+  private def codeLinePeek[$: P] = P((!(nl | codeSuffix) ~ AnyChar).rep)
+  private def codeLineParser[$: P]: P[String] = P(codeLinePeek.!)
 
-  private def codeExprParser[$: P]: P[CodeExpr] = P {
-    def pattern = codePrefix ~ hspaces0 ~ codeLineParser ~ codeSuffix
-    pattern.map(x => CodeExpr(x.trim))
-  }
+  // an expression, not a code block, if the fence closes on the line it opens
+  private def codeExprBody[$: P]: P[String] = P(codeLineParser ~ codeSuffix)
+  private def codeExprPeek[$: P] = P(&(codeExprBody))
+  // without a close, the fence and the code that follows it are words
+  private def codeClosePeek[$: P] = P(&((!codeSuffix ~ AnyChar).rep ~ codeSuffix))
+  // checks for a code block here without reading one
+  private def codeBlockPeek[$: P] = P(&(hspaces0 ~ codePrefix ~ !codeExprPeek ~ codeClosePeek))
+
+  private def codeBodyParser[$: P]: P[Seq[String]] =
+    P(hspaces0 ~ nl.? ~ codeLineParser.rep(1, sep = nl) ~ codeSuffix)
+
+  // the cut keeps a closed block's lines from being read as words
+  private def codeExprParser[$: P]: P[CodeExpr] =
+    P(codePrefix ~ (codeExprBody.map(x => CodeExpr(x.trim)) | codeClosePeek ~/ Fail))
 
   private def codeBlockParser[$: P]: P[CodeBlock] = P {
-    def code = codeLineParser.rep(1, sep = nl)
-    def pattern = hspaces0 ~ codePrefix ~ nl ~ code ~ codeSuffix
-    pattern.map(x => CodeBlock(if (x.last.nonEmpty) x else x.dropRight(1)))
+    def block = hspaces0 ~ codePrefix ~ !codeExprPeek ~ codeBodyParser
+    // a close on its own line leaves an empty last line
+    block.map(x => CodeBlock(if (x.last.isEmpty) x.dropRight(1) else x))
   }
 
   /*
@@ -145,10 +155,11 @@ object ScaladocParser {
     def end = P(nl ~/ nextPartParser(indent, mdOffset))
     def part: P[TextPart] =
       P(codeExprParser | mdCodeSpanParser | linkParser | enclosedJavaTagParser | wordParser)
-    (hspaces0 ~ part ~ (!end ~ (nl.? ~ hspaces0).! ~ part).rep(0)).map { case (part1, parts) =>
-      val partInfos = parts.map { case (spaces, part) => TextPartInfo(part, spaces.isEmpty) }
-      // the first part is NOT attached to a previous part, whatever it is
-      Text(TextPartInfo(part1) +: partInfos)
+    (hspaces0 ~ NoCut(part) ~ (!end ~ (nl.? ~ hspaces0).! ~ NoCut(part)).rep(0)).map {
+      case (part1, parts) =>
+        val partInfos = parts.map { case (spaces, part) => TextPartInfo(part, spaces.isEmpty) }
+        // the first part is NOT attached to a previous part, whatever it is
+        Text(TextPartInfo(part1) +: partInfos)
     }
   }
 
@@ -160,8 +171,10 @@ object ScaladocParser {
     def label = P((nl ~ !nextPartParser(indent)).? ~ hspaces0 ~ wordParser)
     // special case: @usecase takes a single code line, on the same line
     def labelInline = P(hspaces0 ~ (!nl ~ AnyChar).rep(1).!.map(Word))
-    def desc = P((textParser(indent).? ~ embeddedTermsParser()).map { case (x, terms) =>
-      x.fold(terms)(_ +: terms)
+    /* embeddedTermsParser requires a preceding newline, so a code block
+     * opening on the tag's own line has to be taken here */
+    def desc = P((textParser(indent).? ~ codeBlockParser.? ~ embeddedTermsParser()).map {
+      case (x, cb, terms) => x.toSeq ++ cb.toSeq ++ terms
     })
     hspaces0 ~ ("@" ~ labelParser).!.flatMap { tag =>
       val tagType = TagType.getTag(tag)
@@ -281,11 +294,12 @@ object ScaladocParser {
 
   private def termParser[$: P] = P {
     def leadingParser = // might not consume full line
-      tagParser(0)
+      tagParser(0) | codeBlockParser
     def completeParser = // will consume full line
       listBlockParser() | mdCodeBlockParser() | codeBlockParser | headingParser | tableParser |
         textParser(0) // keep at the end, this is the fallback
-    (nl | Start) ~ (leadingParser | completeParser ~ nlOrEndPeek) | textParser(0) // could be following an element leaving trailing text, e.g. tagParser
+    // a code block may also begin partway through a line, as may text after one
+    (nl | Start) ~ (leadingParser | completeParser ~ termEndPeek) | codeBlockParser | textParser(0)
   }
 
   private def embeddedTermsParser[$: P](indent: Int = 0, mdOffset: Int = 0): P[Seq[Term]] = P {

@@ -230,7 +230,9 @@ class ScaladocParserSuite extends FunSuite {
     )
     check(
       "/**\n * the {{{ marker\n * pairs with the }}} marker\n */",
-      Text(words("the {{{ marker pairs with the }}} marker")),
+      Text(Seq(Word("the"))),
+      CodeBlock(Seq("marker", " pairs with the")),
+      Text(Seq(Word("marker"))),
     )
   }
 
@@ -267,12 +269,16 @@ class ScaladocParserSuite extends FunSuite {
     }
     def tag(terms: Term*) = Tag(TagType.Example, None, terms)
 
-    check("", "", Text(words("{{{ bar }}}")))
-    check("", " baz", Text(words("{{{ bar }}} baz")))
-    check("qux ", "", Text(words("qux {{{ bar }}}")))
-    check("qux ", " baz", Text(words("qux {{{ bar }}} baz")))
-    check("@example ", "", tag(Text(words("{{{ bar }}}"))))
-    check("@example ", " baz", tag(Text(words("{{{ bar }}} baz"))))
+    val bar = CodeBlock(Seq("bar"))
+    val baz = Text(words("baz"))
+    val qux = Text(words("qux"))
+
+    check("", "", bar)
+    check("", " baz", bar, baz)
+    check("qux ", "", qux, bar)
+    check("qux ", " baz", qux, bar, baz)
+    check("@example ", "", tag(bar))
+    check("@example ", " baz", tag(bar), baz)
   }
 
   test("multiline code block by fence position") {
@@ -283,23 +289,24 @@ class ScaladocParserSuite extends FunSuite {
       val comment = doc(lead, open, trail)
       assertEquals(parseString(comment), Option(Scaladoc(Seq(Paragraph(terms)))), comment)
     }
-    def tag(x: String) = Tag(TagType.Example, None, Seq(Text(words(x))))
+    def tag(code: Seq[String]) = Tag(TagType.Example, None, Seq(CodeBlock(code)))
+    val foo = Seq(" foo")
+    val barFoo = Seq("bar", " foo")
+    val baz = Text(words("baz"))
+    val qux = Text(words("qux"))
 
-    // only a bare fence alone on its line opens a code block
-    check("", "", "", CodeBlock(Seq(" foo")))
-    // and trailing text after the close discards the whole comment
-    assertEquals(parseString(doc("", "", " baz")), None)
-
-    check("", " bar", "", Text(words("{{{ bar foo }}}")))
-    check("", " bar", " baz", Text(words("{{{ bar foo }}} baz")))
-    check("qux ", "", "", Text(words("qux {{{ foo }}}")))
-    check("qux ", "", " baz", Text(words("qux {{{ foo }}} baz")))
-    check("qux ", " bar", "", Text(words("qux {{{ bar foo }}}")))
-    check("qux ", " bar", " baz", Text(words("qux {{{ bar foo }}} baz")))
-    check("@example ", "", "", tag("{{{ foo }}}"))
-    check("@example ", "", " baz", tag("{{{ foo }}} baz"))
-    check("@example ", " bar", "", tag("{{{ bar foo }}}"))
-    check("@example ", " bar", " baz", tag("{{{ bar foo }}} baz"))
+    check("", "", "", CodeBlock(foo))
+    check("", "", " baz", CodeBlock(foo), baz)
+    check("", " bar", "", CodeBlock(barFoo))
+    check("", " bar", " baz", CodeBlock(barFoo), baz)
+    check("qux ", "", "", qux, CodeBlock(foo))
+    check("qux ", "", " baz", qux, CodeBlock(foo), baz)
+    check("qux ", " bar", "", qux, CodeBlock(barFoo))
+    check("qux ", " bar", " baz", qux, CodeBlock(barFoo), baz)
+    check("@example ", "", "", tag(foo))
+    check("@example ", "", " baz", tag(foo), baz)
+    check("@example ", " bar", "", tag(barFoo))
+    check("@example ", " bar", " baz", tag(barFoo), baz)
   }
 
   test("single-line code expression stays in the text") {
