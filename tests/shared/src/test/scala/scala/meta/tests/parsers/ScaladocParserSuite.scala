@@ -205,6 +205,109 @@ class ScaladocParserSuite extends FunSuite {
     assertScaladoc(comment, expected)
   }
 
+  test("talking about the fence marker") {
+    def words(x: String): Seq[TextPartInfo] = x.split(" ").toSeq.map(Word.apply)
+    def check(comment: String, terms: Term*): Unit =
+      assertEquals(parseString(comment), Option(Scaladoc(Seq(Paragraph(terms)))), comment)
+    def span(x: String) = MdCodeSpan(x, "`")
+
+    // backticks are how a mention keeps the marker out of the parse
+    check(
+      "/**\n * the `{{{` wiki block\n */",
+      Text(Seq(Word("the"), span("{{{"), Word("wiki"), Word("block"))),
+    )
+    check(
+      "/**\n * use `{{{` and `}}}` to fence\n */",
+      Text(Seq(Word("use"), span("{{{"), Word("and"), span("}}}"), Word("to"), Word("fence"))),
+    )
+    // a backslash does not escape, but the word it makes opens no fence
+    check("/**\n * the \\{{{ marker opens a block\n */", Text(words("the \\{{{ marker opens a block")))
+    check("/**\n * the {{{ marker opens a block\n */", Text(words("the {{{ marker opens a block")))
+    // naming both markers closes the fence, whatever the prose meant
+    check(
+      "/**\n * the {{{ marker is closed by }}} at the end\n */",
+      Text(Seq(Word("the"), CodeExpr("marker is closed by"), Word("at"), Word("the"), Word("end"))),
+    )
+    check(
+      "/**\n * the {{{ marker\n * pairs with the }}} marker\n */",
+      Text(words("the {{{ marker pairs with the }}} marker")),
+    )
+  }
+
+  test("code fence with no close") {
+    def words(x: String): Seq[TextPartInfo] = x.split(" ").toSeq.map(Word.apply)
+    def check(comment: String, terms: Term*): Unit =
+      assertEquals(parseString(comment), Option(Scaladoc(Seq(Paragraph(terms)))), comment)
+
+    check("/**\n * {{{ foo\n * bar\n */", Text(words("{{{ foo bar")))
+    check("/**\n * qux {{{ foo\n * bar\n */", Text(words("qux {{{ foo bar")))
+    check(
+      "/**\n * @example qux {{{ foo\n * bar\n */",
+      Tag(TagType.Example, None, Seq(Text(words("qux {{{ foo bar")))),
+    )
+  }
+
+  test("empty code fence") {
+    def check(comment: String, terms: Term*): Unit =
+      assertEquals(parseString(comment), Option(Scaladoc(Seq(Paragraph(terms)))), comment)
+    val empty: Seq[TextPartInfo] = Seq(CodeExpr(""))
+
+    check("/**\n * {{{}}}\n */", Text(empty))
+    check("/**\n * {{{ }}}\n */", Text(empty))
+    check("/**\n * qux {{{}}} baz\n */", Text(Seq(Word("qux"), CodeExpr(""), Word("baz"))))
+    check("/**\n * {{{\n * }}}\n */", CodeBlock(Nil))
+  }
+
+  test("code fence closed on the line below") {
+    def doc(lead: String, trail: String) = s"/**\n * $lead{{{ bar\n * }}}$trail\n */"
+    def words(x: String): Seq[TextPartInfo] = x.split(" ").toSeq.map(Word.apply)
+    def check(lead: String, trail: String, terms: Term*): Unit = {
+      val comment = doc(lead, trail)
+      assertEquals(parseString(comment), Option(Scaladoc(Seq(Paragraph(terms)))), comment)
+    }
+    def tag(terms: Term*) = Tag(TagType.Example, None, terms)
+
+    check("", "", Text(words("{{{ bar }}}")))
+    check("", " baz", Text(words("{{{ bar }}} baz")))
+    check("qux ", "", Text(words("qux {{{ bar }}}")))
+    check("qux ", " baz", Text(words("qux {{{ bar }}} baz")))
+    check("@example ", "", tag(Text(words("{{{ bar }}}"))))
+    check("@example ", " baz", tag(Text(words("{{{ bar }}} baz"))))
+  }
+
+  test("multiline code block by fence position") {
+    def doc(lead: String, open: String, trail: String) =
+      s"/**\n * $lead{{{$open\n * foo\n * }}}$trail\n */"
+    def words(x: String): Seq[TextPartInfo] = x.split(" ").toSeq.map(Word.apply)
+    def check(lead: String, open: String, trail: String, terms: Term*): Unit = {
+      val comment = doc(lead, open, trail)
+      assertEquals(parseString(comment), Option(Scaladoc(Seq(Paragraph(terms)))), comment)
+    }
+    def tag(x: String) = Tag(TagType.Example, None, Seq(Text(words(x))))
+
+    // only a bare fence alone on its line opens a code block
+    check("", "", "", CodeBlock(Seq(" foo")))
+    // and trailing text after the close discards the whole comment
+    assertEquals(parseString(doc("", "", " baz")), None)
+
+    check("", " bar", "", Text(words("{{{ bar foo }}}")))
+    check("", " bar", " baz", Text(words("{{{ bar foo }}} baz")))
+    check("qux ", "", "", Text(words("qux {{{ foo }}}")))
+    check("qux ", "", " baz", Text(words("qux {{{ foo }}} baz")))
+    check("qux ", " bar", "", Text(words("qux {{{ bar foo }}}")))
+    check("qux ", " bar", " baz", Text(words("qux {{{ bar foo }}} baz")))
+    check("@example ", "", "", tag("{{{ foo }}}"))
+    check("@example ", "", " baz", tag("{{{ foo }}} baz"))
+    check("@example ", " bar", "", tag("{{{ bar foo }}}"))
+    check("@example ", " bar", " baz", tag("{{{ bar foo }}} baz"))
+  }
+
+  test("single-line code expression stays in the text") {
+    val comment = "/**\n * qux {{{ bar }}} baz\n */"
+    val parts: Seq[TextPartInfo] = Seq(Word("qux"), CodeExpr("bar"), Word("baz"))
+    assertEquals(parseString(comment), Option(Scaladoc(Seq(Paragraph(Seq(Text(parts)))))))
+  }
+
   test("code blocks multiline") {
     val complexCodeBlock = // keep all newlines and leading spaces
       """|  ggmqwogmwogmqwomgq
