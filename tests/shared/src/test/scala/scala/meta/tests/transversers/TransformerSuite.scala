@@ -59,6 +59,14 @@ class TransformerSuite extends TreeSuiteBase {
     assertEquals(afterTree.origin.inputOpt, beforeTree.origin.inputOpt)
   }
 
+  test("transform: a replacement with a matchable child") {
+    val tree = q"a".transform {
+      case Term.Name("a") => q"f(b)"
+      case Term.Name("b") => Term.Name("c")
+    }
+    assertEquals(tree.toString, "f(c)")
+  }
+
   test("#1200") {
     var i = 0
     val fn: PartialFunction[Tree, Tree] = {
