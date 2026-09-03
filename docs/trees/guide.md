@@ -299,19 +299,16 @@ nodes . Imagine we have a list of type arguments that happens to be empty
 val typeArguments = List.empty[Type]
 ```
 
-If we directly splice the lists into a type application we get an error message
-"invariant failed (targClause should be non-empty)" referring to the `targClause`
-field of `Type.ApplyType` (with additional cryptic information showing specific
-checks performed):
+Splicing the empty list builds a `Term.ApplyType` whose `targClause` is empty,
+and nothing rejects it:
 
-```scala mdoc:crash
-q"function[..$typeArguments]()"
+```scala mdoc
+println(q"function[..$typeArguments]()".structure)
 ```
 
-The quasiquote above is equivalent to calling the normal constructor
-`Type.ApplyType(.., typeArguments)`. Scalameta trees perform strict runtime
-validation for invariants such as "type application arguments must be
-non-empty". To fix this problem, guard the splice against the length of the list
+It prints as `function()`, but it is not the tree `q"function()"` builds, so a
+pattern written for that one does not match. To fix this problem, guard the
+splice against the length of the list
 
 ```scala mdoc
 println(
