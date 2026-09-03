@@ -539,8 +539,9 @@ q"a + b".transform {
 // [error] java.lang.OutOfMemoryError: Java heap space
 ```
 
-The rule matches `b` again inside its own result, `function(b)`. Write a rule
-that cannot match what it returns.
+The rule matches `b` again inside its own result, `function(b)`. Either write a
+rule that cannot match what it returns, or override `replaceSubtree` to keep
+the result as it stands.
 
 ### Custom transformations
 
@@ -561,5 +562,24 @@ val transformer = new Transformer {
 ```scala mdoc
 println(
   transformer.transform(q"a + b")
+)
+```
+
+`replaceSubtree` runs first on every node. A tree it returns stands as the whole
+subtree, so the walk keeps it and does not descend into it; return `null` to
+leave the node to `transformNode`.
+
+```scala mdoc:silent
+val wrapper = new Transformer {
+  override protected def replaceSubtree(node: Tree): Tree = node match {
+    case name @ Term.Name.Initial("b") => q"function($name)"
+    case _ => null
+  }
+}
+```
+
+```scala mdoc
+println(
+  wrapper.transform(q"a + b")
 )
 ```

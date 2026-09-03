@@ -39,6 +39,20 @@ class StackSafetySuite extends FunSuite {
     assert(renamed ne tree) // the spine was actually rebuilt
   }
 
+  test("deeply nested tree - replaceSubtree") {
+    val tree = TestHelpers.deepTree(depth)
+    val transformer = new Transformer {
+      override protected def replaceSubtree(node: Tree): Tree = node match {
+        case Term.Name("x") => Term.Name("y")
+        case _ => null
+      }
+    }
+    // the leaf stops the walk, and the spine above it must still rebuild
+    def load() = transformer.transform(tree)
+    val renamed = load()
+    assert(renamed ne tree)
+  }
+
   // Unlike the others, this can't be captured upfront: before this fix its
   // failure is an OutOfMemoryError (the O(n^2) reparenting copies exhaust the
   // heap) that isn't cleanly catchable, so it is introduced as a positive test.
