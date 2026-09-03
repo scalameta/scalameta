@@ -807,6 +807,9 @@ lazy val docs = project.in(file("scalameta-docs")).settings(
   mdocOut := (ThisBuild / baseDirectory).value / "website" / "target" / "docs",
   mimaPreviousArtifacts := Set.empty,
 ).enablePlugins(BuildInfoPlugin, DocusaurusPlugin)
+  /* mdoc drags in a released scalameta, so without this the examples compile
+   * against that release instead of the tree they document */
+  .dependsOn(scalameta.jvm(PublishedScala213))
 
 def fileOf = Def.task(fileConverter.value.toPath(_: xsbti.HashedVirtualFileRef).toFile)
 
