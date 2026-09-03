@@ -67,6 +67,26 @@ class TransformerSuite extends TreeSuiteBase {
     assertEquals(tree.toString, "f(c)")
   }
 
+  test("replaceSubtree: a replacement with a matchable child") {
+    val transformer = new Transformer {
+      override protected def replaceSubtree(node: Tree): Tree = node match {
+        case Term.Name("a") => q"f(b)"
+        case _ => null
+      }
+    }
+    assertEquals(transformer.transform(q"a").toString, "f(b)")
+  }
+
+  test("replaceSubtree: a replacement that matches itself") {
+    val transformer = new Transformer {
+      override protected def replaceSubtree(node: Tree): Tree = node match {
+        case name @ Term.Name("b") => q"function($name)"
+        case _ => null
+      }
+    }
+    assertEquals(transformer.transform(q"a + b").toString, "a + function(b)")
+  }
+
   test("#1200") {
     var i = 0
     val fn: PartialFunction[Tree, Tree] = {
