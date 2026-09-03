@@ -539,32 +539,30 @@ introduce infinite recursion in `.transform`
 q"a + b".transform {
   case name @ Term.Name.Initial("b") => q"function($name)"
 }.toString
-// [error] java.lang.StackOverflowError
-// at scala.meta.transversers.Api$XtensionCollectionLikeUI$transformer$2$.apply(Api.scala:10)
-// at scala.meta.transversers.Transformer.apply(Transformer.scala:4)
+// [error] java.lang.OutOfMemoryError: Java heap space
 ```
 
-The best solution to fix this problem is to implement a custom transformer to
-gain fine-grained control over the recursion.
+The rule matches `b` again inside its own result, `function(b)`. Write a rule
+that cannot match what it returns.
 
 ### Custom transformations
 
-Extend `Transformer` if you need to implement a custom tree transformation
+Extend `Transformer` and override `transformNode` if you need to implement a
+custom tree transformation
 
 ```scala mdoc:silent
 val transformer = new Transformer {
-  override def apply(tree: Tree): Tree = tree match {
-    case name @ Term.Name.Initial("b") => q"function($name)"
-    case node => super.apply(node)
+  override protected def transformNode(node: Tree): Tree = node match {
+    case Term.Name.Initial("b") => q"c"
+    case node => node
   }
 }
 ```
 
-By avoiding the call to `super.transform` in the first case, we prevent a stack
-overflow.
+`transform` applies it to every node of the tree.
 
 ```scala mdoc
 println(
-  transformer(q"a + b")
+  transformer.transform(q"a + b")
 )
 ```
