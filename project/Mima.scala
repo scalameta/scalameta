@@ -64,6 +64,7 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    exclude[DirectMissingMethodProblem]("transversers.Transformer.apply"),
     // Tree
   )
 }
