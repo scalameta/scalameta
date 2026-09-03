@@ -15,7 +15,7 @@ addSbtPlugin("io.get-coursier" % "sbt-shading" % "2.1.8")
 
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "1.22.0")
 addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.5.12")
-addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.9.1")
-addSbtPlugin("org.scalameta" % "sbt-munit" % "1.3.5")
+addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.9.2")
+addSbtPlugin("org.scalameta" % "sbt-munit" % "1.3.6")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.8")
