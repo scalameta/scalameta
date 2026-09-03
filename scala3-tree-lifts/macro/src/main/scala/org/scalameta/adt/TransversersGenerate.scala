@@ -161,38 +161,6 @@ class TransversersGenerateMacros(val c: Context) extends GenerateHelper with Ast
 
     val footer =
       s"""|
-          |  def apply(treeopt: Option[scala.meta.Tree]): Option[scala.meta.Tree] = treeopt match {
-          |    case Some(tree) =>
-          |      val tree1 = apply(tree)
-          |      if (tree eq tree1) treeopt
-          |      else Some(tree1)
-          |    case None => None
-          |  }
-          |
-          |  def apply(trees: List[scala.meta.Tree]): List[scala.meta.Tree] = {
-          |    var same = true
-          |    val buf = List.newBuilder[scala.meta.Tree]
-          |    trees.foreach { tree =>
-          |      val tree1 = apply(tree)
-          |      if (tree ne tree1) same = false
-          |      buf += tree1
-          |    }
-          |    if (same) trees
-          |    else buf.result()
-          |  }
-          |
-          |  def apply(trees: Seq[scala.meta.Tree]): Seq[scala.meta.Tree] = {
-          |    var same = true
-          |    val buf = Seq.newBuilder[scala.meta.Tree]
-          |    trees.foreach { tree =>
-          |      val tree1 = apply(tree)
-          |      if (tree ne tree1) same = false
-          |      buf += tree1
-          |    }
-          |    if (same) trees
-          |    else buf.result()
-          |  }
-          |
           |  private def fail(field: String, from: scala.meta.Tree, to: scala.meta.Tree): Nothing = {
           |    import scala.meta.prettyprinters._
           |    val errorPrefix = "Invalid transformation of " + field + ": "

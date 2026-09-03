@@ -94,39 +94,6 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
 
   def generatedMethods(): Tree =
     q"""
-      def apply(treeopt: $OptionClass[$TreeClass]): $OptionClass[$TreeClass] = treeopt match {
-        case $SomeModule(tree) =>
-          val tree1 = apply(tree)
-          if (tree eq tree1) treeopt
-          else $SomeModule(tree1)
-        case $NoneModule =>
-          $NoneModule
-      }
-
-      def apply(trees: $ListClass[$TreeClass]): $ListClass[$TreeClass] = {
-        var same = true
-        val buf = $ListModule.newBuilder[$TreeClass]
-        trees.foreach { tree =>
-          val tree1 = apply(tree)
-          if (tree ne tree1) same = false
-          buf += tree1
-        }
-        if (same) trees
-        else buf.result()
-      }
-
-      def apply(trees: $SeqClass[$TreeClass]): $SeqClass[$TreeClass] = {
-        var same = true
-        val buf = $SeqModule.newBuilder[$TreeClass]
-        trees.foreach { tree =>
-          val tree1 = apply(tree)
-          if (tree ne tree1) same = false
-          buf += tree1
-        }
-        if (same) trees
-        else buf.result()
-      }
-
       private def fail(field: String, from: $TreeClass, to: $TreeClass): $NothingClass = {
         import scala.meta.prettyprinters._
         val errorPrefix = "Invalid transformation of " + field + ": "
