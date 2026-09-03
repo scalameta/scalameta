@@ -36,24 +36,5 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
       def apply(trees: $SeqClass[$TreeClass]): $UnitClass = {
         trees.foreach(apply(_))
       }
-
-      def apply(treesopt: $OptionClass[$ListClass[$TreeClass]])(implicit hack: $Hack1Class): $UnitClass = treesopt match {
-        case $SomeModule(trees) => apply(trees)
-        case $NoneModule => // do nothing
-      }
-
-      def apply(treesopt: $OptionClass[$SeqClass[$TreeClass]])(implicit hack: $Hack3Class): $UnitClass =
-        treesopt match {
-          case $SomeModule(trees) => apply(trees)
-          case $NoneModule => // do nothing
-        }
-
-      def apply(treess: $ListClass[$ListClass[$TreeClass]])(implicit hack: $Hack2Class): $UnitClass = {
-        treess.foreach(apply(_))
-      }
-
-      def apply(treess: $SeqClass[$SeqClass[$TreeClass]])(implicit hack: $Hack4Class): $UnitClass = {
-        treess.foreach(apply(_))
-      }
     """
 }
