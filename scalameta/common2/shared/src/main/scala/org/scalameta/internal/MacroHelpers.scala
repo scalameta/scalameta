@@ -71,6 +71,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
   lazy val ScalaRunTimeModule = hygienicRef(scala.runtime.ScalaRunTime)
   lazy val UnsupportedOperationException = hygienicRef[UnsupportedOperationException]
   lazy val IndexOutOfBoundsException = hygienicRef[IndexOutOfBoundsException]
+  lazy val IterableClass = tq"_root_.scala.Iterable"
   lazy val IteratorClass = tq"_root_.scala.collection.Iterator"
   lazy val ListClass = tq"_root_.scala.List"
   lazy val ListModule = q"_root_.scala.List"

@@ -29,11 +29,7 @@ class TraverserMacros(val c: Context) extends TransverserMacros {
         case $NoneModule => // do nothing
       }
 
-      def apply(trees: $ListClass[$TreeClass]): $UnitClass = {
-        trees.foreach(apply(_))
-      }
-
-      def apply(trees: $SeqClass[$TreeClass]): $UnitClass = {
+      def apply(trees: $IterableClass[$TreeClass]): $UnitClass = {
         trees.foreach(apply(_))
       }
     """
