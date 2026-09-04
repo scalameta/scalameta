@@ -243,6 +243,27 @@ object Extensions {
     },
   ).distinct
 
+  /* IntelliJ folds the source roots that matrix cells share into one module, so the whole matrix
+   * compiles scala-2 and scala-3 together. Only IntelliJ's importer reads `ide-skip-project`, so
+   * these properties change what the IDE sees and never what sbt builds. */
+  private val ideSkipProject = SettingKey[Boolean]("ide-skip-project")
+
+  private val ideScala = {
+    val prop = sys.props.getOrElse("ide.scala", "").trim
+    if (prop.isEmpty) CrossVersion.binaryScalaVersion(PublishedScala213) else prop
+  }
+
+  // the platforms to import besides the JVM, which the IDE always gets
+  private val idePlatforms = {
+    val prop = sys.props.getOrElse("ide.platform", "").trim
+    if (prop.isEmpty) Set.empty else prop.split("\\s*,\\s*").toSet + "jvm"
+  }
+
+  private def ideSkip(platform: String) = Seq(ideSkipProject := {
+    val versions = Set(scalaBinaryVersion.value, scalaVersion.value)
+    !versions(ideScala) || idePlatforms.nonEmpty && !idePlatforms(platform)
+  })
+
   implicit class ProjectMatrixExtensions(private val self: ProjectMatrix) extends AnyVal {
 
     def crossJvm(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
@@ -327,7 +348,7 @@ object Extensions {
         dir: String,
         platform: Seq[Setting[?]],
         ss: Seq[Def.SettingsDefinition],
-    ): Seq[Setting[?]] = platform ++ roots("shared", dir) ++ ss.flatMap(_.settings)
+    ): Seq[Setting[?]] = platform ++ roots("shared", dir) ++ ideSkip(dir) ++ ss.flatMap(_.settings)
 
     def jvmCompile(v: String) = self.jvm(v) / Compile
     def classDir(v: String) = Def.setting((jvmCompile(v) / classDirectory).value.getAbsolutePath)
