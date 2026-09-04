@@ -22,6 +22,21 @@ to your sbt file.
 PB.protocExecutable := file("/path/to/protoc")
 ```
 
+## IntelliJ
+
+IntelliJ imports the project for one Scala version, 2.13 by default, because it puts the sources
+that the matrix cells share into a single module: importing every cell would compile the Scala 2
+and the Scala 3 sources of a project together. To change that, set the properties below under
+`Settings -> Build, Execution, Deployment -> Build Tools -> sbt -> VM parameters` and reload the
+sbt project:
+
+- `-Dide.scala=X`: imports Scala version `X` instead. Name a binary version, `2.12`, `2.13` or
+  `3`. Ordinary projects build at one patch while the semanticdb rows build at every patch, so a
+  full version such as `2.13.18` selects the semanticdb row and leaves the rest out.
+- `-Dide.platform=Y`: if `Y` is empty, imports all platforms; otherwise, `Y` is a comma-separated
+  list of platforms to import, and `jvm` is implied, whether or not it is explicitly listed, while
+  `js` and `native` are optional.
+
 ## Testing
 
 The exact test command to run tests depends on what you are working on:
