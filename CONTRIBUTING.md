@@ -41,19 +41,17 @@ sbt project:
 
 The exact test command to run tests depends on what you are working on:
 
-- `testsJVM/test`: run all parser tests
-- `testsSemanticdb/test`: run integration tests for semantic APIs.
+- `tests2_13/testFull`: run all parser tests
+- `testsSemanticdb2_13`: run integration tests for semantic APIs.
 
 Tips to make your edit/test/debug workflow as productive as possible:
 
-- Use `testOnly` to speedup your workflow. Running `testsJVM/test` may
+- Use `testOnly` to speedup your workflow. Running `tests2_13/testFull` may
   still be too slow if you want fast feedback while iterating on a small change.
-  It's recommended to use `testsJVM/testOnly *CUSTOM_SUITE` where `CUSTOM_SUITE`
+  It's recommended to use `tests2_13/testOnly *CUSTOM_SUITE` where `CUSTOM_SUITE`
   is the name of your test suite.
 - Use `testOnly *CUSTOM_SUITE -- -z "TEST_NAME"` to target an individual test case
-  from a test suite. Some test suites contains a lot of unit tests so it may still
-  be too slow to use `testOnly`. To target an individual slow test you must use
-  the `all` scope `testsJVM/all:testOnly *CUSTOM_SUITE -- -z "TEST_NAME"`.
+  from a test suite.
 - Use the sbt command `save-expect` to make `ExpectSuite` pass. This command
   writes to disk the output of the current behavior. The diff may be large,
   please review it thoroughly to ensure that the new expected behavior is correct.
