@@ -212,7 +212,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     case _ => true
   }
 
-  private def canEndStat(token: Token): Boolean = token match {
+  def canEndStat(token: Token): Boolean = token match {
     case _: Ident | _: KwGiven | _: Literal | _: Interpolation.End | _: Xml.End | _: KwReturn |
         _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace | _: Underscore |
         _: Ellipsis | _: Unquote => true

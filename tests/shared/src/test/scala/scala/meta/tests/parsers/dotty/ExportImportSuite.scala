@@ -105,7 +105,6 @@ class ExportImportSuite extends BaseDottySuite {
        |import b.B
        |""".stripMargin,
     "end // commentC",
-    "beg // commentC",
   ))
 
 }

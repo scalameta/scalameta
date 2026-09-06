@@ -67,10 +67,7 @@ class DefnSuite extends ParseSuite {
           case (obj: Defn.Object) :: Nil => obj.templ.stats match {
               case first :: second :: Nil =>
                 assert(first.endComment.exists(_.toString.contains("commentX")))
-                assert(
-                  second.begComment.exists(_.toString.contains("commentX")),
-                  s"adjacent definition duplicates the trailing comment: ${second.begComment}",
-                )
+                assert(second.begComment.isEmpty, s"adjacent definition must not duplicate the trailing comment: ${second.begComment}")
               case x => fail(s"Expected two definitions: ${x.structure}")
             }
           case x => fail(s"Expected one object: ${x.structure}")
@@ -104,7 +101,6 @@ class DefnSuite extends ParseSuite {
        |  val z = 2
        |}""".stripMargin,
     "end // commentX",
-    "beg // commentX",
   ))
 
   test("trailing comment on adjacent xml literal")(assertStatComments(
@@ -112,7 +108,6 @@ class DefnSuite extends ParseSuite {
        |  val x = <a/> // commentX
        |  val z = 2
        |}""".stripMargin,
-    "beg // commentX",
   ))
 
   test("leading comment on xml argument")(assertStatComments(
@@ -134,7 +129,6 @@ class DefnSuite extends ParseSuite {
        |  val z = 2
        |}""".stripMargin,
     "end // commentX",
-    "beg // commentX",
   ))
 
   test("trailing comment on adjacent return")(assertStatComments(
@@ -142,7 +136,7 @@ class DefnSuite extends ParseSuite {
        |  def f: Unit = return // commentX
        |  val z = 2
        |}""".stripMargin,
-    "beg // commentX",
+    "end // commentX",
   ))
 
   test("val (x: Int) = 2")(assertTree(templStat("val (x: Int) = 2"))(

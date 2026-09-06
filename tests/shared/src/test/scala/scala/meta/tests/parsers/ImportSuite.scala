@@ -191,8 +191,8 @@ class ImportSuite extends ParseSuite {
               s"wildcard trailing comment missing: ${cImport.endComment}",
             )
             assert(
-              bImport.begComment.exists(_.toString.contains("commentC")),
-              s"adjacent import duplicates the trailing comment: ${bImport.begComment}",
+              bImport.begComment.isEmpty,
+              s"adjacent import must not duplicate the trailing comment: ${bImport.begComment}",
             )
           case x => fail(s"Expected two imports: ${obtained.structure}")
         }

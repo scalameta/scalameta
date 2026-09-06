@@ -113,6 +113,5 @@ class DeclSuite extends ParseSuite {
        |  def g: Int
        |}""".stripMargin,
     "end // commentX",
-    "beg // commentX",
   ))
 }
