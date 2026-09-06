@@ -19,3 +19,6 @@ addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.9.2")
 addSbtPlugin("org.scalameta" % "sbt-munit" % "1.3.6")
 
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.4.8")
+
+// sbt-assembly and sbt-shading both pin jarjar-abrams 1.17.1
+dependencyOverrides += "com.eed3si9n.jarjarabrams" %% "jarjar-abrams-core" % "1.18.1"
