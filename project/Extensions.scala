@@ -259,18 +259,25 @@ object Extensions {
     if (prop.isEmpty) Set.empty else prop.split("\\s*,\\s*").toSet + "jvm"
   }
 
-  private def ideSkip(platform: String) = Seq(ideSkipProject := {
-    val versions = Set(scalaBinaryVersion.value, scalaVersion.value)
-    !versions(ideScala) || idePlatforms.nonEmpty && !idePlatforms(platform)
-  })
+  // contributes nothing when it keeps a row, so it never overrides another setting
+  private def ideSkip(platform: String, version: Option[String]): Seq[Setting[?]] = {
+    val skipVersion = version
+      .exists(v => ideScala != v && ideScala != CrossVersion.binaryScalaVersion(v))
+    if (skipVersion || idePlatforms.nonEmpty && !idePlatforms(platform)) Seq(ideSkipProject := true)
+    else Nil
+  }
 
   implicit class ProjectMatrixExtensions(private val self: ProjectMatrix) extends AnyVal {
 
     def crossJvm(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
       val (scala2, scala3) = splitScala3(versions)
-      val settings = rowSettings("jvm", jvmPlatformSettings, ss)
-      val proj = self.defaultAxes(bareAxes *).jvmPlatform(scala2, settings)
-      scala3.foldLeft(proj) { case (m, (v, axis, ss)) => m.jvmPlatform(v, axis, settings ++ ss) }
+      // one row at a time, so each one knows the version it is built for
+      def settings(v: String) = rowSettings("jvm", Some(v), jvmPlatformSettings, ss)
+      val proj = scala2
+        .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.jvmPlatform(Seq(v), settings(v)))
+      scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
+        m.jvmPlatform(v, axis, settings(v.head) ++ ss)
+      }
     }
 
     /* semanticdb publishes one artifact per full Scala version, so each patch gets a row of its
@@ -284,7 +291,8 @@ object Extensions {
       /* customRow hands each row its own Project, so a row states the dependency for its own
        * version. A module published per binary version has one row a full-cross row can name. */
       val conv = (p: Project) =>
-        p.settings(rowSettings("jvm", jvmPlatformSettings, ss(v))).dependsOn(deps.map(_.jvm(pv)) *)
+        p.settings(rowSettings("jvm", Some(v), jvmPlatformSettings, ss(v)))
+          .dependsOn(deps.map(_.jvm(pv)) *)
       matrix.customRow(
         autoScalaLibrary = true,
         scalaVersions = Seq(v),
@@ -295,16 +303,22 @@ object Extensions {
 
     def crossJs(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
       val (scala2, scala3) = splitScala3(versions)
-      val settings = rowSettings("js", commonJsSettings, ss)
-      val proj = self.defaultAxes(bareAxes *).jsPlatform(jsScalaVersions(scala2), settings)
-      scala3.foldLeft(proj) { case (m, (v, axis, ss)) => m.jsPlatform(v, axis, settings ++ ss) }
+      def settings(v: String) = rowSettings("js", Some(v), commonJsSettings, ss)
+      val proj = jsScalaVersions(scala2)
+        .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.jsPlatform(Seq(v), settings(v)))
+      scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
+        m.jsPlatform(v, axis, settings(v.head) ++ ss)
+      }
     }
 
     def crossNative(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
       val (scala2, scala3) = splitScala3(versions)
-      val settings = rowSettings("native", nativeSettings, ss)
-      val proj = self.defaultAxes(bareAxes *).nativePlatform(nativeScalaVersions(scala2), settings)
-      scala3.foldLeft(proj) { case (m, (v, axis, ss)) => m.nativePlatform(v, axis, settings ++ ss) }
+      def settings(v: String) = rowSettings("native", Some(v), nativeSettings, ss)
+      val proj = nativeScalaVersions(scala2)
+        .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.nativePlatform(Seq(v), settings(v)))
+      scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
+        m.nativePlatform(v, axis, settings(v.head) ++ ss)
+      }
     }
 
     /** Every platform, nothing published. */
@@ -346,9 +360,11 @@ object Extensions {
 
     private def rowSettings(
         dir: String,
+        version: Option[String],
         platform: Seq[Setting[?]],
         ss: Seq[Def.SettingsDefinition],
-    ): Seq[Setting[?]] = platform ++ roots("shared", dir) ++ ideSkip(dir) ++ ss.flatMap(_.settings)
+    ): Seq[Setting[?]] = platform ++ roots("shared", dir) ++ ideSkip(dir, version) ++
+      ss.flatMap(_.settings)
 
     def jvmCompile(v: String) = self.jvm(v) / Compile
     def classDir(v: String) = Def.setting((jvmCompile(v) / classDirectory).value.getAbsolutePath)
