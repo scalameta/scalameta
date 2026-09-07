@@ -495,8 +495,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 case _: HSpace => true
                 case null => false
                 case t =>
-                  if (t.isAny[Ident, CloseDelim] || body.is[Term.Block] || hadEOL && t.is[Comma])
-                    if (begBuf ne null) begBuf.remove(0, pending)
+                  if (begBuf ne null)
+                    if (t.isAny[Ident, CloseDelim] || body.is[Term.Block] || hadEOL && t.is[Comma])
+                      begBuf.remove(0, pending)
                   false
               }) idx -= 1
             if (begBuf eq null) None else asComments(begBuf)
