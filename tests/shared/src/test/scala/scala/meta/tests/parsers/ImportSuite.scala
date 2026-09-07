@@ -176,6 +176,29 @@ class ImportSuite extends ParseSuite {
     }
   }
 
+  test("trailing comment on adjacent wildcard import") {
+    val code =
+      """|import c._ // commentC
+         |import b.B
+         |""".stripMargin
+    code.parse[Source] match {
+      case x: Parsed.Error => fail(x.message)
+      case Parsed.Success(obtained) => obtained.stats match {
+          case cImport :: bImport :: Nil =>
+            assert(cImport.endComment.isDefined, "wildcard import must keep its trailing comment")
+            assert(
+              cImport.endComment.get.toString.contains("commentC"),
+              s"wildcard trailing comment missing: ${cImport.endComment}",
+            )
+            assert(
+              bImport.begComment.exists(_.toString.contains("commentC")),
+              s"adjacent import duplicates the trailing comment: ${bImport.begComment}",
+            )
+          case x => fail(s"Expected two imports: ${obtained.structure}")
+        }
+    }
+  }
+
   test("import with detached comment") {
     val code =
       """|// detached comment before

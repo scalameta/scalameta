@@ -84,6 +84,15 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
   )(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkParsedTree(code, _.entrypointStat(), syntax)(tree)
 
+  protected def assertStatComments(code: String, comments: String*)(implicit
+      loc: munit.Location,
+      dialect: Dialect,
+  ): Unit = {
+    val obtained = source(code).collect { case t if t.hasComments => t }
+      .flatMap(t => t.begComment.map(x => s"beg $x") ++ t.endComment.map(x => s"end $x")).distinct
+    assertEquals(obtained, comments.toList)
+  }
+
   protected def runTestError[T <: Tree](code: String, expected: String)(implicit
       parser: String => T,
       loc: munit.Location,

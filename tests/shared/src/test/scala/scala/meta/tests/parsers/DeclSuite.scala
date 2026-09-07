@@ -106,4 +106,13 @@ class DeclSuite extends ParseSuite {
   test("val x: (=> X)")(
     assertTree(templStat("val x: (=> X)"))(Decl.Val(Nil, List(patvar("x")), Type.ByName(pname("X")))),
   )
+
+  test("trailing comment on adjacent singleton type")(assertStatComments(
+    """|trait O {
+       |  def f: O.type // commentX
+       |  def g: Int
+       |}""".stripMargin,
+    "end // commentX",
+    "beg // commentX",
+  ))
 }
