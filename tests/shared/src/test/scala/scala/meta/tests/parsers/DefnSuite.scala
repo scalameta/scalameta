@@ -108,12 +108,14 @@ class DefnSuite extends ParseSuite {
        |  val x = <a/> // commentX
        |  val z = 2
        |}""".stripMargin,
+    "end // commentX",
   ))
 
   test("leading comment on xml argument")(assertStatComments(
     """|object O {
        |  val x = f(/* commentX */ <a/>)
        |}""".stripMargin,
+    "beg /* commentX */",
   ))
 
   test("leading comment on literal argument")(assertStatComments(

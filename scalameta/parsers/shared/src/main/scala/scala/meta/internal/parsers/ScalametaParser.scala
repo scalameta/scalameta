@@ -498,7 +498,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   if (begBuf ne null)
                     if (canEndStat(t) || body.is[Term.Block] || hadEOL && t.is[Comma])
                       begBuf.remove(0, pending)
-                  false
+                  t.isEmpty // cannot separate a leading comment from the tree
               }) idx -= 1
             if (begBuf eq null) None else asComments(begBuf)
           } else if (bodyIsBlock) None // braceless
@@ -542,7 +542,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   true
                 case _: HSpace => true
                 case _: Comma => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
-                case _ => false
+                case null => false
+                case t => t.isEmpty // cannot separate the tree from a trailing comment
               }) idx += 1
             if (endBuf eq null) None else asComments(endBuf)
           } else if (bodyIsBlock) None // let the child own it
