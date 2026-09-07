@@ -55,6 +55,96 @@ class DefnSuite extends ParseSuite {
     Defn.Val(Nil, List(patvar("x")), Some("Int"), Term.Placeholder()),
   ))
 
+  test("trailing comment on adjacent literal definition") {
+    val code =
+      """|object O {
+         |  val x = 1 // commentX
+         |  val y = 2
+         |}""".stripMargin
+    code.parse[Source] match {
+      case x: Parsed.Error => fail(x.message)
+      case Parsed.Success(obtained) => obtained.stats match {
+          case (obj: Defn.Object) :: Nil => obj.templ.stats match {
+              case first :: second :: Nil =>
+                assert(first.endComment.exists(_.toString.contains("commentX")))
+                assert(
+                  second.begComment.exists(_.toString.contains("commentX")),
+                  s"adjacent definition duplicates the trailing comment: ${second.begComment}",
+                )
+              case x => fail(s"Expected two definitions: ${x.structure}")
+            }
+          case x => fail(s"Expected one object: ${x.structure}")
+        }
+    }
+  }
+
+  test("trailing comment on adjacent parenthesized definition") {
+    val code =
+      """|object O {
+         |  val x = List(1) // commentX
+         |  val y = 2
+         |}""".stripMargin
+    code.parse[Source] match {
+      case x: Parsed.Error => fail(x.message)
+      case Parsed.Success(obtained) => obtained.stats match {
+          case (obj: Defn.Object) :: Nil => obj.templ.stats match {
+              case first :: second :: Nil =>
+                assert(first.endComment.exists(_.toString.contains("commentX")))
+                assert(second.begComment.isEmpty, s"adjacent definition must not duplicate the trailing comment: ${second.begComment}")
+              case x => fail(s"Expected two definitions: ${x.structure}")
+            }
+          case x => fail(s"Expected one object: ${x.structure}")
+        }
+    }
+  }
+
+  test("trailing comment on adjacent interpolation")(assertStatComments(
+    """|object O {
+       |  val x = s"$y" // commentX
+       |  val z = 2
+       |}""".stripMargin,
+    "end // commentX",
+    "beg // commentX",
+  ))
+
+  test("trailing comment on adjacent xml literal")(assertStatComments(
+    """|object O {
+       |  val x = <a/> // commentX
+       |  val z = 2
+       |}""".stripMargin,
+    "beg // commentX",
+  ))
+
+  test("leading comment on xml argument")(assertStatComments(
+    """|object O {
+       |  val x = f(/* commentX */ <a/>)
+       |}""".stripMargin,
+  ))
+
+  test("leading comment on literal argument")(assertStatComments(
+    """|object O {
+       |  val x = f(/* commentX */ 1)
+       |}""".stripMargin,
+    "beg /* commentX */",
+  ))
+
+  test("trailing comment on adjacent self reference")(assertStatComments(
+    """|class O {
+       |  val x = this // commentX
+       |  val z = 2
+       |}""".stripMargin,
+    "end // commentX",
+    "beg // commentX",
+  ))
+
+  test("trailing comment on adjacent return")(assertStatComments(
+    """|object O {
+       |  def f: Unit = return // commentX
+       |  val z = 2
+       |}""".stripMargin,
+    "beg // commentX",
+  ))
+
   test("val (x: Int) = 2")(assertTree(templStat("val (x: Int) = 2"))(
     Defn.Val(Nil, Pat.Typed(patvar("x"), pname("Int")) :: Nil, None, int(2)),
   ))
