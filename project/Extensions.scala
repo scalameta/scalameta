@@ -42,7 +42,6 @@ object Extensions {
 
   val commonJsSettings = Def.settings(
     platformAxis := Platforms.JS,
-    bspEnabled := false,
     scalaJSLinkerConfig := StandardConfig().withBatchMode(true),
     scalacOptions ++= {
       if (isSnapshot.value) Seq.empty
@@ -57,7 +56,6 @@ object Extensions {
 
   lazy val nativeSettings = Def.settings(
     platformAxis := Platforms.Native,
-    bspEnabled := false,
     nativeConfig ~= {
       _.withMode(Mode.releaseFast)
       /*
@@ -72,9 +70,9 @@ object Extensions {
   /** What a JVM row gets whether or not it is cross-built; a JVM-only project takes it by hand. */
   lazy val jvmPlatformSettings = Def.settings(
     platformAxis := Platforms.JVM,
-    // Target Java 8 bytecode for Scala 2 JVM artifacts regardless of the build
-    // JDK, so releases built on newer JDKs still run on JDK 8. Scala 3 (3.8+) is
-    // built with JDK 17 and needs no -release flag.
+    /* Target Java 8 bytecode for Scala 2 JVM artifacts regardless of the build
+     * JDK, so releases built on newer JDKs still run on JDK 8. Scala 3 (3.8+) is
+     * built with JDK 17 and needs no -release flag. */
     scalacOptions ++= { if (isScala3.value) Nil else Seq("-release", "8") },
   )
 
@@ -254,18 +252,20 @@ object Extensions {
     else None
   }
 
-  // an empty set is no filter, so every platform
-  private val idePlatforms = {
-    val prop = sys.props.getOrElse("ide.platform", "").trim
-    if (prop.isEmpty) Set.empty else prop.split("\\s*,\\s*").toSet
-  }
+  /* Scala.js and Native hold little code here, and compiling them costs a BSP client its first
+   * build, so this build offers the JVM alone until someone asks for more. */
+  private val defaultPlatforms = Set(VirtualAxis.jvm.value)
 
-  // contributes nothing when it keeps a row, so it never overrides another setting
-  private def ideSkip(platform: String, version: Option[String]): Seq[Setting[?]] = {
-    val skipVersion = version
-      .exists(v => ideScala.exists(s => s != v && s != CrossVersion.binaryScalaVersion(v)))
-    if (skipVersion || idePlatforms.nonEmpty && !idePlatforms(platform)) Seq(bspEnabled := false)
-    else Nil
+  // an empty set is no filter, so every platform
+  private val idePlatforms = sys.props.get("ide.platform")
+    .fold(defaultPlatforms)(_.split(',').map(_.trim).filter(_.nonEmpty).toSet)
+
+  // only ever disables a row, so it never overrides another setting
+  private def ideSkip(platform: VirtualAxis.PlatformAxis, version: String): Seq[Setting[?]] = {
+    val skip = idePlatforms.nonEmpty && !idePlatforms(platform.value) ||
+      version.nonEmpty &&
+      ideScala.exists(s => s != version && s != CrossVersion.binaryScalaVersion(version))
+    if (skip) Seq(bspEnabled := false) else Nil
   }
 
   implicit class ProjectMatrixExtensions(private val self: ProjectMatrix) extends AnyVal {
@@ -273,7 +273,7 @@ object Extensions {
     def crossJvm(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
       val (scala2, scala3) = splitScala3(versions)
       // one row at a time, so each one knows the version it is built for
-      def settings(v: String) = rowSettings("jvm", Some(v), jvmPlatformSettings, ss)
+      def settings(v: String) = rowSettings(VirtualAxis.jvm, v, jvmPlatformSettings, ss)
       val proj = scala2
         .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.jvmPlatform(Seq(v), settings(v)))
       scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
@@ -292,7 +292,7 @@ object Extensions {
       /* customRow hands each row its own Project, so a row states the dependency for its own
        * version. A module published per binary version has one row a full-cross row can name. */
       val conv = (p: Project) =>
-        p.settings(rowSettings("jvm", Some(v), jvmPlatformSettings, ss(v)))
+        p.settings(rowSettings(VirtualAxis.jvm, v, jvmPlatformSettings, ss(v)))
           .dependsOn(deps.map(_.jvm(pv)) *)
       matrix.customRow(
         autoScalaLibrary = true,
@@ -304,7 +304,7 @@ object Extensions {
 
     def crossJs(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
       val (scala2, scala3) = splitScala3(versions)
-      def settings(v: String) = rowSettings("js", Some(v), commonJsSettings, ss)
+      def settings(v: String) = rowSettings(VirtualAxis.js, v, commonJsSettings, ss)
       val proj = jsScalaVersions(scala2)
         .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.jsPlatform(Seq(v), settings(v)))
       scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
@@ -314,7 +314,7 @@ object Extensions {
 
     def crossNative(versions: Seq[String], ss: Def.SettingsDefinition*): ProjectMatrix = {
       val (scala2, scala3) = splitScala3(versions)
-      def settings(v: String) = rowSettings("native", Some(v), nativeSettings, ss)
+      def settings(v: String) = rowSettings(VirtualAxis.native, v, nativeSettings, ss)
       val proj = nativeScalaVersions(scala2)
         .foldLeft(self.defaultAxes(bareAxes *))((m, v) => m.nativePlatform(Seq(v), settings(v)))
       scala3.foldLeft(proj) { case (m, (v, axis, ss)) =>
@@ -360,11 +360,11 @@ object Extensions {
     }
 
     private def rowSettings(
-        dir: String,
-        version: Option[String],
+        axis: VirtualAxis.PlatformAxis,
+        version: String,
         platform: Seq[Setting[?]],
         ss: Seq[Def.SettingsDefinition],
-    ): Seq[Setting[?]] = platform ++ roots("shared", dir) ++ ideSkip(dir, version) ++
+    ): Seq[Setting[?]] = platform ++ roots("shared", axis.value) ++ ideSkip(axis, version) ++
       ss.flatMap(_.settings)
 
     def jvmCompile(v: String) = self.jvm(v) / Compile
