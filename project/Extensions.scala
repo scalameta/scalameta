@@ -339,33 +339,12 @@ object Extensions {
       if (shadingSettings.isEmpty) self
       else self.enablePlugins(ShadingPlugin).settings(shadingSettings)
 
-    /**
-     * A matrix has one base directory, so each row lists every source directory it reads. An absent
-     * directory is harmless.
-     */
-    private def roots(dirs: String*): Seq[Setting[?]] = {
-      def under(conf: String, leaf: String => Seq[String]) = Def.setting {
-        // a matrix base can be relative, so resolve a source directory against the build root
-        val root = IO.resolve((ThisBuild / baseDirectory).value, self.base)
-        for (dir <- dirs.toList; name <- leaf(scalaBinaryVersion.value)) yield root / dir / "src" /
-          conf / name
-      }
-      def sources(sbv: String) = Seq("scala", "java", s"scala-$sbv", s"scala-${sbv.head}").distinct
-      Def.settings(
-        Compile / unmanagedSourceDirectories ++= under("main", sources).value,
-        Test / unmanagedSourceDirectories ++= under("test", sources).value,
-        Compile / unmanagedResourceDirectories ++= under("main", _ => Seq("resources")).value,
-        Test / unmanagedResourceDirectories ++= under("test", _ => Seq("resources")).value,
-      )
-    }
-
     private def rowSettings(
         axis: VirtualAxis.PlatformAxis,
         version: String,
         platform: Seq[Setting[?]],
         ss: Seq[Def.SettingsDefinition],
-    ): Seq[Setting[?]] = platform ++ roots("shared", axis.value) ++ ideSkip(axis, version) ++
-      ss.flatMap(_.settings)
+    ): Seq[Setting[?]] = platform ++ ideSkip(axis, version) ++ ss.flatMap(_.settings)
 
     def jvmCompile(v: String) = self.jvm(v) / Compile
     def classDir(v: String) = Def.setting((jvmCompile(v) / classDirectory).value.getAbsolutePath)

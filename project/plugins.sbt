@@ -5,6 +5,7 @@ resolvers += Resolver.sonatypeCentralSnapshots
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "2.4.1")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.1")
 
+addSbtPlugin("com.github.sbt" % "sbt-matrix-sources" % "0.1.0")
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.6.1")
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.12.0")
 
