@@ -13,7 +13,7 @@ object Versions {
     // the first row is published and checked for mima
     // the first two are tested in pre-merge for JVM and JS, and in post-merge for Native
     // NB: use one of these two lines for RC testing, as long as it's not merged
-    "3.3.8" -> "3_lts",
+    "3.3.9-RC1" -> "3_lts",
     "3.8.4" -> "3_next",
     // lines below will only be tested for JVM in post-merge CI
     "3.9.0" -> "3_9",
