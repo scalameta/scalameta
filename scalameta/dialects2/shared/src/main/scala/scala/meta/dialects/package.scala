@@ -22,23 +22,18 @@ package object dialects {
   implicit val Scala212: Dialect = Scala211.withAllowTrailingCommas(true)
     .withAllowQuestionMarkAsTypeWildcard(true)
 
+  /** Dialect starting with Scala 2.12.14 for `-Xsource:3` option */
+  implicit val Scala212Source3: Dialect = withSource3(Scala212)
+
   implicit val Scala213: Dialect = Scala212.withAllowImplicitByNameParameters(true)
     .withAllowLiteralTypes(true).withAllowNumericLiteralUnderscoreSeparators(true)
     .withAllowTryWithAnyExpr(true).withAllowBinaryLiterals(true).withAllowEmptyInfixArgs(false)
     .withTreatUnicodeEscapesAsOrdinary(true) // added in 2.13.2
 
-  /**
-   * Dialect starting with Scala 2.13.6 for `-Xsource:3` option
-   */
-  implicit val Scala213Source3: Dialect = Scala213.withAllowAsForImportRename(true)
-    .withAllowStarWildcardImport(true).withAllowOpenClass(true).withAllowInfixMods(true)
-    .withAllowPostfixStarVarargSplices(true).withAllowPlusMinusUnderscoreAsIdent(true)
-    .withAllowGivenImports(true).withAllowInfixOperatorAfterNL(true)
+  /** Dialect starting with Scala 2.13.6 for `-Xsource:3` option */
+  implicit val Scala213Source3: Dialect = withSource3(Scala213).withAllowInfixOperatorAfterNL(true)
 
-  /**
-   * Dialect starting with Scala 2.12.14 for `-Xsource:3` option
-   */
-  implicit val Scala212Source3: Dialect = Scala212.withAllowAsForImportRename(true)
+  private def withSource3(dialect: Dialect): Dialect = dialect.withAllowAsForImportRename(true)
     .withAllowStarWildcardImport(true).withAllowOpenClass(true).withAllowInfixMods(true)
     .withAllowPostfixStarVarargSplices(true).withAllowPlusMinusUnderscoreAsIdent(true)
     .withAllowGivenImports(true)
