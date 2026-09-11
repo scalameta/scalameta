@@ -1,4 +1,8 @@
 changelog:
+  exclude:
+    labels:
+      - Build
+      - github_actions
   categories:
     - title: Features
       labels:
@@ -7,11 +11,9 @@ changelog:
     - title: Bug fixes
       labels:
         - Bug
-    - title: Build and dependency updates
+    - title: Dependency updates
       labels:
-        - Build
         - dependencies
-        - github_actions
         - library-update
         - sbt-plugin-update
     - title: Miscellaneous
