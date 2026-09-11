@@ -8,26 +8,9 @@ import com.typesafe.tools.mima.core._
 // More details about Mima:
 // https://github.com/typesafehub/migration-manager/wiki/sbt-plugin#basic-usage
 object Mima {
-  val languageAgnosticCompatibilityPolicy: ProblemFilter = {
-    case problem: TemplateProblem =>
-      val ref = problem.ref
-      isPublicAndNotExcluded(ref.fullName, ScalametaMimaUtils.isPublic(ref, null))
-    case problem: MemberProblem =>
-      val ref = problem.ref
-      val accessible = ScalametaMimaUtils.isPublic(ref) &&
-        (ref.fullName match {
-          case "scala.meta.Dialect.this" =>
-            // exclude ctor with the longest method signature (aka, primary)
-            // for some reason, `private[meta]` on the primary ctor is not visible
-            val descriptorLength = ref.descriptor.length
-            !ref.owner.methods.get(MemberInfo.ConstructorName)
-              .forall(ctor => (ctor eq ref) || ctor.descriptor.length < descriptorLength)
-          case _ => true
-        })
-      isPublicAndNotExcluded(ref.fullName, accessible)
-  }
+  val languageAgnosticCompatibilityPolicy: ProblemFilter = _.matchName.exists(isPublicAndNotExcluded)
 
-  private def isPublicAndNotExcluded(fullName: String, accessible: Boolean): Boolean = {
+  private def isPublicAndNotExcluded(fullName: String): Boolean = {
     def exclude(parts: Iterable[String]) = parts.exists {
       case "internal" | "contrib" => true
       case _ => false
@@ -37,12 +20,10 @@ object Mima {
         parts.headOption.exists(Set("metap", "metacp").contains) ||
         parts.lastOption.exists(Set("Metap", "Metacp").contains)
 
-    accessible && {
-      val relName = fullName.stripPrefix("scala.meta.")
-      (relName ne fullName) && ! {
-        val parts = relName.split(Array('.', '#', '$'))
-        exclude(parts) || excludeSemantic(relName, parts)
-      }
+    val relName = fullName.stripPrefix("scala.meta.")
+    (relName ne fullName) && ! {
+      val parts = relName.split(Array('.', '#', '$'))
+      exclude(parts) || excludeSemantic(relName, parts)
     }
   }
 
@@ -64,9 +45,6 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
-    exclude[DirectMissingMethodProblem]("transversers.Transformer.apply"),
-    exclude[DirectMissingMethodProblem]("transversers.Traverser.apply"),
-    exclude[IncompatibleMethTypeProblem]("transversers.Traverser.apply"),
     // Tree
   )
 }
