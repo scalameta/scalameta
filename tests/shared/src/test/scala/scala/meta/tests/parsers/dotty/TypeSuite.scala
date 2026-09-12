@@ -525,6 +525,14 @@ class TypeSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
   }
 
+  test("into-case-class") {
+    implicit val dialect: Dialect = dialects.Scala38
+    val code = "into case class B(a: Int)"
+    val tree = Defn
+      .Class(List(Mod.Into(), Mod.Case()), pname("B"), Nil, ctorp(tparam("a", "Int")), tplNoBody())
+    runTestAssert[Stat](code)(tree)
+  }
+
   // https://github.com/scalameta/scalameta/issues/4561
   test("into-enum") {
     implicit val dialect: Dialect = dialects.Scala38
