@@ -125,7 +125,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       val next = getNextIndex(index)
       tokens(next) match {
         case _: KwClass | _: KwType | _: KwTrait | _: KwEnum => true
-        case otherwise => isModifier(next)
+        case _: KwCase => getNextToken(next).is[KwClass]
+        case _ => isModifier(next)
       }
     }
 
