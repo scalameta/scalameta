@@ -141,11 +141,13 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
     sepRegionsDepth += 1
   }
 
-  private def popSepRegionsIf(token: LegacyToken): Boolean = sepRegionsDepth > 0 &&
-    sepRegions(sepRegionsDepth - 1) == token && {
-      sepRegionsDepth -= 1
-      true
-    }
+  private def isSepRegionAt(token: LegacyToken, depth: Int): Boolean = sepRegionsDepth >= depth &&
+    sepRegions(sepRegionsDepth - depth) == token
+
+  private def popSepRegionsIf(token: LegacyToken): Boolean = isSepRegionAt(token, 1) && {
+    sepRegionsDepth -= 1
+    true
+  }
 
   private def popSepRegionsUntil(token: LegacyToken): Boolean = {
     while (sepRegionsDepth > 0) {
@@ -233,11 +235,10 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
    */
   private final def fetchToken(): Unit = {
     // STRINGPART follows STRINGLIT in multiline interpolation
-    if (sepRegionsDepth > 0 && sepRegions(sepRegionsDepth - 1) == STRINGLIT) {
+    if (isSepRegionAt(STRINGLIT, 1)) {
       if (token == STRINGPART) getStringSplice()
-      else getStringPart(multiLine =
-        sepRegionsDepth > 1 && sepRegions(sepRegionsDepth - 2) == STRINGPART,
-      )
+      else if (!isSepRegionAt(STRINGPART, 2)) getStringPart('"', 1)
+      else getStringPart('"', 3) // multiline delimiter will vary in the future
       return
     }
     if (fetchXmlPart()) return
@@ -381,7 +382,7 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
               if (ch == '"' && !wasEscapedMultiChar) {
                 nextRawChar()
                 offset = begCharOffset
-                getStringPart(multiLine = true)
+                getStringPart('"', 3)
                 pushSepRegions(STRINGPART) // indicate string part
                 pushSepRegions(STRINGLIT) // once more to indicate multi line string part
               } else {
@@ -390,7 +391,7 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
                 strVal = ""
               }
             } else {
-              withAllowUnicodeEscape(getStringPart(multiLine = false))(allow = allowUnicodeEscape)
+              withAllowUnicodeEscape(getStringPart('"', 1))(allow = allowUnicodeEscape)
               pushSepRegions(STRINGLIT) // indicate single line string part
             }
           } else {
@@ -400,7 +401,7 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
               nextChar()
               if (ch == '"' && !wasEscapedMultiChar) {
                 nextRawChar()
-                getMultilineStringLit()
+                getMultilineStringLit('"', 3)
               } else {
                 token = STRINGLIT
                 strVal = ""
@@ -588,23 +589,24 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
     }
 
   @tailrec
-  private def getMultilineStringLit(): Unit =
-    if (ch == '"') { if (!canFinishMultilineStringLit()) getMultilineStringLit() }
+  private def getMultilineStringLit(quote: Char, cnt: Int): Unit =
+    if (ch == quote) { if (moreMultilineStringLit(quote, cnt)) getMultilineStringLit(quote, cnt) }
     else if (ch == SU) {
       setInvalidToken(next)("unclosed multi-line string literal")
       finishStringLit()
     } else if (isUnquoteDollar()) {
       setInvalidToken(next)("can't unquote into multi-line string literals")
       nextRawChar()
-      getMultilineStringLit()
+      getMultilineStringLit(quote, cnt)
     } else {
       putCharAndNextRaw()
-      getMultilineStringLit()
+      getMultilineStringLit(quote, cnt)
     }
 
   private def finishStringLit() = setTokStrVal(STRINGLIT)
 
-  private def getStringPart(multiLine: Boolean): Unit = {
+  private def getStringPart(quote: Char, count: Int): Unit = {
+    val multiLine = count >= 3
     def unclosedLiteralError(): Boolean = {
       finishStringLit()
       val what = if (multiLine) "multi" else "single"
@@ -618,8 +620,9 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
     }
 
     def readSingleChar: Boolean = (ch: @switch) match {
-      case '"' =>
-        if (multiLine) !canFinishMultilineStringLit(withoutQuotes = true)
+      case '"' | '\'' => // a guard on the case would keep @switch from applying
+        if (ch != quote) keepGoing()
+        else if (multiLine) moreMultilineStringLit(quote, count, endBeforeQuotes = true)
         else {
           endOffset = begCharOffset
           nextChar()
@@ -704,28 +707,43 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
     }
   }
 
-  private def canFinishMultilineStringLit(withoutQuotes: Boolean = false): Boolean = {
-    var qte1 = begCharOffset
-    nextRawChar()
-    if (ch == '"') {
-      var qte2 = begCharOffset
+  // offsets of the last `count` quotes of a possible closing run; reused
+  private var quoteRunOffsets = new Array[Int](3)
+
+  private def moreMultilineStringLit(
+      quote: Char,
+      cnt: Int,
+      endBeforeQuotes: Boolean = false,
+  ): Boolean = {
+    if (quoteRunOffsets.length < cnt) quoteRunOffsets = new Array[Int](cnt)
+
+    var seen = 0
+    while ({
+      quoteRunOffsets(seen) = begCharOffset
+      seen += 1
+      seen < cnt
+    }) {
       nextRawChar()
-      if (ch == '"') {
-        var qte3 = begCharOffset
-        nextChar()
-        while (ch == '"') {
-          qte1 = qte2
-          qte2 = qte3
-          qte3 = begCharOffset
-          putCharAndNext()
+      if (ch != quote) {
+        while (seen > 0) {
+          putChar(quote)
+          seen -= 1
         }
-        if (withoutQuotes) endOffset = qte1
-        finishStringLit()
         return true
       }
-      putChar('"')
     }
-    putChar('"')
+
+    nextChar()
+    var oldest = 0 // beyond `count` quotes, the run's leading quotes are content
+    while (ch == quote) {
+      quoteRunOffsets(oldest) = begCharOffset
+      oldest += 1
+      if (oldest == cnt) oldest = 0
+      putCharAndNext()
+    }
+
+    if (endBeforeQuotes) endOffset = quoteRunOffsets(oldest)
+    finishStringLit()
     false
   }
 
