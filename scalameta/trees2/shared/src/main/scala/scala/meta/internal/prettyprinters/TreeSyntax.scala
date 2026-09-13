@@ -273,22 +273,7 @@ object TreeSyntax {
         }
         printSelect(t, sep, bqExpr = backquoteExpr)
       case t: Term.Interpolate =>
-        /** @see LegacyScanner.getStringPart, when ch == '$' */
-        def needBraces(id: String, nextPart: String): Boolean =
-          !Character.isUnicodeIdentifierStart(id.head) ||
-            nextPart.headOption.exists(Character.isUnicodeIdentifierPart)
-        var needQuote = false
-        val partsIter = t.parts.iterator.map { case Lit.String(part) =>
-          needQuote ||= part.contains("\n") || part.contains("\"")
-          part.replace("$", "$$")
-        }.buffered
-        val partsArgs = printPartsArgs(partsIter, t.args, "interpolate") {
-          case id: Name if !guessIsBackquoted(id) && !needBraces(id.value, partsIter.head) =>
-            s("$", id.value)
-          case arg => s("$", printBracedExpr(arg))
-        }
-        val quote = if (needQuote) "\"\"\"" else "\""
-        m(SimpleExpr1, s(t.prefix, quote, partsArgs, quote))
+        m(SimpleExpr1, printInterpolate(t.prefix, t.parts, t.args)(printBracedExpr))
       case t: Term.Xml =>
         if (!dialect.allowXmlLiterals)
           throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
@@ -533,14 +518,7 @@ object TreeSyntax {
         }
         m(pop, s(p(pop, t.lhs), " ", t.op, " ", rhs))
       case t: Pat.Interpolate =>
-        /** @see LegacyScanner.getStringPart, when ch == '$' */
-        def needBraces(id: String): Boolean = !Character.isUnicodeIdentifierStart(id.head)
-        val partsIter = t.parts.iterator.map { case Lit.String(part) => part }
-        val partsArgs = printPartsArgs(partsIter, t.args, "interpolate") {
-          case id: Name if !guessIsBackquoted(id) && !needBraces(id.value) => s("$", id.value)
-          case arg => s("$", printBracedExpr(arg))
-        }
-        m(SimplePattern, s(t.prefix, "\"", partsArgs, "\""))
+        m(SimplePattern, printInterpolate(t.prefix, t.parts, t.args)(arg => printBracedExpr(arg)))
       case t: Pat.Xml =>
         if (!dialect.allowXmlLiterals)
           throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
@@ -1008,6 +986,28 @@ object TreeSyntax {
     private def printBracedExpr(t: Show.Result, useBraces: Boolean = true): Show.Result =
       w("{", t, "}", useBraces)
     private def printBracedExpr(t: Term): Show.Result = printBracedExpr(p(Expr, t), !t.is[Term.Block])
+
+    private def printInterpolate[A <: Tree](prefix: Term.Name, parts: List[Lit], args: Seq[A])(
+        argPrinter: A => Show.Result,
+    ): Show.Result = {
+
+      /** @see LegacyScanner.getStringPart, when ch == '$' */
+      def needBraces(id: String, nextPart: String): Boolean =
+        !Character.isUnicodeIdentifierStart(id.head) ||
+          nextPart.headOption.exists(Character.isUnicodeIdentifierPart)
+      var needQuote = false
+      val partsIter = parts.iterator.map { case Lit.String(part) =>
+        needQuote ||= part.contains("\n") || part.contains("\r") || part.contains("\"")
+        part.replace("$", "$$")
+      }.buffered
+      val partsArgs = printPartsArgs(partsIter, args, "interpolate") {
+        case id: Name if !guessIsBackquoted(id) && !needBraces(id.value, partsIter.head) =>
+          s("$", id.value)
+        case arg => s("$", argPrinter(arg))
+      }
+      val quote = if (needQuote) "\"\"\"" else "\""
+      s(prefix, quote, partsArgs, quote)
+    }
 
     private def printPartsArgs[A <: Tree](partsIter: Iterator[String], args: Seq[A], what: String)(
         f: A => Show.Result,
