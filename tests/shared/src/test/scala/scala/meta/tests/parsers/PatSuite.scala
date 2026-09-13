@@ -150,6 +150,42 @@ class PatSuite extends ParseSuite {
     Pat.Interpolate(tname("q"), List(str("x + "), str("")), List(patwildcard)),
   ))
 
+  test("interpolation with multiline part") {
+    val code = "s\"\"\"a\n$b\"\"\""
+    val tree = Interpolate(tname("s"), List(str("a\n"), str("")), List(Var(tname("b"))))
+    assertPat(code)(tree)
+    // Pat.Interpolate reprints with single quotes, and the multiline part cannot reparse
+    val reprinted = "s\"a\n${b}\""
+    assertNoDiff(pat(code).reprint, reprinted)
+    runTestError[Pat](reprinted, "unclosed single-line string interpolation")
+  }
+
+  test("interpolation with dollar in part") {
+    val code = "s\"a $$ b\""
+    val tree = Interpolate(tname("s"), List(str("a $ b")), Nil)
+    assertPat(code)(tree)
+    // the dollar is not doubled back, so the reprint cannot reparse
+    val reprinted = "s\"a $ b\""
+    assertNoDiff(pat(code).reprint, reprinted)
+    runTestError[Pat](reprinted, "Not one of")
+  }
+
+  test("interpolation with CR in part") {
+    val code = "s\"\"\"a\r$b\"\"\""
+    val tree = Interpolate(tname("s"), List(str("a\r"), str("")), List(Var(tname("b"))))
+    assertPat(code)(tree)
+    // printing renders the CR as a line end but keeps the single quotes,
+    // so the reprint cannot reparse
+    val reprinted = "s\"a\n${b}\""
+    assertNoDiff(pat(code).reprint, reprinted)
+    runTestError[Pat](reprinted, "unclosed single-line string interpolation")
+  }
+
+  test("interpolation with name arg glued to next part") {
+    val tree = Interpolate(tname("s"), List(str(""), str("b")), List(tname("x")))
+    assertNoDiff(tree.reprint, "s\"${`x`}b\"")
+  }
+
   test("#501")(intercept[ParseException](pat("case List(_: BlockExpr, _: MatchExpr, x:_*)  ⇒ false")))
 
   test("<a>{_*}</a>")(
