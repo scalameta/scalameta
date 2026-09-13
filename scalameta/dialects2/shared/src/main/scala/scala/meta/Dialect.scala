@@ -182,6 +182,8 @@ final class Dialect private[meta] (
     val allowImprovedTypeClassesSyntax: Boolean = false,
     // https://github.com/scala/scala/pull/8282
     val treatUnicodeEscapesAsOrdinary: Boolean = false,
+    // SIP-72: https://docs.scala-lang.org/scala3/reference/experimental/dedented-string-literals.html
+    val allowDedentedStringLiterals: Boolean = false,
 
     // NOTE: add new fields above this line
     private[meta] val unquoteParentDialect: Dialect = null,
@@ -398,6 +400,9 @@ final class Dialect private[meta] (
   def withTreatUnicodeEscapesAsOrdinary(newValue: Boolean): Dialect =
     privateCopy(treatUnicodeEscapesAsOrdinary = newValue)
 
+  def withAllowDedentedStringLiterals(newValue: Boolean): Dialect =
+    privateCopy(allowDedentedStringLiterals = newValue)
+
   // NOTE(olafur): add the next `withX()` method above this comment. Please try
   // to use consistent formatting, use `newValue` as the parameter name and wrap
   // the body inside curly braces.
@@ -466,6 +471,7 @@ final class Dialect private[meta] (
       allowNamedTuples: Boolean = this.allowNamedTuples,
       allowImprovedTypeClassesSyntax: Boolean = this.allowImprovedTypeClassesSyntax,
       treatUnicodeEscapesAsOrdinary: Boolean = this.treatUnicodeEscapesAsOrdinary,
+      allowDedentedStringLiterals: Boolean = this.allowDedentedStringLiterals,
       // NOTE(olafur): add the next parameter above this comment.
       unquoteType: UnquoteType = UnquoteType.None,
   ): Dialect = {
@@ -533,6 +539,7 @@ final class Dialect private[meta] (
       allowNamedTuples = allowNamedTuples,
       allowImprovedTypeClassesSyntax = allowImprovedTypeClassesSyntax,
       treatUnicodeEscapesAsOrdinary = treatUnicodeEscapesAsOrdinary,
+      allowDedentedStringLiterals = allowDedentedStringLiterals,
       // NOTE(olafur): add the next argument above this comment.
       unquoteType = unquoteType,
       unquoteParentDialect = if (notForUnquote) null else this,
@@ -626,6 +633,7 @@ final class Dialect private[meta] (
       this.allowCaptureChecking == that.allowCaptureChecking &&
       this.allowNamedTuples == that.allowNamedTuples &&
       this.treatUnicodeEscapesAsOrdinary == that.treatUnicodeEscapesAsOrdinary &&
+      this.allowDedentedStringLiterals == that.allowDedentedStringLiterals &&
       this.allowImprovedTypeClassesSyntax == that.allowImprovedTypeClassesSyntax
 
   @deprecated("Use withX method instead", "4.3.11")
