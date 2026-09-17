@@ -13,7 +13,7 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestAssert[Stat](code)(tree)
+      runTestAssert[Stat](code)(str("i am cow\nhear me moo"))
     }
   }
 
@@ -23,7 +23,7 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestAssert[Stat](code)(tree)
+      runTestAssert[Stat](code)(str(""))
     }
   }
 
@@ -34,7 +34,7 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestAssert[Stat](code, layout)(tree)
+      runTestAssert[Stat](code)(str("foo"))
     }
   }
 
@@ -45,7 +45,7 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestAssert[Stat](code, layout)(tree)
+      runTestAssert[Stat](code)(Defn.Val(Nil, List(patvar("x")), None, str("foo")))
     }
   }
 
@@ -56,7 +56,7 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestAssert[Stat](code, layout)(tree)
+      runTestAssert[Stat](code)(tinfix(tinfix(str("a"), tname("+"), str("b")), tname("+"), str("c")))
     }
   }
 
@@ -69,7 +69,7 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestError[Stat](code, error)
+      runTestAssert[Stat](code)(str("'''\nfoo"))
     }
   }
 
@@ -79,7 +79,12 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestAssert[Stat](code)(tree)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestAssert[Stat](code)(tree)
+      runTestError[Stat](
+        code,
+        """|<input>:2: error: unclosed multi-line string literal
+           |  foo
+           |     ^""".stripMargin,
+      )
     }
   }
 
@@ -105,7 +110,9 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestError[Stat](code, error)
+      runTestAssert[Stat](code, "s\"a $x b\"")(
+        Term.Interpolate(tname("s"), List(str("a "), str(" b")), List(tname("x"))),
+      )
     }
   }
 
@@ -118,7 +125,9 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestError[Stat](code, error)
+      runTestAssert[Stat](code, "s\"a ${\n  '''\n  b\n  '''\n} c\"")(
+        Term.Interpolate(tname("s"), List(str("a "), str(" c")), List(Term.Block(List(str("b"))))),
+      )
     }
   }
 
@@ -155,7 +164,9 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestAssert[Stat](code, layout)(tree)
+      runTestAssert[Stat](code, "x match {\n  case '''\n  a\n  ''' => 1\n}")(
+        tmatch(tname("x"), Case(str("a"), None, lit(1))),
+      )
     }
   }
 
@@ -168,7 +179,10 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestError[Stat](code, error)
+      runTestAssert[Stat](code, "x match {\n  case s\"a ${y} b\" => 1\n}")(tmatch(
+        tname("x"),
+        Case(Pat.Interpolate(tname("s"), List(str("a "), str(" b")), List(patvar("y"))), None, lit(1)),
+      ))
     }
   }
 
@@ -181,7 +195,34 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestError[Stat](code, error)
+      val tree = templStat(code)
+      assertTree(tree)(tmatch(
+        tname("x"),
+        Case(
+          Pat.Interpolate(
+            tname("s"),
+            List(str("First: "), str("\nSecond: "), str("")),
+            List(patvar("a"), patvar("b")),
+          ),
+          None,
+          lit(1),
+        ),
+      ))
+      assertOriginalSyntax(tree, code)
+      val reprinted = "x match {\n  case s\"\"\"First: ${a}\nSecond: ${b}\"\"\" => 1\n}"
+      assertNoDiff(tree.reprint, reprinted)
+      assertTree(templStat(reprinted))(tmatch(
+        tname("x"),
+        Case(
+          Pat.Interpolate(
+            tname("s"),
+            List(str("First: "), str("\nSecond: "), str("")),
+            List(patvar("a"), patvar("b")),
+          ),
+          None,
+          lit(1),
+        ),
+      ))
     }
   }
 
@@ -194,7 +235,7 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestError[Stat](code, error)
+      runTestAssert[Stat](code)(Defn.Val(Nil, List(patvar("x")), Some(str("a")), tname("y")))
     }
   }
 

@@ -33,7 +33,7 @@ private[meta] case class CharArrayReader(
   /** Advance one character; reducing CR;LF pairs to just LF */
   final def nextChar(): Unit = setNextRawCharAndCheck(peekRawChar)
 
-  private def checkRawChar(): Unit = checkLineEnd()
+  private[tokenizers] def checkRawChar(): Unit = checkLineEnd()
 
   final def nextCharFrom(offset: Int): Unit = {
     endCharOffset = offset
