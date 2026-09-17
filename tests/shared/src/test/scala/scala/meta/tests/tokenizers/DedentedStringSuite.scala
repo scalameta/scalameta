@@ -51,6 +51,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [31..34)
        |EOF [34..34)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(i am cow\nhear me moo) [0..34)
+       |EOF [34..34)
+       |""".stripMargin,
   )
 
   checkStruct("no indentation")(
@@ -61,6 +65,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Ident(foo) [4..7)
        |LF [7..8)
        |Constant.Char(') [8..11)
+       |EOF [11..11)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(foo) [0..11)
        |EOF [11..11)
        |""".stripMargin,
   )
@@ -81,6 +89,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [14..17)
        |EOF [17..17)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(  foo) [0..17)
+       |EOF [17..17)
+       |""".stripMargin,
   )
 
   checkStruct("empty")(
@@ -91,6 +103,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [4..5)
        |Space [5..6)
        |Constant.Char(') [6..9)
+       |EOF [9..9)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String() [0..9)
        |EOF [9..9)
        |""".stripMargin,
   )
@@ -112,6 +128,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [13..14)
        |Space [14..15)
        |Constant.Char(') [15..18)
+       |EOF [18..18)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(a\n\nb) [0..18)
        |EOF [18..18)
        |""".stripMargin,
   )
@@ -136,6 +156,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [16..19)
        |EOF [19..19)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(a\n \nb) [0..19)
+       |EOF [19..19)
+       |""".stripMargin,
   )
 
   checkStruct("tab indentation")(
@@ -149,6 +173,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |LF [9..10)
        |Tab [10..11)
        |Constant.Char(') [11..14)
+       |EOF [14..14)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(\tfoo) [0..14)
        |EOF [14..14)
        |""".stripMargin,
   )
@@ -168,6 +196,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [13..14)
        |Space [14..15)
        |Constant.Char(') [15..18)
+       |EOF [18..18)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(\t  foo) [0..18)
        |EOF [18..18)
        |""".stripMargin,
   )
@@ -194,6 +226,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [18..21)
        |EOF [21..21)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(a\n  b) [0..21)
+       |EOF [21..21)
+       |""".stripMargin,
   )
 
   checkStruct("content on opening line")(
@@ -207,6 +243,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [9..12)
        |EOF [12..12)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(foo) [0..12)
+       |EOF [12..12)
+       |""".stripMargin,
   )
 
   checkStruct("text before closing delimiter")(
@@ -218,6 +258,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [5..6)
        |Ident(foo) [6..9)
        |Constant.Char(') [9..12)
+       |EOF [12..12)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(  foo) [0..12)
        |EOF [12..12)
        |""".stripMargin,
   )
@@ -236,6 +280,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [12..13)
        |Space [13..14)
        |Constant.Char(') [14..17)
+       |EOF [17..17)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(foo) [0..17)
        |EOF [17..17)
        |""".stripMargin,
   )
@@ -258,6 +306,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [18..19)
        |Constant.Char(') [19..22)
        |MacroQuote [22..23)
+       |EOF [23..23)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String('''\nfoo) [0..23)
        |EOF [23..23)
        |""".stripMargin,
   )
@@ -285,6 +337,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |MacroQuote [25..26)
        |EOF [26..26)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(''''\nfoo) [0..26)
+       |EOF [26..26)
+       |""".stripMargin,
   )
 
   checkStruct("two quotes in content")(
@@ -300,6 +356,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [9..10)
        |Space [10..11)
        |Constant.Char(') [11..14)
+       |EOF [14..14)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String('') [0..14)
        |EOF [14..14)
        |""".stripMargin,
   )
@@ -319,6 +379,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |MacroQuote [15..16)
        |EOF [16..16)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(  foo\n  ') [0..16)
+       |EOF [16..16)
+       |""".stripMargin,
   )
 
   checkStruct("unclosed")(
@@ -329,6 +393,11 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [4..5)
        |Space [5..6)
        |Ident(foo) [6..9)
+       |EOF [9..9)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(  foo) [0..9)
+       |Invalid(unclosed multi-line string literal) [9..9)
        |EOF [9..9)
        |""".stripMargin,
   )
@@ -345,6 +414,10 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [12..13)
        |Space [13..14)
        |Constant.Char(') [14..17)
+       |EOF [17..17)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(foo) [0..17)
        |EOF [17..17)
        |""".stripMargin,
   )
@@ -367,6 +440,16 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [18..19)
        |Space [19..20)
        |Constant.Char(') [20..23)
+       |EOF [23..23)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Space [3..4)
+       |Ident(x) [4..5)
+       |Space [5..6)
+       |Equals [6..7)
+       |Space [7..8)
+       |Constant.String(foo) [8..23)
        |EOF [23..23)
        |""".stripMargin,
   )
@@ -393,6 +476,18 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.String(c) [22..25)
        |EOF [25..25)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String(a) [0..3)
+       |Space [3..4)
+       |Ident(+) [4..5)
+       |Space [5..6)
+       |Constant.String(b) [6..19)
+       |Space [19..20)
+       |Ident(+) [20..21)
+       |Space [21..22)
+       |Constant.String(c) [22..25)
+       |EOF [25..25)
+       |""".stripMargin,
   )
 
   checkStruct("two quotes alone")(
@@ -409,6 +504,11 @@ class DedentedStringSuite extends BaseTokenizerSuite {
     """|BOF [0..0)
        |Constant.Char(') [0..3)
        |MacroQuote [3..4)
+       |EOF [4..4)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Constant.String() [0..4)
+       |Invalid(unclosed multi-line string literal) [4..4)
        |EOF [4..4)
        |""".stripMargin,
   )
@@ -461,6 +561,17 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [16..19)
        |EOF [19..19)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(''') [1..4)
+       |Interpolation.Part(\n  a ) [4..9)
+       |Interpolation.SpliceStart [9..10)
+       |Ident(x) [10..11)
+       |Interpolation.SpliceEnd [11..11)
+       |Interpolation.Part( b\n  ) [11..16)
+       |Interpolation.End(''') [16..19)
+       |EOF [19..19)
+       |""".stripMargin,
   )
 
   checkStruct("interpolation - block splice")(
@@ -489,6 +600,23 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [22..25)
        |EOF [25..25)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(''') [1..4)
+       |Interpolation.Part(\n  a ) [4..9)
+       |Interpolation.SpliceStart [9..10)
+       |LeftBrace [10..11)
+       |Ident(x) [11..12)
+       |Space [12..13)
+       |Ident(+) [13..14)
+       |Space [14..15)
+       |Constant.Int(1) [15..16)
+       |RightBrace [16..17)
+       |Interpolation.SpliceEnd [17..17)
+       |Interpolation.Part( b\n  ) [17..22)
+       |Interpolation.End(''') [22..25)
+       |EOF [25..25)
+       |""".stripMargin,
   )
 
   checkStruct("interpolation - dollar escape")(
@@ -508,6 +636,13 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [14..15)
        |Space [15..16)
        |Constant.Char(') [16..19)
+       |EOF [19..19)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(''') [1..4)
+       |Interpolation.Part(\n  a $ b\n  ) [4..16)
+       |Interpolation.End(''') [16..19)
        |EOF [19..19)
        |""".stripMargin,
   )
@@ -532,6 +667,13 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [16..19)
        |EOF [19..19)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(''') [1..4)
+       |Interpolation.Part(\n  a ' b\n  ) [4..16)
+       |Interpolation.End(''') [16..19)
+       |EOF [19..19)
+       |""".stripMargin,
   )
 
   checkStruct("interpolation - four-quote delimiter")(
@@ -551,6 +693,17 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [16..17)
        |Constant.Char(') [17..20)
        |MacroQuote [20..21)
+       |EOF [21..21)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start('''') [1..5)
+       |Interpolation.Part(\n  ''' ) [5..12)
+       |Interpolation.SpliceStart [12..13)
+       |Ident(x) [13..14)
+       |Interpolation.SpliceEnd [14..14)
+       |Interpolation.Part(\n  ) [14..17)
+       |Interpolation.End('''') [17..21)
        |EOF [21..21)
        |""".stripMargin,
   )
@@ -585,6 +738,19 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Constant.Char(') [30..33)
        |EOF [33..33)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(''') [1..4)
+       |Interpolation.Part(\n  a ) [4..9)
+       |Interpolation.SpliceStart [9..10)
+       |LeftBrace [10..11)
+       |Constant.String(b) [11..24)
+       |RightBrace [24..25)
+       |Interpolation.SpliceEnd [25..25)
+       |Interpolation.Part( c\n  ) [25..30)
+       |Interpolation.End(''') [30..33)
+       |EOF [33..33)
+       |""".stripMargin,
   )
 
   checkStruct("interpolation - f id")(
@@ -605,6 +771,17 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [15..16)
        |Space [16..17)
        |Constant.Char(') [17..20)
+       |EOF [20..20)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Interpolation.Id(f) [0..1)
+       |Interpolation.Start(''') [1..4)
+       |Interpolation.Part(\n  v: ) [4..10)
+       |Interpolation.SpliceStart [10..11)
+       |Ident(x) [11..12)
+       |Interpolation.SpliceEnd [12..12)
+       |Interpolation.Part(%d\n  ) [12..17)
+       |Interpolation.End(''') [17..20)
        |EOF [20..20)
        |""".stripMargin,
   )
@@ -639,6 +816,14 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Ident(foo) [7..10)
        |EOF [10..10)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Interpolation.Id(s) [0..1)
+       |Interpolation.Start(''') [1..4)
+       |Interpolation.Part(\n  foo) [4..10)
+       |Invalid(unclosed multi-line string interpolation) [10..10)
+       |Interpolation.End() [10..10)
+       |EOF [10..10)
+       |""".stripMargin,
   )
 
   checkStruct("match case")(
@@ -661,6 +846,24 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [23..24)
        |Space [24..25)
        |Constant.Char(') [25..28)
+       |Space [28..29)
+       |RightArrow [29..31)
+       |Space [31..32)
+       |Constant.Int(1) [32..33)
+       |Space [33..34)
+       |RightBrace [34..35)
+       |EOF [35..35)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |Ident(x) [0..1)
+       |Space [1..2)
+       |KwMatch [2..7)
+       |Space [7..8)
+       |LeftBrace [8..9)
+       |Space [9..10)
+       |KwCase [10..14)
+       |Space [14..15)
+       |Constant.String(a) [15..28)
        |Space [28..29)
        |RightArrow [29..31)
        |Space [31..32)
@@ -704,6 +907,31 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |RightBrace [40..41)
        |EOF [41..41)
        |""".stripMargin,
+    """|BOF [0..0)
+       |Ident(x) [0..1)
+       |Space [1..2)
+       |KwMatch [2..7)
+       |Space [7..8)
+       |LeftBrace [8..9)
+       |Space [9..10)
+       |KwCase [10..14)
+       |Space [14..15)
+       |Interpolation.Id(s) [15..16)
+       |Interpolation.Start(''') [16..19)
+       |Interpolation.Part(\n  a ) [19..24)
+       |Interpolation.SpliceStart [24..25)
+       |Ident(y) [25..26)
+       |Interpolation.SpliceEnd [26..26)
+       |Interpolation.Part( b\n  ) [26..31)
+       |Interpolation.End(''') [31..34)
+       |Space [34..35)
+       |RightArrow [35..37)
+       |Space [37..38)
+       |Constant.Int(1) [38..39)
+       |Space [39..40)
+       |RightBrace [40..41)
+       |EOF [41..41)
+       |""".stripMargin,
   )
 
   checkStruct("literal type")(
@@ -723,6 +951,19 @@ class DedentedStringSuite extends BaseTokenizerSuite {
        |Space [15..16)
        |Space [16..17)
        |Constant.Char(') [17..20)
+       |Space [20..21)
+       |Equals [21..22)
+       |Space [22..23)
+       |Ident(y) [23..24)
+       |EOF [24..24)
+       |""".stripMargin,
+    """|BOF [0..0)
+       |KwVal [0..3)
+       |Space [3..4)
+       |Ident(x) [4..5)
+       |Colon [5..6)
+       |Space [6..7)
+       |Constant.String(a) [7..20)
        |Space [20..21)
        |Equals [21..22)
        |Space [22..23)

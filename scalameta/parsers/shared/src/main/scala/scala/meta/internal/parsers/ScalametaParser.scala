@@ -9,6 +9,7 @@ import scala.meta.inputs._
 import scala.meta.internal.parsers.Absolutize._
 import scala.meta.internal.parsers.Location._
 import scala.meta.internal.prettyprinters.{TreeSyntacticGroup => TSG}
+import scala.meta.internal.tokenizers.DedentedString
 import scala.meta.internal.trees._
 import scala.meta.parsers._
 import scala.meta.prettyprinters._
@@ -1548,16 +1549,34 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         loop()
       case _ =>
     }
-    val interpolator = atCurPos(currToken match {
-      case Interpolation.Id(value) =>
-        next()
-        Term.Name(value)
+    // trim dedented (quote-delimited) parts, once the last one provides the indent
+    def dedentedParts(): List[Lit] = {
+      val last = partsBuf.last
+      val indent = last match {
+        case p: Lit.String => DedentedString.closingIndent(p.value)
+        case _ => ""
+      }
+      val res = new ListBuffer[Lit]
+      for (part <- partsBuf) res +=
+        (part match {
+          case p: Lit.String =>
+            val trimmed = DedentedString
+              .trimPart(p.value, indent, isFirst = res.isEmpty, isLast = part eq last)
+            copyPos(p)(Lit.String(trimmed))
+          case p => p
+        })
+      res.toList
+    }
+    val interpolator = atCurPosNext(currToken match {
+      case Interpolation.Id(value) => Term.Name(value)
       case _ => syntaxErrorExpected[Interpolation.Id]
     })
+    val isDedented = currToken.text.startsWith("'")
     accept[Interpolation.Start]
     loop()
     accept[Interpolation.End]
-    result(interpolator, partsBuf.toList, argsBuf.toList)
+    val parts = if (isDedented && partsBuf.nonEmpty) dedentedParts() else partsBuf.toList
+    result(interpolator, parts, argsBuf.toList)
   }
 
   private def xmlWith[Ctx, Ret <: Tree](arg: => Ctx, result: (List[Lit], List[Ctx]) => Ret): Ret =

@@ -157,6 +157,31 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
     false
   }
 
+  /* delimiter of each open string interpolation: quote char in the low 16
+   * bits, run length above; pushed and popped alongside the STRINGLIT
+   * sepRegions */
+  private var interpDelims: Array[Int] = new Array[Int](8)
+  private var interpDelimsDepth: Int = 0
+
+  private def pushMultilineInterpStringLit(quote: Char, count: Int): Unit = {
+    offset = begCharOffset
+    getStringPart(quote, count)
+    pushSepRegions(STRINGPART) // indicate string part
+    pushSepRegions(STRINGLIT) // once more to indicate multi line string part
+    if (interpDelimsDepth == interpDelims.length)
+      interpDelims = java.util.Arrays.copyOf(interpDelims, interpDelims.length * 2)
+    interpDelims(interpDelimsDepth) = count << 16 | quote
+    interpDelimsDepth += 1
+  }
+
+  private def getMultilineInterpStringPart(): Unit = {
+    val delim = interpDelims(interpDelimsDepth - 1)
+    getStringPart((delim & 0xffff).toChar, delim >>> 16)
+  }
+
+  private def popMultilineInterpStringLit(): Unit =
+    if (popSepRegionsIf(STRINGLIT) && popSepRegionsIf(STRINGPART)) interpDelimsDepth -= 1
+
   /**
    * A map of upcoming xml literal parts that are left to be returned in nextToken().
    *
@@ -208,7 +233,7 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
       case CASE => pushSepRegions(ARROW)
       case RBRACE => popSepRegionsUntil(RBRACE)
       case RBRACKET | RPAREN | ARROW => popSepRegionsIf(lastToken)
-      case STRINGLIT => popSepRegionsIf(lastToken) && popSepRegionsIf(STRINGPART)
+      case STRINGLIT => popMultilineInterpStringLit()
       case _ =>
     }
 
@@ -238,7 +263,7 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
     if (isSepRegionAt(STRINGLIT, 1)) {
       if (token == STRINGPART) getStringSplice()
       else if (!isSepRegionAt(STRINGPART, 2)) getStringPart('"', 1)
-      else getStringPart('"', 3) // multiline delimiter will vary in the future
+      else getMultilineInterpStringPart()
       return
     }
     if (fetchXmlPart()) return
@@ -258,10 +283,14 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
       noQuasiDoubleQuote("double quotes are not allowed in single-line quasiquotes")
     def getIdentRestCheckInterpolation() = {
       getIdentRest()
-      if (ch == '"' && token == IDENTIFIER) {
-        token = INTERPOLATIONID
-        noQuasiDoubleQuoteDQ()
-      }
+      if (token == IDENTIFIER)
+        if (ch == '"') {
+          token = INTERPOLATIONID
+          noQuasiDoubleQuoteDQ()
+        } else if (ch == '\'' && atDedentedStringQuotes) {
+          token = INTERPOLATIONID
+          noQuasiDoubleQuoteNL()
+        }
     }
 
     @inline
@@ -381,10 +410,7 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
               nextChar()
               if (ch == '"' && !wasEscapedMultiChar) {
                 nextRawChar()
-                offset = begCharOffset
-                getStringPart('"', 3)
-                pushSepRegions(STRINGPART) // indicate string part
-                pushSepRegions(STRINGLIT) // once more to indicate multi line string part
+                pushMultilineInterpStringLit('"', 3)
               } else {
                 token = STRINGLIT
                 endOffset = offset
@@ -442,7 +468,21 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
           else if (dialect.allowSpliceAndQuote) setTokStrVal(MACROQUOTE)
           else unclosed()
         }
-        fetchSingleQuote()
+        if (atDedentedStringQuotes) {
+          noQuasiDoubleQuoteNL()
+          var count = 0
+          while (ch == '\'' && !wasEscapedMultiChar) {
+            count += 1
+            nextRawChar()
+          }
+          if (token == INTERPOLATIONID) pushMultilineInterpStringLit('\'', count)
+          else {
+            // only the last advance can land on a line end
+            reader.checkRawChar()
+            getMultilineStringLit('\'', count)
+            strVal = DedentedString.trim(strVal)
+          }
+        } else fetchSingleQuote()
       case '.' =>
         nextChar()
         if (isDigit()) setFractionOnDot()
@@ -572,6 +612,10 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
   @inline
   private def isUnquoteDollar(): Boolean = ch == '$' && isUnquoteNextNoDollar()
 
+  // ch is a single quote; do two more follow, opening a dedented string?
+  private def atDedentedStringQuotes: Boolean = dialect.allowDedentedStringLiterals &&
+    endCharOffset + 1 < buf.length && buf(endCharOffset) == '\'' && buf(endCharOffset + 1) == '\''
+
 // Literals -----------------------------------------------------------------
 
   @tailrec
@@ -641,7 +685,8 @@ private[meta] class LegacyScanner(input: Input, dialect: Dialect) {
         val done = isUnquote ||
           ((ch: @switch) match {
             case '$' => false
-            case '"' => !dialect.allowInterpolationDolarQuoteEscape
+            case '"' => quote != '"' || !dialect.allowInterpolationDolarQuoteEscape
+            case '\'' => quote != '\''
             case _ => true
           })
         if (done) {
