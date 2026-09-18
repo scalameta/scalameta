@@ -118,7 +118,7 @@ Tips to make your edit/test/debug workflow as productive as possible:
 - Prefer the terms `enrichment` and `extension` as opposed to `pimp`
 
 In case of any questions, don't hesitate to ask on our
-[gitter channel](https://gitter.im/scalameta/scalameta).
+[Discord](https://discord.gg/fWRUgyqKyD).
 
 (these guidelines have been adapted from
 https://github.com/lihaoyi/ammonite#contribution-guidelines)
