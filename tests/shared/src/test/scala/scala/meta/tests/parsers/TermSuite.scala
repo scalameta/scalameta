@@ -443,6 +443,21 @@ class TermSuite extends ParseSuite {
     )),
   )
 
+  test("case body after a comment line")(
+    checkTerm(
+      """|x match {
+         |  case 1 =>
+         |    // c
+         |    foo
+         |}""".stripMargin,
+      """|x match {
+         |  case 1 => 
+         |  // c
+         |  foo
+         |}""".stripMargin,
+    )(tmatch(tname("x"), Case(int(1), None, tnameComments("foo")("// c")()))),
+  )
+
   test("a + (bs: _*) * c")(
     assertTerm("a + (bs: _*) * c")(tinfix("a", "+", tinfix(Term.Repeated("bs"), "*", "c"))),
   )
