@@ -91,27 +91,27 @@ Tips to make your edit/test/debug workflow as productive as possible:
 
 ## Contribution Guidelines
 
-- **All code PRs should**:
-  - have a meaningful commit message description
-  - comment important things
-  - include unit tests (positive and negative)
-  - pass [CI](http://drone.geirsson.com:8001/scalameta/scalameta), which
-    automatically runs when your pull request is submitted.
-  - be reformatted with `./bin/scalafmt`
+- **All code PRs follow the
+  [contributing guide](https://github.com/scalameta/.github/blob/main/CONTRIBUTING.md)
+  of the scalameta organization**. Format with `./bin/scalafmt`.
 - **Be prepared to discuss/argue-for your changes if you want them merged**!
   You will probably need to refactor so your changes fit into the larger
   codebase
 - **If your code is hard to unit test, and you don't want to unit test it,
   that's ok**. But be prepared to argue why that's the case!
 - **It's entirely possible your changes won't be merged**, or will get ripped
-  out later. This is also the case for maintainer changes, even
-  [@xeno-by](https://github.com/xeno-by)!
+  out later. This is also the case for maintainer changes.
 - **Even a rejected/reverted PR is valuable**! It helps explore the solution
   space, and know what works and what doesn't. For every line in the repo, at
   least three lines were tried, committed, and reverted/refactored, and more
   than 10 were tried without committing.
-- **Feel free to send Proof-Of-Concept PRs** that you don't intend to get merged.
 
+## Contributing with agents
+
+Your agent reads [`AGENTS.md`](AGENTS.md) in this repository, which points at
+the organization's [`AGENTS.md`](https://github.com/scalameta/.github/blob/main/AGENTS.md).
+The section "Contributing with agents" of the organization's guide applies to
+you and to the agent.
 
 ## Documentation Guidelines
 
