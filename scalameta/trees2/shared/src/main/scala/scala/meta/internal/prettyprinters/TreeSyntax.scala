@@ -631,7 +631,11 @@ object TreeSyntax {
         def init() = if (t.inits.nonEmpty) s(" extends ", r(t.inits, ", ")) else s("")
         s(w(t.mods, " "), kw("case"), " ", t.name, t.tparamClause, t.ctor, init())
 
-      case t: Defn.ExtensionGroup => s(kw("extension"), " ", o(t.paramClauseGroup, " "), t.body)
+      case t: Defn.ExtensionGroup =>
+        // a leading comment is printed on its own line, which would move the body out of the
+        // clause; indent the body instead of keeping it on the same line
+        if (t.body.begComment.isEmpty) s(kw("extension"), " ", o(t.paramClauseGroup, " "), t.body)
+        else s(kw("extension"), " ", o(t.paramClauseGroup), i(t.body))
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)

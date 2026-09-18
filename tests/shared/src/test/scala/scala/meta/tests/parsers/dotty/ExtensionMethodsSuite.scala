@@ -63,6 +63,85 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     )
   }
 
+  test("simple-method-indent-doc-comment") {
+    val code =
+      """|extension (c: Circle)
+         |  /** doc */
+         |  def crc: Int = 2
+         |""".stripMargin
+    val layout =
+      """|extension (c: Circle)
+         |  /** doc */
+         |  def crc: Int = 2
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
+      Nil,
+      cparamss,
+      Defn.Def.createWithComments(
+        Nil,
+        tname("crc"),
+        Nil,
+        Nil,
+        Some(pname("Int")),
+        int(2),
+        begComment = Seq("/** doc */"),
+        endComment = None,
+      ),
+    ))
+  }
+
+  test("simple-method-indent-line-comment") {
+    val code =
+      """|extension (c: Circle)
+         |  // doc
+         |  def crc: Int = 2
+         |""".stripMargin
+    val layout =
+      """|extension (c: Circle)
+         |  // doc
+         |  def crc: Int = 2
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
+      Nil,
+      cparamss,
+      Defn.Def.createWithComments(
+        Nil,
+        tname("crc"),
+        Nil,
+        Nil,
+        Some(pname("Int")),
+        int(2),
+        begComment = Seq("// doc"),
+        endComment = None,
+      ),
+    ))
+  }
+
+  test("braces-method-indent-comment") {
+    val code =
+      """|extension (c: Circle)
+         |  /*x*/ {
+         |    def crc: Int = 2
+         |  }
+         |""".stripMargin
+    val layout =
+      """|extension (c: Circle)
+         |  /*x*/
+         |  {
+         |    def crc: Int = 2
+         |  }
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
+      Nil,
+      cparamss,
+      Term.Block.createWithComments(
+        List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))),
+        begComment = Seq("/*x*/"),
+        endComment = None,
+      ),
+    ))
+  }
+
   test("multiple-methods-indent") {
     val code =
       """|extension (c: Circle)
