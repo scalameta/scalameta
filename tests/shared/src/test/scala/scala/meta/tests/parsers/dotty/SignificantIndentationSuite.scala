@@ -1764,6 +1764,222 @@ class SignificantIndentationSuite extends BaseDottySuite {
     ))
   }
 
+  test("def-body-indent-comment") {
+    val code =
+      """|def foo: Int =
+         |  // c
+         |  bar
+         |""".stripMargin
+    val layout =
+      """|def foo: Int = 
+         |// c
+         |bar
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(
+      Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tnameComments("bar")("// c")()),
+    )
+  }
+
+  test("def-body-indent-comment-two-stats") {
+    val code =
+      """|def foo: Int =
+         |  // c
+         |  bar
+         |  baz
+         |""".stripMargin
+    val layout =
+      """|def foo: Int = {
+         |  // c
+         |  bar
+         |  baz
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      Nil,
+      Some(pname("Int")),
+      blk(tnameComments("bar")("// c")(), tname("baz")),
+    ))
+  }
+
+  test("val-body-indent-same-line-comment") {
+    val code =
+      """|val foo =
+         |  /* c */ bar
+         |""".stripMargin
+    val layout =
+      """|val foo = 
+         |/* c */
+         |bar
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(
+      Defn.Val(Nil, List(patvar("foo")), None, tnameComments("bar")("/* c */")()),
+    )
+  }
+
+  test("if-then-indent-comment") {
+    val code =
+      """|if cond then
+         |  // c
+         |  foo
+         |else bar
+         |""".stripMargin
+    val layout =
+      """|if (cond) 
+         |// c
+         |foo else bar
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(
+      Term.If(tname("cond"), tnameComments("foo")("// c")(), tname("bar")),
+    )
+  }
+
+  test("case-body-indent-comment") {
+    val code =
+      """|x match
+         |  case 1 =>
+         |    // c
+         |    foo
+         |""".stripMargin
+    val layout =
+      """|x match {
+         |  case 1 => 
+         |  // c
+         |  foo
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(
+      Term.Match(tname("x"), List(Case(int(1), None, tnameComments("foo")("// c")()))),
+    )
+  }
+
+  test("def-body-indent-comment-braces") {
+    val code =
+      """|def foo: Int =
+         |  // c
+         |  {
+         |    bar
+         |  }
+         |""".stripMargin
+    val layout =
+      """|def foo: Int = 
+         |// c
+         |{
+         |  bar
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(Defn.Def(
+      Nil,
+      tname("foo"),
+      Nil,
+      Nil,
+      Some(pname("Int")),
+      Term.Block.createWithComments(List(tname("bar")), begComment = Seq("// c")),
+    ))
+  }
+
+  test("def-body-indent-braces-trailing-comment") {
+    val code =
+      """|def foo: Int =
+         |  {
+         |    bar
+         |  }
+         |  // c
+         |""".stripMargin
+    val layout =
+      """|def foo: Int = {
+         |  {
+         |    bar
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), blk(blk(tname("bar"))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("case-body-indent-comment-braces") {
+    val code =
+      """|x match
+         |  case 1 =>
+         |    // c
+         |    {
+         |      foo
+         |    }
+         |""".stripMargin
+    val layout =
+      """|x match {
+         |  case 1 =>
+         |    foo
+         |}
+         |""".stripMargin
+    parseAndCheckTree[Stat](code, layout)(Term.Match(
+      tname("x"),
+      List(
+        Case(int(1), None, Term.Block.createWithComments(List(tname("foo")), begComment = Seq("// c"))),
+      ),
+    ))
+    val relayout =
+      """|x match {
+         |  case 1 => foo
+         |}
+         |""".stripMargin
+    parseAndCheckTree[Stat](layout, relayout)(
+      Term.Match(tname("x"), List(Case(int(1), None, tname("foo")))),
+    )
+  }
+
+  test("case-body-braced-match-comment") {
+    val code =
+      """|x match {
+         |  case 1 =>
+         |    // c
+         |    foo
+         |}
+         |""".stripMargin
+    val layout =
+      """|x match {
+         |  case 1 => 
+         |  // c
+         |  foo
+         |}
+         |""".stripMargin
+    runTestAssert[Stat](code, layout)(
+      Term.Match(tname("x"), List(Case(int(1), None, tnameComments("foo")("// c")()))),
+    )
+  }
+
+  test("case-body-braced-comment") {
+    val code =
+      """|x match
+         |  case 1 => {
+         |    // c
+         |    foo
+         |  }
+         |""".stripMargin
+    val layout =
+      """|x match {
+         |  case 1 =>
+         |    // c
+         |    foo
+         |}
+         |""".stripMargin
+    val relayout =
+      """|x match {
+         |  case 1 => 
+         |  // c
+         |  foo
+         |}
+         |""".stripMargin
+    parseAndCheckTree[Stat](code, layout)(
+      Term.Match(tname("x"), List(Case(int(1), None, blk(tnameComments("foo")("// c")())))),
+    )
+    parseAndCheckTree[Stat](layout, relayout)(
+      Term.Match(tname("x"), List(Case(int(1), None, tnameComments("foo")("// c")()))),
+    )
+  }
+
   test("given-with-comment") {
     runTestAssert[Stat](
       """|given Foo with
