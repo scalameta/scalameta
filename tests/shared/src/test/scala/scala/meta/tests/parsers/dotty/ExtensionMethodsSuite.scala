@@ -70,14 +70,15 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def crc: Int = 2
          |""".stripMargin
     val layout =
-      """|extension (c: Circle) 
-         |/** doc */
-         |def crc: Int = 2
+      """|extension (c: Circle) {
+         |  /** doc */
+         |  def crc: Int = 2
+         |}
          |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
       Nil,
       cparamss,
-      Defn.Def.createWithComments(
+      blk(Defn.Def.createWithComments(
         Nil,
         tname("crc"),
         Nil,
@@ -86,7 +87,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         int(2),
         begComment = Seq("/** doc */"),
         endComment = None,
-      ),
+      )),
     ))
   }
 
@@ -97,14 +98,15 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def crc: Int = 2
          |""".stripMargin
     val layout =
-      """|extension (c: Circle) 
-         |// doc
-         |def crc: Int = 2
+      """|extension (c: Circle) {
+         |  // doc
+         |  def crc: Int = 2
+         |}
          |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
       Nil,
       cparamss,
-      Defn.Def.createWithComments(
+      blk(Defn.Def.createWithComments(
         Nil,
         tname("crc"),
         Nil,
@@ -113,7 +115,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         int(2),
         begComment = Seq("// doc"),
         endComment = None,
-      ),
+      )),
     ))
   }
 
@@ -148,14 +150,15 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  /** doc */ def crc: Int = 2
          |""".stripMargin
     val layout =
-      """|extension (c: Circle) 
-         |/** doc */
-         |def crc: Int = 2
+      """|extension (c: Circle) {
+         |  /** doc */
+         |  def crc: Int = 2
+         |}
          |""".stripMargin
     runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(
       Nil,
       cparamss,
-      Defn.Def.createWithComments(
+      blk(Defn.Def.createWithComments(
         Nil,
         tname("crc"),
         Nil,
@@ -164,7 +167,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
         int(2),
         begComment = Seq("/** doc */"),
         endComment = None,
-      ),
+      )),
     ))
   }
 
@@ -234,15 +237,13 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|extension (c: Circle) {
-         |  {
-         |    def crc: Int = 2
-         |  }
+         |  def crc: Int = 2
          |}
          |""".stripMargin
     val tree = Defn.ExtensionGroup(
       Nil,
       cparamss,
-      blk(blk(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))),
+      blk(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
