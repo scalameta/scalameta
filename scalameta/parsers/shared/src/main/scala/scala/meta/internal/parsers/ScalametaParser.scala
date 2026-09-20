@@ -2675,10 +2675,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def blockMaybeRaw(allowRepeated: Boolean = false, keepBlock: Boolean = false): Term =
     blockStatSeq(allowRepeated = allowRepeated) match {
-      case (t: Term) :: Nil if !(keepBlock || isPrecededByDetachedComment(currIndex, t.endIndex)) =>
-        t
+      case (t: Term) :: Nil if !(keepBlock || hasDetachedCommentAfter(t)) => t
       case stats => toBlockRaw(stats)
     }
+
+  private def hasDetachedCommentAfter(t: Tree): Boolean =
+    isPrecededByDetachedComment(currIndex, t.endIndex)
 
   private def blockOnIndent(keepBlock: Boolean = false): Term =
     autoPosOpt(indentedOnOpen(blockMaybeRaw(keepBlock = keepBlock)))
@@ -3878,7 +3880,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val body: Stat = currToken match {
       case _: LeftBrace => blockOnBrace(getStats())
       case _: Indentation.Indent => autoPosOpt(indentedOnOpen(getStats() match {
-          case t :: Nil if !isPrecededByDetachedComment(currIndex, t.endIndex) => t
+          case t :: Nil if !hasDetachedCommentAfter(t) => t
           case stats => toBlockRaw(stats)
         }))
       case _ if isDefIntro(currIndex) => nonLocalDefOrDcl()
