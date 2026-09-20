@@ -631,7 +631,7 @@ object TreeSyntax {
         def init() = if (t.inits.nonEmpty) s(" extends ", r(t.inits, ", ")) else s("")
         s(w(t.mods, " "), kw("case"), " ", t.name, t.tparamClause, t.ctor, init())
 
-      case t: Defn.ExtensionGroup => s(kw("extension"), " ", o(t.paramClauseGroup, " "), t.body)
+      case t: Defn.ExtensionGroup => s(kw("extension"), " ", o(t.paramClauseGroup), sp(t.body))
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)

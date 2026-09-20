@@ -178,7 +178,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|extension (c: Circle) // doc
-         | def crc: Int = 2
+         |  def crc: Int = 2
          |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
       Some(Member.ParamClauseGroup.createWithComments(
