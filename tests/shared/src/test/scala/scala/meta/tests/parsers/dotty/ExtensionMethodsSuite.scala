@@ -171,6 +171,25 @@ class ExtensionMethodsSuite extends BaseDottySuite {
     ))
   }
 
+  test("simple-method-indent-clause-comment") {
+    val code =
+      """|extension (c: Circle) // doc
+         |  def crc: Int = 2
+         |""".stripMargin
+    val layout =
+      """|extension (c: Circle) // doc
+         | def crc: Int = 2
+         |""".stripMargin
+    runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
+      Some(Member.ParamClauseGroup.createWithComments(
+        Type.ParamClause(Nil),
+        List(Term.ParamClause(List(cparam))),
+        endComment = Seq("// doc"),
+      )),
+      Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)),
+    ))
+  }
+
   test("multiple-methods-indent-doc-comment") {
     val code =
       """|extension (c: Circle)
