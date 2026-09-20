@@ -1911,23 +1911,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|x match {
          |  case 1 =>
-         |    foo
+         |    // c
+         |    {
+         |      foo
+         |    }
          |}
          |""".stripMargin
-    parseAndCheckTree[Stat](code, layout)(Term.Match(
+    runTestAssert[Stat](code, assertLayout = Some(layout))(Term.Match(
       tname("x"),
       List(
         Case(int(1), None, Term.Block.createWithComments(List(tname("foo")), begComment = Seq("// c"))),
       ),
     ))
-    val relayout =
-      """|x match {
-         |  case 1 => foo
-         |}
-         |""".stripMargin
-    parseAndCheckTree[Stat](layout, relayout)(
-      Term.Match(tname("x"), List(Case(int(1), None, tname("foo")))),
-    )
   }
 
   test("case-body-braced-match-comment") {

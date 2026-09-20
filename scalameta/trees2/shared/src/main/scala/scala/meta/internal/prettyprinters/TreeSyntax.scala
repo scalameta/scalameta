@@ -326,6 +326,8 @@ object TreeSyntax {
               ) => block(s(name, " =>"), stats)
           case Block(Function.Initial(params, Block(stats)) :: Nil) =>
             block(s("(", r(params, ", "), ") =>"), stats)
+          // a commented block keeps its braces, so the comments stay its own when parsed again
+          case _ if isCaseBody(t) && !t.hasComments => printStats(t.stats, indent = false)
           case _ => block(s(), t.stats)
         }
       case t: Term.If =>
@@ -795,7 +797,6 @@ object TreeSyntax {
           // Scala 3 sub-cases: the body is a `match` in the guard, printed as
           // `case p [if cond] if e match ...`, with no `=>`.
           case b: Term.SubMatch => s(kw("if"), " ", b)
-          case b: Term.Block => s(kw("=>"), b.stats)
           case b =>
             def isOneLiner(body: Tree) = body match {
               case _: Lit | _: Term.Name | Term.Block(Nil) => true
@@ -805,7 +806,7 @@ object TreeSyntax {
               case Some(p: Term.CasesBlock) => p.cases.forall(x => isOneLiner(x.body))
               case _ => isOneLiner(b)
             }
-            s(kw("=>"), if (allOneLiner) s(" ", b) else i(b))
+            s(kw("=>"), if (allOneLiner) w(" ", b) else i(b))
         }
         s("case ", ppat, pcond, " ", prest)
 
@@ -912,10 +913,15 @@ object TreeSyntax {
       case _ => false
     }
 
-    private def printStats(stats: Seq[Stat]) = r {
+    private def isCaseBody(t: Tree): Boolean = t.parent match {
+      case Some(p: Case) => p.body eq t
+      case _ => false
+    }
+
+    private def printStats(stats: Seq[Stat], indent: Boolean = true) = r {
       var prevStat: Stat = null
       stats.map { stat =>
-        val showStat = i(stat)
+        val showStat = if (indent) i(stat) else n(stat)
         if (showStat.isEmpty) showStat
         else {
           val needNL = null != prevStat && guessLeadingBrace(stat) && guessNeedsLineSep(prevStat)
@@ -1023,7 +1029,7 @@ object TreeSyntax {
       s(res.result(): _*)
     }
 
-    implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats)
+    implicit def syntaxStats: Syntax[Seq[Stat]] = Syntax(printStats(_))
 
     def reprint(tree: Tree): Show.Result = withComments(tree)(showTree(tree))
 
