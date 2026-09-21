@@ -273,4 +273,28 @@ class TrailingCommentSuite extends ParseSuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("line comment at end of input") {
+    val x = term("x // X")
+    assertEquals(x.endComment.get.values.last.newlinesAfter, -1)
+    assertSyntax("func(x // X\n)")(Term.Apply(tname("func"), Term.ArgClause(List(x))))
+  }
+
+  test("block comment at end of input") {
+    val x = term("x /* X */")
+    assertEquals(x.endComment.get.values.last.newlinesAfter, -1)
+    assertSyntax("func(x /* X */\n)")(Term.Apply(tname("func"), Term.ArgClause(List(x))))
+  }
+
+  test("line comment at start of input") {
+    val x = term("// X\nx")
+    assertEquals(x.begComment.get.newlinesBefore, 0)
+    assertSyntax("val y =\n  // X\n  x")(Defn.Val(Nil, List(patvar("y")), None, x))
+  }
+
+  test("block comment at start of input") {
+    val x = term("/* X */ x")
+    assertEquals(x.begComment.get.newlinesBefore, 0)
+    assertSyntax("val y =\n  /* X */\n  x")(Defn.Val(Nil, List(patvar("y")), None, x))
+  }
+
 }

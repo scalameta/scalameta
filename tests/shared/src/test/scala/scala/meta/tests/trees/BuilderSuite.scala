@@ -136,6 +136,13 @@ class BuilderSuite extends TreeSuiteBase {
     assertEquals(tree.endComment.map(_.values.head.parts.head.value), Some("// d"))
   }
 
+  test("newBuilder: a later field") {
+    val parts = List(Lit.String("// c"))
+    val tree = Tree.Comment.newBuilder(parts).newlinesAfter(2).result()
+    assertEquals(Tree.Comment.After_4_17_4.unapply(tree), Some((parts, 2)))
+    assertEquals(Tree.Comment.newBuilder(parts).result().newlinesAfter, -1)
+  }
+
   test("newBuilder: a top-level leaf") {
     val tree = Self.newBuilder(tname("self"), None).result()
     assertTree(tree)(Self(tname("self"), None))

@@ -193,10 +193,16 @@ object Tree extends InternalTreeXtensions {
   }
 
   @ast
-  class Comment(parts: List[Lit.String] @nonEmpty) extends Tree {
+  class Comment(
+      parts: List[Lit.String] @nonEmpty,
+      @newField("4.17.4")
+      newlinesAfter: Int = -1,
+  ) extends Tree {
     final def isScaladoc: Boolean = parts.headOption
       .exists(x => x.value.length > 4 && x.value.startsWith("/**"))
     final def isSingleline: Boolean = parts.headOption.exists(_.value.startsWith("//"))
+    final def getNewlinesAfter: Int =
+      if (newlinesAfter > 0) newlinesAfter else if (isSingleline) 1 else 0
     final def isMultiline: Boolean = parts.headOption.exists { x =>
       val part = x.value
       val len = part.length
@@ -205,7 +211,13 @@ object Tree extends InternalTreeXtensions {
   }
 
   @ast
-  class Comments(values: List[Comment] @nonEmpty) extends Tree
+  class Comments(
+      values: List[Comment] @nonEmpty,
+      @newField("4.17.4")
+      newlinesBefore: Int = 0,
+  ) extends Tree {
+    final def isDetached: Boolean = newlinesBefore > 0
+  }
 
 }
 
