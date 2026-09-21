@@ -187,4 +187,56 @@ class TrailingCommentSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("return: comment after keyword, expr on the next line") {
+    val code =
+      """|def f = return // c
+         |  1
+         |""".stripMargin
+    val layout = "def f = return 1"
+    val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, Term.Return(int(1)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("return: comment after keyword, expr on the same line") {
+    val code = "def f = return /* c */ 1"
+    val layout = "def f = return 1"
+    val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, Term.Return(int(1)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("if: block comment after cond, body on the same line") {
+    val code = "if (a) /* c */ b"
+    val layout = "if (a) b"
+    val tree = Term.If(tname("a"), tname("b"), Lit.Unit())
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("while: block comment after cond, body on the same line") {
+    val code = "while (a) /* c */ b"
+    val layout = "while (a) b"
+    val tree = Term.While(tname("a"), tname("b"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("if: comment after cond, body on the next line") {
+    val code =
+      """|if (a) // c
+         |  b
+         |else d
+         |""".stripMargin
+    val layout = "if (a) b else d"
+    val tree = Term.If(tname("a"), tname("b"), tname("d"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("while: comment after cond, body on the next line") {
+    val code =
+      """|while (a) // c
+         |  b
+         |""".stripMargin
+    val layout = "while (a) b"
+    val tree = Term.While(tname("a"), tname("b"))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
 }
