@@ -1049,30 +1049,36 @@ object TreeSyntax {
   }
 
   def original(x: Tree, o: Origin.Parsed, comments: Boolean = true): Show.Result = w(
-    printComments(x, _.begComment, tc => w(n(), tc.text, n())),
+    printBegComments(x, tc => w(n(), tc.text, n())),
     x.pos.text,
-    printComments(x, _.endComment, tc => w(" ", tc.text, n())),
+    printEndComments(x, tc => w(" ", tc.text, n())),
     comments && o.begTokenIdx > 0 && !x.is[Source],
   )
   def reprint(x: Tree, comments: Boolean = true)(implicit dialect: Dialect): Show.Result =
     new SyntaxInstances(comments = comments).reprint(x)
 
-  private def printComments(
-      tree: Tree,
-      f: Tree => Option[Tree.Comments],
-      out: Tree.Comments => Show.Result,
-  ): Show.Result = f(tree) match {
-    case Some(tc) // skip if the parent refers to the same comments
-        if tc.values.nonEmpty && tree.parent.flatMap(f).forall(ptc =>
-          (tc ne ptc) &&
-            ((tc.origin, ptc.origin) match {
-              case (otc: Origin.Partial, optc: Origin.Partial) =>
-                otc.begTokenIdx != optc.begTokenIdx || otc.endTokenIdx != optc.endTokenIdx
-              case _ => true
-            }),
-        ) => out(tc)
-    case _ => s()
-  }
+  // the comments a tree prints itself: the parent prints the ones it refers to as well
+  private def ownComments(tree: Tree, f: Tree => Option[Tree.Comments]): Option[Tree.Comments] =
+    f(tree) match {
+      case res @ Some(tc)
+          if tc.values.nonEmpty && tree.parent.flatMap(f).forall(ptc =>
+            (tc ne ptc) &&
+              ((tc.origin, ptc.origin) match {
+                case (otc: Origin.Partial, optc: Origin.Partial) =>
+                  otc.begTokenIdx != optc.begTokenIdx || otc.endTokenIdx != optc.endTokenIdx
+                case _ => true
+              }),
+          ) => res
+      case _ => None
+    }
+
+  private def ownBegComments(tree: Tree): Option[Tree.Comments] = ownComments(tree, _.begComment)
+  private def ownEndComments(tree: Tree): Option[Tree.Comments] = ownComments(tree, _.endComment)
+
+  private def printBegComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
+    ownBegComments(tree).fold(s())(out)
+  private def printEndComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
+    ownEndComments(tree).fold(s())(out)
 
   private def printComment(t: Tree.Comment): Show.Result = r(t.parts.map(_.value))
   private def printBegComments(t: Tree.Comments): Show.Result =
@@ -1080,9 +1086,6 @@ object TreeSyntax {
   private def printEndComments(t: Tree.Comments): Show.Result =
     r(" ", " ", n())(t.values.map(printComment): _*)
 
-  private[prettyprinters] def withComments(tree: Tree)(syntax: Show.Result): Show.Result = s(
-    printComments(tree, _.begComment, printBegComments),
-    syntax,
-    printComments(tree, _.endComment, printEndComments),
-  )
+  private[prettyprinters] def withComments(tree: Tree)(syntax: Show.Result): Show.Result =
+    s(printBegComments(tree, printBegComments), syntax, printEndComments(tree, printEndComments))
 }
