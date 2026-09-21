@@ -289,4 +289,114 @@ class TrailingCommentSuite extends BaseDottySuite {
     assertSyntax("val y =\n  /* X */\n  x")(Defn.Val(Nil, List(patvar("y")), None, x))
   }
 
+  test("infix: comment on its own line after op") {
+    val code =
+      """|a op
+         |  // foo
+         |  b
+         |""".stripMargin
+    val layout = "a op b"
+    val tree = Term.ApplyInfix(
+      tname("a"),
+      tname("op"),
+      Type.ArgClause(Nil),
+      Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("// foo")),
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+    val reparsed = Term.ApplyInfix(tname("a"), tname("op"), Nil, List(tname("b")))
+    runTestAssert[Stat](layout)(reparsed)
+  }
+
+  test("infix: block comment on its own line after op") {
+    val code =
+      """|a op
+         |  /* foo */ b
+         |""".stripMargin
+    val layout = "a op b"
+    val tree = Term.ApplyInfix(
+      tname("a"),
+      tname("op"),
+      Type.ArgClause(Nil),
+      Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("/* foo */")),
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+    val reparsed = Term.ApplyInfix(tname("a"), tname("op"), Nil, List(tname("b")))
+    runTestAssert[Stat](layout)(reparsed)
+  }
+
+  test("infix: comment inside parens after op") {
+    val code =
+      """|a op (
+         |  // foo
+         |  b
+         |)
+         |""".stripMargin
+    val layout =
+      """|a op
+         |  // foo
+         |  b
+         |""".stripMargin
+    val tree = Term.ApplyInfix(tname("a"), tname("op"), Nil, List(tnameComments("b")("// foo")()))
+    parseAndCheckTree[Stat](code, layout)(tree)
+    val reparsed = Term.ApplyInfix(
+      tname("a"),
+      tname("op"),
+      Type.ArgClause(Nil),
+      Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("// foo")),
+    )
+    parseAndCheckTree[Stat](layout, "a op b")(reparsed)
+  }
+
+  test("comment before a blank line at the start of input") {
+    val code =
+      """|// c
+         |
+         |x
+         |""".stripMargin
+    val tree = tname("x")
+    runTestAssert[Stat](code, "x")(tree)
+  }
+
+  test("comment before a brace body") {
+    val code =
+      """|def f = // c
+         |  {
+         |    x
+         |  }
+         |""".stripMargin
+    val layout =
+      """|def f = {
+         |  x
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(Nil, tname("f"), Nil, None, blk(tname("x")))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("comment inside a parameter clause") {
+    val code =
+      """|def f(
+         |  // c
+         |  x: Int
+         |) = 1
+         |""".stripMargin
+    val layout = "def f(x: Int) = 1"
+    val tree = Defn.Def(
+      Nil,
+      tname("f"),
+      List(Member.ParamClauseGroup(
+        Type.ParamClause(Nil),
+        List(List(
+          Term.Param
+            .createWithComments(Nil, tname("x"), Some(pname("Int")), None, begComment = Seq("// c")),
+        )),
+      )),
+      None,
+      int(1),
+    )
+    parseAndCheckTree[Stat](code, layout)(tree)
+    val reparsed = Defn.Def(Nil, tname("f"), Nil, List(List(tparam("x", pname("Int")))), None, int(1))
+    runTestAssert[Stat](layout)(reparsed)
+  }
+
 }
