@@ -405,8 +405,7 @@ class InfixSuite extends BaseDottySuite {
          |    // c1
          |    /*
          |    c2
-         |  */
-         |    | boiling
+         |  */ | boiling
          |}
          |""".stripMargin
     val tree = blk(
@@ -532,6 +531,7 @@ class InfixSuite extends BaseDottySuite {
          |  def toBeContinued(altToken: Token): Boolean = {
          |    inline def canContinue = !in.canStartStatTokens.contains(in.token) // not statement, so take as continued expr
          |      || followedByToken(altToken) // scan ahead to see whether we find a `then` or `do`
+         |
          |    !in.isNewLine // a newline token means the expression is finished
          |      && !migrateTo3 // old syntax
          |      && canContinue

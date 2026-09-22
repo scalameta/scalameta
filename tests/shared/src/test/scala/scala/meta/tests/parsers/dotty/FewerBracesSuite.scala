@@ -1366,10 +1366,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |    arg2
          |  } ++ /*
          |        c3
-         |        */
-         |  abc {
-         |    arg3
-         |  }
+         |        */ abc {
+         |  arg3
+         |}
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
@@ -1405,10 +1404,9 @@ class FewerBracesSuite extends BaseDottySuite {
          |  arg1
          |} ++ /*
          |   c2
-         |    */
-         |  abc {
-         |    arg2
-         |  }
+         |    */ abc {
+         |  arg2
+         |}
          |""".stripMargin
     val tree = Defn.Def(
       Nil,

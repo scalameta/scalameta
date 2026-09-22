@@ -1790,8 +1790,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|val foo =
-         |  /* c */
-         |  bar
+         |  /* c */ bar
          |""".stripMargin
     runTestAssert[Stat](code, layout)(
       Defn.Val(Nil, List(patvar("foo")), None, tnameComments("bar")("/* c */")()),
@@ -1871,7 +1870,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|def foo: Int = {
          |  {
          |    bar
-         |  } // c
+         |  }
+         |  // c
          |}
          |""".stripMargin
     val body = blk(Term.Block.newBuilder(List(tname("bar"))).endComment(Seq("// c")).result())

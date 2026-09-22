@@ -195,7 +195,8 @@ class ImportSuite extends ParseSuite {
          |""".stripMargin
     val layout =
       """|// attached comment
-         |import y.Y // detached comment after
+         |import y.Y
+         |// detached comment after
          |""".stripMargin
     val importer = Importer("y", List("Y"))
     val imp = Import.newBuilder(List(importer)).begComment(Seq("// attached comment"))

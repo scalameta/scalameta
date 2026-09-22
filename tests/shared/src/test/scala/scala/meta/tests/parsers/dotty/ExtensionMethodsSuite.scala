@@ -106,8 +106,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|extension (c: Circle)
-         |  /*x*/
-         |  {
+         |  /*x*/ {
          |    def crc: Int = 2
          |  }
          |""".stripMargin
@@ -124,8 +123,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|extension (c: Circle) {
-         |  /** doc */
-         |  def crc: Int = 2
+         |  /** doc */ def crc: Int = 2
          |}
          |""".stripMargin
     val body = Defn.Def.newBuilder(Nil, tname("crc"), Nil, Some(pname("Int")), int(2))
