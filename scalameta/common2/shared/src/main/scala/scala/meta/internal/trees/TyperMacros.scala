@@ -14,6 +14,7 @@ object CommonTyperMacros {
   def productPrefix[T]: String = macro CommonTyperMacrosBundle.productPrefix[T]
   def loadField[T](f: T, s: String): Unit = macro CommonTyperMacrosBundle.loadField
   def storeField[T](f: T, v: T, s: String): Unit = macro CommonTyperMacrosBundle.storeField
+  def storeFieldIfSet[T](f: T, s: String): Unit = macro CommonTyperMacrosBundle.storeFieldIfSet
   def initField[T](f: T): T = macro CommonTyperMacrosBundle.initField
   def initParam[T](f: T): T = macro CommonTyperMacrosBundle.initField
   def childrenCount[T]: Int = macro CommonTyperMacrosBundle.childrenCount[T]
@@ -88,6 +89,12 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
       case ListTreeTpe(tpe) => q"$f = $v.map(el => ${copySubtree(q"el", tpe)})"
       case tpe => c.abort(c.enclosingPosition, s"unsupported field type $tpe")
     }
+  }
+
+  // a null field of a copy is loaded from the prototype on first use
+  def storeFieldIfSet(f: c.Tree, s: c.Tree): c.Tree = f.tpe.finalResultType match {
+    case AnyTpe() | PrimitiveTpe() => q"()"
+    case _ => q"if ($f != null) ${storeField(f, f, s)}"
   }
   def initField(f: c.Tree): c.Tree = f.tpe.finalResultType match {
     case AnyTpe() => q"$f"

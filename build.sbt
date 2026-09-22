@@ -279,7 +279,7 @@ lazy val scala3TreeLiftsCodeGen = projectMatrix.in(file("scala3-tree-lifts/impl"
 lazy val common2 = projectMatrix.in(file("scalameta/common2")).settings(
   moduleName := "common2",
   sharedSettings,
-  enableMacros,
+  enableHardcoreMacros,
   buildInfoPackage := "scala.meta.internal",
   buildInfoKeys := Seq[BuildInfoKey](version),
 ).crossAllPublished(PublishedScala2).enablePlugins(BuildInfoPlugin)
