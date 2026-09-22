@@ -20,6 +20,11 @@ class InvariantSuite extends TreeSuiteBase {
     },
   )
 
+  test("a null debuggee") {
+    val x: String = null
+    intercept[NullPointerException](require(x != null))
+  }
+
   test("even more informative error messages") {
     interceptMessage[InvariantFailedException](
       """|invariant failed:
