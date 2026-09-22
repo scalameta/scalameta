@@ -83,13 +83,10 @@ class PackageSuite extends ParseSuite {
          |""".stripMargin,
     ))(Source(List(Pkg(
       tnameComments("foo")()("// foo package left brace in newline"),
-      Pkg.Body.createWithComments(
-        List(Pkg(
-          tnameComments("bar")()("/* also in newline */"),
-          Pkg.Body.createWithComments(List(Pkg(tname("baz"), List())), begComment = Seq("// open")),
-        )),
-        begComment = Seq("/* still okay */"),
-      ),
+      Pkg.Body.newBuilder(List(Pkg(
+        tnameComments("bar")()("/* also in newline */"),
+        Pkg.Body.newBuilder(List(Pkg(tname("baz"), List()))).begComment(Seq("// open")).result(),
+      ))).begComment(Seq("/* still okay */")).result(),
     ))))
   }
 

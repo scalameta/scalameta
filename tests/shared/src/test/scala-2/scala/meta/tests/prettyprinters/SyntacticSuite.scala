@@ -1051,14 +1051,8 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
          |/* c2 */
          |val foo = bar /* c3 */ // c4
          |""".stripMargin
-    val tree = Defn.Val.createWithComments(
-      Nil,
-      List(Pat.Var(Term.Name("foo"))),
-      None,
-      tname("bar"),
-      begComment = Seq("// c1", "/* c2 */"),
-      endComment = Seq("/* c3 */", "// c4"),
-    )
+    val tree = Defn.Val.newBuilder(Nil, List(patvar("foo")), None, tname("bar"))
+      .begComment(Seq("// c1", "/* c2 */")).endComment(Seq("/* c3 */", "// c4")).result()
     runTestAssert[Stat](code, layout)(tree)
   }
 

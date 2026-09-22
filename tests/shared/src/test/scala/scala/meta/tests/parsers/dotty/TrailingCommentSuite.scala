@@ -15,7 +15,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |""".stripMargin
     val tree = Defn.Class(
       Nil,
-      Type.Name.createWithComments("A", endComment = Seq("// c")),
+      Type.Name.newBuilder("A").endComment(Seq("// c")).result(),
       Type.ParamClause(Nil),
       EmptyCtor(),
       tpl(List(init("B")), Nil),
@@ -67,8 +67,8 @@ class TrailingCommentSuite extends BaseDottySuite {
     val tree = Term.Try(
       tname("a"),
       Some(
-        Term.CasesBlock
-          .createWithComments(List(Case(Pat.Wildcard(), None, tname("b"))), endComment = Seq("// c")),
+        Term.CasesBlock.newBuilder(List(Case(Pat.Wildcard(), None, tname("b"))))
+          .endComment(Seq("// c")).result(),
       ),
       Some(tname("d")),
     )
@@ -118,7 +118,7 @@ class TrailingCommentSuite extends BaseDottySuite {
       Nil,
       Type.ApplyInfix(
         pname("A"),
-        Type.Name.createWithComments("&", endComment = Seq("// c")),
+        Type.Name.newBuilder("&").endComment(Seq("// c")).result(),
         pname("B"),
       ),
     )
@@ -136,7 +136,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |  1
          |""".stripMargin
     val tree = Defn
-      .Val(Nil, List(patvar("x")), None, Lit.Int.createWithComments(1, begComment = Seq("// c")))
+      .Val(Nil, List(patvar("x")), None, Lit.Int.newBuilder(1).begComment(Seq("// c")).result())
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -183,7 +183,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |}
          |""".stripMargin
     val tree =
-      tmatch(tname("x"), Case(int(1), None, Lit.Int.createWithComments(2, begComment = Seq("// c"))))
+      tmatch(tname("x"), Case(int(1), None, Lit.Int.newBuilder(2).begComment(Seq("// c")).result()))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -197,7 +197,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |  // c
          |  1
          |""".stripMargin
-    val body = Term.Return(Lit.Int.createWithComments(1, begComment = Seq("// c")))
+    val body = Term.Return(Lit.Int.newBuilder(1).begComment(Seq("// c")).result())
     val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, body)
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -209,7 +209,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |  /* c */
          |  1
          |""".stripMargin
-    val body = Term.Return(Lit.Int.createWithComments(1, begComment = Seq("/* c */")))
+    val body = Term.Return(Lit.Int.newBuilder(1).begComment(Seq("/* c */")).result())
     val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, body)
     runTestAssert[Stat](code, layout)(tree)
   }

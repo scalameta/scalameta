@@ -439,7 +439,7 @@ class TermSuite extends ParseSuite {
     )(tmatch(
       tname("x"),
       Case(patvar("x"), None, bool(true)),
-      Case.createWithComments(patvar("y"), None, tname("y"), begComment = Seq("// sobaka")),
+      Case.newBuilder(patvar("y"), None, tname("y")).begComment(Seq("// sobaka")).result(),
     )),
   )
 

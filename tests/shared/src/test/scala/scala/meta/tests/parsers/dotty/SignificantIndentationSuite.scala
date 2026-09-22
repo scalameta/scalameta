@@ -1537,17 +1537,18 @@ class SignificantIndentationSuite extends BaseDottySuite {
       pname("Namespace"),
       Nil,
       ctorp(tparam(List(Mod.ValParam()), "uri", pinfix("String", "|", pname("Null")))),
-      tpl(Defn.EnumCase.createWithComments(
-        Nil,
-        tname("xhtml"),
-        Nil,
-        EmptyCtor(),
-        List(init(
-          Type.Name.createWithComments("Namespace", endComment = Seq("// Defn.EnumCase ends here")),
-          List(str("http://www.w3.org/1999/xhtml")),
-        )),
-        endComment = Seq("// str"),
-      )),
+      tpl(
+        Defn.EnumCase.newBuilder(
+          Nil,
+          tname("xhtml"),
+          Nil,
+          EmptyCtor(),
+          List(init(
+            Type.Name.newBuilder("Namespace").endComment(Seq("// Defn.EnumCase ends here")).result(),
+            List(str("http://www.w3.org/1999/xhtml")),
+          )),
+        ).endComment(Seq("// str")).result(),
+      ),
     ))
   }
 
@@ -1700,16 +1701,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("Foo"),
       tpl(
-        Defn.Def.createWithComments(
-          Nil,
-          tname("foo"),
-          Nil,
-          Nil,
-          Some(pname("Int")),
-          tname("???"),
-          begComment = Seq("/*inline*/"),
-          endComment = None,
-        ),
+        Defn.Def.newBuilder(Nil, tname("foo"), Nil, Some(pname("Int")), tname("???"))
+          .begComment(Seq("/*inline*/")).endComment(None).result(),
         Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???")),
       ),
     ))
@@ -1724,16 +1717,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
     )(Defn.Object(
       Nil,
       tname("Foo"),
-      tpl(Defn.Def.createWithComments(
-        Nil,
-        tname("foo"),
-        Nil,
-        Nil,
-        Some(pname("Int")),
-        tname("???"),
-        begComment = Seq("/* comment*/"),
-        endComment = None,
-      )),
+      tpl(
+        Defn.Def.newBuilder(Nil, tname("foo"), Nil, Some(pname("Int")), tname("???"))
+          .begComment(Seq("/* comment*/")).endComment(None).result(),
+      ),
     )),
   )
 
@@ -1749,16 +1736,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       tname("Foo"),
       tpl(
-        Defn.Def.createWithComments(
-          Nil,
-          tname("foo"),
-          Nil,
-          Nil,
-          Some(pname("Int")),
-          tname("???"),
-          begComment = Seq("/* multi\n  line\n   comment */"),
-          endComment = None,
-        ),
+        Defn.Def.newBuilder(Nil, tname("foo"), Nil, Some(pname("Int")), tname("???"))
+          .begComment(Seq("/* multi\n  line\n   comment */")).endComment(None).result(),
         Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???")),
       ),
     ))
@@ -1876,7 +1855,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       Nil,
       Some(pname("Int")),
-      Term.Block.createWithComments(List(tname("bar")), begComment = Seq("// c")),
+      Term.Block.newBuilder(List(tname("bar"))).begComment(Seq("// c")).result(),
     ))
   }
 
@@ -1920,7 +1899,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, assertLayout = Some(layout))(Term.Match(
       tname("x"),
       List(
-        Case(int(1), None, Term.Block.createWithComments(List(tname("foo")), begComment = Seq("// c"))),
+        Case(int(1), None, Term.Block.newBuilder(List(tname("foo"))).begComment(Seq("// c")).result()),
       ),
     ))
   }
@@ -1983,16 +1962,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Template.Body(
           None,
           List(
-            Defn.Def.createWithComments(
-              Nil,
-              tname("foo"),
-              Nil,
-              Nil,
-              Some(pname("Int")),
-              tname("???"),
-              begComment = Seq("/* comment */"),
-              endComment = None,
-            ),
+            Defn.Def.newBuilder(Nil, tname("foo"), Nil, Some(pname("Int")), tname("???"))
+              .begComment(Seq("/* comment */")).endComment(None).result(),
             Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???")),
           ),
         ),
@@ -2018,16 +1989,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
         Template.Body(
           None,
           List(
-            Defn.Def.createWithComments(
-              Nil,
-              tname("foo"),
-              Nil,
-              Nil,
-              Some(pname("Int")),
-              tname("???"),
-              begComment = Seq("/* multi\n   line\n   comment */"),
-              endComment = None,
-            ),
+            Defn.Def.newBuilder(Nil, tname("foo"), Nil, Some(pname("Int")), tname("???"))
+              .begComment(Seq("/* multi\n   line\n   comment */")).endComment(None).result(),
             Defn.Def(Nil, tname("bar"), Nil, Nil, Some(pname("Int")), tname("???")),
           ),
         ),
@@ -2072,7 +2035,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Defn.Class(
             List(
               Mod.Annot(init("A1")),
-              Mod.Annot.createWithComments(init("A2"), begComment = Seq("/*\n * hello\n */")),
+              Mod.Annot.newBuilder(init("A2")).begComment(Seq("/*\n * hello\n */")).result(),
             ),
             pname("B"),
             Nil,
@@ -3197,13 +3160,12 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       None,
       blk(
-        Defn.Val.createWithComments(
+        Defn.Val.newBuilder(
           Nil,
           List(patvar("baz")),
           None,
           Term.If(tname("qux"), tname("quux"), tname("fred"), Nil),
-          endComment = Seq("// not very, but a somewhat long comment"),
-        ),
+        ).endComment(Seq("// not very, but a somewhat long comment")).result(),
         Term.Tuple(List(tname("baz"), Lit.Null())),
       ),
     )

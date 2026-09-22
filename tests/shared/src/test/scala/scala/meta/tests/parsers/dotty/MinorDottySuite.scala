@@ -393,15 +393,10 @@ class MinorDottySuite extends BaseDottySuite {
       pname("X"),
       Nil,
       EmptyCtor(),
-      tpl(Decl.Def.createWithComments(
-        Nil,
-        tname("x"),
-        Nil,
-        List(List()),
-        pname("String"),
-        begComment = Seq("// comment"),
-        endComment = None,
-      )),
+      tpl(
+        Decl.Def.newBuilder(Nil, tname("x"), List(pcg(Term.ParamClause(Nil))), pname("String"))
+          .begComment(Seq("// comment")).endComment(None).result(),
+      ),
     ))
   }
 

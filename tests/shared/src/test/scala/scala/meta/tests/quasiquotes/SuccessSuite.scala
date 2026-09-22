@@ -2312,7 +2312,7 @@ class SuccessSuite extends TreeSuiteBase {
   test("comments: single-line: literal") {
     val content = q""""real content""""
     assertTree(q"0 // $content has been unquoted")(
-      Lit.Int.createWithComments(0, endComment = Seq("// real content has been unquoted")),
+      Lit.Int.newBuilder(0).endComment(Seq("// real content has been unquoted")).result(),
     )
   }
 
@@ -2321,7 +2321,7 @@ class SuccessSuite extends TreeSuiteBase {
     val begComment = List("/* bc1 */", "/* real content bc */", "/* bc2 */")
     val endComment = List("/* ec1 */", "/* real content ec */", "/* ec2 */")
     assertTree(q"/* bc1 */ /* $content bc */ /* bc2 */ 0 /* ec1 */ /* $content ec */ /* ec2 */")(
-      Lit.Int.createWithComments(0, begComment = begComment, endComment = endComment),
+      Lit.Int.newBuilder(0).begComment(begComment).endComment(endComment).result(),
     )
   }
 
@@ -2336,7 +2336,7 @@ class SuccessSuite extends TreeSuiteBase {
       """
     assertTree(tree)(tapply(
       "foo",
-      Lit.Int.createWithComments(0, endComment = List("/* c1 */", "/* real content c */", "/* c2 */")),
+      Lit.Int.newBuilder(0).endComment(List("/* c1 */", "/* real content c */", "/* c2 */")).result(),
       lit(1),
     ))
   }
@@ -2352,31 +2352,21 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(tree)(tapply(
       "foo",
       lit(0),
-      Lit.Int.createWithComments(1, begComment = List("/* c1 */", "/* real content c */", "/* c2 */")),
+      Lit.Int.newBuilder(1).begComment(List("/* c1 */", "/* real content c */", "/* c2 */")).result(),
     ))
   }
 
   test("comments: single-line: definition") {
     val content = q""""real content""""
-    val tree = Defn.Val.createWithComments(
-      Nil,
-      List(Pat.Var(Term.Name("foo"))),
-      None,
-      lit(0),
-      endComment = Seq("// real content has been unquoted"),
-    )
+    val tree = Defn.Val.newBuilder(Nil, List(patvar("foo")), None, lit(0))
+      .endComment(Seq("// real content has been unquoted")).result()
     assertTree(q"val foo = 0 // $content has been unquoted")(tree)
   }
 
   test("comments: multi-line: definition") {
     val content = q""""real content""""
-    val tree = Defn.Val.createWithComments(
-      Nil,
-      List(Pat.Var(Term.Name("foo"))),
-      None,
-      lit(0),
-      endComment = Seq("/* real content has been unquoted */"),
-    )
+    val tree = Defn.Val.newBuilder(Nil, List(patvar("foo")), None, lit(0))
+      .endComment(Seq("/* real content has been unquoted */")).result()
     assertTree(q"val foo = 0 /* $content has been unquoted */")(tree)
   }
 

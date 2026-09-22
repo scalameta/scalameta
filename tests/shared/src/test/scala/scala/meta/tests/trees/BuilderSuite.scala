@@ -29,7 +29,10 @@ class BuilderSuite extends TreeSuiteBase {
   test("newBuilder: comments") {
     val tree = Term.Name.newBuilder("x").begComment(comments("/* b */")).endComment(comments("// e"))
       .result()
-    assertTree(tree)(Term.Name.createWithComments("x", comments("/* b */"), comments("// e")))
+    assertStruct(tree)(
+      """|/* b */
+         |Term.Name("x") // e""".stripMargin,
+    )
   }
 
   test("newBuilder: a null field") {
