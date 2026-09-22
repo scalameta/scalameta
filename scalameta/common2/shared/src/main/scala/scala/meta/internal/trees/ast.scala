@@ -1215,4 +1215,13 @@ object AstNamerMacros {
     maxName
   }
 
+  // the fields that the companion's current newBuilder takes, in its order
+  def getRequiredFieldNames(u: scala.reflect.api.Universe)(companion: u.Symbol): List[String] = {
+    import u._
+    val deprecatedType = typeOf[scala.deprecated]
+    companion.info.member(TermName("newBuilder")).alternatives
+      .find(m => !m.annotations.exists(_.tree.tpe <:< deprecatedType))
+      .map(_.asMethod.paramLists.head.map(_.name.toString)).getOrElse(Nil)
+  }
+
 }

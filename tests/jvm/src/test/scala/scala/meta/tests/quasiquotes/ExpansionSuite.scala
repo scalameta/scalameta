@@ -86,7 +86,17 @@ class ExpansionSuite extends FunSuite {
 
   private def about(calls: Set[String]) = calls.filter(_.startsWith("scala/meta/Term$If"))
 
-  test("a term")(assertEquals(about(term), Set("scala/meta/Term$If$After_4_4_0$.apply")))
+  test("a term")(assertEquals(
+    about(term),
+    Set(
+      "scala/meta/Term$If$.newBuilder",
+      "scala/meta/Term$If$Builder$.mods$extension",
+      "scala/meta/Term$If$Builder$.origin$extension",
+      "scala/meta/Term$If$Builder$.begComment$extension",
+      "scala/meta/Term$If$Builder$.endComment$extension",
+      "scala/meta/Term$If$Builder$.result$extension",
+    ),
+  ))
 
   test("a pattern")(assertEquals(about(pattern), Set("scala/meta/Term$If$After_4_4_0$.unapply")))
 

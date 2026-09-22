@@ -62,36 +62,44 @@ class LiftableMacros(val c: Context) extends AdtReflection {
     val liftAdts = adts.map { case (adt, defName) =>
       val matcher: DefDef = customMatcher(adt, defName, localName).getOrElse {
         val init = q"""$u.Ident($u.TermName("_root_"))""": Tree
-        def getNamePath(parts: Iterable[String]): Tree = parts
-          .foldLeft(init)((acc, part) => q"$u.Select($acc, $u.TermName($part))")
-        val nameParts = adt.sym.fullName.split('.')
+        def select(qual: Tree, part: String): Tree = q"$u.Select($qual, $u.TermName($part))"
+        val namePath = adt.sym.fullName.split('.').foldLeft(init)(select)
         val body =
           if (adt.sym.isClass) {
             val fields = adt match {
               case leaf: Leaf => leaf.fields(isPrivateOK)
               case _ => Nil
             }
-            val args = fields.map(f =>
-              q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})",
-              // NOTE: we can't really use AssignOrNamedArg here, sorry
-              // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
-              // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
-              // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
-            )
-            val latestAfterVersion =
-              if (adt.sym.isAstClass) {
-                val moduleNames = adt.sym.companion.info.decls
-                  .flatMap(x => if (x.isModule) Some(x.name.toString) else None)
-                val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames)
-                  .getOrElse(c.abort(
-                    c.enclosingPosition,
-                    s"no latest version ${adt.sym.fullName}: $moduleNames",
-                  ))
-                latestAfterVersion :: Nil
-              } else Nil
-            val namePath = getNamePath(nameParts ++ latestAfterVersion)
-            q"$u.Apply($namePath, $args)"
-          } else getNamePath(nameParts)
+            def liftField(f: Field) =
+              q"_root_.scala.Predef.implicitly[$u.Liftable[${f.tpe}]].apply($localName.${f.name})"
+            // NOTE: we can't really use AssignOrNamedArg here, sorry
+            // Test.scala:10: warning: type-checking the invocation of method apply checks if the named argument expression 'stats = ...' is a valid assignment
+            // in the current scope. The resulting type inference error (see above) can be fixed by providing an explicit type in the local definition for stats.
+            // q"$u.AssignOrNamedArg($fieldName, $fieldValue)"
+            val args = fields.map(liftField)
+            if (!adt.sym.isAstClass) q"$u.Apply($namePath, $args)"
+            else if (isPrivateOK) {
+              /* a term: the expansion lands in the client's bytecode, so it calls what a later
+               * release keeps: the companion's newBuilder, a setter per field, and result() */
+              val requiredNames = AstNamerMacros.getRequiredFieldNames(c.universe)(adt.sym.companion)
+              val required = requiredNames.map(n => liftField(fields.find(_.name.toString == n).get))
+              val others = fields.filterNot(f => requiredNames.contains(f.name.toString))
+              val built = q"$u.Apply(${select(namePath, "newBuilder")}, $required)"
+              val set = others.foldLeft(built) { (acc, f) =>
+                val name = f.name.toString
+                q"$u.Apply(${select(acc, name)}, ${List(liftField(f))})"
+              }
+              q"$u.Apply(${select(set, "result")}, _root_.scala.Nil)"
+            } else {
+              // a pattern: the newest version object, whose unapply keeps its shape
+              val moduleNames = adt.sym.companion.info.decls
+                .flatMap(x => if (x.isModule) Some(x.name.toString) else None)
+              val latest = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse(
+                c.abort(c.enclosingPosition, s"no latest version ${adt.sym.fullName}: $moduleNames"),
+              )
+              q"$u.Apply(${select(namePath, latest)}, $args)"
+            }
+          } else namePath
         q"def $defName($localName: ${adt.tpe}): $u.Tree = $body"
       }
       val body: Tree = customWrapper(adt, defName, localName, matcher.rhs).getOrElse(matcher.rhs)
