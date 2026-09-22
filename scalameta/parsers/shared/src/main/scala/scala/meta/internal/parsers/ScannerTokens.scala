@@ -273,8 +273,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   private[parsers] def countIndent(tokenPosition: Int): Int =
     indentOf(countIndentAndNewlineIndex(tokenPosition))
 
+  // the newlines at which an indentation region opened
+  private val indentAt = new scala.collection.mutable.BitSet
+  private[parsers] def isIndentAt(idx: Int): Boolean = indentAt(idx)
+
   private[parsers] def mkIndentToken(pointPos: Int): Token = {
     val token = tokens(pointPos)
+    indentAt += pointPos
     new Indentation.Indent(token.input, token.dialect, token.start, token.start)
   }
 

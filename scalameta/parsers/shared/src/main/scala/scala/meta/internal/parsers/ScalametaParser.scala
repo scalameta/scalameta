@@ -457,6 +457,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             var idx = start - 1
             var pending = 0
             var hadEOL = false
+            var inRegion = false // the scan crossed the newline that opened a region
             while (tokens.getOrNull(idx) match {
                 case t: Comment =>
                   if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
@@ -491,14 +492,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 case _: AtEOL => !(hadEOL && pending == 0) && {
                     hadEOL = true
                     pending = 0
+                    if (isIndentAt(idx)) inRegion = true
                     true
                   }
                 case _: HSpace => true
                 case null => false
                 case t =>
-                  if (begBuf ne null)
-                    if (canEndStat(t) || body.is[Term.Block] || hadEOL && t.is[Comma])
-                      begBuf.remove(0, pending)
+                  def endsStat = body.is[Term.Block] || hadEOL && t.is[Comma] ||
+                    (hadEOL || endExcl <= start || !t.is[KwReturn]) &&
+                    !inRegion && canEndStat(t) && !condCloseAt(idx)
+                  if (begBuf ne null) if (endsStat) begBuf.remove(0, pending)
                   t.isEmpty // cannot separate a leading comment from the tree
               }) idx -= 1
             if (begBuf eq null) None else asComments(begBuf)
@@ -544,6 +547,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 case _: HSpace => true
                 case _: Comma => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
                 case null => false
+                case _: AtEOL =>
+                  if (isIndentAt(idx)) endBuf = null // the region that opens here owns them
+                  false
                 case t => t.isEmpty // cannot separate the tree from a trailing comment
               }) idx += 1
             if (endBuf eq null) None else asComments(endBuf)
@@ -1658,6 +1664,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def condExpr(): Term = inParens(expr())
 
+  // the `)` that closes a condition is not the last token of a tree: a comment after it leads the body
+  private val condCloseAt = new scala.collection.mutable.BitSet
+  private def markCondClose(): Unit =
+    if (prevToken.is[RightParen] && options.captureComments) condCloseAt += prevIndex
+  private def exprAfterCond(): Term = {
+    markCondClose()
+    expr()
+  }
+
   def expr(): Term = expr(location = NoStat, allowRepeated = false)
 
   def quasiquoteExpr(): Term = expr(location = NoStat, allowRepeated = true)
@@ -1707,7 +1722,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       Term.If(cond, thenp, elsep, mods)
     }
     def getWithCond(cond: Term) =
-      getMaybeIndented(getWithCondAndThenp(cond, _))(getWithCondAndThenp(cond, expr()))
+      getMaybeIndented(getWithCondAndThenp(cond, _))(getWithCondAndThenp(cond, exprAfterCond()))
 
     getMaybeIndented { cond =>
       acceptAfterOptNL[KwThen]
@@ -1721,6 +1736,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def condExprWithOptionalBody[T <: Token: ClassTag]: (Term, Option[Term]) =
     if (!dialect.allowQuietSyntax) {
       val cond = condExpr()
+      markCondClose()
       newLinesOpt()
       (cond, None)
     } else if (!at[LeftParen]) {
@@ -1756,7 +1772,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
     val (cond, bodyOpt) = condExprWithOptionalBody[T]
-    val body = bodyOpt.getOrElse(expr())
+    val body = bodyOpt.getOrElse(exprAfterCond())
     (cond, body)
   }
 
