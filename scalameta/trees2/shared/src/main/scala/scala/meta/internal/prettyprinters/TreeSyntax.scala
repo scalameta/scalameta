@@ -1101,8 +1101,20 @@ object TreeSyntax {
   private[prettyprinters] def withComments(tree: Tree, layout: Boolean = true)(
       syntax: Show.Result,
   ): Show.Result = s(
-    printBegComments(tree, if (layout) printBegComments else printBegCommentsPlain),
-    syntax,
+    ownBegComments(tree) match {
+      case None => syntax
+      case Some(c) if !layout => s(printBegCommentsPlain(c), syntax)
+      case Some(c) if c.isDetached => s(printBegComments(c), syntax)
+      /* attached comments stay on the line that introduces the tree, and the tree
+       * indents under a line comment; at the start of a line there is nothing to
+       * indent under, and the tree follows at the same indentation */
+      case Some(c) => fn { sb =>
+          val atLineStart = sb.length == 0 || sb.charAt(sb.length - 1) == '\n'
+          val comments = printComments(c, s())
+          if (atLineStart && c.values.last.getNewlinesAfter > 0) s(comments, n(syntax))
+          else s(comments, " ", syntax)
+        }
+    },
     printEndComments(tree, if (layout) printEndComments else printEndCommentsPlain),
   )
 }

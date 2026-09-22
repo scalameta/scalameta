@@ -132,8 +132,7 @@ class TrailingCommentSuite extends ParseSuite {
          |  1
          |""".stripMargin
     val layout =
-      """|val x =
-         |  // c
+      """|val x = // c
          |  1
          |""".stripMargin
     val tree = Defn
@@ -147,8 +146,7 @@ class TrailingCommentSuite extends ParseSuite {
          |  e
          |""".stripMargin
     val layout =
-      """|def f = throw
-         |  // c
+      """|def f = throw // c
          |  e
          |""".stripMargin
     val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, Term.Throw(tnameComments("e")("// c")()))
@@ -161,8 +159,7 @@ class TrailingCommentSuite extends ParseSuite {
          |  x
          |""".stripMargin
     val layout =
-      """|(x: Int) =>
-         |  // c
+      """|(x: Int) => // c
          |  x
          |""".stripMargin
     val tree = tfunc(tparam("x", "Int"))(tnameComments("x")("// c")())
@@ -178,8 +175,7 @@ class TrailingCommentSuite extends ParseSuite {
          |""".stripMargin
     val layout =
       """|x match {
-         |  case 1 =>
-         |    // c
+         |  case 1 => // c
          |    2
          |}
          |""".stripMargin
@@ -213,8 +209,7 @@ class TrailingCommentSuite extends ParseSuite {
   test("return: comment after keyword, expr on the same line") {
     val code = "def f = return /* c */ 1"
     val layout =
-      """|def f = return
-         |  /* c */ 1
+      """|def f = return /* c */ 1
          |""".stripMargin
     val body = Term.Return(Lit.Int.newBuilder(1).begComment(Seq("/* c */")).result())
     val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, body)
@@ -224,8 +219,7 @@ class TrailingCommentSuite extends ParseSuite {
   test("if: block comment after cond, body on the same line") {
     val code = "if (a) /* c */ b"
     val layout =
-      """|if (a)
-         |  /* c */ b
+      """|if (a) /* c */ b
          |""".stripMargin
     val tree = Term.If(tname("a"), tnameComments("b")("/* c */")(), Lit.Unit())
     runTestAssert[Stat](code, layout)(tree)
@@ -234,8 +228,7 @@ class TrailingCommentSuite extends ParseSuite {
   test("while: block comment after cond, body on the same line") {
     val code = "while (a) /* c */ b"
     val layout =
-      """|while (a)
-         |  /* c */ b
+      """|while (a) /* c */ b
          |""".stripMargin
     val tree = Term.While(tname("a"), tnameComments("b")("/* c */")())
     runTestAssert[Stat](code, layout)(tree)
@@ -248,8 +241,7 @@ class TrailingCommentSuite extends ParseSuite {
          |else d
          |""".stripMargin
     val layout =
-      """|if (a)
-         |  // c
+      """|if (a) // c
          |  b else d
          |""".stripMargin
     val tree = Term.If(tname("a"), tnameComments("b")("// c")(), tname("d"))
@@ -262,8 +254,7 @@ class TrailingCommentSuite extends ParseSuite {
          |  b
          |""".stripMargin
     val layout =
-      """|while (a)
-         |  // c
+      """|while (a) // c
          |  b
          |""".stripMargin
     val tree = Term.While(tname("a"), tnameComments("b")("// c")())
@@ -285,13 +276,13 @@ class TrailingCommentSuite extends ParseSuite {
   test("line comment at start of input") {
     val x = term("// X\nx")
     assertEquals(x.begComment.get.newlinesBefore, 0)
-    assertSyntax("val y =\n  // X\n  x")(Defn.Val(Nil, List(patvar("y")), None, x))
+    assertSyntax("val y = // X\n  x")(Defn.Val(Nil, List(patvar("y")), None, x))
   }
 
   test("block comment at start of input") {
     val x = term("/* X */ x")
     assertEquals(x.begComment.get.newlinesBefore, 0)
-    assertSyntax("val y =\n  /* X */ x")(Defn.Val(Nil, List(patvar("y")), None, x))
+    assertSyntax("val y = /* X */ x")(Defn.Val(Nil, List(patvar("y")), None, x))
   }
 
   test("infix: comment on its own line after op") {
