@@ -15,8 +15,8 @@ class PublicScala2Suite extends TreeSuiteBase {
 
   test("scala.meta.Tree.structure (quasiquoted)") {
     val tree = q"foo + bar // baz"
-    val expected = Term.ApplyInfix
-      .createWithComments(tname("foo"), "+", Nil, List(tname("bar")), endComment = Seq("// baz"))
+    val expected = Term.ApplyInfix.newBuilder(tname("foo"), "+", Nil, List(tname("bar")))
+      .endComment(Seq("// baz")).result()
     assertTree(tree)(expected)
   }
 

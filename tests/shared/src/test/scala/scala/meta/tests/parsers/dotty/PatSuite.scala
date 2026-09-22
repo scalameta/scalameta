@@ -180,10 +180,8 @@ class PatSuite extends ParseSuite {
         Pat.Bind(patvar("foo"), Pat.Given("Foo")),
         None,
         blk(
-          Import.createWithComments(
-            List(Importer("foo", List(Importee.Wildcard()))),
-            endComment = Seq("// Works fine if I remove this line"),
-          ),
+          Import.newBuilder(List(Importer("foo", List(Importee.Wildcard()))))
+            .endComment(Seq("// Works fine if I remove this line")).result(),
           tapply("x"),
         ),
       ))),

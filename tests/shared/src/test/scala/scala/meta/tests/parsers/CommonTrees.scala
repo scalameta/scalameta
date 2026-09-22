@@ -14,7 +14,7 @@ object CommonTrees {
 
     final def tname(name: String): Term.Name = Term.Name(name)
     final def tnameComments(name: String)(begComment: String*)(endComment: String*): Term.Name =
-      Term.Name.createWithComments(name, begComment = begComment, endComment = endComment)
+      Term.Name.newBuilder(name).begComment(begComment).endComment(endComment).result()
     final def tnameCapset(name: String) = Term.CapSetName(name)
     final def tnameOrCapset(name: String): meta.Name with Term.Ref =
       nameOrCapset(name, tname, tnameCapset)
@@ -102,10 +102,11 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
     case "_" => phName
     case _ => f(name)
   }
-  final def mname(name: String): meta.Name = nameOr(name, tname)
-  implicit def implicitStringToName(obj: String): meta.Name = mname(obj)
-  implicit def implicitStringsToNames(obj: List[String]): List[meta.Name] = obj.map(mname)
-  implicit def implicitStringToNameOpt(obj: Option[String]): Option[meta.Name] = obj.map(mname)
+  final def mname(name: String): meta.Name = meta.Name(name)
+  final def mtname(name: String): meta.Name = nameOr(name, tname)
+  implicit def implicitStringToName(obj: String): meta.Name = mtname(obj)
+  implicit def implicitStringsToNames(obj: List[String]): List[meta.Name] = obj.map(mtname)
+  implicit def implicitStringToNameOpt(obj: Option[String]): Option[meta.Name] = obj.map(mtname)
 
   final def tplNoBody(inits: List[Init]): Template = Template(Nil, inits, tplBody())
   final def tplNoBody(inits: Init*): Template = tplNoBody(inits.toList)
@@ -126,7 +127,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def tplBody(stats: Stat*): Template.Body = tplBody(None, stats: _*)
 
   final def tparam(mods: List[Mod], name: String, tpe: Option[Type] = None): Term.Param = Term
-    .Param(mods, mname(name), tpe, None)
+    .Param(mods, mtname(name), tpe, None)
   final def tparam(name: String, tpe: Option[Type]): Term.Param = tparam(Nil, name, tpe)
   final def tparam(mods: List[Mod], name: String, tpe: Type): Term.Param =
     tparam(mods, name, Option(tpe))
@@ -174,8 +175,8 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
     Type.Param(mods, nameTree, params, bounds)
   }
 
-  def t2pname(op: Term.Name): Type.Name = Type.Name
-    .createWithComments(op.value, op.begComment, op.endComment)
+  def t2pname(op: Term.Name): Type.Name = Type.Name.newBuilder(op.value).begComment(op.begComment)
+    .endComment(op.endComment).result()
 
   final def pinfix(lt: Type, op: String, rt: Type): Type.ApplyInfix = Type.ApplyInfix(lt, op, rt)
   final def pselect(lt: Term.Ref, op: Term.Name, ops: Term.Name*): Type.Select = ops match {
@@ -233,6 +234,17 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
 
   final def pwildcard(bounds: Type.Bounds): Type.Wildcard = Type.Wildcard(bounds)
   final val pwildcard: Type.Wildcard = pwildcard(noBounds)
+
+  final def impname(name: String): Importee.Name = Importee.Name(mname(name))
+  final def impren(name: String, rename: String): Importee.Rename = Importee
+    .Rename(mname(name), mname(rename))
+  final def impdel(name: String): Importee.Unimport = Importee.Unimport(mname(name))
+  final val impwcard: Importee.Wildcard = Importee.Wildcard()
+  final def imp(name: String): Importee = if (name == "_") impwcard else impname(name)
+  final def imp(obj: (String, String)): Importee =
+    if (obj._2 == "_" || obj._2 == "") impdel(obj._1) else impren(obj._1, obj._2)
+  implicit def implicitStringToImportee(name: String): Importee = imp(name)
+  implicit def implicitTupleToImportee(obj: (String, String)): Importee = imp(obj)
 
   final def lit() = Lit.Unit()
   final def bool(v: Boolean) = Lit.Boolean(v)

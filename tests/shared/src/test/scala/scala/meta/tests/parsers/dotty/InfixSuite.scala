@@ -548,34 +548,28 @@ class InfixSuite extends BaseDottySuite {
           List(List(tparam("altToken", "Token"))),
           Some(pname("Boolean")),
           blk(
-            Defn.Def.createWithComments(
+            Defn.Def.newBuilder(
               List(Mod.Inline()),
               tname("canContinue"),
               Nil,
               None,
               tinfix(
-                Term.ApplyUnary.createWithComments(
+                Term.ApplyUnary.newBuilder(
                   tname("!"),
                   tapply(tselect("in", "canStartStatTokens", "contains"), tselect("in", "token")),
-                  endComment = Seq("// not statement, so take as continued expr"),
-                ),
+                ).endComment(Seq("// not statement, so take as continued expr")).result(),
                 "||",
                 tapply(tname("followedByToken"), tname("altToken")),
               ),
-              endComment = Seq("// scan ahead to see whether we find a `then` or `do`"),
-            ),
+            ).endComment(Seq("// scan ahead to see whether we find a `then` or `do`")).result(),
             tinfix(
-              Term.ApplyInfix.createWithComments(
-                Term.ApplyUnary.createWithComments(
-                  tname("!"),
-                  tselect("in", "isNewLine"),
-                  endComment = Seq("// a newline token means the expression is finished"),
-                ),
+              Term.ApplyInfix.newBuilder(
+                Term.ApplyUnary.newBuilder(tname("!"), tselect("in", "isNewLine"))
+                  .endComment(Seq("// a newline token means the expression is finished")).result(),
                 "&&",
                 Nil,
                 List(Term.ApplyUnary(tname("!"), tname("migrateTo3"))),
-                endComment = Seq("// old syntax"),
-              ),
+              ).endComment(Seq("// old syntax")).result(),
               "&&",
               tname("canContinue"),
             ),

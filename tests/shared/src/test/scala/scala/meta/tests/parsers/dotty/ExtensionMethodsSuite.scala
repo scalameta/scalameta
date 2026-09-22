@@ -75,20 +75,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def crc: Int = 2
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
-      Nil,
-      cparamss,
-      blk(Defn.Def.createWithComments(
-        Nil,
-        tname("crc"),
-        Nil,
-        Nil,
-        Some(pname("Int")),
-        int(2),
-        begComment = Seq("/** doc */"),
-        endComment = None,
-      )),
-    ))
+    val body = Defn.Def.newBuilder(Nil, tname("crc"), Nil, Some(pname("Int")), int(2))
+      .begComment(Seq("/** doc */")).endComment(None).result()
+    runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(Nil, cparamss, blk(body)))
   }
 
   test("simple-method-indent-line-comment") {
@@ -103,20 +92,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def crc: Int = 2
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
-      Nil,
-      cparamss,
-      blk(Defn.Def.createWithComments(
-        Nil,
-        tname("crc"),
-        Nil,
-        Nil,
-        Some(pname("Int")),
-        int(2),
-        begComment = Seq("// doc"),
-        endComment = None,
-      )),
-    ))
+    val body = Defn.Def.newBuilder(Nil, tname("crc"), Nil, Some(pname("Int")), int(2))
+      .begComment(Seq("// doc")).endComment(None).result()
+    runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(Nil, cparamss, blk(body)))
   }
 
   test("braces-method-indent-comment") {
@@ -133,15 +111,10 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |    def crc: Int = 2
          |  }
          |""".stripMargin
-    runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
-      Nil,
-      cparamss,
-      Term.Block.createWithComments(
-        List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))),
-        begComment = Seq("/*x*/"),
-        endComment = None,
-      ),
-    ))
+    val body = Term.Block
+      .newBuilder(List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))))
+      .begComment(Seq("/*x*/")).endComment(None).result()
+    runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(Nil, cparamss, body))
   }
 
   test("simple-method-indent-same-line-comment") {
@@ -155,20 +128,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def crc: Int = 2
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(
-      Nil,
-      cparamss,
-      blk(Defn.Def.createWithComments(
-        Nil,
-        tname("crc"),
-        Nil,
-        Nil,
-        Some(pname("Int")),
-        int(2),
-        begComment = Seq("/** doc */"),
-        endComment = None,
-      )),
-    ))
+    val body = Defn.Def.newBuilder(Nil, tname("crc"), Nil, Some(pname("Int")), int(2))
+      .begComment(Seq("/** doc */")).endComment(None).result()
+    runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(Nil, cparamss, blk(body)))
   }
 
   test("simple-method-indent-clause-comment") {
@@ -181,16 +143,8 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  // doc
          |  def crc: Int = 2
          |""".stripMargin
-    val body = Defn.Def.createWithComments(
-      Nil,
-      tname("crc"),
-      Nil,
-      Nil,
-      Some(pname("Int")),
-      int(2),
-      begComment = Seq("// doc"),
-      endComment = None,
-    )
+    val body = Defn.Def.newBuilder(Nil, tname("crc"), Nil, Some(pname("Int")), int(2))
+      .begComment(Seq("// doc")).endComment(None).result()
     val tree = Defn.ExtensionGroup(Nil, cparamss, body)
     parseAndCheckTree[Stat](code, layout)(tree)
   }
@@ -209,23 +163,12 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def crb: Int = 3
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(
-      Nil,
-      cparamss,
-      blk(
-        Defn.Def.createWithComments(
-          Nil,
-          tname("cra"),
-          Nil,
-          Nil,
-          Some(pname("Int")),
-          int(2),
-          begComment = Seq("/** doc */"),
-          endComment = None,
-        ),
-        Defn.Def(Nil, tname("crb"), Nil, Nil, Some(pname("Int")), int(3)),
-      ),
-    ))
+    val body = blk(
+      Defn.Def.newBuilder(Nil, tname("cra"), Nil, Some(pname("Int")), int(2))
+        .begComment(Seq("/** doc */")).endComment(None).result(),
+      Defn.Def(Nil, tname("crb"), Nil, Nil, Some(pname("Int")), int(3)),
+    )
+    runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(Nil, cparamss, body))
   }
 
   test("simple-method-braces-comment") {
@@ -235,20 +178,9 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  def crc: Int = 2
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, code)(Defn.ExtensionGroup(
-      Nil,
-      cparamss,
-      blk(Defn.Def.createWithComments(
-        Nil,
-        tname("crc"),
-        Nil,
-        Nil,
-        Some(pname("Int")),
-        int(2),
-        begComment = Seq("// doc"),
-        endComment = None,
-      )),
-    ))
+    val body = Defn.Def.newBuilder(Nil, tname("crc"), Nil, Some(pname("Int")), int(2))
+      .begComment(Seq("// doc")).endComment(None).result()
+    runTestAssert[Stat](code, code)(Defn.ExtensionGroup(Nil, cparamss, blk(body)))
   }
 
   test("braces-method-indent-trailing-comment") {
