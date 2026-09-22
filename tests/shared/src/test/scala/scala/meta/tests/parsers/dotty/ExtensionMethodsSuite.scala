@@ -127,11 +127,11 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |  }
          |""".stripMargin
     val layout =
-      """|extension (c: Circle) 
-         |/*x*/
-         |{
-         |  def crc: Int = 2
-         |}
+      """|extension (c: Circle)
+         |  /*x*/
+         |  {
+         |    def crc: Int = 2
+         |  }
          |""".stripMargin
     runTestAssert[Stat](code, assertLayout = Some(layout))(Defn.ExtensionGroup(
       Nil,
