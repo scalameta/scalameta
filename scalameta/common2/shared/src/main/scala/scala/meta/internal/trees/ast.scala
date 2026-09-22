@@ -81,10 +81,18 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         if (rawparamss.lengthCompare(1) > 0) c
           .abort(cdef.pos, "@leaf classes must define a single parameter list")
         val params: List[ValDef] = rawparamss.head
+        val apiParams =
+          if (isQuasi) params
+          else {
+            val versions = getNewFieldVersions(params)
+            params.filterNot(p => versions.get(p.name.toString).exists(isFrozen))
+          }
+        val builderOnlyParams = params.filterNot(p => apiParams.exists(_ eq p))
 
         // step 1a: identify modified fields of the class
         val (versionedParams, paramsVersions) =
           if (isQuasi) (Nil, Nil) else getVersionedParams(params, stats)
+        val apiVersionedParams = versionedParams.filter(vp => apiParams.exists(_ eq vp.param))
         val replacedFields = versionedParams.flatMap(_.replaced.flatMap(field =>
           field.oldDefs.map { case (oldDef, _) => field.version -> oldDef },
         ))
@@ -169,14 +177,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val privateBodyForCopy = privateBodyForCopyBuilder.result()
 
         val internalArgs = params.map(getParamArg)
-        def fullCtorCallFromPartialPrivateParams(pp: List[ValOrDefDef]) = {
+        // the frozen API passes the default of a later field
+        val apiCtorArgs = params
+          .map(p => if (builderOnlyParams.exists(_ eq p)) p.rhs else getParamArg(p))
+        def fullCtorCallFromPartialPrivateParams(
+            pp: List[ValOrDefDef],
+            fieldArgs: List[Tree] = apiCtorArgs,
+        ) = {
           val args = List.newBuilder[Tree]
           privateFieldsList.foreach { pf =>
             val f = pf.field
             val useArg = (pf.version ne null) && pp.exists(_.name == f.name)
             args += (if (useArg) getParamArg(f) else f.rhs)
           }
-          args ++= internalArgs
+          args ++= fieldArgs
           q"$mname._ctor(..${args.result()})"
         }
         val applyCall = fullCtorCallFromPartialPrivateParams(Nil)
@@ -303,27 +317,29 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             else (paramsToCopy ++ commentParams).map(toCopyParams)
 
           istatsAdd(q"$mods def copy(..$copyParams): $iname")
-          if (copyWithCommentsParams ne null)
-            istatsAdd(q"$mods def copyWithComments(..$copyWithCommentsParams): $iname")
+          if (copyWithCommentsParams ne null) {
+            val withCommentsMods =
+              if (version.isEmpty) getDeferredModifiers(deprecatedWithComments :: Nil) else mods
+            istatsAdd(q"$withCommentsMods def copyWithComments(..$copyWithCommentsParams): $iname")
+          }
 
           val privateCopyParams = version.flatMap(v =>
             privateApplyParamss.reverseIterator.collectFirst { case (pv, pp) if pv < v => pp },
           ).getOrElse(privateApplyParamss.last._2)
           val args = (privateCopyParams ++ paramsToCopy).map(getParamArg)
 
-          stats1 +=
-            q"""
-            final override def copy(..$copyParams): $iname = {
-              ..$privateBodyForCopy
-              $mname.apply(..$args)
-            }
-            """
+          // a copy of the frozen shape keeps a later field
+          val isApiShape = paramsToCopy.map(_.name) == apiParams.map(_.name)
+          def getCopyBody(setParams: List[ValOrDefDef]) =
+            if (isApiShape) {
+              val setters = setParams.map(p => q"builder.${p.name}(${p.name})")
+              q"{ val builder = this.toBuilder; ..$setters; builder.result() }"
+            } else q"{ ..$privateBodyForCopy; $mname.apply(..$args) }"
+          stats1 += q"final override def copy(..$copyParams): $iname = ${getCopyBody(paramsToCopy)}"
           if (copyWithCommentsParams ne null) stats1 +=
             q"""
-            final override def copyWithComments(..$copyWithCommentsParams): $iname = {
-              ..$privateBodyForCopy
-              $mname.apply(..$args)
-            }
+            final override def copyWithComments(..$copyWithCommentsParams): $iname =
+              ${getCopyBody(paramsToCopy ++ commentParams)}
             """
         }
         if (!isQuasi) {
@@ -336,11 +352,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }
             """
           if (needCopies)
-            if (versionedParams.isEmpty) addCopy(params, withDefault = true)
+            if (versionedParams.isEmpty) addCopy(apiParams, withDefault = true)
             else {
               // add primary copy with default values
               val defaultCopyParams =
-                positionVersionedParams(versionedParams.flatMap(_.getDefaultCopyDef()))
+                positionVersionedParams(apiVersionedParams.flatMap(_.getDefaultCopyDef()))
               addCopy(defaultCopyParams, withDefault = true)
 
               val defaultCopyParamNames = defaultCopyParams.map(_.name.toString).toSet
@@ -348,9 +364,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 .forall(x => defaultCopyParamNames.contains(x.name.toString))
 
               // add full copy without defaults
-              if (!allInDefaults(params)) addCopy(params, withDefault = false)
+              if (!allInDefaults(apiParams)) addCopy(apiParams, withDefault = false)
               // add secondary copy
-              paramsVersions.foreach { version =>
+              paramsVersions.filterNot(isFrozen).foreach { version =>
                 val copyParams = paramsForVersion(version)
                 if (copyParams.length != defaultCopyParams.length || !allInDefaults(copyParams))
                   addCopy(copyParams, withDefault = false, version = Some(version))
@@ -563,9 +579,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           """
         params.foreach(p => internalBody += storeField(p))
         internalBody += q"node"
-        val applyParamDefns = params.map(asValDefn)
-        val applyParamDecls = params.map(asValDecl)
-        val fullCtorParamDefns = privateParams.map(asValDefn) ++ applyParamDefns
+        val applyParamDefns = apiParams.map(asValDefn)
+        val applyParamDecls = apiParams.map(asValDecl)
+        val fullCtorParamDefns = privateParams.map(asValDefn) ++ params.map(asValDefn)
         val commentDefns = commentParams.map(asValDefn)
         val withCommentsDefns = applyParamDefns ++ commentDefns
         val applyWithDialect =
@@ -582,6 +598,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           """
         val createWithComments =
           q"""
+          @$deprecatedWithComments
           def createWithComments(..$withCommentsDefns)(implicit dialect: $DialectClass): $iname = {
             $withCommentsCall
           }
@@ -602,6 +619,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             """
           mstats1 +=
             q"""
+            @$deprecatedWithComments
             def createWithComments(..$withCommentsDefns): $iname = {
               $withCommentsCall
             }
@@ -644,12 +662,16 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             mstats1 += partialWithDialect
             if (partialWithoutDialect ne null) mstats1LowPriority += partialWithoutDialect
           }
-          mstatsLatest += partialWithDialect
-          if (partialWithoutDialect ne null) mstatsLatestLowPriority += partialWithoutDialect
+          if (builderOnlyParams.isEmpty) {
+            mstatsLatest += partialWithDialect
+            if (partialWithoutDialect ne null) mstatsLatestLowPriority += partialWithoutDialect
+          }
         }
-        mstatsLatest += createWithComments
-        mstatsLatest += applyWithDialect
-        mstatsLatestLowPriority += applyWithoutDialect
+        if (builderOnlyParams.isEmpty) {
+          mstatsLatest += createWithComments
+          mstatsLatest += applyWithDialect
+          mstatsLatestLowPriority += applyWithoutDialect
+        }
 
         // step 13a: generate additional companion apply for added and replaced fields
         // generate new applies for each new field added
@@ -676,94 +698,100 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             (if (isTopLevel) mstats1 else mstats1LowPriority) +=
               getNewBuilder(verRequiredParams, applyBody, getDeprecatedAnno(v) :: Nil)
 
-          verMstats.lowPrio +=
-            q"""
+          // a shape with a later field has no apply; the frozen shape has the companion's
+          val frozen = isFrozen(v)
+          val skipApply = frozen && paramsVersions.exists(x => isFrozen(x) && x < v)
+          if (!skipApply) {
+            verMstats.lowPrio +=
+              q"""
             @$deprecatedSince_4_9_0 def apply(..$paramDecls): $iname = {
               ..$applyBody
               $applyCall
             }
             """
-          verMstats.primary +=
-            q"""
+            verMstats.primary +=
+              q"""
             def apply(..$paramDefns)(implicit dialect: $DialectClass): $iname = {
               ..$applyBody
               $applyCall
             }
             """
 
-          privateApplyParamss.foreach { case (pv, pp) =>
-            val partialParamDecls = pp.map(asValDecl) ++ paramDecls
-            val fullCtorCall = fullCtorCallFromPartialPrivateParams(pp)
-            val partialWithDialect =
-              q"""
+            privateApplyParamss.foreach { case (pv, pp) =>
+              val partialParamDecls = pp.map(asValDecl) ++ paramDecls
+              val fullCtorCall = fullCtorCallFromPartialPrivateParams(pp)
+              val partialWithDialect =
+                q"""
               def apply(..$partialParamDecls)(implicit dialect: $DialectClass): $iname = {
                 ..$applyBody
                 $fullCtorCall
               }
               """
-            val partialWithoutDialect =
-              q"""
+              val partialWithoutDialect =
+                q"""
               @$deprecatedSince_4_9_0 def apply(..$partialParamDecls): $iname = {
                 ..$applyBody
                 $fullCtorCall
               }
               """
 
-            verMstats.primary += partialWithDialect
-            if (partialWithoutDialect ne null) verMstats.lowPrio += partialWithoutDialect
+              verMstats.primary += partialWithDialect
+              if (partialWithoutDialect ne null) verMstats.lowPrio += partialWithoutDialect
 
-            if (isTopLevel) mstats1 +=
-              q"""
+              if (frozen) {}
+              else if (isTopLevel) mstats1 +=
+                q"""
               def apply(..$partialParamDecls): $iname = {
                 ..$applyBody
                 $fullCtorCall
               }
               """
-            else {
-              mstats1 += partialWithDialect
-              if (partialWithoutDialect ne null) mstats1LowPriority += partialWithoutDialect
+              else {
+                mstats1 += partialWithDialect
+                if (partialWithoutDialect ne null) mstats1LowPriority += partialWithoutDialect
+              }
             }
-          }
 
-          verMstats.primary +=
-            q"""
+            verMstats.primary +=
+              q"""
             def createWithComments(..$verWithCommentsDefns)(implicit dialect: $DialectClass): $iname = {
               ..$applyBody
               $withCommentsCall
             }
             """
-          if (isTopLevel) {
-            mstats1 +=
-              q"""
+            if (frozen) {}
+            else if (isTopLevel) {
+              mstats1 +=
+                q"""
               @${getDeprecatedAnno(v)} def apply(..$paramDecls): $iname = {
                 ..$applyBody
                 $applyCall
               }
               """
-            mstats1 +=
-              q"""
+              mstats1 +=
+                q"""
               @${getDeprecatedAnno(v)} def createWithComments(..$verWithCommentsDecls): $iname = {
                 ..$applyBody
                 $withCommentsCall
               }
               """
-          } else {
-            mstats1LowPriority +=
-              q"""
+            } else {
+              mstats1LowPriority +=
+                q"""
               @${getDeprecatedAnno(v)} def apply(..$paramDecls): $iname = {
                 ..$applyBody
                 $applyCall
               }
               """
-            mstats1 +=
-              q"""
+              mstats1 +=
+                q"""
               @${getDeprecatedAnno(v)} def apply(..$paramDecls)(implicit dialect: $DialectClass): $iname = {
                 ..$applyBody
                 $applyCall
               }
               """
-            mstats1 +=
-              q"""
+              mstats1 +=
+                q"""
               @${getDeprecatedAnno(v)} def createWithComments(..$verWithCommentsDecls)(
                 implicit dialect: $DialectClass
               ): $iname = {
@@ -771,6 +799,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 $withCommentsCall
               }
               """
+            }
           }
         }
 
@@ -803,7 +832,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
                 verMstats.primary += getUnapply(paramsForVersion(ver))
               }
               val afterLastVer = getAfterVersion(mstatsPerVersion.last._1)
-              val anno = getDeprecatedAnno(headVer, s"; use `.$afterLastVer`")
+              val anno = getDeprecatedAnno(headVer, s"use `.$afterLastVer`")
               mstats1 += getUnapply(headParams, anno)
             case Nil => mstats1 += latestTree
           }
@@ -1116,12 +1145,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     }
   }
 
-  private val deprecatedSince_4_9_0 = getDeprecatedAnno("4.9.0")
+  private val deprecatedSince_4_9_0 = getDeprecatedAnno(Version(4, 9, 0))
+  private val deprecatedWithComments =
+    getDeprecatedAnno(frozenVersion, "use newBuilder and toBuilder")
 
   private def getDeprecatedAnno(v: Version, why: String = ""): Tree =
-    getDeprecatedAnno(v.toString + why)
-  private def getDeprecatedAnno(since: String): Tree =
-    q"new scala.deprecated(${Literal(Constant(since))})"
+    q"new scala.deprecated(message = $why, since = ${v.toString})"
 
   private def getAfterVersion(v: Version) = afterNamePrefix + v.asString('_')
 
@@ -1152,6 +1181,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
 object AstNamerMacros {
 
+  /* the positional API is frozen at this version: apply, copy and the WithComments methods
+   * take the fields up to it, and a later field is set through Builder; each version keeps
+   * unapply */
+  private[trees] val frozenVersion = Version(4, 17, 4)
+
   private val buildVersion: Option[Version] = {
     val bv = BuildInfo.version
     val idx = bv.indexWhere(x => x == '-' || x == '+')
@@ -1162,6 +1196,8 @@ object AstNamerMacros {
 
   val initialName = "Initial"
   val afterNamePrefix = "After_"
+
+  def isFrozen(v: Version): Boolean = v >= frozenVersion
 
   def getLatestAfterName(moduleNames: Iterable[String]): Option[String] = {
     var maxVersion = Version.zero
