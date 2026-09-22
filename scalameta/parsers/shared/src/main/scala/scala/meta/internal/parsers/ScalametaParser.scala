@@ -372,22 +372,54 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def asString(token: CommentUnquote, idx: Int): Lit.String =
     unquoteAt[Lit.String](idx, token)
 
-  private def asComment(parts: List[Lit.String], origin: Origin): Tree.Comment = Tree.Comment
-    ._ctor(origin = origin, parts = parts)
+  private def asComment(parts: List[Lit.String], origin: Origin, lastIdx: Int): Tree.Comment = Tree
+    .Comment._ctor(origin = origin, parts = parts, newlinesAfter = newlinesAfter(lastIdx))
+
+  // newlines between the token at `idx` and the next token that is not horizontal space
+  private def newlinesAfter(idx: Int): Int = {
+    var res = 0
+    var i = idx + 1
+    while (tokens.getOrNull(i) match {
+        case t: AtEOL =>
+          res += t.newlines
+          true
+        case _: EOF =>
+          res = 1
+          false
+        case _: HSpace => true
+        case _ => false
+      }) i += 1
+    res
+  }
+
+  private def newlinesBefore(idx: Int): Int = {
+    var res = 0
+    var i = idx - 1
+    while (tokens.getOrNull(i) match {
+        case t: AtEOL =>
+          res += t.newlines
+          true
+        case _: HSpace => true
+        case _ => false
+      }) i -= 1
+    res
+  }
 
   private def asComment(token: Token, idx: Int): Tree.Comment = {
     val origin = asOrigin(idx)
-    asComment(asString(token, origin) :: Nil, origin)
+    asComment(asString(token, origin) :: Nil, origin, idx)
   }
 
   private def asComment(parts: List[Lit.String], beg: Int, end: Int): Tree.Comment =
-    asComment(parts, asOrigin(beg, end))
+    asComment(parts, asOrigin(beg, end), end - 1)
 
   private def asComments(values: ListBuffer[Tree.Comment]): Option[Tree.Comments] =
     if (values.isEmpty) None
     else Some {
-      val origin = asOrigin(values.head.begIndex, values.last.endIndex + 1)
-      Tree.Comments._ctor(origin = origin, values = values.toList)
+      val beg = values.head.begIndex
+      val origin = asOrigin(beg, values.last.endIndex + 1)
+      Tree.Comments
+        ._ctor(origin = origin, values = values.toList, newlinesBefore = newlinesBefore(beg))
     }
 
   def atPosWithBody[T <: Tree](startPos: Int, body: T, endPos: Int): T = {
@@ -461,6 +493,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           else if (tokens(endExcl - 1).end > maxChildEnd) trailingComments(endExcl)
           else if (bodyIsBlock) None // let the child own it
           else maxChild.endComment
+
+        // the last child of a block owns the own-line comments before the block closes
+        if (bodyIsBlock && (maxChild ne null)) {
+          val bound = if (tokens(endExcl - 1).is[RightBrace]) endExcl - 1 else endPos + 1
+          val last = maxChild.endComment.getOrElse(maxChild)
+          trailingComments(last.endIndex + 1, bound).foreach { more =>
+            val all = new ListBuffer[Tree.Comment]
+            maxChild.endComment.foreach(all ++= _.values)
+            all ++= more.values
+            maxChild.privateSetOrigin(maxChild.origin, maxChild.begComment, asComments(all))
+          }
+        }
       }
 
     body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
@@ -525,15 +569,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     if (begBuf eq null) None else asComments(begBuf)
   }
 
-  // the comments after the tree that ends before `from`, on its line
-  private def trailingComments(from: Int): Option[Tree.Comments] = {
+  /* Trailing comments from `idx` on. On the tree's line only, unless `bound`
+   * is given: then also on the lines that follow, up to `bound` or a blank line,
+   * which is how the last child of a block takes the comments before the block
+   * closes. */
+  private def trailingComments(from: Int, bound: Int = -1): Option[Tree.Comments] = {
+    val ownLine = bound >= 0
     var endBuf: ListBuffer[Tree.Comment] = null // lazily allocated, as begBuf
     var idx = from
-    while (tokens.getOrNull(idx) match {
-        case t: Comment =>
-          if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
-          endBuf.append(asComment(t, idx))
-          true
+    var newlines = 0
+    def add(comment: => Tree.Comment): Boolean = {
+      if (!ownLine || newlines > 0) {
+        if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
+        endBuf.append(comment)
+        newlines = 0
+      }
+      true
+    }
+    while ((!ownLine || idx < bound) &&
+      (tokens.getOrNull(idx) match {
+        case t: Comment => add(asComment(t, idx))
         case begPart: CommentStart =>
           val begIdx = idx
           val parts = new ListBuffer[Lit.String]
@@ -555,17 +610,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 false
             }
           }) {}
-          if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
-          endBuf.append(asComment(parts.toList, begIdx, idx + 1))
-          true
-        case _: HSpace => true
-        case _: Comma => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
-        case null => false
+          add(asComment(parts.toList, begIdx, idx + 1))
+        case t: AtEOL if ownLine =>
+          newlines += t.newlines
+          newlines < 2
         case _: AtEOL =>
           if (isIndentAt(idx)) endBuf = null // the region that opens here owns them
           false
+        case _: HSpace => true
+        case _: Comma if !ownLine => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
+        case null => false
         case t => t.isEmpty // cannot separate the tree from a trailing comment
-      }) idx += 1
+      })) idx += 1
     if (endBuf eq null) None else asComments(endBuf)
   }
 

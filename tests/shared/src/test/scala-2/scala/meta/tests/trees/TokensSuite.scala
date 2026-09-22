@@ -106,11 +106,12 @@ class TokensSuite extends TreeSuiteBase {
              |
              |
              |   import p3.a3 // ct3
+             |// ct4
              |""".stripMargin
         getTokens(stats: _*).permutations.foreach(x =>
           Tokens.merge(x: _*) match {
             case Seq(one) =>
-              assertEquals((1, 37), (one.start, one.length))
+              assertEquals((1, 39), (one.start, one.length))
               assertNoDiff(one.syntax, merged3)
             case x => fail(x.mkString(s"Expected one range, got ${x.length}: [\n", "\n], [\n", "\n]"))
           },
@@ -118,7 +119,7 @@ class TokensSuite extends TreeSuiteBase {
         getTokens(stats(2), stats(1)).permutations.foreach { x =>
           Tokens.merge(x: _*) match {
             case Seq(one) =>
-              assertEquals((12, 26), (one.start, one.length))
+              assertEquals((12, 28), (one.start, one.length))
               assertNoDiff(
                 one.syntax,
                 """|// cl2.1
@@ -127,6 +128,7 @@ class TokensSuite extends TreeSuiteBase {
                    |
                    |
                    |   import p3.a3 // ct3
+                   |// ct4
                    |""".stripMargin,
               )
             case x => fail(x.mkString(s"Expected one range, got ${x.length}: [\n", "\n], [\n", "\n]"))
@@ -159,10 +161,11 @@ class TokensSuite extends TreeSuiteBase {
                    |import p1.a1 // ct1
                    |""".stripMargin,
               )
-              assertEquals((31, 7), (two.start, two.length))
+              assertEquals((31, 9), (two.start, two.length))
               assertNoDiff(
                 two.syntax,
                 """|import p3.a3 // ct3
+                   |// ct4
                    |""".stripMargin,
               )
             case x =>

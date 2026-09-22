@@ -1871,10 +1871,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|def foo: Int = {
          |  {
          |    bar
-         |  }
+         |  } // c
          |}
          |""".stripMargin
-    val tree = Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), blk(blk(tname("bar"))))
+    val body = blk(Term.Block.newBuilder(List(tname("bar"))).endComment(Seq("// c")).result())
+    val tree = Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), body)
     runTestAssert[Stat](code, layout)(tree)
   }
 
