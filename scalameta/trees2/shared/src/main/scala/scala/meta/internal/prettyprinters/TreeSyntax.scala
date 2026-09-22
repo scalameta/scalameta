@@ -281,7 +281,17 @@ object TreeSyntax {
         val partsArgs = printPartsArgs(partsIter, t.args, "xml literal")(printBracedExpr(_))
         m(SimpleExpr1, partsArgs)
 
-      case t: Term.ArgClause => nosp(s("(", o(t.mod, " "), r(t.values, ", "), ")"))
+      case t: Term.ArgClause => t.parent match {
+          // an infix argument drops its parentheses unless its kind needs them
+          case Some(ai: Term.ApplyInfix) if (t.values match {
+                case (_: Lit.Unit) :: Nil => false
+                case (_: Lit | _: Term.Ref | _: Term.Function | _: Term.Apply |
+                    _: Term.Placeholder | _: Term.MatchLike | _: Term.ApplyInfix |
+                    _: Term.MacroLike | _: Term.If) :: Nil => true
+                case _ => false
+              }) => p(new InfixExpr(ai), t.values.head)
+          case _ => nosp(s("(", o(t.mod, " "), nosp(r(t.values, ", ")), ")"))
+        }
       case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
       case t: Term.ApplyUsing =>
         val args = s("(", kw("using"), " ", r(t.argClause.values, ", "), ")")
@@ -289,16 +299,7 @@ object TreeSyntax {
       case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targClause))
       case t: Term.ApplyInfix =>
         val sg = new InfixExpr(t)
-        val args = t.argClause.values match {
-          case (arg: Term) :: Nil if (arg match {
-                case _: Lit.Unit => false
-                case _: Lit | _: Term.Ref | _: Term.Function | _: Term.Apply | _: Term.Placeholder |
-                    _: Term.MatchLike | _: Term.ApplyInfix | _: Term.MacroLike | _: Term.If => true
-                case _ => false
-              }) => p(sg, arg)
-          case _ => printApplyArgs(t.argClause, "")
-        }
-        m(sg, s(p(sg, t.lhs), " ", t.op, t.targClause, " ", args))
+        m(sg, s(p(sg, t.lhs), " ", t.op, t.targClause, " ", printApplyArgs(t.argClause, "")))
       case t: Term.ApplyUnary =>
         val needSpace = !t.op.value.lastOption.forall(isOperatorPart)
         m(PrefixExpr, s(w(t.op, " ", needSpace), p(SimpleExpr, t.arg)))
