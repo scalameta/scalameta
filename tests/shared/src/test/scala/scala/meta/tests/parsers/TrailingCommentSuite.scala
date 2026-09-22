@@ -212,22 +212,35 @@ class TrailingCommentSuite extends ParseSuite {
 
   test("return: comment after keyword, expr on the same line") {
     val code = "def f = return /* c */ 1"
-    val layout = "def f = return 1"
-    val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, Term.Return(int(1)))
-    runTestAssert[Stat](code, layout)(tree)
+    val layout =
+      """|def f = return
+         |  /* c */
+         |  1
+         |""".stripMargin
+    val body = Term.Return(Lit.Int.createWithComments(1, begComment = Seq("/* c */")))
+    val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, body)
+    parseAndCheckTree[Stat](code, layout)(tree)
   }
 
   test("if: block comment after cond, body on the same line") {
     val code = "if (a) /* c */ b"
-    val layout = "if (a) b"
-    val tree = Term.If(tname("a"), tname("b"), Lit.Unit())
+    val layout =
+      """|if (a)
+         |  /* c */
+         |  b
+         |""".stripMargin
+    val tree = Term.If(tname("a"), tnameComments("b")("/* c */")(), Lit.Unit())
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("while: block comment after cond, body on the same line") {
     val code = "while (a) /* c */ b"
-    val layout = "while (a) b"
-    val tree = Term.While(tname("a"), tname("b"))
+    val layout =
+      """|while (a)
+         |  /* c */
+         |  b
+         |""".stripMargin
+    val tree = Term.While(tname("a"), tnameComments("b")("/* c */")())
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -237,8 +250,12 @@ class TrailingCommentSuite extends ParseSuite {
          |  b
          |else d
          |""".stripMargin
-    val layout = "if (a) b else d"
-    val tree = Term.If(tname("a"), tname("b"), tname("d"))
+    val layout =
+      """|if (a)
+         |  // c
+         |  b else d
+         |""".stripMargin
+    val tree = Term.If(tname("a"), tnameComments("b")("// c")(), tname("d"))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -247,8 +264,12 @@ class TrailingCommentSuite extends ParseSuite {
       """|while (a) // c
          |  b
          |""".stripMargin
-    val layout = "while (a) b"
-    val tree = Term.While(tname("a"), tname("b"))
+    val layout =
+      """|while (a)
+         |  // c
+         |  b
+         |""".stripMargin
+    val tree = Term.While(tname("a"), tnameComments("b")("// c")())
     runTestAssert[Stat](code, layout)(tree)
   }
 
