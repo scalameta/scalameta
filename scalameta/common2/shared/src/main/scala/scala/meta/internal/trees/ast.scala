@@ -358,6 +358,109 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }
         }
 
+        // step 7b: generate the builder
+        val builderName = TypeName("Builder")
+        val requiredParams = params.filter(_.rhs.isEmpty)
+        def getSignature(ps: List[ValOrDefDef]) = ps.map(p => (p.name.toString, p.tpt.toString))
+        val newBuilderSignatures = scala.collection.mutable.Set(getSignature(requiredParams))
+        // an older shape computes the current fields from its own first
+        def getNewBuilder(
+            required: List[ValOrDefDef],
+            body: List[Tree] = Nil,
+            annots: List[Tree] = Nil,
+            primary: Boolean = false,
+        ): Tree = {
+          val checks = required.flatMap(p =>
+            List(
+              q"$DataTyperMacrosModule.nullCheck(${p.name})",
+              q"$DataTyperMacrosModule.emptyCheck(${p.name})",
+            ),
+          )
+          // an older shape delegates to the current one: the low-priority trait beside the
+          // companion cannot construct the private implementation class
+          val create =
+            if (primary) {
+              val privateArgs = privateParams
+                .map(p => if (p eq originParam) q"implicitly[$OriginModule.DialectOnly]" else p.rhs)
+              val initialArgs = params.map(p => if (p.rhs.isEmpty) q"${p.name}" else p.rhs)
+              q"new $builderName(new $name(..$privateArgs)(..$initialArgs))"
+            } else q"$mname.newBuilder(..${requiredParams.map(getParamArg)})"
+          val defn =
+            q"""
+            @..$annots def newBuilder(..${required.map(asValDecl)})(
+                implicit dialect: $DialectClass
+            ): $mname.$builderName = {
+              ..$checks
+              ..$body
+              $create
+            }
+            """
+          withDoc(defn, "Starts a builder from a fresh tree.")
+        }
+        if (!isQuasi) {
+          val builderType = tq"$mname.$builderName"
+          val toBuilderDecl = q"def toBuilder: $builderType"
+          istats1 += withDoc(toBuilderDecl, "Starts a builder from a copy of this tree.")
+          quasiExtraAbstractDefs += toBuilderDecl
+          stats1 +=
+            q"""
+            final override def toBuilder: $builderType = new $builderType(privateCopy(
+              parent = $NoneModule,
+              origin = $OriginModule.PartialProxy(this.${originParam.name})
+            ))
+            """
+          def getSetter(p: ValOrDefDef) =
+            q"""
+            def ${p.name}(${asValDecl(p)}): $builderName = {
+              $DataTyperMacrosModule.nullCheck(${p.name})
+              $DataTyperMacrosModule.emptyCheck(${p.name})
+              node.${internalize(p)} = ${p.name}
+              this
+            }
+            """
+          /* a replaced field keeps a setter under its old name: it reads the other old fields
+           * of that version from the tree, computes the new field as the versioned apply does,
+           * and sets it */
+          val oldSetters = versionedParams.flatMap { vp =>
+            vp.replaced.flatMap { rfield =>
+              rfield.oldDefs.map { case (oldDef, _) =>
+                val others = rfield.oldDefs
+                  .collect { case (o, _) if o ne oldDef => q"val ${o.name} = node.${o.name}" }
+                q"""
+                @${getDeprecatedAnno(rfield.version)}
+                def ${oldDef.name}(${asValDecl(oldDef)}): $builderName = {
+                  ..$others
+                  ${rfield.newValDefn}
+                  this.${vp.param.name}(${vp.param.name})
+                }
+                """
+              }
+            }
+          }
+          val storeFields = params.map { p =>
+            val name = p.name.decodedName.toString
+            q"$CommonTyperMacrosModule.storeFieldIfSet(node.${internalize(p)}, $name)"
+          }
+          val result =
+            q"""
+            def result(): $iname = {
+              ..$storeFields
+              node
+            }
+            """
+          mstats1 +=
+            q"""
+            final class $builderName private[meta] (private val node: $name) extends AnyVal
+                with _root_.scala.meta.trees.TreeBuilder[$iname] {
+              ..${params.map(getSetter)}
+              ..$oldSetters
+              ..${(originParam :: commentParams).map(getSetter)}
+              $result
+            }
+            """
+          mstats1 += getNewBuilder(requiredParams, primary = true)
+        }
+
         // step 7a: override the Object and Equals methods
         if (!isQuasi) {
           istats1 +=
@@ -566,6 +669,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
 
           val verWithCommentsDefns = paramDefns ++ commentDefns
           val verWithCommentsDecls = verWithCommentsDefns.map(asValDecl)
+
+          val verRequiredParams = paramDefns.filter(_.rhs.isEmpty)
+          // a replaced field changes the required fields, and the old set stays callable
+          if (newBuilderSignatures.add(getSignature(verRequiredParams)))
+            (if (isTopLevel) mstats1 else mstats1LowPriority) +=
+              getNewBuilder(verRequiredParams, applyBody, getDeprecatedAnno(v) :: Nil)
 
           verMstats.lowPrio +=
             q"""
@@ -1015,6 +1124,20 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     q"new scala.deprecated(${Literal(Constant(since))})"
 
   private def getAfterVersion(v: Version) = afterNamePrefix + v.asString('_')
+
+  // scaladoc reads a DocDef that the expansion carries; quasiquotes drop a comment
+  private def withDoc(defn: Tree, text: String): Tree = c.universe match {
+    case g: scala.tools.nsc.Global =>
+      val comment =
+        s"""|/**
+            | * $text
+            | * @see [[scala.meta.trees.TreeBuilder]]
+            | */
+            |""".stripMargin
+      val tree = defn.asInstanceOf[g.Tree]
+      g.DocDef(g.DocComment(comment, tree.pos), tree).asInstanceOf[Tree]
+    case _ => defn
+  }
 
   private def asValDecl(p: ValOrDefDef): ValDef =
     q"@..${p.mods.annotations} val ${p.name}: ${p.tpt}"

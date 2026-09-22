@@ -57,7 +57,9 @@ class SurfaceSuite extends FunSuite {
     .map(fullName => (fullName, wildcardImportStatics.contains(fullName))).toMap
 
   test("statics (core)") {
-    val diagnostic = core.keys.toList.filter(!_.endsWith("LowPriority")).sorted.map { fullName =>
+    val generated = Seq("LowPriority", ".Builder") // the ast macro emits one per leaf
+    val statics = core.keys.filterNot(x => generated.exists(x.endsWith))
+    val diagnostic = statics.toList.sorted.map { fullName =>
       val suffix = if (core(fullName)) "" else " *"
       s"$fullName$suffix"
     }.mkString(EOL)
@@ -214,6 +216,7 @@ class SurfaceSuite extends FunSuite {
          |scala.meta.trees.Origin.ParsedSpliced *
          |scala.meta.trees.Origin.Partial *
          |scala.meta.trees.Origin.PartialProxy *
+         |scala.meta.trees.TreeBuilder *
          |""".stripMargin.lf2nl,
     )
   }
