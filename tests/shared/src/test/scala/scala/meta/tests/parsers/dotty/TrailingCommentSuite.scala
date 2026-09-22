@@ -11,7 +11,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|class A // c
-         | extends B
+         |  extends B
          |""".stripMargin
     val tree = Defn.Class(
       Nil,
@@ -30,7 +30,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|if (a) b // c
-         | else d
+         |else d
          |""".stripMargin
     val tree = Term.If(tname("a"), tnameComments("b")()("// c"), tname("d"))
     runTestAssert[Stat](code, layout)(tree)
@@ -43,7 +43,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|try a // c
-         | catch {
+         |catch {
          |  case _ => b
          |}
          |""".stripMargin
@@ -62,7 +62,7 @@ class TrailingCommentSuite extends BaseDottySuite {
       """|try a catch {
          |  case _ => b
          |} // c
-         | finally d
+         |finally d
          |""".stripMargin
     val tree = Term.Try(
       tname("a"),
@@ -82,7 +82,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|do a // c
-         | while (b)
+         |while (b)
          |""".stripMargin
     val tree = Term.Do(tnameComments("a")()("// c"), tname("b"))
     runTestAssert[Stat](code, layout)(tree)
@@ -95,7 +95,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|foo // c
-         | match {
+         |match {
          |  case _ => 1
          |}
          |""".stripMargin
@@ -110,7 +110,7 @@ class TrailingCommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|type T = A & // c
-         | B
+         |  B
          |""".stripMargin
     val tree = Defn.Type(
       Nil,
@@ -131,9 +131,9 @@ class TrailingCommentSuite extends BaseDottySuite {
          |  1
          |""".stripMargin
     val layout =
-      """|val x = 
-         |// c
-         |1
+      """|val x =
+         |  // c
+         |  1
          |""".stripMargin
     val tree = Defn
       .Val(Nil, List(patvar("x")), None, Lit.Int.createWithComments(1, begComment = Seq("// c")))
@@ -146,9 +146,9 @@ class TrailingCommentSuite extends BaseDottySuite {
          |  e
          |""".stripMargin
     val layout =
-      """|def f = throw 
-         |// c
-         |e
+      """|def f = throw
+         |  // c
+         |  e
          |""".stripMargin
     val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, Term.Throw(tnameComments("e")("// c")()))
     runTestAssert[Stat](code, layout)(tree)
@@ -160,9 +160,9 @@ class TrailingCommentSuite extends BaseDottySuite {
          |  x
          |""".stripMargin
     val layout =
-      """|(x: Int) => 
-         |// c
-         |x
+      """|(x: Int) =>
+         |  // c
+         |  x
          |""".stripMargin
     val tree = tfunc(tparam("x", "Int"))(tnameComments("x")("// c")())
     runTestAssert[Stat](code, layout)(tree)
@@ -177,9 +177,9 @@ class TrailingCommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|x match {
-         |  case 1 => 
-         |  // c
-         |  2
+         |  case 1 =>
+         |    // c
+         |    2
          |}
          |""".stripMargin
     val tree =

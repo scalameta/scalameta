@@ -451,9 +451,9 @@ class TermSuite extends ParseSuite {
          |    foo
          |}""".stripMargin,
       """|x match {
-         |  case 1 => 
-         |  // c
-         |  foo
+         |  case 1 =>
+         |    // c
+         |    foo
          |}""".stripMargin,
     )(tmatch(tname("x"), Case(int(1), None, tnameComments("foo")("// c")()))),
   )

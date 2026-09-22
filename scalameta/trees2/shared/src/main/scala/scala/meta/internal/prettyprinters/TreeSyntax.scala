@@ -17,7 +17,7 @@ import scala.reflect.{ClassTag, classTag}
 
 object TreeSyntax {
   import Show.{alt, blank, function => fn, indent => i, meta => m, newline => n, nosplit => nosp,
-    opt => o, repeat => r, sequence => s, space => sp, wrap => w}
+    opt => o, repeat => r, sequence => s, spacen => spn, wrap => w}
 
   private final class SyntaxInstances(comments: Boolean)(implicit dialect: Dialect) {
     val keywords = tokenizers.keywords(dialect)
@@ -298,7 +298,7 @@ object TreeSyntax {
               }) => p(sg, arg)
           case _ => printApplyArgs(t.argClause, "")
         }
-        m(sg, s(p(sg, t.lhs), sp(s(t.op, t.targClause, sp(args)))))
+        m(sg, s(p(sg, t.lhs), " ", t.op, t.targClause, " ", args))
       case t: Term.ApplyUnary =>
         val needSpace = !t.op.value.lastOption.forall(isOperatorPart)
         m(PrefixExpr, s(w(t.op, " ", needSpace), p(SimpleExpr, t.arg)))
@@ -344,7 +344,7 @@ object TreeSyntax {
             t.cond,
             ") ",
             p(Expr, t.thenp, force = needParens),
-            if (guessHasElsep(t)) s(" ", kw("else"), " ", p(Expr, t.elsep)) else s(),
+            if (guessHasElsep(t)) spn(s(kw("else"), " ", p(Expr, t.elsep))) else s(),
           ),
         )
       case t: Term.SelectMatch if dialect.allowMatchAsOperator =>
@@ -352,7 +352,7 @@ object TreeSyntax {
         val pref = if (mods.isEmpty) Path else Expr1
         m(pref, s(w(mods, " "), printSelectLhs(t.expr), ".", kw("match"), " ", t.casesBlock))
       case t: Term.MatchLike =>
-        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), " ", kw("match"), " ", t.casesBlock))
+        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), spn(s(kw("match"), " ", t.casesBlock))))
       case t: Term.TryClause =>
         val showExpr = p(Expr, t.expr)
         val needParensAroundExpr = t.expr match {
@@ -367,8 +367,8 @@ object TreeSyntax {
             kw("try"),
             " ",
             if (needParensAroundExpr) s("(", i(showExpr), n(")")) else showExpr,
-            t.catchClause.fold(s())(x => s(" ", kw("catch"), " ", x)),
-            t.finallyp.fold(s())(finallyp => s(" ", kw("finally"), " ", finallyp)),
+            t.catchClause.fold(s())(x => spn(s(kw("catch"), " ", x))),
+            t.finallyp.fold(s())(finallyp => spn(s(kw("finally"), " ", finallyp))),
           ),
         )
       case t: Term.AnonymousFunction => s(t.body)
@@ -389,7 +389,7 @@ object TreeSyntax {
       case t: Term.PartialFunction => m(SimpleExpr, s("{", t.cases, n("}")))
       case t: Term.While => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
       case t: Term.Do =>
-        m(Expr1, s(kw("do"), " ", p(Expr, t.body), " ", kw("while"), " (", t.expr, ")"))
+        m(Expr1, s(kw("do"), " ", p(Expr, t.body), spn(s(kw("while"), " (", t.expr, ")"))))
       case t: Term.For => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
       case t: Term.ForYield =>
         m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
@@ -633,7 +633,7 @@ object TreeSyntax {
         def init() = if (t.inits.nonEmpty) s(" extends ", r(t.inits, ", ")) else s("")
         s(w(t.mods, " "), kw("case"), " ", t.name, t.tparamClause, t.ctor, init())
 
-      case t: Defn.ExtensionGroup => s(kw("extension"), " ", o(t.paramClauseGroup), sp(t.body))
+      case t: Defn.ExtensionGroup => s(kw("extension"), " ", o(t.paramClauseGroup), " ", t.body)
       case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)

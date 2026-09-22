@@ -1771,9 +1771,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  bar
          |""".stripMargin
     val layout =
-      """|def foo: Int = 
-         |// c
-         |bar
+      """|def foo: Int =
+         |  // c
+         |  bar
          |""".stripMargin
     runTestAssert[Stat](code, layout)(
       Defn.Def(Nil, tname("foo"), Nil, Nil, Some(pname("Int")), tnameComments("bar")("// c")()),
@@ -1810,9 +1810,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  /* c */ bar
          |""".stripMargin
     val layout =
-      """|val foo = 
-         |/* c */
-         |bar
+      """|val foo =
+         |  /* c */
+         |  bar
          |""".stripMargin
     runTestAssert[Stat](code, layout)(
       Defn.Val(Nil, List(patvar("foo")), None, tnameComments("bar")("/* c */")()),
@@ -1827,9 +1827,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |else bar
          |""".stripMargin
     val layout =
-      """|if (cond) 
-         |// c
-         |foo else bar
+      """|if (cond)
+         |  // c
+         |  foo else bar
          |""".stripMargin
     runTestAssert[Stat](code, layout)(
       Term.If(tname("cond"), tnameComments("foo")("// c")(), tname("bar")),
@@ -1845,9 +1845,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|x match {
-         |  case 1 => 
-         |  // c
-         |  foo
+         |  case 1 =>
+         |    // c
+         |    foo
          |}
          |""".stripMargin
     runTestAssert[Stat](code, layout)(
@@ -1864,11 +1864,11 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  }
          |""".stripMargin
     val layout =
-      """|def foo: Int = 
-         |// c
-         |{
-         |  bar
-         |}
+      """|def foo: Int =
+         |  // c
+         |  {
+         |    bar
+         |  }
          |""".stripMargin
     runTestAssert[Stat](code, layout)(Defn.Def(
       Nil,
@@ -1935,9 +1935,9 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|x match {
-         |  case 1 => 
-         |  // c
-         |  foo
+         |  case 1 =>
+         |    // c
+         |    foo
          |}
          |""".stripMargin
     runTestAssert[Stat](code, layout)(
@@ -1960,19 +1960,10 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |    foo
          |}
          |""".stripMargin
-    val relayout =
-      """|x match {
-         |  case 1 => 
-         |  // c
-         |  foo
-         |}
-         |""".stripMargin
-    parseAndCheckTree[Stat](code, layout)(
-      Term.Match(tname("x"), List(Case(int(1), None, blk(tnameComments("foo")("// c")())))),
-    )
-    parseAndCheckTree[Stat](layout, relayout)(
-      Term.Match(tname("x"), List(Case(int(1), None, tnameComments("foo")("// c")()))),
-    )
+    val tree = Term.Match(tname("x"), List(Case(int(1), None, blk(tnameComments("foo")("// c")()))))
+    parseAndCheckTree[Stat](code, layout)(tree)
+    val reparsed = Term.Match(tname("x"), List(Case(int(1), None, tnameComments("foo")("// c")())))
+    runTestAssert[Stat](layout)(reparsed)
   }
 
   test("given-with-comment") {

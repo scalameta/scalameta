@@ -401,12 +401,12 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|{
-         |  freezing 
-         |  // c1
-         |  /*
+         |  freezing
+         |    // c1
+         |    /*
          |    c2
          |  */
-         |  | boiling
+         |    | boiling
          |}
          |""".stripMargin
     val tree = blk(
@@ -429,12 +429,12 @@ class InfixSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|{
-         |  freezing 
-         |  // c1
-         |  /*
+         |  freezing
+         |    // c1
+         |    /*
          |    c2
          |  */
-         |  | boiling
+         |    | boiling
          |}
          |""".stripMargin
     val tree = blk(

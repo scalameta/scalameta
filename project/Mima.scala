@@ -46,5 +46,7 @@ object Mima {
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
     // Tree
+    // Show is private[meta], and mima still checks its nested classes
+    exclude[Problem]("prettyprinters.Show$*"),
   )
 }

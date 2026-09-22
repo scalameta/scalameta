@@ -359,19 +359,22 @@ class MinorDottySuite extends BaseDottySuite {
   }
 
   test("unchecked-annotation") {
-    runTestAssert[Stat]("val a :: Nil:  @unchecked = args")(Defn.Val(
+    val tree = Defn.Val(
       Nil,
       List(patinfix(patvar("a"), "::", tname("Nil"))),
       Some(Type.Annotate(Type.AnonymousName(), List(Mod.Annot(init("unchecked"))))),
       tname("args"),
-    ))
+    )
+    runTestAssert[Stat]("val a :: Nil: @unchecked = args")(tree)
 
-    runTestAssert[Stat]("val x:  @annotation.switch = 2")(Defn.Val(
+    val tree2 = Defn.Val(
       Nil,
       List(patvar("x")),
       Some(Type.Annotate(Type.AnonymousName(), List(Mod.Annot(init(pselect("annotation", "switch")))))),
       int(2),
-    ))
+    )
+
+    runTestAssert[Stat]("val x: @annotation.switch = 2")(tree2)
   }
 
   val patternBinding = Term.Match(int(1), List(Case(Pat.Bind(patvar("intValue"), int(1)), None, blk())))
