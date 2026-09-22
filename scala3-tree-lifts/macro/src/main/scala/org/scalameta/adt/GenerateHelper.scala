@@ -14,7 +14,11 @@ abstract class GenerateHelper extends MacroHelpers {
 
   // Helper to build a List[String] tree from a Scala List[String]
   protected def mkStringList(parts: String*): c.Expr[List[String]] = {
-    val literals = parts.map(s => Literal(Constant(s)))
+    // a class file holds a string constant of at most 65535 bytes
+    val literals = parts.map { s =>
+      val chunks = s.grouped(16384).map(x => Literal(Constant(x))).toList
+      q"_root_.scala.Seq(..$chunks).mkString"
+    }
     c.Expr[List[String]](q"_root_.scala.List(..$literals)")
   }
 }
