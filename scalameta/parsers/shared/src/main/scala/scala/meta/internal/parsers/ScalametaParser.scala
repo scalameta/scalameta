@@ -450,115 +450,123 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         val bodyIsBlock = body.is[Tree.Block]
 
         begComment =
-          if (tokens(start).start < minChildBeg) {
-            // lazily allocated only if a comment is actually found (the scan runs
-            // for most nodes but finds a leading comment only rarely)
-            var begBuf: ListBuffer[Tree.Comment] = null
-            var idx = start - 1
-            var pending = 0
-            var hadEOL = false
-            var inRegion = false // the scan crossed the newline that opened a region
-            while (tokens.getOrNull(idx) match {
-                case t: Comment =>
-                  if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
-                  begBuf.prepend(asComment(t, idx))
-                  pending += 1
-                  true
-                case endPart: CommentEnd =>
-                  val endIdx = idx + 1
-                  val parts = new ListBuffer[Lit.String]
-                  parts.prepend(asString(endPart, idx))
-                  while ({
-                    idx -= 1
-                    tokens.getOrNull(idx) match {
-                      case t: CommentStart =>
-                        parts.prepend(asString(t, idx))
-                        false
-                      case t: CommentPart =>
-                        parts.prepend(asString(t, idx))
-                        true
-                      case t: CommentUnquote =>
-                        parts.prepend(asString(t, idx))
-                        true
-                      case _ =>
-                        idx += 1
-                        false
-                    }
-                  }) {}
-                  if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
-                  begBuf.prepend(asComment(parts.toList, idx, endIdx))
-                  pending += 1
-                  true
-                case _: AtEOL => !(hadEOL && pending == 0) && {
-                    hadEOL = true
-                    pending = 0
-                    if (isIndentAt(idx)) inRegion = true
-                    true
-                  }
-                case _: HSpace => true
-                case null => false
-                case t =>
-                  def endsStat = body.is[Term.Block] || hadEOL && t.is[Comma] ||
-                    (hadEOL || endExcl <= start || !t.is[KwReturn]) &&
-                    !inRegion && canEndStat(t) && !condCloseAt(idx)
-                  if (begBuf ne null) if (endsStat) begBuf.remove(0, pending)
-                  t.isEmpty // cannot separate a leading comment from the tree
-              }) idx -= 1
-            if (begBuf eq null) None else asComments(begBuf)
-          } else if (bodyIsBlock) None // braceless
+          if (tokens(start).start < minChildBeg) leadingComments(body, start, endExcl)
+          else if (bodyIsBlock) None // braceless
           else minChild.begComment
 
         val isEndBraceless = bodyIsBlock &&
           tokens.skipIf(_.is[HTrivia], endExcl, endPos + 1) <= endPos
         endComment =
           if (isEndBraceless) None
-          else if (tokens(endExcl - 1).end > maxChildEnd) {
-            var endBuf: ListBuffer[Tree.Comment] = null // lazily allocated, as begBuf
-            var idx = endExcl
-            while (tokens.getOrNull(idx) match {
-                case t: Comment =>
-                  if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
-                  endBuf.append(asComment(t, idx))
-                  true
-                case begPart: CommentStart =>
-                  val begIdx = idx
-                  val parts = new ListBuffer[Lit.String]
-                  parts.append(asString(begPart, idx))
-                  while ({
-                    idx += 1
-                    tokens.getOrNull(idx) match {
-                      case t: CommentEnd =>
-                        parts.append(asString(t, idx))
-                        false
-                      case t: CommentPart =>
-                        parts.append(asString(t, idx))
-                        true
-                      case t: CommentUnquote =>
-                        parts.append(asString(t, idx))
-                        true
-                      case _ =>
-                        idx -= 1
-                        false
-                    }
-                  }) {}
-                  if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
-                  endBuf.append(asComment(parts.toList, begIdx, idx + 1))
-                  true
-                case _: HSpace => true
-                case _: Comma => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
-                case null => false
-                case _: AtEOL =>
-                  if (isIndentAt(idx)) endBuf = null // the region that opens here owns them
-                  false
-                case t => t.isEmpty // cannot separate the tree from a trailing comment
-              }) idx += 1
-            if (endBuf eq null) None else asComments(endBuf)
-          } else if (bodyIsBlock) None // let the child own it
+          else if (tokens(endExcl - 1).end > maxChildEnd) trailingComments(endExcl)
+          else if (bodyIsBlock) None // let the child own it
           else maxChild.endComment
       }
 
     body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
     body
+  }
+
+  // the comments before the tree that starts at `start`, back to the statement before it
+  private def leadingComments(body: Tree, start: Int, endExcl: Int): Option[Tree.Comments] = {
+    // lazily allocated only if a comment is actually found (the scan runs
+    // for most nodes but finds a leading comment only rarely)
+    var begBuf: ListBuffer[Tree.Comment] = null
+    var idx = start - 1
+    var pending = 0
+    var hadEOL = false
+    var inRegion = false // the scan crossed the newline that opened a region
+    while (tokens.getOrNull(idx) match {
+        case t: Comment =>
+          if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
+          begBuf.prepend(asComment(t, idx))
+          pending += 1
+          true
+        case endPart: CommentEnd =>
+          val endIdx = idx + 1
+          val parts = new ListBuffer[Lit.String]
+          parts.prepend(asString(endPart, idx))
+          while ({
+            idx -= 1
+            tokens.getOrNull(idx) match {
+              case t: CommentStart =>
+                parts.prepend(asString(t, idx))
+                false
+              case t: CommentPart =>
+                parts.prepend(asString(t, idx))
+                true
+              case t: CommentUnquote =>
+                parts.prepend(asString(t, idx))
+                true
+              case _ =>
+                idx += 1
+                false
+            }
+          }) {}
+          if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
+          begBuf.prepend(asComment(parts.toList, idx, endIdx))
+          pending += 1
+          true
+        case _: AtEOL => !(hadEOL && pending == 0) && {
+            hadEOL = true
+            pending = 0
+            if (isIndentAt(idx)) inRegion = true
+            true
+          }
+        case _: HSpace => true
+        case null => false
+        case t =>
+          def endsStat = body.is[Term.Block] || hadEOL && t.is[Comma] ||
+            (hadEOL || endExcl <= start || !t.is[KwReturn]) &&
+            !inRegion && canEndStat(t) && !condCloseAt(idx)
+          if (begBuf ne null) if (endsStat) begBuf.remove(0, pending)
+          t.isEmpty // cannot separate a leading comment from the tree
+      }) idx -= 1
+    if (begBuf eq null) None else asComments(begBuf)
+  }
+
+  // the comments after the tree that ends before `from`, on its line
+  private def trailingComments(from: Int): Option[Tree.Comments] = {
+    var endBuf: ListBuffer[Tree.Comment] = null // lazily allocated, as begBuf
+    var idx = from
+    while (tokens.getOrNull(idx) match {
+        case t: Comment =>
+          if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
+          endBuf.append(asComment(t, idx))
+          true
+        case begPart: CommentStart =>
+          val begIdx = idx
+          val parts = new ListBuffer[Lit.String]
+          parts.append(asString(begPart, idx))
+          while ({
+            idx += 1
+            tokens.getOrNull(idx) match {
+              case t: CommentEnd =>
+                parts.append(asString(t, idx))
+                false
+              case t: CommentPart =>
+                parts.append(asString(t, idx))
+                true
+              case t: CommentUnquote =>
+                parts.append(asString(t, idx))
+                true
+              case _ =>
+                idx -= 1
+                false
+            }
+          }) {}
+          if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
+          endBuf.append(asComment(parts.toList, begIdx, idx + 1))
+          true
+        case _: HSpace => true
+        case _: Comma => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
+        case null => false
+        case _: AtEOL =>
+          if (isIndentAt(idx)) endBuf = null // the region that opens here owns them
+          false
+        case t => t.isEmpty // cannot separate the tree from a trailing comment
+      }) idx += 1
+    if (endBuf eq null) None else asComments(endBuf)
   }
 
   def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
