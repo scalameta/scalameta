@@ -282,16 +282,18 @@ class TrailingCommentSuite extends BaseDottySuite {
          |  // foo
          |  b
          |""".stripMargin
-    val layout = "a op b"
+    val layout =
+      """|a op
+         |  // foo
+         |  b
+         |""".stripMargin
     val tree = Term.ApplyInfix(
       tname("a"),
       tname("op"),
       Type.ArgClause(Nil),
       Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("// foo")),
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
-    val reparsed = Term.ApplyInfix(tname("a"), tname("op"), Nil, List(tname("b")))
-    runTestAssert[Stat](layout)(reparsed)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("infix: block comment on its own line after op") {
@@ -299,16 +301,17 @@ class TrailingCommentSuite extends BaseDottySuite {
       """|a op
          |  /* foo */ b
          |""".stripMargin
-    val layout = "a op b"
+    val layout =
+      """|a op
+         |  /* foo */ b
+         |""".stripMargin
     val tree = Term.ApplyInfix(
       tname("a"),
       tname("op"),
       Type.ArgClause(Nil),
       Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("/* foo */")),
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
-    val reparsed = Term.ApplyInfix(tname("a"), tname("op"), Nil, List(tname("b")))
-    runTestAssert[Stat](layout)(reparsed)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("infix: comment inside parens after op") {
@@ -331,7 +334,7 @@ class TrailingCommentSuite extends BaseDottySuite {
       Type.ArgClause(Nil),
       Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("// foo")),
     )
-    parseAndCheckTree[Stat](layout, "a op b")(reparsed)
+    runTestAssert[Stat](layout)(reparsed)
   }
 
   test("comment before a blank line at the start of input") {
