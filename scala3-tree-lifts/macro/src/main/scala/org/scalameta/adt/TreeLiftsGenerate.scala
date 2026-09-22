@@ -128,29 +128,41 @@ class TreeLiftsGenerateMacros(val c: Context)
 
     adts.foreach { case (adt, defName) =>
       val defaultBody: String = customMatcher(adt, defName, localName).getOrElse {
-        def getNamePath(parts: Iterable[String]) = {
-          val name = parts.mkString(".")
+        def getNamePath(name: String) = {
           val smname = getNameSuffix(name)
           if (smname ne name) "sm." + smname else "_root_." + name
         }
-        val nameParts = adt.sym.fullName.split('.')
-        if (adt.sym.isClass) {
+        val namePath = getNamePath(adt.sym.fullName)
+        if (!adt.sym.isClass) namePath
+        else if (!adt.sym.isAstClass) {
           val args = getArgs(adt match {
             case leaf: Leaf => leaf.fields(isPrivateOK).map(_.name)
             case _ => Nil
           })
-          val latestAfterVersion =
-            if (adt.sym.isAstClass) {
-              val moduleNames = adt.sym.companion.info.decls
-                .flatMap(x => if (x.isModule) Some(x.name.toString) else None)
-              val latestAfterVersion = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse(
-                c.abort(c.enclosingPosition, s"no latest version ${adt.sym.fullName}: $moduleNames"),
-              )
-              latestAfterVersion :: Nil
-            } else Nil
-          val namePath = getNamePath(nameParts ++ latestAfterVersion)
           s"treeByMode('{$namePath}, $privateArgs)($args)"
-        } else getNamePath(nameParts)
+        } else {
+          val fields = adt match {
+            case leaf: Leaf => leaf.fields(isPrivateOK).map(_.name)
+            case _ => Nil
+          }
+          val companion = adt.sym.companion
+          val moduleNames = companion.info.decls
+            .flatMap(x => if (x.isModule) Some(x.name.toString) else None)
+          val latest = AstNamerMacros.getLatestAfterName(moduleNames).getOrElse(
+            c.abort(c.enclosingPosition, s"no latest version ${adt.sym.fullName}: $moduleNames"),
+          )
+          /* a term: the expansion lands in the client's bytecode, so it calls what a later
+           * release keeps: the companion's newBuilder, a setter per field, and result(). A
+           * pattern: the newest version object, whose unapply keeps its shape */
+          val requiredNames = AstNamerMacros.getRequiredFieldNames(c.universe)(companion)
+          val required = requiredNames.map(n => s"term($localName.$n)").mkString(",")
+          val setters = {
+            fields.map(_.toString).filterNot(requiredNames.contains) ++ privateFields.map(_.toString)
+          }.map(n => s"""("$n", term($localName.$n))""").mkString(",")
+          val pat = s"treeByPattern('{$namePath.$latest})(${getArgs(fields)})"
+          val term = s"treeByBuilder('{$namePath})($required)($setters)"
+          s"if isPatternMode then $pat else $term"
+        }
       }
       val body = customWrapper(adt, defName, localName, defaultBody).getOrElse(defaultBody)
       res += s"  def $defName($localName: ${adt.tpe}) = $body\n"
@@ -192,6 +204,30 @@ class TreeLiftsGenerateMacros(val c: Context)
 
   def treeByMode =
     """|
+       |  def treeByPattern[T](expr: Expr[T])(args: Tree*): Tree =
+       |    val term = expr.asTerm match
+       |      case Inlined(_, _, inlined) => inlined
+       |    val unapply = term.symbol.methodMember("unapply").head
+       |    val paramType = expr.asTerm.tpe.memberType(unapply) match
+       |      case MethodType(_, List(tpe), _) => tpe
+       |    paramType.asType match
+       |      case '[t] =>
+       |        TypedOrTest(Unapply(Select.unique(term, "unapply"), Nil, args.toList), TypeTree.of[t])
+       |
+       |  def treeByBuilder[T](expr: Expr[T])(required: Tree*)(setters: (String, Tree)*): Tree =
+       |    val term = expr.asTerm match
+       |      case Inlined(_, _, inlined) => inlined
+       |    val deprecated = Symbol.requiredClass("scala.deprecated")
+       |    val newBuilder = term.symbol.methodMember("newBuilder").filterNot(_.hasAnnotation(deprecated)).head
+       |    val built = Apply(
+       |      Apply(Select(term, newBuilder), required.toList.asInstanceOf[List[Term]]),
+       |      List(dialectExpr.asTerm),
+       |    )
+       |    val set = setters.foldLeft[Term](built) { case (acc, (name, arg)) =>
+       |      Select.overloaded(acc, name, Nil, List(arg.asInstanceOf[Term]))
+       |    }
+       |    Apply(Select.unique(set, "result"), Nil)
+       |
        |  def treeByMode[T](expr: Expr[T], privateArgs: Tree*)(args: Tree*): Tree =
        |    val term = expr.asTerm match
        |      case Inlined(_, _, inlined) => inlined

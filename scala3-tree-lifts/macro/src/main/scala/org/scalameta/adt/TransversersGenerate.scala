@@ -1,6 +1,6 @@
 package org.scalameta.adt
 
-import scala.meta.internal.trees.{Reflection => AstReflection}
+import scala.meta.internal.trees.{AstNamerMacros, Reflection => AstReflection}
 
 import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
@@ -116,19 +116,22 @@ class TransversersGenerateMacros(val c: Context) extends GenerateHelper with Ast
               |          if (samelist) original
               |          else { same = false; tolist.result() }
               |""".stripMargin
-        case _ => "        original\n"
+        case _ => "          original\n"
       }
       sb.append(header(fname))
       sb.append(code)
       sb.append(footer)
     }
 
-    val fieldNames = l.fields.map(f => param(f.name.toString)).mkString(", ")
+    val required = AstNamerMacros.getRequiredFieldNames(c.universe)(l.sym.companion)
+    val requiredArgs = required.map(param).mkString(", ")
+    val setters = l.fields.map(_.name.toString).filterNot(required.contains)
+      .map(n => s".$n(${param(n)})").mkString
     sb.append(
       s"""|
           |        if (same) tree
-          |        else ${leafTypeName(l)}($fieldNames)
-          |          .withOrigin(scala.meta.trees.Origin.PartialProxy(tree.origin))
+          |        else ${leafTypeName(l)}.newBuilder($requiredArgs)$setters
+          |          .origin(scala.meta.trees.Origin.PartialProxy(tree.origin)).result()
           |""".stripMargin,
     )
   }

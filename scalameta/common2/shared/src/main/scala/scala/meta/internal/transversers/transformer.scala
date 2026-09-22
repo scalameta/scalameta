@@ -2,6 +2,8 @@ package scala.meta
 package internal
 package transversers
 
+import scala.meta.internal.trees.AstNamerMacros
+
 import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 import scala.reflect.macros.whitebox.Context
@@ -79,14 +81,18 @@ class TransformerMacros(val c: Context) extends TransverserMacros {
     if (hasOnlyPrimitiveFields) return q"$treeName"
     val transformedFields: List[ValDef] = l.fields.map(transformField(treeName))
 
+    val required = AstNamerMacros.getRequiredFieldNames(c.universe)(l.sym.companion)
+    def transformed(f: Field) = TermName(f.name.toString + "1")
+    val requiredArgs = required.map(n => q"${TermName(n + "1")}")
+    val others = l.fields.filterNot(f => required.contains(f.name.toString))
+    val built = others.foldLeft(q"$constructor.newBuilder(..$requiredArgs)": Tree)((acc, f) =>
+      q"$acc.${f.name}(${transformed(f)})",
+    )
     q"""
       var same = true
       ..$transformedFields
       if (same) $treeName
-      else {
-        $constructor(..${transformedFields.map(_.name)})
-          .withOrigin($OriginModule.PartialProxy($treeName.origin))
-      }
+      else $built.origin($OriginModule.PartialProxy($treeName.origin)).result()
     """
   }
 
