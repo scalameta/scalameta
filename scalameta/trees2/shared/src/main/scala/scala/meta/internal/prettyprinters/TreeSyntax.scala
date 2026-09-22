@@ -1081,11 +1081,28 @@ object TreeSyntax {
     ownEndComments(tree).fold(s())(out)
 
   private def printComment(t: Tree.Comment): Show.Result = r(t.parts.map(_.value))
-  private def printBegComments(t: Tree.Comments): Show.Result =
-    r(s(), "", n())(t.values.map(x => n(printComment(x))): _*)
+  private def afterComment(t: Tree.Comment, sep: Show.Result): Show.Result = {
+    val newlines = t.getNewlinesAfter
+    if (newlines > 1) s(blank(), n()) else if (newlines > 0) n() else sep
+  }
+  private def printComments(t: Tree.Comments, afterLast: Show.Result): Show.Result = {
+    val last = t.values.last
+    r(t.values.map(x => s(printComment(x), afterComment(x, if (x eq last) afterLast else s(" ")))))
+  }
+  private def printBegComments(t: Tree.Comments): Show.Result = s(n(), printComments(t, s(" ")))
   private def printEndComments(t: Tree.Comments): Show.Result =
+    s(if (t.isDetached) n() else s(" "), printComments(t, s()))
+  // the structure printer keeps one comment per line
+  private def printBegCommentsPlain(t: Tree.Comments): Show.Result =
+    r(s(), "", n())(t.values.map(x => n(printComment(x))): _*)
+  private def printEndCommentsPlain(t: Tree.Comments): Show.Result =
     r(" ", " ", n())(t.values.map(printComment): _*)
 
-  private[prettyprinters] def withComments(tree: Tree)(syntax: Show.Result): Show.Result =
-    s(printBegComments(tree, printBegComments), syntax, printEndComments(tree, printEndComments))
+  private[prettyprinters] def withComments(tree: Tree, layout: Boolean = true)(
+      syntax: Show.Result,
+  ): Show.Result = s(
+    printBegComments(tree, if (layout) printBegComments else printBegCommentsPlain),
+    syntax,
+    printEndComments(tree, if (layout) printEndComments else printEndCommentsPlain),
+  )
 }

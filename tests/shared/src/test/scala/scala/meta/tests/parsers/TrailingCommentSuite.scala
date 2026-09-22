@@ -214,8 +214,7 @@ class TrailingCommentSuite extends ParseSuite {
     val code = "def f = return /* c */ 1"
     val layout =
       """|def f = return
-         |  /* c */
-         |  1
+         |  /* c */ 1
          |""".stripMargin
     val body = Term.Return(Lit.Int.newBuilder(1).begComment(Seq("/* c */")).result())
     val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, body)
@@ -226,8 +225,7 @@ class TrailingCommentSuite extends ParseSuite {
     val code = "if (a) /* c */ b"
     val layout =
       """|if (a)
-         |  /* c */
-         |  b
+         |  /* c */ b
          |""".stripMargin
     val tree = Term.If(tname("a"), tnameComments("b")("/* c */")(), Lit.Unit())
     runTestAssert[Stat](code, layout)(tree)
@@ -237,8 +235,7 @@ class TrailingCommentSuite extends ParseSuite {
     val code = "while (a) /* c */ b"
     val layout =
       """|while (a)
-         |  /* c */
-         |  b
+         |  /* c */ b
          |""".stripMargin
     val tree = Term.While(tname("a"), tnameComments("b")("/* c */")())
     runTestAssert[Stat](code, layout)(tree)
@@ -294,7 +291,7 @@ class TrailingCommentSuite extends ParseSuite {
   test("block comment at start of input") {
     val x = term("/* X */ x")
     assertEquals(x.begComment.get.newlinesBefore, 0)
-    assertSyntax("val y =\n  /* X */\n  x")(Defn.Val(Nil, List(patvar("y")), None, x))
+    assertSyntax("val y =\n  /* X */ x")(Defn.Val(Nil, List(patvar("y")), None, x))
   }
 
   test("infix: comment on its own line after op") {
