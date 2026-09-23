@@ -1,9 +1,8 @@
-package scala.meta.tests.parsers
+package scala.meta.tests.parsers.dotty
 
 import scala.meta._
 
-class TrailingCommentSuite extends ParseSuite {
-  implicit val dialect: Dialect = dialects.Scala213
+class CommentSuite extends BaseDottySuite {
 
   test("class: comment after name, extends on the next line") {
     val code =
@@ -186,23 +185,15 @@ class TrailingCommentSuite extends ParseSuite {
 
   test("return: comment after keyword, expr on the next line") {
     val code =
-      """|def f = { return // c
-         |  1 }
+      """|def f = return // c
+         |  1
          |""".stripMargin
     val layout =
-      """|def f = {
-         |  return // c
+      """|def f = return // c
          |  1
-         |}
          |""".stripMargin
-    val tree = Defn.Def(
-      Nil,
-      tname("f"),
-      Nil,
-      Nil,
-      None,
-      blk(Term.Return.newBuilder(Lit.Unit()).endComment(Seq("// c")).result(), int(1)),
-    )
+    val body = Term.Return(Lit.Int.newBuilder(1).begComment(Seq("// c")).result())
+    val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, body)
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -213,7 +204,7 @@ class TrailingCommentSuite extends ParseSuite {
          |""".stripMargin
     val body = Term.Return(Lit.Int.newBuilder(1).begComment(Seq("/* c */")).result())
     val tree = Defn.Def(Nil, tname("f"), Nil, Nil, None, body)
-    parseAndCheckTree[Stat](code, layout)(tree)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("if: block comment after cond, body on the same line") {
