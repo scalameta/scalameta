@@ -633,6 +633,10 @@ lazy val sharedSettings = Def.settings(
   scalacOptions ++= { if (isScala213.value) List("-Wconf:cat=deprecation:is") else Nil },
   scalacOptions ++= {
     if (isScala3.value) List(
+      // Shared 2/3 sources still use `T with Quasi`. That construct is a warning from
+      // source 3.4 and a hard error from 3.10, so keep the 3.3 language and silence it.
+      "-source:3.3",
+      "-Wconf:msg=with as a type operator has been deprecated:silent",
       "-Wconf:msg=.*no longer supported for vararg splices.*:silent",
       "-Wconf:msg=.*Implicit parameters should be provided.*:silent",
       "-Wconf:msg=.* deprecated.*:silent", // covers several
