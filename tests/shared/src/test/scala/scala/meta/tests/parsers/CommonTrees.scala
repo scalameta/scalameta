@@ -35,6 +35,8 @@ object CommonTrees {
     final def comments(vals: Tree.Comment*): Option[Tree.Comments] =
       if (vals.isEmpty) None else Some(Tree.Comments(vals.toList))
     final def comments(str: String, strs: String*): Option[Tree.Comments] = str +: strs
+    final def detachedComments(strs: String*): Option[Tree.Comments] =
+      Some(Tree.Comments.newBuilder(strs.map(comment).toList).newlinesBefore(1).result())
     implicit def implicitCommentToOptionComments(obj: Tree.Comment): Option[Tree.Comments] =
       comments(obj)
     implicit def implicitSeqStringToOptionComments(objs: Seq[String]): Option[Tree.Comments] =
