@@ -135,9 +135,9 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
    * most cases it should be the same as 'code' param but sometimes formatting is a little different
    * or for safety () are added). If you are not interested in asserting layout just provide None.
    * After printing generated tree to text representation we parse it again. This ensures that
-   * invariant holds: parse(code) = parse(print(parse(code))) Reprint cannot be handled by
-   * `tree.syntax` because syntax is cached by default and would not be reprinted but only input
-   * code would be returned.
+   * invariant holds: parse(code) = parse(print(parse(code))), and so does parse(print(expected)) =
+   * expected. Reprint cannot be handled by `tree.syntax` because syntax is cached by default and
+   * would not be reprinted but only input code would be returned.
    *
    * @param code
    *   valid scala code
@@ -154,6 +154,7 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
     val struct = expected.structure
     parseAndCheckTreeWithSyntaxAndStruct[T](code, assertLayout, struct, "Original")
       .foreach(parseAndCheckTreeWithSyntaxAndStruct[T](_, assertLayout, struct, "Reprinted"))
+    assertStruct(parser(expected.reprint), "Expected, reprinted")(struct)
   }
 
   protected def parseAndCheckTree[T <: Tree](code: String, syntax: String = null)(
