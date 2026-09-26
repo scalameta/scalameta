@@ -300,7 +300,7 @@ class CommentSuite extends ParseSuite {
       tname("a"),
       tname("op"),
       Type.ArgClause(Nil),
-      Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("// foo")),
+      Term.ArgClause.newBuilder(List(tname("b"))).begComment(Seq("// foo")).result(),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -318,7 +318,7 @@ class CommentSuite extends ParseSuite {
       tname("a"),
       tname("op"),
       Type.ArgClause(Nil),
-      Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("/* foo */")),
+      Term.ArgClause.newBuilder(List(tname("b"))).begComment(Seq("/* foo */")).result(),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -341,7 +341,7 @@ class CommentSuite extends ParseSuite {
       tname("a"),
       tname("op"),
       Type.ArgClause(Nil),
-      Term.ArgClause.createWithComments(List(tname("b")), begComment = Seq("// foo")),
+      Term.ArgClause.newBuilder(List(tname("b"))).begComment(Seq("// foo")).result(),
     )
     runTestAssert[Stat](layout)(reparsed)
   }
@@ -385,10 +385,7 @@ class CommentSuite extends ParseSuite {
       tname("f"),
       List(Member.ParamClauseGroup(
         Type.ParamClause(Nil),
-        List(List(
-          Term.Param
-            .createWithComments(Nil, tname("x"), Some(pname("Int")), None, begComment = Seq("// c")),
-        )),
+        List(List(tparam("x", "Int").toBuilder.begComment(Seq("// c")).result())),
       )),
       None,
       int(1),
