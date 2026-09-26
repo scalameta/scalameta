@@ -446,7 +446,7 @@ object TreeSyntax {
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
         val useStar = dialect.allowStarAsTypePlaceholder &&
-          t.origin.tokensOpt.exists(!_.lastOption.is[Token.Underscore])
+          t.origin.tokensOpt.forall(!_.lastOption.is[Token.Underscore])
         val ph = if (useStar) "*" else "_"
         m(SimpleTyp, s(o(t.variant), ph))
       case t: Type.Wildcard =>
