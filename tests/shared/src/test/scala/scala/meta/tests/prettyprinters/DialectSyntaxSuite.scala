@@ -121,7 +121,7 @@ class DialectSyntaxSuite extends TreeSuiteBase {
     dialects.Scala3 -> "List[_]",
     dialects.Scala3Future -> "List[?]",
   )
-  checkReprint("anonymous type param fallback", Type.AnonymousParam(None))(dialects.Scala3 -> "_")
+  checkReprint("anonymous type param fallback", Type.AnonymousParam(None))(dialects.Scala3 -> "*")
   checkReprint("double literal without origin text", dbl("1"))(dialects.Scala213 -> "1.0")
   checkReprint("negative double literal without origin text", dbl("-1"))(dialects.Scala213 -> "-1")
   checkReprint("double literal keeps value text", dbl("1.5"))(dialects.Scala213 -> "1.5")
