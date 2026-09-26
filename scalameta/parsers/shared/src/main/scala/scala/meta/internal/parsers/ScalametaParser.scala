@@ -369,7 +369,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def asString(token: Token, origin: Origin): Lit.String = Lit.String
     ._ctor(origin = origin, value = token.text)
   private def asString(token: Token, idx: Int): Lit.String = asString(token, asOrigin(idx))
-  private def asString(token: CommentUnquote, idx: Int): Lit.String =
+  private def unquoteAsString(token: CommentUnquote, idx: Int): Lit.String =
     unquoteAt[Lit.String](idx, token)
 
   private def asComment(parts: List[Lit.String], origin: Origin, lastIdx: Int): Tree.Comment = {
@@ -466,7 +466,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           else if (bodyIsBlock) None // let the child own it
           else maxChild.endComment
 
-        // the last child of a block owns the own-line comments before the block closes
+        // the last child of a block owns the detached comments before the block closes
         if (bodyIsBlock && (maxChild ne null)) {
           val bound = if (tokens(endExcl - 1).is[RightBrace]) endExcl - 1 else endPos + 1
           val last = maxChild.endComment.getOrElse(maxChild)
@@ -474,7 +474,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             val all = new ListBuffer[Tree.Comment]
             maxChild.endComment.foreach(all ++= _.values)
             all ++= more.values
-            maxChild.privateSetOrigin(maxChild.origin, maxChild.begComment, asComments(all))
+            maxChild.privateSetEndComment(asComments(all))
           }
         }
       }
@@ -512,7 +512,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 parts.prepend(asString(t, idx))
                 true
               case t: CommentUnquote =>
-                parts.prepend(asString(t, idx))
+                parts.prepend(unquoteAsString(t, idx))
                 true
               case _ =>
                 idx += 1
@@ -541,24 +541,24 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     if (begBuf eq null) None else asComments(begBuf)
   }
 
-  /* Trailing comments from `idx` on. On the tree's line only, unless `bound`
-   * is given: then also on the lines that follow, up to `bound` or a blank line,
+  /* Trailing comments from `idx` on. Attached ones only, unless `bound`
+   * is given: then the detached ones on the lines that follow, up to `bound` or a blank line,
    * which is how the last child of a block takes the comments before the block
    * closes. */
   private def trailingComments(from: Int, bound: Int = -1): Option[Tree.Comments] = {
-    val ownLine = bound >= 0
+    val detached = bound >= 0
     var endBuf: ListBuffer[Tree.Comment] = null // lazily allocated, as begBuf
     var idx = from
     var newlines = 0
     def add(comment: => Tree.Comment): Boolean = {
-      if (!ownLine || newlines > 0) {
+      if (!detached || newlines > 0) {
         if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
         endBuf.append(comment)
         newlines = 0
       }
       true
     }
-    while ((!ownLine || idx < bound) &&
+    while ((!detached || idx < bound) &&
       (tokens.getOrNull(idx) match {
         case t: Comment => add(asComment(t, idx))
         case begPart: CommentStart =>
@@ -575,7 +575,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 parts.append(asString(t, idx))
                 true
               case t: CommentUnquote =>
-                parts.append(asString(t, idx))
+                parts.append(unquoteAsString(t, idx))
                 true
               case _ =>
                 idx -= 1
@@ -583,14 +583,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             }
           }) {}
           add(asComment(parts.toList, begIdx, idx + 1))
-        case t: AtEOL if ownLine =>
+        case t: AtEOL if detached =>
           newlines += t.newlines
           newlines < 2
         case _: AtEOL =>
           if (isIndentAt(idx)) endBuf = null // the region that opens here owns them
           false
         case _: HSpace => true
-        case _: Comma if !ownLine => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
+        case _: Comma if !detached => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
         case null => false
         case t => t.isEmpty // cannot separate the tree from a trailing comment
       })) idx += 1

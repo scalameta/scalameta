@@ -49,7 +49,8 @@ object TreeSyntax {
       }
     }
 
-    def p(og: TreeSyntacticGroup, t: Tree, force: Boolean = false) = s(t) match {
+    def p(og: TreeSyntacticGroup, t: Tree, force: Boolean = false) = parens(og, s(t), force)
+    private def parens(og: TreeSyntacticGroup, res: Show.Result, force: Boolean = false) = res match {
       case x: Show.Meta =>
         val needParens = force ||
           (x.data match {

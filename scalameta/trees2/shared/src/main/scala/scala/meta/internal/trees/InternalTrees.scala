@@ -77,6 +77,9 @@ trait InternalTree extends Product {
       endComment: Option[Tree.Comments] = this.endComment,
   ): Tree
 
+  private[meta] def privateSetBegComment(begComment: Option[Tree.Comments]): Unit
+  private[meta] def privateSetEndComment(endComment: Option[Tree.Comments]): Unit
+
   private[meta] def privateSetOrigin(
       origin: Origin,
       begComment: Option[Tree.Comments] = this.begComment,

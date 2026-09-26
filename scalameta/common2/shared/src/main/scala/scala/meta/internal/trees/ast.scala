@@ -256,9 +256,19 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             ): $UnitClass = {
               $DataTyperMacrosModule.nullCheck(origin)
               this.${internalize(originParam)} = origin
-              this.${internalize(begCommentParam)} = begComment
-              this.${internalize(endCommentParam)} = endComment
+              privateSetBegComment(begComment)
+              privateSetEndComment(endComment)
             }
+          """
+        stats1 +=
+          q"""
+            private[meta] def privateSetBegComment(begComment: ${begCommentParam.tpt}): $UnitClass =
+              this.${internalize(begCommentParam)} = begComment
+          """
+        stats1 +=
+          q"""
+            private[meta] def privateSetEndComment(endComment: ${endCommentParam.tpt}): $UnitClass =
+              this.${internalize(endCommentParam)} = endComment
           """
         stats1 +=
           q"""
