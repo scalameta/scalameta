@@ -953,6 +953,11 @@ class MinorDottySuite extends BaseDottySuite {
     Nil,
   ))))
 
+  test("type placeholder built by hand") {
+    val tree = papply("Kleisli", "F", Type.AnonymousParam(None))
+    assertEquals(tree.reprint, "Kleisli[F, _]")
+  }
+
   test("class Baz1 @deprecated(implicit c: C)")(
     runTestAssert[Stat](
       "class Baz1 @deprecated(implicit c: C)",

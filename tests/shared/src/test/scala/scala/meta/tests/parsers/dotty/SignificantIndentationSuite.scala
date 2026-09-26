@@ -1854,7 +1854,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       Nil,
       Nil,
       Some(pname("Int")),
-      Term.Block.newBuilder(List(tname("bar"))).begComment(Seq("// c")).result(),
+      Term.Block.newBuilder(List(tname("bar"))).begComment(detachedComments("// c")).result(),
     ))
   }
 
@@ -2036,7 +2036,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
           Defn.Class(
             List(
               Mod.Annot(init("A1")),
-              Mod.Annot.newBuilder(init("A2")).begComment(Seq("/*\n * hello\n */")).result(),
+              Mod.Annot.newBuilder(init("A2")).begComment(detachedComments("/*\n * hello\n */"))
+                .result(),
             ),
             pname("B"),
             Nil,

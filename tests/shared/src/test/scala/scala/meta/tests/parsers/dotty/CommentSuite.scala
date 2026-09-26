@@ -291,7 +291,7 @@ class CommentSuite extends BaseDottySuite {
       tname("a"),
       tname("op"),
       Type.ArgClause(Nil),
-      Term.ArgClause.newBuilder(List(tname("b"))).begComment(Seq("// foo")).result(),
+      Term.ArgClause.newBuilder(List(tname("b"))).begComment(detachedComments("// foo")).result(),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -309,7 +309,7 @@ class CommentSuite extends BaseDottySuite {
       tname("a"),
       tname("op"),
       Type.ArgClause(Nil),
-      Term.ArgClause.newBuilder(List(tname("b"))).begComment(Seq("/* foo */")).result(),
+      Term.ArgClause.newBuilder(List(tname("b"))).begComment(detachedComments("/* foo */")).result(),
     )
     runTestAssert[Stat](code, layout)(tree)
   }
@@ -332,7 +332,7 @@ class CommentSuite extends BaseDottySuite {
       tname("a"),
       tname("op"),
       Type.ArgClause(Nil),
-      Term.ArgClause.newBuilder(List(tname("b"))).begComment(Seq("// foo")).result(),
+      Term.ArgClause.newBuilder(List(tname("b"))).begComment(detachedComments("// foo")).result(),
     )
     runTestAssert[Stat](layout)(reparsed)
   }

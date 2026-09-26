@@ -112,7 +112,7 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |""".stripMargin
     val body = Term.Block
       .newBuilder(List(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))))
-      .begComment(Seq("/*x*/")).endComment(None).result()
+      .begComment(detachedComments("/*x*/")).endComment(None).result()
     runTestAssert[Stat](code, layout)(Defn.ExtensionGroup(Nil, cparamss, body))
   }
 

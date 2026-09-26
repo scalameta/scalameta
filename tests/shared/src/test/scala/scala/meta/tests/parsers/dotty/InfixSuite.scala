@@ -408,9 +408,11 @@ class InfixSuite extends BaseDottySuite {
          |  */ | boiling
          |}
          |""".stripMargin
-    val tree = blk(
-      tinfix(tname("freezing"), tnameComments("|")("// c1", "/*\n    c2\n  */")(), tname("boiling")),
-    )
+    val tree = blk(tinfix(
+      tname("freezing"),
+      Term.Name.newBuilder("|").begComment(detachedComments("// c1", "/*\n    c2\n  */")).result(),
+      tname("boiling"),
+    ))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
@@ -436,9 +438,11 @@ class InfixSuite extends BaseDottySuite {
          |    | boiling
          |}
          |""".stripMargin
-    val tree = blk(
-      tinfix(tname("freezing"), tnameComments("|")("// c1", "/*\n    c2\n  */")(), tname("boiling")),
-    )
+    val tree = blk(tinfix(
+      tname("freezing"),
+      Term.Name.newBuilder("|").begComment(detachedComments("// c1", "/*\n    c2\n  */")).result(),
+      tname("boiling"),
+    ))
     runTestAssert[Stat](code, Some(layout))(tree)
   }
 
