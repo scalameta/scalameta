@@ -67,6 +67,9 @@ trait InternalTree extends Product {
   def begOffset: Int = origin.begOffset
   def endOffset: Int = origin.endOffset
 
+  private[meta] def begTokenIdx: Int = origin.begTokenIdx
+  private[meta] def endTokenIdx: Int = origin.endTokenIdx
+
   def begComment: Option[Tree.Comments]
   def endComment: Option[Tree.Comments]
   final def hasComments: Boolean = begComment.nonEmpty || endComment.nonEmpty

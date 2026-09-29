@@ -6,24 +6,22 @@ import scala.meta.trees.Origin
 
 // NOTE: `startTokenPos` and `endTokenPos` are BOTH INCLUSIVE.
 // This is at odds with the rest of scala.meta, where ends are non-inclusive.
-trait StartPos {
+trait StartPos extends Any {
   def begIndex: Int
 }
 
-trait EndPos {
+trait EndPos extends Any {
   def endIndex: Int
 }
 
-trait Pos extends StartPos with EndPos
+trait Pos extends Any with StartPos with EndPos
 
-class IndexPos(index: => Int) extends Pos {
+class IndexPos(val index: Int) extends AnyVal with Pos {
   def begIndex = index
   def endIndex = index
 }
 
-class TreePos(tree: Tree) extends Pos {
-  val (begIndex, endIndex) = tree.origin match {
-    case x: Origin.Partial => (x.begTokenIdx, x.endTokenIdx - 1)
-    case _ => sys.error(s"internal error: unpositioned prototype ${tree.syntax}: ${tree.structure}")
-  }
+class TreePos(val tree: Tree) extends AnyVal with Pos {
+  def begIndex = tree.begTokenIdx
+  def endIndex = tree.endTokenIdx - 1
 }

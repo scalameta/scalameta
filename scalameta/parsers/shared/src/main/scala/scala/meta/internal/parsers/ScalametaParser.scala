@@ -388,8 +388,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def asComments(values: ListBuffer[Tree.Comment]): Option[Tree.Comments] =
     if (values.isEmpty) None
     else Some {
-      val beg = values.head.begIndex
-      val origin = asOrigin(beg, values.last.endIndex + 1)
+      val beg = values.head.begTokenIdx
+      val origin = asOrigin(beg, values.last.endTokenIdx)
       val newlinesBefore = Tokens.countOf(tokens.newlinesBefore(beg))
       Tree.Comments._ctor(origin = origin, values = values.toList, newlinesBefore = newlinesBefore)
     }
@@ -470,7 +470,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         if (bodyIsBlock && (maxChild ne null)) {
           val bound = if (tokens(endExcl - 1).is[RightBrace]) endExcl - 1 else endPos + 1
           val last = maxChild.endComment.getOrElse(maxChild)
-          trailingComments(last.endIndex + 1, bound).foreach { more =>
+          trailingComments(last.endTokenIdx, bound).foreach { more =>
             val all = new ListBuffer[Tree.Comment]
             maxChild.endComment.foreach(all ++= _.values)
             all ++= more.values
@@ -2732,10 +2732,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
 
   private def hasDetachedCommentBefore(t: Tree): Boolean =
-    isPrecededByDetachedComment(t.begIndex - 1, -1)
+    isPrecededByDetachedComment(t.begTokenIdx - 1, 0)
 
   private def hasDetachedCommentAfter(t: Tree): Boolean =
-    isPrecededByDetachedComment(currIndex, t.endIndex)
+    isPrecededByDetachedComment(currIndex, t.endTokenIdx)
 
   private def isTreeWithDetachedComments(t: Tree): Boolean = hasDetachedCommentBefore(t) ||
     hasDetachedCommentAfter(t)

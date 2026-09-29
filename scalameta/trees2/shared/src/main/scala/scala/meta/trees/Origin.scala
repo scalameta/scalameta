@@ -18,6 +18,9 @@ sealed trait Origin extends Optional {
   private[meta] def inputOpt: Option[Input]
   private[meta] def textOpt: Option[String]
   private[meta] def tokensOpt: Option[Tokens]
+
+  private[meta] def begTokenIdx: Int
+  private[meta] def endTokenIdx: Int
 }
 
 object Origin {
@@ -28,6 +31,8 @@ object Origin {
     private[meta] val inputOpt: Option[Input] = scala.None
     private[meta] val textOpt: Option[String] = scala.None
     private[meta] val tokensOpt: Option[Tokens] = scala.None
+    private[meta] def begTokenIdx: Int = -1
+    private[meta] def endTokenIdx: Int = -1
   }
 
   // `begTokenIdx` and `endTokenIdx` are half-open interval of index range
@@ -84,6 +89,8 @@ object Origin {
     private[meta] val inputOpt: Option[Input] = scala.None
     private[meta] val textOpt: Option[String] = scala.None
     private[meta] val tokensOpt: Option[Tokens] = scala.None
+    private[meta] def begTokenIdx: Int = -1
+    private[meta] def endTokenIdx: Int = -1
   }
 
   object DialectOnly {
@@ -119,6 +126,8 @@ object Origin {
     override private[meta] def inputOpt: Option[Input] = origin.inputOpt
     override private[meta] val textOpt: Option[String] = scala.None
     override private[meta] val tokensOpt: Option[Tokens] = scala.None
+    private[meta] def begTokenIdx: Int = -1
+    private[meta] def endTokenIdx: Int = -1
   }
   object PartialProxy {
     def apply(origin: Origin): Origin = origin match {
