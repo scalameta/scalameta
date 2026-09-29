@@ -51,5 +51,8 @@ object Mima {
     // Origin: its subtypes are now sealed or final
     exclude[HierarchyNoLongerCheckedProblem]("trees.Origin$*"),
     exclude[FinalClassProblem]("trees.Origin$*"),
+    // Origin: every subtype already declares or defines these
+    exclude[ReversedMissingMethodProblem]("trees.Origin.begTokenIdx"),
+    exclude[ReversedMissingMethodProblem]("trees.Origin.endTokenIdx"),
   )
 }
