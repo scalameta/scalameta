@@ -41,6 +41,39 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
    */
   private[meta] def getOrNull(idx: Int): Token = if (idx >= 0 && idx < length) get(idx) else null
 
+  /* the newlines between the token at `idx` and the previous token that is not whitespace,
+   * packed with that token's index */
+  private[meta] def newlinesBefore(idx: Int): Long = {
+    var i = idx - 1
+    var newlines = 0
+    while (getOrNull(i) match {
+        case t: Token.AtEOL =>
+          newlines += t.newlines
+          true
+        case _: Token.HSpace => true
+        case _ => false
+      }) i -= 1
+    Tokens.pack(newlines, i)
+  }
+
+  /* the newlines between the token at `idx` and the next token that is not whitespace, packed
+   * with that token's index; the end of input counts as one newline */
+  private[meta] def newlinesAfter(idx: Int): Long = {
+    var i = idx + 1
+    var newlines = 0
+    while (getOrNull(i) match {
+        case t: Token.AtEOL =>
+          newlines += t.newlines
+          true
+        case _: Token.EOF =>
+          newlines = 1
+          false
+        case _: Token.HSpace => true
+        case _ => false
+      }) i += 1
+    Tokens.pack(newlines, i)
+  }
+
   /** get element in full Tokens relative to start of this slice */
   def getWideOpt(idx: Int): Option[Token] = {
     val wideIdx = start + idx
@@ -269,6 +302,14 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
 }
 
 object Tokens {
+  // a count and an index packed into a `Long`, to avoid a tuple on hot paths
+  @inline
+  private[meta] def pack(count: Int, idx: Int): Long = count.toLong << 32 | idx.toLong & 0xffffffffL
+  @inline
+  private[meta] def countOf(packed: Long): Int = (packed >> 32).toInt
+  @inline
+  private[meta] def indexOf(packed: Long): Int = packed.toInt
+
   private[meta] def apply(tokens: Array[Token]): Tokens = apply(tokens, 0, tokens.length)
   private[meta] def apply(tokens: Array[Token], start: Int, end: Int): Tokens =
     new Tokens(tokens, start, end - start)

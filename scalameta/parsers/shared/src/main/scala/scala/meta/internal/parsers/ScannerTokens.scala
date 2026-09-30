@@ -241,37 +241,30 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
    *
    * Returns the indentation level and the `LF` token index packed into a single `Long` (high 32
    * bits = indentation, low 32 bits = index), to avoid a per-token `Tuple2` allocation on this hot
-   * path. Use [[indentOf]] / [[newlineIndexOf]] to unpack.
+   * path. Use [[Tokens.countOf]] / [[Tokens.indexOf]] to unpack.
    */
   private[parsers] def countIndentAndNewlineIndex(tokenPosition: Int): Long = {
     @tailrec
     def countIndentInternal(pos: Int, acc: Int = 0): Long =
-      if (pos < 0) packIndent(acc, pos)
+      if (pos < 0) Tokens.pack(acc, pos)
       else {
         val token = tokens(pos)
         token match {
-          case _: AtEOL | _: BOF => packIndent(acc, pos)
+          case _: AtEOL | _: BOF => Tokens.pack(acc, pos)
           case c: Comment =>
-            if (AsMultilineComment.isMultiline(c)) packIndent(multilineCommentIndent(c), pos)
+            if (AsMultilineComment.isMultiline(c)) Tokens.pack(multilineCommentIndent(c), pos)
             else countIndentInternal(pos - 1)
           case t: HSpace => countIndentInternal(pos - 1, acc + t.len)
-          case _ => packIndent(-1, -1)
+          case _ => Tokens.pack(-1, -1)
         }
       }
 
-    if (tokenPosition < 0 || tokens(tokenPosition).is[Whitespace]) packIndent(-1, -1)
+    if (tokenPosition < 0 || tokens(tokenPosition).is[Whitespace]) Tokens.pack(-1, -1)
     else countIndentInternal(tokenPosition - 1)
   }
 
-  private def packIndent(indent: Int, newlineIndex: Int): Long = indent.toLong << 32 |
-    newlineIndex.toLong & 0xffffffffL
-  @inline
-  private def indentOf(packed: Long): Int = (packed >> 32).toInt
-  @inline
-  private def newlineIndexOf(packed: Long): Int = packed.toInt
-
-  private[parsers] def countIndent(tokenPosition: Int): Int =
-    indentOf(countIndentAndNewlineIndex(tokenPosition))
+  private[parsers] def countIndent(tokenPosition: Int): Int = Tokens
+    .countOf(countIndentAndNewlineIndex(tokenPosition))
 
   // the newlines at which an indentation region opened
   private val indentAt = new scala.collection.mutable.BitSet
@@ -356,8 +349,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     // unused. An eager primitive `val` needs no holder and no boxing when
     // captured, trading those per-token allocations for a short backward scan.
     val packedIndent: Long = countIndentAndNewlineIndex(nextPos)
-    def nextIndent: Int = indentOf(packedIndent)
-    def indentPos: Int = newlineIndexOf(packedIndent)
+    def nextIndent: Int = Tokens.countOf(packedIndent)
+    def indentPos: Int = Tokens.indexOf(packedIndent)
 
     // relax requirement that close delim is on separate line
     def isTrailingComma: Boolean = dialect.allowTrailingCommas && curr.is[Comma] &&

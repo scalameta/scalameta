@@ -372,37 +372,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def asString(token: CommentUnquote, idx: Int): Lit.String =
     unquoteAt[Lit.String](idx, token)
 
-  private def asComment(parts: List[Lit.String], origin: Origin, lastIdx: Int): Tree.Comment = Tree
-    .Comment._ctor(origin = origin, parts = parts, newlinesAfter = newlinesAfter(lastIdx))
-
-  // newlines between the token at `idx` and the next token that is not horizontal space
-  private def newlinesAfter(idx: Int): Int = {
-    var res = 0
-    var i = idx + 1
-    while (tokens.getOrNull(i) match {
-        case t: AtEOL =>
-          res += t.newlines
-          true
-        case _: EOF =>
-          res = 1
-          false
-        case _: HSpace => true
-        case _ => false
-      }) i += 1
-    res
-  }
-
-  private def newlinesBefore(idx: Int): Int = {
-    var res = 0
-    var i = idx - 1
-    while (tokens.getOrNull(i) match {
-        case t: AtEOL =>
-          res += t.newlines
-          true
-        case _: HSpace => true
-        case _ => false
-      }) i -= 1
-    res
+  private def asComment(parts: List[Lit.String], origin: Origin, lastIdx: Int): Tree.Comment = {
+    val newlinesAfter = Tokens.countOf(tokens.newlinesAfter(lastIdx))
+    Tree.Comment._ctor(origin = origin, parts = parts, newlinesAfter = newlinesAfter)
   }
 
   private def asComment(token: Token, idx: Int): Tree.Comment = {
@@ -418,8 +390,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     else Some {
       val beg = values.head.begIndex
       val origin = asOrigin(beg, values.last.endIndex + 1)
-      Tree.Comments
-        ._ctor(origin = origin, values = values.toList, newlinesBefore = newlinesBefore(beg))
+      val newlinesBefore = Tokens.countOf(tokens.newlinesBefore(beg))
+      Tree.Comments._ctor(origin = origin, values = values.toList, newlinesBefore = newlinesBefore)
     }
 
   def atPosWithBody[T <: Tree](startPos: Int, body: T, endPos: Int): T = {
