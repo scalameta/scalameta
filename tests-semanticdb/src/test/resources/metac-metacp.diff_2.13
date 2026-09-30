@@ -585,6 +585,103 @@ example/InstrumentTyper#existential().
                      display_name: "T"
 
 
+==================
+example/Issue1544.
+==================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "example/Issue1544.A#"
+-      symlinks: "example/Issue1544.B#"
+       symlinks: "example/Issue1544.A."
++      symlinks: "example/Issue1544.B#"
+
+
+===============================
+example/Issue1544.A#canEqual().
+===============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#canEqual()."
+
+
+=============================
+example/Issue1544.A#equals().
+=============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Equals#equals()."
+-overridden_symbols: "java/lang/Object#equals()."
+-overridden_symbols: "scala/Any#equals()."
+
+
+===============================
+example/Issue1544.A#hashCode().
+===============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#hashCode()."
+-overridden_symbols: "scala/Any#hashCode()."
+
+
+===================================
+example/Issue1544.A#productArity().
+===================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productArity()."
+
+
+=====================================
+example/Issue1544.A#productElement().
+=====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElement()."
+
+
+=========================================
+example/Issue1544.A#productElementName().
+=========================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productElementName()."
+
+
+======================================
+example/Issue1544.A#productIterator().
+======================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productIterator()."
+
+
+====================================
+example/Issue1544.A#productPrefix().
+====================================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "scala/Product#productPrefix()."
+
+
+===============================
+example/Issue1544.A#toString().
+===============================
+--- metac
++++ metacp
+   public_access {
+-overridden_symbols: "java/lang/Object#toString()."
+-overridden_symbols: "scala/Any#toString()."
+
+
 ======================
 example/Issue1872.x$1.
 ======================
