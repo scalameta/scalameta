@@ -30,7 +30,10 @@ class UnreadableClassfileSuite extends FunSuite {
     dir.toFile.deleteOnExit()
     Files.write(dir.resolve("A.class"), unreadableClassfile)
     val obtained = load(dir)
-    assertNoDiff(obtained.getMessage, "Unsupported class file major version 32767")
+    assertNoDiff(
+      obtained.getMessage,
+      s"Unsupported class file major version 32767 in ${dir.resolve("A.class")}",
+    )
   }
 
   test("unreadable classfile in a jar") {
@@ -43,6 +46,6 @@ class UnreadableClassfileSuite extends FunSuite {
       out.closeEntry()
     } finally out.close()
     val obtained = load(jar)
-    assertNoDiff(obtained.getMessage, "Unsupported class file major version 32767")
+    assertNoDiff(obtained.getMessage, s"Unsupported class file major version 32767 in $jar!/A.class")
   }
 }

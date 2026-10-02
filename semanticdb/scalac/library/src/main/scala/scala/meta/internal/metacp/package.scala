@@ -51,24 +51,35 @@ package object metacp {
 
   }
   implicit class XtensionAsmPathOps(private val path: AbsolutePath) extends AnyVal {
-    def toClassNode: ClassNode = readInputStreamToClassNode(Files.newInputStream(path.toNIO))
+    def toClassNode: ClassNode =
+      readInputStreamToClassNode(Files.newInputStream(path.toNIO), path.toString)
   }
 
   implicit class XtensionAsmClassfileOps(private val classfile: Classfile) extends AnyVal {
-    def toClassNode: ClassNode = readInputStreamToClassNode(classfile.openInputStream())
+    def toClassNode: ClassNode = readInputStreamToClassNode(classfile.openInputStream(), location)
     def hasScalaSig: Boolean = {
-      val classNode = readInputStreamToClassNode(classfile.openInputStream())
+      val classNode = readInputStreamToClassNode(classfile.openInputStream(), location)
       classNode.attrs != null && classNode.attrs.toScala.exists(_.`type` match {
         case "Scala" | "ScalaSig" => true
         case _ => false
       })
     }
+    private def location: String = classfile match {
+      case UncompressedClassfile(_, path) => path.toString
+      case CompressedClassfile(entry, zip) => s"$zip!/${entry.getName}"
+    }
   }
 
-  private def readInputStreamToClassNode(in: InputStream): ClassNode = {
+  private def readInputStreamToClassNode(in: InputStream, location: String): ClassNode = {
     val node = new ClassNode()
     try {
-      new ClassReader(in).accept(
+      val reader =
+        try new ClassReader(in)
+        catch {
+          case e: IllegalArgumentException =>
+            throw new IllegalArgumentException(s"${e.getMessage} in $location", e)
+        }
+      reader.accept(
         node,
         Array(ScalaSigAttribute),
         // NOTE(olafur): don't use SKIP_DEBUG field since it strips away Java
