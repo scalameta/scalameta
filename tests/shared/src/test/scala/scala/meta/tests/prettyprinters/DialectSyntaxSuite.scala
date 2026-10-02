@@ -123,6 +123,7 @@ class DialectSyntaxSuite extends TreeSuiteBase {
   )
   checkReprint("anonymous type param fallback", Type.AnonymousParam(None))(dialects.Scala3 -> "_")
   checkReprint("double literal without origin text", dbl("1"))(dialects.Scala213 -> "1.0")
+  checkReprint("negative double literal without origin text", dbl("-1"))(dialects.Scala213 -> "-1")
   checkReprint("double literal keeps value text", dbl("1.5"))(dialects.Scala213 -> "1.5")
   checkReprint("string literal quoting", str("ab"))(dialects.Scala213 -> "\"ab\"")
   checkReprint("multiline string literal is triple-quoted", str("a\nb"))(
