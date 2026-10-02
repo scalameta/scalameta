@@ -31,13 +31,13 @@ object Origin {
   }
 
   // `begTokenIdx` and `endTokenIdx` are half-open interval of index range
-  trait Partial extends Origin {
+  sealed trait Partial extends Origin {
     val begTokenIdx: Int
     val endTokenIdx: Int
     override def isEmpty: Boolean = begTokenIdx >= endTokenIdx
   }
 
-  trait ParsedPartial extends Partial {
+  sealed trait ParsedPartial extends Partial {
     val source: ParsedSource
 
     @inline
@@ -60,25 +60,25 @@ object Origin {
     def tokens: Tokens = allInputTokens().slice(begTokenIdx, endTokenIdx)
   }
 
-  case class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)
+  final case class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)
       extends ParsedPartial {
     private[meta] def textOpt: Option[String] = Some(text)
     @inline
     def text: String = position.text
   }
 
-  case class ParsedSpliced(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)
+  final case class ParsedSpliced(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)
       extends ParsedPartial {
     private[meta] def textOpt: Option[String] = scala.None
   }
 
-  class ParsedSource(val input: Input)(implicit val dialect: Dialect) {
+  final class ParsedSource(val input: Input)(implicit val dialect: Dialect) {
     lazy val tokenized = input.tokenizerOptions.getTokenize.apply(input, dialect)
     @inline
     def tokens = tokenized.get
   }
 
-  class DialectOnly(dialect: Dialect) extends Origin {
+  final class DialectOnly(dialect: Dialect) extends Origin {
     val position: Position = Position.None
     def dialectOpt: Option[Dialect] = Some(dialect)
     private[meta] val inputOpt: Option[Input] = scala.None
@@ -113,7 +113,7 @@ object Origin {
     }
   }
 
-  class PartialProxy(origin: Partial) extends Origin {
+  final class PartialProxy(origin: Partial) extends Origin {
     override val position: Position = Position.None
     override def dialectOpt: Option[Dialect] = origin.dialectOpt
     override private[meta] def inputOpt: Option[Input] = origin.inputOpt

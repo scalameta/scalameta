@@ -48,5 +48,8 @@ object Mima {
     // Tree
     // Show is private[meta], and mima still checks its nested classes
     exclude[Problem]("prettyprinters.Show$*"),
+    // Origin: its subtypes are now sealed or final
+    exclude[HierarchyNoLongerCheckedProblem]("trees.Origin$*"),
+    exclude[FinalClassProblem]("trees.Origin$*"),
   )
 }
