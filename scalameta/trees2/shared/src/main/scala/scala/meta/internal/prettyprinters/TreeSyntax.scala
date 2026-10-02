@@ -557,11 +557,11 @@ object TreeSyntax {
       case t: Lit.Double =>
         val format = t.format
         val suffix =
-          if (Character.toLowerCase(format.last) == 'd') None
-          else if (t.origin.textOpt.exists(x => Character.toLowerCase(x.last) == 'd')) Some("d")
-          else if (format.forall(Character.isDigit)) Some(".0")
-          else None
-        s(format, o(suffix))
+          if (Character.toLowerCase(format.last) == 'd') ""
+          else if (t.origin.textOpt.exists(x => Character.toLowerCase(x.last) == 'd')) "d"
+          else if (format.forall(c => Character.isDigit(c) || c == '-')) ".0"
+          else ""
+        s(format, suffix)
       case t: Lit.IntXL => s(t.value.toString)
       case t: Lit.FloatXL => s(t.digits, w("e", s(t.exponent)))
       case t: Lit.WithUnary => s(t.op, t.arg)
