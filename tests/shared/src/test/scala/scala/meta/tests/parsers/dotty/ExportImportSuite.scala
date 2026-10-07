@@ -100,11 +100,16 @@ class ExportImportSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
-  test("trailing comment on adjacent given import")(assertStatComments(
-    """|import c.given // commentC
-       |import b.B
-       |""".stripMargin,
-    "end // commentC",
-  ))
+  test("trailing comment on adjacent given import")(
+    checkComments(
+      """|import c.given // commentC
+         |import b.B
+         |""".stripMargin,
+      """|import c.given // commentC
+         |
+         |import b.B
+         |""".stripMargin,
+    )("end Import, Importer, Importee.GivenAll: // commentC"),
+  )
 
 }

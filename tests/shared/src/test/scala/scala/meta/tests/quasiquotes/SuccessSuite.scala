@@ -2370,6 +2370,54 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(q"val foo = 0 /* $content has been unquoted */")(tree)
   }
 
+  test("comments: unquoted modifiers, DSLC before def") {
+    val mods = List(Mod.Private(Name.Anonymous()), Mod.Final())
+    val tree = q"""..$mods
+// c
+def f = 1"""
+    assertTree(tree)(Defn.Def(mods, tname("f"), Nil, None, int(1)))
+  }
+
+  test("comments: annotation, unquoted modifier, DSLC before def") {
+    val mod = Mod.Final()
+    val tree = q"""@a $mod
+// c
+def f = 1"""
+    assertTree(tree)(Defn.Def(List(Mod.Annot(init("a")), mod), tname("f"), Nil, None, int(1)))
+  }
+
+  test("comments: unquoted modifier, DSLC before a modifier") {
+    val mod = Mod.Private(Name.Anonymous())
+    val tree = q"""$mod
+// c
+final def f = 1"""
+    val fin = Mod.Final.newBuilder().begComment(detachedComments("// c")).result()
+    assertTree(tree)(Defn.Def(List(mod, fin), tname("f"), Nil, None, int(1)))
+  }
+
+  test("comments: DSLC before the paren of an unquoted arg clause") {
+    val clauses = List(Term.ArgClause(List(tname("a"), tname("b"))))
+    val tree = q"""f(...$clauses // c
+)"""
+    assertTree(tree)(tapply(tname("f"), tname("a"), tname("b")))
+  }
+
+  test("comments: DSLC before the paren of unquoted args") {
+    val args = List(tname("a"), tname("b"))
+    val tree = q"""f(..$args
+  // c
+)"""
+    assertTree(tree)(tapply(tname("f"), tname("a"), tname("b")))
+  }
+
+  test("comments: DSLC before the brace of unquoted stats") {
+    val args = List(tname("a"), tname("b"))
+    val tree = q"""{ ..$args
+  // c
+}"""
+    assertTree(tree)(blk(tname("a"), tname("b")))
+  }
+
   test("#4434 quasiquote in braces") {
     val fooTypes = Seq(q"Foo", q"Bar")
     val quoted: Tree = q"""${fooTypes(0)}; "any message""""

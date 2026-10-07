@@ -84,13 +84,56 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
   )(implicit loc: munit.Location, dialect: Dialect): Unit =
     checkParsedTree(code, _.entrypointStat(), syntax)(tree)
 
-  protected def assertStatComments(code: String, comments: String*)(implicit
+  /* Parse the code and check the owners of its comments: each group once, with the kinds of the
+   * trees that hold it or a part of it, outermost first. Reprint it: without a layout, the reprint
+   * is the code; with one, check it, then the owners of its own parse, `reprinted` or the same,
+   * or the error that `reprintError` names. */
+  protected def checkComments(
+      code: String,
+      layout: String = null,
+      reprinted: Seq[String] = null,
+      reprintError: String = null,
+  )(owners: String*)(implicit loc: munit.Location, dialect: Dialect): Source = {
+    val parsed = commentOwners(code, owners, "owners")
+    val printed = parsed.reprint
+    if ((layout eq null) || code == layout) {
+      assertNoDiff(printed, code, "layout")
+      if (reprinted ne null) assertEquals(reprinted, owners, "reprinted")
+    } else {
+      assertNoDiff(printed, layout, "layout")
+      if (reprintError ne null) runTestError[Source](printed, reprintError)
+      else commentOwners(printed, if (reprinted eq null) owners else reprinted, "reprinted")
+    }
+    parsed
+  }
+
+  private def commentOwners(code: String, owners: Seq[String], clue: String)(implicit
       loc: munit.Location,
       dialect: Dialect,
-  ): Unit = {
-    val obtained = source(code).collect { case t if t.hasComments => t }
-      .flatMap(t => t.begComment.map(x => s"beg $x") ++ t.endComment.map(x => s"end $x")).distinct
-    assertEquals(obtained, comments.toList)
+  ): Source = {
+    var groups = Vector.empty[(Tree, String, List[String])]
+    var entries = List.empty[(Tree, Int)] // each group seen, and the index of its line
+    def entryOf(g: Tree) = entries.collectFirst { case (x, i) if x eq g => i }
+    val parsed = source(code)
+    parsed.collect { case t if t.hasComments => t }.foreach { t =>
+      def add(side: String, x: Option[Tree], parent: Option[Tree]) = x.foreach { g =>
+        // a group that overlaps its parent's is printed with it, once: it adds a holder
+        val overlapped = parent.filter(p => p.pos.start < g.pos.end && g.pos.start < p.pos.end)
+        entryOf(g).orElse(overlapped.flatMap(entryOf)) match {
+          case None =>
+            groups :+= ((g, side, List(t.productPrefix)))
+            entries ::= g -> (groups.length - 1)
+          case Some(i) =>
+            groups = groups.updated(i, groups(i).copy(_3 = groups(i)._3 :+ t.productPrefix))
+            entries ::= g -> i
+        }
+      }
+      add("beg", t.begComment, t.parent.flatMap(_.begComment))
+      add("end", t.endComment, t.parent.flatMap(_.endComment))
+    }
+    val obtained = groups.map { case (g, side, holders) => s"$side ${holders.mkString(", ")}: $g" }
+    assertEquals(obtained.toList, owners.toList, clue)
+    parsed
   }
 
   protected def runTestError[T <: Tree](code: String, expected: String)(implicit

@@ -95,51 +95,61 @@ class DefnSuite extends ParseSuite {
     }
   }
 
-  test("trailing comment on adjacent interpolation")(assertStatComments(
-    """|object O {
-       |  val x = s"$y" // commentX
-       |  val z = 2
-       |}""".stripMargin,
-    "end // commentX",
-  ))
+  test("trailing comment on adjacent interpolation")(
+    checkComments(
+      """|object O {
+         |  val x = s"$y" // commentX
+         |  val z = 2
+         |}""".stripMargin,
+    )("end Defn.Val, Term.Interpolate: // commentX"),
+  )
 
-  test("trailing comment on adjacent xml literal")(assertStatComments(
-    """|object O {
-       |  val x = <a/> // commentX
-       |  val z = 2
-       |}""".stripMargin,
-    "end // commentX",
-  ))
+  test("trailing comment on adjacent xml literal")(
+    checkComments(
+      """|object O {
+         |  val x = <a/> // commentX
+         |  val z = 2
+         |}""".stripMargin,
+    )("end Defn.Val, Term.Xml, Lit.String: // commentX"),
+  )
 
-  test("leading comment on xml argument")(assertStatComments(
-    """|object O {
-       |  val x = f(/* commentX */ <a/>)
-       |}""".stripMargin,
-    "beg /* commentX */",
-  ))
+  test("leading comment on xml argument")(
+    checkComments(
+      """|object O {
+         |  val x = f(/* commentX */ <a/>)
+         |}""".stripMargin,
+      """|object O { val x = f(/* commentX */ <a/>) }
+         |""".stripMargin,
+    )("beg Term.Xml, Lit.String: /* commentX */"),
+  )
 
-  test("leading comment on literal argument")(assertStatComments(
-    """|object O {
-       |  val x = f(/* commentX */ 1)
-       |}""".stripMargin,
-    "beg /* commentX */",
-  ))
+  test("leading comment on literal argument")(
+    checkComments(
+      """|object O {
+         |  val x = f(/* commentX */ 1)
+         |}""".stripMargin,
+      """|object O { val x = f(/* commentX */ 1) }
+         |""".stripMargin,
+    )("beg Lit.Int: /* commentX */"),
+  )
 
-  test("trailing comment on adjacent self reference")(assertStatComments(
-    """|class O {
-       |  val x = this // commentX
-       |  val z = 2
-       |}""".stripMargin,
-    "end // commentX",
-  ))
+  test("trailing comment on adjacent self reference")(
+    checkComments(
+      """|class O {
+         |  val x = this // commentX
+         |  val z = 2
+         |}""".stripMargin,
+    )("end Defn.Val, Term.This: // commentX"),
+  )
 
-  test("trailing comment on adjacent return")(assertStatComments(
-    """|object O {
-       |  def f: Unit = return // commentX
-       |  val z = 2
-       |}""".stripMargin,
-    "end // commentX",
-  ))
+  test("trailing comment on adjacent return")(
+    checkComments(
+      """|object O {
+         |  def f: Unit = return // commentX
+         |  val z = 2
+         |}""".stripMargin,
+    )("end Defn.Def, Term.Return: // commentX"),
+  )
 
   test("val (x: Int) = 2")(assertTree(templStat("val (x: Int) = 2"))(
     Defn.Val(Nil, Pat.Typed(patvar("x"), pname("Int")) :: Nil, None, int(2)),
