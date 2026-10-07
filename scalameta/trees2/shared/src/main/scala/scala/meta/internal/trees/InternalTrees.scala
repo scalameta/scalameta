@@ -46,6 +46,8 @@ trait InternalTree extends Product {
     foreachChild(buf += _)
     buf.result()
   }
+  // the last direct child tree, or null; overridden per `@ast` node
+  private[meta] def lastChild: Tree = children.lastOption.orNull
 
   /**
    * Number of direct child trees; overridden per `@ast` node to avoid the `children` builder.

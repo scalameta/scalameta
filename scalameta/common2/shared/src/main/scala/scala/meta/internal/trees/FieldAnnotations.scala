@@ -6,4 +6,6 @@ object FieldAnnotations {
   class newField(after: String) extends StaticAnnotation
   class replacedField(until: String, pos: Int = -1) extends StaticAnnotation
   class replacesFields(after: String, ctor: Any) extends StaticAnnotation
+  // the elements of the field may sit in several trees: the tree does not adopt them
+  class shared extends StaticAnnotation
 }

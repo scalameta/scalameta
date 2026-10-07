@@ -19,6 +19,7 @@ object CommonTyperMacros {
   def initParam[T](f: T): T = macro CommonTyperMacrosBundle.initField
   def childrenCount[T]: Int = macro CommonTyperMacrosBundle.childrenCount[T]
   def foreachChild[T, U](f: U => Unit): Unit = macro CommonTyperMacrosBundle.foreachChild[T]
+  def lastChild[T, U]: U = macro CommonTyperMacrosBundle.lastChild[T]
 }
 
 class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
@@ -136,4 +137,19 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
     )
     q"{ ..$stmts; () }"
   }
+
+  // the last non-empty field, checked from the end; null without children
+  def lastChild[T](implicit T: c.WeakTypeTag[T]): c.Tree = T.tpe.typeSymbol.asLeaf.fields
+    .foldLeft(q"null": Tree) { (earlier, field) =>
+      field.tpe match {
+        case TreeTpe() => q"this.${field.sym}"
+        case OptionTreeTpe(_) =>
+          val x = c.freshName(TermName("x"))
+          q"this.${field.sym} match { case _root_.scala.Some($x) => $x; case _ => $earlier }"
+        case ListTreeTpe(_) =>
+          val xs = c.freshName(TermName("xs"))
+          q"{ val $xs = this.${field.sym}; if ($xs.isEmpty) $earlier else $xs.last }"
+        case _ => earlier
+      }
+    }
 }

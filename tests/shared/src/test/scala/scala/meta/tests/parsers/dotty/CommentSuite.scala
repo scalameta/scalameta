@@ -397,8 +397,8 @@ class CommentSuite extends BaseDottySuite {
     assertEquals(imp.endComment.get.values.map(_.syntax), List("// ct3", "// ct4"))
     assertEquals(importer.endComment.get.values.map(_.syntax), List("// ct3"))
     assertNotEquals(importer.endComment.get, imp.endComment.get)
-    assertNotEquals(importer.endComment.get.values.head, imp.endComment.get.values.head)
-    assertEquals(imp.endComment.get.values.head.parent, Some(imp.endComment.get))
+    assertEquals(importer.endComment.get.values.head, imp.endComment.get.values.head)
+    assertEquals(imp.endComment.get.values.head.parent, None)
     assertSyntax(
       """|import p3.a3 // ct3
          |  // ct3
@@ -419,7 +419,7 @@ class CommentSuite extends BaseDottySuite {
     assertEquals(select.endComment.get.values.map(_.syntax), List("// c1", "// c2"))
     assertEquals(select.name.endComment.get.values.map(_.syntax), List("// c1"))
     assertNotEquals(select.name.endComment.get, select.endComment.get)
-    assertNotEquals(select.name.endComment.get.values.head, select.endComment.get.values.head)
+    assertEquals(select.name.endComment.get.values.head, select.endComment.get.values.head)
     assertSyntax(
       """|{
          |  a.b // c1
