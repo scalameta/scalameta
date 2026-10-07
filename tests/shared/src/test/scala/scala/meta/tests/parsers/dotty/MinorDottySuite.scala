@@ -759,9 +759,14 @@ class MinorDottySuite extends BaseDottySuite {
          |
          |  f()
          |}""".stripMargin
-    val layout = "object A { def f(): Unit = {} f (()) }"
-    val body = tinfix(blk(), "f", Lit.Unit())
-    val tree = Defn.Object(Nil, "A", tpl(Defn.Def(Nil, "f", Nil, List(Nil), Some("Unit"), body)))
+    val layout =
+      """|object A {
+         |  def f(): Unit = {}
+         |  f()
+         |}""".stripMargin
+    val body = blk()
+    val tree = Defn
+      .Object(Nil, "A", tpl(Defn.Def(Nil, "f", Nil, List(Nil), Some("Unit"), body), tapply("f")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -771,9 +776,13 @@ class MinorDottySuite extends BaseDottySuite {
          |  def f {}
          |  g
          |}""".stripMargin
-    val layout = "object A { def f: Unit = {} g }"
-    val body = Term.SelectPostfix(blk(), "g")
-    val tree = Defn.Object(Nil, "A", tpl(Defn.Def(Nil, "f", Nil, Nil, Some("Unit"), body)))
+    val layout =
+      """|object A {
+         |  def f: Unit = {}
+         |  g
+         |}""".stripMargin
+    val body = blk()
+    val tree = Defn.Object(Nil, "A", tpl(Defn.Def(Nil, "f", Nil, Nil, Some("Unit"), body), tname("g")))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -783,10 +792,17 @@ class MinorDottySuite extends BaseDottySuite {
          |  def f[T] {}
          |  f()
          |}""".stripMargin
-    val layout = "object A { def f[T]: Unit = {} f (()) }"
-    val body = tinfix(blk(), "f", Lit.Unit())
-    val tree = Defn
-      .Object(Nil, "A", tpl(Defn.Def(Nil, "f", List(pparam("T")), Nil, Some("Unit"), body)))
+    val layout =
+      """|object A {
+         |  def f[T]: Unit = {}
+         |  f()
+         |}""".stripMargin
+    val body = blk()
+    val tree = Defn.Object(
+      Nil,
+      "A",
+      tpl(Defn.Def(Nil, "f", List(pparam("T")), Nil, Some("Unit"), body), tapply("f")),
+    )
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -796,11 +812,19 @@ class MinorDottySuite extends BaseDottySuite {
          |  def f()
          |  def g: Int
          |}""".stripMargin
-    val error =
-      """|<input>:3: error: `=` expected but `def` found
+    val layout =
+      """|trait A {
+         |  def f(): Unit
          |  def g: Int
-         |  ^""".stripMargin
-    runTestError[Stat](code, error)
+         |}""".stripMargin
+    val tree = Defn.Trait(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Decl.Def(Nil, "f", Nil, List(Nil), "Unit"), Decl.Def(Nil, "g", Nil, Nil, "Int")),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("do-while") {
