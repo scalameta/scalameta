@@ -395,4 +395,48 @@ class CommentSuite extends ParseSuite {
     runTestAssert[Stat](layout)(reparsed)
   }
 
+  test("import: ASLC, then a DSLC at the end of input") {
+    val code =
+      """|import p3.a3 // ct3
+         |// ct4
+         |""".stripMargin
+    val src = source(code)
+    val imp = src.stats.head.asInstanceOf[Import]
+    val importer = imp.importers.head
+    assertEquals(imp.endComment.get.values.map(_.syntax), List("// ct3", "// ct4"))
+    assertEquals(importer.endComment.get.values.map(_.syntax), List("// ct3"))
+    assertNotEquals(importer.endComment.get, imp.endComment.get)
+    assertNotEquals(importer.endComment.get.values.head, imp.endComment.get.values.head)
+    assertEquals(imp.endComment.get.values.head.parent, Some(imp.endComment.get))
+    assertSyntax(
+      """|import p3.a3 // ct3
+         |  // ct3
+         |  // ct4
+         |""".stripMargin,
+    )(Source(src.stats))
+  }
+
+  test("block: ASLC on a select, then a DSLC before the closing brace") {
+    val code =
+      """|{
+         |  a.b // c1
+         |  // c2
+         |}
+         |""".stripMargin
+    val block = stat(code).asInstanceOf[Term.Block]
+    val select = block.stats.head.asInstanceOf[Term.Select]
+    assertEquals(select.endComment.get.values.map(_.syntax), List("// c1", "// c2"))
+    assertEquals(select.name.endComment.get.values.map(_.syntax), List("// c1"))
+    assertNotEquals(select.name.endComment.get, select.endComment.get)
+    assertNotEquals(select.name.endComment.get.values.head, select.endComment.get.values.head)
+    assertSyntax(
+      """|{
+         |  a.b // c1
+         |    // c1
+         |    // c2
+         |}
+         |""".stripMargin,
+    )(Term.Block(block.stats))
+  }
+
 }
