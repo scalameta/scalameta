@@ -213,14 +213,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     ok
   }
 
-  private def tryParse[A](bodyFunc: => Option[A]): Option[A] = {
+  private def tryParseUnless[A <: AnyRef](bodyFunc: => A)(sentinel: A): A = {
     val forked = in.fork
     val body = bodyFunc
-    if (body.isEmpty) in = forked
+    if (body eq sentinel) in = forked
     body
   }
+  private def tryParseOpt[A](bodyFunc: => Option[A]): Option[A] = tryParseUnless(bodyFunc)(None)
+  private def tryParse[A >: Null <: AnyRef](bodyFunc: => A): A = tryParseUnless(bodyFunc)(null)
 
-  private def tryAhead[A](bodyFunc: => Option[A]): Option[A] = tryParse(next(bodyFunc))
+  private def tryAhead[A >: Null <: AnyRef](bodyFunc: => A): A = tryParse(next(bodyFunc))
 
   /** evaluate block after shifting next */
   @inline
@@ -338,16 +340,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def atPos[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
     atPos(start.begIndex, end)(body)
-  def atPosIf[T <: Tree](start: StartPos, end: EndPos)(body: => Option[T]): Option[T] =
-    atPosIf(start.begIndex, end)(body)
+  def atPosIf[T >: Null <: Tree](start: StartPos, end: EndPos)(body: => T): T =
+    atPosIf[T](start.begIndex, end)(body)
   def atPosOpt[T <: Tree](start: StartPos, end: EndPos)(body: => T): T =
     atPosOpt(start.begIndex, end)(body)
 
   @inline
   def atPos[T <: Tree](start: Int, end: EndPos)(body: T): T =
     atPosWithBody(start, body, end.endIndex)
-  def atPosIf[T <: Tree](start: Int, end: EndPos)(body: Option[T]): Option[T] = body
-    .map(atPos(start, end))
+  def atPosIf[T >: Null <: Tree](start: Int, end: EndPos)(body: T): T =
+    if (body eq null) null else atPos(start, end)(body)
   def atPosOpt[T <: Tree](start: Int, end: EndPos)(body: T): T = body.origin match {
     case o: Origin.Parsed if o.source eq originSource => body
     case _ => atPos(start, end)(body)
@@ -589,8 +591,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   def autoPos[T <: Tree](body: => T): T = atPos(start = AutoPos, end = AutoPos)(body)
-  def autoPosIf[T <: Tree](body: => Option[T]): Option[T] =
-    atPosIf(start = AutoPos, end = AutoPos)(body)
+  def autoPosIf[T >: Null <: Tree](body: => T): T = atPosIf[T](start = AutoPos, end = AutoPos)(body)
   def autoPosOpt[T <: Tree](body: => T): T = atPosOpt(start = AutoPos, end = AutoPos)(body)
   @inline
   def autoEndPos[T <: Tree](start: Int)(body: => T): T = atPos(start = start, end = AutoPos)(body)
@@ -849,14 +850,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     case t => unreachable(t)
   }
 
-  def unquoteOpt[T <: Tree: AstInfo]: Option[T with Quasi] = currToken match {
-    case t: Unquote => Some(unquote[T](t))
-    case _ => None
+  def unquoteOpt[T >: Null <: Tree: AstInfo]: T = currToken match {
+    case t: Unquote => unquote[T](t)
+    case _ => null
   }
 
-  def unquoteOpt[T <: Tree: AstInfo](pred: => Boolean): Option[T with Quasi] = currToken match {
-    case t: Unquote if pred => Some(unquote[T](t))
-    case _ => None
+  def unquoteOpt[T >: Null <: Tree: AstInfo](pred: => Boolean): T = currToken match {
+    case t: Unquote if pred => unquote[T](t)
+    case _ => null
   }
 
   final def tokenSeparated[Sep: ClassTag, T <: Tree: AstInfo: ClassTag](
@@ -966,13 +967,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
 
       @tailrec
-      def paramOrType(modsBuf: mutable.Builder[Mod, List[Mod]]): Type =
-        namedTypeOpt(modsBuf.result(), allowFunctionType = allowFunctionType) match {
-          case Some(x) => x
-          case None =>
-            val x = modOrType(modsBuf)
-            if (x ne null) x else paramOrType(modsBuf)
+      def paramOrType(modsBuf: mutable.Builder[Mod, List[Mod]]): Type = {
+        val res = namedTypeOpt(modsBuf.result(), allowFunctionType = allowFunctionType)
+        if (res ne null) res
+        else {
+          val x = modOrType(modsBuf)
+          if (x ne null) x else paramOrType(modsBuf)
         }
+      }
 
       val openParenPos = currIndex
       // NOTE: can't have this, because otherwise we run into #312
@@ -999,11 +1001,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           syntaxError(message, at = currToken)
         }
 
-        withTypeCapturesOpt(openParenPos, needCaret = true)(makeTuple(ts)).fold(ts)(_ :: Nil)
+        withTypeCapturesOpt(openParenPos, needCaret = true)(makeTuple(ts)) match {
+          case null => ts
+          case x => x :: Nil
+        }
       }
 
       def maybeFunc = getAfterOptNewLine(typeFuncOnArrowOpt(openParenPos, ts))
-      (if (allowFunctionType) maybeFunc else None).getOrElse {
+      val res = if (allowFunctionType) maybeFunc else null
+      if (res ne null) res
+      else {
         val simple = simpleTypeRest(makeTuple(ts), openParenPos)
         val compound = compoundTypeRest(annotTypeRest(simple, openParenPos), openParenPos)
         infixTypeRest(compound) match {
@@ -1037,13 +1044,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val t: Type =
         if (at[LeftBracket] && dialect.allowTypeLambdas) typeLambdaOrPoly() else infixTypeOrTuple()
 
-      getAfterOptNewLine(currToken match {
-        case _: KwForsome => Some(existentialTypeOnForSome(t))
+      val res = getAfterOptNewLine(currToken match {
+        case _: KwForsome => existentialTypeOnForSome(t)
         case _: KwMatch if dialect.allowTypeMatch =>
           next()
-          Some(Type.Match(t, typeCaseClauses()))
+          Type.Match(t, typeCaseClauses())
         case _ => typeFuncOnArrowOpt(startPos, t :: Nil, inParam = inParam)
-      }).getOrElse(t)
+      })
+      if (res ne null) res else t
     }
 
     private def paramValueType(allowRepeated: Boolean = false): Type = {
@@ -1075,20 +1083,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     private def maybeParamType(allowFunctionType: Boolean): Type =
       if (allowFunctionType) paramType() else typ()
 
-    private def namedTypeOpt(
-        fmods: => List[Mod],
-        allowFunctionType: Boolean,
-    ): Option[Type.TypedParam] = currToken match {
-      case t: Ident if peek[Colon] =>
-        val startPos = currIndex
-        nextTwice() // skip ident and colon
-        val mods = fmods
-        val modPos = if (mods.isEmpty) startPos else mods.head.begIndex
-        val name = atPos(startPos)(Type.Name(t.value))
-        val tpe = maybeParamType(allowFunctionType)
-        Some(autoEndPos(modPos)(Type.TypedParam(name, tpe, mods)))
-      case _ => None
-    }
+    private def namedTypeOpt(fmods: => List[Mod], allowFunctionType: Boolean): Type.TypedParam =
+      currToken match {
+        case t: Ident if peek[Colon] =>
+          val startPos = currIndex
+          nextTwice() // skip ident and colon
+          val mods = fmods
+          val modPos = if (mods.isEmpty) startPos else mods.head.begIndex
+          val name = atPos(startPos)(Type.Name(t.value))
+          val tpe = maybeParamType(allowFunctionType)
+          autoEndPos(modPos)(Type.TypedParam(name, tpe, mods))
+        case _ => null
+      }
 
     def typeBlock(): Type =
       // TypeBlock, https://dotty.epfl.ch/docs/internals/syntax.html#expressions-3
@@ -1100,7 +1106,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
       else typ()
 
-    private def typeCaptures(needCaret: Boolean, allowCaptures: Boolean): Option[Type.Captures] =
+    private def typeCaptures(needCaret: Boolean, allowCaptures: Boolean): Type.Captures =
       if (allowCaptures && dialect.allowCaptureChecking) {
         def ifCaret[A](thenPart: => A, elsePart: => A): A = currToken match {
           case t: Ident if t.text == "^" =>
@@ -1108,23 +1114,31 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             thenPart
           case _ => elsePart
         }
-        def capturesOnBrace(): Option[Type.Captures] =
-          if (!acceptOpt[LeftBrace]) None
-          else Some(autoEndPos(prevIndex)(Type.CapturesSet(
+        def capturesOnBrace(): Type.Captures =
+          if (!acceptOpt[LeftBrace]) null
+          else autoEndPos(prevIndex)(Type.CapturesSet(
             if (acceptOpt[RightBrace]) Nil
             else inBracesAfterOpen(commaSeparated(path() match {
               case x: Term.Name => ifCaret(autoEndPos(x)(Term.CapSetName(x.value)), x)
               case x => x
             })),
-          )))
+          ))
         if (!needCaret) capturesOnBrace()
-        else ifCaret(capturesOnBrace().orElse(Some(atCurPosEmpty(Type.CapturesAny()))), None)
-      } else None
+        else ifCaret(
+          capturesOnBrace() match {
+            case null => atCurPosEmpty(Type.CapturesAny())
+            case x => x
+          },
+          null,
+        )
+      } else null
 
     private def withTypeCapturesOpt(startPos: Int, needCaret: Boolean, allowCaptures: Boolean = true)(
         capturedType: => Type,
-    ): Option[Type] = typeCaptures(needCaret = needCaret, allowCaptures = allowCaptures)
-      .map(captures => autoEndPos(startPos)(Type.Capturing(capturedType, captures)))
+    ): Type = typeCaptures(needCaret = needCaret, allowCaptures = allowCaptures) match {
+      case null => null
+      case captures => autoEndPos(startPos)(Type.Capturing(capturedType, captures))
+    }
 
     private def withTypeCaptures(
         startPos: Int,
@@ -1133,7 +1147,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     )(capturedType: => Type): Type =
       withTypeCapturesOpt(startPos, needCaret = needCaret, allowCaptures = allowCaptures)(
         capturedType,
-      ).getOrElse(capturedType)
+      ) match {
+        case null => capturedType
+        case x => x
+      }
 
     private def typeFuncOnArrow(
         paramPos: Int,
@@ -1153,18 +1170,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         paramPos: Int,
         params: List[Type],
         inParam: Boolean = false,
-    ): Option[Type] = {
-      def func(caps: Boolean = true)(ctor: (Type.FuncParamClause, Type) => Type): Option[Type] =
-        Some(typeFuncOnArrow(paramPos, params, inParam = inParam, allowCaptures = caps)(ctor))
+    ): Type = {
+      def func(caps: Boolean = true)(ctor: (Type.FuncParamClause, Type) => Type): Type =
+        typeFuncOnArrow(paramPos, params, inParam = inParam, allowCaptures = caps)(ctor)
       currToken match {
         case _: RightArrow => func(caps = false)(Type.Function(_, _))
         case _: ContextArrow => func(caps = false)(Type.ContextFunction(_, _))
         case t: Ident => t.text match {
             case soft.KwPureFunctionArrow() => func()(Type.PureFunction(_, _))
             case soft.KwPureContextFunctionArrow() => func()(Type.PureContextFunction(_, _))
-            case _ => None
+            case _ => null
           }
-        case _ => None
+        case _ => null
       }
     }
 
@@ -1254,36 +1271,38 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
       @tailrec
       def loop(rhs: Typ): Typ = (currToken match {
-        case lf: InfixLF => getLeadingInfix(lf)(Type.Name.apply)(getNextRhs(rhs))
-        case _: Unquote | InfixTypeIdent() => Some(getNextRhs(rhs)(typeName()))
-        case _ => None
+        case lf: InfixLF => getLeadingInfix[Type.Name, Typ](lf)(Type.Name.apply)(getNextRhs(rhs))
+        case _: Unquote | InfixTypeIdent() => getNextRhs(rhs)(typeName())
+        case _ => null
       }) match {
-        case Some(x) => loop(x)
-        case None => drainStack(base, rhs, rhs)
+        case null => drainStack(base, rhs, rhs)
+        case x => loop(x)
       }
       loop(t)
     }
 
     def compoundType(inMatchType: Boolean = false, inGivenSig: Boolean = false): Type =
-      refinement(innerType = None).getOrElse {
-        val startPos = currIndex
-        val annot = annotType(startPos, inMatchType = inMatchType)
-        if (inGivenSig) annot else compoundTypeRest(annot, startPos)
+      refinement(innerType = null) match {
+        case null =>
+          val startPos = currIndex
+          val annot = annotType(startPos, inMatchType = inMatchType)
+          if (inGivenSig) annot else compoundTypeRest(annot, startPos)
+        case x => x
       }
 
     def compoundTypeRest(typ: Type, startPos: Int): Type = {
       @tailrec
-      def gatherWithTypes(previousType: Type): Type = refinement(Some(previousType)) match {
+      def gatherWithTypes(previousType: Type): Type = refinement(previousType) match {
         /* Indentation means a refinement and we cannot join
          * refinements this way so stop looping.
          */
-        case None | Some(`previousType`) =>
+        case `previousType` =>
           if (acceptOpt[KwWith]) {
             val rhs = annotType()
             val t = autoEndPos(startPos)(Type.With(previousType, rhs))
             gatherWithTypes(t)
           } else previousType
-        case Some(t) => t
+        case t => t
       }
 
       gatherWithTypes(typ)
@@ -1376,8 +1395,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
     }
 
-    def typesInParens(): List[Type] =
-      inParensOnOpen(commaSeparated(namedTypeOpt(Nil, allowFunctionType = false).getOrElse(typ())))
+    def typesInParens(): List[Type] = inParensOnOpen(commaSeparated {
+      val res = namedTypeOpt(Nil, allowFunctionType = false)
+      if (res ne null) res else typ()
+    })
 
     private def infixPatternTypeImpl(): Type = {
       val t = if (at[LeftParen]) tupleInfixType() else compoundType()
@@ -1649,7 +1670,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def atOrPeekAfterEOL(body: Token => Boolean): Boolean =
     if (at[EOL]) nextIf(body(peekToken)) else body(currToken)
 
-  def getAfterOptNewLine[A](body: => Option[A]): Option[A] = if (at[EOL]) tryAhead(body) else body
+  def getAfterOptNewLine[A >: Null <: AnyRef](body: => A): A = if (at[EOL]) tryAhead(body) else body
 
   /* ------------- TYPES ---------------------------------------------------- */
 
@@ -1720,7 +1741,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def getMaybeIndented(fthen: Term => Term)(felse: => Term): Term =
       if (at[Indentation.Indent]) {
         val begPos = currIndex
-        val termInitRaw = blockExprMaybePartialRaw().getOrElse(next(blockMaybeRaw()))
+        val partialRaw = blockExprMaybePartialRaw()
+        val termInitRaw = if (partialRaw ne null) partialRaw else next(blockMaybeRaw())
         val outdented = acceptOpt[Indentation.Outdent]
         val init = autoEndPosOpt(begPos)(termInitRaw)
         val term = exprAfterSimpleInit(init, begPos)
@@ -1739,50 +1761,61 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       getWithCond(cond)
     } {
       val (cond, thenpOpt) = condExprWithOptionalBody[KwThen]
-      thenpOpt.fold(getWithCond(cond))(getWithCondAndThenp(cond, _))
+      if (thenpOpt eq null) getWithCond(cond) else getWithCondAndThenp(cond, thenpOpt)
     }
   }
 
-  private def condExprWithOptionalBody[T <: Token: ClassTag]: (Term, Option[Term]) =
+  private def condExprWithOptionalBody[T <: Token: ClassTag]: (Term, Term) =
     if (!dialect.allowQuietSyntax) {
       val cond = condExpr()
       markCondClose()
       newLinesOpt()
-      (cond, None)
+      (cond, null)
     } else if (!at[LeftParen]) {
       val cond = expr()
       acceptAfterOptNL[T]
-      (cond, None)
+      (cond, null)
     } else {
       val startPos = currIndex
       val simpleExpr = inParensOrTupleOrUnitExpr()
-      if (acceptIfAfterOptNL[T]) (simpleExpr, None)
+      if (acceptIfAfterOptNL[T]) (simpleExpr, null)
       else {
         // let's consider case when something can continue cond or start body
         val argPos = currIndex
         val argsOrInitBody = currToken match {
-          case _: LeftParen => Some(inParensOrTupleOrUnitExpr())
-          case _: LeftBrace => Some(blockExprOnBrace())
-          case _ => None
+          case _: LeftParen => inParensOrTupleOrUnitExpr()
+          case _: LeftBrace => blockExprOnBrace()
+          case _ => null
         }
         val complexExpr = tryParse {
-          val simpleExprWithArgs = argsOrInitBody.fold(simpleExpr) { t =>
-            val args = copyPos(t)(TermInfixContext.toArgClause(t))
-            autoEndPos(startPos)(Term.Apply(simpleExpr, args))
+          val simpleExprWithArgs =
+            if (argsOrInitBody eq null) simpleExpr
+            else {
+              val args = copyPos(argsOrInitBody)(TermInfixContext.toArgClause(argsOrInitBody))
+              autoEndPos(startPos)(Term.Apply(simpleExpr, args))
+            }
+          Try(exprAfterSimpleInit(simpleExprWithArgs, startPos = startPos, canApply = true)) match {
+            case Success(x) if acceptIfAfterOptNL[T] => (x, null)
+            case _ => null
           }
-          Try(exprAfterSimpleInit(simpleExprWithArgs, startPos = startPos, canApply = true))
-            .toOption.flatMap(x => if (acceptIfAfterOptNL[T]) Some(x -> None) else None)
         }
-        complexExpr.getOrElse {
-          if (argsOrInitBody.isEmpty) newLinesOpt()
-          simpleExpr -> argsOrInitBody.map(exprAfterSimpleInit(_, argPos, canApply = true))
+        complexExpr match {
+          case null => simpleExpr -> {
+              if (argsOrInitBody ne null)
+                exprAfterSimpleInit(argsOrInitBody, argPos, canApply = true)
+              else {
+                newLinesOpt()
+                null
+              }
+            }
+          case x => x
         }
       }
     }
 
   private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
     val (cond, bodyOpt) = condExprWithOptionalBody[T]
-    val body = bodyOpt.getOrElse(exprAfterCond())
+    val body = if (bodyOpt eq null) exprAfterCond() else bodyOpt
     (cond, body)
   }
 
@@ -1816,7 +1849,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               f: (=> Either[Term, Term.CasesBlock]) => Either[Term, Term.CasesBlock],
           ): Term = {
             val catchPos = currIndex
-            f(casesBlockIfAny().toRight(blockRaw())).fold(
+            f(casesBlockIfAny() match {
+              case null => Left(blockRaw())
+              case x => Right(x)
+            }).fold(
               x => tryWithHandler(autoEndPos(catchPos)(x)),
               x => tryWithCases(Some(autoEndPos(catchPos)(x))),
             )
@@ -1852,7 +1888,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               def parseInParens() = inParensOnOpen(enumerators())
               if (dialect.allowQuietSyntax)
                 // Dotty retry in case of `for (a,b) <- list1.zip(list2) yield (a, b)`
-                tryParse(Try(parseInParens()).toOption).getOrElse(enumerators())
+                tryParse(Try(parseInParens()).getOrElse(null)) match {
+                  case null => enumerators()
+                  case x => x
+                }
               else parseInParens()
             } else maybeIndented(enumerators())
           val enums = autoPos(enumList.reduceWith(Term.EnumeratorsBlock.apply))
@@ -1911,8 +1950,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           case _ => t
         }
       case _: Colon => getFewerBracesApplyOnColon(t, startPos) match {
-          case Some(x) => x
-          case _ =>
+          case null =>
             next()
             if (at[At] || at[Ellipsis] && peek[At])
               iter(addPos(Term.Annotate(t, annots(skipNewLines = false))))
@@ -1921,6 +1959,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               // this does not necessarily correspond to syntax, but is necessary to accept lambdas
               // check out the `if (token.is[RightArrow]) { ... }` block below
               iter(addPos(Term.Ascribe(t, typeOrInfixType(location))))
+          case x => x
         }
       case soft.StarSplice() if allowRepeated && peek[RightParen, Comma] => repeatedTerm(t, next)
       case _: KwMatch =>
@@ -1970,36 +2009,41 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       !(hasType && dialect.allowFewerBraces) || tokens(startPos).is[LeftParen] && prev[RightParen]
 
     val funcParamClauseOpt = res match {
-      case _ if !at[FunctionArrow] => None
-      case _: Lit.Unit => Some(Nil)
+      case _ if !at[FunctionArrow] => null
+      case _: Lit.Unit => Nil
       case q: Quasi => q.rank match {
-          case 0 if allowName => Some(q.become[Term.Param] :: Nil)
-          case 1 if allowParam(hasType = false) => Some(q.become[Term.Param] :: Nil)
-          case _ => None
+          case 0 if allowName => q.become[Term.Param] :: Nil
+          case 1 if allowParam(hasType = false) => q.become[Term.Param] :: Nil
+          case _ => null
         }
       case t: Term.Tuple =>
         val params = new ListBuffer[Term.Param]
         @tailrec
-        def iter(ts: List[Term]): Option[List[Term.Param]] = ts match {
-          case Nil => Some(params.toList)
+        def iter(ts: List[Term]): List[Term.Param] = ts match {
+          case Nil => params.toList
           case head :: tail => convertToParam(head) match {
-              case None => None
-              case Some(p) =>
+              case null => null
+              case p =>
                 params += p
                 iter(tail)
             }
         }
         iter(t.args)
-      case t => convertToParam(t).filter(p =>
-          if (p.decltpe.nonEmpty) allowParam(hasType = true)
-          else if (p.mods.nonEmpty) allowParam(hasType = false)
-          else allowName,
-        ).map(_ :: Nil)
+      case t => convertToParam(t) match {
+          case null => null
+          case p =>
+            val ok =
+              if (p.decltpe.nonEmpty) allowParam(hasType = true)
+              else if (p.mods.nonEmpty) allowParam(hasType = false)
+              else allowName
+            if (ok) p :: Nil else null
+        }
     }
 
-    funcParamClauseOpt.fold(res) { x =>
+    if (funcParamClauseOpt eq null) res
+    else {
       val contextFunction = at[ContextArrow]
-      val pc = addPos(x.reduceWith(toParamClause(None)))
+      val pc = addPos(funcParamClauseOpt.reduceWith(toParamClause(None)))
       val trm = next(termFunctionBody(location))
       addPos(if (contextFunction) Term.ContextFunction(pc, trm) else Term.Function(pc, trm))
     }
@@ -2017,76 +2061,90 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case t => t
     }
 
-  private def convertToParam(tree: Tree): Option[Term.Param] = {
-    def getModFromName(name: Name): Option[Mod] = name.value match {
-      case soft.KwUsing() => Some(copyPos(name)(Mod.Using()))
-      case soft.KwErased() => Some(copyPos(name)(Mod.Erased()))
-      case _ => None
+  private def convertToParam(tree: Tree): Term.Param = {
+    def getModFromName(name: Name): Mod = name.value match {
+      case soft.KwUsing() => copyPos(name)(Mod.Using())
+      case soft.KwErased() => copyPos(name)(Mod.Erased())
+      case _ => null
     }
     @tailrec
-    def getMod(t: Tree, mods: List[Mod] = Nil): Option[List[Mod]] = t match {
-      case t: Term.Name => getModFromName(t).map(_ :: mods)
+    def getMod(t: Tree, mods: List[Mod] = Nil): List[Mod] = t match {
+      case t: Term.Name => getModFromName(t) match {
+          case null => null
+          case mod => mod :: mods
+        }
       case t: Term.SelectPostfix => getModFromName(t.name) match {
-          case Some(mod) => getMod(t.qual, mod :: mods)
-          case _ => None
+          case null => null
+          case mod => getMod(t.qual, mod :: mods)
         }
       case t: Term.ApplyInfix => t.argClause.values match {
-          case (n: Name) :: Nil if t.targClause.values.isEmpty =>
-            val mOpt = for {
-              m1 <- getModFromName(t.op)
-              m2 <- getModFromName(n)
-            } yield m1 :: m2 :: mods
-            mOpt match {
-              case Some(m) => getMod(t.lhs, m)
-              case _ => None
+          case (n: Name) :: Nil if t.targClause.isEmpty =>
+            val m1 = getModFromName(t.op)
+            if (m1 eq null) return null
+            val m2 = getModFromName(n)
+            if (m2 eq null) return null
+            getMod(t.lhs, m1 :: m2 :: mods)
+          case _ => null
+        }
+      case _ => null
+    }
+    def getNameAndMod(t: Tree): (Name, List[Mod]) = t match {
+      case t: Name => (t, Nil)
+      case t: Quasi => (t.become[Term.Name], Nil)
+      case t: Term.SelectPostfix => getMod(t.qual) match {
+          case null => null
+          case mods => (t.name, mods)
+        }
+      case t: Term.ApplyInfix => t.argClause.values match {
+          case arg :: Nil if t.targClause.isEmpty =>
+            val mod = getModFromName(t.op)
+            if (mod eq null) return null
+            val name = arg match {
+              case n: Term.Placeholder => copyPos(n)(Name.Placeholder())
+              case n: Name => n
+              case _ => return null
             }
-          case _ => None
+            val mods = getMod(t.lhs, mod :: Nil)
+            if (mods eq null) return null
+            (name, mods)
+          case _ => null
         }
-      case _ => None
-    }
-    def getNameAndMod(t: Tree): Option[(Name, List[Mod])] = t match {
-      case t: Name => Some((t, Nil))
-      case t: Quasi => Some((t.become[Term.Name], Nil))
-      case t: Term.SelectPostfix => getMod(t.qual).map((t.name, _))
-      case t: Term.ApplyInfix => t.argClause.values match {
-          case arg :: Nil if t.targClause.values.isEmpty =>
-            for {
-              mod <- getModFromName(t.op)
-              name <- arg match {
-                case n: Term.Placeholder => Some(copyPos(n)(Name.Placeholder()))
-                case n: Name => Some(n)
-                case _ => None
-              }
-              mods <- getMod(t.lhs, mod :: Nil)
-            } yield (name, mods)
-          case _ => None
+      case t: Term.Placeholder => (copyPos(t)(Name.Placeholder()), Nil)
+      case t: Term.Eta => getMod(t.expr) match {
+          case null => null
+          case mods => (atPos(t.endIndex)(Name.Placeholder()), mods)
         }
-      case t: Term.Placeholder => Some((copyPos(t)(Name.Placeholder()), Nil))
-      case t: Term.Eta => getMod(t.expr).map((atPos(t.endIndex)(Name.Placeholder()), _))
-      case _ => None
+      case _ => null
     }
-    def getType(t: Term): Option[Type] = t.becomeOrOpt[Type] {
-      case t: Term.Name => Some(copyPos(t)(Type.Name(t.value)))
+    def getType(t: Term): Type = t.becomeOr[Type] {
+      case t: Term.Name => copyPos(t)(Type.Name(t.value))
       case t: Term.Function => getTypeFunction(t)
-      case t: Term.ApplyType => getType(t.fun).map(fun => copyPos(t)(Type.Apply(fun, t.targClause)))
-      case _ => None
+      case t: Term.ApplyType => getType(t.fun) match {
+          case null => null
+          case fun => copyPos(t)(Type.Apply(fun, t.targClause))
+        }
+      case _ => null
     }
-    def getTypeFunction(t: Term.Function): Option[Type.Function] = t.becomeOrOpt[Type.Function](t =>
-      getType(t.body).map { tpe =>
-        val pc = t.paramClause.becomeOr[Type.FuncParamClause](pc =>
-          copyPos(pc)(Type.FuncParamClause(pc.values.map(convertTermParamToType))),
-        )
-        copyPos(t)(Type.Function(pc, tpe))
+    def getTypeFunction(t: Term.Function): Type.Function = t.becomeOr[Type.Function](t =>
+      getType(t.body) match {
+        case null => null
+        case tpe =>
+          val pc = t.paramClause.becomeOr[Type.FuncParamClause](pc =>
+            copyPos(pc)(Type.FuncParamClause(pc.values.map(convertTermParamToType))),
+          )
+          copyPos(t)(Type.Function(pc, tpe))
       },
     )
 
-    tree.becomeOrOpt[Term.Param] {
-      case _: Lit.Unit => None
-      case t: Term.Ascribe => getNameAndMod(t.expr).map { case (name, mod) =>
-          copyPos(t)(Term.Param(mod, name, Some(t.tpe), None))
+    tree.becomeOr[Term.Param] {
+      case _: Lit.Unit => null
+      case t: Term.Ascribe => getNameAndMod(t.expr) match {
+          case null => null
+          case (name, mod) => copyPos(t)(Term.Param(mod, name, Some(t.tpe), None))
         }
-      case t => getNameAndMod(t).map { case (name, mod) =>
-          copyPos(t)(Term.Param(mod, name, None, None))
+      case t => getNameAndMod(t) match {
+          case null => null
+          case (name, mod) => copyPos(t)(Term.Param(mod, name, None, None))
         }
     }
   }
@@ -2283,17 +2341,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def getLeadingInfix[A <: Name, B](lf: InfixLF)(f: String => A)(g: A => B): Option[B] =
-    peekToken match {
-      case op: Ident =>
-        def res = Some(g(atCurPos {
-          next()
-          newLineOpt()
-          f(op.value)
-        }))
-        tryAhead(if (peek[Indentation]) None else lf.invalid.fold(res)(syntaxError(_, at = op)))
-      case _ => None
-    }
+  private def getLeadingInfix[A <: Name, B >: Null <: AnyRef](
+      lf: InfixLF,
+  )(f: String => A)(g: A => B): B = peekToken match {
+    case op: Ident =>
+      def res = g(atCurPos {
+        next()
+        newLineOpt()
+        f(op.value)
+      })
+      tryAhead(if (peek[Indentation]) null else lf.invalid.fold(res)(syntaxError(_, at = op)))
+    case _ => null
+  }
 
   def postfixExpr(allowRepeated: Boolean): Term = postfixExpr(currIndex, allowRepeated)
 
@@ -2362,35 +2421,37 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           val argPos = currIndex
           (currToken match {
             case _: Colon => getFewerBracesArgOnColon()
-            case _ => None
+            case _ => null
           }) match {
-            case None => getPostfix(op, targs)
-            case Some(x) => getNextRhsWith(op, targs, autoEndPos(argPos)(Term.Tuple(x :: Nil)))
+            case null => getPostfix(op, targs)
+            case x => getNextRhsWith(op, targs, autoEndPos(argPos)(Term.Tuple(x :: Nil)))
           }
         }
       }
 
       val resOpt = currToken match {
-        case lf: InfixLF => getLeadingInfix(lf)(Term.Name.apply)(getNextRhs(emptyTypeArgs))
+        case lf: InfixLF => getLeadingInfix[Term.Name, Either[Term, Term]](lf)(Term.Name.apply)(
+            getNextRhs(emptyTypeArgs),
+          )
         case _: KwMatch if dialect.allowMatchAsOperator =>
           val op = termName("match")
           val lhs = getPrevLhs(op)
-          Some(Right(matchClause(lhs, getLhsStartPos(lhs))))
-        case _ if prev[Indentation.Outdent] && !inRegionParen => None
+          Right(matchClause(lhs, getLhsStartPos(lhs)))
+        case _ if prev[Indentation.Outdent] && !inRegionParen => null
         case t: Unquote =>
           val op = unquote[Term.Name](t)
-          Some(getPostfixOrNextRhs(op))
+          getPostfixOrNextRhs(op)
         case t: Ident if !(allowRepeated && soft.StarSplice(t) && peek[RightParen, Comma]) =>
           val op = termName(t)
-          Some(getPostfixOrNextRhs(op))
-        case _ => None
+          getPostfixOrNextRhs(op)
+        case _ => null
       }
       resOpt match {
-        case Some(Left(x)) => x
-        case Some(Right(x)) =>
+        case Left(x) => x
+        case Right(x) =>
           // Try to continue the infix chain.
           loop(x)
-        case None =>
+        case null =>
           // Infix chain has ended.
           // In the running example, we're at `a + b[]`
           // with base = List([a +]), rhsK = List([b]).
@@ -2507,7 +2568,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         val arguments = addPos(Term.Apply(t, argClause))
         simpleExprRest(arguments, canApply = true, startPos = startPos)
       case _: Colon if canApply =>
-        getFewerBracesApplyOnColon(t, startPos, okSingleLineLambda = true).getOrElse(t)
+        val res = getFewerBracesApplyOnColon(t, startPos, okSingleLineLambda = true)
+        if (res ne null) res else t
       case _: Underscore if canApply =>
         next()
         addPos(Term.Eta(t))
@@ -2515,49 +2577,51 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def getFewerBracesArgOnColon(okSingleLineLambda: Boolean = false): Option[Term] =
-    if (!dialect.allowFewerBraces) None
+  private def getFewerBracesArgOnColon(okSingleLineLambda: Boolean = false): Term =
+    if (!dialect.allowFewerBraces) null
     else {
       val colonPos = currIndex
       def addPos(term: Term) = autoEndPos(colonPos)(term)
-      def tryGetArgAsLambdaBlock(postCheck: => Boolean) = tryGetArgAsLambda(okSingleLineLambda)
-        .flatMap(arg => if (postCheck) Some(addPos(toBlockRaw(arg :: Nil))) else None)
+      def tryGetArgAsLambdaBlock(postCheck: => Boolean) = {
+        val arg = tryGetArgAsLambda(okSingleLineLambda)
+        if ((arg ne null) && postCheck) addPos(toBlockRaw(arg :: Nil)) else null
+      }
       peekToken match {
         case _: Indentation.Indent =>
           next()
-          tryAhead(tryGetArgAsLambdaBlock(acceptIfAfterOptNL[Indentation.Outdent]))
-            .orElse(Some(addPos(blockExprOnIndent(keepBlock = true))))
+          val res = tryAhead(tryGetArgAsLambdaBlock(acceptIfAfterOptNL[Indentation.Outdent]))
+          if (res ne null) res else addPos(blockExprOnIndent(keepBlock = true))
         case _: Indentation => syntaxError("expected fewer-braces method body", currToken)
         case _: AtEOL =>
           val colon = currToken
           nextTwice()
           val argOpt = tryGetArgAsLambdaBlock(true)
-          if (argOpt.isEmpty) syntaxError("expected fewer-braces method body", colon)
+          if (argOpt eq null) syntaxError("expected fewer-braces method body", colon)
           argOpt
         case _ => tryAhead(tryGetArgAsLambdaBlock(true))
       }
     }
 
-  private def tryGetArgAsLambda(okSingleLine: Boolean): Option[Term.FunctionLike] = Try {
+  private def tryGetArgAsLambda(okSingleLine: Boolean): Term.FunctionLike = Try {
     val paramPos = currIndex
-    def getFunctionTerm(params: Term.ParamClause): Option[Term.FunctionTerm] = {
+    def getFunctionTerm(params: Term.ParamClause): Term.FunctionTerm = {
       def impl(f: (Term.ParamClause, Term) => Term.FunctionTerm) = {
         val bodyOpt =
-          if (nextIfIndentAhead()) Some(blockExprOnIndent())
-          else if (!okSingleLine || inRegionParen) None
-          else next(Some(expr()))
-        bodyOpt.map(body => autoEndPos(paramPos)(f(params, body)))
+          if (nextIfIndentAhead()) blockExprOnIndent()
+          else if (!okSingleLine || inRegionParen) null
+          else next(expr())
+        if (bodyOpt eq null) null else autoEndPos(paramPos)(f(params, bodyOpt))
       }
       currToken match {
         case _: RightArrow => impl(Term.Function.apply)
         case _: ContextArrow => impl(Term.ContextFunction.apply)
-        case _ => None
+        case _ => null
       }
     }
-    def getPolyFunction(params: Type.ParamClause): Option[Term.PolyFunction] =
+    def getPolyFunction(params: Type.ParamClause): Term.PolyFunction =
       if (at[RightArrow] && nextIfIndentAhead())
-        Some(autoEndPos(paramPos)(Term.PolyFunction(params, blockExprOnIndent())))
-      else None
+        autoEndPos(paramPos)(Term.PolyFunction(params, blockExprOnIndent()))
+      else null
 
     /**
      * We need to handle param and then open indented region, otherwise only the block will be
@@ -2609,17 +2673,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case t: Ellipsis if t.rank == 2 => getFunctionTerm(ellipsis[Term.ParamClause](t))
       case _: Ident | _: Underscore | _: Ellipsis => getParamAsFunction(None)
       case _: KwImplicit => getParamAsFunction(Some(atCurPosNext(Mod.Implicit())))
-      case _ => None
+      case _ => null
     }
-  }.getOrElse(None)
+  }.getOrElse(null)
 
   private def getFewerBracesApplyOnColon(
       fun: Term,
       startPos: Int,
       okSingleLineLambda: Boolean = false,
-  ): Option[Term] = {
+  ): Term = {
     val colonPos = currIndex
-    getFewerBracesArgOnColon(okSingleLineLambda).map { arg =>
+    val arg = getFewerBracesArgOnColon(okSingleLineLambda)
+    if (arg eq null) null
+    else {
       val endPos = AutoPos.endIndex
       val argClause = atPos(colonPos, endPos)(Term.ArgClause(arg :: Nil))
       val arguments = atPos(startPos, endPos)(Term.Apply(fun, argClause))
@@ -2685,19 +2751,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def blockExprPartial[T <: Token: ClassTag](orElse: => Term): Term = {
     val startPos = currIndex
-    blockExprMaybePartialRaw().fold(orElse) { term =>
+    val term = blockExprMaybePartialRaw()
+    if (term eq null) orElse
+    else {
       acceptAfterOptNL[T]
       autoEndPos(startPos)(term)
     }
   }
 
-  private def blockExprMaybePartialRaw(): Option[Term] = {
+  private def blockExprMaybePartialRaw(): Term = {
     val isPartial = peekToken match {
       case _: KwCase => ahead(isCaseIntroOnKwCase())
       case _: Ellipsis => ahead(peek[KwCase])
       case _ => false
     }
-    if (isPartial) next(Some(Term.PartialFunction(caseClauses()))) else None
+    if (isPartial) next(Term.PartialFunction(caseClauses())) else null
   }
 
   private def blockRaw(allowRepeated: Boolean = false): Term.Block =
@@ -2778,11 +2846,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   def toCasesBlock(cases: List[Case]): Term.CasesBlock = cases.reduceWith(Term.CasesBlock.apply)
-  def casesBlock(): Term.CasesBlock = casesBlockIfAny().getOrElse(syntaxErrorExpected[KwCase])
-  def casesBlockIfAny(): Option[Term.CasesBlock] = caseClausesIfAny().map(toCasesBlock)
+  def casesBlock(): Term.CasesBlock = toCasesBlock(caseClauses())
+  def casesBlockIfAny(): Term.CasesBlock = caseClausesIfAny() match {
+    case null => null
+    case x => toCasesBlock(x)
+  }
 
-  def caseClauses(): List[Case] = caseClausesIfAny().getOrElse(syntaxErrorExpected[KwCase])
-  def caseClausesIfAny(): Option[List[Case]] = {
+  def caseClauses(): List[Case] = caseClausesIfAny() match {
+    case null => syntaxErrorExpected[KwCase]
+    case x => x
+  }
+  def caseClausesIfAny(): List[Case] = {
     val cases = new ListBuffer[Case]
     @tailrec
     def iter(): Unit = currToken match {
@@ -2793,13 +2867,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _: KwCase if isCaseIntroOnKwCase() =>
         next()
         val quasiCase = unquoteOpt[Case]
-        cases += quasiCase.getOrElse(caseClause())
-        if (quasiCase.nonEmpty) skipAllStatSep() else if (StatSep(currToken)) tryAhead(isCaseIntro())
+        cases += (if (quasiCase eq null) caseClause() else quasiCase)
+        if (quasiCase ne null) skipAllStatSep() else if (StatSep(currToken)) tryAhead(isCaseIntro())
         iter()
       case _ =>
     }
     iter()
-    if (cases.isEmpty) None else Some(cases.toList)
+    if (cases.isEmpty) null else cases.toList
   }
 
   private def guardOnIf(): Term = {
@@ -2898,7 +2972,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def unquotePattern(): Pat = dropAnyBraces(pattern())
 
     private def getSeqWildcard(isEnabled: Boolean, elseF: => Pat, mapF: Pat => Pat = identity) =
-      if (isEnabled && at[Underscore]) autoPosIf(getSeqWildcardAtUnderscore()).fold(elseF)(mapF)
+      if (isEnabled && at[Underscore]) autoPosIf(getSeqWildcardAtUnderscore()) match {
+        case null => elseF
+        case x => mapF(x)
+      }
       else elseF
 
     private def getSeqWildcardAtUnderscore() =
@@ -2906,9 +2983,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         nextTwice() // skip underscore and star
         newLinesOpt()
         val isArgListEnd = at[RightParen, RightBrace, EOF]
-        if (isArgListEnd) Some(Pat.SeqWildcard()) else None
+        if (isArgListEnd) Pat.SeqWildcard() else null
       }
-      else None
+      else null
 
     def pattern1(isForComprehension: Boolean = false): Pat = {
       val p = pattern2(isForComprehension)
@@ -3036,7 +3113,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                   ))
               }
             }
-          case _: Underscore => getSeqWildcardAtUnderscore().getOrElse(next(Pat.Wildcard()))
+          case _: Underscore => getSeqWildcardAtUnderscore() match {
+              case null => next(Pat.Wildcard())
+              case x => x
+            }
           case MacroQuoted(term) => Pat.Macro(term)
           case _: Literal => literal()
           case _: Interpolation.Id => interpolatePat()
@@ -3269,9 +3349,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   ): Unit = while (currToken match {
       case _: At =>
         next()
-        annots += unquoteOpt[Mod.Annot].getOrElse(autoEndPos(prevIndex)(
-          Mod.Annot(initRest(exprSimpleType(), allowArgss, insidePrimaryCtorAnnot)),
-        ))
+        annots +=
+          (unquoteOpt[Mod.Annot] match {
+            case null => autoEndPos(prevIndex)(
+                Mod.Annot(initRest(exprSimpleType(), allowArgss, insidePrimaryCtorAnnot)),
+              )
+            case x => x
+          })
         true
       case t: Ellipsis if peek[At] =>
         annots += ellipsis[Mod.Annot](t, 1, next())
@@ -3295,9 +3379,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     Member.ParamClauseGroup(tparamClause, paramClauses)
   }
 
-  def memberParamClauseGroup(isFirst: Boolean): Option[Member.ParamClauseGroup] = {
-    def onFirstParen = Some(memberParamClauseGroupOnParen())
-    def onBracket = Some(memberParamClauseGroupOnBracket())
+  def memberParamClauseGroup(isFirst: Boolean): Member.ParamClauseGroup = {
+    def onFirstParen = memberParamClauseGroupOnParen()
+    def onBracket = memberParamClauseGroupOnBracket()
     currToken match {
       case _: LeftParen if isFirst => onFirstParen
       case _: LeftBracket => onBracket
@@ -3308,17 +3392,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           case _: LeftBracket =>
             next()
             onBracket
-          case _ => None
+          case _ => null
         }
-      case _ => None
+      case _ => null
     }
   }
 
-  def memberParamClauseGroups(): List[Member.ParamClauseGroup] =
-    listBy[Member.ParamClauseGroup](buf =>
+  def memberParamClauseGroups(): List[Member.ParamClauseGroup] = listBy[Member.ParamClauseGroup](
+    buf =>
       while ({
-        val pcgOpt = memberParamClauseGroup(isFirst = buf.isEmpty)
-        pcgOpt.exists { pcg =>
+        val pcg = memberParamClauseGroup(isFirst = buf.isEmpty)
+        (pcg ne null) && {
           buf += pcg
           // can't have consecutive type clauses (so params must be present)
           // also, only the very last param may contain implicit
@@ -3326,21 +3410,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           pcg.paramClauses.lastOption.exists(pc => pc.is[Quasi] || !pc.mod.is[Mod.Implicit])
         }
       }) {},
-    )
+  )
 
   def termParamClauses(): List[Term.ParamClause] =
     if (!isAfterOptNewLine[LeftParen]) Nil else termParamClausesOnParen()
 
-  private def termParamClausesOnParen(
-      first: Option[Term.ParamClause] = None,
-      ellipsisMaxRank: Int = 2,
-  ): List[Term.ParamClause] = listBy[Term.ParamClause] { paramss =>
-    first.foreach(paramss += _)
-    while ({
-      paramss += termParamClauseOnParen(ellipsisMaxRank = ellipsisMaxRank)
-      isAfterOptNewLine[LeftParen]
-    }) {}
-  }
+  private def termParamClausesOnParen(ellipsisMaxRank: Int = 2): List[Term.ParamClause] =
+    listBy[Term.ParamClause](paramss =>
+      while ({
+        paramss += termParamClauseOnParen(ellipsisMaxRank = ellipsisMaxRank)
+        isAfterOptNewLine[LeftParen]
+      }) {},
+    )
 
   private def termParamClauseOnParen(ellipsisMaxRank: Int = 2): Term.ParamClause = autoPos {
     def reduceParams(params: List[Term.Param], mod: Option[Mod.ParamsType] = None) = params
@@ -3683,8 +3764,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     val newSyntaxOK = dialect.allowImprovedTypeClassesSyntax
     val usedNewSyntax = newSyntaxOK && !prev[Colon]
-    val initPos = sig.declPos.getOrElse(sig.declType.fold(currIndex)(_.begIndex))
-    val decltype = sig.declType.getOrElse(refinement(None).getOrElse(startModType()))
+    val initPos =
+      if (sig.declPos >= 0) sig.declPos
+      else if (sig.declType eq null) currIndex
+      else sig.declType.begIndex
+    val decltype =
+      if (sig.declType ne null) sig.declType
+      else refinement(null) match {
+        case null => startModType()
+        case x => x
+      }
 
     def getDefnGiven() = TemplateOwnerContext.within(OwnedByGiven) {
       val headInit =
@@ -3734,25 +3823,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         def name = atPos(identPos)(Term.Name(ident.value))
         def anon = anonNameAt(identPos)
         if (tryAhead[Colon])
-          if (!tryAheadNot[Indentation.Indent]) None
+          if (!tryAheadNot[Indentation.Indent]) null
           else if (newSyntax) givenSigAfterColon(name)
-          else Some(GivenSig(name))
+          else GivenSig(name)
         else if (tryAhead[LeftBracket]) givenSigOnBracket(name)
         else if (tryAhead[LeftParen]) givenSigOnParen(name) // only with old syntax
         else if (tryAhead[EOL])
           if (tryAhead[LeftBracket]) givenSigOnBracket(name)
           else if (tryAhead[LeftParen]) givenSigOnParen(name) // only with old syntax
-          else None
+          else null
         else if (newSyntax)
           if (!tryAhead[RightArrow]) givenSigOther(anon) // only with old syntax
           else givenSigOnArrow(anon, atPos(identPos)(Type.Name(ident.value)))
-        else None
+        else null
       } else // anonymous typeclass or start of decltype
       if (isAfterOptNewLine[LeftBracket]) givenSigOnBracket(anonName())
-      else if (isAfterOptNewLine[LeftParen]) Try(givenSigOnParen(anonName())).getOrElse(None)
-      else None
+      else if (isAfterOptNewLine[LeftParen]) Try(givenSigOnParen(anonName())).getOrElse(null)
+      else null
     }
-  }.getOrElse(GivenSig(anonName()))
+  } match {
+    case null => GivenSig(anonName())
+    case x => x
+  }
 
   private def givenOldSyntaxColon(): Boolean = at[Colon] && tryAheadNot[Indentation.Indent]
 
@@ -3760,42 +3852,43 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def givenTermParamClause(): Term.ParamClause = termParamClauseOnParen()
 
-  private def givenSigOnBracket(name: Name): Option[GivenSig] = Try(memberParamClauseGroupOnBracket())
-    .toOption.flatMap { pcg =>
-      if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
-      else if (pcg.paramClauses.nonEmpty) None // too hard to convert to init, re-parse
+  private def givenSigOnBracket(name: Name): GivenSig = Try(memberParamClauseGroupOnBracket()) match {
+    case Success(pcg) =>
+      if (givenOldSyntaxColon()) GivenSig(name, pcg :: Nil)
+      else if (pcg.paramClauses.nonEmpty) null // too hard to convert to init, re-parse
       else if (!name.isAnonymous) {
         val tpeInit = convertNameTypeParamClauseToType(nameAsType(name), pcg.tparamClause)
         val tpe = outPattern.infixTypeRest(tpeInit, inGivenSig = true)
         val anon = anonNameAt(name)
         if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
           givenSigAfterArrow(anon, convertTypeToTermParamClause(tpe))
-        else Some(GivenSig(anon, declType = Some(tpe)))
+        else GivenSig(anon, declType = tpe)
       } else if (dialect.allowImprovedTypeClassesSyntax && acceptOpt[RightArrow])
         givenSigAfterArrow(name, pcg.tparamClause)
-      else None
-    }
+      else null
+    case _ => null
+  }
 
-  private def givenSigOnParen(name: Name): Option[GivenSig] = {
+  private def givenSigOnParen(name: Name): GivenSig = {
     // under the new syntax, this is possible only with anonymous name
     val useNewSyntax = dialect.allowImprovedTypeClassesSyntax && name.isAnonymous
-    if (!useNewSyntax && !soft.KwUsing(peekToken)) None
+    if (!useNewSyntax && !soft.KwUsing(peekToken)) null
     else {
       val pcg = memberParamClauseGroupOnParen()
-      if (givenOldSyntaxColon()) Some(GivenSig(name, pcg :: Nil))
+      if (givenOldSyntaxColon()) GivenSig(name, pcg :: Nil)
       else pcg.paramClauses match {
         case Seq(pc) if useNewSyntax && acceptOpt[RightArrow] =>
           givenSigAfterArrow(name, pcg.tparamClause, pc)
-        case _ => None // too hard to convert to init, re-parse
+        case _ => null // too hard to convert to init, re-parse
       }
     }
   }
 
-  private def givenSigAfterColon(name: Name): Option[GivenSig] =
+  private def givenSigAfterColon(name: Name): GivenSig =
     if (isAfterOptNewLine[LeftParen]) {
       val pc = givenTermParamClause()
       if (acceptOpt[RightArrow]) givenSigAfterArrow(name, pc)
-      else Some(GivenSig(name, declType = Some(convertTermParamClauseToType(pc))))
+      else GivenSig(name, declType = convertTermParamClauseToType(pc))
     } else if (isAfterOptNewLine[LeftBracket]) {
       val tpc = givenTypeParamClause()
       accept[RightArrow]
@@ -3803,26 +3896,26 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     } else givenSigOther(name)
 
   // with old syntax deprecated, fold into `givenSigAfterColon`
-  private def givenSigOther(name: => Name): Option[GivenSig] = {
+  private def givenSigOther(name: => Name): GivenSig = {
     val startPos = currIndex
     val tpe = startInfixType(inGivenSig = true)
     if (at[RightArrow]) givenSigOnArrow(name, tpe)
-    else Some(GivenSig(name, declType = Some(tpe), declPos = Some(startPos)))
+    else GivenSig(name, declType = tpe, declPos = startPos)
   }
 
-  private def givenSigOnArrow(name: Name, tpe: Type): Option[GivenSig] = {
+  private def givenSigOnArrow(name: Name, tpe: Type): GivenSig = {
     next()
     givenSigAfterArrow(name, convertTypeToTermParamClause(tpe))
   }
 
-  private def givenSigAfterArrow(name: Name, pc: Term.ParamClause): Option[GivenSig] =
+  private def givenSigAfterArrow(name: Name, pc: Term.ParamClause): GivenSig =
     givenSigAfterArrow(name, atPosEmpty(pc)(emptyTypeParamsRaw), pc)
 
   private def givenSigAfterArrow(
       name: Name,
       tpc: Type.ParamClause,
       pc: Term.ParamClause = null,
-  ): Option[GivenSig] = {
+  ): GivenSig = {
     val pcbuf = new ListBuffer[Term.ParamClause]
     if (pc ne null) pcbuf += pc
     implicit val pcgbuf = new ListBuffer[Member.ParamClauseGroup]
@@ -3834,7 +3927,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       name: Name,
       tpc: Type.ParamClause,
       pcbuf: ListBuffer[Term.ParamClause],
-  )(implicit pcgbuf: ListBuffer[Member.ParamClauseGroup]): Option[GivenSig] = {
+  )(implicit pcgbuf: ListBuffer[Member.ParamClauseGroup]): GivenSig = {
     val arrowPos = prevIndex
     def flushPcBuf(): Unit = {
       val ok = pcbuf.nonEmpty || tpc.is[Quasi] || tpc.nonEmpty
@@ -3843,7 +3936,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
     if (pcbuf.lastOption.exists(!_.nonEmpty)) { // empty clause ends `GivenConditional`
       flushPcBuf()
-      Some(GivenSig(name, pcgbuf.toList))
+      GivenSig(name, pcgbuf.toList)
     } else if (isAfterOptNewLine[LeftParen]) {
       val pc = givenTermParamClause()
       if (acceptOpt[RightArrow]) {
@@ -3851,7 +3944,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         givenSigAfterArrow(name, tpc, pcbuf)
       } else {
         flushPcBuf()
-        Some(GivenSig(name, pcgbuf.toList, Some(convertTermParamClauseToType(pc))))
+        GivenSig(name, pcgbuf.toList, convertTermParamClauseToType(pc))
       }
     } else if (isAfterOptNewLine[LeftBracket]) {
       flushPcBuf()
@@ -3866,7 +3959,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         givenSigAfterArrow(name, tpc, pcbuf)
       } else {
         flushPcBuf()
-        Some(GivenSig(name, pcgbuf.toList, declType = Some(tpe), declPos = Some(startPos)))
+        GivenSig(name, pcgbuf.toList, declType = tpe, declPos = startPos)
       }
     }
   }
@@ -3922,7 +4015,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _ if isDefIntro(currIndex) => nonLocalDefOrDcl()
       case _ => syntaxError("Extension without extension method", currToken)
     }
-    Defn.ExtensionGroup(pcg, body)
+    Defn.ExtensionGroup(Option(pcg), body)
   }
 
   private def funDefRestAfterKwDef(mods: List[Mod]): Stat = {
@@ -3936,7 +4029,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     val paramClauses: List[Member.ParamClauseGroup] =
       if (dialect.allowParamClauseInterleaving) memberParamClauseGroups()
-      else memberParamClauseGroup(isFirst = true).toList
+      else memberParamClauseGroup(isFirst = true) match {
+        case null => Nil
+        case pcg => pcg :: Nil
+      }
 
     def defn(declType: Option[Type]) = Defn.Def(mods, name, paramClauses, declType, expr())
 
@@ -4150,12 +4246,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       allowArgss: Boolean,
       insidePrimaryCtorAnnot: Boolean = false,
       allowBraces: Boolean = false,
-  ): Init = unquoteOpt[Init](!(peek[LeftParen] || allowBraces && peek[LeftBrace]))
-    .getOrElse(initRestAt(currIndex, typeParser)(
-      allowArgss = allowArgss,
-      insidePrimaryCtorAnnot = insidePrimaryCtorAnnot,
-      allowBraces = allowBraces,
-    ))
+  ): Init = unquoteOpt[Init](!(peek[LeftParen] || allowBraces && peek[LeftBrace])) match {
+    case null => initRestAt(currIndex, typeParser)(
+        allowArgss = allowArgss,
+        insidePrimaryCtorAnnot = insidePrimaryCtorAnnot,
+        allowBraces = allowBraces,
+      )
+    case x => x
+  }
 
   /* ---------- SELFS --------------------------------------------- */
 
@@ -4163,8 +4261,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def entrypointSelf(): Self = self(quasiquote = false)
 
-  private def self(quasiquote: Boolean): Self = selfEither(quasiquote)
-    .fold(syntaxError(_, currToken), identity)
+  private def self(quasiquote: Boolean): Self = selfEither(quasiquote) match {
+    case Right(self) => self
+    case Left(msg) => syntaxError(msg, at = currToken)
+  }
 
   private def selfEither(quasiquote: Boolean = false): Either[String, Self] = {
     val startPos = currIndex
@@ -4227,19 +4327,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def templateParentsWithFirst(allowComma: Boolean, allowWithBody: Boolean = false)(
       first: Init,
   ): List[Init] = {
-    def impl(isSeparator: => Boolean) =
-      if (!isSeparator) None
-      else Some(listBy[Init] { x =>
+    def impl(isSeparator: => Boolean)(orElse: => List[Init]) =
+      if (!isSeparator) orElse
+      else listBy[Init] { x =>
         x += first
         doWhile {
           next()
           x += init()
         }(isSeparator)
-      })
+      }
+    def onComma =
+      if (allowComma && dialect.allowCommaSeparatedExtend) impl(at[Comma])(first :: Nil)
+      else first :: Nil
     // whitespace includes Indent and AtEOL
-    (if (allowWithBody) impl(at[KwWith] && !peek[Whitespace, LeftBrace]) else impl(at[KwWith]))
-      .orElse(if (allowComma && dialect.allowCommaSeparatedExtend) impl(at[Comma]) else None)
-      .getOrElse(first :: Nil)
+    if (allowWithBody) impl(at[KwWith] && !peek[Whitespace, LeftBrace])(onComma)
+    else impl(at[KwWith])(onComma)
   }
 
   def templateParents(afterExtend: Boolean = false): List[Init] =
@@ -4287,17 +4389,19 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def entrypointTemplate(): Template = TemplateOwnerContext.within(OwnedByClass)(autoPos(template()))
 
-  def templateOpt(): Template = autoPos(
+  def templateOpt(): Template = autoPos {
     unquoteOpt[Template](peekToken match {
       case _: Dot | _: Hash | _: At | _: Ellipsis | _: LeftParen | _: LeftBracket | _: LeftBrace |
           _: KwWith => false
       case _ => true
-    }).getOrElse {
-      val onExtends =
-        acceptOpt[KwExtends] || (TemplateOwnerContext.owner eq OwnedByTrait) && acceptOpt[Subtype]
-      if (onExtends) template(afterExtend = true) else templateAfterExtends()
-    },
-  )
+    }) match {
+      case null =>
+        val onExtends =
+          acceptOpt[KwExtends] || (TemplateOwnerContext.owner eq OwnedByTrait) && acceptOpt[Subtype]
+        if (onExtends) template(afterExtend = true) else templateAfterExtends()
+      case x => x
+    }
+  }
 
   @inline
   private def emptyTemplateBody(): Template.Body = atCurPosEmpty(Template.Body(None, Nil))
@@ -4328,13 +4432,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def toStatsBlock(startPos: Int)(stats: List[Stat]): Stat.Block =
     autoEndPos(startPos)(toStatsBlockRaw(stats))
 
-  private def refineWith(innerType: Option[Type], statsPos: Int, stats: => List[Stat]) =
-    autoEndPos(innerType)(Type.Refine(innerType, toStatsBlock(statsPos)(stats)))
+  private def refineWith(innerType: Type, statsPos: Int, stats: => List[Stat]) = {
+    val innerTypeOpt = Option(innerType)
+    autoEndPos(innerTypeOpt)(Type.Refine(innerTypeOpt, toStatsBlock(statsPos)(stats)))
+  }
 
-  private def refinement(innerType: Option[Type]): Option[Type] = {
+  private def refinement(innerType: Type): Type = {
     def maybeRefineIndented(startPos: => Int) =
       if (!tryAhead[Indentation.Indent]) innerType
-      else Some(refineWith(innerType, startPos, indented(refineStatSeq())))
+      else refineWith(innerType, startPos, indented(refineStatSeq()))
     currToken match {
       case _ if !dialect.allowSignificantIndentation => refinementInBraces(innerType, -1)
       case _: Colon => maybeRefineIndented(prevIndex)
@@ -4344,7 +4450,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   @tailrec
-  private def refinementInBraces(innerType: Option[Type], minIndent: Int): Option[Type] = {
+  private def refinementInBraces(innerType: Type, minIndent: Int): Type = {
     val notRefined = currToken match {
       case t: LeftBrace => minIndent > 0 && t.pos.startColumn < minIndent &&
         prevToken.pos.endLine < t.pos.endLine
@@ -4352,10 +4458,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _ => true
     }
     if (notRefined) innerType
-    else refinementInBraces(
-      Some(refineWith(innerType, currIndex, inBraces(refineStatSeq()))),
-      minIndent,
-    )
+    else refinementInBraces(refineWith(innerType, currIndex, inBraces(refineStatSeq())), minIndent)
   }
 
   private def existentialTypeOnForSome(t: Type): Type.Existential = {
@@ -4437,7 +4540,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   private def templateStatSeq(): Template.Body = {
-    val selfTreeOpt = tryParse(selfEither().right.toOption)
+    val selfTreeOpt = tryParseOpt(selfEither() match {
+      case Right(self) => Some(self)
+      case _ => None
+    })
     val stats = listBy[Stat] { buf =>
       def getStats() = statSeqBuf(buf, templateStat)
       val wasIndented = getStats() // some stats could be indented relative to self-type
@@ -4650,11 +4756,6 @@ object ScalametaParser {
       case _ => f(tree)
     }
 
-    def becomeOrOpt[A <: Tree: AstInfo](f: T => Option[A]): Option[A] = tree match {
-      case q: Quasi => Some(q.become[A])
-      case _ => f(tree)
-    }
-
   }
 
   private def copyPos[T <: Tree](tree: Tree)(body: T): T = {
@@ -4739,8 +4840,8 @@ object ScalametaParser {
   private case class GivenSig(
       name: Name,
       pcg: List[Member.ParamClauseGroup] = Nil,
-      declType: Option[Type] = None,
-      declPos: Option[Int] = None,
+      declType: Type = null,
+      declPos: Int = -1,
   )
 
   implicit class XtensionToken(private val tok: Token) extends AnyVal {

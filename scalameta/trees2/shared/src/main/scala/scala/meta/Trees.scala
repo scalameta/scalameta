@@ -990,6 +990,7 @@ object Member {
   @branch
   trait SyntaxValuesClause extends Tree {
     def values: List[Tree]
+    final def isEmpty: Boolean = values.isEmpty
     final def nonEmpty: Boolean = values.nonEmpty
   }
 
