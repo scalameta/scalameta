@@ -12,6 +12,14 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
+  private def reprintTwice(code: String, d: Dialect = dialect): (String, String) = {
+    val first = source(code)(d).reprint(d)
+    val second =
+      try source(first)(d).reprint(d)
+      catch { case e: ParseException => e.shortMessage }
+    (first, second)
+  }
+
   private def testBlock(statStr: String, needNL: Boolean, syntaxStr: String = null)(implicit
       loc: munit.Location,
   ): Unit = {
@@ -162,4 +170,80 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
   Seq("true", "'a'", "1.0d", "1.0f", "1", "1L", "null", "\"foo\"", "'foo", "()")
     .foreach(testBlockAddNL(_))
 
+  test("interpolation: this in a part, printed twice") {
+    val code = """object A { val s = s"($this)" }"""
+    val second =
+      """|object A {
+         |  val s = s"(${
+         |    this
+         |  })"
+         |}""".stripMargin
+    assertEquals(reprintTwice(code), ("""object A { val s = s"(${this})" }""", second))
+  }
+
+  test("interpolation: braced name before a letter") {
+    val code = """object A { val s = s"${a}b" }"""
+    val printed =
+      """|object A {
+         |  val s = s"${
+         |    a
+         |  }b"
+         |}""".stripMargin
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("ascription: context function type in parens") {
+    val code = "object A { val x = true: (Int ?=> Boolean) }"
+    val second =
+      """|object A {
+         |  val x = true {
+         |    Int ?=> Boolean
+         |  }
+         |}""".stripMargin
+    val first = "object A { val x = true: Int ?=> Boolean }"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
+  test("ascription: context function type") {
+    val code = "object A { val x = true: Int ?=> Boolean }"
+    val printed =
+      """|object A {
+         |  val x = true {
+         |    Int ?=> Boolean
+         |  }
+         |}""".stripMargin
+    assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
+  }
+
+  test("unary: plus on a literal in parens") {
+    val code = "object A { val x = +(6) }"
+    assertEquals(reprintTwice(code), ("object A { val x = +6 }", "object A { val x = 6 }"))
+  }
+
+  test("unary: minus on a literal in parens") {
+    val code = "object A { val x = -(6) }"
+    val (first, _) = reprintTwice(code)
+    assertEquals(
+      (first, source(first).collect { case x: Lit.Int => x.value }),
+      ("object A { val x = -6 }", List(-6)),
+    )
+  }
+
+  test("unary: tilde on a double in parens") {
+    val code = "object A { val x = ~(1.0) }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = ~1.0 }", Nil))
+  }
+
+  test("postfix: select on a postfix in parens") {
+    val code = "object A { val x = (a b).c }"
+    assertEquals(reprintTwice(code), ("object A { val x = a b.c }", "`;` expected but `.` found"))
+  }
+
+  test("postfix: postfix on a postfix in parens") {
+    val code = "object A { val x = (a b) c }"
+    val printed = "object A { val x = a b c }"
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
 }
