@@ -141,11 +141,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
   }
 
-  @inline
-  def isInlineMatchMod(index: Int): Boolean = soft.KwInline(tokens(index)) &&
-    matchesAfterInlineMatchMod(getNextToken(index))
-
-  private def matchesAfterInlineMatchMod(token: Token): Boolean = token match {
+  private[parsers] def matchesAfterInlineMatchMod(token: Token): Boolean = token match {
     case _: LeftParen | _: LeftBrace | _: KwNew | _: Ident | _: Literal | _: Interpolation.Id |
         _: Xml.Start | _: KwSuper | _: KwThis | _: MacroQuote => true
     case _ => false
