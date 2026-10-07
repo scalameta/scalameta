@@ -113,9 +113,7 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
     assertSameLines(
       tree.reprint,
       """|{
-         |  val x = q"123 + $x + ${
-         |    foo(123)
-         |  } + 456"
+         |  val x = q"123 + $x + ${foo(123)} + 456"
          |  val y = QQQ
          |    $x
          |    $y
@@ -776,18 +774,18 @@ class SyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
   }
 
   Seq(
-    ("${_}", "${\n  _\n}"),
-    ("${x + y.map { _.length }.max}", "${\n  x + y.map {\n    _.length\n  }.max\n}"),
-    ("${_a}", "${\n  _a\n}"),
-    ("${_a}123", "${\n  _a\n}123"),
-    ("${_a} 123", "${\n  _a\n} 123"),
-    ("${_a}_123", "${\n  _a\n}_123"),
-    ("${_a}+123", "${\n  _a\n}+123"),
-    ("${++}", "${\n  ++\n}"),
-    ("${++}123", "${\n  ++\n}123"),
-    ("${++} 123", "${\n  ++\n} 123"),
-    ("${++}_123", "${\n  ++\n}_123"),
-    ("${++}+123", "${\n  ++\n}+123"),
+    ("${_}", "${_}"),
+    ("${x + y.map { _.length }.max}", "${x + y.map {\n  _.length\n}.max}"),
+    ("${_a}", "${_a}"),
+    ("${_a}123", "${_a}123"),
+    ("${_a} 123", "${_a} 123"),
+    ("${_a}_123", "${_a}_123"),
+    ("${_a}+123", "${_a}+123"),
+    ("${++}", "${++}"),
+    ("${++}123", "${++}123"),
+    ("${++} 123", "${++} 123"),
+    ("${++}_123", "${++}_123"),
+    ("${++}+123", "${++}+123"),
   ).foreach { case (codeInterp, termSyntaxInterp) =>
     test(
       s"term interpolator braces: test syntax/parsing consistency: $codeInterp -> $termSyntaxInterp",

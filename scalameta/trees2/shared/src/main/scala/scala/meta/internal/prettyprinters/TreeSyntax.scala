@@ -268,9 +268,9 @@ object TreeSyntax {
             "" -> t.name.value.isIdentSymbolicNonBackquotedInfixOperator
           case _ => " " -> false
         }
-        printSelect(t, sep, bqExpr = backquoteExpr)
+        m(PostfixExpr, s(printSelectLhs(t.qual, backquote = backquoteExpr), sep, t.name))
       case t: Term.Interpolate =>
-        m(SimpleExpr1, printInterpolate(t.prefix, t.parts, t.args)(printBracedExpr))
+        m(SimpleExpr1, printInterpolate(t.prefix, t.parts, t.args)(printInterpolateArg))
       case t: Term.Xml =>
         if (!dialect.allowXmlLiterals)
           throw new UnsupportedOperationException(s"$dialect doesn't support xml literals")
@@ -299,12 +299,15 @@ object TreeSyntax {
         m(sg, s(p(sg, t.lhs), " ", t.op, t.targClause, " ", printApplyArgs(t.argClause, "")))
       case t: Term.ApplyUnary =>
         val needSpace = !t.op.value.lastOption.forall(isOperatorPart)
-        m(PrefixExpr, s(w(t.op, " ", needSpace), p(SimpleExpr, t.arg)))
+        // the parser reads an operator and the literal after it as one literal
+        val isLit = t.arg.is[Lit] && !t.arg.is[Lit.Unit]
+        val arg = if (isLit) s("(", t.arg, ")") else p(SimpleExpr, t.arg)
+        m(PrefixExpr, s(w(t.op, " ", needSpace), arg))
       case t: Term.Assign => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
       case t: Term.Return =>
         m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
       case t: Term.Throw => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
-      case t: Term.Ascribe => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.tpe))
+      case t: Term.Ascribe => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", p(AnyInfixTyp, t.tpe)))
       case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
       case t: Term.Tuple => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
       case t: Term.Block =>
@@ -658,7 +661,7 @@ object TreeSyntax {
         s(p(RefineTyp, tpe), t.argClauses)
 
       // Self
-      case t: Self => w(s(t.name, t.decltpe), " =>")
+      case t: Self => w(s(t.name, t.decltpe.fold(s())(x => s(kw(": "), p(AnyInfixTyp, x)))), " =>")
 
       // Template
       case t: Template =>
@@ -992,6 +995,12 @@ object TreeSyntax {
     private def printBracedExpr(t: Show.Result, useBraces: Boolean = true): Show.Result =
       w("{", t, "}", useBraces)
     private def printBracedExpr(t: Term): Show.Result = printBracedExpr(p(Expr, t), !t.is[Term.Block])
+    // a block of one expression keeps its braces on one line
+    private def printInterpolateArg(t: Term): Show.Result = t match {
+      case b @ Term.Block((stat: Term) :: Nil) if !(comments && b.hasComments) =>
+        printBracedExpr(p(Expr, stat))
+      case _ => printBracedExpr(t)
+    }
 
     private def printInterpolate[A <: Tree](prefix: Term.Name, parts: List[Lit], args: Seq[A])(
         argPrinter: A => Show.Result,

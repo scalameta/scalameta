@@ -3211,9 +3211,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
            |          case _ =>
            |            ex.getMessage
            |        }
-           |        s"[cannot display due to $msg, raw string = ${
-           |          arg.toString
-           |        }]"
+           |        s"[cannot display due to $msg, raw string = ${arg.toString}]"
            |    }
            |  case _ =>
            |    String.valueOf(arg)
@@ -3512,9 +3510,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |""".stripMargin
     val output =
       """|if (indexes.size > 1) {
-         |  val msg = s"ERROR: Multiple index pages for doc found ${
-         |    indexes.map(_.file)
-         |  }"
+         |  val msg = s"ERROR: Multiple index pages for doc found ${indexes.map(_.file)}"
          |  report.error(msg)
          |}
          |""".stripMargin

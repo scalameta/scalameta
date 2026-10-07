@@ -74,11 +74,11 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator braces for operator identifiers") {
     implicit val parseStat: String => Stat = super.templStat
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""", """s"${+++}bar"""")("s\"${\n  +++\n}bar\"")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""", "s\"${+++}_bar\"")("s\"${\n  +++\n}_bar\"")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""", """s"${+++}123"""")("s\"${\n  +++\n}123\"")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""", """s"${+++}***"""")("s\"${\n  +++\n}***\"")
-    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""", "s\"${+++} ***\"")("s\"${\n  +++\n} ***\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}bar"""", """s"${+++}bar"""")("s\"${+++}bar\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}_bar"""", "s\"${+++}_bar\"")("s\"${+++}_bar\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}123"""", """s"${+++}123"""")("s\"${+++}123\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++}***"""", """s"${+++}***"""")("s\"${+++}***\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${+++} ***"""", "s\"${+++} ***\"")("s\"${+++} ***\"")
   }
 
   test("interpolator braces for plain identifiers: check tokens") {
@@ -94,11 +94,11 @@ class QuasiSyntacticSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolator braces for plain identifiers") {
     implicit val parseStat: String => Stat = super.templStat
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""", """s"${foo}bar"""")("s\"${\n  foo\n}bar\"")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""", "s\"${foo}_bar\"")("s\"${\n  foo\n}_bar\"")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""", """s"${foo}123"""")("s\"${\n  foo\n}123\"")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""", """s"${foo}***"""")("s\"${\n  foo\n}***\"")
-    checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""", "s\"${foo} ***\"")("s\"${\n  foo\n} ***\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}bar"""", """s"${foo}bar"""")("s\"${foo}bar\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}_bar"""", "s\"${foo}_bar\"")("s\"${foo}_bar\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}123"""", """s"${foo}123"""")("s\"${foo}123\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo}***"""", """s"${foo}***"""")("s\"${foo}***\"")
+    checkWithOriginalSyntax[Stat](q"""s"$${foo} ***"""", "s\"${foo} ***\"")("s\"${foo} ***\"")
   }
 
   test("Type.Function(Tuple, _) #557") {

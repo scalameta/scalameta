@@ -1142,7 +1142,7 @@ class MinorDottySuite extends BaseDottySuite {
       """|sc.submitJob(rdd, (iter: Iterator[Int]) => iter.toArray, partitions.getOrElse(rdd.partitions.indices), {
          |  case (_, _) =>
          |    return
-         |}: (Int, Array[Int]) => Unit, {
+         |}: ((Int, Array[Int]) => Unit), {
          |  return
          |})
          |""".stripMargin
