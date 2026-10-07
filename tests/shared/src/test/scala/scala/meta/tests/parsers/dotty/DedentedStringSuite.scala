@@ -125,7 +125,7 @@ class DedentedStringSuite extends BaseDottySuite {
     runTestError[Stat](code, error)
     locally {
       implicit val dialect: Dialect = dialectWithFlag
-      runTestAssert[Stat](code, "s\"a ${\n  '''\n  b\n  '''\n} c\"")(
+      runTestAssert[Stat](code, "s\"a ${'''\n  b\n  '''} c\"")(
         Term.Interpolate(tname("s"), List(str("a "), str(" c")), List(Term.Block(List(str("b"))))),
       )
     }

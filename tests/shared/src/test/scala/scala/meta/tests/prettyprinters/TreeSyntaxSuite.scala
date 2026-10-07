@@ -172,36 +172,18 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("interpolation: this in a part, printed twice") {
     val code = """object A { val s = s"($this)" }"""
-    val second =
-      """|object A {
-         |  val s = s"(${
-         |    this
-         |  })"
-         |}""".stripMargin
-    assertEquals(reprintTwice(code), ("""object A { val s = s"(${this})" }""", second))
+    val printed = """object A { val s = s"(${this})" }"""
+    assertEquals(reprintTwice(code), (printed, printed))
   }
 
   test("interpolation: braced name before a letter") {
     val code = """object A { val s = s"${a}b" }"""
-    val printed =
-      """|object A {
-         |  val s = s"${
-         |    a
-         |  }b"
-         |}""".stripMargin
-    assertEquals(reprintTwice(code), (printed, printed))
+    assertEquals(reprintTwice(code), (code, code))
   }
 
   test("ascription: context function type in parens") {
     val code = "object A { val x = true: (Int ?=> Boolean) }"
-    val second =
-      """|object A {
-         |  val x = true {
-         |    Int ?=> Boolean
-         |  }
-         |}""".stripMargin
-    val first = "object A { val x = true: Int ?=> Boolean }"
-    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala3), (code, code))
   }
 
   test("ascription: context function type") {
@@ -217,33 +199,30 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("unary: plus on a literal in parens") {
     val code = "object A { val x = +(6) }"
-    assertEquals(reprintTwice(code), ("object A { val x = +6 }", "object A { val x = 6 }"))
+    assertEquals(reprintTwice(code), (code, code))
   }
 
   test("unary: minus on a literal in parens") {
     val code = "object A { val x = -(6) }"
     val (first, _) = reprintTwice(code)
-    assertEquals(
-      (first, source(first).collect { case x: Lit.Int => x.value }),
-      ("object A { val x = -6 }", List(-6)),
-    )
+    assertEquals((first, source(first).collect { case x: Lit.Int => x.value }), (code, List(6)))
   }
 
   test("unary: tilde on a double in parens") {
     val code = "object A { val x = ~(1.0) }"
     val (first, _) = reprintTwice(code)
     val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
-    assertEquals((first, ops), ("object A { val x = ~1.0 }", Nil))
+    assertEquals((first, ops), (code, List("~")))
   }
 
   test("postfix: select on a postfix in parens") {
     val code = "object A { val x = (a b).c }"
-    assertEquals(reprintTwice(code), ("object A { val x = a b.c }", "`;` expected but `.` found"))
+    assertEquals(reprintTwice(code), (code, code))
   }
 
   test("postfix: postfix on a postfix in parens") {
     val code = "object A { val x = (a b) c }"
-    val printed = "object A { val x = a b c }"
+    val printed = "object A { val x = (a b) c }"
     assertEquals(reprintTwice(code), (printed, printed))
   }
 }

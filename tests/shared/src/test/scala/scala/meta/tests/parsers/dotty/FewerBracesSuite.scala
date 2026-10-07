@@ -1753,7 +1753,7 @@ class FewerBracesSuite extends BaseDottySuite {
         |def a =
         |   foo(using bar: Int => baz)
         |""".stripMargin
-    val layout = "def a = foo(using bar: Int => baz)"
+    val layout = "def a = foo(using bar: (Int => baz))"
     val tree = Defn.Def(
       Nil,
       tname("a"),
