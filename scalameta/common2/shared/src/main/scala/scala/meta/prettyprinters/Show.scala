@@ -117,17 +117,16 @@ private[meta] object Show {
       }
     }
 
-    private def blank(newAfterEOL: Int): Unit = {
+    def blank(): Unit = nl(-1)
+
+    private def nl(newAfterEOL: Int): Unit = {
       val p = takePending()
       if ((delay ne null) && delay.length() != 0) emitPending(p) else indentPending(p)
       appendDelay()
       sb.append(EOL)
       afterEOL = newAfterEOL
     }
-
-    def blank(): Unit = blank(-1)
-
-    def nl(): Unit = if (afterEOL <= 0) blank(1)
+    def nl(): Unit = if (afterEOL <= 0) nl(1)
 
     private def taskRun(task: => Unit): Result = new Run(() => task)
 
