@@ -520,4 +520,5 @@ class EnumSuite extends BaseDottySuite {
 
   private def enumWithCase(name: String, enumCase: Stat) = Defn
     .Enum(Nil, pname(name), Nil, EmptyCtor(), tpl(enumCase))
+
 }

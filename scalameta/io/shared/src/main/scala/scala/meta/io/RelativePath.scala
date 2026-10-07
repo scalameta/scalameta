@@ -9,6 +9,7 @@ import java.nio.{file => nio}
 
 /** Wrapper around a relative nio.Path. */
 sealed abstract case class RelativePath(toNIO: Path) {
+
   require(!toNIO.isAbsolute, s"$toNIO is not relative!")
   def toFile: File = toNIO.toFile
   def toURI(isDirectory: Boolean): URI = RelativePath.toURI(toNIO, isDirectory)
@@ -36,6 +37,7 @@ sealed abstract case class RelativePath(toNIO: Path) {
 
   /** The last path segment, or "" if the path is empty. */
   def fileName: String = Option(toNIO.getFileName).fold("")(_.toString)
+
 }
 
 object RelativePath {

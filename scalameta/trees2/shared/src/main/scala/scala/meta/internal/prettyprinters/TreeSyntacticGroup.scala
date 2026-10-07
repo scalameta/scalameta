@@ -15,6 +15,7 @@ sealed trait TreeSyntacticGroup {
 }
 
 object TreeSyntacticGroup {
+
   trait InfixGroup extends TreeSyntacticGroup {
     def ai: Member.Infix
   }

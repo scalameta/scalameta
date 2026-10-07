@@ -97,4 +97,5 @@ class StatSubtypeExtractionTest extends FunSuite {
     assert(stats.exists(_.isEqual(q"type Foo")))
     assertEquals(stats.size, 1)
   }
+
 }

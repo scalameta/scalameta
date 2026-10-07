@@ -4,6 +4,7 @@ import scala.meta.tokens.Token
 
 // NOTE: public methods of TokenIterator return scannerTokens-based positions
 trait TokenIterator {
+
   def hasCurr: Boolean
   def next(): Unit
   def fork: TokenIterator
@@ -21,4 +22,5 @@ trait TokenIterator {
   def peekToken: Token
   def peekIndex: Int
   def peekRegions: List[SepRegion]
+
 }

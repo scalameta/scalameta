@@ -18,6 +18,7 @@ trait Liftables {
 }
 
 class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with AstReflection {
+
   import c.universe._
 
   lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply"))
@@ -126,4 +127,5 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
   }
   private def liftField(value: Tree, tpe: Tree): Tree =
     q"_root_.scala.Predef.implicitly[c.universe.Liftable[$tpe]].apply($value)"
+
 }

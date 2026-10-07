@@ -11,6 +11,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.reflect.NameTransformer
 
 object Scalalib {
+
   lazy val synthetics: List[ClassfileInfos] = List(
     Scalalib.anyClass,
     Scalalib.anyValClass,
@@ -194,4 +195,5 @@ object Scalalib {
     )
     List(method) ++ tparams ++ params
   }
+
 }

@@ -23,6 +23,7 @@ import scala.reflect.macros.whitebox.Context
 import scala.runtime.ScalaRunTime
 
 class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables with AstLiftables {
+
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
 
@@ -403,4 +404,5 @@ class ReificationMacros(val c: Context) extends AstReflection with AdtLiftables 
         internalResult
     }
   }
+
 }

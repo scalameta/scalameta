@@ -7,6 +7,7 @@ import java.nio.file.Path
 
 // obtained implementation by experimentation on the JDK.
 class File(path: String) {
+
   def this(parent: String, child: String) = this(parent + File.separator + child)
   def this(parent: File, child: String) = this(parent.getPath, child)
   def this(uri: URI) = this(
@@ -34,6 +35,7 @@ class File(path: String) {
   def isFile: Boolean = JSIO.isFile(path)
   def isDirectory: Boolean = JSIO.isDirectory(path)
   override def toString: String = path
+
 }
 
 object File {

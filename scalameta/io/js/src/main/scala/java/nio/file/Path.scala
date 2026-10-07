@@ -5,6 +5,7 @@ import java.net.URI
 
 // obtained interface by experimentation on the JDK.
 trait Path extends Iterable[Path] {
+
   def isAbsolute: Boolean
   def getRoot: Path
   def getFileName: Path
@@ -26,4 +27,5 @@ trait Path extends Iterable[Path] {
   def toAbsolutePath: Path
   def toFile: java.io.File
   def toRealPath(): Path
+
 }

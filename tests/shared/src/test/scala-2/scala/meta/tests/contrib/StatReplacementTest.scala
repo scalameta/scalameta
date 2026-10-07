@@ -7,6 +7,7 @@ import scala.meta.contrib._
 import munit.FunSuite
 
 class StatReplacementTest extends FunSuite {
+
   val methodDef = q"def foo = 1"
   val lit = q"1"
 
@@ -65,4 +66,5 @@ class StatReplacementTest extends FunSuite {
     val newVar = q"def foo = 2".withStats(methodDef :: Nil)
     assert(newVar.extract[Stat].head.isEqual(methodDef))
   }
+
 }

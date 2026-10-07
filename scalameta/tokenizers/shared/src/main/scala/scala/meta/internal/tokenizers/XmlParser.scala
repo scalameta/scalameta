@@ -25,6 +25,7 @@ private[meta] class XmlParser(dialect: Dialect) {
   def XmlPattern[A: P]: P0 = P(Xml.ElemPattern)
 
   private[this] object Xml {
+
     def Element[A: P] = P(TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag)) // FIXME tag must be balanced
     def TagHeader[A: P] = P("<" ~ Name ~/ (S ~ Attribute).rep ~ S.?)
     def ETag[A: P] = P("</" ~ Name ~ S.? ~ ">")
@@ -122,6 +123,7 @@ private[meta] class XmlParser(dialect: Dialect) {
         case _ => ch == '_'
       }
     }
+
   }
 }
 

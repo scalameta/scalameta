@@ -10,6 +10,7 @@ import scala.tools.nsc.interactive.{Global => InteractiveGlobal}
 import scala.tools.nsc.interpreter.ReplGlobal
 
 trait ReflectionToolkit {
+
   val global: Global
   import global._
   lazy val g: global.type = global
@@ -65,6 +66,7 @@ trait ReflectionToolkit {
   }
 
   class Metadata[T: Attachable](carrier: T) {
+
     def toMap: Map[String, Any] = carrier.attachments.get[java.util.HashMap[String, Any]]
       .map(_.toScala).getOrElse(Map[String, Any]())
     def toOption: Option[Map[String, Any]] = carrier.attachments.get[java.util.HashMap[String, Any]]
@@ -91,6 +93,7 @@ trait ReflectionToolkit {
     def --=(other: List[String]): Unit = transform(_ -- other)
     def --=(other: Metadata[T]): Unit = transform(_ -- other.toMap.keys)
     override def toString = toMap.toString
+
   }
 
   class CompilationUnitCache(unit: CompilationUnit) {
@@ -176,4 +179,5 @@ trait ReflectionToolkit {
     def unapply[T: Attachable](carrier: T) = carrier.metadata.get("selectOriginal")
       .map(_.asInstanceOf[Tree])
   }
+
 }

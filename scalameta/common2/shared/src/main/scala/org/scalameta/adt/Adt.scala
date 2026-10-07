@@ -199,6 +199,7 @@ object AdtTyperMacros {
 
 // NOTE: can't call this `AdtTyperMacros`, because then typechecking the macro defs will produce spurious cyclic errors
 class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
+
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
 
@@ -255,4 +256,5 @@ class AdtTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpe
 
     q"()"
   }
+
 }

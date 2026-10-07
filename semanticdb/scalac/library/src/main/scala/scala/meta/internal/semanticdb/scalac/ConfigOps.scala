@@ -48,6 +48,7 @@ case class SemanticdbConfig(
 
 }
 object SemanticdbConfig {
+
   val pluginName = "semanticdb"
 
   def default = SemanticdbConfig(
@@ -167,6 +168,7 @@ object SemanticdbConfig {
     }
     config
   }
+
 }
 
 sealed abstract class FailureMode {

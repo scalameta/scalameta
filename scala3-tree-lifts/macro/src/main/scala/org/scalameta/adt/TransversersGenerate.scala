@@ -11,6 +11,7 @@ object TransversersGenerate {
 }
 
 class TransversersGenerateMacros(val c: Context) extends GenerateHelper with AstReflection {
+
   import c.universe._
 
   private lazy val TermAdt = mirror.staticClass("scala.meta.Term").asAdt
@@ -220,4 +221,5 @@ class TransversersGenerateMacros(val c: Context) extends GenerateHelper with Ast
 
     mkStringList(header, termApply, typeApply, defnApply, restApply, footer)
   }
+
 }

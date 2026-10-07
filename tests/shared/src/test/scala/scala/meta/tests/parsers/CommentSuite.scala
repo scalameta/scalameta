@@ -3,6 +3,7 @@ package scala.meta.tests.parsers
 import scala.meta._
 
 class CommentSuite extends ParseSuite {
+
   implicit val dialect: Dialect = dialects.Scala213
 
   test("class: comment after name, extends on the next line") {

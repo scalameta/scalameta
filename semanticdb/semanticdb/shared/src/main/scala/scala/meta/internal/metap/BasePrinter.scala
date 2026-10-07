@@ -12,6 +12,7 @@ abstract class BasePrinter(
     val doc: TextDocument,
     val symtab: PrinterSymtab,
 ) {
+
   def out: PrintStream = reporter.out
 
   def rep[T](pre: String, xs: Seq[T], sep: String, suf: String)(f: T => Unit): Unit =
@@ -68,4 +69,5 @@ abstract class BasePrinter(
   def opt(s: String, suf: String)(f: String => Unit): Unit = opt("", s, suf)(f)
 
   def opt(s: String)(f: String => Unit): Unit = opt("", s, "")(f)
+
 }

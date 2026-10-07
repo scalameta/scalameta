@@ -104,4 +104,5 @@ object PlatformFileIO {
   def newFileSystem(uri: URI, map: java.util.Map[String, _] = new util.HashMap()): FileSystem =
     try FileSystems.newFileSystem(uri, map)
     catch { case _: FileSystemAlreadyExistsException => FileSystems.getFileSystem(uri) }
+
 }

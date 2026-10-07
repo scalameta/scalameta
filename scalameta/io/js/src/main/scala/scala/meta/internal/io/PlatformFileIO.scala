@@ -10,6 +10,7 @@ import java.nio.file.Paths
 import scala.scalajs.js.JSConverters._
 
 object PlatformFileIO {
+
   def newInputStream(uri: URI): InputStream = new ByteArrayInputStream(readAllBytes(uri))
 
   def readAllBytes(uri: URI): Array[Byte] =
@@ -81,4 +82,5 @@ object PlatformFileIO {
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
       f: AbsolutePath => T,
   ): T = throw new UnsupportedOperationException("Can't expand jar file in Scala.js")
+
 }

@@ -6,6 +6,7 @@ package tokenizers
 // type LegacyToken = Int
 
 private[meta] object LegacyToken {
+
   def isIdentifier(code: LegacyToken) = code == IDENTIFIER // used by ide
   def isLiteral(code: LegacyToken) = code >= CHARLIT && code <= INTERPOLATIONID
 
@@ -202,4 +203,5 @@ private[meta] object LegacyToken {
     keywordMap.foreach { case (k, v) => m.put(k, v) }
     m
   }
+
 }

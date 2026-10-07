@@ -7,6 +7,7 @@ import scala.meta.internal.trees._
 import munit._
 
 class TreeSuite extends TreeSuiteBase {
+
   test("Name.unapply") {
     assert(Name.unapply(Term.Name("a")).contains("a"))
     assert(Name.unapply(Type.Name("a")).contains("a"))
@@ -128,4 +129,5 @@ class TreeSuite extends TreeSuiteBase {
     assertEquals(all.map(_.hasNewlinesAfter), List(false, false, false, false, true))
     assertEquals(all.map(_.hasNewlinesBeforeOrAfter), List(false, true, true, false, true))
   }
+
 }

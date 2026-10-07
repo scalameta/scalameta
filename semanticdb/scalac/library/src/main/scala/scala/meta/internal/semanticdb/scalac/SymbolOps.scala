@@ -149,6 +149,7 @@ trait SymbolOps {
   }
 
   implicit class XtensionGSymbol(sym: g.Symbol) {
+
     def ssym: String = sym.toSemantic
     def self: g.Type = sym.thisSym.info match {
       case g.RefinedType(List(_, self), _) if sym.thisSym != sym => self
@@ -212,6 +213,7 @@ trait SymbolOps {
     def isDefaultParameter: Boolean = sym.hasFlag(gf.DEFAULTPARAM) && sym.hasFlag(gf.PARAM)
     def isDefaultMethod: Boolean = sym.isJavaDefined && sym.owner.isInterface && !sym.isDeferred &&
       !sym.isStatic
+
   }
 
   private lazy val idCache = new mutable.HashMap[String, Int]
@@ -235,4 +237,5 @@ trait SymbolOps {
         if (minput == m.Input.None) Symbols.None
         else Symbols.Local(idCache.updateWithRemap(minput.text)(_.fold(0)(_ + 1)))
     }
+
 }

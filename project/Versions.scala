@@ -4,6 +4,7 @@ package build
 import scala.collection.mutable
 
 object Versions {
+
   val Scala2ReleaseCandidate = "" // type the entire RC version here, e.g. "2.13.19-RC1"
   val Scala212Versions = getVersions2(12, 18 to 21)
   val Scala213Versions = getVersions2(13, 15 to 18)

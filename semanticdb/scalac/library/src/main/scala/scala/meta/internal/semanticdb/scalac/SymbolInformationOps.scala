@@ -14,6 +14,7 @@ trait SymbolInformationOps {
   import g._
 
   implicit class XtensionGSymbolMSymbolInformation(gsym0: g.Symbol) {
+
     private val gsym: g.Symbol =
       if (gsym0.isJavaClass) gsym0.companionClass
       else if (gsym0.isModuleClass) gsym0.asClass.module
@@ -211,5 +212,6 @@ trait SymbolInformationOps {
     )
     def toSymbolInformation(linkMode: LinkMode): s.SymbolInformation =
       toSymbolInfo(linkMode, gsym.ssym)
+
   }
 }

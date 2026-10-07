@@ -12,6 +12,7 @@ private[meta] trait Api {
 
   // apply methods
   extension (inline sc: StringContext) {
+
     transparent inline def q(inline args: Any*): Tree = ${ ReificationMacros.statImpl('sc, 'args) }
     transparent inline def param(inline args: Any*): Term.Param =
       ${ ReificationMacros.termParamImpl('sc, 'args) }
@@ -33,10 +34,12 @@ private[meta] trait Api {
       ${ ReificationMacros.importeeImpl('sc, 'args) }
     transparent inline def source(inline args: Any*): Source =
       ${ ReificationMacros.sourceImpl('sc, 'args) }
+
   }
 
   // unapply methods
   extension (stringContext: scala.StringContext)
+
     @annotation.compileTimeOnly(
       ".q should not be called directly. Use q\"...\" string interpolation.",
     )
@@ -138,6 +141,7 @@ private[meta] trait Api {
   object XTensionQuasiquoteSource {
     private[meta] def parse(implicit input: inputs.Input, dialect: Dialect) = Api.parseAny[Source]
   }
+
 }
 
 private[meta] object Api {

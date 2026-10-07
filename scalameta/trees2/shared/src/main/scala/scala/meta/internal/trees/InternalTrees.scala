@@ -152,6 +152,7 @@ trait InternalTree extends Product {
 
   private def textOpt: Option[String] = origin.textOpt.orElse(syntaxTextOpt)
   private lazy val syntaxTextOpt: Option[String] = origin.dialectOpt.map(reprintSyntax)
+
 }
 
 trait InternalTreeXtensions {

@@ -36,6 +36,7 @@ sealed trait Position extends InputRange {
 
 object Position {
   case object None extends Position {
+
     def input = Input.None
     def start = -1
     def startLine = -1
@@ -47,6 +48,7 @@ object Position {
     def lastColumn = -1
     def text = ""
     override def toString = "Position.None"
+
   }
 
   final case class Range(input: Input, start: Int, end: Int) extends Position {

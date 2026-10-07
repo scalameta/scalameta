@@ -4,6 +4,7 @@ package parsers
 import scala.meta._
 
 class ModSuite extends ParseSuite {
+
   test("implicit") {
     assertTree(
       templStat("implicit object A"),

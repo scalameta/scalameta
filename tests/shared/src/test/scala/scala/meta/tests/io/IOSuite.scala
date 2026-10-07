@@ -7,6 +7,7 @@ import scala.meta.internal.io._
 import munit.FunSuite
 
 class IOSuite extends FunSuite {
+
   val buildSbt: AbsolutePath = RelativePath("build.sbt").toAbsolute
 
   test("PathIO.workingDirectory") {

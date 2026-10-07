@@ -16,6 +16,7 @@ package object semanticdb {
 
   implicit class XtensionSemanticdbSymbolInformation(private val info: SymbolInformation)
       extends AnyVal {
+
     def isScala: Boolean = isLang(l.SCALA)
     def isJava: Boolean = isLang(l.JAVA)
 
@@ -83,6 +84,7 @@ package object semanticdb {
     private def hasAnyProperties(bitmask: Int): Boolean = (info.properties & bitmask) != 0
     @inline
     private def hasProperty(prop: p): Boolean = hasAnyProperties(prop.value)
+
   }
 
   implicit class XtensionSemanticdbScope(private val scope: Scope) extends AnyVal {

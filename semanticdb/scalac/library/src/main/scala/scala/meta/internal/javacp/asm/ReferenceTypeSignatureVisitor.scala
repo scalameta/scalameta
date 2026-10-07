@@ -5,6 +5,7 @@ import scala.meta.internal.javacp._
 import scala.tools.asm.signature.SignatureVisitor
 
 class ReferenceTypeSignatureVisitor extends TypedSignatureVisitor[Option[ReferenceTypeSignature]] {
+
   private var arrayTypeSignatureVisitor: JavaTypeSignatureVisitor = _
   private var typeVariable: TypeVariableSignature = _
   private val simpleClassTypeSignatures = List.newBuilder[SimpleClassTypeSignatureBuilder]

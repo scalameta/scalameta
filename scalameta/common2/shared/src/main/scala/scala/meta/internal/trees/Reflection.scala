@@ -9,6 +9,7 @@ import scala.collection.mutable
 import scala.language.implicitConversions
 
 trait Reflection extends AdtReflection {
+
   import u.Flag._
   import u._
   import u.internal._
@@ -109,4 +110,5 @@ trait Reflection extends AdtReflection {
       astClassDetector.result.toList
     }
   }
+
 }

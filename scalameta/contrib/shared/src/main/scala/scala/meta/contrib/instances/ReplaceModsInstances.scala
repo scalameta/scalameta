@@ -4,6 +4,7 @@ import scala.meta._
 import scala.meta.contrib._
 
 trait ReplaceModsInstances {
+
   implicit val replaceClassMods: Replace[Defn.Class, Mod] = Replace((a, bs) => a.copy(mods = bs))
 
   implicit val replaceTraitMods: Replace[Defn.Trait, Mod] = Replace((a, bs) => a.copy(mods = bs))
@@ -29,6 +30,7 @@ trait ReplaceModsInstances {
   implicit val replaceDeclValMod: Replace[Decl.Val, Mod] = Replace((a, bs) => a.copy(mods = bs))
 
   implicit val replaceDeclTypeMod: Replace[Decl.Type, Mod] = Replace((a, bs) => a.copy(mods = bs))
+
 }
 
 object ReplaceModsInstances extends ReplaceModsInstances

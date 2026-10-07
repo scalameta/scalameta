@@ -12,6 +12,7 @@ import scala.util.control.NonFatal
 
 trait SemanticdbPipeline extends SemanticdbOps {
   self: SemanticdbPlugin =>
+
   implicit class XtensionURI(uri: URI) {
     def toFile: File = new File(uri)
   }
@@ -150,4 +151,5 @@ trait SemanticdbPipeline extends SemanticdbOps {
       println(performanceOverheadMessage)
     }
   }
+
 }

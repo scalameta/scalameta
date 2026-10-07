@@ -11,6 +11,7 @@ import scala.meta.tests.metacp.Library
 import munit.FunSuite
 
 abstract class PrintSuiteBase extends FunSuite {
+
   val symtab = GlobalSymbolTable(Library.scalaLibrary.classpath(), includeJdk = true)
 
   val compiler = InteractiveSemanticdb.newCompiler()

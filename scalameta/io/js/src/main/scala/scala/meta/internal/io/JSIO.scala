@@ -90,6 +90,7 @@ object JSFs extends js.Any {
 
   /** moves files */
   def renameSync(oldPath: String, newPath: String): Unit = js.native
+
 }
 
 @js.native
@@ -132,6 +133,7 @@ class JSStats extends js.Any {
 @js.native
 @JSImport("path", JSImport.Namespace)
 object JSPath extends js.Any {
+
   def sep: String = js.native
   def delimiter: String = js.native
   def isAbsolute(path: String): Boolean = js.native
@@ -143,6 +145,7 @@ object JSPath extends js.Any {
   def root: String = js.native
   def relative(from: String, to: String): String = js.native
   def join(first: String, more: String*): String = js.native
+
 }
 
 @js.native
@@ -157,6 +160,7 @@ trait ParsedPath extends js.Object {
 }
 
 object JSIO {
+
   private[io] val process: JSProcess = js.Dynamic.global.process.asInstanceOf[JSProcess]
   def isNode = !js.isUndefined(process) && !js.isUndefined(process.cwd())
 

@@ -12,6 +12,7 @@ trait Unlift[I, O] extends Convert[I, Option[O]] {
 }
 
 object Unlift {
+
   def apply[I, O](pf: PartialFunction[I, O]): Unlift[I, O] = new Unlift[I, O] {
     def apply(x: I): Option[O] = pf.lift(x)
   }

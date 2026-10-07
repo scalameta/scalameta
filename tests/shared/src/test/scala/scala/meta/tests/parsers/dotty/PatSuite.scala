@@ -5,6 +5,7 @@ import scala.meta._
 import scala.meta.tests.parsers.ParseSuite
 
 class PatSuite extends ParseSuite {
+
   import Pat._
 
   private def assertPat(expr: String)(

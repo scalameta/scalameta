@@ -16,10 +16,12 @@ import scala.collection.mutable.ListBuffer
 import scala.reflect.{ClassTag, classTag}
 
 object TreeSyntax {
+
   import Show.{alt, blank, function => fn, indent => i, literal => lit, meta => m, newline => n,
     nosplit => nosp, opt => o, repeat => r, sequence => s, spacen => spn, wrap => w}
 
   private final class SyntaxInstances(comments: Boolean)(implicit dialect: Dialect) {
+
     val keywords = tokenizers.keywords(dialect)
     import TreeSyntacticGroup._
 
@@ -1125,4 +1127,5 @@ object TreeSyntax {
     },
     printEndComments(tree, if (layout) printEndComments else printEndCommentsPlain),
   )
+
 }

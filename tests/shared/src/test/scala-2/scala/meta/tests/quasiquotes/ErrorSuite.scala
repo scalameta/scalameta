@@ -19,6 +19,7 @@ import typecheckError.Options.WithPositions
 // test("...$ in Pat.Extract") { ... } and test("...$ in Pat.ExtractInfix")  { .. }.
 
 class ErrorSuite extends TreeSuiteBase {
+
   test("val q\"type name[A] = B\"") {
     assertNoDiff(
       typecheckError(
@@ -865,4 +866,5 @@ class ErrorSuite extends TreeSuiteBase {
          |""".stripMargin,
     )
   }
+
 }

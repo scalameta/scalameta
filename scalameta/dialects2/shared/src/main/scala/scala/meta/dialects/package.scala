@@ -1,6 +1,7 @@
 package scala.meta
 
 package object dialects {
+
   implicit val Scala210: Dialect = new Dialect(
     allowAtForExtractorVarargs = true,
     allowCaseClassWithoutParameterList = true,

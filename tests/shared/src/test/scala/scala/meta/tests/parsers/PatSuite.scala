@@ -5,6 +5,7 @@ import org.scalameta.invariants.InvariantFailedException
 import scala.meta._
 
 class PatSuite extends ParseSuite {
+
   import Pat._
 
   implicit val dialect: Dialect = dialects.Scala211

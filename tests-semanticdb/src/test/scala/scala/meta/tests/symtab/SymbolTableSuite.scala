@@ -9,6 +9,7 @@ import scala.meta.tests.metacp.Library
 import munit.FunSuite
 
 class SymbolTableSuite extends FunSuite {
+
   private val classpath = Library.scalaLibrary.classpath() ++
     Classpath(BuildInfo.databaseClasspath +: BuildInfo.classDirectories: _*)
 

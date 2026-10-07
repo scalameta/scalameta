@@ -114,4 +114,5 @@ class DeclSuite extends ParseSuite {
        |}""".stripMargin,
     "end // commentX",
   ))
+
 }

@@ -4,6 +4,7 @@ package quasiquotes
 import scala.meta.internal.trees.quasiquote
 
 private[meta] trait Api {
+
   @quasiquote[Ctor, Stat]("q")
   implicit class XtensionQuasiquoteTerm(ctx: StringContext)
   @quasiquote[Term.Param]("param")
@@ -30,4 +31,5 @@ private[meta] trait Api {
   implicit class XtensionQuasiquoteImportee(ctx: StringContext)
   @quasiquote[Source]("source")
   implicit class XtensionQuasiquoteSource(ctx: StringContext)
+
 }

@@ -4,12 +4,14 @@ package internal
 import scala.annotation.tailrec
 
 trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder with ImplTransformers {
+
   import scala.reflect.internal.Flags._
 
   import c.universe._
   import c.universe.definitions._
 
   implicit class XtensionModifiers(mods: Modifiers) {
+
     def transformFlags(fn: Long => Long): Modifiers = {
       val flags1 = fn(mods.flags.asInstanceOf[Long]).asInstanceOf[FlagSet]
       Modifiers(flags1, mods.privateWithin, mods.annotations)
@@ -23,6 +25,7 @@ trait MacroHelpers extends DebugFinder with MacroCompat with FreeLocalFinder wit
     def unVariant = mods.transformFlags(_ & ~COVARIANT & ~CONTRAVARIANT)
     def unOverride = mods.transformFlags(_ & ~OVERRIDE)
     def unDefault = mods.transformFlags(_ & ~DEFAULTPARAM)
+
   }
 
   implicit class XtensionSymbol(sym: Symbol) {

@@ -403,4 +403,5 @@ class InlineSuite extends BaseDottySuite {
       blk(Defn.Def(List(Mod.Implicit(), Mod.Inline()), tname("qm"), Nil, Nil, None, tname("???"))),
     ))
   }
+
 }

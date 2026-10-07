@@ -225,4 +225,5 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val printed = "object A { val x = (a b) c }"
     assertEquals(reprintTwice(code), (printed, printed))
   }
+
 }

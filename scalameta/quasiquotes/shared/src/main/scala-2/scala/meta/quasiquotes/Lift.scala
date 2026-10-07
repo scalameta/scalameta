@@ -9,6 +9,7 @@ import scala.annotation.implicitNotFound
 trait Lift[O, I] extends Convert[O, I]
 
 object Lift {
+
   def apply[O, I](f: O => I): Lift[O, I] = new Lift[O, I] {
     def apply(x: O): I = f(x)
   }

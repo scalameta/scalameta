@@ -7,6 +7,7 @@ import scala.language.implicitConversions
 
 object CommonTrees {
   trait LowPriorityDefinitions {
+
     final def nameOrCapset[A](name: String, fname: String => A, fcapset: String => A): A = {
       val withoutSuffix = name.stripSuffix("^")
       if (name eq withoutSuffix) fname(name) else fcapset(withoutSuffix)
@@ -46,6 +47,7 @@ object CommonTrees {
 }
 
 trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
+
   object Nothing {
     def unapply(tree: Tree): Boolean = tree match {
       case Type.Name("Nothing") => true

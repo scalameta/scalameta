@@ -24,6 +24,7 @@ trait Token extends InternalToken with InputRange {
 }
 
 object Token {
+
   @branch
   trait MultiToken extends Token {
     def tokens: List[Token]

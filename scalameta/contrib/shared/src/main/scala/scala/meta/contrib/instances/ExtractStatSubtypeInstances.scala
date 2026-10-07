@@ -4,6 +4,7 @@ import scala.meta._
 import scala.meta.contrib._
 
 trait ExtractStatSubtypeInstances {
+
   implicit def extractDefsFromStats[A](implicit ev: Extract[A, Stat]): Extract[A, Defn.Def] =
     Extract(a => ev.extract(a).collect { case d: Defn.Def => d })
 
@@ -48,6 +49,7 @@ trait ExtractStatSubtypeInstances {
 
   implicit def extractDeclTypesFromStats[A](implicit ev: Extract[A, Stat]): Extract[A, Decl.Type] =
     Extract(a => ev.extract(a).collect { case v: Decl.Type => v })
+
 }
 
 object ExtractStatSubtypeInstances extends ExtractStatSubtypeInstances
