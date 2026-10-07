@@ -329,7 +329,7 @@ object TreeSyntax {
             block(s("(", r(params, ", "), ") =>"), stats)
           // a commented block keeps its braces, so the comments stay its own when parsed again
           case _ if isCaseBody(t) && !t.hasComments => printStats(t.stats, indent = false)
-          case _ => block(s(), t.stats)
+          case _ => m(SimpleExpr, printBlock(t, t.stats))
         }
       case t: Term.If =>
         val needParens: Boolean = t.thenp match {
@@ -640,7 +640,7 @@ object TreeSyntax {
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = macro ", t.body)
-      case t: Pkg.Body => if (t.stats.isEmpty) s("{}") else s("{", t.stats, n("}"))
+      case t: Pkg.Body => printBlock(t, t.stats)
       case t: Pkg =>
         val body = if (guessHasBraces(t)) s(" ", t.body) else r(t.body.stats.map(n(_)))
         s(kw("package"), " ", t.ref, body)
@@ -812,7 +812,7 @@ object TreeSyntax {
         s(o(shebang, EOL), r(t.stats, EOL))
       case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
 
-      case t: Stat.Block => if (t.stats.isEmpty) s("{}") else s("{", t.stats, n("}"))
+      case t: Stat.Block => printBlock(t, t.stats)
 
       case t: Tree.Comment => printComment(t)
       // in reality, this shouldn't really be called directly as it might be printed incorrectly
@@ -879,6 +879,8 @@ object TreeSyntax {
       val nameType = if (t.isNameAnonymous) o(t.decltpe) else s(t.name, t.decltpe)
       s(w(mods, " "), nameType, o(" = ", t.default))
     }
+    private def printBlock(t: Tree, stats: List[Stat]): Show.Result =
+      if (stats.isEmpty) s("{}") else s("{", stats, n("}"))
     implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax(r(_, " "))
     private def printParams(t: Term.ParamClause, needParens: Boolean = true): Show.Result = {
       val v = t.values
