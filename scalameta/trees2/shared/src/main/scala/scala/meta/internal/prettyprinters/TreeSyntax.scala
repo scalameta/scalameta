@@ -16,8 +16,8 @@ import scala.collection.mutable.ListBuffer
 import scala.reflect.{ClassTag, classTag}
 
 object TreeSyntax {
-  import Show.{alt, blank, function => fn, indent => i, meta => m, newline => n, nosplit => nosp,
-    opt => o, repeat => r, sequence => s, spacen => spn, wrap => w}
+  import Show.{alt, blank, function => fn, indent => i, literal => lit, meta => m, newline => n,
+    nosplit => nosp, opt => o, repeat => r, sequence => s, spacen => spn, wrap => w}
 
   private final class SyntaxInstances(comments: Boolean)(implicit dialect: Dialect) {
     val keywords = tokenizers.keywords(dialect)
@@ -1024,7 +1024,7 @@ object TreeSyntax {
         val part = partsIter.next()
         val notLast = partsIter.hasNext
         require(notLast == argsIter.hasNext, s"$what has more parts than args")
-        res += { if (notLast) s(part, f(argsIter.next())) else s(part) }
+        res += { if (notLast) s(lit(part), f(argsIter.next())) else lit(part) }
       }
       s(res.result(): _*)
     }
