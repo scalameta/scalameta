@@ -259,7 +259,7 @@ object TreeSyntax {
       case t: Term.Super => m(Path, s(w(t.thisp, "."), kw("super"), w("[", t.superp, "]")))
       case t: Term.Name => m(Path, printMaybeBackquoted(t))
       case t: Term.CapSetName => m(Path, s(printMaybeBackquoted(t), "^"))
-      case t: Term.Select => printSelect(t, ".")
+      case t: Term.Select => m(Path, s(printSelectLhs(t.qual), ".", t.name))
       case t: Term.SelectPostfix =>
         val (sep, backquoteExpr) = t.qual match {
           case q: Term.Name // if it looks like a leading infix, don't use space
@@ -982,9 +982,6 @@ object TreeSyntax {
       case t: Term.Name if backquote => withComments(t)(printBackquoted(t, isBackquoted = true))
       case t => p(SimpleExpr, t)
     }
-
-    private def printSelect(t: Term.SelectLike, sep: String, bqExpr: Boolean = false) =
-      m(Path, s(printSelectLhs(t.qual, backquote = bqExpr), sep, t.name))
 
     private def printMacroExprBody(t: Term, prefix: String) = {
       val body = t match {
