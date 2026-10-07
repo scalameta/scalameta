@@ -54,7 +54,7 @@ object Positions {
           )
         case el: None.type => s("None".colored(color))
         case el: Some[_] => s("Some(".colored(color), loopField(el.get, color), ")".colored(color))
-        case el => s(el.toString.colored(color))
+        case el => Show.literal(el.toString.colored(color))
       }
       def pos(x: Tree): String =
         if (x.pos != Position.None) s"{${x.pos.start}..${x.pos.end}}".sliced(x.toString) else ""

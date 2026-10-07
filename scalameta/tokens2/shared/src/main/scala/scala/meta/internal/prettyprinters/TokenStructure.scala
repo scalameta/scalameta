@@ -3,7 +3,7 @@ package internal
 package prettyprinters
 
 import scala.meta.internal.tokens.Chars
-import scala.meta.prettyprinters.Show.{sequence => s}
+import scala.meta.prettyprinters.Show.{literal => lit, sequence => s}
 import scala.meta.prettyprinters._
 import scala.meta.tokens.Token
 import scala.meta.tokens.Token._
@@ -35,7 +35,7 @@ object TokenStructure {
       val idx = name.lastIndexOf(".Token$")
       if (idx < 0) x.name else name.substring(idx + 7).replace("$", ".")
     }
-    val syntax = if (text eq null) s() else s("(", text, ")")
+    val syntax = if (text eq null) s() else s("(", lit(text), ")")
     s(label, syntax, " [", x.start.toString, "..", x.end.toString, ")")
   }
 }

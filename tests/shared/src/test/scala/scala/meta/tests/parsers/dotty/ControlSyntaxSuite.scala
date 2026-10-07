@@ -1160,7 +1160,7 @@ class ControlSyntaxSuite extends BaseDottySuite {
          |  case a2: TP <- iter2
          |do fn
          |""".stripMargin
-    val output = "for (x <- gen;  case a1: TP <- iter1; if cnd;  case a2: TP <- iter2) fn"
+    val output = "for (x <- gen; case a1: TP <- iter1; if cnd; case a2: TP <- iter2) fn"
     runTestAssert[Stat](code, assertLayout = Some(output))(Term.For(
       List(
         Enumerator.Generator(patvar("x"), tname("gen")),

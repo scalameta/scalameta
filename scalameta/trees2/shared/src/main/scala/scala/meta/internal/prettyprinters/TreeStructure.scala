@@ -8,7 +8,7 @@ import scala.meta.prettyprinters._
 import scala.annotation.tailrec
 
 object TreeStructure {
-  import Show.{indent => i, newline => n, repeat => r, sequence => s}
+  import Show.{indent => i, literal => lit, newline => n, repeat => r, sequence => s}
 
   def apply[T <: Tree]: Structure[T] = Structure(anyTree)
 
@@ -22,7 +22,7 @@ object TreeStructure {
     case Some(el) => s("Some(", i(anyStructure(el)), n(")"))
     case el: List[_] => iterableStructure(el, "List")
     case el: Seq[_] => iterableStructure(el, "Seq")
-    case el => s(el.toString)
+    case el => lit(el.toString)
   }
 
   private def iterableStructure(xs: Seq[_], cls: String): Show.Result =

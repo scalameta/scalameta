@@ -5,6 +5,7 @@ import org.scalameta.internal.ScalaCompat.EOL
 
 import java.nio.CharBuffer
 
+import scala.annotation.tailrec
 import scala.language.implicitConversions
 
 trait Show[-T] {
@@ -21,21 +22,28 @@ private[meta] object Show {
     private var delay: CharSequence = _
     private var stack: List[Result] = Nil
 
-    /* A separator waiting for the next emission. A character takes it, and a
-     * newline drops it. If the separator is scoped to the element it precedes,
-     * a newline on either side indents that element instead. A separator on
-     * top of another emits nothing of its own. */
-    private final class Pending(val sep: String, val outer: Pending, val scoped: Boolean) {
+    /**
+     * A separator waiting for the next emission. If followed by a newline, this separator is
+     * dropped. A chain of separators emits one space, if any of them has one.
+     * @param space
+     *   whether to emit a space before the next character
+     * @param outer
+     *   the previous pending separator, if any
+     * @param indented
+     *   whether a newline on either side of the next element indents that element
+     */
+    private final class Pending(val space: Boolean, val outer: Pending, val indented: Boolean) {
       var prev: Int = -1
     }
     private var pending: Pending = _
 
-    private def addPending(sep: String, scoped: Boolean): Pending = {
-      val outer = pending
-      val p = new Pending(if ((outer ne null) && outer.sep.nonEmpty) "" else sep, outer, scoped)
+    private def addIndent(space: Boolean): Pending = {
+      val p = new Pending(space, pending, indented = true)
       pending = p
       p
     }
+    private def addSpace(): Unit = if ((pending eq null) || pending.indented)
+      pending = new Pending(space = true, pending, indented = false)
     private def closePending(p: Pending): Unit = {
       if (pending eq p) pending = p.outer
       if (p.prev >= 0) indentation.setLength(p.prev)
@@ -45,12 +53,13 @@ private[meta] object Show {
       pending = null
       p
     }
-    private def emitPending(p: Pending): Unit = if (p ne null) {
-      emitPending(p.outer)
-      if (p.sep.nonEmpty) appendImpl(p.sep)
-    }
+    // nothing precedes the start of the output, so no space separates it
+    private def emitPending(p: Pending): Unit = if (sb.length != 0 && hasSpace(p)) sb.append(' ')
+    @tailrec
+    private def hasSpace(p: Pending): Boolean = (p ne null) && (p.space || hasSpace(p.outer))
+    @tailrec
     private def indentPending(p: Pending): Unit = if (p ne null)
-      if (p.scoped) {
+      if (p.indented) {
         p.prev = indentation.length
         indentation.append("  ")
       } else indentPending(p.outer)
@@ -67,17 +76,30 @@ private[meta] object Show {
       end
     }
 
+    // add the leading spaces before `end` as a separator; return where the text begins
+    private def leadingPending(value: String, end: Int): Int = {
+      var beg = 0
+      while (beg < end && value.charAt(beg) == ' ') beg += 1
+      // the delayed separator precedes the space, and a space that ends it is enough
+      if (beg > 0)
+        if (!hasDelay) addSpace()
+        else {
+          appendPrepare()
+          if (sb.charAt(sb.length - 1) != ' ') addSpace()
+        }
+      beg
+    }
+
     def appendTrimmed(value: String, beg: Int, end: Int): Unit = if (beg < end) {
       appendPrepare()
       appendImpl(CharBuffer.wrap(value, beg, end))
     }
 
-    // trailing spaces are a separator, not text
+    // leading and trailing spaces are a separator, not text
     def append(value: String): Unit = {
-      val len = value.length
       val end = endTrimmed(value)
-      if (end > 0) appendTrimmed(value, 0, end)
-      if (end < len) addPending(value.substring(end), scoped = false)
+      if (end > 0) appendTrimmed(value, leadingPending(value, end), end)
+      if (end < value.length) addSpace()
     }
 
     def appendAsIs(value: String): Unit = if (value.nonEmpty) {
@@ -87,7 +109,7 @@ private[meta] object Show {
 
     private def appendPrepare(): Unit = {
       val p = takePending()
-      if (wasNL) indentPending(p) else emitPending(p)
+      if (wasNL) indentPending(p) else if (!hasDelay) emitPending(p) // the separator replaces it
       appendDelay()
       if (wasNL) {
         sb.append(indentation)
@@ -95,8 +117,10 @@ private[meta] object Show {
       }
     }
 
-    private def appendDelay(): Unit = if (delay ne null) {
-      if (delay.length() != 0) appendImpl(delay)
+    private def hasDelay: Boolean = delay ne null
+
+    private def appendDelay(): Unit = if (hasDelay) {
+      appendImpl(delay)
       delay = null
     }
 
@@ -121,7 +145,7 @@ private[meta] object Show {
 
     private def nl(newAfterEOL: Int): Unit = {
       val p = takePending()
-      if ((delay ne null) && delay.length() != 0) emitPending(p) else indentPending(p)
+      if (hasDelay) emitPending(p) else indentPending(p)
       appendDelay()
       sb.append(EOL)
       afterEOL = newAfterEOL
@@ -145,60 +169,76 @@ private[meta] object Show {
     def serialize(top: Result): Unit = {
       stack = top :: Nil
       while (stack.nonEmpty) {
-        val task = stack.head
-        stack = stack.tail
+        val task = pop()
         task match {
           case None => // do nothing
           case AsIs(value) => appendAsIs(value)
+          case Literal(value) => appendTrimmed(value, 0, value.length)
           case Str(value) =>
             if (stack.isEmpty || stack.head.isInstanceOf[Run]) append(value)
             else {
               val end = endTrimmed(value)
               if (end < value.length) // a trailing space is scoped to what follows
-                stack = SpaceOrIndent(stack.head, value.substring(end)) :: stack.tail
-              appendTrimmed(value, 0, end)
+                push(SpaceOrIndent(pop(), space = true))
+              appendTrimmed(value, leadingPending(value, end), end)
             }
           case Blank => blank()
-          case m: Deferred => stack = m.res() :: stack
+          case m: Deferred => maybePush(m.res())
           case Function(fn) =>
-            if (!wasNL) emitPending(takePending())
-            stack = fn(sb) :: stack
+            val len = sb.length
+            if (!wasNL) emitPending(pending) // so fn can see the pending separator
+            val res = fn(sb)
+            sb.setLength(len)
+            maybePush(res)
           case Newline(res) =>
             nl()
-            stack = res :: stack
+            maybePush(res)
           case Indent(res) =>
             pending = null // the indent replaces the separator
-            stack = res :: taskIndent :: stack
-          case SpaceOrIndent(res, sep) =>
-            val p = addPending(sep, scoped = true)
-            stack = res :: taskRun(closePending(p)) :: stack
-          case SpaceOrNewline(res, sep) =>
-            addPending(sep, scoped = false)
-            stack = res :: stack
-          case Wrap(prefix, res, suffix) =>
-            delay(prefix)
-            stack = res :: taskRun(if (delay eq null) append(suffix) else delay = null) :: stack
+            push(taskIndent)
+            maybePush(res)
+          case SpaceOrIndent(res, space) =>
+            val p = addIndent(space)
+            push(taskRun(closePending(p)))
+            maybePush(res)
+          case SpaceOrNewline(res, space) =>
+            if (space) addSpace()
+            maybePush(res)
           case Sequence(xs @ _*) =>
             val it = xs.reverseIterator
-            while (it.hasNext) stack = it.next() :: stack
+            while (it.hasNext) maybePush(it.next())
           case Repeat(xs, sep) if sep.forall(_ == ' ') =>
-            // a space separator is scoped to the element it precedes, and skips an empty one
-            var acc: List[Result] = Nil
+            // a space separator is scoped to the element it precedes
             val it = xs.reverseIterator
-            while (it.hasNext) {
-              val x = it.next()
-              acc = if (acc.isEmpty || sep.isEmpty) x :: acc else x :: Str(sep) :: acc
+            if (sep.isEmpty) while (it.hasNext) maybePush(it.next())
+            else if (it.hasNext) {
+              var x = it.next() // last element
+              while (it.hasNext) {
+                push(SpaceOrIndent(x, space = true))
+                x = it.next()
+              }
+              maybePush(x) // first element
             }
-            stack = acc ::: stack
           case Repeat(xs, sep) =>
             val sepRun = taskRun(delay(sep))
-            stack = taskRun(delay(null)) :: stack
+            push(taskRun(delay(null)))
             val it = xs.reverseIterator // most of the time, walk over IndexedSeq
-            while (it.hasNext) stack = it.next() :: sepRun :: stack
+            while (it.hasNext) {
+              push(sepRun)
+              maybePush(it.next())
+            }
           case r: Run => r.run()
         }
       }
     }
+
+    private def pop(): Result = {
+      val res = stack.head
+      stack = stack.tail
+      res
+    }
+    private def push(res: Result): Unit = stack = res :: stack
+    private def maybePush(res: Result): Unit = if (res ne None) push(res)
   }
 
   sealed abstract class Result {
@@ -217,6 +257,10 @@ private[meta] object Show {
   final case class AsIs(value: String) extends Result {
     override def desc: String = s"AsIs($value)"
   }
+  // text with its own spaces, such as a part of an interpolation
+  final case class Literal(value: String) extends Result {
+    override def desc: String = s"Literal($value)"
+  }
   final case class Str(value: String) extends Result {
     override def desc: String = s"Str($value)"
   }
@@ -229,11 +273,11 @@ private[meta] object Show {
   final case class Indent(res: Result) extends Result {
     override def desc: String = s"Indent(r=${res.desc})"
   }
-  final case class SpaceOrIndent(res: Result, sep: String) extends Result {
-    override def desc: String = s"SpaceOrIndent(sep=$sep, r=${res.desc})"
+  final case class SpaceOrIndent(res: Result, space: Boolean) extends Result {
+    override def desc: String = s"SpaceOrIndent(space=$space, r=${res.desc})"
   }
-  final case class SpaceOrNewline(res: Result, sep: String) extends Result {
-    override def desc: String = s"SpaceOrNewline(sep=$sep, r=${res.desc})"
+  final case class SpaceOrNewline(res: Result, space: Boolean) extends Result {
+    override def desc: String = s"SpaceOrNewline(space=$space, r=${res.desc})"
   }
   final case object Blank extends Result {
     override def desc: String = s"Blank()"
@@ -248,9 +292,6 @@ private[meta] object Show {
   final class Meta(val data: Any, res: () => Result) extends Deferred(res) {
     override def desc: String = s"Meta(d=$data, ...)"
   }
-  final case class Wrap(prefix: String, res: Result, suffix: String) extends Result {
-    override def desc: String = s"Wrap(p=$prefix, r=${res.desc}, s=$suffix)"
-  }
   final case class Function(fn: CharSequence => Result) extends Result {
     override def desc: String = s"Function(...)"
   }
@@ -263,19 +304,22 @@ private[meta] object Show {
     def apply(input: T): Result = f(input)
   }
 
-  def sequence(xs: Result*): Result = xs.filter(_ ne None) match {
+  def sequenceFiltered(xs: Result*): Result = xs match {
     case Seq() => None
     case Seq(head) => head
     case res => Sequence(res: _*)
   }
+  def sequence(xs: Result*): Result = sequenceFiltered(xs.filter(_ ne None): _*)
 
   def indent(res: Result): Result = if (res eq None) None else Indent(res)
+  def indent(res: Result, cond: Boolean): Result = if (cond) indent(res) else res
 
-  def repeat(sep: String)(xs: Result*): Result = xs.filter(_ ne None) match {
+  def repeatFiltered(sep: String)(xs: Seq[Result]): Result = xs match {
     case Seq() => None
     case Seq(head) => head
     case res => Repeat(res, sep)
   }
+  def repeat(sep: String)(xs: Result*): Result = repeatFiltered(sep)(xs.filter(_ ne None))
   def repeat(xs: Seq[Result], sep: String = ""): Result = repeat(sep)(xs: _*)
   def repeat(prefix: => Result, sep: String, suffix: => Result)(xs: Result*): Result =
     wrap(prefix, repeat(xs, sep), suffix)
@@ -283,14 +327,18 @@ private[meta] object Show {
   def blank(): Result = Blank
   def blank(cond: Boolean): Result = if (cond) Blank else None
 
-  def nosplit[T: Show](x: T): Result = {
-    val res = implicitly[Show[T]].apply(x)
-    if (res.isEmpty) None else SpaceOrIndent(res, "")
-  }
-  def spacen(x: Result, sep: String): Result = if (x.isEmpty) None else SpaceOrNewline(x, sep)
-  def spacen[T: Show](x: T): Result = spacen(x, " ")
+  def nosplit[T: Show](x: T): Result = spacei(x, space = false)
 
-  def newline(): Result = Newline(None)
+  def spacei(x: Result, space: Boolean): Result = if (x.isEmpty) None else SpaceOrIndent(x, space)
+
+  val spaceOnly: Result = Str(" ")
+  val spaceOrNewline: Result = SpaceOrNewline(None, space = true)
+  def spacen(): Result = spaceOrNewline
+  def spacen(x: Result, space: Boolean): Result = if (x.isEmpty) None else SpaceOrNewline(x, space)
+  def spacen[T: Show](x: T): Result = spacen(x, space = true)
+
+  val newlineOnly: Result = Newline(None)
+  def newline(): Result = newlineOnly
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
 
   // body by-name + no eager None-elision: the child render is deferred, and
@@ -327,6 +375,7 @@ private[meta] object Show {
   def function(fn: CharSequence => Result): Result = Function(fn)
 
   def asis(value: String): Result = if (value.isEmpty) None else AsIs(value)
+  def literal(value: String): Result = if (value.isEmpty) None else Literal(value)
 
   implicit def printResult[R <: Result]: Show[R] = apply(identity)
   implicit def printString[T <: String]: Show[T] = apply(str)
