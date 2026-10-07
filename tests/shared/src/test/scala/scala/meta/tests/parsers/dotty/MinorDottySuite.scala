@@ -752,6 +752,57 @@ class MinorDottySuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("procedure syntax, blank line, call") {
+    val code =
+      """|object A {
+         |  def f() {}
+         |
+         |  f()
+         |}""".stripMargin
+    val layout = "object A { def f(): Unit = {} f (()) }"
+    val body = tinfix(blk(), "f", Lit.Unit())
+    val tree = Defn.Object(Nil, "A", tpl(Defn.Def(Nil, "f", Nil, List(Nil), Some("Unit"), body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("procedure syntax without params, call") {
+    val code =
+      """|object A {
+         |  def f {}
+         |  g
+         |}""".stripMargin
+    val layout = "object A { def f: Unit = {} g }"
+    val body = Term.SelectPostfix(blk(), "g")
+    val tree = Defn.Object(Nil, "A", tpl(Defn.Def(Nil, "f", Nil, Nil, Some("Unit"), body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("procedure syntax with type params, call") {
+    val code =
+      """|object A {
+         |  def f[T] {}
+         |  f()
+         |}""".stripMargin
+    val layout = "object A { def f[T]: Unit = {} f (()) }"
+    val body = tinfix(blk(), "f", Lit.Unit())
+    val tree = Defn
+      .Object(Nil, "A", tpl(Defn.Def(Nil, "f", List(pparam("T")), Nil, Some("Unit"), body)))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("procedure declaration, def") {
+    val code =
+      """|trait A {
+         |  def f()
+         |  def g: Int
+         |}""".stripMargin
+    val error =
+      """|<input>:3: error: `=` expected but `def` found
+         |  def g: Int
+         |  ^""".stripMargin
+    runTestError[Stat](code, error)
+  }
+
   test("do-while") {
     val code =
       """|def hello() = {
