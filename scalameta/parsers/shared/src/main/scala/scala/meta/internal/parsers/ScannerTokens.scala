@@ -730,7 +730,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         @tailrec
         def strip(rs: List[SepRegion]): Option[List[SepRegion]] = rs match {
           // `[`, `=` and `#` are covered by CantStartStat
-          case RegionDefType :: xs => if (next.is[LeftParen]) None else strip(xs)
+          // a definition without `=`, such as a procedure or a declaration, ends here
+          case (_: RegionDefDecl) :: xs => if (next.is[LeftParen]) None else strip(xs)
           // `extends` and `with` are covered by canEndStat() and CantStartStat
           case (_: RegionTemplateMark) :: xs =>
             if (blankBraceOr(!derives(next))) strip(xs) else None
