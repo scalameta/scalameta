@@ -63,15 +63,11 @@ object TreeSyntax {
 
     def kw(keyword: String) = fn { sb =>
       val sbLen = sb.length
-      val prelast = if (sbLen >= 2) sb.charAt(sbLen - 2) else ' '
-      val last = if (sbLen >= 1) sb.charAt(sbLen - 1) else ' '
-      val next = if (keyword.nonEmpty) keyword(0) else ' '
-      val danger = {
-        val opThenOp = isOperatorPart(last) && isOperatorPart(next)
-        val underscoreThenOp = isIdentifierPart(prelast) && last == '_' && isOperatorPart(next)
-        opThenOp || underscoreThenOp
+      val useSpaceBefore = isOperatorPart(keyword(0)) && sbLen >= 1 && {
+        val last = sb.charAt(sbLen - 1)
+        isOperatorPart(last) || last == '_' && sbLen >= 2 && isIdentifierPart(sb.charAt(sbLen - 2))
       }
-      if (danger) s(" " + keyword) else s(keyword)
+      s(if (useSpaceBefore) " " + keyword else keyword)
     }
 
     def guessIsBackquoted(t: Name): Boolean = {
@@ -669,17 +665,7 @@ object TreeSyntax {
         val pearly = w(o(t.earlyClause), " with")
         val pparents = r(t.inits, " with ")
         val derived = r("derives ", ", ", "")(t.derives: _*)
-        val ptype = t.parent match {
-          case Some(p: Defn.Given) =>
-            val isNew = givenSigUsesNewSyntax(p.paramClauseGroups)(
-              t.inits.forall(_.argClauses.isEmpty) && !t.body.origin.tokensOpt.forall(
-                _.rfindWideNotOrNull(_.is[Token.Trivia], -1).is[Token.KwWith], // still old syntax
-              ),
-            )
-            if (isNew) Decl.Given else Defn.Given
-          case Some(_: Term.NewAnonymous) => Term.NewAnonymous
-          case _ => null
-        }
+        val ptype = templateParentType(t)
         def isOldGiven = ptype eq Defn.Given
         def isNewGiven = ptype eq Decl.Given
         val pbody = s(t.body)
@@ -847,6 +833,18 @@ object TreeSyntax {
           pcs.nonEmpty && pcs.forall(_.mod.isEmpty)
         case _ => true
       })
+
+    private def templateParentType(t: Template): AnyRef = t.parent match {
+      case Some(p: Defn.Given) =>
+        val isNew = givenSigUsesNewSyntax(p.paramClauseGroups)(
+          t.inits.forall(_.argClauses.isEmpty) && !t.body.origin.tokensOpt.forall(
+            _.rfindWideNotOrNull(_.is[Token.Trivia], -1).is[Token.KwWith], // still old syntax
+          ),
+        )
+        if (isNew) Decl.Given else Defn.Given
+      case Some(_: Term.NewAnonymous) => Term.NewAnonymous
+      case _ => null
+    }
 
     private def givenSig(name: meta.Name, pcgs: List[Member.ParamClauseGroup]): Show.Result = {
       val useNewSyntax = givenSigUsesNewSyntax(pcgs)(ifEmpty = true)
