@@ -11,6 +11,7 @@ import scala.collection.mutable
 // Rough implementation of java.nio.Path, should work similarly for the happy
 // path but has undefined behavior for error handling.
 case class NodeNIOPath(filename: String) extends Path {
+
   import NodeNIOPath._
 
   private lazy val normalized =
@@ -97,6 +98,7 @@ case class NodeNIOPath(filename: String) extends Path {
   override def resolve(other: String): Path = adjustResolvedPath(JSPath.resolve(filename, other))
 
   override def toString: String = filename
+
 }
 
 object NodeNIOPath {

@@ -5,6 +5,7 @@ import scala.meta.Name.{Anonymous, Indeterminate}
 import scala.meta.{Name => _, _}
 
 class ImportSuite extends ParseSuite {
+
   import Importee._
   import Term.{Name => TermName, Select, Super, This}
 

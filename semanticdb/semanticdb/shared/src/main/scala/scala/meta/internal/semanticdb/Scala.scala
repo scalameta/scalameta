@@ -26,6 +26,7 @@ object Scala {
   }
 
   implicit class ScalaSymbolOps(private val symbol: String) extends AnyVal {
+
     def isNone: Boolean = symbol == Symbols.None
     def isRootPackage: Boolean = symbol == Symbols.RootPackage
     def isEmptyPackage: Boolean = symbol == Symbols.EmptyPackage
@@ -74,9 +75,11 @@ object Scala {
         if (rest.nonEmpty) rest else Symbols.RootPackage
       }
     def desc: Descriptor = if (isGlobal) DescriptorParser.desc(symbol) else d.None
+
   }
 
   sealed trait Descriptor {
+
     def isNone: Boolean = this == d.None
     def isTerm: Boolean = this.isInstanceOf[d.Term]
     def isMethod: Boolean = this.isInstanceOf[d.Method]
@@ -103,6 +106,7 @@ object Scala {
       case d.Parameter(value) => s"(${n.encode(value)})"
       case d.TypeParameter(value) => s"[${n.encode(value)}]"
     }
+
   }
   object Descriptor {
     case object None extends Descriptor {
@@ -149,6 +153,7 @@ object Scala {
   }
 
   private class DescriptorParser(s: String) {
+
     var i = s.length
     def fail() = {
       val message = "invalid symbol format"
@@ -229,6 +234,7 @@ object Scala {
       readChar()
       parseDescriptor()
     }
+
   }
 
   private[meta] object DescriptorParser {

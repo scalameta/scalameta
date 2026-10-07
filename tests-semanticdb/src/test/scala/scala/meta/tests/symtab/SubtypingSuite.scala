@@ -103,4 +103,5 @@ class SubtypingSuite extends FunSuite {
     assert(local.isSubtypeOf("x/ViaExistential#", "x/Base#"))
     assert(local.isSubtypeOf("x/ViaUniversal#", "x/Base#"))
   }
+
 }

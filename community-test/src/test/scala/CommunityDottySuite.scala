@@ -171,4 +171,5 @@ class CommunityDottySuite extends FunSuite {
   final val ignoreParts =
     List(".git/", "tests/", "test-resources/scripting/", "test-resources/repl/", "sbt-test/", "out/")
       .map(Paths.get(_))
+
 }

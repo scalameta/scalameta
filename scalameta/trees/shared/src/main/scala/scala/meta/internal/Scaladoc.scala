@@ -284,6 +284,7 @@ object Scaladoc {
     lazy val tagTypeMap = predefined.map(x => x.tag -> x).toMap
 
     def getTag(tag: String): TagType = tagTypeMap.getOrElse(tag, TagType.UnknownTag(tag))
+
   }
 
 }

@@ -394,4 +394,5 @@ class TargetedSuite extends SemanticdbSuite {
       )
     }
   }
+
 }

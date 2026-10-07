@@ -5,6 +5,7 @@ import scala.meta.internal.io.PathIO
 import munit.FunSuite
 
 class PathIOSuite extends FunSuite {
+
   def check(path: String, expectedDir: String, expectedName: String)(implicit
       loc: munit.Location,
   ): Unit = test(path) {
@@ -30,4 +31,5 @@ class PathIOSuite extends FunSuite {
   check("a/", "/", "a")
   check("a/b", "a/", "b")
   check("a/b/", "a/", "b")
+
 }

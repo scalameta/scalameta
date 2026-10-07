@@ -23,6 +23,7 @@ object Unlift {
 }
 
 class ConversionMacros(val c: Context) extends AstReflection {
+
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   val XtensionQuasiquoteTerm = "shadow scala.meta quasiquotes"
@@ -72,4 +73,5 @@ class ConversionMacros(val c: Context) extends AstReflection {
       else c.abort(c.enclosingPosition, typeMismatchMessage(insideTpe, outsideTpe))
     }
   }
+
 }

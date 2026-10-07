@@ -5,6 +5,7 @@ import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.{AbsolutePath, RelativePath}
 
 object SemanticdbPaths {
+
   val semanticdbPrefix: RelativePath = RelativePath("META-INF").resolve("semanticdb")
   val semanticdbExtension = "semanticdb"
   private val scalaExtension = "scala"
@@ -49,4 +50,5 @@ object SemanticdbPaths {
       .resolve(doc.uri + "." + semanticdbExtension)
     AbsolutePath.fromAbsoluteUri(uri)
   }
+
 }

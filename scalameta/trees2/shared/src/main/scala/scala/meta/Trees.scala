@@ -317,6 +317,7 @@ trait Lit extends Term with Pat with Type {
   def value: Any
 }
 object Lit {
+
   def unapply(arg: Lit): Option[Any] = Some(arg.value)
   @ast
   class Null() extends Lit {
@@ -391,11 +392,13 @@ object Lit {
   class String(value: JString) extends Lit
   @ast
   class Symbol(value: scala.Symbol) extends Lit
+
 }
 
 @branch
 trait Term extends Stat
 object Term {
+
   @branch
   trait Ref extends Term with sm.Ref
   @ast
@@ -649,11 +652,13 @@ object Term {
   }
   def fresh(): Term.Name = fresh("fresh")
   def fresh(prefix: String): Term.Name = Term.Name(prefix + Fresh.nextId())
+
 }
 
 @branch
 trait Type extends Tree
 object Type {
+
   @branch
   trait Ref extends Type with sm.Ref
   @ast
@@ -934,11 +939,13 @@ object Type {
 
   def fresh(): Type.Name = fresh("fresh")
   def fresh(prefix: String): Type.Name = Type.Name(prefix + Fresh.nextId())
+
 }
 
 @branch
 trait Pat extends Tree
 object Pat {
+
   @ast
   class ArgClause(values: List[Pat]) extends Member.ArgClause with Tree.WithPats {
     override final def pats: List[Pat] = values
@@ -988,6 +995,7 @@ object Pat {
   class Given(tpe: Type) extends Pat
   def fresh(): Pat.Var = Pat.Var(Term.fresh())
   def fresh(prefix: String): Pat.Var = Pat.Var(Term.fresh(prefix))
+
 }
 
 @branch
@@ -996,6 +1004,7 @@ trait Member extends Tree {
   final def isNameAnonymous: Boolean = name.isAnonymous
 }
 object Member {
+
   @branch
   trait Term extends Member {
     def name: sm.Term.Name
@@ -1182,6 +1191,7 @@ object Decl {
 @branch
 trait Defn extends Stat
 object Defn {
+
   @ast
   class Val(mods: List[Mod], pats: List[Pat] @nonEmpty, decltpe: Option[sm.Type], rhs: Term)
       extends Defn with Stat.WithMods with Tree.WithPats with Tree.WithDeclTpeOpt with Tree.WithBody {
@@ -1378,6 +1388,7 @@ object Defn {
   @ast
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
       extends Defn with Member.Term with Stat.WithMods with Stat.WithTemplate
+
 }
 
 @ast
@@ -1490,6 +1501,7 @@ class Template(
 @branch
 trait Mod extends Tree
 object Mod {
+
   @branch
   trait Variant extends Mod
   @branch
@@ -1551,6 +1563,7 @@ object Mod {
   class Tracked() extends Mod
   @ast
   class Into() extends Mod
+
 }
 
 @branch

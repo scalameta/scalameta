@@ -5,6 +5,7 @@ import scala.tools.asm.signature.SignatureVisitor
 
 /** A more sane default SignatureVisitor that throws exceptions on unhandled cases. */
 abstract class FailFastSignatureVisitor extends SignatureVisitor(Opcodes.ASM5) {
+
   override def visitFormalTypeParameter(name: String): Unit = ???
   override def visitClassBound: SignatureVisitor = ???
   override def visitInterfaceBound: SignatureVisitor = ???
@@ -20,4 +21,5 @@ abstract class FailFastSignatureVisitor extends SignatureVisitor(Opcodes.ASM5) {
   override def visitInnerClassType(name: String): Unit = ???
   override def visitTypeArgument(): Unit = ???
   override def visitTypeArgument(wildcard: Char): SignatureVisitor = ???
+
 }

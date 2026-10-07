@@ -201,4 +201,5 @@ class Main(settings: Settings, reporter: Reporter) {
         .getOrElse(throw new IllegalStateException("Unable to detect scala-library via --usejavacp"))
       Classpath(scalaLibraryPath)
     } else Classpath(Nil)
+
 }

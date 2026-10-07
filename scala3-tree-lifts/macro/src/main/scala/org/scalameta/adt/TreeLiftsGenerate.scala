@@ -20,6 +20,7 @@ object TreeLiftsGenerate {
 // expose these methods via the TreeLiftsTrait trait.
 class TreeLiftsGenerateMacros(val c: Context)
     extends GenerateHelper with AdtReflection with CommonNamerMacros {
+
   import c.universe._
 
   lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply"))

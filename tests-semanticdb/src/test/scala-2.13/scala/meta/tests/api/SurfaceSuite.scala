@@ -11,6 +11,7 @@ import scala.reflect.runtime.{universe => ru}
 import munit.FunSuite
 
 class SurfaceSuite extends FunSuite {
+
   object CoreReflection
       extends {
         val u: ru.type = ru
@@ -744,4 +745,5 @@ class SurfaceSuite extends FunSuite {
          |""".stripMargin.lf2nl,
     )
   }
+
 }

@@ -25,6 +25,7 @@ import scala.reflect.ClassTag
 // We can afford that because we no longer have APIs that take adhoc token streams.
 class Tokens private (private[meta] val tokens: Array[Token], val start: Int, val length: Int)
     extends immutable.IndexedSeq[Token] with IndexedSeqOptimized[Token] {
+
   def end: Int = start + length
   @inline
   private def get(idx: Int): Token = tokens(start + idx)
@@ -302,6 +303,7 @@ class Tokens private (private[meta] val tokens: Array[Token], val start: Int, va
 }
 
 object Tokens {
+
   // a count and an index packed into a `Long`, to avoid a tuple on hot paths
   @inline
   private[meta] def pack(count: Int, idx: Int): Long = count.toLong << 32 | idx.toLong & 0xffffffffL

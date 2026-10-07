@@ -41,6 +41,7 @@ object ClasspathIndex {
   ): ClasspathIndex = new Builder(classpath, includeJdk, reporter).result()
 
   private final class Builder(classpath: Classpath, includeJdk: Boolean, reporter: Reporter) {
+
     private val dirs = mutable.Map.empty[String, Classdir]
     // Jars fully processed; lets a jar referenced from several manifests (a
     // diamond) be indexed once instead of being mistaken for a cycle.
@@ -172,5 +173,6 @@ object ClasspathIndex {
           if (dir.endsWith("META-INF")) FileVisitResult.SKIP_SUBTREE else FileVisitResult.CONTINUE
       },
     )
+
   }
 }

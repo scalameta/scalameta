@@ -192,4 +192,5 @@ object Input {
   implicit lazy val fileToInput: Convert[java.io.File, Input] = Convert(Input.File.apply)
   implicit lazy val nioPathToInput: Convert[java.nio.file.Path, Input] = Convert(Input.File.apply)
   implicit lazy val absolutePathToInput: Convert[AbsolutePath, Input] = Convert(Input.File.apply)
+
 }

@@ -44,6 +44,7 @@ class TokensSuite {
   val splitAt: (Tokens, Tokens) = d.splitAt(1)
   def span: (Tokens, Tokens) = d.span(_.isNot[RightParen])
   def spanRight: (Tokens, Tokens) = d.spanRight(_.isNot[LeftParen])
+
 }
 
 class TokensApiSuite extends FunSuite {

@@ -18,6 +18,7 @@ final class Settings private (
     val stubBrokenSignatures: Boolean,
     val logBrokenSignatures: Boolean,
 ) {
+
   private def this() = this(
     out = Settings.defaultOut,
     classpath = Classpath(Nil),
@@ -79,6 +80,7 @@ final class Settings private (
     stubBrokenSignatures = stubBrokenSignatures,
     logBrokenSignatures = logBrokenSignatures,
   )
+
 }
 
 object Settings {

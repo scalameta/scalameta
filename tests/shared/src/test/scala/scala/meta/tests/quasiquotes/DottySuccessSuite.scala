@@ -261,4 +261,5 @@ class DottySuccessSuite extends TreeSuiteBase {
     assertNoDiff(quoted.reprint, syntax)
     assertTree(quoted)(blk(tname("Foo"), lit("any message")))
   }
+
 }

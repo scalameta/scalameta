@@ -24,6 +24,7 @@ import scala.quoted._
 import scala.runtime.ScalaRunTime
 
 object ReificationMacros {
+
   def statImpl(using Quotes)(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Any]]) =
     new ReificationMacros().expandApply(scExpr, argsExpr, QuasiquoteType.Stat)
       .asExprOf[scala.meta.Tree]
@@ -109,6 +110,7 @@ object ReificationMacros {
 
 class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuotes {
   rei =>
+
   import scala.meta.inputs.{Position => MetaPosition, _}
   import scala.meta.{Dialect, Tree => MetaTree}
 
@@ -680,4 +682,5 @@ class ReificationMacros(using val internalQuotes: Quotes) extends HasInternalQuo
 
     }
   }
+
 }

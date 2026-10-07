@@ -8,6 +8,7 @@ import scala.meta.internal.parsers._
 import scala.language.implicitConversions
 
 abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
+
   import MoreHelpers._
 
   val escapedEOL = if (EOL == "\n") """\n""" else """\r\n"""

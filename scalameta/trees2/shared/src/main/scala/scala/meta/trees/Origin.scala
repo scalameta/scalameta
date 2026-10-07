@@ -24,6 +24,7 @@ sealed trait Origin extends Optional {
 }
 
 object Origin {
+
   object None extends Origin {
     val position: Position = Position.None
     val dialectOpt: Option[Dialect] = scala.None
@@ -43,6 +44,7 @@ object Origin {
   }
 
   sealed trait ParsedPartial extends Partial {
+
     val source: ParsedSource
 
     @inline
@@ -63,6 +65,7 @@ object Origin {
     @inline
     def dialect: Dialect = source.dialect
     def tokens: Tokens = allInputTokens().slice(begTokenIdx, endTokenIdx)
+
   }
 
   final case class Parsed(source: ParsedSource, begTokenIdx: Int, endTokenIdx: Int)

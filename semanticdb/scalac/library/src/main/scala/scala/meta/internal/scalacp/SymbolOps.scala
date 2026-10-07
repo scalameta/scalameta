@@ -148,6 +148,7 @@ trait SymbolOps {
   }
 
   implicit class XtensionSymbol(sym: Symbol) {
+
     def ssym: String = sym.toSemantic
     def self: Type = sym match {
       case sym: ClassSymbol => sym.selfType.map {
@@ -222,6 +223,7 @@ trait SymbolOps {
       sym.isSyntheticCaseAccessor || sym.isRefinementClass
     def isUseful: Boolean = !sym.isUseless
     def isDefaultParameter: Boolean = sym.hasFlag(0x02000000) && sym.isParam
+
   }
 
   private var nextId = 0
@@ -231,4 +233,5 @@ trait SymbolOps {
 
   lazy val hardlinks = new HashSet[String]
   private def registerHardlink(sym: Symbol): Unit = hardlinks.add(sym.ssym)
+
 }

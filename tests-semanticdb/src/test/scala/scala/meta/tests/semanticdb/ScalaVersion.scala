@@ -5,6 +5,7 @@ import scala.meta.tests.BuildInfo
 import scala.util.Properties
 
 object ScalaVersion {
+
   val version = Properties.versionNumberString
 
   sealed trait Version

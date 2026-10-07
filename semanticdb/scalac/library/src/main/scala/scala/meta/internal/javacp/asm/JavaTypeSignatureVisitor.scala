@@ -5,6 +5,7 @@ import scala.meta.internal.javacp._
 import scala.tools.asm.signature.SignatureVisitor
 
 class JavaTypeSignatureVisitor(isArray: Boolean) extends TypedSignatureVisitor[JavaTypeSignature] {
+
   private var baseType: BaseType = _
   private val referenceTypeSignature: ReferenceTypeSignatureVisitor =
     new ReferenceTypeSignatureVisitor

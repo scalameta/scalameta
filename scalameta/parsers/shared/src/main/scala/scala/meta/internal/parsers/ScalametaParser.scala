@@ -947,6 +947,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
    * context or not. Formerly, this was threaded through numerous methods as boolean isPattern.
    */
   trait PatternContextSensitive {
+
     private def tupleInfixType(allowFunctionType: Boolean = true): Type = autoPosOpt {
       // NOTE: This is a really hardcore disambiguation caused by introduction of Type.Method.
       // We need to accept `(T, U) => W`, `(x: T): x.U` and also support unquoting.
@@ -1425,6 +1426,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
 
     private def typeVar(t: Type): Type = typeVar(t, t.text)
+
   }
 
   private trait AllowedName[T]
@@ -2185,6 +2187,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   // See `postfixExpr` for an involved usage example.
   // Another, much less involved usage, lives in `pattern3`.
   sealed abstract class InfixContext {
+
     // (Lhs, op and targs form UnfinishedInfix).
     // FinishedInfix is the type of an infix expression.
     // The conversions are necessary to push the output of finishInfixExpr on stack.
@@ -2257,6 +2260,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     // and creates `x + (y, z)`.
     // We need to carry endPos explicitly because its extent may be bigger than rhs because of parent of whatnot.
     protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ
+
   }
 
   // Infix syntax in terms is borderline crazy.
@@ -2930,6 +2934,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
    * sequences are allowed. Formerly, this was threaded through methods as boolean seqOK.
    */
   trait SeqContextSensitive extends PatternContextSensitive {
+
     // is a sequence pattern _* allowed?
     def isSequenceOK: Boolean
     def isNamedTupleOk: Boolean = false
@@ -3137,6 +3142,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         }
       }
     }
+
   }
 
   /** The implementation of the context sensitive methods for parsing outside of patterns. */

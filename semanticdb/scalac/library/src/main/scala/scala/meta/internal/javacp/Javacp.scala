@@ -17,6 +17,7 @@ import scala.tools.asm.tree.{ClassNode, FieldNode, InnerClassNode, MethodNode}
 import scala.tools.asm.{Opcodes => o}
 
 object Javacp {
+
   def parse(node: ClassNode, classpathIndex: ClasspathIndex): ClassfileInfos = {
     val infos = sinfos(node, classpathIndex, 0, Scope.empty)
     ClassfileInfos(node.name + ".class", s.Language.JAVA, infos.toList)

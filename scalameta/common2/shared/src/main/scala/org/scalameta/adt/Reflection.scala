@@ -9,6 +9,7 @@ import scala.reflect.api.Universe
 import scala.reflect.{ClassTag, classTag}
 
 trait Reflection {
+
   val u: Universe
   val mirror: u.Mirror
 
@@ -29,6 +30,7 @@ trait Reflection {
   }
 
   implicit class XtensionAdtSymbol(sym: Symbol) {
+
     def isAdt: Boolean = {
       def inheritsFromAdt = sym.isClass && sym.asClass.toType <:< typeOf[AdtMetadata.Adt]
       def isBookkeeping = sym.asClass == symbolOf[AdtMetadata.Adt] ||
@@ -59,6 +61,7 @@ trait Reflection {
     def asBranch: Branch = new Branch(sym)
     def asLeaf: Leaf = new Leaf(sym)
     def asField: Field = new Field(sym)
+
   }
 
   protected def figureOutDirectSubclasses(sym: ClassSymbol): List[Symbol] =

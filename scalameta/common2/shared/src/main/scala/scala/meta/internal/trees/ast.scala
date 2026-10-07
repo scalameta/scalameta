@@ -16,6 +16,7 @@ class ast extends StaticAnnotation {
 }
 
 class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
+
   import AstNamerMacros._
   import c.universe.Flag._
   import c.universe._

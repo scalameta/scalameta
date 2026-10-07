@@ -8,6 +8,7 @@ import scala.meta.tokenizers.TokenizerOptions
 import scala.language.implicitConversions
 
 class TermSuite extends ParseSuite {
+
   import Name.{Anonymous, Indeterminate}
   import Term.{Name => _, _}
 

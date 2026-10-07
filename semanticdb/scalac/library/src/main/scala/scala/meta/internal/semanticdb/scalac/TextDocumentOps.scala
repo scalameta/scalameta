@@ -15,6 +15,7 @@ import scala.{meta => m}
 
 trait TextDocumentOps {
   self: SemanticdbOps =>
+
   def validateCompilerState(): Unit = {
     if (!g.settings.Yrangepos.value) sys.error("the compiler instance must have -Yrangepos enabled")
     if (g.useOffsetPositions) sys.error("the compiler instance must use range positions")

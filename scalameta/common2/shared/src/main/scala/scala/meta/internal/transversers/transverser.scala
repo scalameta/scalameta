@@ -8,6 +8,7 @@ import scala.meta.internal.trees.{Reflection => AstReflection}
 import scala.reflect.macros.whitebox.Context
 
 trait TransverserMacros extends MacroHelpers with AstReflection {
+
   lazy val u: c.universe.type = c.universe
   lazy val mirror = c.mirror
   val c: Context

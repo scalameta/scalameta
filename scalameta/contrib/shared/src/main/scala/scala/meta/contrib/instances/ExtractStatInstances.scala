@@ -4,6 +4,7 @@ import scala.meta._
 import scala.meta.contrib._
 
 trait ExtractStatInstances {
+
   implicit val extractTemplateStats: Extract[Template, Stat] = Extract(_.stats)
 
   implicit val extractClassStats: Extract[Defn.Class, Stat] = Extract(_.templ.stats)
@@ -27,6 +28,7 @@ trait ExtractStatInstances {
     case Term.Block(stats) => stats
     case s => s :: Nil
   }
+
 }
 
 object ExtractStatInstances extends ExtractStatInstances

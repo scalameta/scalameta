@@ -10,6 +10,7 @@ import scala.reflect.macros.blackbox.Context
 
 // Parts of @root, @branch and @ast logic that need a typer context and can't be run in a macro annotation.
 object CommonTyperMacros {
+
   def hierarchyCheck[T]: Unit = macro CommonTyperMacrosBundle.hierarchyCheck[T]
   def productPrefix[T]: String = macro CommonTyperMacrosBundle.productPrefix[T]
   def loadField[T](f: T, s: String): Unit = macro CommonTyperMacrosBundle.loadField
@@ -20,9 +21,11 @@ object CommonTyperMacros {
   def childrenCount[T]: Int = macro CommonTyperMacrosBundle.childrenCount[T]
   def foreachChild[T, U](f: U => Unit): Unit = macro CommonTyperMacrosBundle.foreachChild[T]
   def lastChild[T, U]: U = macro CommonTyperMacrosBundle.lastChild[T]
+
 }
 
 class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHelpers {
+
   lazy val u: c.universe.type = c.universe
   lazy val mirror: u.Mirror = c.mirror
   import c.universe._
@@ -152,4 +155,5 @@ class CommonTyperMacrosBundle(val c: Context) extends AdtReflection with MacroHe
         case _ => earlier
       }
     }
+
 }

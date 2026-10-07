@@ -12,6 +12,7 @@ import scala.tools.nsc.{Global, Settings}
  * https://github.com/lihaoyi/fastparse/blob/0d67eca8f9264bfaff68e5cbb227045ceac4a15f/scalaparse/jvm/src/test/scala/scalaparse/ProjectTests.scala
  */
 object ScalacParser {
+
   var current: ClassLoader = Thread.currentThread().getContextClassLoader
   val files: mutable.Buffer[File] = collection.mutable.Buffer.empty[java.io.File]
   val settings = new Settings()
@@ -47,4 +48,5 @@ object ScalacParser {
     parser.parse()
     !fail
   }
+
 }

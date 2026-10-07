@@ -8,6 +8,7 @@ import java.io.File
 import munit.FunSuite
 
 class IOFileTest extends FunSuite {
+
   val file = new File("build.sbt")
   val project = new File("project")
   val nestedFile = new File("project", "build.properties")

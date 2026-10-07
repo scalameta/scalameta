@@ -13,6 +13,7 @@ object CommonNamerMacros {
 }
 
 trait CommonNamerMacros extends MacroHelpers {
+
   import c.universe._
 
   lazy val TreeClass = tq"_root_.scala.meta.Tree"

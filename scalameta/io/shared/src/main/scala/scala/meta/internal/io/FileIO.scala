@@ -33,4 +33,5 @@ object FileIO {
   def withJarFileSystem[T](path: AbsolutePath, create: Boolean, close: Boolean = false)(
       f: AbsolutePath => T,
   ): T = PlatformFileIO.withJarFileSystem[T](path, create, close)(f)
+
 }

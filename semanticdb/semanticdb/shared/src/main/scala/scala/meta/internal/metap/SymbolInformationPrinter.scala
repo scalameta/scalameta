@@ -79,6 +79,7 @@ trait SymbolInformationPrinter extends BasePrinter {
   }
 
   class InfoPrinter(notes: InfoNotes) {
+
     def pprint(info: SymbolInformation): Unit = {
       notes.visit(info)
       printInfo(info, Declaration)
@@ -323,6 +324,7 @@ trait SymbolInformationPrinter extends BasePrinter {
         case _ => ""
       }
     }
+
   }
 
   class InfoNotes {

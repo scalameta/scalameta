@@ -28,6 +28,7 @@ private[meta] trait ApiLowPriority {
 }
 
 private[meta] trait Api extends ApiLowPriority {
+
   implicit class XtensionTreesName(name: Name) {
 
     /**
@@ -114,4 +115,5 @@ private[meta] trait Api extends ApiLowPriority {
   implicit def pkgBodyToValues(v: Pkg.Body): List[Stat] = v.stats
   implicit def statValuesToPkgBodyWithDialect(v: List[Stat])(implicit dialect: Dialect): Pkg.Body =
     Pkg.Body(v)
+
 }

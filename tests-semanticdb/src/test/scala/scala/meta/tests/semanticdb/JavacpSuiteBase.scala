@@ -5,6 +5,7 @@ import scala.meta.internal.semanticdb._
 import munit.FunSuite
 
 abstract class JavacpSuiteBase extends FunSuite {
+
   private val infos = MetacMetacpDiffExpect.metacpSymbols
 
   def checkOrder(name: String, symbol: String, filter: String => Boolean, expected: List[String])(

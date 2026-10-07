@@ -49,4 +49,5 @@ case class CorpusFile(filename: String, projectUrl: String, commit: String) {
        |)""".stripMargin
 
   private def link(url: String) = s"[$repo/${url.replaceFirst(".*/", "")}]($url)"
+
 }

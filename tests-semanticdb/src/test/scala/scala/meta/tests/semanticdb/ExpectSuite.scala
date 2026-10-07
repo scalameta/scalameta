@@ -69,6 +69,7 @@ class ExpectSuite extends FunSuite {
 }
 
 trait ExpectHelpers extends munit.Assertions {
+
   def filename: String
 
   def loadExpected: String = new String(Files.readAllBytes(path), UTF_8)

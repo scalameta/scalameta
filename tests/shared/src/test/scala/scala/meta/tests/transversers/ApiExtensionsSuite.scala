@@ -6,6 +6,7 @@ import scala.meta.tests.TreeSuiteBase
 import scala.collection.mutable.ListBuffer
 
 class ApiExtensionsSuite extends TreeSuiteBase {
+
   val a: Defn.Val = q"val x = 2"
 
   test("test dfs") {
@@ -119,4 +120,5 @@ class ApiExtensionsSuite extends TreeSuiteBase {
     assert(a.bfsCollectFirst { case t: Defn.Trait => t }.isEmpty)
     assert(a.bfsCollectFirst { case t: Defn.Def => t }.isEmpty)
   }
+
 }

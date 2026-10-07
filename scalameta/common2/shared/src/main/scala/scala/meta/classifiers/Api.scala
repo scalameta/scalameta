@@ -20,6 +20,7 @@ private[meta] trait Api {
   }
 
   implicit class XtensionOptionClassifiable[T: Classifiable](x: Option[T]) {
+
     type C[U] = Classifier[T, U]
 
     def is[U](implicit c: C[U]): Boolean = x.exists(c.apply)
@@ -36,5 +37,6 @@ private[meta] trait Api {
 
     def isAny[U1: C, U2: C, U3: C, U4: C]: Boolean = x.exists(_.isAny[U1, U2, U3, U4])
     def isAnyOpt[U1: C, U2: C, U3: C, U4: C]: Boolean = x.forall(_.isAny[U1, U2, U3, U4])
+
   }
 }

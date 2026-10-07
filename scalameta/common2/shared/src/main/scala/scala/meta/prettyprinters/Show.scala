@@ -15,6 +15,7 @@ trait Show[-T] {
 private[meta] object Show {
 
   private class Serializer {
+
     private val sb = new StringBuilder
     private val indentation = new StringBuilder
     private var afterEOL = 0
@@ -239,6 +240,7 @@ private[meta] object Show {
     }
     private def push(res: Result): Unit = stack = res :: stack
     private def maybePush(res: Result): Unit = if (res ne None) push(res)
+
   }
 
   sealed abstract class Result {
@@ -382,4 +384,5 @@ private[meta] object Show {
   implicit def str(value: String): Result = if (value.isEmpty) None else Str(value)
   implicit def showAsResult[T](x: T)(implicit show: Show[T]): Result = show(x)
   implicit def seq[T](x: Seq[T])(implicit show: Show[T]): Seq[Result] = x.map(show.apply)
+
 }

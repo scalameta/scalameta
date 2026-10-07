@@ -9,6 +9,7 @@ import java.nio.{file => nio}
 
 /** Wrapper around an absolute nio.Path. */
 sealed abstract case class AbsolutePath(toNIO: nio.Path) {
+
   require(toNIO.isAbsolute, s"$toNIO is not absolute!")
   def toFile: File = toNIO.toFile
   def toURI: URI = toURI(FileIO.isDirectory(this))
@@ -53,6 +54,7 @@ sealed abstract case class AbsolutePath(toNIO: nio.Path) {
 
   /** The last path segment, or "" if this is a filesystem root. */
   def fileName: String = Option(toNIO.getFileName).fold("")(_.toString)
+
 }
 
 object AbsolutePath {
