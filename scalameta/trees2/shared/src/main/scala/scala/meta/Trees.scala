@@ -3,7 +3,7 @@ package scala.meta
 import org.scalameta.invariants._
 import scala.meta.classifiers._
 import scala.meta.internal.prettyprinters._
-import scala.meta.internal.trees.Metadata.{newField, replacedField, replacesFields}
+import scala.meta.internal.trees.FieldAnnotations._
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.trees._
