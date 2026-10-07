@@ -283,7 +283,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           """
 
         def getPrivateCopyArg(p: ValOrDefDef) =
-          q"$CommonTyperMacrosModule.initField(this.${internalize(p)})"
+          if (isShared(p)) q"this.${internalize(p)}"
+          else q"$CommonTyperMacrosModule.initField(this.${internalize(p)})"
         def getPrivateCopyPrivateArg(p: ValOrDefDef) = p match {
           case `prototypeParam` => q"this"
           case `parentParam` => q"parent"
@@ -465,7 +466,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           }
           val storeFields = params.map { p =>
             val name = p.name.decodedName.toString
-            q"$CommonTyperMacrosModule.storeFieldIfSet(node.${internalize(p)}, $name)"
+            if (isShared(p)) q"()"
+            else q"$CommonTyperMacrosModule.storeFieldIfSet(node.${internalize(p)}, $name)"
           }
           val result =
             q"""
@@ -505,6 +507,8 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
           q"override def foreachChild(f: $TreeClass => _root_.scala.Unit): _root_.scala.Unit = $CommonTyperMacrosModule.foreachChild[$iname, $TreeClass](f)"
         stats1 +=
           q"override def childrenCount: $IntClass = $CommonTyperMacrosModule.childrenCount[$iname]"
+        stats1 +=
+          q"override private[meta] def lastChild: $TreeClass = $CommonTyperMacrosModule.lastChild[$iname, $TreeClass]"
 
         // step 9: generate boilerplate required by the @ast infrastructure
         ianns1 += q"new $AstMetadataModule.astClass"
@@ -552,7 +556,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         stats1 +=
           q"""
           protected def writeReplace(): $AnyRefClass = {
-            ..${params.map(loadField)}
+            ..${params.filterNot(isShared).map(loadField)}
             this
           }
           """
@@ -587,7 +591,9 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             ..$paramInits
           )
           """
-        params.foreach(p => internalBody += storeField(p))
+        params.foreach(p =>
+          internalBody += (if (isShared(p)) q"node.${internalize(p)} = ${p.name}" else storeField(p)),
+        )
         internalBody += q"node"
         val applyParamDefns = apiParams.map(asValDefn)
         val applyParamDecls = apiParams.map(asValDecl)
@@ -919,6 +925,12 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getterName(name: String): TermName = TermName(AdtHelpers.getterName(name))
   private def getterName(name: TermName): TermName = getterName(name.toString)
   private def getterName(vr: ValOrDefDef): TermName = getterName(vr.name)
+
+  // a `@shared` field holds its value as it is: no parent, no lazy copy
+  private def isShared(vr: ValOrDefDef): Boolean = vr.mods.annotations.exists {
+    case q"new shared" => true
+    case _ => false
+  }
 
   private def loadField(vr: ValOrDefDef): Tree = loadField(vr.name)
   private def loadField(name: TermName): Tree = loadField(internalize(name), name)

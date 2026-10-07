@@ -95,4 +95,37 @@ class TreeSuite extends TreeSuiteBase {
     assertEquals(copy.toString, expectedSyntax)
   }
 
+  test("Comment: newlines and a blank line after it") {
+    def comment(text: String, newlinesAfter: Int) = Tree.Comment.newBuilder(List(Lit.String(text)))
+      .newlinesAfter(newlinesAfter).result()
+    val mlc0 = comment("/* c */", 0)
+    val mlc1 = comment("/* c */", 1)
+    val mlc2 = comment("/* c */", 2)
+    val slc0 = comment("// c", 0)
+    assertEquals(List(mlc0, mlc1, mlc2, slc0).map(_.hasNewlinesAfter), List(false, true, true, true))
+    assertEquals(List(mlc0, mlc1, mlc2, slc0).map(_.hasBlankAfter), List(false, false, true, false))
+    assertEquals(List(mlc1, mlc0).hasNewlinesAfter, false)
+    assertEquals(List(mlc0, mlc1).hasNewlinesAfter, true)
+    assertEquals(List(mlc1).hasNewlinesBeforeLast, false)
+    assertEquals(List(mlc0, mlc0).hasNewlinesBeforeLast, false)
+    assertEquals(List(mlc1, mlc0).hasNewlinesBeforeLast, true)
+    assertEquals(List(mlc0, slc0, mlc0).hasNewlinesBeforeLast, true)
+  }
+
+  test("Comments: newlines and a blank line around the group") {
+    def comment(newlinesAfter: Int) = Tree.Comment.newBuilder(List(Lit.String("/* c */")))
+      .newlinesAfter(newlinesAfter).result()
+    def comments(newlinesBefore: Int, newlinesAfter: Int*) = Tree.Comments
+      .newBuilder(newlinesAfter.map(comment).toList).newlinesBefore(newlinesBefore).result()
+    val attached = comments(0, 0)
+    val detached = comments(1, 0)
+    val blank = comments(2, 0)
+    val inner = comments(0, 1, 0)
+    val after = comments(0, 0, 1)
+    val all = List(attached, detached, blank, inner, after)
+    assertEquals(all.map(_.hasBlankBefore), List(false, false, true, false, false))
+    assertEquals(all.map(_.hasNewlinesBeforeLast), List(false, true, true, true, false))
+    assertEquals(all.map(_.hasNewlinesAfter), List(false, false, false, false, true))
+    assertEquals(all.map(_.hasNewlinesBeforeOrAfter), List(false, true, true, false, true))
+  }
 }
