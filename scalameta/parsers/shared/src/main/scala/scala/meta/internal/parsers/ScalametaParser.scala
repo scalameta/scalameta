@@ -395,23 +395,20 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
 
   def atPosWithBody[T <: Tree](startPos: Int, body: T, endPos: Int): T = {
-    // Compute the token-index range [start, endExcl) inline, without a getPosRange
-    // helper returning a (start, endExcl) Tuple2 (a per-node allocation). start and
-    // endExcl default to startPos and are narrowed by the branches below.
     var start = startPos
     var endExcl = startPos
     if (endPos >= startPos) {
-      val nonSpaceEnd = tokens.rskipIf(_.is[Whitespace], endPos, startPos - 1)
+      val nonSpaceEnd = tokens.rskipIf(isWhitespace, endPos, startPos - 1)
       if (nonSpaceEnd < startPos) endExcl = if (endPos == startPos) endPos else endPos + 1
       else {
-        val firstNonTrivia = tokens.skipIf(_.is[Trivia], startPos, endPos + 1)
+        val firstNonTrivia = tokens.skipIf(isTrivia, startPos, endPos + 1)
         if (firstNonTrivia > endPos) endExcl = nonSpaceEnd + 1
         else {
           start = firstNonTrivia
           endExcl =
             if (!tokens(nonSpaceEnd).is[Comment]) nonSpaceEnd + 1
             else {
-              val end = tokens.rskipIf(_.is[HTrivia], nonSpaceEnd - 1, firstNonTrivia)
+              val end = tokens.rskipIf(isHTrivia, nonSpaceEnd - 1, firstNonTrivia)
               (if (tokens(end).is[AtEOLorF]) nonSpaceEnd else end) + 1
             }
         }
@@ -419,9 +416,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
     val origin = asOrigin(start, endExcl)
 
-    // two vars rather than a `(begComment, endComment)` Tuple2 allocated per node
-    // (this method runs for every tree node); they aren't captured by the
-    // children.foreach closure below, so they stay plain locals (no Ref boxing).
     var begComment: Option[Tree.Comments] = None
     var endComment: Option[Tree.Comments] = None
     if (options.captureComments)
@@ -430,26 +424,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         endComment = body.endComment
       } else {
         // we don't use comments attributed to a child
-        var minChild: Tree = null
-        var minChildBeg = Int.MaxValue
-        var maxChild: Tree = null
-        var maxChildEnd = -1
-        body.children.foreach { x =>
-          // use start/end offsets directly instead of forcing x.pos, which would
-          // allocate a Position.Range per child just to read these two ints
-          val beg = x.begComment.getOrElse(x).begOffset
-          val end = x.endComment.getOrElse(x).endOffset
-          if (beg < end) {
-            if (beg < minChildBeg) {
-              minChild = x
-              minChildBeg = beg
-            }
-            if (end > maxChildEnd) {
-              maxChild = x
-              maxChildEnd = end
-            }
-          }
-        }
+        childSpan.reset(Int.MinValue)
+        body.foreachChild(childSpan)
+        val minChild = childSpan.minChild
+        val minChildBeg = childSpan.minChildBeg
+        val maxChild = childSpan.maxChild
+        val maxChildEnd = childSpan.maxChildEnd
 
         val bodyIsBlock = body.is[Tree.Block]
 
@@ -482,6 +462,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
     body
   }
+
+  private val childSpan = new ScalametaParser.ChildSpan
 
   // the comments before the tree that starts at `start`, back to the statement before it
   private def leadingComments(body: Tree, start: Int, endExcl: Int): Option[Tree.Comments] = {
@@ -628,14 +610,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   final lazy val reporter = Reporter()
   import this.reporter._
-
-  implicit class XtensionToken(tok: Token) {
-    def is[T](implicit ctag: ClassTag[T]) = ctag.runtimeClass.isAssignableFrom(tok.getClass())
-    def as[T <: AnyRef: ClassTag]: T = (if (is[T]) tok else null).asInstanceOf[T]
-
-    def isAny[A: ClassTag, B: ClassTag] = is[A] || is[B]
-    def isAny[A: ClassTag, B: ClassTag, C: ClassTag] = is[A] || is[B] || is[C]
-  }
 
   @inline
   private def at[T: ClassTag]: Boolean = currToken.is[T]
@@ -4597,6 +4571,43 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
 object ScalametaParser {
 
+  // the range scan of `atPosWithBody` runs per tree: create its predicates once
+  private val isWhitespace: Token => Boolean = _.is[Whitespace]
+  private val isTrivia: Token => Boolean = _.is[Trivia]
+  private val isHTrivia: Token => Boolean = _.is[HTrivia]
+
+  // the first and the last child, with their comments; reused, as every tree computes them
+  private final class ChildSpan extends (Tree => Unit) {
+    private var from = 0
+    var minChild: Tree = null
+    var minChildBeg = Int.MaxValue
+    var maxChild: Tree = null
+    var maxChildEnd = -1
+    def reset(from: Int): Unit = {
+      this.from = from
+      minChild = null
+      minChildBeg = Int.MaxValue
+      maxChild = null
+      maxChildEnd = -1
+    }
+    def apply(x: Tree): Unit = if (x.begTokenIdx >= from) {
+      /* use start/end offsets directly instead of forcing x.pos, which would
+       * allocate a Position.Range per child just to read these two ints */
+      val beg = x.begComment.getOrElse(x).begOffset
+      val end = x.endComment.getOrElse(x).endOffset
+      if (beg < end) {
+        if (beg < minChildBeg) {
+          minChild = x
+          minChildBeg = beg
+        }
+        if (end > maxChildEnd) {
+          maxChild = x
+          maxChildEnd = end
+        }
+      }
+    }
+  }
+
   def doWhile(body: => Unit)(cond: => Boolean): Unit = {
     body
     while (cond) body
@@ -4727,6 +4738,14 @@ object ScalametaParser {
       declType: Option[Type] = None,
       declPos: Option[Int] = None,
   )
+
+  implicit class XtensionToken(private val tok: Token) extends AnyVal {
+    def is[T](implicit ctag: ClassTag[T]) = ctag.runtimeClass.isInstance(tok)
+    def as[T <: AnyRef: ClassTag]: T = (if (is[T]) tok else null).asInstanceOf[T]
+
+    def isAny[A: ClassTag, B: ClassTag] = is[A] || is[B]
+    def isAny[A: ClassTag, B: ClassTag, C: ClassTag] = is[A] || is[B] || is[C]
+  }
 
 }
 
