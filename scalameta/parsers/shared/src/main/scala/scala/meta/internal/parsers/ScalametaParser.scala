@@ -1729,9 +1729,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
    * Deals with Scala 3 concept of {{{inline x match { ...}}}. Since matches can also be chained in
    * Scala 3 we need to create the Match first and only then add the the inline modifier.
    */
-  def inlineMatchClause(inlineMods: List[Mod]) =
-    autoEndPos(inlineMods)(postfixExpr(allowRepeated = false)) match {
-      case t: Term.Match => t.fullCopy(mods = inlineMods)
+  def inlineMatchClause(inlineMod: Mod) =
+    autoEndPos(inlineMod)(postfixExpr(allowRepeated = false)) match {
+      case t: Term.Match => t.fullCopy(mods = List(inlineMod))
       case other => syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
     }
 
@@ -1823,8 +1823,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
     val res = autoPosOpt {
       currToken match {
-        case soft.KwInline() if peek[KwIf] => ifClause(List(inlineMod()))
-        case _ if isInlineMatchMod(currIndex) => inlineMatchClause(List(inlineMod()))
         case _: KwIf => ifClause()
         case _: KwTry =>
           next()
@@ -1903,10 +1901,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           val quants = typeParamClauseOpt()
           accept[RightArrow]
           Term.PolyFunction(quants, expr(location, allowRepeated))
-        case _ =>
-          val startPos = currIndex
-          val t: Term = postfixExpr(startPos, allowRepeated)
-          exprOtherRest(t, startPos, location, allowRepeated)
+        case tok =>
+          val isInline = soft.KwInline(tok)
+          if (isInline && peek[KwIf]) ifClause(List(inlineMod()))
+          else if (isInline && matchesAfterInlineMatchMod(getNextToken(currIndex)))
+            inlineMatchClause(inlineMod())
+          else {
+            val startPos = currIndex
+            val t: Term = postfixExpr(startPos, allowRepeated)
+            exprOtherRest(t, startPos, location, allowRepeated)
+          }
       }
     }
     maybeAnonymousFunction(res, location)
@@ -3636,7 +3640,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           if (peek[Comma]) enumRepeatedCaseDef(mods) else enumSingleCaseDef(mods)
         }
       case _: KwIf if onlyInline() => ifClause(mods)
-      case _ if isExprIntro(currToken, currIndex) && onlyInline() => inlineMatchClause(mods)
+      case _ if isExprIntro(currToken, currIndex) && onlyInline() => inlineMatchClause(mods.head)
       case _ if isKwExtension(currIndex) => extensionGroupDecl(mods)
       case _ => tmplDef(mods, okTopLevel = false)
     }
