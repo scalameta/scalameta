@@ -140,6 +140,9 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def tparamInline(name: String, tpe: Type) = tparam(List(Mod.Inline()), name, tpe)
   final def tparamUsing(name: String, tpe: Type) = tparam(List(Mod.Using()), name, tpe)
 
+  final def tif(cond: Term, thenp: Term, elsep: Term = Lit.Unit()): Term.If = Term
+    .If(cond, thenp, elsep)
+
   final def tinfix(lt: Term, op: Term.Name, ta: List[Type], rt: Term*): Term.ApplyInfix = Term
     .ApplyInfix(lt, op, ta, rt.toList)
   final def tinfix(lt: Term, op: Term.Name, rt: Term*): Term.ApplyInfix = tinfix(lt, op, Nil, rt: _*)

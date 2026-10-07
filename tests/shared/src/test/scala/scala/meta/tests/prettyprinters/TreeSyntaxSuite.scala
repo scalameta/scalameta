@@ -2,6 +2,7 @@ package scala.meta.tests.prettyprinters
 
 import scala.meta._
 import scala.meta.internal.prettyprinters.TreeSyntax
+import scala.meta.prettyprinters.Show
 
 /**
  * This class, unlike similar SyntacticSuite, does not reset origins. Instead it uses runTestAssert
@@ -162,4 +163,147 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
   Seq("true", "'a'", "1.0d", "1.0f", "1", "1L", "null", "\"foo\"", "'foo", "()")
     .foreach(testBlockAddNL(_))
 
+  locally {
+    import scala.meta.prettyprinters.Show
+    import scala.meta.prettyprinters.Show.{blank, newline => n, sequence => s}
+    def checkBlankLine(name: String, res: Show.Result, expected: String)(implicit
+        loc: munit.Location,
+    ): Unit = test(s"blank line: $name")(assertEquals(res.toString.replace("\r\n", "\n"), expected))
+    checkBlankLine("after text", s("foo", blank(), "bar"), "foo\nbar")
+    checkBlankLine("after a newline", s("foo", n(), blank(), "bar"), "foo\n\nbar")
+    checkBlankLine("after text that ends its line", s("foo\n", blank(), "bar"), "foo\n\nbar")
+    checkBlankLine(
+      "after text that ends in a blank line",
+      s("foo\n\n", blank(), "bar"),
+      "foo\n\n\nbar",
+    )
+    checkBlankLine("after a line of spaces", s("foo\n  \n", blank(), "bar"), "foo\n  \n\nbar")
+    checkBlankLine("after a blank line", s("foo", blank(), blank(), "bar"), "foo\n\nbar")
+    checkBlankLine("then a newline", s("foo", blank(), n("bar")), "foo\n\nbar")
+    checkBlankLine("at the start", s(blank(), "bar"), "\nbar")
+    checkBlankLine("at the end", s("foo", blank()), "foo\n")
+    checkBlankLine("at the end, after a newline", s("foo", n(), blank()), "foo\n\n")
+  }
+
+  test("empty block with a comment, printed without comments") {
+    val tree = Term.Block.newBuilder(Nil).endComment(Seq("/* c */")).result()
+    assertNoDiff(tree.syntax, "{}")
+  }
+
+  test("case: one-stat block body, printed without comments") {
+    val tree = templStat(
+      """|x match {
+         |  case 1 => { a }
+         |}
+         |""".stripMargin,
+    )
+    val printed = TreeSyntax.reprint(tree, false).toString
+    assertNoDiff(printed, "x match {\n  case 1 =>\n    a\n}")
+    assertEquals(
+      templStat(printed).collect { case c: Case => c.body.productPrefix },
+      List("Term.Name"),
+    )
+  }
+
+  test("case: block body with one definition, printed without comments") {
+    val tree = templStat(
+      """|x match {
+         |  case 1 => { val a = 1 }
+         |}
+         |""".stripMargin,
+    )
+    val printed = TreeSyntax.reprint(tree, false).toString
+    assertNoDiff(
+      printed,
+      """|x match {
+         |  case 1 =>
+         |    val a = 1
+         |}
+         |""".stripMargin,
+    )
+    assertEquals(
+      templStat(printed).collect { case c: Case => c.body.productPrefix },
+      List("Term.Block"),
+    )
+  }
+
+  test("interpolation: spaces at the ends of the parts") {
+    val parts = List(Lit.String(" a "), Lit.String("  "), Lit.String(" b "))
+    val tree = Term.Interpolate(Term.Name("s"), parts, List(Term.Name("x"), Term.Name("y")))
+    assertEquals(TreeSyntax.reprint(tree).toString, "s\" a $x  $y b \"")
+  }
+
+  test("xml: spaces at the ends of the parts") {
+    val tree = Term.Xml(List(Lit.String("<a> "), Lit.String(" </a>")), List(Term.Name("x")))
+    assertEquals(TreeSyntax.reprint(tree).toString, "<a> {x} </a>")
+  }
+
+  test("show: trailing space, then leading space")(
+    assertEquals(Show.sequence("a ", " (", "b)").toString, "a  (b)"),
+  )
+
+  test("show: trailing spaces, then leading spaces")(
+    assertEquals(Show.sequence("a  ", "  (", "b)").toString, "a    (b)"),
+  )
+
+  test("show: trailing space, then an empty function, then the end")(
+    assertEquals(Show.sequence("a ", Show.function(_ => Show.None)).toString, "a "),
+  )
+
+  test("show: trailing space, then an empty function, then a newline")(assertEquals(
+    Show.sequence("a ", Show.function(_ => Show.None), Show.newline("b")).toString,
+    "a \nb".lf2nl,
+  ))
+
+  test("show: trailing space, then a function that starts with a newline")(
+    assertEquals(Show.sequence("a ", Show.function(_ => Show.newline("b"))).toString, "a \nb".lf2nl),
+  )
+
+  test("show: delayed separator, then leading space")(
+    assertEquals(Show.repeat(", ")("a", " b").toString, "a,  b"),
+  )
+
+  test("show: trailing space, then delayed separator")(
+    assertEquals(Show.repeat(", ")("a ", "b").toString, "a , b"),
+  )
+
+  test("interpolation: this in a part") {
+    val code =
+      """|object A {
+         |  val s = s"($this)"
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { val s = s"(${this})" }
+         |""".stripMargin,
+    )()
+  }
+
+  test("self type: function type") {
+    val code =
+      """|class A {
+         |  this: (Int => Unit) =>
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|class A { this: Int => Unit => }
+         |""".stripMargin,
+      reprintError = "<input>:1: error: `;` expected but `=>` found",
+    )()
+  }
+
+  test("param: function type of no args") {
+    val code =
+      """|object A {
+         |  def g(f: (() => a.R)) = 1
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { def g(f: () => a.R) = 1 }
+         |""".stripMargin,
+    )()
+  }
 }
