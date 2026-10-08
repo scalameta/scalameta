@@ -101,8 +101,13 @@ private[meta] object Show {
         push(SpaceOrIndent(pop(), space = true))
       var beg = 0
       while (beg < end && value.charAt(beg) == ' ') beg += 1
-      if ((space || beg > 0) && end > 0) addLeadingSpace()
-      appendTrimmed(value, beg, end)
+      // a leading space is scoped to the text after it, unless a delayed separator replaces it
+      if ((space || beg > 0) && end > 0) {
+        val p = if (hasDelay) null else addIndent(space = true)
+        addLeadingSpace()
+        appendTrimmed(value, beg, end)
+        if (p ne null) closePending(p)
+      } else appendTrimmed(value, beg, end)
       if (end < value.length && last) addSpace()
     }
 
@@ -212,6 +217,9 @@ private[meta] object Show {
           case Newline(res) =>
             nl()
             maybePush(res)
+          case NoBlankBefore(res) =>
+            if (afterEOL == 2) afterEOL = 1 // the second newline was not written yet
+            maybePush(res)
           case Indent(res) =>
             pending = null // the indent replaces the separator
             push(taskIndent)
@@ -317,6 +325,10 @@ private[meta] object Show {
   final case class Newline(res: Result) extends Result {
     override def desc: String = s"Newline(r=${res.desc})"
   }
+  // a result that a blank line before would detach: one newline replaces the blank line
+  final case class NoBlankBefore(res: Result) extends Result {
+    override def desc: String = s"NoBlankBefore(r=${res.desc})"
+  }
   sealed class Deferred(res: () => Result) extends Result {
     lazy val value: Result = res()
     override def desc: String = s"Deferred(...)"
@@ -381,6 +393,7 @@ private[meta] object Show {
   val newlineOnly: Result = Newline(None)
   def newline(): Result = newlineOnly
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
+  def noBlankBefore(res: Result): Result = if (res eq None) None else NoBlankBefore(res)
 
   // body by-name + no eager None-elision: the child render is deferred, and
   // serialize's `delay` mechanism elides empties dynamically instead.
@@ -426,6 +439,7 @@ private[meta] object Show {
     case SpaceOrIndent(x, _) => firstSyntaxElem(x)
     case SpaceOrNewline(x, _) => firstSyntaxElem(x)
     case Newline(x) => firstSyntaxElem(x)
+    case NoBlankBefore(x) => firstSyntaxElem(x)
     case x: Deferred => firstSyntaxElem(x.value)
     case _ => null // nothing printed, a comment, or a separator
   }

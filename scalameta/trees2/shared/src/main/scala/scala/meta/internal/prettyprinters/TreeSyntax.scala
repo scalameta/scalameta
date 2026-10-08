@@ -375,10 +375,10 @@ object TreeSyntax {
         val paramsSyntax = printParams(t.paramClause, needParens = false)
         m(Expr, s(paramsSyntax, " ", kw(arrow), " ", p(Expr, t.body)))
       case t: Term.PolyFunction => m(Expr, s(t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body)))
-      case t: Term.QuotedMacroType => s("'[ ", t.tpe, " ]")
+      case t: Term.QuotedMacroType => s("'[ ", t.tpe, spn("]"))
       case t: Term.QuotedMacroExpr => printMacroExprBody(t.body, "'")
       case t: Term.SplicedMacroExpr => printMacroExprBody(t.body, "$")
-      case t: Term.SplicedMacroPat => s("${ ", t.pat, " }")
+      case t: Term.SplicedMacroPat => s("${ ", t.pat, spn("}"))
       case t: Pat.Macro => m(SimplePattern, s(t.body))
       case t: Type.Macro => m(SimpleTyp, s(t.body))
       case t: Term.PartialFunction => m(SimpleExpr, s("{", t.cases, n("}")))
@@ -678,7 +678,7 @@ object TreeSyntax {
       case t: Template.Body =>
         val self = o(t.selfOpt)
         t.stats match {
-          case Nil => w("{ ", self, " }")
+          case Nil => w("{ ", self, spn("}"))
           case stat :: Nil =>
             val statStr = s(stat).toString
             if (statStr.contains(EOL)) s("{", w(" ", self), i(stat), n("}"))
@@ -860,7 +860,7 @@ object TreeSyntax {
     private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =
       args.values match {
         case Seq(b @ (_: Term.Block | _: Term.PartialFunction)) => s(beforeBrace, b)
-        case Seq(f: Term.Function) if f.paramClause.mod.isDefined => s(beforeBrace, "{ ", f, " }")
+        case Seq(f: Term.Function) if f.paramClause.mod.isDefined => s(beforeBrace, "{ ", f, spn("}"))
         case _ => s(args)
       }
 
@@ -1005,7 +1005,7 @@ object TreeSyntax {
 
     private def printMacroExprBody(t: Term, prefix: String) = {
       val body = t match {
-        case Term.Block(stat :: Nil) => s("{ ", stat, " }")
+        case Term.Block(stat :: Nil) => s("{ ", stat, spn("}"))
         case body => p(Expr, body)
       }
       m(SimpleExpr, s(prefix, body))
