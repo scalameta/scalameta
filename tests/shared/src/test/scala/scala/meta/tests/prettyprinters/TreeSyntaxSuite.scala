@@ -247,13 +247,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |    if (c) d += p
          |  }
          |}""".stripMargin
-    val second =
-      """|object A {
-         |  def g = a b xs foreach {
-         |    if (a) b += p
-         |    if (c) d += p
-         |  }
-         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
 
@@ -268,18 +262,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  def g = a b xs foreach {
+         |  def g = xs foreach {
          |    if (a) b += p
          |    if (c) d += p
          |  }
          |}""".stripMargin
-    val second =
-      """|object A {
-         |  def g = a b (a b xs) foreach {
-         |    if (a) b += p
-         |    if (c) d += p
-         |  }
-         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
   }
 

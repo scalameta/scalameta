@@ -141,6 +141,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   var in: TokenIterator = LazyTokenIterator(scannerTokens)
 
+  private def fork(): ParserState =
+    ParserState(in.fork, TermInfixContext.stack, PatInfixContext.stack, TypeInfixContext.stack)
+  private def restore(state: ParserState): Unit = {
+    in = state.in
+    TermInfixContext.stack = state.termStack
+    PatInfixContext.stack = state.patStack
+    TypeInfixContext.stack = state.typeStack
+  }
+
   @inline
   def currIndex = in.currIndex
   @inline
@@ -186,9 +195,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
    */
   @inline
   final def ahead[T](body: => T): T = {
-    val forked = in.fork
+    val forked = fork()
     try next(body)
-    finally in = forked
+    finally restore(forked)
   }
 
   @inline
@@ -206,17 +215,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def unreachable: Nothing = unreachable(Map.empty[String, Any])
 
   private def tryAhead(cond: => Boolean): Boolean = {
-    val forked = in.fork
+    val forked = fork()
     next()
     val ok = cond
-    if (!ok) in = forked
+    if (!ok) restore(forked)
     ok
   }
 
   private def tryParseUnless[A <: AnyRef](bodyFunc: => A)(sentinel: A): A = {
-    val forked = in.fork
+    val forked = fork()
     val body = bodyFunc
-    if (body eq sentinel) in = forked
+    if (body eq sentinel) restore(forked)
     body
   }
   private def tryParseOpt[A](bodyFunc: => Option[A]): Option[A] = tryParseUnless(bodyFunc)(None)
@@ -4769,6 +4778,14 @@ object ScalametaParser {
     def isAny[A: ClassTag, B: ClassTag] = is[A] || is[B]
     def isAny[A: ClassTag, B: ClassTag, C: ClassTag] = is[A] || is[B] || is[C]
   }
+
+  // where parsing stands: an attempt that fails restores the tokens and the infix operations
+  private case class ParserState(
+      in: TokenIterator,
+      termStack: List[UnfinishedInfixTerm],
+      patStack: List[UnfinishedInfix[Pat, Term.Name]],
+      typeStack: List[UnfinishedInfix[Type, Type.Name]],
+  )
 
   // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
   private[parsers] trait UnfinishedInfixLike[TreeType <: Tree, NameType <: Name] {
