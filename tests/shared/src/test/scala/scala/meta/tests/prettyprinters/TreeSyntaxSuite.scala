@@ -12,10 +12,15 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   implicit val dialect: Dialect = dialects.Scala211
 
-  private def reprintTwice(code: String, d: Dialect = dialect): (String, String) = {
-    val first = source(code)(d).reprint(d)
+  private def reprintTwice(
+      code: String,
+      d: Dialect = dialect,
+      comments: Boolean = true,
+  ): (String, String) = {
+    def reprint(code: String) = TreeSyntax.reprint(source(code)(d), comments)(d).toString
+    val first = reprint(code)
     val second =
-      try source(first)(d).reprint(d)
+      try reprint(first)
       catch { case e: ParseException => e.shortMessage }
     (first, second)
   }
@@ -224,6 +229,58 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val code = "object A { val x = (a b) c }"
     val printed = "object A { val x = (a b) c }"
     assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("two if-then statements in a block argument") {
+    val code =
+      """|object A:
+         |  def g =
+         |    xs foreach {
+         |      if a then b += p
+         |      if c then d += p
+         |    }
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  def g = xs foreach {
+         |    if (a) b += p
+         |    if (c) d += p
+         |  }
+         |}""".stripMargin
+    val second =
+      """|object A {
+         |  def g = a b xs foreach {
+         |    if (a) b += p
+         |    if (c) d += p
+         |  }
+         |}""".stripMargin
+    assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
+  }
+
+  test("two if statements with conditions in parens in a block argument") {
+    val code =
+      """|object A {
+         |  def g = xs foreach {
+         |    if (a) b += p
+         |    if (c) d += p
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  def g = a b xs foreach {
+         |    if (a) b += p
+         |    if (c) d += p
+         |  }
+         |}""".stripMargin
+    val second =
+      """|object A {
+         |  def g = a b (a b xs) foreach {
+         |    if (a) b += p
+         |    if (c) d += p
+         |  }
+         |}""".stripMargin
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
   }
 
 }
