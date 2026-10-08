@@ -173,6 +173,8 @@ class TransversersGenerateMacros(val c: Context) extends GenerateHelper with Ast
           |    throw new UnsupportedOperationException(errorHeader + errorDetails)
           |  }
           |}
+          |
+          |object Transformer // workaround to run on Scala 3.10.0 https://github.com/scala/scala3/issues/27256
           |""".stripMargin
 
     mkStringList(header, termApply, typeApply, defnApply, restApply, footer)
