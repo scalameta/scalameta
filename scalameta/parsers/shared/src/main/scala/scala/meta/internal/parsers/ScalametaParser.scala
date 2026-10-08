@@ -333,8 +333,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def begIndex = currIndex
     def endIndex = prevIndex
   }
-  implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
-  implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(treeToTreePos)
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
 
@@ -2183,86 +2181,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     autoEndPos(implicitPos)(Term.Function(params, termFunctionBody(location)))
   }
 
-  // Encapsulates state and behavior of parsing infix syntax.
-  // See `postfixExpr` for an involved usage example.
-  // Another, much less involved usage, lives in `pattern3`.
-  sealed abstract class InfixContext {
-
-    // (Lhs, op and targs form UnfinishedInfix).
-    // FinishedInfix is the type of an infix expression.
-    // The conversions are necessary to push the output of finishInfixExpr on stack.
-    type Typ <: Tree
-    type Op <: Name
-    type UnfinishedInfix <: Unfinished
-
-    // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
-    protected trait Unfinished {
-      def lhs: Typ
-      def op: Op
-      override def toString = s"[$lhs $op]"
-    }
-
-    // The stack of unfinished infix expressions, e.g. Stack([a + ]) in `a + b [*] c`.
-    // `push` takes `b`, reads `*`, checks for type arguments and adds [b *] on the top of the stack.
-    // Other methods working on the stack are self-explanatory.
-    var stack: List[UnfinishedInfix] = Nil
-    @inline
-    def isDone(base: List[UnfinishedInfix]): Boolean = this.stack == base
-    def push(unfinishedInfix: UnfinishedInfix): Unit = stack ::= unfinishedInfix
-    def reduceAndPush(base: List[UnfinishedInfix], rhs: Typ, op: Op)(
-        f: (Typ, Op) => UnfinishedInfix,
-    ): Unit = push(f(reduceStack(base, rhs, rhs, op), op))
-
-    def drainStack(base: List[UnfinishedInfix], curr: Typ, currEnd: EndPos): Typ = {
-      @tailrec
-      def loop(rhs: Typ): Typ = stack match {
-        case lhs :: rest if !isDone(base) =>
-          stack = rest
-          loop(finishInfixExpr(lhs, rhs, currEnd))
-        case _ => rhs
-      }
-      loop(curr)
-    }
-
-    def reduceStack(base: List[UnfinishedInfix], curr: Typ, currEnd: EndPos, op: Op): Typ =
-      if (isDone(base)) curr
-      else {
-        val opPrecedence = op.precedence
-        val ifSamePrecedence = !op.isLeftAssoc // see comment below
-
-        // Pop off an unfinished infix expression off the stack and finish it with the rhs.
-        // Then convert the result, so that it can become someone else's rhs.
-        // Repeat while precedence and associativity allow.
-        @tailrec
-        def loop(rhs: Typ): Typ = {
-          val lhs = stack.head
-          /* if op were to become the outer infix, would lhs.op need parens?
-           * if yes, op binds tighter than lhs.op, so we can't continue reducing.
-           * if op and lhs.op were of same precedence, then associativity is the
-           * tie-breaker, and right-associative needs to keep going right. Keep
-           * in mind that scala forbids mixed-associativity at the same level of
-           * precedence, so we have to assume that in that case op and lhs.op are
-           * of the same associativity.
-           */
-          if (TSG.opNeedsParens(opPrecedence, lhs.op.precedence, ifSamePrecedence)) rhs
-          else {
-            stack = stack.tail
-            val fin = finishInfixExpr(lhs, rhs, currEnd)
-            if (isDone(base)) fin else loop(fin)
-          }
-        }
-
-        loop(curr)
-      }
-
-    // Takes the unfinished infix expression, e.g. `[x +]`,
-    // then takes the right-hand side (which can have multiple args), e.g. ` (y, z)`,
-    // and creates `x + (y, z)`.
-    // We need to carry endPos explicitly because its extent may be bigger than rhs because of parent of whatnot.
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ
-
-  }
-
   // Infix syntax in terms is borderline crazy.
   //
   // For example, did you know that `a * b + (c, d) * (f, g: _*)` means:
@@ -2274,12 +2192,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   object TermInfixContext extends InfixContext {
     type Typ = Term
     type Op = Term.Name
-
-    // We need to carry lhsStart/lhsEnd separately from lhs.pos
-    // because their extent may be bigger than lhs because of parentheses or whatnot.
-    case class UnfinishedInfix(lhs: Typ, op: Op, targs: Type.ArgClause) extends Unfinished {
-      override def toString = s"[$lhs $op$targs]"
-    }
+    type Unfinished = UnfinishedInfixTerm
 
     def toArgClause(rhs: Typ): Term.ArgClause = copyPos(rhs)(
       (rhs match {
@@ -2293,14 +2206,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }).reduceWith(Term.ArgClause(_)),
     )
 
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
-      val UnfinishedInfix(lhsExt, op, targs) = unf
-      val lhs = lhsExt match {
+    protected def finishInfixExpr(unf: Unfinished, rhs: Typ, rhsEnd: EndPos): Typ = {
+      val lhs = unf.lhs match {
         // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
         case Term.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Term.Assign] => arg
         case x => x
       }
-      atPos(lhsExt, rhsEnd)(Term.ApplyInfix(lhs, op, targs, toArgClause(rhs)))
+      atPos(unf.lhs, rhsEnd)(Term.ApplyInfix(lhs, unf.op, unf.targs, toArgClause(rhs)))
     }
   }
 
@@ -2308,12 +2220,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   implicit object PatInfixContext extends InfixContext {
     type Typ = Pat
     type Op = Term.Name
+    type Unfinished = UnfinishedInfix[Typ, Op]
 
-    case class UnfinishedInfix(lhs: Typ, op: Op) extends Unfinished
-
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
-      val UnfinishedInfix(lhsExt, op) = unf
-      val lhs = lhsExt match {
+    protected def finishInfixExpr(unf: Unfinished, rhs: Typ, rhsEnd: EndPos): Typ = {
+      val lhs = unf.lhs match {
         // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
         case Pat.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Pat.Assign] => arg
         case x => x
@@ -2329,20 +2239,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           case _ => rhs :: Nil
         }).reduceWith(Pat.ArgClause.apply),
       )
-      atPos(lhsExt, rhsEnd)(Pat.ExtractInfix(lhs, op, args))
+      atPos(unf.lhs, rhsEnd)(Pat.ExtractInfix(lhs, unf.op, args))
     }
   }
 
   private object TypeInfixContext extends InfixContext {
     type Typ = Type
     type Op = Type.Name
+    type Unfinished = UnfinishedInfix[Typ, Op]
 
-    case class UnfinishedInfix(lhs: Typ, op: Op) extends Unfinished
-
-    protected def finishInfixExpr(unf: UnfinishedInfix, rhs: Typ, rhsEnd: EndPos): Typ = {
-      val UnfinishedInfix(lhs, op) = unf
-      atPos(lhs, rhsEnd)(Type.ApplyInfix(lhs, op, rhs))
-    }
+    protected def finishInfixExpr(unf: Unfinished, rhs: Typ, rhsEnd: EndPos): Typ =
+      atPos(unf.lhs, rhsEnd)(Type.ApplyInfix(unf.lhs, unf.op, rhs))
   }
 
   private def getLeadingInfix[A <: Name, B >: Null <: AnyRef](
@@ -2390,7 +2297,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         val lhs = getPrevLhs(op)
         val wrap = (lhs eq rhs0) && lhs.begIndex != startPos
         val lhsExt = if (wrap) atPosWithBody(startPos, Term.Tuple(lhs :: Nil), rhsEndK) else lhs
-        push(UnfinishedInfix(lhsExt, op, targs))
+        push(UnfinishedInfixTerm(lhsExt, op, targs))
         Right(rhs)
       }
 
@@ -4687,6 +4594,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
 object ScalametaParser {
 
+  implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
+  implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
+
   // the range scan of `atPosWithBody` runs per tree: create its predicates once
   private val isWhitespace: Token => Boolean = _.is[Whitespace]
   private val isTrivia: Token => Boolean = _.is[Trivia]
@@ -4856,6 +4766,98 @@ object ScalametaParser {
 
     def isAny[A: ClassTag, B: ClassTag] = is[A] || is[B]
     def isAny[A: ClassTag, B: ClassTag, C: ClassTag] = is[A] || is[B] || is[C]
+  }
+
+  // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
+  private[parsers] trait UnfinishedInfixLike[TreeType <: Tree, NameType <: Name] {
+    def lhs: TreeType
+    def op: NameType
+  }
+
+  private[parsers] case class UnfinishedInfix[TreeType <: Tree, NameType <: Name](
+      lhs: TreeType,
+      op: NameType,
+  ) extends UnfinishedInfixLike[TreeType, NameType] {
+    override def toString = s"[$lhs $op]"
+  }
+
+  // We need to carry lhsStart/lhsEnd separately from lhs.pos
+  // because their extent may be bigger than lhs because of parentheses or whatnot.
+  private[parsers] case class UnfinishedInfixTerm(lhs: Term, op: Term.Name, targs: Type.ArgClause)
+      extends UnfinishedInfixLike[Term, Term.Name] {
+    override def toString = s"[$lhs $op$targs]"
+  }
+
+  // Encapsulates state and behavior of parsing infix syntax.
+  // See `postfixExpr` for an involved usage example.
+  // Another, much less involved usage, lives in `pattern3`.
+  sealed abstract class InfixContext {
+
+    // (Lhs, op and targs form UnfinishedInfix).
+    // FinishedInfix is the type of an infix expression.
+    // The conversions are necessary to push the output of finishInfixExpr on stack.
+    type Typ <: Tree
+    type Op <: Name
+    type Unfinished <: UnfinishedInfixLike[Typ, Op]
+
+    // The stack of unfinished infix expressions, e.g. Stack([a + ]) in `a + b [*] c`.
+    // `push` takes `b`, reads `*`, checks for type arguments and adds [b *] on the top of the stack.
+    // Other methods working on the stack are self-explanatory.
+    var stack: List[Unfinished] = Nil
+    @inline
+    def isDone(base: List[Unfinished]): Boolean = this.stack == base
+    def push(unfinishedInfix: Unfinished): Unit = stack ::= unfinishedInfix
+    def reduceAndPush(base: List[Unfinished], rhs: Typ, op: Op)(f: (Typ, Op) => Unfinished): Unit =
+      push(f(reduceStack(base, rhs, rhs, op), op))
+
+    def drainStack(base: List[Unfinished], curr: Typ, currEnd: EndPos): Typ = {
+      @tailrec
+      def loop(rhs: Typ): Typ = stack match {
+        case lhs :: rest if !isDone(base) =>
+          stack = rest
+          loop(finishInfixExpr(lhs, rhs, currEnd))
+        case _ => rhs
+      }
+      loop(curr)
+    }
+
+    def reduceStack(base: List[Unfinished], curr: Typ, currEnd: EndPos, op: Op): Typ =
+      if (isDone(base)) curr
+      else {
+        val opPrecedence = op.precedence
+        val ifSamePrecedence = !op.isLeftAssoc // see comment below
+
+        // Pop off an unfinished infix expression off the stack and finish it with the rhs.
+        // Then convert the result, so that it can become someone else's rhs.
+        // Repeat while precedence and associativity allow.
+        @tailrec
+        def loop(rhs: Typ): Typ = {
+          val lhs = stack.head
+          /* if op were to become the outer infix, would lhs.op need parens?
+           * if yes, op binds tighter than lhs.op, so we can't continue reducing.
+           * if op and lhs.op were of same precedence, then associativity is the
+           * tie-breaker, and right-associative needs to keep going right. Keep
+           * in mind that scala forbids mixed-associativity at the same level of
+           * precedence, so we have to assume that in that case op and lhs.op are
+           * of the same associativity.
+           */
+          if (TSG.opNeedsParens(opPrecedence, lhs.op.precedence, ifSamePrecedence)) rhs
+          else {
+            stack = stack.tail
+            val fin = finishInfixExpr(lhs, rhs, currEnd)
+            if (isDone(base)) fin else loop(fin)
+          }
+        }
+
+        loop(curr)
+      }
+
+    // Takes the unfinished infix expression, e.g. `[x +]`,
+    // then takes the right-hand side (which can have multiple args), e.g. ` (y, z)`,
+    // and creates `x + (y, z)`.
+    // We need to carry endPos explicitly because its extent may be bigger than rhs because of parent of whatnot.
+    protected def finishInfixExpr(unf: Unfinished, rhs: Typ, rhsEnd: EndPos): Typ
+
   }
 
 }
