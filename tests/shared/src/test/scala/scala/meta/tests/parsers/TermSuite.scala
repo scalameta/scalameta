@@ -929,16 +929,18 @@ class TermSuite extends ParseSuite {
     ))
   }
 
-  test("expr with annotation on the next line")(runTestError[Source](
-    """|object A {
-       |  a:
-       |    @unchecked
-       |}
-       |""".stripMargin,
-    """|<input>:3: error: `identifier` expected but `@` found
-       |    @unchecked
-       |    ^""".stripMargin,
-  ))
+  test("expr with annotation on the next line")(
+    runTestAssert[Source](
+      """|object A {
+         |  a:
+         |    @unchecked
+         |}
+         |""".stripMargin,
+      Some("object A { a: @unchecked }"),
+    )(Source(List(
+      Defn.Object(Nil, tname("A"), tpl(Term.Annotate(tname("a"), List(Mod.Annot(init("unchecked")))))),
+    ))),
+  )
 
   test("expr with annotation, then match") {
     val code =
