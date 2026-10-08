@@ -362,16 +362,21 @@ class NewFunctionsSuite extends BaseDottySuite {
        |^""".stripMargin,
   ))
 
-  test("context-lambda-arrow-after-nl")(runTestError[Stat](
-    """|val f = {
-       |  (x: Int)
-       |    ?=> x
-       |}
-       |""".stripMargin,
-    """|<input>:3: error: illegal start of statement
-       |    ?=> x
-       |    ^""".stripMargin,
-  ))
+  test("context-lambda-arrow-after-nl")(
+    runTestAssert[Stat](
+      """|val f = {
+         |  (x: Int)
+         |    ?=> x
+         |}
+         |""".stripMargin,
+      Some(
+        """|val f = {
+           |  (x: Int) ?=> x
+           |}
+           |""".stripMargin,
+      ),
+    )(Defn.Val(Nil, List(patvar("f")), None, blk(tctxfunc(tparam("x", "Int"))(tname("x"))))),
+  )
 
   test("lambda-function-arrow-after-nl")(
     runTestAssert[Stat](

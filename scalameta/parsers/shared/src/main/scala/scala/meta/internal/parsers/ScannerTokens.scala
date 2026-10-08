@@ -203,8 +203,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   def mightStartStat(token: Token, closeDelimOK: Boolean = false): Boolean = token match {
     case _: KwCatch | _: KwElse | _: KwExtends | _: KwFinally | _: KwForsome | _: KwMatch |
         _: KwWith | _: KwYield | _: Comma | _: Colon | _: Dot | _: Equals | _: Semicolon | _: Hash |
-        _: RightArrow | _: LeftArrow | _: Subtype | _: Supertype | _: Viewbound | _: AtEOLorF =>
-      false
+        _: FunctionArrow | _: TypeLambdaArrow | _: LeftArrow | _: Subtype | _: Supertype |
+        _: Viewbound | _: AtEOLorF => false
     case _: CloseDelim => closeDelimOK
     case _ => true
   }
