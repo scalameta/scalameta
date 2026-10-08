@@ -362,6 +362,17 @@ class NewFunctionsSuite extends BaseDottySuite {
        |^""".stripMargin,
   ))
 
+  test("context-lambda-arrow-after-nl")(runTestError[Stat](
+    """|val f = {
+       |  (x: Int)
+       |    ?=> x
+       |}
+       |""".stripMargin,
+    """|<input>:3: error: illegal start of statement
+       |    ?=> x
+       |    ^""".stripMargin,
+  ))
+
   test("lambda-function-arrow-after-nl")(
     runTestAssert[Stat](
       """|type Tuple =
