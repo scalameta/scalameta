@@ -288,6 +288,14 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     "x /* c */ a",
   ))
 
+  test("show: no blank line before")(
+    assertEquals(Show.sequence("a", Show.blank(), Show.noBlankBefore("b")).toString, "a\nb".lf2nl),
+  )
+
+  test("show: no blank line before, after a newline")(
+    assertEquals(Show.sequence("a", Show.newline(Show.noBlankBefore("b"))).toString, "a\nb".lf2nl),
+  )
+
   test("show: a deferred result is built once") {
     var built = 0
     val res = Show.defer {
@@ -316,7 +324,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
   )
 
   test("show: newline, then a leading space")(
-    assertEquals(Show.sequence("a", Show.newline(" = b")).toString, "a\n= b".lf2nl),
+    assertEquals(Show.sequence("a", Show.newline(" = b")).toString, "a\n  = b".lf2nl),
   )
 
   test("show: newline, then a space before a string")(assertEquals(
