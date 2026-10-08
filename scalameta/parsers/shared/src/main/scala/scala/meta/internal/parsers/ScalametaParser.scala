@@ -4183,12 +4183,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val startPos = currIndex
     def withSelf(self: => Self) = Either
       .cond(acceptOpt[RightArrow] || quasiquote && at[EOF], self, "expected `=>`")
-    def withDeclTpe(name: Name, declTpe: Option[Type]) =
-      withSelf(autoEndPos(startPos)(Self(name, declTpe)))
-    def withName(name: Name) = // possible fewer braces after colon
-      if (!peek[Indentation, EOL]) withDeclTpe(name, getDeclTpeOpt(fullTypeOK = false))
-      else if (!at[Colon]) withDeclTpe(name, None)
-      else Left("missing type after self")
+    def withDeclTpe(name: Name)(declTpe: Option[Type]) =
+      if (declTpe eq null) Left("missing type after self")
+      else withSelf(autoEndPos(startPos)(Self(name, declTpe)))
+    def withName(name: Name) = withDeclTpe(name)(peekToken match {
+      case _: Indentation | _: EOL => if (at[Colon]) null else None // possible fewer braces
+      case _: At if at[Colon] => null // possible ascription, not a type
+      case _ => getDeclTpeOpt(fullTypeOK = false)
+    })
     currToken match {
       case t: Ident => withName(termName(t))
       case _: KwThis => withName(nameThis())
