@@ -311,6 +311,23 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(Show.firstSyntaxElem(Show.sequence(Show.Comment("// c"), " ")), null),
   )
 
+  test("show: leading space within a line")(
+    assertEquals(Show.sequence("a", " = b").toString, "a = b"),
+  )
+
+  test("show: newline, then a leading space")(
+    assertEquals(Show.sequence("a", Show.newline(" = b")).toString, "a\n= b".lf2nl),
+  )
+
+  test("show: newline, then a space before a string")(assertEquals(
+    Show.sequence("a", Show.newline(Show.sequence(" ", "= b"))).toString,
+    "a\n  = b".lf2nl,
+  ))
+
+  test("show: leading and trailing space, then a newline")(
+    assertEquals(Show.sequence("a", " = ", Show.newline("b")).toString, "a =\n  b".lf2nl),
+  )
+
   test("existential type in a function parameter") {
     val code =
       """|object A {
