@@ -929,6 +929,17 @@ class TermSuite extends ParseSuite {
     ))
   }
 
+  test("expr with annotation on the next line")(runTestError[Source](
+    """|object A {
+       |  a:
+       |    @unchecked
+       |}
+       |""".stripMargin,
+    """|<input>:3: error: `identifier` expected but `@` found
+       |    @unchecked
+       |    ^""".stripMargin,
+  ))
+
   test("expr with annotation, then match") {
     val code =
       """|underlyingStableClassRef(mbr.info.loBound): @unchecked match {
