@@ -232,6 +232,29 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(reprintTwice(code), (printed, printed))
   }
 
+  test("show: keyword after a letter")(
+    assertEquals(Show.sequence("a", Show.keyword(":")).toString, "a:"),
+  )
+
+  test("show: keyword after an operator")(
+    assertEquals(Show.sequence("+", Show.keyword(":")).toString, "+ :"),
+  )
+
+  test("show: keyword after a name that ends in an underscore")(
+    assertEquals(Show.sequence("a_", Show.keyword(":")).toString, "a_ :"),
+  )
+
+  test("show: leading comments at the start of a line")(assertEquals(
+    Show.sequence(Show.LeadingComments(Show.Comment("// c"), breakAtLineStart = true), "a").toString,
+    "// c\na".lf2nl,
+  ))
+
+  test("show: leading comments within a line")(assertEquals(
+    Show.sequence("x ", Show.LeadingComments(Show.Comment("/* c */"), breakAtLineStart = true), "a")
+      .toString,
+    "x /* c */ a",
+  ))
+
   test("show: a deferred result is built once") {
     var built = 0
     val res = Show.defer {
