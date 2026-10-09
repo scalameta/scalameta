@@ -184,7 +184,7 @@ private[meta] object Show {
               appendTrimmed(value, leadingPending(value, end), end)
             }
           case Blank => blank()
-          case m: Deferred => maybePush(m.res())
+          case m: Deferred => maybePush(m.value)
           case Function(fn) =>
             val len = sb.length
             if (!wasNL) emitPending(pending) // so fn can see the pending separator
@@ -287,7 +287,8 @@ private[meta] object Show {
   final case class Newline(res: Result) extends Result {
     override def desc: String = s"Newline(r=${res.desc})"
   }
-  sealed class Deferred(val res: () => Result) extends Result {
+  sealed class Deferred(res: () => Result) extends Result {
+    lazy val value: Result = res()
     override def desc: String = s"Deferred(...)"
   }
   // `data` can be consulted without materializing `res`
