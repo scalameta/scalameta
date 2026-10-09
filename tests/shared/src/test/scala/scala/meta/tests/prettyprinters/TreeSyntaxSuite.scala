@@ -311,6 +311,38 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(Show.firstSyntaxElem(Show.sequence(Show.Comment("// c"), " ")), null),
   )
 
+  test("existential type in a function parameter") {
+    val code =
+      """|object A {
+         |  def f(g: ((S[X], X) forSome { type X }) => B): B = g
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  def f(g: (S[X], X) forSome {
+         |    type X
+         |  } => B): B = g
+         |}""".stripMargin.lf2nl
+    val second = "`)` expected but `=>` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("type lambda in a function parameter") {
+    val code = "object A { def f(g: ([X] =>> F[X]) => B): B = g }"
+    val printed = "object A { def f(g: [X] =>> F[X] => B): B = g }"
+    assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
+  }
+
+  test("match type in a function parameter type") {
+    val code = "type T = (X match { case Int => String }) => C"
+    val first =
+      """|type T = X match {
+         |  case Int => String
+         |} => C""".stripMargin.lf2nl
+    val second = "`;` expected but `=>` found"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
   test("statement in parens after a case class: block select-match") {
     val code =
       """|object A {
@@ -331,6 +363,58 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
+  test("typed pattern in parens with a declared type") {
+    val code =
+      """|object A {
+         |  val (x: Int): Int = 1
+         |}
+         |""".stripMargin
+    val first = "object A { val x: Int: Int = 1 }"
+    val second = "`;` expected but `:` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("alternative pattern in a tuple pattern") {
+    val code = "object A { x match { case (a | b, c) => d } }"
+    val printed =
+      """|object A {
+         |  x match {
+         |    case (a | b, c) => d
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("typed pattern in an extractor pattern") {
+    val code = "object A { x match { case Some(y: Int) => y } }"
+    val printed =
+      """|object A {
+         |  x match {
+         |    case Some(y: Int) => y
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("typed pattern in parens, no declared type") {
+    val code = "object A { val (x: Int) = 1 }"
+    val printed = "object A { val x: Int = 1 }"
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("typed var pattern in parens, no declared type") {
+    val code = "object A { var (x: Int) = 1 }"
+    val printed = "object A { var x: Int = 1 }"
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("two typed patterns in parens") {
+    val code = "object A { val (x: Int), (y: Int) = 1 }"
+    val first = "object A { val x: Int, y: Int = 1 }"
+    val second = "`;` expected but `,` found"
+    assertEquals(reprintTwice(code), (first, second))
   }
 
   test("block: built, a comment as the last statement") {
@@ -382,6 +466,205 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
+  test("lambda in braces: implicit param, two statements") {
+    val code =
+      """|object A {
+         |  f { implicit x =>
+         |    a
+         |    b
+         |  }
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f { implicit x =>
+         |    a
+         |    b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("lambda in braces: typed implicit param, two statements") {
+    val code =
+      """|object A {
+         |  f { implicit x: Int =>
+         |    a
+         |    b
+         |  }
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f { implicit x: Int =>
+         |    a
+         |    b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("lambda in braces: param, two statements") {
+    val code =
+      """|object A {
+         |  f { x =>
+         |    a
+         |    b
+         |  }
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f { x =>
+         |    a
+         |    b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("lambda in braces: placeholder param, two statements") {
+    val code =
+      """|object A {
+         |  f { _ =>
+         |    a
+         |    b
+         |  }
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f { _ =>
+         |    a
+         |    b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("lambda in braces: typed param, two statements") {
+    val code =
+      """|object A {
+         |  f { (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f { (x: Int) =>
+         |    a
+         |    b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("lambda in braces: two params, two statements") {
+    val code =
+      """|object A {
+         |  f { (x, y) =>
+         |    a
+         |    b
+         |  }
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f { (x, y) =>
+         |    a
+         |    b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("lambda in braces: param, empty body") {
+    val code =
+      """|object A {
+         |  f { x => }
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f { x =>
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("lambda with a braced body in a block argument") {
+    val code =
+      """|object A {
+         |  f {
+         |    (i: Int) => {
+         |      g(i)
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  f { (i: Int) =>
+         |    g(i)
+         |  }
+         |}""".stripMargin.lf2nl
+    val second =
+      """|object A {
+         |  f {
+         |    (i: Int) => g(i)
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
+  }
+
+  test("lambda with a braced body of two statements in a block argument") {
+    val code =
+      """|object A {
+         |  f {
+         |    (i: Int) => {
+         |      g(i)
+         |      h(i)
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f { (i: Int) =>
+         |    g(i)
+         |    h(i)
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (printed, printed))
+  }
+
+  test("lambda with a braced body in a block argument, with comments") {
+    val code =
+      """|object A {
+         |  f {
+         |    (i: Int) => {
+         |      g(i)
+         |    }
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  f { (i: Int) =>
+         |    g(i)
+         |  }
+         |}""".stripMargin.lf2nl
+    val second =
+      """|object A {
+         |  f {
+         |    (i: Int) => g(i)
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213Source3), (first, second))
   }
 
 }
