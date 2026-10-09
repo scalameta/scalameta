@@ -300,10 +300,20 @@ object TreeSyntax {
         m(sg, s(p(sg, t.lhs), " ", t.op, t.targClause, " ", printApplyArgs(t.argClause, "")))
       case t: Term.ApplyUnary =>
         val needSpace = !t.op.value.lastOption.forall(isOperatorPart)
-        // the parser reads an operator and the literal after it as one literal
-        val isLit = t.arg.is[Lit] && !t.arg.is[Lit.Unit]
-        val arg = if (isLit) s("(", t.arg, ")") else p(SimpleExpr, t.arg)
-        m(PrefixExpr, s(w(t.op, " ", needSpace), arg))
+        val arg = p(SimpleExpr, t.arg)
+        val needParens = t.arg match {
+          case _: Lit.Unit => false
+          // the parser reads an operator and the literal after it as one literal
+          case _: Lit => true
+          // a minus joins a number, and operator characters join the operator
+          case _ =>
+            val elem = Show.firstSyntaxElem(arg)
+            (elem ne null) && {
+              val c = elem.codePointAt(0)
+              isOperatorPart(c) || t.op.value == "-" && (c == '.' || Character.isDigit(c))
+            }
+        }
+        m(PrefixExpr, s(w(t.op, " ", needSpace), w("(", arg, ")", needParens)))
       case t: Term.Assign => m(Expr1, s(p(SimpleExpr1, t.lhs), " ", kw("="), " ", p(Expr, t.rhs)))
       case t: Term.Return =>
         m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
