@@ -265,6 +265,38 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(built, 1)
   }
 
+  test("statement in parens after a case class: block select-match") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  { a }.match { case _ => b }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  {
+         |    a
+         |  }.match {
+         |    case _ => b
+         |  }
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `.` found"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
+  test("block: built, a comment as the last statement") {
+    val stat = Term.Anonymous.newBuilder().begComment(Seq("// c")).result()
+    val tree = Term.Block(List(Term.Name("a"), stat))
+    val printed =
+      """|{
+         |  a
+         |  // c
+         |}""".stripMargin.lf2nl
+    assertEquals(TreeSyntax.reprint(tree).toString, printed)
+  }
+
   test("two if-then statements in a block argument") {
     val code =
       """|object A:
