@@ -891,26 +891,6 @@ object TreeSyntax {
 
     implicit def syntaxCases: Syntax[Seq[CaseTree]] = Syntax(cases => r(cases.map(i(_))))
 
-    // Does this stat render with a leading `{` (which would misparse as a
-    // continuation of the previous stat)? Walk the leftmost spine -- the tree
-    // analog of the old `showStat.headChar.contains('{')`, which we can no
-    // longer use because the child render is now deferred.
-    @tailrec
-    private def guessLeadingBrace(t: Tree): Boolean = t match {
-      case _: Tree.Block | _: Template.Body | _: Term.PartialFunction => true
-      case t: Term.Select => guessLeadingBrace(t.qual)
-      case t: Term.SelectPostfix => guessLeadingBrace(t.qual)
-      case t: Term.Apply => guessLeadingBrace(t.fun)
-      case t: Term.ApplyUsing => guessLeadingBrace(t.fun)
-      case t: Term.ApplyInfix => guessLeadingBrace(t.lhs)
-      case t: Term.ApplyType => guessLeadingBrace(t.fun)
-      case t: Term.Ascribe => guessLeadingBrace(t.expr)
-      case t: Term.Assign => guessLeadingBrace(t.lhs)
-      case t: Term.Eta => guessLeadingBrace(t.expr)
-      case t: Term.Match => guessLeadingBrace(t.expr)
-      case _ => false
-    }
-
     private def isCaseBody(t: Tree): Boolean = t.parent match {
       case Some(p: Case) => p.body eq t
       case _ => false
@@ -922,7 +902,10 @@ object TreeSyntax {
         val showStat = if (indent) i(stat) else n(stat)
         if (showStat.isEmpty) showStat
         else {
-          val needNL = null != prevStat && guessLeadingBrace(stat) && guessNeedsLineSep(prevStat)
+          val needNL = null != prevStat && {
+            val elem = Show.firstSyntaxElem(showStat)
+            (elem ne null) && elem.head == '{' && guessNeedsLineSep(prevStat)
+          }
           prevStat = stat
           s(blank(needNL), showStat)
         }

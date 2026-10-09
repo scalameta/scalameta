@@ -298,6 +298,19 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(built, 1)
   }
 
+  test("show: first syntax element, past a comment and a newline")(assertEquals(
+    Show.firstSyntaxElem(Show.sequence(Show.Comment("// c"), Show.newline(Show.Str("(a)")))),
+    "(a)",
+  ))
+
+  test("show: first syntax element of a keyword")(
+    assertEquals(Show.firstSyntaxElem(Show.sequence(" ", Show.keyword("val"))), "val"),
+  )
+
+  test("show: first syntax element of nothing")(
+    assertEquals(Show.firstSyntaxElem(Show.sequence(Show.Comment("// c"), " ")), null),
+  )
+
   test("statement in parens after a case class: block select-match") {
     val code =
       """|object A {
@@ -309,13 +322,14 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  {
          |    a
          |  }.match {
          |    case _ => b
          |  }
          |}""".stripMargin.lf2nl
-    val second = "`;` expected but `.` found"
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
   }
 
