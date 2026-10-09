@@ -2,6 +2,7 @@ package scala.meta.tests.prettyprinters
 
 import scala.meta._
 import scala.meta.internal.prettyprinters.TreeSyntax
+import scala.meta.prettyprinters.Show
 
 /**
  * This class, unlike similar SyntacticSuite, does not reset origins. Instead it uses runTestAssert
@@ -229,6 +230,16 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val code = "object A { val x = (a b) c }"
     val printed = "object A { val x = (a b) c }"
     assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("show: a deferred result is built once") {
+    var built = 0
+    val res = Show.defer {
+      built += 1
+      Show.Str("a")
+    }
+    assertEquals(Show.sequence(res, res).toString, "aa")
+    assertEquals(built, 1)
   }
 
   test("two if-then statements in a block argument") {
