@@ -304,25 +304,18 @@ object TreeSyntax {
       case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
       case t: Term.Tuple => m(SimpleExpr1, s("(", r(t.args, ", "), ")"))
       case t: Term.Block =>
-        import Term.{Block, Function}
-        def block(pre: Show.Result, x: Seq[Stat]) = {
-          val res = if (pre == Show.None && x.isEmpty) s("{}") else s("{", w(" ", pre), x, n("}"))
-          m(SimpleExpr, res)
-        }
-        t match {
-          case Block(
-                Function
-                  .Initial(Term.Param(mods, name: Term.Name, tptopt, _) :: Nil, Block(stats)) :: Nil,
-              ) if mods.exists(_.is[Mod.Implicit]) =>
-            block(s("implicit ", name, o(": ", tptopt), " =>"), stats)
-          case Block(
-                Function.Initial(Term.Param(_, name: Name, None, _) :: Nil, Block(stats)) :: Nil,
-              ) => block(s(name, " =>"), stats)
-          case Block(Function.Initial(params, Block(stats)) :: Nil) =>
-            block(s("(", r(params, ", "), ") =>"), stats)
-          // a commented block keeps its braces, so the comments stay its own when parsed again
-          case _ if !hasComments(t) && isCaseBody(t) => printStats(t.stats, indent = false)
-          case _ => m(SimpleExpr, printBlock(t, t.stats))
+        def block(pre: Show.Result, x: Show.Result) = m(SimpleExpr, s("{", w(" ", pre), x, n("}")))
+        def bare(stats: List[Stat]) = printStats(stats, indent = false)
+        def plain(stats: List[Stat]) = // a commented block must keep its braces for idempotency
+          if (!hasComments(t) && isCaseBody(t)) bare(stats) else m(SimpleExpr, printBlock(t, stats))
+        t.stats match {
+          case stats @ (f: Term.Function) :: Nil => f.body match {
+              // a body of one statement keeps its braces: after `x =>`, one statement is no block
+              case body: Term.Block if body.stats.lengthCompare(1) != 0 =>
+                block(s(f.paramClause, " =>"), body.stats)
+              case _ => plain(stats)
+            }
+          case stats => plain(stats)
         }
       case t: Term.If =>
         val needParens: Boolean = t.thenp match {
@@ -417,7 +410,7 @@ object TreeSyntax {
                 case _: Type.Tuple | _: Type.ByNameType | _: Type.FunctionParamOrArg |
                     _: Type.ParamFunctionType | _: Type.PolyFunction => false
                 case _ => true
-              }) => s(arg)
+              }) => p(AnyInfixTyp, arg)
           case args => s("(", r(args, ", "), ")")
         }
       case t: Type.Function => printFunctionType(t, "=>")
@@ -434,7 +427,7 @@ object TreeSyntax {
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, s(t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe)))
       case t: Type.PolyFunction => m(Typ, s(t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe)))
-      case t: Type.Match => m(Type, s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}")))
+      case t: Type.Match => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}")))
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
         val useStar = dialect.allowStarAsTypePlaceholder &&
@@ -575,8 +568,8 @@ object TreeSyntax {
 
       // Member
       case t: Member.ParamClauseGroup => s(t.tparamClause, t.paramClauses)
-      case t: Decl.Val => s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
-      case t: Decl.Var => s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), kw(":"), " ", t.decltpe)
+      case t: Decl.Val => s(w(t.mods, " "), kw("val"), " ", printPats(t), kw(":"), " ", t.decltpe)
+      case t: Decl.Var => s(w(t.mods, " "), kw("var"), " ", printPats(t), kw(":"), " ", t.decltpe)
       case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparamClause, t.bounds)
       case t: Decl.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, kw(": "), t.decltpe)
@@ -584,9 +577,9 @@ object TreeSyntax {
         val sig = givenSig(t.name, t.paramClauseGroups)
         r(" ")(t.mods, sig, givenDeclTpe(t.decltpe))
       case t: Defn.Val =>
-        s(w(t.mods, " "), kw("val"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.rhs)
+        s(w(t.mods, " "), kw("val"), " ", printPats(t), t.decltpe, " ", kw("="), " ", t.rhs)
       case t: Defn.Var =>
-        s(w(t.mods, " "), kw("var"), " ", r(t.pats, ", "), t.decltpe, " ", kw("="), " ", t.body)
+        s(w(t.mods, " "), kw("var"), " ", printPats(t), t.decltpe, " ", kw("="), " ", t.body)
       case t: Defn.Type => s(
           w(t.mods, " "),
           kw("type"),
@@ -872,6 +865,9 @@ object TreeSyntax {
       val nameType = if (t.isNameAnonymous) o(t.decltpe) else s(t.name, t.decltpe)
       s(w(mods, " "), nameType, o(" = ", t.default))
     }
+    // a typed pattern keeps its parens: the type after them is the declared one
+    private def printPats(pats: List[Pat]): Show.Result = r(pats.map(p(Pattern2, _)), ", ")
+    private def printPats(t: Tree.WithPats): Show.Result = printPats(t.pats)
     private def printBlock(t: Tree, stats: List[Stat]): Show.Result =
       if (stats.isEmpty) s("{}") else s("{", stats, n("}"))
     implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax(r(_, " "))

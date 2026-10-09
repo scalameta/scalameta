@@ -319,28 +319,27 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  def f(g: (S[X], X) forSome {
+         |  def f(g: ((S[X], X) forSome {
          |    type X
-         |  } => B): B = g
-         |}""".stripMargin.lf2nl
-    val second = "`)` expected but `=>` found"
+         |  }) => B): B = g
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
   test("type lambda in a function parameter") {
     val code = "object A { def f(g: ([X] =>> F[X]) => B): B = g }"
-    val printed = "object A { def f(g: [X] =>> F[X] => B): B = g }"
+    val printed = "object A { def f(g: ([X] =>> F[X]) => B): B = g }"
     assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
   }
 
   test("match type in a function parameter type") {
     val code = "type T = (X match { case Int => String }) => C"
     val first =
-      """|type T = X match {
+      """|type T = (X match {
          |  case Int => String
-         |} => C""".stripMargin.lf2nl
-    val second = "`;` expected but `=>` found"
-    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+         |}) => C""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 
   test("statement in parens after a case class: block select-match") {
@@ -371,8 +370,8 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  val (x: Int): Int = 1
          |}
          |""".stripMargin
-    val first = "object A { val x: Int: Int = 1 }"
-    val second = "`;` expected but `:` found"
+    val first = "object A { val (x: Int): Int = 1 }"
+    val second = "object A { val (x: Int): Int = 1 }"
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -400,20 +399,20 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("typed pattern in parens, no declared type") {
     val code = "object A { val (x: Int) = 1 }"
-    val printed = "object A { val x: Int = 1 }"
+    val printed = "object A { val (x: Int) = 1 }"
     assertEquals(reprintTwice(code), (printed, printed))
   }
 
   test("typed var pattern in parens, no declared type") {
     val code = "object A { var (x: Int) = 1 }"
-    val printed = "object A { var x: Int = 1 }"
+    val printed = "object A { var (x: Int) = 1 }"
     assertEquals(reprintTwice(code), (printed, printed))
   }
 
   test("two typed patterns in parens") {
     val code = "object A { val (x: Int), (y: Int) = 1 }"
-    val first = "object A { val x: Int, y: Int = 1 }"
-    val second = "`;` expected but `,` found"
+    val first = "object A { val (x: Int), (y: Int) = 1 }"
+    val second = "object A { val (x: Int), (y: Int) = 1 }"
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -608,16 +607,13 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  f { (i: Int) =>
-         |    g(i)
-         |  }
-         |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
          |  f {
-         |    (i: Int) => g(i)
+         |    (i: Int) => {
+         |      g(i)
+         |    }
          |  }
-         |}""".stripMargin.lf2nl
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
 
@@ -654,16 +650,13 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  f { (i: Int) =>
-         |    g(i)
-         |  }
-         |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
          |  f {
-         |    (i: Int) => g(i)
+         |    (i: Int) => {
+         |      g(i)
+         |    }
          |  }
-         |}""".stripMargin.lf2nl
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3), (first, second))
   }
 
