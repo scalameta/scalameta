@@ -85,8 +85,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   private def isEndMarkerIdentifier(token: Token) = soft.KwEnd(token)
 
   private def isEndMarkerSpecifier(token: Token) = token match {
-    case _: Ident | _: KwIf | _: KwWhile | _: KwFor | _: KwMatch | _: KwTry | _: KwNew | _: KwThis |
-        _: KwGiven | _: KwVal => true
+    case _: EndMarkerSpecifier => true
     case _ => false
   }
 
@@ -107,9 +106,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   private def isExprIntroImpl(token: Token)(isIdentOK: => Boolean): Boolean = token match {
     case t: Ident => isIdentOK ||
       dialect.allowSpliceAndQuote && t.value.nonEmpty && t.value.charAt(0) == '$'
-    case _: Literal | _: Interpolation.Id | _: Xml.Start | _: KwDo | _: KwFor | _: KwIf | _: KwNew |
-        _: KwReturn | _: KwSuper | _: KwThis | _: KwThrow | _: KwTry | _: KwWhile | _: LeftParen |
-        _: LeftBrace | _: Underscore | _: Unquote | _: MacroQuote | _: Indentation.Indent => true
+    case _: ExprBegToken | _: Unquote => true
     case _: LeftBracket => dialect.allowPolymorphicFunctions
     case _ => false
   }
@@ -121,7 +118,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       isDclIntro(next) || isModifier(next) || f(tokens(next))
     }
     @inline
-    def nextIsClassOrObjectorOpaqueType: Boolean = {
+    def nextIsClassOrObjectOrOpaqueType: Boolean = {
       val next = getNextIndex(index)
       tokens(next) match {
         case _: KwClass | _: KwType | _: KwTrait | _: KwEnum => true
@@ -133,7 +130,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     tokens(index).text match {
       case soft.KwTransparent() => nextIsDclIntroOrModifierOr(_.isAny[KwTrait, KwClass])
       case soft.KwOpaque() => nextIsDclIntroOrModifierOr(_ => false)
-      case soft.KwInto() => nextIsClassOrObjectorOpaqueType
+      case soft.KwInto() => nextIsClassOrObjectOrOpaqueType
       case soft.KwInline() => nextIsDclIntroOrModifierOr(matchesAfterInlineMatchMod)
       case soft.KwOpen() | soft.KwInfix() | soft.KwErased() | soft.KwTracked() =>
         isDefIntro(getNextIndex(index))
@@ -149,15 +146,13 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   @tailrec
   final def isDefIntro(index: Int): Boolean = tokens(index) match {
-    case _: At => true
     case _: Unquote | _: Ellipsis => isDefIntro(getNextIndex(index))
-    case _: KwCase => getNextToken(index).isClassOrObjectOrEnum
     case _ => isDclIntro(index) || isModifier(index) || isTemplateIntro(index)
   }
 
   @tailrec
   final def isTemplateIntro(index: Int): Boolean = tokens(index) match {
-    case _: At | _: KwClass | _: KwObject | _: KwTrait => true
+    case _: At | _: TmplBegKeyword => true
     case _: Unquote => isTemplateIntro(getNextIndex(index))
     case _: KwCase => getNextToken(index).isClassOrObjectOrEnum
     case _ => isModifier(index)
@@ -165,7 +160,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   @tailrec
   final def isDclIntro(index: Int): Boolean = tokens(index) match {
-    case _: KwDef | _: KwType | _: KwEnum | _: KwVal | _: KwVar | _: KwGiven => true
+    case _: DeclBegKeyword => true
     case _: Unquote => isDclIntro(getNextIndex(index))
     case _ => isKwExtension(index)
   }
@@ -201,28 +196,12 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   }
 
   def mightStartStat(token: Token, closeDelimOK: Boolean = false): Boolean = token match {
-    case _: KwCatch | _: KwElse | _: KwExtends | _: KwFinally | _: KwForsome | _: KwMatch |
-        _: KwWith | _: KwYield | _: Comma | _: Colon | _: Dot | _: Equals | _: Semicolon | _: Hash |
-        _: FunctionArrow | _: TypeLambdaArrow | _: LeftArrow | _: Subtype | _: Supertype |
-        _: Viewbound | _: AtEOLorF => false
+    case _: ContKeyword | _: Comma | _: Dot | _: StatDelim | _: EOF => false
     case _: CloseDelim => closeDelimOK
     case _ => true
   }
 
-  def canEndStat(token: Token): Boolean = token match {
-    case _: Ident | _: KwGiven | _: Literal | _: Interpolation.End | _: Xml.End | _: KwReturn |
-        _: KwThis | _: KwType | _: RightParen | _: RightBracket | _: RightBrace | _: Underscore |
-        _: Ellipsis | _: Unquote => true
-    case _ => false
-  }
-
-  object StatSep extends Function[Token, Boolean] {
-    def apply(token: Token): Boolean = token match {
-      case _: Semicolon | _: AtEOL => true
-      case _ => false
-    }
-    def unapply(token: Token) = apply(token)
-  }
+  def canEndStat(token: Token): Boolean = token.isAny[StatEndToken, Ellipsis, Unquote]
 
   object Wildcard {
     def unapply(token: Token): Boolean = token.is[Underscore] || isStar(token)
@@ -652,7 +631,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       case _: Ident => curr.text match {
           case soft.KwDerives() => getTemplateInherit(sepRegions)
           case soft.KwExtension() if (prevToken match {
-                case _: BOF | _: Indentation | _: LeftBrace | _: RightArrow | StatSep() => next
+                case _: BOF | _: Indentation | _: LeftBrace | _: RightArrow | _: StatDelim => next
                     .isAny[LeftParen, LeftBracket]
                 case _ => false
               }) => currRef(RegionExtensionMark :: sepRegions)

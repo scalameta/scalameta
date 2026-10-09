@@ -32,7 +32,7 @@ object Token {
 
   // Literals (include some keywords from above, constants, interpolations and xml)
   @branch
-  trait Literal extends Token
+  trait Literal extends Token with ExprBegToken with StatEndToken
   @branch
   abstract class Constant[A] extends Literal {
     val value: A
@@ -46,6 +46,20 @@ object Token {
   trait Keyword extends Token
   @branch
   trait ModifierKeyword extends Keyword
+  @branch
+  private[meta] trait ContKeyword extends Token
+  @branch
+  private[meta] trait DeclBegKeyword extends Token
+  @branch
+  private[meta] trait TmplBegKeyword extends Token
+  @branch
+  private[meta] trait ExprBegToken extends Token
+  @branch
+  private[meta] trait StatDelim extends Token
+  @branch
+  private[meta] trait EndMarkerSpecifier extends Token
+  @branch
+  private[meta] trait StatEndToken extends Token
 
   @branch
   trait Trivia extends Token
@@ -58,7 +72,7 @@ object Token {
   @branch
   trait AtEOLorF extends Token
   @branch
-  trait AtEOL extends Whitespace with AtEOLorF {
+  trait AtEOL extends Whitespace with AtEOLorF with StatDelim {
     def newlines: Int = 1
   }
   @branch
@@ -71,17 +85,17 @@ object Token {
   @branch
   trait SymbolicKeyword extends Symbolic
   @branch
-  trait FunctionArrow extends SymbolicKeyword
+  trait FunctionArrow extends SymbolicKeyword with ContKeyword
   @branch
   trait Punct extends Symbolic
   @branch
   trait OpenDelim extends Punct
   @branch
-  trait CloseDelim extends Punct
+  trait CloseDelim extends Punct with StatEndToken
 
   // Identifiers
   @freeform("identifier")
-  class Ident(value: String) extends Token
+  class Ident(value: String) extends Token with EndMarkerSpecifier with StatEndToken
 
   // Alphanumeric keywords
   @fixed("abstract")
@@ -89,35 +103,35 @@ object Token {
   @fixed("case")
   class KwCase extends Keyword
   @fixed("catch")
-  class KwCatch extends Keyword
+  class KwCatch extends Keyword with ContKeyword
   @fixed("class")
-  class KwClass extends Keyword
+  class KwClass extends Keyword with TmplBegKeyword
   @fixed("def")
-  class KwDef extends Keyword
+  class KwDef extends Keyword with DeclBegKeyword
   @fixed("do")
-  class KwDo extends Keyword
+  class KwDo extends Keyword with ExprBegToken
   @fixed("else")
-  class KwElse extends Keyword
+  class KwElse extends Keyword with ContKeyword
   @fixed("enum")
-  class KwEnum extends Keyword
+  class KwEnum extends Keyword with DeclBegKeyword
   @fixed("export")
   class KwExport extends Keyword
   @fixed("extends")
-  class KwExtends extends Keyword
+  class KwExtends extends Keyword with ContKeyword
   @fixed("false")
   class KwFalse extends BooleanConstant(false)
   @fixed("final")
   class KwFinal extends ModifierKeyword
   @fixed("finally")
-  class KwFinally extends Keyword
+  class KwFinally extends Keyword with ContKeyword
   @fixed("for")
-  class KwFor extends Keyword
+  class KwFor extends Keyword with EndMarkerSpecifier with ExprBegToken
   @fixed("forSome")
-  class KwForsome extends Keyword
+  class KwForsome extends Keyword with ContKeyword
   @fixed("given")
-  class KwGiven extends Keyword
+  class KwGiven extends Keyword with EndMarkerSpecifier with DeclBegKeyword with StatEndToken
   @fixed("if")
-  class KwIf extends Keyword
+  class KwIf extends Keyword with EndMarkerSpecifier with ExprBegToken
   @fixed("implicit")
   class KwImplicit extends ModifierKeyword
   @fixed("import")
@@ -125,15 +139,15 @@ object Token {
   @fixed("lazy")
   class KwLazy extends ModifierKeyword
   @fixed("match")
-  class KwMatch extends Keyword
+  class KwMatch extends Keyword with ContKeyword with EndMarkerSpecifier
   @fixed("macro")
   class KwMacro extends Keyword
   @fixed("new")
-  class KwNew extends Keyword
+  class KwNew extends Keyword with EndMarkerSpecifier with ExprBegToken
   @fixed("null")
   class KwNull extends Literal
   @fixed("object")
-  class KwObject extends Keyword
+  class KwObject extends Keyword with TmplBegKeyword
   @fixed("override")
   class KwOverride extends ModifierKeyword
   @fixed("package")
@@ -143,69 +157,69 @@ object Token {
   @fixed("protected")
   class KwProtected extends ModifierKeyword
   @fixed("return")
-  class KwReturn extends Keyword
+  class KwReturn extends Keyword with ExprBegToken with StatEndToken
   @fixed("sealed")
   class KwSealed extends ModifierKeyword
   @fixed("super")
-  class KwSuper extends Keyword
+  class KwSuper extends Keyword with ExprBegToken
   @fixed("then")
   class KwThen extends Keyword
   @fixed("this")
-  class KwThis extends Keyword
+  class KwThis extends Keyword with EndMarkerSpecifier with ExprBegToken with StatEndToken
   @fixed("throw")
-  class KwThrow extends Keyword
+  class KwThrow extends Keyword with ExprBegToken
   @fixed("trait")
-  class KwTrait extends Keyword
+  class KwTrait extends Keyword with TmplBegKeyword
   @fixed("true")
   class KwTrue extends BooleanConstant(true)
   @fixed("try")
-  class KwTry extends Keyword
+  class KwTry extends Keyword with EndMarkerSpecifier with ExprBegToken
   @fixed("type")
-  class KwType extends Keyword
+  class KwType extends Keyword with DeclBegKeyword with StatEndToken
   @fixed("val")
-  class KwVal extends Keyword
+  class KwVal extends Keyword with EndMarkerSpecifier with DeclBegKeyword
   @fixed("var")
-  class KwVar extends Keyword
+  class KwVar extends Keyword with DeclBegKeyword
   @fixed("while")
-  class KwWhile extends Keyword
+  class KwWhile extends Keyword with EndMarkerSpecifier with ExprBegToken
   @fixed("with")
-  class KwWith extends Keyword
+  class KwWith extends Keyword with ContKeyword
   @fixed("yield")
-  class KwYield extends Keyword
+  class KwYield extends Keyword with ContKeyword
 
   // Symbolic keywords
   @fixed("#")
-  class Hash extends SymbolicKeyword
+  class Hash extends SymbolicKeyword with ContKeyword
   @fixed(":")
-  class Colon extends SymbolicKeyword
+  class Colon extends SymbolicKeyword with ContKeyword
   @fixed("<%")
-  class Viewbound extends SymbolicKeyword
+  class Viewbound extends SymbolicKeyword with ContKeyword
   @freeform("<-")
-  class LeftArrow extends SymbolicKeyword
+  class LeftArrow extends SymbolicKeyword with ContKeyword
   @fixed("<:")
-  class Subtype extends SymbolicKeyword
+  class Subtype extends SymbolicKeyword with ContKeyword
   @fixed("=")
-  class Equals extends SymbolicKeyword
+  class Equals extends SymbolicKeyword with ContKeyword
   @freeform("=>")
   class RightArrow extends FunctionArrow
   @fixed(">:")
-  class Supertype extends SymbolicKeyword
+  class Supertype extends SymbolicKeyword with ContKeyword
   @fixed("@")
   class At extends SymbolicKeyword
   @fixed("_")
-  class Underscore extends SymbolicKeyword
+  class Underscore extends SymbolicKeyword with ExprBegToken with StatEndToken
   @fixed("=>>")
-  class TypeLambdaArrow extends SymbolicKeyword
+  class TypeLambdaArrow extends SymbolicKeyword with ContKeyword
   @fixed("?=>")
   class ContextArrow extends FunctionArrow
   @fixed("'")
-  class MacroQuote extends SymbolicKeyword
+  class MacroQuote extends SymbolicKeyword with ExprBegToken
   @fixed("$") @deprecated("use Ident($) instead", "v4.14.5")
   private[meta] class MacroSplice extends SymbolicKeyword
 
   // Delimiters
   @fixed("(")
-  class LeftParen extends OpenDelim
+  class LeftParen extends OpenDelim with ExprBegToken
   @fixed(")")
   class RightParen extends CloseDelim
   @fixed(",")
@@ -213,13 +227,13 @@ object Token {
   @fixed(".")
   class Dot extends Punct
   @fixed(";")
-  class Semicolon extends Punct
+  class Semicolon extends Punct with StatDelim
   @fixed("[")
   class LeftBracket extends OpenDelim
   @fixed("]")
   class RightBracket extends CloseDelim
   @fixed("{")
-  class LeftBrace extends OpenDelim
+  class LeftBrace extends OpenDelim with ExprBegToken
   @fixed("}")
   class RightBrace extends CloseDelim
 
@@ -248,7 +262,7 @@ object Token {
   // As you can see, SpliceEnd is always empty, but I still decided to expose it for consistency reasons.
   object Interpolation {
     @freeform("interpolation id")
-    class Id(value: String) extends Token
+    class Id(value: String) extends Token with ExprBegToken
     @freeform("interpolation start")
     class Start extends Token
     @freeform("interpolation part")
@@ -258,11 +272,11 @@ object Token {
     @freeform("splice end")
     class SpliceEnd extends Token
     @freeform("interpolation end")
-    class End extends Token
+    class End extends Token with StatEndToken
   }
   object Xml {
     @freeform("xml start")
-    class Start extends Token {
+    class Start extends Token with ExprBegToken {
       require(dialect.allowXmlLiterals, s"$dialect doesn't support xml literals")
     }
     @freeform("xml part")
@@ -278,7 +292,7 @@ object Token {
       require(dialect.allowXmlLiterals, s"$dialect doesn't support xml literals")
     }
     @freeform("xml end")
-    class End extends Token {
+    class End extends Token with StatEndToken {
       require(dialect.allowXmlLiterals, s"$dialect doesn't support xml literals")
     }
   }
@@ -287,7 +301,7 @@ object Token {
   trait Indentation extends Whitespace
   object Indentation {
     @freeform("indent")
-    class Indent extends Indentation
+    class Indent extends Indentation with ExprBegToken
     @freeform("outdent")
     class Outdent extends Indentation
   }
