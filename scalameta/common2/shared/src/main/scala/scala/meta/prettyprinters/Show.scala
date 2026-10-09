@@ -2,6 +2,7 @@ package scala.meta
 package prettyprinters
 
 import org.scalameta.internal.ScalaCompat.EOL
+import scala.meta.internal.tokens.Chars.{isIdentifierPart, isOperatorPart}
 
 import java.nio.CharBuffer
 
@@ -81,14 +82,28 @@ private[meta] object Show {
     private def leadingPending(value: String, end: Int): Int = {
       var beg = 0
       while (beg < end && value.charAt(beg) == ' ') beg += 1
-      // the delayed separator precedes the space, and a space that ends it is enough
-      if (beg > 0)
-        if (!hasDelay) addSpace()
-        else {
-          appendPrepare()
-          if (sb.charAt(sb.length - 1) != ' ') addSpace()
-        }
+      if (beg > 0) addLeadingSpace()
       beg
+    }
+    // the delayed separator precedes the space, and a space that ends it is enough
+    private def addLeadingSpace(): Unit =
+      if (!hasDelay) addSpace()
+      else {
+        appendPrepare()
+        if (sb.charAt(sb.length - 1) != ' ') addSpace()
+      }
+
+    // the spaces at the ends are separators; `space` adds one before the text
+    private def appendStr(value: String, space: Boolean): Unit = {
+      val end = endTrimmed(value)
+      val last = stack.isEmpty || stack.head.isInstanceOf[Run]
+      if (end < value.length && !last) // a trailing space is scoped to what follows
+        push(SpaceOrIndent(pop(), space = true))
+      var beg = 0
+      while (beg < end && value.charAt(beg) == ' ') beg += 1
+      if ((space || beg > 0) && end > 0) addLeadingSpace()
+      appendTrimmed(value, beg, end)
+      if (end < value.length && last) addSpace()
     }
 
     def appendTrimmed(value: String, beg: Int, end: Int): Unit = if (beg < end) {
@@ -175,21 +190,24 @@ private[meta] object Show {
           case None => // do nothing
           case AsIs(value) => appendAsIs(value)
           case Literal(value) => appendTrimmed(value, 0, value.length)
-          case Str(value) =>
-            if (stack.isEmpty || stack.head.isInstanceOf[Run]) append(value)
-            else {
-              val end = endTrimmed(value)
-              if (end < value.length) // a trailing space is scoped to what follows
-                push(SpaceOrIndent(pop(), space = true))
-              appendTrimmed(value, leadingPending(value, end), end)
-            }
+          case Str(value) => appendStr(value, space = false)
           case Blank => blank()
           case m: Deferred => maybePush(m.value)
-          case Function(fn) =>
-            val len = sb.length
-            if (!wasNL) emitPending(pending) // so fn can see the pending separator
-            val res = fn(sb)
-            sb.setLength(len)
+          case Keyword(value) => appendStr(
+              value,
+              space = withPending {
+                val len = sb.length
+                isOperatorPart(value.charAt(0)) && len >= 1 && {
+                  val last = sb.charAt(len - 1)
+                  isOperatorPart(last) ||
+                  last == '_' && len >= 2 && isIdentifierPart(sb.charAt(len - 2))
+                }
+              },
+            )
+          case Comment(res) => maybePush(res)
+          case LeadingComments(res, breakAtLineStart) =>
+            val atLineStart = withPending(sb.length == 0 || sb.charAt(sb.length - 1) == '\n')
+            push(if (atLineStart && breakAtLineStart) newlineOnly else spaceOnly)
             maybePush(res)
           case Newline(res) =>
             nl()
@@ -231,6 +249,14 @@ private[meta] object Show {
           case r: Run => r.run()
         }
       }
+    }
+
+    // decide with the pending separator in the output, then take it out again
+    private def withPending[A](res: => A): A = {
+      val len = sb.length
+      if (!wasNL) emitPending(pending)
+      try res
+      finally sb.setLength(len)
     }
 
     private def pop(): Result = {
@@ -295,8 +321,16 @@ private[meta] object Show {
   final class Meta(val data: Any, res: () => Result) extends Deferred(res) {
     override def desc: String = s"Meta(d=$data, ...)"
   }
-  final case class Function(fn: CharSequence => Result) extends Result {
-    override def desc: String = s"Function(...)"
+  // a keyword, after a space if it would otherwise join the operator before it
+  final case class Keyword(value: String) extends Result {
+    override def desc: String = s"Keyword($value)"
+  }
+  final case class Comment(res: Result) extends Result {
+    override def desc: String = s"Comment(r=${res.desc})"
+  }
+  // comments before a tree, then a newline if they start a line and the last ends it, else a space
+  final case class LeadingComments(res: Result, breakAtLineStart: Boolean) extends Result {
+    override def desc: String = s"LeadingComments(break=$breakAtLineStart, r=${res.desc})"
   }
 
   private final class Run(val run: () => Unit) extends Result {
@@ -375,7 +409,7 @@ private[meta] object Show {
 
   def alt(a: Result, b: => Result): Result = if (a ne None) a else b
 
-  def function(fn: CharSequence => Result): Result = Function(fn)
+  def keyword(value: String): Result = Keyword(value)
 
   def asis(value: String): Result = if (value.isEmpty) None else AsIs(value)
   def literal(value: String): Result = if (value.isEmpty) None else Literal(value)

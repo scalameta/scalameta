@@ -17,7 +17,7 @@ import scala.reflect.{ClassTag, classTag}
 
 object TreeSyntax {
 
-  import Show.{alt, blank, function => fn, indent => i, literal => lit, meta => m, newline => n,
+  import Show.{alt, blank, indent => i, keyword => kw, literal => lit, meta => m, newline => n,
     nosplit => nosp, opt => o, repeat => r, sequence => s, spacen => spn, wrap => w}
 
   private final class SyntaxInstances(comments: Boolean)(implicit dialect: Dialect) {
@@ -61,15 +61,6 @@ object TreeSyntax {
           })
         w("(", x, ")", needParens)
       case res => res
-    }
-
-    def kw(keyword: String) = fn { sb =>
-      val sbLen = sb.length
-      val useSpaceBefore = isOperatorPart(keyword(0)) && sbLen >= 1 && {
-        val last = sb.charAt(sbLen - 1)
-        isOperatorPart(last) || last == '_' && sbLen >= 2 && isIdentifierPart(sb.charAt(sbLen - 2))
-      }
-      s(if (useSpaceBefore) " " + keyword else keyword)
     }
 
     def guessIsBackquoted(t: Name): Boolean = {
@@ -1090,7 +1081,7 @@ object TreeSyntax {
   private def printEndComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
     ownEndComments(tree).fold(s())(out)
 
-  private def printComment(t: Tree.Comment): Show.Result = r(t.parts.map(_.value))
+  private def printComment(t: Tree.Comment): Show.Result = Show.Comment(r(t.parts.map(_.value)))
   private def afterComment(t: Tree.Comment, sep: Show.Result): Show.Result = {
     val newlines = t.getNewlinesAfter
     if (newlines > 1) s(blank(), n()) else if (newlines > 0) n() else sep
@@ -1118,12 +1109,13 @@ object TreeSyntax {
       /* attached comments stay on the line that introduces the tree, and the tree
        * indents under a line comment; at the start of a line there is nothing to
        * indent under, and the tree follows at the same indentation */
-      case Some(c) => fn { sb =>
-          val atLineStart = sb.length == 0 || sb.charAt(sb.length - 1) == '\n'
-          val comments = printComments(c, s())
-          if (atLineStart && c.values.last.getNewlinesAfter > 0) s(comments, n(syntax))
-          else s(comments, " ", syntax)
-        }
+      case Some(c) => s(
+          Show.LeadingComments(
+            printComments(c, s()),
+            breakAtLineStart = c.values.last.getNewlinesAfter > 0,
+          ),
+          syntax,
+        )
     },
     printEndComments(tree, if (layout) printEndComments else printEndCommentsPlain),
   )
