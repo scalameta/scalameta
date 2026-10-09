@@ -23,7 +23,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.language.implicitConversions
 import scala.reflect.{ClassTag, classTag}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Success, Try}
 
 class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOptions) {
   parser =>
@@ -887,13 +887,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   final def commaSeparatedWithIndex[T <: Tree: AstInfo: ClassTag](part: Int => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
-  private def makeTuple[A <: Tree](lpPos: Int, body: List[A], zero: => A, tuple: List[A] => A)(
-      single: A => Either[List[A], A],
-  ): A = body match {
+  private def makeTuple[A <: Tree](
+      lpPos: Int,
+      body: List[A],
+      zero: => A,
+      tuple: List[A] => A,
+      singlePos: Boolean = false,
+  )(single: A => Either[List[A], A]): A = body match {
     case Nil => autoEndPos(lpPos)(zero)
     case (q: Quasi) :: Nil if q.rank == 1 => copyPos(q)(tuple(body))
     case t :: Nil => single(t) match {
-        case Right(x) => x
+        case Right(x) => if (singlePos) autoEndPos(lpPos)(x) else x
         case Left(x) => autoEndPos(lpPos)(tuple(x))
       }
     case _ => autoEndPos(lpPos)(tuple(body))
@@ -1362,7 +1366,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           Type.AnonymousParam(None)
         case _: Underscore => wildcardType()
         case _: Literal => literal()
-        case Unary(unary) if tryAhead[Literal] => autoEndPos(prevIndex)(rawLiteral(unary))
+        case Unary(unary) if tryAhead[Literal] => literal(unary)
         case t: Ident if !inMatchType =>
           t.text match {
             case soft.QuestionMarkAsTypeWildcard() => wildcardType()
@@ -1527,13 +1531,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     if (acceptOpt[Dot]) selectors(name) else name
   }
 
-  private def rawNumericLiteral(unary: Unary.Numeric): Either[Lit, Lit] = {
+  private def rawNumericLiteral(unary: Unary.Numeric)(token: Token): Either[Lit, Lit] = {
     def withUnary(lit: Lit) = Either.cond(unary ne Unary.Noop, lit, lit)
     def getBigDecimal(tok: NumericConstant[BigDecimal], f: String => Lit) = unary(tok.value) match {
       case Some(x) => withUnary(f(x.toString()))
       case _ => Left(f(tok.value.toString()))
     }
-    currToken match {
+    token match {
       case tok: Constant.Int => withUnary(Lit.Int(unary(tok.value).intValue))
       case tok: Constant.Long => withUnary(Lit.Long(unary(tok.value).longValue))
       case tok: Constant.IntXL => withUnary(Lit.IntXL(unary(tok.value)))
@@ -1543,13 +1547,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def rawLiteral(unary: Unary): Lit = nextAfter {
-    val res = currToken match {
+  private def literal(unary: Unary = Unary.Noop): Lit =
+    nextAfter(literal(unary, prevIndex, currToken, currIndex))
+  private def literal(unary: Unary, unaryPos: Int, token: Token, tokenPos: Int): Lit =
+    (token match {
       case t: Constant.FloatXL => Left(Lit.FloatXL(t.value))
       case _: NumericConstant[_] => rawNumericLiteral(unary match {
           case unary: Unary.Numeric => unary
           case _ => Unary.Noop
-        })
+        })(token)
       case Constant.Char(value) => Left(Lit.Char(value))
       case Constant.String(value) => Left(Lit.String(value))
       case t: Constant.Symbol => Left(Lit.Symbol(t.value))
@@ -1559,16 +1565,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         }
       case _: KwNull => Left(Lit.Null())
       case t => unreachable(t)
-    }
-    res match {
-      case Right(arg) => arg
+    }) match {
+      case Right(arg) => atPos(unaryPos, tokenPos)(arg)
       case Left(arg) =>
-        if (unary eq Unary.Noop) arg
-        else Lit.WithUnary(atPos(prevIndex)(Term.Name(unary.op)), atCurPos(arg))
+        val lit = atPos(tokenPos)(arg)
+        if (unary eq Unary.Noop) lit
+        else atPos(unaryPos, tokenPos)(Lit.WithUnary(atPos(unaryPos)(Term.Name(unary.op)), lit))
     }
-  }
-
-  private def literal(): Lit = atCurPos(rawLiteral(Unary.Noop))
 
   private def interpolateWith[Ctx, Ret <: Tree](
       arg: => Ctx,
@@ -1664,7 +1667,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def newLineOptWhenFollowedBy(pred: Token => Boolean): Boolean = nextIfPair[EOL](pred)
   def newLineOptWhenFollowedBy[T: ClassTag]: Boolean = nextIfPair[EOL, T]
 
-  def isIndentingOrEOL(nonOptBracesOK: => Boolean): Boolean =
+  def isIndentingOrEOL(nonOptBracesOK: Boolean): Boolean =
     if (dialect.allowSignificantIndentation) in.indenting else nonOptBracesOK && at[EOL]
 
   def isAfterOpt[A: ClassTag, B: ClassTag]: Boolean = if (at[B]) tryAhead[A] else at[A]
@@ -2397,39 +2400,46 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       def op = atPos(startPos)(Term.Name(unary.op))
       def addPos(tree: Term) = autoEndPos(startPos)(tree)
       def rest(tree: Term) = simpleExprRest(tree, canApply = true, startPos = startPos)
-      if (at[Literal]) rest(addPos(rawLiteral(unary)))
-      else simpleExpr0(allowRepeated = true) match {
-        case Success(x) => addPos(Term.ApplyUnary(op, x))
+      if (at[Literal]) rest(addPos(literal(unary)))
+      else {
+        val res = simpleExpr0(allowRepeated = true)
+        if (res ne null) addPos(Term.ApplyUnary(op, res))
         // maybe it is not unary operator but simply an ident `trait - {...}`
         // we would fail here anyway, let's try to treat it as ident
-        case _ => rest(op)
+        else rest(op)
       }
     case _ => simpleExpr(allowRepeated)
   }
 
-  def simpleExpr(allowRepeated: Boolean): Term = simpleExpr0(allowRepeated).get
+  def simpleExpr(allowRepeated: Boolean): Term = {
+    val res = simpleExpr0(allowRepeated)
+    if (res ne null) res
+    else throw ParseException(currToken.pos, "illegal start of simple expression")
+  }
 
-  private def simpleExpr0(allowRepeated: Boolean): Try[Term] = {
+  // null if the current token cannot start a simple expression
+  private def simpleExpr0(allowRepeated: Boolean): Term = {
     var canApply = true
     val startPos = currIndex
-    (currToken match {
-      case MacroQuoted(term) => Success(term)
-      case MacroSplicedIdent(term) => Success(term)
-      case _: Literal => Success(literal())
-      case _: Interpolation.Id => Success(interpolateTerm())
-      case _: Xml.Start => Success(xmlTerm())
-      case _: Ident | _: KwThis | _: KwSuper | _: Unquote => Success(path().become[Term])
-      case _: Underscore => Success(atCurPosNext(Term.Placeholder()))
-      case _: LeftParen => Success(inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated))
+    val startToken = currToken
+    val init = startToken match {
+      case MacroQuoted(term) => term
+      case MacroSplicedIdent(term) => term
+      case _: Literal => literal()
+      case _: Interpolation.Id => interpolateTerm()
+      case _: Xml.Start => xmlTerm()
+      case _: Ident | _: KwThis | _: KwSuper | _: Unquote => path().become[Term]
+      case _: Underscore => atCurPosNext(Term.Placeholder())
+      case _: LeftParen => inParensOrTupleOrUnitExpr(allowRepeated = allowRepeated)
       case _: LeftBrace =>
         canApply = false
-        Success(blockExprOnBrace())
+        blockExprOnBrace()
       case _: Indentation.Indent =>
         canApply = false
-        Success(blockExprOnIndent())
+        blockExprOnIndent()
       case _: KwNew =>
         canApply = false
-        Success(autoPos {
+        autoPos {
           next()
           val tpl = TemplateOwnerContext.within(OwnedByTrait)(template())
           tpl.inits match {
@@ -2437,12 +2447,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               Term.New(init)
             case _ => Term.NewAnonymous(tpl)
           }
-        })
-      case _ => Failure(ParseException(currToken.pos, "illegal start of simple expression"))
-    }) match {
-      case Success(x) => Success(simpleExprRest(x, canApply = canApply, startPos = startPos))
-      case x: Failure[_] => x
+        }
+      case _ => return null
     }
+
+    simpleExprRest(init, canApply = canApply, startPos = startPos)
   }
 
   @tailrec
@@ -2467,8 +2476,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         @tailrec
         def isOk(tree: Tree): Boolean = tree match {
           case _: Quasi | _: Term.Name | _: Term.Select | _: Term.Apply | _: Term.ApplyInfix |
-              _: Term.ApplyUnary | _: Term.New | _: Term.Placeholder | _: Term.ApplyUsing |
-              _: Term.Interpolate | _: Term.SplicedMacroExpr | _: Term.PolyFunction => true
+              _: Term.ApplyUnary | _: Term.New | _: Term.Placeholder | _: Term.Interpolate |
+              _: Term.SplicedMacroExpr | _: Term.PolyFunction => true
           case Term.Block(t :: Nil) => isOk(t)
           case _ => false
         }
@@ -2476,7 +2485,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           var app: Term = t
           doWhile { app = addPos(Term.ApplyType(app, exprTypeArgs())) }(at[LeftBracket])
           simpleExprRest(app, canApply = true, startPos = startPos)
-        } else addPos(t)
+        } else t
       case tok @ (_: LeftParen | _: LeftBrace) if canApply =>
         def argClause = if (tok.is[LeftBrace]) getArgClauseOnBrace() else getArgClauseOnParen()
         val arguments = addPos(Term.Apply(t, argClause))
@@ -2991,9 +3000,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         isForComprehension: Boolean = false,
     ): Pat = PatternContext.within {
       val startPos = currIndex
-      autoEndPos(startPos) {
+      autoEndPosOpt(startPos) {
         currToken match {
-          case Unary(unary) if tryAhead[Literal] => rawLiteral(unary)
+          case Unary(unary) if tryAhead[Literal] => literal(unary)
           case sidToken @ (_: Ident | _: KwThis | _: Unquote) =>
             val sid = stableId()
             val targs = if (at[LeftBracket]) Some(super.patternTypeArgs()) else None
@@ -3038,9 +3047,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           case _: Interpolation.Id => interpolatePat()
           case _: Xml.Start => xmlPat()
           case _: LeftParen =>
-            val lpPos = currIndex
             val patterns = inParensOnOpenOr(noSeqWithNamed.patterns())(Nil)
-            makeTuple(lpPos, patterns, Lit.Unit(), Pat.Tuple.apply) {
+            makeTuple(startPos, patterns, Lit.Unit(), Pat.Tuple.apply, singlePos = true) {
               case t: Pat.Assign if dialect.allowNamedTuples => Left(t :: Nil)
               case t if !isRhs => Right(t)
               case t @ Pat.Tuple(_ :: Nil) => Right(t)
