@@ -700,7 +700,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def isAtEndMarker(): Boolean = isEndMarkerIntro(currToken, peekIndex)
 
   @inline
-  def acceptIfStatSep(): Boolean = acceptIf(StatSep)
+  def acceptIfStatSep(): Boolean = acceptOpt[StatDelim]
 
   @inline
   def isImplicitStatSep(): Boolean = prev[Indentation.Outdent]
@@ -1750,7 +1750,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         finally if (!outdented) accept[Indentation.Outdent]
       } else felse
     def getWithCondAndThenp(cond: Term, thenp: Term) = {
-      val elsep = if (acceptIfAfterOpt[KwElse](StatSep)) expr() else atCurPosEmpty(Lit.Unit())
+      val elsep = if (acceptIfAfterOpt[KwElse, StatDelim]) expr() else atCurPosEmpty(Lit.Unit())
       Term.If(cond, thenp, elsep, mods)
     }
     def getWithCond(cond: Term) =
@@ -2779,7 +2779,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         next()
         val quasiCase = unquoteOpt[Case]
         cases += (if (quasiCase eq null) caseClause() else quasiCase)
-        if (quasiCase ne null) skipAllStatSep() else if (StatSep(currToken)) tryAhead(isCaseIntro())
+        if (quasiCase ne null) skipAllStatSep()
+        else if (currToken.is[StatDelim]) tryAhead(isCaseIntro())
         iter()
       case _ =>
     }
@@ -2803,7 +2804,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       enums += enumerator(isFirst = enums.isEmpty)
       while (at[KwIf]) enums += enumeratorGuardOnIf()
     }(
-      if (StatSep(currToken)) nextIf(notEnumsEnd(peekToken))
+      if (currToken.is[StatDelim]) nextIf(notEnumsEnd(peekToken))
       else isImplicitStatSep() && notEnumsEnd(currToken),
     )
   }
@@ -3952,7 +3953,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     val restype = ReturnTypeContext.within(typedOpt())
     if (acceptOpt[Equals])
       if (!acceptOpt[KwMacro]) defn(restype) else Defn.Macro(mods, name, paramClauses, restype, expr())
-    else if (StatSeqEnd(currToken) || StatSep(currToken)) Decl
+    else if (currToken.is[StatDelim] || StatSeqEnd(currToken)) Decl
       .Def(mods, name, paramClauses, restype.getOrElse(procedureSyntaxDeclType))
     else if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) defn(Some(procedureSyntaxDeclType))
     else syntaxErrorExpected[Equals]
