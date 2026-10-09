@@ -333,6 +333,91 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
   }
 
+  test("statement in parens after a case class, blank line between") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a, b).c(d)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a, b).c(d)
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `.` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: infix qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a + b).c
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a + b).c
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `.` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: infix callee") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a + b)(c)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a + b)(c)
+         |}""".stripMargin.lf2nl
+    val second = "object A { case class Foo(a: Int)(a + b)(c) }"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: unary qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (-a).b
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (-a).b
+         |}""".stripMargin.lf2nl
+    val second = "`identifier` expected but `)` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: new callee") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (new A)(b)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (new A)(b)
+         |}""".stripMargin.lf2nl
+    val second = "`identifier` expected but `new` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
   test("match type in a function parameter type") {
     val code = "type T = (X match { case Int => String }) => C"
     val first =
@@ -362,6 +447,255 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
+  test("statement in parens after a case class: infix select-match") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a + b).match { case _ => c }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a + b).match {
+         |    case _ => c
+         |  }
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `.` found"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
+  test("statement in parens after a case class: name select-match") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  x.match { case _ => c }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  x.match {
+         |    case _ => c
+         |  }
+         |}""".stripMargin.lf2nl
+    val second = first
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
+  test("statement in parens after a case class: negative literal qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (-1).abs
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  -1.abs
+         |}""".stripMargin.lf2nl
+    val second = first
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: if qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (if (a) b else c).d
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (if (a) b else c).d
+         |}""".stripMargin.lf2nl
+    val second = "`identifier` expected but `if` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: match qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a match { case _ => b }).c
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a match {
+         |    case _ => b
+         |  }).c
+         |}""".stripMargin.lf2nl
+    val second = "`)` expected but `match` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: lambda callee") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  ((x: Int) => x)(1)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  ((x: Int) => x)(1)
+         |}""".stripMargin.lf2nl
+    val second = "dependent function types are not supported"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: ascribed qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a: A).b
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a: A).b
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `.` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: postfix qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a b).c
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a b).c
+         |}""".stripMargin.lf2nl
+    val second = "`identifier` expected but `)` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: assignment qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a = b).c
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a = b).c
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `.` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: new qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (new A).b
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (new A).b
+         |}""".stripMargin.lf2nl
+    val second = "`identifier` expected but `new` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: if infix lhs") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (if (a) b else c) + d
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (if (a) b else c) + d
+         |}""".stripMargin.lf2nl
+    val second = "`identifier` expected but `if` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: ascribed match selector") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a: A) match { case _ => b }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a: A) match {
+         |    case _ => b
+         |  }
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `match` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: infix eta") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  (a + b) _
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  (a + b) _
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `_` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("statement in parens after a case class: block qualifier") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  { a }.b
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  {
+         |    a
+         |  }.b
+         |}""".stripMargin.lf2nl
+    val second = first
+    assertEquals(reprintTwice(code), (first, second))
   }
 
   test("typed pattern in parens with a declared type") {
@@ -465,6 +799,191 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+  }
+
+  test("backquoted operator name starts a statement, blank line before") {
+    val code =
+      """|object A {
+         |  val b = f(c)
+         |
+         |  `(` + d
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val b = f(c)
+         |  `(` + d
+         |}""".stripMargin.lf2nl
+    val second = "object A { val b = f(c) `(` +d }"
+    assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
+  }
+
+  test("unit statement after a case class, blank line between") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  ().toString
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  ().toString
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `.` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("empty block statement after a case class, blank line between") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  {}
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  {}
+         |}""".stripMargin.lf2nl
+    val second = first
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("lambda without params after a case class, blank line between") {
+    val code =
+      """|object A {
+         |  case class Foo(a: Int)
+         |
+         |  () => 1
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  case class Foo(a: Int)
+         |  () => 1
+         |}""".stripMargin.lf2nl
+    val second = "`;` expected but `=>` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("backquoted operator name, then a word operator, blank line before") {
+    val code =
+      """|object A {
+         |  val b = f(c)
+         |
+         |  `(` max d
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val b = f(c)
+         |  `(` max d
+         |}""".stripMargin.lf2nl
+    val second = "object A { val b = (f(c) `(` max) d }"
+    assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
+  }
+
+  test("backquoted operator name starts a statement in Scala 3, blank line before") {
+    val code =
+      """|object A:
+         |  val b = f(c)
+         |
+         |  `(` + d
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val b = f(c)
+         |  `(` + d
+         |}""".stripMargin.lf2nl
+    val second = "object A { val b = f(c) `(` +d }"
+    assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
+  }
+
+  test("symbolic name starts a statement, blank line before") {
+    val code =
+      """|object A {
+         |  val b = f(c)
+         |
+         |  ++ max d
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val b = f(c)
+         |  ++ max d
+         |}""".stripMargin.lf2nl
+    val second = "object A { val b = (f(c) ++ max) d }"
+    assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
+  }
+
+  private def reprintAfterA(stat: String, d: Dialect): String = {
+    val quasiDialect = d.unquoteTerm(multiline = true)
+    val block = term(s"{ a; $stat }")(quasiDialect).asInstanceOf[Term.Block]
+    TreeSyntax.reprint(Term.Block(block.stats))(quasiDialect).toString
+  }
+  private def reprintQuasiOpAfterA(lhs: Term.Name, d: Dialect): String = {
+    val quasiDialect = d.unquoteTerm(multiline = true)
+    val infix = term("x $op b")(quasiDialect).asInstanceOf[Term.ApplyInfix]
+    TreeSyntax.reprint(Term.Block(List(tname("a"), infix.copy(lhs = lhs))))(quasiDialect).toString
+  }
+
+  test("quasi operator after a symbolic name starts a statement") {
+    def reprint() = reprintQuasiOpAfterA(tname("+"), dialects.Scala3)
+    assertEquals(
+      reprint(),
+      """|{
+         |  a
+         |  + $op b
+         |}""".stripMargin,
+    )
+  }
+
+  test("quasi operator after a backquoted name starts a statement") {
+    def reprint() = reprintQuasiOpAfterA(tname("x y"), dialects.Scala3)
+    assertEquals(
+      reprint(),
+      """|{
+         |  a
+         |  `x y` $op b
+         |}""".stripMargin,
+    )
+  }
+
+  test("quasi operator after a symbolic name starts a statement in Scala 2.13") {
+    def reprint() = reprintQuasiOpAfterA(tname("+"), dialects.Scala213)
+    assertEquals(
+      reprint(),
+      """|{
+         |  a
+         |  + $op b
+         |}""".stripMargin,
+    )
+  }
+
+  test("quasi starts a statement") {
+    def reprint() = reprintAfterA("$x + b", dialects.Scala3)
+    assertEquals(
+      reprint(),
+      """|{
+         |  a
+         |  $x + b
+         |}""".stripMargin,
+    )
+  }
+
+  test("quasi ellipsis starts a statement") {
+    def reprint() = reprintAfterA("..$xs", dialects.Scala3)
+    assertEquals(
+      reprint(),
+      """|{
+         |  a
+         |  ..$xs
+         |}""".stripMargin,
+    )
   }
 
   test("lambda in braces: implicit param, two statements") {
@@ -658,6 +1177,124 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |}""".stripMargin
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3), (first, second))
+  }
+
+  test("procedure syntax, brace on the next line") {
+    val code =
+      """|object A {
+         |  def main(args: Array[String])
+         |  {
+         |    f()
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  def main(args: Array[String]): Unit
+         |  {
+         |    f()
+         |  }
+         |}""".stripMargin.lf2nl
+    val second =
+      "illegal start of declaration (possible cause: missing `=' in front of current method body)"
+    assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
+  }
+
+  test("val declaration, then a block, blank line between") {
+    val code =
+      """|object A {
+         |  val x: Int
+         |
+         |  {
+         |    f()
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val x: Int
+         |  {
+         |    f()
+         |  }
+         |}""".stripMargin.lf2nl
+    val second = "illegal start of declaration"
+    assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
+  }
+
+  test("var declaration, then a block, blank line between") {
+    val code =
+      """|object A {
+         |  var x: Int
+         |
+         |  {
+         |    f()
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  var x: Int
+         |  {
+         |    f()
+         |  }
+         |}""".stripMargin.lf2nl
+    val second = "illegal start of declaration"
+    assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
+  }
+
+  test("type alias, then a block, blank line between") {
+    val code =
+      """|object A {
+         |  type T = Int
+         |
+         |  {
+         |    f()
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  type T = Int
+         |  {
+         |    f()
+         |  }
+         |}""".stripMargin.lf2nl
+    val second = "illegal start of declaration"
+    assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
+  }
+
+  test("postfix select, then a statement, blank line between") {
+    val code =
+      """|object A {
+         |  a toString
+         |
+         |  b
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  a toString
+         |  b
+         |}""".stripMargin.lf2nl
+    val second = "object A { a toString b }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+  }
+
+  test("postfix operator in a val, then a statement, blank line between") {
+    val code =
+      """|object A {
+         |  val x = a +
+         |
+         |  b * c
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val x = a +
+         |  b * c
+         |}""".stripMargin.lf2nl
+    val second = "object A { val x = a + b * c }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
   }
 
 }
