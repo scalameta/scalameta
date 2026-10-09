@@ -2404,17 +2404,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     case Unary(unary) =>
       val startPos = currIndex
       next()
-      def op = atPos(startPos)(Term.Name(unary.op))
-      def addPos(tree: Term) = autoEndPos(startPos)(tree)
-      def rest(tree: Term) = simpleExprRest(tree, canApply = true, startPos = startPos)
-      if (at[Literal]) rest(addPos(literal(unary)))
-      else {
-        val res = simpleExpr0(allowRepeated = true)
-        if (res ne null) addPos(Term.ApplyUnary(op, res))
-        // maybe it is not unary operator but simply an ident `trait - {...}`
-        // we would fail here anyway, let's try to treat it as ident
-        else rest(op)
-      }
+      val res = simpleExpr0(allowRepeated = true, unary = unary)
+      if (res ne null) res
+      else simpleExprRest(atPos(startPos)(Term.Name(unary.op)), canApply = true, startPos = startPos)
     case _ => simpleExpr(allowRepeated)
   }
 
@@ -2425,11 +2417,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   // null if the current token cannot start a simple expression
-  private def simpleExpr0(allowRepeated: Boolean): Term = {
+  private def simpleExpr0(allowRepeated: Boolean, unary: Unary = Unary.Noop): Term = {
     var canApply = true
     val startPos = currIndex
+    val unaryPos = prevIndex
     val startToken = currToken
     val init = startToken match {
+      // the language makes a minus part of the number after it
+      case _: NumericConstant[_] if unary eq Unary.Minus =>
+        next()
+        val lit = literal(unary, unaryPos, startToken, startPos)
+        return simpleExprRest(lit, canApply = canApply, startPos = unaryPos)
+
       case MacroQuoted(term) => term
       case MacroSplicedIdent(term) => term
       case _: Literal => literal()
@@ -2458,7 +2457,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _ => return null
     }
 
-    simpleExprRest(init, canApply = canApply, startPos = startPos)
+    val res = simpleExprRest(init, canApply = canApply, startPos = startPos)
+    if (unary eq Unary.Noop) res
+    // any other operator folds only into a literal that nothing follows
+    else if ((res eq init) && startToken.is[Literal]) literal(unary, unaryPos, startToken, startPos)
+    else autoEndPos(unaryPos)(Term.ApplyUnary(atPos(unaryPos)(Term.Name(unary.op)), res))
   }
 
   @tailrec
