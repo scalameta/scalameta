@@ -254,6 +254,41 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals((first, ops), (code, List("~")))
   }
 
+  test("unary: bang on a boolean in parens") {
+    val code = "object A { val x = !(true) }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = !(true) }", List("!")))
+  }
+
+  test("unary: minus on a string in parens") {
+    val code = "object A { val x = -(\"a\") }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = -(\"a\") }", List("-")))
+  }
+
+  test("unary: minus on a select on a name in parens") {
+    val code = "object A { val x = -(x).y }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = -x.y }", List("-")))
+  }
+
+  test("unary: minus on a select on a literal") {
+    val code = "object A { val x = -(1).x }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = -1.x }", Nil))
+  }
+
+  test("unary: minus on an apply on a literal") {
+    val code = "object A { val x = -(1).max(2) }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = -1.max(2) }", Nil))
+  }
+
   test("unary: plus on a select on a literal") {
     val code = "object A { val x = +(1).x }"
     val (first, _) = reprintTwice(code)
@@ -273,6 +308,32 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val (first, _) = reprintTwice(code)
     val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
     assertEquals((first, ops), ("object A { val x = !1.x }", List("!")))
+  }
+
+  test("unary: plus on a select on a negative literal") {
+    val code = "object A { val x = +(-1).x }"
+    val first = "object A { val x = +-1.x }"
+    val second = "`;` expected but `integer constant` found"
+    assertEquals(reprintTwice(code), (first, second))
+  }
+
+  test("unary: minus on an operator name") {
+    val code = "object A { val x = -(+) }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = -+ }", Nil))
+  }
+
+  test("unary: bang on an operator name") {
+    val code = "object A { val x = !(!) }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = !! }", Nil))
+  }
+
+  test("unary: minus on a built anonymous term") {
+    val tree = Term.ApplyUnary(Term.Name("-"), Term.Anonymous())
+    assertEquals(TreeSyntax.reprint(tree).toString, "-")
   }
 
   test("postfix: select on a postfix in parens") {
