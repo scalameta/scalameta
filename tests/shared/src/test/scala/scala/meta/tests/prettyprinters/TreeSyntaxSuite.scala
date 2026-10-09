@@ -279,14 +279,14 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val code = "object A { val x = -(1).x }"
     val (first, _) = reprintTwice(code)
     val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
-    assertEquals((first, ops), ("object A { val x = -1.x }", Nil))
+    assertEquals((first, ops), ("object A { val x = -(1.x) }", List("-")))
   }
 
   test("unary: minus on an apply on a literal") {
     val code = "object A { val x = -(1).max(2) }"
     val (first, _) = reprintTwice(code)
     val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
-    assertEquals((first, ops), ("object A { val x = -1.max(2) }", Nil))
+    assertEquals((first, ops), ("object A { val x = -(1.max(2)) }", List("-")))
   }
 
   test("unary: plus on a select on a literal") {
@@ -312,8 +312,8 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
 
   test("unary: plus on a select on a negative literal") {
     val code = "object A { val x = +(-1).x }"
-    val first = "object A { val x = +-1.x }"
-    val second = "`;` expected but `integer constant` found"
+    val first = "object A { val x = +(-1.x) }"
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -321,14 +321,14 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val code = "object A { val x = -(+) }"
     val (first, _) = reprintTwice(code)
     val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
-    assertEquals((first, ops), ("object A { val x = -+ }", Nil))
+    assertEquals((first, ops), ("object A { val x = -(+) }", List("-")))
   }
 
   test("unary: bang on an operator name") {
     val code = "object A { val x = !(!) }"
     val (first, _) = reprintTwice(code)
     val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
-    assertEquals((first, ops), ("object A { val x = !! }", Nil))
+    assertEquals((first, ops), ("object A { val x = !(!) }", List("!")))
   }
 
   test("unary: minus on a built anonymous term") {
