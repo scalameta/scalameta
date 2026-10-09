@@ -175,9 +175,9 @@ class LitSuite extends ParseSuite {
   test("unary: +1") {
     val number = lit(1)
     runTestAssert[Stat]("+1", "1")(number)
-    val tree = tapply(number, lit(0))
-    runTestAssert[Stat]("+1(0)", "1(0)")(tree)
-    runTestAssert[Stat]("+1.x", "1.x")(tselect(number, "x"))
+    val tree = unary("+", tapply(number, lit(0)))
+    runTestAssert[Stat]("+1(0)")(tree)
+    runTestAssert[Stat]("+1.x")(unary("+", tselect(number, "x")))
   }
 
   test("unary: -1") {
@@ -191,16 +191,16 @@ class LitSuite extends ParseSuite {
   test("unary: ~1") {
     val number = lit(-2)
     runTestAssert[Stat]("~1", "-2")(number)
-    val tree = tapply(number, lit(0))
-    runTestAssert[Stat]("~1(0)", "-2(0)")(tree)
-    runTestAssert[Stat]("~1.x", "-2.x")(tselect(number, "x"))
+    val tree = unary("~", tapply(lit(1), lit(0)))
+    runTestAssert[Stat]("~1(0)")(tree)
+    runTestAssert[Stat]("~1.x")(unary("~", tselect(lit(1), "x")))
   }
 
   test("unary: !1") {
     val number = lit("!", lit(1))
     runTestAssert[Stat]("!1")(number)
-    runTestAssert[Stat]("!1(0)")(tapply(number, lit(0)))
-    runTestAssert[Stat]("!1.x")(tselect(number, "x"))
+    runTestAssert[Stat]("!1(0)")(unary("!", tapply(lit(1), lit(0))))
+    runTestAssert[Stat]("!1.x")(unary("!", tselect(lit(1), "x")))
   }
 
   test("unary: !1 before a brace argument") {
@@ -208,17 +208,19 @@ class LitSuite extends ParseSuite {
       """|!1 {
          |  0
          |}""".stripMargin
-    runTestAssert[Stat]("!1 { 0 }", layout)(tapply(lit("!", lit(1)), blk(lit(0))))
+    runTestAssert[Stat]("!1 { 0 }", layout)(unary("!", tapply(lit(1), blk(lit(0)))))
   }
 
-  test("unary: !1 before an underscore")(runTestAssert[Stat]("!1 _")(Term.Eta(lit("!", lit(1)))))
+  test("unary: !1 before an underscore")(
+    runTestAssert[Stat]("!1 _", "!(1 _)")(unary("!", Term.Eta(lit(1)))),
+  )
 
   test("unary: !1 before a select on the next line") {
     val code =
       """|!1
          |  .x
          |""".stripMargin
-    runTestAssert[Stat](code, "!1.x")(tselect(lit("!", lit(1)), "x"))
+    runTestAssert[Stat](code, "!1.x")(unary("!", tselect(lit(1), "x")))
   }
 
   test("unary: !1 before a colon with fewer braces") {
@@ -231,16 +233,16 @@ class LitSuite extends ParseSuite {
       """|!1 {
          |  x => x
          |}""".stripMargin
-    val tree = tapply(lit("!", lit(1)), blk(tfunc(tparam("x"))(tname("x"))))
+    val tree = unary("!", tapply(lit(1), blk(tfunc(tparam("x"))(tname("x")))))
     runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unary: +1.0") {
     val number = lit(1d)
     runTestAssert[Stat]("+1.0", "1.0")(number)
-    val tree = tapply(number, lit(0))
-    runTestAssert[Stat]("+1.0(0)", "1.0(0)")(tree)
-    runTestAssert[Stat]("+1.0.x", "1.0.x")(tselect(number, "x"))
+    val tree = unary("+", tapply(number, lit(0)))
+    runTestAssert[Stat]("+1.0(0)")(tree)
+    runTestAssert[Stat]("+1.0.x")(unary("+", tselect(number, "x")))
   }
 
   test("unary: -1.0") {
@@ -254,50 +256,50 @@ class LitSuite extends ParseSuite {
   test("unary: ~1.0") {
     val tree = lit("~", lit(1d))
     runTestAssert[Stat]("~1.0", "~1.0")(tree)
-    runTestAssert[Stat]("~1.0(0)", "~1.0(0)")(tapply(tree, lit(0)))
-    runTestAssert[Stat]("~1.0.x")(tselect(tree, "x"))
+    runTestAssert[Stat]("~1.0(0)", "~1.0(0)")(unary("~", tapply(lit(1d), lit(0))))
+    runTestAssert[Stat]("~1.0.x")(unary("~", tselect(lit(1d), "x")))
   }
 
   test("unary: !1.0") {
     val number = lit("!", lit(1d))
     runTestAssert[Stat]("!1.0", "!1.0")(number)
-    runTestAssert[Stat]("!1.0(0)", "!1.0(0)")(tapply(number, lit(0)))
-    runTestAssert[Stat]("!1.0.x")(tselect(number, "x"))
+    runTestAssert[Stat]("!1.0(0)", "!1.0(0)")(unary("!", tapply(lit(1d), lit(0))))
+    runTestAssert[Stat]("!1.0.x")(unary("!", tselect(lit(1d), "x")))
   }
 
   test("unary: !true") {
     val number = lit(false)
     runTestAssert[Stat]("!true", "false")(number)
-    val tree = tapply(number, lit(0))
-    runTestAssert[Stat]("!true(0)", "false(0)")(tree)
-    runTestAssert[Stat]("!true.x", "false.x")(tselect(number, "x"))
+    val tree = unary("!", tapply(lit(true), lit(0)))
+    runTestAssert[Stat]("!true(0)")(tree)
+    runTestAssert[Stat]("!true.x")(unary("!", tselect(lit(true), "x")))
   }
 
   test("unary: !false") {
     val number = lit(true)
     runTestAssert[Stat]("!false", "true")(number)
-    val tree = tapply(number, lit(0))
-    runTestAssert[Stat]("!false(0)", "true(0)")(tree)
-    runTestAssert[Stat]("!false.x", "true.x")(tselect(number, "x"))
+    val tree = unary("!", tapply(lit(false), lit(0)))
+    runTestAssert[Stat]("!false(0)")(tree)
+    runTestAssert[Stat]("!false.x")(unary("!", tselect(lit(false), "x")))
   }
 
   test("unary: -\"a\"") {
     val string = lit("-", str("a"))
     runTestAssert[Stat]("-\"a\"")(string)
-    runTestAssert[Stat]("-\"a\"(0)")(tapply(string, lit(0)))
-    runTestAssert[Stat]("-\"a\".x")(tselect(string, "x"))
+    runTestAssert[Stat]("-\"a\"(0)")(unary("-", tapply(str("a"), lit(0))))
+    runTestAssert[Stat]("-\"a\".x")(unary("-", tselect(str("a"), "x")))
   }
 
   test("unary: -'a'") {
     val char = lit("-", lit('a'))
     runTestAssert[Stat]("-'a'")(char)
-    runTestAssert[Stat]("-'a'.x")(tselect(char, "x"))
+    runTestAssert[Stat]("-'a'.x")(unary("-", tselect(lit('a'), "x")))
   }
 
   test("unary: !null") {
     val nul = lit("!", Lit.Null())
     runTestAssert[Stat]("!null")(nul)
-    runTestAssert[Stat]("!null.x")(tselect(nul, "x"))
+    runTestAssert[Stat]("!null.x")(unary("!", tselect(Lit.Null(), "x")))
   }
 
   test("literal type before a projection")(runTestAssert[Stat]("type A = 1#B")(
