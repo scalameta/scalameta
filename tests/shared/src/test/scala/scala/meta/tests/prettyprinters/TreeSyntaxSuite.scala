@@ -347,6 +347,97 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(reprintTwice(code), (printed, printed))
   }
 
+  locally {
+    import scala.meta.prettyprinters.Show
+    import scala.meta.prettyprinters.Show.{blank, newline => n, sequence => s}
+    def checkBlankLine(name: String, res: Show.Result, expected: String)(implicit
+        loc: munit.Location,
+    ): Unit = test(s"blank line: $name")(assertEquals(res.toString.replace("\r\n", "\n"), expected))
+    checkBlankLine("after text", s("foo", blank(), "bar"), "foo\nbar")
+    checkBlankLine("after a newline", s("foo", n(), blank(), "bar"), "foo\n\nbar")
+    checkBlankLine("after text that ends its line", s("foo\n", blank(), "bar"), "foo\n\nbar")
+    checkBlankLine(
+      "after text that ends in a blank line",
+      s("foo\n\n", blank(), "bar"),
+      "foo\n\n\nbar",
+    )
+    checkBlankLine("after a line of spaces", s("foo\n  \n", blank(), "bar"), "foo\n  \n\nbar")
+    checkBlankLine("after a blank line", s("foo", blank(), blank(), "bar"), "foo\n\nbar")
+    checkBlankLine("then a newline", s("foo", blank(), n("bar")), "foo\n\nbar")
+    checkBlankLine("at the start", s(blank(), "bar"), "\nbar")
+    checkBlankLine("at the end", s("foo", blank()), "foo\n")
+    checkBlankLine("at the end, after a newline", s("foo", n(), blank()), "foo\n\n")
+  }
+
+  test("empty block with a comment, printed without comments") {
+    val tree = Term.Block.newBuilder(Nil).endComment(Seq("/* c */")).result()
+    assertNoDiff(tree.syntax, "{}")
+  }
+
+  test("case: one-stat block body, printed without comments") {
+    val tree = templStat(
+      """|x match {
+         |  case 1 => { a }
+         |}
+         |""".stripMargin,
+    )
+    val printed = TreeSyntax.reprint(tree, false).toString
+    assertNoDiff(printed, "x match {\n  case 1 =>\n    a\n}")
+    assertEquals(
+      templStat(printed).collect { case c: Case => c.body.productPrefix },
+      List("Term.Name"),
+    )
+  }
+
+  test("case: block body with one definition, printed without comments") {
+    val tree = templStat(
+      """|x match {
+         |  case 1 => { val a = 1 }
+         |}
+         |""".stripMargin,
+    )
+    val printed = TreeSyntax.reprint(tree, false).toString
+    assertNoDiff(
+      printed,
+      """|x match {
+         |  case 1 =>
+         |    val a = 1
+         |}
+         |""".stripMargin,
+    )
+    assertEquals(
+      templStat(printed).collect { case c: Case => c.body.productPrefix },
+      List("Term.Block"),
+    )
+  }
+
+  test("interpolation: spaces at the ends of the parts") {
+    val parts = List(Lit.String(" a "), Lit.String("  "), Lit.String(" b "))
+    val tree = Term.Interpolate(Term.Name("s"), parts, List(Term.Name("x"), Term.Name("y")))
+    assertEquals(TreeSyntax.reprint(tree).toString, "s\" a $x  $y b \"")
+  }
+
+  test("xml: spaces at the ends of the parts") {
+    val tree = Term.Xml(List(Lit.String("<a> "), Lit.String(" </a>")), List(Term.Name("x")))
+    assertEquals(TreeSyntax.reprint(tree).toString, "<a> {x} </a>")
+  }
+
+  test("show: trailing space, then leading space")(
+    assertEquals(Show.sequence("a ", " (", "b)").toString, "a (b)"),
+  )
+
+  test("show: trailing spaces, then leading spaces")(
+    assertEquals(Show.sequence("a  ", "  (", "b)").toString, "a (b)"),
+  )
+
+  test("show: delayed separator, then leading space")(
+    assertEquals(Show.repeat(", ")("a", " b").toString, "a, b"),
+  )
+
+  test("show: trailing space, then delayed separator")(
+    assertEquals(Show.repeat(", ")("a ", "b").toString, "a, b"),
+  )
+
   test("show: keyword after a letter")(
     assertEquals(Show.sequence("a", Show.keyword(":")).toString, "a:"),
   )
@@ -418,6 +509,45 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(Show.sequence("a", " = ", Show.newline("b")).toString, "a =\n  b".lf2nl),
   )
 
+  test("interpolation: this in a part") {
+    val code =
+      """|object A {
+         |  val s = s"($this)"
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { val s = s"(${this})" }
+         |""".stripMargin,
+    )()
+  }
+
+  test("self type: function type") {
+    val code =
+      """|class A {
+         |  this: (Int => Unit) =>
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|class A { this: (Int => Unit) => }
+         |""".stripMargin,
+    )()
+  }
+
+  test("param: function type of no args") {
+    val code =
+      """|object A {
+         |  def g(f: (() => a.R)) = 1
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { def g(f: () => a.R) = 1 }
+         |""".stripMargin,
+    )()
+  }
+
   test("existential type in a function parameter") {
     val code =
       """|object A {
@@ -429,7 +559,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  def f(g: ((S[X], X) forSome {
          |    type X
          |  }) => B): B = g
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -453,7 +583,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (a, b).c(d)
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -471,7 +601,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (a + b).c
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -489,7 +619,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (a + b)(c)
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -507,7 +637,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (-a).b
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -525,7 +655,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (new A)(b)
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -576,7 +706,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  (a + b).match {
          |    case _ => c
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
   }
@@ -630,7 +760,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (if (a) b else c).d
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -650,7 +780,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  (a match {
          |    case _ => b
          |  }).c
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -668,7 +798,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  ((x: Int) => x)(1)
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -686,7 +816,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (a: A).b
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -704,7 +834,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (a b).c
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -722,7 +852,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (a = b).c
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -740,7 +870,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (new A).b
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -758,7 +888,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (if (a) b else c) + d
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -778,7 +908,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  (a: A) match {
          |    case _ => b
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -796,7 +926,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  (a + b) _
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -937,7 +1067,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  val b = f(c)
          |
          |  `(` + d
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
@@ -955,7 +1085,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  ().toString
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -991,7 +1121,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  case class Foo(a: Int)
          |
          |  () => 1
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
@@ -1009,7 +1139,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  val b = f(c)
          |
          |  `(` max d
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
@@ -1026,7 +1156,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  val b = f(c)
          |
          |  `(` + d
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
@@ -1044,7 +1174,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  val b = f(c)
          |
          |  ++ max d
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
@@ -1068,7 +1198,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  a
          |
          |  + $op b
-         |}""".stripMargin,
+         |}""".stripMargin.lf2nl,
     )
   }
 
@@ -1080,7 +1210,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  a
          |
          |  `x y` $op b
-         |}""".stripMargin,
+         |}""".stripMargin.lf2nl,
     )
   }
 
@@ -1091,7 +1221,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       """|{
          |  a
          |  + $op b
-         |}""".stripMargin,
+         |}""".stripMargin.lf2nl,
     )
   }
 
@@ -1103,7 +1233,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  a
          |
          |  $x + b
-         |}""".stripMargin,
+         |}""".stripMargin.lf2nl,
     )
   }
 
@@ -1115,8 +1245,818 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  a
          |
          |  ..$xs
-         |}""".stripMargin,
+         |}""".stripMargin.lf2nl,
     )
+  }
+
+  test("args: a lambda with a braced body after another arg") {
+    val code =
+      """|object A {
+         |  f(a, x => {
+         |    b
+         |    c
+         |  })
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f(a, x => {
+         |    b
+         |    c
+         |  })
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code), (printed, printed))
+  }
+
+  test("args: using, then a lambda with a braced body") {
+    val code =
+      """|object A {
+         |  f(using x => {
+         |    b
+         |    c
+         |  })
+         |}
+         |""".stripMargin
+    val printed =
+      """|object A {
+         |  f(using x => {
+         |    b
+         |    c
+         |  })
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
+  }
+
+  test("infix in parens: blank line and DSLC before the operator") {
+    val code =
+      """|object A {
+         |  val y = (a
+         |
+         |      // c1
+         |      && b)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val y = a
+         |    // c1
+         |    && b
+         |}""".stripMargin.lf2nl
+    val second =
+      """|object A {
+         |  val y = a
+         |  // c1
+         |  && b
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+  }
+
+  test("infix in parens: DSLC before the operator") {
+    val code =
+      """|object A {
+         |  val y = (a
+         |      // c1
+         |      && b)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val y = a
+         |    // c1
+         |    && b
+         |}""".stripMargin.lf2nl
+    val second =
+      """|object A {
+         |  val y = a
+         |  // c1
+         |  && b
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+  }
+
+  test("infix in parens: blank line and DSLC before the operator in Scala 3") {
+    val code =
+      """|object A {
+         |  val y = (a
+         |
+         |      // c1
+         |      && b)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val y = a
+         |    // c1
+         |    && b
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("infix in parens: DSLC before the operator in Scala 3") {
+    val code =
+      """|object A {
+         |  val y = (a
+         |      // c1
+         |      && b)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val y = a
+         |    // c1
+         |    && b
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("infix in parens: MLC before the operator") {
+    val code = "object A { val y = (a /* c1 */ && b) }"
+    val first = "object A { val y = a /* c1 */ && b }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("infix type in parens: blank line and DSLC before the operator in Scala 3") {
+    val code =
+      """|object A {
+         |  type T = (A
+         |
+         |    // c1
+         |    | B)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  type T = A
+         |    // c1
+         |    | B
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("infix type in parens: blank line and DSLC before the operator") {
+    val code =
+      """|object A {
+         |  type T = (A
+         |
+         |    // c1
+         |    | B)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  type T = A
+         |    // c1
+         |    | B
+         |}""".stripMargin.lf2nl
+    val second =
+      """|object A {
+         |  type T = A
+         |  // c1
+         |  | B
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+  }
+
+  test("infix type in parens: DSLC before the operator") {
+    val code =
+      """|object A {
+         |  type T = (A
+         |    // c1
+         |    | B)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  type T = A
+         |    // c1
+         |    | B
+         |}""".stripMargin.lf2nl
+    val second =
+      """|object A {
+         |  type T = A
+         |  // c1
+         |  | B
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+  }
+
+  test("infix pattern in parens: blank line and DSLC before the operator") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case (a
+         |
+         |      // c1
+         |      :: b) => c
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  x match {
+         |    case a
+         |      // c1
+         |      :: b => c
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("infix pattern: DSLC and blank line after the operator") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a ::
+         |
+         |      // c1
+         |      b => c
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  x match {
+         |    case a :: b => c
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("infix pattern: DSLC after the operator") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a ::
+         |      // c1
+         |      b => c
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  x match {
+         |    case a :: b => c
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("infix with type args: blank line and DSLC before them in Scala 3") {
+    val code =
+      """|object A {
+         |  a op
+         |
+         |    // c1
+         |    [T] b
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  a op
+         |  // c1
+         |    [T] b
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("infix type in parens: ASLC after the lhs") {
+    val code =
+      """|object A {
+         |  type T = (A // c1
+         |    | B)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  type T = A // c1
+         |    | B
+         |}""".stripMargin.lf2nl
+    val second =
+      """|object A {
+         |  type T = A // c1
+         |  | B
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+  }
+
+  test("infix pattern in parens: ASLC after the lhs") {
+    val code =
+      """|object A {
+         |  val (a // c1
+         |    :: b) = x
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val a // c1
+         |    :: b = x
+         |}""".stripMargin.lf2nl
+    val second = "declaration requires a type"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+  }
+
+  test("infix pattern in a val, in parens: DSLC before the operator") {
+    val code =
+      """|object A {
+         |  val (a
+         |    // c1
+         |    :: b) = x
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  val a
+         |    // c1
+         |    :: b = x
+         |}""".stripMargin.lf2nl
+    val second = "declaration requires a type"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+  }
+
+  test("try: DSLC above, body on the next line") {
+    val code =
+      """|object A:
+         |  // c1
+         |  try
+         |    a
+         |  finally c
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  // c1
+         |  try a finally c
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("while: DSLC above, condition on the next line") {
+    val code =
+      """|object A:
+         |  // c1
+         |  while
+         |    a
+         |  do b
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  // c1
+         |  while (a) b
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("return: DSLC above, expression on the next line") {
+    val code =
+      """|object A:
+         |  def f: Int =
+         |    // c1
+         |    return
+         |      a
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  def f: Int =
+         |    // c1
+         |    return a
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("args: MLC before a lambda param in a braced arg") {
+    val code =
+      """|object A {
+         |  f(a, xs.map { /* c1 */ x => g(x) })
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  f(a, xs.map {
+         |    /* c1 */ x => g(x)
+         |  })
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("args: MLC in a braced block arg") {
+    val code =
+      """|object A {
+         |  f(a, { /* c1 */ b })
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  f(a, {
+         |    /* c1 */ b
+         |  })
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("tuple: MLC before a lambda param in a braced element") {
+    val code =
+      """|object A {
+         |  (a, xs.map { /* c1 */ x => g(x) })
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  (a, xs.map {
+         |    /* c1 */ x => g(x)
+         |  })
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("args: MLC before a lambda param after a colon") {
+    val code =
+      """|object A:
+         |  f(a, xs.map: /* c1 */ x =>
+         |    g(x))
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  f(a, xs.map {
+         |    /* c1 */ x => g(x)
+         |  })
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("match: DSLC after the last case, printed without comments") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case 1 => b
+         |    // c3
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  x match {
+         |    case 1 => b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213, comments = false), (first, first))
+  }
+
+  test("catch: DSLC after the last case, printed without comments") {
+    val code =
+      """|object A {
+         |  try a
+         |  catch {
+         |    case 1 => b
+         |    // c3
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  try a catch {
+         |    case 1 => b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213, comments = false), (first, first))
+  }
+
+  test("partial function: DSLC after the last case, printed without comments") {
+    val code =
+      """|object A {
+         |  xs.map {
+         |    case 1 => b
+         |    // c3
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  xs.map {
+         |    case 1 => b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213, comments = false), (first, first))
+  }
+
+  test("package with braces: DSLC in the body, printed without comments") {
+    val code =
+      """|package a {
+         |  // c1
+         |}
+         |""".stripMargin
+    val first = "package a"
+    assertEquals(reprintTwice(code, dialects.Scala213, comments = false), (first, first))
+  }
+
+  test("tuple: leading comma with ASLC") {
+    val code =
+      """|object A {
+         |  (
+         |    a
+         |    , // c1
+         |    b
+         |  )
+         |}
+         |""".stripMargin
+    val first = "object A { (a, b) }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("case: MLC between two statements on one line") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case 1 => a /* c1 */; b
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  x match {
+         |    case 1 =>
+         |      a /* c1 */
+         |      b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("case: MLC between two statements in braces") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case 1 => { a /* c1 */; b }
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  x match {
+         |    case 1 =>
+         |      a /* c1 */
+         |      b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("lambda in braces: two statements, DSLC at the brace column") {
+    val code =
+      """|object A {
+         |  xs.map { x =>
+         |    val y = x
+         |    y
+         |  // c1
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  xs.map { x =>
+         |    val y = x
+         |    y
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("lambda in braces: MLC before the param, two statements") {
+    val code =
+      """|object A {
+         |  xs.map { /* c1 */ x =>
+         |    val y = x
+         |    y
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  xs.map { x =>
+         |    val y = x
+         |    y
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("lambda after a colon: MLC before the param, two statements") {
+    val code =
+      """|object A:
+         |  xs.map: /* c1 */ x =>
+         |    val y = x
+         |    y
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  xs.map { x =>
+         |    val y = x
+         |    y
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("if-then: DSLC and blank line before else") {
+    val code =
+      """|object A:
+         |  if a then
+         |    b
+         |  // c1
+         |
+         |  else
+         |    c
+         |""".stripMargin
+    val first = "object A { if (a) b else c }"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("if with condition in parens: DSLC and blank line before the body") {
+    val code =
+      """|object A:
+         |  if (a)
+         |  // c1
+         |
+         |  b
+         |""".stripMargin
+    val first = "object A { if (a) b }"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("if-then: DSLC and blank line before the body") {
+    val code =
+      """|object A:
+         |  if a then
+         |  // c1
+         |
+         |  b
+         |""".stripMargin
+    val first = "object A { if (a) b }"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("infix in parens: DSLC, then a blank line before the operator") {
+    val code =
+      """|object A {
+         |  (a
+         |    // c1
+         |
+         |    && b)
+         |}
+         |""".stripMargin
+    val first = "object A { a && b }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("import: MLC before the importees") {
+    val code =
+      """|import c. /* c1 */{d, e}
+         |""".stripMargin
+    val first = "import c./* c1 */ {d, e}"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("export: MLC before the importees") {
+    val code =
+      """|export c. /* c1 */{d, e}
+         |""".stripMargin
+    val first = "export c./* c1 */ {d, e}"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("args: MLC inside a sequence wildcard") {
+    val code =
+      """|object A {
+         |  f(b: _ /* c1 */*)
+         |}
+         |""".stripMargin
+    val first = "object A { f(b: _*) }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("singleton type: MLC before type") {
+    val code =
+      """|object A {
+         |  type T = x. /* c1 */type
+         |}
+         |""".stripMargin
+    val first = "object A { type T = x.type }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("singleton type of Nil: MLC before type") {
+    val code =
+      """|object A {
+         |  type T = Nil. /* c1 */type
+         |}
+         |""".stripMargin
+    val first = "object A { type T = Nil.type }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("secondary ctor: MLC before the args of this") {
+    val code =
+      """|class A {
+         |  def this() = this /* c1 */(1, null)
+         |}
+         |""".stripMargin
+    val first = "class A { def this() = this(1, null) }"
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("pattern: MLC in empty args") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case List( /* c1 */) =>
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  x match {
+         |    case List() =>
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("quote: MLC before the braces") {
+    val code =
+      """|val x = ' /* c1 */{ x }
+         |""".stripMargin
+    val first = "val x = '{ x }"
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+  }
+
+  test("case: MLC after a body, DSLC on the next line, another case") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case 1 => b /* c1 */
+         |    // c2
+         |    case 2 => d
+         |  }
+         |}
+         |""".stripMargin
+    val first = code.stripSuffix("\n").lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("case: body on its own line with DSLC, then a one-line case") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case 1 =>
+         |      b
+         |      // c1
+         |    case 2 => d
+         |  }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  x match {
+         |    case 1 => b
+         |    // c1
+         |    case 2 => d
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("try: DSLC before the expression on its own line, catch") {
+    val code =
+      """|object A {
+         |  try
+         |    // c1
+         |    a
+         |  catch { case _ => b }
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  try
+         |    // c1
+         |    a catch {
+         |    case _ => b
+         |  }
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
+  }
+
+  test("args: MLC after an arg, DSLC, leading comma") {
+    val code =
+      """|object A {
+         |  f(a /* c1 */
+         |    // c2
+         |    , b)
+         |}
+         |""".stripMargin
+    val first =
+      """|object A {
+         |  f(a /* c1 */
+         |,   b)
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("lambda in braces: implicit param, two statements") {
@@ -1264,7 +2204,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |      g(i)
          |    }
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
@@ -1307,7 +2247,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |      g(i)
          |    }
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3), (first, second))
   }
@@ -1328,7 +2268,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  {
          |    f()
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
@@ -1350,7 +2290,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  {
          |    f()
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
@@ -1372,7 +2312,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  {
          |    f()
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
@@ -1394,7 +2334,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  {
          |    f()
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
