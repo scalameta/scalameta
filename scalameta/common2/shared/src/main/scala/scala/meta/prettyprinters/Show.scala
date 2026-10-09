@@ -279,17 +279,21 @@ private[meta] object Show {
     final def isEmpty: Boolean = this eq None
   }
 
+  sealed abstract class StringLike extends Result {
+    def value: String
+  }
+
   final case object None extends Result {
     override def desc: String = "None"
   }
-  final case class AsIs(value: String) extends Result {
+  final case class AsIs(value: String) extends StringLike {
     override def desc: String = s"AsIs($value)"
   }
   // text with its own spaces, such as a part of an interpolation
-  final case class Literal(value: String) extends Result {
+  final case class Literal(value: String) extends StringLike {
     override def desc: String = s"Literal($value)"
   }
-  final case class Str(value: String) extends Result {
+  final case class Str(value: String) extends StringLike {
     override def desc: String = s"Str($value)"
   }
   final case class Sequence(xs: Result*) extends Result {
@@ -322,7 +326,7 @@ private[meta] object Show {
     override def desc: String = s"Meta(d=$data, ...)"
   }
   // a keyword, after a space if it would otherwise join the operator before it
-  final case class Keyword(value: String) extends Result {
+  final case class Keyword(value: String) extends StringLike {
     override def desc: String = s"Keyword($value)"
   }
   final case class Comment(res: Result) extends Result {
@@ -410,6 +414,42 @@ private[meta] object Show {
   def alt(a: Result, b: => Result): Result = if (a ne None) a else b
 
   def keyword(value: String): Result = Keyword(value)
+
+  // the first syntax elem of the code that `res` prints, past comments and spaces; null if none
+  def firstSyntaxElem(res: Result): String = res match {
+    case s: StringLike =>
+      val c = s.value.trim
+      if (c.isEmpty) null else c
+    case Sequence(xs @ _*) => firstSyntaxElem(xs.iterator, null)
+    case Repeat(xs, sep) => firstSyntaxElem(xs.iterator, sep)
+    case Indent(x) => firstSyntaxElem(x)
+    case SpaceOrIndent(x, _) => firstSyntaxElem(x)
+    case SpaceOrNewline(x, _) => firstSyntaxElem(x)
+    case Newline(x) => firstSyntaxElem(x)
+    case x: Deferred => firstSyntaxElem(x.value)
+    case _ => null // nothing printed, a comment, or a separator
+  }
+
+  private def firstSyntaxElem(iter: Iterator[Result]): String = {
+    while (iter.hasNext) {
+      val res = firstSyntaxElem(iter.next())
+      if (res ne null) return res
+    }
+    null
+  }
+
+  private def firstSyntaxElem(iter: Iterator[Result], sep: String): String = {
+    if (!iter.hasNext) return null
+    if (sep ne null) {
+      val res = firstSyntaxElem(iter.next())
+      if (res ne null) return res
+      if (iter.hasNext) {
+        val c = sep.trim
+        if (c.nonEmpty) return c
+      }
+    }
+    firstSyntaxElem(iter)
+  }
 
   def asis(value: String): Result = if (value.isEmpty) None else AsIs(value)
   def literal(value: String): Result = if (value.isEmpty) None else Literal(value)
