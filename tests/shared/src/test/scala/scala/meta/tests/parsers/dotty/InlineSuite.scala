@@ -254,6 +254,15 @@ class InlineSuite extends BaseDottySuite {
     )),
   )
 
+  test("inline-match-scrutinee-on-next-line") {
+    val code =
+      """|val y = inline
+         |  x match
+         |    case 1 => 1
+         |""".stripMargin
+    runTestError[Stat](code, "illegal start of simple expression")
+  }
+
   test("inline-if-method")(
     runTestAssert[Stat](
       """|def fn: Unit =
