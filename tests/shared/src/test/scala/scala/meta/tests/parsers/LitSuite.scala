@@ -17,6 +17,8 @@ class LitSuite extends ParseSuite {
 
   test("-2147483648")(assertTree(term("-2147483648"))(int(-2147483648)))
 
+  test("-2147483648.x")(assertTree(term("-2147483648.x"))(tselect(int(-2147483648), "x")))
+
   test("42L")(assertTree(term("42L"))(lit(42L)))
 
   test("2147483648L")(assertTree(term("2147483648L"))(lit(2147483648L)))
@@ -132,11 +134,50 @@ class LitSuite extends ParseSuite {
     assertTree(term("-0xffffffffffffffffL"))(lit(1L))
   }
 
+  test("literal before type args")(runTestError[Stat](
+    "1[Int]",
+    """|<input>:1: error: `;` expected but `[` found
+       |1[Int]
+       | ^""".stripMargin,
+  ))
+
+  test("tuple before type args")(runTestError[Stat](
+    "(a, b)[Int]",
+    """|<input>:1: error: `;` expected but `[` found
+       |(a, b)[Int]
+       |      ^""".stripMargin,
+  ))
+
+  test("match in parens before type args")(runTestError[Stat](
+    "(x match { case _ => 1 })[Int]",
+    """|<input>:1: error: `;` expected but `[` found
+       |(x match { case _ => 1 })[Int]
+       |                         ^""".stripMargin,
+  ))
+
+  test("select-match before type args") {
+    implicit val dialect: Dialect = dialects.Scala3
+    runTestError[Stat](
+      "x.match { case _ => 1 }[Int]",
+      """|<input>:1: error: `;` expected but `[` found
+         |x.match { case _ => 1 }[Int]
+         |                       ^""".stripMargin,
+    )
+  }
+
+  test("block of a literal before type args")(runTestError[Stat](
+    "{ 1 }[Int]",
+    """|<input>:1: error: `;` expected but `[` found
+       |{ 1 }[Int]
+       |     ^""".stripMargin,
+  ))
+
   test("unary: +1") {
     val number = lit(1)
     runTestAssert[Stat]("+1", "1")(number)
     val tree = tapply(number, lit(0))
     runTestAssert[Stat]("+1(0)", "1(0)")(tree)
+    runTestAssert[Stat]("+1.x", "1.x")(tselect(number, "x"))
   }
 
   test("unary: -1") {
@@ -144,6 +185,7 @@ class LitSuite extends ParseSuite {
     runTestAssert[Stat]("-1")(number)
     val tree = tapply(number, lit(0))
     runTestAssert[Stat]("-1(0)")(tree)
+    runTestAssert[Stat]("-1.x")(tselect(number, "x"))
   }
 
   test("unary: ~1") {
@@ -151,12 +193,46 @@ class LitSuite extends ParseSuite {
     runTestAssert[Stat]("~1", "-2")(number)
     val tree = tapply(number, lit(0))
     runTestAssert[Stat]("~1(0)", "-2(0)")(tree)
+    runTestAssert[Stat]("~1.x", "-2.x")(tselect(number, "x"))
   }
 
   test("unary: !1") {
     val number = lit("!", lit(1))
     runTestAssert[Stat]("!1")(number)
     runTestAssert[Stat]("!1(0)")(tapply(number, lit(0)))
+    runTestAssert[Stat]("!1.x")(tselect(number, "x"))
+  }
+
+  test("unary: !1 before a brace argument") {
+    val layout =
+      """|!1 {
+         |  0
+         |}""".stripMargin
+    runTestAssert[Stat]("!1 { 0 }", layout)(tapply(lit("!", lit(1)), blk(lit(0))))
+  }
+
+  test("unary: !1 before an underscore")(runTestAssert[Stat]("!1 _")(Term.Eta(lit("!", lit(1)))))
+
+  test("unary: !1 before a select on the next line") {
+    val code =
+      """|!1
+         |  .x
+         |""".stripMargin
+    runTestAssert[Stat](code, "!1.x")(tselect(lit("!", lit(1)), "x"))
+  }
+
+  test("unary: !1 before a colon with fewer braces") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val code =
+      """|!1:
+         |  x => x
+         |""".stripMargin
+    val layout =
+      """|!1 {
+         |  x => x
+         |}""".stripMargin
+    val tree = tapply(lit("!", lit(1)), blk(tfunc(tparam("x"))(tname("x"))))
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("unary: +1.0") {
@@ -164,6 +240,7 @@ class LitSuite extends ParseSuite {
     runTestAssert[Stat]("+1.0", "1.0")(number)
     val tree = tapply(number, lit(0))
     runTestAssert[Stat]("+1.0(0)", "1.0(0)")(tree)
+    runTestAssert[Stat]("+1.0.x", "1.0.x")(tselect(number, "x"))
   }
 
   test("unary: -1.0") {
@@ -171,18 +248,21 @@ class LitSuite extends ParseSuite {
     runTestAssert[Stat]("-1.0", "-1.0")(number)
     val tree = tapply(number, lit(0))
     runTestAssert[Stat]("-1.0(0)", "-1.0(0)")(tree)
+    runTestAssert[Stat]("-1.0.x")(tselect(number, "x"))
   }
 
   test("unary: ~1.0") {
     val tree = lit("~", lit(1d))
     runTestAssert[Stat]("~1.0", "~1.0")(tree)
     runTestAssert[Stat]("~1.0(0)", "~1.0(0)")(tapply(tree, lit(0)))
+    runTestAssert[Stat]("~1.0.x")(tselect(tree, "x"))
   }
 
   test("unary: !1.0") {
     val number = lit("!", lit(1d))
     runTestAssert[Stat]("!1.0", "!1.0")(number)
     runTestAssert[Stat]("!1.0(0)", "!1.0(0)")(tapply(number, lit(0)))
+    runTestAssert[Stat]("!1.0.x")(tselect(number, "x"))
   }
 
   test("unary: !true") {
@@ -190,6 +270,7 @@ class LitSuite extends ParseSuite {
     runTestAssert[Stat]("!true", "false")(number)
     val tree = tapply(number, lit(0))
     runTestAssert[Stat]("!true(0)", "false(0)")(tree)
+    runTestAssert[Stat]("!true.x", "false.x")(tselect(number, "x"))
   }
 
   test("unary: !false") {
@@ -197,6 +278,48 @@ class LitSuite extends ParseSuite {
     runTestAssert[Stat]("!false", "true")(number)
     val tree = tapply(number, lit(0))
     runTestAssert[Stat]("!false(0)", "true(0)")(tree)
+    runTestAssert[Stat]("!false.x", "true.x")(tselect(number, "x"))
+  }
+
+  test("unary: -\"a\"") {
+    val string = lit("-", str("a"))
+    runTestAssert[Stat]("-\"a\"")(string)
+    runTestAssert[Stat]("-\"a\"(0)")(tapply(string, lit(0)))
+    runTestAssert[Stat]("-\"a\".x")(tselect(string, "x"))
+  }
+
+  test("unary: -'a'") {
+    val char = lit("-", lit('a'))
+    runTestAssert[Stat]("-'a'")(char)
+    runTestAssert[Stat]("-'a'.x")(tselect(char, "x"))
+  }
+
+  test("unary: !null") {
+    val nul = lit("!", Lit.Null())
+    runTestAssert[Stat]("!null")(nul)
+    runTestAssert[Stat]("!null.x")(tselect(nul, "x"))
+  }
+
+  test("literal type before a projection")(runTestAssert[Stat]("type A = 1#B")(
+    Defn.Type(Nil, pname("A"), Nil, Type.Project(lit(1), pname("B"))),
+  ))
+
+  test("literal type before type arguments")(runTestAssert[Stat]("type A = 1[Int]")(
+    Defn.Type(Nil, pname("A"), Nil, papply(lit(1), pname("Int"))),
+  ))
+
+  test("literal type after a bang")(runTestAssert[Stat]("type A = !true", "type A = false")(
+    Defn.Type(Nil, pname("A"), Nil, lit(false)),
+  ))
+
+  test("literal pattern after a plus") {
+    val layout =
+      """|x match {
+         |  case 1 => 0
+         |}""".stripMargin
+    runTestAssert[Stat]("x match { case +1 => 0 }", layout)(
+      tmatch(tname("x"), Case(lit(1), None, lit(0))),
+    )
   }
 
   test("scalatest-like infix without literal") {

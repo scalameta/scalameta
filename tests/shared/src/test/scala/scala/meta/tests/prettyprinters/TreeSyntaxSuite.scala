@@ -254,6 +254,27 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals((first, ops), (code, List("~")))
   }
 
+  test("unary: plus on a select on a literal") {
+    val code = "object A { val x = +(1).x }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = +1.x }", Nil))
+  }
+
+  test("unary: tilde on a select on a double") {
+    val code = "object A { val x = ~(1.0).x }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = ~1.0.x }", Nil))
+  }
+
+  test("unary: bang on a select on a literal") {
+    val code = "object A { val x = !(1).x }"
+    val (first, _) = reprintTwice(code)
+    val ops = source(first).collect { case t: Term.ApplyUnary => t.op.value }
+    assertEquals((first, ops), ("object A { val x = !1.x }", Nil))
+  }
+
   test("postfix: select on a postfix in parens") {
     val code = "object A { val x = (a b).c }"
     assertEquals(reprintTwice(code), (code, code))
