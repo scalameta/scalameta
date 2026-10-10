@@ -344,9 +344,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a, b).c(d)
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `.` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -361,9 +362,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a + b).c
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `.` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -378,9 +380,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a + b)(c)
-         |}""".stripMargin.lf2nl
-    val second = "object A { case class Foo(a: Int)(a + b)(c) }"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -395,9 +398,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (-a).b
-         |}""".stripMargin.lf2nl
-    val second = "`identifier` expected but `)` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -412,9 +416,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (new A)(b)
-         |}""".stripMargin.lf2nl
-    val second = "`identifier` expected but `new` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -460,11 +465,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a + b).match {
          |    case _ => c
          |  }
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `.` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
   }
 
@@ -515,9 +521,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (if (a) b else c).d
-         |}""".stripMargin.lf2nl
-    val second = "`identifier` expected but `if` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -532,11 +539,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a match {
          |    case _ => b
          |  }).c
-         |}""".stripMargin.lf2nl
-    val second = "`)` expected but `match` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -551,9 +559,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  ((x: Int) => x)(1)
-         |}""".stripMargin.lf2nl
-    val second = "dependent function types are not supported"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -568,9 +577,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a: A).b
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `.` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -585,9 +595,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a b).c
-         |}""".stripMargin.lf2nl
-    val second = "`identifier` expected but `)` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -602,9 +613,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a = b).c
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `.` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -619,9 +631,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (new A).b
-         |}""".stripMargin.lf2nl
-    val second = "`identifier` expected but `new` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -636,9 +649,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (if (a) b else c) + d
-         |}""".stripMargin.lf2nl
-    val second = "`identifier` expected but `if` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -653,11 +667,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a: A) match {
          |    case _ => b
          |  }
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `match` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -672,9 +687,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  (a + b) _
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `_` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -812,9 +828,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val b = f(c)
+         |
          |  `(` + d
-         |}""".stripMargin.lf2nl
-    val second = "object A { val b = f(c) `(` +d }"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
 
@@ -829,9 +846,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  ().toString
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `.` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -864,9 +882,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  case class Foo(a: Int)
+         |
          |  () => 1
-         |}""".stripMargin.lf2nl
-    val second = "`;` expected but `=>` found"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code), (first, second))
   }
 
@@ -881,9 +900,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val b = f(c)
+         |
          |  `(` max d
-         |}""".stripMargin.lf2nl
-    val second = "object A { val b = (f(c) `(` max) d }"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
 
@@ -897,9 +917,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val b = f(c)
+         |
          |  `(` + d
-         |}""".stripMargin.lf2nl
-    val second = "object A { val b = f(c) `(` +d }"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
 
@@ -914,9 +935,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val b = f(c)
+         |
          |  ++ max d
-         |}""".stripMargin.lf2nl
-    val second = "object A { val b = (f(c) ++ max) d }"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala213Source3, comments = false), (first, second))
   }
 
@@ -937,6 +959,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       reprint(),
       """|{
          |  a
+         |
          |  + $op b
          |}""".stripMargin,
     )
@@ -948,6 +971,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       reprint(),
       """|{
          |  a
+         |
          |  `x y` $op b
          |}""".stripMargin,
     )
@@ -970,6 +994,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       reprint(),
       """|{
          |  a
+         |
          |  $x + b
          |}""".stripMargin,
     )
@@ -981,6 +1006,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       reprint(),
       """|{
          |  a
+         |
          |  ..$xs
          |}""".stripMargin,
     )
@@ -1191,12 +1217,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  def main(args: Array[String]): Unit
+         |
          |  {
          |    f()
          |  }
-         |}""".stripMargin.lf2nl
-    val second =
-      "illegal start of declaration (possible cause: missing `=' in front of current method body)"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
 
@@ -1213,11 +1239,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val x: Int
+         |
          |  {
          |    f()
          |  }
-         |}""".stripMargin.lf2nl
-    val second = "illegal start of declaration"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
 
@@ -1234,11 +1261,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  var x: Int
+         |
          |  {
          |    f()
          |  }
-         |}""".stripMargin.lf2nl
-    val second = "illegal start of declaration"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
 
@@ -1255,11 +1283,12 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  type T = Int
+         |
          |  {
          |    f()
          |  }
-         |}""".stripMargin.lf2nl
-    val second = "illegal start of declaration"
+         |}""".stripMargin
+    val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
 
@@ -1274,10 +1303,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  a toString
+         |
          |  b
          |}""".stripMargin.lf2nl
-    val second = "object A { a toString b }"
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("postfix operator in a val, then a statement, blank line between") {
@@ -1291,10 +1320,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val x = a +
+         |
          |  b * c
          |}""".stripMargin.lf2nl
-    val second = "object A { val x = a + b * c }"
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
 }

@@ -1506,6 +1506,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       assertLayout = Some(
         """|object O {
            |  object ExampleThing extends CompositeThing
+           |
            |  ("One", "Two", "Three", "Four")
            |}
            |""".stripMargin,

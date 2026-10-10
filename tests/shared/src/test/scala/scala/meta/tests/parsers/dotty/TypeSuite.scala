@@ -223,6 +223,7 @@ class TypeSuite extends BaseDottySuite {
            |  type AA = String with Int {
            |    type T >: Null
            |  }
+           |
            |  {
            |    type T >: Int
            |  }
