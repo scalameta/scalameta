@@ -42,4 +42,36 @@ class TemplateSuite extends BaseDottySuite {
     checkStat(code2, "trait B extends F[Int]")(tree)
     runTestError[Source](code3, "error: illegal start of definition `[`")
   }
+
+  test("tuple statement after a def declaration, blank line between") {
+    val code =
+      """|trait A {
+         |  def f: Int
+         |
+         |  (a, b)
+         |}
+         |""".stripMargin
+    runTestError[Stat](code, "`=` expected but `(` found")
+  }
+
+  test("tuple statement after a def declaration") {
+    val code =
+      """|trait A {
+         |  def f: Int
+         |  (a, b)
+         |}
+         |""".stripMargin
+    runTestError[Stat](code, "`=` expected but `(` found")
+  }
+
+  test("tuple statement after a val declaration") {
+    val code =
+      """|trait A {
+         |  val f: Int
+         |  (a, b)
+         |}
+         |""".stripMargin
+    runTestError[Stat](code, "`;` expected but `(` found")
+  }
+
 }
