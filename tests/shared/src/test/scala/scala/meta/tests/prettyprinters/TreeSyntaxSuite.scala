@@ -199,7 +199,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  val x = true {
          |    Int ?=> Boolean
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
   }
 
@@ -280,7 +280,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |    if (a) b += p
          |    if (c) d += p
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3, comments = false), (first, second))
   }
@@ -300,7 +300,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |    if (a) b += p
          |    if (c) d += p
          |  }
-         |}""".stripMargin
+         |}""".stripMargin.lf2nl
     val second = first
     assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
   }
