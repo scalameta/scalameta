@@ -209,10 +209,8 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val printed =
       """|x match {
          |  case 1 =>
-         |    {
-         |      a
-         |      b
-         |    }
+         |    a
+         |    b
          |}""".stripMargin
     assertEquals(TreeSyntax.reprint(tree, comments = false).toString, printed.lf2nl)
   }

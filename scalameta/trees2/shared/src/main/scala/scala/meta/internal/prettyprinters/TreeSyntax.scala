@@ -321,7 +321,7 @@ object TreeSyntax {
           case Block(Function.Initial(params, Block(stats)) :: Nil) =>
             block(s("(", r(params, ", "), ") =>"), stats)
           // a commented block keeps its braces, so the comments stay its own when parsed again
-          case _ if isCaseBody(t) && !t.hasComments => printStats(t.stats, indent = false)
+          case _ if !hasComments(t) && isCaseBody(t) => printStats(t.stats, indent = false)
           case _ => m(SimpleExpr, printBlock(t, t.stats))
         }
       case t: Term.If =>
@@ -989,8 +989,7 @@ object TreeSyntax {
     private def printBracedExpr(t: Term): Show.Result = printBracedExpr(p(Expr, t), !t.is[Term.Block])
     // a block of one expression keeps its braces on one line
     private def printInterpolateArg(t: Term): Show.Result = t match {
-      case b @ Term.Block((stat: Term) :: Nil) if !(comments && b.hasComments) =>
-        printBracedExpr(p(Expr, stat))
+      case b @ Term.Block((stat: Term) :: Nil) if !hasComments(b) => printBracedExpr(p(Expr, stat))
       case _ => printBracedExpr(t)
     }
 
@@ -1034,6 +1033,7 @@ object TreeSyntax {
 
     def reprint(tree: Tree): Show.Result = withComments(tree)(showTree(tree))
 
+    def hasComments(tree: Tree): Boolean = comments && tree.hasComments
     def withComments(tree: Tree)(res: Show.Result): Show.Result =
       if (comments) TreeSyntax.withComments(tree)(res) else res
 
