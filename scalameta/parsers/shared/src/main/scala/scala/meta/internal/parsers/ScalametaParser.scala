@@ -417,6 +417,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         }
       }
     }
+    // the tree already spans these tokens, so its comments are in place too
+    body.origin match {
+      case o: Origin.Parsed
+          if (o.source eq originSource) && o.begTokenIdx == start && o.endTokenIdx == endExcl =>
+        return body
+      case _ =>
+    }
     val origin = asOrigin(start, endExcl)
 
     var begComment: Option[Tree.Comments] = None
