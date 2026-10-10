@@ -203,6 +203,41 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(reprintTwice(code, dialects.Scala3), (printed, printed))
   }
 
+  test("case body: a block with its own comment, printed without comments") {
+    val body = Term.Block.newBuilder(List(tname("a"), tname("b"))).begComment(Seq("// c")).result()
+    val tree = Term.Match(tname("x"), List(Case(int(1), None, body)), Nil)
+    val printed =
+      """|x match {
+         |  case 1 =>
+         |    {
+         |      a
+         |      b
+         |    }
+         |}""".stripMargin
+    assertEquals(TreeSyntax.reprint(tree, comments = false).toString, printed.lf2nl)
+  }
+
+  test("case body: a block with its own comment") {
+    val body = Term.Block.newBuilder(List(tname("a"), tname("b"))).begComment(Seq("// c")).result()
+    val tree = Term.Match(tname("x"), List(Case(int(1), None, body)), Nil)
+    val printed =
+      """|x match {
+         |  case 1 =>
+         |    // c
+         |    {
+         |      a
+         |      b
+         |    }
+         |}""".stripMargin
+    assertEquals(TreeSyntax.reprint(tree).toString, printed.lf2nl)
+  }
+
+  test("interpolation: a braced arg with its own comment, printed without comments") {
+    val arg = Term.Block.newBuilder(List(tname("a"))).begComment(Seq("/* c */")).result()
+    val tree = Term.Interpolate(tname("s"), List(str(""), str("")), List(arg))
+    assertEquals(TreeSyntax.reprint(tree, comments = false).toString, "s\"${a}\"")
+  }
+
   test("unary: plus on a literal in parens") {
     val code = "object A { val x = +(6) }"
     assertEquals(reprintTwice(code), (code, code))
