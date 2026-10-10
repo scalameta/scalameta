@@ -204,9 +204,10 @@ object TreeSyntax {
       !isOnlyChildOfOnlyChild(t)
     }
     def guessNeedsLineSep(t: Tree): Boolean = t match {
-      case _: Decl.Val | _: Decl.Var | _: Decl.Def | _: Defn.Type | _: Term.Ref | _: Member.Apply |
-          _: Term.Ascribe | _: Term.Tuple | _: Term.New | _: Term.Interpolate | _: Term.Xml |
-          _: Lit => !dialect.allowSignificantIndentation
+      // a brace after a type, on the next line, refines it even in a dialect with indentation
+      case _: Decl.Val | _: Decl.Var | _: Decl.Def | _: Defn.Type => true
+      case _: Term.Ref | _: Member.Apply | _: Term.Ascribe | _: Term.Tuple | _: Term.New |
+          _: Term.Interpolate | _: Term.Xml | _: Lit => !dialect.allowSignificantIndentation
       case t: Stat.WithTemplate => t.templ.self.isEmpty && t.templ.stats.isEmpty
       case _: Term.ApplyInfix => true
       case _ => false
@@ -894,6 +895,22 @@ object TreeSyntax {
 
     implicit def syntaxCases: Syntax[Seq[CaseTree]] = Syntax(cases => r(cases.map(i(_))))
 
+    @tailrec
+    // the tree that the text of `t` starts with
+    private def leftmost(t: Tree): Tree = (t match {
+      case t: Term.SelectLike => t.qual
+      case t: Term.MatchLike => t.expr
+      case t: Member.Apply => t.fun
+      case t: Member.Infix => t.lhs
+      case t: Term.Ascribe => t.expr
+      case t: Term.Assign => t.lhs
+      case t: Term.Eta => t.expr
+      case _ => null
+    }) match {
+      case null => t
+      case child => leftmost(child)
+    }
+
     private def isCaseBody(t: Tree): Boolean = t.parent match {
       case Some(p: Case) => p.body eq t
       case _ => false
@@ -905,9 +922,33 @@ object TreeSyntax {
         val showStat = if (indent) i(stat) else n(stat)
         if (showStat.isEmpty) showStat
         else {
+          // the parser would read the statement as part of the one before it
           val needNL = null != prevStat && {
-            val elem = Show.firstSyntaxElem(showStat)
-            (elem ne null) && elem.head == '{' && guessNeedsLineSep(lastExpr(prevStat))
+            val lastPrevExpr = lastExpr(prevStat)
+            lastPrevExpr.is[Term.SelectPostfix] || {
+              val elem = Show.firstSyntaxElem(showStat)
+              if (elem eq null) false
+              else if (elem.head == '{' || elem.head == '(') guessNeedsLineSep(lastPrevExpr)
+              else dialect.allowInfixOperatorAfterNL && {
+                elem == "$" || // quasi
+                elem.startsWith("..") || // ellipsis
+                // the parser would read the name as an operator that continues the line before
+                elem.isIdentSymbolicInfixOperator &&
+                (leftmost(stat) match {
+                  case n: Term.Name => n.parent.exists {
+                      case p: Term.ApplyInfix if p.lhs eq n =>
+                        p.op match {
+                          case _: Quasi => true
+                          case opn =>
+                            val op = opn.value
+                            op.isUnaryOp || !op.isIdentSymbolicInfixOperator
+                        }
+                      case _ => false
+                    }
+                  case _ => false
+                })
+              }
+            }
           }
           prevStat = stat
           s(blank(needNL), showStat)
