@@ -203,27 +203,34 @@ object TreeSyntax {
       }
       !isOnlyChildOfOnlyChild(t)
     }
-    @annotation.tailrec
     def guessNeedsLineSep(t: Tree): Boolean = t match {
-      case t: Term.ApplyUnary => guessNeedsLineSep(t.arg)
       case _: Decl.Val | _: Decl.Var | _: Decl.Def | _: Defn.Type | _: Term.Ref | _: Member.Apply |
           _: Term.Ascribe | _: Term.Tuple | _: Term.New | _: Term.Interpolate | _: Term.Xml |
           _: Lit => !dialect.allowSignificantIndentation
-      case t: Term.Do => false
-      case t: Tree.WithBody => guessNeedsLineSep(t.body)
       case t: Stat.WithTemplate => t.templ.self.isEmpty && t.templ.stats.isEmpty
-      case t: Term.ApplyInfix =>
-        val args = t.argClause.values
-        args.lengthCompare(1) != 0 || guessNeedsLineSep(args.head)
-      case t: Term.Return => guessNeedsLineSep(t.expr)
-      case t: Term.Throw => guessNeedsLineSep(t.expr)
-      case t: Term.If => guessNeedsLineSep(if (guessHasElsep(t)) t.elsep else t.thenp)
-      case t: Term.Try => t.finallyp match {
-          case Some(x) => guessNeedsLineSep(x)
-          case _ => t.catchClause.isEmpty && guessNeedsLineSep(t.expr)
-        }
-      case t: Term.TryWithHandler => guessNeedsLineSep(t.finallyp.getOrElse(t.catchp))
+      case _: Term.ApplyInfix => true
       case _ => false
+    }
+
+    // the tree that ends the statement, past the bodies and operands that end it
+    @tailrec
+    private def lastExpr(t: Tree): Tree = t match {
+      case t: Term.ApplyUnary => lastExpr(t.arg)
+      case _: Decl.Val | _: Decl.Var | _: Decl.Def | _: Defn.Type | _: Term.Do => t
+      case t: Tree.WithBody => lastExpr(t.body)
+      case t: Term.ApplyInfix => t.argClause.values match {
+          case arg :: Nil => lastExpr(arg)
+          case _ => t
+        }
+      case t: Term.Return => lastExpr(t.expr)
+      case t: Term.Throw => lastExpr(t.expr)
+      case t: Term.If => lastExpr(if (guessHasElsep(t)) t.elsep else t.thenp)
+      case t: Term.Try => t.finallyp match {
+          case Some(x) => lastExpr(x)
+          case _ => if (t.catchClause.isEmpty) lastExpr(t.expr) else t
+        }
+      case t: Term.TryWithHandler => lastExpr(t.finallyp.getOrElse(t.catchp))
+      case t => t
     }
 
     // Branches
@@ -900,7 +907,7 @@ object TreeSyntax {
         else {
           val needNL = null != prevStat && {
             val elem = Show.firstSyntaxElem(showStat)
-            (elem ne null) && elem.head == '{' && guessNeedsLineSep(prevStat)
+            (elem ne null) && elem.head == '{' && guessNeedsLineSep(lastExpr(prevStat))
           }
           prevStat = stat
           s(blank(needNL), showStat)
