@@ -78,6 +78,13 @@ private[meta] trait Api extends ApiLowPriority {
       dialect: Dialect,
   ): List[Term.ArgClause] = v.map(termValuesToArgClauseWithDialect)
 
+  implicit def importeesToClauseWithDialect(
+      v: List[Importee],
+  )(implicit dialect: Dialect): Importee.ClauseLike = v match {
+    case x :: Nil => x
+    case _ => Importee.Clause(v)
+  }
+
   implicit def patArgsToValues(v: Pat.ArgClause): List[Pat] = v.values
   implicit def patValuesToArgClauseWithDialect(v: List[Pat])(implicit
       dialect: Dialect,

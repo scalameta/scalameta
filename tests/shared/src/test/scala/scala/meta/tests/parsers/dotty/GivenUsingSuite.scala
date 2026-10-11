@@ -667,9 +667,9 @@ class GivenUsingSuite extends BaseDottySuite {
       List(Importer(tname("File"), List(Importee.GivenAll(), Importee.Wildcard()))),
     ))
 
-    runTestAssert[Stat]("import File.{ given TC }", assertLayout = Some("import File.given TC"))(
-      Import(List(Importer(tname("File"), List(Importee.Given(pname("TC")))))),
-    )
+    runTestAssert[Stat]("import File.{ given TC }")(Import(
+      List(Importer(tname("File"), Importee.Clause(List(Importee.Given(pname("TC")))))),
+    ))
 
     runTestAssert[Stat]("import File.{ given TC, given AC, * }")(Import(List(Importer(
       tname("File"),

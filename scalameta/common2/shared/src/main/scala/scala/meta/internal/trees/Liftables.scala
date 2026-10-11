@@ -23,6 +23,7 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
 
   lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply"))
     .asClass
+  lazy val ImporterSymbol = c.mirror.staticClass("scala.meta.Importer")
   lazy val DefnValSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val"))
     .asClass
   lazy val DefnVarSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var"))
@@ -87,9 +88,28 @@ class LiftableMacros(override val c: Context) extends AdtLiftableMacros(c) with 
             $body
         }
       """
+    def specialcaseImporter: Tree =
+      q"""
+        $localName.clause match {
+          case cl: _root_.scala.meta.Importee.Clause if (cl.values match {
+                case (q: _root_.scala.meta.internal.trees.Quasi) :: _root_.scala.Nil => q.rank == 1
+                case _ => false
+              }) =>
+            c.universe.Apply(
+              ${liftPath("scala.meta.internal.trees.Syntactic.ImporterValues")},
+              _root_.scala.List(
+                ${liftField(q"$localName.ref", tq"_root_.scala.meta.Term.Ref")},
+                ${liftField(q"cl.values", tq"List[_root_.scala.meta.Importee]")}
+              )
+            )
+          case _ =>
+            $body
+        }
+      """
     // NOTE: we ignore tokens here for the time being
     if (adt.tpe <:< QuasiSymbol.toType) Some(q"Lifts.liftQuasi($localName)")
     else if (adt.tpe <:< TermApplySymbol.toType) Some(specialcaseTermApply)
+    else if (adt.tpe <:< ImporterSymbol.toType) Some(specialcaseImporter)
     else if (adt.tpe <:< DefnValSymbol.toType)
       Some(q"{ $localName.pats.foreach(pat => ${prohibitName(q"pat")}); $body }")
     else if (adt.tpe <:< DefnVarSymbol.toType)

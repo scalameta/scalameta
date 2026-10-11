@@ -3529,12 +3529,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     sid match {
       case Term.Select(sid: Term.Ref, tn: Term.Name) if sid.isPath =>
         if (acceptOpt[Dot]) dotselectors
-        else if (acceptIf(soft.KwAs)) Importer(sid, importeeRename(name(tn)) :: Nil)
-        else if (Wildcard.isStar(tn.tokens.head))
-          Importer(sid, copyPos(tn)(Importee.Wildcard()) :: Nil)
-        else Importer(sid, copyPos(tn)(Importee.Name(name(tn))) :: Nil)
+        else if (acceptIf(soft.KwAs)) Importer(sid, importeeRename(name(tn)))
+        else if (Wildcard.isStar(tn.tokens.head)) Importer(sid, copyPos(tn)(Importee.Wildcard()))
+        else Importer(sid, copyPos(tn)(Importee.Name(name(tn))))
       case tn: Term.Name if acceptIf(soft.KwAs) =>
-        Importer(atCurPosEmpty(Term.Anonymous()), importeeRename(name(tn)) :: Nil)
+        Importer(atCurPosEmpty(Term.Anonymous()), importeeRename(name(tn)))
       case _ =>
         accept[Dot]
         dotselectors
@@ -3545,18 +3544,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def entrypointImporter(): Importer = importer()
 
-  def importees(): List[Importee] =
-    if (!acceptOpt[LeftBrace]) List(importWildcardOrName())
-    else {
+  def importees(): Importee.ClauseLike =
+    if (!at[LeftBrace]) importWildcardOrName()
+    else autoPos {
+      next()
       val importees = inBracesAfterOpen(commaSeparated(importee()))
-      if (dialect.allowGivenImports) importees.map {
-        case Importee.Name(nm) if nm.value == "given" && importees.exists {
-              case _: Importee.Wildcard => true
-              case _ => false
-            } => copyPos(nm)(Importee.GivenAll())
-        case i => i
-      }
-      else importees
+      Importee.Clause(
+        if (dialect.allowGivenImports) importees.map {
+          case Importee.Name(nm) if nm.value == "given" && importees.exists {
+                case _: Importee.Wildcard => true
+                case _ => false
+              } => copyPos(nm)(Importee.GivenAll())
+          case i => i
+        }
+        else importees,
+      )
     }
 
   def importWildcardOrName(): Importee = {
@@ -3576,11 +3578,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     })
   }
 
-  def importeeRename(from: Name) = autoEndPos(from)(importWildcardOrName() match {
-    case to: Importee.Name => Importee.Rename(from, to.name)
-    case _: Importee.Wildcard => Importee.Unimport(from)
-    case other => unreachable(Map("importees" -> other, "importeesStructure" -> other.structure))
-  })
+  def importeeRename(from: Name) = {
+    val to = importWildcardOrName()
+    atPos(from, to)(to match {
+      case to: Importee.Name => Importee.Rename(from, to.name)
+      case _: Importee.Wildcard => Importee.Unimport(from)
+      case other => unreachable(Map("importees" -> other, "importeesStructure" -> other.structure))
+    })
+  }
 
   def importee(): Importee = autoPos(importWildcardOrName() match {
     case from: Importee.Name if at[RightArrow] || soft.KwAs(currToken) =>

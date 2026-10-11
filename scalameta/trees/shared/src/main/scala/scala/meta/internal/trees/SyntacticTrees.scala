@@ -45,4 +45,15 @@ object Syntactic {
         }
     }
   }
+
+  // an importer pattern with `{..$xs}` matches the importees with or without braces
+  object ImporterValues {
+    def apply(ref: Term.Ref, importees: List[Importee])(implicit dialect: Dialect): Importer =
+      Importer(ref, Importee.Clause(importees))
+
+    def unapply(tree: Tree): Option[(Term.Ref, List[Importee])] = tree match {
+      case t: Importer => Some((t.ref, t.importees))
+      case _ => None
+    }
+  }
 }
