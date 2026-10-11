@@ -12,19 +12,19 @@ class ImportSuite extends ParseSuite {
   implicit val dialect: Dialect = dialects.Scala211
 
   test("import foo.bar")(
-    assertTree(templStat("import foo.bar"))(Import(Importer("foo", "bar" :: Nil) :: Nil)),
+    assertTree(templStat("import foo.bar"))(Import(Importer("foo", "bar") :: Nil)),
   )
 
-  test("import foo.bar.baz")(assertTree(templStat("import foo.bar.baz"))(Import(
-    Importer(tselect("foo", "bar"), "baz" :: Nil) :: Nil,
-  )))
+  test("import foo.bar.baz")(
+    assertTree(templStat("import foo.bar.baz"))(Import(Importer(tselect("foo", "bar"), "baz") :: Nil)),
+  )
 
   test("import super.foo.bar")(assertTree(templStat("import super.foo.bar"))(Import(
-    Importer(Select(Super(Anonymous(), Anonymous()), "foo"), "bar" :: Nil) :: Nil,
+    Importer(Select(Super(Anonymous(), Anonymous()), "foo"), "bar") :: Nil,
   )))
 
   test("import this.foo.bar")(assertTree(templStat("import this.foo.bar"))(Import(
-    Importer(Select(This(Anonymous()), "foo"), "bar" :: Nil) :: Nil,
+    Importer(Select(This(Anonymous()), "foo"), "bar") :: Nil,
   )))
 
   test("import foo.bar._")(assertTree(templStat("import foo.bar._"))(Import(
@@ -40,42 +40,43 @@ class ImportSuite extends ParseSuite {
   )))
 
   test("import foo.{bar}")(
-    assertTree(templStat("import foo.{bar}"))(Import(Importer("foo", "bar" :: Nil) :: Nil)),
+    assertTree(templStat("import foo.{bar}"))(Import(Importer("foo", impclause("bar")) :: Nil)),
   )
 
-  test("import foo.{bar, baz}")(
-    assertTree(templStat("import foo.{bar, baz}"))(Import(Importer("foo", List("bar", "baz")) :: Nil)),
-  )
+  test("import foo.{bar, baz}")(assertTree(templStat("import foo.{bar, baz}"))(Import(
+    Importer("foo", impclause("bar", "baz")) :: Nil,
+  )))
 
   test("import foo.{bar => baz}")(assertTree(templStat("import foo.{bar => baz}"))(Import(
-    Importer("foo", ("bar" -> "baz") :: Nil) :: Nil,
+    Importer("foo", impclause("bar" -> "baz")) :: Nil,
   )))
 
   test("import foo.{bar => _}")(assertTree(templStat("import foo.{bar => _}"))(Import(
-    Importer("foo", ("bar" -> "") :: Nil) :: Nil,
+    Importer("foo", impclause("bar" -> "")) :: Nil,
   )))
 
   test("import foo.{_ => _}")(
-    assertTree(templStat("import foo.{_ => _}"))(Import(Importer("foo", impwcard :: Nil) :: Nil)),
+    assertTree(templStat("import foo.{_ => _}"))(Import(Importer("foo", impclause(impwcard)) :: Nil)),
   )
 
   test("import foo.{bar => _, _}")(assertTree(templStat("import foo.{bar => _, _}"))(Import(
-    Importer("foo", ("bar" -> "") :: impwcard :: Nil) :: Nil,
+    Importer("foo", impclause("bar" -> "", impwcard)) :: Nil,
   )))
 
   test("import foo.{bar, baz => _, _}")(assertTree(templStat("import foo.{bar, baz => _, _}"))(
-    Import(Importer("foo", List("bar", "baz" -> "", impwcard)) :: Nil),
+    Import(Importer("foo", impclause("bar", "baz" -> "", impwcard)) :: Nil),
   ))
 
   test("import a.b.{ _, c => _ }")(
     // invalid but we don't check anymore
     assertTree(templStat("import a.b.{ _, c => _ }"))(Import(
-      List(Importer(tselect("a", "b"), List(impwcard, "c" -> ""))),
+      List(Importer(tselect("a", "b"), impclause(impwcard, "c" -> ""))),
     )),
   )
 
   test("source3-given-import") {
-    val expected = Import(List(Importer(tselect("a", "b", "c"), List(Importee.GivenAll(), impwcard))))
+    val expected =
+      Import(List(Importer(tselect("a", "b", "c"), impclause(Importee.GivenAll(), impwcard))))
 
     assertTree {
       implicit val dialect: Dialect = dialects.Scala212Source3
@@ -87,7 +88,7 @@ class ImportSuite extends ParseSuite {
       templStat("import a.b.c.{ given, _ }")
     }(expected)
 
-    val expectedWithoutWildcard = Import(List(Importer(tselect("a", "b", "c"), List("given"))))
+    val expectedWithoutWildcard = Import(List(Importer(tselect("a", "b", "c"), impclause("given"))))
 
     assertTree {
       implicit val dialect: Dialect = dialects.Scala212Source3
@@ -113,7 +114,7 @@ class ImportSuite extends ParseSuite {
               """|// c1
                  |import a.b.{c => d} // c2
                  |""".stripMargin
-            val importer = Importer(tselect("a", "b"), List(impren("c", "d")))
+            val importer = Importer(tselect("a", "b"), impclause(impren("c", "d")))
             val tree = Import.newBuilder(List(importer)).begComment(Seq("// c1"))
               .endComment(Seq("// c2")).result()
             checkTree(head, layout)(tree)
@@ -141,7 +142,7 @@ class ImportSuite extends ParseSuite {
                     """|// This comment is ambiguous and not linked to a specific import
                        |import y.Y
                        |""".stripMargin
-                  val importer = Importer("y", List("Y"))
+                  val importer = Importer("y", "Y")
                   val tree = Import.newBuilder(List(importer)).begComment(Seq(
                     "// This comment is ambiguous and not linked to a specific import",
                   )).result()
@@ -152,7 +153,7 @@ class ImportSuite extends ParseSuite {
                   val layout =
                     """|import x.X
                        |""".stripMargin
-                  val tree = Import(List(Importer("x", List("X"))))
+                  val tree = Import(List(Importer("x", "X")))
                   checkTree(two, layout)(tree)
                   assertNoDiff(two.original, layout)
                 }
@@ -199,7 +200,7 @@ class ImportSuite extends ParseSuite {
          |import y.Y
          |// detached comment after
          |""".stripMargin
-    val importer = Importer("y", List("Y"))
+    val importer = Importer("y", "Y")
     val imp = Import.newBuilder(List(importer)).begComment(Seq("// attached comment"))
       .endComment(Seq("// detached comment after")).result()
     val tree = Source(List(imp))

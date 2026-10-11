@@ -247,6 +247,7 @@ trait CommonTrees extends CommonTrees.LowPriorityDefinitions {
   final def imp(name: String): Importee = if (name == "_") impwcard else impname(name)
   final def imp(obj: (String, String)): Importee =
     if (obj._2 == "_" || obj._2 == "") impdel(obj._1) else impren(obj._1, obj._2)
+  final def impclause(xs: Importee*): Importee.Clause = Importee.Clause(xs.toList)
   implicit def implicitStringToImportee(name: String): Importee = imp(name)
   implicit def implicitTupleToImportee(obj: (String, String)): Importee = imp(obj)
 

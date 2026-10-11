@@ -1595,10 +1595,16 @@ class Import(importers: List[Importer] @nonEmpty) extends ImportExportStat
 class Export(importers: List[Importer] @nonEmpty) extends ImportExportStat
 
 @ast
-class Importer(ref: Term.Ref, importees: List[Importee] @nonEmpty) extends Tree
+class Importer(ref: Term.Ref, clause: Importee.ClauseLike) extends Tree {
+  @replacedField("4.17.4")
+  final def importees: List[Importee] = clause match {
+    case x: Importee.Clause => x.values
+    case x: Importee => x :: Nil
+  }
+}
 
 @branch
-trait Importee extends Tree with Ref
+trait Importee extends Tree with Ref with Importee.ClauseLike
 object Importee {
   @ast
   class Wildcard() extends Importee
@@ -1612,6 +1618,11 @@ object Importee {
   class Rename(name: sm.Name, rename: sm.Name) extends Importee
   @ast
   class Unimport(name: sm.Name) extends Importee
+
+  @branch
+  trait ClauseLike extends Tree
+  @ast
+  class Clause(values: List[Importee] @nonEmpty) extends ClauseLike with Member.SyntaxValuesClause
 }
 
 @branch

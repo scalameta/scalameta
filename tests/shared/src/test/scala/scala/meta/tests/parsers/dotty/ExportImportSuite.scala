@@ -18,11 +18,9 @@ class ExportImportSuite extends BaseDottySuite {
     )),
   )
 
-  test("export-given")(
-    runTestAssert[Stat]("export A.{ given Int }", assertLayout = Some("export A.given Int"))(Export(
-      List(Importer(tname("A"), List(Importee.Given(pname("Int"))))),
-    )),
-  )
+  test("export-given")(runTestAssert[Stat]("export A.{ given Int }")(Export(
+    List(Importer(tname("A"), Importee.Clause(List(Importee.Given(pname("Int")))))),
+  )))
 
   test("export-given-no-brace")(
     runTestAssert[Stat]("export A.given Int", assertLayout = Some("export A.given Int"))(Export(

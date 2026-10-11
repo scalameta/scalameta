@@ -201,17 +201,20 @@ class Scala3PositionSuite extends BasePositionSuite {
   checkPositions[Stat](
     "export A.{ b, c, d, _ }",
     """|Importer A.{ b, c, d, _ }
+       |Importee.Clause { b, c, d, _ }
        |""".stripMargin,
   )
   checkPositions[Stat](
     "export a.{given Int}",
     """|Importer a.{given Int}
+       |Importee.Clause {given Int}
        |Importee.Given given Int
        |""".stripMargin,
   )
   checkPositions[Stat](
     "import Instances.{ im, given Ordering[?] }",
     """|Importer Instances.{ im, given Ordering[?] }
+       |Importee.Clause { im, given Ordering[?] }
        |Importee.Given given Ordering[?]
        |Type.Apply Ordering[?]
        |Type.ArgClause [?]
@@ -402,6 +405,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |Importee.Wildcard *
        |Import import a.{no as _, *}
        |Importer a.{no as _, *}
+       |Importee.Clause {no as _, *}
        |Importee.Unimport no as _
        |Importee.Wildcard *
        |Import import A.b.`*`

@@ -25,6 +25,7 @@ class TreeLiftsGenerateMacros(val c: Context)
 
   lazy val TermApplySymbol = c.mirror.staticModule("scala.meta.Term").info.member(TypeName("Apply"))
     .asClass
+  lazy val ImporterSymbol = c.mirror.staticClass("scala.meta.Importer")
   lazy val DefnValSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Val"))
     .asClass
   lazy val DefnVarSymbol = c.mirror.staticModule("scala.meta.Defn").info.member(TypeName("Var"))
@@ -71,8 +72,20 @@ class TreeLiftsGenerateMacros(val c: Context)
           |      case _ => $body
           |    }
           |""".stripMargin
+    def specialcaseImporter: String =
+      s"""|
+          |    $localName.clause match {
+          |      case cl: sm.Importee.Clause if (cl.values match {
+          |          case (q: sm.internal.trees.Quasi) :: scala.Nil => q.rank == 1
+          |          case _ => false
+          |        }) =>
+          |        treeByMode('{sm.internal.trees.Syntactic.ImporterValues})(term($localName.ref), term(cl.values))
+          |      case _ => $body
+          |    }
+          |""".stripMargin
     if (adt.tpe <:< QuasiSymbol.toType) Some(s"liftQuasi0($localName)")
     else if (adt.tpe <:< TermApplySymbol.toType) Some(specialcaseTermApply)
+    else if (adt.tpe <:< ImporterSymbol.toType) Some(specialcaseImporter)
     else if (adt.tpe <:< DefnValSymbol.toType)
       Some(s"{ $localName.pats.foreach(prohibitName)\n    $body }")
     else if (adt.tpe <:< DefnVarSymbol.toType)

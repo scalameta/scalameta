@@ -745,41 +745,15 @@ object TreeSyntax {
         s(t.name, " ", kw(arrow), " ", kw("_"))
       case _: Importee.Wildcard => if (dialect.allowStarWildcardImport) kw("*") else kw("_")
       case t: Importer =>
-        val importees = t.importees match {
-          case imp :: Nil
+        val clause = t.clause match {
+          case imp: Importee
               if dialect.allowAsForImportRename || !imp.isAny[Importee.Rename, Importee.Unimport] =>
             s(imp)
-          case imps =>
-            def getLine(x: Importee): Int = x.pos.startLine
-            val oneline = {
-              val lines = imps.iterator.map(getLine).filter(_ >= 0)
-              !lines.hasNext || {
-                val line = lines.next()
-                lines.forall(_ == line)
-              }
-            }
-            if (oneline) {
-              def lspace: Boolean = {
-                val imp = imps.head
-                getLine(imp) >= 0 && {
-                  val tokens = imp.tokens
-                  val idx = tokens.rskipWideIf(_.is[Token.Trivia], -1)
-                  idx < -1 && tokens.getWideOrNull(idx).is[Token.LeftBrace]
-                }
-              }
-              def rspace: Boolean = {
-                val imp = imps.last
-                getLine(imp) >= 0 && {
-                  val tokens = imp.tokens
-                  val idx = tokens.skipWideIf(_.is[Token.Trivia], tokens.length)
-                  idx > tokens.length && tokens.getWideOrNull(idx).is[Token.RightBrace]
-                }
-              }
-              val space = o(" ", lspace || rspace)
-              s("{", space, r(imps, ", "), space, "}")
-            } else s("{", r(imps.map(i(_)), ","), n("}"))
+          case imp: Importee => printImporteeClause(imp :: Nil)
+          case clause => s(clause)
         }
-        if (t.ref.is[Term.Anonymous]) importees else s(t.ref, ".", importees)
+        if (t.ref.is[Term.Anonymous]) clause else s(t.ref, ".", clause)
+      case t: Importee.Clause => printImporteeClause(t.values)
       case t: Import => s(kw("import"), " ", r(t.importers, ", "))
       case t: Export => s(kw("export"), " ", r(t.importers, ", "))
 
@@ -873,6 +847,37 @@ object TreeSyntax {
         case Seq(f: Term.Function) if f.paramClause.mod.isDefined => s(beforeBrace, "{ ", f, spn("}"))
         case _ => s(args)
       }
+
+    private def printImporteeClause(imps: List[Importee]): Show.Result = {
+      def getLine(x: Importee): Int = x.pos.startLine
+      val oneline = {
+        val lines = imps.iterator.map(getLine).filter(_ >= 0)
+        !lines.hasNext || {
+          val line = lines.next()
+          lines.forall(_ == line)
+        }
+      }
+      if (oneline) {
+        def lspace: Boolean = {
+          val imp = imps.head
+          getLine(imp) >= 0 && {
+            val tokens = imp.tokens
+            val idx = tokens.rskipWideIf(_.is[Token.Trivia], -1)
+            idx < -1 && tokens.getWideOrNull(idx).is[Token.LeftBrace]
+          }
+        }
+        def rspace: Boolean = {
+          val imp = imps.last
+          getLine(imp) >= 0 && {
+            val tokens = imp.tokens
+            val idx = tokens.skipWideIf(_.is[Token.Trivia], tokens.length)
+            idx > tokens.length && tokens.getWideOrNull(idx).is[Token.RightBrace]
+          }
+        }
+        val space = o(" ", lspace || rspace)
+        s("{", space, r(imps, ", "), space, "}")
+      } else s("{", r(imps.map(i(_)), ","), n("}"))
+    }
 
     implicit def syntaxParamClauseGroups: Syntax[Seq[Member.ParamClauseGroup]] = Syntax(r(_))
     implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax(r(_))

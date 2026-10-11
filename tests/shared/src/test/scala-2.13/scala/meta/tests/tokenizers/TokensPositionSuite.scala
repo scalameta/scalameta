@@ -461,17 +461,20 @@ class TokensPositionSuite extends BasePositionSuite {
   checkPositions[Stat](
     "import a.{ b, c }",
     """|Importer a.{ b, c }
+       |Importee.Clause { b, c }
        |""".stripMargin,
   )
   checkPositions[Stat](
     "import a.{ b => c }",
     """|Importer a.{ b => c }
+       |Importee.Clause { b => c }
        |Importee.Rename b => c
        |""".stripMargin,
   )
   checkPositions[Stat](
     "import a.{ b => _ }",
     """|Importer a.{ b => _ }
+       |Importee.Clause { b => _ }
        |Importee.Unimport b => _
        |""".stripMargin,
   )

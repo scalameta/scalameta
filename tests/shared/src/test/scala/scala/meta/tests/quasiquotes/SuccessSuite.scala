@@ -1902,6 +1902,16 @@ class SuccessSuite extends TreeSuiteBase {
     assertEquals(importer"$ref.{..$importees}".syntax, "bar.a.{baz, _}")
   }
 
+  test("importer\"ref.{..importees}\" on an importer without braces") {
+    val importer"$ref.{..$importees}" = importer"bar.baz"
+    assertEquals((ref.syntax, importees.map(_.syntax)), ("bar", List("baz")))
+  }
+
+  test("importer\"ref.{..importees}\" with one importee") {
+    val importees = List(importee"baz")
+    assertEquals(importer"bar.{..$importees}".syntax, "bar.{baz}")
+  }
+
   test("1 importee\"iname\"") {
     val importee"$iname" = importee"x"
     assertTree(iname)(Name("x"))
