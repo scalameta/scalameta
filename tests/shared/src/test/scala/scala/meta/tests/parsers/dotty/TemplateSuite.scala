@@ -51,7 +51,21 @@ class TemplateSuite extends BaseDottySuite {
          |  (a, b)
          |}
          |""".stripMargin
-    runTestError[Stat](code, "`=` expected but `(` found")
+    val layout =
+      """|trait A {
+         |  def f: Int
+         |
+         |  (a, b)
+         |}
+         |""".stripMargin
+    val tree = Defn.Trait(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Decl.Def(Nil, "f", Nil, Nil, "Int"), Term.Tuple(List(tname("a"), tname("b")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("tuple statement after a def declaration") {
@@ -61,7 +75,21 @@ class TemplateSuite extends BaseDottySuite {
          |  (a, b)
          |}
          |""".stripMargin
-    runTestError[Stat](code, "`=` expected but `(` found")
+    val layout =
+      """|trait A {
+         |  def f: Int
+         |
+         |  (a, b)
+         |}
+         |""".stripMargin
+    val tree = Defn.Trait(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Decl.Def(Nil, "f", Nil, Nil, "Int"), Term.Tuple(List(tname("a"), tname("b")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("tuple statement after a val declaration") {
@@ -71,7 +99,21 @@ class TemplateSuite extends BaseDottySuite {
          |  (a, b)
          |}
          |""".stripMargin
-    runTestError[Stat](code, "`;` expected but `(` found")
+    val layout =
+      """|trait A {
+         |  val f: Int
+         |
+         |  (a, b)
+         |}
+         |""".stripMargin
+    val tree = Defn.Trait(
+      Nil,
+      pname("A"),
+      Nil,
+      ctor,
+      tpl(Decl.Val(Nil, List(patvar("f")), pname("Int")), Term.Tuple(List(tname("a"), tname("b")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
 }
