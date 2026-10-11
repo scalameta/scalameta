@@ -142,15 +142,6 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   var in: TokenIterator = LazyTokenIterator(scannerTokens)
 
-  private def fork(): ParserState =
-    ParserState(in.fork, TermInfixContext.stack, PatInfixContext.stack, TypeInfixContext.stack)
-  private def restore(state: ParserState): Unit = {
-    in = state.in
-    TermInfixContext.stack = state.termStack
-    PatInfixContext.stack = state.patStack
-    TypeInfixContext.stack = state.typeStack
-  }
-
   @inline
   def currIndex = in.currIndex
   @inline
@@ -195,11 +186,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
    * evaluating a block and restores it after.
    */
   @inline
-  final def ahead[T](body: => T): T = {
-    val forked = fork()
-    try next(body)
-    finally restore(forked)
-  }
+  final def ahead[T](body: => T): T = tryParseIf(next(body))(_ => false)
 
   @inline
   private def tryAhead[T: ClassTag]: Boolean = nextIf(peek[T])
@@ -215,22 +202,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def unreachable(tok: Token): Nothing = unreachable(Map("token" -> tok))
   private def unreachable: Nothing = unreachable(Map.empty[String, Any])
 
-  private def tryAhead(cond: => Boolean): Boolean = {
-    val forked = fork()
-    next()
-    val ok = cond
-    if (!ok) restore(forked)
-    ok
+  private def tryAhead(cond: => Boolean): Boolean = tryParseIf(next(cond))(identity)
+
+  private def tryParseIf[A](bodyFunc: => A)(isOK: A => Boolean): A = {
+    val forked = in.fork
+    val termStack = TermInfixContext.stack
+    val patStack = PatInfixContext.stack
+    val typeStack = TypeInfixContext.stack
+    var ok = false
+    try {
+      val body = bodyFunc
+      ok = isOK(body)
+      body
+    } finally if (!ok) {
+        in = forked
+        TermInfixContext.stack = termStack
+        PatInfixContext.stack = patStack
+        TypeInfixContext.stack = typeStack
+      }
   }
 
-  private def tryParseUnless[A <: AnyRef](bodyFunc: => A)(sentinel: A): A = {
-    val forked = fork()
-    val body = bodyFunc
-    if (body eq sentinel) restore(forked)
-    body
-  }
-  private def tryParseOpt[A](bodyFunc: => Option[A]): Option[A] = tryParseUnless(bodyFunc)(None)
-  private def tryParse[A >: Null <: AnyRef](bodyFunc: => A): A = tryParseUnless(bodyFunc)(null)
+  private def tryParseOpt[A](bodyFunc: => Option[A]): Option[A] = tryParseIf(bodyFunc)(_.isDefined)
+  private def tryParse[A >: Null <: AnyRef](bodyFunc: => A): A = tryParseIf(bodyFunc)(_ ne null)
 
   private def tryAhead[A >: Null <: AnyRef](bodyFunc: => A): A = tryParse(next(bodyFunc))
 
@@ -4775,14 +4768,6 @@ object ScalametaParser {
     def isAny[A: ClassTag, B: ClassTag] = is[A] || is[B]
     def isAny[A: ClassTag, B: ClassTag, C: ClassTag] = is[A] || is[B] || is[C]
   }
-
-  // where parsing stands: an attempt that fails restores the tokens and the infix operations
-  private case class ParserState(
-      in: TokenIterator,
-      termStack: List[UnfinishedInfixTerm],
-      patStack: List[UnfinishedInfix[Pat, Term.Name]],
-      typeStack: List[UnfinishedInfix[Type, Type.Name]],
-  )
 
   // Represents an unfinished infix expression, e.g. [a * b +] in `a * b + c`.
   private[parsers] trait UnfinishedInfixLike[TreeType <: Tree, NameType <: Name] {
