@@ -645,7 +645,6 @@ lazy val sharedSettings = Def.settings(
     { if (!isScala3.value) Seq("-implicits", "-implicits-hide:.", "-groups") else Seq("-groups") },
   Test / parallelExecution := false, // hello, reflection sync!!
   logBuffered := false,
-  updateOptions := updateOptions.value.withCachedResolution(true),
   ThisBuild / watchTriggeredMessage := Watch.clearScreenOnTrigger,
   evictionErrorLevel := sbt.util.Level.Warn,
   incOptions := Def.uncached(incOptions.value.withLogRecompileOnMacro(false)),
