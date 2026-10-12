@@ -373,7 +373,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       else {
         if (currNonTrivial) last.next = currRef(xs)
         else if (multiEOL && mightStartStat(next))
-          last.next = eofRefAt(xs, last.pointPos, multiEOL = true)
+          last.next = eolRefAt(xs, last.pointPos, multiEOL = true)
         Right((head, last))
       }
 
@@ -392,7 +392,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
     def eolRefFor(rs: List[SepRegion], out: Token, eolPos: Int) =
       TokenRef(rs, out, eolPos, nextPos, eolPos, null)
-    def eofRefAt(rs: List[SepRegion], eolPos: Int, multiEOL: Boolean): TokenRef = {
+    def eolRefAt(rs: List[SepRegion], eolPos: Int, multiEOL: Boolean): TokenRef = {
       val token = tokens(eolPos)
       val out =
         if (!multiEOL || token.is[MultiEOL]) token
@@ -694,7 +694,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
       def lastWhitespaceToken(rs: List[SepRegion], lineIndent: Int) = {
         val addRegionLine = lineIndent >= 0 && isIndented(rs, lineIndent)
         val regions = if (addRegionLine) RegionLine(lineIndent) :: rs else rs
-        eofRefAt(regions, eolPos, multiEOL)
+        eolRefAt(regions, eolPos, multiEOL)
       }
 
       def stripIfCanProduceLF(regions: List[SepRegion]) = {
