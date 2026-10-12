@@ -102,6 +102,11 @@ def rootSettings = Def.settings(
   addCommandAlias("benchAll", benchAll.command),
   addCommandAlias("benchLSP", benchLSP.command),
   addCommandAlias("benchQuick", benchQuick.command),
+  // clean the projects whose classes hold the expansions of our macros
+  addCommandAlias(
+    "rebuildMacros",
+    all(Seq(trees2, scala3TreeLiftsCodeGen, tests).flatMap(_.allProjects()).map(_._1.id + "/clean")),
+  ),
   testAliasesFor(Scala213Versions, Scala212Versions),
   scala3Aliases("tests", "testsJS", "testsNative"),
   commands += mimaPublished,
