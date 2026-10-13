@@ -29,6 +29,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   parser =>
 
   import ScalametaParser._
+  import ScannerTokens._
 
   private val scannerTokens: ScannerTokens = ScannerTokens(input)
   import scannerTokens._
@@ -4608,11 +4609,6 @@ object ScalametaParser {
 
   implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
   implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
-
-  // the range scan of `atPosWithBody` runs per tree: create its predicates once
-  private val isWhitespace: Token => Boolean = _.is[Whitespace]
-  private val isTrivia: Token => Boolean = _.is[Trivia]
-  private val isHTrivia: Token => Boolean = _.is[HTrivia]
 
   // the first and the last child, with their comments; reused, as every tree computes them
   private final class ChildSpan extends (Tree => Unit) {

@@ -11,7 +11,7 @@ import scala.meta.tokens.{Token, TokenExtensions, Tokens}
 
 import scala.annotation.tailrec
 
-final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
+private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
   import ScannerTokens._
 
@@ -24,14 +24,14 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     if (index < max) tokens.skipIf(p, index + 1, max) else max
   }
 
-  final def getPrevIndex(index: Int): Int = skipBefore(index, _.is[Trivia])
-  final def getNextIndex(index: Int): Int = skipAfter(index, _.is[Trivia])
+  final def getPrevIndex(index: Int): Int = skipBefore(index, isTrivia)
+  final def getNextIndex(index: Int): Int = skipAfter(index, isTrivia)
 
   final def getPrevToken(index: Int): Token = tokens(getPrevIndex(index))
   final def getNextToken(index: Int): Token = tokens(getNextIndex(index))
 
-  final def getStrictPrev(index: Int): Int = skipBefore(index, _.is[HTrivia])
-  final def getStrictNext(index: Int): Int = skipAfter(index, _.is[HTrivia])
+  final def getStrictPrev(index: Int): Int = skipBefore(index, isHTrivia)
+  final def getStrictNext(index: Int): Int = skipAfter(index, isHTrivia)
 
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
@@ -138,7 +138,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
     }
   }
 
-  private[parsers] def matchesAfterInlineMatchMod(token: Token): Boolean = token match {
+  def matchesAfterInlineMatchMod(token: Token): Boolean = token match {
     case _: LeftParen | _: LeftBrace | _: KwNew | _: Ident | _: Literal | _: Interpolation.Id |
         _: Xml.Start | _: KwSuper | _: KwThis | _: MacroQuote => true
     case _ => false
@@ -218,7 +218,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
    * bits = indentation, low 32 bits = index), to avoid a per-token `Tuple2` allocation on this hot
    * path. Use [[Tokens.countOf]] / [[Tokens.indexOf]] to unpack.
    */
-  private[parsers] def countIndentAndNewlineIndex(tokenPosition: Int): Long = {
+  def countIndentAndNewlineIndex(tokenPosition: Int): Long = {
     @tailrec
     def countIndentInternal(pos: Int, acc: Int = 0): Long =
       if (pos < 0) Tokens.pack(acc, pos)
@@ -234,34 +234,28 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
         }
       }
 
-    if (tokenPosition < 0 || tokens(tokenPosition).is[Whitespace]) Tokens.pack(-1, -1)
+    if (tokenPosition < 0 || isWhitespace(tokens(tokenPosition))) Tokens.pack(-1, -1)
     else countIndentInternal(tokenPosition - 1)
   }
 
-  private[parsers] def countIndent(tokenPosition: Int): Int = Tokens
-    .countOf(countIndentAndNewlineIndex(tokenPosition))
+  def countIndent(tokenPosition: Int): Int = Tokens.countOf(countIndentAndNewlineIndex(tokenPosition))
 
   // the newlines at which an indentation region opened
   private val indentAt = new scala.collection.mutable.BitSet
-  private[parsers] def isIndentAt(idx: Int): Boolean = indentAt(idx)
+  def isIndentAt(idx: Int): Boolean = indentAt(idx)
 
-  private[parsers] def mkIndentToken(pointPos: Int): Token = {
+  def mkIndentToken(pointPos: Int): Token = {
     val token = tokens(pointPos)
     indentAt += pointPos
     new Indentation.Indent(token.input, token.dialect, token.start, token.start)
   }
 
-  private[parsers] def mkOutdentToken(pointPos: Int): Token = {
+  def mkOutdentToken(pointPos: Int): Token = {
     val token = tokens(pointPos)
     new Indentation.Outdent(token.input, token.dialect, token.start, token.start)
   }
 
-  private[parsers] def findOutdentPos(
-      prevPos: Int,
-      currPos: Int,
-      outdent: Int,
-      okBlank: Boolean,
-  ): Int = {
+  def findOutdentPos(prevPos: Int, currPos: Int, outdent: Int, okBlank: Boolean): Int = {
     @tailrec
     def iter(i: Int, pos: Int, indent: Int, numEOL: Int = 0): Int =
       if (i >= currPos) if (pos < currPos) pos else currPos - 1
@@ -282,15 +276,15 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   }
 
   @tailrec
-  private[parsers] def isAheadNewLine(currentPosition: Int): Boolean = {
+  def isAheadNewLine(currentPosition: Int): Boolean = {
     val nextPos = currentPosition + 1
     nextPos < tokens.length && {
       val nextToken = tokens(nextPos)
-      nextToken.is[AtEOL] || nextToken.is[Trivia] && isAheadNewLine(nextPos)
+      nextToken.is[AtEOL] || isTrivia(nextToken) && isAheadNewLine(nextPos)
     }
   }
 
-  private[parsers] def nextToken(ref: TokenRef): TokenRef = ref.next match {
+  def nextToken(ref: TokenRef): TokenRef = ref.next match {
     case null =>
       val pos = ref.nextPos
       val next =
@@ -314,8 +308,8 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
   ): TokenRef = {
     val prev = if (prevPos >= 0) tokens(prevPos) else null
     val curr = tokens(currPos)
-    val currNonTrivial = !curr.is[Trivia]
-    val nextPos = tokens.indexWhere(!_.is[Trivia], currPos + 1)
+    val currNonTrivial = !isTrivia(curr)
+    val nextPos = tokens.indexWhere(!isTrivia(_), currPos + 1)
     val next = if (nextPos >= 0) tokens(nextPos) else null
     // Computed eagerly into an immutable `val` (packed into a Long) on purpose:
     // a `lazy val (nextIndent, indentPos)` tuple pattern is captured by the
@@ -1002,7 +996,7 @@ final class ScannerTokens(val tokens: Tokens)(implicit dialect: Dialect) {
 
 }
 
-object ScannerTokens {
+private[meta] object ScannerTokens {
 
   private sealed trait LeadingInfix
   private object LeadingInfix {
@@ -1014,13 +1008,13 @@ object ScannerTokens {
   def apply(input: Input)(implicit dialect: Dialect, tokenize: Tokenize): ScannerTokens =
     new ScannerTokens(tokenize(input, dialect).get)
 
-  private[parsers] case class OutdentInfo(
-      outdent: SepRegionIndented,
-      regions: List[SepRegion],
-      done: Boolean = false,
-  )
+  case class OutdentInfo(outdent: SepRegionIndented, regions: List[SepRegion], done: Boolean = false)
 
-  private[parsers] def multilineCommentIndent(t: Comment): Int = {
+  val isWhitespace: Token => Boolean = _.is[Whitespace]
+  val isTrivia: Token => Boolean = _.is[Trivia]
+  val isHTrivia: Token => Boolean = _.is[HTrivia]
+
+  def multilineCommentIndent(t: Comment): Int = {
     val str: String = t.value
     @tailrec
     def loop(idx: Int, indent: Int): Int =
