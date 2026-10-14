@@ -145,17 +145,19 @@ private[meta] object Show {
       delay = null
     }
 
+    private def appendEOL(): Unit = sb.append(EOL)
+
     private def appendImpl(value: CharSequence): Unit = {
       val len = value.length
       var idx = 0
       while (idx < len) {
         value.charAt(idx) match {
           case '\r' =>
-            sb.append(EOL)
+            appendEOL()
             // now skip '\n'
             idx += 1
             if (idx < len && value.charAt(idx) != '\n') idx -= 1
-          case '\n' => sb.append(EOL)
+          case '\n' => appendEOL()
           case ch => sb.append(ch)
         }
         idx += 1
@@ -168,7 +170,7 @@ private[meta] object Show {
       val p = takePending()
       if (hasDelay) emitPending(p) else indentPending(p)
       appendDelay()
-      sb.append(EOL)
+      appendEOL()
       afterEOL = newAfterEOL
     }
     def nl(): Unit = if (afterEOL <= 0) nl(1)
