@@ -74,6 +74,9 @@ object TreeSyntax {
     }
 
     def p(og: TreeSyntacticGroup, t: Tree, force: Boolean = false) = parens(og, s(t), force)
+    // the expression goes on after the tree, so a comment that ends its line needs the parens
+    private def pContinued(og: TreeSyntacticGroup, t: Tree) =
+      p(og, t, force = ownEndComments(t).hasNewlinesAfter)
     private def parens(og: TreeSyntacticGroup, res: Show.Result, force: Boolean = false) = res match {
       case x: Show.Meta =>
         val needParens = force ||
@@ -314,14 +317,15 @@ object TreeSyntax {
           case _ if t.isEmpty => nosp(emptyBlock(t, comments, "(", ")"))
           case _ => delimited(t, "(", t.values, ")", o(t.mod, " "), nosplit = true)(showTree)
         }
-      case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
+      case t: Term.Apply =>
+        m(SimpleExpr1, s(pContinued(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
       case t: Term.ApplyUsing =>
         val args = s("(", kw("using"), " ", rsep(t.argClause.values), ")")
-        m(SimpleExpr1, s(p(SimpleExpr1, t.fun), nosp(withComments(t.argClause)(args))))
-      case t: Term.ApplyType => m(SimpleExpr1, s(p(SimpleExpr, t.fun), t.targClause))
+        m(SimpleExpr1, s(pContinued(SimpleExpr1, t.fun), nosp(withComments(t.argClause)(args))))
+      case t: Term.ApplyType => m(SimpleExpr1, s(pContinued(SimpleExpr, t.fun), t.targClause))
       case t: Term.ApplyInfix =>
-        val sg = new InfixExpr(t)
-        m(sg, s(p(sg, t.lhs), " ", t.op, t.targClause, " ", printApplyArgs(t.argClause, "")))
+        val rest = s(" ", t.op, t.targClause, " ", printApplyArgs(t.argClause, ""))
+        printInfix(t, new InfixExpr(t), SimpleExpr1, rest)
       case t: Term.ApplyUnary =>
         val needSpace = !t.op.value.lastOption.forall(isOperatorPart)
         val arg = p(SimpleExpr, t.arg)
@@ -431,7 +435,7 @@ object TreeSyntax {
       case t: Term.EndMarker => s(kw("end"), " ", withComments(t.name)(t.name.value))
       case t: Term.NewAnonymous => m(SimpleExpr, s(kw("new"), " ", alt(t.templ, "{}")))
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
-      case t: Term.Eta => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
+      case t: Term.Eta => m(PostfixExpr, s(pContinued(SimpleExpr1, t.expr), " ", kw("_")))
       case t: Term.Repeated =>
         val varargs = if (dialect.allowPostfixStarVarargSplices) kw("*") else nosp(kw(": _*"))
         s(p(PostfixExpr, t.expr), varargs)
@@ -464,7 +468,7 @@ object TreeSyntax {
       case t: Type.Apply => m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
       case t: Type.ApplyInfix =>
         val sg = new InfixTyp(t)
-        m(sg, s(p(sg, t.lhs), " ", t.op, " ", p(sg, t.rhs)))
+        printInfix(t, sg, SimpleTyp, s(" ", t.op, " ", p(sg, t.rhs)))
       case t: Type.FuncParamClause => t.values match {
           case arg :: Nil if (arg match {
                 case _: Type.Tuple | _: Type.ByNameType | _: Type.FunctionParamOrArg |
@@ -590,7 +594,7 @@ object TreeSyntax {
             withComments(args)(p(pop, pat))
           case pats => s(pats)
         }
-        m(pop, s(p(pop, t.lhs), " ", t.op, " ", rhs))
+        printInfix(t, pop, SimplePattern, s(" ", t.op, " ", rhs))
       case t: Pat.Interpolate =>
         m(SimplePattern, printInterpolate(t.prefix, t.parts, t.args)(arg => printBracedExpr(arg)))
       case t: Pat.Xml =>
@@ -1120,6 +1124,21 @@ object TreeSyntax {
       }
     }
 
+    private def printInfix(
+        t: Member.Infix,
+        sg: TreeSyntacticGroup,
+        enclosed: TreeSyntacticGroup,
+        rest: Show.Result,
+    ): Show.Result =
+      // an operator may start a line after the lhs, so its comments need no parens
+      if (dialect.allowInfixOperatorAfterNL) m(sg, s(p(sg, t.lhs), rest))
+      else {
+        // without leading operators, only the parens continue the infix at the operator
+        val res = s(pContinued(sg, t.lhs), rest)
+        val needParens = hasComments(t.op) && hasBreaksAroundBegComments(t.op)
+        if (needParens) m(enclosed, s("(", res, ")")) else m(sg, res)
+      }
+
     private def printFunctionLikeType(
         t: Type.FunctionLikeType,
         params: Show.Result,
@@ -1412,6 +1431,11 @@ object TreeSyntax {
     case _ => false
   }
 
+  private def isAfterInfixLhs(tree: Tree): Boolean = tree.parent match {
+    case Some(p: Member.Infix) => p.lhs ne tree
+    case _ => false
+  }
+
   /* how many comments of the group come before the keyword that introduces the tree; without an
    * origin, a detached group goes before the keyword and an attached one after it */
   private def commentsBeforeKeyword(
@@ -1548,7 +1572,10 @@ object TreeSyntax {
           // a body's comments go on lines of their own, at the column of its brace
           else if (opensBody(tree))
             s(s(c.values.map(x => Show.outerNewline(printComment(x))): _*), syntax)
-          else s(printLeading(c.values, c.newlinesBefore), syntax)
+          else { // a blank line inside an infix would end it
+            val newlines = if (isAfterInfixLhs(tree)) c.newlinesBefore.min(1) else c.newlinesBefore
+            s(printLeading(c.values, newlines), syntax)
+          }
       },
       after,
       printEndComments(

@@ -1318,19 +1318,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  val y = a
-         |
+         |  val y = (a
          |    // c1
-         |    && b
+         |    && b)
          |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
-         |  val y = a
-         |
-         |  // c1
-         |  && b
-         |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("infix in parens: DSLC before the operator") {
@@ -1343,17 +1335,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  val y = a
+         |  val y = (a
          |    // c1
-         |    && b
+         |    && b)
          |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
-         |  val y = a
-         |  // c1
-         |  && b
-         |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("infix in parens: blank line and DSLC before the operator in Scala 3") {
@@ -1368,18 +1354,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val y = a
-         |
          |    // c1
          |    && b
          |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
-         |  val y = a
-         |
-         |  // c1
-         |  &&b
-         |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 
   test("infix in parens: DSLC before the operator in Scala 3") {
@@ -1417,18 +1395,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  type T = A
-         |
          |    // c1
          |    | B
          |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
-         |  type T = A
-         |
-         |  // c1
-         |  |B
-         |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 
   test("infix type in parens: blank line and DSLC before the operator") {
@@ -1442,19 +1412,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  type T = A
-         |
+         |  type T = (A
          |    // c1
-         |    | B
+         |    | B)
          |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
-         |  type T = A
-         |
-         |  // c1
-         |  | B
-         |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("infix type in parens: DSLC before the operator") {
@@ -1467,17 +1429,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  type T = A
+         |  type T = (A
          |    // c1
-         |    | B
+         |    | B)
          |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
-         |  type T = A
-         |  // c1
-         |  | B
-         |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("infix pattern in parens: blank line and DSLC before the operator") {
@@ -1494,10 +1450,9 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  x match {
-         |    case a
-         |
+         |    case (a
          |      // c1
-         |      :: b => c
+         |      :: b) => c
          |  }
          |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
@@ -1518,7 +1473,6 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       """|object A {
          |  x match {
          |    case a ::
-         |
          |      // c1
          |      b => c
          |  }
@@ -1559,7 +1513,6 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  a op
-         |
          |  // c1
          |    [T] b
          |}""".stripMargin.lf2nl
@@ -1575,15 +1528,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  type T = A // c1
-         |    | B
+         |  type T = (A // c1
+         |  ) | B
          |}""".stripMargin.lf2nl
-    val second =
-      """|object A {
-         |  type T = A // c1
-         |  | B
-         |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("infix pattern in parens: ASLC after the lhs") {
@@ -1595,11 +1543,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  val a // c1
-         |    :: b = x
+         |  val (a // c1
+         |  ) :: b = x
          |}""".stripMargin.lf2nl
-    val second = "declaration requires a type"
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("infix pattern in a val, in parens: DSLC before the operator") {
@@ -1612,12 +1559,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  val a
+         |  val (a
          |    // c1
-         |    :: b = x
+         |    :: b) = x
          |}""".stripMargin.lf2nl
-    val second = "declaration requires a type"
-    assertEquals(reprintTwice(code, dialects.Scala213), (first, second))
+    assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
   test("try: DSLC above, body on the next line") {
