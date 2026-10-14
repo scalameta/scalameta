@@ -1930,7 +1930,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         case tok =>
           val isInline = soft.KwInline(tok)
           if (isInline && peek[KwIf]) ifClause(List(inlineMod()))
-          else if (isInline && matchesAfterInlineMatchMod(getNextToken(currIndex)))
+          else if (isInline && matchesAfterInlineMatchMod(nextNonTrivia(currIndex)))
             inlineMatchClause(inlineMod())
           else {
             val startPos = currIndex

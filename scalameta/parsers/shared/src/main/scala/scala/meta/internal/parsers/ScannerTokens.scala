@@ -15,24 +15,6 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
 
   import ScannerTokens._
 
-  @inline
-  final def skipBefore(index: Int, p: Token => Boolean): Int =
-    if (index <= 0) 0 else tokens.rskipIf(p, index - 1, 0)
-  @inline
-  final def skipAfter(index: Int, p: Token => Boolean): Int = {
-    val max = tokens.length - 1
-    if (index < max) tokens.skipIf(p, index + 1, max) else max
-  }
-
-  final def getPrevIndex(index: Int): Int = skipBefore(index, isTrivia)
-  final def getNextIndex(index: Int): Int = skipAfter(index, isTrivia)
-
-  final def getPrevToken(index: Int): Token = tokens(getPrevIndex(index))
-  final def getNextToken(index: Int): Token = tokens(getNextIndex(index))
-
-  final def getStrictPrev(index: Int): Int = skipBefore(index, isHTrivia)
-  final def getStrictNext(index: Int): Int = skipAfter(index, isHTrivia)
-
   // NOTE: Scala's parser isn't ready to accept whitespace and comment tokens,
   // so we have to filter them out, because otherwise we'll get errors like `expected blah, got whitespace`
   // However, in certain tricky cases some whitespace tokens (namely, newlines) do have to be emitted.
@@ -69,9 +51,9 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
   }
 
   @inline
-  private def isPrecededByNL(index: Int): Boolean = tokens(getStrictPrev(index)).is[AtEOLorF]
+  private def isPrecededByNL(index: Int): Boolean = prevNonHTrivia(index).is[AtEOLorF]
   @inline
-  private def isFollowedByNL(index: Int): Boolean = tokens(getStrictNext(index)).is[AtEOLorF]
+  private def isFollowedByNL(index: Int): Boolean = nextNonHTrivia(index).is[AtEOLorF]
 
   @tailrec
   final def isPrecededByDetachedComment(idx: Int, end: Int): Boolean = idx >= end &&
@@ -94,7 +76,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
     isEndMarkerSpecifier(tokens(nextIndex)) && isFollowedByNL(nextIndex)
   }
 
-  def isEndMarkerIntro(index: Int): Boolean = isEndMarkerIntro(tokens(index), getStrictNext(index))
+  def isEndMarkerIntro(index: Int): Boolean = isEndMarkerIntro(tokens(index), nextNonHTriviaAt(index))
 
   def isExprIntro(token: Token, fIndex: => Int): Boolean = isExprIntroImpl(token) {
     val index = fIndex
@@ -114,15 +96,15 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
   def isSoftModifier(index: Int): Boolean = {
     @inline
     def nextIsDclIntroOrModifierOr(f: Token => Boolean): Boolean = {
-      val next = getNextIndex(index)
+      val next = nextNonTriviaAt(index)
       isDclIntro(next) || isModifier(next) || f(tokens(next))
     }
     @inline
     def nextIsClassOrObjectOrOpaqueType: Boolean = {
-      val next = getNextIndex(index)
+      val next = nextNonTriviaAt(index)
       tokens(next) match {
         case _: KwClass | _: KwType | _: KwTrait | _: KwEnum => true
-        case _: KwCase => getNextToken(next).is[KwClass]
+        case _: KwCase => nextNonTrivia(next).is[KwClass]
         case _ => isModifier(next)
       }
     }
@@ -133,7 +115,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
       case soft.KwInto() => nextIsClassOrObjectOrOpaqueType
       case soft.KwInline() => nextIsDclIntroOrModifierOr(matchesAfterInlineMatchMod)
       case soft.KwOpen() | soft.KwInfix() | soft.KwErased() | soft.KwTracked() =>
-        isDefIntro(getNextIndex(index))
+        isDefIntro(nextNonTriviaAt(index))
       case _ => false
     }
   }
@@ -146,31 +128,28 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
 
   @tailrec
   final def isDefIntro(index: Int): Boolean = tokens(index) match {
-    case _: Unquote | _: Ellipsis => isDefIntro(getNextIndex(index))
+    case _: Unquote | _: Ellipsis => isDefIntro(nextNonTriviaAt(index))
     case _ => isDclIntro(index) || isModifier(index) || isTemplateIntro(index)
   }
 
   @tailrec
   final def isTemplateIntro(index: Int): Boolean = tokens(index) match {
     case _: At | _: TmplBegKeyword => true
-    case _: Unquote => isTemplateIntro(getNextIndex(index))
-    case _: KwCase => getNextToken(index).isClassOrObjectOrEnum
+    case _: Unquote => isTemplateIntro(nextNonTriviaAt(index))
+    case _: KwCase => nextNonTrivia(index).isClassOrObjectOrEnum
     case _ => isModifier(index)
   }
 
   @tailrec
   final def isDclIntro(index: Int): Boolean = tokens(index) match {
     case _: DeclBegKeyword => true
-    case _: Unquote => isDclIntro(getNextIndex(index))
+    case _: Unquote => isDclIntro(nextNonTriviaAt(index))
     case _ => isKwExtension(index)
   }
 
   // Logic taken from the Scala 3 parser
-  def isKwExtension(index: Int): Boolean = soft.KwExtension(tokens(index)) &&
-    (getNextToken(index) match {
-      case _: LeftParen | _: LeftBracket => true
-      case _ => false
-    })
+  def isKwExtension(index: Int): Boolean = soft.KwExtension(tokens(index)) && nextNonTrivia(index)
+    .isAny[LeftParen, LeftBracket]
 
   def isModifier(index: Int): Boolean = tokens(index).is[ModifierKeyword] || isSoftModifier(index)
 
@@ -243,6 +222,26 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
   // the newlines at which an indentation region opened
   private val indentAt = new scala.collection.mutable.BitSet
   def isIndentAt(idx: Int): Boolean = indentAt(idx)
+
+  // the last token, EOF, stops the search
+  def nextAt(idx: Int, f: Token => Boolean): Int = {
+    val last = tokens.length - 1
+    if (idx < last) tokens.skipIf(f, idx + 1, last) else last
+  }
+  def nextNonHTrivia(idx: Int): Token = tokens.getOrNull(nextNonHTriviaAt(idx))
+  def nextNonTrivia(idx: Int): Token = tokens.getOrNull(nextNonTriviaAt(idx))
+  def nextNonWhitespace(idx: Int): Token = tokens.getOrNull(nextNonWhitespaceAt(idx))
+  def nextNonHTriviaAt(idx: Int): Int = nextAt(idx, isHTrivia)
+  def nextNonTriviaAt(idx: Int): Int = nextAt(idx, isTrivia)
+  def nextNonWhitespaceAt(idx: Int): Int = nextAt(idx, isWhitespace)
+
+  def prevAt(idx: Int, f: Token => Boolean): Int = tokens.rskipIf(f, idx - 1)
+  def prevNonHTrivia(idx: Int): Token = tokens.getOrNull(prevNonHTriviaAt(idx))
+  def prevNonTrivia(idx: Int): Token = tokens.getOrNull(prevNonTriviaAt(idx))
+  def prevNonWhitespace(idx: Int): Token = tokens.getOrNull(prevNonWhitespaceAt(idx))
+  def prevNonHTriviaAt(idx: Int): Int = prevAt(idx, isHTrivia)
+  def prevNonTriviaAt(idx: Int): Int = prevAt(idx, isTrivia)
+  def prevNonWhitespaceAt(idx: Int): Int = prevAt(idx, isWhitespace)
 
   def mkIndentToken(pointPos: Int): Token = {
     val token = tokens(pointPos)
@@ -697,7 +696,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
         @inline
         def blankBraceOr(ok: => Boolean): Boolean = if (next.is[LeftBrace]) multiEOL else ok
         def isEndMarker() = isEndMarkerSpecifier(prev) && {
-          val prevPrevPos = getStrictPrev(prevPos)
+          val prevPrevPos = prevNonHTriviaAt(prevPos)
           isEndMarkerIdentifier(tokens(prevPrevPos)) && isPrecededByNL(prevPrevPos)
         }
         @tailrec
@@ -806,7 +805,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
                 // only if outer is at the same indentation level
                 findIndent(rs) == nextIndent &&
                 // https://docs.scala-lang.org/scala3/reference/other-new-features/indentation.html#special-treatment-of-case-clauses
-                (rc.arrow.ne(prev) && !next.is[KwCase] || getNextToken(nextPos).isClassOrObject))
+                (rc.arrow.ne(prev) && !next.is[KwCase] || nextNonTrivia(nextPos).isClassOrObject))
                 OutdentInfo(r, dropRegionLine(nextIndent, rs))
               else getOutdentOnIndent(r, rs, ctrlOnly = true)
             case RegionTry :: rs => if (noOutdent(rs)) null else OutdentInfo(null, rs)
@@ -868,7 +867,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
                     case (_: RegionBracket | _: RegionHasParamMark) :: _ => false
                     case (_: RegionParen) :: (_: RegionHasParamMark) :: _ => false
                     case _ => true
-                  }) && getPrevToken(prevPos).isAny[Ident, CloseDelim, KwThis]
+                  }) && prevNonTrivia(prevPos).isAny[Ident, CloseDelim, KwThis]
                 sepRegions match {
                   case (_: RegionTemplateDecl) :: rs =>
                     if (exceedsIndent) emitIndent(RegionTemplateBody :: rs)
