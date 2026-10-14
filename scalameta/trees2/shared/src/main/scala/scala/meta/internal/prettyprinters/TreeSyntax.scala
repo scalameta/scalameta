@@ -355,7 +355,11 @@ object TreeSyntax {
           case stats @ (f: Term.Function) :: Nil => f.body match {
               // a body of one statement keeps its braces: after `x =>`, one statement is no block
               case body: Term.Block if body.stats.lengthCompare(1) != 0 =>
-                block(s(f.paramClause, " =>"), body.stats)
+                val pre = s(f.paramClause, " =>")
+                body.stats match {
+                  case Nil => block(withComments(f)(pre), s()) // else the comments are lost
+                  case x => block(withComments(f)(s(pre, i(withComments(body)(bare(x))))), s())
+                }
               case _ => plain(stats)
             }
           case stats => plain(stats)
@@ -415,7 +419,7 @@ object TreeSyntax {
       case t: Term.ForYield =>
         m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ")", beforeKeyword(t.body, "yield")))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
-      case t: Term.EndMarker => s(kw("end"), " ", t.name.value)
+      case t: Term.EndMarker => s(kw("end"), " ", withComments(t.name)(t.name.value))
       case t: Term.NewAnonymous => m(SimpleExpr, s(kw("new"), " ", alt(t.templ, "{}")))
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
       case t: Term.Eta => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
@@ -473,7 +477,9 @@ object TreeSyntax {
       case t: Type.Annotate => m(AnnotTyp, s(p(SimpleTyp, t.tpe), " ", t.annots))
       case t: Type.Lambda => m(Typ, s(t.tparamClause, " ", kw("=>>"), " ", p(Typ, t.tpe)))
       case t: Type.PolyFunction => m(Typ, s(t.tparamClause, " ", kw("=>"), " ", p(Typ, t.tpe)))
-      case t: Type.Match => m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " {", t.cases, n("}")))
+      case t: Type.Match =>
+        val cases = withComments(t.casesBlock)(s("{", t.cases, n("}")))
+        m(Typ, s(p(AnyInfixTyp, t.tpe), " ", kw("match"), " ", cases))
       case t: Type.AnonymousLambda => s(t.tpe)
       case t: Type.AnonymousParam =>
         val useStar = dialect.allowStarAsTypePlaceholder &&
@@ -523,7 +529,7 @@ object TreeSyntax {
       case t: Type.PureByName => printByNameType(t, Token.pureFunctionArrow)
       case t: Type.Var => m(SimpleTyp, s(t.name.value))
       case t: Type.FunctionArg => m(ParamTyp, s(w(t.mods, " "), p(Typ, t.tpe)))
-      case t: Type.TypedParam => m(SimpleTyp, s(w(t.mods, " "), t.name.value, ": ", p(Typ, t.typ)))
+      case t: Type.TypedParam => m(SimpleTyp, s(w(t.mods, " "), t.name, ": ", p(Typ, t.typ)))
       case t: Type.Assign => m(SimpleTyp, s(t.name.value, " ", kw("="), " ", p(Typ, t.rhs)))
       case t: Type.ParamClause => if (t.isEmpty) s() else s("[", rsep(t.values), "]")
       case t: Type.BoundsAlias => m(SimpleTyp, s(t.bounds, " ", "as", " ", t.name))
@@ -569,7 +575,8 @@ object TreeSyntax {
       case t: Pat.ExtractInfix =>
         val pop = new InfixPat(t)
         val rhs = t.argClause match {
-          case Pat.ArgClause(pat :: Nil) if !pat.is[Lit.Unit] => s(p(pop, pat))
+          case args @ Pat.ArgClause(pat :: Nil) if !pat.is[Lit.Unit] =>
+            withComments(args)(p(pop, pat))
           case pats => s(pats)
         }
         m(pop, s(p(pop, t.lhs), " ", t.op, " ", rhs))
@@ -703,15 +710,17 @@ object TreeSyntax {
         val isEmpty = t.stats.isEmpty && (!comments || t.begComment.isEmpty)
         if (isEmpty) s(t.init) else s("{", i(t.init), "", t.stats, n("}"))
       case t: Ctor.Secondary =>
-        s(printMods(t), kw("def "), kw("this"), t.paramClauses, " = ", t.body)
+        val name = withComments(t.name)(kw("this"))
+        s(printMods(t), kw("def "), name, t.paramClauses, " = ", t.body)
 
       // Init
       case t: Init =>
         val tpe = t.tpe match {
-          case Type.Singleton(ref @ Term.This(_: Name.Anonymous)) => ref
-          case tpe => tpe
+          case tpe @ Type.Singleton(ref @ Term.This(_: Name.Anonymous)) =>
+            withComments(tpe)(p(RefineTyp, ref))
+          case tpe => p(RefineTyp, tpe)
         }
-        s(p(RefineTyp, tpe), t.argClauses)
+        s(tpe, t.argClauses)
 
       // Self
       case t: Self => w(s(t.name, t.decltpe.fold(s())(x => s(kw(": "), p(AnyInfixTyp, x)))), " =>")
@@ -783,7 +792,8 @@ object TreeSyntax {
         Show.noBlankBefore(if (leading) Show.outerNewline(body) else body)
 
       // Mod
-      case Mod.Annot(init) => s(kw("@"), p(SimpleTyp, init.tpe), init.argClauses)
+      case Mod.Annot(init) =>
+        s(kw("@"), withComments(init)(s(p(SimpleTyp, init.tpe), init.argClauses)))
       case Mod.Private(within) => s(kw("private"), w("[", within, "]"))
       case Mod.Protected(within) => s(kw("protected"), w("[", within, "]"))
       case _: Mod.Implicit => kw("implicit")
@@ -937,8 +947,10 @@ object TreeSyntax {
     // Multiples and optionals
     private def printApplyArgs(args: Term.ArgClause, beforeBrace: String): Show.Result =
       args.values match {
-        case Seq(b @ (_: Term.Block | _: Term.PartialFunction)) => s(beforeBrace, b)
-        case Seq(f: Term.Function) if f.paramClause.mod.isDefined => s(beforeBrace, "{ ", f, spn("}"))
+        case Seq(b @ (_: Term.Block | _: Term.PartialFunction)) =>
+          s(beforeBrace, withComments(args)(b))
+        case Seq(f: Term.Function) if f.paramClause.mod.isDefined =>
+          s(beforeBrace, withComments(args)(s("{ ", f, spn("}"))))
         case _ => s(args)
       }
 
@@ -1128,9 +1140,10 @@ object TreeSyntax {
 
     private def printMacroExprBody(t: Term, prefix: String) = {
       val body = t match {
-        case Term.Block(stat :: Nil) => s("{ ", stat, spn("}"))
+        case b @ Term.Block(stat :: Nil) => withComments(b)(s("{ ", stat, spn("}")))
         case body => p(Expr, body)
       }
+      // a comment after the prefix would join it into another token
       m(SimpleExpr, s(prefix, body))
     }
 

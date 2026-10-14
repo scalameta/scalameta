@@ -4127,11 +4127,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  def g = f { x =>
+         |  def g = f { x => // c
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("end Term.Function: // c")
   }
 
@@ -4147,10 +4146,10 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  def g = f { x =>
+         |  // c
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("end Term.Function: // c", "beg Term.Block: // c")
   }
 
@@ -5261,11 +5260,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  xs.map { x =>
+         |  xs.map { x => // c1
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("end Term.Function: // c1")
   }
 
@@ -6749,12 +6747,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  locally {
-         |    println("foo")
-         |  }
+         |  locally
+         |    // q
+         |    {
+         |      println("foo")
+         |    }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Term.ArgClause, Term.Block: // q")
   }
 
@@ -7384,9 +7383,8 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A(x: Int) { def this() = this(1) }
+      """|class A(x: Int) { def /* c1 */ this() = this(1) }
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Name.This: /* c1 */")
   }
 
@@ -7398,9 +7396,8 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { @inline def f = 1 }
+      """|object O { @ /* c1 */ inline def f = 1 }
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Init, Type.Name: /* c1 */")
   }
 
