@@ -6826,20 +6826,18 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  val x = a ||
-         |
          |  // c
-         |
          |    // c
          |    b
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.Name: // c"),
+      reprinted = Seq("beg Term.ArgClause, Term.Name: // c\n    // c"),
       twice =
         """|object A {
            |  val x = a ||
-           |
-           |  // c
-           |  b
+           |    // c
+           |    // c
+           |    b
            |}
            |""".stripMargin,
     )("beg Type.ArgClause: // c", "beg Term.ArgClause, Term.Name: // c")
@@ -7592,17 +7590,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = a // c1
-         |    (x)
+         |  def f = (a // c1
+         |  )(x)
          |}
          |""".stripMargin,
-      reprinted = Seq("end Defn.Def, Term.Name: // c1"),
-      twice =
-        """|object A {
-           |  def f = a // c1
-           |  x
-           |}
-           |""".stripMargin,
     )("end Term.Name: // c1")
   }
 
@@ -7617,17 +7608,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = a /* c1 */
-         |    (x)
+         |  def f = (a /* c1 */
+         |  )(x)
          |}
          |""".stripMargin,
-      reprinted = Seq("end Defn.Def, Term.Name: /* c1 */"),
-      twice =
-        """|object A {
-           |  def f = a /* c1 */
-           |  x
-           |}
-           |""".stripMargin,
     )("end Term.Name: /* c1 */")
   }
 
@@ -7641,17 +7625,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  val y = a // c1
-         |    + b
+         |  val y = (a // c1
+         |  ) + b
          |}
          |""".stripMargin,
-      reprinted = Seq("end Defn.Val, Term.Name: // c1"),
-      twice =
-        """|object A {
-           |  val y = a // c1
-           |  +b
-           |}
-           |""".stripMargin,
     )("end Term.Name: // c1")
   }
 
@@ -7665,17 +7642,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  val z = b + a // c1
-         |    * c
+         |  val z = b + (a // c1
+         |  ) * c
          |}
          |""".stripMargin,
-      reprinted = Seq("end Defn.Val, Term.ApplyInfix, Term.ArgClause, Term.Name: // c1"),
-      twice =
-        """|object A {
-           |  val z = b + a // c1
-           |  `*` c
-           |}
-           |""".stripMargin,
     )("end Term.Name: // c1")
   }
 
@@ -7689,17 +7659,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  val y = f // c1
-         |    _
+         |  val y = (f // c1
+         |  ) _
          |}
          |""".stripMargin,
-      reprinted = Seq("end Defn.Val, Term.Name: // c1"),
-      twice =
-        """|object A {
-           |  val y = f // c1
-           |  _
-           |}
-           |""".stripMargin,
     )("end Term.Name: // c1")
   }
 
@@ -7713,11 +7676,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  val y = a // c1
-         |    [Int]
+         |  val y = (a // c1
+         |  )[Int]
          |}
          |""".stripMargin,
-      reprintError = "<input>:3: error: illegal start of definition `[`",
     )("end Term.Name: // c1")
   }
 
