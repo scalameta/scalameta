@@ -809,8 +809,7 @@ class CommentSuite extends ParseSuite {
     assertEquals(imp.endComment.get.values.head.parent, None)
     assertSyntax(
       """|import p3.a3 // ct3
-         |  // ct3
-         |  // ct4
+         |// ct4
          |""".stripMargin,
     )(Source(src.stats))
   }
@@ -831,8 +830,7 @@ class CommentSuite extends ParseSuite {
     assertSyntax(
       """|{
          |  a.b // c1
-         |    // c1
-         |    // c2
+         |  // c2
          |}
          |""".stripMargin,
     )(Term.Block(block.stats))
@@ -7870,19 +7868,10 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  def f = g(x) // c1
-         |    // c1
-         |    // c2
+         |  // c2
          |}
          |""".stripMargin,
-      reprinted = Seq("end Defn.Def, Term.Apply, Term.ArgClause: // c1\n    // c1\n    // c2"),
-      twice =
-        """|object A {
-           |  def f = g(x) // c1
-           |    // c1
-           |    // c1
-           |    // c2
-           |}
-           |""".stripMargin,
+      reprinted = Seq("end Defn.Def, Term.Apply, Term.ArgClause: // c1\n  // c2"),
     )("end Defn.Def, Term.Apply, Term.ArgClause: // c1\n// c2")
   }
 
