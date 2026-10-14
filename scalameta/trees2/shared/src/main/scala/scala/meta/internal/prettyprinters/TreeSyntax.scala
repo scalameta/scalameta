@@ -19,7 +19,18 @@ import scala.reflect.{ClassTag, classTag}
 object TreeSyntax {
 
   import Show.{alt, blank, indent => i, keyword => kw, literal => lit, meta => m, newline => n,
-    nosplit => nosp, opt => o, repeat => r, sequence => s, spacen => spn, wrap => w}
+    nosplit => nosp, opt => o, repeat => r, sequence => s, sequenceFiltered => sf, spaceOnly => spc,
+    spacen => spn, wrap => w}
+
+  private def collect[T](xs: Seq[T])(f: T => Show.Result): Show.Result = {
+    val res = List.newBuilder[Show.Result]
+    val iter = xs.iterator
+    while (iter.hasNext) {
+      val x = f(iter.next())
+      if (x ne Show.None) res += x
+    }
+    sf(res.result(): _*)
+  }
 
   private final class SyntaxInstances(comments: Boolean)(implicit dialect: Dialect) {
 
@@ -811,7 +822,12 @@ object TreeSyntax {
           val shebangOk = x.length >= 2 && x(0).is[Token.BOF] && x(1).is[Token.Shebang]
           if (shebangOk) Some(x(1).asInstanceOf[Token.Shebang].value) else None
         }
-        s(o(shebang, EOL), r(t.stats, EOL))
+        // a trailing comment group may end in a blank line, which `n` does not double
+        val stats = t.stats match {
+          case head :: tail => s(head, r(tail.map(n(_))))
+          case Nil => s()
+        }
+        s(o(shebang, EOL), stats)
       case t: MultiSource => r(t.sources, s"$EOL$EOL@$EOL$EOL")
 
       case t: Stat.Block => printBlock(t, t.stats)
@@ -1091,9 +1107,9 @@ object TreeSyntax {
   }
 
   def original(x: Tree, o: Origin.Parsed, comments: Boolean = true): Show.Result = w(
-    printBegComments(x, tc => w(n(), tc.text, n())),
+    printBegComments(x, tc => sf(n(), tc.text, n())),
     x.pos.text,
-    printEndComments(x, tc => w(" ", tc.text, n())),
+    printEndComments(x, tc => sf(" ", tc.text, n())),
     comments && o.begTokenIdx > 0 && !x.is[Source],
   )
   def reprint(x: Tree, comments: Boolean = true)(implicit dialect: Dialect): Show.Result =
@@ -1120,23 +1136,27 @@ object TreeSyntax {
   private def printEndComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
     ownEndComments(tree).fold(s())(out)
 
-  private def printComment(t: Tree.Comment): Show.Result = Show.Comment(r(t.parts.map(_.value)))
-  private def afterComment(t: Tree.Comment, sep: Show.Result): Show.Result = {
-    val newlines = t.getNewlinesAfter
-    if (newlines > 1) s(blank(), n()) else if (newlines > 0) n() else sep
-  }
-  private def printComments(t: Tree.Comments, afterLast: Show.Result): Show.Result = {
-    val last = t.values.last
-    r(t.values.map(x => s(printComment(x), afterComment(x, if (x eq last) afterLast else s(" ")))))
-  }
-  private def printBegComments(t: Tree.Comments): Show.Result = s(n(), printComments(t, s(" ")))
+  private def printComment(
+      t: Tree.Comment,
+      pre: Show.Result = spn(),
+      post: Show.Result = spc,
+  ): Show.Result = s(pre, Show.Comment(r(t.parts.map(_.value))), post)
+  private def printComments(t: Tree.Comments): Show.Result = printComments(t.values)
+  private def printComments(xs: List[Tree.Comment]): Show.Result =
+    collect(xs)(x => printComment(x, post = printNewlines(x.getNewlinesAfter, spn())))
+  private def printBegComments(t: Tree.Comments): Show.Result =
+    s(newlinesBefore(t, force = true), printComments(t))
   private def printEndComments(t: Tree.Comments): Show.Result =
-    s(if (t.isDetached) n() else s(" "), printComments(t, s()))
+    s(newlinesBefore(t, force = false), printComments(t))
+  private def newlinesBefore(t: Tree.Comments, force: Boolean): Show.Result =
+    printNewlines(t.newlinesBefore.max(if (force) 1 else 0), s())
+  private def printNewlines(count: Int, none: Show.Result): Show.Result =
+    if (count > 1) blank() else if (count > 0) n() else none
   // the structure printer keeps one comment per line
   private def printBegCommentsPlain(t: Tree.Comments): Show.Result =
-    r(s(), "", n())(t.values.map(x => n(printComment(x))): _*)
+    s(s(t.values.map(x => printComment(x, pre = n(), post = s())): _*), n())
   private def printEndCommentsPlain(t: Tree.Comments): Show.Result =
-    r(" ", " ", n())(t.values.map(printComment): _*)
+    s(s(t.values.map(printComment(_)): _*), n())
 
   private[prettyprinters] def withComments(tree: Tree, layout: Boolean = true)(
       syntax: Show.Result,
@@ -1149,10 +1169,8 @@ object TreeSyntax {
        * indents under a line comment; at the start of a line there is nothing to
        * indent under, and the tree follows at the same indentation */
       case Some(c) => s(
-          Show.LeadingComments(
-            printComments(c, s()),
-            breakAtLineStart = c.values.last.getNewlinesAfter > 0,
-          ),
+          Show
+            .LeadingComments(printComments(c), breakAtLineStart = c.values.last.getNewlinesAfter > 0),
           syntax,
         )
     },

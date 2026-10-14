@@ -894,6 +894,7 @@ class CommentSuite extends ParseSuite {
     val layout =
       """|{
          |  s1
+         |
          |  // c3
          |  s2
          |}
@@ -1302,6 +1303,7 @@ class CommentSuite extends ParseSuite {
     val layout =
       """|package p
          |object O
+         |
          |  // c
          |""".stripMargin
     val templ = tplNoBody().toBuilder.begComment(detachedComments("// c")).result()
@@ -1456,6 +1458,7 @@ class CommentSuite extends ParseSuite {
     val layout =
       """|{
          |  x
+         |
          |  // c
          |  y
          |}
@@ -1478,6 +1481,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  x
+         |
          |  // c2
          |  a op b op2 c
          |}
@@ -1501,6 +1505,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  x
+         |
          |  // c2
          |  a op2 c
          |}
@@ -2621,7 +2626,7 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|class A extends B {
-         |  def f = super[// c
+         |  def f = super[ // c
          |    ].f
          |}
          |""".stripMargin,
@@ -2639,7 +2644,7 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|class A extends B {
-         |  def f = super[/* c */
+         |  def f = super[ /* c */
          |    ].f
          |}
          |""".stripMargin,
@@ -2657,7 +2662,7 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|class A extends B {
-         |  def f = A.super[// c
+         |  def f = A.super[ // c
          |    ].f
          |}
          |""".stripMargin,
@@ -3311,6 +3316,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  import a.b // c1
+         |
          |  // c3
          |  val x = 1
          |}
@@ -3672,7 +3678,7 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def f = x /* c */.foo }
+      """|object O { def f = x /* c */ .foo }
          |""".stripMargin,
     )("end Term.Name: /* c */")
   }
@@ -5432,8 +5438,10 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  x match {
          |    case 1 =>
+         |
          |      // c1
          |      {}
+         |
          |    // c1
          |    case 2 => b
          |  }
@@ -5585,6 +5593,7 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  foo match {
          |    case a => x
+         |
          |    // a1
          |    case b => y
          |  }
@@ -6016,6 +6025,7 @@ class CommentSuite extends ParseSuite {
          |    case 1 =>
          |      a
          |      b
+         |
          |    // c1
          |    case 2 =>
          |      c
@@ -6286,10 +6296,10 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  val x = a match {
          |    case _ => 1
-         |  } /* c1 */.foo
+         |  } /* c1 */ .foo
          |}
          |""".stripMargin,
-      reprintError = "<input>:4: error: `;` expected but `.` found",
+      reprintError = "`;` expected but `.` found",
     )("end Term.Match, Term.CasesBlock: /* c1 */")
   }
 
@@ -6344,7 +6354,7 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A private[/* c1 */ ] /* c1 */ (x: Int)
+      """|class A private[ /* c1 */ ] /* c1 */ (x: Int)
          |""".stripMargin,
       reprintError = "<input>:1: error: `identifier` expected but `]` found",
     )(
@@ -6727,18 +6737,20 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  val x = a ||
+         |
          |  // c
+         |
          |    // c
          |    b
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.ArgClause, Term.Name: // c\n    // c"),
+      reprinted = Seq("beg Term.Name: // c"),
       twice =
         """|object A {
            |  val x = a ||
-           |    // c
-           |    // c
-           |    b
+           |
+           |  // c
+           |  b
            |}
            |""".stripMargin,
     )("beg Type.ArgClause: // c", "beg Term.ArgClause, Term.Name: // c")
@@ -7077,7 +7089,7 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  f(// c
+         |  f( // c
          |    a, b)
          |}
          |""".stripMargin,
@@ -7638,8 +7650,7 @@ class CommentSuite extends ParseSuite {
     val first = source(code).reprint
     val second = source(first).reprint
     val expected =
-      """|
-         |// c1
+      """|// c1
          |trait A""".stripMargin.lf2nl
     assertEquals((first, second), (expected, expected))
   }
@@ -7794,7 +7805,7 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A { private[/* c1 */ A /* c2 */] def f = 1 }
+      """|class A { private[ /* c1 */ A /* c2 */ ] def f = 1 }
          |""".stripMargin,
     )("beg Name.Indeterminate: /* c1 */", "end Name.Indeterminate: /* c2 */")
   }

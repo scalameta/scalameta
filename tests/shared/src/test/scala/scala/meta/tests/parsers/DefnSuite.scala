@@ -118,7 +118,7 @@ class DefnSuite extends ParseSuite {
       """|object O {
          |  val x = f(/* commentX */ <a/>)
          |}""".stripMargin,
-      """|object O { val x = f(/* commentX */ <a/>) }
+      """|object O { val x = f( /* commentX */ <a/>) }
          |""".stripMargin,
     )("beg Term.Xml, Lit.String: /* commentX */"),
   )
@@ -128,7 +128,7 @@ class DefnSuite extends ParseSuite {
       """|object O {
          |  val x = f(/* commentX */ 1)
          |}""".stripMargin,
-      """|object O { val x = f(/* commentX */ 1) }
+      """|object O { val x = f( /* commentX */ 1) }
          |""".stripMargin,
     )("beg Lit.Int: /* commentX */"),
   )

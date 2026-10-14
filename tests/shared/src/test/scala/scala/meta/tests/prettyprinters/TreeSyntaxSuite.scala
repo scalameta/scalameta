@@ -1316,12 +1316,14 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val y = a
+         |
          |    // c1
          |    && b
          |}""".stripMargin.lf2nl
     val second =
       """|object A {
          |  val y = a
+         |
          |  // c1
          |  && b
          |}""".stripMargin.lf2nl
@@ -1363,10 +1365,18 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  val y = a
+         |
          |    // c1
          |    && b
          |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+    val second =
+      """|object A {
+         |  val y = a
+         |
+         |  // c1
+         |  &&b
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
   }
 
   test("infix in parens: DSLC before the operator in Scala 3") {
@@ -1404,10 +1414,18 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  type T = A
+         |
          |    // c1
          |    | B
          |}""".stripMargin.lf2nl
-    assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
+    val second =
+      """|object A {
+         |  type T = A
+         |
+         |  // c1
+         |  |B
+         |}""".stripMargin.lf2nl
+    assertEquals(reprintTwice(code, dialects.Scala3), (first, second))
   }
 
   test("infix type in parens: blank line and DSLC before the operator") {
@@ -1422,12 +1440,14 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  type T = A
+         |
          |    // c1
          |    | B
          |}""".stripMargin.lf2nl
     val second =
       """|object A {
          |  type T = A
+         |
          |  // c1
          |  | B
          |}""".stripMargin.lf2nl
@@ -1472,6 +1492,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       """|object A {
          |  x match {
          |    case a
+         |
          |      // c1
          |      :: b => c
          |  }
@@ -1530,6 +1551,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  a op
+         |
          |  // c1
          |    [T] b
          |}""".stripMargin.lf2nl
@@ -1927,7 +1949,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val code =
       """|import c. /* c1 */{d, e}
          |""".stripMargin
-    val first = "import c./* c1 */ {d, e}"
+    val first = "import c. /* c1 */ {d, e}"
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
@@ -1935,7 +1957,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val code =
       """|export c. /* c1 */{d, e}
          |""".stripMargin
-    val first = "export c./* c1 */ {d, e}"
+    val first = "export c. /* c1 */ {d, e}"
     assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 
