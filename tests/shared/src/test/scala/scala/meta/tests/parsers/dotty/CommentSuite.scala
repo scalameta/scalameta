@@ -3738,9 +3738,8 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { type F = (x: Int) => x.type }
+      """|object O { type F = (x /* c1 */ : Int) => x.type }
          |""".stripMargin,
-      reprinted = Seq(),
     )("end Type.Name: /* c1 */")
   }
 
@@ -5397,16 +5396,7 @@ class CommentSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  x match {
-         |    case _ * y => 1
-         |  }
-         |}
-         |""".stripMargin,
-      reprinted = Seq(),
-    )("beg Pat.ArgClause, Pat.Var, Term.Name: // c")
+    checkComments(code)("beg Pat.ArgClause, Pat.Var, Term.Name: // c")
   }
 
   test("given: named, type in parens, DSLC before the closing paren") {
@@ -5872,12 +5862,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  type M[X] = X match {
+         |  type M[X] = X match /* c */ {
          |    case Int => String
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Type.CasesBlock: /* c */")
   }
 
@@ -5893,12 +5882,12 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  type M[X] = X match {
-         |    case Int => String
-         |  }
+         |  type M[X] = X match
+         |    /* c */ {
+         |      case Int => String
+         |    }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Type.CasesBlock: /* c */")
   }
 
@@ -6729,12 +6718,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  val y = x {
-         |    Int
-         |  }
+         |  val y = x
+         |    // c
+         |    {
+         |      Int
+         |    }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Term.ArgClause, Term.Block: // c")
   }
 
@@ -6750,12 +6740,13 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  xs.foreach {
-         |    x => println(x)
-         |  }
+         |  xs.foreach
+         |    // c
+         |    {
+         |      x => println(x)
+         |    }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Term.ArgClause, Term.Block: // c")
   }
 

@@ -1517,7 +1517,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  x match {
-         |    case a :: b => c
+         |    case a ::
+         |
+         |      // c1
+         |      b => c
          |  }
          |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
@@ -1536,7 +1539,9 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  x match {
-         |    case a :: b => c
+         |    case a ::
+         |      // c1
+         |      b => c
          |  }
          |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
@@ -1856,6 +1861,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  xs.map { x =>
          |    val y = x
          |    y
+         |  // c1
          |  }
          |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
@@ -1872,7 +1878,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  xs.map { x =>
+         |  xs.map { /* c1 */ x =>
          |    val y = x
          |    y
          |  }
@@ -1889,7 +1895,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  xs.map { x =>
+         |  xs.map { /* c1 */ x =>
          |    val y = x
          |    y
          |  }
@@ -2000,7 +2006,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  def this() = this /* c1 */(1, null)
          |}
          |""".stripMargin
-    val first = "class A { def this() = this(1, null) }"
+    val first = "class A { def this() = this /* c1 */ (1, null) }"
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
