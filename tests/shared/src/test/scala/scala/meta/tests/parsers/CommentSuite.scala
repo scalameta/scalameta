@@ -2699,7 +2699,23 @@ class CommentSuite extends ParseSuite {
          |// c
          |]
          |""".stripMargin
-    checkComments(code)("beg Type.ParamClause: // c", "beg Type.Bounds: // c")
+    checkComments(
+      code,
+      """|class A[T, U
+         |// c
+         |// c
+         |]
+         |""".stripMargin,
+      reprinted = Seq("beg Type.ParamClause: // c\n// c", "beg Type.Bounds: // c\n// c"),
+      twice =
+        """|class A[T, U
+           |// c
+           |// c
+           |// c
+           |// c
+           |]
+           |""".stripMargin,
+    )("beg Type.ParamClause: // c", "beg Type.Bounds: // c")
   }
 
   test("package block: DSLC after it") {
@@ -4349,9 +4365,21 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f[T
          |  // c1
+         |  // c1
          |    <: A] = 1
          |}
          |""".stripMargin,
+      reprinted = Seq("beg Type.ParamClause: // c1\n  // c1", "beg Type.Bounds: // c1\n  // c1"),
+      twice =
+        """|object A {
+           |  def f[T
+           |  // c1
+           |  // c1
+           |  // c1
+           |  // c1
+           |    <: A] = 1
+           |}
+           |""".stripMargin,
     )("beg Type.ParamClause: // c1", "beg Type.Bounds: // c1")
   }
 
@@ -4368,9 +4396,21 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f[T
          |  // c1
+         |  // c1
          |    >: A] = 1
          |}
          |""".stripMargin,
+      reprinted = Seq("beg Type.ParamClause: // c1\n  // c1", "beg Type.Bounds: // c1\n  // c1"),
+      twice =
+        """|object A {
+           |  def f[T
+           |  // c1
+           |  // c1
+           |  // c1
+           |  // c1
+           |    >: A] = 1
+           |}
+           |""".stripMargin,
     )("beg Type.ParamClause: // c1", "beg Type.Bounds: // c1")
   }
 
@@ -4387,9 +4427,21 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f[T
          |  // c1
+         |  // c1
          |    <% A] = 1
          |}
          |""".stripMargin,
+      reprinted = Seq("beg Type.ParamClause: // c1\n  // c1", "beg Type.Bounds: // c1\n  // c1"),
+      twice =
+        """|object A {
+           |  def f[T
+           |  // c1
+           |  // c1
+           |  // c1
+           |  // c1
+           |    <% A] = 1
+           |}
+           |""".stripMargin,
     )("beg Type.ParamClause: // c1", "beg Type.Bounds: // c1")
   }
 
@@ -4896,9 +4948,21 @@ class CommentSuite extends ParseSuite {
       """|object A {
          |  def f[T
          |  // c1
+         |  // c1
          |  : Ord] = 1
          |}
          |""".stripMargin,
+      reprinted = Seq("beg Type.ParamClause: // c1\n  // c1", "beg Type.Bounds: // c1\n  // c1"),
+      twice =
+        """|object A {
+           |  def f[T
+           |  // c1
+           |  // c1
+           |  // c1
+           |  // c1
+           |  : Ord] = 1
+           |}
+           |""".stripMargin,
     )("beg Type.ParamClause: // c1", "beg Type.Bounds: // c1")
   }
 
@@ -6282,7 +6346,7 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A private[/* c1 */ ] (x: Int)
+      """|class A private[/* c1 */ ] /* c1 */ (x: Int)
          |""".stripMargin,
       reprintError = "<input>:1: error: `identifier` expected but `]` found",
     )(
@@ -6304,11 +6368,10 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  xs.map {
-         |    x => x + 1
+         |    x /* c1 */ => x + 1
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("end Term.ParamClause, Term.Param, Term.Name: /* c1 */")
   }
 
@@ -6320,9 +6383,8 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { xs.map(x => x + 1) }
+      """|object O { xs.map(x /* c1 */ => x + 1) }
          |""".stripMargin,
-      reprinted = Seq(),
     )("end Term.ParamClause, Term.Param, Term.Name: /* c1 */")
   }
 
@@ -6938,9 +7000,21 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  def g[T
          |  // c1
+         |  // c1
          |    <: B] = 1
          |}
          |""".stripMargin,
+      reprinted = Seq("beg Type.ParamClause: // c1\n  // c1", "beg Type.Bounds: // c1\n  // c1"),
+      twice =
+        """|object O {
+           |  def g[T
+           |  // c1
+           |  // c1
+           |  // c1
+           |  // c1
+           |    <: B] = 1
+           |}
+           |""".stripMargin,
     )("beg Type.ParamClause: // c1", "beg Type.Bounds: // c1")
   }
 

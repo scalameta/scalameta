@@ -9,6 +9,7 @@ import scala.meta.internal.tokens.Chars._
 import scala.meta.internal.trees._
 import scala.meta.prettyprinters._
 import scala.meta.tokens._
+import scala.meta.tokens.{Token => T}
 import scala.meta.trees.Origin
 
 import scala.annotation.tailrec
@@ -382,8 +383,7 @@ object TreeSyntax {
           case _: Term.Function => "=>"
           case _: Term.ContextFunction => "?=>"
         }
-        val paramsSyntax = printParams(t.paramClause, needParens = false)
-        m(Expr, s(paramsSyntax, " ", kw(arrow), " ", p(Expr, t.body)))
+        m(Expr, s(t.paramClause, " ", kw(arrow), " ", p(Expr, t.body)))
       case t: Term.PolyFunction => m(Expr, s(t.tparamClause, " ", kw("=>"), " ", p(Expr, t.body)))
       case t: Term.QuotedMacroType => s("'[ ", t.tpe, spn("]"))
       case t: Term.QuotedMacroExpr => printMacroExprBody(t.body, "'")
@@ -409,7 +409,16 @@ object TreeSyntax {
       case t: Term.Param =>
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
         printParam(t)
-      case t: Term.ParamClause => nosp(printParams(t, needParens = !t.parent.is[Term]))
+      case t: Term.ParamClause =>
+        val v = t.values
+        val modOpt = t.mod
+        val useParens = v match {
+          case head :: tail => tail.nonEmpty || !t.parent.is[Term] ||
+            modOpt.fold(head.decltpe.isDefined)(!_.is[Mod.Implicit])
+          case _ => true
+        }
+        val mod = o(modOpt, " ")
+        w("(", s(mod, r(v.map(printParam(_, mod.isEmpty)), ", ")), ")", useParens)
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -469,7 +478,24 @@ object TreeSyntax {
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
         m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
-      case t: Type.Bounds => printBounds(t)
+      case t: Type.Bounds =>
+        val res = Seq.newBuilder[Show.Result]
+        def add(str: String)(tpe: Type): Unit = res += " " += kw(str) += " " += p(Typ, tpe)
+        t.lo.foreach(add(">:"))
+        t.hi.foreach(add("<:"))
+        t.view.foreach(add("<%"))
+        t.context match {
+          case cbs @ x :: xs =>
+            val bounds =
+              if (xs.isEmpty) s(x)
+              else if (dialect.allowImprovedTypeClassesSyntax &&
+                x.origin.tokensOpt.exists(_.rfindWideNotOrNull(_.is[T.Trivia], -1).is[T.LeftBrace]))
+                s("{", r(cbs, ", "), "}")
+              else r(cbs, ": ")
+            res += s(kw(": "), bounds)
+          case _ =>
+        }
+        s(res.result(): _*)
       case t: Type.Repeated => t.tpe match {
           case tByName: Type.ByName => m(ParamTyp, s(kw("=>"), " ", p(Typ, tByName.tpe), kw("*")))
           case _ => m(ParamTyp, s(p(Typ, t.tpe), kw("*")))
@@ -486,8 +512,7 @@ object TreeSyntax {
         def isVariant(m: Mod) = m.is[Mod.Variant]
         val mods = t.mods.filterNot(isVariant)
         val variance = o(t.mods.find(isVariant))
-        val bounds = printBounds(t.bounds, t.vbounds)
-        s(w(mods, " "), variance, t.name, t.tparamClause, bounds)
+        s(w(mods, " "), variance, t.name, t.tparamClause, t.bounds)
       case t: Type.Block => s(w(r(t.typeDefs, "; "), "; "), t.tpe)
       case _: Type.CapturesAny => s()
       case t: Type.CapturesSet => s("{", r(t.values, ", "), "}")
@@ -650,8 +675,7 @@ object TreeSyntax {
         s(kw("package"), " ", t.ref, body)
       case t: Pkg.Object => r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
-        val paramClauses = r(t.paramClauses.map(printParams(_)))
-        s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), paramClauses)
+        s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), s(t.paramClauses: _*))
       case t: Ctor.Block => if (t.stats.isEmpty) s(t.init) else s("{", i(t.init), "", t.stats, n("}"))
       case t: Ctor.Secondary =>
         s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramClauses, " = ", t.body)
@@ -799,10 +823,8 @@ object TreeSyntax {
         if (isTrailing) printEndComments(t) else printBegComments(t)
     }
 
-    private def givenCond(pcg: Member.ParamClauseGroup): Show.Result = {
-      val clauses = pcg.paramClauses.map(x => s("(", r(x.values.map(printParam(_)), ", "), ")"))
-      r("", " => ", " =>")(s(pcg.tparamClause) +: clauses: _*)
-    }
+    private def givenCond(pcg: Member.ParamClauseGroup): Show.Result =
+      r("", " => ", " =>")(pcg.tparamClause +: pcg.paramClauses: _*)
 
     private def givenSigUsesNewSyntax(
         pcgs: List[Member.ParamClauseGroup],
@@ -894,18 +916,13 @@ object TreeSyntax {
     private def printBlock(t: Tree, stats: List[Stat]): Show.Result =
       if (stats.isEmpty) s("{}") else s("{", stats, n("}"))
     implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax(r(_, " "))
-    private def printParams(t: Term.ParamClause, needParens: Boolean = true): Show.Result = {
-      val v = t.values
-      val modOpt = t.mod
-      val useParens = v match {
-        case head +: tail => needParens || tail.nonEmpty ||
-          modOpt.fold(head.decltpe.isDefined)(!_.is[Mod.Implicit])
-        case _ => true
-      }
-      val mod = o(modOpt, " ")
-      w("(", s(mod, r(v.map(printParam(_, mod.isEmpty)), ", ")), ")", useParens)
-    }
-    implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax(r(_))
+    // a term clause after a name does not split from it
+    implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax(xs =>
+      s(xs.map {
+        case x: Term.ParamClause => nosp(x)
+        case x => s(x)
+      }: _*),
+    )
     implicit def syntaxTypeOpt: Syntax[Option[Type]] = Syntax(o(kw(": "), _))
 
     implicit def syntaxCases: Syntax[Seq[CaseTree]] = Syntax(cases => r(cases.map(i(_))))
@@ -985,24 +1002,6 @@ object TreeSyntax {
 
     private def printFunctionType(t: Type.ParamFunctionType, arrow: String): Show.Result =
       printFunctionLikeType(t, s(t.paramClause), arrow)
-
-    private def printContextBounds(cbounds: List[Type] = Nil): Show.Result = cbounds match {
-      case Nil => s()
-      case head :: Nil => s(kw(": "), head)
-      case cbs @ x :: _
-          if dialect.allowImprovedTypeClassesSyntax && x.origin.tokensOpt.exists(
-            _.rfindWideNotOrNull(_.is[Token.Trivia], -1).is[Token.LeftBrace],
-          ) => s(kw(": "), "{", r(cbs, ", "), "}")
-      case cbs => s(kw(": "), r(cbs, ": "))
-    }
-
-    private def printBounds(bounds: Type.Bounds, vbounds: List[Type] = Nil): Show.Result = {
-      val lo = o(bounds.lo.map(x => s(" ", kw(">:"), " ", p(Typ, x))))
-      val hi = o(bounds.hi.map(x => s(" ", kw("<:"), " ", p(Typ, x))))
-      val vb = r(vbounds.map(s(" ", kw("<%"), " ", _)))
-      val cb = printContextBounds(bounds.context)
-      s(lo, hi, vb, cb)
-    }
 
     private def printByNameType(t: Type.ByNameType, arrow: String): Show.Result =
       printFunctionLikeType(t, s(), arrow)
