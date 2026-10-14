@@ -1750,7 +1750,13 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  )
          |}
          |""".stripMargin
-    val first = "object A { (a, b) }"
+    val first =
+      """|object A {
+         |  (
+         |    a, // c1
+         |    b
+         |  )
+         |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
@@ -1871,7 +1877,13 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |
          |  b
          |""".stripMargin
-    val first = "object A { if (a) b }"
+    val first =
+      """|object A {
+         |  if (a)
+         |    // c1
+         |
+         |    b
+         |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 
@@ -1883,7 +1895,13 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |
          |  b
          |""".stripMargin
-    val first = "object A { if (a) b }"
+    val first =
+      """|object A {
+         |  if (a)
+         |    // c1
+         |
+         |    b
+         |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 
@@ -1896,7 +1914,13 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |    && b)
          |}
          |""".stripMargin
-    val first = "object A { a && b }"
+    val first =
+      """|object A {
+         |  (a
+         |    // c1
+         |
+         |    && b)
+         |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
@@ -1977,7 +2001,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val code =
       """|val x = ' /* c1 */{ x }
          |""".stripMargin
-    val first = "val x = '{ x }"
+    val first = "val x = ' /* c1 */ { x }"
     assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 
@@ -2009,9 +2033,11 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  x match {
-         |    case 1 => b
-         |    // c1
-         |    case 2 => d
+         |    case 1 =>
+         |      b
+         |      // c1
+         |    case 2 =>
+         |      d
          |  }
          |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
@@ -2050,6 +2076,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
       """|object A {
          |  f(
          |    a, /* c1 */
+         |    // c2
          |    b
          |  )
          |}""".stripMargin.lf2nl

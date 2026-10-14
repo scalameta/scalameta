@@ -192,13 +192,12 @@ class ExtensionMethodsSuite extends BaseDottySuite {
       """|extension (c: Circle) {
          |  def crc: Int = 2
          |}
+         |// c
          |""".stripMargin
-    val tree = Defn.ExtensionGroup(
-      Nil,
-      cparamss,
-      blk(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2))),
-    )
-    runTestAssert[Stat](code, layout)(tree)
+    val body = blk(Defn.Def(Nil, tname("crc"), Nil, Nil, Some(pname("Int")), int(2)))
+    val tree = Defn.ExtensionGroup(Nil, cparamss, body).toBuilder.endComment(detachedComments("// c"))
+      .result()
+    parseAndCheckTree[Stat](code, layout)(tree)
   }
 
   test("multiple-methods-indent") {
@@ -319,12 +318,20 @@ class ExtensionMethodsSuite extends BaseDottySuite {
          |    /** */
          |""".stripMargin,
       """|extension (a: Int) {
+         |
+         |  /** */
+         |
          |  def double = a * 2
+         |
+         |  /** */
          |}""".stripMargin,
     )(Defn.ExtensionGroup(
       Nil,
       List(List(tparam("a", "Int"))),
-      blk(Defn.Def(Nil, tname("double"), Nil, Nil, None, tinfix(tname("a"), "*", int(2)))),
+      blk(
+        Defn.Def.newBuilder(Nil, tname("double"), Nil, None, tinfix(tname("a"), "*", int(2)))
+          .begComment(Seq("/** */")).endComment(Seq("/** */")).result(),
+      ),
     ))
   }
 

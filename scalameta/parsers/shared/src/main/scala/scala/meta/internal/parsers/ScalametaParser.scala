@@ -486,7 +486,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         val bodyIsBlock = body.is[Tree.Block]
 
         begComment =
-          if (tokens(start).start < minChildBeg) leadingComments(body, start, endExcl)
+          if (tokens(start).start < minChildBeg) leadingComments(body, start)
           else if (bodyIsBlock) None // braceless
           else minChild.begComment
 
@@ -502,7 +502,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         if (bodyIsBlock && (maxChild ne null)) {
           val bound = if (tokens(endExcl - 1).is[RightBrace]) endExcl - 1 else endPos + 1
           val last = maxChild.endComment.getOrElse(maxChild)
-          trailingComments(last.endTokenIdx, bound).foreach { more =>
+          trailingComments(last.endTokenIdx, bound, detached = true).foreach { more =>
             val all = new ListBuffer[Tree.Comment]
             maxChild.endComment.foreach(all ++= _.values)
             all ++= more.values
@@ -518,19 +518,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private val childSpan = new ScalametaParser.ChildSpan
 
   // the comments before the tree that starts at `start`, back to the statement before it
-  private def leadingComments(body: Tree, start: Int, endExcl: Int): Option[Tree.Comments] = {
+  private def leadingComments(body: Tree, start: Int): Option[Tree.Comments] = {
     // lazily allocated only if a comment is actually found (the scan runs
     // for most nodes but finds a leading comment only rarely)
     var begBuf: ListBuffer[Tree.Comment] = null
     var idx = start - 1
-    var pending = 0
-    var hadEOL = false
     var inRegion = false // the scan crossed the newline that opened a region
+    var continued = false // the scan crossed a token that continues the tree before it
     while (tokens.getOrNull(idx) match {
         case t: Comment =>
           if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
           begBuf.prepend(asComment(t, idx))
-          pending += 1
           true
         case endPart: CommentEnd =>
           val endIdx = idx + 1
@@ -555,28 +553,61 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           }) {}
           if (begBuf eq null) begBuf = new ListBuffer[Tree.Comment]
           begBuf.prepend(asComment(parts.toList, idx, endIdx))
-          pending += 1
           true
-        case _: AtEOL => !(hadEOL && pending == 0) && {
-            hadEOL = true
-            pending = 0
-            if (isIndentAt(idx)) inRegion = true
+        // a blank line or an outdent separates the comments of the tree before from ours
+        case _: AtEOL =>
+          val wasIndent = isIndentAt(idx)
+          (wasIndent || !isOutdentAt(idx)) &&
+          (continued || !tokens.findNotOrNull(_.is[HSpace], idx + 1).isInstanceOf[AtEOL] || {
+            val prev = prevNonTriviaAt(idx)
+            // a token that can end a statement ends the tree only where the statement ends
+            !endsTree(prev, body) || canEndStat(tokens(prev)) && !isStatEolAfter(prev)
+          }) && {
+            if (wasIndent) inRegion = true
             true
           }
         case _: HSpace => true
-        case null => false
-        case t =>
-          def endsStat = body.is[Term.Block] || hadEOL && t.is[Comma] ||
-            (hadEOL || endExcl <= start || !t.is[KwReturn]) &&
-            !inRegion && canEndStat(t) && !condCloseAt(idx)
-          if (begBuf ne null) if (endsStat) begBuf.remove(0, pending)
-          t.isEmpty // cannot separate a leading comment from the tree
+        case null | _: BOF | _: EOF => false
+        // the parenthesis of a condition: the comments before it lead the condition
+        case _: LeftParen =>
+          val kw = prevNonTriviaAt(idx)
+          noTreeBeg(kw) || tokens(kw).isAny[KwIf, KwWhile]
+        // the bracket of an access qualifier: the comments before it lead the qualifier
+        case _: LeftBracket => prevNonTrivia(idx).isAny[KwPrivate, KwProtected]
+        // after a newline or a delimiter, a token that continues the tree lets the comments through
+        case t if !inRegion && continuesTree(t, idx) && {
+              prevNonHTrivia(idx) match {
+                case _: StatDelim | _: Comma => true
+                case _: Dot => t.is[KwMatch] // `.match`: the dot starts the line
+                case _ => false
+              }
+            } =>
+          continued = true
+          true
+        case t => t.isEmpty // cannot separate a leading comment from the tree
       }) idx -= 1
-    if (begBuf eq null) None else asComments(begBuf)
+    // exclude the comments that the trailing scan of the tree before took
+    if (begBuf ne null) {
+      val prev = prevNonTriviaAt(begBuf.head.begTokenIdx)
+      if (endsTree(prev, body)) {
+        val treeEnd = if (tokens(prev).isAny[Comma, Semicolon]) prevNonTriviaAt(prev) else prev
+        val taken = trailingCommentsEnd(treeEnd + 1)
+        if (taken > treeEnd + 1) {
+          val kept = begBuf.indexWhere(_.begTokenIdx >= taken)
+          begBuf.remove(0, if (kept < 0) begBuf.length else kept)
+        }
+      }
+    }
+    asComments(begBuf)
   }
 
   private val selfArrows = new collection.mutable.BitSet
   private def markSelfArrow(idx: Int): Unit = if (options.captureComments) selfArrows += idx
+
+  private def commentsTrail(token: Token, idx: Int): Boolean = token match {
+    case _: SymbolicKeyword with ContKeyword | _: Comma | _: Semicolon | _: RightParen => true
+    case _ => false
+  }
 
   // a token that could end a tree (canEndStat), but no tree ends at it
   private val noTreeEnd = new collection.mutable.BitSet
@@ -606,60 +637,151 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
   private def endsTree(idx: Int, body: Tree): Boolean = endsTree(idx, arrowEnds = body.is[Case])
 
-  /* Trailing comments from `idx` on. Attached ones only, unless `bound`
-   * is given: then the detached ones on the lines that follow, up to `bound` or a blank line,
-   * which is how the last child of a block takes the comments before the block
-   * closes. */
-  private def trailingComments(from: Int, bound: Int = -1): Option[Tree.Comments] = {
-    val detached = bound >= 0
-    var endBuf: ListBuffer[Tree.Comment] = null // lazily allocated, as begBuf
-    var idx = from
+  // reused by each trailing scan: `asComments` copies what it holds
+  private val trailingBuf = new ListBuffer[Tree.Comment]
+
+  /* Trailing comments from `from` on, up to `bound`. Attached ones only, unless `detached`: then
+   * the detached ones on the lines that follow, to a blank line unless `pastBlank`. After the
+   * attached ones of a tree that ends at `from`, also the detached ones that stay with it. */
+  private def trailingComments(
+      from: Int,
+      bound: Int = Int.MaxValue,
+      detached: Boolean = false,
+      pastBlank: Boolean = false,
+  ): Option[Tree.Comments] = {
+    trailingBuf.clear()
+    trailingCommentsEnd(from, trailingBuf, bound, detached = detached, pastBlank = pastBlank)
+    asComments(trailingBuf)
+  }
+
+  // collects into `buf` unless null; returns the end of the last comment taken, or `from`
+  private def trailingCommentsEnd(
+      from: Int,
+      buf: ListBuffer[Tree.Comment] = null,
+      bound: Int = Int.MaxValue,
+      detached: Boolean = false,
+      pastBlank: Boolean = false,
+  ): Int = {
+    val size = if (buf eq null) 0 else buf.length
+    var end = from
+    val beforeFrom = from - 1
+    // start at a comma or a semicolon right before `from`, so the loop decides whether to cross it
+    var idx =
+      if (!detached && tokens.getOrNull(beforeFrom).isAny[Comma, Semicolon]) beforeFrom else from
     var newlines = 0
-    def add(comment: => Tree.Comment): Boolean = {
-      if (!detached || newlines > 0) {
-        if (endBuf eq null) endBuf = new ListBuffer[Tree.Comment]
-        endBuf.append(comment)
-        newlines = 0
-      }
-      true
-    }
-    while ((!detached || idx < bound) &&
+    // a detached comment needs a newline before it, or a comment taken before it
+    while (idx < bound &&
       (tokens.getOrNull(idx) match {
-        case t: Comment => add(asComment(t, idx))
-        case begPart: CommentStart =>
-          val begIdx = idx
-          val parts = new ListBuffer[Lit.String]
-          parts.append(asString(begPart, idx))
-          while ({
-            idx += 1
-            tokens.getOrNull(idx) match {
-              case t: CommentEnd =>
-                parts.append(asString(t, idx))
-                false
-              case t: CommentPart =>
-                parts.append(asString(t, idx))
-                true
-              case t: CommentUnquote =>
-                parts.append(unquoteAsString(t, idx))
-                true
-              case _ =>
-                idx -= 1
-                false
-            }
-          }) {}
-          add(asComment(parts.toList, begIdx, idx + 1))
-        case t: AtEOL if detached =>
-          newlines += t.newlines
-          newlines < 2
-        case _: AtEOL =>
-          if (isIndentAt(idx)) endBuf = null // the region that opens here owns them
-          false
         case _: HSpace => true
-        case _: Comma if !detached => tokens.findNotOrNull(_.is[HTrivia], idx + 1).is[AtEOL]
-        case null => false
-        case t => t.isEmpty // cannot separate the tree from a trailing comment
+        case _: HTrivia =>
+          if (!detached || newlines > 0 || end > from) {
+            newlines = 0
+            end = if (buf eq null) idx + 1 else appendComment(buf, idx)
+            idx = end - 1
+          }
+          true
+        case _: BOF => // the input starts a line
+          newlines += 1
+          true
+        case t: AtEOL =>
+          if (detached) {
+            newlines += t.newlines
+            pastBlank || newlines < 2
+          } else {
+            // the region that opens here owns them, unless a self opens it
+            if (isIndentAt(idx) && end > from && !selfArrows(beforeFrom)) {
+              if (buf ne null) buf.remove(size, buf.length - size)
+              end = from
+            }
+            false
+          }
+        case _: Comma | _: Semicolon =>
+          if (detached) idx == from else nextNonHTrivia(idx).isAny[StatDelim, CloseDelim]
+        case null | _: EOF => false
+        case t => isSeparator(t) // cannot separate the tree from a trailing comment
       })) idx += 1
-    if (endBuf eq null) None else asComments(endBuf)
+    // only where the leading scan of the next tree excludes them
+    if (detached || !tokens.getOrNull(idx).isInstanceOf[AtEOL] || isIndentAt(idx)) return end
+    val nextNonWS = nextNonWhitespaceAt(idx)
+    if (!tokens.getOrNull(nextNonWS).isInstanceOf[HTrivia] || !endsTree(beforeFrom, arrowEnds = true))
+      return end
+
+    // also take the comments indented deeper than the line of the code after them
+    val next = nextNonTriviaAt(nextNonWS)
+    val tokenAtNext = tokens.getOrNull(next)
+    // but none indented less than the line that opens the tree's last delimited group
+    val stay =
+      // the tree after a colon at the end of its line takes the comments before the colon
+      if (tokenAtNext.is[Colon]) if (nextNonHTrivia(next).isInstanceOf[AtEOLorF]) idx else next
+      // the element after a comma takes the comments on lines of their own before it
+      else if (tokenAtNext.is[Comma]) idx
+      else if (commentsTrail(tokenAtNext, next)) next
+      else {
+        val indent = lineIndent(next) + 1
+        val prev = prevNonTriviaAt(idx)
+        val outdentPos = findOutdentPos(prev, next, indent, okBlank = true)
+        if (outdentPos <= idx) outdentPos
+        else {
+          var i = beforeFrom
+          var depth = 0
+          while (i > 0 && {
+              tokens(i) match {
+                case _: CloseDelim =>
+                  depth += 1
+                  true
+                case _: OpenDelim =>
+                  depth -= 1
+                  true
+                case _: AtEOL => depth > 0
+                case _ => true
+              }
+            }) i -= 1
+          val newIndent = indent.max(lineIndent(i + 1))
+          if (newIndent == indent) outdentPos
+          else findOutdentPos(prev, next, newIndent, okBlank = true)
+        }
+      }
+    if (stay > idx) {
+      val more = trailingCommentsEnd(idx, buf, stay, detached = true, pastBlank = true)
+      if (more > idx) end = more
+    }
+
+    end
+  }
+
+  // append the comment that starts at `idx`; return the index after it
+  private def appendComment(buf: ListBuffer[Tree.Comment], idx: Int): Int = tokens(idx) match {
+    case t: Comment =>
+      buf.append(asComment(t, idx))
+      idx + 1
+    case begPart: CommentStart =>
+      val parts = new ListBuffer[Lit.String]
+      parts.append(asString(begPart, idx))
+      var end = idx + 1
+      while (tokens.getOrNull(end) match {
+          case t: CommentEnd =>
+            parts.append(asString(t, end))
+            end += 1
+            false
+          case t: CommentPart =>
+            parts.append(asString(t, end))
+            end += 1
+            true
+          case t: CommentUnquote =>
+            parts.append(unquoteAsString(t, end))
+            end += 1
+            true
+          case _ => false
+        }) {}
+      buf.append(asComment(parts.toList, idx, end))
+      end
+    case _ => idx + 1
+  }
+
+  // the indentation of the line that holds the token at `idx`
+  private def lineIndent(idx: Int): Int = {
+    val lineBeg = tokens.rskipIf(!_.is[AtEOL], idx, -1) + 1
+    tokens.findNotOrNull(_.is[HSpace], lineBeg).start - tokens(lineBeg).start
   }
 
   def atPosTry[T <: Tree](start: StartPos, end: EndPos)(body: => Try[T]): Try[T] = {
@@ -1790,10 +1912,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def condExpr(): Term = inParens(expr())
 
-  // the `)` that closes a condition is not the last token of a tree: a comment after it leads the body
-  private val condCloseAt = new scala.collection.mutable.BitSet
-  private def markCondClose(): Unit =
-    if (prevToken.is[RightParen] && options.captureComments) condCloseAt += prevIndex
+  // the `)` that closes a condition ends no tree: a comment after it leads the body
+  private def markCondClose(): Unit = {
+    val idx = prevNonTriviaAt(currIndex)
+    if (tokens(idx).is[RightParen]) markNoTreeEnd(idx)
+  }
   private def exprAfterCond(): Term = {
     markCondClose()
     expr()
@@ -1872,7 +1995,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       (cond, null)
     } else {
       val startPos = currIndex
+      // without the keyword, a body may follow the parentheses: the comments between lead it
       val simpleExpr = inParensOrTupleOrUnitExpr()
+      val rpPos = prevIndex
       if (acceptIfAfterOptNL[T]) (simpleExpr, null)
       else {
         // let's consider case when something can continue cond or start body
@@ -1895,7 +2020,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           }
         }
         complexExpr match {
-          case null => simpleExpr -> {
+          case null =>
+            // a body follows the parentheses: the comments after them lead it
+            markNoTreeEnd(rpPos)
+            simpleExpr.endComment match {
+              case Some(c) if c.values.last.begTokenIdx > rpPos =>
+                val (before, after) = c.values.span(_.begTokenIdx <= rpPos)
+                simpleExpr.privateSetEndComment(asComments(before))
+                if (argsOrInitBody ne null) // otherwise, the body will find own comments
+                  prependBegComment(argsOrInitBody, asComments(after))
+              case _ =>
+            }
+            simpleExpr -> {
               if (argsOrInitBody ne null)
                 exprAfterSimpleInit(argsOrInitBody, argPos, canApply = true)
               else {
@@ -4738,6 +4874,10 @@ object ScalametaParser {
 
   implicit def intToIndexPos(index: Int): Pos = new IndexPos(index)
   implicit def treeToTreePos(tree: Tree): Pos = new TreePos(tree)
+
+  // the tokens that a trailing scan may cross before a comment
+  private val isSeparator: Token => Boolean =
+    t => t.isAny[Whitespace, Comma, Semicolon] || t.isEmpty
 
   // the first and the last child, with their comments; reused, as every tree computes them
   private final class ChildSpan extends (Tree => Unit) {
