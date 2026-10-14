@@ -5471,9 +5471,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { given Ord[Int] = ??? }
+      """|object O {
+         |  given Ord[
+         |    Int
+         |    // c
+         |  ] = ???
+         |}
          |""".stripMargin,
-    )()
+    )("end Type.Name: // c")
   }
 
   test("given: colon body, DSLC before the closing bracket") {
@@ -5487,9 +5492,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { given Ord[Int] { def f = 1 } }
+      """|object O {
+         |  given Ord[
+         |    Int
+         |    // c
+         |  ] { def f = 1 }
+         |}
          |""".stripMargin,
-    )()
+    )("end Type.Name: // c")
   }
 
   test("given: named, DSLC before the closing bracket") {
@@ -7039,9 +7049,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { given Ord[Int] with {} }
+      """|object O {
+         |  given Ord[
+         |    Int
+         |    // c
+         |  ] with {}
+         |}
          |""".stripMargin,
-    )()
+    )("end Type.Name: // c")
   }
 
   test("class: DSLC before extends, DSLC before the colon") {
