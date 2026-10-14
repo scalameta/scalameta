@@ -82,18 +82,11 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         if (rawparamss.lengthCompare(1) > 0) c
           .abort(cdef.pos, "@leaf classes must define a single parameter list")
         val params: List[ValDef] = rawparamss.head
-        val apiParams =
-          if (isQuasi) params
-          else {
-            val versions = getNewFieldVersions(params)
-            params.filterNot(p => versions.get(p.name.toString).exists(isFrozen))
-          }
-        val builderOnlyParams = params.filterNot(p => apiParams.exists(_ eq p))
 
         // step 1a: identify modified fields of the class
-        val (versionedParams, paramsVersions) =
-          if (isQuasi) (Nil, Nil) else getVersionedParams(params, stats)
-        val apiVersionedParams = versionedParams.filter(vp => apiParams.exists(_ eq vp.param))
+        val (versionedParams, paramsVersions, apiParams, apiVersionedParams) =
+          if (isQuasi) (Nil, Nil, params, Nil) else getVersionedParams(params, stats)
+        val builderOnlyParams = params.filterNot(apiParams.contains)
         val replacedFields = versionedParams.flatMap(_.replaced.flatMap(field =>
           field.oldDefs.map { case (oldDef, _) => field.version -> oldDef },
         ))
@@ -180,7 +173,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         val internalArgs = params.map(getParamArg)
         // the frozen API passes the default of a later field
         val apiCtorArgs = params
-          .map(p => if (builderOnlyParams.exists(_ eq p)) p.rhs else getParamArg(p))
+          .map(p => if (builderOnlyParams.contains(p)) p.rhs else getParamArg(p))
         def fullCtorCallFromPartialPrivateParams(
             pp: List[ValOrDefDef],
             fieldArgs: List[Tree] = apiCtorArgs,
@@ -1023,20 +1016,27 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
   private def getVersionedParams(
       params: List[ValDef],
       stats: List[Tree],
-  ): (List[VersionedParam], List[Version]) = {
+  ): (List[VersionedParam], List[Version], List[ValDef], List[VersionedParam]) = {
     val appendedFields: Map[String, Version] = getNewFieldVersions(params)
     val replacedFields: Map[String, Seq[ReplacedField]] = ReplacedField.getMap(params, stats)
     val versionsBuilder = Set.newBuilder[Version]
     appendedFields.values.foreach(versionsBuilder += _)
     replacedFields.values.foreach(_.foreach(versionsBuilder += _.version))
     val versions = versionsBuilder.result().toList.sorted
+    val apiParams = List.newBuilder[ValDef]
+    val apiVersionedParams = List.newBuilder[VersionedParam]
     val versionedParams = params.map { p =>
       val pname = p.name.toString
       val appended = appendedFields.get(pname)
       val replaced = replacedFields.getOrElse(pname, Seq.empty)
-      new VersionedParam(p, appended, replaced)
+      val vp = new VersionedParam(p, appended, replaced)
+      if (!appended.exists(isFrozen)) {
+        apiParams += p
+        apiVersionedParams += vp
+      }
+      vp
     }
-    (versionedParams, versions)
+    (versionedParams, versions, apiParams.result(), apiVersionedParams.result())
   }
 
   private def getAnnotAttribute(value: Tree): String = value match {
