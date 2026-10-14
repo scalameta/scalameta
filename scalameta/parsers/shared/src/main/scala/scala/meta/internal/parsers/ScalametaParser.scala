@@ -1246,8 +1246,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     if (null eq unquoteDialect) syntaxError(s"$dialect doesn't support unquotes", at = unquote)
     // NOTE: I considered having Input.Slice produce absolute positions from the get-go,
     // but then such positions wouldn't be usable with Input.Slice.chars.
-    val unquotedTree = atPos(idx) {
-      val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
+    val unquoteInput = Input.Slice(input, unquote.start + 1, unquote.end)
+    val parsed =
       try {
         val unquoteParser = {
           implicit val dialect: Dialect = unquoteDialect
@@ -1257,8 +1257,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         else if (dialect.allowPatUnquotes) unquoteParser.parseUnquotePat()
         else unreachable
       } catch { case ex: Exception => throw ex.absolutize }
-    }
-    copyPos(unquotedTree)(quasi[T](0, unquotedTree))
+    // the unquote's own parser attached its comments; here it takes only its position
+    parsed.privateSetOrigin(asOrigin(idx))
+    copyPos(parsed)(quasi[T](0, parsed))
   }
 
   private def unquote[T <: Tree: AstInfo](unquote: Token): T with Quasi = {
@@ -2173,11 +2174,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
    * Deals with Scala 3 concept of {{{inline x match { ...}}}. Since matches can also be chained in
    * Scala 3 we need to create the Match first and only then add the the inline modifier.
    */
-  def inlineMatchClause(inlineMod: Mod) =
-    autoEndPos(inlineMod)(postfixExpr(allowRepeated = false)) match {
-      case t: Term.Match => t.fullCopy(mods = List(inlineMod))
-      case other => syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
-    }
+  def inlineMatchClause(inlineMod: Mod) = postfixExpr(allowRepeated = false) match {
+    case t: Term.Match =>
+      val res = t.fullCopy(mods = List(inlineMod))
+      res.privateSetOrigin(asOrigin(inlineMod.begTokenIdx, t.endTokenIdx))
+      prependBegComment(res, inlineMod.begComment)
+      res
+    case other => syntaxError("`inline` must be followed by an `if` or a `match`", at = other.pos)
+  }
 
   private def matchClause(t: Term, startPos: Int, isSelect: Boolean = false) = {
     val cases = autoEndPos(AfterPrevPos)(
@@ -4393,8 +4397,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
-  private def convertTypeParamToType(param: Type.Param): Type = param
-    .becomeOr[Type](x => convertNameTypeParamClauseToType(nameAsType(x.name), param.tparamClause))
+  private def convertTypeParamToType(param: Type.Param): Type = param.becomeOr[Type] { x =>
+    val tpe = convertNameTypeParamClauseToType(nameAsType(x.name), param.tparamClause)
+    // the type replaces the parameter, so it takes the comments the parameter held
+    if (tpe.begComment.isEmpty) tpe.privateSetBegComment(x.begComment)
+    if (tpe.endComment.isEmpty) tpe.privateSetEndComment(x.endComment)
+    tpe
+  }
 
   private def convertNameTypeParamClauseToType(name: Type.Name, tpc: Type.ParamClause) = tpc match {
     case q: Quasi => atPos(name, q)(Type.Apply(name, q.become[Type.ArgClause]))
