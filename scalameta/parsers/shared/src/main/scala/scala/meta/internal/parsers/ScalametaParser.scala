@@ -575,6 +575,37 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     if (begBuf eq null) None else asComments(begBuf)
   }
 
+  private val selfArrows = new collection.mutable.BitSet
+  private def markSelfArrow(idx: Int): Unit = if (options.captureComments) selfArrows += idx
+
+  // a token that could end a tree (canEndStat), but no tree ends at it
+  private val noTreeEnd = new collection.mutable.BitSet
+  private def markNoTreeEnd(idx: Int): Unit = if (options.captureComments) noTreeEnd += idx
+
+  // a token that could not end a statement (canEndStat), but a modifier tree ends at it
+  private val treeEnd = new collection.mutable.BitSet
+  private def markTreeEnd(idx: Int): Unit = if (options.captureComments) treeEnd += idx
+
+  // a token that could start a tree (mightStartStat), but no tree begins at it
+  private val noTreeBeg = new collection.mutable.BitSet
+  private def markNoTreeBeg(idx: Int): Unit = if (options.captureComments) noTreeBeg += idx
+
+  private def continuesTree(t: Token, idx: Int): Boolean = t.is[KwThen] || noTreeBeg(idx) ||
+    !mightStartStat(t, closeDelimOK = true)
+
+  /* whether a tree ends at `idx`, so that its trailing scan takes the comments after it; after a
+   * comma or a semicolon, whether a tree ends before it */
+  @tailrec
+  private def endsTree(idx: Int, arrowEnds: Boolean): Boolean = tokens.getOrNull(idx) match {
+    case null => false
+    case _: Comma | _: Semicolon => idx > 0 && endsTree(prevNonTriviaAt(idx), arrowEnds)
+    case _: RightArrow => arrowEnds || selfArrows(idx) // a case without a body, or a self
+    // a modifier before a clause, unless its qualifier follows
+    case _: ModifierKeyword => !nextNonTrivia(idx).is[LeftBracket]
+    case t => if (canEndStat(t)) !noTreeEnd(idx) else treeEnd(idx)
+  }
+  private def endsTree(idx: Int, body: Tree): Boolean = endsTree(idx, arrowEnds = body.is[Case])
+
   /* Trailing comments from `idx` on. Attached ones only, unless `bound`
    * is given: then the detached ones on the lines that follow, up to `bound` or a blank line,
    * which is how the last child of a block takes the comments before the block
@@ -1377,6 +1408,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def simpleType(inMatchType: Boolean = false): Type = {
       val startPos = currIndex
       def wildcardType(): Type = {
+        markNoTreeEnd(currIndex)
         next()
         Type.Wildcard(typeBounds())
       }
@@ -1569,9 +1601,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private final def selectors(t: Term): Term.Ref = selectors(t, t.begIndex)
 
   def mixinQualifier(): Name =
-    if (acceptOpt[LeftBracket])
+    if (at[LeftBracket]) {
+      markNoTreeEnd(prevIndex) // `super`: the comments after it lead the qualifier
+      next()
       inBracketsAfterOpen(typeName().becomeOr[Name](x => copyPos(x)(Name.Indeterminate(x.value))))
-    else anonName()
+    } else {
+      markTreeEnd(prevIndex) // `super` ends the tree
+      anonName()
+    }
 
   def stableId(): Term.Ref = path(thisOK = false)
 
@@ -1873,6 +1910,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def condExprWithBody[T <: Token: ClassTag]: (Term, Term) = {
     val (cond, bodyOpt) = condExprWithOptionalBody[T]
+    if (prev[KwDo]) markNoTreeBeg(prevIndex)
     val body = if (bodyOpt eq null) exprAfterCond() else bodyOpt
     (cond, body)
   }
@@ -1936,6 +1974,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           val body = expr()
           skipAllStatSep()
           accept[KwWhile]
+          markNoTreeBeg(prevIndex)
           val cond = condExpr()
           Term.Do(body, cond)
         case _: KwFor =>
@@ -1955,13 +1994,17 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           val enums = autoPos(enumList.reduceWith(Term.EnumeratorsBlock.apply))
 
           newLinesOpt()
-          if (acceptOpt[KwDo]) Term.For(enums, expr())
-          else if (acceptOpt[KwYield]) Term.ForYield(enums, expr())
+          if (acceptOpt[KwDo]) {
+            markNoTreeBeg(prevIndex)
+            Term.For(enums, expr())
+          } else if (acceptOpt[KwYield]) Term.ForYield(enums, expr())
           else Term.For(enums, expr())
         case _: KwReturn =>
           next()
-          if (isExprIntro(currToken, currIndex)) Term.Return(expr())
-          else Term.Return(atCurPosEmpty(Lit.Unit()))
+          if (isExprIntro(currToken, currIndex)) {
+            markNoTreeEnd(prevIndex) // `return` with an expression
+            Term.Return(expr())
+          } else Term.Return(atCurPosEmpty(Lit.Unit()))
         case _: KwThrow =>
           next()
           Term.Throw(expr())
@@ -2803,6 +2846,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         // `if`, or the absence of `=>`, marks the guard `match` as a sub-match. A guard
         // followed by `=>` stays an ordinary boolean guard (which may itself be a match).
         def asSubMatch(t: Term.Match) = copyPos(t)(Term.SubMatch(t.expr, t.casesBlock, t.mods))
+        markNoTreeBeg(currIndex)
         val firstGuard = guardOnIf()
         if (at[KwIf]) guardOnIf() match {
           case t: Term.Match => Case(pat, Some(firstGuard), asSubMatch(t))
@@ -2923,6 +2967,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val pat = pattern1()
       checkNoTripleDot(pat)
       if (Keywords.PatAlt(currToken)) {
+        markNoTreeEnd(currIndex)
         next()
         patternAlternatives(pat :: pats)
       } else if (pats.isEmpty) pat
@@ -3110,6 +3155,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
               case t => Left(t :: Nil)
             }
           case _: KwGiven =>
+            markNoTreeEnd(currIndex)
             next()
             Pat.Given(super.patternTyp(allowInfix = false))
           case t => onError(t)
@@ -3240,8 +3286,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _: KwCase => atCurPosNext(Mod.Case())
       case _: KwAbstract => atCurPosNext(Mod.Abstract())
       case _: KwLazy => atCurPosNext(Mod.Lazy())
-      case _: KwVal if !dialect.allowUnquotes => atCurPosNext(Mod.ValParam())
-      case _: KwVar if !dialect.allowUnquotes => atCurPosNext(Mod.VarParam())
+      case _: KwVal if !dialect.allowUnquotes =>
+        markTreeEnd(currIndex)
+        atCurPosNext(Mod.ValParam())
+      case _: KwVar if !dialect.allowUnquotes =>
+        markTreeEnd(currIndex)
+        atCurPosNext(Mod.VarParam())
       case t: Ident => t.text match {
           case "+" => atCurPosNext(Mod.Covariant())
           case "-" => atCurPosNext(Mod.Contravariant())
@@ -3441,8 +3491,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
 
     currToken match {
-      case _: KwVal => mods += atCurPosNext(Mod.ValParam())
-      case _: KwVar => mods += atCurPosNext(Mod.VarParam())
+      case _: KwVal =>
+        markTreeEnd(currIndex)
+        mods += atCurPosNext(Mod.ValParam())
+      case _: KwVar =>
+        markTreeEnd(currIndex)
+        mods += atCurPosNext(Mod.VarParam())
       case _ => if (hasExplicitMods) syntaxErrorExpected[KwVal]
     }
 
@@ -3614,7 +3668,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         Importee.Wildcard()
       case _: KwGiven =>
         next()
-        if (at[Ident]) Importee.Given(typ()) else Importee.GivenAll()
+        if (at[Ident]) {
+          markNoTreeEnd(prevIndex)
+          Importee.Given(typ())
+        } else Importee.GivenAll()
       case t: Unquote => Importee.Name(unquote[Name.Quasi](t))
       case t: Ident =>
         next()
@@ -3624,6 +3681,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   def importeeRename(from: Name) = {
+    markNoTreeEnd(prevIndex) // `as` or `=>`: the comments after it lead the new name
     val to = importWildcardOrName()
     atPos(from, to)(to match {
       case to: Importee.Name => Importee.Rename(from, to.name)
@@ -3688,7 +3746,9 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def endMarker(): Stat = autoPos {
     assert(currToken.text == "end")
+    markNoTreeEnd(currIndex)
     next()
+    markTreeEnd(currIndex) // the name can be a keyword, such as `if`
     Term.EndMarker(termName(currToken match {
       case t: Ident => t.value
       case t => t.text
@@ -3744,6 +3804,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
    * ```
    */
   private def givenDecl(mods: List[Mod]): Stat = autoEndPos(mods) {
+    markNoTreeEnd(currIndex)
     accept[KwGiven]
     val sig = givenSig()
 
@@ -3985,6 +4046,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   // ExtMethod         ::=  {Annotation [nl]} {Modifier} ‘def’ DefDef
   def extensionGroupDecl(mods: List[Mod]): Defn.ExtensionGroup = autoEndPos(mods) {
     next() // 'extension'
+    markNoTreeEnd(prevIndex) // the comments after it lead the clauses
 
     val pcg = ExtensionSigContext.within(memberParamClauseGroup(isFirst = true))
 
@@ -4031,6 +4093,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   def typeDefOrDcl(mods: List[Mod]): Stat.TypeDef = autoEndPos(mods) {
+    markNoTreeEnd(currIndex)
     accept[KwType]
     newLinesOpt()
     val name = typeName()
@@ -4253,8 +4316,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def selfEither(quasiquote: Boolean = false): Either[String, Self] = {
     val startPos = currIndex
-    def withSelf(self: => Self) = Either
-      .cond(acceptOpt[RightArrow] || quasiquote && at[EOF], self, "expected `=>`")
+    def withSelf(self: => Self) = {
+      val hasArrow = acceptOpt[RightArrow]
+      if (hasArrow) markSelfArrow(prevIndex) // before the self's own trailing scan
+      Either.cond(hasArrow || quasiquote && at[EOF], self, "expected `=>`")
+    }
     def withDeclTpe(name: Name)(declTpe: Option[Type]) =
       if (declTpe eq null) Left("missing type after self")
       else withSelf(autoEndPos(startPos)(Self(name, declTpe)))
@@ -4336,6 +4402,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def derivesClasses(): List[Type] =
     if (atOrPeekAfterEOL(soft.KwDerives(_))) {
+      markNoTreeEnd(currIndex)
+      markNoTreeBeg(currIndex)
       next()
       newLineOpt()
       val deriving = ListBuffer[Type]()
