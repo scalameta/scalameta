@@ -1,7 +1,7 @@
 package scala.meta.tests.parsers
 
 import scala.meta._
-import scala.meta.internal.parsers.ScannerTokens
+import scala.meta.internal.parsers.{LazyTokenIterator, ScannerTokens}
 
 import MoreHelpers._
 
@@ -37,6 +37,28 @@ class ScannerTokensSuite extends ParseSuite {
     val st = tokensOf("a")
     assertEquals(at(st, st.prevNonTriviaAt(0)), "<before>")
     assertEquals(st.nextNonTriviaAt(st.tokens.length - 1), st.tokens.length - 1)
+  }
+
+  test("outdents and statement ends") {
+    implicit val dialect: Dialect = dialects.Scala3
+    val st = ScannerTokens(
+      """|object A:
+         |  val x = 1
+         |val y = 2
+         |""".stripMargin.asInput,
+    )
+    val iter = LazyTokenIterator(st)
+    while (iter.hasCurr) iter.next()
+    def found(f: Int => Boolean) = st.tokens.indices.filter(f).toList
+    // an outdent before `val y`, and a statement that ends at `1` before a newline
+    assertEquals(
+      found(st.isOutdentAt).map { i =>
+        val next = st.nextNonTriviaAt(i)
+        s"${at(st, next)} ${at(st, st.nextNonTriviaAt(next))}"
+      },
+      List("val y"),
+    )
+    assertEquals(found(st.isStatEolAfter).map(at(st, _)), List("1"))
   }
 
 }

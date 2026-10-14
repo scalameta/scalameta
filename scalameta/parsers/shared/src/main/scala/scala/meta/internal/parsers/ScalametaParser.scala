@@ -1666,7 +1666,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def newLineOpt(): Unit = if (at[EOL]) next()
 
   @inline
-  def newLinesOpt(): Unit = if (at[AtEOL]) next()
+  def newLinesOpt(): Unit = if (at[AtEOL]) {
+    unmarkStatEolAfter(prevIndex) // the statement goes on past it
+    next()
+  }
 
   def nextIfPair[A: ClassTag, B: ClassTag]: Boolean = at[A] && tryAhead[B]
   def nextIfPair[A: ClassTag](pred: Token => Boolean): Boolean = at[A] && tryAhead(pred(currToken))
