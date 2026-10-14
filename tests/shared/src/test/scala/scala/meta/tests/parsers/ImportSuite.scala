@@ -196,12 +196,15 @@ class ImportSuite extends ParseSuite {
          |// detached comment after
          |""".stripMargin
     val layout =
-      """|// attached comment
+      """|// detached comment before
+         |
+         |// attached comment
          |import y.Y
          |// detached comment after
          |""".stripMargin
     val importer = Importer("y", "Y")
-    val imp = Import.newBuilder(List(importer)).begComment(Seq("// attached comment"))
+    val imp = Import.newBuilder(List(importer))
+      .begComment(Seq("// detached comment before", "// attached comment"))
       .endComment(Seq("// detached comment after")).result()
     val tree = Source(List(imp))
     parseAndCheckTree[Source](code, layout)(tree)
