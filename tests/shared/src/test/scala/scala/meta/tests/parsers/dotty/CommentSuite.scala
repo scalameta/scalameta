@@ -234,7 +234,8 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|if (a) // c
-         |  b else d
+         |  b
+         |else d
          |""".stripMargin
     val tree = Term.If(tname("a"), tnameComments("b")("// c")(), tname("d"))
     runTestAssert[Stat](code, layout)(tree)
@@ -1402,7 +1403,7 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|class A extends B // c1
-         | with C
+         |  with C
          |""".stripMargin
     val b = Type.Name.newBuilder("B").endComment(Seq("// c1")).result()
     val anon = Name.Anonymous.newBuilder().begComment(detachedComments("// c2")).result()
@@ -1419,12 +1420,7 @@ class CommentSuite extends BaseDottySuite {
     val code =
       """|class A extends /* c1 */ B
          |""".stripMargin
-    checkComments(
-      code,
-      """|class A /* c1 */ extends B
-         |""".stripMargin,
-      reprinted = Seq("end Type.Name: /* c1 */"),
-    )("beg Template, Init, Type.Name: /* c1 */")
+    checkComments(code)("beg Template, Init, Type.Name: /* c1 */")
   }
 
   test("class: DSLC before extends") {
@@ -1949,7 +1945,8 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f = if (a)
          |  // c2
-         |  b else d
+         |  b
+         |else d
          |""".stripMargin,
     )("beg Term.Name: // c2")
   }
@@ -2582,7 +2579,7 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|given intOrd: Ord[Int] with /* c1 */
+      """|given intOrd: Ord[Int] with /* c1 */ {}
          |""".stripMargin,
       reprintError = "<input>:1: error: `identifier` expected but `end of file` found",
     )("beg Template.Body: /* c1 */")
@@ -2767,12 +2764,12 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object A {
-         |  def f: Unit = try
+         |  def f: Unit = try (
          |    // c
-         |    g finally h
+         |    g
+         |  ) finally h
          |}
          |""".stripMargin,
-      reprintError = "<input>:4: error: `outdent` expected but `finally` found",
     )("beg Term.Name: // c")
   }
 
@@ -2861,21 +2858,13 @@ class CommentSuite extends BaseDottySuite {
          |  def f = {
          |    if (a)
          |      // t
-         |      x else if (b) // c
-         |      y else z
+         |      x
+         |    else if (b) // c
+         |      y
+         |    else z
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.Name: // t"),
-      twice =
-        """|object A {
-           |  def f = {
-           |    if (a)
-           |      // t
-           |      x else if (b) y else z
-           |  }
-           |}
-           |""".stripMargin,
     )("beg Term.Name: // t", "beg Term.Name: // c")
   }
 
@@ -2897,9 +2886,11 @@ class CommentSuite extends BaseDottySuite {
       """|object A {
          |  def f = {
          |    if (a) // c
-         |      x else if (b)
+         |      x
+         |    else if (b)
          |      // t
-         |      y else z
+         |      y
+         |    else z
          |  }
          |}
          |""".stripMargin,
@@ -3634,7 +3625,8 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  x match {
-         |    case 1 => b
+         |    case 1 =>
+         |      b
          |    // c1
          |  }
          |}
@@ -3653,13 +3645,14 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  try // c1
-         |    a catch {
+         |  try (
+         |    // c1
+         |    a
+         |  ) catch {
          |    case _ => b
          |  }
          |}
          |""".stripMargin,
-      reprintError = "<input>:3: error: `outdent` expected but `catch` found",
     )("beg Term.Name: // c1")
   }
 
@@ -3676,10 +3669,10 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  if (a) if (b) // c1
-         |    c else d else e
+         |    c
+         |  else d else e
          |}
          |""".stripMargin,
-      reprintError = "<input>:3: error: `outdent` expected but `else` found",
     )("beg Term.Name: // c1")
   }
 
@@ -3695,10 +3688,10 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  if (a) while (b) // c1
-         |    c else e
+         |    c
+         |  else e
          |}
          |""".stripMargin,
-      reprintError = "<input>:3: error: `outdent` expected but `else` found",
     )("beg Term.Name: // c1")
   }
 
@@ -5047,9 +5040,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class C extends B with 
-         |// c
-         |D { def f = 1 }
+      """|class C extends B with
+         |  // c
+         |  D { def f = 1 }
          |""".stripMargin,
     )("beg Init, Type.Name: // c")
   }
