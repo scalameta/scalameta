@@ -20,7 +20,7 @@ object TreeSyntax {
 
   import Show.{alt, blank, indent => i, keyword => kw, literal => lit, meta => m, newline => n,
     nosplit => nosp, opt => o, repeat => r, sequence => s, sequenceFiltered => sf, spaceOnly => spc,
-    spacen => spn, wrap => w}
+    spacei => spi, spacen => spn, wrap => w}
 
   private def collect[T](xs: Seq[T])(f: T => Show.Result): Show.Result = {
     val res = List.newBuilder[Show.Result]
@@ -312,7 +312,7 @@ object TreeSyntax {
                 case _ => false
               }) => p(new InfixExpr(ai), t.values.head)
           case _ if t.isEmpty => nosp(emptyBlock(t, comments, "(", ")"))
-          case _ => nosp(s("(", o(t.mod, " "), rsep(t.values), ")"))
+          case _ => delimited(t, "(", t.values, ")", o(t.mod, " "), nosplit = true)(showTree)
         }
       case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
       case t: Term.ApplyUsing =>
@@ -345,7 +345,7 @@ object TreeSyntax {
       case t: Term.Ascribe =>
         m(Expr1, s(p(PostfixExpr, t.expr), nosp(s(kw(": "), p(AnyInfixTyp, t.tpe)))))
       case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
-      case t: Term.Tuple => m(SimpleExpr1, s("(", rsep(t.args), ")"))
+      case t: Term.Tuple => m(SimpleExpr1, delimited(t, "(", t.args, ")")(showTree))
       case t: Term.Block =>
         def block(pre: Show.Result, x: Show.Result) = m(SimpleExpr, s("{", w(" ", pre), x, n("}")))
         def bare(stats: List[Stat]) = printStats(stats, indent = false)
@@ -415,9 +415,18 @@ object TreeSyntax {
       case t: Term.Do =>
         val cond = beforeKeyword(t.expr, "while", t.expr, wrapPre = "(", wrapPost = ")")
         m(Expr1, s(kw("do"), " ", p(Expr, t.body), cond))
-      case t: Term.For => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
+      case t: Term.For =>
+        // a comment after the enumerators would end them: a commented body starts a line
+        val body = if (comments && t.body.begComment.isDefined) i(t.body) else s(" ", t.body)
+        m(Expr1, s(kw("for"), " ", t.enumsBlock, body))
       case t: Term.ForYield =>
-        m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ")", beforeKeyword(t.body, "yield")))
+        m(Expr1, s(kw("for"), " ", t.enumsBlock, beforeKeyword(t.body, "yield")))
+      // enumerators with comments print one per line, in braces
+      case t: Term.EnumeratorsBlock =>
+        val enums = t.enums
+        // a line break inside parens would end an enumerator
+        val useBraces = hasComments(enums) || hasMultilineComments(enums: _*)
+        if (useBraces) s("{", r(enums.map(i(_))), n("}")) else s("(", rsep(enums, ";"), ")")
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
       case t: Term.EndMarker => s(kw("end"), " ", withComments(t.name)(t.name.value))
       case t: Term.NewAnonymous => m(SimpleExpr, s(kw("new"), " ", alt(t.templ, "{}")))
@@ -439,7 +448,8 @@ object TreeSyntax {
         }
         val mod = o(modOpt, " ")
         if (v.isEmpty) emptyBlock(t, comments, "(", ")")
-        else w("(", s(mod, rsepWith(v)(printParam(_, mod.isEmpty))), ")", useParens)
+        else if (useParens) delimited(t, "(", v, ")", mod)(printParam(_, mod.isEmpty))
+        else s(mod, rsepWith(v)(printParam(_, mod.isEmpty)))
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -450,7 +460,7 @@ object TreeSyntax {
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
       case t: Type.ArgClause =>
         def arg(x: Type) = parens(Typ, showTree(x))
-        if (t.isEmpty) s() else nosp(s("[", rsepWith(t.values)(arg), "]"))
+        if (t.isEmpty) s() else delimited(t, "[", t.values, "]", nosplit = true)(arg)
       case t: Type.Apply => m(SimpleTyp, s(p(SimpleTyp, t.tpe), t.argClause))
       case t: Type.ApplyInfix =>
         val sg = new InfixTyp(t)
@@ -461,13 +471,13 @@ object TreeSyntax {
                     _: Type.ParamFunctionType | _: Type.PolyFunction => false
                 case _ => true
               }) => p(AnyInfixTyp, arg)
-          case args => s("(", rsep(args), ")")
+          case args => delimited(t, "(", args, ")")(showTree)
         }
       case t: Type.Function => printFunctionType(t, "=>")
       case t: Type.ContextFunction => printFunctionType(t, "?=>")
       case t: Type.PureFunction => printFunctionType(t, Token.pureFunctionArrow)
       case t: Type.PureContextFunction => printFunctionType(t, Token.pureContextFunctionArrow)
-      case t: Type.Tuple => m(SimpleTyp, s("(", rsep(t.args), ")"))
+      case t: Type.Tuple => m(SimpleTyp, delimited(t, "(", t.args, ")")(showTree))
       case t: Type.With => m(WithTyp, s(p(WithTyp, t.lhs), " with ", p(WithTyp, t.rhs)))
       case t: Type.And => s(Type.ApplyInfix(t.lhs, Type.Name("&"), t.rhs))
       case t: Type.Or => s(Type.ApplyInfix(t.lhs, Type.Name("|"), t.rhs))
@@ -531,7 +541,7 @@ object TreeSyntax {
       case t: Type.FunctionArg => m(ParamTyp, s(w(t.mods, " "), p(Typ, t.tpe)))
       case t: Type.TypedParam => m(SimpleTyp, s(w(t.mods, " "), t.name, ": ", p(Typ, t.typ)))
       case t: Type.Assign => m(SimpleTyp, s(t.name.value, " ", kw("="), " ", p(Typ, t.rhs)))
-      case t: Type.ParamClause => if (t.isEmpty) s() else s("[", rsep(t.values), "]")
+      case t: Type.ParamClause => if (t.isEmpty) s() else delimited(t, "[", t.values, "]")(showTree)
       case t: Type.BoundsAlias => m(SimpleTyp, s(t.bounds, " ", "as", " ", t.name))
       case t: Type.Param =>
         def isVariant(m: Mod) = m.is[Mod.Variant]
@@ -566,10 +576,11 @@ object TreeSyntax {
       case t: Pat.Alternative =>
         val indent = !comments || !isBarAfterDetachedBar(t)
         m(Pattern, s(p(Pattern, t.lhs), beforeKeyword(t.rhs, "|", p(Pattern, t.rhs), indent = indent)))
-      case t: Pat.Tuple => m(SimplePattern, s("(", rsep(t.args), ")"))
+      case t: Pat.Tuple => m(SimplePattern, delimited(t, "(", t.args, ")")(showTree))
       case t: Pat.ArgClause =>
         val args =
-          if (t.isEmpty) nosp(emptyBlock(t, comments, "(", ")")) else s("(", rsep(t.values), ")")
+          if (t.isEmpty) nosp(emptyBlock(t, comments, "(", ")"))
+          else delimited(t, "(", t.values, ")")(showTree)
         m(SimplePattern, args)
       case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
       case t: Pat.ExtractInfix =>
@@ -1257,6 +1268,7 @@ object TreeSyntax {
       .hasNewlinesBeforeOrAfter
 
     def hasComments(tree: Tree): Boolean = comments && tree.hasComments
+    def hasComments(trees: Iterable[Tree]): Boolean = comments && trees.exists(_.hasComments)
     def withComments(tree: Tree, after: Show.Result = Show.None, indents: Int = 1)(
         res: Show.Result,
     ): Show.Result =
@@ -1265,16 +1277,67 @@ object TreeSyntax {
         TreeSyntax.withComments(tree, after = after, indents = indents, afterKeyword = afterKW)(res)
       } else s(res, after)
 
+    // a comment that breaks a line inside the values puts them on lines of their own
+    private def hasMultilineComments(t: Tree*): Boolean = comments && {
+      val q = new ListBuffer[Tree]
+      def appendChildren(tree: Tree): Unit = tree.foreachChild(q += _)
+      t.foreach(appendChildren)
+      while (q.nonEmpty) {
+        val child = q.remove(0)
+        if (hasBreaksAroundBegComments(child) || hasBreaksAroundEndComments(child)) return true
+        // a block lays out the lines inside its braces
+        if (!child.is[Tree.Block]) appendChildren(child)
+      }
+      false
+    }
+
+    private def delimited[T <: Tree](
+        t: Tree,
+        open: String,
+        xs: Seq[T],
+        close: String,
+        pre: Show.Result = s(),
+        nosplit: Boolean = false,
+    )(f: T => Show.Result): Show.Result =
+      if (hasMultilineComments(t)) {
+        // an attached comment stays after the opening delimiter
+        val attached = if (xs.isEmpty) None else ownBegComments(xs.head).filter(!_.isDetached)
+        if (attached.isDefined) addKeywordOwner(xs.head)
+        val afterOpen = attached match {
+          case Some(c) => spi(printComments(c), space = true)
+          case None => s()
+        }
+        s(open, afterOpen, i(s(pre, rsepWith(xs, multiline = true)(f))), n(close))
+      } else {
+        val res = s(open, pre, rsepWith(xs)(f), close)
+        if (nosplit) nosp(res) else res
+      }
+
     private def rsep(xs: Seq[Tree], sep: String = ","): Show.Result = rsepWith(xs, sep)(showTree)
 
     // the separator follows the element, and precedes its trailing comments if they end the line
-    private def rsepWith[T <: Tree](xs: Seq[T], sep: String = ",")(f: T => Show.Result) =
-      sequenceWithLast(xs)((x, isLast) =>
-        if (isLast) reprintWith(x)(f)
-        else if (comments && x.endComment.hasNewlinesAfter)
-          s(reprintWith(x, after = s(sep), indents = 2)(f), " ")
-        else s(reprintWith(x)(f), sep, " "),
-      )
+    private def rsepWith[T <: Tree](xs: Seq[T], sep: String = ",", multiline: Boolean = false)(
+        f: T => Show.Result,
+    ) = {
+      // on lines of their own, the values keep their column after a line break
+      val space = if (multiline) spn() else s(" ")
+      sequenceWithLast(xs) { (x, isLast) =>
+        // an attached comment stays after the separator before the value, as after the delimiter
+        val attached =
+          if (!multiline || (x eq xs.head)) null
+          else ownBegComments(x) match {
+            case Some(c) if !c.isDetached => c
+            case _ => null
+          }
+        if (attached ne null) addKeywordOwner(x)
+        val res =
+          if (isLast) reprintWith(x)(f)
+          else if (comments && x.endComment.hasNewlinesAfter)
+            s(reprintWith(x, after = s(sep), indents = if (multiline) 0 else 2)(f), space)
+          else s(reprintWith(x)(f), sep, space)
+        if (attached eq null) res else s(printComments(attached), res)
+      }
+    }
 
     implicit def syntaxTree[T <: Tree]: Syntax[T] = Syntax[T](reprint(_))
 

@@ -257,13 +257,13 @@ class CommentSuite extends BaseDottySuite {
   test("line comment at end of input") {
     val x = term("x // X")
     assertEquals(x.endComment.get.values.last.newlinesAfter, 1)
-    assertSyntax("func(x // X\n)")(Term.Apply(tname("func"), Term.ArgClause(List(x))))
+    assertSyntax("func(\n  x // X\n)")(Term.Apply(tname("func"), Term.ArgClause(List(x))))
   }
 
   test("block comment at end of input") {
     val x = term("x /* X */")
     assertEquals(x.endComment.get.values.last.newlinesAfter, 1)
-    assertSyntax("func(x /* X */\n)")(Term.Apply(tname("func"), Term.ArgClause(List(x))))
+    assertSyntax("func(\n  x /* X */\n)")(Term.Apply(tname("func"), Term.ArgClause(List(x))))
   }
 
   test("line comment at start of input") {
@@ -374,8 +374,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|def f(
-         |// c
-         |x: Int) = 1
+         |  // c
+         |  x: Int
+         |) = 1
          |""".stripMargin
     val tree = Defn.Def(
       Nil,
@@ -1252,8 +1253,10 @@ class CommentSuite extends BaseDottySuite {
          |]
          |""".stripMargin
     val layout =
-      """|f[A, // c
-         |  B]
+      """|f[
+         |  A, // c
+         |  B
+         |]
          |""".stripMargin
     val a = Type.Name.newBuilder("A").endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(Term.ApplyType(tname("f"), List(a, pname("B"))))
@@ -1267,8 +1270,10 @@ class CommentSuite extends BaseDottySuite {
          |]
          |""".stripMargin
     val layout =
-      """|class C[A, // c
-         |  B]
+      """|class C[
+         |  A, // c
+         |  B
+         |]
          |""".stripMargin
     val a = pparam("A").toBuilder.endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(
@@ -1284,14 +1289,18 @@ class CommentSuite extends BaseDottySuite {
          |} yield a
          |""".stripMargin
     val layout =
-      """|for (a <- b // c
-         |; d <- e) yield a
+      """|for {
+         |  a <- b // c
+         |  d <- e
+         |} yield a
          |""".stripMargin
     val enums = List(
       Enumerator.Generator.newBuilder(patvar("a"), tname("b")).endComment(Seq("// c")).result(),
       Enumerator.Generator(patvar("d"), tname("e")),
     )
-    runTestAssert[Stat](code, layout)(Term.ForYield(enums, tname("a")))
+    val parsed = stat(code)
+    assertSyntax(layout)(parsed)
+    assertTree(parsed)(Term.ForYield(enums, tname("a")))
   }
 
   test("import: ASLC after an importer's comma") {
@@ -1343,9 +1352,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|enum E {
-         |  case C(a: A,
+         |  case C(
+         |    a: A,
          |    // c
-         |    b: B)
+         |    b: B
+         |  )
          |}
          |""".stripMargin,
     )("beg Term.Param, Term.Name: // c")
@@ -2180,9 +2191,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f = for (
-         |// c1
-         |x <- xs) g(x)
+      """|def f = for {
+         |  // c1
+         |  x <- xs
+         |} g(x)
          |""".stripMargin,
     )("beg Enumerator.Generator, Pat.Var, Term.Name: // c1")
   }
@@ -2415,19 +2427,21 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|def f(a: Int)(
-         |// c1
-         |using
          |  // c1
-         |  b: B) = 1
+         |  using
+         |    // c1
+         |    b: B
+         |) = 1
          |""".stripMargin,
       reprinted = Seq("beg Term.Param, Mod.Using, Mod.Using: // c1", "beg Term.Name: // c1"),
       twice =
         """|def f(a: Int)(
-           |// c1
-           |using
            |  // c1
-           |  // c1
-           |  b: B) = 1
+           |  using
+           |    // c1
+           |    // c1
+           |    b: B
+           |) = 1
            |""".stripMargin,
     )("beg Term.Param, Mod.Using, Mod.Using: // c1")
   }
@@ -3464,13 +3478,13 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { for (x <- xs /* c1 */ ) /* c2 */ a }
+      """|object A {
+         |  for {
+         |    x <- xs /* c1 */
+         |  }
+         |    /* c2 */ a
+         |}
          |""".stripMargin,
-      reprinted =
-        Seq("end Term.EnumeratorsBlock: /* c2 */", "end Enumerator.Generator, Term.Name: /* c1 */"),
-      twice =
-        """|object A { for (x <- xs /* c1 */ ) a }
-           |""".stripMargin,
     )("end Enumerator.Generator, Term.Name: /* c1 */", "beg Term.Name: /* c2 */")
   }
 
@@ -5223,20 +5237,22 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  given [T
-         |  // c
-         |  // c
+         |  given [
+         |    T
+         |    // c
+         |    // c
          |  ]: Ord[T] = ???
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Type.ParamClause: // c\n  // c", "beg Type.Bounds: // c\n  // c"),
+      reprinted = Seq("beg Type.ParamClause: // c\n    // c", "beg Type.Bounds: // c\n    // c"),
       twice =
         """|object O {
-           |  given [T
-           |  // c
-           |  // c
-           |  // c
-           |  // c
+           |  given [
+           |    T
+           |    // c
+           |    // c
+           |    // c
+           |    // c
            |  ]: Ord[T] = ???
            |}
            |""".stripMargin,
@@ -5362,7 +5378,8 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  for (x <- xs) // c
+         |  for (x <- xs)
+         |    // c
          |    f(x)
          |}
          |""".stripMargin,
@@ -5509,9 +5526,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  def f[T: {A,
-         |    // c
-         |    B}] = 1
+         |  def f[
+         |    T: {A,
+         |      // c
+         |      B}
+         |  ] = 1
          |}
          |""".stripMargin,
     )("beg Type.Name: // c")
@@ -5557,8 +5576,10 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  def f[T: A: // c
-         |    B] = 1
+         |  def f[
+         |    T: A: // c
+         |      B
+         |  ] = 1
          |}
          |""".stripMargin,
     )("beg Type.Name: // c")
@@ -5972,8 +5993,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  for (x <- // c
-         |    xs; if x > 1) yield x
+         |  for {
+         |    x <- // c
+         |      xs
+         |    if x > 1
+         |  } yield x
          |}
          |""".stripMargin,
       reprintError = "`)` expected but `<-` found",
@@ -6040,8 +6064,10 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  def f(x: =>
-         |  /* c */ Int) = 1
+         |  def f(
+         |    x: =>
+         |    /* c */ Int
+         |  ) = 1
          |}
          |""".stripMargin,
     )("beg Type.Name: /* c */")
