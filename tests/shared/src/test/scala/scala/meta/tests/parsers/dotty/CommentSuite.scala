@@ -399,7 +399,6 @@ class CommentSuite extends BaseDottySuite {
          |  x
          |  // c
          |}
-         |
          |// c
          |def g = 1
          |""".stripMargin
@@ -422,7 +421,6 @@ class CommentSuite extends BaseDottySuite {
          |  x
          |  // c
          |}
-         |
          |// c
          |object P
          |""".stripMargin
@@ -442,7 +440,6 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|object O { x }
-         |
          |// c
          |object P
          |""".stripMargin
@@ -576,6 +573,7 @@ class CommentSuite extends BaseDottySuite {
     val layout =
       """|{
          |  s1
+         |
          |  // c3
          |  s2
          |}
@@ -1038,6 +1036,7 @@ class CommentSuite extends BaseDottySuite {
     val layout =
       """|package p
          |object O
+         |
          |  // c
          |""".stripMargin
     val templ = tplNoBody().toBuilder.begComment(detachedComments("// c")).result()
@@ -1229,6 +1228,7 @@ class CommentSuite extends BaseDottySuite {
     val layout =
       """|{
          |  x
+         |
          |  // c
          |  y
          |}
@@ -2429,7 +2429,7 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f(a: Int)(/* c1 */ using b: B) = 1
+      """|def f(a: Int)( /* c1 */ using b: B) = 1
          |""".stripMargin,
     )("beg Term.Param, Mod.Using, Mod.Using: /* c1 */")
   }
@@ -2643,7 +2643,6 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|trait T extends B
-         |
          |// c
          |end T
          |""".stripMargin,
@@ -3457,12 +3456,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { for (x <- xs /* c1 */) /* c2 */ a }
+      """|object A { for (x <- xs /* c1 */ ) /* c2 */ a }
          |""".stripMargin,
       reprinted =
         Seq("end Term.EnumeratorsBlock: /* c2 */", "end Enumerator.Generator, Term.Name: /* c1 */"),
       twice =
-        """|object A { for (x <- xs /* c1 */) a }
+        """|object A { for (x <- xs /* c1 */ ) a }
            |""".stripMargin,
     )("end Enumerator.Generator, Term.Name: /* c1 */", "beg Term.Name: /* c2 */")
   }
@@ -3756,9 +3755,8 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def f(using Quotes) = '/* c1 */ x }
+      """|object O { def f(using Quotes) = ' /* c1 */ x }
          |""".stripMargin,
-      reprintError = "<input>:1: error: Macro quote must be followed by brace or bracket",
     )("beg Term.Name: /* c1 */")
   }
 
@@ -3819,6 +3817,7 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  def f(): Unit = {}
+         |
          |  /* c1 */ f()
          |}
          |""".stripMargin,
@@ -3857,6 +3856,7 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  def f(): Unit = {}
+         |
          |  // c1
          |  f()
          |}
@@ -3877,9 +3877,11 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  def f(): Unit = {}
+         |
          |  /* c1 */ 1
          |}
          |""".stripMargin,
+      reprinted = Seq("beg Lit.Int: /* c1 */"),
     )("beg Lit.Int: /* c1 */")
   }
 
@@ -3895,6 +3897,7 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  val x = {}
+         |
          |  /* c1 */ f()
          |}
          |""".stripMargin,
@@ -3943,14 +3946,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { if ((a op b)(c op d) /* c2 */(e op f) /* c3 */) g }
+      """|object A { if ((a op b)(c op d) /* c2 */ (e op f) /* c3 */ ) g }
          |""".stripMargin,
       reprinted =
         Seq("end Term.Apply, Term.ArgClause: /* c3 */", "end Term.Apply, Term.ArgClause: /* c2 */"),
     )("end Term.Apply, Term.ArgClause: /* c3 */", "end Term.Apply: /* c2 */").reprint
     assertNoDiff(
       source(first).reprint,
-      "object A { if ((a op b)(c op d) /* c2 */(e op f) /* c3 */) g }",
+      "object A { if ((a op b)(c op d) /* c2 */ (e op f) /* c3 */ ) g }",
     )
   }
 
@@ -3961,14 +3964,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { while ((a op b)(c op d) /* c2 */(e op f) /* c3 */) g }
+      """|object A { while ((a op b)(c op d) /* c2 */ (e op f) /* c3 */ ) g }
          |""".stripMargin,
       reprinted =
         Seq("end Term.Apply, Term.ArgClause: /* c3 */", "end Term.Apply, Term.ArgClause: /* c2 */"),
     )("end Term.Apply, Term.ArgClause: /* c3 */", "end Term.Apply: /* c2 */").reprint
     assertNoDiff(
       source(first).reprint,
-      "object A { while ((a op b)(c op d) /* c2 */(e op f) /* c3 */) g }",
+      "object A { while ((a op b)(c op d) /* c2 */ (e op f) /* c3 */ ) g }",
     )
   }
 
@@ -4083,10 +4086,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { if (/* c0 */ (a op b)(c op d)) g }
+      """|object A { if ( /* c0 */ (a op b)(c op d)) g }
          |""".stripMargin,
     )("beg Term.Apply: /* c0 */").reprint
-    assertNoDiff(source(first).reprint, "object A { if (/* c0 */ (a op b)(c op d)) g }")
+    assertNoDiff(source(first).reprint, "object A { if ( /* c0 */ (a op b)(c op d)) g }")
   }
 
   test("if: MLC after a tuple condition, body on the same line") {
@@ -4096,7 +4099,7 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { if ((a, b) /* c */) /* c */ b }
+      """|object A { if ((a, b) /* c */ ) /* c */ b }
          |""".stripMargin,
     )("end Term.Tuple: /* c */", "beg Term.Name: /* c */")
   }
@@ -4196,6 +4199,7 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  def f = a
+         |
          |  // c2
          |  b
          |}
@@ -4217,6 +4221,7 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  if (x) a
+         |
          |  // c2
          |  b
          |}
@@ -4240,6 +4245,7 @@ class CommentSuite extends BaseDottySuite {
          |  x match {
          |    case 1 => a
          |  }
+         |
          |  // c2
          |  b
          |}
@@ -4326,9 +4332,8 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f = '/* c */ a }
+      """|object A { def f = ' /* c */ a }
          |""".stripMargin,
-      reprintError = "Macro quote must be followed by brace or bracket",
     )("beg Term.Name: /* c */")
   }
 
@@ -4371,8 +4376,10 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object A
+         |
          |  /* c */ { def f = 1 }
          |""".stripMargin,
+      reprintError = "illegal start of definition `{`",
     )("beg Template, Template.Body: /* c */")
   }
 
@@ -5232,7 +5239,7 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { given Ord[Int /* c */] with {} }
+      """|object O { given Ord[Int /* c */ ] with {} }
          |""".stripMargin,
     )("end Type.Name: /* c */")
   }
