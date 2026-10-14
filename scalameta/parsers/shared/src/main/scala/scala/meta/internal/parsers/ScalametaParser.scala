@@ -500,9 +500,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           else leadingComments(body, prevNonTriviaAt(start - 1) + 1, minChild)
 
         endComment =
-          if (bodyEndToken.end > maxChildEnd) trailingComments(endExcl)
-          else if (bodyIsBlock) None // let the child own it
-          else maxChild.endComment
+          if (bodyEndToken.end > maxChildEnd) body match {
+            case b: Case if b.body eq maxChild => // body in parens
+              appendTrailingComments(maxChild, endExcl, detached = false)
+              None // printer may drop parens, so move comments to case body
+            case _ => trailingComments(endExcl)
+          }
+          else if (bodyIsBlock || body.is[Case]) None // let the child own it
+          else maxChild.endComment match {
+            // the child keeps the comments inside its delimiters, and the ones after them trail us
+            case Some(c) if c.endTokenIdx < maxChild.endTokenIdx => trailingComments(endExcl)
+            case x => x
+          }
 
         body match {
           case _: Quasi => // an unquoted tree has no parts to read
@@ -538,6 +547,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             }
           case b: Pat.Bind => appendTrailingComments(b.lhs, pastBlank = true)
           case b: Pat.Alternative => appendTrailingComments(b.lhs, pastBlank = true)
+          // the comments between a quote or a splice and what follows it lead the whole macro
+          case _: Term.QuotedMacroLike | _: Term.SplicedMacroLike
+              if bodyBegToken.start < minChildBeg =>
+            val next = nextNonTriviaAt(start)
+            begComment = concatComments(begComment, commentsAmong(start + 1, next))
+            if (minChild.begTokenIdx == next) minChild.privateSetBegComment(None)
           case _ =>
         }
 
@@ -575,11 +590,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
             val next = elems.head
             val bound = begOfComments(next)
             // an empty enclosure holds the comments inside it, so the next element takes those after it
-            val afterEmpty = (prev ne null) &&
-              (prev.endComment match {
-                case Some(c) => c.endTokenIdx < prev.endTokenIdx
-                case _ => false
-              })
+            val afterEmpty = (prev ne null) && (prev.endComment match {
+              case Some(c) => c.endTokenIdx < prev.endTokenIdx
+              case _ => false
+            })
             def from =
               if (prev ne null) appendTrailingComments(prev, bound = bound)
               // the element took the comments before our opening delimiter
@@ -603,7 +617,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           appendTrailingComments(prev, bound = lastBound, pastBlank = true)
         }
 
-        if (maxChild eq null)
+        if (maxChild eq null) {
           if ((bodyIsBlock || body.isAny[Member.SyntaxValuesClause, Lit.Unit]) &&
             bodyBegToken.is[OpenDelim]) {
             /* an empty enclosure in parens or braces keeps the comments inside its delimiters,
@@ -611,8 +625,14 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
              * without one */
             val inside = commentsAfter(start)
             if (inside.isDefined) endComment = inside
-          } else if (bodyIsBlock && endComment.isEmpty) // an empty braceless block
+          } else if (!bodyIsBlock && endExcl - start > 1) // a literal with its unary operator, `_*`
+            endComment = concatComments(commentsAfter(start), endComment)
+          else if (bodyIsBlock && endComment.isEmpty) // an empty braceless block
             endComment = trailingComments(start, endExcl, detached = true, pastBlank = true)
+        }
+        // no child takes a comment among the tokens that end the tree, such as `.type` or `: _*`
+        else if (bodyElems.isEmpty && bodyEndToken.end > maxChildEnd) endComment =
+          concatComments(commentsAmong(endOfComments(maxChild), endExcl - 1), endComment)
       }
 
     body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
@@ -665,6 +685,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
   }
 
+  // the tree takes the comments before it, past the delimiter at `openPos`
+  private def prependLeadingComments(tree: Tree, openPos: Int): Unit =
+    prependBegComment(tree, leadingComments(tree, openPos, tree))
+
   // the comments before `refPos`, or before the comments that lead `refTree` if those start earlier
   private def leadingComments(tree: Tree, refPos: Int, refTree: Tree): Option[Tree.Comments] =
     leadingComments(tree, refTree.begComment.fold(refPos)(c => refPos.min(c.begTokenIdx)))
@@ -713,7 +737,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           (continued || !tokens.findNotOrNull(_.is[HSpace], idx + 1).isInstanceOf[AtEOL] || {
             val prev = prevNonTriviaAt(idx)
             // a token that can end a statement ends the tree only where the statement ends
-            !endsTree(prev, body) || canEndStat(tokens(prev)) && !isStatEolAfter(prev)
+            !endsTree(prev, body) ||
+            canEndStat(tokens(prev)) && !isStatEolAfter(prev)
           }) && {
             if (wasIndent) inRegion = true
             true
@@ -896,8 +921,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     // only where the leading scan of the next tree excludes them
     if (detached || !tokens.getOrNull(idx).isInstanceOf[AtEOL] || isIndentAt(idx)) return end
     val nextNonWS = nextNonWhitespaceAt(idx)
-    if (!tokens.getOrNull(nextNonWS).isInstanceOf[HTrivia] || !endsTree(beforeFrom, arrowEnds = true))
-      return end
+    if (!tokens.getOrNull(nextNonWS).isInstanceOf[HTrivia] ||
+      !endsTree(beforeFrom, arrowEnds = true)) return end
 
     // also take the comments indented deeper than the line of the code after them
     val next = nextNonTriviaAt(nextNonWS)
@@ -1292,7 +1317,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     case Nil => autoEndPos(lpPos)(zero)
     case (q: Quasi) :: Nil if q.rank == 1 => copyPos(q)(tuple(body))
     case t :: Nil => single(t) match {
-        case Right(x) => if (singlePos) autoEndPos(lpPos)(x) else x
+        case Right(x) =>
+          if (singlePos) autoEndPos(lpPos)(x)
+          else {
+            if (options.captureComments) { // we are dropping parens: let's find comments outside them
+              prependLeadingComments(x, lpPos)
+              if (prev[RightParen]) appendTrailingComments(x, prevIndex + 1, detached = false)
+            }
+            x
+          }
         case Left(x) => autoEndPos(lpPos)(tuple(x))
       }
     case _ => autoEndPos(lpPos)(tuple(body))
@@ -1471,7 +1504,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       currToken match {
         case _: RightArrow => autoPos {
             next()
-            Type.ByName(byNameParamValueType)
+            Type.ByName(maybeIndented(byNameParamValueType)) // the type may start a deeper line
           }
         case soft.KwPureFunctionArrow() =>
           val startPos = currIndex
@@ -1918,8 +1951,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   def mixinQualifier(): Name =
     if (at[LeftBracket]) {
       markNoTreeEnd(prevIndex) // `super`: the comments after it lead the qualifier
+      val lbPos = currIndex
       next()
-      inBracketsAfterOpen(typeName().becomeOr[Name](x => copyPos(x)(Name.Indeterminate(x.value))))
+      val x =
+        inBracketsAfterOpen(typeName().becomeOr[Name](x => copyPos(x)(Name.Indeterminate(x.value))))
+      // the brackets make no tree: the comments before them lead the name inside
+      if (options.captureComments) prependLeadingComments(x, lbPos)
+      x
     } else {
       markTreeEnd(prevIndex) // `super` ends the tree
       anonName()
@@ -2641,7 +2679,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     protected def finishInfixExpr(unf: Unfinished, rhs: Typ, rhsEnd: EndPos): Typ = {
       val lhs = unf.lhs match {
         // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
-        case Term.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Term.Assign] => arg
+        case t @ Term.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Term.Assign] =>
+          // the parentheses make no tree: their comments go to the term inside, unless it has them
+          if (t.begComment ne arg.begComment) prependBegComment(arg, t.begComment)
+          if (t.endComment ne arg.endComment) appendEndComment(arg, t.endComment)
+          arg
         case x => x
       }
       atPos(unf.lhs, rhsEnd)(Term.ApplyInfix(lhs, unf.op, unf.targs, toArgClause(rhs)))
@@ -3387,7 +3429,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           Pat.Bind(p, getSeqWildcard(dialect.allowAtForExtractorVarargs, pattern3()))
         case _: Pat.Wildcard =>
           next()
-          getSeqWildcard(dialect.allowAtForExtractorVarargs, pattern3())
+          val rhs = getSeqWildcard(dialect.allowAtForExtractorVarargs, pattern3())
+          // `_ @` makes no tree to hold the comments before `@`
+          if (options.captureComments) prependBegComment(rhs, commentsAfter(p.endTokenIdx - 1))
+          rhs
         case p => p
       }
       if (pat eq p) p else autoEndPos(p)(pat)
@@ -4020,7 +4065,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   def importeeRename(from: Name) = {
     markNoTreeEnd(prevIndex) // `as` or `=>`: the comments after it lead the new name
-    val to = importWildcardOrName()
+    val to = maybeIndented(importWildcardOrName()) // after `=>`, it may start a deeper line
     atPos(from, to)(to match {
       case to: Importee.Name => Importee.Rename(from, to.name)
       case _: Importee.Wildcard => Importee.Unimport(from)
@@ -4423,7 +4468,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     val restype = ReturnTypeContext.within(typedOpt())
     if (acceptOpt[Equals])
-      if (!acceptOpt[KwMacro]) defn(restype) else Defn.Macro(mods, name, paramClauses, restype, expr())
+      if (!at[KwMacro]) defn(restype)
+      else {
+        val eqIdx = prevIndex
+        val macroIdx = currIndex
+        next()
+        val body = expr()
+        // no tree holds the keyword: the comments before it lead the body after it
+        prependBegComment(body, commentsAmong(eqIdx + 1, macroIdx))
+        Defn.Macro(mods, name, paramClauses, restype, body)
+      }
     else if (currToken.is[StatDelim] || StatSeqEnd(currToken)) Decl
       .Def(mods, name, paramClauses, restype.getOrElse(procedureSyntaxDeclType))
     else if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) defn(Some(procedureSyntaxDeclType))

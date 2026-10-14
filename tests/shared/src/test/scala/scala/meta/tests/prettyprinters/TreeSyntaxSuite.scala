@@ -1954,7 +1954,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  f(b: _ /* c1 */*)
          |}
          |""".stripMargin
-    val first = "object A { f(b: _*) }"
+    val first = "object A { f(b: _* /* c1 */ ) }"
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
@@ -1964,7 +1964,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  type T = x. /* c1 */type
          |}
          |""".stripMargin
-    val first = "object A { type T = x.type }"
+    val first = "object A { type T = x.type /* c1 */ }"
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
@@ -1974,7 +1974,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  type T = Nil. /* c1 */type
          |}
          |""".stripMargin
-    val first = "object A { type T = Nil.type }"
+    val first = "object A { type T = Nil.type /* c1 */ }"
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
 
@@ -2009,7 +2009,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val code =
       """|val x = ' /* c1 */{ x }
          |""".stripMargin
-    val first = "val x = ' /* c1 */ { x }"
+    val first = "val x = /* c1 */ '{ x }"
     assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 

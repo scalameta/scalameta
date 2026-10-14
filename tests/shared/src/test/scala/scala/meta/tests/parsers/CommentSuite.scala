@@ -203,8 +203,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Name: /* c1 */"),
-    )("end Case: /* c1 */")
+    )("end Term.Name: /* c1 */")
   }
 
   test("case: ASLC after a body in parens") {
@@ -225,8 +224,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Name: // c1"),
-    )("end Case: // c1")
+    )("end Term.Name: // c1")
   }
 
   test("case: MLC inside and after a body in parens") {
@@ -247,8 +245,8 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Name: /* c1 */ /* c2 */"),
-    )("end Case: /* c2 */", "end Term.Name: /* c1 */")
+      reprinted = Seq("end Term.Name: /* c1 */ /* c2 */"),
+    )("end Term.Name: /* c1 */) /* c2 */")
   }
 
   test("case: MLC after a body in parens, last case") {
@@ -269,8 +267,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Name: /* c1 */"),
-    )("end Case: /* c1 */")
+    )("end Term.Name: /* c1 */")
   }
 
   test("case: MLC after a semicolon, next case on the line") {
@@ -323,7 +320,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Case, Term.Name: /* c1 */")
+    )("end Term.Name: /* c1 */")
   }
 
   test("case: MLC after a semicolon, two statements") {
@@ -398,7 +395,6 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Name: /* c1 */"),
     )("end Term.Name: /* c1 */")
   }
 
@@ -512,7 +508,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Case, Term.Name: // c1")
+    )("end Term.Name: // c1")
   }
 
   test("block: semicolon, MLC, semicolon, statement") {
@@ -548,7 +544,6 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Name: /* c1 */"),
     )("end Term.Name: /* c1 */")
   }
 
@@ -1627,7 +1622,7 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin,
       reprinted = Seq("beg Term.ApplyInfix, Term.ApplyInfix, Term.Name: // c1\n\n  // c2"),
-    )("beg Term.ApplyInfix: // c1\n\n  // c2")
+    )("beg Term.ApplyInfix, Term.ApplyInfix: // c1\n\n  // c2")
   }
 
   test("block: DSLC, blank line, DSLC, infix with a lhs name in parens") {
@@ -1653,7 +1648,7 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin,
       reprinted = Seq("beg Term.ApplyInfix, Term.Name: // c1\n\n  // c2"),
-    )("beg Term.ApplyInfix: // c1\n\n  // c2")
+    )("beg Term.ApplyInfix, Term.Name: // c1\n\n  // c2")
   }
 
   test("block: DSLC, blank line, DSLC, infix with a lhs tuple") {
@@ -1709,7 +1704,7 @@ class CommentSuite extends ParseSuite {
          |  (a op b).f(c)
          |}
          |""".stripMargin
-    checkComments(code)("beg Term.Apply, Term.Select: // c1\n\n  // c2")
+    checkComments(code)("beg Term.Apply, Term.Select, Term.ApplyInfix: // c1\n\n  // c2")
   }
 
   test("if: newline, DSLC, condition") {
@@ -2478,11 +2473,11 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  x match {
-         |    case B(_*) => 1
+         |    case B(_* /* c */ ) => 1
          |  }
          |}
          |""".stripMargin,
-    )()
+    )("end Pat.SeqWildcard: /* c */")
   }
 
   test("pattern: MLC between a bound wildcard and the star") {
@@ -2495,11 +2490,12 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  x match {
-         |    case B(d @ _*) => 1
+         |    case B(d @ _* /* c */ ) => 1
          |  }
          |}
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Pat.Bind, Pat.SeqWildcard: /* c */"),
+    )("end Pat.SeqWildcard: /* c */")
   }
 
   test("args: MLC between the wildcard and the star") {
@@ -2510,9 +2506,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { f(xs: _*) }
+      """|object O { f(xs: _* /* c */ ) }
          |""".stripMargin,
-    )()
+    )("end Term.Repeated: /* c */")
   }
 
   test("args: MLC between the colon and the wildcard") {
@@ -2523,9 +2519,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { f(xs: _*) }
+      """|object O { f(xs: _* /* c */ ) }
          |""".stripMargin,
-    )()
+    )("end Term.Repeated: /* c */")
   }
 
   test("pattern: MLC between the name and the wildcard") {
@@ -2685,9 +2681,12 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def m: Int = macro impl }
+      """|object O {
+         |  def m: Int =
+         |    /* c */ macro impl
+         |}
          |""".stripMargin,
-    )()
+    )("beg Term.Name: /* c */")
   }
 
   test("macro def: MLC after macro") {
@@ -2712,9 +2711,13 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def m: Int = macro impl }
+      """|object O {
+         |  def m: Int =
+         |    // c
+         |    macro impl
+         |}
          |""".stripMargin,
-    )()
+    )("beg Term.Name: // c")
   }
 
   test("macro def: DSLC on its own line, macro") {
@@ -2727,9 +2730,13 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def m: Int = macro impl }
+      """|object O {
+         |  def m: Int =
+         |    // c
+         |    macro impl
+         |}
          |""".stripMargin,
-    )()
+    )("beg Term.Name: // c")
   }
 
   test("type args: DSLC before the closing bracket") {
@@ -4323,7 +4330,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Term.ParamClause: // c1")
+    )("end Term.ParamClause, Term.Param: // c1")
   }
 
   test("case: DSLC between the pattern and the arrow") {
@@ -4861,11 +4868,14 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  x match {
-         |    case Some(_*) => y
+         |    case Some(
+         |      // c1
+         |      _*
+         |    ) => y
          |  }
          |}
          |""".stripMargin,
-    )()
+    )("beg Pat.SeqWildcard: // c1")
   }
 
   test("alternative: DSLCs before two bars") {
@@ -5685,7 +5695,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Case, Term.Name: // a1")
+    )("end Term.Name: // a1")
   }
 
   test("match: case body, blank line, DSLC indented under it, next case") {
@@ -5713,7 +5723,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Case, Term.Name: // a1")
+    )("end Term.Name: // a1")
   }
 
   test("match: case body, DSLC at the case indentation, next case") {
@@ -5762,7 +5772,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Case, Term.Name: // a1\n      // a2")
+    )("end Term.Name: // a1\n      // a2")
   }
 
   test("match: case body after the arrow, on two lines, ASLC, DSLC indented under it") {
@@ -5788,7 +5798,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Case, Term.Apply, Term.ArgClause: // c1\n      // c2")
+    )("end Term.Apply, Term.ArgClause: // c1\n      // c2")
   }
 
   test("match: ASLC after the arrow, DSLC, statement, ASLC, DSLC, next case") {
@@ -5817,7 +5827,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Case, Term.Name: // c3\n      // c4", "beg Term.Name: // c1\n      // c2")
+    )("beg Term.Name: // c1\n      // c2", "end Term.Name: // c3\n      // c4")
   }
 
   test("match: empty case body, ASLC, DSLC indented under it, next case") {
@@ -5858,12 +5868,11 @@ class CommentSuite extends ParseSuite {
          |  foo match {
          |    case a =>
          |      x
-         |    // c
+         |      // c
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case: // c"),
-    )("end Case, Term.Name: // c")
+    )("end Term.Name: // c")
   }
 
   test("match: last case, empty body, DSLC at the case indentation") {
@@ -6663,8 +6672,8 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Ascribe, Type.Apply, Type.ArgClause: // c"),
-    )("end Case: // c")
+      reprinted = Seq("end Term.Ascribe, Type.Apply, Type.ArgClause: // c"),
+    )("end Term.Ascribe: // c")
   }
 
   test("class: ASLC after the brace, blank line, statement") {
@@ -6806,9 +6815,14 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val x = a + b }
+      """|object A {
+         |  val x =
+         |    // c
+         |    a + b
+         |}
          |""".stripMargin,
-    )()
+      reprinted = Seq("beg Term.ApplyInfix, Term.Name: // c"),
+    )("beg Term.ApplyInfix: // c")
   }
 
   test("apply: DSLC before a brace argument on its own line") {
@@ -7003,7 +7017,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Case, Term.Name: // c")
+    )("end Term.Name: // c")
     assertEquals(
       parsed.collect { case t: Case => t.body.productPrefix },
       List("Term.Name", "Term.Name"),
@@ -7473,9 +7487,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { f(xs: _*) }
+      """|object O { f(xs: _* /* c1 */ ) }
          |""".stripMargin,
-    )()
+    )("end Term.Repeated: /* c1 */")
   }
 
   test("secondary ctor: MLC after def") {
@@ -7772,9 +7786,10 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val x = -1 }
+      """|object A { val x = -1 /* c1 */ }
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Defn.Val, Lit.Int: /* c1 */"),
+    )("end Lit.Int: /* c1 */")
   }
 
   test("unary minus: MLC before a double, no spaces") {
@@ -7785,9 +7800,10 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val y = -1.0 }
+      """|object A { val y = -1.0 /* c1 */ }
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Defn.Val, Lit.Double: /* c1 */"),
+    )("end Lit.Double: /* c1 */")
   }
 
   test("pattern: unary minus, MLC, literal") {
@@ -7802,11 +7818,11 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  x match {
-         |    case -1 =>
+         |    case -1 /* c1 */ =>
          |  }
          |}
          |""".stripMargin,
-    )()
+    )("end Lit.Int: /* c1 */")
   }
 
   test("access modifier: MLC before the qualifier") {
@@ -7843,9 +7859,10 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val x = 1 }
+      """|object A { val x = 1 /* c1 */ }
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Defn.Val, Lit.Int: /* c1 */"),
+    )("end Lit.Int: /* c1 */")
   }
 
   test("unary tilde: MLC before a literal") {
@@ -7856,9 +7873,10 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val x = -2 }
+      """|object A { val x = -2 /* c1 */ }
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Defn.Val, Lit.Int: /* c1 */"),
+    )("end Lit.Int: /* c1 */")
   }
 
   test("unary not: MLC before a boolean") {
@@ -7869,9 +7887,10 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val x = false }
+      """|object A { val x = false /* c1 */ }
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Defn.Val, Lit.Boolean: /* c1 */"),
+    )("end Lit.Boolean: /* c1 */")
   }
 
   test("unary minus: ASLC before a literal") {
@@ -7940,9 +7959,10 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f = (a op b)(x) }
+      """|object A { def f = (a op b /* c1 */ )(x) }
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */"),
+    )("end Term.ApplyInfix: /* c1 */")
   }
 
   test("callee in parens: DSLC at a lower indent before the paren") {
@@ -8140,9 +8160,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val y = x op a + b }
+      """|object A { val y = x op a /* c */ + b }
          |""".stripMargin,
-    )()
+    )("end Term.Name: /* c */")
   }
 
   test("infix: MLC after an argument in parens") {
