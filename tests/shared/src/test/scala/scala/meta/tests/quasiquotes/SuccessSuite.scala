@@ -2386,7 +2386,10 @@ class SuccessSuite extends TreeSuiteBase {
     val tree = q"""..$mods
 // c
 def f = 1"""
-    assertTree(tree)(Defn.Def(mods, tname("f"), Nil, None, int(1)))
+    assertTree(tree)(
+      Defn.Def.newBuilder(mods, tname("f"), Nil, None, int(1)).begComment(detachedComments("// c"))
+        .result(),
+    )
   }
 
   test("comments: annotation, unquoted modifier, DSLC before def") {
@@ -2394,7 +2397,10 @@ def f = 1"""
     val tree = q"""@a $mod
 // c
 def f = 1"""
-    assertTree(tree)(Defn.Def(List(Mod.Annot(init("a")), mod), tname("f"), Nil, None, int(1)))
+    assertTree(tree)(
+      Defn.Def.newBuilder(List(Mod.Annot(init("a")), mod), tname("f"), Nil, None, int(1))
+        .begComment(detachedComments("// c")).result(),
+    )
   }
 
   test("comments: unquoted modifier, DSLC before a modifier") {
