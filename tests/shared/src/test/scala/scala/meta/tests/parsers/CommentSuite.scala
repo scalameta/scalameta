@@ -615,8 +615,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Term.Return: // c1"),
-    )("end Term.Return, Lit.Unit: // c1")
+    )("end Term.Return: // c1")
   }
 
   test("if: block comment after cond, body on the same line") {
@@ -999,9 +998,11 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin
     val layout =
-      """|class A
+      """|class A { // c
+         |}
          |""".stripMargin
-    runTestAssert[Stat](code, layout)(Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody()))
+    val body = Template.Body.newBuilder(None, Nil).endComment(Seq("// c")).result()
+    runTestAssert[Stat](code, layout)(Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(Nil, body)))
   }
 
   test("empty block: ASLC after the brace") {
@@ -1009,8 +1010,11 @@ class CommentSuite extends ParseSuite {
       """|val x = { // c
          |}
          |""".stripMargin
-    val layout = "val x = {}"
-    val body = blk()
+    val layout =
+      """|val x = { // c
+         |}
+         |""".stripMargin
+    val body = Term.Block.newBuilder(Nil).endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, body))
   }
 
@@ -1019,8 +1023,11 @@ class CommentSuite extends ParseSuite {
       """|package p { // c
          |}
          |""".stripMargin
-    val layout = "package p"
-    val body = Pkg.Body(Nil)
+    val layout =
+      """|package p { // c
+         |}
+         |""".stripMargin
+    val body = Pkg.Body.newBuilder(Nil).endComment(Seq("// c")).result()
     runTestAssert[Source](code, layout)(Source(List(Pkg(tname("p"), body))))
   }
 
@@ -1390,14 +1397,14 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     val layout =
       """|package p
-         |object O {}
+         |object O
          |
          |// c
          |""".stripMargin
     val obj = Defn.Object.newBuilder(Nil, tname("O"), tplNoBody()).endComment(Seq("// c")).result()
     val body = Pkg.Body(List(obj))
     val tree = Source(List(Pkg(tname("p"), body)))
-    parseAndCheckTree[Source](code, layout)(tree)
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("braceless package: last statement, blank line, DSLC") {
@@ -1410,16 +1417,11 @@ class CommentSuite extends ParseSuite {
     val layout =
       """|package p
          |object O
-         |// c
-         |{}
          |
          |// c
-         |
          |""".stripMargin
-    val templ = tplNoBody().toBuilder.begComment(detachedComments("// c")).result()
-    val obj = Defn.Object(Nil, tname("O"), templ)
-    val pkg = Pkg.newBuilder(tname("p"), Pkg.Body(List(obj))).endComment(Seq("// c")).result()
-    parseAndCheckTree[Source](code, layout)(Source(List(pkg)))
+    val obj = Defn.Object.newBuilder(Nil, tname("O"), tplNoBody()).endComment(Seq("// c")).result()
+    runTestAssert[Source](code, layout)(Source(List(Pkg(tname("p"), Pkg.Body(List(obj))))))
   }
 
   test("block: ASLC after a semicolon, statement follows") {
@@ -1484,8 +1486,11 @@ class CommentSuite extends ParseSuite {
       """|type T = A { // c
          |}
          |""".stripMargin
-    val layout = "type T = A {}"
-    val body = Stat.Block(Nil)
+    val layout =
+      """|type T = A { // c
+         |}
+         |""".stripMargin
+    val body = Stat.Block.newBuilder(Nil).endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(
       Defn.Type(Nil, pname("T"), Nil, Type.Refine(Some(pname("A")), body)),
     )
@@ -1530,9 +1535,8 @@ class CommentSuite extends ParseSuite {
 
   test("empty block: MLC inside the braces") {
     val code = "val x = { /* c */ }"
-    val layout = "val x = {}"
-    val body = blk()
-    runTestAssert[Stat](code, layout)(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, body))
+    val body = Term.Block.newBuilder(Nil).endComment(Seq("/* c */")).result()
+    runTestAssert[Stat](code)(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, body))
   }
 
   test("empty template: DSLC inside the braces") {
@@ -1541,8 +1545,13 @@ class CommentSuite extends ParseSuite {
          |  // c
          |}
          |""".stripMargin
-    val layout = "class A"
-    runTestAssert[Stat](code, layout)(Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody()))
+    val layout =
+      """|class A {
+         |  // c
+         |}
+         |""".stripMargin
+    val body = Template.Body.newBuilder(None, Nil).endComment(Seq("// c")).result()
+    runTestAssert[Stat](code, layout)(Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(Nil, body)))
   }
 
   test("empty block: DSLC inside the braces") {
@@ -1551,8 +1560,13 @@ class CommentSuite extends ParseSuite {
          |  // c
          |}
          |""".stripMargin
-    val layout = "val x = {}"
-    runTestAssert[Stat](code, layout)(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, blk()))
+    val layout =
+      """|val x = {
+         |  // c
+         |}
+         |""".stripMargin
+    val body = Term.Block.newBuilder(Nil).endComment(Seq("// c")).result()
+    runTestAssert[Stat](code, layout)(Defn.Val(Nil, List(Pat.Var(tname("x"))), None, body))
   }
 
   test("empty package body: DSLC inside the braces") {
@@ -1561,8 +1575,13 @@ class CommentSuite extends ParseSuite {
          |  // c
          |}
          |""".stripMargin
-    val layout = "package p"
-    runTestAssert[Source](code, layout)(Source(List(Pkg(tname("p"), Pkg.Body(Nil)))))
+    val layout =
+      """|package p {
+         |  // c
+         |}
+         |""".stripMargin
+    val body = Pkg.Body.newBuilder(Nil).endComment(Seq("// c")).result()
+    runTestAssert[Source](code, layout)(Source(List(Pkg(tname("p"), body))))
   }
 
   test("block: statement, blank line, DSLC, statement") {
@@ -2034,13 +2053,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = {}
+         |  def f = { /* c */ }
          |  // d
          |
          |  def g = 1
          |}
          |""".stripMargin,
-    )("end Defn.Def: // d")
+    )("end Defn.Def: // d", "end Term.Block: /* c */")
   }
 
   test("def: empty braced body with DSLC, DSLC, blank line, def") {
@@ -2057,13 +2076,15 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  def f = {}
+         |  def f = {
+         |    // c
+         |  }
          |  // d
          |
          |  def g = 1
          |}
          |""".stripMargin,
-    )("end Defn.Def: // d")
+    )("end Defn.Def: // d", "end Term.Block: // c")
   }
 
   test("def: empty braced body, DSLC, blank line, def") {
@@ -2090,13 +2111,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  class B
+         |  class B { /* c */ }
          |  // d
          |
          |  def g = 1
          |}
          |""".stripMargin,
-    )("end Defn.Class: // d")
+    )("end Defn.Class: // d", "end Template.Body: /* c */")
   }
 
   test("new: empty body with MLC, DSLC, blank line, def") {
@@ -2111,13 +2132,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  val b = new B {}
+         |  val b = new B { /* c */ }
          |  // d
          |
          |  def g = 1
          |}
          |""".stripMargin,
-    )("end Defn.Val: // d")
+    )("end Defn.Val: // d", "end Template.Body: /* c */")
   }
 
   test("args: empty with MLC, DSLC, blank line, def") {
@@ -2132,13 +2153,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  val b = f()
+         |  val b = f( /* c */ )
          |  // d
          |
          |  def g = 1
          |}
          |""".stripMargin,
-    )("end Defn.Val: // d")
+    )("end Defn.Val: // d", "end Term.ArgClause: /* c */")
   }
 
   test("unit: MLC inside, DSLC, blank line, def") {
@@ -2153,13 +2174,13 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  val u = ()
+         |  val u = ( /* c */ )
          |  // d
          |
          |  def g = 1
          |}
          |""".stripMargin,
-    )("end Defn.Val: // d")
+    )("end Defn.Val: // d", "end Lit.Unit: /* c */")
   }
 
   test("params: empty with MLC, DSLC, blank line, def") {
@@ -2171,16 +2192,7 @@ class CommentSuite extends ParseSuite {
          |  def g = 1
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  def f() = 1
-         |  // d
-         |
-         |  def g = 1
-         |}
-         |""".stripMargin,
-    )("end Defn.Def: // d")
+    checkComments(code)("end Defn.Def: // d", "end Term.ParamClause: /* c */")
   }
 
   test("block: empty block statement with MLC, DSLC, blank line, statement") {
@@ -2194,18 +2206,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  def f = {
-         |    {}
-         |    // d
-         |
-         |    a
-         |  }
-         |}
-         |""".stripMargin,
-    )("end Term.Block: // d")
+    checkComments(code)("end Term.Block: /* c */", "beg Term.Name: // d")
   }
 
   test("for: condition in parens, blank line, DSLC, blank line, body") {
@@ -2566,7 +2567,7 @@ class CommentSuite extends ParseSuite {
          |  ) = 1
          |}
          |""".stripMargin,
-    )("beg Name.Anonymous: // c", "beg Term.Name: // c")
+    )("beg Term.Name: // c")
   }
 
   test("type param: annotation, blank line, DSLC, blank line, name") {
@@ -2591,7 +2592,7 @@ class CommentSuite extends ParseSuite {
          |  ] = 1
          |}
          |""".stripMargin,
-    )("beg Name.Anonymous: // c", "beg Type.Name: // c")
+    )("beg Type.Name: // c")
   }
 
   test("class: private constructor, blank line, DSLC, blank line, parameters") {
@@ -2881,12 +2882,10 @@ class CommentSuite extends ParseSuite {
       """|class A[
          |  T, U
          |  // c
-         |  // c
-         |  // c
          |]
          |""".stripMargin,
-      reprinted = Seq("end Type.Param, Type.Name: // c\n  // c\n  // c"),
-    )("end Type.Param: // c", "beg Type.ParamClause: // c", "beg Type.Bounds: // c")
+      reprinted = Seq("end Type.Param, Type.Name: // c"),
+    )("end Type.Param: // c")
   }
 
   test("package block: DSLC after it") {
@@ -2900,22 +2899,7 @@ class CommentSuite extends ParseSuite {
          |class B
          |// c
          |""".stripMargin,
-      reprinted = Seq(
-        "end Pkg: // c",
-        "beg Type.ParamClause: // c",
-        "beg Ctor.Primary, Name.Anonymous: // c",
-        "beg Template, Template.Body: // c",
-      ),
-      twice =
-        """|package a
-           |class B
-           |// c
-           |// c
-           |// c
-           |{}
-           |// c
-           |
-           |""".stripMargin,
+      reprinted = Seq("end Defn.Class: // c"),
     )("end Pkg: // c")
   }
 
@@ -3153,8 +3137,6 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|class A
-         |// c1
-         |// c1
          |  // c1
          |  extends B
          |  // c2
@@ -3162,35 +3144,7 @@ class CommentSuite extends ParseSuite {
          |    def f = 1
          |  }
          |""".stripMargin,
-      reprinted = Seq(
-        "beg Type.ParamClause: // c1\n// c1\n  // c1",
-        "beg Ctor.Primary, Name.Anonymous: // c1\n// c1\n  // c1",
-        "beg Template, Init, Type.Name: // c1\n// c1\n  // c1",
-        "beg Template.Body: // c2",
-      ),
-      twice =
-        """|class A
-           |// c1
-           |// c1
-           |// c1
-           |// c1
-           |// c1
-           |// c1
-           |  // c1
-           |  // c1
-           |  // c1
-           |  extends B
-           |  // c2
-           |  {
-           |    def f = 1
-           |  }
-           |""".stripMargin,
-    )(
-      "beg Type.ParamClause: // c1",
-      "beg Ctor.Primary, Name.Anonymous: // c1",
-      "beg Template, Init, Type.Name: // c1",
-      "beg Template.Body: // c2",
-    )
+    )("beg Template, Init, Type.Name: // c1", "beg Template.Body: // c2")
   }
 
   test("class: DSLC before with, DSLC before the brace") {
@@ -3203,11 +3157,7 @@ class CommentSuite extends ParseSuite {
          |  def f = 1
          |}
          |""".stripMargin
-    checkComments(code)(
-      "beg Name.Anonymous: // c1",
-      "beg Init, Type.Name: // c1",
-      "beg Template.Body: // c2",
-    )
+    checkComments(code)("beg Init, Type.Name: // c1", "beg Template.Body: // c2")
   }
 
   test("class: extends on its own line, DSLC before the brace") {
@@ -3626,11 +3576,14 @@ class CommentSuite extends ParseSuite {
          |  // c2
          |  with C
          |""".stripMargin
-    checkComments(code)(
-      "end Type.Name: // c1",
-      "beg Name.Anonymous: // c2",
-      "beg Init, Type.Name: // c2",
-    )
+    val layout =
+      """|class A extends B // c1
+         |  // c2
+         |  with C
+         |""".stripMargin
+    val b = init("B").toBuilder.endComment(Seq("// c1")).result()
+    val c = init("C").toBuilder.begComment(Seq("// c2")).result()
+    runTestAssert[Stat](code, layout)(Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tplNoBody(b, c)))
   }
 
   test("class: MLC after extends") {
@@ -3646,37 +3599,7 @@ class CommentSuite extends ParseSuite {
          |  // c1
          |  extends B
          |""".stripMargin
-    checkComments(
-      code,
-      """|class A
-         |// c1
-         |// c1
-         |  // c1
-         |  extends B
-         |""".stripMargin,
-      reprinted = Seq(
-        "beg Type.ParamClause: // c1\n// c1\n  // c1",
-        "beg Ctor.Primary, Name.Anonymous: // c1\n// c1\n  // c1",
-        "beg Template, Init, Type.Name: // c1\n// c1\n  // c1",
-      ),
-      twice =
-        """|class A
-           |// c1
-           |// c1
-           |// c1
-           |// c1
-           |// c1
-           |// c1
-           |  // c1
-           |  // c1
-           |  // c1
-           |  extends B
-           |""".stripMargin,
-    )(
-      "beg Type.ParamClause: // c1",
-      "beg Ctor.Primary, Name.Anonymous: // c1",
-      "beg Template, Init, Type.Name: // c1",
-    )
+    checkComments(code)("beg Template, Init, Type.Name: // c1")
   }
 
   test("early initializer: DSLC before with") {
@@ -4029,18 +3952,7 @@ class CommentSuite extends ParseSuite {
          |  def f = 1
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  private[
-         |  // c1
-         |  ]
-         |  // c1
-         |  def f = 1
-         |}
-         |""".stripMargin,
-      reprintError = "`identifier` expected but `]` found",
-    )("end Mod.Private: // c1", "beg Name.Anonymous: // c1")
+    checkComments(code)("end Mod.Private: // c1")
   }
 
   test("modifier: DSLC between modifiers, definition") {
@@ -4054,15 +3966,12 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  private[
-         |  // c1
-         |  ]
+         |  private
          |  // c1
          |  final def f = 1
          |}
          |""".stripMargin,
-      reprintError = "<input>:4: error: `identifier` expected but `]` found",
-    )("beg Name.Anonymous: // c1", "beg Mod.Final: // c1")
+    )("beg Mod.Final: // c1")
   }
 
   test("annotation: DSLC before it and after it, definition") {
@@ -4140,7 +4049,7 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin,
       reprinted = Seq("end Mod.Annot: // c1"),
-    )("end Mod.Annot, Init, Type.Name, Name.Anonymous: // c1")
+    )("end Mod.Annot, Init, Type.Name: // c1")
   }
 
   test("trait: annotation, DSLC, declaration") {
@@ -4173,18 +4082,7 @@ class CommentSuite extends ParseSuite {
          |  val x = 1
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  private[
-         |  // c1
-         |  ]
-         |  // c1
-         |  val x = 1
-         |}
-         |""".stripMargin,
-      reprintError = "`identifier` expected but `]` found",
-    )("end Mod.Private: // c1", "beg Name.Anonymous: // c1")
+    checkComments(code)("end Mod.Private: // c1")
   }
 
   test("params: annotation, DSLC, parameter") {
@@ -4206,7 +4104,7 @@ class CommentSuite extends ParseSuite {
          |  ) = 1
          |}
          |""".stripMargin,
-    )("beg Name.Anonymous: // c1", "beg Term.Name: // c1")
+    )("beg Term.Name: // c1")
   }
 
   test("params: annotation, ASLC, parameter") {
@@ -4289,7 +4187,7 @@ class CommentSuite extends ParseSuite {
          |  ) = 1
          |}
          |""".stripMargin,
-    )("beg Name.Anonymous: // c1", "beg Term.Name: // c1")
+    )("beg Term.Name: // c1")
   }
 
   test("type params: annotation, DSLC, parameter") {
@@ -4311,7 +4209,7 @@ class CommentSuite extends ParseSuite {
          |  ] = 1
          |}
          |""".stripMargin,
-    )("beg Name.Anonymous: // c1", "beg Type.Name: // c1")
+    )("beg Type.Name: // c1")
   }
 
   test("lambda in braces: ASLC after the arrow, empty body") {
@@ -4324,12 +4222,11 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  def g = f { x =>
+         |  def g = f { x => // c
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
-    )("beg Term.Block: // c")
+    )("end Term.Function: // c")
   }
 
   test("lambda in braces: DSLC under the arrow, empty body") {
@@ -4348,7 +4245,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Term.Function: // c", "beg Term.Block: // c")
+    )("end Term.Function: // c")
   }
 
   test("lambda in braces: ASLC after the arrow, body") {
@@ -4379,11 +4276,7 @@ class CommentSuite extends ParseSuite {
          |// c2
          |object B
          |""".stripMargin
-    commentOwners(
-      ammonite(code),
-      Seq("end Defn.Object: // c1", "beg Template, Template.Body: // c1", "beg Defn.Object: // c2"),
-      "owners",
-    )
+    commentOwners(ammonite(code), Seq("end Defn.Object: // c1", "beg Defn.Object: // c2"), "owners")
   }
 
   test("ammonite: ASLC before the separator, ASLC after it") {
@@ -5293,9 +5186,13 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { f() }
+      """|object O {
+         |  f(
+         |    // c1
+         |  )
+         |}
          |""".stripMargin,
-    )()
+    )("end Term.ArgClause: // c1")
   }
 
   test("empty parameter clause: DSLC inside") {
@@ -5308,9 +5205,13 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def f() = 1 }
+      """|object O {
+         |  def f(
+         |    // c1
+         |  ) = 1
+         |}
          |""".stripMargin,
-    )()
+    )("end Term.ParamClause: // c1")
   }
 
   test("import: DSLC between selectors, blank lines around it") {
@@ -5382,7 +5283,7 @@ class CommentSuite extends ParseSuite {
          |    this()
          |}
          |""".stripMargin,
-    )("beg Init, Type.Singleton, Term.This, Name.Anonymous: // c1")
+    )("beg Init, Type.Singleton, Term.This: // c1")
   }
 
   test("semicolons: two, then an ASLC") {
@@ -5413,7 +5314,7 @@ class CommentSuite extends ParseSuite {
          |// c1
          |
          |""".stripMargin,
-    )("end Pkg: // c1", "beg Pkg.Body: // c1")
+    )("end Pkg, Pkg.Body: // c1")
   }
 
   test("match: DSLC before the guard") {
@@ -5474,12 +5375,11 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  x match {
          |    case 1 => // c1
-         |      {}
          |    case 2 => b
          |  }
          |}
          |""".stripMargin,
-    )("beg Term.Block: // c1")
+    )("end Case: // c1")
   }
 
   test("match: empty case body, DSLC indented under it, next case") {
@@ -5498,26 +5398,11 @@ class CommentSuite extends ParseSuite {
          |  x match {
          |    case 1 =>
          |      // c1
-         |      {}
-         |      // c1
          |    case 2 => b
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Block: // c1", "beg Term.Block: // c1"),
-      twice =
-        """|object O {
-           |  x match {
-           |    case 1 =>
-           |      // c1
-           |      {}
-           |      // c1
-           |    case 2 =>
-           |      b
-           |  }
-           |}
-           |""".stripMargin,
-    )("end Case: // c1", "beg Term.Block: // c1")
+    )("end Case: // c1")
   }
 
   test("lambda: empty body, ASLC after the arrow") {
@@ -5530,12 +5415,11 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  xs.map { x =>
+         |  xs.map { x => // c1
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
-    )("beg Term.Block: // c1")
+    )("end Term.Function: // c1")
   }
 
   test("secondary ctor: MLC before the self call") {
@@ -5545,7 +5429,7 @@ class CommentSuite extends ParseSuite {
          |}
          |""".stripMargin
     checkComments(code, "class A { def this(x: Int) = /* c1 */ this() }")(
-      "beg Init, Type.Singleton, Term.This, Name.Anonymous: /* c1 */",
+      "beg Init, Type.Singleton, Term.This: /* c1 */",
     )
   }
 
@@ -5559,12 +5443,12 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  x match {
-         |    case 1 => /* c1 */ {}
+         |    case 1 => /* c1 */
          |    case 2 => b
          |  }
          |}
          |""".stripMargin,
-    )("beg Term.Block: /* c1 */")
+    )("end Case: /* c1 */")
   }
 
   test("catch: empty case body, ASLC, next case") {
@@ -5582,12 +5466,11 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  try a catch {
          |    case _: E => // c1
-         |      {}
          |    case _ => b
          |  }
          |}
          |""".stripMargin,
-    )("beg Term.Block: // c1")
+    )("end Case: // c1")
   }
 
   test("match: empty case body, unicode arrow, ASLC, next case") {
@@ -5604,12 +5487,11 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  x match {
          |    case 1 => // c1
-         |      {}
          |    case 2 => b
          |  }
          |}
          |""".stripMargin,
-    )("beg Term.Block: // c1")
+    )("end Case: // c1")
   }
 
   test("match: empty case body, DSLC at the case indentation, next case") {
@@ -5627,14 +5509,12 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  x match {
          |    case 1 =>
-         |      // c1
-         |      {}
          |    // c1
          |    case 2 => b
          |  }
          |}
          |""".stripMargin,
-    )("beg Term.Block: // c1", "beg Case: // c1")
+    )("beg Case: // c1")
   }
 
   test("match: empty case body, DSLC indented under it, DSLC at the case indentation") {
@@ -5654,31 +5534,12 @@ class CommentSuite extends ParseSuite {
          |  x match {
          |    case 1 =>
          |      // c1
-         |      // c2
-         |      {}
-         |      // c1
          |    // c2
          |    case 2 => b
          |  }
          |}
          |""".stripMargin,
-      reprinted =
-        Seq("end Case, Term.Block: // c1", "beg Term.Block: // c1\n      // c2", "beg Case: // c2"),
-      twice =
-        """|object O {
-           |  x match {
-           |    case 1 =>
-           |      // c1
-           |      // c2
-           |      {}
-           |      // c1
-           |    // c2
-           |    case 2 =>
-           |      b
-           |  }
-           |}
-           |""".stripMargin,
-    )("end Case: // c1", "beg Term.Block: // c1\n    // c2", "beg Case: // c2")
+    )("end Case: // c1", "beg Case: // c2")
   }
 
   test("match: empty case body, blank line, DSLC indented under it, next case") {
@@ -5699,14 +5560,11 @@ class CommentSuite extends ParseSuite {
          |    case 1 =>
          |
          |      // c1
-         |      {}
-         |
-         |    // c1
          |    case 2 => b
          |  }
          |}
          |""".stripMargin,
-    )("beg Term.Block: // c1", "beg Case: // c1")
+    )("end Case: // c1")
   }
 
   test("for: DSLC before the first enumerator") {
@@ -5770,24 +5628,12 @@ class CommentSuite extends ParseSuite {
          |  foo match {
          |    case a =>
          |      // a1
-         |      // b1
-         |      /* b2 */ {}
-         |      // a1
          |    // b1
          |    /* b2 */ case b =>
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(
-        "end Case, Term.Block: // a1",
-        "beg Term.Block: // a1\n      // b1\n      /* b2 */",
-        "beg Case: // b1\n    /* b2 */",
-      ),
-    )(
-      "end Case: // a1",
-      "beg Term.Block: // a1\n    // b1\n    /* b2 */",
-      "beg Case: // b1\n    /* b2 */",
-    )
+    )("end Case: // a1", "beg Case: // b1\n    /* b2 */")
   }
 
   test("match: empty case body, two DSLCs, next case at their indentation") {
@@ -5806,17 +5652,14 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  foo match {
          |    case a =>
-         |      // a1
-         |      // b1
-         |      {}
          |    // a1
          |    // b1
          |    case b =>
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.Block: // a1\n      // b1", "beg Case: // a1\n    // b1"),
-    )("beg Term.Block: // a1\n      // b1", "beg Case: // a1\n      // b1")
+      reprinted = Seq("beg Case: // a1\n    // b1"),
+    )("beg Case: // a1\n      // b1")
   }
 
   test("match: case body, DSLC indented under it, next case") {
@@ -5992,28 +5835,12 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  foo match {
          |    case a => // a1
-         |    // a2
-         |      {}
          |      // a2
          |    case b => y
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Block: // a2", "beg Term.Block: // a1\n    // a2"),
-      twice =
-        """|object O {
-           |  foo match {
-           |    case a =>
-           |      // a1
-           |      // a2
-           |      {}
-           |      // a2
-           |    case b =>
-           |      y
-           |  }
-           |}
-           |""".stripMargin,
-    )("end Case: // a2", "beg Term.Block: // a1\n      // a2")
+    )("end Case: // a1\n      // a2")
   }
 
   test("match: last case body, DSLC at the case indentation") {
@@ -6053,13 +5880,11 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  foo match {
          |    case a =>
-         |      // c
-         |      {}
          |    // c
          |  }
          |}
          |""".stripMargin,
-    )("end Case: // c", "beg Term.Block: // c")
+    )("end Case: // c")
   }
 
   test("class: def body, DSLC indented under it, next def") {
@@ -6789,9 +6614,13 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { val x = () }
+      """|object O {
+         |  val x = (
+         |    // c1
+         |  )
+         |}
          |""".stripMargin,
-    )()
+    )("end Lit.Unit: // c1")
   }
 
   test("package with braces: DSLC before and after a class") {
@@ -6806,21 +6635,12 @@ class CommentSuite extends ParseSuite {
       code,
       """|package a
          |// c1
-         |class A {}
+         |class A
          |// c2
+         |
          |""".stripMargin,
-      reprinted = Seq("end Pkg: // c2", "beg Defn.Class: // c1"),
-      twice =
-        """|package a
-           |// c1
-           |class A
-           |// c2
-           |
-           |""".stripMargin,
-    )(
-      "beg Defn.Class: // c1",
-      "end Defn.Class, Type.Name, Type.ParamClause, Ctor.Primary, Name.Anonymous, Template, Template.Body: // c2",
-    )
+      reprinted = Seq("beg Defn.Class: // c1", "end Defn.Class: // c2"),
+    )("beg Defn.Class: // c1", "end Defn.Class, Type.Name: // c2")
   }
 
   test("match: parenthesized case body, ASLC") {
@@ -7029,21 +6849,11 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  val x = a ||
-         |  // c
          |    // c
          |    b
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Term.ArgClause, Term.Name: // c\n    // c"),
-      twice =
-        """|object A {
-           |  val x = a ||
-           |    // c
-           |    // c
-           |    b
-           |}
-           |""".stripMargin,
-    )("beg Type.ArgClause: // c", "beg Term.ArgClause, Term.Name: // c")
+    )("beg Term.ArgClause, Term.Name: // c")
   }
 
   test("match: DSLC before a guard, parenthesized operand") {
@@ -7333,10 +7143,12 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  def f = {} // c2
+         |  def f = {
+         |    // c1
+         |  } // c2
          |}
          |""".stripMargin,
-    )("end Defn.Def, Term.Block: // c2")
+    )("end Defn.Def: // c2", "end Term.Block: // c1")
   }
 
   test("class: empty body, DSLC inside, ASLC after the brace") {
@@ -7347,10 +7159,12 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A {} // c2
+      """|class A {
+         |  // c1
+         |} // c2
          |
          |""".stripMargin,
-    )("end Defn.Class, Template, Template.Body: // c2")
+    )("end Defn.Class, Template: // c2", "end Template.Body: // c1")
   }
 
   test("new: empty body, DSLC inside, ASLC after the brace") {
@@ -7364,10 +7178,12 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  val x = new B {} // c2
+         |  val x = new B {
+         |    // c1
+         |  } // c2
          |}
          |""".stripMargin,
-    )("end Defn.Val, Term.NewAnonymous, Template, Template.Body: // c2")
+    )("end Defn.Val, Term.NewAnonymous, Template: // c2", "end Template.Body: // c1")
   }
 
   test("args: ASLC after the paren, two args") {
@@ -7419,10 +7235,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  f() // c2
+         |  f( /* c1 */ ) // c2
          |}
          |""".stripMargin,
-    )("end Term.Apply, Term.ArgClause: // c2")
+    )("end Term.Apply: // c2", "end Term.ArgClause: /* c1 */")
   }
 
   test("if: DSLC, blank line, else") {
@@ -7542,46 +7358,11 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|class A
-         |// c1
-         |
-         |// c1
-         |
          |  // c1
          |
          |  extends B
          |""".stripMargin,
-      reprinted = Seq(
-        "beg Type.ParamClause: // c1\n\n// c1\n\n  // c1",
-        "beg Ctor.Primary, Name.Anonymous: // c1\n\n// c1\n\n  // c1",
-        "beg Template, Init, Type.Name: // c1\n\n// c1\n\n  // c1",
-      ),
-      twice =
-        """|class A
-           |// c1
-           |
-           |// c1
-           |
-           |// c1
-           |
-           |// c1
-           |
-           |// c1
-           |
-           |// c1
-           |
-           |  // c1
-           |
-           |  // c1
-           |
-           |  // c1
-           |
-           |  extends B
-           |""".stripMargin,
-    )(
-      "beg Type.ParamClause: // c1",
-      "beg Ctor.Primary, Name.Anonymous: // c1",
-      "beg Template, Init, Type.Name: // c1",
-    )
+    )("beg Template, Init, Type.Name: // c1")
   }
 
   test("annotation: DSLC, blank line, modifier, def") {
@@ -7766,12 +7547,15 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  def f = {
-         |    {} // c2
+         |    {
+         |      // c1
+         |    }
+         |    // c2
          |    a
          |  }
          |}
          |""".stripMargin,
-    )("end Term.Block: // c2")
+    )("end Term.Block: // c1", "beg Term.Name: // c2")
   }
 
   test("if: DSLC before else, literal else branch") {
@@ -8048,7 +7832,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|class A { protected[ /* c1 */ this] def f = 1 }
          |""".stripMargin,
-    )("beg Term.This, Name.Anonymous: /* c1 */")
+    )("beg Term.This: /* c1 */")
   }
 
   test("unary plus: MLC before a literal") {
