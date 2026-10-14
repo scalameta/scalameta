@@ -6346,17 +6346,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  val x = a + b // c1
-         |    * c
+         |  val x = (a + b // c1
+         |  ) * c
          |}
          |""".stripMargin,
-      reprinted = Seq("end Defn.Val, Term.ApplyInfix, Term.ArgClause, Term.Name: // c1"),
-      twice =
-        """|object O {
-           |  val x = a + b // c1
-           |  `*` c
-           |}
-           |""".stripMargin,
     )("end Term.ApplyInfix, Term.ArgClause, Term.Name: // c1")
   }
 
@@ -6368,9 +6361,8 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { val x = a + b /* c1 */ * c }
+      """|object O { val x = (a + b /* c1 */ ) * c }
          |""".stripMargin,
-      reprinted = Seq("end Term.Name: /* c1 */"),
     )("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */")
   }
 
@@ -6383,12 +6375,11 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  val x = a match {
+         |  val x = (a match {
          |    case _ => 1
-         |  } /* c1 */ .foo
+         |  } /* c1 */ ).foo
          |}
          |""".stripMargin,
-      reprintError = "`;` expected but `.` found",
     )("end Term.Match, Term.CasesBlock: /* c1 */")
   }
 

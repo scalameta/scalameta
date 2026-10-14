@@ -1538,33 +1538,40 @@ object TreeSyntax {
       after: Show.Result = Show.None,
       indents: Int = 1, // the levels that the comments under the tree indent
       afterKeyword: => Boolean = false,
-  )(syntax: Show.Result): Show.Result = s(
-    ownBegComments(tree) match {
-      case None => syntax
-      case Some(c) =>
-        if (!layout) s(printBegCommentsPlain(c), syntax)
-        else if (afterKeyword) syntax
-        // a body's comments go on lines of their own, at the column of its brace
-        else if (opensBody(tree))
-          s(s(c.values.map(x => Show.outerNewline(printComment(x))): _*), syntax)
-        else s(printLeading(c.values, c.newlinesBefore), syntax)
-    },
-    after,
-    printEndComments(
-      tree,
-      if (!layout) printEndCommentsPlain
-      else { c =>
-        // what follows a modifier keeps its column, unless its tree continues after the comments
-        if (tree.is[Mod])
-          i(printEndComments(c), c.newlinesBefore > 0 && !tree.parent.forall(_.is[Stat]))
-        else if (tree.parent.forall {
-            case _: Self => false
-            case p: Pat.Alternative => (p.lhs ne tree) || isBarAfterDetachedBar(p)
-            case p => p.lastChild eq tree
-          }) printEndComments(c)
-        else printEndCommentsUnder(c, indents)
+  )(syntax: Show.Result): Show.Result = {
+    val res = s(
+      ownBegComments(tree) match {
+        case None => syntax
+        case Some(c) =>
+          if (!layout) s(printBegCommentsPlain(c), syntax)
+          else if (afterKeyword) syntax
+          // a body's comments go on lines of their own, at the column of its brace
+          else if (opensBody(tree))
+            s(s(c.values.map(x => Show.outerNewline(printComment(x))): _*), syntax)
+          else s(printLeading(c.values, c.newlinesBefore), syntax)
       },
-    ),
-  )
+      after,
+      printEndComments(
+        tree,
+        if (!layout) printEndCommentsPlain
+        else { c =>
+          // what follows a modifier keeps its column, unless its tree continues after the comments
+          if (tree.is[Mod])
+            i(printEndComments(c), c.newlinesBefore > 0 && !tree.parent.forall(_.is[Stat]))
+          else if (tree.parent.forall {
+              case _: Self => false
+              case p: Pat.Alternative => (p.lhs ne tree) || isBarAfterDetachedBar(p)
+              case p => p.lastChild eq tree
+            }) printEndComments(c)
+          else printEndCommentsUnder(c, indents)
+        },
+      ),
+    )
+    // keep the syntactic group, so that the parentheses go around the comments too
+    syntax match {
+      case x: Show.Meta if res ne x => m(x.data, res)
+      case _ => res
+    }
+  }
 
 }
