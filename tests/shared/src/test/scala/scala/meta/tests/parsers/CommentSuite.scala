@@ -1002,11 +1002,14 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     val layout =
       """|package p
-         |object O
+         |// c
+         |{
+         |  object O
+         |}
          |""".stripMargin
     val obj = Defn.Object(Nil, tname("O"), tplNoBody())
-    val body = Pkg.Body.newBuilder(List(obj)).begComment(Seq("// c")).result()
-    parseAndCheckTree[Source](code, layout)(Source(List(Pkg(tname("p"), body))))
+    val body = Pkg.Body.newBuilder(List(obj)).begComment(detachedComments("// c")).result()
+    runTestAssert[Source](code, layout)(Source(List(Pkg(tname("p"), body))))
   }
 
   test("def: ASLC after =, brace body on the next line") {
@@ -1306,8 +1309,8 @@ class CommentSuite extends ParseSuite {
     val layout =
       """|package p
          |object O
-         |
-         |  // c
+         |// c
+         |{}
          |""".stripMargin
     val templ = tplNoBody().toBuilder.begComment(detachedComments("// c")).result()
     val obj = Defn.Object(Nil, tname("O"), templ)
@@ -2747,7 +2750,8 @@ class CommentSuite extends ParseSuite {
            |class B
            |// c
            |// c
-           |  // c
+           |// c
+           |{}
            |// c
            |
            |""".stripMargin,
@@ -2945,21 +2949,7 @@ class CommentSuite extends ParseSuite {
          |  {}
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  val a = new A
-         |    // c
-         |}
-         |""".stripMargin,
-      reprinted = Seq("end Defn.Val: // c"),
-      twice =
-        """|object O {
-           |  val a = new A
-           |  // c
-           |}
-           |""".stripMargin,
-    )("beg Template.Body: // c")
+    checkComments(code)("beg Template.Body: // c")
   }
 
   test("new: DSLC on its own line, braces with a statement") {
@@ -2974,8 +2964,10 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  val a = new A
-         |    // c
-         |    { def f = 1 }
+         |  // c
+         |  {
+         |    def f = 1
+         |  }
          |}
          |""".stripMargin,
     )("beg Template.Body: // c")
@@ -2998,8 +2990,10 @@ class CommentSuite extends ParseSuite {
          |// c1
          |  // c1
          |  extends B
-         |    // c2
-         |    { def f = 1 }
+         |  // c2
+         |  {
+         |    def f = 1
+         |  }
          |""".stripMargin,
       reprinted = Seq(
         "beg Type.ParamClause: // c1\n// c1\n  // c1",
@@ -3019,8 +3013,10 @@ class CommentSuite extends ParseSuite {
            |  // c1
            |  // c1
            |  extends B
-           |    // c2
-           |    { def f = 1 }
+           |  // c2
+           |  {
+           |    def f = 1
+           |  }
            |""".stripMargin,
     )(
       "beg Type.ParamClause: // c1",
@@ -3043,8 +3039,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|class A extends B with C
-         |  // c2
-         |  { def f = 1 }
+         |// c2
+         |{
+         |  def f = 1
+         |}
          |""".stripMargin,
       reprinted = Seq("beg Template.Body: // c2"),
     )("beg Name.Anonymous: // c1", "beg Template.Body: // c2")
@@ -3062,8 +3060,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|class A extends B
-         |  // c2
-         |  { def f = 1 }
+         |// c2
+         |{
+         |  def f = 1
+         |}
          |""".stripMargin,
     )("beg Template.Body: // c2")
   }
@@ -6086,8 +6086,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A { self =>
-         |// c1
+      """|class A {
+         |  self =>
+         |  // c1
          |}
          |""".stripMargin,
     )("end Self: // c1")
@@ -6218,7 +6219,9 @@ class CommentSuite extends ParseSuite {
       code,
       """|class A {
          |  // c1
-         |  self => def f = 1 }
+         |  self =>
+         |  def f = 1
+         |}
          |""".stripMargin,
     )("beg Self, Term.Name: // c1")
   }
@@ -6581,7 +6584,8 @@ class CommentSuite extends ParseSuite {
            |class A
            |// c2
            |// c2
-           |  // c2
+           |// c2
+           |{}
            |// c2
            |
            |""".stripMargin,
@@ -6824,10 +6828,11 @@ class CommentSuite extends ParseSuite {
       """|class A {
          |  def this(i: Float) =
          |    // c
-         |    this(i.toLong)
+         |    {
+         |      this(i.toLong)
+         |    }
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Init, Type.Singleton, Term.This, Name.Anonymous: // c"),
     )("beg Ctor.Block: // c")
   }
 
@@ -6901,8 +6906,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A { self: X =>
-         |// c
+      """|class A {
+         |  self: X =>
+         |  // c
          |}
          |""".stripMargin,
     )("end Self: // c")
@@ -7089,10 +7095,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A // c2
+      """|class A {} // c2
          |
          |""".stripMargin,
-      reprinted = Seq("end Defn.Class, Type.Name: // c2"),
     )("end Defn.Class, Template, Template.Body: // c2")
   }
 

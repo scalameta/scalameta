@@ -681,11 +681,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|package p
-         |object O
+         |// c
+         |{
+         |  object O
+         |}
          |""".stripMargin
     val obj = Defn.Object(Nil, tname("O"), tplNoBody())
-    val body = Pkg.Body.newBuilder(List(obj)).begComment(Seq("// c")).result()
-    parseAndCheckTree[Source](code, layout)(Source(List(Pkg(tname("p"), body))))
+    val body = Pkg.Body.newBuilder(List(obj)).begComment(detachedComments("// c")).result()
+    runTestAssert[Source](code, layout)(Source(List(Pkg(tname("p"), body))))
   }
 
   test("def: ASLC after =, brace body on the next line") {
@@ -1039,8 +1042,8 @@ class CommentSuite extends BaseDottySuite {
     val layout =
       """|package p
          |object O
-         |
-         |  // c
+         |// c
+         |{}
          |""".stripMargin
     val templ = tplNoBody().toBuilder.begComment(detachedComments("// c")).result()
     val obj = Defn.Object(Nil, tname("O"), templ)
@@ -1138,7 +1141,8 @@ class CommentSuite extends BaseDottySuite {
     assertNoDiff(
       printed,
       """|class A { self => // c
-         |  x }
+         |  x
+         |}
          |""".stripMargin,
     )
     val reparsed = Defn.Class(
@@ -4382,10 +4386,11 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object A
-         |
-         |  /* c */ { def f = 1 }
+         |/* c */
+         |{
+         |  def f = 1
+         |}
          |""".stripMargin,
-      reprintError = "illegal start of definition `{`",
     )("beg Template, Template.Body: /* c */")
   }
 
@@ -4465,8 +4470,10 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object A
-         |  // c
-         |  { def f = 1 }
+         |// c
+         |{
+         |  def f = 1
+         |}
          |""".stripMargin,
       reprinted = Seq("beg Template, Template.Body: // c"),
     )("beg Template, Template.Body: // c")
@@ -5994,10 +6001,8 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O // c
-         |
          |  { def f = 1 }
          |""".stripMargin,
-      reprintError = "illegal start of definition `{`",
     )("end Term.Name: // c")
   }
 
@@ -6591,8 +6596,10 @@ class CommentSuite extends BaseDottySuite {
          |// c1
          |  // c1
          |  extends B
-         |    // c2
-         |    { def f = 1 }
+         |  // c2
+         |  {
+         |    def f = 1
+         |  }
          |""".stripMargin,
       reprinted = Seq(
         "beg Type.ParamClause: // c1\n// c1\n  // c1",
@@ -6613,8 +6620,10 @@ class CommentSuite extends BaseDottySuite {
            |  // c1
            |  // c1
            |  extends B
-           |    // c2
-           |    { def f = 1 }
+           |  // c2
+           |  {
+           |    def f = 1
+           |  }
            |""".stripMargin,
     )(
       "beg Type.ParamClause: // c1",
@@ -6637,8 +6646,10 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|class A extends B derives D
-         |  // c2
-         |  { def f = 1 }
+         |// c2
+         |{
+         |  def f = 1
+         |}
          |""".stripMargin,
       reprinted = Seq("beg Template.Body: // c2"),
     )("beg Name.Anonymous: // c1", "beg Template.Body: // c2")
@@ -6757,25 +6768,7 @@ class CommentSuite extends BaseDottySuite {
          |    def f = 1
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  given A
-         |    // c
-         |    { def f = 1 }
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Block: // c"),
-      twice =
-        """|object O {
-           |  given A
-           |  // c
-           |  {
-           |    def f = 1
-           |  }
-           |}
-           |""".stripMargin,
-    )("beg Name.Anonymous: // c", "beg Template.Body: // c")
+    checkComments(code)("beg Name.Anonymous: // c", "beg Template.Body: // c")
   }
 
   test("val: DSLC, colon and type on one line") {
@@ -6823,25 +6816,7 @@ class CommentSuite extends BaseDottySuite {
          |    def f = 1
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  given x: A
-         |    // c
-         |    { def f = 1 }
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Block: // c"),
-      twice =
-        """|object O {
-           |  given x: A
-           |  // c
-           |  {
-           |    def f = 1
-           |  }
-           |}
-           |""".stripMargin,
-    )("beg Name.Anonymous: // c", "beg Template.Body: // c")
+    checkComments(code)("beg Name.Anonymous: // c", "beg Template.Body: // c")
   }
 
   test("given: ASLC before the brace") {
@@ -6933,25 +6908,7 @@ class CommentSuite extends BaseDottySuite {
          |    def f = 1
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  given [T] => (o: Ord[T]) => C[T]
-         |    // c
-         |    { def f = 1 }
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Block: // c"),
-      twice =
-        """|object O {
-           |  given [T] => (o: Ord[T]) => C[T]
-           |  // c
-           |  {
-           |    def f = 1
-           |  }
-           |}
-           |""".stripMargin,
-    )("beg Name.Anonymous: // c", "beg Template.Body: // c")
+    checkComments(code)("beg Name.Anonymous: // c", "beg Template.Body: // c")
   }
 
   test("given: using clause, DSLC, colon at the end of its line, body") {
@@ -6976,27 +6933,7 @@ class CommentSuite extends BaseDottySuite {
          |    def f = 1
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  given A
-         |    // c
-         |    { self => def f = 1 }
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Block: // c"),
-      twice =
-        """|object O {
-           |  given A
-           |  // c
-           |  {
-           |    self => {
-           |      def f = 1
-           |    }
-           |  }
-           |}
-           |""".stripMargin,
-    )("beg Name.Anonymous: // c", "beg Template.Body: // c")
+    checkComments(code)("beg Name.Anonymous: // c", "beg Template.Body: // c")
   }
 
   test("given: DSLC, colon at the end of its line, self") {
@@ -7008,24 +6945,7 @@ class CommentSuite extends BaseDottySuite {
          |    self =>
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  given A
-         |    // c
-         |    { self => }
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Block: // c"),
-      twice =
-        """|object O {
-           |  given A
-           |  // c
-           |  { self =>
-           |  }
-           |}
-           |""".stripMargin,
-    )("beg Name.Anonymous: // c", "beg Template.Body: // c")
+    checkComments(code)("beg Name.Anonymous: // c", "beg Template.Body: // c")
   }
 
 }
