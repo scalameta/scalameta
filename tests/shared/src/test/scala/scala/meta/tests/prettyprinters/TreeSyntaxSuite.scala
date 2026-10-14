@@ -509,6 +509,23 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     assertEquals(Show.sequence("a", " = ", Show.newline("b")).toString, "a =\n  b".lf2nl),
   )
 
+  test("show: newline on a condition") {
+    assertEquals(Show.sequence("a", Show.newline("b", cond = false)).toString, "ab")
+    assertEquals(Show.sequence("a", Show.newline("b", cond = true)).toString, "a\nb".lf2nl)
+  }
+
+  test("show: space, then a newline")(
+    assertEquals(Show.sequence("a", " ", Show.newline("b")).toString, "a\n  b".lf2nl),
+  )
+
+  test("show: space, then an outer newline")(
+    assertEquals(Show.sequence("a", " ", Show.outerNewline("b")).toString, "a\nb".lf2nl),
+  )
+
+  test("show: first syntax element past an outer newline")(
+    assertEquals(Show.firstSyntaxElem(Show.outerNewline(Show.Str("(a)"))), "(a)"),
+  )
+
   test("interpolation: this in a part") {
     val code =
       """|object A {

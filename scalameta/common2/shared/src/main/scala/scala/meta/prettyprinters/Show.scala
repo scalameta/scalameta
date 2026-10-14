@@ -222,6 +222,10 @@ private[meta] object Show {
           case NoBlankBefore(res) =>
             if (afterEOL == 2) afterEOL = 1 // the second newline was not written yet
             maybePush(res)
+          case OuterNewline(res) =>
+            pending = null // the newline replaces the separator, as an indent does
+            nl()
+            maybePush(res)
           case Indent(res) =>
             pending = null // the indent replaces the separator
             push(taskIndent)
@@ -331,6 +335,10 @@ private[meta] object Show {
   final case class NoBlankBefore(res: Result) extends Result {
     override def desc: String = s"NoBlankBefore(r=${res.desc})"
   }
+  // a newline at the indentation outside the separator before it, which would indent it otherwise
+  final case class OuterNewline(res: Result) extends Result {
+    override def desc: String = s"OuterNewline(r=${res.desc})"
+  }
   sealed class Deferred(res: () => Result) extends Result {
     lazy val value: Result = res()
     override def desc: String = s"Deferred(...)"
@@ -395,6 +403,8 @@ private[meta] object Show {
   val newlineOnly: Result = Newline(None)
   def newline(): Result = newlineOnly
   def newline(res: Result): Result = if (res eq None) None else Newline(res)
+  def newline(res: Result, cond: Boolean): Result = if (cond) newline(res) else res
+  def outerNewline(res: Result): Result = if (res eq None) None else OuterNewline(res)
   def noBlankBefore(res: Result): Result = if (res eq None) None else NoBlankBefore(res)
 
   // body by-name + no eager None-elision: the child render is deferred, and
@@ -441,6 +451,7 @@ private[meta] object Show {
     case SpaceOrIndent(x, _) => firstSyntaxElem(x)
     case SpaceOrNewline(x, _) => firstSyntaxElem(x)
     case Newline(x) => firstSyntaxElem(x)
+    case OuterNewline(x) => firstSyntaxElem(x)
     case NoBlankBefore(x) => firstSyntaxElem(x)
     case x: Deferred => firstSyntaxElem(x.value)
     case _ => null // nothing printed, a comment, or a separator
