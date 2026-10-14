@@ -467,11 +467,12 @@ class DefnSuite extends ParseSuite {
             "nonEmpty",
           ),
         ),
-        Case.newBuilder(
+        Case(
           Pat.Bind(patvar("class"), Pat.Extract(tname("ScClass"), List(tname("type")))),
           None,
-          tapply(tname("isCaseOrInScala3File"), tname("class")),
-        ).endComment(Seq("// SCL-19992, SCL-21187")).result(),
+          Term.Apply.newBuilder(tname("isCaseOrInScala3File"), Term.ArgClause(List(tname("class"))))
+            .endComment(Seq("// SCL-19992, SCL-21187")).result(),
+        ),
         Case(patwildcard, None, lit(false)),
       ),
     )

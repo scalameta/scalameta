@@ -2509,7 +2509,6 @@ class CommentSuite extends BaseDottySuite {
          |    y
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Name: // a1"),
     )("end Term.Name: // a1")
   }
 
@@ -2555,7 +2554,7 @@ class CommentSuite extends BaseDottySuite {
          |  case b =>
          |}
          |""".stripMargin,
-    )("end Case, Term.Name: // c2", "beg Term.Name: // c1")
+    )("beg Term.Name: // c1", "end Term.Name: // c2")
   }
 
   test("braceless match: two-statement case body, DSLC indented under it, next case") {
@@ -3087,7 +3086,7 @@ class CommentSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Term.ParamClause: // c1")
+    )("end Term.ParamClause, Term.Param: // c1")
   }
 
   test("lambda in braces: DSLC between the params and the arrow, body on the arrow's line") {
@@ -3108,7 +3107,7 @@ class CommentSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Term.ParamClause: // c1")
+    )("end Term.ParamClause, Term.Param: // c1")
   }
 
   test("lambda in braces: two DSLCs between the params and the arrow") {
@@ -3132,8 +3131,8 @@ class CommentSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Term.ParamClause: // c1\n      // c2"),
-    )("end Term.ParamClause: // c1\n    // c2")
+      reprinted = Seq("end Term.ParamClause, Term.Param: // c1\n      // c2"),
+    )("end Term.ParamClause, Term.Param: // c1\n    // c2")
   }
 
   test("case: DSLC between the pattern and the arrow") {
@@ -3277,7 +3276,7 @@ class CommentSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin,
-    )("end Term.ParamClause: // c1")
+    )("end Term.ParamClause, Term.Param: // c1")
   }
 
   test("val: DSLC between the pattern and the equals") {
@@ -3342,9 +3341,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val x = (a + b) * c }
+      """|object A { val x = (a + b /* c1 */ ) * c }
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */"),
+    )("end Term.ApplyInfix: /* c1 */")
   }
 
   test("if: MLC between the condition and a brace body") {
@@ -3356,12 +3356,12 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object A {
-         |  if (x) {
+         |  if (x) /* c1 */ {
          |    a
          |  }
          |}
          |""".stripMargin,
-    )()
+    )("beg Term.Block: /* c1 */")
   }
 
   test("apply: MLC after a parenthesized argument") {
@@ -3372,9 +3372,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { f(a + b) }
+      """|object A { f(a + b /* c1 */ ) }
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */"),
+    )("end Term.ApplyInfix: /* c1 */")
   }
 
   test("val: MLC after a parenthesized type") {
@@ -3385,9 +3386,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val x: Int = 1 }
+      """|object A { val x: Int /* c1 */ = 1 }
          |""".stripMargin,
-    )()
+    )("end Type.Name: /* c1 */")
   }
 
   test("case: MLC after a parenthesized guard") {
@@ -3402,11 +3403,12 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  x match {
-         |    case a if a > 0 => b
+         |    case a if a > 0 /* c1 */ => b
          |  }
          |}
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Lit.Int: /* c1 */"),
+    )("end Term.ApplyInfix: /* c1 */")
   }
 
   test("while: MLC between the condition and a brace body") {
@@ -3418,12 +3420,12 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object A {
-         |  while (x) {
+         |  while (x) /* c1 */ {
          |    a
          |  }
          |}
          |""".stripMargin,
-    )()
+    )("beg Term.Block: /* c1 */")
   }
 
   test("if: MLC between the condition and a brace body, else") {
@@ -3435,12 +3437,12 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object A {
-         |  if (x) {
+         |  if (x) /* c1 */ {
          |    a
          |  } else b
          |}
          |""".stripMargin,
-    )()
+    )("beg Term.Block: /* c1 */")
   }
 
   test("if: MLC between the condition and then") {
@@ -3451,9 +3453,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { if (x) a else b }
+      """|object A { if (x /* c1 */ ) a else b }
          |""".stripMargin,
-    )()
+    )("end Term.Name: /* c1 */")
   }
 
   test("if: ASLC after the condition, then on the next line") {
@@ -3464,9 +3466,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { if (x) a }
+      """|object A {
+         |  if (x // c1
+         |  ) a
+         |}
          |""".stripMargin,
-    )()
+    )("end Term.Name: // c1")
   }
 
   test("while: MLC between the condition and do") {
@@ -3477,9 +3482,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { while (x) a }
+      """|object A { while (x /* c1 */ ) a }
          |""".stripMargin,
-    )()
+    )("end Term.Name: /* c1 */")
   }
 
   test("quoted type pattern: type definition, type, DSLC before the bracket") {
@@ -3555,9 +3560,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|import a.{d as _}
+      """|import a.{d as _ /* c1 */ }
          |""".stripMargin,
-    )()
+    )("end Importee.Unimport: /* c1 */")
   }
 
   test("import: MLC after the arrow") {
@@ -3604,9 +3609,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { super[A].f }
+      """|object A { super[ /* c1 */ A].f }
          |""".stripMargin,
-    )()
+    )("beg Name.Indeterminate: /* c1 */")
   }
 
   test("for: MLC after the generator, do, MLC") {
@@ -3666,7 +3671,6 @@ class CommentSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Case, Term.Name: // c1", "beg Case: // c2"),
     )("end Term.Name: // c1", "beg Case: // c2")
   }
 
@@ -3915,9 +3919,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def f(using Quotes) = ' /* c1 */ x }
+      """|object O { def f(using Quotes) = /* c1 */ 'x }
          |""".stripMargin,
-    )("beg Term.Name: /* c1 */")
+    )("beg Term.QuotedMacroExpr: /* c1 */")
   }
 
   test("annotation: DSLC, blank line, modifier, def") {
@@ -4114,14 +4118,21 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { if ((a op b)(c op d) /* c2 */ (e op f) /* c3 */ ) g }
+      """|object A { if ((a op b /* c1 */ )(c op d) /* c2 */ (e op f) /* c3 */ ) g }
          |""".stripMargin,
-      reprinted =
-        Seq("end Term.Apply, Term.ArgClause: /* c3 */", "end Term.Apply, Term.ArgClause: /* c2 */"),
-    )("end Term.Apply, Term.ArgClause: /* c3 */", "end Term.Apply: /* c2 */").reprint
+      reprinted = Seq(
+        "end Term.Apply, Term.ArgClause: /* c3 */",
+        "end Term.Apply, Term.ArgClause: /* c2 */",
+        "end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */",
+      ),
+    )(
+      "end Term.Apply, Term.ArgClause: /* c3 */",
+      "end Term.Apply, Term.ArgClause, Term.ApplyInfix: /* c2 */",
+      "end Term.ApplyInfix: /* c1 */",
+    ).reprint
     assertNoDiff(
       source(first).reprint,
-      "object A { if ((a op b)(c op d) /* c2 */ (e op f) /* c3 */ ) g }",
+      "object A { if ((a op b /* c1 */ )(c op d) /* c2 */ (e op f) /* c3 */ ) g }",
     )
   }
 
@@ -4132,14 +4143,21 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { while ((a op b)(c op d) /* c2 */ (e op f) /* c3 */ ) g }
+      """|object A { while ((a op b /* c1 */ )(c op d) /* c2 */ (e op f) /* c3 */ ) g }
          |""".stripMargin,
-      reprinted =
-        Seq("end Term.Apply, Term.ArgClause: /* c3 */", "end Term.Apply, Term.ArgClause: /* c2 */"),
-    )("end Term.Apply, Term.ArgClause: /* c3 */", "end Term.Apply: /* c2 */").reprint
+      reprinted = Seq(
+        "end Term.Apply, Term.ArgClause: /* c3 */",
+        "end Term.Apply, Term.ArgClause: /* c2 */",
+        "end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */",
+      ),
+    )(
+      "end Term.Apply, Term.ArgClause: /* c3 */",
+      "end Term.Apply, Term.ArgClause, Term.ApplyInfix: /* c2 */",
+      "end Term.ApplyInfix: /* c1 */",
+    ).reprint
     assertNoDiff(
       source(first).reprint,
-      "object A { while ((a op b)(c op d) /* c2 */ (e op f) /* c3 */ ) g }",
+      "object A { while ((a op b /* c1 */ )(c op d) /* c2 */ (e op f) /* c3 */ ) g }",
     )
   }
 
@@ -4150,13 +4168,21 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { if (a op b) /* c1 */ (c op d)(e op f) /* c3 */ g }
+      """|object A { if (a op b) /* c1 */ (c op d /* c2 */ )(e op f) /* c3 */ g }
          |""".stripMargin,
-    )("beg Term.SelectPostfix, Term.Apply: /* c1 */", "end Term.Apply, Term.ArgClause: /* c3 */")
-      .reprint
+      reprinted = Seq(
+        "beg Term.SelectPostfix, Term.Apply, Term.ApplyInfix: /* c1 */",
+        "end Term.Apply, Term.ArgClause: /* c3 */",
+        "end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c2 */",
+      ),
+    )(
+      "beg Term.SelectPostfix, Term.Apply, Term.ApplyInfix: /* c1 */",
+      "end Term.Apply, Term.ArgClause: /* c3 */",
+      "end Term.ApplyInfix: /* c2 */",
+    ).reprint
     assertNoDiff(
       source(first).reprint,
-      "object A { if (a op b) /* c1 */ (c op d)(e op f) /* c3 */ g }",
+      "object A { if (a op b) /* c1 */ (c op d /* c2 */ )(e op f) /* c3 */ g }",
     )
   }
 
@@ -4168,16 +4194,25 @@ class CommentSuite extends BaseDottySuite {
     val first = checkComments(
       code,
       """|object A {
-         |  if (a op b) /* c1 */ (c op d)(e op f) /* c3 */ {
+         |  if (a op b) /* c1 */ (c op d /* c2 */ )(e op f) /* c3 */ {
          |    g
          |  }
          |}
          |""".stripMargin,
-    )("beg Term.Apply, Term.Apply: /* c1 */", "end Term.Apply, Term.ArgClause: /* c3 */").reprint
+      reprinted = Seq(
+        "beg Term.Apply, Term.Apply, Term.ApplyInfix: /* c1 */",
+        "end Term.Apply, Term.ArgClause: /* c3 */",
+        "end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c2 */",
+      ),
+    )(
+      "beg Term.Apply, Term.Apply, Term.ApplyInfix: /* c1 */",
+      "end Term.Apply, Term.ArgClause: /* c3 */",
+      "end Term.ApplyInfix: /* c2 */",
+    ).reprint
     assertNoDiff(
       source(first).reprint,
       """|object A {
-         |  if (a op b) /* c1 */ (c op d)(e op f) /* c3 */ {
+         |  if (a op b) /* c1 */ (c op d /* c2 */ )(e op f) /* c3 */ {
          |    g
          |  }
          |}
@@ -4218,10 +4253,11 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { if ((a op b) == x) g }
+      """|object A { if ((a op b /* c1 */ ) == x) g }
          |""".stripMargin,
-    )().reprint
-    assertNoDiff(source(first).reprint, "object A { if ((a op b) == x) g }")
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */"),
+    )("end Term.ApplyInfix: /* c1 */").reprint
+    assertNoDiff(source(first).reprint, "object A { if ((a op b /* c1 */ ) == x) g }")
   }
 
   test("if then: MLC after an infix operand that starts the condition, then on its line") {
@@ -4232,10 +4268,11 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { if ((a op b) == x) g }
+      """|object A { if ((a op b /* c1 */ ) == x) g }
          |""".stripMargin,
-    )().reprint
-    assertNoDiff(source(first).reprint, "object A { if ((a op b) == x) g }")
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */"),
+    )("end Term.ApplyInfix: /* c1 */").reprint
+    assertNoDiff(source(first).reprint, "object A { if ((a op b /* c1 */ ) == x) g }")
   }
 
   test("if then: MLC before a select on a group that starts the condition") {
@@ -4245,10 +4282,11 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { if ((a op b).c) g }
+      """|object A { if ((a op b /* c1 */ ).c) g }
          |""".stripMargin,
-    )().reprint
-    assertNoDiff(source(first).reprint, "object A { if ((a op b).c) g }")
+      reprinted = Seq("end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */"),
+    )("end Term.ApplyInfix: /* c1 */").reprint
+    assertNoDiff(source(first).reprint, "object A { if ((a op b /* c1 */ ).c) g }")
   }
 
   test("if then: MLC before and after a group that starts the condition") {
@@ -4258,11 +4296,15 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val first = checkComments(
       code,
-      """|object A { if ( /* c0 */ (a op b)(c op d)) g }
+      """|object A { if ( /* c0 */ (a op b /* c1 */ )(c op d)) g }
          |""".stripMargin,
-      reprinted = Seq("beg Term.Apply: /* c0 */"),
-    )("beg Term.Apply, Term.ApplyInfix, Term.Name: /* c0 */").reprint
-    assertNoDiff(source(first).reprint, "object A { if ( /* c0 */ (a op b)(c op d)) g }")
+      reprinted = Seq(
+        "beg Term.Apply, Term.ApplyInfix: /* c0 */",
+        "end Term.ApplyInfix, Term.ArgClause, Term.Name: /* c1 */",
+      ),
+    )("beg Term.Apply, Term.ApplyInfix, Term.Name: /* c0 */", "end Term.ApplyInfix: /* c1 */")
+      .reprint
+    assertNoDiff(source(first).reprint, "object A { if ( /* c0 */ (a op b /* c1 */ )(c op d)) g }")
   }
 
   test("if: MLC after a tuple condition, body on the same line") {
@@ -4476,9 +4518,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f = '{ ${ a } } }
+      """|object A { def f = '{ /* c */ ${ a } } }
          |""".stripMargin,
-    )()
+    )("beg Term.SplicedMacroExpr: /* c */")
   }
 
   test("splice: MLC between the dollar and the name") {
@@ -4489,9 +4531,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f = '{ $a } }
+      """|object A { def f = '{ /* c */ $a } }
          |""".stripMargin,
-    )()
+      reprinted = Seq("beg Term.SplicedMacroExpr, Term.Name: /* c */"),
+    )("beg Term.SplicedMacroExpr: /* c */")
   }
 
   test("type quote: MLC between the quote and the bracket") {
@@ -4502,9 +4545,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f = '[ T ] }
+      """|object A { def f = /* c */ '[ T ] }
          |""".stripMargin,
-    )()
+    )("beg Term.QuotedMacroType: /* c */")
   }
 
   test("type splice: MLC between the dollar and the block") {
@@ -4515,9 +4558,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f = '[ List[${ t }] ] }
+      """|object A { def f = '[ List[ /* c */ ${ t }] ] }
          |""".stripMargin,
-    )()
+      reprinted = Seq("beg Type.Macro, Term.SplicedMacroExpr: /* c */"),
+    )("beg Term.SplicedMacroExpr: /* c */")
   }
 
   test("quote: MLC between the quote and the name") {
@@ -4528,9 +4572,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f = ' /* c */ a }
+      """|object A { def f = /* c */ 'a }
          |""".stripMargin,
-    )("beg Term.Name: /* c */")
+    )("beg Term.QuotedMacroExpr: /* c */")
   }
 
   test("quote: MLC between the quote and the block") {
@@ -4541,9 +4585,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f = ' /* c */ { a } }
+      """|object A { def f = /* c */ '{ a } }
          |""".stripMargin,
-    )("beg Term.Block: /* c */")
+    )("beg Term.QuotedMacroExpr: /* c */")
   }
 
   test("object: blank line, DSLC, blank line, colon body") {
@@ -4974,11 +5018,11 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  x match {
-         |    case B(_*) => 1
+         |    case B(_* /* c */ ) => 1
          |  }
          |}
          |""".stripMargin,
-    )()
+    )("end Pat.SeqWildcard: /* c */")
   }
 
   test("pattern: MLC between the name and the star") {
@@ -5570,9 +5614,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { if (a(b)) 1 else 2 }
+      """|object O { if (a /* c */ (b)) 1 else 2 }
          |""".stripMargin,
-    )()
+    )("end Term.Name: /* c */")
   }
 
   test("if: condition in parens, MLC, body in parens") {
@@ -5583,9 +5627,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { if (a) b else c }
+      """|object O { if (a) /* c */ b else c }
          |""".stripMargin,
-    )()
+    )("beg Term.Name: /* c */")
   }
 
   test("if: condition in parens, DSLC, body in braces") {
@@ -5616,9 +5660,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { while (a) b }
+      """|object O { while (a) /* c */ b }
          |""".stripMargin,
-    )()
+    )("beg Term.Name: /* c */")
   }
 
   test("while: condition in parens, MLC, args, do") {
@@ -5629,9 +5673,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { while (a(b)) c }
+      """|object O { while (a /* c */ (b)) c }
          |""".stripMargin,
-    )()
+    )("end Term.Name: /* c */")
   }
 
   test("for: tuple pattern in parens, MLC, generator") {
@@ -6363,7 +6407,11 @@ class CommentSuite extends BaseDottySuite {
          |    Int) = 1
          |}
          |""".stripMargin
-    runTestError[Source](code, "`identifier` expected but `indent` found")
+    checkComments(
+      code,
+      """|object O { def f(x: => Int) = 1 }
+         |""".stripMargin,
+    )()
   }
 
   test("extends: blank line, DSLC, blank line, comma, parent") {
@@ -6494,9 +6542,14 @@ class CommentSuite extends BaseDottySuite {
          |  )
          |}
          |""".stripMargin,
-      reprinted = Seq(),
+      reprinted = Seq("end Term.Repeated: // c"),
       twice =
-        """|object O { g(xs*) }
+        """|object O {
+           |  g(
+           |    xs*
+           |    // c
+           |  )
+           |}
            |""".stripMargin,
     )("end Term.Name: // c")
   }
@@ -6511,9 +6564,15 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def g(xs: Int*) = 1 }
+      """|object O {
+         |  def g(
+         |    xs: Int*
+         |    // c
+         |  ) = 1
+         |}
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Term.Param, Type.Repeated: // c"),
+    )("end Type.Repeated: // c")
   }
 
   test("import: given, blank line, DSLC, blank line, comma, wildcard") {
@@ -6542,7 +6601,7 @@ class CommentSuite extends BaseDottySuite {
       """|import a.{x => // c
          |  y}
          |""".stripMargin
-    runTestError[Source](code, "`identifier` expected but `indent` found")
+    checkComments(code)("beg Name.Indeterminate: // c")
   }
 
   test("import: unimport arrow, MLC on the next line") {
@@ -6552,9 +6611,10 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|import a.{x as _}
+      """|import a.{x as _
+         |/* c */ }
          |""".stripMargin,
-    )()
+    )("end Importee.Unimport: /* c */")
   }
 
   test("select match: MLC before the brace") {
