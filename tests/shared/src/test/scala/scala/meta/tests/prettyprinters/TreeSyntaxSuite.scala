@@ -353,20 +353,20 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     def checkBlankLine(name: String, res: Show.Result, expected: String)(implicit
         loc: munit.Location,
     ): Unit = test(s"blank line: $name")(assertEquals(res.toString.replace("\r\n", "\n"), expected))
-    checkBlankLine("after text", s("foo", blank(), "bar"), "foo\nbar")
+    checkBlankLine("after text", s("foo", blank(), "bar"), "foo\n\nbar")
     checkBlankLine("after a newline", s("foo", n(), blank(), "bar"), "foo\n\nbar")
     checkBlankLine("after text that ends its line", s("foo\n", blank(), "bar"), "foo\n\nbar")
     checkBlankLine(
       "after text that ends in a blank line",
       s("foo\n\n", blank(), "bar"),
-      "foo\n\n\nbar",
+      "foo\n\nbar",
     )
-    checkBlankLine("after a line of spaces", s("foo\n  \n", blank(), "bar"), "foo\n  \n\nbar")
+    checkBlankLine("after a line of spaces", s("foo\n  \n", blank(), "bar"), "foo\n  \nbar")
     checkBlankLine("after a blank line", s("foo", blank(), blank(), "bar"), "foo\n\nbar")
     checkBlankLine("then a newline", s("foo", blank(), n("bar")), "foo\n\nbar")
-    checkBlankLine("at the start", s(blank(), "bar"), "\nbar")
+    checkBlankLine("at the start", s(blank(), "bar"), "bar")
     checkBlankLine("at the end", s("foo", blank()), "foo\n")
-    checkBlankLine("at the end, after a newline", s("foo", n(), blank()), "foo\n\n")
+    checkBlankLine("at the end, after a newline", s("foo", n(), blank()), "foo\n")
   }
 
   test("empty block with a comment, printed without comments") {

@@ -19,6 +19,7 @@ private[meta] object Show {
 
     private val sb = new StringBuilder
     private val indentation = new StringBuilder
+    // 0 within a line, 1 after a newline, 2 after a newline with another one owed
     private var afterEOL = 0
     // text that emits only if a character follows it
     private var delay: CharSequence = _
@@ -129,6 +130,10 @@ private[meta] object Show {
     }
 
     private def appendPrepare(): Unit = {
+      if (afterEOL == 2) {
+        appendEOL()
+        afterEOL = 1
+      }
       val p = takePending()
       if (wasNL) indentPending(p) else if (!hasDelay) emitPending(p) // the separator replaces it
       appendDelay()
@@ -164,7 +169,33 @@ private[meta] object Show {
       }
     }
 
-    def blank(): Unit = nl(-1)
+    /* a blank line, unless the output ends with one, whether text or a newline printed it; the
+     * second newline waits for a character, so that the output never ends with an empty line */
+    def blank(): Unit = if (afterEOL != 2) trailingEOLs() match {
+      case 0 => nl(2)
+      case 1 => afterEOL = 2
+      case _ => if (afterEOL == 0) afterEOL = 1
+    }
+
+    // the line breaks that end the output, through spaces, up to two; nothing counts as two
+    private def trailingEOLs(): Int = {
+      var idx = sb.length
+      var eols = 0
+      while ({
+        if (idx == 0) return 2
+        if (idx >= EOL.length && sb.startsWith(EOL, idx - EOL.length)) {
+          if (eols == 1) return 2
+          eols += 1
+          idx -= EOL.length
+          true
+        } else {
+          idx -= 1
+          val ch = sb.charAt(idx)
+          ch == ' ' || ch == '\t'
+        }
+      }) {}
+      eols
+    }
 
     private def nl(newAfterEOL: Int): Unit = {
       val p = takePending()
