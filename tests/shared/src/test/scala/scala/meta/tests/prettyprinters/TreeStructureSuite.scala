@@ -93,7 +93,12 @@ class TreeStructureSuite extends ParseSuite {
 
   test("built name with two line comments after it") {
     val tree = Term.Name.newBuilder("a").endComment(Seq("// c1", "// c2")).result()
-    assertNoDiff(tree.structure, """Term.Name("a") // c1 // c2""")
+    assertNoDiff(
+      tree.structure,
+      """|Term.Name("a") // c1
+         |  // c2
+         |""".stripMargin,
+    )
   }
 
 }

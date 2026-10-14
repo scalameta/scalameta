@@ -1544,8 +1544,10 @@ object TreeSyntax {
   // the structure printer keeps one comment per line
   private def printBegCommentsPlain(t: Tree.Comments): Show.Result =
     s(s(t.values.map(x => printComment(x, pre = n(), post = s())): _*), n())
-  private def printEndCommentsPlain(t: Tree.Comments): Show.Result =
-    s(s(t.values.map(printComment(_)): _*), n())
+  private def printEndCommentsPlain(t: Tree.Comments): Show.Result = {
+    val rest = t.values.tail.map(x => printComment(x, pre = n(), post = s()))
+    s(printComment(t.values.head), s(rest: _*), n())
+  }
 
   // the leading comments `xs` of the tree that follows, with `newlines` before them
   private def printLeading(xs: List[Tree.Comment], newlines: Int): Show.Result =
