@@ -223,6 +223,7 @@ object TreeSyntax {
         case Some(p: Source) => p.stats.lengthCompare(1) == 0
         case _ => true
       }
+      hasComments(t.body) && (t.body.stats.nonEmpty || endCommentsInside(t.body)) ||
       !isOnlyChildOfOnlyChild(t)
     }
     def guessNeedsLineSep(t: Tree): Boolean = t match {
@@ -310,6 +311,7 @@ object TreeSyntax {
                     _: Term.MacroLike | _: Term.If) :: Nil => true
                 case _ => false
               }) => p(new InfixExpr(ai), t.values.head)
+          case _ if t.isEmpty => nosp(emptyBlock(t, comments, "(", ")"))
           case _ => nosp(s("(", o(t.mod, " "), rsep(t.values), ")"))
         }
       case t: Term.Apply => m(SimpleExpr1, s(p(SimpleExpr1, t.fun), printApplyArgs(t.argClause, " ")))
@@ -432,7 +434,8 @@ object TreeSyntax {
           case _ => true
         }
         val mod = o(modOpt, " ")
-        w("(", s(mod, rsepWith(v)(printParam(_, mod.isEmpty))), ")", useParens)
+        if (v.isEmpty) emptyBlock(t, comments, "(", ")")
+        else w("(", s(mod, rsepWith(v)(printParam(_, mod.isEmpty))), ")", useParens)
 
       // Type
       case t: Type.AnonymousName => m(Path, s(""))
@@ -558,7 +561,10 @@ object TreeSyntax {
         val indent = !comments || !isBarAfterDetachedBar(t)
         m(Pattern, s(p(Pattern, t.lhs), beforeKeyword(t.rhs, "|", p(Pattern, t.rhs), indent = indent)))
       case t: Pat.Tuple => m(SimplePattern, s("(", rsep(t.args), ")"))
-      case t: Pat.ArgClause => m(SimplePattern, s("(", rsep(t.values), ")"))
+      case t: Pat.ArgClause =>
+        val args =
+          if (t.isEmpty) nosp(emptyBlock(t, comments, "(", ")")) else s("(", rsep(t.values), ")")
+        m(SimplePattern, args)
       case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
       case t: Pat.ExtractInfix =>
         val pop = new InfixPat(t)
@@ -626,7 +632,7 @@ object TreeSyntax {
         m(Literal, s(syntax))
       case Lit.Symbol(value) => m(Literal, s("'", value.name))
       case Lit.Null() => m(Literal, s(kw("null")))
-      case Lit.Unit() => m(Literal, s("()"))
+      case t: Lit.Unit => m(Literal, emptyBlock(t, comments, "(", ")"))
 
       // Member
       case t: Member.ParamClauseGroup => s(t.tparamClause, t.paramClauses)
@@ -683,14 +689,19 @@ object TreeSyntax {
         val pcg = t.paramClauseGroups
         val body = beforeKeyword(t.body, "macro")
         s(printMods(t), kw("def "), t.name, pcg, nosp(t.decltpe), " = ", body)
-      case t: Pkg.Body => printBlock(t, t.stats)
+      case t: Pkg.Body =>
+        val body = printBlock(t, t.stats)
+        if (comments && t.begComment.isDefined) Show.outerNewline(body) else body
       case t: Pkg =>
-        val body = if (guessHasBraces(t)) s(" ", t.body) else r(t.body.stats.map(n(_)))
+        val body = if (guessHasBraces(t)) spn(t.body) else r(t.body.stats.map(n(_)))
         s(kw("package"), " ", t.ref, body)
       case t: Pkg.Object => r(" ")(kw("package"), t.mods, kw("object"), t.name, t.templ)
       case t: Ctor.Primary =>
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), s(t.paramClauses: _*))
-      case t: Ctor.Block => if (t.stats.isEmpty) s(t.init) else s("{", i(t.init), "", t.stats, n("}"))
+      // a block with a comment before it keeps its braces, so the comment stays its own
+      case t: Ctor.Block =>
+        val isEmpty = t.stats.isEmpty && (!comments || t.begComment.isEmpty)
+        if (isEmpty) s(t.init) else s("{", i(t.init), "", t.stats, n("}"))
       case t: Ctor.Secondary =>
         s(printMods(t), kw("def "), kw("this"), t.paramClauses, " = ", t.body)
 
@@ -740,15 +751,36 @@ object TreeSyntax {
         val rest = r(" ")(pparents, derived, body)
         if (noExtends) rest else beforeKeyword(allParents.head, "extends", rest, owner = t)
       case t: Template.Body =>
-        val self = o(t.selfOpt)
-        t.stats match {
-          case Nil => w("{ ", self, spn("}"))
-          case stat :: Nil =>
-            val statStr = s(stat).toString
-            if (statStr.contains(EOL)) s("{", w(" ", self), i(stat), n("}"))
-            else r(" ")("{", self, statStr, "}")
-          case stats => s("{", w(" ", self), stats, n("}"))
+        val selfBeg = if (comments) t.selfOpt.flatMap(_.begComment) else None
+        val selfEnd = if (comments) t.selfOpt.flatMap(lastEndComment) else None
+        val detachBeforeSelf = selfBeg.exists(_.isDetached) ||
+          selfEnd.exists(_.hasNewlinesBeforeLast)
+        def detachAfterSelf = detachBeforeSelf || selfEnd.exists(_.hasNewlinesAfter)
+        val self = t.selfOpt.fold(s())(self => if (detachBeforeSelf) i(self) else s(self))
+        // the comments before the brace end their lines, so the brace starts one of its own
+        val leading = comments && t.begComment.isDefined && !hasKeywordOwner(t)
+        // use a colon for a new-syntax given, it treats a detached brace as an unrelated block
+        def useColonForGiven = t.parent match {
+          case Some(p: Template) => leading && !t.isEmpty && (templateParentType(p) eq Decl.Given)
+          case _ => false
         }
+        val body = t.stats match {
+          case stats if useColonForGiven => s(":", t.selfOpt.fold(s())(i(_)), stats)
+          case Nil if !detachBeforeSelf =>
+            if (self.isEmpty)
+              o(emptyBlock(t, comments), leading || comments && t.endComment.isDefined)
+            else s("{ ", self, spn("}"))
+          case stat :: Nil =>
+            def fallback = s("{ ", self, i(stat), n("}"))
+            if (leading || detachAfterSelf) fallback
+            else {
+              val statStr = s(stat).toString
+              if (statStr.contains(EOL)) fallback else s("{ ", self, " ", statStr, spn("}"))
+            }
+          case stats => s("{ ", self, stats, n("}"))
+        }
+        // a blank line before the brace would make the body a block of its own
+        Show.noBlankBefore(if (leading) Show.outerNewline(body) else body)
 
       // Mod
       case Mod.Annot(init) => s(kw("@"), p(SimpleTyp, init.tpe), init.argClauses)
@@ -964,7 +996,7 @@ object TreeSyntax {
       rsepWith(pats)(x => parens(Pattern2, showTree(x)))
     private def printPats(t: Tree.WithPats): Show.Result = printPats(t.pats)
     private def printBlock(t: Tree, stats: List[Stat]): Show.Result =
-      if (stats.isEmpty) s("{}") else s("{", stats, n("}"))
+      if (stats.isEmpty) emptyBlock(t, comments) else s("{", stats, n("}"))
     implicit def syntaxAnnots: Syntax[Seq[Mod.Annot]] = Syntax(r(_, " "))
     // a term clause after a name does not split from it
     implicit def syntaxMemberParamss: Syntax[Seq[Member.ParamClause]] = Syntax(xs =>
@@ -1297,6 +1329,13 @@ object TreeSyntax {
 
   private def ownBegComments(tree: Tree): Option[Tree.Comments] = ownComments(tree)(_.begComment)
 
+  // the tree prints a body first, whose brace a blank line before it would detach
+  private def opensBody(tree: Tree): Boolean = tree match {
+    case _: Template.Body | _: Pkg.Body => true
+    case t: Template => t.earlyClause.isEmpty && t.inits.isEmpty && t.derives.isEmpty
+    case _ => false
+  }
+
   /* how many comments of the group come before the keyword that introduces the tree; without an
    * origin, a detached group goes before the keyword and an attached one after it */
   private def commentsBeforeKeyword(
@@ -1332,7 +1371,37 @@ object TreeSyntax {
   private def printBegComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
     ownBegComments(tree).fold(s())(out)
   private def printEndComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
-    ownEndComments(tree).fold(s())(out)
+    if (endCommentsInside(tree)) s() else ownEndComments(tree).fold(s())(out)
+
+  // an empty enclosure in parens or braces prints its comments inside its delimiters
+  private def endCommentsInside(tree: Tree): Boolean =
+    (tree match {
+      case _: Source => false
+      case t: Tree.Block => t.childrenCount == 0
+      case t: Member.SyntaxValuesClause => t.isEmpty
+      case _: Lit.Unit => true
+      case _ => false
+    }) && endCommentIfInside(tree).isDefined
+
+  // the end comments if they lie before the tree's last token; without an origin, assume they do
+  private def endCommentIfInside(tree: Tree): Option[Tree.Comments] = tree.endComment match {
+    case x @ Some(c) if ((c.origin, tree.origin) match {
+          case (co: Origin.Partial, to: Origin.Partial) => co.endTokenIdx < to.endTokenIdx
+          case _ => true
+        }) => x
+    case _ => None
+  }
+
+  private def emptyBlock(
+      t: Tree,
+      comments: Boolean,
+      open: String = "{",
+      close: String = "}",
+  ): Show.Result = (if (comments) endCommentIfInside(t) else None) match {
+    case None => s(open, close)
+    case Some(c) if c.isDetached => s(open, i(printComments(c)), n(close))
+    case Some(c) => s(open, printComments(c), close)
+  }
 
   private def printComment(
       t: Tree.Comment,
@@ -1399,6 +1468,9 @@ object TreeSyntax {
       case Some(c) =>
         if (!layout) s(printBegCommentsPlain(c), syntax)
         else if (afterKeyword) syntax
+        // a body's comments go on lines of their own, at the column of its brace
+        else if (opensBody(tree))
+          s(s(c.values.map(x => Show.outerNewline(printComment(x))): _*), syntax)
         else s(printLeading(c.values, c.newlinesBefore), syntax)
     },
     after,
@@ -1410,6 +1482,7 @@ object TreeSyntax {
         if (tree.is[Mod])
           i(printEndComments(c), c.newlinesBefore > 0 && !tree.parent.forall(_.is[Stat]))
         else if (tree.parent.forall {
+            case _: Self => false
             case p: Pat.Alternative => (p.lhs ne tree) || isBarAfterDetachedBar(p)
             case p => p.lastChild eq tree
           }) printEndComments(c)
