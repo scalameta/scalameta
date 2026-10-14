@@ -388,8 +388,50 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def asComment(parts: List[Lit.String], beg: Int, end: Int): Tree.Comment =
     asComment(parts, asOrigin(beg, end), end - 1)
 
-  private def asComments(values: ListBuffer[Tree.Comment]): Option[Tree.Comments] =
-    if (values.isEmpty) None
+  private def concatComments(one: Tree.Comments, two: Tree.Comments): Tree.Comments = {
+    val origin = asOrigin(one.begTokenIdx, two.endTokenIdx)
+    val values = one.values ::: two.values
+    Tree.Comments._ctor(origin = origin, values = values, newlinesBefore = one.newlinesBefore)
+  }
+
+  private def concatComments(one: Tree.Comments, twoOpt: Option[Tree.Comments]): Tree.Comments =
+    twoOpt match {
+      case Some(two) => concatComments(one, two)
+      case None => one
+    }
+
+  private def concatComments(oneOpt: Option[Tree.Comments], two: Tree.Comments): Tree.Comments =
+    oneOpt match {
+      case Some(one) => concatComments(one, two)
+      case None => two
+    }
+
+  private def concatComments(
+      oneOpt: Option[Tree.Comments],
+      twoOpt: Option[Tree.Comments],
+  ): Option[Tree.Comments] = (oneOpt, twoOpt) match {
+    case (Some(one), Some(two)) => Some(concatComments(one, two))
+    case (_, None) => oneOpt
+    case _ => twoOpt
+  }
+
+  private def prependBegComment(tree: Tree, tc: Tree.Comments): Unit = tree
+    .privateSetBegComment(Some(concatComments(tc, tree.begComment)))
+  private def prependBegComment(tree: Tree, tcOpt: Option[Tree.Comments]): Unit = tcOpt match {
+    case Some(tc) => prependBegComment(tree, tc)
+    case None =>
+  }
+
+  private def appendEndComment(tree: Tree, tc: Tree.Comments): Unit = tree
+    .privateSetEndComment(Some(concatComments(tree.endComment, tc)))
+
+  private def appendEndComment(tree: Tree, tcOpt: Option[Tree.Comments]): Unit = tcOpt match {
+    case Some(tc) => appendEndComment(tree, tc)
+    case None =>
+  }
+
+  private def asComments(values: collection.Seq[Tree.Comment]): Option[Tree.Comments] =
+    if ((values eq null) || values.isEmpty) None
     else Some {
       val beg = values.head.begTokenIdx
       val origin = asOrigin(beg, values.last.endTokenIdx)
