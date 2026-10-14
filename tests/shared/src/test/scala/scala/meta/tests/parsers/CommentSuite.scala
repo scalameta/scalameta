@@ -3740,7 +3740,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  @deprecated // c1
-         |    def f = 1
+         |  def f = 1
          |}
          |""".stripMargin,
     )("end Mod.Annot, Init, Type.Name: // c1")
@@ -3757,7 +3757,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  @deprecated // c1
-         |    val f = 1
+         |  val f = 1
          |}
          |""".stripMargin,
     )("end Mod.Annot, Init, Type.Name: // c1")
@@ -3774,7 +3774,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  @deprecated // c1
-         |    class A
+         |  class A
          |}
          |""".stripMargin,
     )("end Mod.Annot, Init, Type.Name: // c1")
@@ -3793,8 +3793,8 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  @a
-         |    // c1
-         |    @b def f = 1
+         |  // c1
+         |  @b def f = 1
          |}
          |""".stripMargin,
     )("beg Mod.Annot: // c1")
@@ -3834,8 +3834,8 @@ class CommentSuite extends ParseSuite {
          |  private[
          |  // c1
          |  ]
-         |    // c1
-         |    final def f = 1
+         |  // c1
+         |  final def f = 1
          |}
          |""".stripMargin,
       reprintError = "<input>:4: error: `identifier` expected but `]` found",
@@ -3888,7 +3888,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  @deprecated // c1
-         |    def f = 1
+         |  def f = 1
          |}
          |""".stripMargin,
     )("end Mod.Annot, Init, Type.Name: // c1")
@@ -3907,8 +3907,8 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  final
-         |    /** c1 */
-         |    protected def f = 1
+         |  /** c1 */
+         |  protected def f = 1
          |}
          |""".stripMargin,
     )("beg Mod.Protected: /** c1 */")
@@ -4974,7 +4974,7 @@ class CommentSuite extends ParseSuite {
          |  def f[T
          |  // c1
          |  // c1
-         |  : Ord] = 1
+         |    : Ord] = 1
          |}
          |""".stripMargin,
       reprinted = Seq("beg Type.ParamClause: // c1\n  // c1", "beg Type.Bounds: // c1\n  // c1"),
@@ -4985,7 +4985,7 @@ class CommentSuite extends ParseSuite {
            |  // c1
            |  // c1
            |  // c1
-           |  : Ord] = 1
+           |    : Ord] = 1
            |}
            |""".stripMargin,
     )("beg Type.ParamClause: // c1", "beg Type.Bounds: // c1")
@@ -7411,7 +7411,7 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  @deprecated // c1
-         |    def f = 1
+         |  def f = 1
          |}
          |""".stripMargin,
     )("end Mod.Annot, Init, Type.Name: // c1")

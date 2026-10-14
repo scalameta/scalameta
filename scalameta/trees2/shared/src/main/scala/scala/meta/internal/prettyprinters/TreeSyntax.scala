@@ -340,7 +340,8 @@ object TreeSyntax {
       case t: Term.Return =>
         m(Expr1, s(kw("return"), if (guessHasExpr(t)) s(" ", p(Expr, t.expr)) else s()))
       case t: Term.Throw => m(Expr1, s(kw("throw"), " ", p(Expr, t.expr)))
-      case t: Term.Ascribe => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", p(AnyInfixTyp, t.tpe)))
+      case t: Term.Ascribe =>
+        m(Expr1, s(p(PostfixExpr, t.expr), nosp(s(kw(": "), p(AnyInfixTyp, t.tpe)))))
       case t: Term.Annotate => m(Expr1, s(p(PostfixExpr, t.expr), kw(":"), " ", t.annots))
       case t: Term.Tuple => m(SimpleExpr1, s("(", rsep(t.args), ")"))
       case t: Term.Block =>
@@ -366,15 +367,15 @@ object TreeSyntax {
         val showElse =
           if (!guessHasElsep(t)) s()
           else n(beforeKeyword(t.elsep, "else", p(Expr, t.elsep)), comments && breakBeforeElse(t))
-        m(Expr1, s(w(t.mods, " "), kw("if"), " (", t.cond, ") ", showThen, showElse))
+        m(Expr1, s(printMods(t), kw("if"), " (", t.cond, ") ", showThen, showElse))
       case t: Term.SelectMatch if dialect.allowMatchAsOperator =>
         val mods = t.mods
         val pref = if (mods.isEmpty) Path else Expr1
         val casesBlock = beforeKeyword(t.casesBlock, ".match")
-        m(pref, s(w(mods, " "), printSelectLhs(t.expr), casesBlock))
+        m(pref, s(printMods(mods), printSelectLhs(t.expr), casesBlock))
       case t: Term.MatchLike =>
         val casesBlock = beforeKeyword(t.casesBlock, "match")
-        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), casesBlock))
+        m(Expr1, s(printMods(t.mods), p(PostfixExpr, t.expr), casesBlock))
       case t: Term.TryClause =>
         val showExpr = p(Expr, t.expr)
         val showCatch = t.catchClause.fold(s())(beforeKeyword(_, "catch"))
@@ -417,8 +418,8 @@ object TreeSyntax {
       case _: Term.Placeholder => m(SimpleExpr1, kw("_"))
       case t: Term.Eta => m(PostfixExpr, s(p(SimpleExpr1, t.expr), " ", kw("_")))
       case t: Term.Repeated =>
-        if (dialect.allowPostfixStarVarargSplices) s(p(PostfixExpr, t.expr), kw("*"))
-        else s(p(PostfixExpr, t.expr), kw(":"), " ", kw("_*"))
+        val varargs = if (dialect.allowPostfixStarVarargSplices) kw("*") else nosp(kw(": _*"))
+        s(p(PostfixExpr, t.expr), varargs)
       case t: Term.Param =>
         // NOTE: `implicit/using` in parameters is skipped as it applies to whole list
         printParam(t)
@@ -438,7 +439,7 @@ object TreeSyntax {
       case t: Type.Name => m(Path, printMaybeBackquoted(t))
       case t: Type.CapSetName => m(Path, s(printMaybeBackquoted(t), "^"))
       case t: Type.Select => m(SimpleTyp, s(t.qual, kw("."), t.name))
-      case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), kw("#"), t.name))
+      case t: Type.Project => m(SimpleTyp, s(p(SimpleTyp, t.qual), nosp(s(kw("#"), t.name))))
       case t: Type.Singleton => m(SimpleTyp, s(p(SimpleExpr1, t.ref), ".", kw("type")))
       case t: Type.ArgClause =>
         def arg(x: Type) = parens(Typ, showTree(x))
@@ -483,7 +484,7 @@ object TreeSyntax {
         def questionMarkUsed = t.origin.tokensOpt.exists(!_.headOption.is[Token.Underscore])
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
-        m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
+        m(SimpleTyp, s(kw(if (useQM) "?" else "_"), spn(t.bounds)))
       case t: Type.PatWildcard => m(SimpleTyp, kw("_"))
       case t: Type.Placeholder =>
         /* In order not to break existing tools `.syntax` should still return
@@ -492,7 +493,7 @@ object TreeSyntax {
         def questionMarkUsed = t.origin.tokensOpt.exists(!_.exists(_.is[Token.Underscore]))
         val useQM = dialect.allowQuestionMarkAsTypeWildcard &&
           (dialect.allowUnderscoreAsTypePlaceholder || questionMarkUsed)
-        m(SimpleTyp, s(kw(if (useQM) "?" else "_"), t.bounds))
+        m(SimpleTyp, s(kw(if (useQM) "?" else "_"), spn(t.bounds)))
       case t: Type.Bounds =>
         val res = Seq.newBuilder[Show.Result]
         def add(str: String)(tpe: Type): Unit = res += " " += kw(str) += " " += p(Typ, tpe)
@@ -507,7 +508,7 @@ object TreeSyntax {
                 x.origin.tokensOpt.exists(_.rfindWideNotOrNull(_.is[T.Trivia], -1).is[T.LeftBrace]))
                 s("{", rsep(cbs), "}")
               else r(cbs, ": ")
-            res += s(kw(": "), bounds)
+            res += nosp(s(kw(": "), bounds))
           case _ =>
         }
         s(res.result(): _*)
@@ -576,7 +577,8 @@ object TreeSyntax {
         m(SimplePattern, partsArgs)
       case Pat.Typed(lhs, rhs: Lit) =>
         m(Pattern1, s(p(SimplePattern, lhs), kw(":"), " ", p(Literal, rhs)))
-      case t: Pat.Typed => m(Pattern1, s(p(SimplePattern, t.lhs), kw(":"), " ", p(RefineTyp, t.rhs)))
+      case t: Pat.Typed =>
+        m(Pattern1, s(p(SimplePattern, t.lhs), nosp(s(kw(": "), p(RefineTyp, t.rhs)))))
 
       // Lit
       case Lit.Boolean(value) => m(Literal, s(value.toString))
@@ -628,66 +630,59 @@ object TreeSyntax {
 
       // Member
       case t: Member.ParamClauseGroup => s(t.tparamClause, t.paramClauses)
-      case t: Decl.Val => s(w(t.mods, " "), kw("val"), " ", printPats(t), kw(":"), " ", t.decltpe)
-      case t: Decl.Var => s(w(t.mods, " "), kw("var"), " ", printPats(t), kw(":"), " ", t.decltpe)
-      case t: Decl.Type => s(w(t.mods, " "), kw("type"), " ", t.name, t.tparamClause, t.bounds)
+      case t: Decl.Val => s(printMods(t), kw("val "), printPats(t), nosp(s(kw(": "), t.decltpe)))
+      case t: Decl.Var => s(printMods(t), kw("var "), printPats(t), nosp(s(kw(": "), t.decltpe)))
+      case t: Decl.Type => s(printMods(t), kw("type "), t.name, t.tparamClause, t.bounds)
       case t: Decl.Def =>
-        s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, kw(": "), t.decltpe)
+        s(printMods(t), kw("def "), t.name, t.paramClauseGroups, nosp(s(kw(": "), t.decltpe)))
       case t: Decl.GivenLike =>
         val sig = givenSig(t.name, t.paramClauseGroups)
-        r(" ")(t.mods, sig, givenDeclTpe(t.decltpe))
-      case t: Defn.Val =>
-        s(w(t.mods, " "), kw("val"), " ", printPats(t), t.decltpe, " ", kw("="), " ", t.rhs)
-      case t: Defn.Var =>
-        s(w(t.mods, " "), kw("var"), " ", printPats(t), t.decltpe, " ", kw("="), " ", t.body)
-      case t: Defn.Type => s(
-          w(t.mods, " "),
-          kw("type"),
-          " ",
-          t.name,
-          t.tparamClause,
-          t.bounds,
-          " ",
-          kw("="),
-          " ",
-          t.body,
-        )
-      case t: Defn.Class => r(" ")(
-          t.mods,
-          kw("class"),
-          s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
-          t.templ,
+        s(printMods(t), sig, spn(), givenDeclTpe(t.decltpe))
+      case t: Defn.Val => s(printMods(t), kw("val "), printPats(t), nosp(t.decltpe), " = ", t.rhs)
+      case t: Defn.Var => s(printMods(t), kw("var "), printPats(t), nosp(t.decltpe), " = ", t.body)
+      case t: Defn.Type =>
+        s(printMods(t), kw("type "), t.name, t.tparamClause, t.bounds, " = ", t.body)
+      case t: Defn.Class => s(
+          printMods(t),
+          r(" ")(
+            kw("class"),
+            s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
+            t.templ,
+          ),
         )
       case t: Defn.Trait =>
-        if (dialect.allowTraitParameters || t.ctor.mods.isEmpty) r(" ")(
-          t.mods,
-          kw("trait"),
-          s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
-          t.templ,
+        if (dialect.allowTraitParameters || t.ctor.mods.isEmpty) s(
+          printMods(t),
+          r(" ")(
+            kw("trait"),
+            s(t.name, t.tparamClause, w(" ", t.ctor, t.ctor.mods.nonEmpty)),
+            t.templ,
+          ),
         )
         else throw new UnsupportedOperationException(s"$dialect doesn't support trait parameters")
 
       case t: Defn.GivenAlias =>
         val sig = givenSig(t.name, t.paramClauseGroups)
-        r(" ")(t.mods, sig, givenDeclTpe(t.decltpe), kw("="), t.body)
+        s(printMods(t), sig, spn(), givenDeclTpe(t.decltpe), kw(" = "), t.body)
       case t: Defn.Given =>
         val sig = givenSig(t.name, t.paramClauseGroups)
-        r(" ")(t.mods, sig, t.templ)
+        s(printMods(t), sig, spn(), t.templ)
 
-      case t: Defn.Enum => r(" ")(t.mods, kw("enum"), s(t.name, t.tparamClause, t.ctor), t.templ)
-      case t: Defn.RepeatedEnumCase => s(w(t.mods, " "), kw("case"), " ", rsep(t.cases))
+      case t: Defn.Enum =>
+        s(printMods(t), r(" ")(kw("enum"), s(t.name, t.tparamClause, t.ctor), t.templ))
+      case t: Defn.RepeatedEnumCase => s(printMods(t), kw("case"), " ", rsep(t.cases))
       case t: Defn.EnumCase =>
         def init() = if (t.inits.nonEmpty) s(" extends ", rsep(t.inits)) else s("")
-        s(w(t.mods, " "), kw("case"), " ", t.name, t.tparamClause, t.ctor, init())
+        s(printMods(t), kw("case"), " ", t.name, t.tparamClause, t.ctor, init())
 
       case t: Defn.ExtensionGroup => s(kw("extension"), " ", o(t.paramClauseGroup), " ", t.body)
-      case t: Defn.Object => r(" ")(t.mods, kw("object"), t.name, t.templ)
+      case t: Defn.Object => s(printMods(t), r(" ")(kw("object"), t.name, t.templ))
       case t: Defn.Def =>
-        s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)
+        s(printMods(t), kw("def "), t.name, t.paramClauseGroups, nosp(t.decltpe), " = ", t.body)
       case t: Defn.Macro =>
         val pcg = t.paramClauseGroups
         val body = beforeKeyword(t.body, "macro")
-        s(w(t.mods, " "), kw("def "), t.name, pcg, t.decltpe, " = ", body)
+        s(printMods(t), kw("def "), t.name, pcg, nosp(t.decltpe), " = ", body)
       case t: Pkg.Body => printBlock(t, t.stats)
       case t: Pkg =>
         val body = if (guessHasBraces(t)) s(" ", t.body) else r(t.body.stats.map(n(_)))
@@ -697,7 +692,7 @@ object TreeSyntax {
         s(w(t.mods, " ", t.mods.nonEmpty && t.paramClauses.nonEmpty), s(t.paramClauses: _*))
       case t: Ctor.Block => if (t.stats.isEmpty) s(t.init) else s("{", i(t.init), "", t.stats, n("}"))
       case t: Ctor.Secondary =>
-        s(w(t.mods, " "), kw("def"), " ", kw("this"), t.paramClauses, " = ", t.body)
+        s(printMods(t), kw("def "), kw("this"), t.paramClauses, " = ", t.body)
 
       // Init
       case t: Init =>
@@ -797,8 +792,9 @@ object TreeSyntax {
       case t: Importee.Given => s(kw("given"), " ", t.tpe)
       case t: Importee.GivenAll => s(kw("given"))
       case t: Importee.Rename =>
-        val arrow = if (dialect.allowAsForImportRename) "as" else "=>"
-        s(t.name, " ", kw(arrow), " ", t.rename)
+        // a line break after `as` ends the importee, but after `=>` it does not
+        val asOK = dialect.allowAsForImportRename && !hasBreaksAroundBegComments(t.rename)
+        s(t.name, " ", kw(if (asOK) "as" else "=>"), spn(t.rename))
       case t: Importee.Unimport =>
         val arrow = if (dialect.allowAsForImportRename) "as" else "=>"
         s(t.name, " ", kw(arrow), " ", kw("_"))
@@ -954,11 +950,14 @@ object TreeSyntax {
     implicit def syntaxParamClauseGroups: Syntax[Seq[Member.ParamClauseGroup]] = Syntax(r(_))
     implicit def syntaxArgss: Syntax[Seq[Term.ArgClause]] = Syntax(r(_))
     implicit def syntaxMods: Syntax[Seq[Mod]] = Syntax(r(_, " "))
+    // each modifier, then a space that a newline drops, so that what follows keeps their column
+    private def printMods(mods: Seq[Mod]): Show.Result = r(mods.map(s(_, spn())))
+    private def printMods(t: Stat.WithMods): Show.Result = printMods(t.mods)
     private def isUsingOrImplicit(m: Mod): Boolean = m.is[Mod.ParamsType]
     private def printParam(t: Term.Param, keepImplicit: Boolean = false): Show.Result = {
       val mods = if (keepImplicit) t.mods else t.mods.filterNot(isUsingOrImplicit)
-      val nameType = if (t.isNameAnonymous) o(t.decltpe) else s(t.name, t.decltpe)
-      s(w(mods, " "), nameType, o(" = ", t.default))
+      val nameType = if (t.isNameAnonymous) o(t.decltpe) else s(t.name, nosp(t.decltpe))
+      s(w(mods, " "), nameType, o(kw(" = "), t.default))
     }
     // a typed pattern keeps its parens: the type after them is the declared one
     private def printPats(pats: List[Pat]): Show.Result =
@@ -1075,7 +1074,7 @@ object TreeSyntax {
         case Some(p: Type.Capturing) if p.tpe eq t => s(p.caps)
         case _ => Show.None
       }
-      m(Typ, s(w(params, " "), kw(arrow), caps, " ", p(Typ, t.res)))
+      m(Typ, s(w(params, " "), kw(arrow), caps, spn(p(Typ, t.res))))
     }
 
     private def printFunctionType(t: Type.ParamFunctionType, arrow: String): Show.Result =
@@ -1206,6 +1205,11 @@ object TreeSyntax {
       if (comments) TreeSyntax.ownBegComments(tree) else None
     def ownEndComments(tree: Tree): Option[Tree.Comments] =
       if (comments) TreeSyntax.ownEndComments(tree) else None
+
+    def hasBreaksAroundBegComments(tree: Tree): Boolean = ownBegComments(tree)
+      .hasNewlinesBeforeOrAfter
+    def hasBreaksAroundEndComments(tree: Tree): Boolean = ownEndComments(tree)
+      .hasNewlinesBeforeOrAfter
 
     def hasComments(tree: Tree): Boolean = comments && tree.hasComments
     def withComments(tree: Tree, after: Show.Result = Show.None, indents: Int = 1)(
@@ -1402,7 +1406,10 @@ object TreeSyntax {
       tree,
       if (!layout) printEndCommentsPlain
       else { c =>
-        if (tree.parent.forall {
+        // what follows a modifier keeps its column, unless its tree continues after the comments
+        if (tree.is[Mod])
+          i(printEndComments(c), c.newlinesBefore > 0 && !tree.parent.forall(_.is[Stat]))
+        else if (tree.parent.forall {
             case p: Pat.Alternative => (p.lhs ne tree) || isBarAfterDetachedBar(p)
             case p => p.lastChild eq tree
           }) printEndComments(c)
