@@ -2599,9 +2599,8 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { given f: (x: Int) => Foo = ??? }
+      """|object O { given f: (x: Int) /* c1 */ => Foo = ??? }
          |""".stripMargin,
-      reprinted = Seq(),
     )("end Term.ParamClause: /* c1 */")
   }
 
@@ -5209,9 +5208,21 @@ class CommentSuite extends BaseDottySuite {
       """|object O {
          |  given [T
          |  // c
+         |  // c
          |  ]: Ord[T] = ???
          |}
          |""".stripMargin,
+      reprinted = Seq("beg Type.ParamClause: // c\n  // c", "beg Type.Bounds: // c\n  // c"),
+      twice =
+        """|object O {
+           |  given [T
+           |  // c
+           |  // c
+           |  // c
+           |  // c
+           |  ]: Ord[T] = ???
+           |}
+           |""".stripMargin,
     )("beg Type.ParamClause: // c", "beg Type.Bounds: // c")
   }
 
