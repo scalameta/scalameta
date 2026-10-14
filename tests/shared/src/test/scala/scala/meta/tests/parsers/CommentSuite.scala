@@ -778,7 +778,11 @@ class CommentSuite extends ParseSuite {
          |  x: Int
          |) = 1
          |""".stripMargin
-    val layout = "def f(x: Int) = 1"
+    val layout =
+      """|def f(
+         |// c
+         |x: Int) = 1
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
@@ -789,9 +793,7 @@ class CommentSuite extends ParseSuite {
       None,
       int(1),
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
-    val reparsed = Defn.Def(Nil, tname("f"), Nil, List(List(tparam("x", pname("Int")))), None, int(1))
-    runTestAssert[Stat](layout)(reparsed)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("import: ASLC, then a DSLC at the end of input") {
@@ -1355,15 +1357,16 @@ class CommentSuite extends ParseSuite {
 
   test("args: MLC between an arg and the comma") {
     val code = "f(a /* c */, b)"
-    runTestAssert[Stat](code)(tapply(tname("f"), tnameComments("a")()("/* c */"), tname("b")))
+    runTestAssert[Stat](code, "f(a /* c */ , b)")(
+      tapply(tname("f"), tnameComments("a")()("/* c */"), tname("b")),
+    )
   }
 
   test("params: MLC between a param and the comma") {
     val code = "def f(a: Int /* c */, b: Int) = a"
     val a = tparam("a", "Int").toBuilder.endComment(Seq("/* c */")).result()
     val params = List(a, tparam("b", "Int"))
-    val layout = "def f(a: Int, b: Int) = a"
-    parseAndCheckTree[Stat](code, layout)(
+    runTestAssert[Stat](code, "def f(a: Int /* c */ , b: Int) = a")(
       Defn.Def(Nil, tname("f"), Nil, List(params), None, tname("a")),
     )
   }
@@ -3241,8 +3244,8 @@ class CommentSuite extends ParseSuite {
          |]
          |""".stripMargin
     val layout =
-      """|f[A // c
-         |, B]
+      """|f[A, // c
+         |  B]
          |""".stripMargin
     val a = Type.Name.newBuilder("A").endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(Term.ApplyType(tname("f"), List(a, pname("B"))))
@@ -3256,8 +3259,8 @@ class CommentSuite extends ParseSuite {
          |]
          |""".stripMargin
     val layout =
-      """|class C[A // c
-         |, B]
+      """|class C[A, // c
+         |  B]
          |""".stripMargin
     val a = pparam("A").toBuilder.endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(
@@ -3330,8 +3333,8 @@ class CommentSuite extends ParseSuite {
          |  d.e
          |""".stripMargin
     val layout =
-      """|import a.b // c
-         |, d.e
+      """|import a.b, // c
+         |  d.e
          |""".stripMargin
     val ab = Importer("a", "b").toBuilder.endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(Import(List(ab, Importer("d", "e"))))
@@ -4031,9 +4034,31 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  def f(
          |  // c1
-         |  implicit x: Int, y: Int) = 1
+         |  implicit
+         |    // c1
+         |    x: Int,
+         |      // c1
+         |      y: Int) = 1
          |}
          |""".stripMargin,
+      reprinted = Seq(
+        "beg Term.Param, Mod.Implicit, Term.Param, Mod.Implicit, Mod.Implicit: // c1",
+        "beg Term.Name: // c1",
+        "beg Term.Name: // c1",
+      ),
+      twice =
+        """|object O {
+           |  def f(
+           |  // c1
+           |  implicit
+           |    // c1
+           |    // c1
+           |    x: Int,
+           |      // c1
+           |      // c1
+           |      y: Int) = 1
+           |}
+           |""".stripMargin,
     )("beg Term.Param, Mod.Implicit, Term.Param, Mod.Implicit, Mod.Implicit: // c1")
   }
 
@@ -4289,7 +4314,7 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val x /* c1 */, y = 1 }
+      """|object A { val x /* c1 */ , y = 1 }
          |""".stripMargin,
     )("end Pat.Var, Term.Name: /* c1 */")
   }
@@ -5074,21 +5099,12 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  import a.{
-         |    b // c1
-         |,    // c2
+         |    b, // c1
+         |    // c2
          |    c
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Importee.Name, Name.Indeterminate: // c1"),
-      twice =
-        """|object O {
-           |  import a.{
-           |    b // c1
-           |,    c
-           |  }
-           |}
-           |""".stripMargin,
     )("end Importee.Name, Name.Indeterminate: // c1", "beg Importee.Name, Name.Indeterminate: // c2")
   }
 
@@ -5933,9 +5949,9 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object O {
-         |  f(a, 
-         |  // c
-         |  b)
+         |  f(a,
+         |    // c
+         |    b)
          |}
          |""".stripMargin,
     )("beg Term.Name: // c")
@@ -5953,9 +5969,12 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def f(a: A, b: B) = 1 }
+      """|object O {
+         |  def f(a: A,
+         |    // c
+         |    b: B) = 1
+         |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Term.Param, Term.Name: // c")
   }
 
@@ -5971,9 +5990,12 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { case class C(a: A, b: B) }
+      """|object O {
+         |  case class C(a: A,
+         |    // c
+         |    b: B)
+         |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Term.Param, Term.Name: // c")
   }
 
@@ -6088,9 +6110,22 @@ class CommentSuite extends ParseSuite {
       """|object O {
          |  def f(a: Int)(
          |  // c1
-         |  implicit b: B) = 1
+         |  implicit
+         |    // c1
+         |    b: B) = 1
          |}
          |""".stripMargin,
+      reprinted = Seq("beg Term.Param, Mod.Implicit, Mod.Implicit: // c1", "beg Term.Name: // c1"),
+      twice =
+        """|object O {
+           |  def f(a: Int)(
+           |  // c1
+           |  implicit
+           |    // c1
+           |    // c1
+           |    b: B) = 1
+           |}
+           |""".stripMargin,
     )("beg Term.Param, Mod.Implicit, Mod.Implicit: // c1")
   }
 
@@ -7107,9 +7142,11 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f(a: A, b: B) = 1 }
+      """|object A {
+         |  def f( // c
+         |    a: A, b: B) = 1
+         |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Term.Param, Term.Name: // c")
   }
 
@@ -7908,9 +7945,12 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A(x: Int, y: Int)
+      """|class A(
+         |/** c1 */
+         |x: Int,
+         |  /** c2 */
+         |  y: Int)
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Term.Param, Term.Name: /** c1 */", "beg Term.Param, Term.Name: /** c2 */")
   }
 

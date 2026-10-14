@@ -371,7 +371,11 @@ class CommentSuite extends BaseDottySuite {
          |  x: Int
          |) = 1
          |""".stripMargin
-    val layout = "def f(x: Int) = 1"
+    val layout =
+      """|def f(
+         |// c
+         |x: Int) = 1
+         |""".stripMargin
     val tree = Defn.Def(
       Nil,
       tname("f"),
@@ -382,9 +386,7 @@ class CommentSuite extends BaseDottySuite {
       None,
       int(1),
     )
-    parseAndCheckTree[Stat](code, layout)(tree)
-    val reparsed = Defn.Def(Nil, tname("f"), Nil, List(List(tparam("x", pname("Int")))), None, int(1))
-    runTestAssert[Stat](layout)(reparsed)
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("braceless def body: DSLC at the body's indentation, definition follows") {
@@ -1088,15 +1090,16 @@ class CommentSuite extends BaseDottySuite {
 
   test("args: MLC between an arg and the comma") {
     val code = "f(a /* c */, b)"
-    runTestAssert[Stat](code)(tapply(tname("f"), tnameComments("a")()("/* c */"), tname("b")))
+    runTestAssert[Stat](code, "f(a /* c */ , b)")(
+      tapply(tname("f"), tnameComments("a")()("/* c */"), tname("b")),
+    )
   }
 
   test("params: MLC between a param and the comma") {
     val code = "def f(a: Int /* c */, b: Int) = a"
     val a = tparam("a", "Int").toBuilder.endComment(Seq("/* c */")).result()
     val params = List(a, tparam("b", "Int"))
-    val layout = "def f(a: Int, b: Int) = a"
-    parseAndCheckTree[Stat](code, layout)(
+    runTestAssert[Stat](code, "def f(a: Int /* c */ , b: Int) = a")(
       Defn.Def(Nil, tname("f"), Nil, List(params), None, tname("a")),
     )
   }
@@ -1244,8 +1247,8 @@ class CommentSuite extends BaseDottySuite {
          |]
          |""".stripMargin
     val layout =
-      """|f[A // c
-         |, B]
+      """|f[A, // c
+         |  B]
          |""".stripMargin
     val a = Type.Name.newBuilder("A").endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(Term.ApplyType(tname("f"), List(a, pname("B"))))
@@ -1259,8 +1262,8 @@ class CommentSuite extends BaseDottySuite {
          |]
          |""".stripMargin
     val layout =
-      """|class C[A // c
-         |, B]
+      """|class C[A, // c
+         |  B]
          |""".stripMargin
     val a = pparam("A").toBuilder.endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(
@@ -1292,8 +1295,8 @@ class CommentSuite extends BaseDottySuite {
          |  d.e
          |""".stripMargin
     val layout =
-      """|import a.b // c
-         |, d.e
+      """|import a.b, // c
+         |  d.e
          |""".stripMargin
     val ab = Importer("a", "b").toBuilder.endComment(Seq("// c")).result()
     runTestAssert[Stat](code, layout)(Import(List(ab, Importer("d", "e"))))
@@ -1313,21 +1316,12 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  export a.{
-         |    b // c1
-         |,    // c2
+         |    b, // c1
+         |    // c2
          |    c
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Importee.Name, Name.Indeterminate: // c1"),
-      twice =
-        """|object O {
-           |  export a.{
-           |    b // c1
-           |,    c
-           |  }
-           |}
-           |""".stripMargin,
     )("end Importee.Name, Name.Indeterminate: // c1", "beg Importee.Name, Name.Indeterminate: // c2")
   }
 
@@ -1343,9 +1337,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|enum E { case C(a: A, b: B) }
+      """|enum E {
+         |  case C(a: A,
+         |    // c
+         |    b: B)
+         |}
          |""".stripMargin,
-      reprinted = Seq(),
     )("beg Term.Param, Term.Name: // c")
   }
 
@@ -2418,8 +2415,19 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f(a: Int)(
          |// c1
-         |using b: B) = 1
+         |using
+         |  // c1
+         |  b: B) = 1
          |""".stripMargin,
+      reprinted = Seq("beg Term.Param, Mod.Using, Mod.Using: // c1", "beg Term.Name: // c1"),
+      twice =
+        """|def f(a: Int)(
+           |// c1
+           |using
+           |  // c1
+           |  // c1
+           |  b: B) = 1
+           |""".stripMargin,
     )("beg Term.Param, Mod.Using, Mod.Using: // c1")
   }
 
@@ -2429,8 +2437,13 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f(a: Int)( /* c1 */ using b: B) = 1
+      """|def f(a: Int)( /* c1 */ using /* c1 */ b: B) = 1
          |""".stripMargin,
+      reprinted =
+        Seq("beg Term.Param, Mod.Using, Mod.Using: /* c1 */", "end Mod.Using, Mod.Using: /* c1 */"),
+      twice =
+        """|def f(a: Int)( /* c1 */ using /* c1 */ /* c1 */ b: B) = 1
+           |""".stripMargin,
     )("beg Term.Param, Mod.Using, Mod.Using: /* c1 */")
   }
 
@@ -5067,9 +5080,9 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|enum E {
-         |  case A extends B, 
-         |  // c
-         |  C
+         |  case A extends B,
+         |    // c
+         |    C
          |}
          |""".stripMargin,
     )("beg Init, Type.Name: // c")
@@ -5084,9 +5097,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class C derives A, 
-         |// c
-         |B { def f = 1 }
+      """|class C derives A,
+         |  // c
+         |  B { def f = 1 }
          |""".stripMargin,
     )("beg Type.Name: // c")
   }
@@ -5101,9 +5114,9 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|enum E {
-         |  case A, 
-         |  // c
-         |  B
+         |  case A,
+         |    // c
+         |    B
          |}
          |""".stripMargin,
     )("beg Term.Name: // c")
@@ -5506,9 +5519,9 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  def f[T: {A, 
-         |  // c
-         |  B}] = 1
+         |  def f[T: {A,
+         |    // c
+         |    B}] = 1
          |}
          |""".stripMargin,
     )("beg Type.Name: // c")
@@ -5587,9 +5600,9 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|object O {
-         |  val l: Logger^{fs, 
-         |  // c
-         |  io} = ???
+         |  val l: Logger^{fs,
+         |    // c
+         |    io} = ???
          |}
          |""".stripMargin,
     )("beg Term.Name: // c")
