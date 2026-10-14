@@ -282,7 +282,7 @@ object TreeSyntax {
       case t: Term.Super => m(Path, s(w(t.thisp, "."), kw("super"), w("[", t.superp, "]")))
       case t: Term.Name => m(Path, printMaybeBackquoted(t))
       case t: Term.CapSetName => m(Path, s(printMaybeBackquoted(t), "^"))
-      case t: Term.Select => m(Path, s(printSelectLhs(t.qual), ".", t.name))
+      case t: Term.Select => m(Path, s(printSelectLhs(t.qual), beforeKeyword(t.name, ".")))
       case t: Term.SelectPostfix =>
         val (sep, backquoteExpr) = t.qual match {
           case q: Term.Name // if it looks like a leading infix, don't use space
@@ -362,42 +362,33 @@ object TreeSyntax {
           case innerIf: Term.If => !guessHasElsep(innerIf) && guessHasElsep(t)
           case _ => false
         }
-        m(
-          Expr1,
-          s(
-            w(t.mods, " "),
-            kw("if"),
-            " (",
-            t.cond,
-            ") ",
-            p(Expr, t.thenp, force = needParens),
-            if (guessHasElsep(t)) spn(s(kw("else"), " ", p(Expr, t.elsep))) else s(),
-          ),
-        )
+        val showThen = p(Expr, t.thenp, force = needParens)
+        val showElse =
+          if (!guessHasElsep(t)) s()
+          else n(beforeKeyword(t.elsep, "else", p(Expr, t.elsep)), comments && breakBeforeElse(t))
+        m(Expr1, s(w(t.mods, " "), kw("if"), " (", t.cond, ") ", showThen, showElse))
       case t: Term.SelectMatch if dialect.allowMatchAsOperator =>
         val mods = t.mods
         val pref = if (mods.isEmpty) Path else Expr1
-        m(pref, s(w(mods, " "), printSelectLhs(t.expr), ".", kw("match"), " ", t.casesBlock))
+        val casesBlock = beforeKeyword(t.casesBlock, ".match")
+        m(pref, s(w(mods, " "), printSelectLhs(t.expr), casesBlock))
       case t: Term.MatchLike =>
-        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), spn(s(kw("match"), " ", t.casesBlock))))
+        val casesBlock = beforeKeyword(t.casesBlock, "match")
+        m(Expr1, s(w(t.mods, " "), p(PostfixExpr, t.expr), casesBlock))
       case t: Term.TryClause =>
         val showExpr = p(Expr, t.expr)
+        val showCatch = t.catchClause.fold(s())(beforeKeyword(_, "catch"))
+        val showFinally = t.finallyp.fold(s())(beforeKeyword(_, "finally"))
         val needParensAroundExpr = t.expr match {
           case e: Term.TryClause if e.finallyp.isEmpty =>
-            if (e.catchClause.isEmpty) t.catchClause.nonEmpty || t.finallyp.isDefined
-            else t.catchClause.isEmpty && t.finallyp.isDefined
-          case _ => false
+            if (e.catchClause.isEmpty) !showCatch.isEmpty || !showFinally.isEmpty
+            else showCatch.isEmpty && !showFinally.isEmpty
+          // a body on lines of its own: the keyword after it must not continue its last line
+          case e => comments && (!showCatch.isEmpty || !showFinally.isEmpty) &&
+            e.begComment.hasNewlinesBeforeOrAfter
         }
-        m(
-          Expr1,
-          s(
-            kw("try"),
-            " ",
-            if (needParensAroundExpr) s("(", i(showExpr), n(")")) else showExpr,
-            t.catchClause.fold(s())(x => spn(s(kw("catch"), " ", x))),
-            t.finallyp.fold(s())(finallyp => spn(s(kw("finally"), " ", finallyp))),
-          ),
-        )
+        val showTry = if (needParensAroundExpr) s("(", i(showExpr), n(")")) else showExpr
+        m(Expr1, s(kw("try"), " ", showTry, showCatch, showFinally))
       case t: Term.AnonymousFunction => s(t.body)
       case t: Term.FunctionTerm =>
         val arrow = t match {
@@ -415,10 +406,11 @@ object TreeSyntax {
       case t: Term.PartialFunction => m(SimpleExpr, s("{", t.cases, n("}")))
       case t: Term.While => m(Expr1, s(kw("while"), " (", t.expr, ") ", p(Expr, t.body)))
       case t: Term.Do =>
-        m(Expr1, s(kw("do"), " ", p(Expr, t.body), spn(s(kw("while"), " (", t.expr, ")"))))
+        val cond = beforeKeyword(t.expr, "while", t.expr, wrapPre = "(", wrapPost = ")")
+        m(Expr1, s(kw("do"), " ", p(Expr, t.body), cond))
       case t: Term.For => m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", t.body))
       case t: Term.ForYield =>
-        m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ") ", kw("yield"), " ", t.body))
+        m(Expr1, s(kw("for"), " (", r(t.enums, "; "), ")", beforeKeyword(t.body, "yield")))
       case t: Term.New => m(SimpleExpr, s(kw("new"), " ", t.init))
       case t: Term.EndMarker => s(kw("end"), " ", t.name.value)
       case t: Term.NewAnonymous => m(SimpleExpr, s(kw("new"), " ", alt(t.templ, "{}")))
@@ -561,7 +553,9 @@ object TreeSyntax {
           case _ => s(" ", kw("@"))
         }
         m(Pattern2, s(p(SimplePattern, t.lhs), separator, " ", p(AnyPattern3, t.rhs)))
-      case t: Pat.Alternative => m(Pattern, s(p(Pattern, t.lhs), " ", kw("|"), " ", p(Pattern, t.rhs)))
+      case t: Pat.Alternative =>
+        val indent = !comments || !isBarAfterDetachedBar(t)
+        m(Pattern, s(p(Pattern, t.lhs), beforeKeyword(t.rhs, "|", p(Pattern, t.rhs), indent = indent)))
       case t: Pat.Tuple => m(SimplePattern, s("(", rsep(t.args), ")"))
       case t: Pat.ArgClause => m(SimplePattern, s("(", rsep(t.values), ")"))
       case t: Pat.Extract => m(SimplePattern, s(t.fun, t.argClause))
@@ -691,7 +685,9 @@ object TreeSyntax {
       case t: Defn.Def =>
         s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = ", t.body)
       case t: Defn.Macro =>
-        s(w(t.mods, " "), kw("def "), t.name, t.paramClauseGroups, t.decltpe, " = macro ", t.body)
+        val pcg = t.paramClauseGroups
+        val body = beforeKeyword(t.body, "macro")
+        s(w(t.mods, " "), kw("def "), t.name, pcg, t.decltpe, " = ", body)
       case t: Pkg.Body => printBlock(t, t.stats)
       case t: Pkg =>
         val body = if (guessHasBraces(t)) s(" ", t.body) else r(t.body.stats.map(n(_)))
@@ -716,22 +712,38 @@ object TreeSyntax {
 
       // Template
       case t: Template =>
-        val pearly = w(o(t.earlyClause), " with")
-        val pparents = r(t.inits, " with ")
-        val derived = if (t.derives.isEmpty) s() else s("derives ", rsep(t.derives))
+        def bk(kw: String, res: Show.Result = Show.None)(x: Tree) =
+          beforeKeyword(x, kw, if (res.isEmpty) s(x) else res, indent = true)
+        val allParents = t.earlyClause match {
+          case Some(x) => x :: t.inits
+          case None => t.inits
+        }
+        val pparents = allParents match {
+          case x :: xs => s(x, r(xs.map(bk("with"))))
+          case _ => s()
+        }
+        val derived = t.derives match {
+          case xs @ x :: _ => beforeKeyword(x, "derives", rsep(xs))
+          case _ => s()
+        }
         val ptype = templateParentType(t)
         def isOldGiven = ptype eq Defn.Given
         def isNewGiven = ptype eq Decl.Given
+        val hasBodyComments = isOldGiven && ownBegComments(t.body).isDefined
+        // record the body now: it prints before `with`, which prints its comments
+        if (hasBodyComments) addKeywordOwner(t.body)
         val pbody = s(t.body)
         val body =
-          if (pbody.isEmpty) t.inits match {
+          if (pbody.isEmpty && !hasBodyComments) t.inits match {
             case x :: Nil if isOldGiven => o("with {}", x.argClauses.isEmpty)
             case _ :: xs if xs.nonEmpty => s()
-            case _ => o("{}", (ptype eq Term.NewAnonymous) && pearly.isEmpty || isNewGiven)
+            case _ => o("{}", (ptype eq Term.NewAnonymous) && t.earlyClause.isEmpty || isNewGiven)
           }
-          else w("with ", pbody, isOldGiven)
-        val noExtends = ptype != null || pparents.isEmpty && pearly.isEmpty
-        r(" ")(o("extends", !noExtends), pearly, pparents, derived, body)
+          else if (isOldGiven) bk("with", alt(pbody, s("{}")))(t.body)
+          else pbody
+        val noExtends = ptype != null || allParents.isEmpty
+        val rest = r(" ")(pparents, derived, body)
+        if (noExtends) rest else beforeKeyword(allParents.head, "extends", rest, owner = t)
       case t: Template.Body =>
         val self = o(t.selfOpt)
         t.stats match {
@@ -808,21 +820,25 @@ object TreeSyntax {
       case t: Term.CasesBlock => s("{", t.cases, n("}"))
       case t: Case =>
         val ppat = p(Pattern, t.pat)
-        val pcond = t.cond.fold(s())(cond => s(" ", kw("if"), " ", p(PostfixExpr, cond)))
+        val pcond = t.cond.fold(s())(x => beforeKeyword(x, "if", p(PostfixExpr, x)))
         val prest = t.body match {
           // Scala 3 sub-cases: the body is a `match` in the guard, printed as
           // `case p [if cond] if e match ...`, with no `=>`.
           case b: Term.SubMatch => s(kw("if"), " ", b)
           case b =>
+            def isAttached(x: Tree) = !comments || !x.endComment.hasNewlinesBeforeLast
             def isOneLiner(body: Tree) = body match {
-              case _: Lit | _: Term.Name | Term.Block(Nil) => true
+              case _: Lit | _: Term.Name | Term.Block(Nil) => isAttached(body)
               case _ => false
             }
+            val body = caseBodyStat(b)
             def allOneLiner = t.parent match {
-              case Some(p: Term.CasesBlock) => p.cases.forall(x => isOneLiner(x.body))
-              case _ => isOneLiner(b)
+              case Some(p: Term.CasesBlock) => p.cases.forall(x => isOneLiner(caseBodyStat(x.body)))
+              case _ => isOneLiner(body)
             }
-            s(kw("=>"), if (allOneLiner) w(" ", b) else i(b))
+            // a detached comment after the case would follow a body on the arrow's line
+            val useSpace = (body.is[Term.Block] || isAttached(t)) && allOneLiner
+            s(kw("=>"), if (useSpace) w(" ", body) else i(body))
         }
         s("case ", ppat, pcond, " ", prest)
 
@@ -978,6 +994,33 @@ object TreeSyntax {
       case child => leftmost(child)
     }
 
+    /* A thenp on lines of its own: `else` starts a line, or it would continue the thenp. An
+     * `else` that starts a line in the chain after it needs each `else` before it to start one. */
+    @tailrec
+    private def breakBeforeElse(t: Term.If): Boolean = endsInBodyOnOwnLine(t.thenp) ||
+      (t.elsep match {
+        case e: Term.If => guessHasElsep(e) && breakBeforeElse(e)
+        case _ => false
+      })
+
+    // the tree ends in a body printed on its own line after a comment; a block closes it
+    @tailrec
+    private def endsInBodyOnOwnLine(t: Tree): Boolean = t.begComment.hasNewlinesBeforeOrAfter ||
+      !t.is[Term.Block] &&
+      (t.lastChild match {
+        case null => false
+        case last => endsInBodyOnOwnLine(last)
+      })
+
+    // a case body of one term prints as the term, as its block prints without braces
+    private def caseBodyStat(body: Term): Term = body match {
+      case Term.Block((stat: Term) :: Nil) if (stat match {
+            case f: Term.Function if f.body.isInstanceOf[Term.Block] => false // keep lambda braces
+            case _ => !hasComments(body)
+          }) => stat
+      case _ => body
+    }
+
     private def isCaseBody(t: Tree): Boolean = t.parent match {
       case Some(p: Case) => p.body eq t
       case _ => false
@@ -1114,6 +1157,51 @@ object TreeSyntax {
         f: T => Show.Result,
     ): Show.Result = withComments(tree, after = after, indents = indents)(f(tree))
 
+    // the trees whose leading comments `beforeKeyword` prints around its keyword
+    private var keywordOwners: java.util.Set[Tree] = _
+    private def addKeywordOwner(tree: Tree): Unit = {
+      if (keywordOwners eq null) keywordOwners = java.util.Collections
+        .newSetFromMap(new java.util.IdentityHashMap[Tree, java.lang.Boolean])
+      keywordOwners.add(tree)
+    }
+    private def hasKeywordOwner(tree: Tree): Boolean =
+      (keywordOwners ne null) && keywordOwners.contains(tree)
+
+    private def beforeKeyword(body: Tree, keyword: String): Show.Result =
+      beforeKeyword(body, keyword, reprint(body))
+
+    // the keyword follows the detached comments of the block after it, on the next line
+    private def beforeKeyword(
+        body: Tree,
+        keyword: String,
+        bodyRes: => Show.Result,
+        wrapPre: Show.Result = Show.None,
+        wrapPost: Show.Result = Show.None,
+        indent: Boolean = false,
+        owner: Tree = null, // holds the comments, if not the body
+    ): Show.Result = {
+      def withKeyword(bodyPre: Show.Result) =
+        s(kw(keyword), o(" ", keyword.last != '.'), s(wrapPre, bodyPre, bodyRes, wrapPost))
+      // a continuation of the same clause, such as `with`, indents when it starts a line
+      def afterPrev(bodyPre: Show.Result = Show.None) =
+        s(if (keyword.head == '.') s() else if (indent) " " else spn(), withKeyword(bodyPre))
+      val holder = if (owner eq null) body else owner
+      val begComments = ownBegComments(holder)
+      // record the holder before the body prints, so that the body leaves its comments to us
+      if (begComments.isDefined) addKeywordOwner(holder)
+      begComments match {
+        case None => afterPrev()
+        case Some(c) =>
+          val (before, after) = commentsBeforeKeyword(c, body)
+          if (before.isEmpty) afterPrev(printLeading(after, c.newlinesBefore))
+          else {
+            val newlines = after.headOption.fold(0)(countNewlinesBefore)
+            val res = withKeyword(printLeading(after, newlines))
+            i(s(newlinesBefore(c, force = true), printComments(before), res), indent)
+          }
+      }
+    }
+
     def ownBegComments(tree: Tree): Option[Tree.Comments] =
       if (comments) TreeSyntax.ownBegComments(tree) else None
     def ownEndComments(tree: Tree): Option[Tree.Comments] =
@@ -1123,8 +1211,10 @@ object TreeSyntax {
     def withComments(tree: Tree, after: Show.Result = Show.None, indents: Int = 1)(
         res: Show.Result,
     ): Show.Result =
-      if (comments) TreeSyntax.withComments(tree, after = after, indents = indents)(res)
-      else s(res, after)
+      if (comments) {
+        def afterKW = hasKeywordOwner(tree)
+        TreeSyntax.withComments(tree, after = after, indents = indents, afterKeyword = afterKW)(res)
+      } else s(res, after)
 
     private def rsep(xs: Seq[Tree], sep: String = ","): Show.Result = rsepWith(xs, sep)(showTree)
 
@@ -1165,6 +1255,20 @@ object TreeSyntax {
       tree.parent.flatMap(f).exists(ptc => (tc eq ptc) || tokensOverlap(tc.origin, ptc.origin)),
     )
 
+  // the bar before already indents this one if it starts its own line
+  private def isBarAfterDetachedBar(t: Pat.Alternative): Boolean = t.parent match {
+    case Some(x: Pat.Alternative) => (x.rhs eq t) && lastEndComment(x.lhs).hasNewlinesAfter
+    case _ => false
+  }
+
+  @tailrec
+  private def lastEndComment(tree: Tree): Option[Tree.Comments] = tree.endComment match {
+    case None =>
+      val child = tree.lastChild
+      if (child ne null) lastEndComment(child) else None
+    case x => x
+  }
+
   private def tokensOverlap(a: Origin, b: Origin): Boolean = (a, b) match {
     case (a: Origin.Partial, b: Origin.Partial) => a.begTokenIdx < b.endTokenIdx &&
       b.begTokenIdx < a.endTokenIdx
@@ -1188,6 +1292,37 @@ object TreeSyntax {
   }
 
   private def ownBegComments(tree: Tree): Option[Tree.Comments] = ownComments(tree)(_.begComment)
+
+  /* how many comments of the group come before the keyword that introduces the tree; without an
+   * origin, a detached group goes before the keyword and an attached one after it */
+  private def commentsBeforeKeyword(
+      c: Tree.Comments,
+      tree: Tree,
+  ): (List[Tree.Comment], List[Tree.Comment]) = tree.origin match {
+    case o: Origin.Parsed =>
+      val tokens = o.allInputTokens()
+      var kwIdx = o.begTokenIdx - 1 // the `(` of a do-while follows the keyword
+      while (kwIdx >= 0 && tokens(kwIdx).isAny[T.Trivia, T.LeftParen]) kwIdx -= 1
+      var rest = c.values
+      val before = List.newBuilder[Tree.Comment]
+      while (rest match {
+          case head :: tail if (head.origin match {
+                case x: Origin.Parsed => (x.source eq o.source) && x.endTokenIdx <= kwIdx
+                case _ => false
+              }) =>
+            before += head
+            rest = tail
+            true
+          case _ => false
+        }) {}
+      (before.result(), rest)
+    case _ => if (c.isDetached) (c.values, Nil) else (Nil, c.values)
+  }
+
+  private def countNewlinesBefore(x: Tree.Comment): Int = x.origin match {
+    case o: Origin.Parsed => Tokens.countOf(o.allInputTokens().newlinesBefore(o.begTokenIdx))
+    case _ => 0
+  }
   private def ownEndComments(tree: Tree): Option[Tree.Comments] = ownComments(tree)(_.endComment)
 
   private def printBegComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
@@ -1239,31 +1374,38 @@ object TreeSyntax {
   private def printEndCommentsPlain(t: Tree.Comments): Show.Result =
     s(s(t.values.map(printComment(_)): _*), n())
 
+  // the leading comments `xs` of the tree that follows, with `newlines` before them
+  private def printLeading(xs: List[Tree.Comment], newlines: Int): Show.Result =
+    if (xs.isEmpty) s()
+    else if (newlines > 0) s(printNewlines(newlines, s()), printComments(xs))
+    /* attached comments stay on the line that introduces the tree, and the tree
+     * indents under a line comment; at the start of a line there is nothing to
+     * indent under, and the tree follows at the same indentation */
+    else Show.LeadingComments(printComments(xs), breakAtLineStart = xs.hasNewlinesAfter)
+
   private[prettyprinters] def withComments(
       tree: Tree,
       layout: Boolean = true,
       after: Show.Result = Show.None,
       indents: Int = 1, // the levels that the comments under the tree indent
+      afterKeyword: => Boolean = false,
   )(syntax: Show.Result): Show.Result = s(
     ownBegComments(tree) match {
       case None => syntax
-      case Some(c) if !layout => s(printBegCommentsPlain(c), syntax)
-      case Some(c) if c.isDetached => s(printBegComments(c), syntax)
-      /* attached comments stay on the line that introduces the tree, and the tree
-       * indents under a line comment; at the start of a line there is nothing to
-       * indent under, and the tree follows at the same indentation */
-      case Some(c) => s(
-          Show
-            .LeadingComments(printComments(c), breakAtLineStart = c.values.last.getNewlinesAfter > 0),
-          syntax,
-        )
+      case Some(c) =>
+        if (!layout) s(printBegCommentsPlain(c), syntax)
+        else if (afterKeyword) syntax
+        else s(printLeading(c.values, c.newlinesBefore), syntax)
     },
     after,
     printEndComments(
       tree,
       if (!layout) printEndCommentsPlain
       else { c =>
-        if (tree.parent.forall(_.lastChild eq tree)) printEndComments(c)
+        if (tree.parent.forall {
+            case p: Pat.Alternative => (p.lhs ne tree) || isBarAfterDetachedBar(p)
+            case p => p.lastChild eq tree
+          }) printEndComments(c)
         else printEndCommentsUnder(c, indents)
       },
     ),

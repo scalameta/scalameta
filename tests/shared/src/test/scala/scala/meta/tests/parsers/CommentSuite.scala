@@ -641,7 +641,8 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     val layout =
       """|if (a) // c
-         |  b else d
+         |  b
+         |else d
          |""".stripMargin
     val tree = Term.If(tname("a"), tnameComments("b")("// c")(), tname("d"))
     runTestAssert[Stat](code, layout)(tree)
@@ -3415,7 +3416,7 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     val layout =
       """|class A extends B // c1
-         | with C
+         |  with C
          |""".stripMargin
     val b = Type.Name.newBuilder("B").endComment(Seq("// c1")).result()
     val anon = Name.Anonymous.newBuilder().begComment(detachedComments("// c2")).result()
@@ -3432,12 +3433,7 @@ class CommentSuite extends ParseSuite {
     val code =
       """|class A extends /* c1 */ B
          |""".stripMargin
-    checkComments(
-      code,
-      """|class A /* c1 */ extends B
-         |""".stripMargin,
-      reprinted = Seq("end Type.Name: /* c1 */"),
-    )("beg Template, Init, Type.Name: /* c1 */")
+    checkComments(code)("beg Template, Init, Type.Name: /* c1 */")
   }
 
   test("class: DSLC before extends") {
@@ -3711,9 +3707,9 @@ class CommentSuite extends ParseSuite {
     val elsep = tname("d").toBuilder.begComment(detachedComments("// c")).result()
     assertNoDiff(
       Term.If(tname("a"), tname("b"), elsep).reprint,
-      """|if (a) b else
-         |  // c
-         |  d
+      """|if (a) b
+         |// c
+         |else d
          |""".stripMargin,
     )
   }
@@ -5760,7 +5756,8 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  foo match {
-         |    case a => x
+         |    case a =>
+         |      x
          |    // c
          |  }
          |}
@@ -6846,8 +6843,10 @@ class CommentSuite extends ParseSuite {
     checkComments(
       code,
       """|object A {
-         |  if (a) b else if (c) // c1
-         |    d else e
+         |  if (a) b
+         |  else if (c) // c1
+         |    d
+         |  else e
          |}
          |""".stripMargin,
     )("beg Term.Name: // c1")
@@ -6999,7 +6998,8 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  x match {
-         |    case 1 => b
+         |    case 1 =>
+         |      b
          |    // c1
          |  }
          |}
@@ -7022,7 +7022,8 @@ class CommentSuite extends ParseSuite {
       code,
       """|object O {
          |  try a catch {
-         |    case _ => b
+         |    case _ =>
+         |      b
          |    // c1
          |  }
          |}

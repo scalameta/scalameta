@@ -382,11 +382,14 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin,
     )
     val printed = TreeSyntax.reprint(tree, false).toString
-    assertNoDiff(printed, "x match {\n  case 1 =>\n    a\n}")
-    assertEquals(
-      templStat(printed).collect { case c: Case => c.body.productPrefix },
-      List("Term.Name"),
+    assertNoDiff(
+      printed,
+      """|x match {
+         |  case 1 => a
+         |}
+         |""".stripMargin,
     )
+    assertNoDiff(TreeSyntax.reprint(templStat(printed), false).toString, printed)
   }
 
   test("case: block body with one definition, printed without comments") {
@@ -2073,9 +2076,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  try
+         |  try (
          |    // c1
-         |    a catch {
+         |    a
+         |  ) catch {
          |    case _ => b
          |  }
          |}""".stripMargin.lf2nl

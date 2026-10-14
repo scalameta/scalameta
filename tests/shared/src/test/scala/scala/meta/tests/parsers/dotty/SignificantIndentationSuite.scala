@@ -1808,7 +1808,8 @@ class SignificantIndentationSuite extends BaseDottySuite {
     val layout =
       """|if (cond)
          |  // c
-         |  foo else bar
+         |  foo
+         |else bar
          |""".stripMargin
     runTestAssert[Stat](code, layout)(
       Term.If(tname("cond"), tnameComments("foo")("// c")(), tname("bar")),
