@@ -1099,23 +1099,21 @@ object TreeSyntax {
   def reprint(x: Tree, comments: Boolean = true)(implicit dialect: Dialect): Show.Result =
     new SyntaxInstances(comments = comments).reprint(x)
 
-  // the comments a tree prints itself: the parent prints the ones it refers to as well
-  private def ownComments(tree: Tree, f: Tree => Option[Tree.Comments]): Option[Tree.Comments] =
-    f(tree) match {
-      case res @ Some(tc)
-          if tc.values.nonEmpty && tree.parent.flatMap(f).forall(ptc =>
-            (tc ne ptc) &&
-              ((tc.origin, ptc.origin) match {
-                case (otc: Origin.Partial, optc: Origin.Partial) =>
-                  otc.begTokenIdx != optc.begTokenIdx || otc.endTokenIdx != optc.endTokenIdx
-                case _ => true
-              }),
-          ) => res
-      case _ => None
-    }
+  /* the comments a tree prints itself: the parent prints the ones it refers to as well, and
+   * its group holds the child's comments when it extends the child's group */
+  private def ownComments(tree: Tree)(f: Tree => Option[Tree.Comments]): Option[Tree.Comments] =
+    f(tree).filterNot(tc =>
+      tree.parent.flatMap(f).exists(ptc => (tc eq ptc) || tokensOverlap(tc.origin, ptc.origin)),
+    )
 
-  private def ownBegComments(tree: Tree): Option[Tree.Comments] = ownComments(tree, _.begComment)
-  private def ownEndComments(tree: Tree): Option[Tree.Comments] = ownComments(tree, _.endComment)
+  private def tokensOverlap(a: Origin, b: Origin): Boolean = (a, b) match {
+    case (a: Origin.Partial, b: Origin.Partial) => a.begTokenIdx < b.endTokenIdx &&
+      b.begTokenIdx < a.endTokenIdx
+    case _ => false
+  }
+
+  private def ownBegComments(tree: Tree): Option[Tree.Comments] = ownComments(tree)(_.begComment)
+  private def ownEndComments(tree: Tree): Option[Tree.Comments] = ownComments(tree)(_.endComment)
 
   private def printBegComments(tree: Tree, out: Tree.Comments => Show.Result): Show.Result =
     ownBegComments(tree).fold(s())(out)

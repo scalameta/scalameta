@@ -491,8 +491,7 @@ class CommentSuite extends BaseDottySuite {
     assertEquals(imp.endComment.get.values.head.parent, None)
     assertSyntax(
       """|import p3.a3 // ct3
-         |  // ct3
-         |  // ct4
+         |// ct4
          |""".stripMargin,
     )(Source(src.stats))
   }
@@ -513,8 +512,7 @@ class CommentSuite extends BaseDottySuite {
     assertSyntax(
       """|{
          |  a.b // c1
-         |    // c1
-         |    // c2
+         |  // c2
          |}
          |""".stripMargin,
     )(Term.Block(block.stats))
