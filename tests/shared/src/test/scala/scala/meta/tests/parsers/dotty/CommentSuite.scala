@@ -561,10 +561,12 @@ class CommentSuite extends BaseDottySuite {
     val layout =
       """|{
          |  x
+         |  // c
+         |
          |  y
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, layout)(blk(tname("x"), tname("y")))
+    runTestAssert[Stat](code, layout)(blk(tnameComments("x")()("// c"), tname("y")))
   }
 
   test("block: DSLCs between two statements, separated by blank lines") {
@@ -582,12 +584,16 @@ class CommentSuite extends BaseDottySuite {
     val layout =
       """|{
          |  s1
+         |  // c1
+         |
+         |  // c2
          |
          |  // c3
          |  s2
          |}
          |""".stripMargin
-    runTestAssert[Stat](code, layout)(blk(tname("s1"), tnameComments("s2")("// c3")()))
+    val tree = blk(tnameComments("s1")()("// c1"), tnameComments("s2")("// c2", "// c3")())
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("source: DSLC, blank line, first statement") {
@@ -614,8 +620,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|import a.b
+         |
+         |// c
          |""".stripMargin
-    runTestAssert[Source](code, layout)(Source(List(Import(List(Importer("a", "b"))))))
+    val imp = Import.newBuilder(List(Importer("a", "b"))).endComment(Seq("// c")).result()
+    val tree = Source(List(imp))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("block: DSLC, blank line, first statement") {
@@ -836,9 +846,14 @@ class CommentSuite extends BaseDottySuite {
          |)
          |""".stripMargin
     val layout =
-      """|f(a, b)
+      """|f(
+         |  a,
+         |  // c
+         |
+         |  b
+         |)
          |""".stripMargin
-    runTestAssert[Stat](code, layout)(tapply(tname("f"), tname("a"), tname("b")))
+    runTestAssert[Stat](code, layout)(tapply(tname("f"), tnameComments("a")()("// c"), tname("b")))
   }
 
   test("tuple: last element, then a DSLC before the paren") {
@@ -966,9 +981,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|import y.Y
+         |// c
+         |
          |object O
          |""".stripMargin
-    val tree = Source(List(Import(List(Importer("y", "Y"))), Defn.Object(Nil, tname("O"), tplNoBody())))
+    val tree = Source(List(
+      Import.newBuilder(List(Importer("y", "Y"))).endComment(Seq("// c")).result(),
+      Defn.Object(Nil, tname("O"), tplNoBody()),
+    ))
     runTestAssert[Source](code, layout)(tree)
   }
 
@@ -982,9 +1002,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     val layout =
       """|package p
+         |
+         |// c
+         |
          |object O
          |""".stripMargin
-    val tree = Source(List(Pkg(tname("p"), Pkg.Body(List(Defn.Object(Nil, tname("O"), tplNoBody()))))))
+    val obj = Defn.Object.newBuilder(Nil, tname("O"), tplNoBody()).begComment(Seq("// c")).result()
+    val body = Pkg.Body(List(obj))
+    val tree = Source(List(Pkg(tname("p"), body)))
     runTestAssert[Source](code, layout)(tree)
   }
 
@@ -999,12 +1024,14 @@ class CommentSuite extends BaseDottySuite {
     val layout =
       """|object O {
          |  x
+         |  // c
+         |
          |  y
          |}
          |""".stripMargin
-    runTestAssert[Source](code, layout)(Source(
-      List(Defn.Object(Nil, tname("O"), tpl(List(tname("x"), tname("y"))))),
-    ))
+    val tree =
+      Source(List(Defn.Object(Nil, tname("O"), tpl(List(tnameComments("x")()("// c"), tname("y"))))))
+    runTestAssert[Source](code, layout)(tree)
   }
 
   test("colon body: last statement, blank line, DSLC, outdent") {
@@ -1120,10 +1147,14 @@ class CommentSuite extends BaseDottySuite {
          |object O
          |// c
          |{}
+         |
+         |// c
+         |
          |""".stripMargin
     val templ = tplNoBody().toBuilder.begComment(detachedComments("// c")).result()
     val obj = Defn.Object(Nil, tname("O"), templ)
-    parseAndCheckTree[Source](code, layout)(Source(List(Pkg(tname("p"), Pkg.Body(List(obj))))))
+    val pkg = Pkg.newBuilder(tname("p"), Pkg.Body(List(obj))).endComment(Seq("// c")).result()
+    parseAndCheckTree[Source](code, layout)(Source(List(pkg)))
   }
 
   test("block: ASLC after a semicolon, statement follows") {
@@ -1203,9 +1234,17 @@ class CommentSuite extends BaseDottySuite {
          |  x
          |}
          |""".stripMargin
-    val layout = "class A { self => x }"
+    val layout =
+      """|class A {
+         |  self =>
+         |  // c
+         |
+         |  x
+         |}
+         |""".stripMargin
     val x = tname("x")
-    val tree = Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(Nil, self(tname("self")), x))
+    val commentedSelf = Self.newBuilder(tname("self"), None).endComment(Seq("// c")).result()
+    val tree = Defn.Class(Nil, pname("A"), Nil, EmptyCtor(), tpl(Nil, commentedSelf, x))
     runTestAssert[Stat](code, layout)(tree)
   }
 
@@ -2210,9 +2249,13 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A { inline def f = 1 }
+      """|class A {
+         |  inline
+         |  // c1
+         |  def f = 1
+         |}
          |""".stripMargin,
-    )()
+    )("end Mod.Inline: // c1")
   }
 
   test("colon argument: braces at both ends, ASLC after the last") {
@@ -2380,10 +2423,22 @@ class CommentSuite extends BaseDottySuite {
          |  case 1 =>
          |    // c1
          |    {}
+         |    // c1
          |  case 2 => b
          |}
          |""".stripMargin,
-    )("beg Term.Block: // c1")
+      reprinted = Seq("end Case, Term.Block: // c1", "beg Term.Block: // c1"),
+      twice =
+        """|def f = x match {
+           |  case 1 =>
+           |    // c1
+           |    {}
+           |    // c1
+           |  case 2 =>
+           |    b
+           |}
+           |""".stripMargin,
+    )("end Case: // c1", "beg Term.Block: // c1")
   }
 
   test("braceless match: case body, DSLC indented under it, next case") {
@@ -2489,22 +2544,10 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|def f(a: Int)(
          |  // c1
-         |  using
-         |    // c1
-         |    b: B
+         |  using b: B
          |) = 1
          |""".stripMargin,
-      reprinted = Seq("beg Term.Param, Mod.Using, Mod.Using: // c1", "beg Term.Name: // c1"),
-      twice =
-        """|def f(a: Int)(
-           |  // c1
-           |  using
-           |    // c1
-           |    // c1
-           |    b: B
-           |) = 1
-           |""".stripMargin,
-    )("beg Term.Param, Mod.Using, Mod.Using: // c1")
+    )("beg Mod.Using, Mod.Using: // c1")
   }
 
   test("params: MLC before using") {
@@ -2513,14 +2556,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|def f(a: Int)( /* c1 */ using /* c1 */ b: B) = 1
+      """|def f(a: Int)( /* c1 */ using b: B) = 1
          |""".stripMargin,
-      reprinted =
-        Seq("beg Term.Param, Mod.Using, Mod.Using: /* c1 */", "end Mod.Using, Mod.Using: /* c1 */"),
-      twice =
-        """|def f(a: Int)( /* c1 */ using /* c1 */ /* c1 */ b: B) = 1
-           |""".stripMargin,
-    )("beg Term.Param, Mod.Using, Mod.Using: /* c1 */")
+    )("beg Mod.Using, Mod.Using: /* c1 */")
   }
 
   test("given: MLC before the name") {
@@ -3445,14 +3483,7 @@ class CommentSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq(),
-      twice =
-        """|object A {
-           |  def f(x: Type[?]) = x match {
-           |    case '[ type t; List[t] ] => 1
-           |  }
-           |}
-           |""".stripMargin,
+      reprinted = Seq("end Type.Apply: // c"),
     )("end Type.Apply, Type.ArgClause: // c")
   }
 
@@ -3473,10 +3504,7 @@ class CommentSuite extends BaseDottySuite {
          |  ]
          |}
          |""".stripMargin,
-      reprinted = Seq(),
-      twice =
-        """|object A { val t = '[ List[Int] ] }
-           |""".stripMargin,
+      reprinted = Seq("end Type.Apply: // c"),
     )("end Type.Apply, Type.ArgClause: // c")
   }
 
@@ -3883,9 +3911,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { @deprecated final def f = 1 }
+      """|object O {
+         |  @deprecated
+         |  // c1
+         |
+         |  final def f = 1
+         |}
          |""".stripMargin,
-    )()
+    )("end Mod.Annot: // c1")
   }
 
   test("annotation: ASLC, DSLC, def") {
@@ -3899,10 +3932,11 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  @deprecated // c1
+         |  // c2
          |  def f = 1
          |}
          |""".stripMargin,
-    )("end Mod.Annot, Init, Type.Name: // c1")
+    )("end Mod.Annot, Init, Type.Name: // c1\n  // c2")
   }
 
   test("source: line comment at the start") {
@@ -4313,11 +4347,13 @@ class CommentSuite extends BaseDottySuite {
       """|object A {
          |  {
          |    a
+         |    // c
+         |
          |    &&b
          |  }
          |}
          |""".stripMargin,
-    )()
+    )("end Term.Name: // c")
   }
 
   test("def body: outdent, DSLC, blank line, DSLC, statement") {
@@ -4334,12 +4370,13 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  def f = a
+         |  // c1
          |
          |  // c2
          |  b
          |}
          |""".stripMargin,
-    )("beg Term.Name: // c2")
+    )("end Defn.Def: // c1", "beg Term.Name: // c2")
   }
 
   test("if block: outdent, DSLC, blank line, DSLC, statement") {
@@ -4356,12 +4393,13 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object A {
          |  if (x) a
+         |  // c1
          |
          |  // c2
          |  b
          |}
          |""".stripMargin,
-    )("beg Term.Name: // c2")
+    )("end Term.If: // c1", "beg Term.Name: // c2")
   }
 
   test("match: outdent, DSLC, blank line, DSLC, statement") {
@@ -4380,12 +4418,13 @@ class CommentSuite extends BaseDottySuite {
          |  x match {
          |    case 1 => a
          |  }
+         |  // c1
          |
          |  // c2
          |  b
          |}
          |""".stripMargin,
-    )("beg Term.Name: // c2")
+    )("end Term.Match: // c1", "beg Term.Name: // c2")
   }
 
   test("class body: outdent, DSLC, blank line, DSLC, statement") {
@@ -4400,11 +4439,12 @@ class CommentSuite extends BaseDottySuite {
     checkComments(
       code,
       """|class A { def f = a }
+         |// c1
          |
          |// c2
          |val b = 1
          |""".stripMargin,
-    )("beg Defn.Val: // c2")
+    )("end Defn.Class: // c1", "beg Defn.Val: // c2")
   }
 
   test("splice: MLC between the dollar and the block") {
@@ -4871,11 +4911,7 @@ class CommentSuite extends BaseDottySuite {
          |  def f = 1
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O { @deprecated("x") def f = 1 }
-         |""".stripMargin,
-    )()
+    checkComments(code)("end Mod.Annot: // c")
   }
 
   test("pattern: MLC between the wildcard and the star") {
@@ -5070,11 +5106,14 @@ class CommentSuite extends BaseDottySuite {
       """|object O {
          |  inline def f(x: Int) = {
          |    inline
+         |
+         |    // c
+         |
          |    if (x > 0) 1 else 2
          |  }
          |}
          |""".stripMargin,
-    )()
+    )("beg Term.If: // c")
   }
 
   test("inline if: MLC, if") {
@@ -5114,9 +5153,15 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A(val x: Int)
+      """|class A(
+         |  val
+         |
+         |    // c
+         |
+         |    x: Int
+         |)
          |""".stripMargin,
-    )()
+    )("end Mod.ValParam: // c")
   }
 
   test("enum param: val, blank line, DSLC, blank line, name") {
@@ -5130,9 +5175,15 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|enum E(val x: Int) { case A extends E(1) }
+      """|enum E(
+         |  val
+         |
+         |    // c
+         |
+         |    x: Int
+         |) { case A extends E(1) }
          |""".stripMargin,
-    )()
+    )("end Mod.ValParam: // c")
   }
 
   test("extends: comma, blank line, DSLC, blank line, parent") {
@@ -5146,9 +5197,13 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class C extends B with D { def f = 1 }
+      """|class C extends B with
+         |
+         |  // c
+         |
+         |  D { def f = 1 }
          |""".stripMargin,
-    )()
+    )("beg Init, Type.Name: // c")
   }
 
   test("derives: comma, blank line, DSLC, blank line, type class") {
@@ -5162,9 +5217,13 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class C derives A, B { def f = 1 }
+      """|class C derives A,
+         |
+         |  // c
+         |
+         |  B { def f = 1 }
          |""".stripMargin,
-    )()
+    )("beg Type.Name: // c")
   }
 
   test("enum: case comma, blank line, DSLC, blank line, case") {
@@ -5178,9 +5237,15 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|enum E { case A, B }
+      """|enum E {
+         |  case A,
+         |
+         |    // c
+         |
+         |    B
+         |}
          |""".stripMargin,
-    )()
+    )("beg Term.Name: // c")
   }
 
   test("args: comma, blank line, DSLC, blank line, arg") {
@@ -5195,11 +5260,7 @@ class CommentSuite extends BaseDottySuite {
          |  )
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O { f(a, b) }
-         |""".stripMargin,
-    )()
+    checkComments(code)("beg Term.Name: // c")
   }
 
   test("extends: comma, DSLC, parent") {
@@ -5229,9 +5290,15 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|enum E { case A extends B, C }
+      """|enum E {
+         |  case A extends B,
+         |
+         |    // c
+         |
+         |    C
+         |}
          |""".stripMargin,
-    )()
+    )("beg Init, Type.Name: // c")
   }
 
   test("enum case: extends comma, DSLC, parent") {
@@ -5327,9 +5394,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { given x: Ord[Int] with {} }
+      """|object O {
+         |  given x: Ord[
+         |    Int
+         |    // c
+         |  ] with {}
+         |}
          |""".stripMargin,
-    )()
+    )("end Type.Name: // c")
   }
 
   test("type args: DSLC before the closing bracket") {
@@ -5342,9 +5414,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { val x: Ord[Int] = ??? }
+      """|object O {
+         |  val x: Ord[
+         |    Int
+         |    // c
+         |  ] = ???
+         |}
          |""".stripMargin,
-    )()
+    )("end Type.Name: // c")
   }
 
   test("given: tuple type, DSLC before the closing paren") {
@@ -5402,11 +5479,12 @@ class CommentSuite extends BaseDottySuite {
          |    T
          |    // c
          |    // c
+         |    // c
          |  ]: Ord[T] = ???
          |}
          |""".stripMargin,
-      reprinted = Seq("end Type.Param, Type.Name: // c\n    // c"),
-    )("beg Type.ParamClause: // c", "beg Type.Bounds: // c")
+      reprinted = Seq("end Type.Param, Type.Name: // c\n    // c\n    // c"),
+    )("end Type.Param: // c", "beg Type.ParamClause: // c", "beg Type.Bounds: // c")
   }
 
   test("given: type args, MLC before the closing bracket") {
@@ -5718,9 +5796,17 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def f[T: {A, B}] = 1 }
+      """|object O {
+         |  def f[
+         |    T: {A,
+         |
+         |      // c
+         |
+         |      B}
+         |  ] = 1
+         |}
          |""".stripMargin,
-    )()
+    )("beg Type.Name: // c")
   }
 
   test("context bounds: MLC before the second colon") {
@@ -5802,9 +5888,15 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { val l: Logger^{fs, io} = ??? }
+      """|object O {
+         |  val l: Logger^{fs,
+         |
+         |    // c
+         |
+         |    io} = ???
+         |}
          |""".stripMargin,
-    )()
+    )("beg Term.Name: // c")
   }
 
   test("quoted type block: MLC after a semicolon") {
@@ -6240,9 +6332,19 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class A extends B with C
+      """|class A extends B
+         |// c
+         |
+         |  with C
          |""".stripMargin,
-    )()
+      reprinted = Seq("beg Name.Anonymous: // c", "beg Init, Type.Name: // c"),
+      twice =
+        """|class A extends B
+           |  // c
+           |
+           |  with C
+           |""".stripMargin,
+    )("end Init: // c")
   }
 
   test("derives: blank line, DSLC, blank line, comma") {
@@ -6261,10 +6363,6 @@ class CommentSuite extends BaseDottySuite {
          |
          |  Show
          |""".stripMargin,
-      reprinted = Seq(),
-      twice =
-        """|case class A(x: Int) derives Eq, Show
-           |""".stripMargin,
     )("beg Type.Name: // c")
   }
 
@@ -6288,10 +6386,6 @@ class CommentSuite extends BaseDottySuite {
          |    B
          |}
          |""".stripMargin,
-      reprinted = Seq(),
-      twice =
-        """|enum E { case A, B }
-           |""".stripMargin,
     )("beg Term.Name: // c")
   }
 
@@ -6317,10 +6411,6 @@ class CommentSuite extends BaseDottySuite {
          |  ] = 1
          |}
          |""".stripMargin,
-      reprinted = Seq(),
-      twice =
-        """|object O { def f[T: {A, B}] = 1 }
-           |""".stripMargin,
     )("beg Type.Name: // c")
   }
 
@@ -6382,13 +6472,6 @@ class CommentSuite extends BaseDottySuite {
          |  *
          |}
          |""".stripMargin,
-      reprinted = Seq(),
-      twice =
-        """|import a.{
-           |  given,
-           |  *
-           |}
-           |""".stripMargin,
     )("beg Importee.Wildcard: // c")
   }
 
@@ -6502,9 +6585,12 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|class C derives A, B { def f = 1 }
+      """|class C derives A,
+         |// c
+         |
+         |  B { def f = 1 }
          |""".stripMargin,
-    )()
+    )("end Type.Name: // c")
   }
 
   test("enum: case comma, DSLC, blank line, case") {
@@ -6517,9 +6603,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|enum E { case A, B }
+      """|enum E {
+         |  case A,
+         |  // c
+         |
+         |    B
+         |}
          |""".stripMargin,
-    )()
+    )("end Term.Name: // c")
   }
 
   test("context bounds in braces: comma, DSLC, blank line, bound") {
@@ -6533,9 +6624,16 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object O { def f[T: {A, B}] = 1 }
+      """|object O {
+         |  def f[
+         |    T: {A,
+         |    // c
+         |
+         |      B}
+         |  ] = 1
+         |}
          |""".stripMargin,
-    )()
+    )("end Type.Name: // c")
   }
 
   test("enum case: extends comma, DSLC, blank line, parent") {
@@ -6548,9 +6646,14 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|enum E { case A extends B, C }
+      """|enum E {
+         |  case A extends B,
+         |  // c
+         |
+         |    C
+         |}
          |""".stripMargin,
-    )()
+    )("end Init: // c")
   }
 
   test("given alias: DSLC after the equals, body") {
