@@ -3476,27 +3476,22 @@ class ControlSyntaxSuite extends BaseDottySuite {
     val output =
       """|classDef.foreach {
          |  case typeSymbol: Symbol =>
-         |    if (typ) {}
-         |    if (typeDef) if (typJava) {}
+         |    if (typ) {
+         |      // foo
+         |    }
+         |    if (typeDef) if (typJava) {
+         |      // foo
+         |    }
          |  case _ =>
          |}
          |""".stripMargin
+    val commentedEmptyBlock = Term.Block.newBuilder(Nil).endComment(Seq("// foo")).result()
+    def tifEmpty(cond: String) = tif(cond, commentedEmptyBlock)
+    val body = blk(tifEmpty("typ"), tif("typeDef", tifEmpty("typJava")))
     runTestAssert[Stat](code, assertLayout = Some(output))(tapply(
       tselect("classDef", "foreach"),
       Term.PartialFunction(List(
-        Case(
-          Pat.Typed(patvar("typeSymbol"), pname("Symbol")),
-          None,
-          blk(
-            Term.If(tname("typ"), blk(), Lit.Unit(), Nil),
-            Term.If(
-              tname("typeDef"),
-              Term.If(tname("typJava"), blk(), Lit.Unit(), Nil),
-              Lit.Unit(),
-              Nil,
-            ),
-          ),
-        ),
+        Case(Pat.Typed(patvar("typeSymbol"), pname("Symbol")), None, body),
         Case(patwildcard, None, blk()),
       )),
     ))

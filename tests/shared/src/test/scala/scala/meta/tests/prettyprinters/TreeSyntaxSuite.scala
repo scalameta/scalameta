@@ -1865,7 +1865,15 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |  else
          |    c
          |""".stripMargin
-    val first = "object A { if (a) b else c }"
+    val first =
+      """|object A {
+         |  if (a) b
+         |  // c1
+         |
+         |  else {
+         |    c
+         |  }
+         |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala3), (first, first))
   }
 
@@ -1991,7 +1999,7 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
     val first =
       """|object A {
          |  x match {
-         |    case List() =>
+         |    case List( /* c1 */ ) =>
          |  }
          |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))

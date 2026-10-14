@@ -336,6 +336,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def begIndex = currIndex
     def endIndex = prevIndex
   }
+  // a body without a delimiter starts right after the token before it
+  case object AfterPrevPos extends StartPos {
+    def begIndex = prevIndex + 1
+  }
   implicit def optionTreeToPos(tree: Option[Tree]): Pos = tree.fold[Pos](AutoPos)(treeToTreePos)
   implicit def modsToPos(mods: List[Mod]): Pos = mods.headOption
 
@@ -474,7 +478,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       if (body.hasComments) {
         begComment = body.begComment
         endComment = body.endComment
-      } else {
+      } else if (endExcl > start || body.is[Source]) { // an empty tree has no comment beside it
         val bodyBegToken = tokens(start)
         val bodyEndToken = tokens(endExcl - 1)
 
@@ -491,14 +495,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
         begComment =
           if (bodyBegToken.start < minChildBeg) leadingComments(body, start)
-          else if (bodyIsBlock) None // braceless
-          else minChild.begComment
+          else if (!bodyIsBlock) minChild.begComment
+          // braceless: the scan starts at the token that opens it, or before its first child's comments
+          else leadingComments(body, prevNonTriviaAt(start - 1) + 1, minChild)
 
-        val isEndBraceless = bodyIsBlock &&
-          tokens.skipIf(_.is[HTrivia], endExcl, endPos + 1) <= endPos
         endComment =
-          if (isEndBraceless) None
-          else if (bodyEndToken.end > maxChildEnd) trailingComments(endExcl)
+          if (bodyEndToken.end > maxChildEnd) trailingComments(endExcl)
           else if (bodyIsBlock) None // let the child own it
           else maxChild.endComment
 
@@ -601,6 +603,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           appendTrailingComments(prev, bound = lastBound, pastBlank = true)
         }
 
+        if (maxChild eq null)
+          if ((bodyIsBlock || body.isAny[Member.SyntaxValuesClause, Lit.Unit]) &&
+            bodyBegToken.is[OpenDelim]) {
+            /* an empty enclosure in parens or braces keeps the comments inside its delimiters,
+             * over the ones after them: those go to a parent that ends there, and are lost
+             * without one */
+            val inside = commentsAfter(start)
+            if (inside.isDefined) endComment = inside
+          } else if (bodyIsBlock && endComment.isEmpty) // an empty braceless block
+            endComment = trailingComments(start, endExcl, detached = true, pastBlank = true)
       }
 
     body.privateSetOrigin(origin = origin, begComment = begComment, endComment = endComment)
@@ -619,6 +631,16 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case _ => idx + 1
     }
     asComments(trailingBuf)
+  }
+
+  // the comments after the token at `idx`, attached and detached
+  private def commentsAfter(idx: Int): Option[Tree.Comments] = {
+    val inner = trailingComments(idx + 1)
+    val from = inner match {
+      case Some(c) => c.endTokenIdx
+      case None => idx + 1
+    }
+    concatComments(inner, trailingComments(from, detached = true, pastBlank = true))
   }
 
   private def begOfComments(tree: Tree): Int = tree.begComment.getOrElse(tree).begTokenIdx
@@ -642,6 +664,10 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       case None => start
     }
   }
+
+  // the comments before `refPos`, or before the comments that lead `refTree` if those start earlier
+  private def leadingComments(tree: Tree, refPos: Int, refTree: Tree): Option[Tree.Comments] =
+    leadingComments(tree, refTree.begComment.fold(refPos)(c => refPos.min(c.begTokenIdx)))
 
   // the comments before the tree that starts at `start`, back to the statement before it
   private def leadingComments(body: Tree, start: Int): Option[Tree.Comments] = {
@@ -775,6 +801,21 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def continuesTree(t: Token, idx: Int): Boolean = t.is[KwThen] || noTreeBeg(idx) ||
     !mightStartStat(t, closeDelimOK = true)
+
+  // check if `idx` follows a detached comment that is not indented deeper
+  private def isAfterDetachedComment(idx: Int): Boolean = options.captureComments && {
+    val packed = countIndentAndNewlineIndex(idx)
+    val indent = Tokens.countOf(packed)
+    if (indent < 0) return false
+
+    val nlIdx = Tokens.indexOf(packed) // non-negative if indent is non-negative
+    if (nextNonWhitespace(nlIdx).isInstanceOf[Comment]) return true
+    val prevNonWS = prevNonWhitespaceAt(nlIdx + 1)
+    if (!tokens.getOrNull(prevNonWS).isInstanceOf[Comment]) return false
+
+    val commentIndent = countIndent(prevNonWS)
+    commentIndent >= 0 && commentIndent <= indent
+  }
 
   /* whether a tree ends at `idx`, so that its trailing scan takes the comments after it; after a
    * comma or a semicolon, whether a tree ends before it */
@@ -1545,7 +1586,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       }
     }
 
-    private def typeCaseClauses(): Type.CasesBlock = autoPos {
+    private def typeCaseClauses(): Type.CasesBlock = autoEndPos(AfterPrevPos) {
       def cases() = listBy[TypeCase](allCases =>
         while (at[KwCase]) {
           allCases += autoPos {
@@ -2101,21 +2142,25 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }
 
   private def matchClause(t: Term, startPos: Int, isSelect: Boolean = false) = {
-    val cases =
-      autoPos(if (at[Indentation.Indent]) indentedOnOpen(casesBlock()) else inBraces(casesBlock()))
+    val cases = autoEndPos(AfterPrevPos)(
+      if (at[Indentation.Indent]) indentedOnOpen(casesBlock()) else inBraces(casesBlock()),
+    )
     autoEndPos(startPos)(if (isSelect) Term.SelectMatch(t, cases) else Term.Match(t, cases))
   }
 
   def ifClause(mods: List[Mod] = Nil) = autoEndPos(mods) {
     accept[KwIf]
+    val ifIdx = prevIndex
     def getMaybeIndented(fthen: Term => Term)(felse: => Term): Term =
       if (at[Indentation.Indent]) {
-        val begPos = currIndex
+        val kwIdx = prevIndex
         val partialRaw = blockExprMaybePartialRaw()
-        val termInitRaw = if (partialRaw ne null) partialRaw else next(blockMaybeRaw())
+        val termInitRaw =
+          if (partialRaw ne null) partialRaw
+          else next(blockMaybeRaw(keepBlock = kwIdx > ifIdx && isAfterDetachedComment(kwIdx)))
         val outdented = acceptOpt[Indentation.Outdent]
-        val init = autoEndPosOpt(begPos)(termInitRaw)
-        val term = exprAfterSimpleInit(init, begPos)
+        val init = autoEndPosOpt(kwIdx + 1)(termInitRaw)
+        val term = exprAfterSimpleInit(init, kwIdx + 1)
         try fthen(term)
         finally if (!outdented) accept[Indentation.Outdent]
       } else felse
@@ -2230,25 +2275,23 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           def tryWithCases(cases: Option[Term.CasesBlock]) = Term.Try(body, cases, finallyopt)
           def tryWithHandler(handler: Term) = Term.TryWithHandler(body, handler, finallyopt)
           def tryInDelims(
+              catchPos: Int,
               f: (=> Either[Term, Term.CasesBlock]) => Either[Term, Term.CasesBlock],
-          ): Term = {
-            val catchPos = currIndex
-            f(casesBlockIfAny() match {
-              case null => Left(blockRaw())
-              case x => Right(x)
-            }).fold(
-              x => tryWithHandler(autoEndPos(catchPos)(x)),
-              x => tryWithCases(Some(autoEndPos(catchPos)(x))),
-            )
-          }
+          ): Term = f(casesBlockIfAny() match {
+            case null => Left(blockRaw())
+            case x => Right(x)
+          }).fold(
+            x => tryWithHandler(autoEndPos(catchPos)(x)),
+            x => tryWithCases(Some(autoEndPos(catchPos)(x))),
+          )
 
           if (acceptIfAfterOptNL[KwCatch]) currToken match {
             case _: KwCase => tryWithCases(Some(autoPos {
                 next()
                 toCasesBlock(caseClause(true) :: Nil)
               }))
-            case _: Indentation.Indent => tryInDelims(indentedOnOpen)
-            case _: LeftBrace => tryInDelims(inBracesOnOpen)
+            case _: Indentation.Indent => tryInDelims(AfterPrevPos.begIndex, indentedOnOpen)
+            case _: LeftBrace => tryInDelims(currIndex, inBracesOnOpen)
             case _ => tryWithHandler(expr())
           }
           else tryWithCases(None)
@@ -2279,7 +2322,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
                 }
               else parseInParens()
             } else maybeIndented(enumerators())
-          val enums = autoPos(enumList.reduceWith(Term.EnumeratorsBlock.apply))
+          val enums = autoEndPos(AfterPrevPos)(enumList.reduceWith(Term.EnumeratorsBlock.apply))
 
           newLinesOpt()
           if (acceptOpt[KwDo]) {
@@ -3095,8 +3138,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   private def isTreeWithDetachedComments(t: Tree): Boolean = hasDetachedCommentBefore(t) ||
     hasDetachedCommentAfter(t)
 
-  private def blockOnIndent(keepBlock: Boolean = false): Term =
-    autoPosOpt(indentedOnOpen(blockMaybeRaw(keepBlock = keepBlock)))
+  private def blockOnIndent(keepBlock: Boolean = false): Term = {
+    val keep = keepBlock ||
+      !prevToken.is[Colon] && !commentsTrail(prevToken, prevIndex) &&
+      continuesTree(prevToken, prevIndex) && isAfterDetachedComment(prevIndex)
+    autoEndPosOpt(AfterPrevPos)(indentedOnOpen(blockMaybeRaw(keepBlock = keep)))
+  }
+
   private def blockExprOnIndent(keepBlock: Boolean = false): Term =
     blockExprPartial[Indentation.Outdent](blockOnIndent(keepBlock))
 
@@ -3110,10 +3158,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   private def blockOnOther(allowRepeated: Boolean = false): Term = {
     val start = currIndex
+    val afterPrev = AfterPrevPos.begIndex // the first statement takes the comments from there
     blockStatSeq(allowRepeated = allowRepeated) match {
       case (term: Term) :: Nil => term
       case (q: Quasi) :: Nil => q.become[Term]
-      case stats => autoEndPos(start)(toBlockRaw(stats))
+      case Nil => autoEndPos(start)(toBlockRaw(Nil))
+      case stats => autoEndPos(afterPrev)(toBlockRaw(stats))
     }
   }
 
@@ -4117,7 +4167,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       val body =
         if (acceptOpt[KwWith])
           if (isAfterOptNewLine[LeftBrace]) templateBodyOnLeftBrace()
-          else if (at[Indentation.Indent]) autoPos(templateBodyOnIndentRaw())
+          else if (at[Indentation.Indent]) autoEndPos(AfterPrevPos)(templateBodyOnIndentRaw())
           else syntaxError("expected '{' or indentation", at = currToken)
         else if (usedNewSyntax) templateBodyOpt()
         else if (inits.lengthCompare(1) > 0) syntaxError("expected 'with' <body>", at = prevToken)
@@ -4343,7 +4393,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     def getStats() = statSeq(templateStat)
     val body: Stat = currToken match {
       case _: LeftBrace => blockOnBrace(getStats())
-      case _: Indentation.Indent => autoPosOpt(indentedOnOpen(getStats() match {
+      case _: Indentation.Indent => autoEndPosOpt(AfterPrevPos)(indentedOnOpen(getStats() match {
           case t :: Nil if t.is[Term.Block] || !isTreeWithDetachedComments(t) => t
           case stats => toBlockRaw(stats)
         }))
@@ -4503,7 +4553,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       accept[Equals]
       at[LeftBrace]
     }
-    val body = autoPos(
+    val body = autoEndPos(AfterPrevPos)(
       if (hasLeftBrace) inBracesOnOpen(constrInternal())
       else indentedOr(constrInternal())(Ctor.Block(initInsideConstructor(), Nil)),
     )
@@ -4787,7 +4837,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     currToken match {
       case _ if !dialect.allowSignificantIndentation => refinementInBraces(innerType, -1)
       case _: Colon => maybeRefineIndented(prevIndex)
-      case _: KwWith => maybeRefineIndented(currIndex)
+      case _: KwWith => maybeRefineIndented(AfterPrevPos.begIndex)
       case _ => refinementInBraces(innerType, in.previousIndentation + 1)
     }
   }
@@ -4963,8 +5013,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     }) {}
   }
 
-  private def toPkgBody(startPos: Int)(stats: List[Stat]): Pkg.Body =
-    autoEndPos(startPos)(stats.reduceWith(Pkg.Body.apply))
+  private def toPkgBody(startPos: Int, endPos: EndPos = AutoPos)(stats: List[Stat]): Pkg.Body =
+    atPos(startPos, endPos)(stats.reduceWith(Pkg.Body.apply))
 
   private def packageOrPackageObjectDef(statpf: PartialFunction[Token, Stat]): Stat = autoPos {
     next()
@@ -4988,8 +5038,8 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       if (at[KwPackage] && tryAheadNot[KwObject]) {
         val startPos = prevIndex
         val qid = qualId()
-        def getPackage(pkgDelimPos: Int)(stats: => List[Stat]) =
-          autoEndPos(startPos)(Pkg(qid, toPkgBody(pkgDelimPos)(stats)))
+        def getPackage(pkgDelimPos: Int, endPos: EndPos = AutoPos)(stats: => List[Stat]) =
+          atPos(startPos, endPos)(Pkg(qid, toPkgBody(pkgDelimPos, endPos)(stats)))
         def inPackageOnOpen[T <: Token: ClassTag](pkgDelimPos: Int) = f(listBy[Stat] { buf =>
           val pkg = getPackage(pkgDelimPos) {
             next()
@@ -5007,8 +5057,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         if (nextIfColonIndent()) inPackageOnOpen[Indentation.Outdent](prevIndex)
         else if (isAfterOptNewLine[LeftBrace]) inPackageOnOpen[RightBrace](currIndex)
         else {
-          val inPkgPos = currIndex
-          bracelessPackageStats(stats => f(getPackage(inPkgPos)(stats) :: Nil))
+          // the region starts after the ref: the body owns the comments before its first statement
+          val inPkgPos = AfterPrevPos.begIndex
+          // the region ends with the input, so the last statement owns the comments after it
+          bracelessPackageStats { stats =>
+            val endPos: EndPos = if (options.captureComments) currIndex - 1 else AutoPos
+            f(getPackage(inPkgPos, endPos)(stats) :: Nil)
+          }
         }
       } else f(statSeq(statpf))
     }
