@@ -2102,8 +2102,10 @@ class TreeSyntaxSuite extends scala.meta.tests.parsers.ParseSuite {
          |""".stripMargin
     val first =
       """|object A {
-         |  f(a, /* c1 */
-         |    b)
+         |  f(
+         |    a, /* c1 */
+         |    b
+         |  )
          |}""".stripMargin.lf2nl
     assertEquals(reprintTwice(code, dialects.Scala213), (first, first))
   }
