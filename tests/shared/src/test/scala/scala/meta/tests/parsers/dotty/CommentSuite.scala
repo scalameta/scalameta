@@ -3792,7 +3792,7 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  @deprecated // c1
-         |    def f = 1
+         |  def f = 1
          |}
          |""".stripMargin,
     )("end Mod.Annot, Init, Type.Name: // c1")
@@ -5927,10 +5927,9 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  val f: Int ?=>
-         |    /* c */ Int = ???
+         |  /* c */ Int = ???
          |}
          |""".stripMargin,
-      reprintError = "`outdent` expected but `=` found",
     )("beg Type.Name: /* c */")
   }
 
@@ -5945,10 +5944,9 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  val f: Int =>
-         |    /* c */ Int = ???
+         |  /* c */ Int = ???
          |}
          |""".stripMargin,
-      reprintError = "`outdent` expected but `=` found",
     )("beg Type.Name: /* c */")
   }
 
@@ -5959,10 +5957,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|import a.{x as
-         |  /* c */ y}
+      """|import a.{x =>
+         |/* c */ y}
          |""".stripMargin,
-      reprintError = "`identifier` expected but `\\n` found",
     )("beg Name.Indeterminate: /* c */")
   }
 
@@ -6015,10 +6012,9 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  given [T](using Ord[T]):
-         |    /* c */ Ord[List[T]] = ???
+         |  /* c */ Ord[List[T]] = ???
          |}
          |""".stripMargin,
-      reprintError = "`identifier` expected but `[` found",
     )("beg Type.Apply, Type.Name: /* c */")
   }
 
@@ -6034,10 +6030,9 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  given intOrd:
-         |    /* c */ Ord[Int] with { def compare = 1 }
+         |  /* c */ Ord[Int] with { def compare = 1 }
          |}
          |""".stripMargin,
-      reprintError = "`;` expected but `with` found",
     )("beg Template, Init, Type.Apply, Type.Name: /* c */")
   }
 
@@ -6052,10 +6047,9 @@ class CommentSuite extends BaseDottySuite {
       code,
       """|object O {
          |  def f(x: =>
-         |    /* c */ Int) = 1
+         |  /* c */ Int) = 1
          |}
          |""".stripMargin,
-      reprintError = "`identifier` expected but `indent` found",
     )("beg Type.Name: /* c */")
   }
 
