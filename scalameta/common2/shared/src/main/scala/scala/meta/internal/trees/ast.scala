@@ -687,6 +687,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
         // generate new applies for each new field added
         // with field A, B and additional binary compat ones C, D and E, we generate:
         // apply(A, B, C), apply(A, B, C, D), apply(A, B, C, D, E)
+        var addApply = true
         mstatsPerVersion.foreach { case (v, verMstats) =>
           val applyParamsBuilder = List.newBuilder[(ValDef, Int)]
           val applyBodyBuilder = List.newBuilder[Tree]
@@ -708,10 +709,10 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             (if (isTopLevel) mstats1 else mstats1LowPriority) +=
               getNewBuilder(verRequiredParams, applyBody, getDeprecatedAnno(v) :: Nil)
 
-          // a shape with a later field has no apply; the frozen shape has the companion's
-          val frozen = isFrozen(v)
-          val skipApply = frozen && paramsVersions.exists(x => isFrozen(x) && x < v)
-          if (!skipApply) {
+          // a shape with a later field has no apply; the companion's own shape needs no copy
+          if (addApply) {
+            if (isFrozen(v)) addApply = false
+
             verMstats.lowPrio +=
               q"""
             @$deprecatedSince_4_9_0 def apply(..$paramDecls): $iname = {
@@ -727,6 +728,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
             }
             """
 
+            val isApiShape = !addApply && paramDefns.map(_.name) == apiParams.map(_.name)
             privateApplyParamss.foreach { case (pv, pp) =>
               val partialParamDecls = pp.map(asValDecl) ++ paramDecls
               val fullCtorCall = fullCtorCallFromPartialPrivateParams(pp)
@@ -748,7 +750,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               verMstats.primary += partialWithDialect
               if (partialWithoutDialect ne null) verMstats.lowPrio += partialWithoutDialect
 
-              if (frozen) {}
+              if (isApiShape) {}
               else if (isTopLevel) mstats1 +=
                 q"""
               def apply(..$partialParamDecls): $iname = {
@@ -769,7 +771,7 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
               $withCommentsCall
             }
             """
-            if (frozen) {}
+            if (isApiShape) {}
             else if (isTopLevel) {
               mstats1 +=
                 q"""
