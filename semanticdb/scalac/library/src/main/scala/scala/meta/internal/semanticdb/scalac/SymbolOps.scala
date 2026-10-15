@@ -36,7 +36,12 @@ trait SymbolOps {
       val desc =
         if (sym.isValMethod) d.Term(sym.symbolName)
         else if (sym.isMethod || sym.isUsefulField) d.Method(sym.symbolName, sym.disambiguator)
-        else if (sym.isTypeParameter) d.TypeParameter(sym.symbolName)
+        else if (sym.isTypeParameter && sym.name == g.tpnme.WILDCARD) {
+          // 2.12 names each anonymous type param `_`: number them within the owner
+          val anonymous = sym.owner.typeParams.filter(_.name == g.tpnme.WILDCARD)
+          val index = anonymous.indexOf(sym)
+          d.TypeParameter(if (index < 0) sym.symbolName else "_$$" + (index + 1))
+        } else if (sym.isTypeParameter) d.TypeParameter(sym.symbolName)
         else if (sym.isValueParameter) d.Parameter(sym.symbolName)
         else if (sym.isType || sym.isJavaClass) d.Type(sym.symbolName)
         else if (sym.hasPackageFlag) d.Package(sym.symbolName)

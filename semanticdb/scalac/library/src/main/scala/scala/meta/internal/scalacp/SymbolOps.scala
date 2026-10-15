@@ -84,6 +84,18 @@ trait SymbolOps {
           case k.TYPE | k.CLASS | k.TRAIT => d.Type(symbolName)
           case k.PACKAGE => d.Package(symbolName)
           case k.PARAMETER => d.Parameter(symbolName)
+          case k.TYPE_PARAMETER if sym.name == "_" =>
+            // 2.12 names each anonymous type param `_`: number them within the owner
+            val tparams = sym.parent.get match {
+              case owner: SymbolInfoSymbol => owner.infoType match {
+                  case PolyType(_, tparams) => tparams
+                  case _ => Nil
+                }
+              case _ => Nil
+            }
+            val anonymous = tparams.filter(_.name == "_")
+            val index = anonymous.indexOf(sym)
+            d.TypeParameter(if (index < 0) symbolName else "_$$" + (index + 1))
           case k.TYPE_PARAMETER => d.TypeParameter(symbolName)
           case skind => sys.error(s"unsupported kind $skind for symbol $sym")
         }

@@ -43,11 +43,7 @@ class Issue1830Suite extends SemanticdbSuite {
     """|package w5
        |trait X { type T[_, _] }
        |""".stripMargin,
-    doc =>
-      assertEquals(
-        typeParams(doc),
-        if (ScalaVersion.is212) List("w5/X#T#[_]") else List("w5/X#T#[_$$1]", "w5/X#T#[_$$2]"),
-      ),
+    doc => assertEquals(typeParams(doc), List("w5/X#T#[_$$1]", "w5/X#T#[_$$2]")),
   )
 
   targeted(
@@ -55,11 +51,7 @@ class Issue1830Suite extends SemanticdbSuite {
        |object X { def m[F[_, _]] = ??? }
        |""".stripMargin,
     doc =>
-      assertEquals(
-        typeParams(doc),
-        if (ScalaVersion.is212) List("w6/X.m().[F]", "w6/X.m().[F][_]")
-        else List("w6/X.m().[F]", "w6/X.m().[F][_$$1]", "w6/X.m().[F][_$$2]"),
-      ),
+      assertEquals(typeParams(doc), List("w6/X.m().[F]", "w6/X.m().[F][_$$1]", "w6/X.m().[F][_$$2]")),
   )
 
   targeted(
@@ -69,7 +61,7 @@ class Issue1830Suite extends SemanticdbSuite {
     doc =>
       assertEquals(
         typeParams(doc),
-        if (ScalaVersion.is212) List("w7/C#[F]", "w7/C#[F][_]", "w7/C#m().[_]")
+        if (ScalaVersion.is212) List("w7/C#[F]", "w7/C#[F][_$$1]", "w7/C#m().[_$$1]")
         else List("w7/C#[F]", "w7/C#[F][_$$1]", "w7/C#m().[_$$2]"),
       ),
   )
