@@ -113,6 +113,7 @@ object Extensions {
     publishMavenStyle := true,
     pomIncludeRepository := { x => false },
     versionScheme := Some("semver-spec"),
+    mimaReportSignatureProblems := true,
     mimaBinaryIssueFilters += Mima.languageAgnosticCompatibilityPolicy,
     mimaBinaryIssueFilters += Mima.scalaSpecificCompatibilityPolicy,
     mimaBinaryIssueFilters ++= Mima.apiCompatibilityExceptions,
