@@ -229,7 +229,7 @@ trait TextDocumentOps {
             val symInfo = saveSymbolFromSemantic(gsym, symbol)
 
             if (gsym.isClass && !gsym.isTrait) {
-              if (gsym.isAnonymousClass)
+              if (gsym.isAnonymousClass && gsym.pos.isDefined)
                 addOccurrenceFromSemantic(gsym.pos.focus.toMeta, symbol, Role.DEFINITION)
               val gprim = gsym.primaryConstructor
               saveSymbol(gprim)
