@@ -680,8 +680,16 @@ trait TextDocumentOps {
           }
         }
 
-        private def getApplyImplicitView(gt: g.ApplyImplicitView, range: s.Range) = s
-          .ApplyTree(gt.fun.toSemanticTree, List(range.toSemanticOriginal))
+        private def getApplyImplicitView(gt: g.ApplyImplicitView, range: s.Range) = {
+          val fun = gt.fun match {
+            // a method of a value, like `f.apply`, does not identify the conversion by itself
+            case f @ g.Select(qual, _)
+                if qual.symbol != null && !qual.symbol.isModule && !qual.symbol.hasPackageFlag =>
+              f.toSemanticQualifierTree
+            case f => f.toSemanticTree
+          }
+          s.ApplyTree(fun, List(range.toSemanticOriginal))
+        }
 
         private def getApplyToImplicitArgs(gt: g.ApplyToImplicitArgs, fun: s.Tree): s.ApplyTree = s
           .ApplyTree(fun, gt.args.map(_.toSemanticTree))
