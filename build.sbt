@@ -290,8 +290,7 @@ lazy val common = projectMatrix.in(file("scalameta/common")).settings(
   libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.4.4",
   description := "Bag of private and public helpers used in scalameta APIs and implementations",
   enableMacros,
-).crossAllPublished(TestedScalaVersions, PublishedScalaVersions).enablePlugins(BuildInfoPlugin)
-  .dependsOn(common2)
+).crossAllPublished(TestedScalaVersions, PublishedScalaVersions).dependsOn(common2)
 
 lazy val io = projectMatrix.in(file("scalameta/io"))
   .settings(moduleName := "io", sharedSettings, description := "Scalameta IO abstractions")
