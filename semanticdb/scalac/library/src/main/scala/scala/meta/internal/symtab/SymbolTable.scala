@@ -69,7 +69,7 @@ trait SymbolTable {
    * Constructors are not inherited, so for `name == "<init>"` only `tpe`'s own constructors are
    * returned, not its parents'.
    *
-   * Caveats: erasure is symbol-level, and accessibility/applicability is not applied — final
+   * Caveats: erasure is approximate, and accessibility/applicability is not applied — final
    * overload resolution is the compiler's job.
    */
   def overloads(tpe: String, name: String): List[String] = {
@@ -151,7 +151,6 @@ trait SymbolTable {
 
   // symbol-only views, used where type arguments aren't needed (e.g. `isSubtypeOf`)
   private def parentSymbols(sinfo: SymbolInformation): Iterator[String] = parentRefs(sinfo).map(_._1)
-  private def typeSymbols(tpe: Type): Iterator[String] = typeRefs(tpe).map(_._1)
 
   // `tpe` plus its transitive parents in Scala linearization order, cycle-safe, each paired with the
   // substitution of its type parameters to erased symbols (so generic overrides compare correctly).
@@ -187,7 +186,7 @@ trait SymbolTable {
     if (args.isEmpty) Map.empty
     else owner.signature[ClassSignature].map(c =>
       c.typeParameters.symbols.iterator.zip(args.iterator).flatMap { case (param, arg) =>
-        headSymbol(arg, env).map(param -> _)
+        erasure(arg, env).map(param -> _)
       }.toMap,
     ).getOrElse(Map.empty)
 
@@ -203,7 +202,7 @@ trait SymbolTable {
   private def erasedSignature(method: String, env: Map[String, String]): Option[List[String]] =
     method.signature[MethodSignature].flatMap { m =>
       val types = m.parameterLists.iterator.flatMap(paramInfos).map(_.signature match {
-        case v: ValueSignature => headSymbol(v.tpe, env)
+        case v: ValueSignature => erasure(v.tpe, env)
         case _ => None
       }).toList
       if (types.forall(_.isDefined)) Some(types.flatten) else None
@@ -212,22 +211,23 @@ trait SymbolTable {
   private def paramInfos(scope: Scope): Iterator[SymbolInformation] =
     if (scope.symlinks.nonEmpty) scope.symlinks.iterator.flatMap(info) else scope.hardlinks.iterator
 
-  // Reduce a type to its erased head symbol: unwrap by-name/repeated wrappers, then resolve a type
-  // parameter through `env` (substitution) or, failing that, follow its alias/upper bound.
-  private def headSymbol(tpe: Type, env: Map[String, String]): Option[String] = {
-    // resolve a type parameter through `env` (substitution), else follow its alias/upper bound;
-    // `seen` guards against alias/type-parameter cycles.
-    val seen = mutable.Set.empty[String]
-    def head(t: Type): Option[String] = typeSymbols(t).nextOption()
-    @tailrec
-    def resolve(sym: String): String = env.get(sym) match {
-      case Some(bound) => bound
-      case None => sym.signature[TypeSignature].flatMap(x => head(x.upperBound)) match {
-          case Some(next) if seen.add(next) => resolve(next)
-          case _ => sym
+  /* Erase a type to its head symbol, and resolve a type parameter through `env`, else through its
+   * alias/upper bound. As on the JVM, a by-name type erases to `Function0`, and an array keeps its
+   * element. A repeated type stays apart from a plain one. */
+  private def erasure(tpe: Type, env: Map[String, String]): Option[String] = {
+    val seen = mutable.Set.empty[String] // guards against alias/type-parameter cycles
+    def loop(t: Type): Option[String] = t match {
+      case _: ByNameType => Some("scala/Function0#")
+      case RepeatedType(elem) => loop(elem).map(_ + "*")
+      case _ => typeRefs(t).nextOption().flatMap {
+          case ("scala/Array#", Seq(elem)) => loop(elem).map(e => s"scala/Array#[$e]")
+          case (sym, _) => env.get(sym).orElse(sym.signature[TypeSignature] match {
+              case Some(ts) if seen.add(sym) => loop(ts.upperBound).orElse(Some(sym))
+              case _ => Some(sym)
+            })
         }
     }
-    head(tpe).map(resolve)
+    loop(tpe)
   }
 
   implicit class XtensionOptionSymbolInformation(private val obj: Option[SymbolInformation]) {
