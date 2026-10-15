@@ -1298,9 +1298,7 @@ class CommentSuite extends BaseDottySuite {
       Enumerator.Generator.newBuilder(patvar("a"), tname("b")).endComment(Seq("// c")).result(),
       Enumerator.Generator(patvar("d"), tname("e")),
     )
-    val parsed = stat(code)
-    assertSyntax(layout)(parsed)
-    assertTree(parsed)(Term.ForYield(enums, tname("a")))
+    runTestAssert[Stat](code, layout)(Term.ForYield(enums, tname("a")))
   }
 
   test("import: ASLC after an importer's comma") {
