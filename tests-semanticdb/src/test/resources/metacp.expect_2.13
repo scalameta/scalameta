@@ -2101,6 +2101,81 @@ example/Issue1544.B# => class B extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 example/Issue1544.B#`<init>`(). => primary ctor <init>()
 
+example/Issue1672.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1672.class
+Text => empty
+Language => Scala
+Symbols => 14 entries
+
+Symbols:
+example/Issue1672# => @Issue1672Annot class Issue1672 extends AnyRef { +9 decls }
+  Issue1672Annot => example/Issue1672Annot#
+  AnyRef => scala/AnyRef#
+example/Issue1672#NamedClass# => @Issue1672Annot class NamedClass extends AnyRef { +1 decls }
+  Issue1672Annot => example/Issue1672Annot#
+  AnyRef => scala/AnyRef#
+example/Issue1672#NamedClass#`<init>`(). => primary ctor <init>()
+example/Issue1672#NamedType# => @Issue1672Annot type NamedType = Int
+  Issue1672Annot => example/Issue1672Annot#
+  Int => scala/Int#
+example/Issue1672#`<init>`(). => primary ctor <init>()
+example/Issue1672#`<local Issue1672>`. => val method <local Issue1672>
+example/Issue1672#blockDef(). => @Issue1672Annot method blockDef: Int
+  Issue1672Annot => example/Issue1672Annot#
+  Int => scala/Int#
+example/Issue1672#namedDef(). => @Issue1672Annot method namedDef: Int
+  Issue1672Annot => example/Issue1672Annot#
+  Int => scala/Int#
+example/Issue1672#namedParam(). => method namedParam(@Issue1672Annot p: Int): Int
+  p => example/Issue1672#namedParam().(p)
+  Issue1672Annot => example/Issue1672Annot#
+  Int => scala/Int#
+example/Issue1672#namedParam().(p) => @Issue1672Annot param p: Int
+  Issue1672Annot => example/Issue1672Annot#
+  Int => scala/Int#
+example/Issue1672#namedVal. => val method namedVal: Int
+  Int => scala/Int#
+example/Issue1672#positionalDef(). => @Issue1672Annot method positionalDef: Int
+  Issue1672Annot => example/Issue1672Annot#
+  Int => scala/Int#
+example/Issue1672. => final object Issue1672 extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1672.namedDef(). => @Issue1672Annot method namedDef: Int
+  Issue1672Annot => example/Issue1672Annot#
+  Int => scala/Int#
+
+example/Issue1672Annot.class
+----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1672Annot.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+example/Issue1672Annot# => class Issue1672Annot extends Annotation with StaticAnnotation { +3 decls }
+  Annotation => scala/annotation/Annotation#
+  StaticAnnotation => scala/annotation/StaticAnnotation#
+example/Issue1672Annot#`<init>`(). => primary ctor <init>(x: Int, y: String)
+  x => example/Issue1672Annot#`<init>`().(x)
+  Int => scala/Int#
+  y => example/Issue1672Annot#`<init>`().(y)
+  String => scala/Predef.String#
+example/Issue1672Annot#`<init>`().(x) => param x: Int
+  Int => scala/Int#
+example/Issue1672Annot#`<init>`().(y) => param y: String
+  String => scala/Predef.String#
+example/Issue1672Annot#x. => private[this] val method x: Int
+  Int => scala/Int#
+example/Issue1672Annot#y. => private[this] val method y: String
+  String => scala/Predef.String#
+
 example/Issue1749.class
 -----------------------
 
@@ -2119,6 +2194,55 @@ example/Issue1749#x1. => val method x1: Int
   Int => scala/Int#
 example/Issue1749#x2. => val method x2: Int
   Int => scala/Int#
+
+example/Issue1806.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1806.class
+Text => empty
+Language => Scala
+Symbols => 9 entries
+
+Symbols:
+example/Issue1806# => class Issue1806 extends AnyRef { +7 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1806#Alias# => type Alias = Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} }
+  Issue1806 => example/Issue1806#
+  T => local10
+  <refinement> => local11
+example/Issue1806#`<init>`(). => primary ctor <init>(x: Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} })
+  x => example/Issue1806#`<init>`().(x)
+  Issue1806 => example/Issue1806#
+  T => local12
+  <refinement> => local13
+example/Issue1806#`<init>`().(x) => param x: Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} }
+  Issue1806 => example/Issue1806#
+  T => local12
+  <refinement> => local13
+example/Issue1806#flat. => val method flat: Issue1806 { type T }
+  Issue1806 => example/Issue1806#
+  T => local9
+example/Issue1806#inArg. => val method inArg: List[Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} }]
+  List => scala/package.List#
+  Issue1806 => example/Issue1806#
+  T => local7
+  <refinement> => local8
+example/Issue1806#inDecl. => val method inDecl: Issue1806 { def m: Issue1806 { def n: Int }; class <refinement>Issue1806 { def n: Int } }
+  Issue1806 => example/Issue1806#
+  m => local4
+  n => local6
+  Int => scala/Int#
+  <refinement> => local5
+example/Issue1806#inParent. => val method inParent: Issue1806 { type U } { type T }
+  Issue1806 => example/Issue1806#
+  U => local2
+  T => local3
+example/Issue1806#x. => private[this] val method x: Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} }
+  Issue1806 => example/Issue1806#
+  T => local0
+  <refinement> => local1
 
 example/Issue1854.class
 -----------------------
