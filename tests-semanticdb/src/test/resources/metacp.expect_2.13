@@ -2333,6 +2333,67 @@ example/Issue1806#x. => private[this] val method x: Issue1806 { type T = Issue18
   Issue1806 => example/Issue1806#
   T => local0
 
+example/Issue1830.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1830.class
+Text => empty
+Language => Scala
+Symbols => 8 entries
+
+Symbols:
+example/Issue1830# => trait Issue1830 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1830#T# => abstract type T[_, _]
+  _ => example/Issue1830#T#[`1`]
+  _ => example/Issue1830#T#[`2`]
+example/Issue1830#T#[`1`] => typeparam _
+example/Issue1830#T#[`2`] => typeparam _
+example/Issue1830#m(). => abstract method m[F[_, _]]: Unit
+  F => example/Issue1830#m().[F]
+  _ => example/Issue1830#m().[F][`3`]
+  _ => example/Issue1830#m().[F][`4`]
+  Unit => scala/Unit#
+example/Issue1830#m().[F] => typeparam F[_, _]
+  _ => example/Issue1830#m().[F][`3`]
+  _ => example/Issue1830#m().[F][`4`]
+example/Issue1830#m().[F][`3`] => typeparam _
+example/Issue1830#m().[F][`4`] => typeparam _
+
+example/Issue1830Single.class
+-----------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/Issue1830Single.class
+Text => empty
+Language => Scala
+Symbols => 10 entries
+
+Symbols:
+example/Issue1830Single# => class Issue1830Single[_] extends AnyRef { +4 decls }
+  _ => example/Issue1830Single#[`5`]
+  AnyRef => scala/AnyRef#
+example/Issue1830Single#A# => type A[_] = Int
+  _ => example/Issue1830Single#A#[`7`]
+  Int => scala/Int#
+example/Issue1830Single#A#[`7`] => typeparam _
+example/Issue1830Single#[`5`] => typeparam _
+example/Issue1830Single#`<init>`(). => primary ctor <init>()
+example/Issue1830Single#hk(). => method hk[G[_]]: Unit
+  G => example/Issue1830Single#hk().[G]
+  _ => example/Issue1830Single#hk().[G][`8`]
+  Unit => scala/Unit#
+example/Issue1830Single#hk().[G] => typeparam G[_]
+  _ => example/Issue1830Single#hk().[G][`8`]
+example/Issue1830Single#hk().[G][`8`] => typeparam _
+example/Issue1830Single#m(). => method m[_]: Unit
+  _ => example/Issue1830Single#m().[`6`]
+  Unit => scala/Unit#
+example/Issue1830Single#m().[`6`] => typeparam _
+
 example/Issue1854.class
 -----------------------
 
