@@ -104,4 +104,34 @@ class SubtypingSuite extends FunSuite {
     assert(local.isSubtypeOf("x/ViaUniversal#", "x/Base#"))
   }
 
+  test("subtypeOf: a fully resolved classpath") {
+    assertEquals(symtab.subtypeOf("scala/Some#", "scala/Option#"), Some(true))
+    assertEquals(symtab.subtypeOf("scala/Some#", "scala/Int#"), Some(false))
+    assertEquals(symtab.subtypeOf("does/not/Exist#", "does/not/Exist#"), Some(true))
+    assertEquals(symtab.subtypeOf("does/not/Exist#", "scala/Any#"), None)
+  }
+
+  test("subtypeOf: a missing parent") {
+    // A extends missing/X with B, and B extends missing/Y
+    def cls(sym: String, parents: String*): SymbolInformation = SymbolInformation(
+      symbol = sym,
+      signature = ClassSignature(parents = parents.map(p => TypeRef(symbol = p))),
+    )
+    val local = LocalSymbolTable(List(cls("a/A#", "missing/X#", "a/B#"), cls("a/B#", "missing/Y#")))
+    assertEquals(local.subtypeOf("a/A#", "a/B#"), Some(true))
+    assertEquals(local.subtypeOf("a/A#", "missing/Y#"), Some(true))
+    assertEquals(local.subtypeOf("a/A#", "a/C#"), None)
+    assertEquals(local.subtypeOf("a/B#", "a/A#"), None)
+  }
+
+  test("subtypeOf: cyclic parents") {
+    def cls(sym: String, parent: String): SymbolInformation = SymbolInformation(
+      symbol = sym,
+      signature = ClassSignature(parents = List(TypeRef(symbol = parent))),
+    )
+    val local = LocalSymbolTable(List(cls("a/A#", "a/B#"), cls("a/B#", "a/A#")))
+    assertEquals(local.subtypeOf("a/A#", "a/B#"), Some(true))
+    assertEquals(local.subtypeOf("a/A#", "scala/Any#"), Some(false))
+  }
+
 }

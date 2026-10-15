@@ -124,11 +124,31 @@ trait SymbolTable {
    * ancestor chain matches even when its own `SymbolInformation` is missing, but an unresolvable
    * intermediate link stops the walk there, yielding `false` rather than throwing; the traversal is
    * cycle-safe.
+   *
+   * To tell a genuine `false` from an unresolvable link, use [[subtypeOf]].
    */
-  def isSubtypeOf(child: String, parent: String): Boolean = {
+  def isSubtypeOf(child: String, parent: String): Boolean = subtypeOf(child, parent).contains(true)
+
+  /**
+   * Like [[isSubtypeOf]], but returns `None` instead of `false` if the walk reached a type whose
+   * `info` is missing.
+   */
+  def subtypeOf(child: String, parent: String): Option[Boolean] = {
     val seen = mutable.Set.empty[String]
-    def loop(sym: String): Boolean = sym == parent || seen.add(sym) && info(sym)
-      .exists(parentSymbols(_).exists(loop))
+    def loop(sym: String): Option[Boolean] =
+      if (sym == parent) Some(true)
+      else if (!seen.add(sym)) Some(false) // its first visit already counted
+      else info(sym) match {
+        case None => None
+        case Some(sinfo) =>
+          val parents = parentSymbols(sinfo)
+          var res: Option[Boolean] = Some(false)
+          while (parents.hasNext && !res.contains(true)) loop(parents.next()) match {
+            case Some(false) =>
+            case r => res = r
+          }
+          res
+      }
     loop(child)
   }
 
