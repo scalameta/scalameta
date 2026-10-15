@@ -80,10 +80,10 @@ object OccurrenceSuite {
     val sb = new StringBuilder
     val input = Input.VirtualFile(doc.uri, doc.text)
     var offset = 0
-    doc.occurrences.foreach { occ =>
-      val range = occ.range.get
-      val pos = Position
-        .Range(input, range.startLine, range.startCharacter, range.endLine, range.endCharacter)
+    doc.occurrences.map { occ =>
+      val r = occ.range.get
+      occ -> Position.Range(input, r.startLine, r.startCharacter, r.endLine, r.endCharacter)
+    }.sortBy(_._2).foreach { case (occ, pos) =>
       if (pos.end >= offset) {
         sb.append(doc.text.substring(offset, pos.end))
         val isPrimaryConstructor = symtab.get(occ.symbol).exists(_.isPrimary)
@@ -93,6 +93,13 @@ object OccurrenceSuite {
     }
     sb.append(doc.text.substring(offset))
     sb.toString()
+  }
+
+  private implicit object RangeOrdering extends Ordering[Position.Range] {
+    def compare(x: Position.Range, y: Position.Range): Int = {
+      val start = x.start - y.start
+      if (start != 0) start else x.end - y.end
+    }
   }
 
   def printSymbol(sb: StringBuilder, symbol: String, role: SymbolOccurrence.Role): Unit = {
