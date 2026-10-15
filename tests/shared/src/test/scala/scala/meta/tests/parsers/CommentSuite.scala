@@ -8359,4 +8359,9 @@ class CommentSuite extends ParseSuite {
     )
   }
 
+  test("checkComments: reprint error, layout equal to the code") {
+    def check() = checkComments("object A", reprintError = "an error")()
+    intercept[munit.ComparisonFailException](check())
+  }
+
 }

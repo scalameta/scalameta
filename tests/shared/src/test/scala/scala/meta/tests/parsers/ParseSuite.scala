@@ -100,14 +100,19 @@ abstract class ParseSuite extends TreeSuiteBase with CommonTrees {
     val printed = parsed.reprint
     if ((layout eq null) || code == layout) {
       assertNoDiff(printed, code, "layout")
+      assertEquals(reprintError, null, "reprintError") // the reprint is the code, which parsed
       if (reprinted ne null) assertEquals(reprinted, owners, "reprinted")
     } else {
       assertNoDiff(printed, layout, "layout")
-      if (reprintError ne null) runTestError[Source](printed.nl2lf, reprintError)
-      else commentOwners(source(printed), if (reprinted eq null) owners else reprinted, "reprinted")
+      if (reprintError ne null) {
+        runTestError[Source](printed.nl2lf, reprintError)
+        assertEquals(reprinted, null, "reprinted") // the reprint has no tree to hold owners
+      } else
+        commentOwners(source(printed), if (reprinted eq null) owners else reprinted, "reprinted")
     }
     if (reprintError eq null)
       assertNoDiff(source(printed).reprint, if (twice eq null) printed else twice, "twice")
+    else assertEquals(twice, null, "twice") // a reprint that fails to parse has no second reprint
     parsed
   }
 

@@ -2595,12 +2595,7 @@ class CommentSuite extends BaseDottySuite {
     val code =
       """|given intOrd: Ord[Int] with /* c1 */ {}
          |""".stripMargin
-    checkComments(
-      code,
-      """|given intOrd: Ord[Int] with /* c1 */ {}
-         |""".stripMargin,
-      reprintError = "<input>:1: error: `identifier` expected but `end of file` found",
-    )("beg Template.Body: /* c1 */")
+    checkComments(code)("beg Template.Body: /* c1 */")
   }
 
   test("given with: DSLC before with, empty body") {
@@ -5990,18 +5985,7 @@ class CommentSuite extends BaseDottySuite {
          |  } yield x
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object O {
-         |  for {
-         |    x <- // c
-         |      xs
-         |    if x > 1
-         |  } yield x
-         |}
-         |""".stripMargin,
-      reprintError = "`)` expected but `<-` found",
-    )("beg Term.Name: // c")
+    checkComments(code)("beg Term.Name: // c")
   }
 
   test("object: DSLC, blank line, colon body") {
