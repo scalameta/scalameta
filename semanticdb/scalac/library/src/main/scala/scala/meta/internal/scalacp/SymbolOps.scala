@@ -53,6 +53,7 @@ trait SymbolOps {
       if (sym.isRootPackage) n.RootPackage.value
       else if (sym.isEmptyPackage) n.EmptyPackage.value
       else if (sym.isConstructor) n.Constructor.value
+      else if (sym.isTypeParam) NameTransformer.decode(sym.name)
       else {
         @tailrec
         def loop(value: String): String = {
