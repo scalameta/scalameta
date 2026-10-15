@@ -663,6 +663,20 @@ def semanticdbScalacShadedPackage = Def.setting {
   s"scala.meta.internal.semanticdb.scalac.shaded_v$ver"
 }
 
+def jarClasses(jar: File): List[String] = scala.util.Using
+  .resource(new java.util.zip.ZipFile(jar)) { zip =>
+    val res = List.newBuilder[String]
+    val iter = zip.entries
+    while (iter.hasMoreElements) {
+      val elem = iter.nextElement().getName
+      val stripped = elem.stripSuffix(".class")
+      if (elem ne stripped) res += stripped.replace('/', '.')
+    }
+    res.result()
+  }
+
+def packageOf(cls: String): String = cls.substring(0, cls.lastIndexOf('.').max(0))
+
 lazy val mergeSettings = Def.settings(
   sharedSettings,
   // sbt-assembly's shade rules fail on an exported jar
@@ -695,6 +709,24 @@ lazy val mergeSettings = Def.settings(
         s"$pkg.**" -> s"$shaded.@1",
       ).inAll,
     )
+  },
+  /* Relocate the libraries that the jar bundles: its pom lists none of them, so a build tool
+   * cannot evict them from a runtime classpath (#4080). Move a class one by one if the compiler
+   * jars have its package. */
+  assembly / assemblyOption := {
+    val options = (assembly / assemblyOption).value
+    val shaded = semanticdbScalacShadedPackage.value
+    val toFile = fileOf.value
+    val compilerPackages = scalaInstance.value.allJars.toSet.flatMap(jarClasses).map(packageOf)
+    val excludedJars = options.excludedJars.map(_.data).toSet
+    val rules = (assembly / externalDependencyClasspath).value.flatMap { cp =>
+      val data = cp.data
+      if (excludedJars(data)) Nil else jarClasses(toFile(data))
+    }.groupBy(packageOf).toList.flatMap { case (pkg, classes) =>
+      if (pkg.isEmpty || compilerPackages(pkg)) classes.distinct.map(x => x -> s"$shaded.$x")
+      else List(s"$pkg.*" -> s"$shaded.$pkg.@1")
+    }
+    options.withShadeRules(options.shadeRules :+ ShadeRule.rename(rules.sorted: _*).inAll)
   },
   Compile / Keys.`package` := Def.uncached {
     val slimJar = (Compile / Keys.`package`).value
