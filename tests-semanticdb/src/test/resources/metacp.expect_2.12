@@ -2191,41 +2191,35 @@ Symbols => 9 entries
 Symbols:
 example/Issue1806# => class Issue1806 extends AnyRef { +7 decls }
   AnyRef => scala/AnyRef#
-example/Issue1806#Alias# => type Alias = Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} }
-  Issue1806 => example/Issue1806#
-  T => local10
-  <refinement> => local11
-example/Issue1806#`<init>`(). => primary ctor <init>(x: Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} })
-  x => example/Issue1806#`<init>`().(x)
-  Issue1806 => example/Issue1806#
-  T => local12
-  <refinement> => local13
-example/Issue1806#`<init>`().(x) => param x: Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} }
-  Issue1806 => example/Issue1806#
-  T => local12
-  <refinement> => local13
-example/Issue1806#flat. => val method flat: Issue1806 { type T }
-  Issue1806 => example/Issue1806#
-  T => local9
-example/Issue1806#inArg. => val method inArg: List[Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} }]
-  List => scala/package.List#
+example/Issue1806#Alias# => type Alias = Issue1806 { type T = Issue1806 with Issue1806 {} }
   Issue1806 => example/Issue1806#
   T => local7
-  <refinement> => local8
-example/Issue1806#inDecl. => val method inDecl: Issue1806 { def m: Issue1806 { def n: Int }; class <refinement>Issue1806 { def n: Int } }
+example/Issue1806#`<init>`(). => primary ctor <init>(x: Issue1806 { type T = Issue1806 with Issue1806 {} })
+  x => example/Issue1806#`<init>`().(x)
   Issue1806 => example/Issue1806#
-  m => local4
-  n => local6
+  T => local8
+example/Issue1806#`<init>`().(x) => param x: Issue1806 { type T = Issue1806 with Issue1806 {} }
+  Issue1806 => example/Issue1806#
+  T => local8
+example/Issue1806#flat. => val method flat: Issue1806 { type T }
+  Issue1806 => example/Issue1806#
+  T => local6
+example/Issue1806#inArg. => val method inArg: List[Issue1806 { type T = Issue1806 with Issue1806 {} }]
+  List => scala/package.List#
+  Issue1806 => example/Issue1806#
+  T => local5
+example/Issue1806#inDecl. => val method inDecl: Issue1806 { def m: Issue1806 { def n: Int } }
+  Issue1806 => example/Issue1806#
+  m => local3
+  n => local4
   Int => scala/Int#
-  <refinement> => local5
 example/Issue1806#inParent. => val method inParent: Issue1806 { type U } { type T }
   Issue1806 => example/Issue1806#
-  U => local2
-  T => local3
-example/Issue1806#x. => private[this] val method x: Issue1806 { type T = Issue1806 with Issue1806 {}; class <refinement>Issue1806 with Issue1806 {} }
+  U => local1
+  T => local2
+example/Issue1806#x. => private[this] val method x: Issue1806 { type T = Issue1806 with Issue1806 {} }
   Issue1806 => example/Issue1806#
   T => local0
-  <refinement> => local1
 
 example/Issue1854.class
 -----------------------
