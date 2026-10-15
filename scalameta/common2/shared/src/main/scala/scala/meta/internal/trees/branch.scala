@@ -56,12 +56,18 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
                 if (x != null) $SomeModule($successArgs) else $NoneModule
             """
           }
+          // the extractor keeps the fields it had at the frozen version
+          def isNewField(p: ValOrDefDef) = p.mods.annotations.exists {
+            case q"new newField($since)" => AstNamerMacros
+                .isFrozen(parseVersionAnnot(since, "newField", "after"))
+            case _ => false
+          }
           val params = stats.collect {
             case x: ValDef => x
             case x: DefDef if x.tparams.isEmpty && x.vparamss.isEmpty => x
           }.filter(p => // a private member is not a field of the extractor
             (p.rhs eq EmptyTree) && !p.mods.hasFlag(PRIVATE) &&
-              p.mods.privateWithin == typeNames.EMPTY,
+              p.mods.privateWithin == typeNames.EMPTY && !isNewField(p),
           )
           if (params.nonEmpty) mstats1 += getUnapply(params)
           else mstats1 += q"@$InlineAnnotation final def unapply(x: $name): $BooleanClass = true"
