@@ -100,14 +100,13 @@ object Tree extends InternalTreeXtensions {
   /** brace- or indent-delimited container of statements */
   trait Block extends Tree {
     def stats: List[Tree]
-    private[meta] def allElems: List[Tree]
+    private[meta] def allElems: List[Tree] = stats
   }
 
   @branch
   trait CasesBlock extends Block {
     def cases: List[CaseTree]
     final def stats: List[Tree] = cases
-    private[meta] final def allElems: List[Tree] = cases
   }
 
   @branch
@@ -269,7 +268,6 @@ object Stat {
   @ast
   class Block(stats: List[Stat]) extends Tree.Block {
     final def nonEmpty: Boolean = stats.nonEmpty
-    private[meta] final def allElems: List[Tree] = stats
   }
 
   @branch
@@ -408,7 +406,6 @@ object Term {
   @ast
   class EnumeratorsBlock(enums: List[Enumerator] @nonEmpty) extends Tree.Block {
     final def stats: List[Tree] = enums
-    private[meta] final def allElems: List[Tree] = enums
   }
 
   @ast
@@ -478,9 +475,7 @@ object Term {
   @ast
   class Tuple(args: List[Term]) extends Term with Member.Tuple
   @ast
-  class Block(stats: List[Stat]) extends Term with Tree.Block with Tree.WithStats {
-    private[meta] final def allElems: List[Tree] = stats
-  }
+  class Block(stats: List[Stat]) extends Term with Tree.Block with Tree.WithStats
   @ast
   class EndMarker(name: Term.Name) extends Term
   @ast
@@ -919,7 +914,7 @@ object Type {
   @ast
   class Block(typeDefs: List[Stat.TypeDef], tpe: Type) extends Type with Tree.Block {
     final def stats: List[Tree] = typeDefs
-    private[meta] final def allElems: List[Tree] = typeDefs :+ tpe
+    override private[meta] final def allElems: List[Tree] = typeDefs :+ tpe
   }
 
   @branch
@@ -1406,9 +1401,7 @@ object Pkg {
   class Object(mods: List[Mod], name: Term.Name, templ: Template)
       extends Member.Term with Stat with Stat.WithMods with Stat.WithTemplate
   @ast
-  class Body(stats: List[Stat]) extends Tree.Block {
-    private[meta] final def allElems: List[Tree] = stats
-  }
+  class Body(stats: List[Stat]) extends Tree.Block
 }
 
 // NOTE: The names of Ctor.Primary and Ctor.Secondary here is always Name.Anonymous.
@@ -1426,7 +1419,7 @@ object Ctor {
 
   @ast
   class Block(init: Init, stats: List[Stat]) extends Tree.Block {
-    private[meta] final def allElems: List[Tree] = init :: stats
+    override private[meta] final def allElems: List[Tree] = init :: stats
   }
   private[meta] object BlockCtor {
     def apply(init: Init, stats: List[Stat]): Block = Block(init = init, stats = stats)
@@ -1466,7 +1459,7 @@ object Template {
   @ast
   class Body(selfOpt: Option[Self], stats: List[Stat]) extends Tree.Block {
     final def isEmpty: Boolean = stats.isEmpty && selfOpt.isEmpty
-    private[meta] final def allElems: List[Tree] = selfOpt match {
+    override private[meta] final def allElems: List[Tree] = selfOpt match {
       case None => stats
       case Some(self) => self :: stats
     }
@@ -1637,9 +1630,7 @@ class Case(pat: Pat, cond: Option[Term], body: Term)
 class TypeCase(pat: Type, body: Type) extends CaseTree
 
 @ast
-class Source(stats: List[Stat]) extends Tree with Tree.WithStats with Tree.Block {
-  private[meta] final def allElems: List[Tree] = stats
-}
+class Source(stats: List[Stat]) extends Tree with Tree.WithStats with Tree.Block
 
 @ast
 class MultiSource(sources: List[Source]) extends Tree

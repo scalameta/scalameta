@@ -16,7 +16,7 @@ class TreeSuite extends TreeSuiteBase {
   test("Tree.Block.unapply") {
     val a = Term.Name("a")
     def extract() = Tree.Block.unapply(Term.Block(List(a)))
-    assertEquals(extract(), Some((List[Tree](a), List[Tree](a))))
+    assertEquals(extract(), Some(List[Tree](a)))
   }
 
   // https://github.com/scalameta/scalameta/issues/1193
