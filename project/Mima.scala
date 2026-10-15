@@ -55,5 +55,7 @@ object Mima {
     // Origin: every subtype already declares or defines these
     exclude[ReversedMissingMethodProblem]("trees.Origin.begTokenIdx"),
     exclude[ReversedMissingMethodProblem]("trees.Origin.endTokenIdx"),
+    // FunctionType: the extractor no longer returns the private `params`
+    exclude[IncompatibleSignatureProblem]("Type#FunctionType.unapply"),
   )
 }
