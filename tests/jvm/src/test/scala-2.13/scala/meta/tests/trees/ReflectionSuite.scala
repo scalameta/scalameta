@@ -27,6 +27,96 @@ class ReflectionSuite extends TreeSuiteBase {
     assertEquals((root.allBranches.length, root.allLeafs.length), (78, 496))
   }
 
+  test("branch extractors") {
+    val obtained = symbolOf[scala.meta.Tree].asRoot.allBranches.map { b =>
+      val unapply = b.sym.companion.info.member(TermName("unapply"))
+      s"${b.sym.fullName}: ${unapply.alternatives.map(_.asMethod.returnType).mkString(", ")}"
+    }.sorted.mkString(EOL)
+    assertNoDiff(
+      obtained,
+      """|
+         |scala.meta.CaseTree: Option[(scala.meta.Tree, scala.meta.Tree)]
+         |scala.meta.Ctor: Boolean
+         |scala.meta.Decl.GivenLike: Option[(List[scala.meta.Mod], scala.meta.Name, List[scala.meta.Member.ParamClauseGroup], scala.meta.Type)]
+         |scala.meta.Decl: Boolean
+         |scala.meta.Defn: Boolean
+         |scala.meta.Enumerator.Assign: Option[(scala.meta.Pat, scala.meta.Term)]
+         |scala.meta.Enumerator: Boolean
+         |scala.meta.ImportExportStat: Option[List[scala.meta.Importer]]
+         |scala.meta.Importee.ClauseLike: Boolean
+         |scala.meta.Importee: Boolean
+         |scala.meta.Lit: Option[Any]
+         |scala.meta.Member.Apply: Option[(scala.meta.Tree, scala.meta.Member.ArgClause)]
+         |scala.meta.Member.ArgClause: Option[List[scala.meta.Tree]]
+         |scala.meta.Member.Function: Option[(scala.meta.Member.SyntaxValuesClause, scala.meta.Tree)]
+         |scala.meta.Member.Infix: Option[(scala.meta.Tree, scala.meta.Name, scala.meta.Tree)]
+         |scala.meta.Member.Param: Option[List[scala.meta.Mod]]
+         |scala.meta.Member.ParamClause: Option[List[scala.meta.Member.Param]]
+         |scala.meta.Member.SyntaxValuesClause: Option[List[scala.meta.Tree]]
+         |scala.meta.Member.Term: Option[meta.Term.Name]
+         |scala.meta.Member.Tuple: Option[List[scala.meta.Tree]]
+         |scala.meta.Member.Type: Option[meta.Type.Name]
+         |scala.meta.Member: Option[scala.meta.Name]
+         |scala.meta.Mod.ArgsType: Boolean
+         |scala.meta.Mod.ParamsType: Boolean
+         |scala.meta.Mod.Variant: Boolean
+         |scala.meta.Mod.WithWithin: Option[scala.meta.Ref]
+         |scala.meta.Mod: Boolean
+         |scala.meta.Name: Option[String]
+         |scala.meta.Pat: Boolean
+         |scala.meta.Ref: Boolean
+         |scala.meta.Stat.GivenLike: Option[(List[scala.meta.Mod], scala.meta.Name, List[scala.meta.Member.ParamClauseGroup])]
+         |scala.meta.Stat.TypeDef: Option[(List[scala.meta.Mod], meta.Type.ParamClause, meta.Type.Bounds)]
+         |scala.meta.Stat.WithCtor: Option[scala.meta.Ctor.Primary]
+         |scala.meta.Stat.WithMods: Option[List[scala.meta.Mod]]
+         |scala.meta.Stat.WithTemplate: Option[scala.meta.Template]
+         |scala.meta.Stat: Boolean
+         |scala.meta.Term.ForClause: Option[(scala.meta.Term.EnumeratorsBlock, scala.meta.Tree)]
+         |scala.meta.Term.FunctionLike: Option[(scala.meta.Member.ParamClause, scala.meta.Term)]
+         |scala.meta.Term.FunctionTerm: Option[(scala.meta.Term.ParamClause, scala.meta.Term)]
+         |scala.meta.Term.MacroLike: Option[scala.meta.Tree]
+         |scala.meta.Term.MatchLike: Option[(scala.meta.Term, scala.meta.Term.CasesBlock, List[scala.meta.Mod])]
+         |scala.meta.Term.QuotedMacroLike: Option[scala.meta.Tree]
+         |scala.meta.Term.Ref: Boolean
+         |scala.meta.Term.SelectLike: Option[(scala.meta.Term, scala.meta.Term.Name)]
+         |scala.meta.Term.SplicedMacroLike: Option[scala.meta.Tree]
+         |scala.meta.Term.TryClause: Option[(scala.meta.Term, Option[scala.meta.Tree], Option[scala.meta.Term])]
+         |scala.meta.Term: Boolean
+         |scala.meta.Tree.Block: Option[List[scala.meta.Tree]]
+         |scala.meta.Tree.CasesBlock: Option[List[scala.meta.CaseTree]]
+         |scala.meta.Tree.Repeated: Option[scala.meta.Tree]
+         |scala.meta.Tree.WithBody: Option[scala.meta.Tree]
+         |scala.meta.Tree.WithCases: Option[List[scala.meta.CaseTree]]
+         |scala.meta.Tree.WithCasesBlock: Option[scala.meta.Tree.CasesBlock]
+         |scala.meta.Tree.WithCond: Option[scala.meta.Term]
+         |scala.meta.Tree.WithCondOpt: Option[Option[scala.meta.Term]]
+         |scala.meta.Tree.WithDeclTpe: Option[scala.meta.Type]
+         |scala.meta.Tree.WithDeclTpeOpt: Option[Option[scala.meta.Type]]
+         |scala.meta.Tree.WithEnumeratorsBlock: Option[scala.meta.Term.EnumeratorsBlock]
+         |scala.meta.Tree.WithEnums: Option[List[scala.meta.Enumerator]]
+         |scala.meta.Tree.WithExprs: Option[List[scala.meta.Tree]]
+         |scala.meta.Tree.WithParamClauseGroup: Option[Option[scala.meta.Member.ParamClauseGroup]]
+         |scala.meta.Tree.WithParamClauseGroups: Option[List[scala.meta.Member.ParamClauseGroup]]
+         |scala.meta.Tree.WithParamClauses: Option[Seq[scala.meta.Term.ParamClause]]
+         |scala.meta.Tree.WithPats: Option[List[scala.meta.Pat]]
+         |scala.meta.Tree.WithStats: Option[List[scala.meta.Stat]]
+         |scala.meta.Tree.WithStatsBlock: Option[scala.meta.Stat.Block]
+         |scala.meta.Tree.WithTParamClause: Option[scala.meta.Type.ParamClause]
+         |scala.meta.Type.ByNameType: Option[scala.meta.Type]
+         |scala.meta.Type.Captures: Boolean
+         |scala.meta.Type.FunctionLikeType: Option[scala.meta.Type]
+         |scala.meta.Type.FunctionParamOrArg: Option[(List[scala.meta.Mod], Option[scala.meta.Type.Name], scala.meta.Type)]
+         |scala.meta.Type.FunctionType: Option[(scala.meta.Type.FuncParamClause, scala.meta.Type)]
+         |scala.meta.Type.ParamFunctionType: Option[(scala.meta.Type.FuncParamClause, scala.meta.Type)]
+         |scala.meta.Type.Placeholder: Option[scala.meta.Type.Bounds]
+         |scala.meta.Type.PureFunctionType: Option[(scala.meta.Type.FuncParamClause, scala.meta.Type)]
+         |scala.meta.Type.Ref: Boolean
+         |scala.meta.Type: Boolean
+         |scala.meta.internal.trees.Quasi: Option[(Int, scala.meta.Tree, Class[_])]
+         |""".stripMargin.lf2nl,
+    )
+  }
+
   test("If") {
     val iff = symbolOf[scala.meta.Term.If].asLeaf
     assertEquals(
