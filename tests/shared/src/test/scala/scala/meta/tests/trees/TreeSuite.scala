@@ -25,6 +25,15 @@ class TreeSuite extends TreeSuiteBase {
     assertEquals(extract(), Some((f.paramClause, f.res)))
   }
 
+  test("Importee.ClauseLike.importees") {
+    def importees(clause: Importee.ClauseLike) = Importer(tname("a"), clause).clause.importees
+      .map(_.syntax)
+    val b = Importee.Name(Name("b"))
+    val c = Importee.Name(Name("c"))
+    assertEquals(importees(b), List("b"))
+    assertEquals(importees(Importee.Clause(List(b, c))), List("b", "c"))
+  }
+
   // https://github.com/scalameta/scalameta/issues/1193
   // The same `Term.Name` shape appears both at binding sites (definitions) and use sites
   // (references); `isDefinition`/`isReference` let callers tell them apart.

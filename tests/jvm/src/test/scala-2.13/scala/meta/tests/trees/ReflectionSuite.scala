@@ -43,7 +43,7 @@ class ReflectionSuite extends TreeSuiteBase {
          |scala.meta.Enumerator.Assign: Option[(scala.meta.Pat, scala.meta.Term)]
          |scala.meta.Enumerator: Boolean
          |scala.meta.ImportExportStat: Option[List[scala.meta.Importer]]
-         |scala.meta.Importee.ClauseLike: Boolean
+         |scala.meta.Importee.ClauseLike: Option[List[scala.meta.Importee]]
          |scala.meta.Importee: Boolean
          |scala.meta.Lit: Option[Any]
          |scala.meta.Member.Apply: Option[(scala.meta.Tree, scala.meta.Member.ArgClause)]
