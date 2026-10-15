@@ -268,6 +268,25 @@ class TargetedSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  occurrences(
+    """|package q
+       |case class C(xs: List[Int])
+       |""".stripMargin,
+    """|[0:8..0:9): q <= q/
+       |[1:11..1:12): C <= q/C#
+       |[1:12..1:12):  <= q/C#`<init>`().
+       |[1:13..1:15): xs <= q/C#`<init>`().(xs)
+       |[1:13..1:15): xs <= q/C#xs.
+       |""".stripMargin +
+      (if (ScalaVersion.isSupported(minimal212 = Int.MaxValue, minimal213 = 17))
+         """|[1:17..1:21): List => local0
+            |""".stripMargin
+       else
+         """|[1:17..1:21): List => scala/package.List#
+            |[1:22..1:25): Int => scala/Int#
+            |""".stripMargin),
+  )
+
   test("named-args") {
     val code =
       """|@deprecated(since = "123")
