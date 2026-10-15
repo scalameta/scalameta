@@ -282,6 +282,95 @@ class TargetedSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  // meta-annotations (#2085)
+  occurrences(
+    """|package t
+       |import scala.annotation.meta.field
+       |class C1(@(deprecated @field) val x: Int)
+       |class C2(@(deprecated @field)("m", "s") val x: Int)
+       |""".stripMargin,
+    """|[0:8..0:9): t <= t/
+       |[1:7..1:12): scala => scala/
+       |[1:13..1:23): annotation => scala/annotation/
+       |[1:24..1:28): meta => scala/annotation/meta/
+       |[1:29..1:34): field => scala/annotation/meta/field#
+       |[2:6..2:8): C1 <= t/C1#
+       |[2:8..2:8):  <= t/C1#`<init>`().
+       |[2:11..2:21): deprecated => scala/deprecated#
+       |[2:23..2:28): field => scala/deprecated.
+       |[2:30..2:30):  => scala/deprecated#`<init>`().
+       |[2:34..2:35): x <= t/C1#`<init>`().(x)
+       |[2:34..2:35): x <= t/C1#x.
+       |[2:37..2:40): Int => scala/Int#
+       |[3:6..3:8): C2 <= t/C2#
+       |[3:8..3:8):  <= t/C2#`<init>`().
+       |[3:11..3:21): deprecated => scala/deprecated#
+       |[3:29..3:29):  => scala/deprecated#`<init>`().
+       |[3:44..3:45): x <= t/C2#`<init>`().(x)
+       |[3:44..3:45): x <= t/C2#x.
+       |[3:47..3:50): Int => scala/Int#
+       |""".stripMargin,
+  )
+
+  // annotated types (#2085)
+  occurrences(
+    """|package u
+       |class C[T <: AnyRef @unchecked] {
+       |  val a: Int @unchecked = 1
+       |  def b(x: Option[Int @unchecked]): Unit = ()
+       |  val c = (1: @unchecked)
+       |  val d = new (Object @unchecked)
+       |}
+       |""".stripMargin,
+    """|[0:8..0:9): u <= u/
+       |[1:6..1:7): C <= u/C#
+       |[1:8..1:9): T <= u/C#[T]
+       |[1:13..1:19): AnyRef => scala/AnyRef#
+       |[1:32..1:32):  <= u/C#`<init>`().
+       |[2:6..2:7): a <= u/C#a.
+       |[2:9..2:12): Int => scala/Int#
+       |[3:6..3:7): b <= u/C#b().
+       |[3:8..3:9): x <= u/C#b().(x)
+       |[3:11..3:17): Option => scala/Option#
+       |[3:18..3:21): Int => scala/Int#
+       |[3:36..3:40): Unit => scala/Unit#
+       |[4:6..4:7): c <= u/C#c.
+       |[5:6..5:7): d <= u/C#d.
+       |[5:15..5:21): Object => java/lang/Object#
+       |[5:33..5:33):  => java/lang/Object#`<init>`().
+       |""".stripMargin,
+  )
+
+  // default arguments of qualified targets
+  occurrences(
+    """|package v
+       |object n { class D(x: Int = 1); def f(x: Int = 1) = x }
+       |class C { new n.D(); n.f(); v.n.f() }
+       |""".stripMargin,
+    """|[0:8..0:9): v <= v/
+       |[1:7..1:8): n <= v/n.
+       |[1:17..1:18): D <= v/n.D#
+       |[1:18..1:18):  <= v/n.D#`<init>`().
+       |[1:19..1:20): x <= v/n.D#`<init>`().(x)
+       |[1:19..1:20): x <= v/n.D#x.
+       |[1:22..1:25): Int => scala/Int#
+       |[1:36..1:37): f <= v/n.f().
+       |[1:38..1:39): x <= v/n.f().(x)
+       |[1:41..1:44): Int => scala/Int#
+       |[1:52..1:53): x => v/n.f().(x)
+       |[2:6..2:7): C <= v/C#
+       |[2:8..2:8):  <= v/C#`<init>`().
+       |[2:14..2:15): n => v/n.
+       |[2:16..2:17): D => v/n.D#
+       |[2:17..2:17):  => v/n.D#`<init>`().
+       |[2:21..2:22): n => v/n.
+       |[2:23..2:24): f => v/n.f().
+       |[2:28..2:29): v => v/
+       |[2:30..2:31): n => v/n.
+       |[2:32..2:33): f => v/n.f().
+       |""".stripMargin,
+  )
+
   test("named-args") {
     val code =
       """|@deprecated(since = "123")
