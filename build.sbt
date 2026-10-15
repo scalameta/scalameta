@@ -515,6 +515,8 @@ def testsSemanticdbSettings(version: String) = Def.settings(
   Test / fullClasspath := Def.uncached {
     sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar") =
       semanticdbScalacPluginPackage(version).value
+    sys.props("sbt.paths.scala-compiler.jars") = scalaInstance.value.allJars
+      .mkString(java.io.File.pathSeparator)
     (Test / fullClasspath).value
   },
   // Needed because some tests rely on the --usejavacp option
