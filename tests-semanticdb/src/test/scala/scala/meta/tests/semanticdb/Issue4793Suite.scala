@@ -10,7 +10,7 @@ class Issue4793Suite extends SemanticdbSuite {
        |""".stripMargin,
     { doc =>
       val noRange = doc.occurrences.filter(_.range.forall(_.startLine < 0))
-      assertEquals(noRange.map(_.symbol), List("local0"))
+      assertEquals(noRange.map(_.symbol), Nil)
     },
   )
 
