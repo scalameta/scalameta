@@ -71,13 +71,23 @@ trait SymbolTable {
    *
    * Caveats: erasure is approximate, and accessibility/applicability is not applied — final
    * overload resolution is the compiler's job.
+   *
+   * To tell whether a parent was missing from this symbol table, use [[resolveOverloads]].
    */
-  def overloads(tpe: String, name: String): List[String] = {
+  def overloads(tpe: String, name: String): List[String] = resolveOverloads(tpe, name).symbols
+
+  /**
+   * Returns the result of `overloads(tpe, name)` together with the types in the walk whose `info`
+   * is missing. The result can lack the overloads that a missing type declares or inherits.
+   */
+  def resolveOverloads(tpe: String, name: String): SymbolTable.Overloads = {
     // constructors are not inherited, so do not walk parents for the `<init>` name
     val bases = if (name == "<init>") List(tpe -> Map.empty[String, String]) else linearization(tpe)
     val seenSignatures = mutable.Set.empty[List[String]]
     val res = List.newBuilder[String]
+    val unres = List.newBuilder[String]
     bases.foreach { case (owner, env) =>
+      if (info(owner).isEmpty) unres += owner
       // an unresolved erased signature (None) keeps the method rather than risk a wrong merge;
       // methods of one owner cannot override each other, so we add their signatures only after
       val ownerSignatures = mutable.ListBuffer.empty[List[String]]
@@ -91,7 +101,7 @@ trait SymbolTable {
       )
       seenSignatures ++= ownerSignatures
     }
-    res.result()
+    SymbolTable.Overloads(res.result(), unres.result())
   }
 
   /**
@@ -238,5 +248,17 @@ trait SymbolTable {
   implicit class XtensionSymbol(private val symbol: String) {
     def signature[T <: Signature: ClassTag]: Option[T] = info(symbol).signature[T]
   }
+
+}
+
+object SymbolTable {
+
+  /**
+   * @param symbols
+   *   the overloads, as `overloads(tpe, name)` returns them
+   * @param unresolved
+   *   the types in the walk whose `info` is missing; the result is complete only if this is empty
+   */
+  final case class Overloads(symbols: List[String], unresolved: List[String])
 
 }
