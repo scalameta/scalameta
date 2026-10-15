@@ -692,10 +692,6 @@ example/Issue1672#
 -  arguments {
  language: SCALA
  signature {
-       symlinks: "example/Issue1672#NamedType#"
-       symlinks: "example/Issue1672#NamedClass#"
-       symlinks: "example/Issue1672#namedVal."
-+      symlinks: "example/Issue1672#`<local Issue1672>`."
 
 
 =============================

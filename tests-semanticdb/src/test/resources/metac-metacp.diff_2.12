@@ -616,14 +616,6 @@ example/Issue1672#
 -      symbol: "local0"
  language: SCALA
  signature {
-       symlinks: "example/Issue1672#NamedType#"
-       symlinks: "example/Issue1672#NamedClass#"
-       symlinks: "example/Issue1672#namedVal."
-+      symlinks: "example/Issue1672#`<local Issue1672>`."
-+      symlinks: "example/Issue1672#`<local Issue1672>`."
-+      symlinks: "example/Issue1672#`<local Issue1672>`."
-+      symlinks: "example/Issue1672#`<local Issue1672>`."
-+      symlinks: "example/Issue1672#`<local Issue1672>`."
 
 
 =============================
@@ -712,16 +704,6 @@ example/Issue1672#positionalDef().
 -  arguments {
  language: SCALA
  signature {
-
-
-==================
-example/Issue1672.
-==================
---- metac
-+++ metacp
-     declarations {
-       symlinks: "example/Issue1672.namedDef()."
-+      symlinks: "example/Issue1672.`<local Issue1672>`."
 
 
 =============================

@@ -188,6 +188,7 @@ trait SymbolOps {
       case _ => false
     }
     def isLocalChild: Boolean = sym.name == "<local child>"
+    def isLocalDummy: Boolean = sym.parent.exists(owner => sym.name == s"<local ${owner.name}>")
     def isExtensionMethod: Boolean = sym.name.contains("$extension")
     def isSyntheticValueClassCompanion: Boolean = sym match {
       case sym: SymbolInfoSymbol =>
@@ -220,7 +221,7 @@ trait SymbolOps {
     def isSyntheticCaseAccessor: Boolean = sym.isCaseAccessor && sym.name.contains("$")
     def isRefinementClass: Boolean = sym.name == "<refinement>"
     def isUseless: Boolean = sym == NoSymbol || sym.isAnonymousClass ||
-      sym.isSyntheticConstructor || sym.isModuleClass || sym.isLocalChild ||
+      sym.isSyntheticConstructor || sym.isModuleClass || sym.isLocalChild || sym.isLocalDummy ||
       sym.isExtensionMethod || sym.isSyntheticValueClassCompanion || sym.isUselessField ||
       sym.isSyntheticCaseAccessor || sym.isRefinementClass
     def isUseful: Boolean = !sym.isUseless
