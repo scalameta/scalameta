@@ -1041,23 +1041,6 @@ class AstNamerMacros(val c: Context) extends Reflection with CommonNamerMacros {
     (versionedParams, versions, apiParams.result(), apiVersionedParams.result())
   }
 
-  private def getAnnotAttribute(value: Tree): String = value match {
-    case x: AssignOrNamedArg => x.rhs.toString
-    case x => x.toString
-  }
-
-  private def parseVersionAnnot(version: Tree, annot: String, field: String): Version = {
-    val parsed = Version.parse(getAnnotAttribute(version).stripPrefix("\"").stripSuffix("\""))
-      .getOrElse(c.abort(version.pos, s"@$annot must contain $field=major.minor.patch"))
-    buildVersion.foreach { bv =>
-      if (parsed.major < bv.major) c
-        .abort(version.pos, s"@$annot: obsolete, old major version (must be ${bv.major})")
-      if (parsed > bv) c
-        .abort(version.pos, s"@$annot can't refer to future versions (current is $bv)")
-    }
-    parsed
-  }
-
   private def getNewFieldVersions(params: List[ValDef]): Map[String, Version] = {
     val builder = Map.newBuilder[String, Version]
     var prevVersion: Version = null
@@ -1210,14 +1193,6 @@ object AstNamerMacros {
    * take the fields up to it, and a later field is set through Builder; each version keeps
    * unapply */
   private[trees] val frozenVersion = Version(4, 17, 4)
-
-  private val buildVersion: Option[Version] = {
-    val bv = BuildInfo.version
-    val idx = bv.indexWhere(x => x == '-' || x == '+')
-    val version = if (idx < 0) bv else bv.substring(0, idx)
-    // filter in case buildVersion is incorrectly set (Windows forces 0.0.0)
-    Version.parse(version).toOption.filter(_ != Version.zero)
-  }
 
   val initialName = "Initial"
   val afterNamePrefix = "After_"
