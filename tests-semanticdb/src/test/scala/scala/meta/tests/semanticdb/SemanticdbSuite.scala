@@ -112,8 +112,7 @@ abstract class SemanticdbSuite extends FunSuite {
       g.globalPhase = phase
       if (phase eq run.typerPhase) g.openPackageModule(g.definitions.ScalaPackage)
       phase.asInstanceOf[g.GlobalPhase].apply(unit)
-      // note(tgodzik) might have broken with https://github.com/scala/scala/pull/11103
-      // assertNoReporterErrors()
+      assertNoReporterErrors()
     }
     g.phase = run.phaseNamed("patmat")
     g.globalPhase = run.phaseNamed("patmat")
