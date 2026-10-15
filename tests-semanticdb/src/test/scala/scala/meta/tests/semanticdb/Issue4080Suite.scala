@@ -56,23 +56,8 @@ class Issue4080Suite extends FunSuite {
     assertEquals(packages(bundled), expected)
   }
 
-  test("plugin classes in the compiler classpath") {
-    val expected =
-      if (isScala212) Nil
-      else List(
-        "com/github/difflib",
-        "org/jline/builtins",
-        "org/jline/console",
-        "org/jline/jansi",
-        "org/jline/keymap",
-        "org/jline/nativ",
-        "org/jline/reader",
-        "org/jline/style",
-        "org/jline/terminal",
-        "org/jline/utils",
-        "org/jline/widget",
-      )
-    assertEquals(packages(pluginClasses.intersect(compilerClasses)), expected)
-  }
+  test("plugin classes in the compiler classpath")(
+    assertEquals(packages(pluginClasses.intersect(compilerClasses)), Nil),
+  )
 
 }

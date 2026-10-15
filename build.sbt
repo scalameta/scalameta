@@ -672,6 +672,11 @@ lazy val mergeSettings = Def.settings(
   assembly / assemblyJarName :=
     name.value + "_" + scalaVersion.value + "-" + version.value + "-assembly.jar",
   assembly / assemblyOption ~= { _.withIncludeScala(false) },
+  // scalac loads the plugin under a classloader that has the compiler and its dependencies
+  assembly / assemblyExcludedJars := {
+    val compilerJars = scalaInstance.value.allJars.map(_.getName).toSet
+    (assembly / fullClasspath).value.filter(x => compilerJars(x.data.name))
+  },
   // Relocate the plugin's internal implementation classes into a per-version
   // package, so two different semanticdb-scalac versions can coexist on one
   // -Xplugin classpath (e.g. scalafix's vs. sbt's) without their identically
