@@ -3894,9 +3894,11 @@ prefixes/B#b1(). => method b1: Z
 prefixes/B. => final object B extends B { +3 decls }
   B => prefixes/B#
 prefixes/B.Z# => abstract type Z
-prefixes/B.b2(). => method b2: X
+prefixes/B.b2(). => method b2: B.this.X
+  B => prefixes/B.
   X => prefixes/B#X#
-prefixes/B.b3(). => method b3: X
+prefixes/B.b3(). => method b3: B.X
+  B => prefixes/B.
   X => prefixes/B#X#
 
 prefixes/C.class
@@ -4022,14 +4024,16 @@ Symbols => 5 entries
 Symbols:
 prefixes/TestB. => final object TestB extends AnyRef { +4 decls }
   AnyRef => scala/AnyRef#
-prefixes/TestB.b4(). => method b4: X
+prefixes/TestB.b4(). => method b4: B.X
+  B => prefixes/B.
   X => prefixes/B#X#
 prefixes/TestB.b5(). => method b5: B#X
   B => prefixes/B#
   X => prefixes/B#X#
 prefixes/TestB.b6(). => method b6: Z
   Z => prefixes/B.Z#
-prefixes/TestB.b7(). => method b7: X
+prefixes/TestB.b7(). => method b7: Q.X
+  Q => prefixes/P.Q.
   X => prefixes/P.Q#X#
 
 selfs/B.class

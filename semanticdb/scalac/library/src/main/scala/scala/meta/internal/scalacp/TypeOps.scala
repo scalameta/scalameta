@@ -140,17 +140,18 @@ trait TypeOps {
     def hasTrivialPrefix: Boolean = {
       def checkTrivialPrefix(pre: Type, sym: Symbol): Boolean = pre match {
         case TypeRefType(prepre, presym, _) => checkTrivialPrefix(prepre, presym) &&
-          checkTrivialOwner(presym, sym) && checkModule(presym)
+          checkTrivialOwner(presym, sym, module = true) && checkModule(presym)
         case SingleType(prepre, presym) => checkTrivialPrefix(prepre, presym) &&
-          checkTrivialOwner(presym, sym)
-        case ThisType(presym) => checkTrivialOwner(presym, sym)
+          checkTrivialOwner(presym, sym, module = true)
+        case ThisType(presym) => checkTrivialOwner(presym, sym, checkModule(presym))
         case NoPrefixType => true
         case _ => false
       }
-      def checkTrivialOwner(presym: Symbol, sym: Symbol): Boolean = sym.parent match {
-        case Some(owner) => presym.path == owner.path
-        case None => true
-      }
+      def checkTrivialOwner(presym: Symbol, sym: Symbol, module: Boolean): Boolean =
+        sym.parent match {
+          case Some(owner) => presym.path == owner.path && checkModule(owner) == module
+          case None => true
+        }
       def checkModule(presym: Symbol): Boolean = presym match {
         case presym: SymbolInfoSymbol => presym.isModule
         case presym: ExternalSymbol => presym.entry.entryType == 10
