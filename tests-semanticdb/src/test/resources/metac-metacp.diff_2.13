@@ -994,6 +994,94 @@ example/Issue1806#`<init>`().(x)
              display_name: "T"
 
 
+====================
+example/Issue1830#T#
+====================
+--- metac
++++ metacp
+ signature {
+   type_signature {
+     type_parameters {
+-      symlinks: "example/Issue1830#T#[_$$1]"
+-      symlinks: "example/Issue1830#T#[_$$2]"
++      symlinks: "example/Issue1830#T#[`1`]"
++      symlinks: "example/Issue1830#T#[`2`]"
+     lower_bound {
+       type_ref {
+
+
+=========================
+example/Issue1830#m().[F]
+=========================
+--- metac
++++ metacp
+ signature {
+   type_signature {
+     type_parameters {
+-      symlinks: "example/Issue1830#m().[F][_$$3]"
+-      symlinks: "example/Issue1830#m().[F][_$$4]"
++      symlinks: "example/Issue1830#m().[F][`3`]"
++      symlinks: "example/Issue1830#m().[F][`4`]"
+     lower_bound {
+       type_ref {
+
+
+========================
+example/Issue1830Single#
+========================
+--- metac
++++ metacp
+ signature {
+   class_signature {
+     type_parameters {
+-      symlinks: "example/Issue1830Single#[_$$5]"
++      symlinks: "example/Issue1830Single#[`5`]"
+     parents {
+       type_ref {
+
+
+==========================
+example/Issue1830Single#A#
+==========================
+--- metac
++++ metacp
+ signature {
+   type_signature {
+     type_parameters {
+-      symlinks: "example/Issue1830Single#A#[_$$7]"
++      symlinks: "example/Issue1830Single#A#[`7`]"
+     lower_bound {
+       type_ref {
+
+
+================================
+example/Issue1830Single#hk().[G]
+================================
+--- metac
++++ metacp
+ signature {
+   type_signature {
+     type_parameters {
+-      symlinks: "example/Issue1830Single#hk().[G][_$$8]"
++      symlinks: "example/Issue1830Single#hk().[G][`8`]"
+     lower_bound {
+       type_ref {
+
+
+============================
+example/Issue1830Single#m().
+============================
+--- metac
++++ metacp
+ signature {
+   method_signature {
+     type_parameters {
+-      symlinks: "example/Issue1830Single#m().[_$$6]"
++      symlinks: "example/Issue1830Single#m().[`6`]"
+     return_type {
+       type_ref {
+
+
 ======================
 example/Issue1872.x$1.
 ======================

@@ -2662,6 +2662,82 @@ Occurrences:
 [8:36..8:45): Issue1806 => example/Issue1806#
 [8:51..8:60): Issue1806 => example/Issue1806#
 
+semanticdb/integration/src/main/scala/example/Issue1830.scala
+-------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Issue1830.scala
+Text => non-empty
+Language => Scala
+Symbols => 18 entries
+Occurrences => 18 entries
+Diagnostics => 3 entries
+
+Symbols:
+example/Issue1830# => trait Issue1830 extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/Issue1830#T# => abstract type T[_, _]
+  _ => example/Issue1830#T#[_$$1]
+  _ => example/Issue1830#T#[_$$2]
+example/Issue1830#T#[_$$1] => typeparam _
+example/Issue1830#T#[_$$2] => typeparam _
+example/Issue1830#m(). => abstract method m[F[_, _]]: Unit
+  F => example/Issue1830#m().[F]
+  _ => example/Issue1830#m().[F][_$$3]
+  _ => example/Issue1830#m().[F][_$$4]
+  Unit => scala/Unit#
+example/Issue1830#m().[F] => typeparam F[_, _]
+  _ => example/Issue1830#m().[F][_$$3]
+  _ => example/Issue1830#m().[F][_$$4]
+example/Issue1830#m().[F][_$$3] => typeparam _
+example/Issue1830#m().[F][_$$4] => typeparam _
+example/Issue1830Single# => class Issue1830Single[_] extends AnyRef { +4 decls }
+  _ => example/Issue1830Single#[_$$5]
+  AnyRef => scala/AnyRef#
+example/Issue1830Single#A# => type A[_] = Int
+  _ => example/Issue1830Single#A#[_$$7]
+  Int => scala/Int#
+example/Issue1830Single#A#[_$$7] => typeparam _
+example/Issue1830Single#[_$$5] => typeparam _
+example/Issue1830Single#`<init>`(). => primary ctor <init>()
+example/Issue1830Single#hk(). => method hk[G[_]]: Unit
+  G => example/Issue1830Single#hk().[G]
+  _ => example/Issue1830Single#hk().[G][_$$8]
+  Unit => scala/Unit#
+example/Issue1830Single#hk().[G] => typeparam G[_]
+  _ => example/Issue1830Single#hk().[G][_$$8]
+example/Issue1830Single#hk().[G][_$$8] => typeparam _
+example/Issue1830Single#m(). => method m[_]: Unit
+  _ => example/Issue1830Single#m().[_$$6]
+  Unit => scala/Unit#
+example/Issue1830Single#m().[_$$6] => typeparam _
+
+Occurrences:
+[1:8..1:15): example <= example/
+[3:7..3:12): scala => scala/
+[3:13..3:21): language => scala/language.
+[3:22..3:33): higherKinds => scala/language.higherKinds.
+[5:6..5:15): Issue1830 <= example/Issue1830#
+[6:7..6:8): T <= example/Issue1830#T#
+[7:6..7:7): m <= example/Issue1830#m().
+[7:8..7:9): F <= example/Issue1830#m().[F]
+[7:18..7:22): Unit => scala/Unit#
+[10:6..10:21): Issue1830Single <= example/Issue1830Single#
+[10:25..10:25):  <= example/Issue1830Single#`<init>`().
+[11:6..11:7): m <= example/Issue1830Single#m().
+[11:12..11:16): Unit => scala/Unit#
+[12:7..12:8): A <= example/Issue1830Single#A#
+[12:14..12:17): Int => scala/Int#
+[13:6..13:8): hk <= example/Issue1830Single#hk().
+[13:9..13:10): G <= example/Issue1830Single#hk().[G]
+[13:16..13:20): Unit => scala/Unit#
+
+Diagnostics:
+[3:22..3:33) [warning] Unused import of deprecated lazy value higherKinds: higherKinds no longer needs to be imported explicitly
+[10:22..10:22) [warning] Top-level wildcard is not allowed
+[11:8..11:8) [warning] Top-level wildcard is not allowed
+
 semanticdb/integration/src/main/scala/example/Issue1872.scala
 -------------------------------------------------------------
 
