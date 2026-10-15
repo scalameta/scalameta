@@ -3,9 +3,9 @@ package types
 import scala.language/*=>scala.language.*/.existentials/*=>scala.language.existentials.*/
 import scala.language/*=>scala.language.*/.higherKinds/*=>scala.language.higherKinds.*/
 
-class ann/*<=types.ann#*/[T/*<=types.ann#[T]*/](x/*<=types.ann#x.*//*<=types.ann#`<init>`().(x)*/: T/*=>types.ann#[T]*/) extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*/
-class ann1/*<=types.ann1#*/ extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*/
-class ann2/*<=types.ann2#*/ extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*/
+class ann/*<=types.ann#*/[T/*<=types.ann#[T]*/](x/*<=types.ann#x.*//*<=types.ann#`<init>`().(x)*/: T/*=>types.ann#[T]*/) extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*//*=>scala.annotation.Annotation#`<init>`().*/
+class ann1/*<=types.ann1#*/ extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*//*=>scala.annotation.Annotation#`<init>`().*/
+class ann2/*<=types.ann2#*/ extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*//*=>scala.annotation.Annotation#`<init>`().*/
 
 class B/*<=types.B#*/
 
