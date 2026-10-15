@@ -238,7 +238,7 @@ class AstVersionsSuite extends FunSuite {
   }
 
   test("Branched: field added at the frozen version")(assertSignatures(Branched.getClass, "unapply")(
-    "unapply(AstVersionsSuite.Branched): Option<Tuple2<Term.Name, Object>>",
+    "unapply(AstVersionsSuite.Branched): Option<Term.Name>",
   ))
 
 }
