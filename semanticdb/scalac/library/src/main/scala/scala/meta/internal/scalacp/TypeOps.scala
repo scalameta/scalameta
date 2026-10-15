@@ -73,7 +73,7 @@ trait TypeOps {
         case RefinedType(sym, parents) =>
           val sparents = parents.map(loop)
           val stpe = s.WithType(sparents)
-          val sdecls = Some(sym.children.sscope(HardlinkChildren))
+          val sdecls = Some(sym.semanticdbDecls.sscope(HardlinkChildren))
           s.StructuralType(stpe, sdecls)
         case AnnotatedType(tpe, anns) =>
           val sanns = anns.reverse.map(_.toSemantic)
