@@ -342,7 +342,7 @@ class SymbolTableSuite extends FunSuite {
 
   test("overloads(tpe, name): a diamond with the override in the last parent") {
     val symtab = LocalSymbolTable(diamond(List("_empty_/C#", "_empty_/B#")))
-    assertEquals(symtab.overloads("_empty_/D#", "g"), List("_empty_/A#g()."))
+    assertEquals(symtab.overloads("_empty_/D#", "g"), List("_empty_/B#g()."))
   }
 
   test("overloads(tpe, name): a diamond with an overload in the last parent") {
@@ -352,7 +352,7 @@ class SymbolTableSuite extends FunSuite {
         else synthClass("_empty_/C#", List("_empty_/A#"), List("_empty_/C#g().")),
       ) :+ synthMethod("_empty_/C#g().", "scala/Predef.String#"),
     )
-    assertEquals(symtab.overloads("_empty_/D#", "g"), List("_empty_/B#g().", "_empty_/C#g()."))
+    assertEquals(symtab.overloads("_empty_/D#", "g"), List("_empty_/C#g().", "_empty_/B#g()."))
   }
 
   private val intType = s.TypeRef(symbol = "scala/Int#")
