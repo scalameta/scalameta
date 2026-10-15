@@ -3351,4 +3351,75 @@ class SignificantIndentationSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  // the trees inside the parsed one that end at EOF
+  private def endAtEof(tree: Tree): List[String] = tree.collect {
+    case t if (t ne tree) && t.tokens.lastOption.exists(_.is[Token.EOF]) => t.productPrefix
+  }
+
+  test("region closed at EOF: package, enum") {
+    val code =
+      """|package a
+         |
+         |enum E:
+         |  case A""".stripMargin
+    assertEquals(endAtEof(source(code)), List("Defn.Enum", "Template", "Template.Body"))
+  }
+
+  test("region closed at EOF: package, enum, newline") {
+    val code =
+      """|package a
+         |
+         |enum E:
+         |  case A
+         |""".stripMargin
+    assertEquals(endAtEof(source(code)), Nil)
+  }
+
+  test("region closed at EOF: package, extension, comment") {
+    val code =
+      """|package a
+         |
+         |extension (s: String)
+         |
+         |  /** c */
+         |  def f: Unit =
+         |    ???""".stripMargin
+    assertEquals(endAtEof(source(code)), List("Defn.ExtensionGroup", "Term.Block", "Defn.Def"))
+  }
+
+  test("region closed at EOF: package with colon, object") {
+    val code =
+      """|package a:
+         |  object A:
+         |    def f = 1""".stripMargin
+    assertEquals(
+      endAtEof(source(code)),
+      List("Pkg", "Pkg.Body", "Defn.Object", "Template", "Template.Body"),
+    )
+  }
+
+  test("region closed at EOF: object, def") {
+    val code =
+      """|object A:
+         |  def f =
+         |    1""".stripMargin
+    assertEquals(endAtEof(source(code)), List("Defn.Object", "Template", "Template.Body", "Defn.Def"))
+  }
+
+  test("region closed at EOF: object, def, as stat") {
+    val code =
+      """|object A:
+         |  def f =
+         |    1""".stripMargin
+    assertEquals(endAtEof(stat(code)), List("Template", "Template.Body", "Defn.Def"))
+  }
+
+  test("region closed at EOF: object in braces") {
+    val code =
+      """|object A {
+         |  def f = 1
+         |}""".stripMargin
+    assertEquals(endAtEof(source(code)), Nil)
+  }
+
 }
