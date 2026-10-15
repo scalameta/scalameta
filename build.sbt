@@ -656,6 +656,11 @@ def copyAssemblyJar = Def.task {
   fileOf.value.andThen(slimJar => IO.copy(List(fatJar -> slimJar), CopyOptions().withOverwrite(true)))
 }
 
+def semanticdbScalacShadedPackage = Def.setting {
+  val ver = version.value.replaceAll("[^0-9A-Za-z]", "_")
+  s"scala.meta.internal.semanticdb.scalac.shaded_v$ver"
+}
+
 lazy val mergeSettings = Def.settings(
   sharedSettings,
   // sbt-assembly's shade rules fail on an exported jar
@@ -673,14 +678,14 @@ lazy val mergeSettings = Def.settings(
   // references (and InteractiveSemanticdb's) to the relocated classes.
   assembly / assemblyShadeRules := {
     val pkg = "scala.meta.internal.semanticdb.scalac"
-    val ver = version.value.replaceAll("[^0-9A-Za-z]", "_")
+    val shaded = semanticdbScalacShadedPackage.value
     Seq(
       ShadeRule.rename(
         s"$pkg.SemanticdbPlugin" -> s"$pkg.SemanticdbPlugin",
         s"$pkg.SemanticdbPlugin$$" -> s"$pkg.SemanticdbPlugin$$",
         // Prevent double-shading: if classes are already in the shaded package, keep them as-is.
-        s"$pkg.shaded_v$ver.**" -> s"$pkg.shaded_v$ver.@1",
-        s"$pkg.**" -> s"$pkg.shaded_v$ver.@1",
+        s"$shaded.**" -> s"$shaded.@1",
+        s"$pkg.**" -> s"$shaded.@1",
       ).inAll,
     )
   },
