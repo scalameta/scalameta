@@ -59,7 +59,10 @@ class BranchNamerMacros(val c: Context) extends AstReflection with CommonNamerMa
           val params = stats.collect {
             case x: ValDef => x
             case x: DefDef if x.tparams.isEmpty && x.vparamss.isEmpty => x
-          }.filter(_.rhs eq EmptyTree)
+          }.filter(p => // a private member is not a field of the extractor
+            (p.rhs eq EmptyTree) && !p.mods.hasFlag(PRIVATE) &&
+              p.mods.privateWithin == typeNames.EMPTY,
+          )
           if (params.nonEmpty) mstats1 += getUnapply(params)
           else mstats1 += q"@$InlineAnnotation final def unapply(x: $name): $BooleanClass = true"
         }

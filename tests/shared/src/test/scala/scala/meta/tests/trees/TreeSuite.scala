@@ -22,7 +22,7 @@ class TreeSuite extends TreeSuiteBase {
   test("Type.FunctionType.unapply") {
     val f = Type.Function(Type.FuncParamClause(List(pname("A"))), pname("B"))
     def extract() = Type.FunctionType.unapply(f)
-    assertEquals(extract(), Some((f.paramClause, f.params, f.res)))
+    assertEquals(extract(), Some((f.paramClause, f.res)))
   }
 
   // https://github.com/scalameta/scalameta/issues/1193
