@@ -1,6 +1,6 @@
 package scala.meta.tests.symtab
 
-import scala.meta.internal.symtab.{AggregateSymbolTable, GlobalSymbolTable, LocalSymbolTable}
+import scala.meta.internal.symtab._
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.Classpath
 import scala.meta.tests.BuildInfo
@@ -180,7 +180,7 @@ class SymbolTableSuite extends FunSuite {
     )
 
   // a one-parameter method `sym` whose parameter has type `paramType` (carried inline as a hardlink)
-  private def synthMethod(sym: String, paramType: String) = s.SymbolInformation(
+  private def synthMethod(sym: String, paramType: s.Type): s.SymbolInformation = s.SymbolInformation(
     symbol = sym,
     kind = s.SymbolInformation.Kind.METHOD,
     signature = s.MethodSignature(parameterLists =
@@ -188,11 +188,13 @@ class SymbolTableSuite extends FunSuite {
         List(s.SymbolInformation(
           symbol = sym + "(x)",
           kind = s.SymbolInformation.Kind.PARAMETER,
-          signature = s.ValueSignature(s.TypeRef(symbol = paramType)),
+          signature = s.ValueSignature(paramType),
         )),
       )),
     ),
   )
+  private def synthMethod(sym: String, paramType: String): s.SymbolInformation =
+    synthMethod(sym, s.TypeRef(symbol = paramType))
 
   test("overloads(tpe, name): inherited and own overloads are both returned, most-derived first") {
     val symtab = LocalSymbolTable(List(
@@ -249,9 +251,9 @@ class SymbolTableSuite extends FunSuite {
     ),
   )
 
-  // `trait Base[A] { def foo(a: A) }; class Sub extends Base[String] { def foo(a: subParam) }`
-  private def genericHierarchy(subParam: String) = {
-    def method(sym: String, paramType: String) = s.SymbolInformation(
+  // `trait Base[A] { def foo(a: A) }; class Sub extends Base[baseArg] { def foo(a: subParam) }`
+  private def genericHierarchy(subParam: s.Type, baseArg: s.Type): SymbolTable = {
+    def method(sym: String, paramType: s.Type) = s.SymbolInformation(
       symbol = sym,
       kind = s.SymbolInformation.Kind.METHOD,
       signature = s.MethodSignature(parameterLists =
@@ -259,7 +261,7 @@ class SymbolTableSuite extends FunSuite {
           List(s.SymbolInformation(
             symbol = sym + "(a)",
             kind = s.SymbolInformation.Kind.PARAMETER,
-            signature = s.ValueSignature(s.TypeRef(symbol = paramType)),
+            signature = s.ValueSignature(paramType),
           )),
         )),
       ),
@@ -279,15 +281,13 @@ class SymbolTableSuite extends FunSuite {
           kind = s.SymbolInformation.Kind.TYPE_PARAMETER,
           signature = s.TypeSignature(upperBound = s.TypeRef(symbol = "scala/Any#")),
         ),
-        method("_empty_/Base#foo().", "_empty_/Base#[A]"), // parameter typed by the type parameter A
+        // parameter typed by the type parameter A
+        method("_empty_/Base#foo().", s.TypeRef(symbol = "_empty_/Base#[A]")),
         s.SymbolInformation(
           symbol = "_empty_/Sub#",
           kind = s.SymbolInformation.Kind.CLASS,
           signature = s.ClassSignature(
-            parents = List(s.TypeRef(
-              symbol = "_empty_/Base#",
-              typeArguments = List(s.TypeRef(symbol = "scala/Predef.String#")),
-            )),
+            parents = List(s.TypeRef(symbol = "_empty_/Base#", typeArguments = List(baseArg))),
             declarations = Some(s.Scope(symlinks = List("_empty_/Sub#foo()."))),
           ),
         ),
@@ -295,6 +295,8 @@ class SymbolTableSuite extends FunSuite {
       )
     }
   }
+  private def genericHierarchy(subParam: String): SymbolTable =
+    genericHierarchy(s.TypeRef(symbol = subParam), s.TypeRef(symbol = "scala/Predef.String#"))
 
   test("overloads(tpe, name): a generic override is deduplicated via type-argument substitution")(
     // Sub#foo(String) overrides Base#foo(A) with A := String, so only the most-derived survives
