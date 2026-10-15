@@ -13,6 +13,12 @@ class TreeSuite extends TreeSuiteBase {
     assert(Name.unapply(Type.Name("a")).contains("a"))
   }
 
+  test("Tree.Block.unapply") {
+    val a = Term.Name("a")
+    def extract() = Tree.Block.unapply(Term.Block(List(a)))
+    assertEquals(extract(), Some((List[Tree](a), List[Tree](a))))
+  }
+
   // https://github.com/scalameta/scalameta/issues/1193
   // The same `Term.Name` shape appears both at binding sites (definitions) and use sites
   // (references); `isDefinition`/`isReference` let callers tell them apart.
