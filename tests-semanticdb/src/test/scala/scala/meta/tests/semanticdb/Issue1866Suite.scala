@@ -18,7 +18,8 @@ class Issue1866Suite extends SemanticdbSuite {
        |  locally { import o._; val d: Option[Int] = "s" }
        |}
        |""".stripMargin,
-    """|[7:23..7:24): 1 => apply(*)
+    """|[7:23..7:24): 1 => viaVal.apply(*)
+       |  viaVal => w/C#viaVal.
        |  apply => scala/Function1#apply().
        |[8:23..8:26): 'c' => local(*)
        |  local => w/C#local().
