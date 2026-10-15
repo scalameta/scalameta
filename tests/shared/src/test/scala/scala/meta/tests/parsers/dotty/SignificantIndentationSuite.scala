@@ -3362,7 +3362,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |
          |enum E:
          |  case A""".stripMargin
-    assertEquals(endAtEof(source(code)), List("Defn.Enum", "Template", "Template.Body"))
+    assertEquals(endAtEof(source(code)), Nil)
   }
 
   test("region closed at EOF: package, enum, newline") {
@@ -3384,7 +3384,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
          |  /** c */
          |  def f: Unit =
          |    ???""".stripMargin
-    assertEquals(endAtEof(source(code)), List("Defn.ExtensionGroup", "Term.Block", "Defn.Def"))
+    assertEquals(endAtEof(source(code)), Nil)
   }
 
   test("region closed at EOF: package with colon, object") {
@@ -3392,10 +3392,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|package a:
          |  object A:
          |    def f = 1""".stripMargin
-    assertEquals(
-      endAtEof(source(code)),
-      List("Pkg", "Pkg.Body", "Defn.Object", "Template", "Template.Body"),
-    )
+    assertEquals(endAtEof(source(code)), Nil)
   }
 
   test("region closed at EOF: object, def") {
@@ -3403,7 +3400,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A:
          |  def f =
          |    1""".stripMargin
-    assertEquals(endAtEof(source(code)), List("Defn.Object", "Template", "Template.Body", "Defn.Def"))
+    assertEquals(endAtEof(source(code)), Nil)
   }
 
   test("region closed at EOF: object, def, as stat") {
@@ -3411,7 +3408,7 @@ class SignificantIndentationSuite extends BaseDottySuite {
       """|object A:
          |  def f =
          |    1""".stripMargin
-    assertEquals(endAtEof(stat(code)), List("Template", "Template.Body", "Defn.Def"))
+    assertEquals(endAtEof(stat(code)), Nil)
   }
 
   test("region closed at EOF: object in braces") {

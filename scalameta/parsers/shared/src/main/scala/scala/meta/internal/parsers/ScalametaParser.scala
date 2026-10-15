@@ -447,11 +447,13 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     var start = startPos
     var endExcl = startPos
     if (endPos >= startPos) {
-      val nonSpaceEnd = tokens.rskipIf(isWhitespace, endPos, startPos - 1)
-      if (nonSpaceEnd < startPos) endExcl = if (endPos == startPos) endPos else endPos + 1
+      // only the tree of the whole input, which starts at BOF, ends at EOF
+      val lastIdx = if (tokens(endPos).is[EOF] && !tokens(startPos).is[BOF]) endPos - 1 else endPos
+      val nonSpaceEnd = tokens.rskipIf(isWhitespace, lastIdx, startPos - 1)
+      if (nonSpaceEnd < startPos) endExcl = if (lastIdx == startPos) lastIdx else lastIdx + 1
       else {
-        val firstNonTrivia = tokens.skipIf(isTrivia, startPos, endPos + 1)
-        if (firstNonTrivia > endPos) endExcl = nonSpaceEnd + 1
+        val firstNonTrivia = tokens.skipIf(isTrivia, startPos, lastIdx + 1)
+        if (firstNonTrivia > lastIdx) endExcl = nonSpaceEnd + 1
         else {
           start = firstNonTrivia
           endExcl =
