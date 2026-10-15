@@ -31,3 +31,28 @@ object Test/*<=prefixes.Test.*/ {
   import M/*=>prefixes.M.*/._
   def n3/*<=prefixes.Test.n3().*/: T/*=>prefixes.M.T#*/ = ???/*=>scala.Predef.`???`().*/
 }
+
+class B/*<=prefixes.B#*/ {
+  class X/*<=prefixes.B#X#*/
+  def b1/*<=prefixes.B#b1().*/: B/*=>prefixes.B.*/.Z/*=>prefixes.B.Z#*/ = ???/*=>scala.Predef.`???`().*/
+}
+
+object B/*<=prefixes.B.*/ extends B/*=>prefixes.B#*/ {
+  type Z/*<=prefixes.B.Z#*/
+  def b2/*<=prefixes.B.b2().*/: X/*=>prefixes.B#X#*/ = ???/*=>scala.Predef.`???`().*/
+  def b3/*<=prefixes.B.b3().*/: B/*=>prefixes.B.*/.X/*=>prefixes.B#X#*/ = ???/*=>scala.Predef.`???`().*/
+}
+
+object P/*<=prefixes.P.*/ {
+  class Q/*<=prefixes.P.Q#*/ {
+    class X/*<=prefixes.P.Q#X#*/
+  }
+  object Q/*<=prefixes.P.Q.*/ extends Q/*=>prefixes.P.Q#*/
+}
+
+object TestB/*<=prefixes.TestB.*/ {
+  def b4/*<=prefixes.TestB.b4().*/: B/*=>prefixes.B.*/.X/*=>prefixes.B#X#*/ = ???/*=>scala.Predef.`???`().*/
+  def b5/*<=prefixes.TestB.b5().*/: B/*=>prefixes.B#*/#X/*=>prefixes.B#X#*/ = ???/*=>scala.Predef.`???`().*/
+  def b6/*<=prefixes.TestB.b6().*/: B/*=>prefixes.B.*/.Z/*=>prefixes.B.Z#*/ = ???/*=>scala.Predef.`???`().*/
+  def b7/*<=prefixes.TestB.b7().*/: P/*=>prefixes.P.*/.Q/*=>prefixes.P.Q.*/.X/*=>prefixes.P.Q#X#*/ = ???/*=>scala.Predef.`???`().*/
+}

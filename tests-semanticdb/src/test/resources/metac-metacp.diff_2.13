@@ -1234,6 +1234,61 @@ flags/p/package.X.toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
+================
+prefixes/B.b2().
+================
+--- metac
++++ metacp
+     return_type {
+       type_ref {
+         prefix {
+-          this_type {
+-            symbol: "prefixes/B."
+         symbol: "prefixes/B#X#"
+
+
+================
+prefixes/B.b3().
+================
+--- metac
++++ metacp
+     return_type {
+       type_ref {
+         prefix {
+-          single_type {
+-            prefix {
+-            symbol: "prefixes/B."
+         symbol: "prefixes/B#X#"
+
+
+====================
+prefixes/TestB.b4().
+====================
+--- metac
++++ metacp
+     return_type {
+       type_ref {
+         prefix {
+-          single_type {
+-            prefix {
+-            symbol: "prefixes/B."
+         symbol: "prefixes/B#X#"
+
+
+====================
+prefixes/TestB.b7().
+====================
+--- metac
++++ metacp
+     return_type {
+       type_ref {
+         prefix {
+-          single_type {
+-            prefix {
+-            symbol: "prefixes/P.Q."
+         symbol: "prefixes/P.Q#X#"
+
+
 =====================================
 types/Test.C#RepeatedType#canEqual().
 =====================================

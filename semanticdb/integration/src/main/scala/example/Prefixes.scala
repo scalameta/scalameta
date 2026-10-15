@@ -31,3 +31,28 @@ object Test {
   import M._
   def n3: T = ???
 }
+
+class B {
+  class X
+  def b1: B.Z = ???
+}
+
+object B extends B {
+  type Z
+  def b2: X = ???
+  def b3: B.X = ???
+}
+
+object P {
+  class Q {
+    class X
+  }
+  object Q extends Q
+}
+
+object TestB {
+  def b4: B.X = ???
+  def b5: B#X = ???
+  def b6: B.Z = ???
+  def b7: P.Q.X = ???
+}
