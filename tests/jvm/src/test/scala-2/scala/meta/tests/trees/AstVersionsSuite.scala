@@ -29,6 +29,13 @@ object AstVersionsSuite {
     def apply(values: List[Term.Name]): Term.Name = values.head
   }
 
+  @branch
+  trait Branched extends Tree {
+    def name: Term.Name
+    @newField("4.17.4")
+    def count: Int
+  }
+
 }
 
 class AstVersionsSuite extends FunSuite {
@@ -229,5 +236,9 @@ class AstVersionsSuite extends FunSuite {
       "values(): List<Term.Name>",
     )
   }
+
+  test("Branched: field added at the frozen version")(assertSignatures(Branched.getClass, "unapply")(
+    "unapply(AstVersionsSuite.Branched): Option<Tuple2<Term.Name, Object>>",
+  ))
 
 }
