@@ -29,7 +29,7 @@ class Issue4080Suite extends FunSuite {
   test("plugin classes outside scalameta") {
     val bundled = pluginClasses.diff(compilerClasses)
       .filterNot(x => x.startsWith("scala/meta/") || x.startsWith("org/scalameta/"))
-    assertEquals(packages(bundled), List("buildinfo"))
+    assertEquals(packages(bundled), Nil)
   }
 
   test("plugin classes in the compiler classpath")(
