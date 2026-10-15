@@ -3954,6 +3954,33 @@ objects/X. => final object X extends AnyRef { +1 decls }
 objects/X.Y. => final object Y extends AnyRef
   AnyRef => scala/AnyRef#
 
+prefixes/B.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => prefixes/B.class
+Text => empty
+Language => Scala
+Symbols => 9 entries
+
+Symbols:
+prefixes/B# => class B extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+prefixes/B#X# => class X extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+prefixes/B#X#`<init>`(). => primary ctor <init>()
+prefixes/B#`<init>`(). => primary ctor <init>()
+prefixes/B#b1(). => method b1: Z
+  Z => prefixes/B.Z#
+prefixes/B. => final object B extends B { +3 decls }
+  B => prefixes/B#
+prefixes/B.Z# => abstract type Z
+prefixes/B.b2(). => method b2: X
+  X => prefixes/B#X#
+prefixes/B.b3(). => method b3: X
+  X => prefixes/B#X#
+
 prefixes/C.class
 ----------------
 
@@ -4011,6 +4038,28 @@ prefixes/O.o1(). => method o1: O.this.T
   O => prefixes/O.
   T => prefixes/C#T#
 
+prefixes/P.class
+----------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => prefixes/P.class
+Text => empty
+Language => Scala
+Symbols => 6 entries
+
+Symbols:
+prefixes/P. => final object P extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+prefixes/P.Q# => class Q extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+prefixes/P.Q#X# => class X extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+prefixes/P.Q#X#`<init>`(). => primary ctor <init>()
+prefixes/P.Q#`<init>`(). => primary ctor <init>()
+prefixes/P.Q. => final object Q extends Q
+  Q => prefixes/P.Q#
+
 prefixes/Test.class
 -------------------
 
@@ -4041,6 +4090,29 @@ prefixes/Test.n2(). => method n2: T
   T => prefixes/M.T#
 prefixes/Test.n3(). => method n3: T
   T => prefixes/M.T#
+
+prefixes/TestB.class
+--------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => prefixes/TestB.class
+Text => empty
+Language => Scala
+Symbols => 5 entries
+
+Symbols:
+prefixes/TestB. => final object TestB extends AnyRef { +4 decls }
+  AnyRef => scala/AnyRef#
+prefixes/TestB.b4(). => method b4: X
+  X => prefixes/B#X#
+prefixes/TestB.b5(). => method b5: B#X
+  B => prefixes/B#
+  X => prefixes/B#X#
+prefixes/TestB.b6(). => method b6: Z
+  Z => prefixes/B.Z#
+prefixes/TestB.b7(). => method b7: X
+  X => prefixes/P.Q#X#
 
 selfs/B.class
 -------------
