@@ -76,10 +76,22 @@ trait SymbolTable {
     // constructors are not inherited, so do not walk parents for the `<init>` name
     val bases = if (name == "<init>") List(tpe -> Map.empty[String, String]) else linearization(tpe)
     val seenSignatures = mutable.Set.empty[List[String]]
-    bases.flatMap { case (owner, env) =>
-      // an unresolved erased signature (None) keeps the method rather than risk a wrong merge
-      membersNamed(owner, name).filter(erasedSignature(_, env).forall(seenSignatures.add))
+    val res = List.newBuilder[String]
+    bases.foreach { case (owner, env) =>
+      // an unresolved erased signature (None) keeps the method rather than risk a wrong merge;
+      // methods of one owner cannot override each other, so we add their signatures only after
+      val ownerSignatures = mutable.ListBuffer.empty[List[String]]
+      membersNamed(owner, name).foreach(m =>
+        erasedSignature(m, env) match {
+          case Some(sig) =>
+            if (!seenSignatures.contains(sig)) res += m
+            ownerSignatures += sig
+          case None => res += m
+        },
+      )
+      seenSignatures ++= ownerSignatures
     }
+    res.result()
   }
 
   /**

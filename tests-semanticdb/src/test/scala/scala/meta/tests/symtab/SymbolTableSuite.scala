@@ -367,24 +367,25 @@ class SymbolTableSuite extends FunSuite {
   )).overloads("_empty_/C#", "f")
 
   test("overloads(tpe, name): same-owner by-value and by-name parameters")(
-    assertEquals(declared(intType, s.ByNameType(intType)), List("_empty_/C#f().")),
+    assertEquals(declared(intType, s.ByNameType(intType)), List("_empty_/C#f().", "_empty_/C#f(+1).")),
   )
 
   test("overloads(tpe, name): same-owner arrays of different elements")(assertEquals(
     declared(typeOf("scala/Array#", "scala/Int#"), typeOf("scala/Array#", "java/lang/String#")),
-    List("_empty_/C#f()."),
+    List("_empty_/C#f().", "_empty_/C#f(+1)."),
   ))
 
-  test("overloads(tpe, name): same-owner plain and repeated parameters")(
-    assertEquals(declared(intType, s.RepeatedType(intType)), List("_empty_/C#f().")),
-  )
+  test("overloads(tpe, name): same-owner plain and repeated parameters")(assertEquals(
+    declared(intType, s.RepeatedType(intType)),
+    List("_empty_/C#f().", "_empty_/C#f(+1)."),
+  ))
 
   test("overloads(tpe, name): same-owner parameters with different type arguments")(assertEquals(
     declared(
       typeOf("scala/package.List#", "scala/Int#"),
       typeOf("scala/package.List#", "java/lang/String#"),
     ),
-    List("_empty_/C#f()."),
+    List("_empty_/C#f().", "_empty_/C#f(+1)."),
   ))
 
   // `class Base { def f(x: baseParam) }; class Sub extends Base { def f(x: subParam) }`
