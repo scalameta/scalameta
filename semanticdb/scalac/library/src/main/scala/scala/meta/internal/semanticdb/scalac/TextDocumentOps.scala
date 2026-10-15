@@ -456,7 +456,16 @@ trait TextDocumentOps {
               case SelfTypeOf(original) => traverse(original)
               case SelectOf(original) => traverse(original)
 
-              case gtree: g.TypeTree if gtree.original != null => traverse(gtree.original)
+              case gtree: g.TypeTree if gtree.original != null =>
+                traverse(gtree.original)
+                // annotations in the original are untyped, like `@field` in `@(deprecated @field)`
+                gtree.tpe match {
+                  case g.AnnotatedType(anns, _) => anns.foreach { ann =>
+                      val gpos = ann.original.pos
+                      if (gpos.isRange && gpos.source == unit.source) traverse(ann.original)
+                    }
+                  case _ =>
+                }
               case gtree: g.TypeTreeWithDeferredRefCheck => traverse(gtree.check())
 
               case t: g.Literal if t.tpe != null && t.tpe.typeSymbol == g.definitions.ClassClass =>
@@ -503,6 +512,10 @@ trait TextDocumentOps {
                   case v: g.ApplyImplicitView => v.args.headOption.foreach(traverse)
                   case _ =>
                 }
+              case gtree: g.Select if gtree.symbol != null && gtree.symbol.isDefaultGetter =>
+                // the qualifier of a default argument may have its offset at another name
+                if (!gtree.qualifier.pos.isRange) isVisited += gtree.qualifier
+                tryFindMtree(gtree)
               case select: g.Select if isSyntheticName(select) => tryFindSynthetic(select)
               case gtree: g.AppliedTypeTree => tryFindMtree(gtree)
               case gblock @ NamedApplyBlock(_) =>

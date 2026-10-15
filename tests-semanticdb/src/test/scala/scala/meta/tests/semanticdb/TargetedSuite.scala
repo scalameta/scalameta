@@ -297,7 +297,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:6..2:8): C1 <= t/C1#
        |[2:8..2:8):  <= t/C1#`<init>`().
        |[2:11..2:21): deprecated => scala/deprecated#
-       |[2:23..2:28): field => scala/deprecated.
+       |[2:23..2:28): field => scala/annotation/meta/field#
+       |[2:28..2:28):  => scala/annotation/meta/field#`<init>`().
        |[2:30..2:30):  => scala/deprecated#`<init>`().
        |[2:34..2:35): x <= t/C1#`<init>`().(x)
        |[2:34..2:35): x <= t/C1#x.
@@ -305,6 +306,8 @@ class TargetedSuite extends SemanticdbSuite {
        |[3:6..3:8): C2 <= t/C2#
        |[3:8..3:8):  <= t/C2#`<init>`().
        |[3:11..3:21): deprecated => scala/deprecated#
+       |[3:23..3:28): field => scala/annotation/meta/field#
+       |[3:28..3:28):  => scala/annotation/meta/field#`<init>`().
        |[3:29..3:29):  => scala/deprecated#`<init>`().
        |[3:44..3:45): x <= t/C2#`<init>`().(x)
        |[3:44..3:45): x <= t/C2#x.
@@ -326,17 +329,27 @@ class TargetedSuite extends SemanticdbSuite {
        |[1:6..1:7): C <= u/C#
        |[1:8..1:9): T <= u/C#[T]
        |[1:13..1:19): AnyRef => scala/AnyRef#
+       |[1:21..1:30): unchecked => scala/unchecked#
+       |[1:30..1:30):  => scala/unchecked#`<init>`().
        |[1:32..1:32):  <= u/C#`<init>`().
        |[2:6..2:7): a <= u/C#a.
        |[2:9..2:12): Int => scala/Int#
+       |[2:14..2:23): unchecked => scala/unchecked#
+       |[2:24..2:24):  => scala/unchecked#`<init>`().
        |[3:6..3:7): b <= u/C#b().
        |[3:8..3:9): x <= u/C#b().(x)
        |[3:11..3:17): Option => scala/Option#
        |[3:18..3:21): Int => scala/Int#
+       |[3:23..3:32): unchecked => scala/unchecked#
+       |[3:32..3:32):  => scala/unchecked#`<init>`().
        |[3:36..3:40): Unit => scala/Unit#
        |[4:6..4:7): c <= u/C#c.
+       |[4:15..4:24): unchecked => scala/unchecked#
+       |[4:24..4:24):  => scala/unchecked#`<init>`().
        |[5:6..5:7): d <= u/C#d.
        |[5:15..5:21): Object => java/lang/Object#
+       |[5:23..5:32): unchecked => scala/unchecked#
+       |[5:32..5:32):  => scala/unchecked#`<init>`().
        |[5:33..5:33):  => java/lang/Object#`<init>`().
        |""".stripMargin,
   )
