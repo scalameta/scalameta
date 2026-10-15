@@ -602,6 +602,405 @@ example/Issue1544.A#toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
+==================
+example/Issue1672#
+==================
+--- metac
++++ metacp
+       symbol: "example/Issue1672Annot#"
+-  arguments {
+-    id_tree {
+-      symbol: "local1"
+-  arguments {
+-    id_tree {
+-      symbol: "local0"
+ language: SCALA
+ signature {
+       symlinks: "example/Issue1672#NamedType#"
+       symlinks: "example/Issue1672#NamedClass#"
+       symlinks: "example/Issue1672#namedVal."
++      symlinks: "example/Issue1672#`<local Issue1672>`."
++      symlinks: "example/Issue1672#`<local Issue1672>`."
++      symlinks: "example/Issue1672#`<local Issue1672>`."
++      symlinks: "example/Issue1672#`<local Issue1672>`."
++      symlinks: "example/Issue1672#`<local Issue1672>`."
+
+
+=============================
+example/Issue1672#NamedClass#
+=============================
+--- metac
++++ metacp
+       symbol: "example/Issue1672Annot#"
+-  arguments {
+-    id_tree {
+-      symbol: "local12"
+-  arguments {
+-    id_tree {
+-      symbol: "local11"
+ language: SCALA
+ signature {
+
+
+============================
+example/Issue1672#NamedType#
+============================
+--- metac
++++ metacp
+       symbol: "example/Issue1672Annot#"
+-  arguments {
+-    id_tree {
+-      symbol: "local10"
+-  arguments {
+-    id_tree {
+-      symbol: "local9"
+ language: SCALA
+ signature {
+
+
+=============================
+example/Issue1672#blockDef().
+=============================
+--- metac
++++ metacp
+       symbol: "example/Issue1672Annot#"
+-  arguments {
+-  arguments {
+ language: SCALA
+ signature {
+
+
+=============================
+example/Issue1672#namedDef().
+=============================
+--- metac
++++ metacp
+       symbol: "example/Issue1672Annot#"
+-  arguments {
+-    id_tree {
+-      symbol: "local3"
+-  arguments {
+-    id_tree {
+-      symbol: "local2"
+ language: SCALA
+ signature {
+
+
+==================================
+example/Issue1672#namedParam().(p)
+==================================
+--- metac
++++ metacp
+       symbol: "example/Issue1672Annot#"
+-  arguments {
+-    id_tree {
+-      symbol: "local8"
+-  arguments {
+-    id_tree {
+-      symbol: "local7"
+ language: SCALA
+ signature {
+
+
+==================================
+example/Issue1672#positionalDef().
+==================================
+--- metac
++++ metacp
+       symbol: "example/Issue1672Annot#"
+-  arguments {
+-  arguments {
+ language: SCALA
+ signature {
+
+
+==================
+example/Issue1672.
+==================
+--- metac
++++ metacp
+     declarations {
+       symlinks: "example/Issue1672.namedDef()."
++      symlinks: "example/Issue1672.`<local Issue1672>`."
+
+
+=============================
+example/Issue1672.namedDef().
+=============================
+--- metac
++++ metacp
+       symbol: "example/Issue1672Annot#"
+-  arguments {
+-    id_tree {
+-      symbol: "local14"
+-  arguments {
+-    id_tree {
+-      symbol: "local13"
+ language: SCALA
+ signature {
+
+
+========================
+example/Issue1806#Alias#
+========================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local7"
++            symbol: "local10"
+             kind: TYPE
+             properties: 0
+             display_name: "T"
++          hardlinks {
++            symbol: "local11"
++            kind: CLASS
++            properties: 0
++            display_name: "<refinement>"
++            language: SCALA
++            signature {
++              value_signature {
++                tpe {
++                  structural_type {
++                    tpe {
++                      with_type {
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                    declarations {
++            access {
++              public_access {
+         declarations {
+           hardlinks {
+-            symbol: "local7"
++            symbol: "local10"
+             kind: TYPE
+             properties: 0
+             display_name: "T"
++          hardlinks {
++            symbol: "local11"
++            kind: CLASS
++            properties: 0
++            display_name: "<refinement>"
++            language: SCALA
++            signature {
++              value_signature {
++                tpe {
++                  structural_type {
++                    tpe {
++                      with_type {
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                    declarations {
++            access {
++              public_access {
+
+
+================================
+example/Issue1806#`<init>`().(x)
+================================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local0"
++            symbol: "local12"
+             kind: TYPE
+             properties: 0
+             display_name: "T"
++          hardlinks {
++            symbol: "local13"
++            kind: CLASS
++            properties: 0
++            display_name: "<refinement>"
++            language: SCALA
++            signature {
++              value_signature {
++                tpe {
++                  structural_type {
++                    tpe {
++                      with_type {
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                    declarations {
++            access {
++              public_access {
+
+
+=======================
+example/Issue1806#flat.
+=======================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local6"
++            symbol: "local9"
+             kind: TYPE
+             properties: 4
+             display_name: "T"
+
+
+========================
+example/Issue1806#inArg.
+========================
+--- metac
++++ metacp
+             declarations {
+               hardlinks {
+-                symbol: "local5"
++                symbol: "local7"
+                 kind: TYPE
+                 properties: 0
+                 display_name: "T"
++              hardlinks {
++                symbol: "local8"
++                kind: CLASS
++                properties: 0
++                display_name: "<refinement>"
++                language: SCALA
++                signature {
++                  value_signature {
++                    tpe {
++                      structural_type {
++                        tpe {
++                          with_type {
++                            types {
++                              type_ref {
++                                prefix {
++                                symbol: "example/Issue1806#"
++                            types {
++                              type_ref {
++                                prefix {
++                                symbol: "example/Issue1806#"
++                        declarations {
++                access {
++                  public_access {
+
+
+=========================
+example/Issue1806#inDecl.
+=========================
+--- metac
++++ metacp
+         declarations {
+           hardlinks {
+-            symbol: "local3"
++            symbol: "local4"
+             kind: METHOD
+             properties: 4
+             display_name: "m"
+                     declarations {
+                       hardlinks {
+-                        symbol: "local4"
++                        symbol: "local6"
+                         kind: METHOD
+                         properties: 4
+                         display_name: "n"
++          hardlinks {
++            symbol: "local5"
++            kind: CLASS
++            properties: 0
++            display_name: "<refinement>"
++            language: SCALA
++            signature {
++              value_signature {
++                tpe {
++                  structural_type {
++                    tpe {
++                      with_type {
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                    declarations {
++                      hardlinks {
++                        symbol: "local6"
++                        kind: METHOD
++                        properties: 4
++                        display_name: "n"
++                        language: SCALA
++                        signature {
++                          method_signature {
++                            type_parameters {
++                            return_type {
++                              type_ref {
++                                prefix {
++                                symbol: "scala/Int#"
++                        access {
++                          public_access {
++            access {
++              public_access {
+
+
+===========================
+example/Issue1806#inParent.
+===========================
+--- metac
++++ metacp
+                 declarations {
+                   hardlinks {
+-                    symbol: "local1"
++                    symbol: "local2"
+                     kind: TYPE
+                     properties: 4
+                     display_name: "U"
+         declarations {
+           hardlinks {
+-            symbol: "local2"
++            symbol: "local3"
+             kind: TYPE
+             properties: 4
+             display_name: "T"
+
+
+====================
+example/Issue1806#x.
+====================
+--- metac
++++ metacp
++          hardlinks {
++            symbol: "local1"
++            kind: CLASS
++            properties: 0
++            display_name: "<refinement>"
++            language: SCALA
++            signature {
++              value_signature {
++                tpe {
++                  structural_type {
++                    tpe {
++                      with_type {
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                        types {
++                          type_ref {
++                            prefix {
++                            symbol: "example/Issue1806#"
++                    declarations {
++            access {
++              public_access {
+
+
 ======================
 example/Issue1872.x$1.
 ======================
