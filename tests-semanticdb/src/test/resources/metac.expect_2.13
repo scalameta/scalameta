@@ -1660,7 +1660,7 @@ Text => non-empty
 Language => Scala
 Symbols => 13 entries
 Occurrences => 56 entries
-Synthetics => 13 entries
+Synthetics => 12 entries
 
 Symbols:
 example/ForComprehension# => class ForComprehension extends AnyRef { +2 decls }
@@ -1680,17 +1680,17 @@ local4 => param a: Int
   Int => scala/Int#
 local5 => param b: Int
   Int => scala/Int#
-local11 => val local c: Int
-  Int => scala/Int#
-local12 => val local d: Int
-  Int => scala/Int#
-local13 => val local x$3: Tuple2[Int, Int]
-  Tuple2 => scala/Tuple2#
-  Int => scala/Int#
-local14 => val local e: Tuple4[Int, Int, Int, Int]
+local11 => param f: Tuple4[Int, Int, Int, Int]
   Tuple4 => scala/Tuple4#
   Int => scala/Int#
-local15 => param f: Tuple4[Int, Int, Int, Int]
+local12 => val local c: Int
+  Int => scala/Int#
+local13 => val local d: Int
+  Int => scala/Int#
+local14 => val local x$3: Tuple2[Int, Int]
+  Tuple2 => scala/Tuple2#
+  Int => scala/Int#
+local15 => val local e: Tuple4[Int, Int, Int, Int]
   Tuple4 => scala/Tuple4#
   Int => scala/Int#
 
@@ -1719,32 +1719,32 @@ Occurrences:
 [13:6..13:7): a => local4
 [14:6..14:7): b => local5
 [15:6..15:8): == => java/lang/Object#`==`().
-[17:6..17:7): c <= local11
-[18:6..18:7): d <= local12
+[17:6..17:7): c <= local12
+[18:6..18:7): d <= local13
 [19:9..19:13): List => scala/package.List.
 [19:15..19:16): a => local4
 [19:18..19:19): b => local5
 [21:6..21:7): a => local4
 [22:6..22:7): b => local5
-[23:6..23:7): c => local11
-[24:6..24:7): d => local12
+[23:6..23:7): c => local12
+[24:6..24:7): d => local13
 [25:6..25:8): == => java/lang/Object#`==`().
-[26:4..26:5): e <= local14
+[26:4..26:5): e <= local15
 [27:6..27:7): a => local4
 [28:6..28:7): b => local5
-[29:6..29:7): c => local11
-[30:6..30:7): d => local12
-[32:7..32:8): e => local14
+[29:6..29:7): c => local12
+[30:6..30:7): d => local13
+[32:7..32:8): e => local15
 [32:9..32:11): == => java/lang/Object#`==`().
-[33:4..33:5): f <= local15
+[33:4..33:5): f <= local11
 [33:9..33:13): List => scala/package.List.
-[33:14..33:15): e => local14
+[33:14..33:15): e => local15
 [36:6..36:7): a => local4
 [37:6..37:7): b => local5
-[38:6..38:7): c => local11
-[39:6..39:7): d => local12
-[40:6..40:7): e => local14
-[41:6..41:7): f => local15
+[38:6..38:7): c => local12
+[39:6..39:7): d => local13
+[40:6..40:7): e => local15
+[41:6..41:7): f => local11
 [44:6..44:7): x <= example/ForComprehension#x.
 [44:9..44:15): Option => scala/Option#
 [44:17..44:20): Int => scala/Int#
@@ -1758,10 +1758,7 @@ Synthetics:
     b <- List(1)
     if b > 1
     c = a + b
-  } yield (a, b, c) => orig(List(1)).flatMap[Tuple3[Int, Int, Int]]({(a) => orig(List(1)).withFilter({(b) => orig(b > 1)}).map[Tuple2[Int, Int]]({(b) => orig(c = a + b)}).map[Tuple3[Int, Int, Int]]({(local2) => orig(b <- List(1)
-    if b > 1
-    c = a + b
-  } yield (a, b, c))})})
+  } yield (a, b, c) => orig(List(1)).flatMap[Tuple3[Int, Int, Int]]({(a) => orig(List(1)).withFilter({(b) => orig(b > 1)}).map[Tuple2[Int, Int]]({(b) => orig(c = a + b)}).map[Tuple3[Int, Int, Int]]({(local2) => orig((a, b, c))})})
   flatMap => scala/collection/immutable/List#flatMap().
   Tuple3 => scala/Tuple3#
   Int => scala/Int#
@@ -1815,72 +1812,23 @@ Synthetics:
       a,
       b
     ) == (1, 2))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(b) => orig(List((a, b))).withFilter({(local6) => orig()}).withFilter({(local7) => orig((
-      c,
-      d
-    ) <- List((a, b))
-    if (
       a,
       b,
       c,
       d
-    ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]({(local8) => orig((
-      c,
-      d
-    ) <- List((a, b))
-    if (
+    ) == (1, 2, 3, 4))}).map[Tuple2[Tuple2[Int, Int], Tuple4[Int, Int, Int, Int]]]({(local8) => orig(e = (
       a,
       b,
       c,
       d
-    ) == (1, 2, 3, 4)
-    e = (
-      a,
-      b,
-      c,
-      d
-    ))}).withFilter({(local9) => orig((
-      c,
-      d
-    ) <- List((a, b))
-    if (
-      a,
-      b,
-      c,
-      d
-    ) == (1, 2, 3, 4)
-    e = (
-      a,
-      b,
-      c,
-      d
-    )
-    if e == (1, 2, 3, 4))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(local10) => orig((
-      c,
-      d
-    ) <- List((a, b))
-    if (
-      a,
-      b,
-      c,
-      d
-    ) == (1, 2, 3, 4)
-    e = (
-      a,
-      b,
-      c,
-      d
-    )
-    if e == (1, 2, 3, 4)
-    f <- List(e)
-  } yield {
-    (
+    ))}).withFilter({(local9) => orig(e == (1, 2, 3, 4))}).flatMap[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(local10) => orig(List(e)).map[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(f) => orig((
       a,
       b,
       c,
       d,
       e,
       f
-    ))})})})
+    ))})})})})
   flatMap => scala/collection/immutable/List#flatMap().
   Tuple6 => scala/Tuple6#
   Int => scala/Int#
@@ -1897,6 +1845,8 @@ Synthetics:
   local8 => local8
   local9 => local9
   local10 => local10
+  map => scala/collection/immutable/List#map().
+  f => local11
 [10:9..10:13): List => *.apply[Int]
   apply => scala/collection/IterableFactory#apply().
   Int => scala/Int#
@@ -1924,36 +1874,13 @@ Synthetics:
 [32:7..32:24): e == (1, 2, 3, 4) => *.apply[Int, Int, Int, Int]
   apply => scala/Tuple4.apply().
   Int => scala/Int#
-[33:4..42:5): f <- List(e)
-  } yield {
-    (
-      a,
-      b,
-      c,
-      d,
-      e,
-      f
-    ) => orig(List(e)).map[Tuple6[Int, Int, Int, Int, Tuple4[Int, Int, Int, Int], Tuple4[Int, Int, Int, Int]]]({(f) => orig((
-      a,
-      b,
-      c,
-      d,
-      e,
-      f
-    ))})
-  map => scala/collection/immutable/List#map().
-  Tuple6 => scala/Tuple6#
-  Int => scala/Int#
-  Tuple4 => scala/Tuple4#
-  f => local15
 [33:9..33:13): List => *.apply[Tuple4[Int, Int, Int, Int]]
   apply => scala/collection/IterableFactory#apply().
   Tuple4 => scala/Tuple4#
   Int => scala/Int#
 [45:2..47:12): for {
     (_, _) <- x
-  } yield () => orig(x).withFilter({(local16) => orig()}).map[Unit]({(local17) => orig((_, _) <- x
-  } yield ())})
+  } yield () => orig(x).withFilter({(local16) => orig()}).map[Unit]({(local17) => orig(())})
   withFilter => scala/Option#withFilter().
   local16 => local16
   map => scala/Option#WithFilter#map().

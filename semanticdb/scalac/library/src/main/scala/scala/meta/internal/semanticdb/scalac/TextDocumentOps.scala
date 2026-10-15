@@ -707,7 +707,13 @@ trait TextDocumentOps {
           gt.args match {
             case (f: g.Function) :: Nil => cachedForApplyFun(gt.fun).filter(_.range.isEmpty)
                 .flatMap { x =>
-                  val arg = s.FunctionTree(f.vparams.map(_.toSemanticId), cachedForOrOrig(f.body))
+                  // a pattern binds through a match on the parameter; its range spans the generator
+                  val body = f.body match {
+                    case g.Match(g.Typed(sel, _), cd :: Nil)
+                        if f.vparams.exists(_.symbol == sel.symbol) => cd.body
+                    case body => body
+                  }
+                  val arg = s.FunctionTree(f.vparams.map(_.toSemanticId), cachedForOrOrig(body))
                   syn(gt.toRange, s.ApplyTree(x.tree, List(arg)), usePos)
                 }
             case _ => None
