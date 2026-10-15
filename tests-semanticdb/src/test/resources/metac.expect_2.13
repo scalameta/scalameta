@@ -4990,7 +4990,7 @@ Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
 Symbols => 145 entries
-Occurrences => 271 entries
+Occurrences => 274 entries
 Diagnostics => 1 entries
 
 Symbols:
@@ -5344,16 +5344,19 @@ Occurrences:
 [5:27..5:32): scala => scala/
 [5:33..5:43): annotation => scala/annotation/
 [5:44..5:60): StaticAnnotation => scala/annotation/StaticAnnotation#
+[5:60..5:60):  => scala/annotation/Annotation#`<init>`().
 [6:6..6:10): ann1 <= types/ann1#
 [6:11..6:11):  <= types/ann1#`<init>`().
 [6:19..6:24): scala => scala/
 [6:25..6:35): annotation => scala/annotation/
 [6:36..6:52): StaticAnnotation => scala/annotation/StaticAnnotation#
+[6:52..6:52):  => scala/annotation/Annotation#`<init>`().
 [7:6..7:10): ann2 <= types/ann2#
 [7:11..7:11):  <= types/ann2#`<init>`().
 [7:19..7:24): scala => scala/
 [7:25..7:35): annotation => scala/annotation/
 [7:36..7:52): StaticAnnotation => scala/annotation/StaticAnnotation#
+[7:52..7:52):  => scala/annotation/Annotation#`<init>`().
 [9:6..9:7): B <= types/B#
 [9:7..9:7):  <= types/B#`<init>`().
 [11:6..11:7): C <= types/C#

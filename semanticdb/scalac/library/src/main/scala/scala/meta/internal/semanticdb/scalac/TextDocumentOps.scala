@@ -7,6 +7,7 @@ import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.{semanticdb => s}
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.math.Ordering
 import scala.reflect.internal._
@@ -69,7 +70,8 @@ trait TextDocumentOps {
       val mwithins = mutable.Map[m.Tree, m.Name]()
       val mwithinctors = mutable.Map[m.Tree, m.Name]() // name of enclosing class -> name of private/protected within for primary ctor
       val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
-      val mctorrefs = mutable.Map[Int, m.Name]() // start offset of new/init -> new's anonymous name
+      val mctorrefs = mutable.Map[Int, m.Name]() // start of new, init or init's type name -> name
+      val mparents = mutable.Map[Int, m.Type]() // start offset of init's type -> the type
       val msupers = mutable.Map.empty[Int, m.Term.Super] // end offset
       val mfuncs = mutable.Map.empty[Int, m.Position] // start offset of a function
 
@@ -166,6 +168,14 @@ trait TextDocumentOps {
               case _ =>
             }
           }
+          // scalac puts the constructor reference of `n.B(1)` at `B`
+          @tailrec
+          private def typeNameStart(mtpe: m.Type): Int = mtpe match {
+            case t: m.Type.Apply => typeNameStart(t.tpe)
+            case t: m.Type.Select => t.name.pos.start
+            case t: m.Type.Project => t.name.pos.start
+            case t => t.pos.start
+          }
           def indexPats(pats: List[m.Pat]): Unit = pats.foreach(_.traverse {
             case pat: m.Pat.Extract => indexPatsWithExtract(pat)
             case pat: m.Pat.Var => mvalpatstart += pat.name.pos.start
@@ -200,6 +210,8 @@ trait TextDocumentOps {
               case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
               case mtree: m.Init =>
                 mctorrefs(mtree.pos.start) = mtree.name
+                mctorrefs(typeNameStart(mtree.tpe)) = mtree.name
+                mparents(mtree.tpe.pos.start) = mtree.tpe
                 def parentOpt = mtree.parent.collect { case p: m.Term.New => p }
                 setArgNames((mtree +: parentOpt.toList).map(_.pos.start))(mtree.argClauses: _*)
               case _: m.Name.Anonymous | _: m.Name.Placeholder | _: m.Name.This =>
@@ -387,6 +399,8 @@ trait TextDocumentOps {
                   tryMstart(gstart)
                   singleValPat()
                 }
+              // mctordefs found it above; its point can be on a parent's name
+              case _: g.DefDef if gsym.isConstructor =>
               case _: g.DefTree => tryMstart(gpoint)
               case _: g.This => mstarts.get(gpoint)
                   .foreach(name => if (gsym.nameString == name.value) success(name, gsym))
@@ -423,6 +437,27 @@ trait TextDocumentOps {
               case _ =>
             }
           }
+
+          // a parent with inferred type arguments, like `n.P(1)`, has no original tree
+          private def tryFindParentQualifier(gtpt: g.TypeTree): Unit =
+            (mparents.get(gtpt.pos.start), gtpt.tpe) match {
+              case (Some(m.Type.Select(mqual, _)), g.TypeRef(gpre, _, _)) =>
+                tryFindQualifier(mqual, gpre)
+              case _ =>
+            }
+          @tailrec
+          private def tryFindQualifier(mqual: m.Term.Ref, gpre: g.Type): Unit =
+            (mqual, gpre) match {
+              case (m.Term.Select(mq: m.Term.Ref, mname), g.SingleType(gp, gsym)) =>
+                success(mname, gsym)
+                tryFindQualifier(mq, gp)
+              case (m.Term.Select(mq: m.Term.Ref, mname), g.ThisType(gsym)) =>
+                success(mname, gsym)
+                tryFindQualifier(mq, gsym.owner.thisType)
+              case (mname: m.Term.Name, g.SingleType(_, gsym)) => success(mname, gsym)
+              case (mname: m.Term.Name, g.ThisType(gsym)) => success(mname, gsym)
+              case _ =>
+            }
 
           private def processMemberDef(gtree: g.MemberDef) = {
             val gsym = gtree.symbol
@@ -557,6 +592,11 @@ trait TextDocumentOps {
                 t.body.foreach {
                   case s: g.ValDef =>
                     if (s.symbol.hasAllFlags(Flags.IMPLICIT | Flags.SYNTHETIC)) traverse(s.tpt)
+                  case _ =>
+                }
+                t.parents.foreach {
+                  case p: g.TypeTree if p.original == null && p.pos.isRange =>
+                    tryFindParentQualifier(p)
                   case _ =>
                 }
                 tryFindMtree(t)

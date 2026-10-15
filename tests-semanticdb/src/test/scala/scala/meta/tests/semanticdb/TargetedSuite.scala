@@ -411,14 +411,18 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:9..2:9):  <= r/C1#`<init>`().
        |[2:17..2:18): n => r/n.
        |[2:19..2:20): B => r/n.B#
+       |[2:20..2:20):  => r/n.B#`<init>`().
        |[3:6..3:8): C2 <= r/C2#
        |[3:9..3:9):  <= r/C2#`<init>`().
-       |[3:19..3:20): P => r/C2#
+       |[3:17..3:18): n => r/n.
+       |[3:19..3:20): P => r/n.P#
+       |[3:20..3:20):  => r/n.P#`<init>`().
        |[4:6..4:8): C3 <= r/C3#
        |[4:9..4:9):  <= r/C3#`<init>`().
        |[4:17..4:18): n => r/n.
        |[4:19..4:20): P => r/n.P#
        |[4:21..4:24): Int => scala/Int#
+       |[4:25..4:25):  => r/n.P#`<init>`().
        |[5:6..5:8): C4 <= r/C4#
        |[5:9..5:9):  <= r/C4#`<init>`().
        |[5:15..5:16): n => r/n.
@@ -429,7 +433,10 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:30..5:30):  => r/n.P#`<init>`().
        |[6:6..6:8): C5 <= r/C5#
        |[6:9..6:9):  <= r/C5#`<init>`().
-       |[6:21..6:22): P => r/C5#
+       |[6:17..6:18): r => r/
+       |[6:19..6:20): n => r/n.
+       |[6:21..6:22): P => r/n.P#
+       |[6:22..6:22):  => r/n.P#`<init>`().
        |""".stripMargin,
   )
 
@@ -492,6 +499,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[5:17..5:22): scala => scala/
        |[5:23..5:33): annotation => scala/annotation/
        |[5:34..5:50): StaticAnnotation => scala/annotation/StaticAnnotation#
+       |[5:50..5:50):  => scala/annotation/Annotation#`<init>`().
        |[6:6..6:8): A3 <= c/A3#
        |[6:9..6:9):  <= c/A3#`<init>`().
        |[6:17..6:18): U => c/U#
@@ -500,15 +508,18 @@ class TargetedSuite extends SemanticdbSuite {
        |[7:9..7:9):  <= c/A4#`<init>`().
        |[7:17..7:18): c => c/
        |[7:19..7:20): U => c/U#
+       |[7:20..7:20):  => java/lang/Object#`<init>`().
        |[8:6..8:8): A5 <= c/A5#
        |[8:9..8:9):  <= c/A5#`<init>`().
        |[8:17..8:18): c => c/
        |[8:19..8:20): o => c/o.
        |[8:21..8:22): V => c/o.V#
+       |[8:22..8:22):  => java/lang/Object#`<init>`().
        |[9:6..9:8): A6 <= c/A6#
        |[9:9..9:9):  <= c/A6#`<init>`().
        |[9:17..9:18): c => c/
        |[9:19..9:20): U => c/U#
+       |[9:21..9:21):  => java/lang/Object#`<init>`().
        |""".stripMargin,
   )
 
@@ -539,6 +550,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:9..2:9):  <= y/A1#`<init>`().
        |[2:17..2:18): y => y/
        |[2:19..2:20): U => y/U#
+       |[3:0..3:0):  => java/lang/Object#`<init>`().
        |""".stripMargin,
   )
 
