@@ -49,8 +49,8 @@ trait SymbolTable {
 
   /**
    * Returns all overloads of `name` visible on type `tpe` — its own declarations plus those
-   * inherited across its supertypes — override-deduplicated, most-derived first. `Nil` if `tpe` is
-   * not a resolvable class-like symbol or has no such method.
+   * inherited across its supertypes — override-deduplicated, in linearization order. `Nil` if `tpe`
+   * is not a resolvable class-like symbol or has no such method.
    *
    * This is the hierarchy-aware companion to the single-argument `overloads`: a resolved method
    * symbol only exposes its own owner's overloads, but the complete candidate set at a call site
@@ -69,9 +69,8 @@ trait SymbolTable {
    * Constructors are not inherited, so for `name == "<init>"` only `tpe`'s own constructors are
    * returned, not its parents'.
    *
-   * Caveats: the walk is a simple most-derived-first parent traversal, not full Scala linearization
-   * (enough for override dedup, not for exact resolution order); erasure is symbol-level; and
-   * accessibility/applicability is not applied — final overload resolution is the compiler's job.
+   * Caveats: erasure is symbol-level, and accessibility/applicability is not applied — final
+   * overload resolution is the compiler's job.
    */
   def overloads(tpe: String, name: String): List[String] = {
     // constructors are not inherited, so do not walk parents for the `<init>` name
@@ -142,20 +141,28 @@ trait SymbolTable {
   private def parentSymbols(sinfo: SymbolInformation): Iterator[String] = parentRefs(sinfo).map(_._1)
   private def typeSymbols(tpe: Type): Iterator[String] = typeRefs(tpe).map(_._1)
 
-  // `tpe` plus its transitive parents, most-derived first and cycle-safe, each paired with the
+  // `tpe` plus its transitive parents in Scala linearization order, cycle-safe, each paired with the
   // substitution of its type parameters to erased symbols (so generic overrides compare correctly).
   // A type always precedes its own ancestors, so dedup-by-first-seen keeps the most-derived method.
   private def linearization(tpe: String): List[(String, Map[String, String])] = {
-    val seen = mutable.LinkedHashMap.empty[String, Map[String, String]]
-    def loop(sym: String, env: Map[String, String]): Unit = {
-      val size = seen.size
-      seen.getOrElseUpdate(sym, env) // first env wins; recurse only when this was a new entry
-      if (seen.size != size) info(sym).foreach(parentRefs(_).foreach { case (parent, args) =>
-        loop(parent, bindTypeParams(parent, args, env))
-      })
+    val res = mutable.ListBuffer.empty[String]
+    val visited = mutable.Set.empty[String]
+    /* a post-order walk over the parents in declaration order visits the linearization in reverse;
+     * we mark a type on entry, so a cycle terminates */
+    def loop(sym: String): Unit = if (visited.add(sym)) {
+      info(sym).foreach(parentSymbols(_).foreach(loop))
+      res.prepend(sym)
     }
-    loop(tpe, Map.empty)
-    seen.toList
+    loop(tpe)
+    val envs = mutable.HashMap(tpe -> Map.empty[String, String])
+    res.toList.map { sym =>
+      val env = envs.getOrElse(sym, Map.empty)
+      // a type follows all its subtypes, so its env is set before we reach it
+      info(sym).foreach(parentRefs(_).foreach { case (parent, args) =>
+        if (!envs.contains(parent)) envs(parent) = bindTypeParams(parent, args, env)
+      })
+      sym -> env
+    }
   }
 
   // Map `owner`'s type parameters to the erased symbols of `args` (resolved through the caller's
