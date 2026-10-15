@@ -465,4 +465,31 @@ class SymbolTableSuite extends FunSuite {
     List("_empty_/Sub#foo().", "_empty_/Base#foo()."),
   ))
 
+  test("resolveOverloads: a hierarchy without a missing parent")(assertEquals(
+    LocalSymbolTable(diamond(List("_empty_/C#", "_empty_/B#"))).resolveOverloads("_empty_/D#", "g"),
+    SymbolTable.Overloads(List("_empty_/B#g()."), Nil),
+  ))
+
+  test("resolveOverloads: a missing parent") {
+    val symtab = LocalSymbolTable(List(
+      synthClass("_empty_/Sub#", List("_empty_/Missing#"), List("_empty_/Sub#f().")),
+      synthMethod("_empty_/Sub#f().", "scala/Int#"),
+    ))
+    assertEquals(
+      symtab.resolveOverloads("_empty_/Sub#", "f"),
+      SymbolTable.Overloads(List("_empty_/Sub#f()."), List("_empty_/Missing#")),
+    )
+  }
+
+  test("resolveOverloads: an unknown type") {
+    val expected = SymbolTable.Overloads(Nil, List("does/not/T#"))
+    assertEquals(globalSymtab.resolveOverloads("does/not/T#", "foo"), expected)
+    assertEquals(globalSymtab.resolveOverloads("does/not/T#", "<init>"), expected)
+  }
+
+  test("resolveOverloads: a method symbol")(assertEquals(
+    globalSymtab.resolveOverloads("scala/Predef.assert().", "assert"),
+    SymbolTable.Overloads(Nil, Nil),
+  ))
+
 }
