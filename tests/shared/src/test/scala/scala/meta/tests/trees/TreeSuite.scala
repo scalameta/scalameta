@@ -19,6 +19,12 @@ class TreeSuite extends TreeSuiteBase {
     assertEquals(extract(), Some(List[Tree](a)))
   }
 
+  test("Type.FunctionType.unapply") {
+    val f = Type.Function(Type.FuncParamClause(List(pname("A"))), pname("B"))
+    def extract() = Type.FunctionType.unapply(f)
+    assertEquals(extract(), Some((f.paramClause, f.params, f.res)))
+  }
+
   // https://github.com/scalameta/scalameta/issues/1193
   // The same `Term.Name` shape appears both at binding sites (definitions) and use sites
   // (references); `isDefinition`/`isReference` let callers tell them apart.
