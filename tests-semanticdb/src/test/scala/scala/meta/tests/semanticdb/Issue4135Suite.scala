@@ -27,7 +27,7 @@ class Issue4135Suite extends SemanticdbSuite {
        |[2:29..2:35): Option => *.apply[Int]
        |  apply => scala/Option.apply().
        |  Int => scala/Int#
-       |[3:2..3:46): for { (a, b) <- Option((1, 2)) } yield a + b => orig(Option((1, 2))).withFilter({(local4) => orig()}).map[Int]({(local5) => orig((a, b) <- Option((1, 2)) } yield a + b)})
+       |[3:2..3:46): for { (a, b) <- Option((1, 2)) } yield a + b => orig(Option((1, 2))).withFilter({(local4) => orig()}).map[Int]({(local5) => orig(a + b)})
        |  withFilter => scala/Option#withFilter().
        |  local4 => local4
        |  map => scala/Option#WithFilter#map().
@@ -37,7 +37,7 @@ class Issue4135Suite extends SemanticdbSuite {
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |[4:2..4:62): for { a <- Option(1); (b, c) <- Option((a, a)) } yield b + c => orig(Option(1)).flatMap[Int]({(a) => orig(Option((a, a))).withFilter({(local9) => orig()}).map[Int]({(local10) => orig((b, c) <- Option((a, a)) } yield b + c)})})
+       |[4:2..4:62): for { a <- Option(1); (b, c) <- Option((a, a)) } yield b + c => orig(Option(1)).flatMap[Int]({(a) => orig(Option((a, a))).withFilter({(local9) => orig()}).map[Int]({(local10) => orig(b + c)})})
        |  flatMap => scala/Option#flatMap().
        |  Int => scala/Int#
        |  a => local8
@@ -52,11 +52,7 @@ class Issue4135Suite extends SemanticdbSuite {
        |  apply => scala/Option.apply().
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |""".stripMargin.replace(
-      "orig((a, b, c))",
-      if (ScalaVersion.is213) "orig(b <- Option(2); c = a + b } yield (a, b, c))"
-      else "orig((a, b, c))",
-    ),
+       |""".stripMargin,
   )
 
 }
