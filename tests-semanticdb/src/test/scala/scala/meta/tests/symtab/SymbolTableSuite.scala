@@ -399,9 +399,10 @@ class SymbolTableSuite extends FunSuite {
       ) ++ others,
     ).overloads("_empty_/Sub#", "f")
 
-  test("overloads(tpe, name): inherited by-value and by-name parameters")(
-    assertEquals(inherited(intType, s.ByNameType(intType)), List("_empty_/Sub#f().")),
-  )
+  test("overloads(tpe, name): inherited by-value and by-name parameters")(assertEquals(
+    inherited(intType, s.ByNameType(intType)),
+    List("_empty_/Sub#f().", "_empty_/Base#f()."),
+  ))
 
   test("overloads(tpe, name): inherited by-name parameters")(
     assertEquals(inherited(s.ByNameType(intType), s.ByNameType(intType)), List("_empty_/Sub#f().")),
@@ -409,7 +410,7 @@ class SymbolTableSuite extends FunSuite {
 
   test("overloads(tpe, name): inherited arrays of different elements")(assertEquals(
     inherited(typeOf("scala/Array#", "scala/Int#"), typeOf("scala/Array#", "java/lang/String#")),
-    List("_empty_/Sub#f()."),
+    List("_empty_/Sub#f().", "_empty_/Base#f()."),
   ))
 
   test("overloads(tpe, name): inherited arrays of the same element")(assertEquals(
@@ -417,9 +418,10 @@ class SymbolTableSuite extends FunSuite {
     List("_empty_/Sub#f()."),
   ))
 
-  test("overloads(tpe, name): inherited plain and repeated parameters")(
-    assertEquals(inherited(intType, s.RepeatedType(intType)), List("_empty_/Sub#f().")),
-  )
+  test("overloads(tpe, name): inherited plain and repeated parameters")(assertEquals(
+    inherited(intType, s.RepeatedType(intType)),
+    List("_empty_/Sub#f().", "_empty_/Base#f()."),
+  ))
 
   // `type IA = Array[Int]`
   private val intArrayAlias = s.SymbolInformation(
@@ -437,7 +439,7 @@ class SymbolTableSuite extends FunSuite {
       s.TypeRef(symbol = "_empty_/p.IA#"),
       intArrayAlias,
     ),
-    List("_empty_/Sub#f()."),
+    List("_empty_/Sub#f().", "_empty_/Base#f()."),
   ))
 
   test("overloads(tpe, name): inherited array and an alias of the same array")(assertEquals(
@@ -460,7 +462,7 @@ class SymbolTableSuite extends FunSuite {
       typeOf("scala/Array#", "java/lang/String#"),
       typeOf("scala/Array#", "scala/Int#"),
     ).overloads("_empty_/Sub#", "foo"),
-    List("_empty_/Sub#foo()."),
+    List("_empty_/Sub#foo().", "_empty_/Base#foo()."),
   ))
 
 }
