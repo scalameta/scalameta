@@ -1175,17 +1175,42 @@ Schema => SemanticDB v4
 Uri => com/javacp/Interface.class
 Text => empty
 Language => Java
-Symbols => 4 entries
+Symbols => 13 entries
 
 Symbols:
-com/javacp/Interface# => abstract interface Interface extends Object { +3 decls }
+com/javacp/Interface# => abstract interface Interface extends Object { +7 decls }
   Object => java/lang/Object#
 com/javacp/Interface#a(). => abstract method a(): Unit
   Unit => scala/Unit#
+com/javacp/Interface#ap(). => abstract method ap(x: Int): Unit
+  x => com/javacp/Interface#ap().(x)
+  Int => scala/Int#
+  Unit => scala/Unit#
+com/javacp/Interface#ap().(x) => default param x: Int
+  Int => scala/Int#
 com/javacp/Interface#d(). => default method d(): Unit
   Unit => scala/Unit#
+com/javacp/Interface#dp(). => default method dp(x: Int): Unit
+  x => com/javacp/Interface#dp().(x)
+  Int => scala/Int#
+  Unit => scala/Unit#
+com/javacp/Interface#dp().(x) => default param x: Int
+  Int => scala/Int#
+com/javacp/Interface#dt(). => default method dt[T](x: T): Unit
+  T => com/javacp/Interface#dt().[T]
+  x => com/javacp/Interface#dt().(x)
+  Unit => scala/Unit#
+com/javacp/Interface#dt().(x) => default param x: T
+  T => com/javacp/Interface#dt().[T]
+com/javacp/Interface#dt().[T] => typeparam T
 com/javacp/Interface#s(). => static method s(): Unit
   Unit => scala/Unit#
+com/javacp/Interface#sp(). => static method sp(x: Int): Unit
+  x => com/javacp/Interface#sp().(x)
+  Int => scala/Int#
+  Unit => scala/Unit#
+com/javacp/Interface#sp().(x) => default param x: Int
+  Int => scala/Int#
 
 com/javacp/Logger.class
 -----------------------
