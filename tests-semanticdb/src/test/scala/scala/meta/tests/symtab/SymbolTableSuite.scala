@@ -325,4 +325,141 @@ class SymbolTableSuite extends FunSuite {
     assertEquals(symtab.overloads("_empty_/Q#", "<init>"), List("_empty_/Q#`<init>`()."))
   }
 
+  // `trait A { def g(x: Int) }; trait B extends A { override def g(x: Int) }; trait C extends A`
+  private def diamond(parentsOfD: List[String]) = List(
+    synthClass("_empty_/A#", Nil, List("_empty_/A#g().")),
+    synthMethod("_empty_/A#g().", "scala/Int#"),
+    synthClass("_empty_/B#", List("_empty_/A#"), List("_empty_/B#g().")),
+    synthMethod("_empty_/B#g().", "scala/Int#"),
+    synthClass("_empty_/C#", List("_empty_/A#"), Nil),
+    synthClass("_empty_/D#", parentsOfD, Nil),
+  )
+
+  test("overloads(tpe, name): a diamond with the override in the first parent") {
+    val symtab = LocalSymbolTable(diamond(List("_empty_/B#", "_empty_/C#")))
+    assertEquals(symtab.overloads("_empty_/D#", "g"), List("_empty_/B#g()."))
+  }
+
+  test("overloads(tpe, name): a diamond with the override in the last parent") {
+    val symtab = LocalSymbolTable(diamond(List("_empty_/C#", "_empty_/B#")))
+    assertEquals(symtab.overloads("_empty_/D#", "g"), List("_empty_/A#g()."))
+  }
+
+  test("overloads(tpe, name): a diamond with an overload in the last parent") {
+    val symtab = LocalSymbolTable(
+      diamond(List("_empty_/B#", "_empty_/C#")).map(info =>
+        if (info.symbol != "_empty_/C#") info
+        else synthClass("_empty_/C#", List("_empty_/A#"), List("_empty_/C#g().")),
+      ) :+ synthMethod("_empty_/C#g().", "scala/Predef.String#"),
+    )
+    assertEquals(symtab.overloads("_empty_/D#", "g"), List("_empty_/B#g().", "_empty_/C#g()."))
+  }
+
+  private val intType = s.TypeRef(symbol = "scala/Int#")
+  private def typeOf(sym: String, arg: String) = s
+    .TypeRef(symbol = sym, typeArguments = List(s.TypeRef(symbol = arg)))
+
+  // `class C { def f(x: param1); def f(x: param2) }`
+  private def declared(param1: s.Type, param2: s.Type) = LocalSymbolTable(List(
+    synthClass("_empty_/C#", Nil, List("_empty_/C#f().", "_empty_/C#f(+1).")),
+    synthMethod("_empty_/C#f().", param1),
+    synthMethod("_empty_/C#f(+1).", param2),
+  )).overloads("_empty_/C#", "f")
+
+  test("overloads(tpe, name): same-owner by-value and by-name parameters")(
+    assertEquals(declared(intType, s.ByNameType(intType)), List("_empty_/C#f().")),
+  )
+
+  test("overloads(tpe, name): same-owner arrays of different elements")(assertEquals(
+    declared(typeOf("scala/Array#", "scala/Int#"), typeOf("scala/Array#", "java/lang/String#")),
+    List("_empty_/C#f()."),
+  ))
+
+  test("overloads(tpe, name): same-owner plain and repeated parameters")(
+    assertEquals(declared(intType, s.RepeatedType(intType)), List("_empty_/C#f().")),
+  )
+
+  test("overloads(tpe, name): same-owner parameters with different type arguments")(assertEquals(
+    declared(
+      typeOf("scala/package.List#", "scala/Int#"),
+      typeOf("scala/package.List#", "java/lang/String#"),
+    ),
+    List("_empty_/C#f()."),
+  ))
+
+  // `class Base { def f(x: baseParam) }; class Sub extends Base { def f(x: subParam) }`
+  private def inherited(baseParam: s.Type, subParam: s.Type, others: s.SymbolInformation*) =
+    LocalSymbolTable(
+      List(
+        synthClass("_empty_/Base#", Nil, List("_empty_/Base#f().")),
+        synthMethod("_empty_/Base#f().", baseParam),
+        synthClass("_empty_/Sub#", List("_empty_/Base#"), List("_empty_/Sub#f().")),
+        synthMethod("_empty_/Sub#f().", subParam),
+      ) ++ others,
+    ).overloads("_empty_/Sub#", "f")
+
+  test("overloads(tpe, name): inherited by-value and by-name parameters")(
+    assertEquals(inherited(intType, s.ByNameType(intType)), List("_empty_/Sub#f().")),
+  )
+
+  test("overloads(tpe, name): inherited by-name parameters")(
+    assertEquals(inherited(s.ByNameType(intType), s.ByNameType(intType)), List("_empty_/Sub#f().")),
+  )
+
+  test("overloads(tpe, name): inherited arrays of different elements")(assertEquals(
+    inherited(typeOf("scala/Array#", "scala/Int#"), typeOf("scala/Array#", "java/lang/String#")),
+    List("_empty_/Sub#f()."),
+  ))
+
+  test("overloads(tpe, name): inherited arrays of the same element")(assertEquals(
+    inherited(typeOf("scala/Array#", "scala/Int#"), typeOf("scala/Array#", "scala/Int#")),
+    List("_empty_/Sub#f()."),
+  ))
+
+  test("overloads(tpe, name): inherited plain and repeated parameters")(
+    assertEquals(inherited(intType, s.RepeatedType(intType)), List("_empty_/Sub#f().")),
+  )
+
+  // `type IA = Array[Int]`
+  private val intArrayAlias = s.SymbolInformation(
+    symbol = "_empty_/p.IA#",
+    kind = s.SymbolInformation.Kind.TYPE,
+    signature = s.TypeSignature(
+      lowerBound = typeOf("scala/Array#", "scala/Int#"),
+      upperBound = typeOf("scala/Array#", "scala/Int#"),
+    ),
+  )
+
+  test("overloads(tpe, name): inherited array and an alias of another array")(assertEquals(
+    inherited(
+      typeOf("scala/Array#", "java/lang/String#"),
+      s.TypeRef(symbol = "_empty_/p.IA#"),
+      intArrayAlias,
+    ),
+    List("_empty_/Sub#f()."),
+  ))
+
+  test("overloads(tpe, name): inherited array and an alias of the same array")(assertEquals(
+    inherited(
+      typeOf("scala/Array#", "scala/Int#"),
+      s.TypeRef(symbol = "_empty_/p.IA#"),
+      intArrayAlias,
+    ),
+    List("_empty_/Sub#f()."),
+  ))
+
+  test("overloads(tpe, name): a generic override with an array type argument")(assertEquals(
+    genericHierarchy(typeOf("scala/Array#", "scala/Int#"), typeOf("scala/Array#", "scala/Int#"))
+      .overloads("_empty_/Sub#", "foo"),
+    List("_empty_/Sub#foo()."),
+  ))
+
+  test("overloads(tpe, name): a generic overload with an array type argument")(assertEquals(
+    genericHierarchy(
+      typeOf("scala/Array#", "java/lang/String#"),
+      typeOf("scala/Array#", "scala/Int#"),
+    ).overloads("_empty_/Sub#", "foo"),
+    List("_empty_/Sub#foo()."),
+  ))
+
 }
