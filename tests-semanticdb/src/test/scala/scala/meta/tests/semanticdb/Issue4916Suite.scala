@@ -276,6 +276,7 @@ class Issue4916Suite extends SemanticdbSuite {
        |[2:48..2:50): s1 => advanced/Structural#s1().
        |[3:6..3:17): structuralX <= d/C#structuralX.
        |[3:20..3:33): structuralVal => d/C#structuralVal.
+       |[3:34..3:35): x => local0
        |""".stripMargin,
   )
 
