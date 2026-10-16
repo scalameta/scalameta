@@ -266,7 +266,7 @@ class Issue1672Suite extends FunSuite {
   ))
 
   test("nested annotation argument")(
-    check("p/K#nested().", """@p/sn#(sel(, p/sa#`<init>`().)(1, "a"))""", """@p/sn#(<?>)"""),
+    check("p/K#nested().", """@p/sn#(p/sa#`<init>`().(1, "a"))""", """@p/sn#(<?>)"""),
   )
 
   test("no arguments")(check("p/K#noArgs().", """@p/sb#()"""))
