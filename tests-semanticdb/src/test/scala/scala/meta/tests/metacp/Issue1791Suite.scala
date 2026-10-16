@@ -16,7 +16,9 @@ import munit.FunSuite
 // https://github.com/scalameta/scalameta/issues/1791
 class Issue1791Suite extends FunSuite {
 
-  private val tmp = Files.createTempDirectory("issue1791_")
+  // inside the checkout, so that a relative path to it exists on Windows too
+  private val tmp = Files
+    .createTempDirectory(Files.createDirectories(Paths.get(BuildInfo.targetDirectory)), "issue1791_")
   private val note = "NOTE. To fix 'missing symbol' errors please provide a complete " +
     "--classpath or --dependency-classpath. The provided classpath or classpaths should " +
     "include the Scala library as well as JDK jars such as rt.jar."
@@ -49,8 +51,9 @@ class Issue1791Suite extends FunSuite {
     (stdout, stderr)
   }
 
+  // an output path uses the separator of the platform
   private def status(entries: (String, String)*): String = entries.map { case (in, out) =>
-    s"""    "$in": "$out""""
+    s"""    "$in": "${Paths.get(out)}""""
   }.mkString("{\n  \"status\": {\n", ",\n", "\n  },\n  \"scalaLibrarySynthetics\": \"\"\n}\n")
 
   test("relative directory") {
@@ -109,7 +112,7 @@ class Issue1791Suite extends FunSuite {
     val in = relative(abs)
     val out = tmp.resolve("out-spelling")
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$abs"))
-    assertNoDiff(stdout, status(in -> s"$out/spelling", s"$abs" -> s"$out/spelling-1"))
+    assertNoDiff(stdout, status(in -> s"$out/spelling-1", s"$abs" -> s"$out/spelling-1"))
     assertNoDiff(stderr, "")
   }
 
