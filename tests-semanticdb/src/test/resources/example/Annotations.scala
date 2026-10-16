@@ -5,7 +5,7 @@ import scala.annotation.meta._
 import scala.language/*=>scala.language.*/.experimental/*=>scala.language.experimental.*/.macros/*=>scala.language.experimental.macros.*/
 
 @ClassAnnotation/*=>com.javacp.annot.ClassAnnotation#*/
-class Annotations/*<=annot.Annotations#*/[@TypeParameterAnnotation/*=>com.javacp.annot.TypeParameterAnnotation#*/ T/*<=annot.Annotations#[T]*/](@ParameterAnnotation/*=>com.javacp.annot.ParameterAnnotation#*/ x/*<=annot.Annotations#x.*//*<=annot.Annotations#`<init>`().(x)*/: T/*=>annot.Annotations#[T]*/) { self/*<=local0*/: AnyRef =>
+class Annotations/*<=annot.Annotations#*/[@TypeParameterAnnotation/*=>com.javacp.annot.TypeParameterAnnotation#*/ T/*<=annot.Annotations#[T]*/](@ParameterAnnotation/*=>com.javacp.annot.ParameterAnnotation#*/ x/*<=annot.Annotations#x.*//*<=annot.Annotations#`<init>`().(x)*/: T/*=>annot.Annotations#[T]*/) { self/*<=local0*/: AnyRef/*=>scala.AnyRef#*/ =>
   @FieldAnnotation/*=>com.javacp.annot.FieldAnnotation#*/
   val field/*<=annot.Annotations#field.*/ = 42
 

@@ -5,7 +5,7 @@ import scala.language/*=>scala.language.*/.existentials/*=>scala.language.existe
 import scala.language/*=>scala.language.*/.higherKinds/*=>scala.language.higherKinds.*/
 import types.Test/*=>types.Test.*/._
 
-class InstrumentTyper/*<=example.InstrumentTyper#*/ { self/*<=local0*/: AnyRef =>
+class InstrumentTyper/*<=example.InstrumentTyper#*/ { self/*<=local0*/: AnyRef/*=>scala.AnyRef#*/ =>
   def all/*<=example.InstrumentTyper#all().*/ = List/*=>scala.package.List.*/(
     Literal/*=>types.Test.Literal.*/.int/*=>types.Test.Literal.int.*/,
     Literal/*=>types.Test.Literal.*/.long/*=>types.Test.Literal.long.*/,

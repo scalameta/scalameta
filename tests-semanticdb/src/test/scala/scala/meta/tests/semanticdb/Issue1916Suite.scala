@@ -23,6 +23,7 @@ class Issue1916Suite extends SemanticdbSuite {
     """|[0:8..0:9): b <= b/
        |[1:6..1:7): C <= b/C#
        |[1:8..1:8):  <= b/C#`<init>`().
+       |[1:16..1:22): String => scala/Predef.String#
        |""".stripMargin,
   )
 
@@ -33,6 +34,9 @@ class Issue1916Suite extends SemanticdbSuite {
     """|[0:8..0:9): c <= c/
        |[1:6..1:7): C <= c/C#
        |[1:8..1:8):  <= c/C#`<init>`().
+       |[1:16..1:19): Map => scala/Predef.Map#
+       |[1:20..1:23): Int => scala/Int#
+       |[1:25..1:31): String => scala/Predef.String#
        |""".stripMargin,
   )
 
@@ -108,6 +112,7 @@ class Issue1916Suite extends SemanticdbSuite {
        |[1:22..1:32): collection => scala/collection/
        |[1:33..1:42): immutable => scala/collection/immutable/
        |[1:43..1:46): Seq => scala/collection/immutable/Seq#
+       |[1:47..1:50): Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -123,6 +128,7 @@ class Issue1916Suite extends SemanticdbSuite {
        |[2:6..2:7): C <= g/C#
        |[2:8..2:8):  <= g/C#`<init>`().
        |[2:16..2:17): O => g/O#
+       |[2:18..2:19): T => g/O#T#
        |""".stripMargin,
   )
 
@@ -134,8 +140,10 @@ class Issue1916Suite extends SemanticdbSuite {
     """|[0:8..0:9): h <= h/
        |[1:6..1:7): T <= h/T#
        |[1:8..1:9): X <= h/T#[X]
+       |[1:19..1:23): List => scala/package.List#
        |[1:24..1:25): X => h/T#[X]
        |[2:7..2:8): O <= h/O.
+       |[2:17..2:24): Product => scala/Product#
        |""".stripMargin,
   )
 

@@ -392,7 +392,7 @@ Uri => semanticdb/integration/src/main/scala/example/Annotations.scala
 Text => non-empty
 Language => Scala
 Symbols => 21 entries
-Occurrences => 52 entries
+Occurrences => 53 entries
 
 Symbols:
 annot/Alias. => final object Alias extends AnyRef { +1 decls }
@@ -475,6 +475,7 @@ Occurrences:
 [7:67..7:68): x <= annot/Annotations#x.
 [7:70..7:71): T => annot/Annotations#[T]
 [7:75..7:79): self <= local0
+[7:81..7:87): AnyRef => scala/AnyRef#
 [8:3..8:18): FieldAnnotation => com/javacp/annot/FieldAnnotation#
 [9:6..9:11): field <= annot/Annotations#field.
 [11:3..11:19): MethodAnnotation => com/javacp/annot/MethodAnnotation#
@@ -2100,7 +2101,7 @@ Uri => semanticdb/integration/src/main/scala/example/InstrumentTyper.scala
 Text => non-empty
 Language => Scala
 Symbols => 11 entries
-Occurrences => 59 entries
+Occurrences => 60 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -2152,6 +2153,7 @@ Occurrences:
 [7:6..7:21): InstrumentTyper <= example/InstrumentTyper#
 [7:22..7:22):  <= example/InstrumentTyper#`<init>`().
 [7:24..7:28): self <= local0
+[7:30..7:36): AnyRef => scala/AnyRef#
 [8:6..8:9): all <= example/InstrumentTyper#all().
 [8:12..8:16): List => scala/collection/immutable/List.
 [9:4..9:11): Literal => types/Test.Literal.

@@ -72,6 +72,7 @@ trait TextDocumentOps {
       val mctordefs = mutable.Map[Int, m.Name]() // start offset of ctor -> ctor's anonymous name
       val mctorrefs = mutable.Map[Int, m.Name]() // start of new, init or init's type name -> name
       val mparents = mutable.Map[Int, m.Type]() // start offset of init's type -> the type
+      val mselftypes = mutable.Map[Int, m.Type]() // start offset -> declared self type
       val msupers = mutable.Map.empty[Int, m.Term.Super] // end offset
       val mfuncs = mutable.Map.empty[Int, m.Position] // start offset of a function
 
@@ -206,6 +207,7 @@ trait TextDocumentOps {
                 indexName(mname)
                 return
               case mtree: m.Term.Super => msupers.update(mtree.pos.end, mtree)
+              case m.Self(_, Some(mtpe)) => mselftypes(mtpe.pos.start) = mtpe
               case mtree: m.Ctor => mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
               case mtree: m.Init =>
@@ -473,6 +475,23 @@ trait TextDocumentOps {
               case _ =>
             }
 
+          // match the names in a type that scalac left without symbols to its type
+          private def tryFindType(mtpe: m.Type, gtpe: g.Type): Unit = (mtpe, gtpe) match {
+            case (m.Type.Apply(mfun, margs), g.TypeRef(_, _, gargs)) =>
+              tryFindType(mfun, gtpe)
+              tryFindTypes(margs, gargs)
+            case (mname: m.Type.Name, g.TypeRef(_, gsym, _)) => success(mname, gsym)
+            case (m.Type.Select(mqual, mname), g.TypeRef(gpre, gsym, _)) =>
+              success(mname, gsym)
+              tryFindQualifier(mqual, gpre)
+            case (m.Type.Project(mqual, mname), g.TypeRef(gpre, gsym, _)) =>
+              success(mname, gsym)
+              tryFindType(mqual, gpre)
+            case _ =>
+          }
+          private def tryFindTypes(mtpes: List[m.Type], gtpes: List[g.Type]): Unit = mtpes.zip(gtpes)
+            .foreach { case (mtpe, gtpe) => tryFindType(mtpe, gtpe) }
+
           private def processMemberDef(gtree: g.MemberDef) = {
             val gsym = gtree.symbol
             if (gsym != null) gsym.annotations.foreach(ann => traverse(ann.original))
@@ -611,6 +630,17 @@ trait TextDocumentOps {
                 t.parents.foreach {
                   case p: g.TypeTree if p.original == null && p.pos.isRange =>
                     tryFindParentQualifier(p)
+                  case _ =>
+                }
+                t.self.tpt match {
+                  case tpt: g.TypeTree if tpt.original != null =>
+                    // scalac types `this: T =>` in class C as `C with T`
+                    val gtpe = tpt.tpe match {
+                      case g.RefinedType(gcls :: gtpe :: Nil, _)
+                          if gcls.typeSymbol == t.symbol.owner => gtpe
+                      case gtpe => gtpe
+                    }
+                    mselftypes.get(tpt.original.pos.start).foreach(tryFindType(_, gtpe))
                   case _ =>
                 }
                 tryFindMtree(t)
