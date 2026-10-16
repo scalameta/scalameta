@@ -471,6 +471,10 @@ example/Issue1672#blockDef().
        symbol: "example/Issue1672Annot#"
 -  arguments {
 -  arguments {
+-    literal_tree {
+-      constant {
+-        string_constant {
+-          value: "b"
  language: SCALA
  signature {
 
@@ -514,7 +518,15 @@ example/Issue1672#positionalDef().
 +++ metacp
        symbol: "example/Issue1672Annot#"
 -  arguments {
+-    literal_tree {
+-      constant {
+-        int_constant {
+-          value: 2
 -  arguments {
+-    literal_tree {
+-      constant {
+-        string_constant {
+-          value: "b"
  language: SCALA
  signature {
 
@@ -979,7 +991,15 @@ example/X.x().
 +++ metacp
        symbol: "scala/deprecated#"
 -  arguments {
+-    literal_tree {
+-      constant {
+-        string_constant {
+-          value: "to test -Xmaxwarn"
 -  arguments {
+-    literal_tree {
+-      constant {
+-        string_constant {
+-          value: "forever"
  language: SCALA
  signature {
 
@@ -1143,17 +1163,5 @@ types/Test.C#RepeatedType.toString().
 -overridden_symbols: "scala/Function1#toString()."
 -overridden_symbols: "java/lang/Object#toString()."
 -overridden_symbols: "scala/Any#toString()."
-
-
-======================
-types/Test.C#annType1.
-======================
---- metac
-+++ metacp
-           arguments {
-+            literal_tree {
-+              constant {
-+                int_constant {
-+                  value: 42
 
 
