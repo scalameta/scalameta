@@ -103,7 +103,7 @@ class Issue1791Suite extends FunSuite {
     val in = relative(dir("twice"))
     val out = tmp.resolve("out-twice")
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$in"))
-    assertNoDiff(stdout, status(in -> s"$out/twice-1", in -> s"$out/twice-1"))
+    assertNoDiff(stdout, status(in -> s"$out/twice", in -> s"$out/twice-1"))
     assertNoDiff(stderr, "")
   }
 
@@ -112,7 +112,7 @@ class Issue1791Suite extends FunSuite {
     val in = relative(abs)
     val out = tmp.resolve("out-spelling")
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$abs"))
-    assertNoDiff(stdout, status(in -> s"$out/spelling-1", s"$abs" -> s"$out/spelling-1"))
+    assertNoDiff(stdout, status(in -> s"$out/spelling", s"$abs" -> s"$out/spelling-1"))
     assertNoDiff(stderr, "")
   }
 

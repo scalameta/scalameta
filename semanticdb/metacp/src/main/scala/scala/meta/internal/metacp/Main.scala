@@ -12,7 +12,6 @@ import java.io.BufferedOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
-import java.util.concurrent.ConcurrentHashMap
 import java.util.jar._
 
 import scala.collection.{immutable, mutable}
@@ -32,20 +31,20 @@ class Main(settings: Settings, reporter: Reporter) {
     if (!settings.out.isDirectory) Files.createDirectories(settings.out.toNIO)
 
     val classpath = settings.classpath.entries
-    val cpargs = classpath.zip(settings.classpathArgs)
+    val cpargs = classpath.zip(settings.classpathArgs).zipWithIndex
 
-    val status = new ConcurrentHashMap[AbsolutePath, Option[AbsolutePath]]()
+    val outputs = new Array[Option[AbsolutePath]](classpath.length)
 
-    Job(cpargs, if (settings.verbose) reporter.err else devnull).foreach { case (entry, arg) =>
+    Job(cpargs, if (settings.verbose) reporter.err else devnull).foreach { case ((entry, arg), i) =>
       val out = withOutputEntry(entry) { x =>
-        status.put(entry, if (convertClasspathEntry(entry, arg, x.root)) Some(x.output) else None)
+        outputs(i) = if (convertClasspathEntry(entry, arg, x.root)) Some(x.output) else None
         x.output
       }
       if (entry.isFile) {
         val jar = new JarFile(entry.toFile)
         try {
           val manifest = jar.getManifest
-          if (manifest != null) if (!processManifest(entry, manifest, out)) status.put(entry, None)
+          if (manifest != null) if (!processManifest(entry, manifest, out)) outputs(i) = None
         } finally jar.close()
       }
     }
@@ -65,8 +64,11 @@ class Main(settings: Settings, reporter: Reporter) {
 
     reporter.out.println("{")
     reporter.out.println("  \"status\": {")
-    cpargs.zipWithIndex.foreach { case ((in, arg), i) =>
-      val s_out = status.get(in).map(_.toString).getOrElse("")
+    val orderedStatus = immutable.ListMap.newBuilder[AbsolutePath, Option[AbsolutePath]]
+    cpargs.foreach { case ((cp, arg), i) =>
+      val output = outputs(i)
+      orderedStatus += cp -> output
+      val s_out = output.map(_.toString).getOrElse("")
       reporter.out.print(s"""    "$arg": "$s_out"""")
       if (i != classpath.length - 1) reporter.out.print(",")
       reporter.out.println()
@@ -76,8 +78,7 @@ class Main(settings: Settings, reporter: Reporter) {
     reporter.out.println(s"""  "scalaLibrarySynthetics": "$s_out"""")
     reporter.out.println("}")
 
-    val orderedStatus = immutable.ListMap(classpath.map(in => in -> status.get(in)): _*)
-    Result(orderedStatus, scalaLibrarySynthetics)
+    Result(orderedStatus.result(), scalaLibrarySynthetics)
   }
 
   private def processManifest(entry: AbsolutePath, manifest: Manifest, out: AbsolutePath): Boolean = {
