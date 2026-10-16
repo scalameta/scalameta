@@ -58,7 +58,8 @@ object Javacp {
     }
 
     if (isAnonymousClass(node)) return Nil
-    val classSymbol = ssym(node.name)
+    implicit val classSymbols: ClassSymbols = new ClassSymbols(node, classpathIndex)
+    val classSymbol = classSymbols(node.name)
     val classDisplayName = sdisplayName(node.name)
     val classAccess = node.access | access
     val hasOuterClassReference = node.fields.toScala.exists(isOuterClassReference)
@@ -244,11 +245,11 @@ object Javacp {
     // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
     val directInnerClasses = node.innerClasses.toScala.filter(_.outerName == node.name)
     directInnerClasses.foreach { ic =>
-      val innerClassSymbol = ssym(ic.name)
+      val innerClassSymbol = classSymbols(ic.name)
       decls += innerClassSymbol
       val path = ic.name + ".class"
       val classfile = classpathIndex.getClassfile(path)
-        .getOrElse(throw MissingSymbolException(ssym(ic.name)))
+        .getOrElse(throw MissingSymbolException(innerClassSymbol))
       val innerClassNode = classfile.toClassNode
       buf ++= sinfos(innerClassNode, classpathIndex, ic.access, classScope)
     }
@@ -274,10 +275,12 @@ object Javacp {
   private def isAnonymousClass(node: ClassNode): Boolean = node.innerClasses.toScala
     .exists(ic /* InnerClassNode */ => ic.name == node.name && ic.innerName == null)
 
-  private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope): s.Type = sig match {
+  private def fromJavaTypeSignature(sig: JavaTypeSignature, scope: Scope)(implicit
+      classSymbols: ClassSymbols,
+  ): s.Type = sig match {
     case ClassTypeSignature(SimpleClassTypeSignature(identifier, targs), suffix) =>
       require(identifier != null, sig.toString)
-      val sym = ssym(identifier)
+      val sym = classSymbols(identifier)
       val prefix = styperef(sym, targs.toSemanticTpe(scope))
       val (result, _) = suffix
         .foldLeft(prefix -> sym) { case ((accum, owner), s: ClassTypeSignatureSuffix) =>
@@ -296,10 +299,8 @@ object Javacp {
   }
 
   private case class TypeParameterInfo(value: TypeParameter, symbol: String)
-  private def addTypeParameters(
-      typeParameters: TypeParameters,
-      ownerSymbol: String,
-      scope: Scope,
+  private def addTypeParameters(typeParameters: TypeParameters, ownerSymbol: String, scope: Scope)(
+      implicit classSymbols: ClassSymbols,
   ): (Scope, List[s.SymbolInformation]) = {
     var nextScope = scope
     // Enter all type variables before computing types for right hand side type parameter bounds.
@@ -314,10 +315,8 @@ object Javacp {
     }
     nextScope -> infos.map(info => addTypeParameter(info, ownerSymbol, nextScope))
   }
-  private def addTypeParameter(
-      typeParameter: TypeParameterInfo,
-      ownerSymbol: String,
-      scope: Scope,
+  private def addTypeParameter(typeParameter: TypeParameterInfo, ownerSymbol: String, scope: Scope)(
+      implicit classSymbols: ClassSymbols,
   ): s.SymbolInformation = {
     val typeParameters = typeParameter.value.upperBounds.map(fromJavaTypeSignature(_, scope))
     val upperBounds = typeParameters match {
@@ -350,6 +349,18 @@ object Javacp {
       case _ => i -= 1
     }
     asmName
+  }
+
+  /**
+   * Builds the symbols of the classes that `node` refers to.
+   *
+   * @param node
+   *   the class that refers to the classes
+   * @param classpathIndex
+   *   the classpath that has the classes
+   */
+  private class ClassSymbols(node: ClassNode, classpathIndex: ClasspathIndex) {
+    def apply(asmName: String): String = ssym(asmName)
   }
 
   private def ssym(asmName: String): String = {
@@ -430,7 +441,7 @@ object Javacp {
 
   private implicit class XtensionTypeArgument(private val self: TypeArgument) extends AnyVal {
     // FIXME: https://github.com/scalameta/scalameta/issues/1563
-    def toSemanticTpe(scope: Scope): s.Type = self match {
+    def toSemanticTpe(scope: Scope)(implicit classSymbols: ClassSymbols): s.Type = self match {
       case ReferenceTypeArgument(None, referenceTypeSignature) => referenceTypeSignature
           .toSemanticTpe(scope)
       case ReferenceTypeArgument(Some(_), _) | WildcardTypeArgument =>
@@ -441,15 +452,17 @@ object Javacp {
 
   private implicit class XtensionJavaTypeSignature(private val self: JavaTypeSignature)
       extends AnyVal {
-    def toSemanticTpe(scope: Scope): s.Type = fromJavaTypeSignature(self, scope)
+    def toSemanticTpe(scope: Scope)(implicit classSymbols: ClassSymbols): s.Type =
+      fromJavaTypeSignature(self, scope)
   }
 
   private implicit class XtensionTypeArgumentsOption(private val self: Option[TypeArguments])
       extends AnyVal {
-    def toSemanticTpe(scope: Scope): List[s.Type] = self match {
-      case Some(targs: TypeArguments) => targs.all.map(_.toSemanticTpe(scope))
-      case _ => Nil
-    }
+    def toSemanticTpe(scope: Scope)(implicit classSymbols: ClassSymbols): List[s.Type] =
+      self match {
+        case Some(targs: TypeArguments) => targs.all.map(_.toSemanticTpe(scope))
+        case _ => Nil
+      }
   }
 
   private implicit class XtensionAccess(private val asmAccess: Int) extends AnyVal {
