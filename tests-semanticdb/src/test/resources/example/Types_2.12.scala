@@ -113,10 +113,10 @@ object Test/*<=types.Test.*/ {
     final val javaEnum/*<=types.Test.Literal.javaEnum.*/ = java.nio.file.LinkOption/*=>java.nio.file.LinkOption#*/.NOFOLLOW_LINKS/*=>java.nio.file.LinkOption#NOFOLLOW_LINKS.*/
     final val clazzOfInt/*<=types.Test.Literal.clazzOfInt.*/ = classOf/*=>scala.Predef.classOf().*/[Int/*=>scala.Int#*/]
 
-    final val clazzOfOption/*<=types.Test.Literal.clazzOfOption.*/ = classOf/*=>scala.Predef.classOf().*/[Option[Int]]
+    final val clazzOfOption/*<=types.Test.Literal.clazzOfOption.*/ = classOf/*=>scala.Predef.classOf().*/[Option/*=>scala.Option#*/[Int/*=>scala.Int#*/]]
 
     final val clazzOfJStr/*<=types.Test.Literal.clazzOfJStr.*/ = classOf/*=>scala.Predef.classOf().*/[java.lang.String/*=>java.lang.String#*/]
     final val clazzOfM/*<=types.Test.Literal.clazzOfM.*/ = classOf/*=>scala.Predef.classOf().*/[M/*=>types.Test.M#*/]
-    final val clazzOfTRef/*<=types.Test.Literal.clazzOfTRef.*/ = classOf/*=>scala.Predef.classOf().*/[T#C/*=>types.T#C#*/]
+    final val clazzOfTRef/*<=types.Test.Literal.clazzOfTRef.*/ = classOf/*=>scala.Predef.classOf().*/[T/*=>types.T#*/#C/*=>types.T#C#*/]
   }
 }
