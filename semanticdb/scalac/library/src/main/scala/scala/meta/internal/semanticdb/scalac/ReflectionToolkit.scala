@@ -114,26 +114,6 @@ trait ReflectionToolkit {
     def cache: CompilationUnitCache = new CompilationUnitCache(unit)
   }
 
-  object ConstfoldOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("constantFoldingOriginal")
-      .map(_.asInstanceOf[Tree])
-  }
-
-  object ClassOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("classOfOriginal")
-      .map(_.asInstanceOf[Tree])
-  }
-
-  object NewArrayOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("newArrayOriginal")
-      .map(_.asInstanceOf[Tree])
-  }
-
-  object SingletonTypeTreeOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("singletonTypeTreeOriginal")
-      .map(_.asInstanceOf[Tree])
-  }
-
   object CompoundTypeTreeOf {
     def unapply[T: Attachable](carrier: T) = carrier match {
       case CompoundTypeTree(templ) =>
@@ -142,26 +122,6 @@ trait ReflectionToolkit {
         att.map(att => CompoundTypeTree(treeCopy.Template(templ, att.parents, templ.self, att.stats)))
       case _ => None
     }
-  }
-
-  object ExistentialTypeTreeOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("existentialTypeTreeOriginal")
-      .map(_.asInstanceOf[Tree])
-  }
-
-  object AnnotatedOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("annotatedOriginal")
-      .map(_.asInstanceOf[Tree])
-  }
-
-  object SelfTypeOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("selfTypeOriginal")
-      .map(_.asInstanceOf[Tree])
-  }
-
-  object SelectOf {
-    def unapply[T: Attachable](carrier: T) = carrier.metadata.get("selectOriginal")
-      .map(_.asInstanceOf[Tree])
   }
 
 }

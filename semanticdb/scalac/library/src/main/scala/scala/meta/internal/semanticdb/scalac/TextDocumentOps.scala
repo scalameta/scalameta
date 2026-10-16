@@ -521,15 +521,7 @@ trait TextDocumentOps {
 
             gtree match {
               case OriginalTreeOf(original) => traverse(original)
-              case ConstfoldOf(original) => traverse(original)
-              case ClassOf(original) => traverse(original)
-              case NewArrayOf(original) => traverse(original)
-              case SingletonTypeTreeOf(original) => traverse(original)
               case CompoundTypeTreeOf(original) => traverse(original)
-              case ExistentialTypeTreeOf(original) => traverse(original)
-              case AnnotatedOf(original) => traverse(original)
-              case SelfTypeOf(original) => traverse(original)
-              case SelectOf(original) => traverse(original)
 
               case gtree: g.TypeTree if gtree.original != null =>
                 traverse(gtree.original)
