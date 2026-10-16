@@ -193,12 +193,7 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
     val metac = metacSymbols.valuesIterator.toSeq.sortBy(_.symbol)
     val symbols = for {
       sym <- metac.iterator
-      javasym <- {
-        if (sym.symbol.contains("com.javacp"))
-          // metac references to java defined symbols in com.javacp must have a corresponding metacp entry.
-          Some(metacp.getOrElse(sym.symbol, SymbolInformation()))
-        else metacp.get(sym.symbol)
-      }
+      javasym <- metacp.get(sym.symbol)
     } yield {
       val header = "=" * sym.symbol.length
       val diff = unifiedDiff("metac", "metacp", sym.toProtoString, javasym.toProtoString)
