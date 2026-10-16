@@ -14,6 +14,7 @@ import java.nio.file._
 import java.util.jar._
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.util.Properties
 
 import munit.FunSuite
@@ -196,7 +197,12 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
       javasym <- metacp.get(sym.symbol)
     } yield {
       val header = "=" * sym.symbol.length
-      val diff = unifiedDiff("metac", "metacp", sym.toProtoString, javasym.toProtoString)
+      val diff = unifiedDiff(
+        "metac",
+        "metacp",
+        renumberLocals(sym.toProtoString),
+        renumberLocals(javasym.toProtoString),
+      )
       if (diff.isEmpty) ""
       else s"""$header
               |${sym.symbol}
@@ -210,6 +216,13 @@ object MetacMetacpDiffExpect extends ExpectHelpers {
   }
   def metacpSymbols = loadMiniSymtab(metacp(classDirectory))
   def metacSymbols = loadMiniSymtab(classDirectory)
+
+  // metac and metacp number local symbols differently
+  private def renumberLocals(proto: String): String = {
+    val ids = mutable.Map.empty[String, Int]
+    "(?<=\")local\\d+(?=\")".r
+      .replaceAllIn(proto, m => "local" + ids.getOrElseUpdate(m.matched, ids.size))
+  }
 }
 
 object ManifestMetap extends ExpectHelpers {
