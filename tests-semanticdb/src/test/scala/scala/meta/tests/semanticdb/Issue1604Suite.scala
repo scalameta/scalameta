@@ -201,12 +201,7 @@ class Issue1604Suite extends FunSuite {
     val path = jar(root.resolve("a.jar"), Some("b.jar  b.jar"))("a.semanticdb")
     assertEquals(
       locate(root, path),
-      List(
-        "a.semanticdb: A.scala",
-        "b.semanticdb: A.scala",
-        "c.semanticdb: A.scala",
-        "b.semanticdb: A.scala",
-      ),
+      List("a.semanticdb: A.scala", "b.semanticdb: A.scala", "b.semanticdb: A.scala"),
     )
   }
 

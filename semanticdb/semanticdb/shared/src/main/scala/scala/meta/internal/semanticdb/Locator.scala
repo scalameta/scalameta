@@ -8,7 +8,7 @@ import java.io.InputStream
 import java.nio.file._
 import java.util.jar._
 
-import scala.util.Try
+import scala.util.{Success, Try}
 
 class Locator(private val fn: Locator.Visitor) extends AnyVal {
   def apply(paths: List[Path]): Unit = paths.foreach(path => apply(path))
@@ -31,13 +31,21 @@ class Locator(private val fn: Locator.Visitor) extends AnyVal {
   private def visitJar(path: Path, jar: JarFile, jars: Set[Path]): Unit =
     try {
       visitIter(jar.entries().toScala)(x => Paths.get(x.getName), jar.getInputStream)
-      Try(Option(jar.getManifest)).toOption.flatten
-        .flatMap(x => Option(x.getMainAttributes.getValue("Class-Path"))).foreach { classPath =>
-          val parent = path.toAbsolutePath.getParent
-          val ancestors = jars + path.toAbsolutePath.normalize
-          classPath.split(" ").map(x => parent.resolve(x).normalize).filterNot(ancestors)
-            .foreach(apply(_, ancestors))
-        }
+      Try(jar.getManifest) match {
+        case Success(manifest) if manifest ne null =>
+          val classPath = manifest.getMainAttributes.getValue("Class-Path")
+          if (classPath ne null) {
+            val parent = path.toAbsolutePath.getParent
+            val ancestors = jars + path.toAbsolutePath.normalize
+            classPath.split(" ").foreach(cp =>
+              if (cp.nonEmpty) {
+                val resolved = parent.resolve(cp).normalize
+                if (!ancestors(resolved)) apply(resolved, ancestors)
+              },
+            )
+          }
+        case _ =>
+      }
     } finally jar.close()
 
   private def visit(path: Path, stream: => InputStream): Unit = {
