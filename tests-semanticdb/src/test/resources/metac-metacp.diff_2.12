@@ -1,145 +1,3 @@
-===========
-advanced/D#
-===========
---- metac
-+++ metacp
-                   type_ref {
-                     prefix {
--                    symbol: "local10"
-+                    symbol: "local0"
-             declarations {
-               hardlinks {
--                symbol: "local10"
-+                symbol: "local0"
-                 kind: TYPE
-                 properties: 4
-                 display_name: "_"
-
-
-==========================
-advanced/Existential#e1().
-==========================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local6"
-+                symbol: "local0"
-         declarations {
-           hardlinks {
--            symbol: "local6"
-+            symbol: "local0"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-
-
-==========================
-advanced/Existential#e2().
-==========================
---- metac
-+++ metacp
-                   type_ref {
-                     prefix {
--                    symbol: "local7"
-+                    symbol: "local1"
-             declarations {
-               hardlinks {
--                symbol: "local7"
-+                symbol: "local1"
-                 kind: TYPE
-                 properties: 4
-                 display_name: "T"
-
-
-==========================
-advanced/Existential#e4().
-==========================
---- metac
-+++ metacp
-           type_ref {
-             prefix {
--            symbol: "local8"
-+            symbol: "local2"
-             type_arguments {
-               type_ref {
-                 prefix {
-         declarations {
-           hardlinks {
--            symbol: "local8"
-+            symbol: "local2"
-             kind: TYPE
-             properties: 4
-             display_name: "U"
-                     type_parameters {
-                       hardlinks {
--                        symbol: "local9"
-+                        symbol: "local3"
-                         kind: TYPE_PARAMETER
-                         properties: 0
-                         display_name: "T"
-
-
-=========================
-advanced/Structural#s3().
-=========================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local3"
-+            symbol: "local2"
-             kind: METHOD
-             properties: 0
-             display_name: "m"
-                 parameter_lists {
-                   hardlinks {
--                    symbol: "local4"
-+                    symbol: "local3"
-                     kind: PARAMETER
-                     properties: 0
-                     display_name: "x"
-
-
-=================
-advanced/Test.e2.
-=================
---- metac
-+++ metacp
-                   type_ref {
-                     prefix {
--                    symbol: "local7"
-+                    symbol: "local4"
-             declarations {
-               hardlinks {
--                symbol: "local7"
-+                symbol: "local4"
-                 kind: TYPE
-                 properties: 4
-                 display_name: "T"
-
-
-=================
-advanced/Test.s3.
-=================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local3"
-+            symbol: "local2"
-             kind: METHOD
-             properties: 0
-             display_name: "m"
-                 parameter_lists {
-                   hardlinks {
--                    symbol: "local4"
-+                    symbol: "local3"
-                     kind: PARAMETER
-                     properties: 0
-                     display_name: "x"
-
-
 ====================
 classes/C1#equals().
 ====================
@@ -444,20 +302,6 @@ classes/C6.toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
-====================
-classes/N.anonClass.
-====================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local9"
-+            symbol: "local0"
-             kind: METHOD
-             properties: 1024
-             display_name: "local"
-
-
 ===============
 example/Access#
 ===============
@@ -481,211 +325,6 @@ example/B#foo().
 +++ metacp
    public_access {
 -overridden_symbols: "example/A#foo()."
-
-
-========================
-example/ExistentialsE#A#
-========================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local7"
-+                symbol: "local6"
-         declarations {
-           hardlinks {
--            symbol: "local7"
-+            symbol: "local6"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-               type_ref {
-                 prefix {
--                symbol: "local7"
-+                symbol: "local6"
-         declarations {
-           hardlinks {
--            symbol: "local7"
-+            symbol: "local6"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-
-
-==========================
-example/ExistentialsE#f().
-==========================
---- metac
-+++ metacp
-           type_ref {
-             prefix {
--            symbol: "local5"
-+            symbol: "local4"
-         declarations {
-           hardlinks {
--            symbol: "local5"
-+            symbol: "local4"
-             kind: TYPE
-             properties: 4
-             display_name: "T"
-
-
-==========================
-example/ExistentialsE#h().
-==========================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local6"
-+                symbol: "local5"
-         declarations {
-           hardlinks {
--            symbol: "local6"
-+            symbol: "local5"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-
-
-==========================
-example/ExistentialsE#l().
-==========================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local2"
-+                symbol: "local1"
-         declarations {
-           hardlinks {
--            symbol: "local2"
-+            symbol: "local1"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-
-
-==========================
-example/ExistentialsE#m().
-==========================
---- metac
-+++ metacp
-                   type_ref {
-                     prefix {
--                    symbol: "local1"
-+                    symbol: "local0"
-             declarations {
-               hardlinks {
--                symbol: "local1"
-+                symbol: "local0"
-                 kind: TYPE
-                 properties: 4
-                 display_name: "_"
-
-
-========================
-example/ExistentialsE#x.
-========================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local3"
-+                symbol: "local2"
-             type_arguments {
-               type_ref {
-                 prefix {
--                symbol: "local4"
-+                symbol: "local3"
-         declarations {
-           hardlinks {
--            symbol: "local3"
-+            symbol: "local2"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-           hardlinks {
--            symbol: "local4"
-+            symbol: "local3"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-
-
-===========================
-example/ExistentialsTest.x.
-===========================
---- metac
-+++ metacp
-                   type_ref {
-                     prefix {
--                    symbol: "local1"
-+                    symbol: "local0"
-             declarations {
-               hardlinks {
--                symbol: "local1"
-+                symbol: "local0"
-                 kind: TYPE
-                 properties: 4
-                 display_name: "_"
-
-
-===========================
-example/ExistentialsTest.y.
-===========================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local8"
-+                symbol: "local1"
-             type_arguments {
-               type_ref {
-                 prefix {
--                symbol: "local9"
-+                symbol: "local2"
-         declarations {
-           hardlinks {
--            symbol: "local8"
-+            symbol: "local1"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-           hardlinks {
--            symbol: "local9"
-+            symbol: "local2"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-
-
-======================================
-example/InstrumentTyper#existential().
-======================================
---- metac
-+++ metacp
-           type_ref {
-             prefix {
--            symbol: "local1"
-+            symbol: "local0"
-             type_arguments {
-               type_ref {
-                 prefix {
-         declarations {
-           hardlinks {
--            symbol: "local1"
-+            symbol: "local0"
-             kind: TYPE
-             properties: 4
-             display_name: "U"
-                     type_parameters {
-                       hardlinks {
--                        symbol: "local2"
-+                        symbol: "local1"
-                         kind: TYPE_PARAMETER
-                         properties: 0
-                         display_name: "T"
 
 
 ==================
@@ -784,10 +423,10 @@ example/Issue1672#
        symbol: "example/Issue1672Annot#"
 -  arguments {
 -    id_tree {
--      symbol: "local1"
+-      symbol: "local0"
 -  arguments {
 -    id_tree {
--      symbol: "local0"
+-      symbol: "local1"
  language: SCALA
  signature {
 
@@ -800,10 +439,10 @@ example/Issue1672#NamedClass#
        symbol: "example/Issue1672Annot#"
 -  arguments {
 -    id_tree {
--      symbol: "local12"
+-      symbol: "local0"
 -  arguments {
 -    id_tree {
--      symbol: "local11"
+-      symbol: "local1"
  language: SCALA
  signature {
 
@@ -816,10 +455,10 @@ example/Issue1672#NamedType#
        symbol: "example/Issue1672Annot#"
 -  arguments {
 -    id_tree {
--      symbol: "local10"
+-      symbol: "local0"
 -  arguments {
 -    id_tree {
--      symbol: "local9"
+-      symbol: "local1"
  language: SCALA
  signature {
 
@@ -844,10 +483,10 @@ example/Issue1672#namedDef().
        symbol: "example/Issue1672Annot#"
 -  arguments {
 -    id_tree {
--      symbol: "local3"
+-      symbol: "local0"
 -  arguments {
 -    id_tree {
--      symbol: "local2"
+-      symbol: "local1"
  language: SCALA
  signature {
 
@@ -860,10 +499,10 @@ example/Issue1672#namedParam().(p)
        symbol: "example/Issue1672Annot#"
 -  arguments {
 -    id_tree {
--      symbol: "local8"
+-      symbol: "local0"
 -  arguments {
 -    id_tree {
--      symbol: "local7"
+-      symbol: "local1"
  language: SCALA
  signature {
 
@@ -888,26 +527,12 @@ example/Issue1672.namedDef().
        symbol: "example/Issue1672Annot#"
 -  arguments {
 -    id_tree {
--      symbol: "local14"
+-      symbol: "local0"
 -  arguments {
 -    id_tree {
--      symbol: "local13"
+-      symbol: "local1"
  language: SCALA
  signature {
-
-
-================================
-example/Issue1806#`<init>`().(x)
-================================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local0"
-+            symbol: "local8"
-             kind: TYPE
-             properties: 0
-             display_name: "T"
 
 
 ======================
@@ -1221,20 +846,6 @@ example/NamedArguments#User.toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
-==========================
-example/StructuralTypes.a.
-==========================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local1"
-+            symbol: "local0"
-             kind: METHOD
-             properties: 1024
-             display_name: "b"
-
-
 ===================================
 example/Synthetic#s.Bar#canEqual().
 ===================================
@@ -1544,105 +1155,5 @@ types/Test.C#annType1.
 +              constant {
 +                int_constant {
 +                  value: 42
-
-
-===========================
-types/Test.C#compoundType4.
-===========================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local3"
-+            symbol: "local2"
-             kind: METHOD
-             properties: 0
-             display_name: "k"
-
-
-===========================
-types/Test.C#compoundType6.
-===========================
---- metac
-+++ metacp
-         declarations {
-           hardlinks {
--            symbol: "local6"
-+            symbol: "local3"
-             kind: METHOD
-             properties: 0
-             display_name: "k"
-
-
-==============================
-types/Test.C#existentialType1.
-==============================
---- metac
-+++ metacp
-           type_ref {
-             prefix {
--            symbol: "local7"
-+            symbol: "local4"
-         declarations {
-           hardlinks {
--            symbol: "local7"
-+            symbol: "local4"
-             kind: TYPE
-             properties: 4
-             display_name: "T"
-
-
-==============================
-types/Test.C#existentialType2.
-==============================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local8"
-+                symbol: "local5"
-         declarations {
-           hardlinks {
--            symbol: "local8"
-+            symbol: "local5"
-             kind: TYPE
-             properties: 4
-             display_name: "_"
-
-
-==============================
-types/Test.C#existentialType3.
-==============================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local9"
-+                symbol: "local6"
-         declarations {
-           hardlinks {
--            symbol: "local9"
-+            symbol: "local6"
-             kind: TYPE
-             properties: 4
-             display_name: "?0"
-
-
-==============================
-types/Test.C#existentialType4.
-==============================
---- metac
-+++ metacp
-               type_ref {
-                 prefix {
--                symbol: "local10"
-+                symbol: "local7"
-         declarations {
-           hardlinks {
--            symbol: "local10"
-+            symbol: "local7"
-             kind: TYPE
-             properties: 4
-             display_name: "?0"
 
 
