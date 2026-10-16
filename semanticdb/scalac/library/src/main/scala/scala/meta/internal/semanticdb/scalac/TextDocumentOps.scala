@@ -370,17 +370,25 @@ trait TextDocumentOps {
             // in a macro expansion, find only the annottee and its companion
             if (!gpos.isRange) mexpansions.get(gpoint) match {
               case Some(mannottee) =>
-                if (gtree.isInstanceOf[g.ImplDef]) mannottee.parent.foreach { p =>
-                  val gname = gsym.decodedName
-                  p.foreachChild {
-                    case t: m.Member
-                        if t.name.value == gname &&
-                          t.name.isInstanceOf[m.Term.Name] == gsym.isTerm =>
-                      success(t.name, gsym)
-                      t match { // 2.12 puts the primary constructor past the class
-                        case t: m.Defn.Class => success(t.ctor.name, gsym.primaryConstructor)
-                        case _ =>
-                      }
+                if (gtree.isInstanceOf[g.ImplDef]) {
+                  mannottee.parent.foreach { p =>
+                    val gname = gsym.decodedName
+                    p.foreachChild {
+                      case t: m.Member
+                          if t.name.value == gname &&
+                            t.name.isInstanceOf[m.Term.Name] == gsym.isTerm =>
+                        success(t.name, gsym)
+                        t match { // 2.12 puts the primary constructor past the class
+                          case t: m.Defn.Class => success(t.ctor.name, gsym.primaryConstructor)
+                          case _ =>
+                        }
+                      case _ =>
+                    }
+                  }
+                  val gscope = genclosing.drop(1)
+                  mannottee.foreachChild {
+                    case t: m.Mod.Annot if t.init.pos.start == gpoint =>
+                      tryFindMacroAnnotation(t.init.tpe, gscope, t.pos.start)
                     case _ =>
                   }
                 }
@@ -622,6 +630,29 @@ trait TextDocumentOps {
           }
           private def tryFindTypes(mtpes: List[m.Type], gtpes: List[g.Type]): Unit = mtpes.zip(gtpes)
             .foreach { case (mtpe, gtpe) => tryFindType(mtpe, gtpe) }
+
+          // scalac keeps no tree of a macro annotation: resolve its name in the scope around it
+          @tailrec
+          private def tryFindMacroAnnotation(mtpe: m.Type, gscope: List[g.Tree], start: Int): Unit =
+            mtpe match {
+              case mtpe: m.Type.Apply => tryFindMacroAnnotation(mtpe.tpe, gscope, start)
+              case mtpe: m.Type.Name => lookupName(g.TypeName(mtpe.value).encode, gscope, start)
+                  .foreach(successMacroAnnotation(mtpe, _, Nil))
+              case mtpe: m.Type.Select => resolvePath(mtpe.qual, gscope, start)
+                  .foreach { case (gpre, gquals) =>
+                    val gsym = gpre.member(g.TypeName(mtpe.name.value).encode)
+                    successMacroAnnotation(mtpe.name, gsym, gquals)
+                  }
+              case _ =>
+            }
+          private def successMacroAnnotation(
+              mname: m.Name,
+              gann: g.Symbol,
+              gquals: List[(m.Name, g.Symbol)],
+          ): Unit = if (gann.isClass && gann.hasFlag(gf.MACRO)) {
+            gquals.foreach { case (mq, gq) => success(mq, gq) }
+            success(mname, gann)
+          }
 
           private def processMemberDef(gtree: g.MemberDef) = {
             val gsym = gtree.symbol

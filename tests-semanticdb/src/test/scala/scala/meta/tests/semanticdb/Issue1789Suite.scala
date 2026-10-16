@@ -10,6 +10,8 @@ class Issue1789Suite extends SemanticdbSuite {
        |object A
        |""".stripMargin,
     """|[0:8..0:9): a <= a/
+       |[1:1..1:8): example => example/
+       |[1:9..1:24): MacroAnnotation => example/MacroAnnotation#
        |[2:6..2:7): A <= a/A#
        |[2:7..2:7):  <= a/A#`<init>`().
        |[3:7..3:8): A <= a/A.
@@ -26,6 +28,7 @@ class Issue1789Suite extends SemanticdbSuite {
        |[1:7..1:14): example => example/
        |[1:15..1:30): MacroAnnotation => example/MacroAnnotation#
        |[1:15..1:30): MacroAnnotation => example/MacroAnnotation.
+       |[2:1..2:16): MacroAnnotation => example/MacroAnnotation#
        |[2:25..2:26): B <= b/B#
        |[2:27..2:28): T <= b/B#[T]
        |[2:29..2:29):  <= b/B#`<init>`().
@@ -42,6 +45,10 @@ class Issue1789Suite extends SemanticdbSuite {
        |class C(a: Int)
        |""".stripMargin,
     """|[0:8..0:9): c <= c/
+       |[1:1..1:4): org => org/
+       |[1:5..1:14): scalameta => org/scalameta/
+       |[1:15..1:19): data => org/scalameta/data/
+       |[1:20..1:24): data => org/scalameta/data/data#
        |[2:6..2:7): C <= c/C#
        |[2:7..2:7):  <= c/C#`<init>`().
        |[2:11..2:14): Int => scala/Int#
@@ -56,6 +63,8 @@ class Issue1789Suite extends SemanticdbSuite {
     """|[0:8..0:9): d <= d/
        |[1:1..1:11): deprecated => scala/deprecated#
        |[1:11..1:11):  => scala/deprecated#`<init>`().
+       |[1:13..1:20): example => example/
+       |[1:21..1:36): MacroAnnotation => example/MacroAnnotation#
        |[1:43..1:44): D <= d/D#
        |[1:44..1:44):  <= d/D#`<init>`().
        |[2:7..2:8): D <= d/D.
@@ -86,6 +95,8 @@ class Issue1789Suite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:9): f <= f/
        |[1:7..1:8): F <= f/F.
+       |[2:3..2:10): example => example/
+       |[2:11..2:26): MacroAnnotation => example/MacroAnnotation#
        |[2:33..2:34): G <= f/F.G#
        |[2:34..2:34):  <= f/F.G#`<init>`().
        |[3:9..3:10): G <= f/F.G.
@@ -104,6 +115,10 @@ class Issue1789Suite extends SemanticdbSuite {
        |@org.scalameta.adt.root trait R
        |""".stripMargin,
     """|[0:8..0:9): r <= r/
+       |[1:1..1:4): org => org/
+       |[1:5..1:14): scalameta => org/scalameta/
+       |[1:15..1:18): adt => org/scalameta/adt/
+       |[1:19..1:23): root => org/scalameta/adt/root#
        |[1:30..1:31): R <= r/R#
        |""".stripMargin,
   )

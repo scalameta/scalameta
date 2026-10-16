@@ -10,6 +10,8 @@ class Issue1815Suite extends SemanticdbSuite {
        |object A
        |""".stripMargin,
     """|[0:8..0:9): a <= a/
+       |[1:1..1:8): example => example/
+       |[1:9..1:24): MacroAnnotation => example/MacroAnnotation#
        |[2:6..2:7): A <= a/A#
        |[2:7..2:7):  <= a/A#`<init>`().
        |[3:7..3:8): A <= a/A.
@@ -22,6 +24,9 @@ class Issue1815Suite extends SemanticdbSuite {
        |object B
        |""".stripMargin,
     """|[0:8..0:9): b <= b/
+       |[1:1..1:7): _root_ => _root_/
+       |[1:8..1:15): example => example/
+       |[1:16..1:31): MacroAnnotation => example/MacroAnnotation#
        |[1:38..1:39): B <= b/B#
        |[1:39..1:39):  <= b/B#`<init>`().
        |[2:7..2:8): B <= b/B.
@@ -40,6 +45,11 @@ class Issue1815Suite extends SemanticdbSuite {
        |[0:14..0:18): meta => scala/meta/
        |[1:8..1:9): c <= scala/meta/c/
        |[2:7..2:8): C <= scala/meta/c/C.
+       |[3:3..3:8): scala => scala/
+       |[3:9..3:13): meta => scala/meta/
+       |[3:14..3:22): internal => scala/meta/internal/
+       |[3:23..3:28): trees => scala/meta/internal/trees/
+       |[3:29..3:39): quasiquote => scala/meta/internal/trees/quasiquote#
        |[3:40..3:44): Stat => scala/meta/Stat#
        |[4:17..4:36): XtensionQuasiquoteC <= scala/meta/c/C.XtensionQuasiquoteC#
        |[4:36..4:36):  <= scala/meta/c/C.XtensionQuasiquoteC#`<init>`().
@@ -55,6 +65,8 @@ class Issue1815Suite extends SemanticdbSuite {
        |object D
        |""".stripMargin,
     """|[0:8..0:9): d <= d/
+       |[1:1..1:8): example => example/
+       |[1:9..1:24): MacroAnnotation => example/MacroAnnotation#
        |[1:28..1:38): deprecated => scala/deprecated#
        |[1:38..1:38):  => scala/deprecated#`<init>`().
        |[1:45..1:46): D <= d/D#
@@ -73,6 +85,7 @@ class Issue1815Suite extends SemanticdbSuite {
        |[1:7..1:14): example => example/
        |[1:15..1:30): MacroAnnotation => example/MacroAnnotation#
        |[1:15..1:30): MacroAnnotation => example/MacroAnnotation.
+       |[2:1..2:16): MacroAnnotation => example/MacroAnnotation#
        |[2:23..2:24): E <= e/E#
        |[2:24..2:24):  <= e/E#`<init>`().
        |[3:7..3:8): E <= e/E.
@@ -87,6 +100,8 @@ class Issue1815Suite extends SemanticdbSuite {
     """|[0:8..0:11): org => org/
        |[0:12..0:21): scalameta => org/scalameta/
        |[1:8..1:9): f <= org/scalameta/f/
+       |[2:1..2:5): data => org/scalameta/data/
+       |[2:6..2:10): data => org/scalameta/data/data#
        |[2:17..2:18): F <= org/scalameta/f/F#
        |[2:18..2:18):  <= org/scalameta/f/F#`<init>`().
        |[2:22..2:25): Int => scala/Int#
@@ -102,6 +117,8 @@ class Issue1815Suite extends SemanticdbSuite {
        |[1:7..1:10): org => org/
        |[1:11..1:20): scalameta => org/scalameta/
        |[1:21..1:25): data => org/scalameta/data/
+       |[2:1..2:5): data => org/scalameta/data/
+       |[2:6..2:10): data => org/scalameta/data/data#
        |[2:17..2:18): G <= g/G#
        |[2:18..2:18):  <= g/G#`<init>`().
        |[2:22..2:25): Int => scala/Int#
@@ -191,6 +208,8 @@ class Issue1815Suite extends SemanticdbSuite {
     """|[0:8..0:9): l <= l/
        |[1:7..1:8): L <= l/L.
        |[2:6..2:7): f <= l/L.f().
+       |[3:5..3:12): example => example/
+       |[3:13..3:28): MacroAnnotation => example/MacroAnnotation#
        |[3:35..3:36): M <= local1
        |[3:36..3:36):  <= local2
        |[4:11..4:12): M <= local3
@@ -229,6 +248,7 @@ class Issue1815Suite extends SemanticdbSuite {
     """|[0:8..0:11): org => org/
        |[0:12..0:21): scalameta => org/scalameta/
        |[0:22..0:25): adt => org/scalameta/adt/
+       |[1:1..1:5): root => org/scalameta/adt/root#
        |[1:12..1:13): R <= org/scalameta/adt/R#
        |""".stripMargin,
   )
@@ -244,6 +264,7 @@ class Issue1815Suite extends SemanticdbSuite {
        |[1:7..1:14): example => example/
        |[1:16..1:31): MacroAnnotation => example/MacroAnnotation#
        |[1:16..1:31): MacroAnnotation => example/MacroAnnotation.
+       |[2:1..2:3): MA => example/MacroAnnotation#
        |[2:10..2:11): P <= p/P#
        |[2:11..2:11):  <= p/P#`<init>`().
        |[3:7..3:8): P <= p/P.
@@ -259,6 +280,7 @@ class Issue1815Suite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:9): q <= q/
        |[1:7..1:14): example => example/
+       |[2:1..2:16): MacroAnnotation => example/MacroAnnotation#
        |[2:23..2:24): Q <= q/Q#
        |[2:24..2:24):  <= q/Q#`<init>`().
        |[3:7..3:8): Q <= q/Q.
@@ -279,6 +301,7 @@ class Issue1815Suite extends SemanticdbSuite {
        |[2:9..2:16): example => example/
        |[2:17..2:32): MacroAnnotation => example/MacroAnnotation#
        |[2:17..2:32): MacroAnnotation => example/MacroAnnotation.
+       |[3:3..3:18): MacroAnnotation => example/MacroAnnotation#
        |[3:25..3:26): S <= r/R.S#
        |[3:26..3:26):  <= r/R.S#`<init>`().
        |[4:9..4:10): S <= r/R.S.
