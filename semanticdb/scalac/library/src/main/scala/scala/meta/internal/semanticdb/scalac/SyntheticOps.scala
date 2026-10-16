@@ -35,7 +35,8 @@ trait SyntheticOps {
     }
 
     def toSemanticQualifierTree: s.Tree = gTree match {
-      case sel @ Select(qual, _) if sel.symbol.owner != qual.symbol =>
+      case sel @ g.Select(qual, _)
+          if !qual.isInstanceOf[g.New] && sel.symbol.owner != qual.symbol =>
         s.SelectTree(qualifier = qual.toSemanticId, id = Some(sel.toSemanticId))
       case fun => fun.toSemanticId
     }
