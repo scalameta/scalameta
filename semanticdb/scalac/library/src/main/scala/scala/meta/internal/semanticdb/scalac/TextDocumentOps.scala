@@ -239,6 +239,9 @@ trait TextDocumentOps {
 
       locally {
         object traverser extends g.Traverser {
+          private var genclosing: List[g.Tree] = Nil // the current tree and its parents
+          private lazy val grootImports = g.analyzer.rootContext(unit).imports.map(_.tree)
+
           private def trySymbolDefinition(gsym: g.Symbol): Unit = {
             if (shouldNotSaveSymbol(gsym)) return
             val symbol = gsym.toSemantic
@@ -471,6 +474,107 @@ trait TextDocumentOps {
               case _ =>
             }
 
+          /* scalac dealiased the parent, so its prefix may not be the qualifier: resolve the
+           * qualifier from the scope around the class instead, and keep it if its member of
+           * that name leads to the same class */
+          private def tryFindParentQualifier(mqual: m.Term.Ref, mname: m.Name, gtpe: g.Type): Unit = {
+            val gscope = genclosing.dropWhile(!_.isInstanceOf[g.ImplDef]).drop(1)
+            resolvePath(mqual, gscope, mqual.pos.start).foreach { case (gpre, gquals) =>
+              val gmember = gpre.member(g.TypeName(mname.value).encode)
+              @tailrec
+              def dealiased(gtpe: g.Type): g.Symbol = gtpe match {
+                case g.PolyType(_, gres) => dealiased(gres)
+                case _ => gtpe.dealias.typeSymbol
+              }
+              val gcls = if (gmember.isClass) gmember else dealiased(gpre.memberInfo(gmember))
+              if (gmember.exists && gcls == gtpe.typeSymbol) gquals.foreach { case (mq, gq) =>
+                success(mq, gq)
+              }
+            }
+          }
+          // the type of a stable path and the symbols of its names, if scalac would accept it
+          private def resolvePath(
+              mqual: m.Term.Ref,
+              gscope: List[g.Tree],
+              start: Int,
+          ): Option[(g.Type, List[(m.Name, g.Symbol)])] = mqual match {
+            case m.Term.Select(mq: m.Term.Ref, mname) => resolvePath(mq, gscope, start).flatMap {
+                case (gpre, gquals) => stablePath(gpre.member(g.TermName(mname.value).encode))
+                    .map { case (gtpe, gsym) => (gtpe, (mname -> gsym) :: gquals) }
+              }
+            case mname: m.Term.Name if mname.value == "_root_" =>
+              Some((g.rootMirror.RootClass.tpe, (mname -> g.rootMirror.RootPackage) :: Nil))
+            case mname: m.Term.Name => lookupName(g.TermName(mname.value).encode, gscope, start)
+                .flatMap(stablePath).map { case (gtpe, gsym) => (gtpe, (mname -> gsym) :: Nil) }
+            case m.Term.This(mq) => enclosingClass(mq, gscope).map(gcls => (gcls.thisType, Nil))
+            case m.Term.Super(mthis, msuper) => enclosingClass(mthis, gscope).flatMap { gcls =>
+                val gparents = gcls.info.parents
+                if (msuper.value.isEmpty) Some((g.intersectionType(gparents), Nil))
+                else gparents.find(_.typeSymbol.decodedName == msuper.value).map((_, Nil))
+              }
+            case _ => None
+          }
+          // the class that `this` or `super` refers to, with an optional class name
+          private def enclosingClass(mname: m.Name, gscope: List[g.Tree]): Option[g.Symbol] = gscope
+            .collectFirst {
+              case t: g.Template
+                  if mname.value.isEmpty || t.symbol.owner.decodedName == mname.value =>
+                t.symbol.owner
+            }
+          private def stablePath(gsym: g.Symbol): Option[(g.Type, g.Symbol)] =
+            if (gsym.exists && gsym.isTerm && !gsym.isOverloaded && gsym.isStable)
+              Some((gsym.info.finalResultType, gsym))
+            else None
+          /* the symbol of a name in scope, innermost binding first, or None if unsure;
+           * for a compiled tree, a binding never conflicts with one further out */
+          private def lookupName(gname: g.TermName, gscope: List[g.Tree], start: Int) = {
+            val gbindings = gscope.iterator.map(scopeBinding(gname, _, start)) ++
+              grootImports.iterator.map(importBinding(gname, _)) ++
+              Iterator(Some(g.rootMirror.RootClass.info.member(gname)))
+            gbindings.find(_.forall(_.exists)).flatten
+          }
+          // the symbol that a scope binds to a name: NoSymbol if none, None if unsure
+          private def scopeBinding(gname: g.TermName, gtree: g.Tree, start: Int): Option[g.Symbol] = {
+            def orElse(gsym: Option[g.Symbol])(other: => Option[g.Symbol]) =
+              if (gsym.contains(g.NoSymbol)) other else gsym
+            def imports(gstats: List[g.Tree]) = gstats.reverseIterator.collect {
+              case t: g.Import if t.pos.isDefined && t.pos.start < start => importBinding(gname, t)
+            }.find(_.forall(_.exists)).getOrElse(Some(g.NoSymbol))
+            def defined(gtrees: List[g.Tree]) = Some(
+              gtrees.collectFirst {
+                case t: g.DefTree if t.name == gname && t.symbol != null => t.symbol
+              }.getOrElse(g.NoSymbol),
+            )
+            gtree match {
+              case t: g.Block => orElse(imports(t.stats))(defined(t.stats))
+              case t: g.Template => orElse(imports(t.body))(defined(t.self :: Nil)) match {
+                  case Some(g.NoSymbol) => Some(t.symbol.owner.thisType.member(gname))
+                  case gsym => gsym
+                }
+              case t: g.PackageDef => orElse(imports(t.stats)) {
+                  val gpkg = t.pid.symbol.moduleClass
+                  Some(gpkg.info.member(gname).orElse(gpkg.packageObject.info.member(gname)))
+                }
+              case t: g.DefDef => defined(t.vparamss.flatten)
+              case t: g.Function => defined(t.vparams)
+              case t: g.CaseDef => defined(t.pat.collect { case b: g.Bind => b })
+              case _ => Some(g.NoSymbol)
+            }
+          }
+          // the symbol that an import binds to a name: NoSymbol if none, None if unsure
+          private def importBinding(gname: g.TermName, gimport: g.Import): Option[g.Symbol] = {
+            val gtpe = gimport.expr.tpe
+            if (gtpe == null) None
+            else gimport.selectors.find(_.rename == gname) match {
+              case Some(sel) => Some(gtpe.member(sel.name.toTermName))
+              case _ =>
+                val isWildcard = gimport.selectors.exists(_.name == g.nme.WILDCARD)
+                // a selector that renames the name hides it from the wildcard
+                if (isWildcard && !gimport.selectors.exists(_.name == gname)) Some(gtpe.member(gname))
+                else Some(g.NoSymbol)
+            }
+          }
+
           // match the names in a type that scalac left without symbols to its type
           private def tryFindType(mtpe: m.Type, gtpe: g.Type): Unit = (mtpe, gtpe) match {
             case (m.Type.Apply(mfun, margs), g.TypeRef(_, _, gargs)) =>
@@ -499,6 +603,7 @@ trait TextDocumentOps {
           }
 
           override def traverse(gtree: g.Tree): Unit = if (isVisited.add(gtree)) {
+            genclosing = gtree :: genclosing
             gtree.attachments.all.foreach {
               case att: g.analyzer.MacroExpansionAttachment => traverse(att.expandee)
               case _ =>
@@ -614,7 +719,12 @@ trait TextDocumentOps {
                 t.parents.foreach {
                   // a parent with inferred type arguments, like `n.P(1)`, has no original tree
                   case p: g.TypeTree if p.original == null && p.pos.isRange =>
-                    mparents.get(p.pos.start).foreach(tryFindType(_, p.tpe))
+                    mparents.get(p.pos.start).foreach {
+                      case m.Type.Select(mqual, mname) =>
+                        success(mname, p.tpe.typeSymbol)
+                        tryFindParentQualifier(mqual, mname, p.tpe)
+                      case mtpe => tryFindType(mtpe, p.tpe)
+                    }
                   case _ =>
                 }
                 t.self.tpt match {
@@ -632,6 +742,7 @@ trait TextDocumentOps {
               case _ => tryFindMtree(gtree)
             }
             super.traverse(gtree)
+            genclosing = genclosing.tail
           }
         }
         traverser.traverse(unit.body)
