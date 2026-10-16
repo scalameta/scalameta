@@ -33,9 +33,14 @@ class Locator(private val fn: Locator.Visitor) extends AnyVal {
         }
     } finally jar.close()
 
-  private def visit(path: Path, stream: InputStream): Unit =
-    try fn(path, () => TextDocuments.parseFrom(stream))
-    finally stream.close()
+  private def visit(path: Path, stream: => InputStream): Unit = {
+    val parse = () => {
+      val is = stream
+      try TextDocuments.parseFrom(is)
+      finally is.close()
+    }
+    fn(path, parse)
+  }
 
   private def visitIter[A](
       iter: Iterator[A],
