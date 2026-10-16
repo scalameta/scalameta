@@ -457,13 +457,6 @@ trait TextDocumentOps {
             }
           }
 
-          // a parent with inferred type arguments, like `n.P(1)`, has no original tree
-          private def tryFindParentQualifier(gtpt: g.TypeTree): Unit =
-            (mparents.get(gtpt.pos.start), gtpt.tpe) match {
-              case (Some(m.Type.Select(mqual, _)), g.TypeRef(gpre, _, _)) =>
-                tryFindQualifier(mqual, gpre)
-              case _ =>
-            }
           @tailrec
           private def tryFindQualifier(mqual: m.Term.Ref, gpre: g.Type): Unit =
             (mqual, gpre) match {
@@ -619,8 +612,9 @@ trait TextDocumentOps {
                   case _ =>
                 }
                 t.parents.foreach {
+                  // a parent with inferred type arguments, like `n.P(1)`, has no original tree
                   case p: g.TypeTree if p.original == null && p.pos.isRange =>
-                    tryFindParentQualifier(p)
+                    mparents.get(p.pos.start).foreach(tryFindType(_, p.tpe))
                   case _ =>
                 }
                 t.self.tpt match {
