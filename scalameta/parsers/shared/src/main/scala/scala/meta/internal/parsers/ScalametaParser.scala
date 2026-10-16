@@ -4580,17 +4580,27 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
   /* -------- CONSTRUCTORS ------------------------------------------- */
 
-  def primaryCtor(): Ctor.Primary = autoPos {
-    val noCtor = !TemplateOwnerContext.owner.isPrimaryCtorAllowed
-    val mods =
-      if (noCtor) Nil
-      else listBy[Mod] { buf =>
-        annotsBuf(buf, skipNewLines = false, allowArgss = false, insidePrimaryCtorAnnot = true)
-        ctorModifiers(buf)
-      }
-    val name = anonName()
-    val paramss = if (noCtor) Nil else termParamClauses()
-    Ctor.Primary(mods, name, paramss)
+  def primaryCtor(): Ctor.Primary = {
+    def nextPartStart: Int = currToken match {
+      // as in templateBodyOpt and derivesClasses, a template may start on the next line
+      case _: EOL if peek[LeftBrace] || soft.KwDerives(peekToken) => peekIndex
+      // the statement ends here, and the next token is past it
+      case t if statDelimOrSeqEnd(t) => AfterPrevPos.begIndex
+      case _ => currIndex
+    }
+    val ctorStart = nextPartStart
+    autoEndPos(ctorStart) {
+      val noCtor = !TemplateOwnerContext.owner.isPrimaryCtorAllowed
+      val mods =
+        if (noCtor) Nil
+        else listBy[Mod] { buf =>
+          annotsBuf(buf, skipNewLines = false, allowArgss = false, insidePrimaryCtorAnnot = true)
+          ctorModifiers(buf)
+        }
+      val name = anonNameAt(if (mods.isEmpty) ctorStart else nextPartStart)
+      val paramss = if (noCtor) Nil else termParamClauses()
+      Ctor.Primary(mods, name, paramss)
+    }
   }
 
   def quasiquoteCtor(): Ctor = autoPos {
@@ -4650,7 +4660,12 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   }
 
   private def initImpl(startPos: StartPos, tpe: Type)(argss: => List[Term.ArgClause]): Init =
-    try autoEndPos(startPos)(Init(tpe, anonName(), argss))
+    try autoEndPos(startPos) {
+        val args = argss
+        // put name at arguments or right after the type otherwise
+        val name = anonNameAt(args.headOption.fold[StartPos](AfterPrevPos)(treeToTreePos))
+        Init(tpe, name, args)
+      }
     catch {
       case _: InvariantFailedException =>
         syntaxError(s"class type required but $tpe found", at = tpe)

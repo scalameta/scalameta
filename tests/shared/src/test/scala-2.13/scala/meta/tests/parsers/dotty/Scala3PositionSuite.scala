@@ -1989,7 +1989,7 @@ class Scala3PositionSuite extends BasePositionSuite {
        |  // c3</body>
        |<stats0>Defn.Class class Baz</stats0>
        |<tparamClause>Type.ParamClause   // c3@@</tparamClause>
-       |<ctor>Ctor.Primary   // c3@@</ctor>
+       |<ctor>Ctor.Primary   class Baz@@</ctor>
        |<templ>Template   // c3@@</templ>
        |<body>Template.Body   // c3@@</body>
        |""".stripMargin,

@@ -63,6 +63,7 @@ class Issue4902Suite extends SemanticdbSuite {
        |[10:17..10:18): K => a/K#
        |[10:18..10:18):  => a/K#`<init>`().
        |[11:6..11:9): C10 <= a/C10#
+       |[11:9..11:9):  <= a/C10#`<init>`().
        |[12:7..12:9): O1 <= a/O1.
        |[12:18..12:19): U => a/U#
        |[12:19..12:19):  => java/lang/Object#`<init>`().
@@ -106,6 +107,7 @@ class Issue4902Suite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:9): d <= d/
        |[1:6..1:8): C1 <= d/C1#
+       |[1:8..1:8):  <= d/C1#`<init>`().
        |""".stripMargin,
   )
 
