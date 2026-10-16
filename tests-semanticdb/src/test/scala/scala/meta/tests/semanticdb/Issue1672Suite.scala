@@ -1,0 +1,436 @@
+package scala.meta.tests.semanticdb
+
+import scala.meta.cli.Metacp
+import scala.meta.internal.io.FileIO
+import scala.meta.internal.semanticdb.TextDocuments
+import scala.meta.internal.symtab.GlobalSymbolTable
+import scala.meta.internal.{semanticdb => s}
+import scala.meta.io.{AbsolutePath, Classpath}
+import scala.meta.tests.cli.CliTestUtils
+import scala.meta.tests.metacp.Library
+
+import java.nio.file.{Files, Paths}
+
+import scala.collection.JavaConverters._
+import scala.tools.nsc.reporters.StoreReporter
+import scala.tools.nsc.{Global, Settings}
+
+import munit.FunSuite
+
+// https://github.com/scalameta/scalameta/issues/1672
+class Issue1672Suite extends FunSuite {
+
+  // metac reads the semanticdb files of this compilation, metacp its classfiles
+  private val classdir = {
+    val out = Files.createTempDirectory("issue1672_")
+    out.toFile.deleteOnExit()
+    val settings = new Settings(msg => fail(msg))
+    settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
+    settings.outputDirs.setSingleOutput(out.toString)
+    val plugin = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
+    settings.processArgumentString(
+      s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb -P:semanticdb:failures:error " +
+        "-P:semanticdb:synthetics:on " +
+        s"-P:semanticdb:sourceroot:$out -P:semanticdb:targetroot:$out",
+    )
+    val reporter = new StoreReporter()
+    val g = new Global(settings, reporter)
+    val code =
+      """|package p
+         |import scala.annotation.meta.field
+         |class sa(x: Int, y: String) extends scala.annotation.StaticAnnotation
+         |class sd(x: Int, y: String = "d") extends scala.annotation.StaticAnnotation
+         |class sc(c: Class[_]) extends scala.annotation.StaticAnnotation
+         |class sr(xs: Array[Int]) extends scala.annotation.StaticAnnotation
+         |class sn(n: sa) extends scala.annotation.StaticAnnotation
+         |class sb extends scala.annotation.StaticAnnotation
+         |class sl(l: Long, s: Short) extends scala.annotation.StaticAnnotation
+         |class sbc(b: Byte, c: Char) extends scala.annotation.StaticAnnotation
+         |class sf(f: Float, d: Double) extends scala.annotation.StaticAnnotation
+         |class sdn(x: Int = -1) extends scala.annotation.StaticAnnotation
+         |object C2 {
+         |  final val I = -200
+         |  final val L = -200L
+         |  final val F = Float.NegativeInfinity
+         |  final val D = Double.NegativeInfinity
+         |  final val DF = -1.5
+         |}
+         |object C { final val I = 1; final val S = "s"; val v = 3; final val N = -1 }
+         |object C3 {
+         |  final val Ch = '\uffff'
+         |  final val LM = Long.MinValue
+         |  final val DZ = -0.0
+         |}
+         |@sa(1, "a") class K(@sa(1, "a") val f: Int, @(sa @field)(1, "a") val g: Int) {
+         |  @sa(1, "a") def literal = 1
+         |  @sa(-1, "a" + "b") def folded = 1
+         |  @sl(-129L, -2) def negative = 1
+         |  @sa(C.I, C.S) def constant = 1
+         |  @sa(C.I + 1, C.S + "t") def constantFolded = 1
+         |  @sa(C.v, "a") def nonConstant = 1
+         |  @sa(y = "b", x = 2) def named = 1
+         |  @sa(2, y = "b") def mixed = 1
+         |  @sd(1) def default = 1
+         |  @sd(y = "e", x = 1) def defaultNamed = 1
+         |  @sc(classOf[String]) def clazz = 1
+         |  @sr(Array(1, 2)) def array = 1
+         |  @sn(new sa(1, "a")) def nested = 1
+         |  @sb def noArgs = 1
+         |  @deprecated("msg", "1") def scalaPositional = 1
+         |  @deprecated("msg", since = "1") def scalaNamed = 1
+         |  @throws[Exception]("cause") def throws = 1
+         |  @SerialVersionUID(5L) class Serial
+         |  @SuppressWarnings(Array("a", "b")) def javaArray = 1
+         |  @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
+         |  def javaEnum = 1
+         |  @issue1672.Outer(value = new issue1672.Inner(value = "i")) def javaNested = 1
+         |  def param(@sa(1, "a") p: Int) = p
+         |  @sa(1, "a") type Alias = Int
+         |  def tpe: Int @sa(1, "a") = 1
+         |  def tpeAssoc: Int @deprecated("msg", "1") = 1
+         |  def tpeJava: Int @SuppressWarnings(Array("a")) = 1
+         |  def typeParam[@sa(1, "a") T] = 1
+         |  @sa(1, "a") val field = 1
+         |  @sbc(-1, Char.MaxValue) def byteChar = 1
+         |  @sf(Float.NegativeInfinity, Double.NegativeInfinity) def infinite = 1
+         |  @sf(-1.5f, -2.5) def finiteNegative = 1
+         |  @sdn() def defaultNegative = 1
+         |  def tpeNested: Int @issue1672.Outer(value = new issue1672.Inner(value = "j")) = 1
+         |  @issue1672.Colors(Array(issue1672.Color.RED)) def missingArray = 1
+         |  @issue1672.Wrap(new issue1672.Tint(issue1672.Color.RED)) def missingNested = 1
+         |  @sc(classOf[issue1672.Color]) def missingClass = 1
+         |  def tpeMissing: Int @issue1672.Colors(Array(issue1672.Color.RED)) = 1
+         |  @issue1672.Ints(Array(-1, -129)) def javaInts = 1
+         |  @issue1672.NumWrap(value = new issue1672.Num(value = -129)) def javaNumNested = 1
+         |  def tpeNegative: Int @sl(-129L, -2) = 1
+         |  @issue1672.Shade(value = issue1672.Color.RED) def missingScalar = 1
+         |  implicit final val n = 1
+         |  def implicitArg(implicit i: Int) = i
+         |  def implicitUse = implicitArg
+         |}
+         |""".stripMargin
+    val src = out.resolve("Issue1672.scala")
+    Files.write(src, code.getBytes("UTF-8"))
+    new g.Run().compile(List(src.toString))
+    assertEquals(reporter.infos.toList.filter(_.severity == reporter.ERROR).map(_.msg), Nil)
+    out
+  }
+
+  private val documents = (for {
+    file <- FileIO.listAllFilesRecursively(AbsolutePath(classdir)).iterator
+    if file.toNIO.toString.endsWith(".semanticdb")
+    doc <- TextDocuments.parseFrom(file.readAllBytes).documents
+  } yield doc).toList
+
+  private val metac: Map[String, s.SymbolInformation] = documents.iterator
+    .flatMap(_.symbols.map(info => info.symbol -> info)).toMap
+
+  // the directory of the Java annotations that the code uses
+  private val javaClasses = Classpath(AbsolutePath(
+    Paths.get(classOf[issue1672.Outer].getProtectionDomain.getCodeSource.getLocation.toURI),
+  ))
+
+  private val symtab = GlobalSymbolTable(
+    Library.scalaLibrary.classpath() ++ Classpath(AbsolutePath(classdir)) ++ javaClasses,
+    includeJdk = true,
+  )
+
+  // the Java annotations without `Color` and `Tint`, which the arguments of some refer to
+  private val javaMissing = {
+    val dir = Files.createTempDirectory("issue1672_java_")
+    dir.toFile.deleteOnExit()
+    val pkg = javaClasses.entries.head.toNIO.resolve("issue1672")
+    Files.createDirectories(dir.resolve("issue1672"))
+    Files.list(pkg).iterator().asScala.map(_.getFileName.toString)
+      .filterNot(x => x == "Color.class" || x == "Tint.class")
+      .foreach(x => Files.copy(pkg.resolve(x), dir.resolve("issue1672").resolve(x)))
+    Classpath(AbsolutePath(dir))
+  }
+
+  private val symtabMissing = GlobalSymbolTable(
+    Library.scalaLibrary.classpath() ++ Classpath(AbsolutePath(classdir)) ++ javaMissing,
+    includeJdk = true,
+  )
+
+  // whether metacp converts the code without `Color` and `Tint`, and what it reports
+  private def metacpMissing(stub: Boolean, log: Boolean): String = {
+    val out = Files.createTempDirectory("issue1672_metacp_")
+    out.toFile.deleteOnExit()
+    val settings = scala.meta.metacp.Settings().withOut(AbsolutePath(out))
+      .withClasspath(Classpath(AbsolutePath(classdir)))
+      .withDependencyClasspath(Library.scalaLibrary.classpath() ++ javaMissing).withIncludeJdk(true)
+      .withStubBrokenSignatures(stub).withLogBrokenSignatures(log)
+    val (result, _, err) = CliTestUtils.withReporter(reporter => Metacp.process(settings, reporter))
+    val errors = err.linesIterator.filter(x => x.startsWith("broken") || x.startsWith("missing"))
+      .map(_.replaceAll(" in /.*", "")).toList.distinct.sorted
+    (s"success = ${result.isSuccess}" :: errors).mkString("\n")
+  }
+
+  private def render(tree: s.Tree): String = tree match {
+    case t: s.AnnotationTree => "@" + render(t.tpe) + t.arguments.map(render)
+        .mkString("(", ", ", ")")
+    case t: s.ApplyTree => render(t.function) + t.arguments.map(render).mkString("(", ", ", ")")
+    case t: s.AssignTree => render(t.lhs) + " = " + render(t.rhs)
+    case t: s.IdTree => t.symbol
+    case t: s.LiteralTree => s.Print.constant(t.constant)
+    case t: s.SelectTree => s"sel(${render(t.qualifier)}, ${t.id.fold("<?>")(render)})"
+    case t: s.TypeApplyTree => render(t.function) + t.typeArguments.map(render)
+        .mkString("[", ", ", "]")
+    case _: s.OriginalTree => "*"
+    case s.NoTree => "<?>"
+    case t => t.toString
+  }
+
+  private def render(tpe: s.Type): String = tpe match {
+    case t: s.TypeRef if t.typeArguments.isEmpty => t.symbol
+    case t: s.TypeRef => t.symbol + t.typeArguments.map(render).mkString("[", ", ", "]")
+    case t => t.toString
+  }
+
+  private def annotations(info: Option[s.SymbolInformation]): String = info.fold("<absent>") { i =>
+    val tpe = i.signature match {
+      case s.MethodSignature(_, _, t: s.AnnotatedType, _) => t.annotations
+      case _ => Nil
+    }
+    (i.annotations ++ tpe).map(render).mkString(" ")
+  }
+
+  private def check(symbol: String, metacExpected: String, metacpExpected: String)(implicit
+      loc: munit.Location,
+  ): Unit = {
+    assertEquals(annotations(metac.get(symbol)), metacExpected, "metac")
+    assertEquals(annotations(symtab.info(symbol)), metacpExpected, "metacp")
+  }
+
+  private def check(symbol: String, expected: String)(implicit loc: munit.Location): Unit =
+    check(symbol, expected, expected)
+
+  // metacp without the classes that the arguments refer to
+  private def checkMissing(symbol: String, expected: String)(implicit loc: munit.Location): Unit =
+    assertEquals(annotations(symtabMissing.info(symbol)), expected)
+
+  private def returnType(info: Option[s.SymbolInformation]): String = info.map(_.signature) match {
+    case Some(s.MethodSignature(_, _, s.ConstantType(c), _)) => s.Print.constant(c)
+    case sig => sig.toString
+  }
+
+  // before 2.13.17, scalac keeps a positional default argument as a call to its getter
+  private val defaultGetter = !ScalaVersion.isSupported(minimal212 = Int.MaxValue, minimal213 = 17)
+
+  test("class")(check("p/K#", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+  test("literal arguments")(check("p/K#literal().", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+  test("folded literals")(check("p/K#folded().", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+  test("negative long and short")(check("p/K#negative().", "@p/sl#(<?>, <?>)", "@p/sl#()"))
+  test("constant arguments")(check("p/K#constant().", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+
+  test("folded constants")(check("p/K#constantFolded().", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+
+  test("non-constant argument")(check("p/K#nonConstant().", "@p/sa#(p/C.v., <?>)", "@p/sa#()"))
+
+  test("named arguments")(check(
+    "p/K#named().",
+    if (ScalaVersion.is212) "@p/sa#(local2, local1)" else "@p/sa#(<?>, <?>)",
+    "@p/sa#()",
+  ))
+
+  test("positional and named arguments")(check("p/K#mixed().", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+
+  test("default argument")(check(
+    "p/K#default().",
+    if (defaultGetter) "@p/sd#(<?>, p/sd.`<init>$default$2`().)" else "@p/sd#(<?>, <?>)",
+    "@p/sd#()",
+  ))
+
+  test("named arguments with a default")(check(
+    "p/K#defaultNamed().",
+    if (ScalaVersion.is212) "@p/sd#(local4, local3)" else "@p/sd#(<?>, <?>)",
+    "@p/sd#()",
+  ))
+
+  test("class literal argument")(check("p/K#clazz().", "@p/sc#(<?>)", "@p/sc#()"))
+
+  test("array argument")(
+    check("p/K#array().", "@p/sr#(sel(scala/Array., scala/Array.apply(+5).)(<?>, <?>))", "@p/sr#()"),
+  )
+
+  test("nested annotation argument")(
+    check("p/K#nested().", "@p/sn#(sel(, p/sa#`<init>`().)(<?>, <?>))", "@p/sn#()"),
+  )
+
+  test("no arguments")(check("p/K#noArgs().", """@p/sb#()"""))
+
+  test("scala library annotation, positional arguments")(
+    if (ScalaVersion.is212)
+      check("p/K#scalaPositional().", "@scala/deprecated#(<?>, <?>)", "@scala/deprecated#()")
+    else check("p/K#scalaPositional().", """@scala/deprecated#(message = "msg", since = "1")"""),
+  )
+
+  test("scala library annotation, named argument")(
+    if (ScalaVersion.is212)
+      check("p/K#scalaNamed().", "@scala/deprecated#(<?>, <?>)", "@scala/deprecated#()")
+    else check("p/K#scalaNamed().", """@scala/deprecated#(message = "msg", since = "1")"""),
+  )
+
+  test("type argument and argument")(check(
+    "p/K#throws().",
+    "@scala/throws#[scala/package.Exception#](<?>)",
+    "@scala/throws#[scala/package.Exception#]()",
+  ))
+
+  test("class with a long argument")(check("p/K#Serial#", """@scala/SerialVersionUID#(value = 5L)"""))
+
+  test("java annotation, array argument")(check(
+    "p/K#javaArray().",
+    """@java/lang/SuppressWarnings#(value = <?>("a", "b"))""",
+    "@java/lang/SuppressWarnings#()",
+  ))
+
+  test("java annotation, enum argument")(check(
+    "p/K#javaEnum().",
+    """@java/lang/annotation/Retention#(value = java/lang/annotation/RetentionPolicy#RUNTIME.)""",
+  ))
+
+  test("method parameter")(check("p/K#param().(p)", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+  test("class parameter")(check("p/K#`<init>`().(f)", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+  test("class parameter accessor")(check("p/K#f.", ""))
+  test("class parameter with a field meta-annotation")(check("p/K#g.", ""))
+  test("val")(check("p/K#field.", ""))
+  test("type alias")(check("p/K#Alias#", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+  test("type parameter")(check("p/K#typeParam().[T]", "@p/sa#(<?>, <?>)", "@p/sa#()"))
+  test("return type")(check("p/K#tpe().", "@p/sa#(<?>, <?>)", """@p/sa#(1, "a")"""))
+
+  test("return type, scala library annotation")(
+    if (ScalaVersion.is212)
+      check("p/K#tpeAssoc().", "@scala/deprecated#(<?>, <?>)", """@scala/deprecated#("msg", "1")""")
+    else check(
+      "p/K#tpeAssoc().",
+      """@scala/deprecated#(message = "msg", since = "1")""",
+      """@scala/deprecated#("message", "msg", "since", "1")""",
+    ),
+  )
+
+  test("return type, java annotation")(check(
+    "p/K#tpeJava().",
+    """@java/lang/SuppressWarnings#(value = <?>("a"))""",
+    """@java/lang/SuppressWarnings#("value", <?>)""",
+  ))
+
+  test("negative constant") {
+    assertEquals(returnType(metac.get("p/C.N.")), "-1", "metac")
+    assertEquals(returnType(symtab.info("p/C.N.")), "255", "metacp")
+  }
+
+  test("java annotation, nested annotation argument")(check(
+    "p/K#javaNested().",
+    """@issue1672/Outer#(value = @issue1672/Inner#(value = "i"))""",
+    "@issue1672/Outer#()",
+  ))
+
+  test("byte and char arguments")(check("p/K#byteChar().", "@p/sbc#(<?>, <?>)", "@p/sbc#()"))
+
+  test("infinite float and double arguments")(
+    check("p/K#infinite().", "@p/sf#(<?>, <?>)", "@p/sf#()"),
+  )
+
+  test("negative float and double arguments")(
+    check("p/K#finiteNegative().", "@p/sf#(<?>, <?>)", "@p/sf#()"),
+  )
+
+  test("negative default argument")(check(
+    "p/K#defaultNegative().",
+    if (defaultGetter) "@p/sdn#(p/sdn.`<init>$default$1`().)" else "@p/sdn#(<?>)",
+    "@p/sdn#()",
+  ))
+
+  test("return type, nested java annotation")(check(
+    "p/K#tpeNested().",
+    "@issue1672/Outer#(value = @issue1672/Inner#(value = \"j\"))",
+    """@issue1672/Outer#("value", <?>)""",
+  ))
+
+  test("negative constants") {
+    assertEquals(
+      List("I", "L", "F", "D", "DF").map(x => returnType(metac.get(s"p/C2.$x."))),
+      List("-200", "-200L", "-Infinityf", "-Infinity", "-1.5"),
+      "metac",
+    )
+    assertEquals(
+      List("I", "L", "F", "D", "DF").map(x => returnType(symtab.info(s"p/C2.$x."))),
+      List(
+        "65336",
+        "65336L",
+        s"${java.lang.Float.intBitsToFloat(0x00800000)}f",
+        java.lang.Double.longBitsToDouble(0x00f0000000000000L).toString,
+        "-1.5",
+      ),
+      "metacp",
+    )
+  }
+
+  test("missing class in an array argument")(
+    checkMissing("p/K#missingArray().", "@issue1672/Colors#()"),
+  )
+
+  test("missing class in a nested argument")(
+    checkMissing("p/K#missingNested().", "@issue1672/Wrap#()"),
+  )
+
+  test("missing class in a class literal argument")(checkMissing("p/K#missingClass().", "@p/sc#()"))
+
+  test("return type, missing class in an argument")(
+    checkMissing("p/K#tpeMissing().", """@issue1672/Colors#("value", <?>)"""),
+  )
+
+  test("implicit constant argument") {
+    val lines = Files.readAllLines(classdir.resolve("Issue1672.scala")).asScala
+    val line = lines.indexWhere(_.contains("def implicitUse"))
+    val synthetics = documents.flatMap(_.synthetics).filter(_.range.exists(_.startLine == line))
+      .map(x => render(x.tree))
+    assertEquals(synthetics, List("*(<?>)"))
+  }
+
+  test("constant types of other widths") {
+    val names = List("Ch", "LM", "DZ")
+    assertEquals(
+      names.map(x => returnType(metac.get(s"p/C3.$x."))),
+      List("'\uffff'", "-9223372036854775808L", "0.0"),
+      "metac",
+    )
+    assertEquals(
+      names.map(x => returnType(symtab.info(s"p/C3.$x."))),
+      List("'\uffff'", "-9223372036854775808L", "-0.0"),
+      "metacp",
+    )
+  }
+
+  test("java int array argument")(
+    check("p/K#javaInts().", "@issue1672/Ints#(value = <?>(-1, -129))", "@issue1672/Ints#()"),
+  )
+
+  test("nested java annotation, negative argument")(check(
+    "p/K#javaNumNested().",
+    "@issue1672/NumWrap#(value = @issue1672/Num#(value = -129))",
+    "@issue1672/NumWrap#()",
+  ))
+
+  test("return type, negative arguments")(
+    check("p/K#tpeNegative().", "@p/sl#(<?>, <?>)", "@p/sl#(65407L, 254)"),
+  )
+
+  test("missing class in a scalar argument")(checkMissing("p/K#missingScalar().", ""))
+
+  test("metacp without stubs, missing classes")(assertNoDiff(
+    metacpMissing(stub = false, log = false),
+    """|success = false
+       |missing symbol: issue1672.Color
+       |""".stripMargin,
+  ))
+
+  test("metacp with stubs and logs, missing classes")(assertNoDiff(
+    metacpMissing(stub = true, log = true),
+    """|success = true
+       |broken annotation for p/K#missingScalar().: missing symbol: issue1672.Color
+       |""".stripMargin,
+  ))
+
+}
