@@ -13,23 +13,30 @@ import scala.util.Try
 class Locator(private val fn: Locator.Visitor) extends AnyVal {
   def apply(paths: List[Path]): Unit = paths.foreach(path => apply(path))
 
-  def apply(path: Path): Unit = Try( // if missing or inaccessible, will throw
+  def apply(path: Path): Unit = apply(path, Set.empty)
+
+  // `jars` are the jars whose Class-Path led to `path`
+  private def apply(path: Path, jars: Set[Path]): Unit = Try(
+    // if missing or inaccessible, will throw
     Files.readAttributes(path, classOf[attribute.BasicFileAttributes]),
   ).foreach(attrs =>
     if (attrs.isDirectory) visitIter( // walk all files
       FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator,
     )(_.toNIO, e => Files.newInputStream(e.toNIO))
-    else if (path.toString.endsWith(".jar")) Try(new JarFile(path.toFile)).foreach(visitJar(path, _))
+    else if (path.toString.endsWith(".jar")) Try(new JarFile(path.toFile))
+      .foreach(visitJar(path, _, jars))
     else if (Locator.isSemantic(path)) visit(path, Files.newInputStream(path)),
   )
 
-  private def visitJar(path: Path, jar: JarFile): Unit =
+  private def visitJar(path: Path, jar: JarFile, jars: Set[Path]): Unit =
     try {
       visitIter(jar.entries().toScala)(x => Paths.get(x.getName), jar.getInputStream)
       Try(Option(jar.getManifest)).toOption.flatten
         .flatMap(x => Option(x.getMainAttributes.getValue("Class-Path"))).foreach { classPath =>
           val parent = path.toAbsolutePath.getParent
-          classPath.split(" ").foreach(x => apply(parent.resolve(x)))
+          val ancestors = jars + path.toAbsolutePath.normalize
+          classPath.split(" ").map(x => parent.resolve(x).normalize).filterNot(ancestors)
+            .foreach(apply(_, ancestors))
         }
     } finally jar.close()
 
