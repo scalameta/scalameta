@@ -30,8 +30,8 @@ class Issue4913Suite extends ParseSuite {
   check(
     """|class C // c
        |""".stripMargin,
-    """|ctor: @@
-       |ctor name: @@
+    """|ctor: class C@@ // c
+       |ctor name: class C@@ // c
        |""".stripMargin,
   )
 
@@ -39,23 +39,23 @@ class Issue4913Suite extends ParseSuite {
     """|class C private[a] // c
        |""".stripMargin,
     """|ctor: class C @@private[a] // c
-       |ctor name: @@
+       |ctor name: class C private[a]@@ // c
        |""".stripMargin,
   )
 
   check(
     """|class C[T] // c
        |""".stripMargin,
-    """|ctor: @@
-       |ctor name: @@
+    """|ctor: class C[T]@@ // c
+       |ctor name: class C[T]@@ // c
        |""".stripMargin,
   )
 
   check(
     """|trait T // c
        |""".stripMargin,
-    """|ctor: @@
-       |ctor name: @@
+    """|ctor: trait T@@ // c
+       |ctor name: trait T@@ // c
        |""".stripMargin,
   )
 
@@ -80,7 +80,7 @@ class Issue4913Suite extends ParseSuite {
        |""".stripMargin,
     """|ctor: class D @@extends C // c
        |ctor name: class D @@extends C // c
-       |init name: @@
+       |init name: class D extends C@@ // c
        |""".stripMargin,
   )
 
@@ -88,7 +88,7 @@ class Issue4913Suite extends ParseSuite {
     """|object O { new C // c
        |}
        |""".stripMargin,
-    """|init name: object O { new C // c@@
+    """|init name: object O { new C@@ // c
        |""".stripMargin,
   )
 
@@ -107,8 +107,8 @@ class Issue4913Suite extends ParseSuite {
        |""".stripMargin,
     """|ctor: enum E@@:
        |ctor name: enum E@@:
-       |ctor:   case A // c@@
-       |ctor name:   case A // c@@
+       |ctor:   case A@@ // c
+       |ctor name:   case A@@ // c
        |ctor:   case B@@
        |ctor name:   case B@@
        |""".stripMargin,
@@ -121,7 +121,7 @@ class Issue4913Suite extends ParseSuite {
        |""".stripMargin,
     """|ctor:   @@extends B
        |ctor name:   @@extends B
-       |init name: @@
+       |init name:   extends B@@
        |""".stripMargin,
   )
 
@@ -129,8 +129,8 @@ class Issue4913Suite extends ParseSuite {
     """|class C // c
        |{ }
        |""".stripMargin,
-    """|ctor: class C // c@@
-       |ctor name: class C // c@@
+    """|ctor: @@{ }
+       |ctor name: @@{ }
        |""".stripMargin,
   )
 

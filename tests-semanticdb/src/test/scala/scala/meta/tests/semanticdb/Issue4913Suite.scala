@@ -15,6 +15,7 @@ class Issue4913Suite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:8..0:9): a <= a/
        |[1:6..1:8): C1 <= a/C1#
+       |[1:8..1:8):  <= a/C1#`<init>`().
        |[2:11..2:13): C2 <= a/C2#
        |[2:13..2:13):  <= a/C2#`<init>`().
        |[3:6..3:8): T1 <= a/T1#
@@ -41,22 +42,27 @@ class Issue4913Suite extends SemanticdbSuite {
     """|[0:8..0:9): b <= b/
        |[1:6..1:8): C1 <= b/C1#
        |[1:9..1:10): T <= b/C1#[T]
+       |[1:11..1:11):  <= b/C1#`<init>`().
        |[2:12..2:14): C2 <= b/C2#
+       |[2:14..2:14):  <= b/C2#`<init>`().
        |[3:1..3:11): deprecated => scala/deprecated#
        |[3:11..3:11):  => scala/deprecated#`<init>`().
        |[3:18..3:20): C3 <= b/C3#
+       |[3:20..3:20):  <= b/C3#`<init>`().
        |[4:6..4:8): C4 <= b/C4#
-       |[4:17..4:17):  <= b/C4#`<init>`().
+       |[4:16..4:16):  <= b/C4#`<init>`().
        |[5:6..5:8): C5 <= b/C5#
        |[5:17..5:18): b => b/
-       |[5:24..5:24):  <= b/C5#`<init>`().
+       |[5:19..5:19):  <= b/C5#`<init>`().
        |[6:6..6:8): C6 <= b/C6#
        |[6:10..6:20): deprecated => scala/deprecated#
        |[6:20..6:20):  => scala/deprecated#`<init>`().
-       |[6:27..6:27):  <= b/C6#`<init>`().
+       |[6:22..6:22):  <= b/C6#`<init>`().
        |[7:15..7:17): C7 <= b/C7#
+       |[7:17..7:17):  <= b/C7#`<init>`().
        |[8:22..8:24): C8 <= b/C8#
        |[8:26..8:27): T <= b/C8#[T]
+       |[8:28..8:28):  <= b/C8#`<init>`().
        |""".stripMargin,
   )
 
@@ -79,11 +85,13 @@ class Issue4913Suite extends SemanticdbSuite {
        |[3:6..3:8): C2 <= c/C2#
        |[3:8..3:8):  <= c/C2#`<init>`().
        |[4:6..4:8): C3 <= c/C3#
+       |[4:8..4:8):  <= c/C3#`<init>`().
        |[5:6..5:8): C4 <= c/C4#
        |[5:8..5:8):  <= c/C4#`<init>`().
        |[7:6..7:8): C5 <= c/C5#
        |[7:8..7:8):  <= c/C5#`<init>`().
        |[9:6..9:8): C6 <= c/C6#
+       |[9:8..9:8):  <= c/C6#`<init>`().
        |""".stripMargin,
   )
 
@@ -94,30 +102,19 @@ class Issue4913Suite extends SemanticdbSuite {
        |class C3 ; class C4 ;
        |object O { class C5 }
        |""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[0:8..0:9): d <= d/
-         |[1:6..1:8): C1 <= d/C1#
-         |[1:17..1:17):  <= d/C1#`<init>`().
-         |[1:25..1:27): C2 <= d/C2#
-         |[1:27..1:27):  <= d/C2#`<init>`().
-         |[2:6..2:8): C3 <= d/C3#
-         |[2:9..2:9):  <= d/C3#`<init>`().
-         |[2:17..2:19): C4 <= d/C4#
-         |[2:20..2:20):  <= d/C4#`<init>`().
-         |[3:7..3:8): O <= d/O.
-         |[3:17..3:19): C5 <= d/O.C5#
-         |[3:20..3:20):  <= d/O.C5#`<init>`().
-         |""".stripMargin
-    else
-      """|[0:8..0:9): d <= d/
-         |[1:6..1:8): C1 <= d/C1#
-         |[1:25..1:27): C2 <= d/C2#
-         |[1:27..1:27):  <= d/C2#`<init>`().
-         |[2:6..2:8): C3 <= d/C3#
-         |[2:17..2:19): C4 <= d/C4#
-         |[3:7..3:8): O <= d/O.
-         |[3:17..3:19): C5 <= d/O.C5#
-         |""".stripMargin,
+    """|[0:8..0:9): d <= d/
+       |[1:6..1:8): C1 <= d/C1#
+       |[1:8..1:8):  <= d/C1#`<init>`().
+       |[1:25..1:27): C2 <= d/C2#
+       |[1:27..1:27):  <= d/C2#`<init>`().
+       |[2:6..2:8): C3 <= d/C3#
+       |[2:8..2:8):  <= d/C3#`<init>`().
+       |[2:17..2:19): C4 <= d/C4#
+       |[2:19..2:19):  <= d/C4#`<init>`().
+       |[3:7..3:8): O <= d/O.
+       |[3:17..3:19): C5 <= d/O.C5#
+       |[3:19..3:19):  <= d/O.C5#`<init>`().
+       |""".stripMargin,
   )
 
   // a class at the end of a file without a newline
@@ -134,15 +131,10 @@ class Issue4913Suite extends SemanticdbSuite {
   occurrences(
     """|package f
        |class C1 // c""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[0:8..0:9): f <= f/
-         |[1:6..1:8): C1 <= f/C1#
-         |[1:13..1:13):  <= f/C1#`<init>`().
-         |""".stripMargin
-    else
-      """|[0:8..0:9): f <= f/
-         |[1:6..1:8): C1 <= f/C1#
-         |""".stripMargin,
+    """|[0:8..0:9): f <= f/
+       |[1:6..1:8): C1 <= f/C1#
+       |[1:8..1:8):  <= f/C1#`<init>`().
+       |""".stripMargin,
   )
 
   // nested classes
@@ -161,13 +153,16 @@ class Issue4913Suite extends SemanticdbSuite {
     """|[0:8..0:9): g <= g/
        |[1:7..1:8): O <= g/O.
        |[2:8..2:10): C1 <= g/O.C1#
+       |[2:10..2:10):  <= g/O.C1#`<init>`().
        |[3:8..3:10): C2 <= g/O.C2#
        |[3:10..3:10):  <= g/O.C2#`<init>`().
        |[5:6..5:7): K <= g/K#
        |[5:8..5:8):  <= g/K#`<init>`().
        |[6:8..6:10): C3 <= g/K#C3#
+       |[6:10..6:10):  <= g/K#C3#`<init>`().
        |[7:6..7:7): m <= g/K#m().
        |[7:18..7:20): C4 <= local0
+       |[7:20..7:20):  <= local1
        |[8:8..8:10): C4 => local0
        |[8:10..8:10):  => local1
        |""".stripMargin,
@@ -183,6 +178,7 @@ class Issue4913Suite extends SemanticdbSuite {
     """|[0:8..0:9): h <= h/
        |[1:15..1:16): p <= h/p/package.
        |[2:8..2:10): C1 <= h/p/package.C1#
+       |[2:10..2:10):  <= h/p/package.C1#`<init>`().
        |""".stripMargin,
   )
 
@@ -202,6 +198,7 @@ class Issue4913Suite extends SemanticdbSuite {
        |[2:10..2:16): AnyRef => scala/AnyRef#
        |[2:16..2:16):  => java/lang/Object#`<init>`().
        |[3:6..3:8): C2 <= b/C2#
+       |[4:0..4:0):  <= b/C2#`<init>`().
        |[5:6..5:8): C3 <= b/C3#
        |[6:2..6:2):  <= b/C3#`<init>`().
        |[6:10..6:16): AnyRef => scala/AnyRef#
