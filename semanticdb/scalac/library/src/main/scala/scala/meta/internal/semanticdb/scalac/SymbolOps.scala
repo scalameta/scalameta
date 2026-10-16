@@ -258,14 +258,35 @@ trait SymbolOps {
     if (conflict != sym && conflict.name == sym.name) conflict.toSemantic else freshSymbolRaw(sym)
   }
 
+  private var documentSource: GSourceFile = GNoSourceFile
+  // locals numbered in `documentSource`: a classfile symbol may appear in another document too
+  private val documentSymbols = mutable.ListBuffer.empty[g.Symbol]
+  def startDocument(sourceFile: GSourceFile): Unit = {
+    clearDocumentCaches()
+    symbolCache --= documentSymbols
+    documentSymbols.clear()
+    documentSource = sourceFile
+  }
+
   @tailrec
-  private[semanticdb] final def freshSymbolRaw(sym: g.Symbol): String =
-    if (sym == g.NoSymbol) Symbols.None
+  private[semanticdb] final def enclosingSource(sym: g.Symbol): GSourceFile =
+    if (sym == g.NoSymbol) GNoSourceFile
     else sym.pos.source match {
-      case GNoSourceFile => freshSymbolRaw(sym.owner)
-      case src =>
-        if (src.hasInput) Symbols.Local(idCache.updateWithRemap(src)(_.fold(0)(_ + 1)))
-        else Symbols.None
+      case GNoSourceFile => enclosingSource(sym.owner)
+      case src => src
     }
+
+  private[semanticdb] def freshSymbolRaw(sym: g.Symbol): String = {
+    val sourceFile =
+      if (sym == g.NoSymbol) GNoSourceFile
+      else enclosingSource(sym) match {
+        case GNoSourceFile =>
+          documentSymbols += sym
+          documentSource
+        case src => if (src.hasInput) src else GNoSourceFile
+      }
+    if (sourceFile == GNoSourceFile) Symbols.None
+    else Symbols.Local(idCache.updateWithRemap(sourceFile)(_.fold(0)(_ + 1)))
+  }
 
 }

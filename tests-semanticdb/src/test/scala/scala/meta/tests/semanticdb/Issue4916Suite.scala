@@ -96,10 +96,10 @@ class Issue4916Suite extends SemanticdbSuite {
        |  String => java/lang/String#
        |a/C#forSomeDef(). => method forSomeDef: Class[T] forSome { type T }
        |  Class => scala/Predef.Class#
-       |  T => local8
+       |  T => local9
        |a/C#forSomeVal. => val method forSomeVal: Class[T] forSome { type T }
        |  Class => scala/Predef.Class#
-       |  T => local7
+       |  T => local8
        |a/C#inferredDef(). => method inferredDef: Class[?0] forSome { type ?0 }
        |  Class => java/lang/Class#
        |  ?0 => local1
@@ -112,7 +112,7 @@ class Issue4916Suite extends SemanticdbSuite {
        |  ?0 => local5
        |a/C#placeholderVal. => val method placeholderVal: Class[_] forSome { type _ }
        |  Class => scala/Predef.Class#
-       |  _ => local6
+       |  _ => local7
        |a/C#rawVal. => val method rawVal: List[E] forSome { type E }
        |  List => java/util/List#
        |  E => local3
@@ -121,11 +121,11 @@ class Issue4916Suite extends SemanticdbSuite {
        |  WatchKey => java/nio/file/WatchKey#
        |  List => java/util/List#
        |  WatchEvent => java/nio/file/WatchEvent#
-       |  ?0 => 
+       |  ?0 => local6
        |a/C#wildcardArgDef().(k) => param k: WatchKey
        |  WatchKey => java/nio/file/WatchKey#
-       |local7 => abstract type T
        |local8 => abstract type T
+       |local9 => abstract type T
        |""".stripMargin,
   )
 
@@ -143,7 +143,7 @@ class Issue4916Suite extends SemanticdbSuite {
           "nestedVal => ?0: hardlink only",
           "placeholderVal => _: hardlink only",
           "rawVal => E: hardlink only",
-          "wildcardArgDef => ?0: no symbol",
+          "wildcardArgDef => ?0: hardlink only",
         ),
       ),
   )
@@ -189,25 +189,25 @@ class Issue4916Suite extends SemanticdbSuite {
        |c/C#boundedVal. => val method boundedVal: Set[Class[?0] forSome { type ?0 <: PlatformManagedObject }]
        |  Set => java/util/Set#
        |  Class => java/lang/Class#
-       |  ?0 => 
+       |  ?0 => local5
        |  PlatformManagedObject => java/lang/management/PlatformManagedObject#
        |c/C#collectorVal. => val method collectorVal: Collector[String, ?0, List[String]] forSome { type ?0 }
        |  Collector => java/util/stream/Collector#
        |  String => java/lang/String#
-       |  ?0 => local1
+       |  ?0 => local6
        |  List => java/util/List#
        |c/C#javaDef(). => method javaDef(t: MethodType): List[Class[?0] forSome { type ?0 }]
        |  t => c/C#javaDef().(t)
        |  MethodType => java/lang/invoke/MethodType#
        |  List => java/util/List#
        |  Class => java/lang/Class#
-       |  ?0 => 
+       |  ?0 => local4
        |c/C#javaDef().(t) => param t: MethodType
        |  MethodType => java/lang/invoke/MethodType#
        |c/C#javaVal. => val method javaVal: List[Class[?0] forSome { type ?0 }]
        |  List => java/util/List#
        |  Class => java/lang/Class#
-       |  ?0 => 
+       |  ?0 => local4
        |c/C#m(). => method m(): Unit
        |  Unit => scala/Unit#
        |c/C#ownDef(). => method ownDef: List[List[_] forSome { type _ }]
@@ -218,29 +218,29 @@ class Issue4916Suite extends SemanticdbSuite {
        |  _ => local0
        |c/C#scalaDefVal. => val method scalaDefVal: List[List[_] forSome { type _ }]
        |  List => scala/package.List#
-       |  _ => 
+       |  _ => local1
        |c/C#scalaForSomeVal. => val method scalaForSomeVal: C[List[T] forSome { type T }]
        |  C => advanced/C#
        |  List => scala/package.List#
-       |  T => 
+       |  T => local2
        |c/C#structuralVal. => val method structuralVal: AnyRef { val def x: Int }
        |  AnyRef => scala/AnyRef#
-       |  x => 
+       |  x => local3
        |  Int => scala/Int#
        |c/C#structuralX. => val method structuralX: Int
        |  Int => scala/Int#
-       |local2 => val local localVal: List[Class[?0] forSome { type ?0 }]
+       |local7 => val local localVal: List[Class[?0] forSome { type ?0 }]
        |  List => java/util/List#
        |  Class => java/lang/Class#
-       |  ?0 => 
-       |local3 => param t: MethodType
+       |  ?0 => local4
+       |local8 => param t: MethodType
        |  MethodType => java/lang/invoke/MethodType#
-       |local4 => val local lambdaVal: Function1[MethodType, List[Class[?0] forSome { type ?0 }]]
+       |local9 => val local lambdaVal: Function1[MethodType, List[Class[?0] forSome { type ?0 }]]
        |  Function1 => scala/Function1#
        |  MethodType => java/lang/invoke/MethodType#
        |  List => java/util/List#
        |  Class => java/lang/Class#
-       |  ?0 => 
+       |  ?0 => local4
        |""".stripMargin,
   )
 
@@ -250,16 +250,16 @@ class Issue4916Suite extends SemanticdbSuite {
       assertEquals(
         hardlinks(doc),
         List(
-          "boundedVal => ?0: no symbol",
+          "boundedVal => ?0: hardlink only",
           "collectorVal => ?0: hardlink only",
-          "javaDef => ?0: no symbol",
-          "javaVal => ?0: no symbol",
-          "lambdaVal => ?0: no symbol",
-          "localVal => ?0: no symbol",
+          "javaDef => ?0: hardlink only",
+          "javaVal => ?0: hardlink only",
+          "lambdaVal => ?0: hardlink only",
+          "localVal => ?0: hardlink only",
           "ownDef => _: hardlink only",
           "ownVal => _: hardlink only",
-          "scalaDefVal => _: no symbol",
-          "scalaForSomeVal => T: no symbol",
+          "scalaDefVal => _: hardlink only",
+          "scalaForSomeVal => T: hardlink only",
         ),
       ),
   )
