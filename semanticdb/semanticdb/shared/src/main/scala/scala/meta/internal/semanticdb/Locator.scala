@@ -19,7 +19,7 @@ class Locator(private val fn: Locator.Visitor) extends AnyVal {
     if (attrs.isDirectory) visitIter( // walk all files
       FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator,
     )(_.toNIO, e => Files.newInputStream(e.toNIO))
-    else if (path.toString.endsWith(".jar")) visitJar(path, new JarFile(path.toFile))
+    else if (path.toString.endsWith(".jar")) Try(new JarFile(path.toFile)).foreach(visitJar(path, _))
     else if (Locator.isSemantic(path)) visit(path, Files.newInputStream(path)),
   )
 
