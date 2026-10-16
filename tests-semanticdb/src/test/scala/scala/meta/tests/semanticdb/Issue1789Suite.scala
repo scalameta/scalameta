@@ -9,15 +9,11 @@ class Issue1789Suite extends SemanticdbSuite {
        |class A
        |object A
        |""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[0:8..0:9): a <= a/
-         |[1:1..1:8): example => a/A#
-         |""".stripMargin
-    else
-      """|[0:8..0:9): a <= a/
-         |[1:1..1:8): example => a/A#
-         |[2:7..2:7):  <= a/A#`<init>`().
-         |""".stripMargin,
+    """|[0:8..0:9): a <= a/
+       |[2:6..2:7): A <= a/A#
+       |[2:7..2:7):  <= a/A#`<init>`().
+       |[3:7..3:8): A <= a/A.
+       |""".stripMargin,
   )
 
   occurrences(
@@ -26,29 +22,18 @@ class Issue1789Suite extends SemanticdbSuite {
        |@MacroAnnotation() class B[T](x: T)
        |object B
        |""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[0:8..0:9): b <= b/
-         |[1:7..1:14): example => example/
-         |[1:15..1:30): MacroAnnotation => example/MacroAnnotation#
-         |[1:15..1:30): MacroAnnotation => example/MacroAnnotation.
-         |[2:1..2:16): MacroAnnotation => b/B#
-         |[2:27..2:28): T <= b/B#[T]
-         |[2:30..2:31): x <= b/B#`<init>`().(x)
-         |[2:30..2:31): x <= b/B#x.
-         |[2:33..2:34): T => b/B#[T]
-         |""".stripMargin
-    else
-      """|[0:8..0:9): b <= b/
-         |[1:7..1:14): example => example/
-         |[1:15..1:30): MacroAnnotation => example/MacroAnnotation#
-         |[1:15..1:30): MacroAnnotation => example/MacroAnnotation.
-         |[2:1..2:16): MacroAnnotation => b/B#
-         |[2:27..2:28): T <= b/B#[T]
-         |[2:29..2:29):  <= b/B#`<init>`().
-         |[2:30..2:31): x <= b/B#`<init>`().(x)
-         |[2:30..2:31): x <= b/B#x.
-         |[2:33..2:34): T => b/B#[T]
-         |""".stripMargin,
+    """|[0:8..0:9): b <= b/
+       |[1:7..1:14): example => example/
+       |[1:15..1:30): MacroAnnotation => example/MacroAnnotation#
+       |[1:15..1:30): MacroAnnotation => example/MacroAnnotation.
+       |[2:25..2:26): B <= b/B#
+       |[2:27..2:28): T <= b/B#[T]
+       |[2:29..2:29):  <= b/B#`<init>`().
+       |[2:30..2:31): x <= b/B#`<init>`().(x)
+       |[2:30..2:31): x <= b/B#x.
+       |[2:33..2:34): T => b/B#[T]
+       |[3:7..3:8): B <= b/B.
+       |""".stripMargin,
   )
 
   occurrences(
@@ -56,19 +41,11 @@ class Issue1789Suite extends SemanticdbSuite {
        |@org.scalameta.data.data
        |class C(a: Int)
        |""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[0:8..0:9): c <= c/
-         |[1:1..1:4): org => c/C#
-         |[1:24..1:24):  => java/lang/IndexOutOfBoundsException#`<init>`(+1).
-         |[2:11..2:14): Int => scala/Int#
-         |""".stripMargin
-    else
-      """|[0:8..0:9): c <= c/
-         |[1:1..1:4): org => c/C#
-         |[1:24..1:24):  => java/lang/IndexOutOfBoundsException#`<init>`(+1).
-         |[2:7..2:7):  <= c/C#`<init>`().
-         |[2:11..2:14): Int => scala/Int#
-         |""".stripMargin,
+    """|[0:8..0:9): c <= c/
+       |[2:6..2:7): C <= c/C#
+       |[2:7..2:7):  <= c/C#`<init>`().
+       |[2:11..2:14): Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -76,19 +53,13 @@ class Issue1789Suite extends SemanticdbSuite {
        |@deprecated @example.MacroAnnotation class D
        |object D
        |""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[0:8..0:9): d <= d/
-         |[1:1..1:11): deprecated => scala/deprecated#
-         |[1:11..1:11):  => scala/deprecated#`<init>`().
-         |[1:13..1:20): example => d/D#
-         |""".stripMargin
-    else
-      """|[0:8..0:9): d <= d/
-         |[1:1..1:11): deprecated => scala/deprecated#
-         |[1:11..1:11):  => scala/deprecated#`<init>`().
-         |[1:13..1:20): example => d/D#
-         |[1:44..1:44):  <= d/D#`<init>`().
-         |""".stripMargin,
+    """|[0:8..0:9): d <= d/
+       |[1:1..1:11): deprecated => scala/deprecated#
+       |[1:11..1:11):  => scala/deprecated#`<init>`().
+       |[1:43..1:44): D <= d/D#
+       |[1:44..1:44):  <= d/D#`<init>`().
+       |[2:7..2:8): D <= d/D.
+       |""".stripMargin,
   )
 
   occurrences(
@@ -113,31 +84,19 @@ class Issue1789Suite extends SemanticdbSuite {
        |  val g = new G().classNumber + G.objectNumber
        |}
        |""".stripMargin,
-    if (ScalaVersion.is212)
-      """|[0:8..0:9): f <= f/
-         |[1:7..1:8): F <= f/F.
-         |[2:3..2:10): example => f/F.G#
-         |[4:6..4:7): g <= f/F.g.
-         |[4:14..4:15): G => f/F.G#
-         |[4:15..4:15):  => f/F.G#`<init>`().
-         |[4:18..4:29): classNumber => f/F.G#classNumber().
-         |[4:30..4:31): + => scala/Int#`+`(+4).
-         |[4:32..4:33): G => f/F.G.
-         |[4:34..4:46): objectNumber => f/F.G.objectNumber().
-         |""".stripMargin
-    else
-      """|[0:8..0:9): f <= f/
-         |[1:7..1:8): F <= f/F.
-         |[2:3..2:10): example => f/F.G#
-         |[2:34..2:34):  <= f/F.G#`<init>`().
-         |[4:6..4:7): g <= f/F.g.
-         |[4:14..4:15): G => f/F.G#
-         |[4:15..4:15):  => f/F.G#`<init>`().
-         |[4:18..4:29): classNumber => f/F.G#classNumber().
-         |[4:30..4:31): + => scala/Int#`+`(+4).
-         |[4:32..4:33): G => f/F.G.
-         |[4:34..4:46): objectNumber => f/F.G.objectNumber().
-         |""".stripMargin,
+    """|[0:8..0:9): f <= f/
+       |[1:7..1:8): F <= f/F.
+       |[2:33..2:34): G <= f/F.G#
+       |[2:34..2:34):  <= f/F.G#`<init>`().
+       |[3:9..3:10): G <= f/F.G.
+       |[4:6..4:7): g <= f/F.g.
+       |[4:14..4:15): G => f/F.G#
+       |[4:15..4:15):  => f/F.G#`<init>`().
+       |[4:18..4:29): classNumber => f/F.G#classNumber().
+       |[4:30..4:31): + => scala/Int#`+`(+4).
+       |[4:32..4:33): G => f/F.G.
+       |[4:34..4:46): objectNumber => f/F.G.objectNumber().
+       |""".stripMargin,
   )
 
   occurrences(
@@ -145,8 +104,7 @@ class Issue1789Suite extends SemanticdbSuite {
        |@org.scalameta.adt.root trait R
        |""".stripMargin,
     """|[0:8..0:9): r <= r/
-       |[1:1..1:4): org => org/scalameta/adt/Metadata.root#
-       |[1:23..1:23):  => org/scalameta/adt/Metadata.root#`<init>`().
+       |[1:30..1:31): R <= r/R#
        |""".stripMargin,
   )
 
