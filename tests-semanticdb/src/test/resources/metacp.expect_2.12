@@ -2690,6 +2690,122 @@ example/Issue4505J#AnnotationWithEnum#value(). => abstract method value(): Annot
   AnnotationEnum => example/Issue4505J#AnnotationEnum#
 example/Issue4505J#`<init>`(). => ctor <init>()
 
+example/JavaRefs.class
+----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/JavaRefs.class
+Text => empty
+Language => Scala
+Symbols => 11 entries
+
+Symbols:
+example/JavaRefs. => final object JavaRefs extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Generic# => class Generic[T] extends AnyRef { +2 decls }
+  T => example/JavaRefs.Generic#[T]
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Generic#Member# => class Member extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Generic#Member#`<init>`(). => primary ctor <init>()
+example/JavaRefs.Generic#[T] => typeparam T
+example/JavaRefs.Generic#`<init>`(). => primary ctor <init>()
+example/JavaRefs.Inner# => class Inner extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Inner#`<init>`(). => primary ctor <init>()
+example/JavaRefs.Nested. => final object Nested extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Nested.Deep# => class Deep extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Nested.Deep#`<init>`(). => primary ctor <init>()
+
+example/javarefs/package.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/javarefs/package.class
+Text => empty
+Language => Scala
+Symbols => 1 entries
+
+Symbols:
+example/javarefs/package. => final package object javarefs extends AnyRef
+  AnyRef => scala/AnyRef#
+
+example/JavaRefsC.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/JavaRefsC.class
+Text => empty
+Language => Scala
+Symbols => 7 entries
+
+Symbols:
+example/JavaRefsC# => class JavaRefsC extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefsC#InClass# => class InClass extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefsC#InClass#`<init>`(). => primary ctor <init>()
+example/JavaRefsC#`<init>`(). => primary ctor <init>()
+example/JavaRefsC. => final object JavaRefsC extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefsC.InObject# => class InObject extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefsC.InObject#`<init>`(). => primary ctor <init>()
+
+example/JavaRefsJ$Dollar.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/JavaRefsJ$Dollar.class
+Text => empty
+Language => Java
+Symbols => 2 entries
+
+Symbols:
+example/JavaRefsJ#Dollar# => class Dollar extends Object { +1 decls }
+  Object => java/lang/Object#
+example/JavaRefsJ#Dollar#`<init>`(). => ctor <init>()
+
+example/JavaRefsJ.class
+-----------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/JavaRefsJ.class
+Text => empty
+Language => Java
+Symbols => 11 entries
+
+Symbols:
+example/JavaRefsJ# => class JavaRefsJ extends Object { +9 decls }
+  Object => java/lang/Object#
+example/JavaRefsJ#Member# => class Member extends Object { +1 decls }
+  Object => java/lang/Object#
+example/JavaRefsJ#Member#`<init>`(). => ctor <init>()
+example/JavaRefsJ#`<init>`(). => ctor <init>()
+example/JavaRefsJ#deep. => field deep: Deep
+  Deep => example/JavaRefs#Nested#Deep#
+example/JavaRefsJ#dollar. => field dollar: Dollar
+  Dollar => example/JavaRefsJ#Dollar#
+example/JavaRefsJ#inClass. => field inClass: InClass
+  InClass => example/JavaRefsC#InClass#
+example/JavaRefsJ#inObject. => field inObject: InObject
+  InObject => example/JavaRefsC#InObject#
+example/JavaRefsJ#inner. => field inner: Inner
+  Inner => example/JavaRefs#Inner#
+example/JavaRefsJ#javaMember. => field javaMember: Member
+  Member => example/JavaRefsJ#Member#
+example/JavaRefsJ#member. => field member: Generic[String]#Member
+  Generic => example/JavaRefs#Generic#
+  String => java/lang/String#
+  Member => example/JavaRefs#Generic#Member#
+
 example/local$minusfile.class
 -----------------------------
 
