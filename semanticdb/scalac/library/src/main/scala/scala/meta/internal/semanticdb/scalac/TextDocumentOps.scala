@@ -76,6 +76,8 @@ trait TextDocumentOps {
       val mclassofs = mutable.Map[Int, m.Type]() // start offset of classOf -> its type argument
       val msupers = mutable.Map.empty[Int, m.Term.Super] // end offset
       val mfuncs = mutable.Map.empty[Int, m.Position] // start offset of a function
+      val mannottees = mutable.Map.empty[Int, m.Member] // start offset of an annotation's init
+      val mexpansions = mutable.Map.empty[Int, m.Member] // the same, for a macro annotation
 
       // Occurrences for names in val patterns, like `val (a, b) =`. Unlike the `occurrences` map, val pattern
       // occurrences uses "last occurrence wins" instead of "first occurrences wins" when disambiguating between
@@ -211,6 +213,10 @@ trait TextDocumentOps {
               case m.Self(_, Some(mtpe)) => mselftypes(mtpe.pos.start) = mtpe
               case m.Term.ApplyType(m.Term.Name("classOf"), mtpe :: Nil) =>
                 mclassofs(mtree.pos.start) = mtpe
+              case mtree: m.Mod.Annot => mtree.parent.foreach {
+                  case p: m.Member => mannottees(mtree.init.pos.start) = p
+                  case _ =>
+                }
               case mtree: m.Ctor => mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
               case mtree: m.Init =>
@@ -361,6 +367,27 @@ trait TextDocumentOps {
               case _ =>
             }
 
+            // in a macro expansion, find only the annottee and its companion
+            if (!gpos.isRange) mexpansions.get(gpoint) match {
+              case Some(mannottee) =>
+                if (gtree.isInstanceOf[g.ImplDef]) mannottee.parent.foreach { p =>
+                  val gname = gsym.decodedName
+                  p.foreachChild {
+                    case t: m.Member
+                        if t.name.value == gname &&
+                          t.name.isInstanceOf[m.Term.Name] == gsym.isTerm =>
+                      success(t.name, gsym)
+                      t match { // 2.12 puts the primary constructor past the class
+                        case t: m.Defn.Class => success(t.ctor.name, gsym.primaryConstructor)
+                        case _ =>
+                      }
+                    case _ =>
+                  }
+                }
+                return
+              case _ =>
+            }
+
             tryNamedArg(gsym, gstart, gpoint)
 
             (gtree match {
@@ -501,6 +528,12 @@ trait TextDocumentOps {
 
           private def processMemberDef(gtree: g.MemberDef) = {
             val gsym = gtree.symbol
+            // a macro annotation puts its expansion at the offset of the annotation
+            if (gtree.isInstanceOf[g.ImplDef]) {
+              val gpos = gtree.pos
+              if (gpos.isDefined && !gpos.isRange) mannottees.get(gpos.point)
+                .foreach(mexpansions(gpos.point) = _)
+            }
             if (gsym != null) gsym.annotations.foreach(ann => traverse(ann.original))
             tryFindMtree(gtree)
           }

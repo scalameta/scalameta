@@ -3539,7 +3539,7 @@ Uri => semanticdb/integration/src/main/scala/example/MacroAnnotations.scala
 Text => non-empty
 Language => Scala
 Symbols => 5 entries
-Occurrences => 2 entries
+Occurrences => 4 entries
 
 Symbols:
 example/MacroAnnotations# => class MacroAnnotations extends AnyRef { +2 decls }
@@ -3554,7 +3554,9 @@ example/MacroAnnotations.objectNumber(). => method objectNumber: Int
 
 Occurrences:
 [0:8..0:15): example <= example/
-[2:1..2:16): MacroAnnotation => example/MacroAnnotations#
+[3:6..3:22): MacroAnnotations <= example/MacroAnnotations#
+[3:22..3:22):  <= example/MacroAnnotations#`<init>`().
+[4:7..4:23): MacroAnnotations <= example/MacroAnnotations.
 
 semanticdb/integration/src/main/scala/example/MetacJava.scala
 -------------------------------------------------------------
