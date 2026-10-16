@@ -57,7 +57,7 @@ class Issue1791Suite extends FunSuite {
     val in = relative(dir("reldir"))
     val out = tmp.resolve("out-reldir")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(s"${AbsolutePath(in)}" -> s"$out/reldir"))
+    assertNoDiff(stdout, status(in -> s"$out/reldir"))
     assertNoDiff(stderr, "")
   }
 
@@ -65,7 +65,7 @@ class Issue1791Suite extends FunSuite {
     val in = relative(jar("reljar.jar"))
     val out = tmp.resolve("out-reljar")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(s"${AbsolutePath(in)}" -> s"$out/reljar.jar"))
+    assertNoDiff(stdout, status(in -> s"$out/reljar.jar"))
     assertNoDiff(stderr, "")
   }
 
@@ -75,7 +75,7 @@ class Issue1791Suite extends FunSuite {
     val in = relative(jar("classjar.jar", "com/javacp/Coin.class" -> coin))
     val out = tmp.resolve("out-classjar")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(s"${AbsolutePath(in)}" -> s"$out/classjar.jar"))
+    assertNoDiff(stdout, status(in -> s"$out/classjar.jar"))
     assertNoDiff(stderr, "")
   }
 
@@ -92,10 +92,7 @@ class Issue1791Suite extends FunSuite {
     val b = relative(jar("cp-b.jar"))
     val out = tmp.resolve("out-cp")
     val (stdout, stderr) = metacp(parse(out, s"$a$pathSeparator$b"))
-    assertNoDiff(
-      stdout,
-      status(s"${AbsolutePath(a)}" -> s"$out/cp-a", s"${AbsolutePath(b)}" -> s"$out/cp-b.jar"),
-    )
+    assertNoDiff(stdout, status(a -> s"$out/cp-a", b -> s"$out/cp-b.jar"))
     assertNoDiff(stderr, "")
   }
 
@@ -103,10 +100,7 @@ class Issue1791Suite extends FunSuite {
     val in = relative(dir("twice"))
     val out = tmp.resolve("out-twice")
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$in"))
-    assertNoDiff(
-      stdout,
-      status(s"${AbsolutePath(in)}" -> s"$out/twice-1", s"${AbsolutePath(in)}" -> s"$out/twice-1"),
-    )
+    assertNoDiff(stdout, status(in -> s"$out/twice-1", in -> s"$out/twice-1"))
     assertNoDiff(stderr, "")
   }
 
@@ -115,10 +109,7 @@ class Issue1791Suite extends FunSuite {
     val in = relative(abs)
     val out = tmp.resolve("out-spelling")
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$abs"))
-    assertNoDiff(
-      stdout,
-      status(s"${AbsolutePath(in)}" -> s"$out/spelling", s"$abs" -> s"$out/spelling-1"),
-    )
+    assertNoDiff(stdout, status(in -> s"$out/spelling", s"$abs" -> s"$out/spelling-1"))
     assertNoDiff(stderr, "")
   }
 
@@ -127,10 +118,10 @@ class Issue1791Suite extends FunSuite {
     val in = relative(dir("missing", "A.class" -> aclass))
     val out = tmp.resolve("out-missing")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(s"${AbsolutePath(in)}" -> ""))
+    assertNoDiff(stdout, status(in -> ""))
     assertNoDiff(
       stderr,
-      s"""|missing symbol: scala in ${AbsolutePath(in)}
+      s"""|missing symbol: scala in $in
           |$note
           |""".stripMargin,
     )
@@ -140,9 +131,9 @@ class Issue1791Suite extends FunSuite {
     val in = relative(dir("broken", "Bad.class" -> Array[Byte](1, 2, 3)))
     val out = tmp.resolve("out-broken")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(s"${AbsolutePath(in)}" -> ""))
+    assertNoDiff(stdout, status(in -> ""))
     val bad = AbsolutePath(in).resolve("Bad.class")
-    assertNoDiff(stderr.linesIterator.next(), s"error: can't convert $bad in ${AbsolutePath(in)}")
+    assertNoDiff(stderr.linesIterator.next(), s"error: can't convert $bad in $in")
   }
 
   test("relative jar with a manifest classpath") {
@@ -152,10 +143,10 @@ class Issue1791Suite extends FunSuite {
     val in = relative(manifestDir.resolve("manifest.jar"))
     val out = tmp.resolve("out-manifest")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(s"${AbsolutePath(in)}" -> ""))
+    assertNoDiff(stdout, status(in -> ""))
     assertNoDiff(
       stderr,
-      s"""|missing symbol: scala in ${AbsolutePath(in)}
+      s"""|missing symbol: scala in $in
           |$note
           |""".stripMargin,
     )

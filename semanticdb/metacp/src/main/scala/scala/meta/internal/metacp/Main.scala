@@ -32,13 +32,13 @@ class Main(settings: Settings, reporter: Reporter) {
     if (!settings.out.isDirectory) Files.createDirectories(settings.out.toNIO)
 
     val classpath = settings.classpath.entries
+    val cpargs = classpath.zip(settings.classpathArgs)
 
     val status = new ConcurrentHashMap[AbsolutePath, Option[AbsolutePath]]()
 
-    val job = Job(classpath, if (settings.verbose) reporter.err else devnull)
-    job.foreach { entry =>
+    Job(cpargs, if (settings.verbose) reporter.err else devnull).foreach { case (entry, arg) =>
       val out = withOutputEntry(entry) { x =>
-        status.put(entry, if (convertClasspathEntry(entry, x.root)) Some(x.output) else None)
+        status.put(entry, if (convertClasspathEntry(entry, arg, x.root)) Some(x.output) else None)
         x.output
       }
       if (entry.isFile) {
@@ -65,9 +65,9 @@ class Main(settings: Settings, reporter: Reporter) {
 
     reporter.out.println("{")
     reporter.out.println("  \"status\": {")
-    classpath.zipWithIndex.foreach { case (in, i) =>
+    cpargs.zipWithIndex.foreach { case ((in, arg), i) =>
       val s_out = status.get(in).map(_.toString).getOrElse("")
-      reporter.out.print(s"""    "${in.toNIO}": "$s_out"""")
+      reporter.out.print(s"""    "$arg": "$s_out"""")
       if (i != classpath.length - 1) reporter.out.print(",")
       reporter.out.println()
     }
@@ -90,7 +90,7 @@ class Main(settings: Settings, reporter: Reporter) {
         val linkedEntry = AbsolutePath(linkedPath)
         if (linkedEntry.isFile || linkedEntry.isDirectory) withOutputEntry(linkedEntry) { out =>
           buf += out.output.toNIO.getFileName
-          success &= convertClasspathEntry(linkedEntry, out.root)
+          success &= convertClasspathEntry(linkedEntry, linkedEntry.toString, out.root)
         }
       }
       val convertedLinkedJars = buf.result()
@@ -153,7 +153,7 @@ class Main(settings: Settings, reporter: Reporter) {
     settings.out.resolve(name) #:: jarNameAlternatives(filename, i + 1)
   }
 
-  private def convertClasspathEntry(in: AbsolutePath, out: AbsolutePath): Boolean = {
+  private def convertClasspathEntry(in: AbsolutePath, arg: String, out: AbsolutePath): Boolean = {
     var success = true
     val classpath = Classpath(in)
     classpath.visit { _ =>
@@ -168,11 +168,11 @@ class Main(settings: Settings, reporter: Reporter) {
             } catch {
               case e @ MissingSymbolException(symbol) => if (!missingSymbols(symbol)) {
                   missingSymbols += symbol
-                  reporter.err.println(s"${e.getMessage} in $in")
+                  reporter.err.println(s"${e.getMessage} in $arg")
                   success = false
                 }
               case ex: Throwable =>
-                reporter.err.println(s"error: can't convert $path in $in")
+                reporter.err.println(s"error: can't convert $path in $arg")
                 ex.printStackTrace(reporter.err)
                 success = false
             }

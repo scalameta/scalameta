@@ -17,6 +17,8 @@ final class Settings private (
     val includeJdk: Boolean,
     val stubBrokenSignatures: Boolean,
     val logBrokenSignatures: Boolean,
+    // the classpath entries as passed to `parse` or `withClasspath`
+    private[meta] val classpathArgs: List[String],
 ) {
 
   private def this() = this(
@@ -30,6 +32,7 @@ final class Settings private (
     includeJdk = false,
     stubBrokenSignatures = false,
     logBrokenSignatures = false,
+    classpathArgs = Nil,
   )
 
   def withOut(out: AbsolutePath): Settings = copy(out = out)
@@ -37,7 +40,8 @@ final class Settings private (
   @deprecated("Use withOut instead", "4.0.0")
   private[meta] def withCacheDir(out: AbsolutePath): Settings = copy(out = out)
 
-  def withClasspath(classpath: Classpath): Settings = copy(classpath = classpath)
+  def withClasspath(classpath: Classpath): Settings =
+    copy(classpath = classpath, classpathArgs = classpath.entries.map(_.toString))
 
   def withDependencyClasspath(classpath: Classpath): Settings = copy(dependencyClasspath = classpath)
 
@@ -68,6 +72,7 @@ final class Settings private (
       includeJdk: Boolean = includeJdk,
       stubBrokenSignatures: Boolean = stubBrokenSignatures,
       logBrokenSignatures: Boolean = logBrokenSignatures,
+      classpathArgs: List[String] = classpathArgs,
   ): Settings = new Settings(
     out = out,
     classpath = classpath,
@@ -79,6 +84,7 @@ final class Settings private (
     includeJdk = includeJdk,
     stubBrokenSignatures = stubBrokenSignatures,
     logBrokenSignatures = logBrokenSignatures,
+    classpathArgs = classpathArgs,
   )
 
 }
@@ -111,8 +117,10 @@ object Settings {
         case flag :: _ if allowOptions && flag.startsWith("-") =>
           reporter.err.println(s"unsupported flag $flag")
           None
-        case classpath :: Nil => Some(settings.copy(classpath = Classpath(classpath)))
-        case classpath :: arg :: _ =>
+        case cp :: Nil =>
+          val args = Classpath.toPaths(cp)
+          Some(settings.copy(classpath = Classpath.fromPaths(args), classpathArgs = args))
+        case _ :: arg :: _ =>
           reporter.err.println(s"unsupported argument $arg")
           None
         case Nil => Some(settings)
