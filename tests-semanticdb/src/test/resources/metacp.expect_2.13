@@ -2857,7 +2857,7 @@ Language => Java
 Symbols => 2 entries
 
 Symbols:
-example/JavaRefsJ$Dollar# => class Dollar extends Object { +1 decls }
+example/JavaRefsJ$Dollar# => class JavaRefsJ$Dollar extends Object { +1 decls }
   Object => java/lang/Object#
 example/JavaRefsJ$Dollar#`<init>`(). => ctor <init>()
 
