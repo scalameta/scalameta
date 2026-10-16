@@ -56,7 +56,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:7..2:12): munit => munit/
        |[3:7..3:8): x <= e/x.
        |[3:17..3:25): FunSuite => munit/FunSuite#
-       |[3:26..3:26):  => munit/FunSuite#`<init>`().
+       |[3:25..3:25):  => munit/FunSuite#`<init>`().
        |[4:6..4:7): x <= e/x.x.
        |[4:10..4:11): q => scala/meta/internal/quasiquotes/Unlift.
        |[5:6..5:7): y <= e/x.y.
@@ -299,7 +299,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:11..2:21): deprecated => scala/deprecated#
        |[2:23..2:28): field => scala/annotation/meta/field#
        |[2:28..2:28):  => scala/annotation/meta/field#`<init>`().
-       |[2:30..2:30):  => scala/deprecated#`<init>`().
+       |[2:29..2:29):  => scala/deprecated#`<init>`().
        |[2:34..2:35): x <= t/C1#`<init>`().(x)
        |[2:34..2:35): x <= t/C1#x.
        |[2:37..2:40): Int => scala/Int#
@@ -335,7 +335,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:6..2:7): a <= u/C#a.
        |[2:9..2:12): Int => scala/Int#
        |[2:14..2:23): unchecked => scala/unchecked#
-       |[2:24..2:24):  => scala/unchecked#`<init>`().
+       |[2:23..2:23):  => scala/unchecked#`<init>`().
        |[3:6..3:7): b <= u/C#b().
        |[3:8..3:9): x <= u/C#b().(x)
        |[3:11..3:17): Option => scala/Option#
@@ -519,7 +519,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[9:9..9:9):  <= c/A6#`<init>`().
        |[9:17..9:18): c => c/
        |[9:19..9:20): U => c/U#
-       |[9:21..9:21):  => java/lang/Object#`<init>`().
+       |[9:20..9:20):  => java/lang/Object#`<init>`().
        |""".stripMargin,
   )
 
@@ -534,7 +534,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:6..2:8): A1 <= d/A1#
        |[2:9..2:9):  <= d/A1#`<init>`().
        |[2:17..2:18): U => d/U#
-       |[3:0..3:0):  => java/lang/Object#`<init>`().
+       |[2:18..2:18):  => java/lang/Object#`<init>`().
        |""".stripMargin,
   )
 
@@ -550,7 +550,7 @@ class TargetedSuite extends SemanticdbSuite {
        |[2:9..2:9):  <= y/A1#`<init>`().
        |[2:17..2:18): y => y/
        |[2:19..2:20): U => y/U#
-       |[3:0..3:0):  => java/lang/Object#`<init>`().
+       |[2:20..2:20):  => java/lang/Object#`<init>`().
        |""".stripMargin,
   )
 
