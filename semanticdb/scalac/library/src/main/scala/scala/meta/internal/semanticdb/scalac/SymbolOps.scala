@@ -17,11 +17,13 @@ trait SymbolOps {
 
   def clearSymbolCaches(): Unit = {
     symbolCache.clear()
-    idCache.clear()
-    clearSymbolPointsCache()
+    clearDocumentCaches()
   }
 
-  def clearSymbolPointsCache(): Unit = pointsCache.clear()
+  def clearDocumentCaches(): Unit = {
+    idCache.clear()
+    pointsCache.clear()
+  }
 
   private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {

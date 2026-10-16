@@ -51,7 +51,7 @@ trait TextDocumentOps {
     def toTextDocument: s.TextDocument = toTextDocument(None)
 
     def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
-      clearSymbolPointsCache()
+      clearDocumentCaches()
       val occurrences = emptyOccurrenceMap()
       val samoccurrences = emptyOccurrenceMap()
       // SAM methods share positions with their classes.
