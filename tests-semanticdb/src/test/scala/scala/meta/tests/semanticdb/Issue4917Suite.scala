@@ -47,6 +47,7 @@ class Issue4917Suite extends SemanticdbSuite {
        |[2:44..2:46): s1 => advanced/Structural#s1().
        |[3:6..3:16): memberValX <= a/C#memberValX.
        |[3:19..3:28): memberVal => a/C#memberVal.
+       |[3:29..3:30): x => local0
        |[4:6..4:15): memberDef <= a/C#memberDef().
        |[4:22..4:30): advanced => advanced/
        |[4:31..4:41): Structural => advanced/Structural#
@@ -54,30 +55,35 @@ class Issue4917Suite extends SemanticdbSuite {
        |[4:44..4:46): s1 => advanced/Structural#s1().
        |[5:6..5:16): memberDefX <= a/C#memberDefX.
        |[5:19..5:28): memberDef => a/C#memberDef().
+       |[5:29..5:30): x => local0
        |[6:6..6:12): chainX <= a/C#chainX.
        |[6:19..6:27): advanced => advanced/
        |[6:28..6:38): Structural => advanced/Structural#
        |[6:38..6:38):  => advanced/Structural#`<init>`().
        |[6:41..6:43): s1 => advanced/Structural#s1().
+       |[6:44..6:45): x => local0
        |[7:6..7:11): anonX <= a/C#anonX.
        |[7:18..7:26): advanced => advanced/
        |[7:27..7:37): Structural => advanced/Structural#
        |[7:37..7:37):  => advanced/Structural#`<init>`().
        |[7:40..7:42): s2 => advanced/Structural#s2().
+       |[7:43..7:44): x => local1
        |[8:6..8:13): methodM <= a/C#methodM.
        |[8:20..8:28): advanced => advanced/
        |[8:29..8:39): Structural => advanced/Structural#
        |[8:39..8:39):  => advanced/Structural#`<init>`().
        |[8:42..8:44): s3 => advanced/Structural#s3().
+       |[8:45..8:46): m => local2
        |[9:6..9:7): m <= a/C#m().
        |[9:11..9:15): Unit => scala/Unit#
-       |[10:8..10:16): localVal <= local1
+       |[10:8..10:16): localVal <= local3
        |[10:23..10:31): advanced => advanced/
        |[10:32..10:42): Structural => advanced/Structural#
        |[10:42..10:42):  => advanced/Structural#`<init>`().
        |[10:45..10:47): s1 => advanced/Structural#s1().
-       |[11:8..11:14): localX <= local2
-       |[11:17..11:25): localVal => local1
+       |[11:8..11:14): localX <= local4
+       |[11:17..11:25): localVal => local3
+       |[11:26..11:27): x => local0
        |""".stripMargin,
   )
 
@@ -107,11 +113,11 @@ class Issue4917Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |c/C#methodM. => val method methodM: Int
        |  Int => scala/Int#
-       |local1 => val local localVal: AnyRef { val def x: Int }
+       |local3 => val local localVal: AnyRef { val def x: Int }
        |  AnyRef => scala/AnyRef#
        |  x => local0
        |  Int => scala/Int#
-       |local2 => val local localX: Int
+       |local4 => val local localX: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
