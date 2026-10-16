@@ -90,7 +90,7 @@ class Issue1675Suite extends FunSuite {
   )
 
   test("method annotated with a class from a missing package")(
-    assertEquals(missing("p/W#a()."), "missing symbol: p.gone"),
+    assertEquals(load("p/W#a()."), Some("p/W#a(). => method a: Int")),
   )
 
   test("java class without its nested classfiles")(assertEquals(
