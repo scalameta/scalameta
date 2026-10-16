@@ -549,14 +549,14 @@ trait TextDocumentOps {
             else None
           /* the symbol of a name in scope, innermost binding first, or None if unsure;
            * for a compiled tree, a binding never conflicts with one further out */
-          private def lookupName(gname: g.TermName, gscope: List[g.Tree], start: Int) = {
+          private def lookupName(gname: g.Name, gscope: List[g.Tree], start: Int) = {
             val gbindings = gscope.iterator.map(scopeBinding(gname, _, start)) ++
               grootImports.iterator.map(importBinding(gname, _)) ++
               Iterator(Some(g.rootMirror.RootClass.info.member(gname)))
             gbindings.find(_.forall(_.exists)).flatten
           }
           // the symbol that a scope binds to a name: NoSymbol if none, None if unsure
-          private def scopeBinding(gname: g.TermName, gtree: g.Tree, start: Int): Option[g.Symbol] = {
+          private def scopeBinding(gname: g.Name, gtree: g.Tree, start: Int): Option[g.Symbol] = {
             def orElse(gsym: Option[g.Symbol])(other: => Option[g.Symbol]) =
               if (gsym.contains(g.NoSymbol)) other else gsym
             def imports(gstats: List[g.Tree]) = gstats.reverseIterator.collect {
@@ -584,15 +584,18 @@ trait TextDocumentOps {
             }
           }
           // the symbol that an import binds to a name: NoSymbol if none, None if unsure
-          private def importBinding(gname: g.TermName, gimport: g.Import): Option[g.Symbol] = {
+          private def importBinding(gname: g.Name, gimport: g.Import): Option[g.Symbol] = {
             val gtpe = gimport.expr.tpe
+            // selectors have term names, for a type too
+            val gterm = gname.toTermName
             if (gtpe == null) None
-            else gimport.selectors.find(_.rename == gname) match {
-              case Some(sel) => Some(gtpe.member(sel.name.toTermName))
+            else gimport.selectors.find(_.rename == gterm) match {
+              case Some(sel) =>
+                Some(gtpe.member(if (gname.isTypeName) sel.name.toTypeName else sel.name.toTermName))
               case _ =>
                 val isWildcard = gimport.selectors.exists(_.name == g.nme.WILDCARD)
                 // a selector that renames the name hides it from the wildcard
-                if (isWildcard && !gimport.selectors.exists(_.name == gname)) Some(gtpe.member(gname))
+                if (isWildcard && !gimport.selectors.exists(_.name == gterm)) Some(gtpe.member(gname))
                 else Some(g.NoSymbol)
             }
           }
