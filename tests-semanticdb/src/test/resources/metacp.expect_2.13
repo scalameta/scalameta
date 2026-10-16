@@ -1920,6 +1920,102 @@ example/Example.x. => val method x: ClassTag[Int]
   ClassTag => scala/reflect/ClassTag#
   Int => scala/Int#
 
+example/ExistentialsB.class
+---------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ExistentialsB.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/ExistentialsB# => class ExistentialsB[T] extends AnyRef { +1 decls }
+  T => example/ExistentialsB#[T]
+  AnyRef => scala/AnyRef#
+example/ExistentialsB#[T] => typeparam T
+example/ExistentialsB#`<init>`(). => primary ctor <init>()
+
+example/ExistentialsC.class
+---------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ExistentialsC.class
+Text => empty
+Language => Scala
+Symbols => 4 entries
+
+Symbols:
+example/ExistentialsC# => class ExistentialsC[CC[_]] extends ExistentialsB[CC[_] forSome { type _ }] { +2 decls }
+  CC => example/ExistentialsC#[CC]
+  _ => example/ExistentialsC#[CC][`1`]
+  ExistentialsB => example/ExistentialsB#
+  _ => example/ExistentialsC#_$1#
+example/ExistentialsC#[CC] => typeparam CC[_]
+  _ => example/ExistentialsC#[CC][`1`]
+example/ExistentialsC#[CC][`1`] => typeparam _
+example/ExistentialsC#`<init>`(). => primary ctor <init>()
+
+example/ExistentialsE.class
+---------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ExistentialsE.class
+Text => empty
+Language => Scala
+Symbols => 10 entries
+
+Symbols:
+example/ExistentialsE# => class ExistentialsE extends AnyRef { +7 decls }
+  AnyRef => scala/AnyRef#
+example/ExistentialsE#A# => type A = List[_] forSome { type _ }
+  List => scala/package.List#
+  _ => local6
+example/ExistentialsE#`<init>`(). => primary ctor <init>()
+example/ExistentialsE#f(). => method f: T forSome { type T }
+  T => local4
+example/ExistentialsE#h(). => method h[F[_]]: F[_] forSome { type _ }
+  F => example/ExistentialsE#h().[F]
+  _ => example/ExistentialsE#h().[F][`2`]
+  _ => local5
+example/ExistentialsE#h().[F] => typeparam F[_]
+  _ => example/ExistentialsE#h().[F][`2`]
+example/ExistentialsE#h().[F][`2`] => typeparam _
+example/ExistentialsE#l(). => method l: List[_] forSome { type _ }
+  List => scala/package.List#
+  _ => local1
+example/ExistentialsE#m(). => method m: List[List[_] forSome { type _ }]
+  List => scala/package.List#
+  _ => local0
+example/ExistentialsE#x. => val method x: Map[_, _] forSome { type _; type _ }
+  Map => scala/Predef.Map#
+  _ => local2
+  _ => local3
+
+example/ExistentialsTest.class
+------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => example/ExistentialsTest.class
+Text => empty
+Language => Scala
+Symbols => 3 entries
+
+Symbols:
+example/ExistentialsTest. => final object ExistentialsTest extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/ExistentialsTest.x. => val method x: List[List[_] forSome { type _ }]
+  List => scala/package.List#
+  _ => example/ExistentialsTest._$2#
+example/ExistentialsTest.y. => val method y: Map[_, _] forSome { type _; type _ }
+  Map => scala/Predef.Map#
+  _ => local0
+  _ => local1
+
 example/FilenameWithSpaces.class
 --------------------------------
 
