@@ -1,8 +1,5 @@
 package scala.meta.internal.semanticdb.scalac
 
-import org.scalameta.collections.Conversions._
-
-import scala.reflect.ClassTag
 import scala.reflect.macros.Attachments
 import scala.tools.nsc.Global
 import scala.tools.nsc.doc.ScaladocGlobal
@@ -26,92 +23,15 @@ trait ReflectionToolkit {
   // NOTE: this boilerplate is unfortunately necessary, because we don't expose Attachable in the public API
   trait Attachable[-T] {
     def attachments(carrier: T): Attachments { type Pos = Position }
-    def updateAttachment[U: ClassTag](carrier: T, attachment: U): Unit
   }
   object Attachable {
     implicit object TreeAttachable extends Attachable[Tree] {
       def attachments(carrier: Tree): Attachments { type Pos = Position } = carrier.attachments
-      def updateAttachment[U: ClassTag](carrier: Tree, attachment: U): Unit = carrier
-        .updateAttachment(attachment)
-    }
-    implicit object SymbolAttachable extends Attachable[Symbol] {
-      def attachments(carrier: Symbol): Attachments { type Pos = Position } = carrier.attachments
-      def updateAttachment[U: ClassTag](carrier: Symbol, attachment: U): Unit = carrier
-        .updateAttachment(attachment)
     }
   }
   implicit class XtensionAttachable[T: Attachable](carrier: T) {
     def attachments: Attachments { type Pos = Position } = implicitly[Attachable[T]]
       .attachments(carrier)
-    def updateAttachment[U: ClassTag](attachment: U): Unit = implicitly[Attachable[T]]
-      .updateAttachment(carrier, attachment)
-  }
-
-  // NOTE: the mechanism of attachments is too low-level for our purposes
-  // because it typically works with dedicated data structures that are declared and then shared between all potential users
-  // since we are a compiler plugin, that's a big restriction, so we go for a stringly-typed approach
-  // all metadata produced by the plugin is stored as key-value pairs in a java.util.HashMap[String, Any]
-  // why Java's HashMap and not a native Scala Map? because prior to 2.11.2 attachments don't work  with subtyping and Map has a bunch of specific subclasses
-  implicit class XtensionMetadataAttachable[T: Attachable](carrier: T) {
-    def metadata: Metadata[T] = new Metadata(carrier)
-    def appendMetadata(kvps: (String, Any)*): T = {
-      kvps.foreach(kvp => carrier.metadata += kvp)
-      carrier
-    }
-    def removeMetadata(keys: String*): T = {
-      keys.foreach(key => carrier.metadata -= key)
-      carrier
-    }
-    def hasMetadata(key: String): Boolean = metadata.get(key).isDefined
-  }
-
-  class Metadata[T: Attachable](carrier: T) {
-
-    def toMap: Map[String, Any] = carrier.attachments.get[java.util.HashMap[String, Any]]
-      .map(_.toScala).getOrElse(Map[String, Any]())
-    def toOption: Option[Map[String, Any]] = carrier.attachments.get[java.util.HashMap[String, Any]]
-      .map(_.toScala)
-    def transform(f: Map[String, Any] => Map[String, Any]): Unit = carrier
-      .updateAttachment(f(toMap).toJava)
-    def contains(key: String): Boolean = toMap.contains(key)
-    def apply(key: String): Any = toMap(key)
-    def get(key: String): Option[Any] = toMap.get(key)
-    def getOrElse[T: ClassTag](key: String, value: => T): T = toMap.get(key).map(_.asInstanceOf[T])
-      .getOrElse(value)
-    def getOrElseUpdate[T: ClassTag](key: String, default: => T): T = {
-      val valueopt = toMap.get(key).map(_.asInstanceOf[T])
-      val value = valueopt.getOrElse(default)
-      if (valueopt.isEmpty) update(key, value)
-      value
-    }
-    def update(key: String, value: Any): Unit = transform(_ + (key -> value))
-    def remove(key: String): Unit = transform(_ - key)
-    def +=(kvp: (String, Any)): Unit = update(kvp._1, kvp._2)
-    def ++=(other: Map[String, Any]): Unit = transform(_ ++ other)
-    def ++=(other: Metadata[T]): Unit = transform(_ ++ other.toMap)
-    def -=(key: String): Unit = remove(key)
-    def --=(other: List[String]): Unit = transform(_ -- other)
-    def --=(other: Metadata[T]): Unit = transform(_ -- other.toMap.keys)
-    override def toString = toMap.toString
-
-  }
-
-  class CompilationUnitCache(unit: CompilationUnit) {
-    def getOrElse[T](key: String, op: => T): T = {
-      val dummyName = g.TermName("<" + key + "Carrier>")
-      val dummySymbol = unit.checkedFeatures.find(_.name == dummyName)
-      val cached = dummySymbol.flatMap(_.metadata.get(key).map(_.asInstanceOf[T]))
-      cached.getOrElse {
-        val computed = op
-        val dummySymbol = g.NoSymbol.newValue(dummyName).appendMetadata(key -> computed)
-        unit.checkedFeatures += dummySymbol
-        computed
-      }
-    }
-  }
-
-  implicit class XtensionCompilationUnitCache(unit: CompilationUnit) {
-    def cache: CompilationUnitCache = new CompilationUnitCache(unit)
   }
 
   object CompoundTypeTreeOf {
