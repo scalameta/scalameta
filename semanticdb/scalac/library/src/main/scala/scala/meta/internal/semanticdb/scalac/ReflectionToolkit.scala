@@ -114,22 +114,6 @@ trait ReflectionToolkit {
     def cache: CompilationUnitCache = new CompilationUnitCache(unit)
   }
 
-  implicit class XtensionDesugarings[T: Attachable](carrier: T) {
-    private def rememberOriginal(designation: String, original: Tree): T =
-      if (carrier == original) carrier else carrier.appendMetadata(designation -> original)
-    def rememberConstfoldOf(original: Tree) = rememberOriginal("constantFoldingOriginal", original)
-    def rememberClassOf(original: Tree) = rememberOriginal("classOfOriginal", original)
-    def rememberNewArrayOf(original: Tree) = rememberOriginal("newArrayOriginal", original)
-    def rememberSingletonTypeTreeOf(original: Tree) =
-      rememberOriginal("singletonTypeTreeOriginal", original)
-    // def rememberCompoundTypeTreeOf(original: Tree) = rememberOriginal("compoundTypeTreeOriginal", original)
-    def rememberExistentialTypeTreeOf(original: Tree) =
-      rememberOriginal("existentialTypeTreeOriginal", original)
-    def rememberAnnotatedOf(original: Tree) = rememberOriginal("annotatedOriginal", original)
-    def rememberSelfTypeOf(original: Tree) = rememberOriginal("selfTypeOriginal", original)
-    def rememberSelectOf(original: Tree) = rememberOriginal("selectOriginal", original)
-  }
-
   object ConstfoldOf {
     def unapply[T: Attachable](carrier: T) = carrier.metadata.get("constantFoldingOriginal")
       .map(_.asInstanceOf[Tree])
