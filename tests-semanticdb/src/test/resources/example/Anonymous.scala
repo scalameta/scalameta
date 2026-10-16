@@ -14,5 +14,5 @@ class Anonymous/*<=example.Anonymous#*/ {
   }
 
   trait Foo/*<=example.Anonymous#Foo#*/
-  new /*<=local4*/Foo/*=>example.Anonymous#Foo#*/ /*=>java.lang.Object#`<init>`().*/{}
+  new /*<=local4*/Foo/*=>example.Anonymous#Foo#*//*=>java.lang.Object#`<init>`().*/ {}
 }

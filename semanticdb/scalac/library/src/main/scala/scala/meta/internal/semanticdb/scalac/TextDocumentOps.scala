@@ -282,7 +282,12 @@ trait TextDocumentOps {
             if (gsym0 == null) return
             if (gsym0.isUselessOccurrence) return
             if (gsym0.isImplicitPrimitiveConversion(mtree)) return
-            val pos = mtree.pos
+            val pos = mtree.parent match {
+              // without arguments, the name of an init is at the next token, past any comment
+              case Some(p: m.Init) if (p.name eq mtree) && p.argClauses.isEmpty =>
+                p.pos.input.pos(p.pos.end)
+              case _ => mtree.pos
+            }
             if (pos == m.Position.None) return
             if (occurrences.contains(pos)) return
 

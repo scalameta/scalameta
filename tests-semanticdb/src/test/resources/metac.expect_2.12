@@ -573,7 +573,7 @@ Occurrences:
 [15:8..15:11): Foo <= example/Anonymous#Foo#
 [16:6..16:6):  <= local4
 [16:6..16:9): Foo => example/Anonymous#Foo#
-[16:10..16:10):  => java/lang/Object#`<init>`().
+[16:9..16:9):  => java/lang/Object#`<init>`().
 
 Synthetics:
 [8:2..8:9): locally => *[Unit]
@@ -1661,7 +1661,7 @@ Occurrences:
 [20:38..20:41): Int => scala/Int#
 [21:8..21:9): S <= flags/p/package.S#
 [21:11..21:22): specialized => scala/specialized#
-[21:23..21:23):  => scala/specialized#`<init>`(+2).
+[21:22..21:22):  => scala/specialized#`<init>`(+2).
 [21:23..21:24): T <= flags/p/package.S#[T]
 [21:25..21:25):  <= flags/p/package.S#`<init>`().
 [22:6..22:10): List => scala/collection/immutable/List.
@@ -3057,7 +3057,7 @@ Occurrences:
 [13:6..13:17): Issue2116_2 <= example/Issue2116_2#
 [13:18..13:18):  <= example/Issue2116_2#`<init>`().
 [13:26..13:35): Issue2116 => example/Issue2116#
-[13:36..13:36):  => example/Issue2116#`<init>`().
+[13:35..13:35):  => example/Issue2116#`<init>`().
 [15:15..15:17): ec <= example/Issue2116_2#ec.
 [15:20..15:25): scala => scala/
 [15:26..15:36): concurrent => scala/concurrent/
@@ -4490,7 +4490,7 @@ Occurrences:
 [3:6..3:7): B <= example/B#
 [3:7..3:7):  <= example/B#`<init>`().
 [3:18..3:19): A => example/A#
-[3:20..3:20):  => java/lang/Object#`<init>`().
+[3:19..3:19):  => java/lang/Object#`<init>`().
 [3:26..3:29): foo <= example/B#foo().
 [3:31..3:34): Int => scala/Int#
 
@@ -4608,7 +4608,7 @@ Occurrences:
 [14:14..14:17): ??? => scala/Predef.`???`().
 [17:7..17:8): O <= prefixes/O.
 [17:17..17:18): C => prefixes/C#
-[17:19..17:19):  => prefixes/C#`<init>`().
+[17:18..17:18):  => prefixes/C#`<init>`().
 [18:6..18:8): o1 <= prefixes/O.o1().
 [18:10..18:11): T => prefixes/C#T#
 [18:14..18:17): ??? => scala/Predef.`???`().
@@ -4648,7 +4648,7 @@ Occurrences:
 [36:16..36:19): ??? => scala/Predef.`???`().
 [39:7..39:8): B <= prefixes/B.
 [39:17..39:18): B => prefixes/B#
-[39:19..39:19):  => prefixes/B#`<init>`().
+[39:18..39:18):  => prefixes/B#`<init>`().
 [40:7..40:8): Z <= prefixes/B.Z#
 [41:6..41:8): b2 <= prefixes/B.b2().
 [41:10..41:11): X => prefixes/B#X#
@@ -4736,34 +4736,34 @@ Occurrences:
 [4:6..4:8): C1 <= selfs/C1#
 [4:9..4:9):  <= selfs/C1#`<init>`().
 [4:17..4:18): B => selfs/B#
-[4:19..4:19):  => selfs/B#`<init>`().
+[4:18..4:18):  => selfs/B#`<init>`().
 [4:21..4:25): self <= local0
 [6:6..6:8): C2 <= selfs/C2#
 [6:9..6:9):  <= selfs/C2#`<init>`().
 [6:17..6:18): B => selfs/B#
-[6:19..6:19):  => selfs/B#`<init>`().
+[6:18..6:18):  => selfs/B#`<init>`().
 [6:21..6:25): self <= local1
 [6:27..6:28): B => selfs/B#
 [8:6..8:8): C3 <= selfs/C3#
 [8:9..8:9):  <= selfs/C3#`<init>`().
 [8:17..8:18): B => selfs/B#
-[8:19..8:19):  => selfs/B#`<init>`().
+[8:18..8:18):  => selfs/B#`<init>`().
 [8:21..8:25): self <= local2
 [8:27..8:28): B => selfs/B#
 [8:34..8:37): Int => scala/Int#
 [10:6..10:8): C4 <= selfs/C4#
 [10:9..10:9):  <= selfs/C4#`<init>`().
 [10:17..10:18): B => selfs/B#
-[10:19..10:19):  => selfs/B#`<init>`().
+[10:18..10:18):  => selfs/B#`<init>`().
 [12:6..12:8): C5 <= selfs/C5#
 [12:9..12:9):  <= selfs/C5#`<init>`().
 [12:17..12:18): B => selfs/B#
-[12:19..12:19):  => selfs/B#`<init>`().
+[12:18..12:18):  => selfs/B#`<init>`().
 [12:24..12:25): B => selfs/B#
 [14:6..14:8): C6 <= selfs/C6#
 [14:9..14:9):  <= selfs/C6#`<init>`().
 [14:17..14:18): B => selfs/B#
-[14:19..14:19):  => selfs/B#`<init>`().
+[14:18..14:18):  => selfs/B#`<init>`().
 [14:27..14:28): B => selfs/B#
 [16:15..16:17): C7 <= selfs/C7#
 [16:18..16:18):  <= selfs/C7#`<init>`().
@@ -5333,7 +5333,7 @@ Occurrences:
 [8:9..8:10): U => traits/U#
 [8:17..8:17):  <= local0
 [8:17..8:18): U => traits/U#
-[8:19..8:19):  => java/lang/Object#`<init>`().
+[8:18..8:18):  => java/lang/Object#`<init>`().
 [11:6..11:7): C <= traits/C#
 [11:7..11:7):  <= traits/C#`<init>`().
 [12:6..12:7): V <= traits/V#
@@ -5744,7 +5744,7 @@ Occurrences:
 [34:8..34:9): C <= types/Test.C#
 [34:10..34:10):  <= types/Test.C#`<init>`().
 [34:18..34:19): M => types/Test.M#
-[34:20..34:20):  => types/Test.M#`<init>`().
+[34:19..34:19):  => types/Test.M#`<init>`().
 [35:8..35:9): p <= types/Test.C#p.
 [35:16..35:17): P => types/P#
 [35:17..35:17):  => types/P#`<init>`().
@@ -5816,12 +5816,12 @@ Occurrences:
 [58:8..58:21): compoundType5 <= types/Test.C#compoundType5.
 [58:28..58:28):  <= local4
 [58:28..58:29): M => types/Test.M#
-[58:30..58:30):  => types/Test.M#`<init>`().
+[58:29..58:29):  => types/Test.M#`<init>`().
 [58:35..58:36): N => types/Test.N#
 [59:8..59:21): compoundType6 <= types/Test.C#compoundType6.
 [59:28..59:28):  <= local5
 [59:28..59:29): M => types/Test.M#
-[59:30..59:30):  => types/Test.M#`<init>`().
+[59:29..59:29):  => types/Test.M#`<init>`().
 [59:35..59:36): N => types/Test.N#
 [59:43..59:44): k <= local6
 [59:46..59:49): Int => scala/Int#
@@ -5834,9 +5834,9 @@ Occurrences:
 [62:8..62:16): annType2 <= types/Test.C#annType2.
 [62:18..62:19): T => types/T#
 [62:21..62:25): ann1 => types/ann1#
-[62:26..62:26):  => types/ann1#`<init>`().
+[62:25..62:25):  => types/ann1#`<init>`().
 [62:27..62:31): ann2 => types/ann2#
-[62:32..62:32):  => types/ann2#`<init>`().
+[62:31..62:31):  => types/ann2#`<init>`().
 [62:34..62:37): ??? => scala/Predef.`???`().
 [64:8..64:24): existentialType1 <= types/Test.C#existentialType1.
 [64:26..64:27): T => local7
@@ -5864,7 +5864,7 @@ Occurrences:
 [73:10..73:24): ClassInfoType2 <= types/Test.C#ClassInfoType2#
 [73:25..73:25):  <= types/Test.C#ClassInfoType2#`<init>`().
 [73:33..73:34): B => types/B#
-[73:35..73:35):  => types/B#`<init>`().
+[73:34..73:34):  => types/B#`<init>`().
 [73:41..73:42): x <= types/Test.C#ClassInfoType2#x().
 [74:10..74:24): ClassInfoType3 <= types/Test.C#ClassInfoType3#
 [74:25..74:26): T <= types/Test.C#ClassInfoType3#[T]
