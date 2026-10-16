@@ -409,7 +409,16 @@ trait TextDocumentOps {
                   // now find the super parent
                   val parent = t.mix
                   val parents = gsym.asClass.info.parents.map(_.typeSymbol)
-                  (if (parent.isEmpty) parents.headOption else parents.find(_.name == parent))
+                  if (parent.nonEmpty) parents.find(_.name == parent)
+                    .foreach(success(mtree.superp, _))
+                }
+              // an unqualified super stands for the parent that has the selected member
+              case g.Select(t: g.Super, _) if t.mix.isEmpty =>
+                tryMstart(gpoint)
+                if (gsym != null && gsym.exists) msupers.get(t.pos.end).foreach { mtree =>
+                  val owner = gsym.owner
+                  val parents = t.symbol.asClass.info.parents.map(_.typeSymbol)
+                  parents.find(_ == owner).orElse(parents.find(_.isSubClass(owner)))
                     .foreach(success(mtree.superp, _))
                 }
               case gtree: g.Select if gtree.symbol == g.definitions.NilModule =>
