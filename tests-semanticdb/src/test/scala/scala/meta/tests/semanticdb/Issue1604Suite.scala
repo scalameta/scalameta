@@ -112,13 +112,16 @@ class Issue1604Suite extends FunSuite {
 
   dir.test("unreadable .semanticdb file") { root =>
     val path = unreadable(write(root.resolve("a.semanticdb"), payload))
-    assertEquals(locate(root, path), List("throws AccessDeniedException"))
+    assertEquals(locate(root, path), List("a.semanticdb: AccessDeniedException"))
   }
 
   dir.test("unreadable .semanticdb file in a directory") { root =>
     unreadable(write(root.resolve("a.semanticdb"), payload))
     write(root.resolve("b.semanticdb"), payload)
-    assertEquals(locate(root, root), List("throws AccessDeniedException"))
+    assertEquals(
+      locate(root, root),
+      List("a.semanticdb: AccessDeniedException", "b.semanticdb: A.scala"),
+    )
   }
 
   dir.test("unreadable directory") { root =>
