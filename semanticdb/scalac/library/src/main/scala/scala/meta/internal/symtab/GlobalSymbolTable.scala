@@ -17,7 +17,7 @@ import scala.reflect.NameTransformer
 final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean)
     extends SymbolTable {
 
-  private val settings = Settings()
+  private val settings = Settings().withStubBrokenSignatures(true)
   private val reporter = Reporter().withSilentOut().withSilentErr()
   private val classpathIndex = ClasspathIndex(classpath, includeJdk, reporter)
   private val symbolCache = TrieMap.empty[String, SymbolInformation]

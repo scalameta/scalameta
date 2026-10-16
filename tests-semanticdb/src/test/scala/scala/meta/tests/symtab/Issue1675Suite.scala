@@ -76,17 +76,17 @@ class Issue1675Suite extends FunSuite {
     .getMessage
 
   test("method returning a class from a missing package") {
-    assertEquals(missing("p/U#"), "missing symbol: p.gone")
-    assertEquals(missing("p/U#m()."), "missing symbol: p.gone")
-    assertEquals(missing("p/U#n()."), "missing symbol: p.gone")
+    assertEquals(load("p/U#"), Some("p/U# => class U extends AnyRef { +3 decls }"))
+    assertEquals(load("p/U#m()."), Some("p/U#m(). => method m"))
+    assertEquals(load("p/U#n()."), Some("p/U#n(). => method n: Int"))
   }
 
   test("method returning a missing class")(
-    assertEquals(missing("p/L#m()."), "missing symbol: p.Lost"),
+    assertEquals(load("p/L#m()."), Some("p/L#m(). => method m")),
   )
 
   test("class extending a class from a missing package")(
-    assertEquals(missing("p/V#"), "missing symbol: p.gone"),
+    assertEquals(load("p/V#"), Some("p/V# => class V")),
   )
 
   test("method annotated with a class from a missing package")(
