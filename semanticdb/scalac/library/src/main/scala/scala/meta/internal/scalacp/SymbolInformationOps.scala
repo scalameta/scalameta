@@ -165,7 +165,15 @@ trait SymbolInformationOps {
 
     private def annotations: List[s.AnnotationTree] = {
       val builder = List.newBuilder[s.AnnotationTree]
-      sym.attributes.foreach(attr => attr.toSemanticOpt.foreach(builder += _))
+      sym.attributes.foreach(attr =>
+        try attr.toSemanticOpt.foreach(builder += _)
+        catch {
+          case ex: MissingSymbolException =>
+            if (settings.logBrokenSignatures) reporter.err
+              .println(s"broken annotation for ${sym.ssym}: ${ex.getMessage}")
+            if (!settings.stubBrokenSignatures) throw ex
+        },
+      )
       builder.result()
     }
 
