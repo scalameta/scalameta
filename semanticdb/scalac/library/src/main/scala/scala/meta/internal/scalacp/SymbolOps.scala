@@ -36,7 +36,7 @@ trait SymbolOps {
         // sym.isSelfParameter ||
         // sym.isLocalDummy ||
         sym.isRefinementClass || sym.isAnonymousClass || sym.isAnonymousFunction ||
-        sym.isInstanceOf[TypeSymbol] && sym.isExistential
+        sym.isExistentialType
       def ownerLocal = sym.parent.map(_.isSemanticdbLocal).getOrElse(false)
       !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
@@ -99,7 +99,8 @@ trait SymbolOps {
     def semanticdbDecls: SemanticdbDecls = {
       // ScalaSig has no source positions, so declarations keep symbol-table order: a companion
       // eagerly created after its class stays there even if declared later (#1544); metac reorders.
-      val decls = sym.children.filter(decl => decl.isUseful && !decl.isTypeParam)
+      val decls = sym.children
+        .filter(decl => decl.isUseful && !decl.isTypeParam && !decl.isExistentialType)
       SemanticdbDecls(decls.toList)
     }
   }
@@ -179,6 +180,28 @@ trait SymbolOps {
     def isConstructor: Boolean = sym.isMethod && (sym.name == "<init>" || sym.name == "$init$")
     def isPackageObject: Boolean = sym.name == "package"
     def isTypeParam = sym.isType && sym.isParam
+    def isExistentialType: Boolean = sym match {
+      case sym: TypeSymbol =>
+        /* scalap reads the flags as an Int and drops EXISTENTIAL (bit 35), so read them again:
+         * name_Ref owner_Ref flags_LongNat, after a Nat if the tag is over 64 */
+        val entry = sym.entry.scalaSig.getEntry(sym.index)
+        val bytes = entry.byteCode.bytes
+        var pos = entry.byteCode.pos
+        var left = if (entry.entryType > 64) 4 else 3
+        var nat = 0L
+        while (left > 0) {
+          nat = 0L
+          var b = 0x80
+          while ((b & 0x80) != 0) {
+            b = bytes(pos)
+            pos += 1
+            nat = nat << 7 | b & 0x7f
+          }
+          left -= 1
+        }
+        (nat & 0x800000000L) != 0
+      case _ => false
+    }
     def isAnonymousClass = sym.name.contains("$anon")
     def isAnonymousFunction = sym.name.contains("$anonfun")
     def isSyntheticConstructor = sym match {

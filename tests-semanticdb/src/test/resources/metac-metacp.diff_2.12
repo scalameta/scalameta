@@ -6,17 +6,14 @@ advanced/D#
                    type_ref {
                      prefix {
 -                    symbol: "local10"
-+                    symbol: "advanced/D#_$2#"
++                    symbol: "local0"
              declarations {
                hardlinks {
 -                symbol: "local10"
-+                symbol: "advanced/D#_$2#"
++                symbol: "local0"
                  kind: TYPE
                  properties: 4
                  display_name: "_"
-     declarations {
-       symlinks: "advanced/D#`<init>`()."
-+      symlinks: "advanced/D#_$2#"
 
 
 ==========================
@@ -112,11 +109,11 @@ advanced/Test.e2.
                    type_ref {
                      prefix {
 -                    symbol: "local7"
-+                    symbol: "advanced/Test.T#"
++                    symbol: "local4"
              declarations {
                hardlinks {
 -                symbol: "local7"
-+                symbol: "advanced/Test.T#"
++                symbol: "local4"
                  kind: TYPE
                  properties: 4
                  display_name: "T"
@@ -486,27 +483,6 @@ example/B#foo().
 -overridden_symbols: "example/A#foo()."
 
 
-======================
-example/ExistentialsC#
-======================
---- metac
-+++ metacp
-                   type_ref {
-                     prefix {
--                    symbol: "local0"
-+                    symbol: "example/ExistentialsC#_$1#"
-             declarations {
-               hardlinks {
--                symbol: "local0"
-+                symbol: "example/ExistentialsC#_$1#"
-                 kind: TYPE
-                 properties: 4
-                 display_name: "_"
-     declarations {
-       symlinks: "example/ExistentialsC#`<init>`()."
-+      symlinks: "example/ExistentialsC#_$1#"
-
-
 ========================
 example/ExistentialsE#A#
 ========================
@@ -645,11 +621,11 @@ example/ExistentialsTest.x.
                    type_ref {
                      prefix {
 -                    symbol: "local1"
-+                    symbol: "example/ExistentialsTest._$2#"
++                    symbol: "local0"
              declarations {
                hardlinks {
 -                symbol: "local1"
-+                symbol: "example/ExistentialsTest._$2#"
++                symbol: "local0"
                  kind: TYPE
                  properties: 4
                  display_name: "_"
@@ -663,22 +639,22 @@ example/ExistentialsTest.y.
                type_ref {
                  prefix {
 -                symbol: "local8"
-+                symbol: "local0"
++                symbol: "local1"
              type_arguments {
                type_ref {
                  prefix {
 -                symbol: "local9"
-+                symbol: "local1"
++                symbol: "local2"
          declarations {
            hardlinks {
 -            symbol: "local8"
-+            symbol: "local0"
++            symbol: "local1"
              kind: TYPE
              properties: 4
              display_name: "_"
            hardlinks {
 -            symbol: "local9"
-+            symbol: "local1"
++            symbol: "local2"
              kind: TYPE
              properties: 4
              display_name: "_"

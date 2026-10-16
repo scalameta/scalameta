@@ -45,11 +45,11 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-advanced/D# => class D[CC[_]] extends C[CC[_] forSome { type _ }] { +2 decls }
+advanced/D# => class D[CC[_]] extends C[CC[_] forSome { type _ }] { +1 decls }
   CC => advanced/D#[CC]
   _ => advanced/D#[CC][_]
   C => advanced/C#
-  _ => advanced/D#_$2#
+  _ => local0
 advanced/D#[CC] => typeparam CC[_]
   _ => advanced/D#[CC][_]
 advanced/D#[CC][_] => typeparam _
@@ -133,7 +133,7 @@ advanced/Test.e1x. => val method e1x: Any
 advanced/Test.e2. => val method e2: C[List[T] forSome { type T }]
   C => advanced/C#
   List => scala/package.List#
-  T => advanced/Test.T#
+  T => local4
 advanced/Test.e2x. => val method e2x: List[Any]
   List => scala/collection/immutable/List#
   Any => scala/Any#
@@ -1931,11 +1931,11 @@ Language => Scala
 Symbols => 4 entries
 
 Symbols:
-example/ExistentialsC# => class ExistentialsC[CC[_]] extends ExistentialsB[CC[_] forSome { type _ }] { +2 decls }
+example/ExistentialsC# => class ExistentialsC[CC[_]] extends ExistentialsB[CC[_] forSome { type _ }] { +1 decls }
   CC => example/ExistentialsC#[CC]
   _ => example/ExistentialsC#[CC][_]
   ExistentialsB => example/ExistentialsB#
-  _ => example/ExistentialsC#_$1#
+  _ => local0
 example/ExistentialsC#[CC] => typeparam CC[_]
   _ => example/ExistentialsC#[CC][_]
 example/ExistentialsC#[CC][_] => typeparam _
@@ -1993,11 +1993,11 @@ example/ExistentialsTest. => final object ExistentialsTest extends AnyRef { +2 d
   AnyRef => scala/AnyRef#
 example/ExistentialsTest.x. => val method x: List[List[_] forSome { type _ }]
   List => scala/package.List#
-  _ => example/ExistentialsTest._$2#
+  _ => local0
 example/ExistentialsTest.y. => val method y: Map[_, _] forSome { type _; type _ }
   Map => scala/Predef.Map#
-  _ => local0
   _ => local1
+  _ => local2
 
 example/FilenameWithSpaces.class
 --------------------------------
