@@ -503,6 +503,7 @@ def testsSemanticdbSettings(version: String) = Def.settings(
     "classDirectories" ->
       Seq(common2.publishedClassDir(version).value, common.publishedClassDir(version).value),
     "databaseClasspath" -> semanticdbIntegration.classDir(version).value,
+    "targetDirectory" -> (Test / target).value.getAbsolutePath,
     "integrationSourceDirectories" -> (semanticdbIntegration.jvmCompile(version) / sourceDirectories)
       .value,
   ),
