@@ -1303,6 +1303,131 @@ Diagnostics => 1 entries
 Diagnostics:
 [5:6..5:41) [warning] class Stack in package mutable is deprecated (since 2.12.0): Stack is an inelegant and potentially poorly-performing wrapper around List. Use a List assigned to a var instead.
 
+semanticdb/integration/src/main/scala/example/Existentials.scala
+----------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/Existentials.scala
+Text => non-empty
+Language => Scala
+Symbols => 21 entries
+Occurrences => 42 entries
+Diagnostics => 3 entries
+
+Symbols:
+example/ExistentialsB# => class ExistentialsB[T] extends AnyRef { +1 decls }
+  T => example/ExistentialsB#[T]
+  AnyRef => scala/AnyRef#
+example/ExistentialsB#[T] => typeparam T
+example/ExistentialsB#`<init>`(). => primary ctor <init>()
+example/ExistentialsC# => class ExistentialsC[CC[_]] extends ExistentialsB[CC[_] forSome { type _ }] { +1 decls }
+  CC => example/ExistentialsC#[CC]
+  _ => example/ExistentialsC#[CC][_]
+  ExistentialsB => example/ExistentialsB#
+  _ => local0
+example/ExistentialsC#[CC] => typeparam CC[_]
+  _ => example/ExistentialsC#[CC][_]
+example/ExistentialsC#[CC][_] => typeparam _
+example/ExistentialsC#`<init>`(). => primary ctor <init>()
+example/ExistentialsE# => class ExistentialsE extends AnyRef { +7 decls }
+  AnyRef => scala/AnyRef#
+example/ExistentialsE#A# => type A = List[_] forSome { type _ }
+  List => scala/package.List#
+  _ => local7
+example/ExistentialsE#`<init>`(). => primary ctor <init>()
+example/ExistentialsE#f(). => method f: T forSome { type T }
+  T => local5
+example/ExistentialsE#h(). => method h[F[_]]: F[_] forSome { type _ }
+  F => example/ExistentialsE#h().[F]
+  _ => example/ExistentialsE#h().[F][_]
+  _ => local6
+example/ExistentialsE#h().[F] => typeparam F[_]
+  _ => example/ExistentialsE#h().[F][_]
+example/ExistentialsE#h().[F][_] => typeparam _
+example/ExistentialsE#l(). => method l: List[_] forSome { type _ }
+  List => scala/package.List#
+  _ => local2
+example/ExistentialsE#m(). => method m: List[List[_] forSome { type _ }]
+  List => scala/package.List#
+  _ => local1
+example/ExistentialsE#x. => val method x: Map[_, _] forSome { type _; type _ }
+  Map => scala/Predef.Map#
+  _ => local3
+  _ => local4
+example/ExistentialsTest. => final object ExistentialsTest extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/ExistentialsTest.x. => val method x: List[List[_] forSome { type _ }]
+  List => scala/package.List#
+  _ => local1
+example/ExistentialsTest.y. => val method y: Map[_, _] forSome { type _; type _ }
+  Map => scala/Predef.Map#
+  _ => local8
+  _ => local9
+local5 => abstract type T
+
+Occurrences:
+[1:8..1:15): example <= example/
+[3:6..3:19): ExistentialsB <= example/ExistentialsB#
+[3:20..3:21): T <= example/ExistentialsB#[T]
+[3:22..3:22):  <= example/ExistentialsB#`<init>`().
+[4:6..4:19): ExistentialsC <= example/ExistentialsC#
+[4:20..4:22): CC <= example/ExistentialsC#[CC]
+[4:27..4:27):  <= example/ExistentialsC#`<init>`().
+[4:35..4:48): ExistentialsB => example/ExistentialsB#
+[4:49..4:51): CC => example/ExistentialsC#[CC]
+[4:55..4:55):  => example/ExistentialsB#`<init>`().
+[6:6..6:19): ExistentialsE <= example/ExistentialsE#
+[6:20..6:20):  <= example/ExistentialsE#`<init>`().
+[7:6..7:7): m <= example/ExistentialsE#m().
+[7:9..7:13): List => scala/package.List#
+[7:14..7:18): List => scala/package.List#
+[7:25..7:28): ??? => scala/Predef.`???`().
+[8:6..8:7): l <= example/ExistentialsE#l().
+[8:9..8:13): List => scala/package.List#
+[8:19..8:22): ??? => scala/Predef.`???`().
+[9:6..9:7): x <= example/ExistentialsE#x.
+[9:9..9:12): Map => scala/Predef.Map#
+[9:21..9:24): ??? => scala/Predef.`???`().
+[10:6..10:7): f <= example/ExistentialsE#f().
+[10:9..10:10): T => local5
+[10:26..10:27): T <= local5
+[10:32..10:35): ??? => scala/Predef.`???`().
+[11:6..11:7): h <= example/ExistentialsE#h().
+[11:8..11:9): F <= example/ExistentialsE#h().[F]
+[11:15..11:16): F => example/ExistentialsE#h().[F]
+[11:22..11:25): ??? => scala/Predef.`???`().
+[12:7..12:8): A <= example/ExistentialsE#A#
+[12:11..12:15): List => scala/package.List#
+[15:7..15:23): ExistentialsTest <= example/ExistentialsTest.
+[16:6..16:7): x <= example/ExistentialsTest.x.
+[16:14..16:27): ExistentialsE => example/ExistentialsE#
+[16:27..16:27):  => example/ExistentialsE#`<init>`().
+[16:30..16:31): m => example/ExistentialsE#m().
+[17:6..17:7): y <= example/ExistentialsTest.y.
+[17:9..17:12): Map => scala/Predef.Map#
+[17:25..17:38): ExistentialsE => example/ExistentialsE#
+[17:38..17:38):  => example/ExistentialsE#`<init>`().
+[17:41..17:42): x => example/ExistentialsE#x.
+
+Diagnostics:
+[4:20..4:25) [warning] higher-kinded type should be enabled
+by making the implicit value scala.language.higherKinds visible.
+----
+This can be achieved by adding the import clause 'import scala.language.higherKinds'
+or by setting the compiler option -language:higherKinds.
+See the Scaladoc for value scala.language.higherKinds for a discussion
+why the feature should be explicitly enabled.
+[10:9..10:29) [warning] the existential type T forSome { type T }, which cannot be expressed by wildcards,  should be enabled
+by making the implicit value scala.language.existentials visible.
+----
+This can be achieved by adding the import clause 'import scala.language.existentials'
+or by setting the compiler option -language:existentials.
+See the Scaladoc for value scala.language.existentials for a discussion
+why the feature should be explicitly enabled.
+[11:8..11:12) [warning] higher-kinded type should be enabled
+by making the implicit value scala.language.higherKinds visible.
+
 semanticdb/integration/src/main/scala/example/filename%20with%20spaces.scala
 ----------------------------------------------------------------------------
 

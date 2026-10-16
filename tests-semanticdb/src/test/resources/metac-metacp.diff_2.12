@@ -486,6 +486,204 @@ example/B#foo().
 -overridden_symbols: "example/A#foo()."
 
 
+======================
+example/ExistentialsC#
+======================
+--- metac
++++ metacp
+                   type_ref {
+                     prefix {
+-                    symbol: "local0"
++                    symbol: "example/ExistentialsC#_$1#"
+             declarations {
+               hardlinks {
+-                symbol: "local0"
++                symbol: "example/ExistentialsC#_$1#"
+                 kind: TYPE
+                 properties: 4
+                 display_name: "_"
+     declarations {
+       symlinks: "example/ExistentialsC#`<init>`()."
++      symlinks: "example/ExistentialsC#_$1#"
+
+
+========================
+example/ExistentialsE#A#
+========================
+--- metac
++++ metacp
+               type_ref {
+                 prefix {
+-                symbol: "local7"
++                symbol: "local6"
+         declarations {
+           hardlinks {
+-            symbol: "local7"
++            symbol: "local6"
+             kind: TYPE
+             properties: 4
+             display_name: "_"
+               type_ref {
+                 prefix {
+-                symbol: "local7"
++                symbol: "local6"
+         declarations {
+           hardlinks {
+-            symbol: "local7"
++            symbol: "local6"
+             kind: TYPE
+             properties: 4
+             display_name: "_"
+
+
+==========================
+example/ExistentialsE#f().
+==========================
+--- metac
++++ metacp
+           type_ref {
+             prefix {
+-            symbol: "local5"
++            symbol: "local4"
+         declarations {
+           hardlinks {
+-            symbol: "local5"
++            symbol: "local4"
+             kind: TYPE
+             properties: 4
+             display_name: "T"
+
+
+==========================
+example/ExistentialsE#h().
+==========================
+--- metac
++++ metacp
+               type_ref {
+                 prefix {
+-                symbol: "local6"
++                symbol: "local5"
+         declarations {
+           hardlinks {
+-            symbol: "local6"
++            symbol: "local5"
+             kind: TYPE
+             properties: 4
+             display_name: "_"
+
+
+==========================
+example/ExistentialsE#l().
+==========================
+--- metac
++++ metacp
+               type_ref {
+                 prefix {
+-                symbol: "local2"
++                symbol: "local1"
+         declarations {
+           hardlinks {
+-            symbol: "local2"
++            symbol: "local1"
+             kind: TYPE
+             properties: 4
+             display_name: "_"
+
+
+==========================
+example/ExistentialsE#m().
+==========================
+--- metac
++++ metacp
+                   type_ref {
+                     prefix {
+-                    symbol: "local1"
++                    symbol: "local0"
+             declarations {
+               hardlinks {
+-                symbol: "local1"
++                symbol: "local0"
+                 kind: TYPE
+                 properties: 4
+                 display_name: "_"
+
+
+========================
+example/ExistentialsE#x.
+========================
+--- metac
++++ metacp
+               type_ref {
+                 prefix {
+-                symbol: "local3"
++                symbol: "local2"
+             type_arguments {
+               type_ref {
+                 prefix {
+-                symbol: "local4"
++                symbol: "local3"
+         declarations {
+           hardlinks {
+-            symbol: "local3"
++            symbol: "local2"
+             kind: TYPE
+             properties: 4
+             display_name: "_"
+           hardlinks {
+-            symbol: "local4"
++            symbol: "local3"
+             kind: TYPE
+             properties: 4
+             display_name: "_"
+
+
+===========================
+example/ExistentialsTest.x.
+===========================
+--- metac
++++ metacp
+                   type_ref {
+                     prefix {
+-                    symbol: "local1"
++                    symbol: "example/ExistentialsTest._$2#"
+             declarations {
+               hardlinks {
+-                symbol: "local1"
++                symbol: "example/ExistentialsTest._$2#"
+                 kind: TYPE
+                 properties: 4
+                 display_name: "_"
+
+
+===========================
+example/ExistentialsTest.y.
+===========================
+--- metac
++++ metacp
+               type_ref {
+                 prefix {
+-                symbol: "local8"
++                symbol: "local0"
+             type_arguments {
+               type_ref {
+                 prefix {
+-                symbol: "local9"
++                symbol: "local1"
+         declarations {
+           hardlinks {
+-            symbol: "local8"
++            symbol: "local0"
+             kind: TYPE
+             properties: 4
+             display_name: "_"
+           hardlinks {
+-            symbol: "local9"
++            symbol: "local1"
+             kind: TYPE
+             properties: 4
+             display_name: "_"
+
+
 ======================================
 example/InstrumentTyper#existential().
 ======================================
