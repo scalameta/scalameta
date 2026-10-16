@@ -172,7 +172,7 @@ class Issue1604Suite extends FunSuite {
       os.write(payload)
       os.closeEntry()
     } finally os.close()
-    assertEquals(locate(root, path), List("a.semanticdb: A.scala", "throws IOException"))
+    assertEquals(locate(root, path), List("a.semanticdb: A.scala"))
   }
 
   dir.test("jar with Class-Path") { root =>
