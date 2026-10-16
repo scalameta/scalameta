@@ -3356,6 +3356,72 @@ Synthetics:
 [9:15..9:16): a => toF(*)
   toF => example/AA.toF().
 
+semanticdb/integration/src/main/scala/example/JavaRefs.scala
+------------------------------------------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => semanticdb/integration/src/main/scala/example/JavaRefs.scala
+Text => non-empty
+Language => Scala
+Symbols => 19 entries
+Occurrences => 20 entries
+
+Symbols:
+example/JavaRefs. => final object JavaRefs extends AnyRef { +3 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Generic# => class Generic[T] extends AnyRef { +2 decls }
+  T => example/JavaRefs.Generic#[T]
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Generic#Member# => class Member extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Generic#Member#`<init>`(). => primary ctor <init>()
+example/JavaRefs.Generic#[T] => typeparam T
+example/JavaRefs.Generic#`<init>`(). => primary ctor <init>()
+example/JavaRefs.Inner# => class Inner extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Inner#`<init>`(). => primary ctor <init>()
+example/JavaRefs.Nested. => final object Nested extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Nested.Deep# => class Deep extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefs.Nested.Deep#`<init>`(). => primary ctor <init>()
+example/JavaRefsC# => class JavaRefsC extends AnyRef { +2 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefsC#InClass# => class InClass extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefsC#InClass#`<init>`(). => primary ctor <init>()
+example/JavaRefsC#`<init>`(). => primary ctor <init>()
+example/JavaRefsC. => final object JavaRefsC extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefsC.InObject# => class InObject extends AnyRef { +1 decls }
+  AnyRef => scala/AnyRef#
+example/JavaRefsC.InObject#`<init>`(). => primary ctor <init>()
+example/javarefs/package. => final package object javarefs extends AnyRef
+  AnyRef => scala/AnyRef#
+
+Occurrences:
+[0:8..0:15): example <= example/
+[2:7..2:15): JavaRefs <= example/JavaRefs.
+[3:8..3:13): Inner <= example/JavaRefs.Inner#
+[3:13..3:13):  <= example/JavaRefs.Inner#`<init>`().
+[4:8..4:15): Generic <= example/JavaRefs.Generic#
+[4:16..4:17): T <= example/JavaRefs.Generic#[T]
+[4:19..4:19):  <= example/JavaRefs.Generic#`<init>`().
+[5:10..5:16): Member <= example/JavaRefs.Generic#Member#
+[5:16..5:16):  <= example/JavaRefs.Generic#Member#`<init>`().
+[7:9..7:15): Nested <= example/JavaRefs.Nested.
+[8:10..8:14): Deep <= example/JavaRefs.Nested.Deep#
+[8:14..8:14):  <= example/JavaRefs.Nested.Deep#`<init>`().
+[12:6..12:15): JavaRefsC <= example/JavaRefsC#
+[12:16..12:16):  <= example/JavaRefsC#`<init>`().
+[13:8..13:15): InClass <= example/JavaRefsC#InClass#
+[13:15..13:15):  <= example/JavaRefsC#InClass#`<init>`().
+[16:7..16:16): JavaRefsC <= example/JavaRefsC.
+[17:8..17:16): InObject <= example/JavaRefsC.InObject#
+[17:16..17:16):  <= example/JavaRefsC.InObject#`<init>`().
+[20:15..20:23): javarefs <= example/javarefs/package.
+
 semanticdb/integration/src/main/scala/example/local-file.scala
 --------------------------------------------------------------
 
