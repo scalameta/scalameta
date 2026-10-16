@@ -29,28 +29,23 @@ class Main(settings: Settings, reporter: Reporter) {
   def process(): Result = {
     if (settings.out.isFile)
       throw new FileAlreadyExistsException(settings.out.toString, null, "--out must not be a file")
-    else if (!settings.out.isDirectory) Files.createDirectories(settings.out.toNIO)
+    if (!settings.out.isDirectory) Files.createDirectories(settings.out.toNIO)
 
     val classpath = settings.classpath.entries
 
     val status = new ConcurrentHashMap[AbsolutePath, Option[AbsolutePath]]()
-    def processEntry(entry: AbsolutePath): OutputEntry = withOutputEntry(entry) { out =>
-      val isSuccess = convertClasspathEntry(entry, out.root)
-      if (isSuccess) status.put(entry, Some(out.output)) else status.put(entry, None)
-      out
-    }
 
     val job = Job(classpath, if (settings.verbose) reporter.err else devnull)
     job.foreach { entry =>
-      val out = processEntry(entry)
+      val out = withOutputEntry(entry) { x =>
+        status.put(entry, if (convertClasspathEntry(entry, x.root)) Some(x.output) else None)
+        x.output
+      }
       if (entry.isFile) {
         val jar = new JarFile(entry.toFile)
         try {
           val manifest = jar.getManifest
-          if (manifest != null) {
-            val isSuccess = processManifest(entry, manifest, out.output)
-            if (!isSuccess) status.put(entry, None)
-          }
+          if (manifest != null) if (!processManifest(entry, manifest, out)) status.put(entry, None)
         } finally jar.close()
       }
     }
@@ -70,11 +65,10 @@ class Main(settings: Settings, reporter: Reporter) {
 
     reporter.out.println("{")
     reporter.out.println("  \"status\": {")
-    val ins = settings.classpath.entries
-    ins.zipWithIndex.foreach { case (in, i) =>
+    classpath.zipWithIndex.foreach { case (in, i) =>
       val s_out = status.get(in).map(_.toString).getOrElse("")
       reporter.out.print(s"""    "${in.toNIO}": "$s_out"""")
-      if (i != ins.length - 1) reporter.out.print(",")
+      if (i != classpath.length - 1) reporter.out.print(",")
       reporter.out.println()
     }
     reporter.out.println("  },")
@@ -82,7 +76,7 @@ class Main(settings: Settings, reporter: Reporter) {
     reporter.out.println(s"""  "scalaLibrarySynthetics": "$s_out"""")
     reporter.out.println("}")
 
-    val orderedStatus = immutable.ListMap(ins.map(in => in -> status.get(in)): _*)
+    val orderedStatus = immutable.ListMap(classpath.map(in => in -> status.get(in)): _*)
     Result(orderedStatus, scalaLibrarySynthetics)
   }
 

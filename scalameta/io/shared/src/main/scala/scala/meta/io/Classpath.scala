@@ -21,11 +21,11 @@ final case class Classpath(entries: List[AbsolutePath]) {
 object Classpath {
   def apply(entry: AbsolutePath): Classpath = new Classpath(List(entry))
 
-  private def parse(value: String) = value.split(pathSeparator).map(AbsolutePath(_)).toList
+  private[meta] def toPaths(value: String) = value.split(pathSeparator).toList
+  private[meta] def fromPaths(paths: List[String]) = new Classpath(paths.map(AbsolutePath(_)))
 
-  def apply(value: String): Classpath = new Classpath(parse(value))
-
-  def apply(value: String*): Classpath = new Classpath(value.flatMap(parse).toList)
+  def apply(value: String): Classpath = fromPaths(toPaths(value))
+  def apply(value: String*): Classpath = fromPaths(value.flatMap(toPaths).toList)
 
   def apply(entry: Path): Classpath = Classpath(AbsolutePath(entry))
 }
