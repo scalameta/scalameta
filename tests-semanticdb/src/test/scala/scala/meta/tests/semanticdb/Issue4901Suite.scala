@@ -92,7 +92,7 @@ class Issue4901Suite extends SemanticdbSuite {
        |[4:6..4:8): C1 <= b/C1#
        |[4:9..4:9):  <= b/C1#`<init>`().
        |[4:17..4:19): T1 => b/T1#
-       |[4:20..4:20):  => java/lang/Object#`<init>`().
+       |[4:19..4:19):  => java/lang/Object#`<init>`().
        |[4:26..4:27): y <= b/C1#y().
        |[4:29..4:32): Int => scala/Int#
        |[4:35..4:35):  => b/C1#
@@ -101,7 +101,7 @@ class Issue4901Suite extends SemanticdbSuite {
        |[5:6..5:8): C2 <= b/C2#
        |[5:9..5:9):  <= b/C2#`<init>`().
        |[5:17..5:18): K => b/K#
-       |[5:19..5:19):  => b/K#`<init>`().
+       |[5:18..5:18):  => b/K#`<init>`().
        |[5:24..5:26): T1 => b/T1#
        |[5:33..5:34): y <= b/C2#y().
        |[5:36..5:39): Int => scala/Int#
@@ -115,7 +115,7 @@ class Issue4901Suite extends SemanticdbSuite {
        |[6:6..6:8): C3 <= b/C3#
        |[6:9..6:9):  <= b/C3#`<init>`().
        |[6:17..6:19): T1 => b/T1#
-       |[6:20..6:20):  => java/lang/Object#`<init>`().
+       |[6:19..6:19):  => java/lang/Object#`<init>`().
        |[6:26..6:27): y <= b/C3#y().
        |[6:29..6:32): Int => scala/Int#
        |[6:35..6:37): C3 => b/C3#
@@ -124,7 +124,7 @@ class Issue4901Suite extends SemanticdbSuite {
        |[7:6..7:8): C4 <= b/C4#
        |[7:9..7:9):  <= b/C4#`<init>`().
        |[7:17..7:19): T1 => b/T1#
-       |[7:20..7:20):  => java/lang/Object#`<init>`().
+       |[7:19..7:19):  => java/lang/Object#`<init>`().
        |[7:26..7:27): y <= b/C4#y().
        |[7:29..7:32): Int => scala/Int#
        |[7:35..7:35):  => b/C4#
@@ -140,7 +140,7 @@ class Issue4901Suite extends SemanticdbSuite {
        |[9:6..9:8): C6 <= b/C6#
        |[9:9..9:9):  <= b/C6#`<init>`().
        |[9:17..9:19): T2 => b/T2#
-       |[9:20..9:20):  => java/lang/Object#`<init>`().
+       |[9:19..9:19):  => java/lang/Object#`<init>`().
        |[9:26..9:27): y <= b/C6#y().
        |[9:29..9:32): Int => scala/Int#
        |[9:35..9:35):  => b/C6#
@@ -149,7 +149,7 @@ class Issue4901Suite extends SemanticdbSuite {
        |[10:6..10:8): C7 <= b/C7#
        |[10:9..10:9):  <= b/C7#`<init>`().
        |[10:17..10:18): K => b/K#
-       |[10:19..10:19):  => b/K#`<init>`().
+       |[10:18..10:18):  => b/K#`<init>`().
        |[10:24..10:26): T1 => b/T1#
        |[10:33..10:34): y <= b/C7#y().
        |[10:36..10:39): Int => scala/Int#
@@ -164,7 +164,7 @@ class Issue4901Suite extends SemanticdbSuite {
        |[11:15..11:16): o <= b/O.o.
        |[11:23..11:23):  <= local0
        |[11:23..11:24): K => b/K#
-       |[11:25..11:25):  => b/K#`<init>`().
+       |[11:24..11:24):  => b/K#`<init>`().
        |[11:30..11:32): T1 => b/T1#
        |[11:39..11:40): y <= local1
        |[11:42..11:45): Int => scala/Int#
