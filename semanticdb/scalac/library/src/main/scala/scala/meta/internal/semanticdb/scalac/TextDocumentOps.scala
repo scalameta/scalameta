@@ -296,6 +296,8 @@ trait TextDocumentOps {
             if (gsym0 == null) return
             if (gsym0.isUselessOccurrence) return
             if (gsym0.isImplicitPrimitiveConversion(mtree)) return
+            // scalac puts the constructor of `@a.B` at `a`
+            if (gsym0.isConstructor && mtree.isInstanceOf[m.Term.Name]) return
             val pos = mtree.pos
             if (pos == m.Position.None) return
             if (occurrences.contains(pos)) return

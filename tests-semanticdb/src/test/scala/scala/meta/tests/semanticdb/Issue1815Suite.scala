@@ -206,13 +206,13 @@ class Issue1815Suite extends SemanticdbSuite {
        |object P
        |""".stripMargin,
     """|[0:8..0:9): n <= n/
-       |[1:1..1:7): _root_ => scala/deprecated#
+       |[1:1..1:7): _root_ => _root_/
        |[1:8..1:13): scala => scala/
        |[1:14..1:24): deprecated => scala/deprecated#
        |[1:24..1:24):  => scala/deprecated#`<init>`().
        |[1:31..1:32): N <= n/N#
        |[1:32..1:32):  <= n/N#`<init>`().
-       |[2:1..2:6): scala => scala/deprecated#
+       |[2:1..2:6): scala => scala/
        |[2:7..2:17): deprecated => scala/deprecated#
        |[2:17..2:17):  => scala/deprecated#`<init>`().
        |[2:24..2:25): O <= n/O#
