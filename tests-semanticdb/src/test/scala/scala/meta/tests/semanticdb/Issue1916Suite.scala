@@ -47,6 +47,8 @@ class Issue1916Suite extends SemanticdbSuite {
     """|[0:8..0:10): c2 <= c2/
        |[1:6..1:7): C <= c2/C#
        |[1:8..1:8):  <= c2/C#`<init>`().
+       |[1:16..1:19): Map => scala/Predef.Map#
+       |[1:23..1:26): Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -159,7 +161,8 @@ class Issue1916Suite extends SemanticdbSuite {
        |[2:2..2:9): classOf => scala/Predef.classOf().
        |[2:10..2:13): Int => scala/Int#
        |[3:2..3:9): classOf => scala/Predef.classOf().
-       |[3:10..3:19): scala.Int => scala/Int#
+       |[3:10..3:15): scala => scala/
+       |[3:16..3:19): Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -174,8 +177,16 @@ class Issue1916Suite extends SemanticdbSuite {
     """|[0:8..0:9): j <= j/
        |[1:7..1:8): O <= j/O.
        |[2:2..2:9): classOf => scala/Predef.classOf().
+       |[2:10..2:14): List => scala/package.List#
+       |[2:15..2:18): Int => scala/Int#
        |[3:2..3:9): classOf => scala/Predef.classOf().
+       |[3:10..3:15): Array => scala/Array#
+       |[3:16..3:19): Int => scala/Int#
        |[4:2..4:9): classOf => scala/Predef.classOf().
+       |[4:10..4:13): Map => scala/Predef.Map#
+       |[4:14..4:20): String => scala/Predef.String#
+       |[4:22..4:26): List => scala/package.List#
+       |[4:27..4:30): Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -193,8 +204,14 @@ class Issue1916Suite extends SemanticdbSuite {
        |[1:16..1:17): T <= k/O#T#
        |[2:7..2:8): O <= k/O.
        |[3:2..3:9): classOf => scala/Predef.classOf().
+       |[3:10..3:15): scala => scala/
+       |[3:16..3:26): collection => scala/collection/
+       |[3:27..3:36): immutable => scala/collection/immutable/
+       |[3:37..3:41): List => scala/collection/immutable/List#
+       |[3:42..3:45): Int => scala/Int#
        |[4:2..4:9): classOf => scala/Predef.classOf().
-       |[4:10..4:13): O#T => k/O#T#
+       |[4:10..4:11): O => k/O#
+       |[4:12..4:13): T => k/O#T#
        |""".stripMargin,
   )
 
@@ -209,8 +226,13 @@ class Issue1916Suite extends SemanticdbSuite {
     """|[0:8..0:9): l <= l/
        |[1:7..1:8): O <= l/O.
        |[2:2..2:9): classOf => scala/Predef.classOf().
+       |[2:11..2:14): Int => scala/Int#
+       |[2:16..2:22): String => scala/Predef.String#
        |[3:2..3:9): classOf => scala/Predef.classOf().
+       |[3:10..3:13): Int => scala/Int#
+       |[3:17..3:23): String => scala/Predef.String#
        |[4:2..4:9): classOf => scala/Predef.classOf().
+       |[4:10..4:14): List => scala/package.List#
        |""".stripMargin,
   )
 

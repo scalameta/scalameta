@@ -73,6 +73,7 @@ trait TextDocumentOps {
       val mctorrefs = mutable.Map[Int, m.Name]() // start of new, init or init's type name -> name
       val mparents = mutable.Map[Int, m.Type]() // start offset of init's type -> the type
       val mselftypes = mutable.Map[Int, m.Type]() // start offset -> declared self type
+      val mclassofs = mutable.Map[Int, m.Type]() // start offset of classOf -> its type argument
       val msupers = mutable.Map.empty[Int, m.Term.Super] // end offset
       val mfuncs = mutable.Map.empty[Int, m.Position] // start offset of a function
 
@@ -208,6 +209,8 @@ trait TextDocumentOps {
                 return
               case mtree: m.Term.Super => msupers.update(mtree.pos.end, mtree)
               case m.Self(_, Some(mtpe)) => mselftypes(mtpe.pos.start) = mtpe
+              case m.Term.ApplyType(m.Term.Name("classOf"), mtpe :: Nil) =>
+                mclassofs(mtree.pos.start) = mtpe
               case mtree: m.Ctor => mctordefs(mtree.pos.start) = mtree.name
               case mtree: m.Term.New => mctorrefs(mtree.pos.start) = mtree.init.name
               case mtree: m.Init =>
@@ -487,6 +490,10 @@ trait TextDocumentOps {
             case (m.Type.Project(mqual, mname), g.TypeRef(gpre, gsym, _)) =>
               success(mname, gsym)
               tryFindType(mqual, gpre)
+            case (mtpe: m.Type.Tuple, g.TypeRef(_, _, gargs)) => tryFindTypes(mtpe.args, gargs)
+            case (mtpe: m.Type.Function, g.TypeRef(_, _, gargs)) =>
+              tryFindTypes(mtpe.paramClause.values :+ mtpe.res, gargs)
+            case (_, g.ExistentialType(_, gtpe)) => tryFindType(mtpe, gtpe)
             case _ =>
           }
           private def tryFindTypes(mtpes: List[m.Type], gtpes: List[g.Type]): Unit = mtpes.zip(gtpes)
@@ -541,16 +548,8 @@ trait TextDocumentOps {
                 if (!mpos.isEmpty && isClassOf(mpos)) {
                   val mposClassOf = mpos.trunc("classOf".length)
                   addOccurrenceFromSemantic(mposClassOf, "scala/Predef.classOf().", Role.REFERENCE)
-                  t.value match {
-                    // Limitation: can't extract occurrence from types inside classOf
-                    // if it's not a TypeRef without any type applications.
-                    // because `classOf[...]` is encoded as `Literal(Constant(...))` while typing and
-                    // positinal information inside of `classOf` disappear after the typechecking.
-                    case g.Constant(tpe: g.TypeRef) if tpe.args.isEmpty =>
-                      val mposClazz = mpos.input.pos(mposClassOf.end + 1, mpos.end - 1)
-                      addOccurrence(mposClazz, tpe.typeSymbol, Role.REFERENCE)
-                    case _ =>
-                  }
+                  // scalac replaces `classOf[T]` with a constant of type T
+                  mclassofs.get(mpos.start).foreach(tryFindType(_, t.value.typeValue))
                 } else tryFindMtree(t)
 
               case t: g.Function =>
