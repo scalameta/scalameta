@@ -60,7 +60,7 @@ object Javacp {
     if (isAnonymousClass(node)) return Nil
     implicit val classSymbols: ClassSymbols = new ClassSymbols(node, classpathIndex)
     val classSymbol = classSymbols(node.name)
-    val classDisplayName = sdisplayName(node.name)
+    val classDisplayName = sdisplayName(node)
     val classAccess = node.access | access
     val hasOuterClassReference = node.fields.toScala.exists(isOuterClassReference)
     val isEnum = node.access.hasFlag(o.ACC_ENUM)
@@ -342,14 +342,11 @@ object Javacp {
   private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = (asmName + ".class")
     .split("/").foldLeft(base) { case (accum, filename) => accum.resolve(filename) }
 
-  private def sdisplayName(asmName: String): String = {
-    var i = asmName.length - 1
-    while (i >= 0) asmName.charAt(i) match {
-      case '$' | '/' => return asmName.substring(i + 1)
-      case _ => i -= 1
+  private def sdisplayName(node: ClassNode): String =
+    node.innerClasses.toScala.find(_.name == node.name) match {
+      case Some(ic) => ic.innerName
+      case None => node.name.substring(node.name.lastIndexOf('/') + 1)
     }
-    asmName
-  }
 
   /**
    * Builds the symbol of a class from its InnerClasses entry, which `node` or the class itself has.
