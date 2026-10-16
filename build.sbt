@@ -437,7 +437,7 @@ lazy val semanticdbIntegration = projectMatrix.in(file("semanticdb/integration")
   javacOptions += "-parameters",
 ).crossFullJvm(
   AllScala2Versions,
-  v => Seq(scalacOptions += s"-Xplugin:${semanticdbScalacPluginPackage(v).value}"),
+  v => Seq(scalacOptions += s"-Xplugin:${semanticdbScalacPluginByHash(v).value}"),
 ).dependsOn(semanticdbIntegrationMacros, semanticdbScalacPlugin)
 
 lazy val semanticdbIntegrationMacros = projectMatrix.in(file("semanticdb/integration-macros"))
@@ -867,3 +867,11 @@ def semanticdbRows(state: State)(version: String) = {
 def semanticdbScalacPluginPackage(version: String) = Def.task(
   fileOf.value((semanticdbScalacPlugin.jvmCompile(version) / Keys.`package`).value).getAbsolutePath,
 )
+
+// a copy named by its hash, so that a change to the plugin changes the scalac options
+def semanticdbScalacPluginByHash(version: String) = Def.task {
+  val jar = file(semanticdbScalacPluginPackage(version).value)
+  val copy = target.value / "semanticdb-scalac" / s"${Hash.toHex(Hash(jar))}.jar"
+  if (!copy.exists) IO.copyFile(jar, copy)
+  copy.getAbsolutePath
+}
