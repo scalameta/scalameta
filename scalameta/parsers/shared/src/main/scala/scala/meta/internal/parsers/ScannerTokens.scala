@@ -174,6 +174,8 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
     def unapply(token: Token) = apply(token)
   }
 
+  def statDelimOrSeqEnd(token: Token): Boolean = token.is[StatDelim] || StatSeqEnd(token)
+
   def mightStartStat(token: Token, closeDelimOK: Boolean = false): Boolean = token match {
     case _: ContKeyword | _: Comma | _: Dot | _: StatDelim | _: EOF => false
     case _: CloseDelim => closeDelimOK
