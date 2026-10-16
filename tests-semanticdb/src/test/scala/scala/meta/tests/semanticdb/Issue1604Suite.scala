@@ -186,19 +186,13 @@ class Issue1604Suite extends FunSuite {
 
   dir.test("jar with Class-Path naming itself") { root =>
     val path = jar(root.resolve("a.jar"), Some("a.jar"))("a.semanticdb")
-    assertEquals(
-      locate(root, path).distinct,
-      List("a.semanticdb: A.scala", "throws StackOverflowError"),
-    )
+    assertEquals(locate(root, path).distinct, List("a.semanticdb: A.scala"))
   }
 
   dir.test("jars whose Class-Path names each other") { root =>
     jar(root.resolve("b.jar"), Some("a.jar"))("b.semanticdb")
     val path = jar(root.resolve("a.jar"), Some("b.jar"))("a.semanticdb")
-    assertEquals(
-      locate(root, path).distinct,
-      List("a.semanticdb: A.scala", "b.semanticdb: A.scala", "throws StackOverflowError"),
-    )
+    assertEquals(locate(root, path).distinct, List("a.semanticdb: A.scala", "b.semanticdb: A.scala"))
   }
 
   dir.test("jar with Class-Path separated by two spaces") { root =>
