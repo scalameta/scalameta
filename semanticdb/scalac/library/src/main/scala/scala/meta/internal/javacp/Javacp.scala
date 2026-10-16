@@ -352,7 +352,9 @@ object Javacp {
   }
 
   /**
-   * Builds the symbols of the classes that `node` refers to.
+   * Builds the symbol of a class from its InnerClasses entry, which `node` or the class itself has.
+   * A Scala module class, such as `M$`, gets the symbol of its object. If the classpath does not
+   * have the class, we split its binary name at each `$`.
    *
    * @param node
    *   the class that refers to the classes
@@ -360,7 +362,37 @@ object Javacp {
    *   the classpath that has the classes
    */
   private class ClassSymbols(node: ClassNode, classpathIndex: ClasspathIndex) {
-    def apply(asmName: String): String = ssym(asmName)
+    private val innerClasses = node.innerClasses.toScala.map(ic => ic.name -> ic).toMap
+
+    def apply(asmName: String): String = innerClass(asmName) match {
+      case Some(ic) if ic.outerName != null && ic.innerName != null =>
+        // a static class in a Scala object has the mirror class as its outer class
+        val outerName =
+          if (ic.access.hasFlag(o.ACC_STATIC) && exists(ic.outerName + "$")) ic.outerName + "$"
+          else ic.outerName
+        Symbols.Global(apply(outerName), descriptor(ic.innerName))
+      case None if asmName.indexOf('$') < 0 || asmName == node.name || exists(asmName) =>
+        val parts = asmName.split('/')
+        val pkg =
+          if (parts.length == 1) Symbols.EmptyPackage
+          else parts.init
+            .foldLeft(Symbols.RootPackage)((owner, name) => Symbols.Global(owner, d.Package(name)))
+        Symbols.Global(pkg, descriptor(parts.last))
+      case _ => ssym(asmName)
+    }
+
+    private def innerClass(asmName: String): Option[InnerClassNode] = innerClasses.get(asmName)
+      .orElse(
+        if (asmName.indexOf('$') < 0 || asmName == node.name) None
+        else classpathIndex.getClassfile(asmName + ".class")
+          .flatMap(_.toClassNode.innerClasses.toScala.find(_.name == asmName)),
+      )
+
+    private def exists(asmName: String): Boolean = classpathIndex.getClassfile(asmName + ".class")
+      .isDefined
+
+    private def descriptor(name: String): Descriptor =
+      if (name.endsWith("$")) d.Term(name.stripSuffix("$")) else d.Type(name)
   }
 
   private def ssym(asmName: String): String = {
