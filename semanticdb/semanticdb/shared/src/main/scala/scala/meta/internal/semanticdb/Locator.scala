@@ -15,22 +15,23 @@ class Locator(private val fn: Locator.Visitor) extends AnyVal {
 
   def apply(path: Path): Unit = Try( // if missing or inaccessible, will throw
     Files.readAttributes(path, classOf[attribute.BasicFileAttributes]),
-  ).foreach { attrs =>
+  ).foreach(attrs =>
     if (attrs.isDirectory) visitIter( // walk all files
       FileIO.listAllFilesRecursively(AbsolutePath(path)).iterator,
     )(_.toNIO, e => Files.newInputStream(e.toNIO))
-    else if (path.toString.endsWith(".jar")) {
-      val jar = new JarFile(path.toFile)
-      try {
-        visitIter(jar.entries().toScala)(x => Paths.get(x.getName), jar.getInputStream)
-        Option(jar.getManifest).flatMap(x => Option(x.getMainAttributes.getValue("Class-Path")))
-          .foreach { classPath =>
-            val parent = path.toAbsolutePath.getParent
-            classPath.split(" ").foreach(x => apply(parent.resolve(x)))
-          }
-      } finally jar.close()
-    } else if (Locator.isSemantic(path)) visit(path, Files.newInputStream(path))
-  }
+    else if (path.toString.endsWith(".jar")) visitJar(path, new JarFile(path.toFile))
+    else if (Locator.isSemantic(path)) visit(path, Files.newInputStream(path)),
+  )
+
+  private def visitJar(path: Path, jar: JarFile): Unit =
+    try {
+      visitIter(jar.entries().toScala)(x => Paths.get(x.getName), jar.getInputStream)
+      Option(jar.getManifest).flatMap(x => Option(x.getMainAttributes.getValue("Class-Path")))
+        .foreach { classPath =>
+          val parent = path.toAbsolutePath.getParent
+          classPath.split(" ").foreach(x => apply(parent.resolve(x)))
+        }
+    } finally jar.close()
 
   private def visit(path: Path, stream: InputStream): Unit =
     try fn(path, () => TextDocuments.parseFrom(stream))
