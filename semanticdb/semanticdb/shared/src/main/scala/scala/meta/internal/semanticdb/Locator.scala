@@ -26,8 +26,8 @@ class Locator(private val fn: Locator.Visitor) extends AnyVal {
   private def visitJar(path: Path, jar: JarFile): Unit =
     try {
       visitIter(jar.entries().toScala)(x => Paths.get(x.getName), jar.getInputStream)
-      Option(jar.getManifest).flatMap(x => Option(x.getMainAttributes.getValue("Class-Path")))
-        .foreach { classPath =>
+      Try(Option(jar.getManifest)).toOption.flatten
+        .flatMap(x => Option(x.getMainAttributes.getValue("Class-Path"))).foreach { classPath =>
           val parent = path.toAbsolutePath.getParent
           classPath.split(" ").foreach(x => apply(parent.resolve(x)))
         }
