@@ -4489,7 +4489,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
         prependBegComment(body, commentsAmong(eqIdx + 1, macroIdx))
         Defn.Macro(mods, name, paramClauses, restype, body)
       }
-    else if (currToken.is[StatDelim] || StatSeqEnd(currToken)) Decl
+    else if (statDelimOrSeqEnd(currToken)) Decl
       .Def(mods, name, paramClauses, restype.getOrElse(procedureSyntaxDeclType))
     else if (restype.isEmpty && isAfterOptNewLine[LeftBrace]) defn(Some(procedureSyntaxDeclType))
     else syntaxErrorExpected[Equals]
