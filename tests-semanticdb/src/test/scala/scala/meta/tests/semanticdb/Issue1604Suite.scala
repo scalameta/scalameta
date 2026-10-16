@@ -89,13 +89,13 @@ class Issue1604Suite extends FunSuite {
   dir.test("non-zip file named .jar") { root =>
     val path = write(root.resolve("a.jar"), "not a zip".getBytes)
     write(root.resolve("b.semanticdb"), payload)
-    assertEquals(locate(root, path, root), List("throws ZipException"))
+    assertEquals(locate(root, path, root), List("b.semanticdb: A.scala"))
   }
 
   dir.test("empty file named .jar") { root =>
     val path = write(root.resolve("a.jar"), Array.emptyByteArray)
     write(root.resolve("b.semanticdb"), payload)
-    assertEquals(locate(root, path, root), List("throws ZipException"))
+    assertEquals(locate(root, path, root), List("b.semanticdb: A.scala"))
   }
 
   dir.test("directory named .jar") { root =>
@@ -107,7 +107,7 @@ class Issue1604Suite extends FunSuite {
   dir.test("unreadable jar") { root =>
     val path = unreadable(jar(root.resolve("a.jar"))("META-INF/a.semanticdb"))
     write(root.resolve("b.semanticdb"), payload)
-    assertEquals(locate(root, path, root), List("throws FileNotFoundException"))
+    assertEquals(locate(root, path, root), List("b.semanticdb: A.scala"))
   }
 
   dir.test("unreadable .semanticdb file") { root =>
