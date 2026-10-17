@@ -165,7 +165,7 @@ trait SymbolInformationOps {
 
     private def annotations: List[s.AnnotationTree] = {
       val builder = List.newBuilder[s.AnnotationTree]
-      sym.attributes.foreach(attr =>
+      symbolAnnotations.getOrElse(sym.index, Nil).foreach(attr =>
         try attr.toSemanticOpt.foreach(builder += _)
         catch {
           case ex: MissingSymbolException =>
