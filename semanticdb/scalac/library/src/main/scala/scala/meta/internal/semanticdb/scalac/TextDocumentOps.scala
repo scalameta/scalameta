@@ -509,23 +509,46 @@ trait TextDocumentOps {
               case _ =>
             }
 
-          /* scalac dealiased the parent, so its prefix may not be the qualifier: resolve the
-           * qualifier from the scope around the class instead, and keep it if its member of
-           * that name leads to the same class */
-          private def tryFindParentQualifier(mqual: m.Term.Ref, mname: m.Name, gtpe: g.Type): Unit = {
-            val gscope = genclosing.dropWhile(!_.isInstanceOf[g.ImplDef]).drop(1)
-            resolvePath(mqual, gscope, mqual.pos.start).foreach { case (gpre, gquals) =>
-              val gmember = gpre.member(g.TypeName(mname.value).encode)
-              @tailrec
-              def dealiased(gtpe: g.Type): g.Symbol = gtpe match {
-                case g.PolyType(_, gres) => dealiased(gres)
-                case _ => gtpe.dealias.typeSymbol
-              }
-              val gcls = if (gmember.isClass) gmember else dealiased(gpre.memberInfo(gmember))
-              if (gmember.exists && gcls == gtpe.typeSymbol) gquals.foreach { case (mq, gq) =>
-                success(mq, gq)
-              }
+          /* scalac dealiased the parent, so its type and prefix may not be what the source names:
+           * resolve the names from the scope around the class instead, and keep them if they
+           * lead to the same class; the class itself binds only its type parameters there */
+          private def tryFindParent(mtpe: m.Type, gtpe: g.Type): Boolean = {
+            val gscope = genclosing.dropWhile(!_.isInstanceOf[g.ImplDef])
+            @tailrec
+            def dealiased(gtpe: g.Type): g.Symbol = gtpe match {
+              case g.PolyType(_, gres) => dealiased(gres)
+              case _ => gtpe.dealias.typeSymbol
             }
+            resolveTypePath(mtpe, gscope, mtpe.pos.start) match {
+              case Some((gpre, gnames @ (_, gsym) :: _)) =>
+                val gcls = if (gsym.isClass) gsym else dealiased(gpre.memberInfo(gsym))
+                val isParent = gcls == gtpe.typeSymbol
+                if (isParent) gnames.foreach { case (mname, gname) => success(mname, gname) }
+                isParent
+              case _ => false
+            }
+          }
+          // the prefix of a type name and the symbols of the names in its path, the type first
+          private def resolveTypePath(
+              mtpe: m.Type,
+              gscope: List[g.Tree],
+              start: Int,
+          ): Option[(g.Type, List[(m.Name, g.Symbol)])] = mtpe match {
+            case mname: m.Type.Name => lookupMember(g.TypeName(mname.value).encode, gscope, start)
+                .map { case (gpre, gsym) => (gpre, (mname -> gsym) :: Nil) }
+            case mtpe: m.Type.Select => resolvePath(mtpe.qual, gscope, start)
+                .flatMap { case (gpre, gquals) =>
+                  val gsym = gpre.member(g.TypeName(mtpe.name.value).encode)
+                  if (gsym.exists) Some((gpre, (mtpe.name -> gsym) :: gquals)) else None
+                }
+            case mtpe: m.Type.Project => resolveTypePath(mtpe.qual, gscope, start).flatMap {
+                case (gpreQual, gquals @ (_, gqual) :: _) =>
+                  val gpre = g.typeRef(gpreQual, gqual, Nil).dealias
+                  val gsym = gpre.member(g.TypeName(mtpe.name.value).encode)
+                  if (gsym.exists) Some((gpre, (mtpe.name -> gsym) :: gquals)) else None
+                case _ => None
+              }
+            case _ => None
           }
           // the type of a stable path and the symbols of its names, if scalac would accept it
           private def resolvePath(
@@ -560,56 +583,71 @@ trait TextDocumentOps {
             if (gsym.exists && gsym.isTerm && !gsym.isOverloaded && gsym.isStable)
               Some((gsym.info.finalResultType, gsym))
             else None
-          /* the symbol of a name in scope, innermost binding first, or None if unsure;
-           * for a compiled tree, a binding never conflicts with one further out */
-          private def lookupName(gname: g.Name, gscope: List[g.Tree], start: Int) = {
+          private def lookupName(gname: g.Name, gscope: List[g.Tree], start: Int) =
+            lookupMember(gname, gscope, start).map(_._2)
+          /* the prefix and the symbol of a name in scope, innermost binding first, or None if
+           * unsure; for a compiled tree, a binding never conflicts with one further out */
+          private def lookupMember(gname: g.Name, gscope: List[g.Tree], start: Int) = {
             val gbindings = gscope.iterator.map(scopeBinding(gname, _, start)) ++
               grootImports.iterator.map(importBinding(gname, _)) ++
-              Iterator(Some(g.rootMirror.RootClass.info.member(gname)))
-            gbindings.find(_.forall(_.exists)).flatten
+              Iterator(Some(member(g.rootMirror.RootClass.thisType, gname)))
+            gbindings.find(_.forall(_._2.exists)).flatten
           }
-          // the symbol that a scope binds to a name: NoSymbol if none, None if unsure
-          private def scopeBinding(gname: g.Name, gtree: g.Tree, start: Int): Option[g.Symbol] = {
-            def orElse(gsym: Option[g.Symbol])(other: => Option[g.Symbol]) =
-              if (gsym.contains(g.NoSymbol)) other else gsym
+          private def member(gpre: g.Type, gname: g.Name) = (gpre, gpre.member(gname))
+          private val noBinding = (g.NoPrefix, g.NoSymbol)
+          // the binding of a name in a scope: NoSymbol if none, None if unsure
+          private def scopeBinding(
+              gname: g.Name,
+              gtree: g.Tree,
+              start: Int,
+          ): Option[(g.Type, g.Symbol)] = {
+            def orElse(gbinding: Option[(g.Type, g.Symbol)])(other: => Option[(g.Type, g.Symbol)]) =
+              if (gbinding.exists(_._2 == g.NoSymbol)) other else gbinding
             def imports(gstats: List[g.Tree]) = gstats.reverseIterator.collect {
               case t: g.Import if t.pos.isDefined && t.pos.start < start => importBinding(gname, t)
-            }.find(_.forall(_.exists)).getOrElse(Some(g.NoSymbol))
+            }.find(_.forall(_._2.exists)).getOrElse(Some(noBinding))
             def defined(gtrees: List[g.Tree]) = Some(
               gtrees.collectFirst {
-                case t: g.DefTree if t.name == gname && t.symbol != null => t.symbol
-              }.getOrElse(g.NoSymbol),
+                case t: g.DefTree if t.name == gname && t.symbol != null => (g.NoPrefix, t.symbol)
+              }.getOrElse(noBinding),
             )
             gtree match {
               case t: g.Block => orElse(imports(t.stats))(defined(t.stats))
               case t: g.Template => orElse(imports(t.body))(defined(t.self :: Nil)) match {
-                  case Some(g.NoSymbol) => Some(t.symbol.owner.thisType.member(gname))
-                  case gsym => gsym
+                  case Some((_, g.NoSymbol)) => Some(member(t.symbol.owner.thisType, gname))
+                  case gbinding => gbinding
                 }
               case t: g.PackageDef => orElse(imports(t.stats)) {
                   val gpkg = t.pid.symbol.moduleClass
-                  Some(gpkg.info.member(gname).orElse(gpkg.packageObject.info.member(gname)))
+                  val gbinding = member(gpkg.thisType, gname)
+                  Some(if (gbinding._2.exists) gbinding else member(gpkg.packageObject.info, gname))
                 }
-              case t: g.DefDef => defined(t.vparamss.flatten)
+              case t: g.ClassDef => defined(t.tparams)
+              case t: g.DefDef => defined(t.tparams ++ t.vparamss.flatten)
               case t: g.Function => defined(t.vparams)
               case t: g.CaseDef => defined(t.pat.collect { case b: g.Bind => b })
-              case _ => Some(g.NoSymbol)
+              case _ => Some(noBinding)
             }
           }
-          // the symbol that an import binds to a name: NoSymbol if none, None if unsure
-          private def importBinding(gname: g.Name, gimport: g.Import): Option[g.Symbol] = {
+          // the binding of a name by an import: NoSymbol if none, None if unsure
+          private def importBinding(
+              gname: g.Name,
+              gimport: g.Import,
+          ): Option[(g.Type, g.Symbol)] = {
             val gtpe = gimport.expr.tpe
-            // selectors have term names, for a type too
-            val gterm = gname.toTermName
             if (gtpe == null) None
-            else gimport.selectors.find(_.rename == gterm) match {
-              case Some(sel) =>
-                Some(gtpe.member(if (gname.isTypeName) sel.name.toTypeName else sel.name.toTermName))
-              case _ =>
-                val isWildcard = gimport.selectors.exists(_.name == g.nme.WILDCARD)
-                // a selector that renames the name hides it from the wildcard
-                if (isWildcard && !gimport.selectors.exists(_.name == gterm)) Some(gtpe.member(gname))
-                else Some(g.NoSymbol)
+            else Some {
+              // selectors have term names, for a type too
+              val gterm = gname.toTermName
+              gimport.selectors.find(_.rename == gterm) match {
+                case Some(sel) =>
+                  member(gtpe, if (gname.isTypeName) sel.name.toTypeName else sel.name.toTermName)
+                case _ =>
+                  val isWildcard = gimport.selectors.exists(_.name == g.nme.WILDCARD)
+                  // a selector that renames the name hides it from the wildcard
+                  if (isWildcard && !gimport.selectors.exists(_.name == gterm)) member(gtpe, gname)
+                  else noBinding
+              }
             }
           }
 
@@ -639,13 +677,10 @@ trait TextDocumentOps {
           private def tryFindMacroAnnotation(mtpe: m.Type, gscope: List[g.Tree], start: Int): Unit =
             mtpe match {
               case mtpe: m.Type.Apply => tryFindMacroAnnotation(mtpe.tpe, gscope, start)
-              case mtpe: m.Type.Name => lookupName(g.TypeName(mtpe.value).encode, gscope, start)
-                  .foreach(successMacroAnnotation(mtpe, _, Nil))
-              case mtpe: m.Type.Select => resolvePath(mtpe.qual, gscope, start)
-                  .foreach { case (gpre, gquals) =>
-                    val gsym = gpre.member(g.TypeName(mtpe.name.value).encode)
-                    successMacroAnnotation(mtpe.name, gsym, gquals)
-                  }
+              case _: m.Type.Name | _: m.Type.Select => resolveTypePath(mtpe, gscope, start).foreach {
+                  case (_, (mname, gann) :: gquals) => successMacroAnnotation(mname, gann, gquals)
+                  case _ =>
+                }
               case _ =>
             }
           private def successMacroAnnotation(
@@ -786,12 +821,12 @@ trait TextDocumentOps {
                 t.parents.foreach {
                   // a parent with inferred type arguments, like `n.P(1)`, has no original tree
                   case p: g.TypeTree if p.original == null && p.pos.isRange =>
-                    mparents.get(p.pos.start).foreach {
-                      case m.Type.Select(mqual, mname) =>
-                        success(mname, p.tpe.typeSymbol)
-                        tryFindParentQualifier(mqual, mname, p.tpe)
-                      case mtpe => tryFindType(mtpe, p.tpe)
-                    }
+                    mparents.get(p.pos.start).foreach(mtpe =>
+                      if (!tryFindParent(mtpe, p.tpe)) mtpe match {
+                        case mtpe: m.Type.Select => success(mtpe.name, p.tpe.typeSymbol)
+                        case _ => tryFindType(mtpe, p.tpe)
+                      },
+                    )
                   case _ =>
                 }
                 t.self.tpt match {
