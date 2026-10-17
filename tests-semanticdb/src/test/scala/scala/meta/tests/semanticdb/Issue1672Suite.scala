@@ -217,66 +217,82 @@ class Issue1672Suite extends FunSuite {
   // before 2.13.17, scalac keeps a positional default argument as a call to its getter
   private val defaultGetter = !ScalaVersion.isSupported(minimal212 = Int.MaxValue, minimal213 = 17)
 
-  test("class")(check("p/K#", """@p/sa#(1, "a")""", "@p/sa#()"))
-  test("literal arguments")(check("p/K#literal().", """@p/sa#(1, "a")""", "@p/sa#()"))
-  test("folded literals")(check("p/K#folded().", """@p/sa#(-1, "ab")""", "@p/sa#()"))
-  test("negative long and short")(check("p/K#negative().", """@p/sl#(-129L, -2)""", "@p/sl#()"))
-  test("constant arguments")(check("p/K#constant().", """@p/sa#(1, "s")""", "@p/sa#()"))
+  test("class")(check("p/K#", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
+  test("literal arguments")(check("p/K#literal().", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
+  test("folded literals")(check("p/K#folded().", """@p/sa#(-1, "ab")""", """@p/sa#(255, "ab")"""))
+  test("negative long and short")(
+    check("p/K#negative().", """@p/sl#(-129L, -2)""", "@p/sl#(65407L, 254)"),
+  )
+  test("constant arguments")(check("p/K#constant().", """@p/sa#(1, "s")""", """@p/sa#(1, "s")"""))
 
-  test("folded constants")(check("p/K#constantFolded().", """@p/sa#(2, "st")""", "@p/sa#()"))
+  test("folded constants")(
+    check("p/K#constantFolded().", """@p/sa#(2, "st")""", """@p/sa#(2, "st")"""),
+  )
 
-  test("non-constant argument")(check("p/K#nonConstant().", """@p/sa#(p/C.v., "a")""", "@p/sa#()"))
+  test("non-constant argument")(
+    check("p/K#nonConstant().", """@p/sa#(p/C.v., "a")""", """@p/sa#(<?>, "a")"""),
+  )
 
   test("named arguments")(check(
     "p/K#named().",
     if (ScalaVersion.is212) """@p/sa#(local2, local1)""" else """@p/sa#(2, "b")""",
-    "@p/sa#()",
+    if (ScalaVersion.is212) """@p/sa#(<?>, <?>)""" else """@p/sa#(2, "b")""",
   ))
 
-  test("positional and named arguments")(check("p/K#mixed().", """@p/sa#(2, "b")""", "@p/sa#()"))
+  test("positional and named arguments")(
+    check("p/K#mixed().", """@p/sa#(2, "b")""", """@p/sa#(2, "b")"""),
+  )
 
   test("default argument")(check(
     "p/K#default().",
     if (defaultGetter) """@p/sd#(1, p/sd.`<init>$default$2`().)""" else """@p/sd#(1, "d")""",
-    "@p/sd#()",
+    if (defaultGetter) """@p/sd#(1, <?>)""" else """@p/sd#(1, "d")""",
   ))
 
   test("named arguments with a default")(check(
     "p/K#defaultNamed().",
     if (ScalaVersion.is212) """@p/sd#(local4, local3)""" else """@p/sd#(1, "e")""",
-    "@p/sd#()",
+    if (ScalaVersion.is212) """@p/sd#(<?>, <?>)""" else """@p/sd#(1, "e")""",
   ))
 
   test("class literal argument")(
-    check("p/K#clazz().", """@p/sc#(scala/Predef.String#)""", "@p/sc#()"),
+    check("p/K#clazz().", """@p/sc#(scala/Predef.String#)""", """@p/sc#(scala/Predef.String#)"""),
   )
 
-  test("array argument")(
-    check("p/K#array().", """@p/sr#(sel(scala/Array., scala/Array.apply(+5).)(1, 2))""", "@p/sr#()"),
-  )
+  test("array argument")(check(
+    "p/K#array().",
+    """@p/sr#(sel(scala/Array., scala/Array.apply(+5).)(1, 2))""",
+    """@p/sr#(<?>)""",
+  ))
 
   test("nested annotation argument")(
-    check("p/K#nested().", """@p/sn#(sel(, p/sa#`<init>`().)(1, "a"))""", "@p/sn#()"),
+    check("p/K#nested().", """@p/sn#(sel(, p/sa#`<init>`().)(1, "a"))""", """@p/sn#(<?>)"""),
   )
 
   test("no arguments")(check("p/K#noArgs().", """@p/sb#()"""))
 
   test("scala library annotation, positional arguments")(
-    if (ScalaVersion.is212)
-      check("p/K#scalaPositional().", """@scala/deprecated#("msg", "1")""", "@scala/deprecated#()")
+    if (ScalaVersion.is212) check(
+      "p/K#scalaPositional().",
+      """@scala/deprecated#("msg", "1")""",
+      """@scala/deprecated#("msg", "1")""",
+    )
     else check("p/K#scalaPositional().", """@scala/deprecated#(message = "msg", since = "1")"""),
   )
 
   test("scala library annotation, named argument")(
-    if (ScalaVersion.is212)
-      check("p/K#scalaNamed().", """@scala/deprecated#("msg", "1")""", "@scala/deprecated#()")
+    if (ScalaVersion.is212) check(
+      "p/K#scalaNamed().",
+      """@scala/deprecated#("msg", "1")""",
+      """@scala/deprecated#("msg", "1")""",
+    )
     else check("p/K#scalaNamed().", """@scala/deprecated#(message = "msg", since = "1")"""),
   )
 
   test("type argument and argument")(check(
     "p/K#throws().",
     """@scala/throws#[scala/package.Exception#]("cause")""",
-    "@scala/throws#[scala/package.Exception#]()",
+    """@scala/throws#[scala/package.Exception#]("cause")""",
   ))
 
   test("class with a long argument")(check("p/K#Serial#", """@scala/SerialVersionUID#(value = 5L)"""))
@@ -284,7 +300,7 @@ class Issue1672Suite extends FunSuite {
   test("java annotation, array argument")(check(
     "p/K#javaArray().",
     """@java/lang/SuppressWarnings#(value = <?>("a", "b"))""",
-    "@java/lang/SuppressWarnings#()",
+    "@java/lang/SuppressWarnings#(value = <?>)",
   ))
 
   test("java annotation, enum argument")(check(
@@ -292,13 +308,13 @@ class Issue1672Suite extends FunSuite {
     """@java/lang/annotation/Retention#(value = java/lang/annotation/RetentionPolicy#RUNTIME.)""",
   ))
 
-  test("method parameter")(check("p/K#param().(p)", """@p/sa#(1, "a")""", "@p/sa#()"))
-  test("class parameter")(check("p/K#`<init>`().(f)", """@p/sa#(1, "a")""", "@p/sa#()"))
+  test("method parameter")(check("p/K#param().(p)", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
+  test("class parameter")(check("p/K#`<init>`().(f)", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
   test("class parameter accessor")(check("p/K#f.", ""))
   test("class parameter with a field meta-annotation")(check("p/K#g.", ""))
   test("val")(check("p/K#field.", ""))
-  test("type alias")(check("p/K#Alias#", """@p/sa#(1, "a")""", "@p/sa#()"))
-  test("type parameter")(check("p/K#typeParam().[T]", """@p/sa#(1, "a")""", "@p/sa#()"))
+  test("type alias")(check("p/K#Alias#", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
+  test("type parameter")(check("p/K#typeParam().[T]", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
   test("return type")(check("p/K#tpe().", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
 
   test("return type, scala library annotation")(
@@ -328,23 +344,27 @@ class Issue1672Suite extends FunSuite {
   test("java annotation, nested annotation argument")(check(
     "p/K#javaNested().",
     """@issue1672/Outer#(value = @issue1672/Inner#(value = "i"))""",
-    "@issue1672/Outer#()",
+    "@issue1672/Outer#(value = <?>)",
   ))
 
-  test("byte and char arguments")(check("p/K#byteChar().", "@p/sbc#(-1, '\uffff')", "@p/sbc#()"))
-
-  test("infinite float and double arguments")(
-    check("p/K#infinite().", "@p/sf#(-Infinityf, -Infinity)", "@p/sf#()"),
+  test("byte and char arguments")(
+    check("p/K#byteChar().", "@p/sbc#(-1, '\uffff')", "@p/sbc#(-1, '\uffff')"),
   )
 
+  test("infinite float and double arguments")(check(
+    "p/K#infinite().",
+    "@p/sf#(-Infinityf, -Infinity)",
+    "@p/sf#(1.1754944E-38f, 3.645561009778199E-304)",
+  ))
+
   test("negative float and double arguments")(
-    check("p/K#finiteNegative().", "@p/sf#(-1.5f, -2.5)", "@p/sf#()"),
+    check("p/K#finiteNegative().", "@p/sf#(-1.5f, -2.5)", "@p/sf#(-1.5f, -2.5)"),
   )
 
   test("negative default argument")(check(
     "p/K#defaultNegative().",
     if (defaultGetter) "@p/sdn#(p/sdn.`<init>$default$1`().)" else "@p/sdn#(-1)",
-    "@p/sdn#()",
+    if (defaultGetter) "@p/sdn#(<?>)" else "@p/sdn#(255)",
   ))
 
   test("return type, nested java annotation")(check(
@@ -373,14 +393,16 @@ class Issue1672Suite extends FunSuite {
   }
 
   test("missing class in an array argument")(
-    checkMissing("p/K#missingArray().", "@issue1672/Colors#()"),
+    checkMissing("p/K#missingArray().", "@issue1672/Colors#(value = <?>)"),
   )
 
   test("missing class in a nested argument")(
-    checkMissing("p/K#missingNested().", "@issue1672/Wrap#()"),
+    checkMissing("p/K#missingNested().", "@issue1672/Wrap#(value = <?>)"),
   )
 
-  test("missing class in a class literal argument")(checkMissing("p/K#missingClass().", "@p/sc#()"))
+  test("missing class in a class literal argument")(
+    checkMissing("p/K#missingClass().", "@p/sc#(<?>)"),
+  )
 
   test("return type, missing class in an argument")(
     checkMissing("p/K#tpeMissing().", """@issue1672/Colors#("value", <?>)"""),
@@ -408,21 +430,25 @@ class Issue1672Suite extends FunSuite {
     )
   }
 
-  test("java int array argument")(
-    check("p/K#javaInts().", "@issue1672/Ints#(value = <?>(-1, -129))", "@issue1672/Ints#()"),
-  )
+  test("java int array argument")(check(
+    "p/K#javaInts().",
+    "@issue1672/Ints#(value = <?>(-1, -129))",
+    "@issue1672/Ints#(value = <?>)",
+  ))
 
   test("nested java annotation, negative argument")(check(
     "p/K#javaNumNested().",
     "@issue1672/NumWrap#(value = @issue1672/Num#(value = -129))",
-    "@issue1672/NumWrap#()",
+    "@issue1672/NumWrap#(value = <?>)",
   ))
 
   test("return type, negative arguments")(
     check("p/K#tpeNegative().", "@p/sl#(-129L, -2)", "@p/sl#(65407L, 254)"),
   )
 
-  test("missing class in a scalar argument")(checkMissing("p/K#missingScalar().", ""))
+  test("missing class in a scalar argument")(
+    checkMissing("p/K#missingScalar().", "@issue1672/Shade#(value = <?>)"),
+  )
 
   test("metacp without stubs, missing classes")(assertNoDiff(
     metacpMissing(stub = false, log = false),
@@ -434,7 +460,7 @@ class Issue1672Suite extends FunSuite {
   test("metacp with stubs and logs, missing classes")(assertNoDiff(
     metacpMissing(stub = true, log = true),
     """|success = true
-       |broken annotation for p/K#missingScalar().: missing symbol: issue1672.Color
+       |broken annotation argument: missing symbol: issue1672.Color
        |""".stripMargin,
   ))
 
