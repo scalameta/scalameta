@@ -326,14 +326,14 @@ class Issue1672Suite extends FunSuite {
     else check(
       "p/K#tpeAssoc().",
       """@scala/deprecated#(message = "msg", since = "1")""",
-      """@scala/deprecated#("message", "msg", "since", "1")""",
+      """@scala/deprecated#(message = "msg", since = "1")""",
     ),
   )
 
   test("return type, java annotation")(check(
     "p/K#tpeJava().",
     """@java/lang/SuppressWarnings#(value = <?>("a"))""",
-    """@java/lang/SuppressWarnings#("value", <?>)""",
+    "@java/lang/SuppressWarnings#(value = <?>)",
   ))
 
   test("negative constant") {
@@ -370,7 +370,7 @@ class Issue1672Suite extends FunSuite {
   test("return type, nested java annotation")(check(
     "p/K#tpeNested().",
     "@issue1672/Outer#(value = @issue1672/Inner#(value = \"j\"))",
-    """@issue1672/Outer#("value", <?>)""",
+    "@issue1672/Outer#(value = <?>)",
   ))
 
   test("negative constants") {
@@ -405,7 +405,7 @@ class Issue1672Suite extends FunSuite {
   )
 
   test("return type, missing class in an argument")(
-    checkMissing("p/K#tpeMissing().", """@issue1672/Colors#("value", <?>)"""),
+    checkMissing("p/K#tpeMissing().", "@issue1672/Colors#(value = <?>)"),
   )
 
   test("implicit constant argument") {
