@@ -37,16 +37,9 @@ trait AnnotationOps {
   }
 
   implicit class XtensionAnnotation(ann: Int) {
-    def toSemanticOpt: Option[s.AnnotationTree] = parseEntry(ann) match {
-      case ann: AnnotInfo => ann.refs match {
-          case head +: tail => parseEntry(head) match {
-              case tpe: Type =>
-                Some(s.AnnotationTree(tpe.toSemanticTpe, tail.map(x => toTree(parseEntry(x)))))
-              case _ => None
-            }
-          case _ => None
-        }
-      case _ if entryType(ann) == SYMANNOT => toAnnotation(entryRefs(ann).drop(1))
+    def toSemanticOpt: Option[s.AnnotationTree] = entryType(ann) match {
+      case SYMANNOT => toAnnotation(entryRefs(ann).drop(1))
+      case ANNOTINFO => toAnnotation(entryRefs(ann))
       case _ => None
     }
 
