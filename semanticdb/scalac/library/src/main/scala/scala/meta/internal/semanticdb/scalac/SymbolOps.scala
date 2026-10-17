@@ -10,7 +10,6 @@ import scala.collection.mutable
 import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile, SourceFile => GSourceFile}
 import scala.reflect.internal.{Flags => gf}
 import scala.util.control.NonFatal
-import scala.{meta => m}
 
 trait SymbolOps {
   self: SemanticdbOps =>
@@ -248,7 +247,7 @@ trait SymbolOps {
 
   }
 
-  private lazy val idCache = new mutable.HashMap[String, Int]
+  private lazy val idCache = new mutable.HashMap[GSourceFile, Int]
   private lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
     val pos = sym.pos
@@ -265,9 +264,8 @@ trait SymbolOps {
     else sym.pos.source match {
       case GNoSourceFile => freshSymbolRaw(sym.owner)
       case src =>
-        val minput = src.toInput
-        if (minput == m.Input.None) Symbols.None
-        else Symbols.Local(idCache.updateWithRemap(minput.text)(_.fold(0)(_ + 1)))
+        if (src.hasInput) Symbols.Local(idCache.updateWithRemap(src)(_.fold(0)(_ + 1)))
+        else Symbols.None
     }
 
 }

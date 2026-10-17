@@ -47,6 +47,13 @@ trait InputOps {
         md5.update(bytes)
         Hex.bytesToHex(md5.digest())
       }
+
+    def hasInput: Boolean = gsource.file match {
+      case _: GPlainFile => true
+      case _: VirtualFile => true
+      case _ => false
+    }
+
     def toInput: m.Input = gSourceFileInputCache.getOrElseUpdate(
       gsource,
       gsource.file match {
