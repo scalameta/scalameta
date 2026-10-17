@@ -300,7 +300,7 @@ class Issue1672Suite extends FunSuite {
   test("java annotation, array argument")(check(
     "p/K#javaArray().",
     """@java/lang/SuppressWarnings#(value = <?>("a", "b"))""",
-    "@java/lang/SuppressWarnings#(value = <?>)",
+    """@java/lang/SuppressWarnings#(value = <?>("a", "b"))""",
   ))
 
   test("java annotation, enum argument")(check(
@@ -333,7 +333,7 @@ class Issue1672Suite extends FunSuite {
   test("return type, java annotation")(check(
     "p/K#tpeJava().",
     """@java/lang/SuppressWarnings#(value = <?>("a"))""",
-    "@java/lang/SuppressWarnings#(value = <?>)",
+    """@java/lang/SuppressWarnings#(value = <?>("a"))""",
   ))
 
   test("negative constant") {
@@ -344,7 +344,7 @@ class Issue1672Suite extends FunSuite {
   test("java annotation, nested annotation argument")(check(
     "p/K#javaNested().",
     """@issue1672/Outer#(value = @issue1672/Inner#(value = "i"))""",
-    "@issue1672/Outer#(value = <?>)",
+    """@issue1672/Outer#(value = @issue1672/Inner#(value = "i"))""",
   ))
 
   test("byte and char arguments")(
@@ -370,7 +370,7 @@ class Issue1672Suite extends FunSuite {
   test("return type, nested java annotation")(check(
     "p/K#tpeNested().",
     "@issue1672/Outer#(value = @issue1672/Inner#(value = \"j\"))",
-    "@issue1672/Outer#(value = <?>)",
+    "@issue1672/Outer#(value = @issue1672/Inner#(value = \"j\"))",
   ))
 
   test("negative constants") {
@@ -393,7 +393,7 @@ class Issue1672Suite extends FunSuite {
   }
 
   test("missing class in an array argument")(
-    checkMissing("p/K#missingArray().", "@issue1672/Colors#(value = <?>)"),
+    checkMissing("p/K#missingArray().", "@issue1672/Colors#(value = <?>(<?>))"),
   )
 
   test("missing class in a nested argument")(
@@ -405,7 +405,7 @@ class Issue1672Suite extends FunSuite {
   )
 
   test("return type, missing class in an argument")(
-    checkMissing("p/K#tpeMissing().", "@issue1672/Colors#(value = <?>)"),
+    checkMissing("p/K#tpeMissing().", "@issue1672/Colors#(value = <?>(<?>))"),
   )
 
   test("implicit constant argument") {
@@ -433,13 +433,13 @@ class Issue1672Suite extends FunSuite {
   test("java int array argument")(check(
     "p/K#javaInts().",
     "@issue1672/Ints#(value = <?>(-1, -129))",
-    "@issue1672/Ints#(value = <?>)",
+    "@issue1672/Ints#(value = <?>(255, 65407))",
   ))
 
   test("nested java annotation, negative argument")(check(
     "p/K#javaNumNested().",
     "@issue1672/NumWrap#(value = @issue1672/Num#(value = -129))",
-    "@issue1672/NumWrap#(value = <?>)",
+    "@issue1672/NumWrap#(value = @issue1672/Num#(value = 65407))",
   ))
 
   test("return type, negative arguments")(
@@ -461,6 +461,7 @@ class Issue1672Suite extends FunSuite {
     metacpMissing(stub = true, log = true),
     """|success = true
        |broken annotation argument: missing symbol: issue1672.Color
+       |broken annotation argument: missing symbol: issue1672.Tint
        |""".stripMargin,
   ))
 

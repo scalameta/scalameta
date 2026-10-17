@@ -91,6 +91,8 @@ trait AnnotationOps {
 
   @tailrec
   private def toTree(ref: Int): s.Tree = entryType(ref) match {
+    case ANNOTINFO => toAnnotation(entryRefs(ref)).getOrElse(s.NoTree)
+    case ANNOTARGARRAY => s.ApplyTree(s.NoTree, entryRefs(ref).map(toArgument))
     case TREE => entryRefs(ref) match {
         case LITERALtree :: _ :: const :: _ => toTree(const)
         case _ => s.NoTree
