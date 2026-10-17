@@ -168,7 +168,7 @@ trait TextDocumentOps {
                   case _ =>
                 }
               case mencl: m.Member => setWithins(mencl.name)
-              case m.Tree.WithPats(p :: Nil) => p.traverse { case m.Pat.Var(n) => setWithins(n) }
+              case m.Tree.WithPats(p :: Nil) => p.traverse { case t: m.Pat.Var => setWithins(t.name) }
               case _ =>
             }
           }
@@ -206,11 +206,11 @@ trait TextDocumentOps {
               case mtree: m.Term.Apply => setArgNames(mtree.fun.pos.end :: Nil)(mtree.argClause)
               case m.Mod.WithWithin(mname: m.Name.Indeterminate) => indexWithin(mname)
               // NOTE: ignore mrename for now, we may decide to make it a binder
-              case m.Importee.Rename(mname, _) =>
-                indexName(mname)
+              case mtree: m.Importee.Rename =>
+                indexName(mtree.name)
                 return
               case mtree: m.Term.Super => msupers.update(mtree.pos.end, mtree)
-              case m.Self(_, Some(mtpe)) => mselftypes(mtpe.pos.start) = mtpe
+              case mtree: m.Self => mtree.decltpe.foreach(t => mselftypes(t.pos.start) = t)
               case m.Term.ApplyType(m.Term.Name("classOf"), mtpe :: Nil) =>
                 mclassofs(mtree.pos.start) = mtpe
               case mtree: m.Mod.Annot => mtree.parent.foreach {
@@ -541,9 +541,10 @@ trait TextDocumentOps {
               Some((g.rootMirror.RootClass.tpe, (mname -> g.rootMirror.RootPackage) :: Nil))
             case mname: m.Term.Name => lookupName(g.TermName(mname.value).encode, gscope, start)
                 .flatMap(stablePath).map { case (gtpe, gsym) => (gtpe, (mname -> gsym) :: Nil) }
-            case m.Term.This(mq) => enclosingClass(mq, gscope).map(gcls => (gcls.thisType, Nil))
-            case m.Term.Super(mthis, msuper) => enclosingClass(mthis, gscope).flatMap { gcls =>
+            case mq: m.Term.This => enclosingClass(mq.qual, gscope).map(gcls => (gcls.thisType, Nil))
+            case mq: m.Term.Super => enclosingClass(mq.thisp, gscope).flatMap { gcls =>
                 val gparents = gcls.info.parents
+                val msuper = mq.superp
                 if (msuper.value.isEmpty) Some((g.intersectionType(gparents), Nil))
                 else gparents.find(_.typeSymbol.decodedName == msuper.value).map((_, Nil))
               }
@@ -615,16 +616,16 @@ trait TextDocumentOps {
 
           // match the names in a type that scalac left without symbols to its type
           private def tryFindType(mtpe: m.Type, gtpe: g.Type): Unit = (mtpe, gtpe) match {
-            case (m.Type.Apply(mfun, margs), g.TypeRef(_, _, gargs)) =>
-              tryFindType(mfun, gtpe)
-              tryFindTypes(margs, gargs)
+            case (mtpe: m.Type.Apply, g.TypeRef(_, _, gargs)) =>
+              tryFindType(mtpe.tpe, gtpe)
+              tryFindTypes(mtpe.argClause.values, gargs)
             case (mname: m.Type.Name, g.TypeRef(_, gsym, _)) => success(mname, gsym)
-            case (m.Type.Select(mqual, mname), g.TypeRef(gpre, gsym, _)) =>
-              success(mname, gsym)
-              tryFindQualifier(mqual, gpre)
-            case (m.Type.Project(mqual, mname), g.TypeRef(gpre, gsym, _)) =>
-              success(mname, gsym)
-              tryFindType(mqual, gpre)
+            case (mtpe: m.Type.Select, g.TypeRef(gpre, gsym, _)) =>
+              success(mtpe.name, gsym)
+              tryFindQualifier(mtpe.qual, gpre)
+            case (mtpe: m.Type.Project, g.TypeRef(gpre, gsym, _)) =>
+              success(mtpe.name, gsym)
+              tryFindType(mtpe.qual, gpre)
             case (mtpe: m.Type.Tuple, g.TypeRef(_, _, gargs)) => tryFindTypes(mtpe.args, gargs)
             case (mtpe: m.Type.Function, g.TypeRef(_, _, gargs)) =>
               tryFindTypes(mtpe.paramClause.values :+ mtpe.res, gargs)
