@@ -420,15 +420,13 @@ example/Issue1672#
 ==================
 --- metac
 +++ metacp
-       symbol: "example/Issue1672Annot#"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local0"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local1"
  language: SCALA
- signature {
 
 
 =============================
@@ -436,15 +434,13 @@ example/Issue1672#NamedClass#
 =============================
 --- metac
 +++ metacp
-       symbol: "example/Issue1672Annot#"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local0"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local1"
  language: SCALA
- signature {
 
 
 ============================
@@ -452,27 +448,13 @@ example/Issue1672#NamedType#
 ============================
 --- metac
 +++ metacp
-       symbol: "example/Issue1672Annot#"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local0"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local1"
  language: SCALA
- signature {
-
-
-=============================
-example/Issue1672#blockDef().
-=============================
---- metac
-+++ metacp
-       symbol: "example/Issue1672Annot#"
--  arguments {
--  arguments {
- language: SCALA
- signature {
 
 
 =============================
@@ -480,15 +462,13 @@ example/Issue1672#namedDef().
 =============================
 --- metac
 +++ metacp
-       symbol: "example/Issue1672Annot#"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local0"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local1"
  language: SCALA
- signature {
 
 
 ==================================
@@ -496,27 +476,13 @@ example/Issue1672#namedParam().(p)
 ==================================
 --- metac
 +++ metacp
-       symbol: "example/Issue1672Annot#"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local0"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local1"
  language: SCALA
- signature {
-
-
-==================================
-example/Issue1672#positionalDef().
-==================================
---- metac
-+++ metacp
-       symbol: "example/Issue1672Annot#"
--  arguments {
--  arguments {
- language: SCALA
- signature {
 
 
 =============================
@@ -524,15 +490,13 @@ example/Issue1672.namedDef().
 =============================
 --- metac
 +++ metacp
-       symbol: "example/Issue1672Annot#"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local0"
--  arguments {
+   arguments {
 -    id_tree {
 -      symbol: "local1"
  language: SCALA
- signature {
 
 
 ======================
@@ -972,18 +936,6 @@ example/ValPattern#x$2.
 +  private_this_access {
 
 
-==============
-example/X.x().
-==============
---- metac
-+++ metacp
-       symbol: "scala/deprecated#"
--  arguments {
--  arguments {
- language: SCALA
- signature {
-
-
 =============================
 flags/p/package.X.canEqual().
 =============================
@@ -1143,17 +1095,5 @@ types/Test.C#RepeatedType.toString().
 -overridden_symbols: "scala/Function1#toString()."
 -overridden_symbols: "java/lang/Object#toString()."
 -overridden_symbols: "scala/Any#toString()."
-
-
-======================
-types/Test.C#annType1.
-======================
---- metac
-+++ metacp
-           arguments {
-+            literal_tree {
-+              constant {
-+                int_constant {
-+                  value: 42
 
 

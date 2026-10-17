@@ -22,6 +22,7 @@ trait SyntheticOps {
       case gTree: g.Select => gTree.toSemanticId
       case gTree: g.Ident => gTree.toSemanticId
       case gTree: g.This => gTree.toSemanticId
+      case gTree: g.Literal => toTree(gTree.value)
       case AssignOrNamedArg(lhs, rhs) => s
           .AssignTree(lhs = lhs.toSemanticTree, rhs = rhs.toSemanticTree)
       case gTree: g.Typed if gTree.hasAttachment[g.analyzer.MacroExpansionAttachment] =>
@@ -34,7 +35,8 @@ trait SyntheticOps {
     }
 
     def toSemanticQualifierTree: s.Tree = gTree match {
-      case sel @ Select(qual, _) if sel.symbol.owner != qual.symbol =>
+      case sel @ g.Select(qual, _)
+          if !qual.isInstanceOf[g.New] && sel.symbol.owner != qual.symbol =>
         s.SelectTree(qualifier = qual.toSemanticId, id = Some(sel.toSemanticId))
       case fun => fun.toSemanticId
     }

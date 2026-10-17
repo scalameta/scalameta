@@ -67,8 +67,8 @@ trait TypeOps {
               val sargs = sarg :: Nil
               s.TypeRef(s.NoType, ssym, sargs)
           }
-        case ConstantType(const) =>
-          val sconst = s.Constant(const)
+        case ctpe @ ConstantType(const) =>
+          val sconst = signedConstantType(ctpe).getOrElse(s.Constant(const))
           s.ConstantType(sconst)
         case RefinedType(sym, parents) =>
           val sparents = parents.map(loop)

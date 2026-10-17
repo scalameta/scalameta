@@ -1,9 +1,13 @@
 package scala.meta.internal.scalacp
 
+import scala.meta.internal.classpath.MissingSymbolException
 import scala.meta.internal.{semanticdb => s}
 
+import scala.annotation.tailrec
+import scala.collection.mutable
+import scala.reflect.internal.pickling.PickleFormat._
 import scala.tools.scalap.scalax.rules.scalasig._
-import scala.tools.scalap.scalax.rules.~
+import scala.util.control.NonFatal
 
 trait AnnotationOps {
   self: Scalacp =>
@@ -12,29 +16,123 @@ trait AnnotationOps {
 
   private def parseEntry(ref: Int): Any = node.scalaSig.parseEntry(ref)
 
+  private def entryType(ref: Int): Int = node.scalaSig.table(ref)._1
+
+  private def entryRefs(ref: Int): List[Int] = node.scalaSig
+    .applyRule(ScalaSigParsers.parseEntry(entryRefsParser)(ref))
+
+  // the SYMANNOT entries of each symbol, by the entry of the symbol
+  private[scalacp] lazy val symbolAnnotations: collection.Map[Int, collection.Seq[Int]] = {
+    val res = mutable.Map.empty[Int, mutable.ArrayBuffer[Int]]
+    var idx = 0
+    val len = node.scalaSig.table.length
+    while (idx < len) {
+      if (entryType(idx) == SYMANNOT) entryRefs(idx) match {
+        case ref :: _ => res.getOrElseUpdate(ref, new mutable.ArrayBuffer[Int]) += idx
+        case _ =>
+      }
+      idx += 1
+    }
+    res
+  }
+
   implicit class XtensionAnnotation(ann: Int) {
-    def toSemanticOpt: Option[s.AnnotationTree] = parseEntry(ann) match {
-      case ann: AnnotInfo => ann.refs match {
-          case head +: tail => parseEntry(head) match {
-              case tpe: Type =>
-                Some(s.AnnotationTree(tpe.toSemanticTpe, tail.map(x => toTree(parseEntry(x)))))
-              case _ => None
-            }
-          case _ => None
-        }
+    def toSemanticOpt: Option[s.AnnotationTree] = entryType(ann) match {
+      case SYMANNOT => toAnnotation(entryRefs(ann).drop(1))
+      case ANNOTINFO => toAnnotation(entryRefs(ann))
       case _ => None
     }
 
     def toSemantic: s.AnnotationTree = toSemanticOpt.getOrElse(s.AnnotationTree())
   }
 
-  implicit class XtensionAttribute(obj: AttributeInfo) {
-    def toSemanticOpt: Option[s.AnnotationTree] = obj.typeRef.toSemanticTpe match {
-      case tpe: s.TypeRef if syntheticAnnotationsSymbols.contains(tpe.symbol) => None
-      case tpe => Some(s.AnnotationTree(tpe, obj.values.map(pairToTree)))
+  // info_Ref {annotArg_Ref} {name_Ref constAnnotArg_Ref}
+  private def toAnnotation(refs: List[Int]): Option[s.AnnotationTree] = refs match {
+    case head :: tail => parseEntry(head) match {
+        case tpe: Type => tpe.toSemanticTpe match {
+            case stpe: s.TypeRef if syntheticAnnotationsSymbols.contains(stpe.symbol) => None
+            case stpe => Some(s.AnnotationTree(stpe, toArguments(tail)))
+          }
+        case _ => None
+      }
+    case _ => None
+  }
+
+  private def toArguments(refs: List[Int]): List[s.Tree] = {
+    val res = List.newBuilder[s.Tree]
+    @tailrec
+    def loop(refs: List[Int]): List[s.Tree] = refs match {
+      case name :: arg :: rest if isName(name) =>
+        res += s.AssignTree(s.IdTree(parseEntry(name).toString), toArgument(arg))
+        loop(rest)
+      case arg :: rest =>
+        res += toArgument(arg)
+        loop(rest)
+      case _ => res.result()
+    }
+    loop(refs)
+  }
+
+  // if broken signatures are stubbed, a missing class drops only the argument that refers to it
+  private def toArgument(ref: Int): s.Tree =
+    try toTree(ref)
+    catch {
+      case ex: MissingSymbolException =>
+        if (settings.logBrokenSignatures) reporter.err
+          .println(s"broken annotation argument: ${ex.getMessage}")
+        if (settings.stubBrokenSignatures) s.NoTree else throw ex
+      case NonFatal(_) => s.NoTree
     }
 
+  private def isName(ref: Int): Boolean = {
+    val tpe = entryType(ref)
+    tpe == TERMname || tpe == TYPEname
   }
+
+  @tailrec
+  private def toTree(ref: Int): s.Tree = entryType(ref) match {
+    case ANNOTINFO => toAnnotation(entryRefs(ref)).getOrElse(s.NoTree)
+    case ANNOTARGARRAY => s.ApplyTree(s.NoTree, entryRefs(ref).map(toArgument))
+    case TREE => entryRefs(ref) match {
+        case LITERALtree :: _ :: const :: _ => toTree(const)
+        case _ => s.NoTree
+      }
+    case LITERALshort | LITERALint | LITERALlong | LITERALfloat | LITERALdouble => s
+        .LiteralTree(signedConstant(ref))
+    case _ => toTree(parseEntry(ref))
+  }
+
+  // scalap reads the value of a literal without its sign
+  private def signedConstant(ref: Int): s.Constant = {
+    val bytes = node.scalaSig.getEntry(ref).byteCode
+    val shift = java.lang.Long.SIZE - java.lang.Byte.SIZE * bytes.length
+    val value = bytes.toLong << shift >> shift
+    entryType(ref) match {
+      case LITERALshort => s.ShortConstant(value.toInt)
+      case LITERALint => s.IntConstant(value.toInt)
+      case LITERALfloat => s.FloatConstant(java.lang.Float.intBitsToFloat(value.toInt))
+      case LITERALdouble => s.DoubleConstant(java.lang.Double.longBitsToDouble(value))
+      case _ => s.LongConstant(value)
+    }
+  }
+
+  // the signed constant of each numeric constant type, by the type that scalap parsed
+  private lazy val constantTypes: java.util.IdentityHashMap[Any, s.Constant] = {
+    val map = new java.util.IdentityHashMap[Any, s.Constant]
+    node.scalaSig.table.indices.foreach(ref =>
+      if (entryType(ref) == CONSTANTtpe) entryRefs(ref).headOption.foreach(literal =>
+        entryType(literal) match {
+          case LITERALshort | LITERALint | LITERALlong | LITERALfloat | LITERALdouble => map
+              .put(parseEntry(ref), signedConstant(literal))
+          case _ =>
+        },
+      ),
+    )
+    map
+  }
+
+  private[scalacp] def signedConstantType(tpe: ConstantType): Option[s.Constant] =
+    Option(constantTypes.get(tpe))
 
   private def toTree(obj: Any): s.Tree = obj match {
     case x: ExternalSymbol => toTree(ConstantType(x).toSemanticTpe)
@@ -58,13 +156,15 @@ trait AnnotationOps {
     if (pre eq s.NoTree) sym else s.SelectTree(pre, Some(sym))
   }
 
-  private def pairToTree(obj: String ~ Any): s.AssignTree = s
-    .AssignTree(s.IdTree(obj._1), toTree(obj._2))
-
 }
 
 object AnnotationOps {
 
   private val syntheticAnnotationsSymbols = Set("scala/reflect/macros/internal/macroImpl#")
+
+  private val entryRefsParser = {
+    import ScalaSigEntryParsers._
+    ref.*
+  }
 
 }

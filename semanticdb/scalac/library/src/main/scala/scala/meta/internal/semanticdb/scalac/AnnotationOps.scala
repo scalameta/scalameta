@@ -22,7 +22,7 @@ trait AnnotationOps {
     case _ => s.NoTree
   }
 
-  private def toTree(garg: g.Constant): s.Tree = garg.value match {
+  private[scalac] def toTree(garg: g.Constant): s.Tree = garg.value match {
     case x: g.Symbol => s.IdTree(x.toSemantic)
     case x: g.Type => toTree(x.toSemanticTpe)
     case x => s.Constant.opt(x).fold[s.Tree](s.NoTree)(s.LiteralTree.apply)
