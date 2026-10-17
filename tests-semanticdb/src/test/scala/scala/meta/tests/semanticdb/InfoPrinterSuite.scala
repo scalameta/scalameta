@@ -46,13 +46,14 @@ class InfoPrinterSuite extends FunSuite {
         p.TRANSPARENT,
         p.INFIX,
         p.OPAQUE,
+        p.EXTENSION,
       ),
       displayName = "Declaration",
     )
     val obtained = Print.info(Format.Compact, info, emptyPrinterSymtab)
     assertNoDiff(
       obtained,
-      """_empty_/Declaration# => synthetic abstract final sealed implicit lazy case covariant contravariant val var static primary enum default given inline open transparent infix opaque class Declaration""",
+      """_empty_/Declaration# => synthetic abstract final sealed implicit lazy case covariant contravariant val var static primary enum default given inline open transparent infix opaque extension class Declaration""",
     )
   }
 

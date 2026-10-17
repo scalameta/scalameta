@@ -60,6 +60,7 @@ package object semanticdb {
     def isInfix: Boolean = hasProperty(p.INFIX)
     def isOpaque: Boolean = hasProperty(p.OPAQUE)
     def isSynthetic: Boolean = hasProperty(p.SYNTHETIC)
+    def isExtension: Boolean = hasProperty(p.EXTENSION)
 
     def isPrivate: Boolean = info.access.isInstanceOf[PrivateAccess]
     def isPrivateThis: Boolean = info.access.isInstanceOf[PrivateThisAccess]

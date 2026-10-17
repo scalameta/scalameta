@@ -848,6 +848,11 @@ languages map onto these properties.
     e.g. members generated for <code>case</code> classes and <code>AnyVal</code>
     classes?</td>
   </tr>
+  <tr>
+    <td><code>0x1000000</code></td>
+    <td><code>EXTENSION</code></td>
+    <td>Is an extension method?</td>
+  </tr>
 </table>
 
 `display_name`. Display name of the definition, i.e. how this definition should
