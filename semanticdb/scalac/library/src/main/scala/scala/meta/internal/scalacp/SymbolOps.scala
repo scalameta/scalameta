@@ -58,7 +58,8 @@ trait SymbolOps {
         @tailrec
         def loop(value: String): String = {
           val i = value.lastIndexOf("$$")
-          if (i > 0) loop(value.substring(i + 2)) else NameTransformer.decode(value).stripSuffix(" ")
+          if (i > 0) loop(value.substring(i + 2))
+          else NameTransformer.decode(value).stripSuffix(NameTransformer.LOCAL_SUFFIX_STRING)
         }
         loop(sym.name)
       }
@@ -250,7 +251,9 @@ trait SymbolOps {
     }
     def isUselessField: Boolean = {
       val peers = sym.parent.map(_.children.toList).getOrElse(Nil)
-      val getter = peers.find(m => m.isAccessor && m.name == sym.name.stripSuffix(" "))
+      val getter = peers.find(m =>
+        m.isAccessor && m.name == sym.name.stripSuffix(NameTransformer.LOCAL_SUFFIX_STRING),
+      )
       sym.isScalacField && getter.nonEmpty
     }
     def isUsefulField: Boolean = sym.isScalacField && !sym.isUselessField
