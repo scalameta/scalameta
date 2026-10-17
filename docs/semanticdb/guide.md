@@ -370,7 +370,7 @@ scalacOptions += "-Yrangepos"
 
 ### Scala bindings
 
-The `semanticdb` library contains [ScalaPB](https://scalapb.github.io/) bindings
+The `semanticdb-shared` library contains [ScalaPB](https://scalapb.github.io/) bindings
 to
 [the SemanticDB protobuf schema](https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb/shared/src/main/proto/semanticdb.proto).
 Using this library, one can model SemanticDB entities as Scala case classes and
@@ -382,13 +382,10 @@ libraryDependencies += "org.scalameta" %% "semanticdb-shared" % "@VERSION@"
 
 Caveats:
 
-- At the moment, there are no compatibility guarantees for Scala bindings to the
-  SemanticDB schema. The current package of the schema
-  (`scala.meta.internal.semanticdb`) is considered internal, so we do not
-  provide any guarantees about compatibility across different versions of the
-  `semanticdb` library. We are planning to
-  [improve the situation](https://github.com/scalameta/scalameta/issues/1300) in
-  the future.
+- There are no compatibility guarantees for Scala bindings to the SemanticDB
+  schema. The package of the schema (`scala.meta.internal.semanticdb`) is
+  considered internal, so we do not provide any guarantees about compatibility
+  across different versions of the `semanticdb-shared` library.
 - At the moment, SemanticDB-based tools are responsible for implementing
   discovery of SemanticDB payloads on their own. For example, the non-trivial
   logic that Metap uses to traverse its inputs and detect SemanticDB files must
