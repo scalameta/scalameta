@@ -20,16 +20,19 @@ class MetacpErrorSuite extends FunSuite {
 
   test("missing symbol 1") {
     val (result, out, err) = CliTestUtils.withReporter { reporter =>
-      val scalametaSettings = settings.withClasspath(
-        Library(
-          "org.scalameta",
-          "scalameta_2.12",
-          "3.2.0",
-          // Scalameta has public signatures that reference scala-reflect APIs even if scala-reflect not
-          // declared as a provided dependency in pom.xml.
-          provided = Nil,
-        ).classpath(),
-      )
+      val classpath = Library(
+        "org.scalameta",
+        "scalameta_2.12",
+        "3.2.0",
+        // Scalameta has public signatures that reference scala-reflect APIs even if scala-reflect not
+        // declared as a provided dependency in pom.xml.
+        provided = Nil,
+      ).classpath()
+      // the missing symbols are all in `common`: convert only it, and only index the rest
+      val (common, others) = classpath.entries
+        .partition(_.toNIO.getFileName.toString.startsWith("common_"))
+      val scalametaSettings = settings.withClasspath(Classpath(common))
+        .withDependencyClasspath(Classpath(others))
       Metacp.process(scalametaSettings, reporter)
     }
     assert(result.classpath.isEmpty)
