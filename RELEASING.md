@@ -43,10 +43,6 @@
   * Wait for the Travis CI validation.
   * Merge the pull request immediately without waiting for approvals.
   * Apply the website hotfix (https://github.com/scalameta/scalameta.github.com/commit/adc7920ee56dfbe2cb615492554808ded922ae34).
-* Update the SemanticDB guide:
-  * Update version numbers in https://github.com/scalameta/scalameta/blob/main/semanticdb/semanticdb3/guide.md
-  * Submit a pull request to scalameta/scalameta.
-  * Merge the pull request immediately without waiting for travis or approvals.
 * Publish the release on GitHub:
   * https://github.com/scalameta/scalameta/releases
   * Select the previously drafted release.
