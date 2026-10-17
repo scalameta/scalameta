@@ -16,8 +16,9 @@ object SymbolInformationPrinter {
   //          are the only exceptions to it.
   //   defn   an occasional Definition-only deviation from `word`: null (default) keeps `word`,
   //          so most rows omit this arg; "" drops the modifier, which Definition does not model
-  //          (synthetic, primary, default, given, inline, open, transparent, infix, opaque); any
-  //          other string replaces it (variance prints +/- rather than covariant/contravariant).
+  //          (synthetic, primary, default, given, inline, open, transparent, infix, opaque,
+  //          extension); any other string replaces it (variance prints +/- rather than
+  //          covariant/contravariant).
   //   defnOK an extra Definition gate keyed on kind, not property, for the two modifiers Scala
   //          keeps only in some positions: `abstract` only on classes, `final` only off objects
   //          (Scala implies it there). Declaration ignores it.
@@ -50,6 +51,7 @@ object SymbolInformationPrinter {
     Modifier(Property.TRANSPARENT, "transparent ", ""),
     Modifier(Property.INFIX, "infix ", ""),
     Modifier(Property.OPAQUE, "opaque ", ""),
+    Modifier(Property.EXTENSION, "extension ", ""),
   )
 }
 
