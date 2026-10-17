@@ -219,9 +219,9 @@ class Issue1672Suite extends FunSuite {
 
   test("class")(check("p/K#", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
   test("literal arguments")(check("p/K#literal().", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
-  test("folded literals")(check("p/K#folded().", """@p/sa#(-1, "ab")""", """@p/sa#(255, "ab")"""))
+  test("folded literals")(check("p/K#folded().", """@p/sa#(-1, "ab")""", """@p/sa#(-1, "ab")"""))
   test("negative long and short")(
-    check("p/K#negative().", """@p/sl#(-129L, -2)""", "@p/sl#(65407L, 254)"),
+    check("p/K#negative().", """@p/sl#(-129L, -2)""", """@p/sl#(-129L, -2)"""),
   )
   test("constant arguments")(check("p/K#constant().", """@p/sa#(1, "s")""", """@p/sa#(1, "s")"""))
 
@@ -338,7 +338,7 @@ class Issue1672Suite extends FunSuite {
 
   test("negative constant") {
     assertEquals(returnType(metac.get("p/C.N.")), "-1", "metac")
-    assertEquals(returnType(symtab.info("p/C.N.")), "255", "metacp")
+    assertEquals(returnType(symtab.info("p/C.N.")), "-1", "metacp")
   }
 
   test("java annotation, nested annotation argument")(check(
@@ -351,11 +351,9 @@ class Issue1672Suite extends FunSuite {
     check("p/K#byteChar().", "@p/sbc#(-1, '\uffff')", "@p/sbc#(-1, '\uffff')"),
   )
 
-  test("infinite float and double arguments")(check(
-    "p/K#infinite().",
-    "@p/sf#(-Infinityf, -Infinity)",
-    "@p/sf#(1.1754944E-38f, 3.645561009778199E-304)",
-  ))
+  test("infinite float and double arguments")(
+    check("p/K#infinite().", "@p/sf#(-Infinityf, -Infinity)", "@p/sf#(-Infinityf, -Infinity)"),
+  )
 
   test("negative float and double arguments")(
     check("p/K#finiteNegative().", "@p/sf#(-1.5f, -2.5)", "@p/sf#(-1.5f, -2.5)"),
@@ -364,7 +362,7 @@ class Issue1672Suite extends FunSuite {
   test("negative default argument")(check(
     "p/K#defaultNegative().",
     if (defaultGetter) "@p/sdn#(p/sdn.`<init>$default$1`().)" else "@p/sdn#(-1)",
-    if (defaultGetter) "@p/sdn#(<?>)" else "@p/sdn#(255)",
+    if (defaultGetter) "@p/sdn#(<?>)" else "@p/sdn#(-1)",
   ))
 
   test("return type, nested java annotation")(check(
@@ -381,13 +379,7 @@ class Issue1672Suite extends FunSuite {
     )
     assertEquals(
       List("I", "L", "F", "D", "DF").map(x => returnType(symtab.info(s"p/C2.$x."))),
-      List(
-        "65336",
-        "65336L",
-        s"${java.lang.Float.intBitsToFloat(0x00800000)}f",
-        java.lang.Double.longBitsToDouble(0x00f0000000000000L).toString,
-        "-1.5",
-      ),
+      List("-200", "-200L", "-Infinityf", "-Infinity", "-1.5"),
       "metacp",
     )
   }
@@ -433,17 +425,17 @@ class Issue1672Suite extends FunSuite {
   test("java int array argument")(check(
     "p/K#javaInts().",
     "@issue1672/Ints#(value = <?>(-1, -129))",
-    "@issue1672/Ints#(value = <?>(255, 65407))",
+    "@issue1672/Ints#(value = <?>(-1, -129))",
   ))
 
   test("nested java annotation, negative argument")(check(
     "p/K#javaNumNested().",
     "@issue1672/NumWrap#(value = @issue1672/Num#(value = -129))",
-    "@issue1672/NumWrap#(value = @issue1672/Num#(value = 65407))",
+    "@issue1672/NumWrap#(value = @issue1672/Num#(value = -129))",
   ))
 
   test("return type, negative arguments")(
-    check("p/K#tpeNegative().", "@p/sl#(-129L, -2)", "@p/sl#(65407L, 254)"),
+    check("p/K#tpeNegative().", "@p/sl#(-129L, -2)", "@p/sl#(-129L, -2)"),
   )
 
   test("missing class in a scalar argument")(

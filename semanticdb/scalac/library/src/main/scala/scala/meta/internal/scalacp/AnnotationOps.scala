@@ -97,8 +97,42 @@ trait AnnotationOps {
         case LITERALtree :: _ :: const :: _ => toTree(const)
         case _ => s.NoTree
       }
+    case LITERALshort | LITERALint | LITERALlong | LITERALfloat | LITERALdouble => s
+        .LiteralTree(signedConstant(ref))
     case _ => toTree(parseEntry(ref))
   }
+
+  // scalap reads the value of a literal without its sign
+  private def signedConstant(ref: Int): s.Constant = {
+    val bytes = node.scalaSig.getEntry(ref).byteCode
+    val shift = java.lang.Long.SIZE - java.lang.Byte.SIZE * bytes.length
+    val value = bytes.toLong << shift >> shift
+    entryType(ref) match {
+      case LITERALshort => s.ShortConstant(value.toInt)
+      case LITERALint => s.IntConstant(value.toInt)
+      case LITERALfloat => s.FloatConstant(java.lang.Float.intBitsToFloat(value.toInt))
+      case LITERALdouble => s.DoubleConstant(java.lang.Double.longBitsToDouble(value))
+      case _ => s.LongConstant(value)
+    }
+  }
+
+  // the signed constant of each numeric constant type, by the type that scalap parsed
+  private lazy val constantTypes: java.util.IdentityHashMap[Any, s.Constant] = {
+    val map = new java.util.IdentityHashMap[Any, s.Constant]
+    node.scalaSig.table.indices.foreach(ref =>
+      if (entryType(ref) == CONSTANTtpe) entryRefs(ref).headOption.foreach(literal =>
+        entryType(literal) match {
+          case LITERALshort | LITERALint | LITERALlong | LITERALfloat | LITERALdouble => map
+              .put(parseEntry(ref), signedConstant(literal))
+          case _ =>
+        },
+      ),
+    )
+    map
+  }
+
+  private[scalacp] def signedConstantType(tpe: ConstantType): Option[s.Constant] =
+    Option(constantTypes.get(tpe))
 
   private def toTree(obj: Any): s.Tree = obj match {
     case x: ExternalSymbol => toTree(ConstantType(x).toSemanticTpe)
