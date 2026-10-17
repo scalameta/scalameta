@@ -164,18 +164,21 @@ trait SymbolInformationOps {
       }
 
     private def annotations: List[s.AnnotationTree] = {
-      val builder = List.newBuilder[s.AnnotationTree]
-      symbolAnnotations.getOrElse(sym.index, Nil).foreach(attr =>
-        try attr.toSemanticOpt.foreach(builder += _)
+      val builder = new mutable.ListBuffer[s.AnnotationTree]
+      annotations(builder += _)(sym)
+      builder.toList
+    }
+
+    private def annotations(f: s.AnnotationTree => Unit)(symbol: SymbolInfoSymbol): Unit =
+      symbolAnnotations.getOrElse(symbol.index, Nil).foreach(attr =>
+        try attr.toSemanticOpt.foreach(f)
         catch {
           case ex: MissingSymbolException =>
             if (settings.logBrokenSignatures) reporter.err
-              .println(s"broken annotation for ${sym.ssym}: ${ex.getMessage}")
+              .println(s"broken annotation for ${symbol.ssym}: ${ex.getMessage}")
             if (!settings.stubBrokenSignatures) throw ex
         },
       )
-      builder.result()
-    }
 
     private def access: s.Access = kind match {
       case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE | k

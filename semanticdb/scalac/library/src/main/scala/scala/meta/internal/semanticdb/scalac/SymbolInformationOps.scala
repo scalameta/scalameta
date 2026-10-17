@@ -6,6 +6,7 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k, Property => 
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
 
+import scala.collection.mutable
 import scala.reflect.internal.{Flags => gf}
 import scala.{meta => m}
 
@@ -172,9 +173,14 @@ trait SymbolInformationOps {
         else ssig
       }
 
-    private def annotations: List[s.AnnotationTree] = gsym.annotations.flatMap(gann =>
-      if (gann.symbol == definitions.MacroImplAnnotation) None else Some(gann.toSemantic),
-    )
+    private def annotations: List[s.AnnotationTree] = {
+      val buf = new mutable.ListBuffer[s.AnnotationTree]
+      annotations(buf += _)(gsym)
+      buf.toList
+    }
+
+    private def annotations(f: s.AnnotationTree => Unit)(sym: g.Symbol): Unit = sym.annotations
+      .foreach(x => if (x.symbol != definitions.MacroImplAnnotation) f(x.toSemantic))
 
     private def access: s.Access = kind match {
       case k.LOCAL | k.PARAMETER | k.SELF_PARAMETER | k.TYPE_PARAMETER | k.PACKAGE | k
