@@ -35,8 +35,8 @@ class Issue4933Suite extends FunSuite {
     val (root, out) = setup()
     val blob = link(root, out)
     doc.save(root)
-    assert(Files.isSymbolicLink(out))
-    assertEquals(bytes(blob), bytes(doc))
+    assert(!Files.isSymbolicLink(out))
+    assertEquals(bytes(blob), cached)
     assertEquals(bytes(out), bytes(doc))
   }
 
@@ -45,8 +45,8 @@ class Issue4933Suite extends FunSuite {
     val blob = link(root, out)
     doc.save(root)
     diag.append(root)
-    assert(Files.isSymbolicLink(out))
-    assertEquals(bytes(blob), bytes(doc, diag))
+    assert(!Files.isSymbolicLink(out))
+    assertEquals(bytes(blob), cached)
     assertEquals(bytes(out), bytes(doc, diag))
   }
 
@@ -69,14 +69,14 @@ class Issue4933Suite extends FunSuite {
     Files.write(tmp, cached.toArray)
     doc.save(root)
     assertEquals(bytes(out), bytes(doc))
-    assertEquals(Files.exists(tmp), true)
+    assertEquals(Files.exists(tmp), false)
   }
 
   test("append to a corrupt file") {
     val (root, out) = setup()
     Files.write(out, cached.toArray)
     diag.append(root)
-    assertEquals(bytes(out), cached ++ bytes(diag))
+    assertEquals(bytes(out), bytes(diag))
   }
 
 }
