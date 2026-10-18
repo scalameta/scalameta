@@ -5,6 +5,7 @@ import scala.meta.internal.metap.{DocumentPrinter, PrinterSymtab}
 import scala.meta.metap._
 
 import java.io.{ByteArrayOutputStream, PrintStream}
+import java.nio.charset.StandardCharsets
 
 object Print {
 
@@ -51,12 +52,12 @@ object Print {
       fn: DocumentPrinter => Unit,
   ): String = {
     val baos = new ByteArrayOutputStream()
-    val ps = new PrintStream(baos)
+    val ps = new PrintStream(baos, false, StandardCharsets.UTF_8.name)
     val settings = Settings().withFormat(format)
     val reporter = Reporter().withOut(ps).withSilentErr()
     val printer = new DocumentPrinter(settings, reporter, doc, symtab)
     fn(printer)
-    baos.toString().trim
+    baos.toString(StandardCharsets.UTF_8.name).trim
   }
 
 }

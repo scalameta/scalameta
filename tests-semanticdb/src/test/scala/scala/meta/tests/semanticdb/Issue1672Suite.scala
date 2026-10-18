@@ -162,7 +162,7 @@ class Issue1672Suite extends FunSuite {
       .withStubBrokenSignatures(stub).withLogBrokenSignatures(log)
     val (result, _, err) = CliTestUtils.withReporter(reporter => Metacp.process(settings, reporter))
     val errors = err.linesIterator.filter(x => x.startsWith("broken") || x.startsWith("missing"))
-      .map(_.replaceAll(" in /.*", "")).toList.distinct.sorted
+      .map(_.replaceAll(" in .*", "")).toList.distinct.sorted
     (s"success = ${result.isSuccess}" :: errors).mkString("\n")
   }
 

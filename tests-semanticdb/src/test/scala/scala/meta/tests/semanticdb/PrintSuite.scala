@@ -12,6 +12,8 @@ class PrintSuite extends PrintSuiteBase {
   checkConstant(s.LongConstant(64), "64L")
   checkConstant(s.CharConstant('a'.toInt), "'a'")
   checkConstant(s.StringConstant("a"), "\"a\"")
+  checkConstant(s.CharConstant(0xffff), "'\uffff'")
+  checkConstant(s.StringConstant("\u03c0"), "\"\u03c0\"")
 
   checkSignature("scala/Predef.assert(+1).", """(assertion: Boolean, message: => Any): Unit""")
   checkSignature("scala/Predef.ArrowAssoc#`->`().", "[B](y: B): Tuple2[A, B]")
