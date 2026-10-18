@@ -176,6 +176,12 @@ trait SymbolInformationOps {
     private def annotations: List[s.AnnotationTree] = {
       val buf = new mutable.ListBuffer[s.AnnotationTree]
       annotations(buf += _)(gsym)
+      if (gsym.isGetter) {
+        val len = buf.length
+        annotations(x => if (!buf.iterator.take(len).contains(x)) buf += x)(
+          gsym.owner.info.decl(gsym.localName).filter(!_.isMethod),
+        )
+      }
       buf.toList
     }
 

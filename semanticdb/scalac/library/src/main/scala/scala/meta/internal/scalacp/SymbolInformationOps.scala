@@ -8,6 +8,7 @@ import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
 
 import scala.collection.mutable
+import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolInformationOps {
@@ -166,6 +167,15 @@ trait SymbolInformationOps {
     private def annotations: List[s.AnnotationTree] = {
       val builder = new mutable.ListBuffer[s.AnnotationTree]
       annotations(builder += _)(sym)
+      if (sym.isAccessor && !sym.name.endsWith(NameTransformer.SETTER_SUFFIX_STRING)) {
+        val fieldName = sym.name + NameTransformer.LOCAL_SUFFIX_STRING
+        sym.symbolInfo.owner.children.collectFirst {
+          case x: SymbolInfoSymbol if x.name == fieldName && x.isScalacField => x
+        }.foreach { field =>
+          val len = builder.length
+          annotations(x => if (!builder.iterator.take(len).contains(x)) builder += x)(field)
+        }
+      }
       builder.toList
     }
 

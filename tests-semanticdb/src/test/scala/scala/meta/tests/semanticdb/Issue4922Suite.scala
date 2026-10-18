@@ -160,7 +160,7 @@ class Issue4922Suite extends FunSuite {
   }
 
   test("class parameter val with @field") {
-    check("p/K#f.", "")
+    check("p/K#f.", field)
     check("p/K#`<init>`().(f)", "")
   }
 
@@ -180,7 +180,7 @@ class Issue4922Suite extends FunSuite {
   }
 
   test("class parameter val with @getter and another @field") {
-    check("p/K#gf.", getter)
+    check("p/K#gf.", s"$getter $sbField")
     check("p/K#`<init>`().(gf)", "")
   }
 
@@ -192,7 +192,7 @@ class Issue4922Suite extends FunSuite {
   }
 
   test("class parameter var with @field") {
-    check("p/K#fVar().", "")
+    check("p/K#fVar().", field)
     check("p/K#`fVar_=`().", "")
     check("p/K#`fVar_=`().(x$1)", "")
     check("p/K#`<init>`().(fVar)", "")
@@ -210,14 +210,17 @@ class Issue4922Suite extends FunSuite {
     check("p/K#`<init>`().(h)", "")
   }
 
-  test("val in the body")(check("p/K#body.", ""))
+  test("val in the body")(check("p/K#body.", plain))
   test("val in the body with @getter")(check("p/K#bodyGetter.", getter))
 
-  test("val in the body with @getter and another @field")(check("p/K#bodyGf.", getter))
-  test("val in the body with @getter and a plain one")(check("p/K#bodyGetterPlain.", getter))
+  test("val in the body with @getter and another @field")(check("p/K#bodyGf.", s"$getter $sbField"))
+
+  test("val in the body with @getter and a plain one")(
+    check("p/K#bodyGetterPlain.", s"$getter $plain"),
+  )
 
   test("var in the body") {
-    check("p/K#bodyVar().", "")
+    check("p/K#bodyVar().", plain)
     check("p/K#`bodyVar_=`().", "")
     check("p/K#`bodyVar_=`().(x$1)", "")
   }
@@ -228,7 +231,7 @@ class Issue4922Suite extends FunSuite {
     check("p/K#`bodySetter_=`().(x$1)", "")
   }
 
-  test("val in the body with @sa twice")(check("p/K#bodyTwice.", ""))
+  test("val in the body with @sa twice")(check("p/K#bodyTwice.", s"$plain $plain", plain))
 
   test("val in the body with @field and @getter twice")(
     check("p/K#bodyFgTwice.", s"$fieldGetter $fieldGetter", fieldGetter),
@@ -241,7 +244,7 @@ class Issue4922Suite extends FunSuite {
   test("lazy val in the body with @field")(check("p/L#lzField.", field))
   test("lazy val in the body with @getter")(check("p/L#lzGetter.", getter))
   test("private[this] val in the body")(check("p/L#pt.", plain))
-  test("private val in the body with @field")(check("p/L#pv.", ""))
+  test("private val in the body with @field")(check("p/L#pv.", field))
   test("val in the body with @deprecated")(check("p/L#dep.", "@scala/deprecated#"))
 
   test("var in the body with @deprecated") {
@@ -249,25 +252,29 @@ class Issue4922Suite extends FunSuite {
     check("p/L#`depVar_=`().", "@scala/deprecated#")
   }
 
-  test("var in the body with @BeanProperty")(check("p/L#bean().", ""))
-  test("var in the body with @volatile")(check("p/L#vol().", ""))
-  test("val in the body with @transient")(check("p/L#tr.", ""))
+  test("var in the body with @BeanProperty")(check("p/L#bean().", "@scala/beans/BeanProperty#"))
+  test("var in the body with @volatile")(check("p/L#vol().", "@scala/volatile#"))
+  test("val in the body with @transient")(check("p/L#tr.", "@scala/transient#"))
 
   test("tuple pattern val in the body") {
-    check("p/L#pa.", "")
-    check("p/L#pb.", "")
+    check("p/L#pa.", plain)
+    check("p/L#pb.", plain)
   }
 
-  test("extractor pattern val in the body with @field")(check("p/L#pc.", ""))
+  test("extractor pattern val in the body with @field")(check("p/L#pc.", field))
 
-  test("val in the body with @field and @getter, then @field")(check("p/L#fgThenF.", fieldGetter))
+  test("val in the body with @field and @getter, then @field")(
+    check("p/L#fgThenF.", s"$fieldGetter $field"),
+  )
 
-  test("val in the body with @getter, then @field")(check("p/L#gThenF.", getter))
+  test("val in the body with @getter, then @field")(check("p/L#gThenF.", s"$getter $field"))
 
-  test("val in the body with @field, then @getter and @field")(check("p/L#fThenGf.", getterField))
+  test("val in the body with @field, then @getter and @field")(
+    check("p/L#fThenGf.", s"$getterField $field"),
+  )
 
-  test("val with an operator name in the body with @field")(check("p/L#`+`.", ""))
-  test("val with a space in its name in the body with @field")(check("p/L#`a b`.", ""))
+  test("val with an operator name in the body with @field")(check("p/L#`+`.", field))
+  test("val with a space in its name in the body with @field")(check("p/L#`a b`.", field))
 
   test("abstract val") {
     check("p/A#abs.", "")
@@ -277,17 +284,17 @@ class Issue4922Suite extends FunSuite {
   }
 
   test("overriding val with @field") {
-    check("p/A#ov.", "")
-    check("p/B#ov.", "")
+    check("p/A#ov.", plain)
+    check("p/B#ov.", field)
   }
 
   test("val with @field implementing an abstract def") {
     check("p/A#defAbs().", plain)
-    check("p/B#defAbs.", "")
+    check("p/B#defAbs.", field)
   }
 
-  test("val in an object")(check("p/O.objVal.", ""))
-  test("var in an object with @field")(check("p/O.objVar().", ""))
+  test("val in an object")(check("p/O.objVal.", plain))
+  test("var in an object with @field")(check("p/O.objVar().", field))
 
   test("vals in a trait with @field") {
     check("p/T2#traitField.", field)
@@ -296,12 +303,12 @@ class Issue4922Suite extends FunSuite {
   }
 
   test("case class parameter") {
-    check("p/CC#x.", "")
+    check("p/CC#x.", field)
     check("p/CC#y.", "")
     check("p/CC#`<init>`().(y)", plain)
   }
 
-  test("value class parameter with @field")(check("p/V#x.", ""))
-  test("val in an inner class")(check("p/Outer#Inner#inner.", ""))
+  test("value class parameter with @field")(check("p/V#x.", field))
+  test("val in an inner class")(check("p/Outer#Inner#inner.", plain))
 
 }

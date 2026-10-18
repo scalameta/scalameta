@@ -485,6 +485,20 @@ example/Issue1672#namedParam().(p)
  language: SCALA
 
 
+===========================
+example/Issue1672#namedVal.
+===========================
+--- metac
++++ metacp
+   arguments {
+-    id_tree {
+-      symbol: "local0"
+   arguments {
+-    id_tree {
+-      symbol: "local1"
+ language: SCALA
+
+
 =============================
 example/Issue1672.namedDef().
 =============================
