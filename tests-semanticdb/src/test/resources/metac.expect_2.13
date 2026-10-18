@@ -6,12 +6,13 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala-2.13/example/LeadingInfix.scala
 Text => non-empty
 Language => Scala
-Symbols => 11 entries
-Occurrences => 28 entries
+Symbols => 12 entries
+Occurrences => 29 entries
 
 Symbols:
-example/LeadingInfixTest# => trait LeadingInfixTest extends AnyRef { +9 decls }
+example/LeadingInfixTest# => trait LeadingInfixTest extends AnyRef { +10 decls }
   AnyRef => scala/AnyRef#
+example/LeadingInfixTest#`<init>`(). => primary ctor <init>()
 example/LeadingInfixTest#`?=`(). => abstract method ?=(right: Any): Unit
   right => example/LeadingInfixTest#`?=`().(right)
   Any => scala/Any#
@@ -38,6 +39,7 @@ example/LeadingInfixTest#testNoLeadingInfix(). => method testNoLeadingInfix: Uni
 Occurrences:
 [0:8..0:15): example <= example/
 [2:6..2:22): LeadingInfixTest <= example/LeadingInfixTest#
+[2:23..2:23):  <= example/LeadingInfixTest#`<init>`().
 [3:6..3:8): ?= <= example/LeadingInfixTest#`?=`().
 [3:9..3:14): right <= example/LeadingInfixTest#`?=`().(right)
 [3:16..3:19): Any => scala/Any#
@@ -2152,12 +2154,13 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Infix.scala
 Text => non-empty
 Language => Scala
-Symbols => 4 entries
-Occurrences => 9 entries
+Symbols => 5 entries
+Occurrences => 10 entries
 
 Symbols:
-example/SymbolTest# => trait SymbolTest extends AnyRef { +2 decls }
+example/SymbolTest# => trait SymbolTest extends AnyRef { +3 decls }
   AnyRef => scala/AnyRef#
+example/SymbolTest#`<init>`(). => primary ctor <init>()
 example/SymbolTest#arg(). => method arg: Int
   Int => scala/Int#
 example/SymbolTest#shouldBe(). => abstract method shouldBe(right: Any): Unit
@@ -2170,6 +2173,7 @@ example/SymbolTest#shouldBe().(right) => param right: Any
 Occurrences:
 [0:8..0:15): example <= example/
 [2:6..2:16): SymbolTest <= example/SymbolTest#
+[2:17..2:17):  <= example/SymbolTest#`<init>`().
 [3:6..3:14): shouldBe <= example/SymbolTest#shouldBe().
 [3:15..3:20): right <= example/SymbolTest#shouldBe().(right)
 [3:22..3:25): Any => scala/Any#
@@ -2869,8 +2873,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Issue2040.scala
 Text => non-empty
 Language => Scala
-Symbols => 16 entries
-Occurrences => 35 entries
+Symbols => 19 entries
+Occurrences => 38 entries
 Diagnostics => 2 entries
 Synthetics => 2 entries
 
@@ -2885,9 +2889,10 @@ example/Issue2040.AnyShouldWrapper#shouldBe(). => abstract method shouldBe(right
   Boolean => scala/Boolean#
 example/Issue2040.AnyShouldWrapper#shouldBe().(right) => param right: Any
   Any => scala/Any#
-example/Issue2040.BarSpec# => trait BarSpec extends AnyRef with Base { +1 decls }
+example/Issue2040.BarSpec# => trait BarSpec extends AnyRef with Base { +2 decls }
   AnyRef => scala/AnyRef#
   Base => example/Issue2040.Base#
+example/Issue2040.BarSpec#`<init>`(). => primary ctor <init>()
 example/Issue2040.BarSpec#convertToAnyShouldWrapper(). => abstract implicit method convertToAnyShouldWrapper(o: Any)(implicit prettifier: Prettifier): AnyShouldWrapper
   o => example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o)
   Any => scala/Any#
@@ -2898,13 +2903,15 @@ example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o) => param o: Any
   Any => scala/Any#
 example/Issue2040.BarSpec#convertToAnyShouldWrapper().(prettifier) => implicit param prettifier: Prettifier
   Prettifier => example/Issue2040.Prettifier#
-example/Issue2040.Base# => trait Base extends AnyRef { +1 decls }
+example/Issue2040.Base# => trait Base extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
+example/Issue2040.Base#`<init>`(). => primary ctor <init>()
 example/Issue2040.Base#i(). => method i(): Int
   Int => scala/Int#
-example/Issue2040.FooSpec# => trait FooSpec extends AnyRef with Base { +1 decls }
+example/Issue2040.FooSpec# => trait FooSpec extends AnyRef with Base { +2 decls }
   AnyRef => scala/AnyRef#
   Base => example/Issue2040.Base#
+example/Issue2040.FooSpec#`<init>`(). => primary ctor <init>()
 example/Issue2040.FooSpec#convertToAnyShouldWrapper(). => abstract implicit method convertToAnyShouldWrapper(o: Any): AnyShouldWrapper
   o => example/Issue2040.FooSpec#convertToAnyShouldWrapper().(o)
   Any => scala/Any#
@@ -2935,8 +2942,10 @@ Occurrences:
 [12:24..12:27): Any => scala/Any#
 [12:30..12:37): Boolean => scala/Boolean#
 [15:8..15:12): Base <= example/Issue2040.Base#
+[15:13..15:13):  <= example/Issue2040.Base#`<init>`().
 [16:8..16:9): i <= example/Issue2040.Base#i().
 [19:8..19:15): FooSpec <= example/Issue2040.FooSpec#
+[19:16..19:16):  <= example/Issue2040.FooSpec#`<init>`().
 [19:24..19:28): Base => example/Issue2040.Base#
 [20:17..20:42): convertToAnyShouldWrapper <= example/Issue2040.FooSpec#convertToAnyShouldWrapper().
 [20:43..20:44): o <= example/Issue2040.FooSpec#convertToAnyShouldWrapper().(o)
@@ -2945,6 +2954,7 @@ Occurrences:
 [22:4..22:5): i => example/Issue2040.Base#i().
 [22:6..22:14): shouldBe => example/Issue2040.AnyShouldWrapper#shouldBe().
 [25:8..25:15): BarSpec <= example/Issue2040.BarSpec#
+[25:16..25:16):  <= example/Issue2040.BarSpec#`<init>`().
 [25:24..25:28): Base => example/Issue2040.Base#
 [26:17..26:42): convertToAnyShouldWrapper <= example/Issue2040.BarSpec#convertToAnyShouldWrapper().
 [26:43..26:44): o <= example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o)
@@ -5445,8 +5455,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Traits.scala
 Text => non-empty
 Language => Scala
-Symbols => 10 entries
-Occurrences => 15 entries
+Symbols => 11 entries
+Occurrences => 16 entries
 
 Symbols:
 local0 => final class $anon extends AnyRef with U
@@ -5457,8 +5467,9 @@ local1 => selfparam self: C
 traits/C# => class C extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 traits/C#`<init>`(). => primary ctor <init>()
-traits/T# => trait T extends AnyRef { +1 decls }
+traits/T# => trait T extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
+traits/T#`<init>`(). => primary ctor <init>()
 traits/T#x(). => method x: Int
   Int => scala/Int#
 traits/U# => sealed trait U extends AnyRef
@@ -5474,6 +5485,7 @@ traits/V# => trait V extends AnyRef { self: C =>  }
 Occurrences:
 [0:8..0:14): traits <= traits/
 [2:6..2:7): T <= traits/T#
+[2:8..2:8):  <= traits/T#`<init>`().
 [3:6..3:7): x <= traits/T#x().
 [6:13..6:14): U <= traits/U#
 [7:7..7:8): U <= traits/U.
@@ -5496,8 +5508,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
-Symbols => 145 entries
-Occurrences => 279 entries
+Symbols => 146 entries
+Occurrences => 280 entries
 Diagnostics => 1 entries
 
 Symbols:
@@ -5809,8 +5821,9 @@ types/Test.M# => class M extends AnyRef { +2 decls }
 types/Test.M#`<init>`(). => primary ctor <init>()
 types/Test.M#m(). => method m: Int
   Int => scala/Int#
-types/Test.N# => trait N extends AnyRef { +1 decls }
+types/Test.N# => trait N extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
+types/Test.N#`<init>`(). => primary ctor <init>()
 types/Test.N#n(). => method n: Int
   Int => scala/Int#
 types/ann# => class ann[T] extends Annotation with StaticAnnotation { +2 decls }
@@ -5893,6 +5906,7 @@ Occurrences:
 [27:11..27:14): Int => scala/Int#
 [27:17..27:20): ??? => scala/Predef.`???`().
 [30:8..30:9): N <= types/Test.N#
+[30:10..30:10):  <= types/Test.N#`<init>`().
 [31:8..31:9): n <= types/Test.N#n().
 [31:11..31:14): Int => scala/Int#
 [31:17..31:20): ??? => scala/Predef.`???`().
@@ -6554,11 +6568,11 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/XmaxWarn.scala
 Text => non-empty
 Language => Scala
-Symbols => 104 entries
-Occurrences => 210 entries
+Symbols => 105 entries
+Occurrences => 211 entries
 
 Symbols:
-example/T# => trait T extends AnyRef { +101 decls }
+example/T# => trait T extends AnyRef { +102 decls }
   AnyRef => scala/AnyRef#
 example/T#`1`(). => method 1: Int
   Int => scala/Int#
@@ -6762,6 +6776,7 @@ example/T#`100`(). => method 100: Int
   Int => scala/Int#
 example/T#`101`(). => method 101: Int
   Int => scala/Int#
+example/T#`<init>`(). => primary ctor <init>()
 example/X. => final object X extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
 example/X.x(). => @deprecated method x: Int
@@ -6776,6 +6791,7 @@ Occurrences:
 [3:35..3:40): since => scala/deprecated#`<init>`().(since)
 [4:6..4:7): x <= example/X.x().
 [7:6..7:7): T <= example/T#
+[7:8..7:8):  <= example/T#`<init>`().
 [9:9..9:10): X => example/X.
 [10:6..10:9): `1` <= example/T#`1`().
 [10:12..10:13): x => example/X.x().

@@ -321,6 +321,7 @@ class Issue4919Suite extends SemanticdbSuite {
        |[1:25..1:26): T => v/n.P#[T]
        |[2:6..2:7): T <= v/T#
        |[2:8..2:9): X <= v/T#[X]
+       |[2:14..2:14):  <= v/T#`<init>`().
        |[2:22..2:23): V <= v/T#V#
        |[2:24..2:24):  <= v/T#V#`<init>`().
        |[2:31..2:32): A <= v/T#V#A#
@@ -689,6 +690,7 @@ class Issue4919Suite extends SemanticdbSuite {
        |[2:27..2:28): P => b4/n.P#
        |[2:29..2:30): T => b4/HasA#A#[T]
        |[3:6..3:7): T <= b4/T#
+       |[3:8..3:8):  <= b4/T#`<init>`().
        |[3:10..3:14): self <= local0
        |[3:16..3:20): HasA => b4/HasA#
        |[3:30..3:31): C <= b4/T#C#

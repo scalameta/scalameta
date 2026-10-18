@@ -223,7 +223,7 @@ trait SymbolOps {
     def isSyntheticConstructor = sym match {
       case sym: SymbolInfoSymbol =>
         val owner = sym.symbolInfo.owner
-        sym.isConstructor && (owner.isModuleClass || owner.isTrait)
+        sym.isConstructor && owner.isModuleClass
       case _ => false
     }
     def isLocalChild: Boolean = sym.name == "<local child>"
