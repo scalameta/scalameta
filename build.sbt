@@ -135,7 +135,8 @@ def rootSettings = Def.settings(
     s
   },
   commands += Command.command("save-expect")(s =>
-    LatestScala2.foldLeft(s) { case (s, version) =>
+    // run Scala 2.13 last: both versions save the shared expect files
+    LatestScala2.foldRight(s) { case (version, s) =>
       s"${semanticdbScalacPlugin.jvm(version).id}/compile" ::
         s"${semanticdbIntegration.jvm(version).id}/clean" ::
         s"${semanticdbIntegration.jvm(version).id}/compile" ::
@@ -144,7 +145,8 @@ def rootSettings = Def.settings(
     },
   ),
   commands += Command.command("save-manifest")(s =>
-    "tests/Test/runMain scala.meta.tests.semanticdb.SaveManifestTest" :: s,
+    s"${testsSemanticdb.jvm(LatestScala213).id}/Test/runMain scala.meta.tests.semanticdb.SaveManifestTest" ::
+      s,
   ),
   // can also be used to ensure sbt server has started
   commands += Command.command("whoami") { s =>
@@ -519,6 +521,9 @@ def testsSemanticdbSettings(version: String) = Def.settings(
       .mkString(java.io.File.pathSeparator)
     (Test / fullClasspath).value
   },
+  /* a forked runMain reads the jars, and the plugin jar bundles classes of semanticdb-shared that
+   * call a shaded ScalaPB */
+  Test / fullClasspathAsJars := (Test / fullClasspath).value,
   // Needed because some tests rely on the --usejavacp option
   Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
 )

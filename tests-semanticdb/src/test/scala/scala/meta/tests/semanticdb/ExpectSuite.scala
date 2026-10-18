@@ -276,16 +276,15 @@ object SaveManifestTest {
     withJar(manifest) { jos =>
       jos.putNextEntry(new JarEntry("META-INF/MANIFEST.MF"))
       val manifest =
-        """|
-           |Manifest-Version: 1.0
+        """|Manifest-Version: 1.0
            |Class-Path: part0.jar part1.jar
-           |""".stripMargin + "\n\n"
+           |""".stripMargin + "\n"
       jos.write(manifest.getBytes(UTF_8))
       jos.closeEntry()
     }
 
-    val emptyClassfiles = Files.list(classes).iterator.asScala.toList
-      .filter(f => Files.isRegularFile(f))
+    // take only the classes of example/Empty.scala
+    val emptyClassfiles = List("A.class", "B.class").map(classes.resolve)
     withJar(part0)(jos =>
       emptyClassfiles.foreach { classfile =>
         jos.putNextEntry(new JarEntry(classes.relativize(classfile).toString))
