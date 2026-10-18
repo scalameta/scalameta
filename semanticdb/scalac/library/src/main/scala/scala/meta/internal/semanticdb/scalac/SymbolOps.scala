@@ -79,7 +79,7 @@ trait SymbolOps {
     def symbolName: String =
       if (sym.name == g.nme.ROOTPKG) n.RootPackage.value
       else if (sym.name == g.nme.EMPTY_PACKAGE_NAME) n.EmptyPackage.value
-      else if (sym.name == g.nme.CONSTRUCTOR) n.Constructor.value
+      else if (sym.isConstructor) n.Constructor.value
       else sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
     def disambiguator: String = {
       val peers = sym.owner.semanticdbDecls.gsyms
@@ -192,7 +192,6 @@ trait SymbolOps {
     def isJavaClass: Boolean = isJavaNonPackage && (sym.isClass || sym.isModule)
     def isSyntheticConstructor: Boolean = {
       val owner = sym.owner
-      sym.isMixinConstructor ||
       sym.isConstructor &&
       (owner.isModuleClass || owner.hasAllFlags(gf.JAVA | gf.INTERFACE) || owner.hasJavaEnumFlag) ||
       sym.name == g.TermName(GenBCode.CLASS_CONSTRUCTOR_NAME) || owner.isClassfileAnnotation

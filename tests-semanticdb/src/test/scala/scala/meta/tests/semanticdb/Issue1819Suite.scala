@@ -55,22 +55,25 @@ class Issue1819Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |a/Decls#b(). => abstract method b: Int
        |  Int => scala/Int#
-       |a/Defs# => trait Defs extends AnyRef { +1 decls }
+       |a/Defs# => trait Defs extends AnyRef { +2 decls }
        |  AnyRef => scala/AnyRef#
+       |a/Defs#`<init>`(). => primary ctor <init>()
        |a/Defs#d(). => method d: Int
        |  Int => scala/Int#
        |a/Empty# => trait Empty extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |a/Init# => trait Init extends AnyRef { +1 decls }
+       |a/Init# => trait Init extends AnyRef { +2 decls }
        |  AnyRef => scala/AnyRef#
+       |a/Init#`<init>`(). => primary ctor <init>()
        |a/Init#x. => val method x: Int
        |  Int => scala/Int#
        |a/L. => final object L extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
        |a/L.m(). => method m: Int
        |  Int => scala/Int#
-       |a/Lazy# => trait Lazy extends AnyRef { +1 decls }
+       |a/Lazy# => trait Lazy extends AnyRef { +2 decls }
        |  AnyRef => scala/AnyRef#
+       |a/Lazy#`<init>`(). => primary ctor <init>()
        |a/Lazy#l. => lazy val method l: Int
        |  Int => scala/Int#
        |a/O. => final object O extends AnyRef { +2 decls }
@@ -81,11 +84,13 @@ class Issue1819Suite extends SemanticdbSuite {
        |a/O.anon2. => val method anon2: AnyRef with Empty {}
        |  AnyRef => scala/AnyRef#
        |  Empty => a/Empty#
-       |a/Stat# => trait Stat extends AnyRef
+       |a/Stat# => trait Stat extends AnyRef { +1 decls }
        |  AnyRef => scala/AnyRef#
-       |a/Sub# => trait Sub extends AnyRef with Init { +1 decls }
+       |a/Stat#`<init>`(). => primary ctor <init>()
+       |a/Sub# => trait Sub extends AnyRef with Init { +2 decls }
        |  AnyRef => scala/AnyRef#
        |  Init => a/Init#
+       |a/Sub#`<init>`(). => primary ctor <init>()
        |a/Sub#y. => val method y: Int
        |  Int => scala/Int#
        |local0 => final class $anon extends AnyRef with Init
@@ -94,9 +99,10 @@ class Issue1819Suite extends SemanticdbSuite {
        |local1 => final class $anon extends AnyRef with Empty
        |  AnyRef => scala/AnyRef#
        |  Empty => a/Empty#
-       |local2 => trait Loc extends AnyRef { +1 decls }
+       |local2 => trait Loc extends AnyRef { +2 decls }
        |  AnyRef => scala/AnyRef#
-       |local3 => val method z: Int
+       |local3 => primary ctor <init>()
+       |local4 => val method z: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -109,6 +115,7 @@ class Issue1819Suite extends SemanticdbSuite {
        |[2:21..2:22): m <= a/Abstract#m().
        |[2:24..2:27): Int => scala/Int#
        |[3:6..3:10): Init <= a/Init#
+       |[3:11..3:11):  <= a/Init#`<init>`().
        |[3:17..3:18): x <= a/Init#x.
        |[3:24..3:31): println => scala/Predef.println(+1).
        |[3:32..3:33): x => a/Init#x.
@@ -132,10 +139,13 @@ class Issue1819Suite extends SemanticdbSuite {
        |[6:51..6:56): Empty => a/Empty#
        |[6:56..6:56):  => java/lang/Object#`<init>`().
        |[7:6..7:10): Stat <= a/Stat#
+       |[7:11..7:11):  <= a/Stat#`<init>`().
        |[7:13..7:20): println => scala/Predef.println(+1).
        |[8:6..8:10): Lazy <= a/Lazy#
+       |[8:11..8:11):  <= a/Lazy#`<init>`().
        |[8:22..8:23): l <= a/Lazy#l.
        |[9:6..9:10): Defs <= a/Defs#
+       |[9:11..9:11):  <= a/Defs#`<init>`().
        |[9:17..9:18): d <= a/Defs#d().
        |[10:6..10:11): Decls <= a/Decls#
        |[10:19..10:20): T <= a/Decls#T#
@@ -144,12 +154,14 @@ class Issue1819Suite extends SemanticdbSuite {
        |[10:38..10:39): b <= a/Decls#b().
        |[10:41..10:44): Int => scala/Int#
        |[11:6..11:9): Sub <= a/Sub#
+       |[11:10..11:10):  <= a/Sub#`<init>`().
        |[11:18..11:22): Init => a/Init#
        |[11:29..11:30): y <= a/Sub#y.
        |[12:7..12:8): L <= a/L.
        |[12:15..12:16): m <= a/L.m().
        |[12:27..12:30): Loc <= local2
-       |[12:37..12:38): z <= local3
+       |[12:31..12:31):  <= local3
+       |[12:37..12:38): z <= local4
        |""".stripMargin,
   )
 
@@ -209,12 +221,12 @@ class Issue1819Suite extends SemanticdbSuite {
     val expected = List(
       "Empty" -> Nil,
       "Abstract" -> List("a/Abstract#m()."),
-      "Init" -> List("a/Init#x."),
-      "Stat" -> Nil,
-      "Lazy" -> List("a/Lazy#l."),
-      "Defs" -> List("a/Defs#d()."),
+      "Init" -> List("a/Init#`<init>`().", "a/Init#x."),
+      "Stat" -> List("a/Stat#`<init>`()."),
+      "Lazy" -> List("a/Lazy#`<init>`().", "a/Lazy#l."),
+      "Defs" -> List("a/Defs#`<init>`().", "a/Defs#d()."),
       "Decls" -> List("a/Decls#T#", "a/Decls#a.", "a/Decls#b()."),
-      "Sub" -> List("a/Sub#y."),
+      "Sub" -> List("a/Sub#`<init>`().", "a/Sub#y."),
     )
     assertEquals(traits.map(t => t -> decls(s"a/$t#")), expected)
   }
@@ -223,12 +235,12 @@ class Issue1819Suite extends SemanticdbSuite {
     val expected = List(
       "Empty" -> None,
       "Abstract" -> None,
-      "Init" -> None,
-      "Stat" -> None,
-      "Lazy" -> None,
-      "Defs" -> None,
+      "Init" -> Some("a/Init#`<init>`(). => primary ctor <init>()"),
+      "Stat" -> Some("a/Stat#`<init>`(). => primary ctor <init>()"),
+      "Lazy" -> Some("a/Lazy#`<init>`(). => primary ctor <init>()"),
+      "Defs" -> Some("a/Defs#`<init>`(). => primary ctor <init>()"),
       "Decls" -> None,
-      "Sub" -> None,
+      "Sub" -> Some("a/Sub#`<init>`(). => primary ctor <init>()"),
       "C1" -> Some("a/C1#`<init>`(). => primary ctor <init>()"),
     )
     assertEquals((traits :+ "C1").map(t => t -> load(s"a/$t#`<init>`().")), expected)

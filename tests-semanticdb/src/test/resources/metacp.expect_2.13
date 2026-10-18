@@ -2463,7 +2463,7 @@ Schema => SemanticDB v4
 Uri => example/Issue2040.class
 Text => empty
 Language => Scala
-Symbols => 16 entries
+Symbols => 19 entries
 
 Symbols:
 example/Issue2040. => final object Issue2040 extends AnyRef { +6 decls }
@@ -2476,9 +2476,10 @@ example/Issue2040.AnyShouldWrapper#shouldBe(). => abstract method shouldBe(right
   Boolean => scala/Boolean#
 example/Issue2040.AnyShouldWrapper#shouldBe().(right) => param right: Any
   Any => scala/Any#
-example/Issue2040.BarSpec# => trait BarSpec extends AnyRef with Base { +1 decls }
+example/Issue2040.BarSpec# => trait BarSpec extends AnyRef with Base { +2 decls }
   AnyRef => scala/AnyRef#
   Base => example/Issue2040.Base#
+example/Issue2040.BarSpec#`<init>`(). => primary ctor <init>()
 example/Issue2040.BarSpec#convertToAnyShouldWrapper(). => abstract implicit method convertToAnyShouldWrapper(o: Any)(implicit prettifier: Prettifier): AnyShouldWrapper
   o => example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o)
   Any => scala/Any#
@@ -2489,13 +2490,15 @@ example/Issue2040.BarSpec#convertToAnyShouldWrapper().(o) => param o: Any
   Any => scala/Any#
 example/Issue2040.BarSpec#convertToAnyShouldWrapper().(prettifier) => implicit param prettifier: Prettifier
   Prettifier => example/Issue2040.Prettifier#
-example/Issue2040.Base# => trait Base extends AnyRef { +1 decls }
+example/Issue2040.Base# => trait Base extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
+example/Issue2040.Base#`<init>`(). => primary ctor <init>()
 example/Issue2040.Base#i(). => method i(): Int
   Int => scala/Int#
-example/Issue2040.FooSpec# => trait FooSpec extends AnyRef with Base { +1 decls }
+example/Issue2040.FooSpec# => trait FooSpec extends AnyRef with Base { +2 decls }
   AnyRef => scala/AnyRef#
   Base => example/Issue2040.Base#
+example/Issue2040.FooSpec#`<init>`(). => primary ctor <init>()
 example/Issue2040.FooSpec#convertToAnyShouldWrapper(). => abstract implicit method convertToAnyShouldWrapper(o: Any): AnyShouldWrapper
   o => example/Issue2040.FooSpec#convertToAnyShouldWrapper().(o)
   Any => scala/Any#
@@ -2911,11 +2914,12 @@ Schema => SemanticDB v4
 Uri => example/LeadingInfixTest.class
 Text => empty
 Language => Scala
-Symbols => 11 entries
+Symbols => 12 entries
 
 Symbols:
-example/LeadingInfixTest# => trait LeadingInfixTest extends AnyRef { +9 decls }
+example/LeadingInfixTest# => trait LeadingInfixTest extends AnyRef { +10 decls }
   AnyRef => scala/AnyRef#
+example/LeadingInfixTest#`<init>`(). => primary ctor <init>()
 example/LeadingInfixTest#`?=`(). => abstract method ?=(right: Any): Unit
   right => example/LeadingInfixTest#`?=`().(right)
   Any => scala/Any#
@@ -3618,11 +3622,12 @@ Schema => SemanticDB v4
 Uri => example/SymbolTest.class
 Text => empty
 Language => Scala
-Symbols => 4 entries
+Symbols => 5 entries
 
 Symbols:
-example/SymbolTest# => trait SymbolTest extends AnyRef { +2 decls }
+example/SymbolTest# => trait SymbolTest extends AnyRef { +3 decls }
   AnyRef => scala/AnyRef#
+example/SymbolTest#`<init>`(). => primary ctor <init>()
 example/SymbolTest#arg(). => method arg: Int
   Int => scala/Int#
 example/SymbolTest#shouldBe(). => abstract method shouldBe(right: Any): Unit
@@ -3757,10 +3762,10 @@ Schema => SemanticDB v4
 Uri => example/T.class
 Text => empty
 Language => Scala
-Symbols => 102 entries
+Symbols => 103 entries
 
 Symbols:
-example/T# => trait T extends AnyRef { +101 decls }
+example/T# => trait T extends AnyRef { +102 decls }
   AnyRef => scala/AnyRef#
 example/T#`1`(). => method 1: Int
   Int => scala/Int#
@@ -3964,6 +3969,7 @@ example/T#`100`(). => method 100: Int
   Int => scala/Int#
 example/T#`101`(). => method 101: Int
   Int => scala/Int#
+example/T#`<init>`(). => primary ctor <init>()
 
 example/ValPattern.class
 ------------------------
@@ -4686,11 +4692,12 @@ Schema => SemanticDB v4
 Uri => traits/T.class
 Text => empty
 Language => Scala
-Symbols => 2 entries
+Symbols => 3 entries
 
 Symbols:
-traits/T# => trait T extends AnyRef { +1 decls }
+traits/T# => trait T extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
+traits/T#`<init>`(). => primary ctor <init>()
 traits/T#x(). => method x: Int
   Int => scala/Int#
 
@@ -4867,7 +4874,7 @@ Schema => SemanticDB v4
 Uri => types/Test.class
 Text => empty
 Language => Scala
-Symbols => 107 entries
+Symbols => 108 entries
 
 Symbols:
 types/Test. => final object Test extends AnyRef { +4 decls }
@@ -5127,7 +5134,8 @@ types/Test.M# => class M extends AnyRef { +2 decls }
 types/Test.M#`<init>`(). => primary ctor <init>()
 types/Test.M#m(). => method m: Int
   Int => scala/Int#
-types/Test.N# => trait N extends AnyRef { +1 decls }
+types/Test.N# => trait N extends AnyRef { +2 decls }
   AnyRef => scala/AnyRef#
+types/Test.N#`<init>`(). => primary ctor <init>()
 types/Test.N#n(). => method n: Int
   Int => scala/Int#

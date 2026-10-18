@@ -2282,7 +2282,7 @@ class C(x: Int) {
 Notes:
 
 - Unlike some other metaprogramming systems for Scala, we do not create
-  synthetic constructor symbols for traits and objects.
+  synthetic constructor symbols for objects.
 - Supported properties for constructor symbols are:
   - `PRIMARY`: set for primary constructors.
 - Display name for constructor symbols is equal to `<init>`.
@@ -2421,7 +2421,8 @@ definitions (see above). Concretely, the differences between trait symbols and
 class symbols are:
 
 - Trait symbols only support `SEALED` property.
-- Traits don't have constructors.
+- A trait has a primary constructor only if scalac creates an initializer
+  (`$init$`) for it, which implementing classes call.
 
 **Object definitions** [\[59\]][59] are represented by `OBJECT` symbols
 similarly to class definitions (see above). Concretely, the differences between
