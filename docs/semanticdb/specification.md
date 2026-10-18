@@ -2405,6 +2405,10 @@ Notes:
   - Symbol of the primary constructor.
   - Symbols of declared members in order of their appearance in source code.
     (Inherited members must not be part of `declarations`.)
+    - Metacp reads the Scala signature, which has no positions. If scalac
+      creates a companion object together with its class, as for a case class
+      or a class with default arguments, metacp lists an explicit `object`
+      right after the class, wherever the object is declared.
   - Synthetic symbols in unspecified order and positions in the declarations
     list. We may provide more structure here in the future.
 - In some cases, SLS and its extensions mandate generation of synthetic members
