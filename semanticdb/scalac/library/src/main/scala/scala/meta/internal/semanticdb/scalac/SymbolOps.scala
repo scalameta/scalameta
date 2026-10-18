@@ -9,6 +9,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile, SourceFile => GSourceFile}
 import scala.reflect.internal.{Flags => gf}
+import scala.tools.nsc.backend.jvm.GenBCode
 import scala.util.control.NonFatal
 
 trait SymbolOps {
@@ -190,15 +191,11 @@ trait SymbolOps {
     private def isJavaNonPackage: Boolean = sym.getFlag(gf.PACKAGE | gf.JAVA) == gf.JAVA
     def isJavaClass: Boolean = isJavaNonPackage && (sym.isClass || sym.isModule)
     def isSyntheticConstructor: Boolean = {
-      val isModuleConstructor = sym.isConstructor && sym.owner.isModuleClass
-      val isTraitConstructor = sym.isMixinConstructor
-      val isInterfaceConstructor = sym.isConstructor && sym.owner.isJavaDefined &&
-        sym.owner.isInterface
-      val isEnumConstructor = sym.isConstructor && sym.owner.hasJavaEnumFlag
-      val isStaticConstructor = sym.name == g.TermName("<clinit>")
-      val isClassfileAnnotationConstructor = sym.owner.isClassfileAnnotation
-      isModuleConstructor || isTraitConstructor || isInterfaceConstructor || isEnumConstructor ||
-      isStaticConstructor || isClassfileAnnotationConstructor
+      val owner = sym.owner
+      sym.isMixinConstructor ||
+      sym.isConstructor &&
+      (owner.isModuleClass || owner.hasAllFlags(gf.JAVA | gf.INTERFACE) || owner.hasJavaEnumFlag) ||
+      sym.name == g.TermName(GenBCode.CLASS_CONSTRUCTOR_NAME) || owner.isClassfileAnnotation
     }
     def isLocalChild: Boolean = sym.name == g.tpnme.LOCAL_CHILD
     def isSyntheticValueClassCompanion: Boolean =

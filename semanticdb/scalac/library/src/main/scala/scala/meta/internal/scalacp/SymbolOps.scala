@@ -11,6 +11,7 @@ import java.util.{HashMap, HashSet}
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.NameTransformer
+import scala.tools.nsc.backend.jvm.GenBCode
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolOps {
@@ -191,7 +192,8 @@ trait SymbolOps {
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
     def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
     def isMacro: Boolean = sym.isMethod && sym.hasFlag(0x00008000)
-    def isConstructor: Boolean = sym.isMethod && (sym.name == "<init>" || sym.name == "$init$")
+    def isConstructor: Boolean = sym.isMethod &&
+      (sym.name == GenBCode.INSTANCE_CONSTRUCTOR_NAME || sym.name == "$init$")
     def isPackageObject: Boolean = sym.name == "package"
     def isTypeParam = sym.isType && sym.isParam
     def isExistentialType: Boolean = sym match {

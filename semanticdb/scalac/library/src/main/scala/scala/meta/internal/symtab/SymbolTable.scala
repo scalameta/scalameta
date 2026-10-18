@@ -82,7 +82,9 @@ trait SymbolTable {
    */
   def resolveOverloads(tpe: String, name: String): SymbolTable.Overloads = {
     // constructors are not inherited, so do not walk parents for the `<init>` name
-    val bases = if (name == "<init>") List(tpe -> Map.empty[String, String]) else linearization(tpe)
+    val bases =
+      if (name == Names.Constructor.value) List(tpe -> Map.empty[String, String])
+      else linearization(tpe)
     val seenSignatures = mutable.Set.empty[List[String]]
     val res = List.newBuilder[String]
     val unres = List.newBuilder[String]
