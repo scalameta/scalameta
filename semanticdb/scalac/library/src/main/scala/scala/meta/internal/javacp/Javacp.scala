@@ -15,6 +15,7 @@ import scala.meta.io.AbsolutePath
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.tools.asm.tree.{ClassNode, FieldNode, InnerClassNode, MethodNode}
 import scala.tools.asm.{Opcodes => o}
+import scala.tools.nsc.backend.jvm.GenBCode
 
 object Javacp {
 
@@ -125,9 +126,9 @@ object Javacp {
     val byStaticAccess = methodSignatures.sortBy(_.node.access.hasFlag(o.ACC_STATIC))
 
     methodSignatures.foreach {
-      case method: MethodInfo if method.node.name == "<clinit>" => ()
+      case method: MethodInfo if method.node.name == GenBCode.CLASS_CONSTRUCTOR_NAME => ()
       case method: MethodInfo =>
-        val isConstructor = method.node.name == "<init>"
+        val isConstructor = method.node.name == GenBCode.INSTANCE_CONSTRUCTOR_NAME
         val methodDisambiguator = {
           val overloads = byStaticAccess.filter(_.node.name == method.node.name)
           if (overloads.lengthCompare(1) == 0) "()"
