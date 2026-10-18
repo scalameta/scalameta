@@ -184,6 +184,8 @@ class Issue1672Suite extends FunSuite {
   private def render(tpe: s.Type): String = tpe match {
     case t: s.TypeRef if t.typeArguments.isEmpty => t.symbol
     case t: s.TypeRef => t.symbol + t.typeArguments.map(render).mkString("[", ", ", "]")
+    case t: s.AnnotatedType => t.annotations.map(x => s" @${render(x.tpe)}")
+        .mkString(s"(${render(t.tpe)}", "", ")")
     case t => t.toString
   }
 
