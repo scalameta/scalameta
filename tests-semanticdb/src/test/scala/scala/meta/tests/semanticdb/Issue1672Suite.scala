@@ -313,8 +313,12 @@ class Issue1672Suite extends FunSuite {
   test("method parameter")(check("p/K#param().(p)", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
   test("class parameter")(check("p/K#`<init>`().(f)", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
   test("class parameter accessor")(check("p/K#f.", ""))
-  test("class parameter with a field meta-annotation")(check("p/K#g.", ""))
-  test("val")(check("p/K#field.", ""))
+
+  test("class parameter with a field meta-annotation")(
+    check("p/K#g.", """@(p/sa# @scala/annotation/meta/field#)(1, "a")"""),
+  )
+
+  test("val")(check("p/K#field.", """@p/sa#(1, "a")"""))
   test("type alias")(check("p/K#Alias#", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
   test("type parameter")(check("p/K#typeParam().[T]", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
   test("return type")(check("p/K#tpe().", """@p/sa#(1, "a")""", """@p/sa#(1, "a")"""))
