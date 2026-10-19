@@ -43,7 +43,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |_empty_/b.m(). => method m(): Int
        |  Int => scala/Int#
-       |local0 => lazy val local z: : Int
+       |local0 => lazy val local z: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -65,14 +65,14 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local1 => val local y: Int
        |  Int => scala/Int#
-       |local2 => synthetic val local x$1: : Tuple2[Int, Int]
+       |local2 => synthetic val local x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |local3 => var local v: Int
        |  Int => scala/Int#
        |local4 => var local w: Int
        |  Int => scala/Int#
-       |local5 => synthetic val local x$2: : Tuple2[Int, Int]
+       |local5 => synthetic val local x$2: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
@@ -90,11 +90,11 @@ class Issue4935Suite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |_empty_/d.m(). => method m(): Int
        |  Int => scala/Int#
-       |local0 => lazy val local x: : Int
+       |local0 => lazy val local x: Int
        |  Int => scala/Int#
-       |local1 => lazy val local y: : Int
+       |local1 => lazy val local y: Int
        |  Int => scala/Int#
-       |local2 => synthetic lazy val local x$1: : Tuple2[Int, Int]
+       |local2 => synthetic lazy val local x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
@@ -148,7 +148,7 @@ class Issue4935Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |_empty_/f.m(). => method m(): Unit
          |  Unit => scala/Unit#
-         |local0 => synthetic val local x$1: : Unit
+         |local0 => synthetic val local x$1: Unit
          |  Unit => scala/Unit#
          |""".stripMargin,
   )
@@ -169,13 +169,13 @@ class Issue4935Suite extends SemanticdbSuite {
        |_empty_/g#`<init>`(). => primary ctor <init>()
        |local0 => val local x: Int
        |  Int => scala/Int#
-       |local1 => lazy val local z: : Int
+       |local1 => lazy val local z: Int
        |  Int => scala/Int#
        |local2 => val local p: Int
        |  Int => scala/Int#
        |local3 => val local q: Int
        |  Int => scala/Int#
-       |local4 => synthetic val local x$1: : Tuple2[Int, Int]
+       |local4 => synthetic val local x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |local5 => method d: Int
@@ -201,7 +201,7 @@ class Issue4935Suite extends SemanticdbSuite {
       """|_empty_/h# => class h extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |_empty_/h#`<init>`(). => primary ctor <init>()
-         |local0 => synthetic val local x$1: : Unit
+         |local0 => synthetic val local x$1: Unit
          |  Unit => scala/Unit#
          |""".stripMargin,
   )
@@ -232,7 +232,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local7 => val local q: Int
        |  Int => scala/Int#
-       |local8 => synthetic val local x$2: : Tuple3[Tuple2[Int, Int], Int, Int]
+       |local8 => synthetic val local x$2: Tuple3[Tuple2[Int, Int], Int, Int]
        |  Tuple3 => scala/Tuple3#
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
@@ -261,7 +261,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local1 => val local x: Int
        |  Int => scala/Int#
-       |local2 => lazy val local z: : Int
+       |local2 => lazy val local z: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -336,10 +336,10 @@ class Issue4935Suite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |_empty_/l.m(). => method m(): Unit
        |  Unit => scala/Unit#
-       |local0 => lazy val local f: : Function0[Int]
+       |local0 => lazy val local f: Function0[Int]
        |  Function0 => scala/Function0#
        |  Int => scala/Int#
-       |local1 => implicit lazy val local i: : Int
+       |local1 => implicit lazy val local i: Int
        |  Int => scala/Int#
        |local2 => method g[T](t: T)(implicit u: Int): T
        |  T => local5
@@ -460,16 +460,16 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Any => scala/Any#
        |local0 => val local n: Int
        |  Int => scala/Int#
-       |local1 => lazy val local z: : Int
+       |local1 => lazy val local z: Int
        |  Int => scala/Int#
        |local2 => val local a: Int
        |  Int => scala/Int#
        |local3 => val local b: Int
        |  Int => scala/Int#
-       |local4 => synthetic val local x$1: : Tuple2[Int, Int]
+       |local4 => synthetic val local x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local5 => lazy val local w: : Int
+       |local5 => lazy val local w: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
