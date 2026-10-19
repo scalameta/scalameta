@@ -21,7 +21,7 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
   private val reporter = Reporter().withSilentOut().withSilentErr()
   private val classpathIndex = ClasspathIndex(classpath, includeJdk, reporter)
   private val symbolCache = TrieMap.empty[String, SymbolInformation]
-  Scalalib.synthetics.foreach(enter)
+  Scalalib.synthetics(Scalalib.isHashHashNullary(classpathIndex)).foreach(enter)
 
   override def toString: String = s"GlobalSymbolTable($classpath)"
 

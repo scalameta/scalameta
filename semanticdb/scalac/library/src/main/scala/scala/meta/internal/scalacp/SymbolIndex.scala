@@ -62,7 +62,7 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
   private implicit class XtensionSymbolOps(sym: Symbol) {
     def isRootPackage: Boolean = sym.path == "<root>"
     def isEmptyPackage: Boolean = sym.path == "<empty>"
-    def isScalalibSynthetic: Boolean = scalalibSyntheticsPaths.contains(sym.path)
+    def isScalalibSynthetic: Boolean = SymbolIndex.scalalibSyntheticsPaths.contains(sym.path)
     def packageResourceName: String = ownerChain.filterNot(_.isEmptyPackage).map(_.name)
       .mkString("", "/", "/")
     private def ownerChain: List[Symbol] = {
@@ -75,10 +75,13 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
       buf.result()
     }
   }
-  private lazy val scalalibSyntheticsPaths: Set[String] = Scalalib.synthetics
-    .map(synthetic => synthetic.relativeUri.stripSuffix(Classfile.Suffix).replace('/', '.')).toSet
 }
 
 object SymbolIndex {
   def apply(classpathIndex: ClasspathIndex): SymbolIndex = new SymbolIndex(classpathIndex)
+
+  // the paths do not depend on the shape of `##`
+  private lazy val scalalibSyntheticsPaths: Set[String] = Scalalib
+    .synthetics(isHashHashNullaryInBuild)
+    .map(synthetic => synthetic.relativeUri.stripSuffix(Classfile.Suffix).replace('/', '.')).toSet
 }

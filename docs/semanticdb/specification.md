@@ -2482,11 +2482,11 @@ abstract class Any {
   final def ==(that: Any): Boolean
   final def !=(that: Any): Boolean
   def hashCode(): Int
-  final def ##(): Int
+  final def ##: Int
   def toString(): String
   final def getClass(): Class
-  final def isInstanceOf[A](): Boolean
-  final def asInstanceOf[A](): A
+  final def isInstanceOf[A]: Boolean
+  final def asInstanceOf[A]: A
 }
 
 abstract class AnyVal extends Any
@@ -2509,6 +2509,9 @@ Notes:
 - `equals`, `hashCode` and `toString` are `ABSTRACT`; the other methods of `Any` and all methods
   of `AnyRef` are `FINAL`.
 - `Nothing` and `Null` are additionally `FINAL`.
+- The shape of `##` follows the scala-library being read: if that library is of Scala 2.12 or
+  earlier, `##` takes an empty parameter list, here and in `java.lang.Object`. Without a
+  scala-library, the Scala version of Scalameta decides.
 - Every built-in class (but not the `Singleton` trait) carries a synthesized primary constructor
   `<init>()`.
 - `getClass` is given the return type `java/lang/Class#`. Its actual return type cannot be
@@ -2524,6 +2527,30 @@ predeclared Scala symbols that producers and consumers are expected to know abou
 them as six standalone `scala/*.class` SemanticDB payloads — packaged in a
 `scala-library-synthetics.jar` for file-based consumers — only when run with
 `--include-scala-library-synthetics` (excluded by default).
+
+The Scala compiler also adds members to two JDK classes, and their classfiles do not declare
+them:
+
+```scala
+package java.lang
+
+class Object {
+  final def ==(that: Any): Boolean
+  final def !=(that: Any): Boolean
+  final def ##: Int
+  final def eq(that: AnyRef): Boolean
+  final def ne(that: AnyRef): Boolean
+  final def synchronized[T](body: T): T
+}
+
+final class String {
+  final def +(that: Any): String
+}
+```
+
+Scalameta appends these Scala definitions to the payload that it converts from the classfile of
+`java.lang.Object` or `java.lang.String`. `GlobalSymbolTable` converts these classfiles when it
+includes the JDK. `metacp` converts them only from a JDK jar on `--classpath`, such as `rt.jar`.
 
 <a name="scala-annotation"></a>
 
