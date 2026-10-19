@@ -5,6 +5,7 @@ import scala.meta.internal.SemanticCompat._
 import scala.meta.internal.classpath.{Classfile, ClasspathIndex, MissingSymbolException}
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
+import scala.meta.internal.scalacp.Scalalib
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
@@ -12,6 +13,7 @@ import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 
+import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
 import scala.tools.asm.tree.{ClassNode, FieldNode, InnerClassNode, MethodNode}
 import scala.tools.asm.{Opcodes => o}
@@ -243,6 +245,11 @@ object Javacp {
         decls += methodInfo.symbol
     }
 
+    jdkMembers(node.name, classpathIndex).foreach { info =>
+      buf += info
+      if (info.kind.isMethod) decls += info.symbol
+    }
+
     // node.innerClasses includes all inner classes, both direct and those nested inside other inner classes.
     val directInnerClasses = node.innerClasses.toScala.filter(_.outerName == node.name)
     directInnerClasses.foreach { ic =>
@@ -265,6 +272,53 @@ object Javacp {
     addInfo(classSymbol, classKind, classDisplayName, classSig, classAccess)
     buf
   }
+
+  /**
+   * Returns the members that scalac adds to the JDK class with the internal name `className`, which
+   * its classfile does not declare.
+   */
+  private def jdkMembers(
+      className: String,
+      classpathIndex: ClasspathIndex,
+  ): List[s.SymbolInformation] = className match {
+    case "java/lang/Object" =>
+      implicit val symbols = List.newBuilder[s.SymbolInformation]
+      val nullary = Scalalib.isHashHashNullary(classpathIndex)
+      val synchronizedT = "java/lang/Object#synchronized().[T]"
+      jdkMethod("Object", "==", Nil, List("that" -> Scalalib.anySymbol), Scalalib.booleanSymbol)
+      jdkMethod("Object", "!=", Nil, List("that" -> Scalalib.anySymbol), Scalalib.booleanSymbol)
+      jdkMethod("Object", "##", Nil, Nil, Scalalib.intSymbol, nullary = nullary)
+      jdkMethod("Object", "eq", Nil, List("that" -> Scalalib.anyRefSymbol), Scalalib.booleanSymbol)
+      jdkMethod("Object", "ne", Nil, List("that" -> Scalalib.anyRefSymbol), Scalalib.booleanSymbol)
+      jdkMethod("Object", "synchronized", List("T"), List("body" -> synchronizedT), synchronizedT)
+      symbols.result()
+    case "java/lang/String" =>
+      implicit val symbols = List.newBuilder[s.SymbolInformation]
+      jdkMethod("String", "+", Nil, List("that" -> Scalalib.anySymbol), Scalalib.stringSymbol)
+      symbols.result()
+    case _ => Nil
+  }
+
+  private val javaLangPackage: String = Symbols
+    .Global(Symbols.Global(Symbols.RootPackage, d.Package("java")), d.Package("lang"))
+
+  private def jdkMethod(
+      className: String,
+      methodName: String,
+      tparamDsls: List[String],
+      paramDsls: List[(String, String)],
+      retTpeSymbol: String,
+      nullary: Boolean = false,
+  )(implicit builder: mutable.Builder[s.SymbolInformation, _]): Unit = Scalalib.builtinMethod(
+    className,
+    List(s.SymbolInformation.Property.FINAL),
+    methodName,
+    tparamDsls,
+    paramDsls,
+    retTpeSymbol,
+    javaLangPackage,
+    nullary,
+  )
 
   // Returns true if this field holds a reference to an outer enclosing class.
   private def isOuterClassReference(field: FieldNode): Boolean = field.name.startsWith("this$")

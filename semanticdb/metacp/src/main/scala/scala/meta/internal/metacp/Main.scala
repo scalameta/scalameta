@@ -52,7 +52,8 @@ class Main(settings: Settings, reporter: Reporter) {
     val scalaLibrarySynthetics =
       if (settings.scalaLibrarySynthetics)
         withOutputEntry(settings.out.resolve("scala-library-synthetics.jar")) { out =>
-          Scalalib.synthetics.foreach(infos => infos.save(out.root))
+          Scalalib.synthetics(Scalalib.isHashHashNullary(classpathIndex))
+            .foreach(infos => infos.save(out.root))
           Some(out.output)
         }
       else None

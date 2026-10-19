@@ -46,49 +46,80 @@ class Issue1752Suite extends SemanticdbSuite {
     """|package i1752a
        |object A { val x, y: AnyRef = ""; x <<==>> y }
        |""".stripMargin,
-    check("java/lang/Object#`==`().", None, false),
+    check(
+      "java/lang/Object#`==`().",
+      Some("java/lang/Object#`==`(). => final method ==(that: Any): Boolean"),
+      true,
+    ),
   )
 
   targeted(
     """|package i1752b
        |object A { val x, y: AnyRef = ""; x <<!=>> y }
        |""".stripMargin,
-    check("java/lang/Object#`!=`().", None, false),
+    check(
+      "java/lang/Object#`!=`().",
+      Some("java/lang/Object#`!=`(). => final method !=(that: Any): Boolean"),
+      true,
+    ),
   )
 
   targeted(
     """|package i1752c
        |object A { val x: AnyRef = ""; x.<<##>> }
        |""".stripMargin,
-    check("java/lang/Object#`##`().", None, false),
+    check(
+      "java/lang/Object#`##`().",
+      Some(
+        if (ScalaVersion.is212) "java/lang/Object#`##`(). => final method ##(): Int"
+        else "java/lang/Object#`##`(). => final method ##: Int",
+      ),
+      true,
+    ),
   )
 
   targeted(
     """|package i1752d
        |object A { val x, y: AnyRef = ""; x <<eq>> y }
        |""".stripMargin,
-    check("java/lang/Object#eq().", None, false),
+    check(
+      "java/lang/Object#eq().",
+      Some("java/lang/Object#eq(). => final method eq(that: AnyRef): Boolean"),
+      true,
+    ),
   )
 
   targeted(
     """|package i1752e
        |object A { val x, y: AnyRef = ""; x <<ne>> y }
        |""".stripMargin,
-    check("java/lang/Object#ne().", None, false),
+    check(
+      "java/lang/Object#ne().",
+      Some("java/lang/Object#ne(). => final method ne(that: AnyRef): Boolean"),
+      true,
+    ),
   )
 
   targeted(
     """|package i1752f
        |object A { val x: AnyRef = ""; x.<<synchronized>>(1) }
        |""".stripMargin,
-    check("java/lang/Object#synchronized().", None, false),
+    check(
+      "java/lang/Object#synchronized().",
+      Some("java/lang/Object#synchronized(). => final method synchronized[T](body: T): T"),
+      true,
+    ),
   )
 
   targeted(
     """|package i1752g
        |object A { <<synchronized>>(1) }
        |""".stripMargin,
-    check("java/lang/Object#synchronized().", None, false),
+    check(
+      "java/lang/Object#synchronized().",
+      Some("java/lang/Object#synchronized(). => final method synchronized[T](body: T): T"),
+      true,
+    ),
   )
 
   targeted(
@@ -97,7 +128,7 @@ class Issue1752Suite extends SemanticdbSuite {
        |""".stripMargin,
     check(
       "scala/Any#isInstanceOf().",
-      Some("scala/Any#isInstanceOf(). => final method isInstanceOf[A](): Boolean"),
+      Some("scala/Any#isInstanceOf(). => final method isInstanceOf[A]: Boolean"),
       true,
     ),
   )
@@ -108,7 +139,7 @@ class Issue1752Suite extends SemanticdbSuite {
        |""".stripMargin,
     check(
       "scala/Any#asInstanceOf().",
-      Some("scala/Any#asInstanceOf(). => final method asInstanceOf[A](): A"),
+      Some("scala/Any#asInstanceOf(). => final method asInstanceOf[A]: A"),
       true,
     ),
   )
@@ -117,14 +148,22 @@ class Issue1752Suite extends SemanticdbSuite {
     """|package i1752j
        |object A { "a" <<==>> "b" }
        |""".stripMargin,
-    check("java/lang/Object#`==`().", None, false),
+    check(
+      "java/lang/Object#`==`().",
+      Some("java/lang/Object#`==`(). => final method ==(that: Any): Boolean"),
+      true,
+    ),
   )
 
   targeted(
     """|package i1752k
        |object A { "a" <<+>> 1 }
        |""".stripMargin,
-    check("java/lang/String#`+`().", None, false),
+    check(
+      "java/lang/String#`+`().",
+      Some("java/lang/String#`+`(). => final method +(that: Any): String"),
+      true,
+    ),
   )
 
   targeted(
@@ -142,7 +181,14 @@ class Issue1752Suite extends SemanticdbSuite {
     """|package i1752m
        |object A { val x: Any = 1; x.<<##>> }
        |""".stripMargin,
-    check("scala/Any#`##`().", Some("scala/Any#`##`(). => final method ##(): Int"), true),
+    check(
+      "scala/Any#`##`().",
+      Some(
+        if (ScalaVersion.is212) "scala/Any#`##`(). => final method ##(): Int"
+        else "scala/Any#`##`(). => final method ##: Int",
+      ),
+      true,
+    ),
   )
 
   private lazy val otherLibrary = {
@@ -155,18 +201,36 @@ class Issue1752Suite extends SemanticdbSuite {
     val otherSymtab = GlobalSymbolTable(otherLibrary, includeJdk = true)
     assertEquals(
       load(otherSymtab, "scala/Any#`##`()."),
-      Some("scala/Any#`##`(). => final method ##(): Int"),
+      Some(
+        if (ScalaVersion.is212) "scala/Any#`##`(). => final method ##: Int"
+        else "scala/Any#`##`(). => final method ##(): Int",
+      ),
     )
-    assertEquals(load(otherSymtab, "java/lang/Object#`##`()."), None)
+    assertEquals(
+      load(otherSymtab, "java/lang/Object#`##`()."),
+      Some(
+        if (ScalaVersion.is212) "java/lang/Object#`##`(). => final method ##: Int"
+        else "java/lang/Object#`##`(). => final method ##(): Int",
+      ),
+    )
   }
 
   test("no scala-library") {
     val jdkSymtab = GlobalSymbolTable(Classpath(Nil), includeJdk = true)
     assertEquals(
       load(jdkSymtab, "scala/Any#`##`()."),
-      Some("scala/Any#`##`(). => final method ##(): Int"),
+      Some(
+        if (ScalaVersion.is212) "scala/Any#`##`(). => final method ##(): Int"
+        else "scala/Any#`##`(). => final method ##: Int",
+      ),
     )
-    assertEquals(load(jdkSymtab, "java/lang/Object#`##`()."), None)
+    assertEquals(
+      load(jdkSymtab, "java/lang/Object#`##`()."),
+      Some(
+        if (ScalaVersion.is212) "java/lang/Object#`##`(). => final method ##(): Int"
+        else "java/lang/Object#`##`(). => final method ##: Int",
+      ),
+    )
   }
 
   test("scala-library-synthetics of the other Scala version") {
@@ -182,7 +246,10 @@ class Issue1752Suite extends SemanticdbSuite {
       })
     assertEquals(
       info.map(Print.info(Format.Compact, _, printerSymtab)),
-      Some("scala/Any#`##`(). => final method ##(): Int"),
+      Some(
+        if (ScalaVersion.is212) "scala/Any#`##`(). => final method ##: Int"
+        else "scala/Any#`##`(). => final method ##(): Int",
+      ),
     )
   }
 
@@ -200,7 +267,10 @@ class Issue1752Suite extends SemanticdbSuite {
     // on 2.13, the 2.12 library comes first on the classpath, so `##()` is right
     assertEquals(
       info.map(Print.info(Format.Compact, _, printerSymtab)),
-      Some("scala/Any#`##`(). => final method ##(): Int"),
+      Some(
+        if (ScalaVersion.is212) "scala/Any#`##`(). => final method ##: Int"
+        else "scala/Any#`##`(). => final method ##(): Int",
+      ),
     )
   }
 
@@ -229,8 +299,17 @@ class Issue1752Suite extends SemanticdbSuite {
     )
     def find(sym: String) = infos.find(_.symbol == sym)
       .map(Print.info(Format.Compact, _, printerSymtab))
-    assertEquals(find("java/lang/Object#`##`()."), None)
-    assertEquals(find("java/lang/String#`+`()."), None)
+    assertEquals(
+      find("java/lang/Object#`##`()."),
+      Some(
+        if (ScalaVersion.is212) "java/lang/Object#`##`(). => final method ##: Int"
+        else "java/lang/Object#`##`(). => final method ##(): Int",
+      ),
+    )
+    assertEquals(
+      find("java/lang/String#`+`()."),
+      Some("java/lang/String#`+`(). => final method +(that: Any): String"),
+    )
   }
 
   test("classes directory of the other Scala version before scala-library") {
@@ -243,9 +322,18 @@ class Issue1752Suite extends SemanticdbSuite {
     val dirSymtab = GlobalSymbolTable(Classpath(entries), includeJdk = true)
     assertEquals(
       load(dirSymtab, "scala/Any#`##`()."),
-      Some("scala/Any#`##`(). => final method ##(): Int"),
+      Some(
+        if (ScalaVersion.is212) "scala/Any#`##`(). => final method ##: Int"
+        else "scala/Any#`##`(). => final method ##(): Int",
+      ),
     )
-    assertEquals(load(dirSymtab, "java/lang/Object#`##`()."), None)
+    assertEquals(
+      load(dirSymtab, "java/lang/Object#`##`()."),
+      Some(
+        if (ScalaVersion.is212) "java/lang/Object#`##`(). => final method ##: Int"
+        else "java/lang/Object#`##`(). => final method ##(): Int",
+      ),
+    )
   }
 
   test("scala-library before the other Scala version") {
@@ -253,9 +341,18 @@ class Issue1752Suite extends SemanticdbSuite {
     val bothSymtab = GlobalSymbolTable(Classpath(entries), includeJdk = true)
     assertEquals(
       load(bothSymtab, "scala/Any#`##`()."),
-      Some("scala/Any#`##`(). => final method ##(): Int"),
+      Some(
+        if (ScalaVersion.is212) "scala/Any#`##`(). => final method ##(): Int"
+        else "scala/Any#`##`(). => final method ##: Int",
+      ),
     )
-    assertEquals(load(bothSymtab, "java/lang/Object#`##`()."), None)
+    assertEquals(
+      load(bothSymtab, "java/lang/Object#`##`()."),
+      Some(
+        if (ScalaVersion.is212) "java/lang/Object#`##`(). => final method ##(): Int"
+        else "java/lang/Object#`##`(). => final method ##: Int",
+      ),
+    )
   }
 
   test("pathing jar to the other Scala version") {
@@ -270,9 +367,18 @@ class Issue1752Suite extends SemanticdbSuite {
     val pathingSymtab = GlobalSymbolTable(Classpath(entries), includeJdk = true)
     assertEquals(
       load(pathingSymtab, "scala/Any#`##`()."),
-      Some("scala/Any#`##`(). => final method ##(): Int"),
+      Some(
+        if (ScalaVersion.is212) "scala/Any#`##`(). => final method ##: Int"
+        else "scala/Any#`##`(). => final method ##(): Int",
+      ),
     )
-    assertEquals(load(pathingSymtab, "java/lang/Object#`##`()."), None)
+    assertEquals(
+      load(pathingSymtab, "java/lang/Object#`##`()."),
+      Some(
+        if (ScalaVersion.is212) "java/lang/Object#`##`(). => final method ##: Int"
+        else "java/lang/Object#`##`(). => final method ##(): Int",
+      ),
+    )
   }
 
 }

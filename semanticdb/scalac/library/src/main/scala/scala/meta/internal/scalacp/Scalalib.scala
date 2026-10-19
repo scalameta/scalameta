@@ -1,6 +1,6 @@
 package scala.meta.internal.scalacp
 
-import scala.meta.internal.classpath.Classfile
+import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, DisplayNames => dn, Names => n}
@@ -8,33 +8,63 @@ import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k, Property => 
 import scala.meta.internal.semanticdb.{Language => l}
 import scala.meta.internal.{semanticdb => s}
 
+import java.io.IOException
+import java.nio.file.Files
+import java.util.zip.ZipFile
+
 import scala.collection.mutable
 import scala.reflect.NameTransformer
 
 object Scalalib {
 
-  lazy val synthetics: List[ClassfileInfos] = List(
-    Scalalib.anyClass,
+  def synthetics(isHashHashNullary: Boolean): List[ClassfileInfos] = List(
+    Scalalib.anyClass(isHashHashNullary),
     Scalalib.anyValClass,
     Scalalib.anyRefClass,
     Scalalib.nothingClass,
     Scalalib.nullClass,
     Scalalib.singletonTrait,
   )
+
+  /**
+   * Returns true if `##` has no parameter list in the first scala-library of `classpathIndex`, or
+   * in that of the build if `classpathIndex` has none.
+   */
+  private[internal] def isHashHashNullary(classpathIndex: ClasspathIndex): Boolean = {
+    // 2.13 replaced TraversableOnce with IterableOnce
+    def isNullary(exists: String => Boolean): Boolean =
+      if (exists("IterableOnce" + Classfile.Suffix)) true
+      else if (exists("TraversableOnce" + Classfile.Suffix)) false
+      else isHashHashNullaryInBuild
+    // read only the entry of the first Predef: a later entry may hold another library
+    classpathIndex.getClassfile("scala/Predef" + Classfile.Suffix) match {
+      case Some(UncompressedClassfile(_, predef)) =>
+        val dir = predef.toNIO.resolveSibling("collection")
+        isNullary(name => Files.isRegularFile(dir.resolve(name)))
+      case Some(CompressedClassfile(_, jar)) =>
+        try {
+          val zip = new ZipFile(jar)
+          try isNullary(name => zip.getEntry("scala/collection/" + name) ne null)
+          finally zip.close()
+        } catch { case _: IOException => isHashHashNullaryInBuild }
+      case _ => isHashHashNullaryInBuild
+    }
+  }
+
   // scalafmt: { maxColumn = 150 }
-  private def anyClass: ClassfileInfos = {
+  private def anyClass(isHashHashNullary: Boolean): ClassfileInfos = {
     implicit val symbols = List.newBuilder[s.SymbolInformation]
     builtinMethod("Any", List(p.ABSTRACT), "equals", Nil, List("that" -> anySymbol), booleanSymbol)
     builtinMethod("Any", List(p.FINAL), "==", Nil, List("that" -> anySymbol), booleanSymbol)
     builtinMethod("Any", List(p.FINAL), "!=", Nil, List("that" -> anySymbol), booleanSymbol)
     builtinMethod("Any", List(p.ABSTRACT), "hashCode", Nil, Nil, intSymbol)
-    builtinMethod("Any", List(p.FINAL), "##", Nil, Nil, intSymbol)
+    builtinMethod("Any", List(p.FINAL), "##", Nil, Nil, intSymbol, nullary = isHashHashNullary)
     builtinMethod("Any", List(p.ABSTRACT), "toString", Nil, Nil, stringSymbol)
     // NOTE: Return type of getClass can't be expressed in the SemanticDB type system.
     // The method is special-cased in both the Java and Scala compilers, so we'll slack a little bit too for the time being.
     builtinMethod("Any", List(p.FINAL), "getClass", Nil, Nil, "java/lang/Class#")
-    builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, booleanSymbol)
-    builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "scala/Any#asInstanceOf().[A]")
+    builtinMethod("Any", List(p.FINAL), "isInstanceOf", List("A"), Nil, booleanSymbol, nullary = true)
+    builtinMethod("Any", List(p.FINAL), "asInstanceOf", List("A"), Nil, "scala/Any#asInstanceOf().[A]", nullary = true)
     builtin(k.CLASS, List(p.ABSTRACT), "Any", Nil, symbols.result())
   }
 
@@ -66,7 +96,7 @@ object Scalalib {
   private[internal] val intSymbol = "scala/Int#"
   private[internal] val stringSymbol = "java/lang/String#"
 
-  private def scalaPackage: String = Symbols.Global(Symbols.RootPackage, d.Package("scala"))
+  private val scalaPackage: String = Symbols.Global(Symbols.RootPackage, d.Package("scala"))
 
   private def builtin(
       kind: s.SymbolInformation.Kind,
@@ -112,15 +142,17 @@ object Scalalib {
     syntheticClassfile
   }
 
-  private def builtinMethod(
+  private[internal] def builtinMethod(
       className: String,
       props: List[s.SymbolInformation.Property],
       methodName: String,
       tparamDsls: List[String],
       paramDsls: List[(String, String)],
       retTpeSymbol: String,
+      packageSymbol: String = scalaPackage,
+      nullary: Boolean = false,
   )(implicit builder: mutable.Builder[s.SymbolInformation, _]): Unit = {
-    val classSymbol = Symbols.Global(scalaPackage, d.Type(className))
+    val classSymbol = Symbols.Global(packageSymbol, d.Type(className))
     val methodSymbol = Symbols.Global(classSymbol, d.Method(methodName, "()"))
     val tparamSymbols = List.newBuilder[String]
     tparamDsls.foreach { tparamName =>
@@ -156,7 +188,8 @@ object Scalalib {
     val methodSig = {
       val tps = Some(s.Scope(tparamSymbols.result()))
       val returnType = s.TypeRef(s.NoType, retTpeSymbol, Nil)
-      s.MethodSignature(tps, List(s.Scope(paramSymbols.result())), returnType)
+      val paramss = if (nullary) Nil else List(s.Scope(paramSymbols.result()))
+      s.MethodSignature(tps, paramss, returnType)
     }
     builder += s.SymbolInformation(
       symbol = methodSymbol,

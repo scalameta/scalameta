@@ -25,7 +25,7 @@ scala/Any#`==`(). => final method ==(that: Any): Boolean
   Boolean => scala/Boolean#
 scala/Any#`==`().(that) => param that: Any
   Any => scala/Any#
-scala/Any#asInstanceOf(). => final method asInstanceOf[A](): A
+scala/Any#asInstanceOf(). => final method asInstanceOf[A]: A
   A => scala/Any#asInstanceOf().[A]
 scala/Any#asInstanceOf().[A] => typeparam A
 scala/Any#equals(). => abstract method equals(that: Any): Boolean
@@ -38,7 +38,7 @@ scala/Any#getClass(). => final method getClass(): Class
   Class => java/lang/Class#
 scala/Any#hashCode(). => abstract method hashCode(): Int
   Int => scala/Int#
-scala/Any#isInstanceOf(). => final method isInstanceOf[A](): Boolean
+scala/Any#isInstanceOf(). => final method isInstanceOf[A]: Boolean
   A => scala/Any#isInstanceOf().[A]
   Boolean => scala/Boolean#
 scala/Any#isInstanceOf().[A] => typeparam A
