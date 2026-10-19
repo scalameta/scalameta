@@ -100,7 +100,12 @@ trait TextDocumentOps {
     def toTextDocument: s.TextDocument = toTextDocument(None)
 
     def toTextDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
-      startDocument(unit.source)
+      startDocument(unit)
+      try textDocument(explicitDialect)
+      finally endDocument()
+    }
+
+    private def textDocument(explicitDialect: Option[m.Dialect]): s.TextDocument = {
       val occurrences = emptyOccurrenceMap()
       val samoccurrences = emptyOccurrenceMap()
       // SAM methods share positions with their classes.
@@ -146,8 +151,7 @@ trait TextDocumentOps {
           val sam = samf.synthCls
           def atPos(mpos: m.Position): Unit = {
             def set(gsym: g.Symbol, map: mutable.Map[m.Position, Occurrence]): Boolean = {
-              // SAM symbols aren't reusable and share position with lambda
-              val ssym = freshSymbolRaw(gsym)
+              val ssym = gsym.toSemantic
               val ok = ssym ne Symbols.None
               if (ok) {
                 map.update(mpos, (ssym, Role.DEFINITION))
@@ -176,7 +180,8 @@ trait TextDocumentOps {
       def saveSymbol(gs: g.Symbol): Unit = if (gs.isUsefulSymbolInformation) saveSymbolDo(gs)
       def saveSymbolDo(gs: g.Symbol): Unit = saveSymbolFromSemantic(gs, gs.toSemantic)
       def saveSymbolFromSemantic(gs: g.Symbol, ssym: String): s.SymbolInformation = {
-        val info = gs.toSymbolInfo(SymlinkChildren, ssym)
+        val gdecl = if (ssym.isLocal) localDeclaration(ssym, gs) else gs
+        val info = gdecl.toSymbolInfo(SymlinkChildren, ssym)
         symbols(ssym) = info
         info
       }
@@ -393,19 +398,7 @@ trait TextDocumentOps {
                   addOccurrenceFromSemantic(pos, _, Role.DEFINITION)
                 else if (gsym.symbolName == mtree.value) addPatOccurrenceFromSemantic(pos, _)
                 else null
-              else if (!gsym.owner.isRefinementClass || {
-                  val src = enclosingSource(gsym)
-                  src == gu.NoSourceFile || src == unit.source
-                })
-                // We don't emit occurrences for accesses on structural types
-                // because is no canonical definition of a structural types,
-                // the same structure can be re-declared in various locations.
-                // However, in the special case where the structural type is defined
-                // within the same file or in a classfile, we use a local symbol of this file.
-                // We can't use the local symbol of another source file because
-                // that would mean we reference local symbols across files.
-                addOccurrenceFromSemantic(pos, _, Role.REFERENCE)
-              else null
+              else addOccurrenceFromSemantic(pos, _, Role.REFERENCE)
             if (register eq null) return
             val symbol = gsym.toSemantic
             if (symbol == Symbols.None) return
@@ -1319,6 +1312,19 @@ trait TextDocumentOps {
       def tryFindSynthetic(gtree: g.Tree): Unit =
         if (config.synthetics.isOn && gtree.pos.isRange) Synth.getCached(gtree)
 
+      // the information of every local that the document refers to, but an existential hardlink
+      if (!config.symbols.isNone) {
+        // repeat while a pass frees an existential, which the pass may have skipped already
+        var free = -1
+        while (free != freeExistentials.size) {
+          free = freeExistentials.size
+          foreachDocumentLocal((ssym, gdecl) =>
+            if (!symbols.contains(ssym) && !gdecl.isUseless && !gdecl.isError &&
+              (!gdecl.hasFlag(gf.EXISTENTIAL) || freeExistentials(ssym)))
+              saveSymbolFromSemantic(gdecl, ssym),
+          )
+        }
+      }
       val finalSymbols = symbols.values.toList
 
       val finalOccurrences = {

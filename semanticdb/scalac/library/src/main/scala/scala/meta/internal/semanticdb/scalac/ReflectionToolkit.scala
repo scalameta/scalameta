@@ -35,11 +35,14 @@ trait ReflectionToolkit {
   }
 
   object CompoundTypeTreeOf {
+    private val strictTreeCopier = newStrictTreeCopier
     def unapply[T: Attachable](carrier: T) = carrier match {
-      case CompoundTypeTree(templ) =>
-        val att = templ.attachments.get[CompoundTypeTreeOriginalAttachment]
-        templ.removeAttachment[CompoundTypeTreeOriginalAttachment]
-        att.map(att => CompoundTypeTree(treeCopy.Template(templ, att.parents, templ.self, att.stats)))
+      case CompoundTypeTree(templ) => templ.attachments.get[CompoundTypeTreeOriginalAttachment]
+          .map { att =>
+            // the copy has the attachments of `templ`, and a traversal must not extract it again
+            val copy = strictTreeCopier.Template(templ, att.parents, templ.self, att.stats)
+            CompoundTypeTree(copy.removeAttachment[CompoundTypeTreeOriginalAttachment])
+          }
       case _ => None
     }
   }

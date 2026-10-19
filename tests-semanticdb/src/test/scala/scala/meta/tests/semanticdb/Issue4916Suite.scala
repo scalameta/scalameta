@@ -124,6 +124,7 @@ class Issue4916Suite extends SemanticdbSuite {
        |  ?0 => local6
        |a/C#wildcardArgDef().(k) => param k: WatchKey
        |  WatchKey => java/nio/file/WatchKey#
+       |local4 => abstract type ?0
        |local7 => synthetic abstract type _
        |local8 => abstract type T
        |local9 => abstract type T
@@ -156,10 +157,10 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "members: synthetics",
     members,
-    s"""|[6:18..6:22): List => *.apply[Class[local4]]
+    s"""|[6:18..6:22): List => *.apply[Class[?0]]
         |  apply => $listApply
         |  Class => java/lang/Class#
-        |  local4 => local4
+        |  ?0 => local4
         |""".stripMargin,
     "Synthetics",
   )
@@ -247,6 +248,8 @@ class Issue4916Suite extends SemanticdbSuite {
        |c/C#structuralX. => val method structuralX: Int
        |  Int => scala/Int#
        |local0 => synthetic abstract type _
+       |local3 => abstract val method x: Int
+       |  Int => scala/Int#
        |local7 => val local localVal: List[Class[?0] forSome { type ?0 }]
        |  List => java/util/List#
        |  Class => java/lang/Class#
@@ -309,12 +312,12 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "twoSkolems: synthetics",
     twoSkolems,
-    s"""|[2:15..2:19): List => *.apply[Class[_1] forSome { type _1 >: local1 with local2 {} }]
+    s"""|[2:15..2:19): List => *.apply[Class[_1] forSome { type _1 >: ?0 with ?0 {} }]
         |  apply => $listApply
         |  Class => java/lang/Class#
         |  _1 => local0
-        |  local1 => local1
-        |  local2 => local2
+        |  ?0 => local1
+        |  ?0 => local2
         |""".stripMargin,
     "Synthetics",
   )
@@ -330,6 +333,8 @@ class Issue4916Suite extends SemanticdbSuite {
        |  _1 => local0
        |  ?0 => local3
        |  ?0 => local4
+       |local1 => abstract type ?0
+       |local2 => abstract type ?0
        |""".stripMargin,
   )
 
@@ -347,30 +352,30 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "twoSkolemMembers: synthetics",
     twoSkolemMembers,
-    s"""|[2:15..2:19): List => *.apply[Class[_1] forSome { type _1 >: local3 with local4 {} }]
+    s"""|[2:15..2:19): List => *.apply[Class[_1] forSome { type _1 >: ?0 with ?0 {} }]
         |  apply => $listApply
         |  Class => java/lang/Class#
         |  _1 => local0
-        |  local3 => local3
-        |  local4 => local4
-        |[3:21..3:25): List => *.apply[Class[_1] forSome { type _1 >: local6 with local7 {} }]
+        |  ?0 => local3
+        |  ?0 => local4
+        |[3:21..3:25): List => *.apply[Class[_1] forSome { type _1 >: ?0 with ?0 {} }]
         |  apply => $listApply
         |  Class => java/lang/Class#
         |  _1 => local5
-        |  local6 => local6
-        |  local7 => local7
-        |[4:15..4:19): List => *.apply[Class[_1] forSome { type _1 >: local11 with local12 {} }]
+        |  ?0 => local6
+        |  ?0 => local7
+        |[4:15..4:19): List => *.apply[Class[_1] forSome { type _1 >: ?0 with ?0 {} }]
         |  apply => $listApply
         |  Class => java/lang/Class#
         |  _1 => local10
-        |  local11 => local11
-        |  local12 => local12
-        |[5:35..5:39): List => *.apply[Class[_1] forSome { type _1 >: local16 with local17 {} }]
+        |  ?0 => local11
+        |  ?0 => local12
+        |[5:35..5:39): List => *.apply[Class[_1] forSome { type _1 >: ?0 with ?0 {} }]
         |  apply => $listApply
         |  Class => java/lang/Class#
         |  _1 => local15
-        |  local16 => local16
-        |  local17 => local17
+        |  ?0 => local16
+        |  ?0 => local17
         |""".stripMargin,
     "Synthetics",
   )
@@ -414,6 +419,14 @@ class Issue4916Suite extends SemanticdbSuite {
        |  _1 => local10
        |  ?0 => local13
        |  ?0 => local14
+       |local3 => abstract type ?0
+       |local4 => abstract type ?0
+       |local6 => abstract type ?0
+       |local7 => abstract type ?0
+       |local11 => abstract type ?0
+       |local12 => abstract type ?0
+       |local16 => abstract type ?0
+       |local17 => abstract type ?0
        |local18 => val local twoLocal: List[Class[_1] forSome { type _1 >: ?0 with ?0 {} }] forSome { type ?0; type ?0 }
        |  List => scala/collection/immutable/List#
        |  Class => java/lang/Class#
@@ -436,12 +449,12 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "droppedSkolems: synthetics",
     droppedSkolems,
-    s"""|[3:15..3:16): f => *[local0]
-        |  local0 => local0
+    s"""|[3:15..3:16): f => *[?0]
+        |  ?0 => local0
         |[3:17..3:48): Class.forName("f.C").asSubclass => *[Runnable]
         |  Runnable => java/lang/Runnable#
-        |[4:36..4:37): f => *[local2]
-        |  local2 => local2
+        |[4:36..4:37): f => *[?0]
+        |  ?0 => local2
         |[4:38..4:69): Class.forName("f.C").asSubclass => *[List[String]]
         |  List => java/util/List#
         |  String => scala/Predef.String#
@@ -473,6 +486,11 @@ class Issue4916Suite extends SemanticdbSuite {
        |  Runnable => java/lang/Runnable#
        |  Class => java/lang/Class#
        |  ?0 => local1
+       |local0 => abstract type ?0 <: Runnable
+       |  Runnable => java/lang/Runnable#
+       |local2 => abstract type ?0 <: List[String]
+       |  List => java/util/List#
+       |  String => scala/Predef.String#
        |""".stripMargin,
   )
 
@@ -488,16 +506,16 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "functionSkolems: synthetics",
     functionSkolems,
-    s"""|[2:24..2:28): List => *.apply[Class[local1]]
+    s"""|[2:24..2:28): List => *.apply[Class[?0]]
         |  apply => $listApply
         |  Class => java/lang/Class#
-        |  local1 => local1
-        |[3:24..3:28): List => *.apply[Class[_1] forSome { type _1 >: local5 with local6 {} }]
+        |  ?0 => local1
+        |[3:24..3:28): List => *.apply[Class[_1] forSome { type _1 >: ?0 with ?0 {} }]
         |  apply => $listApply
         |  Class => java/lang/Class#
         |  _1 => local4
-        |  local5 => local5
-        |  local6 => local6
+        |  ?0 => local5
+        |  ?0 => local6
         |""".stripMargin,
     "Synthetics",
   )
@@ -523,8 +541,11 @@ class Issue4916Suite extends SemanticdbSuite {
        |  ?0 => local8
        |local0 => param x: Int
        |  Int => scala/Int#
+       |local1 => abstract type ?0
        |local3 => param x: Int
        |  Int => scala/Int#
+       |local5 => abstract type ?0
+       |local6 => abstract type ?0
        |""".stripMargin,
   )
 
@@ -541,10 +562,10 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "aliasSkolems: synthetics",
     aliasSkolems,
-    s"""|[4:11..4:12): h => *[local0]
-        |  local0 => local0
-        |[4:36..4:37): h => *[local1]
-        |  local1 => local1
+    s"""|[4:11..4:12): h => *[?0]
+        |  ?0 => local0
+        |[4:36..4:37): h => *[?0]
+        |  ?0 => local1
         |""".stripMargin,
     "Synthetics",
   )
@@ -571,6 +592,8 @@ class Issue4916Suite extends SemanticdbSuite {
        |  Tuple2 => scala/Tuple2#
        |  ?0 => local2
        |  ?0 => local3
+       |local0 => abstract type ?0
+       |local1 => abstract type ?0
        |""".stripMargin,
   )
 
@@ -588,24 +611,24 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "chainedSkolems: synthetics",
     chainedSkolems,
-    s"""|[3:30..3:34): List => *.apply[Class[local0]]
+    s"""|[3:30..3:34): List => *.apply[Class[?0]]
         |  apply => $listApply
         |  Class => java/lang/Class#
-        |  local0 => local0
-        |[4:12..4:13): f => *[local2]
-        |  local2 => local2
-        |[4:37..4:41): List => *.apply[Class[local3]]
+        |  ?0 => local0
+        |[4:12..4:13): f => *[?0]
+        |  ?0 => local2
+        |[4:37..4:41): List => *.apply[Class[?0]]
         |  apply => $listApply
         |  Class => java/lang/Class#
-        |  local3 => local3
-        |[5:30..5:34): List => *.apply[Class[local5]]
+        |  ?0 => local3
+        |[5:30..5:34): List => *.apply[Class[?0]]
         |  apply => $listApply
         |  Class => java/lang/Class#
-        |  local5 => local5
-        |[5:68..5:72): List => *.apply[Class[local6]]
+        |  ?0 => local5
+        |[5:68..5:72): List => *.apply[Class[?0]]
         |  apply => $listApply
         |  Class => java/lang/Class#
-        |  local6 => local6
+        |  ?0 => local6
         |""".stripMargin,
     "Synthetics",
   )
@@ -635,6 +658,11 @@ class Issue4916Suite extends SemanticdbSuite {
        |  List => scala/collection/immutable/List#
        |  Class => java/lang/Class#
        |  ?0 => local7
+       |local0 => abstract type ?0
+       |local2 => abstract type ?0
+       |local3 => abstract type ?0
+       |local5 => abstract type ?0
+       |local6 => abstract type ?0
        |""".stripMargin,
   )
 
@@ -649,10 +677,10 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "samSkolems: synthetics",
     samSkolems,
-    s"""|[2:61..2:65): List => *.apply[Class[local4]]
+    s"""|[2:61..2:65): List => *.apply[Class[?0]]
         |  apply => $listApply
         |  Class => java/lang/Class#
-        |  local4 => local4
+        |  ?0 => local3
         |""".stripMargin,
     "Synthetics",
   )
@@ -669,11 +697,12 @@ class Issue4916Suite extends SemanticdbSuite {
        |  Object => java/lang/Object#
        |  IntFunction => java/util/function/IntFunction#
        |  Any => scala/Any#
-       |local2 => method apply(unknown x$1): Any <: java/util/function/IntFunction#apply().
+       |local1 => method apply(unknown x$1): Any <: java/util/function/IntFunction#apply().
        |  x$1 => java/util/function/IntFunction#apply().(x$1)
        |  Any => scala/Any#
-       |local3 => param x: Int
+       |local2 => param x: Int
        |  Int => scala/Int#
+       |local3 => abstract type ?0
        |""".stripMargin,
   )
 
@@ -689,10 +718,10 @@ class Issue4916Suite extends SemanticdbSuite {
   checkSection(
     "sharedBinder: synthetics",
     sharedBinder,
-    """|[3:37..3:43): Tuple2 => *.apply[local0, local1]
+    """|[3:37..3:43): Tuple2 => *.apply[T, T]
        |  apply => scala/Tuple2.apply().
-       |  local0 => local0
-       |  local1 => local1
+       |  T => local0
+       |  T => local1
        |""".stripMargin,
     "Synthetics",
   )
@@ -707,6 +736,8 @@ class Issue4916Suite extends SemanticdbSuite {
        |j/C#v. => val method v: Tuple2[T, T] forSome { type T }
        |  Tuple2 => scala/Tuple2#
        |  T => local2
+       |local0 => abstract type T
+       |local1 => abstract type T
        |local2 => abstract type T
        |""".stripMargin,
   )

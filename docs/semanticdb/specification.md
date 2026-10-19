@@ -3465,9 +3465,12 @@ Notes:
 most of them due to implementation restrictions:
 
 - Member access on [structural types](#scala-type) produces a
-  `REFERENCE` occurrence of a local symbol if the structural type is declared
-  in the same file. If the structural type is declared in another file, no
-  occurrence is produced.
+  `REFERENCE` occurrence of a local symbol. If the structural type is
+  declared outside the document, in another file or in a classfile, the
+  member gets a local symbol of the document, and the "Symbols" section of
+  the document includes its [SymbolInformation](#symbolinformation). Copies
+  of a member from another file share its local symbol; each copy of a
+  member from a classfile gets its own.
 - In `classOf[T]`, the `classOf` name resolves to `scala/Predef.classOf().`.
   The type argument produces a single reference covering the whole type
   expression if it is a simple, possibly qualified, type reference, e.g.

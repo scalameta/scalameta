@@ -10,11 +10,12 @@ object Scala {
     val None: String = ""
     val RootPackage: String = "_root_/"
     val EmptyPackage: String = "_empty_/"
+    val LocalPrefix = "local"
     val ClassOfLabel = "classOf"
 
     def Global(owner: String, desc: Descriptor): String =
       if (owner != RootPackage) owner + desc.toString else desc.toString
-    def Local(id: Int): String = "local" + id.toString
+    def Local(id: Int): String = LocalPrefix + id.toString
     def Multi(symbols: List[String]): String = symbols.distinct match {
       case List(symbol) => symbol
       case symbols =>
@@ -37,7 +38,7 @@ object Scala {
         case '.' | '#' | '/' | ')' | ']' => true
         case _ => false
       })
-    def isLocal: Boolean = symbol.startsWith("local")
+    def isLocal: Boolean = symbol.startsWith(Symbols.LocalPrefix)
     def isMulti: Boolean = symbol.startsWith(";")
     def asMulti: List[String] =
       if (!isMulti) symbol :: Nil

@@ -1043,9 +1043,10 @@ class ExistentialTypesSuite extends SemanticdbSuite {
        |  List => scala/collection/immutable/List#
        |_empty_/e23.f().(x) => param x: Any
        |  Any => scala/Any#
-       |local0 => val local l: List[local1]
+       |local0 => val local l: List[A]
        |  List => scala/collection/immutable/List#
-       |  local1 => local1
+       |  A => local1
+       |local1 => abstract type A
        |""".stripMargin,
   )
 
