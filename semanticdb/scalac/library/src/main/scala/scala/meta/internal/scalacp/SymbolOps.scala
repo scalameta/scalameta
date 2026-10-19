@@ -18,6 +18,7 @@ trait SymbolOps {
   self: Scalacp =>
 
   lazy val symbolCache = new mutable.HashMap[Symbol, String]
+  private lazy val classfileOrderCache = new mutable.HashMap[Symbol, List[Symbol]]
   implicit class XtensionSymbolSSymbol(sym: Symbol) {
     def toSemantic: String = {
       def uncached(sym: Symbol): String =
@@ -116,8 +117,94 @@ trait SymbolOps {
       // eagerly created after its class stays there even if declared later (#1544); metac reorders.
       val decls = sym.children
         .filter(decl => decl.isUseful && !decl.isTypeParam && !decl.isExistentialType)
-      SemanticdbDecls(decls.toList)
+      sym match {
+        case cls: ClassSymbol if decls.exists(_.isMovedPrivate) =>
+          SemanticdbDecls(
+            classfileOrderCache
+              .getOrElseUpdate(cls, inClassfileOrder(decls, symbolIndex.methodNames(cls))),
+          )
+        case _ => SemanticdbDecls(decls)
+      }
     }
+    // the condition under which scalac's superaccessors phase expands the name of a member
+    def isMovedPrivate: Boolean = sym match {
+      case sym: SymbolInfoSymbol if !sym.isProtected && !sym.isConstructor =>
+        sym.symbolInfo.privateWithin match {
+          case Some(owner: ClassSymbol) => !owner.isModule
+          case _ => false
+        }
+      case _ => false
+    }
+    def isMethodDecl: Boolean = sym.isInstanceOf[MethodSymbol] && sym.isMethod && !sym.isConstructor
+  }
+
+  /* The superaccessors phase expands the name of a member that is private to an enclosing class
+   * and re-enters it at the end of its owner's scope, so the pickle lists it last (#1590). The
+   * classfile keeps the methods in source order, so move each such method back before the first
+   * other method that follows it there. Objects, classes and types have no method in that order,
+   * so they stay last. */
+  private def inClassfileOrder(decls: Seq[Symbol], methods: IndexedSeq[String]): List[Symbol] = {
+    /* A private method that the companion calls takes the same expanded name in the classfile,
+     * so count the classfile methods of each moved name less the moved methods of that name, and
+     * keep the pickle order of a name whose count is not 0. */
+    val surplus = mutable.HashMap.empty[String, Int]
+    decls.foreach(decl =>
+      if (decl.isMethodDecl && decl.isMovedPrivate)
+        surplus(decl.name) = surplus.getOrElse(decl.name, 0) - 1,
+    )
+    methods.foreach(name => surplus.get(name).foreach(n => surplus(name) = n + 1))
+    val slots = new Array[Symbol](methods.length)
+    // the first classfile method from `from` with this name whose slot is free, or -1
+    def slotOf(name: String, from: Int): Int = {
+      var i = from
+      while (i < methods.length && ((slots(i) ne null) || methods(i) != name)) i += 1
+      if (i == methods.length) -1 else i
+    }
+    val isMoved = new Array[Boolean](decls.length)
+    var declsIdx = 0
+    var declsIter = decls.iterator
+    while (declsIter.hasNext) {
+      val decl = declsIter.next()
+      if (decl.isMethodDecl && decl.isMovedPrivate && surplus(decl.name) == 0) {
+        val i = slotOf(decl.name, 0)
+        if (i >= 0) {
+          slots(i) = decl
+          isMoved(declsIdx) = true
+        }
+      }
+      declsIdx += 1
+    }
+    val buf = List.newBuilder[Symbol]
+    // add the moved members of the slots in [from, end), and return the first slot not released
+    def releaseSlots(from: Int, end: Int): Int = {
+      var slotIdx = from
+      while (slotIdx < end) {
+        val moved = slots(slotIdx)
+        if (moved ne null) buf += moved
+        slotIdx += 1
+      }
+      slotIdx
+    }
+    var released = 0
+    var anchorFrom = 0
+    declsIdx = 0
+    declsIter = decls.iterator
+    while (declsIter.hasNext) {
+      val decl = declsIter.next()
+      if (!isMoved(declsIdx)) {
+        if (decl.isMethodDecl && !decl.isMovedPrivate) {
+          val i = slotOf(decl.name, anchorFrom)
+          if (i >= 0) {
+            released = releaseSlots(released, i)
+            anchorFrom = i + 1
+          }
+        }
+        buf += decl
+      }
+      declsIdx += 1
+    }
+    releaseSlots(released, slots.length)
+    buf.result()
   }
 
   implicit class XtensionSymbolsSSpec(syms: Seq[Symbol]) {

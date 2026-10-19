@@ -329,22 +329,6 @@ classes/C6.toString().
 -overridden_symbols: "scala/Any#toString()."
 
 
-===============
-example/Access#
-===============
---- metac
-+++ metacp
-       symlinks: "example/Access#`<init>`()."
-       symlinks: "example/Access#m1()."
-       symlinks: "example/Access#m2()."
--      symlinks: "example/Access#m3()."
-       symlinks: "example/Access#m4()."
-       symlinks: "example/Access#m5()."
-       symlinks: "example/Access#m6()."
-       symlinks: "example/Access#m7()."
-+      symlinks: "example/Access#m3()."
-
-
 ================
 example/B#foo().
 ================

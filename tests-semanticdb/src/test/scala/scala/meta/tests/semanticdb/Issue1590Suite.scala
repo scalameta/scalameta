@@ -110,11 +110,11 @@ class Issue1590Suite extends FunSuite {
       "a/Acc#`<init>`().",
       "a/Acc#m1().",
       "a/Acc#m2().",
+      "a/Acc#m3().",
       "a/Acc#m4().",
       "a/Acc#m5().",
       "a/Acc#m6().",
       "a/Acc#m7().",
-      "a/Acc#m3().",
     ),
   )
 
@@ -141,9 +141,9 @@ class Issue1590Suite extends FunSuite {
     ),
     List(
       "a/Acc#`<init>`().",
-      "a/Acc#m().",
       "a/Acc#v.",
       "a/Acc#l.",
+      "a/Acc#m().",
       "a/Acc#C#",
       "a/Acc#O.",
       "a/Acc#T#",
@@ -160,9 +160,7 @@ class Issue1590Suite extends FunSuite {
        |""".stripMargin,
     "a/Acc#",
     List("a/Acc#`<init>`().", "a/Acc#m1().", "a/Acc#w().", "a/Acc#`w_=`().", "a/Acc#m2()."),
-    if (ScalaVersion.is212)
-      List("a/Acc#`<init>`().", "a/Acc#m1().", "a/Acc#`w_=`().", "a/Acc#m2().", "a/Acc#w().")
-    else List("a/Acc#`<init>`().", "a/Acc#m1().", "a/Acc#m2().", "a/Acc#w().", "a/Acc#`w_=`()."),
+    List("a/Acc#`<init>`().", "a/Acc#m1().", "a/Acc#w().", "a/Acc#`w_=`().", "a/Acc#m2()."),
   )
 
   check(
@@ -176,7 +174,7 @@ class Issue1590Suite extends FunSuite {
        |""".stripMargin,
     "a/Acc#",
     List("a/Acc#`<init>`().", "a/Acc#m0().", "a/Acc#m().", "a/Acc#m(+1).", "a/Acc#n()."),
-    List("a/Acc#`<init>`().", "a/Acc#m0().", "a/Acc#m().", "a/Acc#n().", "a/Acc#m(+1)."),
+    List("a/Acc#`<init>`().", "a/Acc#m0().", "a/Acc#m().", "a/Acc#m(+1).", "a/Acc#n()."),
   )
 
   check(
@@ -191,7 +189,7 @@ class Issue1590Suite extends FunSuite {
        |""".stripMargin,
     "a/Acc#",
     List("a/Acc#`<init>`().", "a/Acc#m0().", "a/Acc#v.", "a/Acc#m1().", "a/Acc#l.", "a/Acc#m2()."),
-    List("a/Acc#`<init>`().", "a/Acc#m0().", "a/Acc#m1().", "a/Acc#m2().", "a/Acc#v.", "a/Acc#l."),
+    List("a/Acc#`<init>`().", "a/Acc#m0().", "a/Acc#v.", "a/Acc#m1().", "a/Acc#l.", "a/Acc#m2()."),
   )
 
   check(
@@ -227,8 +225,8 @@ class Issue1590Suite extends FunSuite {
     List(
       "a/Outer#Inner#`<init>`().",
       "a/Outer#Inner#m1().",
-      "a/Outer#Inner#m3().",
       "a/Outer#Inner#m2().",
+      "a/Outer#Inner#m3().",
     ),
   )
 
@@ -256,7 +254,7 @@ class Issue1590Suite extends FunSuite {
        |""".stripMargin,
     "a/T#",
     List("a/T#`<init>`().", "a/T#m1().", "a/T#m2().", "a/T#m3()."),
-    List("a/T#`<init>`().", "a/T#m1().", "a/T#m3().", "a/T#m2()."),
+    List("a/T#`<init>`().", "a/T#m1().", "a/T#m2().", "a/T#m3()."),
   )
 
   check(
@@ -377,9 +375,9 @@ class Issue1590Suite extends FunSuite {
     ),
     List(
       "a/Acc#`<init>`().[]",
-      "a/Acc#m().[a/Acc#m().(x)]",
+      "a/Acc#m().[a/Acc#m().(s)]",
+      "a/Acc#m(+1).[a/Acc#m(+1).(x)]",
       "a/Acc#n().[]",
-      "a/Acc#m(+1).[a/Acc#m(+1).(s)]",
     ),
     params = true,
   )
@@ -396,7 +394,7 @@ class Issue1590Suite extends FunSuite {
        |""".stripMargin,
     "a/X.C#",
     List("a/X.C#`<init>`().", "a/X.C#m1().", "a/X.C#m2().", "a/X.C#m3()."),
-    List("a/X.C#`<init>`().", "a/X.C#m1().", "a/X.C#m3().", "a/X.C#m2()."),
+    List("a/X.C#`<init>`().", "a/X.C#m1().", "a/X.C#m2().", "a/X.C#m3()."),
   )
 
   check(
@@ -434,8 +432,8 @@ class Issue1590Suite extends FunSuite {
     List(
       "a/p/package.C#`<init>`().",
       "a/p/package.C#m1().",
-      "a/p/package.C#m3().",
       "a/p/package.C#m2().",
+      "a/p/package.C#m3().",
     ),
   )
 
@@ -449,7 +447,7 @@ class Issue1590Suite extends FunSuite {
        |""".stripMargin,
     "_empty_/E#",
     List("_empty_/E#`<init>`().", "_empty_/E#m1().", "_empty_/E#m2().", "_empty_/E#m3()."),
-    List("_empty_/E#`<init>`().", "_empty_/E#m1().", "_empty_/E#m3().", "_empty_/E#m2()."),
+    List("_empty_/E#`<init>`().", "_empty_/E#m1().", "_empty_/E#m2().", "_empty_/E#m3()."),
     pkg = "",
   )
 
@@ -475,10 +473,10 @@ class Issue1590Suite extends FunSuite {
     List(
       "a/Acc#`<init>`().[]",
       "a/Acc#m0().[]",
-      "a/Acc#m().[a/Acc#m().(b)]",
-      "a/Acc#n().[]",
-      "a/Acc#m(+1).[a/Acc#m(+1).(x)]",
+      "a/Acc#m().[a/Acc#m().(x)]",
+      "a/Acc#m(+1).[a/Acc#m(+1).(b)]",
       "a/Acc#m(+2).[a/Acc#m(+2).(s)]",
+      "a/Acc#n().[]",
     ),
     params = true,
   )
