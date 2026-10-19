@@ -24,6 +24,7 @@ trait SymbolOps {
   def clearDocumentCaches(): Unit = {
     idCache.clear()
     pointsCache.clear()
+    namesCache.clear()
   }
 
   private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
@@ -72,7 +73,7 @@ trait SymbolOps {
       def definitelyLocal = sym == g.NoSymbol || sym.owner.isTerm && !sym.isParameter ||
         (sym.owner.isAliasType || sym.owner.isAbstractType) && !sym.isParameter ||
         sym.isSelfParameter || sym.isLocalDummy || sym.isRefinementClass || sym.isAnonymousClass ||
-        sym.isAnonymousFunction || sym.isExistential
+        sym.isAnonymousFunction || sym.hasFlag(gf.EXISTENTIAL)
       def ownerLocal = sym.owner.isSemanticdbLocal
       !definitelyGlobal && (definitelyLocal || ownerLocal)
     }
@@ -201,6 +202,7 @@ trait SymbolOps {
     def isSyntheticValueClassCompanion: Boolean =
       if (sym.isModule) sym.moduleClass.isSyntheticValueClassCompanion
       else sym.isModuleClass && sym.isSynthetic && sym.semanticdbDecls.gsyms.isEmpty
+    def isDefMethod: Boolean = sym.isMethod && !sym.isAccessor
     def isValMethod: Boolean = sym.kind.isMethod && {
       sym.isAccessor && sym.isStable || isUsefulField && !sym.isMutable
     }
@@ -245,15 +247,22 @@ trait SymbolOps {
 
   private lazy val idCache = new mutable.HashMap[GSourceFile, Int]
   private lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
+  private lazy val namesCache = new mutable.HashMap[(Int, g.Name), g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
     val pos = sym.pos
     if (pos.isDefined) {
       val conflict = pointsCache.getOrElseUpdate(pos.point, sym)
-      if (conflict != sym)
+      if (conflict != sym) {
         /* Use conflicting symbol instead of this local symbol.
          * This can happen for example in for comprehensions when the same binder
          * results in multiple parameter symbols for each flatMap/withFilter/map/foreach. */
         if (conflict.name == sym.name) return conflict.toSemantic
+        if (sym.hasFlag(gf.EXISTENTIAL)) {
+          // an existential value shares its point with its type: pair the copies of each by name
+          val first = namesCache.getOrElseUpdate((pos.point, sym.name), sym)
+          if (first != sym) return first.toSemantic
+        }
+      }
     }
     freshSymbolRaw(sym)
   }

@@ -152,7 +152,7 @@ Uri => semanticdb/integration/src/main/scala/example/Advanced.scala
 Text => non-empty
 Language => Scala
 Symbols => 46 entries
-Occurrences => 117 entries
+Occurrences => 118 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -321,6 +321,7 @@ Occurrences:
 [19:12..19:15): Int => scala/Int#
 [19:32..19:33): U <= local8
 [19:34..19:35): T <= local9
+[19:39..19:42): Int => scala/Int#
 [19:48..19:51): ??? => scala/Predef.`???`().
 [22:6..22:7): D <= advanced/D#
 [22:8..22:10): CC <= advanced/D#[CC]
@@ -2151,7 +2152,7 @@ Uri => semanticdb/integration/src/main/scala/example/InstrumentTyper.scala
 Text => non-empty
 Language => Scala
 Symbols => 11 entries
-Occurrences => 62 entries
+Occurrences => 63 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -2236,6 +2237,7 @@ Occurrences:
 [23:21..23:24): Int => scala/Int#
 [23:41..23:42): U <= local1
 [23:43..23:44): T <= local2
+[23:48..23:51): Int => scala/Int#
 [23:57..23:60): ??? => scala/Predef.`???`().
 [24:7..24:20): AnnotatedType <= example/InstrumentTyper#AnnotatedType#
 [24:23..24:26): Int => scala/Int#

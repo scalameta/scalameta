@@ -1593,7 +1593,8 @@ message SymbolInformation {
 symbols, with the exact number of symbols, their kinds, properties, signatures
 and access modifiers dependent on the corresponding value:
 
-- Local symbol of kind `LOCAL` is created for all local values.
+- Local symbol of kind `LOCAL` is created for all local values and for the
+  values that an existential type quantifies over.
 - Getter symbol of kind `METHOD` is created for all member values to model the
   getter method associated with the corresponding member value.
 - Parameter symbol of kind `PARAMETER` is created for `val` parameters of
@@ -1664,8 +1665,8 @@ abstract class C(val xp: Int) {
   <tr>
     <td><code>xe</code></td>
     <td><code>local5</code></td>
-    <td><code>METHOD</code></td>
-    <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
+    <td><code>LOCAL</code></td>
+    <td><code>ValueSignature(TypeRef(None, &lt;AnyRef&gt;, List()))</code></td>
   </tr>
 </table>
 
