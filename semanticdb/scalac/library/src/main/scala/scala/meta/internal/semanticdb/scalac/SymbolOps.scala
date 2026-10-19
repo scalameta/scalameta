@@ -217,8 +217,7 @@ trait SymbolOps {
     def isSyntheticAbstractType: Boolean = sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
     private def startsWithFreshTermName: Boolean = sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
     def isEtaExpandedParameter: Boolean =
-      // Term.Placeholder occurrences are not persisted so we don't persist their symbol information.
-      // We might want to revisit this decision https://github.com/scalameta/scalameta/issues/1657
+      // the parameter of `m _` or of `_ + 1`; we save the latter's information with its occurrence
       sym.isParameter && startsWithFreshTermName && sym.owner.isAnonymousFunction
     def isAnonymousSelfParameter: Boolean = isSelfParameter && {
       sym.name == g.nme.this_ || // hardlinked in ClassSignature.self

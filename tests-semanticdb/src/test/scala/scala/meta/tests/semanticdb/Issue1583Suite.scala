@@ -32,6 +32,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:11..1:14): Any => scala/Any#
        |[1:18..1:19): a => _empty_/O.m().(a)
        |[1:36..1:40): List => scala/package.List#
+       |[1:41..1:42): _ <= local0
        |""".stripMargin,
   )
 
@@ -71,6 +72,8 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:18..1:19): a => _empty_/O.m().(a)
        |[1:33..1:34): x <= local1
        |[1:36..1:39): Map => scala/Predef.Map#
+       |[1:40..1:41): _ <= local0
+       |[1:43..1:44): _ <= local2
        |[1:49..1:50): x => local1
        |""".stripMargin,
   )
@@ -96,6 +99,11 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.l(). => method l: List[_] forSome { type _ }
        |  List => scala/package.List#
        |  _ => local0
+       |local0 => synthetic abstract type _
+       |local1 => synthetic abstract type _ <: AnyRef
+       |  AnyRef => scala/AnyRef#
+       |local2 => synthetic abstract type _ >: Null
+       |  Null => scala/Null#
        |""".stripMargin,
   )
 
@@ -104,9 +112,12 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:6..1:7): l <= _empty_/O.l().
        |[1:9..1:13): List => scala/package.List#
+       |[1:14..1:15): _ <= local0
        |[1:19..1:22): ??? => scala/Predef.`???`().
        |[2:6..2:7): b <= _empty_/O.b().
        |[2:9..2:12): Map => scala/Predef.Map#
+       |[2:13..2:14): _ <= local1
+       |[2:26..2:27): _ <= local2
        |[2:39..2:42): ??? => scala/Predef.`???`().
        |""".stripMargin,
   )
@@ -125,6 +136,8 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.f. => val method f: Function1[Int, Int]
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
+       |local0 => param x$1: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -134,6 +147,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:6..1:7): f <= _empty_/O.f.
        |[1:9..1:12): Int => scala/Int#
        |[1:16..1:19): Int => scala/Int#
+       |[1:22..1:23): _ <= local0
        |""".stripMargin,
   )
 
@@ -155,6 +169,12 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.g. => val method g: Function1[Int, Int]
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
+       |local0 => param x$1: Int
+       |  Int => scala/Int#
+       |local1 => param x$2: Int
+       |  Int => scala/Int#
+       |local2 => param x$3: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -165,7 +185,10 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:10..1:13): Int => scala/Int#
        |[1:15..1:18): Int => scala/Int#
        |[1:23..1:26): Int => scala/Int#
+       |[1:30..1:31): _ <= local0
+       |[1:33..1:34): _ <= local1
        |[2:6..2:7): g <= _empty_/O.g.
+       |[2:11..2:12): _ <= local2
        |[2:14..2:17): Int => scala/Int#
        |""".stripMargin,
   )
@@ -184,6 +207,10 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.f. => val method f: Function1[Int, Function1[Int, Int]]
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
+       |local0 => param x$1: Int
+       |  Int => scala/Int#
+       |local1 => param x$2: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -194,6 +221,8 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:9..1:12): Int => scala/Int#
        |[1:16..1:19): Int => scala/Int#
        |[1:23..1:26): Int => scala/Int#
+       |[1:29..1:30): _ <= local0
+       |[1:34..1:35): _ <= local1
        |""".stripMargin,
   )
 
@@ -205,6 +234,7 @@ class Issue1583Suite extends SemanticdbSuite {
   occurrences(
     classTparam,
     """|[0:6..0:7): C <= _empty_/C#
+       |[0:8..0:9): _ <= _empty_/C#[_$$1]
        |[0:10..0:10):  <= _empty_/C#`<init>`().
        |""".stripMargin,
   )
@@ -217,6 +247,7 @@ class Issue1583Suite extends SemanticdbSuite {
   occurrences(
     boundedTparam,
     """|[0:6..0:7): C <= _empty_/C#
+       |[0:8..0:9): _ <= _empty_/C#[_$$1]
        |[0:13..0:19): AnyRef => scala/AnyRef#
        |[0:20..0:20):  <= _empty_/C#`<init>`().
        |""".stripMargin,
@@ -234,6 +265,7 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:6..1:7): m <= _empty_/O.m().
        |[1:8..1:9): T <= _empty_/O.m().[T]
+       |[1:10..1:11): _ <= _empty_/O.m().[T][_$$1]
        |""".stripMargin,
   )
 
@@ -249,6 +281,7 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:6..1:7): m <= _empty_/O.m().
        |[1:8..1:9): T <= _empty_/O.m().[T]
+       |[1:10..1:11): _ <= _empty_/O.m().[T][_$$1]
        |[1:14..1:15): a <= _empty_/O.m().(a)
        |[1:17..1:20): Int => scala/Int#
        |""".stripMargin,
@@ -262,6 +295,7 @@ class Issue1583Suite extends SemanticdbSuite {
   occurrences(
     caseClassTparam,
     """|[0:11..0:12): K <= _empty_/K#
+       |[0:13..0:14): _ <= _empty_/K#[_$$1]
        |[0:15..0:15):  <= _empty_/K#`<init>`().
        |[0:16..0:17): a <= _empty_/K#`<init>`().(a)
        |[0:16..0:17): a <= _empty_/K#a.
@@ -280,6 +314,7 @@ class Issue1583Suite extends SemanticdbSuite {
     methodTparam,
     """|[0:7..0:8): O <= _empty_/O.
        |[1:6..1:7): n <= _empty_/O.n().
+       |[1:8..1:9): _ <= _empty_/O.n().[_$$1]
        |""".stripMargin,
   )
 
@@ -294,6 +329,7 @@ class Issue1583Suite extends SemanticdbSuite {
     aliasTparam,
     """|[0:7..0:8): O <= _empty_/O.
        |[1:7..1:8): F <= _empty_/O.F#
+       |[1:9..1:10): _ <= _empty_/O.F#[_$$1]
        |[1:14..1:17): Int => scala/Int#
        |""".stripMargin,
   )
@@ -309,6 +345,8 @@ class Issue1583Suite extends SemanticdbSuite {
     placeholder,
     """|_empty_/O. => final object O extends AnyRef
        |  AnyRef => scala/AnyRef#
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -317,6 +355,7 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:2..1:8): Option => scala/Option.
        |[1:12..1:15): map => scala/Option#map().
+       |[1:16..1:17): _ <= local0
        |[1:18..1:19): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
@@ -341,6 +380,12 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.r().(f) => param f: Function2[Int, Int, Int]
        |  Function2 => scala/Function2#
        |  Int => scala/Int#
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local1 => synthetic param x$2: Int
+       |  Int => scala/Int#
+       |local2 => synthetic param x$3: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -354,9 +399,12 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:25..1:28): Int => scala/Int#
        |[1:32..1:33): f => _empty_/O.r().(f)
        |[2:2..2:3): r => _empty_/O.r().
+       |[2:4..2:5): _ <= local0
        |[2:6..2:7): + => scala/Int#`+`(+4).
+       |[2:8..2:9): _ <= local1
        |[3:2..3:8): Option => scala/Option.
        |[3:12..3:15): map => scala/Option#map().
+       |[3:17..3:18): _ <= local2
        |[3:20..3:23): Int => scala/Int#
        |[3:25..3:26): + => scala/Int#`+`(+4).
        |""".stripMargin,
@@ -374,7 +422,11 @@ class Issue1583Suite extends SemanticdbSuite {
     qualifierPlaceholder,
     """|_empty_/O. => final object O extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => param x: Int
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local1 => param x: Int
+       |  Int => scala/Int#
+       |local2 => synthetic param x$2: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -384,13 +436,15 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:2..1:8): Option => scala/Option.
        |[1:12..1:15): map => scala/Option#map().
+       |[1:16..1:17): _ <= local0
        |[1:18..1:26): toString => scala/Any#toString().
-       |[2:7..2:8): x <= local0
+       |[2:7..2:8): x <= local1
        |[2:12..2:18): Option => scala/Option.
        |[2:23..2:29): Option => scala/Option.
        |[2:33..2:36): map => scala/Option#map().
+       |[2:37..2:38): _ <= local2
        |[2:39..2:40): + => scala/Int#`+`(+4).
-       |[2:41..2:42): x => local0
+       |[2:41..2:42): x => local1
        |""".stripMargin,
   )
 
@@ -423,9 +477,13 @@ class Issue1583Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/O.i. => val method i: Int
        |  Int => scala/Int#
-       |local0 => val local x$1: Int
+       |local0 => synthetic param x$1: Int
        |  Int => scala/Int#
-       |local1 => val local x$2: Function1[Int, Int] @uncheckedBounds
+       |local1 => synthetic param x$2: Int
+       |  Int => scala/Int#
+       |local2 => val local x$1: Int
+       |  Int => scala/Int#
+       |local3 => val local x$2: Function1[Int, Int] @uncheckedBounds
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
        |  uncheckedBounds => scala/reflect/internal/annotations/uncheckedBounds#
@@ -443,11 +501,13 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:26..1:29): Int => scala/Int#
        |[2:6..2:7): i <= _empty_/O.i.
        |[3:2..3:3): g => _empty_/O.g().
+       |[3:4..3:5): _ <= local0
        |[3:6..3:7): + => scala/Int#`+`(+4).
        |[4:2..4:3): g => _empty_/O.g().
        |[4:4..4:5): b => _empty_/O.g().(b)
        |[4:8..4:9): i => _empty_/O.i.
        |[4:11..4:12): a => _empty_/O.g().(a)
+       |[4:15..4:16): _ <= local1
        |[4:17..4:18): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
@@ -484,6 +544,8 @@ class Issue1583Suite extends SemanticdbSuite {
        |local2 => synthetic method f(a: Int): Int <: _empty_/O.S#f().
        |  a => _empty_/O.S#f().(a)
        |  Int => scala/Int#
+       |local3 => synthetic param x$1: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -501,6 +563,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[2:16..2:17): s => _empty_/O.w().(s)
        |[2:18..2:19): f => _empty_/O.S#f().
        |[3:2..3:3): w => _empty_/O.w().
+       |[3:4..3:5): _ <= local3
        |[3:4..3:9): _ + 1 <= local0
        |[3:4..3:9): _ + 1 <= local2
        |[3:6..3:7): + => scala/Int#`+`(+4).
@@ -617,11 +680,20 @@ class Issue1583Suite extends SemanticdbSuite {
 
   occurrences(
     vals,
-    """|[0:7..0:8): O <= _empty_/O.
-       |[2:7..2:8): a <= local0
-       |[3:6..3:7): v <= _empty_/O.v().
-       |[3:9..3:12): Int => scala/Int#
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:6..1:7): _ <= _empty_/O._.
+         |[2:7..2:8): a <= local0
+         |[3:6..3:7): v <= _empty_/O.v().
+         |[3:9..3:12): Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:6..1:7): _ <= _empty_/O.x$1.
+         |[2:7..2:8): a <= local0
+         |[3:6..3:7): v <= _empty_/O.v().
+         |[3:9..3:12): Int => scala/Int#
+         |""".stripMargin,
   )
 
   // a typed underscore value definition
@@ -649,9 +721,16 @@ class Issue1583Suite extends SemanticdbSuite {
 
   occurrences(
     typedVal,
-    """|[0:7..0:8): O <= _empty_/O.
-       |[1:9..1:12): Int => scala/Int#
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:6..1:7): _ <= _empty_/O._.
+         |[1:9..1:12): Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:6..1:7): _ <= _empty_/O.x$1.
+         |[1:9..1:12): Int => scala/Int#
+         |""".stripMargin,
   )
 
   // an underscore variable definition
@@ -685,8 +764,14 @@ class Issue1583Suite extends SemanticdbSuite {
 
   occurrences(
     underscoreVar,
-    """|[0:7..0:8): O <= _empty_/O.
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:6..1:7): _ <= _empty_/O._().
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:6..1:7): _ <= _empty_/O.x$1.
+         |""".stripMargin,
   )
 
   // a local underscore value definition
@@ -723,6 +808,7 @@ class Issue1583Suite extends SemanticdbSuite {
     localVal,
     """|[0:7..0:8): O <= _empty_/O.
        |[1:6..1:7): m <= _empty_/O.m().
+       |[2:8..2:9): _ <= local0
        |""".stripMargin,
   )
 
@@ -790,12 +876,15 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
   occurrences(
     generator,
     """|[0:7..0:8): O <= _empty_/O.
+       |[1:7..1:8): _ <= local0
        |[1:12..1:18): Option => scala/Option.
        |""".stripMargin,
   )
@@ -820,13 +909,19 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param x$2: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
   occurrences(
     generators,
     """|[0:7..0:8): O <= _empty_/O.
+       |[1:7..1:8): _ <= local0
        |[1:12..1:18): Option => scala/Option.
+       |[1:23..1:24): _ <= local1
        |[1:28..1:34): Option => scala/Option.
        |""".stripMargin,
   )
@@ -849,12 +944,15 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local1 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
   occurrences(
     typedGenerator,
     """|[0:7..0:8): O <= _empty_/O.
+       |[1:7..1:8): _ <= local1
        |[1:10..1:13): Int => scala/Int#
        |[1:17..1:23): Option => scala/Option.
        |""".stripMargin,
@@ -883,6 +981,7 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:8..1:9): x <= local0
        |[1:13..1:19): Option => scala/Option.
+       |[1:24..1:25): _ <= local2
        |[1:28..1:29): x => local0
        |""".stripMargin,
   )
@@ -905,12 +1004,15 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
   occurrences(
     generatorYield,
     """|[0:7..0:8): O <= _empty_/O.
+       |[1:7..1:8): _ <= local0
        |[1:12..1:18): Option => scala/Option.
        |""".stripMargin,
   )
@@ -937,6 +1039,8 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => param x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
@@ -945,6 +1049,7 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:7..1:8): x <= local0
        |[1:12..1:18): Option => scala/Option.
+       |[1:34..1:35): _ <= local1
        |[1:39..1:45): Option => scala/Option.
        |[1:56..1:57): x => local0
        |""".stripMargin,
@@ -1066,14 +1171,25 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$2: Int
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
   occurrences(
     guardedGenerator,
-    """|[0:7..0:8): O <= _empty_/O.
-       |[1:12..1:18): Option => scala/Option.
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= local0
+         |[1:12..1:18): Option => scala/Option.
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= local1
+         |[1:12..1:18): Option => scala/Option.
+         |""".stripMargin,
   )
 
   synthetics(
@@ -1089,12 +1205,12 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:38): for (_ <- Option(1) if true) yield 1 => orig(Option(1)).withFilter({(local0) => orig(true)}).map[Int]({(local1) => orig(1)})
+      """|[1:2..1:38): for (_ <- Option(1) if true) yield 1 => orig(Option(1)).withFilter({(x$1) => orig(true)}).map[Int]({(x$2) => orig(1)})
          |  withFilter => scala/Option#withFilter().
-         |  local0 => local0
+         |  x$1 => local0
          |  map => scala/Option#WithFilter#map().
          |  Int => scala/Int#
-         |  local1 => local1
+         |  x$2 => local1
          |[1:12..1:18): Option => *.apply[Int]
          |  apply => scala/Option.apply().
          |  Int => scala/Int#
@@ -1227,9 +1343,16 @@ class Issue1583Suite extends SemanticdbSuite {
 
   occurrences(
     typedValPattern,
-    """|[0:7..0:8): O <= _empty_/O.
-       |[1:10..1:13): Int => scala/Int#
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= _empty_/O._.
+         |[1:10..1:13): Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= _empty_/O.x$1.
+         |[1:10..1:13): Int => scala/Int#
+         |""".stripMargin,
   )
 
   // an underscore that starts an infix case pattern
@@ -1342,15 +1465,35 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$2: Int
+         |  Int => scala/Int#
+         |local2 => synthetic param x$3: Int
+         |  Int => scala/Int#
+         |local3 => synthetic param x$4: Int
+         |  Int => scala/Int#
+         |local4 => synthetic param x$5: Int
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
   occurrences(
     guardedGenerators,
-    """|[0:7..0:8): O <= _empty_/O.
-       |[1:12..1:18): Option => scala/Option.
-       |[2:12..2:18): Option => scala/Option.
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= local0
+         |[1:12..1:18): Option => scala/Option.
+         |[2:7..2:8): _ <= local1
+         |[2:12..2:18): Option => scala/Option.
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= local2
+         |[1:12..1:18): Option => scala/Option.
+         |[2:7..2:8): _ <= local4
+         |[2:12..2:18): Option => scala/Option.
+         |""".stripMargin,
   )
 
   synthetics(
@@ -1375,23 +1518,23 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:47): for (_ <- Option(1) if true if false) yield 1 => orig(Option(1)).withFilter({(local0) => orig(true)}).withFilter({(local1) => orig(false)}).map[Int]({(local2) => orig(1)})
+      """|[1:2..1:47): for (_ <- Option(1) if true if false) yield 1 => orig(Option(1)).withFilter({(x$1) => orig(true)}).withFilter({(x$2) => orig(false)}).map[Int]({(x$3) => orig(1)})
          |  withFilter => scala/Option#withFilter().
-         |  local0 => local0
+         |  x$1 => local0
          |  withFilter => scala/Option#WithFilter#withFilter().
-         |  local1 => local1
+         |  x$2 => local1
          |  map => scala/Option#WithFilter#map().
          |  Int => scala/Int#
-         |  local2 => local2
+         |  x$3 => local2
          |[1:12..1:18): Option => *.apply[Int]
          |  apply => scala/Option.apply().
          |  Int => scala/Int#
-         |[2:2..2:33): for (_ <- Option(2) if true) () => orig(Option(2)).withFilter({(local3) => orig(true)}).foreach[Unit]({(local4) => orig(())})
+         |[2:2..2:33): for (_ <- Option(2) if true) () => orig(Option(2)).withFilter({(x$4) => orig(true)}).foreach[Unit]({(x$5) => orig(())})
          |  withFilter => scala/Option#withFilter().
-         |  local3 => local3
+         |  x$4 => local3
          |  foreach => scala/Option#WithFilter#foreach().
          |  Unit => scala/Unit#
-         |  local4 => local4
+         |  x$5 => local4
          |[2:12..2:18): Option => *.apply[Int]
          |  apply => scala/Option.apply().
          |  Int => scala/Int#
@@ -1409,6 +1552,8 @@ class Issue1583Suite extends SemanticdbSuite {
     generatorValue,
     """|_empty_/O. => final object O extends AnyRef
        |  AnyRef => scala/AnyRef#
+       |local0 => param x$1: Int
+       |  Int => scala/Int#
        |local2 => val local y: Int
        |  Int => scala/Int#
        |""".stripMargin,
@@ -1420,18 +1565,21 @@ class Issue1583Suite extends SemanticdbSuite {
       List(
         ScalaVersion.Full("2.13.15") ->
           """|[0:7..0:8): O <= _empty_/O.
+             |[1:7..1:8): _ <= local0
              |[1:12..1:18): Option => scala/Option.
              |[1:23..1:24): y <= local2
              |[1:36..1:37): y => local1
              |""".stripMargin,
         ScalaVersion.Scala212 ->
           """|[0:7..0:8): O <= _empty_/O.
+             |[1:7..1:8): _ <= local0
              |[1:12..1:18): Option => scala/Option.
              |[1:23..1:24): y <= local2
              |[1:36..1:37): y => local1
              |""".stripMargin,
       ),
       """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= local0
          |[1:12..1:18): Option => scala/Option.
          |[1:23..1:24): y <= local2
          |[1:36..1:37): y => local2
@@ -1463,6 +1611,8 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local2 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |local3 => val local y: Int
          |  Int => scala/Int#
          |""".stripMargin,
@@ -1475,6 +1625,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:12..1:18): Option => scala/Option.
        |[1:23..1:24): y <= local3
        |[1:27..1:28): x => local0
+       |[1:30..1:31): _ <= local2
        |[1:35..1:41): Option => scala/Option.
        |[1:42..1:43): y => local3
        |[1:52..1:53): y => local3
@@ -1505,6 +1656,8 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local2 => synthetic param x$2: Int
+         |  Int => scala/Int#
          |local3 => val local x$1: Int
          |  Int => scala/Int#
          |""".stripMargin,
@@ -1515,7 +1668,9 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:7..1:8): x <= local0
        |[1:12..1:18): Option => scala/Option.
+       |[1:23..1:24): _ <= local3
        |[1:27..1:28): x => local0
+       |[1:30..1:31): _ <= local2
        |[1:35..1:41): Option => scala/Option.
        |[1:42..1:43): x => local0
        |[1:52..1:53): x => local0
@@ -1546,6 +1701,10 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local2 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local3 => synthetic param x$2: Int
+         |  Int => scala/Int#
          |local4 => val local y: Int
          |  Int => scala/Int#
          |""".stripMargin,
@@ -1561,6 +1720,7 @@ class Issue1583Suite extends SemanticdbSuite {
              |[1:12..1:18): Option => scala/Option.
              |[1:23..1:24): y <= local4
              |[1:27..1:28): x => local0
+             |[1:30..1:31): _ <= local3
              |[1:35..1:41): Option => scala/Option.
              |[1:42..1:43): y => local4
              |[1:48..1:49): y => local4
@@ -1573,6 +1733,7 @@ class Issue1583Suite extends SemanticdbSuite {
              |[1:12..1:18): Option => scala/Option.
              |[1:23..1:24): y <= local3
              |[1:27..1:28): x => local0
+             |[1:30..1:31): _ <= local2
              |[1:35..1:41): Option => scala/Option.
              |[1:42..1:43): y => local3
              |[1:48..1:49): y => local3
@@ -1585,6 +1746,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |[1:12..1:18): Option => scala/Option.
          |[1:23..1:24): y <= local4
          |[1:27..1:28): x => local0
+         |[1:30..1:31): _ <= local3
          |[1:35..1:41): Option => scala/Option.
          |[1:42..1:43): y => local4
          |[1:48..1:49): y => local4
@@ -1618,6 +1780,8 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local3 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |local4 => val local y: Int
          |  Int => scala/Int#
          |""".stripMargin,
@@ -1630,6 +1794,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:12..1:18): Option => scala/Option.
        |[1:23..1:24): y <= local4
        |[1:27..1:28): x => local0
+       |[1:30..1:31): _ <= local3
        |[1:33..1:36): Int => scala/Int#
        |[1:40..1:46): Option => scala/Option.
        |[1:47..1:48): y => local4
@@ -1661,6 +1826,8 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local2 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |local3 => val local y: Int
          |  Int => scala/Int#
          |""".stripMargin,
@@ -1673,6 +1840,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:12..1:18): Option => scala/Option.
        |[1:23..1:24): y <= local3
        |[1:27..1:28): x => local0
+       |[1:30..1:31): _ <= local2
        |[1:35..1:41): Option => scala/Option.
        |[1:42..1:43): y => local3
        |[1:46..1:53): println => scala/Predef.println(+1).
@@ -1692,6 +1860,8 @@ class Issue1583Suite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => param x$1: Int
+         |  Int => scala/Int#
          |local2 => param _: Int
          |  Int => scala/Int#
          |local3 => val local y: Int
@@ -1700,6 +1870,10 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => param x$1: Int
+         |  Int => scala/Int#
+         |local2 => synthetic param x$2: Int
+         |  Int => scala/Int#
          |local3 => val local y: Int
          |  Int => scala/Int#
          |""".stripMargin,
@@ -1708,8 +1882,10 @@ class Issue1583Suite extends SemanticdbSuite {
   occurrences(
     generatorValueGenerator,
     """|[0:7..0:8): O <= _empty_/O.
+       |[1:7..1:8): _ <= local0
        |[1:12..1:18): Option => scala/Option.
        |[1:23..1:24): y <= local3
+       |[1:30..1:31): _ <= local2
        |[1:35..1:41): Option => scala/Option.
        |[1:42..1:43): y => local3
        |[1:52..1:53): y => local3
@@ -1730,6 +1906,8 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local2 => param x$1: Int
+         |  Int => scala/Int#
          |local4 => param _: Int
          |  Int => scala/Int#
          |local5 => val local y: Int
@@ -1741,6 +1919,10 @@ class Issue1583Suite extends SemanticdbSuite {
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
+         |  Int => scala/Int#
+         |local2 => param x$1: Int
+         |  Int => scala/Int#
+         |local4 => synthetic param x$2: Int
          |  Int => scala/Int#
          |local5 => val local y: Int
          |  Int => scala/Int#
@@ -1756,10 +1938,12 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:12..1:18): Option => scala/Option.
        |[1:23..1:24): y <= local5
        |[1:27..1:28): x => local0
+       |[1:30..1:31): _ <= local2
        |[1:35..1:41): Option => scala/Option.
        |[1:42..1:43): y => local5
        |[1:46..1:47): z <= local6
        |[1:50..1:51): y => local5
+       |[1:53..1:54): _ <= local4
        |[1:58..1:64): Option => scala/Option.
        |[1:65..1:66): z => local6
        |[1:75..1:76): z => local6
@@ -1790,6 +1974,8 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local3 => synthetic param x$2: Int
+         |  Int => scala/Int#
          |local4 => val local y: Int
          |  Int => scala/Int#
          |""".stripMargin,
@@ -1804,6 +1990,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:27..1:28): x => local0
        |[1:32..1:33): y => local4
        |[1:34..1:35): > => scala/Int#`>`(+3).
+       |[1:39..1:40): _ <= local3
        |[1:44..1:50): Option => scala/Option.
        |[1:51..1:52): y => local4
        |[1:61..1:62): y => local4
@@ -1821,6 +2008,8 @@ class Issue1583Suite extends SemanticdbSuite {
     withFilterPlaceholder,
     """|_empty_/O. => final object O extends AnyRef
        |  AnyRef => scala/AnyRef#
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -1829,6 +2018,7 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:2..1:8): Option => scala/Option.
        |[1:12..1:22): withFilter => scala/Option#withFilter().
+       |[1:23..1:24): _ <= local0
        |[1:25..1:26): > => scala/Int#`>`(+3).
        |""".stripMargin,
   )
@@ -1845,13 +2035,17 @@ class Issue1583Suite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
-         |local0 => synthetic val local x$2: Int
+         |local0 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local1 => synthetic val local x$2: Int
          |  Int => scala/Int#
          |""".stripMargin
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
-         |local0 => synthetic final val local rassoc$1: Int
+         |local0 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local1 => synthetic final val local rassoc$1: Int
          |  Int => scala/Int#
          |""".stripMargin,
   )
@@ -1862,6 +2056,7 @@ class Issue1583Suite extends SemanticdbSuite {
       """|[0:7..0:8): O <= _empty_/O.
          |[1:2..1:6): List => scala/collection/immutable/List.
          |[1:10..1:13): map => scala/collection/immutable/List#map().
+         |[1:14..1:15): _ <= local0
          |[1:16..1:18): :: => scala/collection/immutable/List#`::`().
          |[1:19..1:22): Nil => scala/collection/immutable/Nil.
          |""".stripMargin
@@ -1869,6 +2064,7 @@ class Issue1583Suite extends SemanticdbSuite {
       """|[0:7..0:8): O <= _empty_/O.
          |[1:2..1:6): List => scala/package.List.
          |[1:10..1:13): map => scala/collection/immutable/List#map().
+         |[1:14..1:15): _ <= local0
          |[1:16..1:18): :: => scala/collection/immutable/List#`::`().
          |[1:19..1:22): Nil => scala/package.Nil.
          |""".stripMargin,
@@ -1906,7 +2102,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.o(). => method o: Option[List[_] forSome { type _ }]
        |  Option => scala/Option#
        |  List => scala/package.List#
-       |  _ => local3
+       |  _ => local4
        |_empty_/O.v. => val method v: List[_] forSome { type _ }
        |  List => scala/package.List#
        |  _ => local0
@@ -1916,6 +2112,11 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.z. => lazy val method z: List[_] forSome { type _ }
        |  List => scala/package.List#
        |  _ => local2
+       |local0 => synthetic abstract type _
+       |local1 => synthetic abstract type _
+       |local2 => synthetic abstract type _
+       |local3 => synthetic abstract type _
+       |local4 => synthetic abstract type _
        |""".stripMargin,
   )
 
@@ -1925,12 +2126,15 @@ class Issue1583Suite extends SemanticdbSuite {
       """|[0:7..0:8): O <= _empty_/O.
          |[1:6..1:7): v <= _empty_/O.v.
          |[1:9..1:13): List => scala/package.List#
+         |[1:14..1:15): _ <= local0
          |[1:19..1:22): Nil => scala/collection/immutable/Nil.
          |[2:6..2:7): w <= _empty_/O.w().
          |[2:9..2:13): List => scala/package.List#
+         |[2:14..2:15): _ <= local1
          |[2:19..2:22): Nil => scala/collection/immutable/Nil.
          |[3:11..3:12): z <= _empty_/O.z.
          |[3:14..3:18): List => scala/package.List#
+         |[3:19..3:20): _ <= local2
          |[3:24..3:27): Nil => scala/collection/immutable/Nil.
          |[4:6..4:7): c <= _empty_/O.c().
          |[4:8..4:9): a <= _empty_/O.c().(a)
@@ -1938,21 +2142,26 @@ class Issue1583Suite extends SemanticdbSuite {
          |[4:18..4:19): a => _empty_/O.c().(a)
          |[4:20..4:32): asInstanceOf => scala/Any#asInstanceOf().
          |[4:33..4:37): List => scala/package.List#
+         |[4:38..4:39): _ <= local3
          |[5:6..5:7): o <= _empty_/O.o().
          |[5:9..5:15): Option => scala/Option#
          |[5:16..5:20): List => scala/package.List#
+         |[5:21..5:22): _ <= local4
          |[5:27..5:31): None => scala/None.
          |""".stripMargin
     else
       """|[0:7..0:8): O <= _empty_/O.
          |[1:6..1:7): v <= _empty_/O.v.
          |[1:9..1:13): List => scala/package.List#
+         |[1:14..1:15): _ <= local0
          |[1:19..1:22): Nil => scala/package.Nil.
          |[2:6..2:7): w <= _empty_/O.w().
          |[2:9..2:13): List => scala/package.List#
+         |[2:14..2:15): _ <= local1
          |[2:19..2:22): Nil => scala/package.Nil.
          |[3:11..3:12): z <= _empty_/O.z.
          |[3:14..3:18): List => scala/package.List#
+         |[3:19..3:20): _ <= local2
          |[3:24..3:27): Nil => scala/package.Nil.
          |[4:6..4:7): c <= _empty_/O.c().
          |[4:8..4:9): a <= _empty_/O.c().(a)
@@ -1960,9 +2169,11 @@ class Issue1583Suite extends SemanticdbSuite {
          |[4:18..4:19): a => _empty_/O.c().(a)
          |[4:20..4:32): asInstanceOf => scala/Any#asInstanceOf().
          |[4:33..4:37): List => scala/package.List#
+         |[4:38..4:39): _ <= local3
          |[5:6..5:7): o <= _empty_/O.o().
          |[5:9..5:15): Option => scala/Option#
          |[5:16..5:20): List => scala/package.List#
+         |[5:21..5:22): _ <= local4
          |[5:27..5:31): None => scala/None.
          |""".stripMargin,
   )
@@ -1981,6 +2192,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/T#a. => abstract val method a: List[_] forSome { type _ }
        |  List => scala/package.List#
        |  _ => local0
+       |local0 => synthetic abstract type _
        |""".stripMargin,
   )
 
@@ -1989,6 +2201,7 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:6..0:7): T <= _empty_/T#
        |[1:6..1:7): a <= _empty_/T#a.
        |[1:9..1:13): List => scala/package.List#
+       |[1:14..1:15): _ <= local0
        |""".stripMargin,
   )
 
@@ -2081,6 +2294,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |  _ => local0
          |_empty_/K.unapply().(x$0) => synthetic param x$0: K
          |  K => _empty_/K#
+         |local0 => synthetic abstract type _
          |local1 => synthetic val local K$1: K
          |  K => _empty_/K#
          |""".stripMargin
@@ -2172,6 +2386,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |  K => _empty_/K#
          |_empty_/K.writeReplace(). => private synthetic method writeReplace(): Object
          |  Object => java/lang/Object#
+         |local0 => synthetic abstract type _
          |local1 => synthetic val local K$1: K
          |  K => _empty_/K#
          |""".stripMargin,
@@ -2184,6 +2399,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[0:13..0:14): a <= _empty_/K#`<init>`().(a)
        |[0:13..0:14): a <= _empty_/K#a.
        |[0:16..0:20): List => scala/package.List#
+       |[0:21..0:22): _ <= local0
        |""".stripMargin,
   )
 
@@ -2207,6 +2423,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |local0 => lazy val local l: List[_] forSome { type _ }
        |  List => scala/package.List#
        |  _ => local1
+       |local1 => synthetic abstract type _
        |""".stripMargin,
   )
 
@@ -2217,6 +2434,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |[1:6..1:7): m <= _empty_/O.m().
          |[2:13..2:14): l <= local0
          |[2:16..2:20): List => scala/package.List#
+         |[2:21..2:22): _ <= local1
          |[2:26..2:29): Nil => scala/collection/immutable/Nil.
          |[3:4..3:5): l => local0
          |""".stripMargin
@@ -2225,6 +2443,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |[1:6..1:7): m <= _empty_/O.m().
          |[2:13..2:14): l <= local0
          |[2:16..2:20): List => scala/package.List#
+         |[2:21..2:22): _ <= local1
          |[2:26..2:29): Nil => scala/package.Nil.
          |[3:4..3:5): l => local0
          |""".stripMargin,
@@ -2243,6 +2462,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |  Map => scala/Predef.Map#
        |  _ => local0
        |  Int => scala/Int#
+       |local0 => synthetic abstract type _
        |""".stripMargin,
   )
 
@@ -2250,6 +2470,7 @@ class Issue1583Suite extends SemanticdbSuite {
     selfType,
     """|[0:6..0:7): T <= _empty_/T#
        |[0:16..0:19): Map => scala/Predef.Map#
+       |[0:20..0:21): _ <= local0
        |[0:23..0:26): Int => scala/Int#
        |""".stripMargin,
   )
@@ -2286,8 +2507,14 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/C#`<init>`(). => primary ctor <init>()
        |_empty_/O. => final object O extends AnyRef
        |  AnyRef => scala/AnyRef#
-       |local0 => final class $anon extends A
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local1 => param x$2: Int
+       |  Int => scala/Int#
+       |local2 => final class $anon extends A
        |  A => _empty_/A#
+       |local3 => synthetic param x$3: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -2303,15 +2530,18 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:8..1:8):  <= _empty_/B#`<init>`().
        |[1:16..1:17): A => _empty_/A#
        |[1:17..1:17):  => _empty_/A#`<init>`().
+       |[1:18..1:19): _ <= local0
        |[1:20..1:21): + => scala/Int#`+`(+4).
        |[2:6..2:7): C <= _empty_/C#
        |[2:8..2:8):  <= _empty_/C#`<init>`().
        |[2:16..2:17): A => _empty_/A#
        |[2:17..2:17):  => _empty_/A#`<init>`().
+       |[2:18..2:19): _ <= local1
        |[3:7..3:8): O <= _empty_/O.
-       |[4:6..4:6):  <= local0
+       |[4:6..4:6):  <= local2
        |[4:6..4:7): A => _empty_/A#
        |[4:7..4:7):  => _empty_/A#`<init>`().
+       |[4:8..4:9): _ <= local3
        |[4:10..4:11): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
@@ -2393,9 +2623,17 @@ class Issue1583Suite extends SemanticdbSuite {
          |_empty_/T# => class T extends S { +1 decls }
          |  S => _empty_/S#
          |_empty_/T#`<init>`(). => primary ctor <init>()
-         |local0 => val local x$1: Int
+         |local0 => synthetic param x$1: Int
          |  Int => scala/Int#
-         |local1 => val local x$2: Function1[Int, Int] @uncheckedBounds
+         |local1 => synthetic param x$2: Int
+         |  Int => scala/Int#
+         |local2 => synthetic param x$3: Int
+         |  Int => scala/Int#
+         |local3 => synthetic param x$4: Int
+         |  Int => scala/Int#
+         |local4 => val local x$1: Int
+         |  Int => scala/Int#
+         |local5 => val local x$2: Function1[Int, Int] @uncheckedBounds
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
          |  uncheckedBounds => scala/reflect/internal/annotations/uncheckedBounds#
@@ -2465,8 +2703,16 @@ class Issue1583Suite extends SemanticdbSuite {
          |_empty_/T# => class T extends S { +1 decls }
          |  S => _empty_/S#
          |_empty_/T#`<init>`(). => primary ctor <init>()
-         |local0 => val local x$1: 2
-         |local1 => val local x$2: Function1[Int, Int] @uncheckedBounds
+         |local0 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$2: Int
+         |  Int => scala/Int#
+         |local2 => synthetic param x$3: Int
+         |  Int => scala/Int#
+         |local3 => synthetic param x$4: Int
+         |  Int => scala/Int#
+         |local4 => val local x$1: 2
+         |local5 => val local x$2: Function1[Int, Int] @uncheckedBounds
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
          |  uncheckedBounds => scala/reflect/internal/annotations/uncheckedBounds#
@@ -2488,7 +2734,9 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:7..1:8): P <= _empty_/P.
        |[1:17..1:18): A => _empty_/A#
        |[1:18..1:18):  => _empty_/A#`<init>`().
+       |[1:19..1:20): _ <= local0
        |[1:21..1:22): + => scala/Int#`+`(+4).
+       |[1:26..1:27): _ <= local1
        |[1:28..1:29): + => scala/Int#`+`(+4).
        |[2:6..2:7): Q <= _empty_/Q#
        |[2:8..2:9): T <= _empty_/Q#[T]
@@ -2502,6 +2750,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[3:16..3:17): Q => _empty_/Q#
        |[3:18..3:21): Int => scala/Int#
        |[3:22..3:22):  => _empty_/Q#`<init>`().
+       |[3:23..3:24): _ <= local2
        |[3:25..3:26): + => scala/Int#`+`(+4).
        |[4:6..4:7): S <= _empty_/S#
        |[4:7..4:7):  <= _empty_/S#`<init>`().
@@ -2518,6 +2767,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[5:17..5:17):  => _empty_/S#`<init>`().
        |[5:18..5:19): g => _empty_/S#`<init>`().(g)
        |[5:25..5:26): f => _empty_/S#`<init>`().(f)
+       |[5:29..5:30): _ <= local3
        |[5:31..5:32): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
@@ -2554,8 +2804,12 @@ class Issue1583Suite extends SemanticdbSuite {
        |local0 => class B extends A { +1 decls }
        |  A => _empty_/A#
        |local1 => primary ctor <init>()
-       |local2 => final class $anon extends A
+       |local2 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local3 => final class $anon extends A
        |  A => _empty_/A#
+       |local4 => param x$2: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -2573,10 +2827,12 @@ class Issue1583Suite extends SemanticdbSuite {
        |[3:12..3:12):  <= local1
        |[3:20..3:21): A => _empty_/A#
        |[3:21..3:21):  => _empty_/A#`<init>`().
+       |[3:22..3:23): _ <= local2
        |[3:24..3:25): + => scala/Int#`+`(+4).
-       |[4:8..4:8):  <= local2
+       |[4:8..4:8):  <= local3
        |[4:8..4:9): A => _empty_/A#
        |[4:9..4:9):  => _empty_/A#`<init>`().
+       |[4:10..4:11): _ <= local4
        |""".stripMargin,
   )
 
@@ -2602,6 +2858,8 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/A#f. => private[this] val method f: Function1[Int, Int]
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -2615,6 +2873,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[0:18..0:21): Int => scala/Int#
        |[1:6..1:10): this <= _empty_/A#`<init>`(+1).
        |[1:19..1:19):  => _empty_/A#`<init>`().
+       |[1:20..1:21): _ <= local0
        |[1:22..1:23): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
@@ -2647,6 +2906,8 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/ann#f. => private[this] val method f: Function1[Int, Int]
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -2665,6 +2926,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:7..1:8): O <= _empty_/O.
        |[2:3..2:6): ann => _empty_/ann#
        |[2:6..2:6):  => _empty_/ann#`<init>`().
+       |[2:7..2:8): _ <= local0
        |[2:9..2:10): + => scala/Int#`+`(+4).
        |[2:18..2:19): m <= _empty_/O.m().
        |""".stripMargin,
@@ -2711,6 +2973,10 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.m().(f) => default param f: Function1[Int, Int]
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local1 => synthetic param x$2: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -2722,12 +2988,14 @@ class Issue1583Suite extends SemanticdbSuite {
        |[0:8..0:9): f <= _empty_/C#f.
        |[0:11..0:14): Int => scala/Int#
        |[0:18..0:21): Int => scala/Int#
+       |[0:24..0:25): _ <= local0
        |[0:26..0:27): + => scala/Int#`+`(+4).
        |[1:7..1:8): O <= _empty_/O.
        |[2:6..2:7): m <= _empty_/O.m().
        |[2:8..2:9): f <= _empty_/O.m().(f)
        |[2:11..2:14): Int => scala/Int#
        |[2:18..2:21): Int => scala/Int#
+       |[2:24..2:25): _ <= local1
        |[2:26..2:27): + => scala/Int#`+`(+4).
        |[2:33..2:34): f => _empty_/O.m().(f)
        |""".stripMargin,
@@ -2746,6 +3014,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |[0:13..0:14): f <= _empty_/K#f.
        |[0:16..0:19): Int => scala/Int#
        |[0:23..0:26): Int => scala/Int#
+       |[0:29..0:30): _ <= local0
        |[0:31..0:32): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
@@ -2778,7 +3047,19 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local1 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local2 => synthetic param x$2: Int
+         |  Int => scala/Int#
          |local3 => param x: Int
+         |  Int => scala/Int#
+         |local4 => synthetic param x$3: Int
+         |  Int => scala/Int#
+         |local5 => synthetic param x$4: Int
+         |  Int => scala/Int#
+         |local6 => synthetic param x$5: Int
+         |  Int => scala/Int#
+         |local7 => synthetic param x$6: Int
          |  Int => scala/Int#
          |local8 => param y: Int
          |  Int => scala/Int#
@@ -2791,15 +3072,18 @@ class Issue1583Suite extends SemanticdbSuite {
       List(
         ScalaVersion.Full("2.13.15") ->
           """|[0:7..0:8): O <= _empty_/O.
+             |[1:7..1:8): _ <= local2
              |[1:10..1:13): Int => scala/Int#
              |[1:17..1:23): Option => scala/Option.
              |[2:7..2:8): x <= local3
              |[2:12..2:18): Option => scala/Option.
+             |[2:23..2:24): _ <= local5
              |[2:28..2:34): Option => scala/Option.
              |[2:35..2:36): x => local3
              |[2:41..2:42): x => local3
              |[2:43..2:44): > => scala/Int#`>`(+3).
              |[2:54..2:55): x => local5
+             |[3:7..3:8): _ <= local7
              |[3:12..3:18): Option => scala/Option.
              |[3:31..3:32): y <= local8
              |[3:36..3:42): Option => scala/Option.
@@ -2807,15 +3091,18 @@ class Issue1583Suite extends SemanticdbSuite {
              |""".stripMargin,
         ScalaVersion.Scala212 ->
           """|[0:7..0:8): O <= _empty_/O.
+             |[1:7..1:8): _ <= local1
              |[1:10..1:13): Int => scala/Int#
              |[1:17..1:23): Option => scala/Option.
              |[2:7..2:8): x <= local2
              |[2:12..2:18): Option => scala/Option.
+             |[2:23..2:24): _ <= local3
              |[2:28..2:34): Option => scala/Option.
              |[2:35..2:36): x => local2
              |[2:41..2:42): x => local2
              |[2:43..2:44): > => scala/Int#`>`(+3).
              |[2:54..2:55): x => local2
+             |[3:7..3:8): _ <= local4
              |[3:12..3:18): Option => scala/Option.
              |[3:31..3:32): y <= local5
              |[3:36..3:42): Option => scala/Option.
@@ -2823,15 +3110,18 @@ class Issue1583Suite extends SemanticdbSuite {
              |""".stripMargin,
       ),
       """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= local2
          |[1:10..1:13): Int => scala/Int#
          |[1:17..1:23): Option => scala/Option.
          |[2:7..2:8): x <= local3
          |[2:12..2:18): Option => scala/Option.
+         |[2:23..2:24): _ <= local5
          |[2:28..2:34): Option => scala/Option.
          |[2:35..2:36): x => local3
          |[2:41..2:42): x => local3
          |[2:43..2:44): > => scala/Int#`>`(+3).
          |[2:54..2:55): x => local3
+         |[3:7..3:8): _ <= local7
          |[3:12..3:18): Option => scala/Option.
          |[3:31..3:32): y <= local8
          |[3:36..3:42): Option => scala/Option.
@@ -2881,37 +3171,37 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:43): for (_: Int <- Option(1) if true) yield 1 => orig(Option(1)).withFilter({(local0) => orig()}).withFilter({(local1) => orig(true)}).map[Int]({(local2) => orig(1)})
+      """|[1:2..1:43): for (_: Int <- Option(1) if true) yield 1 => orig(Option(1)).withFilter({(local0) => orig()}).withFilter({(x$1) => orig(true)}).map[Int]({(x$2) => orig(1)})
          |  withFilter => scala/Option#withFilter().
          |  local0 => local0
          |  withFilter => scala/Option#WithFilter#withFilter().
-         |  local1 => local1
+         |  x$1 => local1
          |  map => scala/Option#WithFilter#map().
          |  Int => scala/Int#
-         |  local2 => local2
+         |  x$2 => local2
          |[1:17..1:23): Option => *.apply[Int]
          |  apply => scala/Option.apply().
          |  Int => scala/Int#
-         |[2:2..2:55): for (x <- Option(1); _ <- Option(x) if x > 0) yield x => orig(Option(1)).flatMap[Int]({(x) => orig(Option(x)).withFilter({(local4) => orig(x > 0)}).map[Int]({(local5) => orig(x)})})
+         |[2:2..2:55): for (x <- Option(1); _ <- Option(x) if x > 0) yield x => orig(Option(1)).flatMap[Int]({(x) => orig(Option(x)).withFilter({(x$3) => orig(x > 0)}).map[Int]({(x$4) => orig(x)})})
          |  flatMap => scala/Option#flatMap().
          |  Int => scala/Int#
          |  x => local3
          |  withFilter => scala/Option#withFilter().
-         |  local4 => local4
+         |  x$3 => local4
          |  map => scala/Option#WithFilter#map().
-         |  local5 => local5
+         |  x$4 => local5
          |[2:12..2:18): Option => *.apply[Int]
          |  apply => scala/Option.apply().
          |  Int => scala/Int#
          |[2:28..2:34): Option => *.apply[Int]
          |  apply => scala/Option.apply().
          |  Int => scala/Int#
-         |[3:2..3:54): for (_ <- Option(1) if true; y <- Option(2)) yield y => orig(Option(1)).withFilter({(local6) => orig(true)}).flatMap[Int]({(local7) => orig(Option(2)).map[Int]({(y) => orig(y)})})
+         |[3:2..3:54): for (_ <- Option(1) if true; y <- Option(2)) yield y => orig(Option(1)).withFilter({(x$5) => orig(true)}).flatMap[Int]({(x$6) => orig(Option(2)).map[Int]({(y) => orig(y)})})
          |  withFilter => scala/Option#withFilter().
-         |  local6 => local6
+         |  x$5 => local6
          |  flatMap => scala/Option#WithFilter#flatMap().
          |  Int => scala/Int#
-         |  local7 => local7
+         |  x$6 => local7
          |  map => scala/Option#map().
          |  y => local8
          |[3:12..3:18): Option => *.apply[Int]
@@ -2937,20 +3227,39 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => param _: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |""".stripMargin
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param x$2: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$3: Int
+         |  Int => scala/Int#
+         |local2 => synthetic param x$1: Int
+         |  Int => scala/Int#
          |""".stripMargin,
   )
 
   occurrences(
     guardedYieldPlaceholder,
-    """|[0:7..0:8): O <= _empty_/O.
-       |[1:12..1:18): Option => scala/Option.
-       |[1:41..1:44): Int => scala/Int#
-       |[1:46..1:47): + => scala/Int#`+`(+4).
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= local0
+         |[1:12..1:18): Option => scala/Option.
+         |[1:38..1:39): _ <= local1
+         |[1:41..1:44): Int => scala/Int#
+         |[1:46..1:47): + => scala/Int#`+`(+4).
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= local1
+         |[1:12..1:18): Option => scala/Option.
+         |[1:38..1:39): _ <= local2
+         |[1:41..1:44): Int => scala/Int#
+         |[1:46..1:47): + => scala/Int#`+`(+4).
+         |""".stripMargin,
   )
 
   synthetics(
@@ -2967,13 +3276,13 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:49): for (_ <- Option(1) if true) yield (_: Int) + 1 => orig(Option(1)).withFilter({(local0) => orig(true)}).map[Function1[Int, Int]]({(local1) => orig((_: Int) + 1)})
+      """|[1:2..1:49): for (_ <- Option(1) if true) yield (_: Int) + 1 => orig(Option(1)).withFilter({(x$2) => orig(true)}).map[Function1[Int, Int]]({(x$3) => orig((_: Int) + 1)})
          |  withFilter => scala/Option#withFilter().
-         |  local0 => local0
+         |  x$2 => local0
          |  map => scala/Option#WithFilter#map().
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
-         |  local1 => local1
+         |  x$3 => local1
          |[1:12..1:18): Option => *.apply[Int]
          |  apply => scala/Option.apply().
          |  Int => scala/Int#
@@ -3036,33 +3345,42 @@ class Issue1583Suite extends SemanticdbSuite {
       List(
         ScalaVersion.Full("2.13.15") ->
           """|[0:7..0:8): O <= _empty_/O.
+             |[1:7..1:8): _ <= _empty_/O.x$1.
              |[1:10..1:13): Int => scala/Int#
              |[2:6..2:7): m <= _empty_/O.m().
+             |[3:9..3:10): _ <= local0
              |[3:12..3:15): Int => scala/Int#
              |[6:7..6:8): x <= local1
              |[6:12..6:18): Option => scala/Option.
+             |[6:24..6:25): _ <= local3
              |[6:27..6:30): Int => scala/Int#
              |[6:34..6:35): x => local1
              |[6:43..6:44): x => local2
              |""".stripMargin,
         ScalaVersion.Scala212 ->
           """|[0:7..0:8): O <= _empty_/O.
+             |[1:7..1:8): _ <= _empty_/O._().
              |[1:10..1:13): Int => scala/Int#
              |[2:6..2:7): m <= _empty_/O.m().
+             |[3:9..3:10): _ <= local0
              |[3:12..3:15): Int => scala/Int#
              |[6:7..6:8): x <= local1
              |[6:12..6:18): Option => scala/Option.
+             |[6:24..6:25): _ <= local3
              |[6:27..6:30): Int => scala/Int#
              |[6:34..6:35): x => local1
              |[6:43..6:44): x => local2
              |""".stripMargin,
       ),
       """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= _empty_/O.x$1.
          |[1:10..1:13): Int => scala/Int#
          |[2:6..2:7): m <= _empty_/O.m().
+         |[3:9..3:10): _ <= local0
          |[3:12..3:15): Int => scala/Int#
          |[6:7..6:8): x <= local1
          |[6:12..6:18): Option => scala/Option.
+         |[6:24..6:25): _ <= local3
          |[6:27..6:30): Int => scala/Int#
          |[6:34..6:35): x => local1
          |[6:43..6:44): x => local1
@@ -3095,8 +3413,14 @@ class Issue1583Suite extends SemanticdbSuite {
 
   occurrences(
     parenValPattern,
-    """|[0:7..0:8): O <= _empty_/O.
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= _empty_/O._.
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:7..1:8): _ <= _empty_/O.x$1.
+         |""".stripMargin,
   )
 
   // scalac 2.12 and 2.13.15 resolve the yield's `x` in `parenTypedPatterns` to another local
@@ -3140,6 +3464,8 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local0 => synthetic val local x$1: Unit
          |  Unit => scala/Unit#
+         |local2 => synthetic param x$2: Int
+         |  Int => scala/Int#
          |local3 => val local x: Int
          |  Int => scala/Int#
          |local5 => val local x$3: Int
@@ -3151,11 +3477,14 @@ class Issue1583Suite extends SemanticdbSuite {
     parenTypedPatterns,
     s"""|[0:7..0:8): O <= _empty_/O.
         |[1:6..1:7): m <= _empty_/O.m().
+        |[2:10..2:11): _ <= local0
         |[2:15..2:18): Int => scala/Int#
+        |[5:8..5:9): _ <= local2
         |[5:12..5:15): Int => scala/Int#
         |[5:19..5:25): Option => scala/Option.
         |[6:7..6:8): x <= local3
         |[6:12..6:18): Option => scala/Option.
+        |[6:24..6:25): _ <= local5
         |[6:28..6:31): Int => scala/Int#
         |[6:34..6:35): x => local3
         |[6:43..6:44): x => $parenTypedYieldRef
@@ -3240,6 +3569,8 @@ class Issue1583Suite extends SemanticdbSuite {
        |  Map => scala/Predef.Map#
        |  _ => local1
        |  Int => scala/Int#
+       |local0 => abstract type _
+       |local1 => abstract type _
        |""".stripMargin,
   )
 
@@ -3249,9 +3580,11 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:6..1:7): c <= _empty_/O.c.
        |[1:10..1:17): classOf => scala/Predef.classOf().
        |[1:18..1:22): List => scala/package.List#
+       |[1:23..1:24): _ <= local0
        |[2:6..2:7): d <= _empty_/O.d.
        |[2:10..2:17): classOf => scala/Predef.classOf().
        |[2:18..2:21): Map => scala/Predef.Map#
+       |[2:22..2:23): _ <= local1
        |[2:25..2:28): Int => scala/Int#
        |""".stripMargin,
   )
@@ -3284,6 +3617,11 @@ class Issue1583Suite extends SemanticdbSuite {
        |  Option => scala/Option#
        |  List => scala/package.List#
        |  _ => local3
+       |local0 => abstract type _
+       |local1 => abstract type _
+       |local2 => abstract type _ <: AnyRef
+       |  AnyRef => scala/AnyRef#
+       |local3 => abstract type _
        |""".stripMargin,
   )
 
@@ -3293,13 +3631,18 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:6..1:7): e <= _empty_/O.e.
        |[1:10..1:17): classOf => scala/Predef.classOf().
        |[1:18..1:21): Map => scala/Predef.Map#
+       |[1:22..1:23): _ <= local0
+       |[1:25..1:26): _ <= local1
        |[2:6..2:7): f <= _empty_/O.f.
        |[2:10..2:17): classOf => scala/Predef.classOf().
        |[2:18..2:22): List => scala/package.List#
+       |[2:23..2:24): _ <= local2
+       |[2:28..2:34): AnyRef => scala/AnyRef#
        |[3:6..3:7): g <= _empty_/O.g.
        |[3:10..3:17): classOf => scala/Predef.classOf().
        |[3:18..3:24): Option => scala/Option#
        |[3:25..3:29): List => scala/package.List#
+       |[3:30..3:31): _ <= local3
        |""".stripMargin,
   )
 
@@ -3317,6 +3660,7 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.x. => val method x: List[List[_] forSome { type _ }]
        |  List => scala/collection/immutable/List#
        |  _ => local0
+       |local0 => abstract type _
        |""".stripMargin,
   )
 
@@ -3325,6 +3669,8 @@ class Issue1583Suite extends SemanticdbSuite {
     """|[0:7..0:8): O <= _empty_/O.
        |[1:6..1:7): x <= _empty_/O.x.
        |[1:10..1:14): List => scala/collection/immutable/Nil.
+       |[1:15..1:19): List => scala/collection/immutable/List#
+       |[1:20..1:21): _ <= local0
        |""".stripMargin,
   )
 
@@ -3405,17 +3751,40 @@ class Issue1583Suite extends SemanticdbSuite {
 
   occurrences(
     parenTypedValues,
-    """|[0:7..0:8): O <= _empty_/O.
-       |[1:12..1:15): Int => scala/Int#
-       |[2:6..2:7): m <= _empty_/O.m().
-       |[3:14..3:17): Int => scala/Int#
-       |[7:7..7:8): P <= _empty_/P.
-       |[8:12..8:15): Int => scala/Int#
-       |[10:7..10:8): Q <= _empty_/Q.
-       |[11:18..11:21): Int => scala/Int#
-       |[12:6..12:7): m <= _empty_/Q.m().
-       |[13:20..13:23): Int => scala/Int#
-       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:8..1:9): _ <= _empty_/O._.
+         |[1:12..1:15): Int => scala/Int#
+         |[2:6..2:7): m <= _empty_/O.m().
+         |[3:10..3:11): _ <= local0
+         |[3:14..3:17): Int => scala/Int#
+         |[7:7..7:8): P <= _empty_/P.
+         |[8:8..8:9): _ <= _empty_/P._().
+         |[8:12..8:15): Int => scala/Int#
+         |[10:7..10:8): Q <= _empty_/Q.
+         |[11:7..11:8): _ <= _empty_/Q._.
+         |[11:18..11:21): Int => scala/Int#
+         |[12:6..12:7): m <= _empty_/Q.m().
+         |[13:9..13:10): _ <= local1
+         |[13:20..13:23): Int => scala/Int#
+         |""".stripMargin
+    else
+      """|[0:7..0:8): O <= _empty_/O.
+         |[1:8..1:9): _ <= _empty_/O.x$1.
+         |[1:12..1:15): Int => scala/Int#
+         |[2:6..2:7): m <= _empty_/O.m().
+         |[3:10..3:11): _ <= local0
+         |[3:14..3:17): Int => scala/Int#
+         |[7:7..7:8): P <= _empty_/P.
+         |[8:8..8:9): _ <= _empty_/P.x$3.
+         |[8:12..8:15): Int => scala/Int#
+         |[10:7..10:8): Q <= _empty_/Q.
+         |[11:7..11:8): _ <= _empty_/Q.x$4.
+         |[11:18..11:21): Int => scala/Int#
+         |[12:6..12:7): m <= _empty_/Q.m().
+         |[13:9..13:10): _ <= local1
+         |[13:20..13:23): Int => scala/Int#
+         |""".stripMargin,
   )
 
   // type arguments of empty collections
@@ -3452,6 +3821,10 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Array => scala/Array#
          |  List => scala/collection/immutable/List#
          |  _ => local3
+         |local0 => synthetic abstract type _
+         |local1 => synthetic abstract type _
+         |local2 => synthetic abstract type _
+         |local3 => synthetic abstract type _
          |""".stripMargin
     else
       """|_empty_/O. => final object O extends AnyRef { +5 decls }
@@ -3474,6 +3847,10 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Array => scala/Array#
          |  List => scala/collection/immutable/List#
          |  _ => local3
+         |local0 => synthetic abstract type _
+         |local1 => synthetic abstract type _
+         |local2 => synthetic abstract type _
+         |local3 => synthetic abstract type _
          |""".stripMargin,
   )
 
@@ -3483,37 +3860,47 @@ class Issue1583Suite extends SemanticdbSuite {
       """|[0:7..0:8): O <= _empty_/O.
          |[1:6..1:7): a <= _empty_/O.a.
          |[1:10..1:14): List => scala/collection/immutable/Nil.
+         |[1:15..1:18): Int => scala/Int#
          |[2:6..2:7): b <= _empty_/O.b.
          |[2:10..2:14): List => scala/collection/immutable/List.
          |[2:15..2:19): List => scala/package.List#
+         |[2:20..2:21): _ <= local0
          |[2:24..2:27): Nil => scala/collection/immutable/Nil.
          |[3:6..3:7): c <= _empty_/O.c.
          |[3:10..3:13): Seq => scala/collection/Seq.
          |[3:14..3:18): List => scala/package.List#
+         |[3:19..3:20): _ <= local1
          |[4:6..4:7): d <= _empty_/O.d.
          |[4:10..4:16): Vector => scala/package.Vector.
          |[4:17..4:21): List => scala/package.List#
+         |[4:22..4:23): _ <= local2
          |[5:6..5:7): e <= _empty_/O.e.
          |[5:10..5:15): Array => scala/Array.
          |[5:16..5:20): List => scala/package.List#
+         |[5:21..5:22): _ <= local3
          |""".stripMargin
     else
       """|[0:7..0:8): O <= _empty_/O.
          |[1:6..1:7): a <= _empty_/O.a.
          |[1:10..1:14): List => scala/collection/immutable/Nil.
+         |[1:15..1:18): Int => scala/Int#
          |[2:6..2:7): b <= _empty_/O.b.
          |[2:10..2:14): List => scala/package.List.
          |[2:15..2:19): List => scala/package.List#
+         |[2:20..2:21): _ <= local0
          |[2:24..2:27): Nil => scala/package.Nil.
          |[3:6..3:7): c <= _empty_/O.c.
          |[3:10..3:13): Seq => scala/package.Seq.
          |[3:14..3:18): List => scala/package.List#
+         |[3:19..3:20): _ <= local1
          |[4:6..4:7): d <= _empty_/O.d.
          |[4:10..4:16): Vector => scala/package.Vector.
          |[4:17..4:21): List => scala/package.List#
+         |[4:22..4:23): _ <= local2
          |[5:6..5:7): e <= _empty_/O.e.
          |[5:10..5:15): Array => scala/Array.
          |[5:16..5:20): List => scala/package.List#
+         |[5:21..5:22): _ <= local3
          |""".stripMargin,
   )
 
@@ -3575,9 +3962,17 @@ class Issue1583Suite extends SemanticdbSuite {
        |  List => scala/package.List#
        |  _ => local5
        |  Int => scala/Int#
+       |local0 => synthetic abstract type _
+       |local1 => synthetic abstract type _
+       |local2 => synthetic abstract type _
        |local3 => param x: List[_] forSome { type _ }
        |  List => scala/package.List#
        |  _ => local4
+       |local4 => synthetic abstract type _
+       |local5 => synthetic abstract type _
+       |local6 => synthetic param x$1: List[_] forSome { type _ }
+       |  List => scala/package.List#
+       |  _ => local5
        |""".stripMargin,
   )
 
@@ -3589,23 +3984,29 @@ class Issue1583Suite extends SemanticdbSuite {
          |[0:8..0:9): a <= _empty_/C#`<init>`().(a)
          |[0:8..0:9): a <= _empty_/C#a.
          |[0:11..0:15): List => scala/package.List#
+         |[0:16..0:17): _ <= local0
          |[1:6..1:7): D <= _empty_/D#
          |[1:7..1:7):  <= _empty_/D#`<init>`().
          |[1:12..1:13): a <= _empty_/D#`<init>`().(a)
          |[1:12..1:13): a <= _empty_/D#a.
          |[1:15..1:19): List => scala/package.List#
+         |[1:20..1:21): _ <= local1
          |[2:7..2:8): O <= _empty_/O.
          |[3:6..3:7): m <= _empty_/O.m().
          |[3:8..3:9): a <= _empty_/O.m().(a)
          |[3:11..3:15): List => scala/package.List#
+         |[3:16..3:17): _ <= local2
          |[3:22..3:23): a => _empty_/O.m().(a)
          |[4:6..4:7): f <= _empty_/O.f.
          |[4:11..4:12): x <= local3
          |[4:14..4:18): List => scala/package.List#
+         |[4:19..4:20): _ <= local4
          |[4:26..4:27): x => local3
          |[5:6..5:7): n <= _empty_/O.n().
          |[5:9..5:13): List => scala/package.List#
+         |[5:14..5:15): _ <= local5
          |[5:20..5:23): Int => scala/Int#
+         |[5:26..5:27): _ <= local6
          |[5:28..5:32): size => scala/collection/SeqLike#size().
          |""".stripMargin
     else
@@ -3614,23 +4015,29 @@ class Issue1583Suite extends SemanticdbSuite {
          |[0:8..0:9): a <= _empty_/C#`<init>`().(a)
          |[0:8..0:9): a <= _empty_/C#a.
          |[0:11..0:15): List => scala/package.List#
+         |[0:16..0:17): _ <= local0
          |[1:6..1:7): D <= _empty_/D#
          |[1:7..1:7):  <= _empty_/D#`<init>`().
          |[1:12..1:13): a <= _empty_/D#`<init>`().(a)
          |[1:12..1:13): a <= _empty_/D#a.
          |[1:15..1:19): List => scala/package.List#
+         |[1:20..1:21): _ <= local1
          |[2:7..2:8): O <= _empty_/O.
          |[3:6..3:7): m <= _empty_/O.m().
          |[3:8..3:9): a <= _empty_/O.m().(a)
          |[3:11..3:15): List => scala/package.List#
+         |[3:16..3:17): _ <= local2
          |[3:22..3:23): a => _empty_/O.m().(a)
          |[4:6..4:7): f <= _empty_/O.f.
          |[4:11..4:12): x <= local3
          |[4:14..4:18): List => scala/package.List#
+         |[4:19..4:20): _ <= local4
          |[4:26..4:27): x => local3
          |[5:6..5:7): n <= _empty_/O.n().
          |[5:9..5:13): List => scala/package.List#
+         |[5:14..5:15): _ <= local5
          |[5:20..5:23): Int => scala/Int#
+         |[5:26..5:27): _ <= local6
          |[5:28..5:32): size => scala/collection/SeqOps#size().
          |""".stripMargin,
   )
@@ -3663,6 +4070,9 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/T#m().[U] => typeparam U <: List[_] forSome { type _ }
        |  List => scala/package.List#
        |  _ => local2
+       |local0 => synthetic abstract type _
+       |local1 => synthetic abstract type _
+       |local2 => synthetic abstract type _
        |""".stripMargin,
   )
 
@@ -3672,11 +4082,14 @@ class Issue1583Suite extends SemanticdbSuite {
        |[0:8..0:8):  <= _empty_/T#`<init>`().
        |[1:7..1:8): A <= _empty_/T#A#
        |[1:11..1:15): List => scala/package.List#
+       |[1:16..1:17): _ <= local0
        |[2:7..2:8): B <= _empty_/T#B#
        |[2:12..2:16): List => scala/package.List#
+       |[2:17..2:18): _ <= local1
        |[3:6..3:7): m <= _empty_/T#m().
        |[3:8..3:9): U <= _empty_/T#m().[U]
        |[3:13..3:17): List => scala/package.List#
+       |[3:18..3:19): _ <= local2
        |""".stripMargin,
   )
 
@@ -3707,11 +4120,11 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.b. => val method b: Option[List[_] forSome { type _ }]
        |  Option => scala/Option#
        |  List => scala/collection/immutable/List#
-       |  _ => local1
+       |  _ => local2
        |_empty_/O.c. => val method c: ArrayList[List[_] forSome { type _ }]
        |  ArrayList => java/util/ArrayList#
        |  List => scala/collection/immutable/List#
-       |  _ => local2
+       |  _ => local3
        |_empty_/O.m(). => method m(x: Any): Boolean
        |  x => _empty_/O.m().(x)
        |  Any => scala/Any#
@@ -3724,7 +4137,12 @@ class Issue1583Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/O.n().(x) => param x: Any
        |  Any => scala/Any#
-       |local3 => abstract type _
+       |local0 => synthetic abstract type _
+       |local1 => synthetic abstract type _
+       |local2 => synthetic abstract type _
+       |local3 => synthetic abstract type _
+       |local4 => synthetic abstract type _
+       |local5 => abstract type _
        |""".stripMargin,
   )
 
@@ -3737,20 +4155,24 @@ class Issue1583Suite extends SemanticdbSuite {
          |[0:21..0:25): util => java/util/
          |[0:26..0:35): ArrayList => java/util/ArrayList#
          |[0:36..0:40): List => scala/package.List#
+         |[0:41..0:42): _ <= local0
          |[0:44..0:44):  => java/util/ArrayList#`<init>`(+1).
          |[1:7..1:8): O <= _empty_/O.
          |[2:6..2:7): a <= _empty_/O.a.
          |[2:11..2:14): Nil => scala/collection/immutable/Nil.
          |[2:16..2:20): List => scala/package.List#
+         |[2:21..2:22): _ <= local1
          |[3:6..3:7): b <= _empty_/O.b.
          |[3:10..3:16): Option => scala/Option.
          |[3:17..3:22): empty => scala/Option.empty().
          |[3:23..3:27): List => scala/package.List#
+         |[3:28..3:29): _ <= local2
          |[4:6..4:7): c <= _empty_/O.c.
          |[4:14..4:18): java => java/
          |[4:19..4:23): util => java/util/
          |[4:24..4:33): ArrayList => java/util/ArrayList#
          |[4:34..4:38): List => scala/package.List#
+         |[4:39..4:40): _ <= local3
          |[4:42..4:42):  => java/util/ArrayList#`<init>`(+1).
          |[5:6..5:7): m <= _empty_/O.m().
          |[5:8..5:9): x <= _empty_/O.m().(x)
@@ -3758,11 +4180,13 @@ class Issue1583Suite extends SemanticdbSuite {
          |[5:18..5:19): x => _empty_/O.m().(x)
          |[5:20..5:32): isInstanceOf => scala/Any#isInstanceOf().
          |[5:33..5:37): List => scala/package.List#
+         |[5:38..5:39): _ <= local4
          |[6:6..6:7): n <= _empty_/O.n().
          |[6:8..6:9): x <= _empty_/O.n().(x)
          |[6:11..6:14): Any => scala/Any#
          |[6:18..6:19): x => _empty_/O.n().(x)
          |[6:36..6:40): List => scala/package.List#
+         |[6:41..6:42): _ <= local5
          |""".stripMargin
     else
       """|[0:6..0:7): C <= _empty_/C#
@@ -3771,20 +4195,24 @@ class Issue1583Suite extends SemanticdbSuite {
          |[0:21..0:25): util => java/util/
          |[0:26..0:35): ArrayList => java/util/ArrayList#
          |[0:36..0:40): List => scala/package.List#
+         |[0:41..0:42): _ <= local0
          |[0:44..0:44):  => java/util/ArrayList#`<init>`(+1).
          |[1:7..1:8): O <= _empty_/O.
          |[2:6..2:7): a <= _empty_/O.a.
          |[2:11..2:14): Nil => scala/package.Nil.
          |[2:16..2:20): List => scala/package.List#
+         |[2:21..2:22): _ <= local1
          |[3:6..3:7): b <= _empty_/O.b.
          |[3:10..3:16): Option => scala/Option.
          |[3:17..3:22): empty => scala/Option.empty().
          |[3:23..3:27): List => scala/package.List#
+         |[3:28..3:29): _ <= local2
          |[4:6..4:7): c <= _empty_/O.c.
          |[4:14..4:18): java => java/
          |[4:19..4:23): util => java/util/
          |[4:24..4:33): ArrayList => java/util/ArrayList#
          |[4:34..4:38): List => scala/package.List#
+         |[4:39..4:40): _ <= local3
          |[4:42..4:42):  => java/util/ArrayList#`<init>`(+1).
          |[5:6..5:7): m <= _empty_/O.m().
          |[5:8..5:9): x <= _empty_/O.m().(x)
@@ -3792,11 +4220,13 @@ class Issue1583Suite extends SemanticdbSuite {
          |[5:18..5:19): x => _empty_/O.m().(x)
          |[5:20..5:32): isInstanceOf => scala/Any#isInstanceOf().
          |[5:33..5:37): List => scala/package.List#
+         |[5:38..5:39): _ <= local4
          |[6:6..6:7): n <= _empty_/O.n().
          |[6:8..6:9): x <= _empty_/O.n().(x)
          |[6:11..6:14): Any => scala/Any#
          |[6:18..6:19): x => _empty_/O.n().(x)
          |[6:36..6:40): List => scala/package.List#
+         |[6:41..6:42): _ <= local5
          |""".stripMargin,
   )
 
@@ -3833,6 +4263,20 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.g().(h) => param h: Function1[Int, Int]
        |  Function1 => scala/Function1#
        |  Int => scala/Int#
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local1 => synthetic param x$2: Int
+       |  Int => scala/Int#
+       |local2 => synthetic param x$3: Int
+       |  Int => scala/Int#
+       |local3 => synthetic param x$4: Int
+       |  Int => scala/Int#
+       |local4 => synthetic param x$5: Int
+       |  Int => scala/Int#
+       |local5 => synthetic param x$6: Int
+       |  Int => scala/Int#
+       |local6 => synthetic param x$7: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -3842,9 +4286,12 @@ class Issue1583Suite extends SemanticdbSuite {
       """|[0:7..0:8): O <= _empty_/O.
          |[1:2..1:6): List => scala/collection/immutable/List.
          |[1:10..1:18): foldLeft => scala/collection/LinearSeqOptimized#foldLeft().
+         |[1:22..1:23): _ <= local0
          |[1:24..1:25): + => scala/Int#`+`(+4).
+         |[1:26..1:27): _ <= local1
          |[2:2..2:6): List => scala/collection/immutable/List.
          |[2:10..2:13): map => scala/collection/immutable/List#map().
+         |[2:14..2:15): _ <= local2
          |[2:16..2:24): toString => scala/Any#toString().
          |[2:25..2:31): length => java/lang/String#length().
          |[3:6..3:7): f <= _empty_/O.f().
@@ -3854,10 +4301,13 @@ class Issue1583Suite extends SemanticdbSuite {
          |[4:2..4:6): List => scala/collection/immutable/List.
          |[4:10..4:13): map => scala/collection/immutable/List#map().
          |[4:14..4:15): f => _empty_/O.f().
+         |[4:16..4:17): _ <= local3
          |[5:2..5:6): List => scala/collection/immutable/List.
          |[5:10..5:13): map => scala/collection/immutable/List#map().
+         |[5:15..5:16): _ <= local4
          |[6:2..6:6): List => scala/collection/immutable/List.
          |[6:10..6:13): map => scala/collection/immutable/List#map().
+         |[6:16..6:17): _ <= local5
          |[6:18..6:19): + => scala/Int#`+`(+4).
          |[7:6..7:7): g <= _empty_/O.g().
          |[7:8..7:9): a <= _empty_/O.g().(a)
@@ -3866,15 +4316,19 @@ class Issue1583Suite extends SemanticdbSuite {
          |[7:19..7:22): Int => scala/Int#
          |[7:26..7:29): Int => scala/Int#
          |[8:2..8:3): g => _empty_/O.g().
+         |[8:7..8:8): _ <= local6
          |[8:9..8:10): + => scala/Int#`+`(+4).
          |""".stripMargin
     else
       """|[0:7..0:8): O <= _empty_/O.
          |[1:2..1:6): List => scala/package.List.
          |[1:10..1:18): foldLeft => scala/collection/LinearSeqOps#foldLeft().
+         |[1:22..1:23): _ <= local0
          |[1:24..1:25): + => scala/Int#`+`(+4).
+         |[1:26..1:27): _ <= local1
          |[2:2..2:6): List => scala/package.List.
          |[2:10..2:13): map => scala/collection/immutable/List#map().
+         |[2:14..2:15): _ <= local2
          |[2:16..2:24): toString => scala/Any#toString().
          |[2:25..2:31): length => java/lang/String#length().
          |[3:6..3:7): f <= _empty_/O.f().
@@ -3884,10 +4338,13 @@ class Issue1583Suite extends SemanticdbSuite {
          |[4:2..4:6): List => scala/package.List.
          |[4:10..4:13): map => scala/collection/immutable/List#map().
          |[4:14..4:15): f => _empty_/O.f().
+         |[4:16..4:17): _ <= local3
          |[5:2..5:6): List => scala/package.List.
          |[5:10..5:13): map => scala/collection/immutable/List#map().
+         |[5:15..5:16): _ <= local4
          |[6:2..6:6): List => scala/package.List.
          |[6:10..6:13): map => scala/collection/immutable/List#map().
+         |[6:16..6:17): _ <= local5
          |[6:18..6:19): + => scala/Int#`+`(+4).
          |[7:6..7:7): g <= _empty_/O.g().
          |[7:8..7:9): a <= _empty_/O.g().(a)
@@ -3896,6 +4353,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |[7:19..7:22): Int => scala/Int#
          |[7:26..7:29): Int => scala/Int#
          |[8:2..8:3): g => _empty_/O.g().
+         |[8:7..8:8): _ <= local6
          |[8:9..8:10): + => scala/Int#`+`(+4).
          |""".stripMargin,
   )
@@ -3936,6 +4394,10 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/C# => class C extends A { +1 decls }
        |  A => _empty_/A#
        |_empty_/C#`<init>`(). => primary ctor <init>()
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local1 => synthetic param x$2: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -3955,11 +4417,13 @@ class Issue1583Suite extends SemanticdbSuite {
        |[1:18..1:21): Int => scala/Int#
        |[1:31..1:32): A => _empty_/A#
        |[1:32..1:32):  => _empty_/A#`<init>`().
+       |[1:33..1:34): _ <= local0
        |[1:35..1:36): + => scala/Int#`+`(+4).
        |[2:6..2:7): C <= _empty_/C#
        |[2:8..2:8):  <= _empty_/C#`<init>`().
        |[2:16..2:17): A => _empty_/A#
        |[2:17..2:17):  => _empty_/A#`<init>`().
+       |[2:20..2:21): _ <= local1
        |[2:22..2:23): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )
@@ -4083,20 +4547,24 @@ class Issue1583Suite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|[0:7..0:8): O <= _empty_/O.
          |[1:6..1:7): a <= _empty_/O.a.
+         |[1:9..1:10): _ <= _empty_/O._.
          |[2:10..2:12): :: => scala/package.`::`.
          |[2:13..2:16): Nil => scala/collection/immutable/Nil.
          |[2:19..2:23): List => scala/collection/immutable/List.
          |[3:7..3:8): b <= _empty_/O.b.
          |[3:10..3:14): List => scala/package.List#
+         |[3:15..3:16): _ <= local1
          |[3:19..3:20): c <= _empty_/O.c.
          |[3:25..3:28): Nil => scala/collection/immutable/Nil.
          |[4:6..4:7): m <= _empty_/O.m().
+         |[5:8..5:9): _ <= local3
          |[8:6..8:7): n <= _empty_/O.n().
          |[8:8..8:9): x <= _empty_/O.n().(x)
          |[8:11..8:14): Any => scala/Any#
          |[8:18..8:19): x => _empty_/O.n().(x)
          |[8:33..8:34): y <= local4
          |[8:41..8:45): List => scala/package.List#
+         |[8:46..8:47): _ <= local5
          |[8:53..8:54): y => local4
          |[9:11..9:12): d <= local8
          |[9:17..9:21): List => scala/collection/immutable/List.
@@ -4107,6 +4575,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |[11:31..11:32): e => local10
          |[12:7..12:8): f <= local12
          |[12:10..12:14): List => scala/package.List#
+         |[12:15..12:16): _ <= local13
          |[12:21..12:25): List => scala/collection/immutable/List.
          |[12:26..12:29): Nil => scala/collection/immutable/Nil.
          |[12:38..12:39): f => local12
@@ -4114,20 +4583,24 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|[0:7..0:8): O <= _empty_/O.
          |[1:6..1:7): a <= _empty_/O.a.
+         |[1:9..1:10): _ <= _empty_/O.x$1.
          |[2:10..2:12): :: => scala/package.`::`.
          |[2:13..2:16): Nil => scala/package.Nil.
          |[2:19..2:23): List => scala/package.List.
          |[3:7..3:8): b <= _empty_/O.b.
          |[3:10..3:14): List => scala/package.List#
+         |[3:15..3:16): _ <= local1
          |[3:19..3:20): c <= _empty_/O.c.
          |[3:25..3:28): Nil => scala/package.Nil.
          |[4:6..4:7): m <= _empty_/O.m().
+         |[5:8..5:9): _ <= local3
          |[8:6..8:7): n <= _empty_/O.n().
          |[8:8..8:9): x <= _empty_/O.n().(x)
          |[8:11..8:14): Any => scala/Any#
          |[8:18..8:19): x => _empty_/O.n().(x)
          |[8:33..8:34): y <= local4
          |[8:41..8:45): List => scala/package.List#
+         |[8:46..8:47): _ <= local5
          |[8:53..8:54): y => local4
          |[9:11..9:12): d <= local8
          |[9:17..9:21): List => scala/package.List.
@@ -4138,6 +4611,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |[11:31..11:32): e => local10
          |[12:7..12:8): f <= local12
          |[12:10..12:14): List => scala/package.List#
+         |[12:15..12:16): _ <= local13
          |[12:21..12:25): List => scala/package.List.
          |[12:26..12:29): Nil => scala/package.Nil.
          |[12:38..12:39): f => local12

@@ -6,8 +6,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala-2.12/example/SingleAbstractMethod.scala
 Text => non-empty
 Language => Scala
-Symbols => 16 entries
-Occurrences => 33 entries
+Symbols => 17 entries
+Occurrences => 34 entries
 
 Symbols:
 example/SingleAbstractMethod# => class SingleAbstractMethod extends AnyRef { +4 decls }
@@ -37,18 +37,20 @@ local0 => synthetic class $anon extends Object with SAM { +1 decls }
 local2 => synthetic method foo(a: Int): Int <: example/SingleAbstractMethod#SAM#foo().
   a => example/SingleAbstractMethod#SAM#foo().(a)
   Int => scala/Int#
-local3 => synthetic class $anon extends Object with SAM { +1 decls }
+local3 => synthetic param x$1: Int
+  Int => scala/Int#
+local4 => synthetic class $anon extends Object with SAM { +1 decls }
   Object => java/lang/Object#
   SAM => example/SingleAbstractMethod#SAM#
-local4 => synthetic method foo(a: Int): Int <: example/SingleAbstractMethod#SAM#foo().
+local5 => synthetic method foo(a: Int): Int <: example/SingleAbstractMethod#SAM#foo().
   a => example/SingleAbstractMethod#SAM#foo().(a)
   Int => scala/Int#
-local5 => param x: Int
+local6 => param x: Int
   Int => scala/Int#
-local6 => synthetic class $anon extends Object with SAM { +1 decls }
+local7 => synthetic class $anon extends Object with SAM { +1 decls }
   Object => java/lang/Object#
   SAM => example/SingleAbstractMethod#SAM#
-local7 => synthetic method foo(a: Int): Int <: example/SingleAbstractMethod#SAM#foo().
+local8 => synthetic method foo(a: Int): Int <: example/SingleAbstractMethod#SAM#foo().
   a => example/SingleAbstractMethod#SAM#foo().(a)
   Int => scala/Int#
 
@@ -67,15 +69,16 @@ Occurrences:
 [7:24..7:25): a => example/SingleAbstractMethod#withSAM().(a)
 [7:26..7:29): foo => example/SingleAbstractMethod#SAM#foo().
 [9:2..9:9): withSAM => example/SingleAbstractMethod#withSAM().
+[9:10..9:11): _ <= local3
 [9:10..9:15): _ + 1 <= local0
 [9:10..9:15): _ + 1 <= local2
 [9:12..9:13): + => scala/Int#`+`(+4).
 [10:2..10:9): withSAM => example/SingleAbstractMethod#withSAM().
-[10:10..10:27): (x: Int) => x - 1 <= local3
 [10:10..10:27): (x: Int) => x - 1 <= local4
-[10:11..10:12): x <= local5
+[10:10..10:27): (x: Int) => x - 1 <= local5
+[10:11..10:12): x <= local6
 [10:14..10:17): Int => scala/Int#
-[10:22..10:23): x => local5
+[10:22..10:23): x => local6
 [10:24..10:25): - => scala/Int#`-`(+3).
 [12:6..12:13): funcSAM <= example/SingleAbstractMethod#funcSAM().
 [12:14..12:15): y <= example/SingleAbstractMethod#funcSAM().(y)
@@ -84,8 +87,8 @@ Occurrences:
 [12:26..12:27): * => scala/Int#`*`(+3).
 [13:2..13:9): withSAM => example/SingleAbstractMethod#withSAM().
 [13:10..13:17): funcSAM => example/SingleAbstractMethod#funcSAM().
-[13:10..13:17): funcSAM <= local6
 [13:10..13:17): funcSAM <= local7
+[13:10..13:17): funcSAM <= local8
 
 semanticdb/integration/src/main/scala/example/Access.scala
 ----------------------------------------------------------
@@ -148,8 +151,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Advanced.scala
 Text => non-empty
 Language => Scala
-Symbols => 44 entries
-Occurrences => 113 entries
+Symbols => 46 entries
+Occurrences => 117 entries
 Synthetics => 1 entries
 
 Symbols:
@@ -251,12 +254,14 @@ local4 => param x: Int
   Int => scala/Int#
 local5 => final class $anon extends AnyRef { +1 decls }
   AnyRef => scala/AnyRef#
+local6 => synthetic abstract type _
 local7 => abstract type T
 local8 => abstract type U[T <: Int]
   T => local9
   Int => scala/Int#
 local9 => typeparam T <: Int
   Int => scala/Int#
+local10 => synthetic abstract type _
 local11 => val local e3: List[_]
   List => scala/package.List#
   _ => local12
@@ -303,6 +308,7 @@ Occurrences:
 [16:18..16:18):  <= advanced/Existential#`<init>`().
 [17:6..17:8): e1 <= advanced/Existential#e1().
 [17:10..17:14): List => scala/package.List#
+[17:15..17:16): _ <= local6
 [17:20..17:23): ??? => scala/Predef.`???`().
 [18:6..18:8): e2 <= advanced/Existential#e2().
 [18:10..18:11): C => advanced/C#
@@ -318,9 +324,11 @@ Occurrences:
 [19:48..19:51): ??? => scala/Predef.`???`().
 [22:6..22:7): D <= advanced/D#
 [22:8..22:10): CC <= advanced/D#[CC]
+[22:11..22:12): _ <= advanced/D#[CC][_$$1]
 [22:15..22:15):  <= advanced/D#`<init>`().
 [22:23..22:24): C => advanced/C#
 [22:25..22:27): CC => advanced/D#[CC]
+[22:28..22:29): _ <= local10
 [22:31..22:31):  => advanced/C#`<init>`().
 [24:7..24:11): Test <= advanced/Test.
 [25:6..25:7): s <= advanced/Test.s.
@@ -375,6 +383,7 @@ Occurrences:
 [40:11..40:14): Any => scala/Any#
 [41:11..41:13): e3 <= local11
 [41:15..41:19): List => scala/package.List#
+[41:20..41:21): _ <= local12
 [42:12..42:15): e3x <= local13
 [42:18..42:20): e3 => local11
 [42:21..42:25): head => scala/collection/IterableLike#head().
@@ -517,8 +526,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Anonymous.scala
 Text => non-empty
 Language => Scala
-Symbols => 11 entries
-Occurrences => 26 entries
+Symbols => 14 entries
+Occurrences => 32 entries
 Synthetics => 2 entries
 
 Symbols:
@@ -541,11 +550,15 @@ example/Anonymous#m2(). => method m2: Map[_, List[_] forSome { type _ }] forSome
   _ => local0
   List => scala/package.List#
   _ => local1
+local0 => synthetic abstract type _
+local1 => synthetic abstract type _
 local2 => abstract type _
-local3 => val local x: Function1[Int, Int]
+local3 => param x$1: Int
+  Int => scala/Int#
+local4 => val local x: Function1[Int, Int]
   Function1 => scala/Function1#
   Int => scala/Int#
-local4 => final class $anon extends AnyRef with Foo
+local5 => final class $anon extends AnyRef with Foo
   AnyRef => scala/AnyRef#
   Foo => example/Anonymous#Foo#
 
@@ -559,21 +572,27 @@ Occurrences:
 [4:8..4:17): Anonymous => example/Anonymous#
 [6:6..6:8): m1 <= example/Anonymous#m1().
 [6:9..6:10): T <= example/Anonymous#m1().[T]
+[6:11..6:12): _ <= example/Anonymous#m1().[T][_$$1]
+[6:15..6:16): _ <= example/Anonymous#m1().[_$$1]
 [6:20..6:23): ??? => scala/Predef.`???`().
 [7:6..7:8): m2 <= example/Anonymous#m2().
 [7:10..7:13): Map => scala/Predef.Map#
+[7:14..7:15): _ <= local0
 [7:17..7:21): List => scala/package.List#
+[7:22..7:23): _ <= local1
 [7:28..7:31): ??? => scala/Predef.`???`().
 [8:2..8:9): locally => scala/Predef.locally().
 [9:4..9:7): ??? => scala/Predef.`???`().
 [9:24..9:28): List => scala/package.List#
+[9:29..9:30): _ <= local2
 [11:2..11:9): locally => scala/Predef.locally().
-[12:8..12:9): x <= local3
+[12:8..12:9): x <= local4
 [12:11..12:14): Int => scala/Int#
 [12:18..12:21): Int => scala/Int#
+[12:24..12:25): _ <= local3
 [12:29..12:32): ??? => scala/Predef.`???`().
 [15:8..15:11): Foo <= example/Anonymous#Foo#
-[16:6..16:6):  <= local4
+[16:6..16:6):  <= local5
 [16:6..16:9): Foo => example/Anonymous#Foo#
 [16:9..16:9):  => java/lang/Object#`<init>`().
 
@@ -1188,8 +1207,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/EtaExpansion.scala
 Text => non-empty
 Language => Scala
-Symbols => 4 entries
-Occurrences => 13 entries
+Symbols => 6 entries
+Occurrences => 15 entries
 Synthetics => 5 entries
 
 Symbols:
@@ -1200,6 +1219,10 @@ example/EtaExpansion#meth(). => method meth(): String
   String => java/lang/String#
 example/EtaExpansion#prop(). => method prop: String
   String => java/lang/String#
+local0 => synthetic param x$1: String
+  String => java/lang/String#
+local1 => synthetic param x$2: Int
+  Int => scala/Int#
 
 Occurrences:
 [0:8..0:15): example <= example/
@@ -1210,7 +1233,9 @@ Occurrences:
 [3:14..3:22): identity => scala/Predef.identity().
 [4:2..4:6): List => scala/collection/immutable/List.
 [4:10..4:18): foldLeft => scala/collection/LinearSeqOptimized#foldLeft().
+[4:23..4:24): _ <= local0
 [4:25..4:26): + => java/lang/String#`+`().
+[4:27..4:28): _ <= local1
 [6:6..6:10): prop <= example/EtaExpansion#prop().
 [7:6..7:10): meth <= example/EtaExpansion#meth().
 [9:2..9:6): prop => example/EtaExpansion#prop().
@@ -1313,8 +1338,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Existentials.scala
 Text => non-empty
 Language => Scala
-Symbols => 21 entries
-Occurrences => 42 entries
+Symbols => 30 entries
+Occurrences => 53 entries
 Diagnostics => 3 entries
 
 Symbols:
@@ -1366,7 +1391,16 @@ example/ExistentialsTest.y. => val method y: Map[_, _] forSome { type _; type _ 
   Map => scala/Predef.Map#
   _ => local8
   _ => local9
+local0 => synthetic abstract type _
+local1 => synthetic abstract type _
+local2 => synthetic abstract type _
+local3 => synthetic abstract type _
+local4 => synthetic abstract type _
 local5 => abstract type T
+local6 => synthetic abstract type _
+local7 => synthetic abstract type _
+local8 => synthetic abstract type _
+local9 => synthetic abstract type _
 
 Occurrences:
 [1:8..1:15): example <= example/
@@ -1375,21 +1409,27 @@ Occurrences:
 [3:22..3:22):  <= example/ExistentialsB#`<init>`().
 [4:6..4:19): ExistentialsC <= example/ExistentialsC#
 [4:20..4:22): CC <= example/ExistentialsC#[CC]
+[4:23..4:24): _ <= example/ExistentialsC#[CC][_$$1]
 [4:27..4:27):  <= example/ExistentialsC#`<init>`().
 [4:35..4:48): ExistentialsB => example/ExistentialsB#
 [4:49..4:51): CC => example/ExistentialsC#[CC]
+[4:52..4:53): _ <= local0
 [4:55..4:55):  => example/ExistentialsB#`<init>`().
 [6:6..6:19): ExistentialsE <= example/ExistentialsE#
 [6:20..6:20):  <= example/ExistentialsE#`<init>`().
 [7:6..7:7): m <= example/ExistentialsE#m().
 [7:9..7:13): List => scala/package.List#
 [7:14..7:18): List => scala/package.List#
+[7:19..7:20): _ <= local1
 [7:25..7:28): ??? => scala/Predef.`???`().
 [8:6..8:7): l <= example/ExistentialsE#l().
 [8:9..8:13): List => scala/package.List#
+[8:14..8:15): _ <= local2
 [8:19..8:22): ??? => scala/Predef.`???`().
 [9:6..9:7): x <= example/ExistentialsE#x.
 [9:9..9:12): Map => scala/Predef.Map#
+[9:13..9:14): _ <= local3
+[9:16..9:17): _ <= local4
 [9:21..9:24): ??? => scala/Predef.`???`().
 [10:6..10:7): f <= example/ExistentialsE#f().
 [10:9..10:10): T => local5
@@ -1397,10 +1437,13 @@ Occurrences:
 [10:32..10:35): ??? => scala/Predef.`???`().
 [11:6..11:7): h <= example/ExistentialsE#h().
 [11:8..11:9): F <= example/ExistentialsE#h().[F]
+[11:10..11:11): _ <= example/ExistentialsE#h().[F][_$$1]
 [11:15..11:16): F => example/ExistentialsE#h().[F]
+[11:17..11:18): _ <= local6
 [11:22..11:25): ??? => scala/Predef.`???`().
 [12:7..12:8): A <= example/ExistentialsE#A#
 [12:11..12:15): List => scala/package.List#
+[12:16..12:17): _ <= local7
 [15:7..15:23): ExistentialsTest <= example/ExistentialsTest.
 [16:6..16:7): x <= example/ExistentialsTest.x.
 [16:14..16:27): ExistentialsE => example/ExistentialsE#
@@ -1408,6 +1451,8 @@ Occurrences:
 [16:30..16:31): m => example/ExistentialsE#m().
 [17:6..17:7): y <= example/ExistentialsTest.y.
 [17:9..17:12): Map => scala/Predef.Map#
+[17:13..17:14): _ <= local8
+[17:16..17:17): _ <= local9
 [17:25..17:38): ExistentialsE => example/ExistentialsE#
 [17:38..17:38):  => example/ExistentialsE#`<init>`().
 [17:41..17:42): x => example/ExistentialsE#x.
@@ -2647,7 +2692,7 @@ Uri => semanticdb/integration/src/main/scala/example/Issue1830.scala
 Text => non-empty
 Language => Scala
 Symbols => 18 entries
-Occurrences => 18 entries
+Occurrences => 26 entries
 
 Symbols:
 example/Issue1830# => trait Issue1830 extends AnyRef { +2 decls }
@@ -2695,17 +2740,25 @@ Occurrences:
 [3:22..3:33): higherKinds => scala/language.higherKinds.
 [5:6..5:15): Issue1830 <= example/Issue1830#
 [6:7..6:8): T <= example/Issue1830#T#
+[6:9..6:10): _ <= example/Issue1830#T#[_$$1]
+[6:12..6:13): _ <= example/Issue1830#T#[_$$2]
 [7:6..7:7): m <= example/Issue1830#m().
 [7:8..7:9): F <= example/Issue1830#m().[F]
+[7:10..7:11): _ <= example/Issue1830#m().[F][_$$1]
+[7:13..7:14): _ <= example/Issue1830#m().[F][_$$2]
 [7:18..7:22): Unit => scala/Unit#
 [10:6..10:21): Issue1830Single <= example/Issue1830Single#
+[10:22..10:23): _ <= example/Issue1830Single#[_$$1]
 [10:25..10:25):  <= example/Issue1830Single#`<init>`().
 [11:6..11:7): m <= example/Issue1830Single#m().
+[11:8..11:9): _ <= example/Issue1830Single#m().[_$$1]
 [11:12..11:16): Unit => scala/Unit#
 [12:7..12:8): A <= example/Issue1830Single#A#
+[12:9..12:10): _ <= example/Issue1830Single#A#[_$$1]
 [12:14..12:17): Int => scala/Int#
 [13:6..13:8): hk <= example/Issue1830Single#hk().
 [13:9..13:10): G <= example/Issue1830Single#hk().[G]
+[13:11..13:12): _ <= example/Issue1830Single#hk().[G][_$$1]
 [13:16..13:20): Unit => scala/Unit#
 
 semanticdb/integration/src/main/scala/example/Issue1872.scala
@@ -3305,8 +3358,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Issue5939Metals.scala
 Text => non-empty
 Language => Scala
-Symbols => 9 entries
-Occurrences => 24 entries
+Symbols => 10 entries
+Occurrences => 25 entries
 Synthetics => 2 entries
 
 Symbols:
@@ -3335,6 +3388,8 @@ example/AA.toF(). => implicit method toF(a: AA): Function1[Int, Int]
   Int => scala/Int#
 example/AA.toF().(a) => param a: AA
   AA => example/AA#
+local0 => synthetic param x$1: Int
+  Int => scala/Int#
 
 Occurrences:
 [1:8..1:15): example <= example/
@@ -3358,6 +3413,7 @@ Occurrences:
 [8:6..8:7): a <= example/AA.a.
 [8:14..8:16): AA => example/AA#
 [8:16..8:16):  => example/AA#`<init>`().
+[8:17..8:18): _ <= local0
 [8:19..8:20): + => scala/Int#`+`(+4).
 [9:6..9:12): result <= example/AA.result.
 [9:15..9:16): a => example/AA.a.
@@ -4964,8 +5020,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Synthetic.scala
 Text => non-empty
 Language => Scala
-Symbols => 57 entries
-Occurrences => 115 entries
+Symbols => 58 entries
+Occurrences => 116 entries
 Synthetics => 44 entries
 
 Symbols:
@@ -5068,42 +5124,44 @@ example/Synthetic#x. => val method x: Int
 example/Synthetic#xs. => val method xs: Stream[Int]
   Stream => scala/collection/immutable/Stream#
   Int => scala/Int#
-local0 => val local x: Int
+local0 => synthetic param x$1: Int
   Int => scala/Int#
-local1 => val local xs: Stream[Int]
+local1 => val local x: Int
+  Int => scala/Int#
+local2 => val local xs: Stream[Int]
   Stream => scala/collection/immutable/Stream#
   Int => scala/Int#
-local2 => val local name: String
+local3 => val local name: String
   String => scala/Predef.String#
-local3 => synthetic val local x$4: Int
+local4 => synthetic val local x$4: Int
   Int => scala/Int#
-local4 => synthetic val local x$3: Int
+local5 => synthetic val local x$3: Int
   Int => scala/Int#
-local5 => synthetic val local x$6: Int
+local6 => synthetic val local x$6: Int
   Int => scala/Int#
-local6 => synthetic val local x$5: Int
+local7 => synthetic val local x$5: Int
   Int => scala/Int#
-local7 => param x: Int
+local8 => param x: Int
   Int => scala/Int#
-local8 => param y: Int
+local9 => param y: Int
   Int => scala/Int#
-local9 => param i: Int
+local10 => param i: Int
   Int => scala/Int#
-local10 => param j: Int
+local11 => param j: Int
   Int => scala/Int#
-local11 => param i: Int
+local12 => param i: Int
   Int => scala/Int#
-local12 => param j: Int
+local13 => param j: Int
   Int => scala/Int#
-local13 => param a: Int
+local14 => param a: Int
   Int => scala/Int#
-local14 => param b: Int
+local15 => param b: Int
   Int => scala/Int#
-local15 => param a: Int
+local16 => param a: Int
   Int => scala/Int#
-local16 => param b: Int
+local17 => param b: Int
   Int => scala/Int#
-local17 => synthetic val local x$7: Int
+local18 => synthetic val local x$7: Int
   Int => scala/Int#
 
 Occurrences:
@@ -5112,6 +5170,7 @@ Occurrences:
 [2:16..2:16):  <= example/Synthetic#`<init>`().
 [3:2..3:6): List => scala/collection/immutable/List.
 [3:10..3:13): map => scala/collection/immutable/List#map().
+[3:14..3:15): _ <= local0
 [3:16..3:17): + => scala/Int#`+`(+4).
 [4:2..4:7): Array => scala/Array.
 [4:8..4:13): empty => scala/Array.empty().
@@ -5137,29 +5196,29 @@ Occurrences:
 [13:31..13:36): empty => scala/collection/immutable/Stream.empty().
 [14:2..14:5): lst => example/Synthetic#lst.
 [14:6..14:7): + => scala/Predef.any2stringadd#`+`().
-[16:7..16:8): x <= local7
+[16:7..16:8): x <= local8
 [16:14..16:16): to => scala/runtime/RichInt#to().
-[16:21..16:22): y <= local8
+[16:21..16:22): y <= local9
 [16:28..16:33): until => scala/runtime/RichInt#until().
 [16:38..16:45): println => scala/Predef.println(+1).
-[16:46..16:47): x => local7
+[16:46..16:47): x => local8
 [16:48..16:50): -> => scala/Predef.ArrowAssoc#`->`().
-[16:51..16:52): x => local7
-[17:7..17:8): i <= local9
+[16:51..16:52): x => local8
+[17:7..17:8): i <= local10
 [17:14..17:16): to => scala/runtime/RichInt#to().
-[17:21..17:22): j <= local10
+[17:21..17:22): j <= local11
 [17:28..17:33): until => scala/runtime/RichInt#until().
-[17:45..17:46): i => local9
-[17:48..17:49): j => local10
-[18:7..18:8): i <= local11
+[17:45..17:46): i => local10
+[17:48..17:49): j => local11
+[18:7..18:8): i <= local12
 [18:14..18:16): to => scala/runtime/RichInt#to().
-[18:21..18:22): j <= local12
+[18:21..18:22): j <= local13
 [18:28..18:33): until => scala/runtime/RichInt#until().
-[18:40..18:41): i => local11
+[18:40..18:41): i => local12
 [18:42..18:43): % => scala/Int#`%`(+3).
 [18:46..18:48): == => scala/Int#`==`(+3).
-[18:59..18:60): i => local11
-[18:62..18:63): j => local12
+[18:59..18:60): i => local12
+[18:62..18:63): j => local13
 [20:9..20:10): s <= example/Synthetic#s.
 [21:8..21:13): apply <= example/Synthetic#s.apply().
 [22:4..22:5): s => example/Synthetic#s.
@@ -5194,32 +5253,32 @@ Occurrences:
 [35:26..35:42): ExecutionContext => scala/concurrent/ExecutionContext.
 [35:43..35:52): Implicits => scala/concurrent/ExecutionContext.Implicits.
 [35:53..35:59): global => scala/concurrent/ExecutionContext.Implicits.global.
-[37:4..37:5): a <= local13
+[37:4..37:5): a <= local14
 [37:9..37:14): scala => scala/
 [37:15..37:25): concurrent => scala/concurrent/
 [37:26..37:32): Future => scala/concurrent/Future.
 [37:33..37:43): successful => scala/concurrent/Future.successful().
-[38:4..38:5): b <= local14
+[38:4..38:5): b <= local15
 [38:9..38:14): scala => scala/
 [38:15..38:25): concurrent => scala/concurrent/
 [38:26..38:32): Future => scala/concurrent/Future.
 [38:33..38:43): successful => scala/concurrent/Future.successful().
 [39:4..39:11): println => scala/Predef.println(+1).
-[39:12..39:13): a => local13
-[41:4..41:5): a <= local15
+[39:12..39:13): a => local14
+[41:4..41:5): a <= local16
 [41:9..41:14): scala => scala/
 [41:15..41:25): concurrent => scala/concurrent/
 [41:26..41:32): Future => scala/concurrent/Future.
 [41:33..41:43): successful => scala/concurrent/Future.successful().
-[42:4..42:5): b <= local16
+[42:4..42:5): b <= local17
 [42:9..42:14): scala => scala/
 [42:15..42:25): concurrent => scala/concurrent/
 [42:26..42:32): Future => scala/concurrent/Future.
 [42:33..42:43): successful => scala/concurrent/Future.successful().
-[43:7..43:8): a => local15
+[43:7..43:8): a => local16
 [43:9..43:10): < => scala/Int#`<`(+3).
-[43:11..43:12): b => local16
-[44:10..44:11): a => local15
+[43:11..43:12): b => local17
+[44:10..44:11): a => local16
 [47:4..47:6): :: => scala/collection/immutable/List#`::`().
 [47:7..47:10): Nil => scala/collection/immutable/Nil.
 
@@ -5288,8 +5347,8 @@ Synthetics:
 [16:2..16:53): for (x <- 1 to 10; y <- 0 until 10) println(x -> x) => orig(1 to 10).foreach[Unit]({(x) => orig(0 until 10).foreach[Unit]({(y) => orig(println(x -> x))})})
   foreach => scala/collection/immutable/Range#foreach().
   Unit => scala/Unit#
-  x => local7
-  y => local8
+  x => local8
+  y => local9
 [16:12..16:13): 1 => intWrapper(*)
   intWrapper => scala/LowPriorityImplicits#intWrapper().
 [16:26..16:27): 0 => intWrapper(*)
@@ -5305,9 +5364,9 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-  i => local9
+  i => local10
   map => scala/collection/TraversableLike#map().
-  j => local10
+  j => local11
   IndexedSeq => scala/collection/immutable/IndexedSeq.
   canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
 [17:12..17:13): 1 => intWrapper(*)
@@ -5319,9 +5378,9 @@ Synthetics:
   Tuple2 => scala/Tuple2#
   Int => scala/Int#
   IndexedSeq => scala/collection/immutable/IndexedSeq#
-  i => local11
+  i => local12
   withFilter => scala/collection/TraversableLike#withFilter().
-  j => local12
+  j => local13
   map => scala/collection/generic/FilterMonadic#map().
   IndexedSeq => scala/collection/immutable/IndexedSeq.
   canBuildFrom => scala/collection/immutable/IndexedSeq.canBuildFrom().
@@ -5348,8 +5407,8 @@ Synthetics:
   } println(a) => orig(scala.concurrent.Future.successful(1)).foreach[Unit]({(a) => orig(scala.concurrent.Future.successful(2)).foreach[Unit]({(b) => orig(println(a))})(global)})(global)
   foreach => scala/concurrent/Future#foreach().
   Unit => scala/Unit#
-  a => local13
-  b => local14
+  a => local14
+  b => local15
   global => scala/concurrent/ExecutionContext.Implicits.global.
 [37:9..37:43): scala.concurrent.Future.successful => *[Int]
   Int => scala/Int#
@@ -5362,9 +5421,9 @@ Synthetics:
   } yield a => orig(scala.concurrent.Future.successful(1)).flatMap[Int]({(a) => orig(scala.concurrent.Future.successful(2)).withFilter({(b) => orig(a < b)})(global).map[Int]({(b) => orig(a)})(global)})(global)
   flatMap => scala/concurrent/Future#flatMap().
   Int => scala/Int#
-  a => local15
+  a => local16
   withFilter => scala/concurrent/Future#withFilter().
-  b => local16
+  b => local17
   global => scala/concurrent/ExecutionContext.Implicits.global.
   map => scala/concurrent/Future#map().
 [41:9..41:43): scala.concurrent.Future.successful => *[Int]
@@ -5435,8 +5494,8 @@ Schema => SemanticDB v4
 Uri => semanticdb/integration/src/main/scala/example/Types.scala
 Text => non-empty
 Language => Scala
-Symbols => 144 entries
-Occurrences => 280 entries
+Symbols => 145 entries
+Occurrences => 283 entries
 
 Symbols:
 local0 => abstract method k: Int
@@ -5456,6 +5515,7 @@ local5 => final class $anon extends M with N { +1 decls }
 local6 => method k: Int
   Int => scala/Int#
 local7 => abstract type T
+local8 => synthetic abstract type _
 local11 => type L[T] = List[T]
   T => local12
   List => scala/package.List#
@@ -5933,6 +5993,7 @@ Occurrences:
 [64:49..64:52): ??? => scala/Predef.`???`().
 [65:8..65:24): existentialType2 <= types/Test.C#existentialType2.
 [65:26..65:30): List => scala/package.List#
+[65:31..65:32): _ <= local8
 [65:36..65:39): ??? => scala/Predef.`???`().
 [66:8..66:24): existentialType3 <= types/Test.C#existentialType3.
 [66:27..66:32): Class => java/lang/Class#
@@ -5942,6 +6003,7 @@ Occurrences:
 [67:33..67:40): forName => java/lang/Class#forName().
 [69:8..69:19): typeLambda1 <= types/Test.C#typeLambda1().
 [69:20..69:21): M <= types/Test.C#typeLambda1().[M]
+[69:22..69:23): _ <= types/Test.C#typeLambda1().[M][_$$1]
 [69:28..69:31): ??? => scala/Predef.`???`().
 [70:4..70:15): typeLambda1 => types/Test.C#typeLambda1().
 [70:24..70:25): L <= local11
@@ -6007,6 +6069,7 @@ Occurrences:
 [95:29..95:32): ??? => scala/Predef.`???`().
 [96:10..96:12): m3 <= types/Test.C#TypeType.m3().
 [96:13..96:15): M3 <= types/Test.C#TypeType.m3().[M3]
+[96:16..96:17): _ <= types/Test.C#TypeType.m3().[M3][_$$1]
 [96:22..96:25): ??? => scala/Predef.`???`().
 [97:11..97:13): T4 <= types/Test.C#TypeType.T4#
 [97:16..97:17): C => types/Test.C#

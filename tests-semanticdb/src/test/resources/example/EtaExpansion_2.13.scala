@@ -2,7 +2,7 @@ package example
 
 class EtaExpansion/*<=example.EtaExpansion#*/ {
   Some/*=>scala.Some.*/(1).map/*=>scala.Option#map().*/(identity/*=>scala.Predef.identity().*/)
-  List/*=>scala.package.List.*/(1).foldLeft/*=>scala.collection.LinearSeqOps#foldLeft().*/("")(_ +/*=>java.lang.String#`+`().*/ _)
+  List/*=>scala.package.List.*/(1).foldLeft/*=>scala.collection.LinearSeqOps#foldLeft().*/("")(_/*<=local0*/ +/*=>java.lang.String#`+`().*/ _/*<=local1*/)
 
   def prop/*<=example.EtaExpansion#prop().*/ = ""
   def meth/*<=example.EtaExpansion#meth().*/() = ""

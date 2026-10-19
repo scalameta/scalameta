@@ -78,6 +78,7 @@ trait TextDocumentOps {
       val mfuncs = mutable.Map.empty[Int, m.Position] // start offset of a function
       val mannottees = mutable.Map.empty[Int, m.Member] // start offset of an annotation's init
       val mexpansions = mutable.Map.empty[Int, m.Member] // the same, for a macro annotation
+      val munderscores = mutable.Map.empty[Int, m.Position] // start offset -> an underscore
 
       // Occurrences for names in val patterns, like `val (a, b) =`. Unlike the `occurrences` map, val pattern
       // occurrences uses "last occurrence wins" instead of "first occurrences wins" when disambiguating between
@@ -179,6 +180,17 @@ trait TextDocumentOps {
             case t: m.Type.Project => t.name.pos.start
             case t => t.pos.start
           }
+          private def indexUnderscore(mtree: m.Tree): m.Position = {
+            val mpos = mtree.pos.trunc(1)
+            munderscores(mpos.start) = mpos
+            mpos
+          }
+          @tailrec // only a whole pattern, like `_` in `val _ =` or `_: Int <- xs`, has a symbol
+          private def isWholePat(mpat: m.Pat): Boolean = mpat.parent match {
+            case Some(p: m.Pat.Typed) => isWholePat(p)
+            case Some(_: m.Pat | _: m.Pat.ArgClause | _: m.Case) => false
+            case _ => true
+          }
           def indexPats(pats: List[m.Pat]): Unit = pats.foreach(_.traverse {
             case pat: m.Pat.Extract => indexPatsWithExtract(pat)
             case pat: m.Pat.Var => mvalpatstart += pat.name.pos.start
@@ -224,7 +236,21 @@ trait TextDocumentOps {
                 mparents(mtree.tpe.pos.start) = mtree.tpe
                 def parentOpt = mtree.parent.collect { case p: m.Term.New => p }
                 setArgNames((mtree +: parentOpt.toList).map(_.pos.start))(mtree.argClauses: _*)
-              case _: m.Name.Anonymous | _: m.Name.Placeholder | _: m.Name.This =>
+              case _: m.Name.Anonymous | _: m.Name.This =>
+              case _: m.Name.Placeholder | _: m.Term.Placeholder | _: m.Type.Wildcard =>
+                indexUnderscore(mtree)
+              case mtree: m.Pat.Wildcard => if (isWholePat(mtree)) {
+                  val mpos = indexUnderscore(mtree)
+                  // scalac 2.12 and 2.13.15 put the value of `val (_: Int) = 1` at the colon
+                  if (mtree.parent.is[m.Pat.Typed]) {
+                    val mtoks = mtree.tokens
+                    val pred = (t: m.Token) => t.isAny[m.Token.Trivia, m.Token.RightParen]
+                    mtoks.findWideNotOrNull(pred, mtoks.length) match {
+                      case t: m.Token.Colon => munderscores(t.start) = mpos
+                      case _ =>
+                    }
+                  }
+                }
               case mtree: m.Name => indexName(mtree)
               case mtree @ (_: m.Term.FunctionLike | _: m.Term.AnonymousFunction) =>
                 val mpos = mtree.pos
@@ -350,6 +376,31 @@ trait TextDocumentOps {
             tryWithin(mwithins, gsym)
             tryWithin(mwithinctors, gsym.primaryConstructor)
           }
+          // define the symbol that scalac created for an underscore, like in `_ + 1` or `List[_]`
+          private def defineUnderscore(gtree: g.Tree): Unit =
+            defineUnderscore(findUnderscore(gtree), gtree.symbol)
+          private def defineUnderscore(mpos: m.Position, gsym: g.Symbol): Unit =
+            if (mpos ne null) addOccurrenceFromSemantic(mpos, saveUnderscore(gsym), Role.DEFINITION)
+          // the underscore at a tree that has no occurrence yet, or null
+          private def findUnderscore(gtree: g.Tree): m.Position = {
+            if (munderscores.isEmpty) return null
+            val gpos = gtree.pos
+            if (!gpos.isDefined) return null
+            val mpos = findUnderscore(gpos.start)
+            if (mpos ne null) mpos else findUnderscore(gpos.point)
+          }
+          private def findUnderscore(offset: Int): m.Position = {
+            val mpos = munderscores.getOrElse(offset, null)
+            if ((mpos eq null) || occurrences.contains(mpos)) null else mpos
+          }
+          private def saveUnderscore(gsym: g.Symbol): String = {
+            // define the getter rather than its field, and never an anonymous self
+            if (gsym.isUseless || gsym.isAnonymousSelfParameter) return Symbols.None
+            val ssym = gsym.toSemantic
+            if (!config.symbols.isNone && !shouldNotSaveSemanticSymbol(ssym))
+              saveSymbolFromSemantic(gsym, ssym)
+            ssym
+          }
           private def tryNamedArg(gsym: g.Symbol, offsets: Int*): Unit =
             if (gsym != null && (gsym.isMethod || gsym.isConstructor)) for {
               offset <- offsets
@@ -370,6 +421,10 @@ trait TextDocumentOps {
             def tryMend(pos: Int): Unit = success(mends.get(pos), gsym)
 
             gtree match {
+              case _: g.TypeDef | _: g.Bind | _: g.ValOrDefDef =>
+                trySymbolDefinition(gsym)
+                // scalac 2.12 and 2.13.15 start a constructor at the `_` of `extends A(_ + 1)`
+                if (!gsym.isConstructor) defineUnderscore(gtree)
               case _: g.DefTree => trySymbolDefinition(gsym)
               case _ =>
             }
@@ -476,6 +531,11 @@ trait TextDocumentOps {
               case gtree: g.Select if gtree.symbol == g.definitions.NilModule =>
                 // NOTE: List() gets desugared into mkAttributedRef(NilModule)
                 tryMstart(gstart)
+                // the type arguments of `List[T]()` remain only in the type of `Nil`
+                if (gtree.tpe ne null) mstarts.get(gstart).flatMap(_.parent).foreach {
+                  case p: m.Term.ApplyType => tryFindTypes(p.targClause.values, gtree.tpe.typeArgs)
+                  case _ =>
+                }
               case g.Select(g.Ident(qualTerm), _) if qualTerm.startsWith(g.nme.QUAL_PREFIX) =>
                 tryMend(gend) // transformNamedApplication blockWithQualifier case
               case _: g.RefTree => if (!gsym.isDefaultGetter) tryMstart(gpoint)
@@ -672,6 +732,11 @@ trait TextDocumentOps {
             case (mtpe: m.Type.Function, g.TypeRef(_, _, gargs)) =>
               tryFindTypes(mtpe.paramClause.values :+ mtpe.res, gargs)
             case (_, g.ExistentialType(_, gtpe)) => tryFindType(mtpe, gtpe)
+            case (mtpe: m.Type.Wildcard, g.TypeRef(_, gsym, _)) if gsym.isExistentiallyBound =>
+              defineUnderscore(findUnderscore(mtpe.pos.start), gsym)
+              val gbounds = gsym.info.bounds
+              mtpe.bounds.lo.foreach(tryFindType(_, gbounds.lo))
+              mtpe.bounds.hi.foreach(tryFindType(_, gbounds.hi))
             case _ =>
           }
           private def tryFindTypes(mtpes: List[m.Type], gtpes: List[g.Type]): Unit = mtpes.zip(gtpes)
@@ -751,8 +816,32 @@ trait TextDocumentOps {
 
               case t: g.Function =>
                 addSamOccurrence(t)
+                // the parameter of a guard repeats that of its generator, which defines the `_`
+                val isGuard = genclosing match {
+                  case _ :: g.Apply(gfun: g.Select, _) :: _ => gfun.name == g.nme.withFilter &&
+                    gfun.hasAttachment[g.ForAttachment.type]
+                  case _ => false
+                }
+                // a for matches the parameter of its closure on the pattern
+                val gpat = t.body match {
+                  case g.Match(_, g.CaseDef(gpat, _, _) :: Nil) => gpat
+                  case _ => g.EmptyTree
+                }
+                /* a for unpacks `y` of `y = x; _ <- ys` with a tuple pattern that has no range;
+                 * this parameter defines no `_`, though scalac 2.12 puts it at the one of `ys` */
+                val isUnpacking = gpat.isInstanceOf[g.Apply] && !gpat.pos.isRange
+                // scalac 2.13.15 may put a closure of a for at its body, but its pattern at `_`
+                def findParamUnderscore(p: g.ValDef): m.Position = {
+                  val mpos = findUnderscore(gpat)
+                  if (mpos ne null) mpos else findUnderscore(p)
+                }
                 t.vparams.foreach(p =>
-                  if (!(p.symbol.isSynthetic || p.name.decoded.startsWith("x$"))) traverse(p),
+                  if (!(p.symbol.isSynthetic || p.name.decoded.startsWith("x$"))) traverse(p)
+                  else if (isUnpacking) {}
+                  else if (!isGuard) defineUnderscore(findParamUnderscore(p), p.symbol)
+                  // mark it visited, or traversing the function would define the `_`
+                  else if (isVisited.add(p) && (findParamUnderscore(p) ne null))
+                    saveUnderscore(p.symbol),
                 )
                 traverse(t.body)
                 tryFindMtree(t)
@@ -836,6 +925,8 @@ trait TextDocumentOps {
                 }
                 t.self.tpt match {
                   case tpt: g.TypeTree if tpt.original != null =>
+                    // the tree of `_` in `this: List[_] =>` defines it, not the type below
+                    traverse(t.self)
                     // scalac types `this: T =>` in class C as `C with T`
                     val gtpe = tpt.tpe match {
                       case g.RefinedType(gcls :: gtpe :: Nil, _)
