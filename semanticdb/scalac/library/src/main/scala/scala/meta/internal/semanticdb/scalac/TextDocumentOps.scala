@@ -294,6 +294,11 @@ trait TextDocumentOps {
             // https://github.com/scalameta/scalameta/issues/665
             // Instead of crashing with "unsupported file", we ignore these cases.
             if (gsym0 == null) return
+            // scalac types a reference to `self` in `class C { self => }` as `C.this`
+            if (gsym0.isClass && mtree.isInstanceOf[m.Term.Name]) {
+              val gself = gsym0.thisSym
+              if ((gself ne gsym0) && gself.nameString == mtree.value) return success(mtree, gself)
+            }
             if (gsym0.isUselessOccurrence) return
             if (gsym0.isImplicitPrimitiveConversion(mtree)) return
             // scalac puts the constructor of `@a.B` at `a`
