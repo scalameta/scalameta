@@ -4,6 +4,7 @@ import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 
 import scala.collection.mutable
+import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.scalasig._
 
 final class SymbolIndex private (classpathIndex: ClasspathIndex) {
@@ -17,11 +18,12 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
       case Some(p: ExternalSymbol) => lookup(p) match {
           case PackageLookup =>
             val scalaShortName =
-              if (sym.entry.entryType == 10) sym.name + "$.class" else sym.name + ".class"
+              (if (sym.entry.entryType == 10) sym.name + NameTransformer.MODULE_SUFFIX_STRING
+               else sym.name) + Classfile.Suffix
             classpathIndex.getClassfile(p.packageResourceName, scalaShortName) match {
               case Some(entry) => if (entry.hasScalaSig) ScalaLookup else JavaLookup
               case None =>
-                val javaShortName = sym.name + ".class"
+                val javaShortName = sym.name + Classfile.Suffix
                 classpathIndex.getClassfile(p.packageResourceName, javaShortName) match {
                   case Some(entry) => if (entry.hasScalaSig) MissingLookup else JavaLookup
                   case None => MissingLookup
@@ -50,7 +52,7 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
     }
   }
   private lazy val scalalibSyntheticsPaths: Set[String] = Scalalib.synthetics
-    .map(synthetic => synthetic.relativeUri.stripSuffix(".class").replace('/', '.')).toSet
+    .map(synthetic => synthetic.relativeUri.stripSuffix(Classfile.Suffix).replace('/', '.')).toSet
 }
 
 object SymbolIndex {

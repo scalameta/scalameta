@@ -25,6 +25,10 @@ sealed abstract class Classfile extends ClasspathElement {
   def openInputStream(): InputStream
 }
 
+object Classfile {
+  val Suffix = ".class"
+}
+
 /** A classpath entry that is a directory. */
 final case class Classdir(relativeUri: String) extends ClasspathElement {
   def resolve(filename: String): Option[ClasspathElement] = members.get(filename).orElse {

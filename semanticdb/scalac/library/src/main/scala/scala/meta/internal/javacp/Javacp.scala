@@ -2,7 +2,7 @@ package scala.meta.internal.javacp
 
 import org.scalameta.collections.Conversions._
 import scala.meta.internal.SemanticCompat._
-import scala.meta.internal.classpath.{ClasspathIndex, MissingSymbolException}
+import scala.meta.internal.classpath.{Classfile, ClasspathIndex, MissingSymbolException}
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb.Scala._
@@ -21,7 +21,7 @@ object Javacp {
 
   def parse(node: ClassNode, classpathIndex: ClasspathIndex): ClassfileInfos = {
     val infos = sinfos(node, classpathIndex, 0, Scope.empty)
-    ClassfileInfos(node.name + ".class", s.Language.JAVA, infos.toList)
+    ClassfileInfos(node.name + Classfile.Suffix, s.Language.JAVA, infos.toList)
   }
 
   private def sinfos(
@@ -248,7 +248,7 @@ object Javacp {
     directInnerClasses.foreach { ic =>
       val innerClassSymbol = classSymbols(ic.name)
       decls += innerClassSymbol
-      val path = ic.name + ".class"
+      val path = ic.name + Classfile.Suffix
       val classfile = classpathIndex.getClassfile(path)
         .getOrElse(throw MissingSymbolException(innerClassSymbol))
       val innerClassNode = classfile.toClassNode
@@ -340,8 +340,10 @@ object Javacp {
 
   private case class MethodInfo(node: MethodNode, signature: MethodSignature)
 
-  private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath = (asmName + ".class")
-    .split("/").foldLeft(base) { case (accum, filename) => accum.resolve(filename) }
+  private def asmNameToPath(asmName: String, base: AbsolutePath): AbsolutePath =
+    (asmName + Classfile.Suffix).split("/").foldLeft(base) { case (accum, filename) =>
+      accum.resolve(filename)
+    }
 
   private def sdisplayName(node: ClassNode): String =
     node.innerClasses.toScala.find(_.name == node.name) match {
@@ -382,12 +384,12 @@ object Javacp {
     private def innerClass(asmName: String): Option[InnerClassNode] = innerClasses.get(asmName)
       .orElse(
         if (asmName.indexOf('$') < 0 || asmName == node.name) None
-        else classpathIndex.getClassfile(asmName + ".class")
+        else classpathIndex.getClassfile(asmName + Classfile.Suffix)
           .flatMap(_.toClassNode.innerClasses.toScala.find(_.name == asmName)),
       )
 
-    private def exists(asmName: String): Boolean = classpathIndex.getClassfile(asmName + ".class")
-      .isDefined
+    private def exists(asmName: String): Boolean = classpathIndex
+      .getClassfile(asmName + Classfile.Suffix).isDefined
 
     private def descriptor(name: String): Descriptor =
       if (name.endsWith("$")) d.Term(name.stripSuffix("$")) else d.Type(name)

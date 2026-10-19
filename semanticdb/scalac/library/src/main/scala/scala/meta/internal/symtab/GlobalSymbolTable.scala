@@ -1,7 +1,7 @@
 package scala.meta.internal.symtab
 
 import scala.meta.cli._
-import scala.meta.internal.classpath.ClasspathIndex
+import scala.meta.internal.classpath.{Classfile, ClasspathIndex}
 import scala.meta.internal.metacp._
 import scala.meta.internal.scalacp.Scalalib
 import scala.meta.internal.semanticdb.Scala._
@@ -33,7 +33,7 @@ final class GlobalSymbolTable private (classpath: Classpath, includeJdk: Boolean
     val toplevel = symbol.ownerChain.find(!_.isPackage).get
     val owner = toplevel.owner
     val classdir = if (owner.isEmptyPackage) "/" else owner
-    val filename = NameTransformer.encode(toplevel.desc.value) + ".class"
+    val filename = NameTransformer.encode(toplevel.desc.value) + Classfile.Suffix
     classpathIndex.getClassfile(classdir, filename) match {
       case Some(classfile) =>
         val node = classfile.toClassNode

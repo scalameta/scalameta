@@ -1,5 +1,6 @@
 package scala.meta.internal.scalacp
 
+import scala.meta.internal.classpath.Classfile
 import scala.meta.internal.io.PathIO
 import scala.meta.internal.metacp._
 import scala.meta.internal.semanticdb.Scala._
@@ -135,7 +136,7 @@ object Scalalib {
       overriddenSymbols = Nil,
     )
     val infos = builtin :: (if (kind.isClass) ctor :: symbols else symbols)
-    val relativeUri = "scala/" + NameTransformer.encode(className) + ".class"
+    val relativeUri = "scala/" + NameTransformer.encode(className) + Classfile.Suffix
     val syntheticClassfile = ClassfileInfos(relativeUri, s.Language.SCALA, infos)
     syntheticClassfile
   }

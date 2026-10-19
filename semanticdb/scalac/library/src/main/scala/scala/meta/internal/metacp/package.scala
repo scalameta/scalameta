@@ -28,7 +28,7 @@ package object metacp {
         scalaSig <- {
           if (scalaSigAttribute.table.nonEmpty) Some(scalaSigAttribute) else fromScalaSigAnnotation
         }
-      } yield ScalaSigNode(node.name + ".class", scalaSig)
+      } yield ScalaSigNode(node.name + Classfile.Suffix, scalaSig)
     private def fromScalaSigAnnotation: Option[ScalaSig] = Option(node.visibleAnnotations).flatMap {
       _.toScala.iterator.filter(annot =>
         annot.desc == Main.SCALA_SIG_ANNOTATION || annot.desc == Main.SCALA_LONG_SIG_ANNOTATION,
