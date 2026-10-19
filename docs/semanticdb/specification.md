@@ -3166,6 +3166,8 @@ Notes:
 - Named self parameters produce a `DEFINITION` occurrence of a local symbol.
   Self parameters declared as `_` or `this` produce no occurrence, but their
   type annotations still produce references.
+- References to a named self parameter, e.g. `self` in `self.x`, produce
+  `REFERENCE` occurrences of its local symbol.
 - Anonymous classes produce an empty-range `DEFINITION` occurrence of a local
   symbol at the start of the instantiated parent, in addition to the
   reference to the parent and an empty-range reference to the invoked

@@ -20,7 +20,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:23..0:24): T <= _empty_/D#T#
        |[0:27..0:30): Int => scala/Int#
        |[0:36..0:37): m <= _empty_/D#m().
-       |[0:39..0:43): self => _empty_/D#
+       |[0:39..0:43): self => local0
        |[0:44..0:45): T => _empty_/D#T#
        |[0:48..0:51): ??? => scala/Predef.`???`().
        |""".stripMargin,
@@ -48,7 +48,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:10..0:14): self <= local0
        |[0:22..0:23): x <= _empty_/D#x.
        |[0:33..0:34): m <= _empty_/D#m().
-       |[0:37..0:41): self => _empty_/D#
+       |[0:37..0:41): self => local0
        |[0:42..0:43): x => _empty_/D#x.
        |""".stripMargin,
   )
@@ -61,7 +61,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:10..0:14): self <= local0
        |[0:22..0:23): m <= _empty_/D#m().
        |[0:26..0:33): println => scala/Predef.println(+1).
-       |[0:34..0:38): self => _empty_/D#
+       |[0:34..0:38): self => local0
        |""".stripMargin,
   )
 
@@ -73,7 +73,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:10..0:14): self <= local0
        |[0:22..0:23): m <= _empty_/D#m().
        |[0:25..0:26): D => _empty_/D#
-       |[0:29..0:33): self => _empty_/D#
+       |[0:29..0:33): self => local0
        |""".stripMargin,
   )
 
@@ -84,8 +84,8 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:8..0:8):  <= _empty_/D#`<init>`().
        |[0:10..0:14): self <= local0
        |[0:22..0:23): m <= _empty_/D#m().
-       |[0:25..0:29): self => _empty_/D#
-       |[0:37..0:41): self => _empty_/D#
+       |[0:25..0:29): self => local0
+       |[0:37..0:41): self => local0
        |""".stripMargin,
   )
 
@@ -112,7 +112,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:33..0:37): self <= local0
        |[0:39..0:40): A => _empty_/A#
        |[0:48..0:49): m <= _empty_/D#m().
-       |[0:52..0:56): self => _empty_/D#
+       |[0:52..0:56): self => local0
        |[0:57..0:58): a => _empty_/A#a().
        |""".stripMargin,
   )
@@ -127,7 +127,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:25..0:26): A => _empty_/A#
        |[0:34..0:35): m <= _empty_/D#m().
        |[0:37..0:38): A => _empty_/A#
-       |[0:41..0:45): self => _empty_/D#
+       |[0:41..0:45): self => local0
        |""".stripMargin,
   )
 
@@ -141,7 +141,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:30..0:34): self <= local0
        |[0:36..0:37): A => _empty_/A#
        |[0:45..0:46): m <= _empty_/D#m().
-       |[0:48..0:52): self => _empty_/D#
+       |[0:48..0:52): self => local0
        |[0:53..0:54): T => _empty_/A#T#
        |[0:57..0:60): ??? => scala/Predef.`???`().
        |""".stripMargin,
@@ -173,7 +173,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:10..0:14): self <= local0
        |[0:22..0:23): x <= _empty_/D#x.
        |[0:33..0:34): m <= _empty_/D#m().
-       |[0:37..0:41): self => _empty_/D#
+       |[0:37..0:41): self => local0
        |[0:42..0:43): x => _empty_/D#x.
        |""".stripMargin,
   )
@@ -185,7 +185,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:11..0:15): self <= local0
        |[0:23..0:24): x <= _empty_/D.x.
        |[0:34..0:35): m <= _empty_/D.m().
-       |[0:38..0:42): self => _empty_/D.
+       |[0:38..0:42): self => local0
        |[0:43..0:44): x => _empty_/D.x.
        |""".stripMargin,
   )
@@ -200,6 +200,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:29..0:29):  => java/lang/Object#`<init>`().
        |[0:32..0:36): self <= local2
        |[0:44..0:45): m <= local1
+       |[0:48..0:52): self => local2
        |""".stripMargin,
   )
 
@@ -212,7 +213,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:29..0:29):  <= local1
        |[0:31..0:35): self <= local3
        |[0:43..0:44): m <= local2
-       |[0:47..0:51): self => local0
+       |[0:47..0:51): self => local3
        |""".stripMargin,
   )
 
@@ -226,7 +227,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:36..0:37): E <= _empty_/D#E#
        |[0:38..0:38):  <= _empty_/D#E#`<init>`().
        |[0:44..0:45): m <= _empty_/D#E#m().
-       |[0:48..0:53): outer => _empty_/D#
+       |[0:48..0:53): outer => local0
        |[0:54..0:55): x => _empty_/D#x.
        |""".stripMargin,
   )
@@ -242,7 +243,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:39..0:40): E <= _empty_/D#E#
        |[0:41..0:41):  <= _empty_/D#E#`<init>`().
        |[0:47..0:48): m <= _empty_/D#E#m().
-       |[0:50..0:55): outer => _empty_/D#
+       |[0:50..0:55): outer => local0
        |[0:56..0:57): T => _empty_/D#T#
        |[0:60..0:63): ??? => scala/Predef.`???`().
        |""".stripMargin,
@@ -275,8 +276,8 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:27..0:27):  <= _empty_/D#E#`<init>`().
        |[0:29..0:34): inner <= local1
        |[0:42..0:43): m <= _empty_/D#E#m().
-       |[0:47..0:52): outer => _empty_/D#
-       |[0:54..0:59): inner => _empty_/D#E#
+       |[0:47..0:52): outer => local0
+       |[0:54..0:59): inner => local1
        |""".stripMargin,
   )
 
@@ -290,7 +291,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:33..0:34): a <= _empty_/D#a().
        |[0:42..0:43): x => _empty_/D#x.
        |[0:49..0:50): b <= _empty_/D#b().
-       |[0:53..0:57): self => _empty_/D#
+       |[0:53..0:57): self => local0
        |[0:58..0:59): x => _empty_/D#x.
        |[0:65..0:66): c <= _empty_/D#c().
        |[0:69..0:70): D => _empty_/D#
@@ -306,7 +307,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:10..0:11): D <= local0
        |[0:19..0:20): x <= _empty_/D#x.
        |[0:30..0:31): m <= _empty_/D#m().
-       |[0:34..0:35): D => _empty_/D#
+       |[0:34..0:35): D => local0
        |[0:36..0:37): x => _empty_/D#x.
        |[0:43..0:44): n <= _empty_/D#n().
        |[0:47..0:48): D => _empty_/D#
@@ -323,7 +324,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:25..0:26): o <= _empty_/D#o.
        |[0:33..0:34): x <= _empty_/D#o.x.
        |[0:46..0:47): m <= _empty_/D#m().
-       |[0:59..0:63): self => _empty_/D#
+       |[0:59..0:63): self => local0
        |[0:64..0:65): o => _empty_/D#o.
        |[0:66..0:67): x => _empty_/D#o.x.
        |[0:69..0:70): x => _empty_/D#o.x.
@@ -340,7 +341,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:24..0:25): a <= _empty_/D#m().(a)
        |[0:27..0:30): Any => scala/Any#
        |[0:34..0:35): a => _empty_/D#m().(a)
-       |[0:49..0:55): `self` => _empty_/D#
+       |[0:49..0:55): `self` => local0
        |""".stripMargin,
   )
 
@@ -449,7 +450,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:10..0:14): self <= local0
        |[0:22..0:23): m <= _empty_/D#m().
        |[0:26..0:27): s => scala/StringContext#s().
-       |[0:29..0:33): self => _empty_/D#
+       |[0:29..0:33): self => local0
        |""".stripMargin,
   )
 
@@ -467,6 +468,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:50..0:54): self <= local2
        |[0:56..0:57): A => _empty_/A#
        |[0:65..0:66): m <= local1
+       |[0:69..0:73): self => local2
        |[0:74..0:75): a => _empty_/A#a().
        |""".stripMargin,
   )
@@ -490,7 +492,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:11..0:12): D <= local0
        |[0:20..0:21): x <= _empty_/D.x.
        |[0:31..0:32): m <= _empty_/D.m().
-       |[0:35..0:36): D => _empty_/D.
+       |[0:35..0:36): D => local0
        |[0:37..0:38): x => _empty_/D.x.
        |""".stripMargin,
   )
@@ -508,7 +510,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:68..0:68):  <= _empty_/D#`<init>`().
        |[0:70..0:74): self <= local0
        |[0:82..0:83): m <= _empty_/D#m().
-       |[0:86..0:90): self => _empty_/D#
+       |[0:86..0:90): self => local0
        |[0:91..0:97): length => java/lang/String#length().
        |""".stripMargin,
   )
@@ -523,7 +525,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:16..0:19): Int => scala/Int#
        |[0:23..0:27): self <= local0
        |[0:35..0:36): m <= _empty_/D#m().
-       |[0:39..0:43): self => _empty_/D#
+       |[0:39..0:43): self => local0
        |[0:44..0:48): copy => _empty_/D#copy().
        |""".stripMargin,
   )
@@ -539,7 +541,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:30..0:36): AnyRef => scala/AnyRef#
        |[0:36..0:36):  => java/lang/Object#`<init>`().
        |[0:43..0:44): m <= local2
-       |[0:47..0:51): self => _empty_/D#
+       |[0:47..0:51): self => local0
        |""".stripMargin,
   )
 
@@ -552,7 +554,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:22..0:23): m <= _empty_/D#m().
        |[0:24..0:25): d <= _empty_/D#m().(d)
        |[0:27..0:28): D => _empty_/D#
-       |[0:31..0:35): self => _empty_/D#
+       |[0:31..0:35): self => local0
        |[0:39..0:40): d => _empty_/D#m().(d)
        |""".stripMargin,
   )
@@ -585,7 +587,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:36..0:37): s <= local1
        |[0:45..0:46): y <= _empty_/D#E#y.
        |[0:56..0:57): m <= _empty_/D#E#m().
-       |[0:60..0:61): s => _empty_/D#E#
+       |[0:60..0:61): s => local1
        |[0:62..0:63): y => _empty_/D#E#y.
        |""".stripMargin,
   )
@@ -604,7 +606,8 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:47..0:48): n <= local1
        |[0:51..0:52): D => _empty_/D#
        |[0:54..0:55): D => _empty_/D#
-       |[0:60..0:64): self => _empty_/D#
+       |[0:60..0:64): self => local0
+       |[0:66..0:71): inner => local3
        |""".stripMargin,
   )
 
@@ -619,7 +622,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:34..0:34):  <= _empty_/D#E#`<init>`().
        |[0:36..0:37): s <= local1
        |[0:45..0:46): m <= _empty_/D#E#m().
-       |[0:49..0:50): s => _empty_/D#E#
+       |[0:49..0:50): s => local1
        |""".stripMargin,
   )
 
@@ -632,7 +635,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:24..0:25): E <= _empty_/D#E#
        |[0:25..0:25):  <= _empty_/D#E#`<init>`().
        |[0:31..0:32): m <= _empty_/D#m().
-       |[0:34..0:38): self => _empty_/D#
+       |[0:34..0:38): self => local0
        |[0:39..0:40): E => _empty_/D#E#
        |[0:43..0:46): ??? => scala/Predef.`???`().
        |[0:53..0:54): n <= _empty_/D#n().
@@ -652,7 +655,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:19..0:20): D => _empty_/D#
        |[0:21..0:22): T => _empty_/D#[T]
        |[0:31..0:32): m <= _empty_/D#m().
-       |[0:35..0:39): self => _empty_/D#
+       |[0:35..0:39): self => local0
        |""".stripMargin,
   )
 
@@ -673,7 +676,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:60..0:60):  <= local1
        |[0:60..0:61): B => _empty_/B#
        |[0:61..0:61):  => _empty_/B#`<init>`().
-       |[0:62..0:66): self => _empty_/D#
+       |[0:62..0:66): self => local0
        |""".stripMargin,
   )
 
@@ -689,6 +692,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:46..0:47): E <= local1
        |[0:48..0:48):  <= local3
        |[0:54..0:55): m <= local4
+       |[0:58..0:62): self => local2
        |""".stripMargin,
   )
 
@@ -699,7 +703,7 @@ class Issue1808Suite extends SemanticdbSuite {
        |[0:8..0:8):  <= _empty_/D#`<init>`().
        |[0:10..0:19): `my self` <= local0
        |[0:27..0:28): m <= _empty_/D#m().
-       |[0:31..0:40): `my self` => _empty_/D#
+       |[0:31..0:40): `my self` => local0
        |""".stripMargin,
   )
 
