@@ -135,6 +135,13 @@ trait SymbolInformationOps {
           case m: s.MethodSignature => m.copy(returnType = s.NoType)
           case m => m
         }
+        // A local is a value, even a lazy getter or a private[this] pattern temporary
+        else if (kind.isLocal) ssig match {
+          case ssig: s.MethodSignature
+              if ssig.parameterLists.isEmpty && ssig.typeParameters.forall(_.symlinks.isEmpty) =>
+            s.ValueSignature(ssig.returnType)
+          case _ => ssig
+        }
         else if (gsym.isScalacField) ssig match {
           case ssig: s.ValueSignature =>
             val stparams = Some(s.Scope())
