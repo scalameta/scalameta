@@ -2905,6 +2905,11 @@ Notes:
   resolve to local symbols.
 - Type variables bound by type patterns, e.g. `t` in `case _: List[t]`, also
   produce `DEFINITION` occurrences of local symbols.
+- An underscore that is the whole pattern of a value definition or of a for
+  comprehension enumerator, e.g. `_` in `val _ = 1` or in `_ <- xs`, produces
+  a `DEFINITION` occurrence of the symbol that the compiler creates for it.
+  An underscore inside a larger pattern, e.g. `_` in `val _ :: x = xs`,
+  produces no occurrence.
 - A pattern variable bound in a for comprehension enumerator produces exactly
   one `DEFINITION` occurrence, even when the compiler desugars the
   enumerator into multiple anonymous functions.
@@ -2956,6 +2961,14 @@ class C[T] {
     <td><code>REFERENCE</code></td>
   </tr>
 </table>
+
+Notes:
+
+- Anonymous type parameters, e.g. `_` in `class C[_]`, produce `DEFINITION`
+  occurrences of their type parameter symbols.
+- Underscore type arguments, e.g. `_` in `List[_]` or the second `_` in
+  `case _: List[_]`, produce `DEFINITION` occurrences of local symbols, and
+  these symbols have `SymbolInformation`.
 
 **Parameters** [\[45\]][45] produce `DEFINITION` occurrences at their
 declaration site. Named arguments produce references to the corresponding
@@ -3396,13 +3409,18 @@ class C {
     <td><code>DEFINITION</code></td>
   </tr>
   <tr>
+    <td><code>_</code> in <code>_ + 1</code></td>
+    <td><code>local3</code></td>
+    <td><code>DEFINITION</code></td>
+  </tr>
+  <tr>
     <td><code>i</code> in <code>i =&gt; i + 1</code></td>
-    <td><code>local2</code></td>
+    <td><code>local4</code></td>
     <td><code>DEFINITION</code></td>
   </tr>
   <tr>
     <td><code>i</code> in <code>i + 1</code></td>
-    <td><code>local2</code></td>
+    <td><code>local4</code></td>
     <td><code>REFERENCE</code></td>
   </tr>
 </table>
@@ -3416,6 +3434,9 @@ Notes:
   method that implements the single abstract method. An eta-expanded method
   value additionally produces a regular reference to the expanded method
   with the same range.
+- An underscore that stands for a parameter, e.g. `_` in `_ + 1` or in
+  `_ => 1`, produces a `DEFINITION` occurrence of the local symbol of the
+  parameter that the compiler creates for it.
 - Anonymous functions of standard `FunctionN` types produce occurrences only
   for their parameters and bodies.
 

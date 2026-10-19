@@ -48,6 +48,7 @@ class Issue1916Suite extends SemanticdbSuite {
        |[1:6..1:7): C <= c2/C#
        |[1:8..1:8):  <= c2/C#`<init>`().
        |[1:16..1:19): Map => scala/Predef.Map#
+       |[1:20..1:21): _ <= local0
        |[1:23..1:26): Int => scala/Int#
        |""".stripMargin,
   )
@@ -233,6 +234,7 @@ class Issue1916Suite extends SemanticdbSuite {
        |[3:17..3:23): String => scala/Predef.String#
        |[4:2..4:9): classOf => scala/Predef.classOf().
        |[4:10..4:14): List => scala/package.List#
+       |[4:15..4:16): _ <= local0
        |""".stripMargin,
   )
 

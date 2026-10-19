@@ -6,6 +6,6 @@ class AA/*<=example.AA#*/(val f/*<=example.AA#f.*//*<=example.AA#`<init>`().(f)*
 
 object AA/*<=example.AA.*/ {
   implicit def toF/*<=example.AA.toF().*/(a/*<=example.AA.toF().(a)*/: AA/*=>example.AA#*/): Int/*=>scala.Int#*/ => Int/*=>scala.Int#*/ = a/*=>example.AA.toF().(a)*/.f/*=>example.AA#f.*/
-  val a/*<=example.AA.a.*/ = new AA/*=>example.AA#*/(_ +/*=>scala.Int#`+`(+4).*/ 1)
+  val a/*<=example.AA.a.*/ = new AA/*=>example.AA#*/(_/*<=local0*/ +/*=>scala.Int#`+`(+4).*/ 1)
   val result/*<=example.AA.result.*/ = a/*=>example.AA.a.*/(1)
 }

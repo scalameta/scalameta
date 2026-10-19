@@ -124,6 +124,7 @@ class Issue4916Suite extends SemanticdbSuite {
        |  ?0 => local6
        |a/C#wildcardArgDef().(k) => param k: WatchKey
        |  WatchKey => java/nio/file/WatchKey#
+       |local7 => synthetic abstract type _
        |local8 => abstract type T
        |local9 => abstract type T
        |""".stripMargin,
@@ -141,7 +142,7 @@ class Issue4916Suite extends SemanticdbSuite {
           "inferredDef => ?0: hardlink only",
           "inferredVal => ?0: hardlink only",
           "nestedVal => ?0: hardlink only",
-          "placeholderVal => _: hardlink only",
+          "placeholderVal => _: in Symbols",
           "rawVal => E: hardlink only",
           "wildcardArgDef => ?0: hardlink only",
         ),
@@ -161,6 +162,7 @@ class Issue4916Suite extends SemanticdbSuite {
        |local2 => val local placeholderVal: Class[_] forSome { type _ }
        |  Class => scala/Predef.Class#
        |  _ => local3
+       |local3 => synthetic abstract type _
        |local4 => val local forSomeVal: Class[T] forSome { type T }
        |  Class => scala/Predef.Class#
        |  T => local5
@@ -176,7 +178,7 @@ class Issue4916Suite extends SemanticdbSuite {
         List(
           "forSomeVal => T: in Symbols",
           "inferredVal => ?0: hardlink only",
-          "placeholderVal => _: hardlink only",
+          "placeholderVal => _: in Symbols",
         ),
       ),
   )
@@ -229,6 +231,7 @@ class Issue4916Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |c/C#structuralX. => val method structuralX: Int
        |  Int => scala/Int#
+       |local0 => synthetic abstract type _
        |local7 => val local localVal: List[Class[?0] forSome { type ?0 }]
        |  List => java/util/List#
        |  Class => java/lang/Class#
@@ -256,8 +259,8 @@ class Issue4916Suite extends SemanticdbSuite {
           "javaVal => ?0: hardlink only",
           "lambdaVal => ?0: hardlink only",
           "localVal => ?0: hardlink only",
-          "ownDef => _: hardlink only",
-          "ownVal => _: hardlink only",
+          "ownDef => _: in Symbols",
+          "ownVal => _: in Symbols",
           "scalaDefVal => _: hardlink only",
           "scalaForSomeVal => T: hardlink only",
         ),

@@ -63,11 +63,11 @@ object Test/*<=types.Test.*/ {
     val annType2/*<=types.Test.C#annType2.*/: T/*=>types.T#*/ @ann1/*=>types.ann1#*/ @ann2/*=>types.ann2#*/ = ???/*=>scala.Predef.`???`().*/
 
     val existentialType1/*<=types.Test.C#existentialType1.*/: T/*=>local7*/ forSome { type T/*<=local7*/ } = ???/*=>scala.Predef.`???`().*/
-    val existentialType2/*<=types.Test.C#existentialType2.*/: List/*=>scala.package.List#*/[_] = ???/*=>scala.Predef.`???`().*/
+    val existentialType2/*<=types.Test.C#existentialType2.*/: List/*=>scala.package.List#*/[_/*<=local8*/] = ???/*=>scala.Predef.`???`().*/
     val existentialType3/*<=types.Test.C#existentialType3.*/ = Class/*=>java.lang.Class#*/.forName/*=>java.lang.Class#forName().*/("foo.Bar")
     val existentialType4/*<=types.Test.C#existentialType4.*/ = Class/*=>java.lang.Class#*/.forName/*=>java.lang.Class#forName().*/("foo.Bar")
 
-    def typeLambda1/*<=types.Test.C#typeLambda1().*/[M/*<=types.Test.C#typeLambda1().[M]*/[_]] = ???/*=>scala.Predef.`???`().*/
+    def typeLambda1/*<=types.Test.C#typeLambda1().*/[M/*<=types.Test.C#typeLambda1().[M]*/[_/*<=types.Test.C#typeLambda1().[M][_$$1]*/]] = ???/*=>scala.Predef.`???`().*/
     typeLambda1/*=>types.Test.C#typeLambda1().*/[({ type L/*<=local11*/[T/*<=local12*/] = List/*=>scala.package.List#*/[T/*=>local12*/] })#L/*=>local11*/]
 
     object ClassInfoType1/*<=types.Test.C#ClassInfoType1.*/
@@ -94,7 +94,7 @@ object Test/*<=types.Test.*/ {
     object TypeType/*<=types.Test.C#TypeType.*/ {
       type T1/*<=types.Test.C#TypeType.T1#*/
       def m2/*<=types.Test.C#TypeType.m2().*/[T2/*<=types.Test.C#TypeType.m2().[T2]*/ >: C/*=>types.Test.C#*/ <: C/*=>types.Test.C#*/] = ???/*=>scala.Predef.`???`().*/
-      def m3/*<=types.Test.C#TypeType.m3().*/[M3/*<=types.Test.C#TypeType.m3().[M3]*/[_]] = ???/*=>scala.Predef.`???`().*/
+      def m3/*<=types.Test.C#TypeType.m3().*/[M3/*<=types.Test.C#TypeType.m3().[M3]*/[_/*<=types.Test.C#TypeType.m3().[M3][_$$1]*/]] = ???/*=>scala.Predef.`???`().*/
       type T4/*<=types.Test.C#TypeType.T4#*/ = C/*=>types.Test.C#*/
       type T5/*<=types.Test.C#TypeType.T5#*/[U/*<=types.Test.C#TypeType.T5#[U]*/] = U/*=>types.Test.C#TypeType.T5#[U]*/
     }
