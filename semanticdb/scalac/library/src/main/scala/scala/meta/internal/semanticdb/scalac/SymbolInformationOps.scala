@@ -29,6 +29,7 @@ trait SymbolInformationOps {
       else l.SCALA
 
     private[meta] def kind: s.SymbolInformation.Kind = gsym match {
+      // term symbols
       case _ if gsym.isSelfParameter => k.SELF_PARAMETER
       case gsym: MethodSymbol =>
         if (gsym.isConstructor) k.CONSTRUCTOR
@@ -42,14 +43,16 @@ trait SymbolInformationOps {
       case gsym: TermSymbol =>
         if (gsym.isParameter) k.PARAMETER
         else if (gsym.isLocalToBlock) k.LOCAL
-        else if (gsym.isJavaDefined || gsym.hasJavaEnumFlag) k.FIELD
+        else if (gsym.hasFlag(gf.JAVA | gf.JAVA_ENUM)) k.FIELD
         else k.METHOD
+
+      // type symbols
       case gsym: ClassSymbol =>
-        if (gsym.isTrait && gsym.hasFlag(gf.JAVA)) k.INTERFACE
-        else if (gsym.isTrait) k.TRAIT
+        if (gsym.isTrait) if (gsym.isJavaDefined) k.INTERFACE else k.TRAIT
         else if (gsym.isClassfileAnnotation) k.INTERFACE
         else k.CLASS
       case gsym: TypeSymbol => if (gsym.isParameter) k.TYPE_PARAMETER else k.TYPE
+
       case NoSymbol => k.UNKNOWN_KIND
       case _ => sys.error(s"unsupported symbol $gsym")
     }

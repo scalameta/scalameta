@@ -525,8 +525,8 @@ trait TextDocumentOps {
                 if (gsym != null && gsym.exists) msupers.get(t.pos.end).foreach { mtree =>
                   val owner = gsym.owner
                   val parents = t.symbol.asClass.info.parents.map(_.typeSymbol)
-                  parents.find(_ == owner).orElse(parents.find(_.isSubClass(owner)))
-                    .foreach(success(mtree.superp, _))
+                  if (parents.contains(owner)) success(mtree.superp, owner)
+                  else parents.find(_.isSubClass(owner)).foreach(success(mtree.superp, _))
                 }
               case gtree: g.Select if gtree.symbol == g.definitions.NilModule =>
                 // NOTE: List() gets desugared into mkAttributedRef(NilModule)
@@ -717,30 +717,33 @@ trait TextDocumentOps {
           }
 
           // match the names in a type that scalac left without symbols to its type
+          @tailrec
           private def tryFindType(mtpe: m.Type, gtpe: g.Type): Unit = (mtpe, gtpe) match {
-            case (mtpe: m.Type.Apply, g.TypeRef(_, _, gargs)) =>
+            case (mtpe: m.Type.Apply, gtpe: g.TypeRef) =>
+              tryFindTypes(mtpe.argClause.values, gtpe.args)
               tryFindType(mtpe.tpe, gtpe)
-              tryFindTypes(mtpe.argClause.values, gargs)
-            case (mname: m.Type.Name, g.TypeRef(_, gsym, _)) => success(mname, gsym)
-            case (mtpe: m.Type.Select, g.TypeRef(gpre, gsym, _)) =>
-              success(mtpe.name, gsym)
-              tryFindQualifier(mtpe.qual, gpre)
-            case (mtpe: m.Type.Project, g.TypeRef(gpre, gsym, _)) =>
-              success(mtpe.name, gsym)
-              tryFindType(mtpe.qual, gpre)
-            case (mtpe: m.Type.Tuple, g.TypeRef(_, _, gargs)) => tryFindTypes(mtpe.args, gargs)
-            case (mtpe: m.Type.Function, g.TypeRef(_, _, gargs)) =>
-              tryFindTypes(mtpe.paramClause.values :+ mtpe.res, gargs)
-            case (_, g.ExistentialType(_, gtpe)) => tryFindType(mtpe, gtpe)
-            case (mtpe: m.Type.Wildcard, g.TypeRef(_, gsym, _)) if gsym.isExistentiallyBound =>
-              defineUnderscore(findUnderscore(mtpe.pos.start), gsym)
-              val gbounds = gsym.info.bounds
-              mtpe.bounds.lo.foreach(tryFindType(_, gbounds.lo))
-              mtpe.bounds.hi.foreach(tryFindType(_, gbounds.hi))
+            case (mname: m.Type.Name, gtpe: g.TypeRef) => success(mname, gtpe.sym)
+            case (mtpe: m.Type.Select, gtpe: g.TypeRef) =>
+              success(mtpe.name, gtpe.sym)
+              tryFindQualifier(mtpe.qual, gtpe.pre)
+            case (mtpe: m.Type.Project, gtpe: g.TypeRef) =>
+              success(mtpe.name, gtpe.sym)
+              tryFindType(mtpe.qual, gtpe.pre)
+            case (mtpe: m.Type.Tuple, gtpe: g.TypeRef) => tryFindTypes(mtpe.args, gtpe.args)
+            case (mtpe: m.Type.Function, gtpe: g.TypeRef) =>
+              tryFindTypes(mtpe.paramClause.values :+ mtpe.res, gtpe.args)
+            case (_, gtpe: g.ExistentialType) => tryFindType(mtpe, gtpe.underlying)
+            case (mtpe: m.Type.Wildcard, gtpe: g.TypeRef) if gtpe.sym.isExistentiallyBound =>
+              defineUnderscore(findUnderscore(mtpe.pos.start), gtpe.sym)
+              tryFindBounds(mtpe.bounds, gtpe.sym.info.bounds)
             case _ =>
           }
           private def tryFindTypes(mtpes: List[m.Type], gtpes: List[g.Type]): Unit = mtpes.zip(gtpes)
             .foreach { case (mtpe, gtpe) => tryFindType(mtpe, gtpe) }
+          private def tryFindBounds(mbounds: m.Type.Bounds, gbounds: g.TypeBounds): Unit = {
+            mbounds.lo.foreach(tryFindType(_, gbounds.lo))
+            mbounds.hi.foreach(tryFindType(_, gbounds.hi))
+          }
 
           // scalac keeps no tree of a macro annotation: resolve its name in the scope around it
           @tailrec
