@@ -3,7 +3,7 @@ package scala.meta.tests.semanticdb
 import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.semanticdb.TextDocuments
-import scala.meta.internal.semanticdb.scalac.SemanticdbOps
+import scala.meta.internal.semanticdb.scalac.{BinaryMode, SemanticdbOps}
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.meta.metap.Format
@@ -414,10 +414,90 @@ class Issue1591Suite extends FunSuite {
 
   test("A in another file of the run: symbols") {
     def printed = symbols(joint)
-    try {
-      printed
-      fail("the printer was expected to overflow")
-    } catch { case _: StackOverflowError => }
+    assertNoDiff(
+      printed,
+      """|b/Use. => final object Use extends AnyRef { +16 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/Use.age. => val method age: Int
+         |  Int => scala/Int#
+         |b/Use.f(). => method f(p: AnyRef { def id: Int }): Int
+         |  p => b/Use.f().(p)
+         |  AnyRef => scala/AnyRef#
+         |  id => local2
+         |  Int => scala/Int#
+         |b/Use.f().(p) => param p: AnyRef { def id: Int }
+         |  AnyRef => scala/AnyRef#
+         |  id => local2
+         |  Int => scala/Int#
+         |b/Use.get. => val method get: Int
+         |  Int => scala/Int#
+         |b/Use.inferred. => val method inferred: AnyRef { def age: Int }
+         |  AnyRef => scala/AnyRef#
+         |  age => local1
+         |  Int => scala/Int#
+         |b/Use.inferredDef(). => method inferredDef: C { def y: Int }
+         |  C => a/Defs.C#
+         |  y => local4
+         |  Int => scala/Int#
+         |b/Use.inferredE. => val method inferredE: List[List[_] forSome { type _ }]
+         |  List => scala/package.List#
+         |  _ => local10
+         |b/Use.inferredF. => val method inferredF: F[Int]
+         |  F => a/Defs.F#
+         |  Int => scala/Int#
+         |b/Use.inferredM. => val method inferredM: AnyRef { def poly[T](t: T): T }
+         |  AnyRef => scala/AnyRef#
+         |  poly => local6
+         |  T => local9
+         |  t => local8
+         |b/Use.inferredR. => val method inferredR: C { def y: Int }
+         |  C => a/Defs.C#
+         |  y => local4
+         |  Int => scala/Int#
+         |b/Use.name. => val method name: String
+         |  String => scala/Predef.String#
+         |b/Use.poly. => val method poly: Int
+         |  Int => scala/Int#
+         |b/Use.takeFn. => val method takeFn: Function1[AnyRef { def id: Int }, Int]
+         |  Function1 => scala/Function1#
+         |  AnyRef => scala/AnyRef#
+         |  id => local11
+         |  Int => scala/Int#
+         |b/Use.user. => val method user: User
+         |  User => a/Defs.User#
+         |b/Use.viaParam. => val method viaParam: Option[Int]
+         |  Option => scala/Option#
+         |  Int => scala/Int#
+         |b/Use.y. => val method y: Int
+         |  Int => scala/Int#
+         |b/Use.z. => val method z: Int
+         |  Int => scala/Int#
+         |local0 => abstract method name: String
+         |  String => scala/Predef.String#
+         |local1 => abstract method age: Int
+         |  Int => scala/Int#
+         |local2 => abstract method id: Int
+         |  Int => scala/Int#
+         |local3 => param p: AnyRef { def age: Int }
+         |  AnyRef => scala/AnyRef#
+         |  age => local1
+         |  Int => scala/Int#
+         |local4 => abstract method y: Int
+         |  Int => scala/Int#
+         |local5 => abstract method get: T
+         |  T => a/Defs.F#[T]
+         |local6 => abstract method poly[T](t: T): T
+         |  T => local9
+         |  t => local8
+         |local7 => method z: Int
+         |  Int => scala/Int#
+         |local8 => param t: T
+         |  T => local9
+         |local9 => typeparam T
+         |local11 => abstract method id: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+    )
   }
 
   test("A in another file of the run: occurrences") {
@@ -432,30 +512,37 @@ class Issue1591Suite extends FunSuite {
          |[3:19..3:22): ??? => scala/Predef.`???`().
          |[4:6..4:10): name <= b/Use.name.
          |[4:13..4:17): user => b/Use.user.
+         |[4:18..4:22): name => local0
          |[5:6..5:9): age <= b/Use.age.
          |[5:12..5:13): u => a/Defs.u.
+         |[5:14..5:17): age => local1
          |[6:6..6:7): f <= b/Use.f().
          |[6:8..6:9): p <= b/Use.f().(p)
-         |[6:17..6:19): id <= local0
+         |[6:17..6:19): id <= local2
          |[6:21..6:24): Int => scala/Int#
          |[6:30..6:31): p => b/Use.f().(p)
-         |[6:32..6:34): id => local0
+         |[6:32..6:34): id => local2
          |[7:6..7:14): viaParam <= b/Use.viaParam.
          |[7:17..7:23): Option => scala/Option.
          |[7:24..7:25): u => a/Defs.u.
          |[7:27..7:30): map => scala/Option#map().
-         |[7:31..7:32): p <= local1
-         |[7:36..7:37): p => local1
+         |[7:31..7:32): p <= local3
+         |[7:36..7:37): p => local3
+         |[7:38..7:41): age => local1
          |[8:6..8:7): y <= b/Use.y.
          |[8:10..8:11): r => a/Defs.r.
+         |[8:12..8:13): y => local4
          |[9:6..9:9): get <= b/Use.get.
          |[9:13..9:16): ??? => scala/Predef.`???`().
          |[9:19..9:20): F => a/Defs.F#
          |[9:21..9:24): Int => scala/Int#
+         |[9:27..9:30): get => local5
          |[10:6..10:10): poly <= b/Use.poly.
          |[10:13..10:14): m => a/Defs.m.
+         |[10:15..10:19): poly => local6
          |[11:6..11:7): z <= b/Use.z.
          |[11:10..11:13): lub => a/Defs.lub.
+         |[11:14..11:15): z => local7
          |[12:6..12:14): inferred <= b/Use.inferred.
          |[12:17..12:18): u => a/Defs.u.
          |[13:6..13:15): inferredR <= b/Use.inferredR.
@@ -535,11 +622,33 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/Use.z. => val method z: Int
          |  Int => scala/Int#
+         |local0 => abstract method name: String
+         |  String => scala/Predef.String#
+         |local1 => abstract method age: Int
+         |  Int => scala/Int#
          |local2 => abstract method id: Int
          |  Int => scala/Int#
          |local3 => param p: AnyRef { def age: Int }
          |  AnyRef => scala/AnyRef#
          |  age => local1
+         |  Int => scala/Int#
+         |local4 => abstract method y: Int
+         |  Int => scala/Int#
+         |local5 => abstract method get: Int
+         |  Int => scala/Int#
+         |local6 => abstract method poly[T](t: T): T
+         |  T => local11
+         |  t => local10
+         |local7 => method z: Int
+         |  Int => scala/Int#
+         |local8 => abstract method y: Int
+         |  Int => scala/Int#
+         |local9 => abstract method y: Int
+         |  Int => scala/Int#
+         |local10 => param t: T
+         |  T => local11
+         |local11 => typeparam T
+         |local13 => abstract method id: Int
          |  Int => scala/Int#
          |""".stripMargin,
     )
@@ -616,13 +725,15 @@ class Issue1591Suite extends FunSuite {
       symbols(doc),
       """|b/Use. => final object Use extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
-         |b/Use.inferredR. => val method inferredR: C { val y: Int }
+         |b/Use.inferredR. => val method inferredR: C { def y: Int }
          |  C => a/Defs.C#
-         |  y => local0
+         |  y => local1
          |  Int => scala/Int#
          |b/Use.sameOffsetAsY(). => method sameOffsetAsY: Int
          |  Int => scala/Int#
          |local0 => val local y: Int
+         |  Int => scala/Int#
+         |local1 => abstract method y: Int
          |  Int => scala/Int#
          |""".stripMargin,
     )
@@ -630,30 +741,14 @@ class Issue1591Suite extends FunSuite {
 
   test("local names") {
     assertEquals(collisions(sameFile), Nil)
-    assertEquals(collisions(joint), List("local0: id, y", "local1: age, p"))
+    assertEquals(collisions(joint), Nil)
     assertEquals(collisions(classfile), Nil)
   }
 
   test("local references") {
     assertEquals(dangling(sameFile), Nil)
-    assertEquals(dangling(joint), List("local2", "local5", "local6", "local7", "local8"))
-    assertEquals(
-      dangling(classfile),
-      List(
-        "local0",
-        "local1",
-        "local4",
-        "local5",
-        "local6",
-        "local7",
-        "local8",
-        "local9",
-        "local10",
-        "local11",
-        "local12",
-        "local13",
-      ),
-    )
+    assertEquals(dangling(joint), List("local10"))
+    assertEquals(dangling(classfile), List("local12"))
   }
 
   test("two refinements with one member name under one owner, from a classfile: symbols") {
@@ -675,6 +770,14 @@ class Issue1591Suite extends FunSuite {
          |  x => local0
          |  Int => scala/Int#
          |  x => local1
+         |local0 => abstract method x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method x: Int
+         |  Int => scala/Int#
+         |local2 => abstract method x: Int
+         |  Int => scala/Int#
+         |local3 => abstract method x: Int
+         |  Int => scala/Int#
          |""".stripMargin,
     )
   }
@@ -700,6 +803,14 @@ class Issue1591Suite extends FunSuite {
          |  x => local0
          |  Int => scala/Int#
          |  x => local1
+         |local0 => abstract method x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method x: Int
+         |  Int => scala/Int#
+         |local2 => abstract method x: Int
+         |  Int => scala/Int#
+         |local3 => abstract method x: Int
+         |  Int => scala/Int#
          |""".stripMargin,
     )
   }
@@ -726,6 +837,16 @@ class Issue1591Suite extends FunSuite {
          |  x => local1
          |  String => scala/Predef.String#
          |b/UseMixed.x. => val method x: Int
+         |  Int => scala/Int#
+         |local0 => abstract method x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method x: String
+         |  String => scala/Predef.String#
+         |local2 => abstract method x: Int
+         |  Int => scala/Int#
+         |local3 => abstract method x: Int
+         |  Int => scala/Int#
+         |local4 => abstract method x: Int
          |  Int => scala/Int#
          |""".stripMargin,
     )
@@ -764,9 +885,9 @@ class Issue1591Suite extends FunSuite {
          |b/UseMixed.copies. => val method copies: Tuple2[C { def x: Int }, C { def x: Int }]
          |  Tuple2 => scala/Tuple2#
          |  C => a/Mixed.C#
-         |  x => local0
+         |  x => local2
          |  Int => scala/Int#
-         |  x => local1
+         |  x => local3
          |b/UseMixed.types. => val method types: Tuple2[AnyRef { def x: Int }, AnyRef { def x: String }]
          |  Tuple2 => scala/Tuple2#
          |  AnyRef => scala/AnyRef#
@@ -775,6 +896,14 @@ class Issue1591Suite extends FunSuite {
          |  x => local1
          |  String => scala/Predef.String#
          |b/UseMixed.x. => val method x: Int
+         |  Int => scala/Int#
+         |local0 => abstract method x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method x: String
+         |  String => scala/Predef.String#
+         |local2 => abstract method x: Int
+         |  Int => scala/Int#
+         |local3 => abstract method x: Int
          |  Int => scala/Int#
          |""".stripMargin,
     )
@@ -811,6 +940,17 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseOv.s. => val method s: Int
          |  Int => scala/Int#
+         |local0 => param x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method f(x: Int): Int
+         |  x => local0
+         |  Int => scala/Int#
+         |local2 => param x: String
+         |  String => scala/Predef.String#
+         |local3 => abstract method f(x: String): Int
+         |  x => local2
+         |  String => scala/Predef.String#
+         |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): UseOv <= b/UseOv.
@@ -828,7 +968,7 @@ class Issue1591Suite extends FunSuite {
          |[3:19..3:20): x => local2
          |----
          |collisions List()
-         |dangling List(local0, local1, local2, local3)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -842,6 +982,17 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseOv.s. => val method s: Int
          |  Int => scala/Int#
+         |local0 => param x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method f(x: Int): Int
+         |  x => local0
+         |  Int => scala/Int#
+         |local2 => param x: String
+         |  String => scala/Predef.String#
+         |local3 => abstract method f(x: String): Int
+         |  x => local2
+         |  String => scala/Predef.String#
+         |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): UseOv <= b/UseOv.
@@ -849,15 +1000,17 @@ class Issue1591Suite extends FunSuite {
          |[2:10..2:11): a => a/
          |[2:12..2:14): Ov => a/Ov.
          |[2:15..2:16): o => a/Ov.o.
-         |[2:19..2:20): x => local1
+         |[2:17..2:18): f => local1
+         |[2:19..2:20): x => local0
          |[3:6..3:7): s <= b/UseOv.s.
          |[3:10..3:11): a => a/
          |[3:12..3:14): Ov => a/Ov.
          |[3:15..3:16): o => a/Ov.o.
-         |[3:19..3:20): x => local3
+         |[3:17..3:18): f => local3
+         |[3:19..3:20): x => local2
          |----
          |collisions List()
-         |dangling List(local1, local3)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -903,6 +1056,10 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseM.v. => val method v: Int
          |  Int => scala/Int#
+         |local0 => abstract method x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method x: Int
+         |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:11): UseM <= b/UseM.
@@ -918,7 +1075,7 @@ class Issue1591Suite extends FunSuite {
          |[3:16..3:17): x => local1
          |----
          |collisions List()
-         |dangling List(local0, local1)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -932,6 +1089,10 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseM.v. => val method v: Int
          |  Int => scala/Int#
+         |local0 => abstract method x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method x: Int
+         |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:11): UseM <= b/UseM.
@@ -947,7 +1108,7 @@ class Issue1591Suite extends FunSuite {
          |[3:16..3:17): x => local1
          |----
          |collisions List()
-         |dangling List(local0, local1)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -1031,10 +1192,37 @@ class Issue1591Suite extends FunSuite {
          |  m => local12
          |  q => local13
          |  Int => scala/Int#
+         |local0 => abstract method x: Int
+         |  Int => scala/Int#
+         |local1 => abstract method inner: AnyRef { def x: Int }
+         |  AnyRef => scala/AnyRef#
+         |  x => local0
+         |  Int => scala/Int#
+         |local2 => abstract method x: Int
+         |  Int => scala/Int#
+         |local3 => abstract method x: Int
+         |  Int => scala/Int#
+         |local4 => abstract method y: Int
+         |  Int => scala/Int#
+         |local5 => abstract method x: Int
+         |  Int => scala/Int#
+         |local6 => abstract method get: Int
+         |  Int => scala/Int#
+         |local7 => abstract method get: String
+         |  String => scala/Predef.String#
+         |local8 => abstract method x: Int
+         |  Int => scala/Int#
+         |local9 => abstract method x: Int
+         |  Int => scala/Int#
          |local10 => abstract method m(q: Int): Int
          |  q => local11
          |  Int => scala/Int#
          |local11 => param q: Int
+         |  Int => scala/Int#
+         |local12 => abstract method m(q: Int): Int
+         |  q => local13
+         |  Int => scala/Int#
+         |local13 => param q: Int
          |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
@@ -1092,7 +1280,7 @@ class Issue1591Suite extends FunSuite {
          |[13:14..13:18): meth => a/N.meth().
          |----
          |collisions List()
-         |dangling List(local0, local1, local2, local3, local4, local5, local6, local7, local8, local9, local12, local13)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -1117,13 +1305,13 @@ class Issue1591Suite extends FunSuite {
          |b/UseN.mq(). => method mq(p: AnyRef { def m(q: Int): Int }): Int
          |  p => b/UseN.mq().(p)
          |  AnyRef => scala/AnyRef#
-         |  m => local0
-         |  q => local1
+         |  m => local9
+         |  q => local10
          |  Int => scala/Int#
          |b/UseN.mq().(p) => param p: AnyRef { def m(q: Int): Int }
          |  AnyRef => scala/AnyRef#
-         |  m => local0
-         |  q => local1
+         |  m => local9
+         |  q => local10
          |  Int => scala/Int#
          |b/UseN.nest. => val method nest: Int
          |  Int => scala/Int#
@@ -1134,13 +1322,38 @@ class Issue1591Suite extends FunSuite {
          |b/UseN.takeM. => val method takeM: Function1[AnyRef { def m(q: Int): Int }, Int]
          |  Function1 => scala/Function1#
          |  AnyRef => scala/AnyRef#
-         |  m => local6
-         |  q => local7
+         |  m => local11
+         |  q => local12
          |  Int => scala/Int#
-         |local0 => abstract method m(q: Int): Int
-         |  q => local1
+         |local0 => abstract method x: Int
          |  Int => scala/Int#
-         |local1 => param q: Int
+         |local1 => abstract method inner: AnyRef { def x: Int }
+         |  AnyRef => scala/AnyRef#
+         |  x => local0
+         |  Int => scala/Int#
+         |local2 => abstract method x: Int
+         |  Int => scala/Int#
+         |local3 => abstract method x: Int
+         |  Int => scala/Int#
+         |local4 => abstract method y: Int
+         |  Int => scala/Int#
+         |local5 => abstract method x: Int
+         |  Int => scala/Int#
+         |local6 => abstract method get: T
+         |  T => a/N.F#[T]
+         |local7 => abstract method x: Int
+         |  Int => scala/Int#
+         |local8 => abstract method x: Int
+         |  Int => scala/Int#
+         |local9 => abstract method m(q: Int): Int
+         |  q => local10
+         |  Int => scala/Int#
+         |local10 => param q: Int
+         |  Int => scala/Int#
+         |local11 => abstract method m(q: Int): Int
+         |  q => local12
+         |  Int => scala/Int#
+         |local12 => param q: Int
          |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
@@ -1149,46 +1362,89 @@ class Issue1591Suite extends FunSuite {
          |[2:7..2:11): UseN <= b/UseN.
          |[3:6..3:8): nx <= b/UseN.nx.
          |[3:11..3:12): n => a/N.n.
+         |[3:13..3:18): inner => local1
+         |[3:19..3:20): x => local0
          |[4:6..4:8): gx <= b/UseN.gx.
          |[4:11..4:12): g => a/N.g.
+         |[4:13..4:14): x => local2
          |[5:6..5:9): alx <= b/UseN.alx.
          |[5:13..5:16): ??? => scala/Predef.`???`().
          |[5:19..5:21): Al => a/N.Al#
+         |[5:23..5:24): x => local3
          |[6:6..6:9): aly <= b/UseN.aly.
          |[6:13..6:16): ??? => scala/Predef.`???`().
          |[6:19..6:21): Al => a/N.Al#
+         |[6:23..6:24): y => local4
          |[7:6..7:9): bdx <= b/UseN.bdx.
          |[7:12..7:14): bd => a/N.bd.
+         |[7:15..7:16): x => local5
          |[8:6..8:8): fi <= b/UseN.fi.
          |[8:12..8:15): ??? => scala/Predef.`???`().
          |[8:18..8:19): F => a/N.F#
          |[8:20..8:23): Int => scala/Int#
+         |[8:26..8:29): get => local6
          |[9:6..9:8): fs <= b/UseN.fs.
          |[9:12..9:15): ??? => scala/Predef.`???`().
          |[9:18..9:19): F => a/N.F#
          |[9:20..9:26): String => scala/Predef.String#
+         |[9:29..9:32): get => local6
          |[10:6..10:10): nest <= b/UseN.nest.
          |[10:17..10:21): Nest => a/N.Nest#
          |[10:21..10:21):  => a/N.Nest#`<init>`().
          |[10:24..10:25): r => a/N.Nest#r.
+         |[10:26..10:27): x => local7
          |[11:6..11:8): px <= b/UseN.px.
          |[11:15..11:16): P => a/N.P#
          |[11:16..11:16):  => a/N.P#`<init>`().
          |[11:19..11:22): get => a/N.Base#get().
+         |[11:23..11:24): x => local8
          |[12:6..12:8): mq <= b/UseN.mq().
          |[12:9..12:10): p <= b/UseN.mq().(p)
-         |[12:18..12:19): m <= local0
-         |[12:20..12:21): q <= local1
+         |[12:18..12:19): m <= local9
+         |[12:20..12:21): q <= local10
          |[12:23..12:26): Int => scala/Int#
          |[12:29..12:32): Int => scala/Int#
          |[12:38..12:39): p => b/UseN.mq().(p)
-         |[12:40..12:41): m => local0
-         |[12:42..12:43): q => local1
+         |[12:40..12:41): m => local9
+         |[12:42..12:43): q => local10
          |[13:6..13:11): takeM <= b/UseN.takeM.
          |[13:14..13:18): meth => a/N.meth().
          |----
          |collisions List()
-         |dangling List(local6, local7)
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  // the parent of a nested object holds a copy-prone refinement of the outer object
+  private val nestedObjectA = Map(
+    "Q.scala" ->
+      """|package a
+         |object Q {
+         |  class C
+         |  class Base[T] { def get: T = ??? }
+         |  object Inner extends Base[C { def x: Int }]
+         |  val g: C { def x: Int } = ???
+         |}
+         |""".stripMargin,
+  )
+
+  private val nestedObjectB = Map(
+    "UseQ.scala" ->
+      """|package b
+         |object UseQ {
+         |  val ix = a.Q.Inner.get.x
+         |  val gx = a.Q.g.x
+         |}
+         |""".stripMargin,
+  )
+
+  test("a refinement in the parent of a nested object, from a classfile") {
+    val doc = fromClassfile(nestedObjectA, nestedObjectB, "UseQ.scala")
+    assertNoDiff(
+      occurrences(doc).linesIterator.filter(_.contains(" x ")).mkString("\n"),
+      """|[2:25..2:26): x => local0
+         |[3:17..3:18): x => local1
          |""".stripMargin,
     )
   }
@@ -1197,10 +1453,7 @@ class Issue1591Suite extends FunSuite {
     val out =
       compile(Map("A.scala" -> a, "B.scala" -> b, "B2.scala" -> b.replace("package b", "package b2")))
     def symbolsOf(uri: String) = symbols(document(out, uri)).replace("b2/", "b/")
-    try {
-      symbolsOf("B2.scala")
-      fail("no StackOverflowError")
-    } catch { case _: StackOverflowError => }
+    assertEquals(symbolsOf("B2.scala"), symbolsOf("B.scala"))
   }
 
   private val selfA = Map(
@@ -1470,6 +1723,10 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseBox.s. => val method s: String
          |  String => scala/Predef.String#
+         |local0 => abstract method get: Int
+         |  Int => scala/Int#
+         |local1 => abstract method get: String
+         |  String => scala/Predef.String#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -1492,7 +1749,7 @@ class Issue1591Suite extends FunSuite {
          |[4:30..4:33): get => local1
          |----
          |collisions List()
-         |dangling List(local0, local1)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -1506,6 +1763,8 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseBox.s. => val method s: String
          |  String => scala/Predef.String#
+         |local0 => abstract method get: T
+         |  T => a/Box#[T]
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -1518,12 +1777,14 @@ class Issue1591Suite extends FunSuite {
          |[3:20..3:23): Int => scala/Int#
          |[3:24..3:24):  => a/Box#`<init>`().
          |[3:25..3:26): v => a/Box#v.
+         |[3:27..3:30): get => local0
          |[4:6..4:7): s <= b/UseBox.s.
          |[4:14..4:15): a => a/
          |[4:16..4:19): Box => a/Box#
          |[4:20..4:26): String => scala/Predef.String#
          |[4:27..4:27):  => a/Box#`<init>`().
          |[4:28..4:29): v => a/Box#v.
+         |[4:30..4:33): get => local0
          |----
          |collisions List()
          |dangling List()
@@ -1569,6 +1830,10 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseF.l. => val method l: Long
          |  Long => scala/Long#
+         |local0 => abstract method get: Int
+         |  Int => scala/Int#
+         |local1 => abstract method get: Long
+         |  Long => scala/Long#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -1607,7 +1872,7 @@ class Issue1591Suite extends FunSuite {
          |[6:38..6:41): get => local1
          |----
          |collisions List()
-         |dangling List(local0, local1)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -1625,6 +1890,8 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseF.l. => val method l: Long
          |  Long => scala/Long#
+         |local0 => abstract method get: T
+         |  T => a/F#[T]
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -1651,6 +1918,7 @@ class Issue1591Suite extends FunSuite {
          |[5:26..5:27): F => a/F#
          |[5:28..5:31): Int => scala/Int#
          |[5:34..5:35): x => a/F#x().
+         |[5:36..5:39): get => local0
          |[6:6..6:8): fl <= b/UseF.fl.
          |[6:16..6:17): a => a/
          |[6:18..6:23): LongF => a/LongF#
@@ -1659,6 +1927,7 @@ class Issue1591Suite extends FunSuite {
          |[6:27..6:28): F => a/F#
          |[6:29..6:33): Long => scala/Long#
          |[6:36..6:37): x => a/F#x().
+         |[6:38..6:41): get => local0
          |----
          |collisions List()
          |dangling List()
@@ -1759,10 +2028,11 @@ class Issue1591Suite extends FunSuite {
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
          |  Any => scala/Any#
-         |local0 => val local v: W[v]
+         |local0 => val local v: W[_]
          |  W => a/E.W#
-         |  v => local0
-         |local1 => abstract type t
+         |  _ => local1
+         |local1 => synthetic abstract type _
+         |local2 => abstract type t
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:11): UseE <= b/UseE.
@@ -1774,7 +2044,7 @@ class Issue1591Suite extends FunSuite {
          |[2:32..2:33): a => a/
          |[2:34..2:35): E => a/E.
          |[2:36..2:37): W => a/E.W#
-         |[2:38..2:39): t <= local1
+         |[2:38..2:39): t <= local2
          |[2:44..2:45): v => local0
          |[2:46..2:47): t => a/E.W#t.
          |----
@@ -1791,13 +2061,14 @@ class Issue1591Suite extends FunSuite {
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
          |  Any => scala/Any#
-         |b/UseE.s. => val method s: W[v] forSome { val v: W[v] }
+         |b/UseE.s. => val method s: W[_] forSome { type _ }
          |  W => a/E.W#
-         |  v => local0
-         |local0 => val local v: W[v]
+         |  _ => local0
+         |local0 => synthetic abstract type _
+         |local1 => val local v: W[_]
          |  W => a/E.W#
-         |  v => local0
-         |local1 => abstract type t
+         |  _ => local0
+         |local2 => abstract type t
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:11): UseE <= b/UseE.
@@ -1810,15 +2081,15 @@ class Issue1591Suite extends FunSuite {
          |[3:10..3:11): a => a/
          |[3:12..3:13): E => a/E.
          |[3:14..3:15): w => a/E.w.
-         |[3:29..3:30): v <= local0
+         |[3:29..3:30): v <= local1
          |[3:32..3:33): a => a/
          |[3:34..3:35): E => a/E.
          |[3:36..3:37): W => a/E.W#
-         |[3:38..3:39): t <= local1
-         |[3:44..3:45): v => local0
+         |[3:38..3:39): t <= local2
+         |[3:44..3:45): v => local1
          |[3:46..3:47): t => a/E.W#t.
          |----
-         |collisions List(local0: _, v)
+         |collisions List()
          |dangling List()
          |""".stripMargin,
     )
@@ -1831,13 +2102,14 @@ class Issue1591Suite extends FunSuite {
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
          |  Any => scala/Any#
-         |b/UseE.s. => val method s: W[v] forSome { val v: W[v] }
+         |b/UseE.s. => val method s: W[_] forSome { type _ }
          |  W => a/E.W#
-         |  v => local0
-         |local0 => val local v: W[v]
+         |  _ => local1
+         |local0 => val local v: W[_]
          |  W => a/E.W#
-         |  v => local0
-         |local1 => abstract type t
+         |  _ => local1
+         |local1 => synthetic abstract type _
+         |local2 => abstract type t
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:11): UseE <= b/UseE.
@@ -1849,7 +2121,7 @@ class Issue1591Suite extends FunSuite {
          |[2:32..2:33): a => a/
          |[2:34..2:35): E => a/E.
          |[2:36..2:37): W => a/E.W#
-         |[2:38..2:39): t <= local1
+         |[2:38..2:39): t <= local2
          |[2:44..2:45): v => local0
          |[2:46..2:47): t => a/E.W#t.
          |[3:6..3:7): s <= b/UseE.s.
@@ -1858,7 +2130,7 @@ class Issue1591Suite extends FunSuite {
          |[3:14..3:15): w => a/E.w.
          |[3:16..3:20): self => a/E.W#self().
          |----
-         |collisions List(local0: _, v)
+         |collisions List()
          |dangling List()
          |""".stripMargin,
     )
@@ -1873,14 +2145,15 @@ class Issue1591Suite extends FunSuite {
          |  Any => scala/Any#
          |b/UseE.n(). => method n: Any
          |  Any => scala/Any#
-         |local0 => val local v: W[v]
+         |local0 => val local v: W[_]
          |  W => a/E.W#
-         |  v => local0
-         |local1 => abstract type t
-         |local2 => val local u: W[v]
+         |  _ => local1
+         |local1 => synthetic abstract type _
+         |local2 => abstract type t
+         |local3 => val local u: W[_]
          |  W => a/E.W#
-         |  v => local0
-         |local3 => abstract type r
+         |  _ => local1
+         |local4 => abstract type r
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:11): UseE <= b/UseE.
@@ -1892,19 +2165,19 @@ class Issue1591Suite extends FunSuite {
          |[2:32..2:33): a => a/
          |[2:34..2:35): E => a/E.
          |[2:36..2:37): W => a/E.W#
-         |[2:38..2:39): t <= local1
+         |[2:38..2:39): t <= local2
          |[2:44..2:45): v => local0
          |[2:46..2:47): t => a/E.W#t.
          |[3:6..3:7): n <= b/UseE.n().
          |[3:10..3:11): a => a/
          |[3:12..3:13): E => a/E.
          |[3:14..3:15): w => a/E.w.
-         |[3:29..3:30): u <= local2
+         |[3:29..3:30): u <= local3
          |[3:32..3:33): a => a/
          |[3:34..3:35): E => a/E.
          |[3:36..3:37): W => a/E.W#
-         |[3:38..3:39): r <= local3
-         |[3:44..3:45): u => local2
+         |[3:38..3:39): r <= local4
+         |[3:44..3:45): u => local3
          |[3:46..3:47): t => a/E.W#t.
          |----
          |collisions List()
@@ -2122,9 +2395,10 @@ class Issue1591Suite extends FunSuite {
          |  AnyRef => scala/AnyRef#
          |b/UseE.m(). => method m: Any
          |  Any => scala/Any#
-         |local0 => val local v: W[local1]
+         |local0 => val local v: W[_]
          |  W => a/E.W#
-         |  local1 => local1
+         |  _ => local1
+         |local1 => abstract type _
          |local2 => abstract type t
          |----
          |[0:8..0:9): b <= b/
@@ -2142,7 +2416,7 @@ class Issue1591Suite extends FunSuite {
          |[2:46..2:47): t => a/E.W#t.
          |----
          |collisions List()
-         |dangling List(local1)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -2157,9 +2431,10 @@ class Issue1591Suite extends FunSuite {
          |b/UseE.s. => val method s: W[_] forSome { type _ }
          |  W => a/E.W#
          |  _ => local0
-         |local1 => val local v: W[local2]
+         |local1 => val local v: W[_]
          |  W => a/E.W#
-         |  local2 => local2
+         |  _ => local2
+         |local2 => abstract type _
          |local3 => abstract type t
          |----
          |[0:8..0:9): b <= b/
@@ -2182,7 +2457,7 @@ class Issue1591Suite extends FunSuite {
          |[3:46..3:47): t => a/E.W#t.
          |----
          |collisions List()
-         |dangling List(local0, local2)
+         |dangling List(local0)
          |""".stripMargin,
     )
   }
@@ -2197,9 +2472,10 @@ class Issue1591Suite extends FunSuite {
          |b/UseE.s. => val method s: W[_] forSome { type _ }
          |  W => a/E.W#
          |  _ => local3
-         |local0 => val local v: W[local1]
+         |local0 => val local v: W[_]
          |  W => a/E.W#
-         |  local1 => local1
+         |  _ => local1
+         |local1 => abstract type _
          |local2 => abstract type t
          |----
          |[0:8..0:9): b <= b/
@@ -2222,7 +2498,7 @@ class Issue1591Suite extends FunSuite {
          |[3:16..3:20): self => a/E.W#self().
          |----
          |collisions List()
-         |dangling List(local1, local3)
+         |dangling List(local3)
          |""".stripMargin,
     )
   }
@@ -2236,13 +2512,15 @@ class Issue1591Suite extends FunSuite {
          |  Any => scala/Any#
          |b/UseE.n(). => method n: Any
          |  Any => scala/Any#
-         |local0 => val local v: W[local1]
+         |local0 => val local v: W[_]
          |  W => a/E.W#
-         |  local1 => local1
+         |  _ => local1
+         |local1 => abstract type _
          |local2 => abstract type t
-         |local3 => val local u: W[local4]
+         |local3 => val local u: W[_]
          |  W => a/E.W#
-         |  local4 => local4
+         |  _ => local4
+         |local4 => abstract type _
          |local5 => abstract type r
          |----
          |[0:8..0:9): b <= b/
@@ -2271,7 +2549,7 @@ class Issue1591Suite extends FunSuite {
          |[3:46..3:47): t => a/E.W#t.
          |----
          |collisions List()
-         |dangling List(local1, local4)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -2313,10 +2591,10 @@ class Issue1591Suite extends FunSuite {
          |local0 => synthetic class $anon extends Object with S { +1 decls }
          |  Object => java/lang/Object#
          |  S => a/O.S#
-         |local2 => synthetic method f(a: Int): Int <: a/O.S#f().
+         |local1 => synthetic method f(a: Int): Int <: a/O.S#f().
          |  a => a/O.S#f().(a)
          |  Int => scala/Int#
-         |local3 => synthetic param x$1: Int
+         |local2 => synthetic param x$1: Int
          |  Int => scala/Int#
          |----
          |[0:8..0:9): a <= a/
@@ -2332,9 +2610,9 @@ class Issue1591Suite extends FunSuite {
          |[3:16..3:17): s => a/O.w().(s)
          |[3:18..3:19): f => a/O.S#f().
          |[4:2..4:3): w => a/O.w().
-         |[4:4..4:5): _ <= local3
+         |[4:4..4:5): _ <= local2
          |[4:4..4:9): _ + 1 <= local0
-         |[4:4..4:9): _ + 1 <= local2
+         |[4:4..4:9): _ + 1 <= local1
          |[4:6..4:7): + => scala/Int#`+`(+4).
          |----
          |collisions List()
@@ -2383,15 +2661,21 @@ class Issue1591Suite extends FunSuite {
          |b/U.p. => val method p: Tuple2[AnyRef { def x: Int }, AnyRef { def x: Long }]
          |  Tuple2 => scala/Tuple2#
          |  AnyRef => scala/AnyRef#
-         |  x => local3
-         |  Int => scala/Int#
          |  x => local4
+         |  Int => scala/Int#
+         |  x => local5
          |  Long => scala/Long#
          |local0 => final class $anon extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |local1 => method x: Int
          |  Int => scala/Int#
-         |local2 => method x: Long
+         |local2 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local3 => method x: Long
+         |  Long => scala/Long#
+         |local4 => method x: Int
+         |  Int => scala/Int#
+         |local5 => method x: Long
          |  Long => scala/Long#
          |----
          |[0:8..0:9): b <= b/
@@ -2402,19 +2686,19 @@ class Issue1591Suite extends FunSuite {
          |[3:6..3:7): p <= b/U.p.
          |[3:10..3:11): a => a/
          |[3:12..3:13): M => a/M.
-         |[3:14..3:14):  <= local0
+         |[3:14..3:14):  <= local2
          |[3:14..3:18): pair => a/M.pair().
          |[4:6..4:7): i <= b/U.i.
          |[4:10..4:11): p => b/U.p.
          |[4:12..4:14): _1 => scala/Tuple2#_1.
-         |[4:15..4:16): x => local3
+         |[4:15..4:16): x => local4
          |[5:6..5:7): l <= b/U.l.
          |[5:10..5:11): p => b/U.p.
          |[5:12..5:14): _2 => scala/Tuple2#_2.
-         |[5:15..5:16): x => local4
+         |[5:15..5:16): x => local5
          |----
          |collisions List()
-         |dangling List(local3, local4)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -2453,7 +2737,7 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/U.o. => val method o: AnyRef { def x: Int }
          |  AnyRef => scala/AnyRef#
-         |  x => local2
+         |  x => local1
          |  Int => scala/Int#
          |local0 => final class $anon extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
@@ -2472,10 +2756,10 @@ class Issue1591Suite extends FunSuite {
          |[3:15..3:18): one => a/M1.one().
          |[4:6..4:7): i <= b/U.i.
          |[4:10..4:11): o => b/U.o.
-         |[4:12..4:13): x => local2
+         |[4:12..4:13): x => local1
          |----
          |collisions List()
-         |dangling List(local2)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -2505,6 +2789,10 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/U.l. => val method l: Long
          |  Long => scala/Long#
+         |local0 => method x: Int
+         |  Int => scala/Int#
+         |local1 => method x: Long
+         |  Long => scala/Long#
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -2515,10 +2803,12 @@ class Issue1591Suite extends FunSuite {
          |[3:10..3:11): P => b/P.
          |[3:12..3:13): p => b/P.p.
          |[3:14..3:16): _1 => scala/Tuple2#_1.
+         |[3:17..3:18): x => local0
          |[4:6..4:7): l <= b/U.l.
          |[4:10..4:11): P => b/P.
          |[4:12..4:13): p => b/P.p.
          |[4:14..4:16): _2 => scala/Tuple2#_2.
+         |[4:17..4:18): x => local1
          |----
          |collisions List()
          |dangling List()
@@ -2566,6 +2856,13 @@ class Issue1591Suite extends FunSuite {
     def locals(name: String): List[String] = unit.body
       .collect { case t: pc.ValDef if t.name.toString == name => t.symbol.toSemantic }
     def document: s.TextDocument = unit.toTextDocument
+    // the existential types in the types of the trees
+    def existentials: List[String] = {
+      val syms = mutable.LinkedHashSet.empty[pc.Symbol]
+      unit.body
+        .foreach(t => if (t.tpe != null) t.tpe.foreach(tpe => syms ++= tpe.typeArgs.map(_.typeSymbol)))
+      syms.toList.filter(_.hasFlag(scala.reflect.internal.Flags.EXISTENTIAL)).map(_.toSemantic)
+    }
 
   }
 
@@ -2579,14 +2876,16 @@ class Issue1591Suite extends FunSuite {
     val typed = new Typed(code)
     val before = typed.locals("x")
     val doc = typed.document
-    assertEquals(before ++ typed.locals("x"), List("local0", "local0"))
+    assertEquals(before ++ typed.locals("x"), List("local0", "local1"))
     assertNoDiff(
       symbols(doc),
       """|_empty_/O. => final object O extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
          |_empty_/O.f(). => method f: Int
          |  Int => scala/Int#
-         |local0 => val local x: Int
+         |local0 => val local y: Int
+         |  Int => scala/Int#
+         |local1 => val local x: Int
          |  Int => scala/Int#
          |""".stripMargin,
     )
@@ -2607,10 +2906,10 @@ class Issue1591Suite extends FunSuite {
     pc.askShutdown()
     assertNoDiff(
       section(doc, "Synthetics"),
-      """|[1:10..1:16) => *.apply[Class[local0]]
+      """|[1:10..1:16) => *.apply[Class[?0]]
          |  apply => scala/Option.apply().
          |  Class => java/lang/Class#
-         |  local0 => local0
+         |  ?0 => local0
          |""".stripMargin,
     )
   }
@@ -2671,12 +2970,19 @@ class Issue1591Suite extends FunSuite {
          |  AnyRef => scala/AnyRef#
          |b/UseEsc.x. => val method x: Int
          |  Int => scala/Int#
-         |b/UseEsc.y. => val method y: Object { def get: AnyRef }
+         |b/UseEsc.y. => val method y: Object { def get: K2 }
          |  Object => java/lang/Object#
-         |  get => local3
-         |  AnyRef => scala/AnyRef#
+         |  get => local1
+         |  K2 => local2
          |b/UseEsc.z. => val method z: AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => method get: Int
+         |  Int => scala/Int#
+         |local1 => abstract method get: K2
+         |  K2 => local2
+         |local2 => class K2 extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |local3 => primary ctor <init>()
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -2687,6 +2993,7 @@ class Issue1591Suite extends FunSuite {
          |[3:10..3:11): a => a/
          |[3:12..3:15): Esc => a/Esc.
          |[3:16..3:17): f => a/Esc.f().
+         |[3:18..3:21): get => local0
          |[4:6..4:7): y <= b/UseEsc.y.
          |[4:10..4:11): a => a/
          |[4:12..4:15): Esc => a/Esc.
@@ -2695,9 +3002,10 @@ class Issue1591Suite extends FunSuite {
          |[5:10..5:11): a => a/
          |[5:12..5:15): Esc => a/Esc.
          |[5:16..5:17): g => a/Esc.g().
+         |[5:18..5:21): get => local1
          |----
          |collisions List()
-         |dangling List(local3)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -2714,6 +3022,10 @@ class Issue1591Suite extends FunSuite {
          |  get => local1
          |  AnyRef => scala/AnyRef#
          |b/UseEsc.z. => val method z: AnyRef
+         |  AnyRef => scala/AnyRef#
+         |local0 => method get: Int
+         |  Int => scala/Int#
+         |local1 => abstract method get: AnyRef
          |  AnyRef => scala/AnyRef#
          |----
          |[0:8..0:9): b <= b/
@@ -2737,7 +3049,7 @@ class Issue1591Suite extends FunSuite {
          |[5:18..5:21): get => local1
          |----
          |collisions List()
-         |dangling List(local0, local1)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -2766,7 +3078,7 @@ class Issue1591Suite extends FunSuite {
     assertNoDiff(
       locals(document(compile(Map("K.scala" -> code)), "K.scala")),
       """|local0 => abstract method get: T
-         |  T => a/K.unapply().[T]
+         |  T => a/K#[T]
          |local1 => synthetic val local K$1: K[T]
          |  K => a/K#
          |  T => a/K#[T]
@@ -2779,14 +3091,17 @@ class Issue1591Suite extends FunSuite {
       summary(inOneRun(caseA, caseB, "UseK.scala")),
       """|b/UseK. => final object UseK extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
-         |b/UseK.f. => val method f: Function1[AnyRef { def get: Int }, K[Int]]
+         |b/UseK.f. => val method f: Function1[AnyRef { def get: T }, K[Int]]
          |  Function1 => scala/Function1#
          |  AnyRef => scala/AnyRef#
          |  get => local0
-         |  Int => scala/Int#
+         |  T => a/K#[T]
          |  K => a/K#
+         |  Int => scala/Int#
          |b/UseK.g. => val method g: Int
          |  Int => scala/Int#
+         |local0 => abstract method get: T
+         |  T => a/K#[T]
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -2803,9 +3118,10 @@ class Issue1591Suite extends FunSuite {
          |[4:12..4:13): K => a/K.
          |[4:14..4:17): Int => scala/Int#
          |[4:25..4:26): r => a/K#r.
+         |[4:27..4:30): get => local0
          |----
          |collisions List()
-         |dangling List(local0)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -2822,6 +3138,10 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |  K => a/K#
          |b/UseK.g. => val method g: Int
+         |  Int => scala/Int#
+         |local0 => abstract method get: Int
+         |  Int => scala/Int#
+         |local1 => abstract method get: Int
          |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
@@ -2842,7 +3162,7 @@ class Issue1591Suite extends FunSuite {
          |[4:27..4:30): get => local1
          |----
          |collisions List()
-         |dangling List(local0, local1)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -2884,7 +3204,7 @@ class Issue1591Suite extends FunSuite {
     assertNoDiff(
       locals(document(compile(Map("M.scala" -> code)), "M.scala")),
       """|local0 => abstract method get: T
-         |  T => a/M.D.unapply().[T]
+         |  T => a/M.D#[T]
          |local1 => synthetic val local D$1: D[T]
          |  D => a/M.D#
          |  T => a/M.D#[T]
@@ -2903,7 +3223,7 @@ class Issue1591Suite extends FunSuite {
          |local7 => abstract method get: T
          |  T => a/M.m().[T]
          |local8 => abstract method get: T
-         |  T => a/M.I().[T]
+         |  T => a/M.I#[T]
          |""".stripMargin,
     )
   }
@@ -2923,6 +3243,16 @@ class Issue1591Suite extends FunSuite {
          |  Int => scala/Int#
          |b/UseM.p. => val method p: Int
          |  Int => scala/Int#
+         |local0 => abstract method get: T
+         |  T => a/M.D#[T]
+         |local1 => abstract method get: T
+         |  T => a/M.E#[T]
+         |local2 => abstract method get: T
+         |  T => a/M.F#[T]
+         |local3 => abstract method get: T
+         |  T => a/M.P#[T]
+         |local4 => abstract method get: T
+         |  T => a/M.I#[T]
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -2935,18 +3265,21 @@ class Issue1591Suite extends FunSuite {
          |[3:14..3:15): D => a/M.D.
          |[3:16..3:19): Int => scala/Int#
          |[3:23..3:24): r => a/M.D#r.
+         |[3:25..3:28): get => local0
          |[4:6..4:7): e <= b/UseM.e.
          |[4:10..4:11): a => a/
          |[4:12..4:13): M => a/M.
          |[4:14..4:15): E => a/M.E.
          |[4:16..4:19): Int => scala/Int#
          |[4:27..4:28): r => a/M.E#r.
+         |[4:29..4:32): get => local1
          |[5:6..5:7): f <= b/UseM.f.
          |[5:10..5:11): a => a/
          |[5:12..5:13): M => a/M.
          |[5:14..5:15): F => a/M.F.
          |[5:16..5:19): Int => scala/Int#
          |[5:23..5:24): r => a/M.F#r.
+         |[5:25..5:28): get => local2
          |[6:6..6:7): p <= b/UseM.p.
          |[6:14..6:15): a => a/
          |[6:16..6:17): M => a/M.
@@ -2954,12 +3287,14 @@ class Issue1591Suite extends FunSuite {
          |[6:20..6:23): Int => scala/Int#
          |[6:24..6:24):  => a/M.P#`<init>`().
          |[6:27..6:28): r => a/M.P#r.
+         |[6:29..6:32): get => local3
          |[7:6..7:7): i <= b/UseM.i.
          |[7:10..7:11): a => a/
          |[7:12..7:13): M => a/M.
          |[7:14..7:15): I => a/M.I().
          |[7:16..7:19): Int => scala/Int#
          |[7:27..7:28): r => a/M.I#r.
+         |[7:29..7:32): get => local4
          |----
          |collisions List()
          |dangling List()
@@ -2981,6 +3316,16 @@ class Issue1591Suite extends FunSuite {
          |b/UseM.i. => val method i: Int
          |  Int => scala/Int#
          |b/UseM.p. => val method p: Int
+         |  Int => scala/Int#
+         |local0 => abstract method get: Int
+         |  Int => scala/Int#
+         |local1 => abstract method get: Int
+         |  Int => scala/Int#
+         |local2 => abstract method get: Int
+         |  Int => scala/Int#
+         |local3 => abstract method get: Int
+         |  Int => scala/Int#
+         |local4 => abstract method get: Int
          |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
@@ -3026,7 +3371,7 @@ class Issue1591Suite extends FunSuite {
          |[7:29..7:32): get => local4
          |----
          |collisions List()
-         |dangling List(local0, local1, local2, local3, local4)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -3061,9 +3406,9 @@ class Issue1591Suite extends FunSuite {
       """|local0 => abstract type T <: AnyRef { def get: U }
          |  AnyRef => scala/AnyRef#
          |  get => local1
-         |  U => a/X.W.unapply().[U]
+         |  U => a/X.W#[U]
          |local1 => abstract method get: U
-         |  U => a/X.W.unapply().[U]
+         |  U => a/X.W#[U]
          |local2 => synthetic val local W$1: W[U]
          |  W => a/X.W#
          |  U => a/X.W#[U]
@@ -3078,11 +3423,13 @@ class Issue1591Suite extends FunSuite {
          |  AnyRef => scala/AnyRef#
          |b/UseX.g. => val method g: Int
          |  Int => scala/Int#
-         |b/UseX.w. => val method w: Box[AnyRef { def get: Int }]
+         |b/UseX.w. => val method w: Box[AnyRef { def get: U }]
          |  Box => a/X.Box#
          |  AnyRef => scala/AnyRef#
          |  get => local0
-         |  Int => scala/Int#
+         |  U => a/X.W#[U]
+         |local0 => abstract method get: U
+         |  U => a/X.W#[U]
          |----
          |[0:8..0:9): b <= b/
          |[1:7..1:12): scala => scala/
@@ -3102,9 +3449,10 @@ class Issue1591Suite extends FunSuite {
          |[4:16..4:19): Int => scala/Int#
          |[4:27..4:28): r => a/X.W#r.
          |[4:29..4:33): head => a/X.Box#head.
+         |[4:34..4:37): get => local0
          |----
          |collisions List()
-         |dangling List(local0)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -3120,6 +3468,10 @@ class Issue1591Suite extends FunSuite {
          |  Box => a/X.Box#
          |  AnyRef => scala/AnyRef#
          |  get => local0
+         |  Int => scala/Int#
+         |local0 => abstract method get: Int
+         |  Int => scala/Int#
+         |local1 => abstract method get: Int
          |  Int => scala/Int#
          |----
          |[0:8..0:9): b <= b/
@@ -3143,7 +3495,7 @@ class Issue1591Suite extends FunSuite {
          |[4:34..4:37): get => local1
          |----
          |collisions List()
-         |dangling List(local0, local1)
+         |dangling List()
          |""".stripMargin,
     )
   }
@@ -3202,93 +3554,226 @@ class Issue1591Suite extends FunSuite {
     )
     assertNoDiff(
       infos(doc, heads: _*),
-      """|local0 => synthetic method copy[T](t: T): k[T]
-         |  T => local1
-         |  t => local2
-         |  k => local3
-         |local4 => synthetic method copy$default$1[T]: T @uncheckedVariance
-         |  T => local1
-         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local5 => synthetic method canEqual(unknown local6): Boolean <: scala/Equals#canEqual().
-         |  local6 => local6
-         |  Boolean => scala/Boolean#
-         |local7 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local8 => synthetic method equals(unknown local9): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  local9 => local9
-         |  Boolean => scala/Boolean#
-         |local1 => typeparam T
-         |local10 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local11 => synthetic method apply[T](t: T): k[T]
-         |  T => local1
-         |  t => local2
-         |  k => local3
-         |local12 => synthetic method unapply[T](unknown local13): Option[T]
-         |  T => local1
-         |  local13 => local13
-         |  Option => scala/Option#
-         |local14 => synthetic method apply[A, B](a: A, unknown local15): j[A, B]
-         |  A => local16
-         |  B => local17
-         |  a => local18
-         |  local15 => local15
-         |  j => local19
-         |local20 => synthetic method apply$default$2[A, B]: None.type @uncheckedVariance
-         |  A => local16
-         |  B => local17
-         |  None => scala/None.
-         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local21 => synthetic method unapply[A, B](unknown local22): Option[Tuple2[A, Option[B]]]
-         |  A => local16
-         |  B => local17
-         |  local22 => local22
-         |  Option => scala/Option#
-         |  Tuple2 => scala/Tuple2#
-         |local23 => synthetic method <init>$default$2[A, B]: None.type @uncheckedVariance
-         |  A => local16
-         |  B => local17
-         |  None => scala/None.
-         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local16 => typeparam A
-         |local17 => typeparam B
-         |local24 => synthetic method copy[A, B](a: A, unknown local25): j[A, B]
-         |  A => local16
-         |  B => local17
-         |  a => local18
-         |  local25 => local25
-         |  j => local19
-         |local26 => synthetic method copy$default$1[A, B]: A @uncheckedVariance
-         |  A => local16
-         |  B => local17
-         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local27 => synthetic method copy$default$2[A, B]: Option[B] @uncheckedVariance
-         |  A => local16
-         |  B => local17
-         |  Option => scala/Option#
-         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local28 => synthetic method canEqual(unknown local29): Boolean <: scala/Equals#canEqual().
-         |  local29 => local29
-         |  Boolean => scala/Boolean#
-         |local30 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local31 => synthetic method equals(unknown local32): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  local32 => local32
-         |  Boolean => scala/Boolean#
-         |local33 => implicit class ic[T] extends AnyRef { +3 decls }
-         |  T => local34
-         |  AnyRef => scala/AnyRef#
-         |local34 => typeparam T
-         |local35 => synthetic implicit method ic[T](t: T): ic[T]
-         |  T => local34
-         |  t => local36
-         |  ic => local33
-         |local37 => typeparam T
-         |local38 => synthetic method <init>$default$1[T]: None.type @uncheckedVariance
-         |  T => local37
-         |  None => scala/None.
-         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |""".stripMargin,
+      if (ScalaVersion.is212)
+        """|local0 => synthetic method copy[+T](val t: T): k[T]
+           |  T => local1
+           |  t => local2
+           |  k => local3
+           |local4 => synthetic method copy$default$1[+T]: T @uncheckedVariance
+           |  T => local1
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local5 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+           |  x$1 => local6
+           |  Any => scala/Any#
+           |  Boolean => scala/Boolean#
+           |local7 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |  String => java/lang/String#
+           |local8 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+           |  x$1 => local9
+           |  Any => scala/Any#
+           |  Boolean => scala/Boolean#
+           |local1 => covariant typeparam T
+           |local10 => synthetic param x$1: Int
+           |  Int => scala/Int#
+           |local6 => synthetic param x$1: Any
+           |  Any => scala/Any#
+           |local9 => synthetic param x$1: Any
+           |  Any => scala/Any#
+           |local11 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |  String => java/lang/String#
+           |local12 => synthetic method apply[+T](val t: T): k[T]
+           |  T => local1
+           |  t => local2
+           |  k => local3
+           |local13 => synthetic method unapply[+T](x$0: k[T]): Option[T]
+           |  T => local1
+           |  x$0 => local14
+           |  k => local3
+           |  Option => scala/Option#
+           |local15 => synthetic method apply[A, B](val a: A, val b: Option[B]): j[A, B]
+           |  A => local16
+           |  B => local17
+           |  a => local18
+           |  b => local19
+           |  Option => scala/Option#
+           |  j => local20
+           |local21 => synthetic method apply$default$2[A, B]: None.type @uncheckedVariance
+           |  A => local16
+           |  B => local17
+           |  None => scala/None.
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local22 => synthetic method unapply[A, B](x$0: j[A, B]): Option[Tuple2[A, Option[B]]]
+           |  A => local16
+           |  B => local17
+           |  x$0 => local23
+           |  j => local20
+           |  Option => scala/Option#
+           |  Tuple2 => scala/Tuple2#
+           |local24 => synthetic method <init>$default$2[A, B]: None.type @uncheckedVariance
+           |  A => local16
+           |  B => local17
+           |  None => scala/None.
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local16 => typeparam A
+           |local17 => typeparam B
+           |local25 => synthetic method copy[A, B](val a: A, val b: Option[B]): j[A, B]
+           |  A => local16
+           |  B => local17
+           |  a => local18
+           |  b => local19
+           |  Option => scala/Option#
+           |  j => local20
+           |local26 => synthetic method copy$default$1[A, B]: A @uncheckedVariance
+           |  A => local16
+           |  B => local17
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local27 => synthetic method copy$default$2[A, B]: Option[B] @uncheckedVariance
+           |  A => local16
+           |  B => local17
+           |  Option => scala/Option#
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local28 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+           |  x$1 => local29
+           |  Any => scala/Any#
+           |  Boolean => scala/Boolean#
+           |local30 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |  String => java/lang/String#
+           |local31 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+           |  x$1 => local32
+           |  Any => scala/Any#
+           |  Boolean => scala/Boolean#
+           |local33 => synthetic param x$1: Int
+           |  Int => scala/Int#
+           |local29 => synthetic param x$1: Any
+           |  Any => scala/Any#
+           |local32 => synthetic param x$1: Any
+           |  Any => scala/Any#
+           |local34 => implicit class ic[T] extends AnyRef { +3 decls }
+           |  T => local35
+           |  AnyRef => scala/AnyRef#
+           |local35 => typeparam T
+           |local36 => synthetic implicit method ic[T](t: T): ic[T]
+           |  T => local35
+           |  t => local37
+           |  ic => local34
+           |local38 => typeparam T
+           |local39 => synthetic method <init>$default$1[T]: None.type @uncheckedVariance
+           |  T => local38
+           |  None => scala/None.
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |""".stripMargin
+      else
+        """|local0 => synthetic method copy[+T](val t: T): k[T]
+           |  T => local1
+           |  t => local2
+           |  k => local3
+           |local4 => synthetic method copy$default$1[+T]: T @uncheckedVariance
+           |  T => local1
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local5 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+           |  x$1 => local6
+           |  Any => scala/Any#
+           |  Boolean => scala/Boolean#
+           |local7 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |  String => java/lang/String#
+           |local8 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+           |  x$1 => local9
+           |  Any => scala/Any#
+           |  Boolean => scala/Boolean#
+           |local1 => covariant typeparam T
+           |local10 => synthetic param x$1: Int
+           |  Int => scala/Int#
+           |local6 => synthetic param x$1: Any
+           |  Any => scala/Any#
+           |local11 => synthetic param x$1: Int
+           |  Int => scala/Int#
+           |local9 => synthetic param x$1: Any
+           |  Any => scala/Any#
+           |local12 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |  String => java/lang/String#
+           |local13 => synthetic method apply[+T](val t: T): k[T]
+           |  T => local1
+           |  t => local2
+           |  k => local3
+           |local14 => synthetic method unapply[+T](x$0: k[T]): Option[T]
+           |  T => local1
+           |  x$0 => local15
+           |  k => local3
+           |  Option => scala/Option#
+           |local16 => synthetic method apply[A, B](val a: A, val b: Option[B]): j[A, B]
+           |  A => local17
+           |  B => local18
+           |  a => local19
+           |  b => local20
+           |  Option => scala/Option#
+           |  j => local21
+           |local22 => synthetic method apply$default$2[A, B]: None.type @uncheckedVariance
+           |  A => local17
+           |  B => local18
+           |  None => scala/None.
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local23 => synthetic method unapply[A, B](x$0: j[A, B]): Option[Tuple2[A, Option[B]]]
+           |  A => local17
+           |  B => local18
+           |  x$0 => local24
+           |  j => local21
+           |  Option => scala/Option#
+           |  Tuple2 => scala/Tuple2#
+           |local25 => synthetic method <init>$default$2[A, B]: None.type @uncheckedVariance
+           |  A => local17
+           |  B => local18
+           |  None => scala/None.
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local17 => typeparam A
+           |local18 => typeparam B
+           |local26 => synthetic method copy[A, B](val a: A, val b: Option[B]): j[A, B]
+           |  A => local17
+           |  B => local18
+           |  a => local19
+           |  b => local20
+           |  Option => scala/Option#
+           |  j => local21
+           |local27 => synthetic method copy$default$1[A, B]: A @uncheckedVariance
+           |  A => local17
+           |  B => local18
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local28 => synthetic method copy$default$2[A, B]: Option[B] @uncheckedVariance
+           |  A => local17
+           |  B => local18
+           |  Option => scala/Option#
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |local29 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+           |  x$1 => local30
+           |  Any => scala/Any#
+           |  Boolean => scala/Boolean#
+           |local31 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+           |  String => java/lang/String#
+           |local32 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+           |  x$1 => local33
+           |  Any => scala/Any#
+           |  Boolean => scala/Boolean#
+           |local34 => synthetic param x$1: Int
+           |  Int => scala/Int#
+           |local30 => synthetic param x$1: Any
+           |  Any => scala/Any#
+           |local35 => synthetic param x$1: Int
+           |  Int => scala/Int#
+           |local33 => synthetic param x$1: Any
+           |  Any => scala/Any#
+           |local36 => implicit class ic[T] extends AnyRef { +3 decls }
+           |  T => local37
+           |  AnyRef => scala/AnyRef#
+           |local37 => typeparam T
+           |local38 => synthetic implicit method ic[T](t: T): ic[T]
+           |  T => local37
+           |  t => local39
+           |  ic => local36
+           |local40 => typeparam T
+           |local41 => synthetic method <init>$default$1[T]: None.type @uncheckedVariance
+           |  T => local40
+           |  None => scala/None.
+           |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+           |""".stripMargin,
     )
   }
 
@@ -3307,50 +3792,61 @@ class Issue1591Suite extends FunSuite {
     val doc = document(compile(Map("S.scala" -> localSynthetics)), "S.scala")
     assertNoDiff(
       infos(doc, "productElement(", "canEqual", "equals(", "toString"),
-      """|local0 => synthetic method productElement(unknown local1): Any <: scala/Product#productElement().
-         |  local1 => local1
+      """|local0 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local1
+         |  Int => scala/Int#
          |  Any => scala/Any#
-         |local2 => synthetic method canEqual(unknown local3): Boolean <: scala/Equals#canEqual().
-         |  local3 => local3
+         |local2 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local3
+         |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local4 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local5 => synthetic method equals(unknown local6): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  local6 => local6
+         |local5 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local6
+         |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local7 => synthetic final method toString(): String <: scala/Function1#toString()., java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local8 => synthetic method productElement(unknown local9): Any <: scala/Product#productElement().
-         |  local9 => local9
+         |local8 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local9
+         |  Int => scala/Int#
          |  Any => scala/Any#
-         |local10 => synthetic method canEqual(unknown local11): Boolean <: scala/Equals#canEqual().
-         |  local11 => local11
+         |local10 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local11
+         |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local12 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local13 => synthetic method productElement(unknown local14): Any <: scala/Product#productElement().
-         |  local14 => local14
+         |local13 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local14
+         |  Int => scala/Int#
          |  Any => scala/Any#
-         |local15 => synthetic method canEqual(unknown local16): Boolean <: scala/Equals#canEqual().
-         |  local16 => local16
+         |local15 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local16
+         |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local17 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local18 => synthetic method equals(unknown local19): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  local19 => local19
+         |local18 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local19
+         |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local20 => synthetic final method toString(): String <: scala/Function0#toString()., java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local21 => synthetic method productElement(unknown local22): Any <: scala/Product#productElement().
-         |  local22 => local22
+         |local21 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local22
+         |  Int => scala/Int#
          |  Any => scala/Any#
-         |local23 => synthetic method canEqual(unknown local24): Boolean <: scala/Equals#canEqual().
-         |  local24 => local24
+         |local23 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local24
+         |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local25 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local26 => synthetic method equals(unknown local27): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  local27 => local27
+         |local26 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local27
+         |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local28 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
@@ -3370,28 +3866,34 @@ class Issue1591Suite extends FunSuite {
   private lazy val localDefinitionsDoc =
     document(compile(Map("D.scala" -> localDefinitions)), "D.scala")
 
-  test("the setters of a bean property in a local class")(assertNoDiff(
-    infos(localDefinitionsDoc, "x_=", "param x$1"),
-    """|local0 => var method x_=(x$1: Int): Unit
-       |  x$1 => local1
-       |  Int => scala/Int#
-       |  Unit => scala/Unit#
-       |local1 => synthetic param x$1: Int
-       |  Int => scala/Int#
-       |""".stripMargin,
-  ))
+  test("the setters of a bean property in a local class") {
+    assertNoDiff(
+      infos(localDefinitionsDoc, "x_=", "param x$1"),
+      """|local0 => var method x_=(x$1: Int): Unit
+         |  x$1 => local1
+         |  Int => scala/Int#
+         |  Unit => scala/Unit#
+         |local1 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local2 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |""".stripMargin,
+    )
+  }
 
   test("a partial function literal") {
     assertNoDiff(
       infos(localDefinitionsDoc, "applyOrElse", "isDefinedAt"),
-      """|local0 => final method applyOrElse[A1 <: Int, B1 >: Int](unknown local1, unknown local2): B1 <: scala/PartialFunction#applyOrElse().
-         |  A1 => local3
+      """|local0 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+         |  A1 => local1
          |  Int => scala/Int#
-         |  B1 => local4
-         |  local1 => local1
-         |  local2 => local2
-         |local5 => final method isDefinedAt(unknown local6): Boolean <: scala/PartialFunction#isDefinedAt().
-         |  local6 => local6
+         |  B1 => local2
+         |  x1 => local3
+         |  default => local4
+         |  Function1 => scala/Function1#
+         |local5 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+         |  x1 => local6
+         |  Int => scala/Int#
          |  Boolean => scala/Boolean#
          |""".stripMargin,
     )
@@ -3530,12 +4032,36 @@ class Issue1591Suite extends FunSuite {
 
   test("a local case class that escapes its method, in another file of the run") {
     val doc = inOneRun(escapingCaseClass, escapingCaseClassUse, "U.scala")
-    assertNoDiff(infos(doc, escapingHeads: _*), """|""".stripMargin)
+    assertNoDiff(
+      infos(doc, escapingHeads: _*),
+      """|local0 => synthetic method copy(val t: Int): ks
+         |  t => local1
+         |  Int => scala/Int#
+         |  ks => local2
+         |local3 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local4
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local5 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local6 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local7
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |""".stripMargin,
+    )
   }
 
   test("a local case class that escapes its method, from a classfile") {
     val doc = fromClassfile(escapingCaseClass, escapingCaseClassUse, "U.scala")
-    assertNoDiff(infos(doc, escapingHeads: _*), """|""".stripMargin)
+    assertNoDiff(
+      infos(doc, escapingHeads: _*),
+      """|local0 => synthetic method copy(t: Int): ks
+         |  t => local1
+         |  Int => scala/Int#
+         |  ks => local2
+         |""".stripMargin,
+    )
   }
 
   test("references to the binder of a partial function literal") {
@@ -3776,6 +4302,245 @@ class Issue1591Suite extends FunSuite {
          |[2:14..2:19): twice => a/T.twice().
          |[2:26..2:27): x <= local0
          |[2:33..2:34): x => local0
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  // the errors of a run that compiles `sources`, with the plugin
+  private def errors(sources: Map[String, String]): List[String] = {
+    val out = Files.createTempDirectory("issue1591_")
+    sources.foreach { case (name, code) => Files.write(out.resolve(name), code.getBytes("UTF-8")) }
+    val settings = new Settings(msg => fail(msg))
+    settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
+    settings.outputDirs.setSingleOutput(out.toString)
+    val plugin = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
+    settings.processArgumentString(
+      s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb " +
+        s"-P:semanticdb:sourceroot:$out -P:semanticdb:targetroot:$out",
+    )
+    val reporter = new StoreReporter()
+    val g = new Global(settings, reporter)
+    new g.Run().compile(sources.keys.toList.sorted.map(out.resolve(_).toString))
+    reporter.infos.toList.filter(_.severity == reporter.ERROR)
+      .map(info => s"${info.pos.source.file.name}:${info.pos.line}:${info.pos.column}: ${info.msg}")
+  }
+
+  private val outsideBounds =
+    """|object A {
+       |  type F[T <: String] = List[T]
+       |  def f = { val x: F[Int] = ???; x }
+       |  val r: { def y: Int } = ???
+       |}
+       |""".stripMargin
+
+  // each error once, though the document and the index both run the deferred check of the bounds
+  private val outsideBoundsErrors = List(
+    "A.scala:3:7: type arguments [Int] do not conform to type F's type parameter bounds [T <: String]",
+    "A.scala:3:20: type arguments [Int] do not conform to type F's type parameter bounds [T <: String]",
+  )
+
+  test("a type alias applied outside its bounds, in the same file")(
+    assertEquals(errors(Map("A.scala" -> outsideBounds)), outsideBoundsErrors),
+  )
+
+  test("a type alias applied outside its bounds, in another file of the run") {
+    val b = "object B { val y = A.r.y }\n"
+    assertEquals(errors(Map("A.scala" -> outsideBounds, "B.scala" -> b)), outsideBoundsErrors)
+  }
+
+  test("an existential of a classfile, outside a document and then in a document") {
+    val typed = new Typed("object O { val v = Option(Class.forName(\"C\")) }")
+    typed.ops.config = typed.ops.config.copy(synthetics = BinaryMode.On)
+    val before = typed.existentials
+    assertNoDiff(
+      section(typed.document, "Synthetics"),
+      """|[0:19..0:25) => *.apply[Class[?0]]
+         |  apply => scala/Option.apply().
+         |  Class => java/lang/Class#
+         |  ?0 => local0
+         |""".stripMargin,
+    )
+    assertEquals(
+      (before, typed.existentials),
+      (List("local0", "local1", "local0"), List("local1", "local0", "local0")),
+    )
+  }
+
+  test("locals in an annotated type, a refinement and a bounded alias, in the same file") {
+    val code =
+      """|package p
+         |class ann(f: Int => Int) extends scala.annotation.StaticAnnotation
+         |object O {
+         |  type F[T] = { def get: T }
+         |  type G[T <: AnyRef] = { def get: T }
+         |  def f = {
+         |    val x: Int @ann({ val q = 1; (p: Int) => p + q }) = 1
+         |    val r: AnyRef { def y(a: Int): Int; type U <: { def w: Int } } = ???
+         |    val v: F[Int] = ???
+         |    val g: G[String] = ???
+         |    def h[K](k: K): K { def z: Int } = ???
+         |    (x, r.y(1), v.get, g.get, h(new { def z = 1 }).z, (??? : r.U).w)
+         |  }
+         |}
+         |""".stripMargin
+    assertNoDiff(
+      summary(document(compile(Map("P.scala" -> code)), "P.scala")),
+      """|local0 => abstract method get: T
+         |  T => p/O.F#[T]
+         |local1 => abstract method get: T
+         |  T => p/O.G#[T]
+         |local2 => val local x: Int @ann
+         |  Int => scala/Int#
+         |  ann => p/ann#
+         |local3 => val local q: Int
+         |  Int => scala/Int#
+         |local4 => param p: Int
+         |  Int => scala/Int#
+         |local5 => val local r: AnyRef { def y(a: Int): Int; type U <: AnyRef { def w: Int } }
+         |  AnyRef => scala/AnyRef#
+         |  y => local6
+         |  a => local7
+         |  Int => scala/Int#
+         |  U => local8
+         |  w => local9
+         |local6 => abstract method y(a: Int): Int
+         |  a => local7
+         |  Int => scala/Int#
+         |local7 => param a: Int
+         |  Int => scala/Int#
+         |local8 => abstract type U <: AnyRef { def w: Int }
+         |  AnyRef => scala/AnyRef#
+         |  w => local9
+         |  Int => scala/Int#
+         |local9 => abstract method w: Int
+         |  Int => scala/Int#
+         |local10 => val local v: F[Int]
+         |  F => p/O.F#
+         |  Int => scala/Int#
+         |local11 => val local g: G[String]
+         |  G => p/O.G#
+         |  String => scala/Predef.String#
+         |local12 => method h[K](k: K): K { def z: Int }
+         |  K => local14
+         |  k => local13
+         |  z => local15
+         |  Int => scala/Int#
+         |local13 => param k: K
+         |  K => local14
+         |local14 => typeparam K
+         |local15 => abstract method z: Int
+         |  Int => scala/Int#
+         |local16 => method z: Int
+         |  Int => scala/Int#
+         |local17 => final class $anon extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |p/O. => final object O extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |p/O.F# => type F[T] = AnyRef { def get: T }
+         |  T => p/O.F#[T]
+         |  AnyRef => scala/AnyRef#
+         |  get => local0
+         |p/O.F#[T] => typeparam T
+         |p/O.G# => type G[T <: AnyRef] = AnyRef { def get: T }
+         |  T => p/O.G#[T]
+         |  AnyRef => scala/AnyRef#
+         |  get => local1
+         |p/O.G#[T] => typeparam T <: AnyRef
+         |  AnyRef => scala/AnyRef#
+         |p/O.f(). => method f: Tuple6[Int, Int, Int, String, Int, Int]
+         |  Tuple6 => scala/Tuple6#
+         |  Int => scala/Int#
+         |  String => scala/Predef.String#
+         |p/ann# => class ann extends Annotation with StaticAnnotation { +2 decls }
+         |  Annotation => scala/annotation/Annotation#
+         |  StaticAnnotation => scala/annotation/StaticAnnotation#
+         |p/ann#`<init>`(). => primary ctor <init>(f: Function1[Int, Int])
+         |  f => p/ann#`<init>`().(f)
+         |  Function1 => scala/Function1#
+         |  Int => scala/Int#
+         |p/ann#`<init>`().(f) => param f: Function1[Int, Int]
+         |  Function1 => scala/Function1#
+         |  Int => scala/Int#
+         |p/ann#f. => private[this] val method f: Function1[Int, Int]
+         |  Function1 => scala/Function1#
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): p <= p/
+         |[1:6..1:9): ann <= p/ann#
+         |[1:9..1:9):  <= p/ann#`<init>`().
+         |[1:10..1:11): f <= p/ann#`<init>`().(f)
+         |[1:10..1:11): f <= p/ann#f.
+         |[1:13..1:16): Int => scala/Int#
+         |[1:20..1:23): Int => scala/Int#
+         |[1:33..1:38): scala => scala/
+         |[1:39..1:49): annotation => scala/annotation/
+         |[1:50..1:66): StaticAnnotation => scala/annotation/StaticAnnotation#
+         |[1:66..1:66):  => scala/annotation/Annotation#`<init>`().
+         |[2:7..2:8): O <= p/O.
+         |[3:7..3:8): F <= p/O.F#
+         |[3:9..3:10): T <= p/O.F#[T]
+         |[3:20..3:23): get <= local0
+         |[3:25..3:26): T => p/O.F#[T]
+         |[4:7..4:8): G <= p/O.G#
+         |[4:9..4:10): T <= p/O.G#[T]
+         |[4:14..4:20): AnyRef => scala/AnyRef#
+         |[4:30..4:33): get <= local1
+         |[4:35..4:36): T => p/O.G#[T]
+         |[5:6..5:7): f <= p/O.f().
+         |[6:8..6:9): x <= local2
+         |[6:11..6:14): Int => scala/Int#
+         |[6:16..6:19): ann => p/ann#
+         |[6:19..6:19):  => p/ann#`<init>`().
+         |[6:26..6:27): q <= local3
+         |[6:34..6:35): p <= local4
+         |[6:37..6:40): Int => scala/Int#
+         |[6:45..6:46): p => local4
+         |[6:47..6:48): + => scala/Int#`+`(+4).
+         |[6:49..6:50): q => local3
+         |[7:8..7:9): r <= local5
+         |[7:11..7:17): AnyRef => scala/AnyRef#
+         |[7:24..7:25): y <= local6
+         |[7:26..7:27): a <= local7
+         |[7:29..7:32): Int => scala/Int#
+         |[7:35..7:38): Int => scala/Int#
+         |[7:45..7:46): U <= local8
+         |[7:56..7:57): w <= local9
+         |[7:59..7:62): Int => scala/Int#
+         |[7:69..7:72): ??? => scala/Predef.`???`().
+         |[8:8..8:9): v <= local10
+         |[8:11..8:12): F => p/O.F#
+         |[8:13..8:16): Int => scala/Int#
+         |[8:20..8:23): ??? => scala/Predef.`???`().
+         |[9:8..9:9): g <= local11
+         |[9:11..9:12): G => p/O.G#
+         |[9:13..9:19): String => scala/Predef.String#
+         |[9:23..9:26): ??? => scala/Predef.`???`().
+         |[10:8..10:9): h <= local12
+         |[10:10..10:11): K <= local14
+         |[10:13..10:14): k <= local13
+         |[10:16..10:17): K => local14
+         |[10:20..10:21): K => local14
+         |[10:28..10:29): z <= local15
+         |[10:31..10:34): Int => scala/Int#
+         |[10:39..10:42): ??? => scala/Predef.`???`().
+         |[11:5..11:6): x => local2
+         |[11:8..11:9): r => local5
+         |[11:10..11:11): y => local6
+         |[11:16..11:17): v => local10
+         |[11:18..11:21): get => local0
+         |[11:23..11:24): g => local11
+         |[11:25..11:28): get => local1
+         |[11:30..11:31): h => local12
+         |[11:36..11:36):  <= local17
+         |[11:42..11:43): z <= local16
+         |[11:51..11:52): z => local16
+         |[11:55..11:58): ??? => scala/Predef.`???`().
+         |[11:61..11:62): r => local5
+         |[11:63..11:64): U => local8
+         |[11:66..11:67): w => local9
          |----
          |collisions List()
          |dangling List()

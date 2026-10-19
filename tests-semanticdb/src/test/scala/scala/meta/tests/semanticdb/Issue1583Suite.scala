@@ -541,10 +541,10 @@ class Issue1583Suite extends SemanticdbSuite {
        |local0 => synthetic class $anon extends Object with S { +1 decls }
        |  Object => java/lang/Object#
        |  S => _empty_/O.S#
-       |local2 => synthetic method f(a: Int): Int <: _empty_/O.S#f().
+       |local1 => synthetic method f(a: Int): Int <: _empty_/O.S#f().
        |  a => _empty_/O.S#f().(a)
        |  Int => scala/Int#
-       |local3 => synthetic param x$1: Int
+       |local2 => synthetic param x$1: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -563,9 +563,9 @@ class Issue1583Suite extends SemanticdbSuite {
        |[2:16..2:17): s => _empty_/O.w().(s)
        |[2:18..2:19): f => _empty_/O.S#f().
        |[3:2..3:3): w => _empty_/O.w().
-       |[3:4..3:5): _ <= local3
+       |[3:4..3:5): _ <= local2
        |[3:4..3:9): _ + 1 <= local0
-       |[3:4..3:9): _ + 1 <= local2
+       |[3:4..3:9): _ + 1 <= local1
        |[3:6..3:7): + => scala/Int#`+`(+4).
        |""".stripMargin,
   )

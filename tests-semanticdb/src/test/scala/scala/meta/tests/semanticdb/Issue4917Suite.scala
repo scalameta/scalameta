@@ -88,36 +88,44 @@ class Issue4917Suite extends SemanticdbSuite {
   )
 
   symbols(
-    // local numbers continue across compiles of one text, so compile another
-    classfile.replace("package a", "package c"),
-    """|c/C# => class C extends AnyRef { +9 decls }
+    classfile,
+    """|a/C# => class C extends AnyRef { +9 decls }
        |  AnyRef => scala/AnyRef#
-       |c/C#`<init>`(). => primary ctor <init>()
-       |c/C#anonX. => val method anonX: Int
+       |a/C#`<init>`(). => primary ctor <init>()
+       |a/C#anonX. => val method anonX: Int
        |  Int => scala/Int#
-       |c/C#chainX. => val method chainX: Int
+       |a/C#chainX. => val method chainX: Int
        |  Int => scala/Int#
-       |c/C#m(). => method m(): Unit
+       |a/C#m(). => method m(): Unit
        |  Unit => scala/Unit#
-       |c/C#memberDef(). => method memberDef: AnyRef { val def x: Int }
+       |a/C#memberDef(). => method memberDef: AnyRef { val def x: Int }
        |  AnyRef => scala/AnyRef#
        |  x => local0
        |  Int => scala/Int#
-       |c/C#memberDefX. => val method memberDefX: Int
+       |a/C#memberDefX. => val method memberDefX: Int
        |  Int => scala/Int#
-       |c/C#memberVal. => val method memberVal: AnyRef { val def x: Int }
+       |a/C#memberVal. => val method memberVal: AnyRef { val def x: Int }
        |  AnyRef => scala/AnyRef#
        |  x => local0
        |  Int => scala/Int#
-       |c/C#memberValX. => val method memberValX: Int
+       |a/C#memberValX. => val method memberValX: Int
        |  Int => scala/Int#
-       |c/C#methodM. => val method methodM: Int
+       |a/C#methodM. => val method methodM: Int
+       |  Int => scala/Int#
+       |local0 => abstract val method x: Int
+       |  Int => scala/Int#
+       |local1 => val method x: Int
+       |  Int => scala/Int#
+       |local2 => method m(x: Int): Int
+       |  x => local5
        |  Int => scala/Int#
        |local3 => val local localVal: AnyRef { val def x: Int }
        |  AnyRef => scala/AnyRef#
        |  x => local0
        |  Int => scala/Int#
        |local4 => val local localX: Int
+       |  Int => scala/Int#
+       |local5 => param x: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )

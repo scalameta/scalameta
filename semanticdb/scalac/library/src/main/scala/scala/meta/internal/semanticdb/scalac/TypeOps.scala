@@ -5,10 +5,17 @@ import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.reflect.internal.{Flags => gf}
 
 trait TypeOps {
   self: SemanticdbOps =>
+
+  // the existentials of the `ExistentialType`s that a conversion is inside
+  private lazy val boundExistentials = new mutable.HashSet[g.Symbol]
+  // the existentials of the document that a converted type refers to outside their own type
+  private[scalac] lazy val freeExistentials = new mutable.HashSet[String]
+
   implicit class XtensionGTypeSType(gtpe: g.Type) {
     def toSemanticTpe: s.Type = {
       // A repeated type (`T*`) is only valid in parameter position; scalac widens a Scala repeated
@@ -24,6 +31,12 @@ trait TypeOps {
           s.TypeRef(s.NoType, "scala/package.Seq#", loop(gtpe.args.head) :: Nil)
         case _ => loop(gtpe)
       }
+      def referenced(gsym: g.Symbol): String = {
+        val ssym = gsym.ssym
+        if (gsym.hasFlag(gf.EXISTENTIAL) && !boundExistentials(gsym.deSkolemize))
+          freeExistentials += ssym
+        ssym
+      }
       def loop(gtpe: g.Type): s.Type = gtpe match {
         case gtpe: g.TypeRef =>
           val gsym = gtpe.sym
@@ -34,11 +47,11 @@ trait TypeOps {
                   gsym == g.definitions.JavaRepeatedParamClass => s.RepeatedType(loop(garg))
             case gargs =>
               val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gtpe.pre)
-              s.TypeRef(spre, gsym.ssym, gargs.map(widenRepeated))
+              s.TypeRef(spre, referenced(gsym), gargs.map(widenRepeated))
           }
         case gtpe: g.SingleType =>
           val spre = if (gtpe.hasTrivialPrefix) s.NoType else loop(gtpe.pre)
-          s.SingleType(spre, gtpe.sym.ssym)
+          s.SingleType(spre, referenced(gtpe.sym))
         case gtpe: g.ThisType => s.ThisType(gtpe.sym.ssym)
         case gtpe: g.SuperType =>
           val spre = loop(gtpe.thistpe.typeSymbol.tpe)
@@ -57,8 +70,11 @@ trait TypeOps {
           val sanns = gtpe.annotations.reverse.map(_.toSemantic)
           s.AnnotatedType(sanns, loop(gtpe.underlying))
         case gtpe: g.ExistentialType =>
-          val stpe = loop(gtpe.underlying)
-          s.ExistentialType(stpe, Some(gtpe.quantified.sscope(HardlinkChildren)))
+          val bound = gtpe.quantified.filter(boundExistentials.add)
+          try {
+            val stpe = loop(gtpe.underlying)
+            s.ExistentialType(stpe, Some(gtpe.quantified.sscope(HardlinkChildren)))
+          } finally boundExistentials --= bound
         case gtpe: g.PolyType => loop(gtpe.resultType) match {
             case s.NoType => s.NoType
             case stpe =>

@@ -20,16 +20,23 @@ trait SymbolOps {
 
   def clearSymbolCaches(): Unit = {
     symbolCache.clear()
+    declarationCache.clear()
+    sourceIndexes.clear()
+    runSources.clear()
+    runSourcesRun = null
     clearDocumentCaches()
   }
 
   def clearDocumentCaches(): Unit = {
-    idCache.clear()
-    pointsCache.clear()
-    namesCache.clear()
+    namespaces.clear()
+    localCache.clear()
+    freeExistentials.clear()
   }
 
   private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
+  // the locals that we looked up since a document started or ended: either changes a namespace
+  private lazy val localCache = new mutable.HashMap[g.Symbol, String]
+
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     private[semanticdb] def toSemanticUncached: String = {
       if (sym == null || sym == g.NoSymbol) return Symbols.None
@@ -56,15 +63,14 @@ trait SymbolOps {
     }
 
     def toSemantic: String = {
-      def defaultValue =
-        try toSemanticUncached
-        catch {
-          case NonFatal(e) if isInteractiveCompiler =>
-            // happens regularly for broken code with the pc, see
-            // https://github.com/scalameta/scalameta/issues/1194
-            Symbols.None
-        }
-      symbolCache.getOrElseUpdate(sym, defaultValue)
+      def defaultValue = {
+        val ssym = // see https://github.com/scalameta/scalameta/issues/1194
+          try toSemanticUncached
+          catch { case e if isInteractiveCompiler && NonFatal(e) => Symbols.None }
+        if (ssym.isLocal) localCache(sym) = ssym else symbolCache(sym) = ssym
+        ssym
+      }
+      symbolCache.getOrElse(sym, localCache.getOrElse(sym, defaultValue))
     }
   }
 
@@ -275,10 +281,6 @@ trait SymbolOps {
 
   }
 
-  private lazy val idCache = new mutable.HashMap[GSourceFile, Int]
-  private lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
-  private lazy val namesCache = new mutable.HashMap[(Int, g.Name), g.Symbol]
-
   // the source does not have the whole name written at `at`, maybe in backquotes
   private def notWrittenAt(text: Array[Char], at: Int, name: String): Boolean = {
     val quoted = at < text.length && text(at) == '`'
@@ -300,33 +302,94 @@ trait SymbolOps {
   private def freshSymbol(sym: g.Symbol): String = {
     val gval = sym.patternValue
     if (gval.exists) return gval.toSemantic
-    val pos = sym.pos
-    if (pos.isDefined) {
-      val conflict = pointsCache.getOrElseUpdate(pos.point, sym)
-      if (conflict != sym) {
-        /* Use conflicting symbol instead of this local symbol.
-         * This can happen for example in for comprehensions when the same binder
-         * results in multiple parameter symbols for each flatMap/withFilter/map/foreach. */
-        if (conflict.name == sym.name) return conflict.toSemantic
-        if (sym.hasFlag(gf.EXISTENTIAL)) {
-          // an existential value shares its point with its type: pair the copies of each by name
-          val first = namesCache.getOrElseUpdate((pos.point, sym.name), sym)
-          if (first != sym) return first.toSemantic
-        }
-      }
-    }
-    freshSymbolRaw(sym)
+    localSymbol(declarationOf(sym))
   }
 
-  private var documentSource: GSourceFile = GNoSourceFile
-  // locals numbered in `documentSource`: a classfile symbol may appear in another document too
-  private val documentSymbols = mutable.ListBuffer.empty[g.Symbol]
-  def startDocument(sourceFile: GSourceFile): Unit = {
-    clearDocumentCaches()
-    symbolCache --= documentSymbols
-    documentSymbols.clear()
-    documentSource = sourceFile
+  /* A local stands for a declaration. A document numbers the locals that it meets in a namespace
+   * of its own. Outside a document, a local takes its number in the namespace of its source. */
+  private final class Namespace {
+    val locals = new mutable.HashMap[g.Symbol, String]
+    // the declaration of each local, by its number
+    val declarations = new mutable.ArrayBuffer[g.Symbol]
+    def foreach(f: (String, g.Symbol) => Unit): Unit = {
+      var i = 0
+      while (i < declarations.length) {
+        val decl = declarations(i)
+        f(locals(decl), decl)
+        i += 1
+      }
+
+    }
   }
+  private lazy val namespaces = new mutable.HashMap[GSourceFile, Namespace]
+
+  private var documentSource: GSourceFile = GNoSourceFile
+  private var documentBody: g.Tree = _
+  private var documentNamespace: Namespace = _
+
+  def startDocument(unit: g.CompilationUnit): Unit = {
+    documentSource = unit.source
+    documentBody = unit.body
+    documentNamespace = new Namespace
+    namespaces(documentSource) = documentNamespace
+    localCache.clear()
+    freeExistentials.clear()
+  }
+  def endDocument(): Unit = {
+    documentSource = GNoSourceFile
+    documentBody = null
+    documentNamespace = null
+    localCache.clear()
+  }
+
+  private def localSymbol(decl: g.Symbol): String = {
+    val namespace =
+      if (null ne documentNamespace) documentNamespace
+      else {
+        val source = enclosingSource(decl)
+        if (!source.hasInput) return Symbols.None
+        namespaces.getOrElseUpdate(source, new Namespace)
+      }
+    namespace.locals.getOrElseUpdate(
+      decl, {
+        val declarations = namespace.declarations
+        try Symbols.Local(declarations.length)
+        finally declarations += decl
+      },
+    )
+  }
+
+  // the declaration of a local of the document, or `sym`
+  private[scalac] def localDeclaration(local: String, sym: g.Symbol): g.Symbol = {
+    if (null ne documentNamespace) {
+      val number = localNumber(local)
+      if (number >= 0) {
+        val declarations = documentNamespace.declarations
+        if (number < declarations.length) return declarations(number)
+      }
+    }
+    sym
+  }
+
+  // the number of a local such as `local12`, or -1
+  private def localNumber(local: String): Int = {
+    val start = Symbols.LocalPrefix.length
+    // a namespace has fewer than 10^9 locals
+    if (local.length <= start || local.length > start + 9) return -1
+    var number = 0
+    var i = start
+    while (i < local.length) {
+      val digit = local.charAt(i) - '0'
+      if (digit < 0 || digit > 9) return -1
+      number = number * 10 + digit
+      i += 1
+    }
+    number
+  }
+
+  // calls `f` with each local of the document and its declaration, also with the locals `f` adds
+  private[scalac] def foreachDocumentLocal(f: (String, g.Symbol) => Unit): Unit =
+    if (null ne documentNamespace) documentNamespace.foreach(f)
 
   @tailrec
   private[semanticdb] final def enclosingSource(sym: g.Symbol): GSourceFile =
@@ -336,17 +399,168 @@ trait SymbolOps {
       case src => src
     }
 
-  private[semanticdb] def freshSymbolRaw(sym: g.Symbol): String = {
-    val sourceFile =
-      if (sym == g.NoSymbol) GNoSourceFile
-      else enclosingSource(sym) match {
-        case GNoSourceFile =>
-          documentSymbols += sym
-          documentSource
-        case src => if (src.hasInput) src else GNoSourceFile
+  // the declaration of each local symbol that we looked up in this run
+  private lazy val declarationCache = new mutable.HashMap[g.Symbol, g.Symbol]
+  private def declarationOf(sym: g.Symbol): g.Symbol = declarationCache.getOrElse(
+    sym, {
+      // a symbol whose declaration depends on itself is its own declaration
+      declarationCache(sym) = sym
+      val decl =
+        try findDeclaration(sym)
+        catch { case NonFatal(_) => sym }
+      declarationCache(sym) = decl
+      decl
+    },
+  )
+  private def ownerDeclaration(sym: g.Symbol): g.Symbol = {
+    val owner = sym.owner
+    if (owner.isSemanticdbLocal) declarationOf(owner) else owner
+  }
+
+  private def findDeclaration(sym: g.Symbol): g.Symbol = {
+    val pos = sym.pos
+    val index = if (pos.isDefined) sourceIndex(pos.source) else null
+    if (index ne null) {
+      val key = DeclarationKey(pos.point, sym.name)
+      val decls = index.declarations.getOrElse(key, null)
+      if (decls eq null) {
+        // an existential that no tree declares, such as `?0`
+        if (sym.hasFlag(gf.EXISTENTIAL)) return index.existentials.getOrElseUpdate(key, sym)
+      } else {
+        val decl = declarationAt(sym, decls)
+        if (decl ne g.NoSymbol) return decl
       }
-    if (sourceFile == GNoSourceFile) Symbols.None
-    else Symbols.Local(idCache.updateWithRemap(sourceFile)(_.fold(0)(_ + 1)))
+    }
+    // a parameter of a copy
+    if (sym.isParameter) {
+      val owner = sym.owner
+      if (owner.isSemanticdbLocal) {
+        val odecl = declarationOf(owner)
+        if (odecl ne owner) {
+          val params = if (sym.isType) odecl.typeParams.iterator else odecl.paramss.iterator.flatten
+          params.find(_.name == sym.name) match {
+            case Some(param) => return declarationOf(param)
+            case _ =>
+          }
+        }
+      }
+    }
+    sym
+  }
+
+  // the declaration of `sym` at its key, or NoSymbol
+  private def declarationAt(sym: g.Symbol, decls: Declarations): g.Symbol = {
+    val rep = decls.representative
+    val symbols = decls.symbols
+    if (symbols.contains(sym)) return if (rep ne null) rep else sym
+
+    // a copy has the position and the name of its original
+    lazy val owner = ownerDeclaration(sym)
+    def isOriginal(decl: g.Symbol) = (decl.owner eq sym.owner) || (ownerDeclaration(decl) eq owner)
+    // a type operation copies a member of a refinement, or an existential, to another owner
+    def isTypeCopy = sym.owner.isRefinementClass || sym.hasFlag(gf.EXISTENTIAL)
+    if (rep ne null) return if (symbols.exists(isOriginal) || isTypeCopy) rep else g.NoSymbol
+
+    val originals = symbols.iterator.filter(isOriginal)
+    if (originals.hasNext) {
+      val original = originals.next()
+      return if (originals.hasNext) g.NoSymbol else original
+    }
+
+    if (isTypeCopy && symbols.lengthCompare(1) == 0) symbols.head else g.NoSymbol
+  }
+
+  private case class DeclarationKey(point: Int, name: g.Name)
+
+  /* The declarations of one key in a unit. A desugaring copies a declaration with its position,
+   * and if its name is written at that position, the copies join the representative. */
+  private final class Declarations {
+    var symbols: List[g.Symbol] = Nil
+    var representative: g.Symbol = _
+  }
+
+  // the local declarations in the trees of a unit that a document visits
+  private final class SourceIndex(source: GSourceFile, val body: g.Tree) {
+    val declarations = new mutable.HashMap[DeclarationKey, Declarations]
+    val existentials = new mutable.HashMap[DeclarationKey, g.Symbol]
+
+    /* the representative is the last declaration outside synthetic definitions, else the first;
+     * a binder that stands for a value is not a declaration */
+    private def add(sym: g.Symbol, inSynthetic: Boolean): Unit = {
+      val pos = sym.pos
+      if (pos.isDefined && (pos.source eq source) && sym.isSemanticdbLocal &&
+        !sym.patternValue.exists) {
+        val decls = declarations
+          .getOrElseUpdate(DeclarationKey(pos.point, sym.name), new Declarations)
+        if (!decls.symbols.contains(sym)) {
+          decls.symbols = sym :: decls.symbols
+          if ((!inSynthetic || (decls.representative eq null)) && isNameWritten(sym, pos))
+            decls.representative = sym
+        }
+      }
+    }
+
+    new DocumentTraverser(source) {
+      private var syntheticDef: g.Tree = null
+      override protected def leave(tree: g.Tree): Unit =
+        if (tree eq syntheticDef) syntheticDef = null
+      override protected def visit(tree: g.Tree, hasOriginal: Boolean): Unit = tree match {
+        case t: g.DefTree if (t.symbol ne null) && t.symbol.exists =>
+          val sym = t.symbol
+          // the tree of a method has the skolems of the type parameters of its signature
+          add(sym.deSkolemize, syntheticDef ne null)
+          traverseAnnotations(t)
+          if ((syntheticDef eq null) && t.isInstanceOf[g.MemberDef] && sym.isSynthetic)
+            syntheticDef = t
+        case _ =>
+      }
+    }.traverse(body)
+  }
+
+  private def isNameWritten(sym: g.Symbol, pos: g.Position): Boolean = {
+    val text = pos.source.content
+    // an existential value `v` has the name `v.type`
+    val name = sym.decodedName.stripSuffix(g.nme.LOCAL_SUFFIX_STRING).stripSuffix(".type")
+    // scalac gives a placeholder `_` a fresh name
+    val isFresh = name.startsWith("_$") || name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
+    def isPlaceholderAt(at: Int) = isFresh && at < text.length && text(at) == '_'
+    isWrittenAt(pos, name) || isPlaceholderAt(pos.start) || isPlaceholderAt(pos.point)
+  }
+
+  private lazy val sourceIndexes = new mutable.HashMap[GSourceFile, SourceIndex]
+  // the index of a unit of the run, or null; Metals can type a unit again into a new body
+  private def sourceIndex(source: GSourceFile): SourceIndex = {
+    val body =
+      if (source eq documentSource) documentBody
+      else {
+        val unit = runSource(source)
+        if (null eq unit) null else unit.body
+      }
+    if (null eq body) return null
+    sourceIndexes.get(source) match {
+      case Some(index) if index.body eq body => index
+      case _ =>
+        val index = new SourceIndex(source, body)
+        sourceIndexes(source) = index
+        index
+    }
+  }
+
+  // the units of `runSourcesRun` by source, when it had `runSourcesSize` units
+  private lazy val runSources = new java.util.IdentityHashMap[GSourceFile, g.CompilationUnit]
+  private var runSourcesRun: g.Run = _
+  private var runSourcesSize = 0
+
+  // the unit of the run, or null; `compileLate` can add units to the run
+  private def runSource(source: GSourceFile): g.CompilationUnit = {
+    val unit = runSources.get(source)
+    val run = g.currentRun
+    if ((null ne unit) || (run eq runSourcesRun) && run.size == runSourcesSize) return unit
+    runSources.clear()
+    run.units.foreach(unit => runSources.put(unit.source, unit))
+    runSourcesRun = run
+    runSourcesSize = run.size
+    runSources.get(source)
   }
 
 }
