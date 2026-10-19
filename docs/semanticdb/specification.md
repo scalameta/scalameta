@@ -2409,6 +2409,10 @@ Notes:
       creates a companion object together with its class, as for a case class
       or a class with default arguments, metacp lists an explicit `object`
       right after the class, wherever the object is declared.
+    - Metacp lists some members that are private to an enclosing class
+      (`private[C]`) last, because scalac moves them to the end of the Scala
+      signature: objects, classes and types, and a method that has the
+      classfile name of a private method that the companion object calls.
   - Synthetic symbols in unspecified order and positions in the declarations
     list. We may provide more structure here in the future.
 - In some cases, SLS and its extensions mandate generation of synthetic members

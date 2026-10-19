@@ -1,11 +1,14 @@
 package scala.meta.internal.scalacp
 
+import org.scalameta.collections.Conversions._
 import scala.meta.internal.classpath._
 import scala.meta.internal.metacp._
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.NameTransformer
 import scala.tools.scalap.scalax.rules.scalasig._
+import scala.util.control.NonFatal
 
 final class SymbolIndex private (classpathIndex: ClasspathIndex) {
   private lazy val lookupCache = mutable.Map.empty[Symbol, SymbolLookup]
@@ -34,6 +37,27 @@ final class SymbolIndex private (classpathIndex: ClasspathIndex) {
       case _ => MissingLookup
     },
   )
+
+  /** Returns the names of the methods in the classfile of a class, in classfile order. */
+  def methodNames(cls: ClassSymbol): IndexedSeq[String] = {
+    val res = IndexedSeq.newBuilder[String]
+    try classfile(cls).foreach(_.toClassNode.methods.forEach(m => res += m.name))
+    catch { case NonFatal(_) => }
+    res.result()
+  }
+
+  private def classfile(cls: ClassSymbol): Option[Classfile] = {
+    @tailrec
+    def loop(s: Symbol, names: List[String]): Option[Classfile] = s.parent match {
+      case Some(p: ClassSymbol) => loop(p, p.name :: names)
+      case Some(p: ExternalSymbol) =>
+        val filename = names.mkString("", NameTransformer.NAME_JOIN_STRING, Classfile.Suffix)
+        classpathIndex.getClassfile(p.packageResourceName, filename)
+      case _ => None
+    }
+    val clsName = if (cls.isModule) cls.name + NameTransformer.MODULE_SUFFIX_STRING else cls.name
+    loop(cls, clsName :: Nil)
+  }
 
   private implicit class XtensionSymbolOps(sym: Symbol) {
     def isRootPackage: Boolean = sym.path == "<root>"
