@@ -312,7 +312,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  xe.type => local10
        |  AnyRef => scala/AnyRef#
        |  Singleton => scala/Singleton#
-       |local11 => method xeAnyRef
+       |local11 => val local xe: AnyRef
        |  AnyRef => scala/AnyRef#
        |""".stripMargin,
   )

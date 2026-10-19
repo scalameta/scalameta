@@ -65,6 +65,8 @@ trait TypeOps {
               val stparams = gtpe.typeParams.sscope(HardlinkChildren)
               s.UniversalType(Some(stparams), stpe)
           }
+        // the bound of an existential `val` in a self type keeps the type of its getter
+        case gtpe: g.NullaryMethodType => loop(gtpe.resultType)
         case g.NoType => s.NoType
         case g.NoPrefix => s.NoType
         case g.ErrorType => s.NoType
@@ -80,7 +82,7 @@ trait TypeOps {
         case g.WildcardType => s.NoType
         case _: g.BoundedWildcardType => s.NoType
         case _: g.ClassInfoType => s.NoType
-        case gother => sys.error(s"unsupported type $gother: ${g.showRaw(gother)}")
+        case _ => s.NoType
       }
       loop(gtpe)
     }

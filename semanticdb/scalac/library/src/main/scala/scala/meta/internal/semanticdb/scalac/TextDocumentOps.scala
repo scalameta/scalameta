@@ -74,6 +74,7 @@ trait TextDocumentOps {
       val mparents = mutable.Map[Int, m.Type]() // start offset of init's type -> the type
       val mselftypes = mutable.Map[Int, m.Type]() // start offset -> declared self type
       val mclassofs = mutable.Map[Int, m.Type]() // start offset of classOf -> its type argument
+      val mexistentials = mutable.Map[Int, m.Type.Existential]() // start offset -> existential type
       val msupers = mutable.Map.empty[Int, m.Term.Super] // end offset
       val mfuncs = mutable.Map.empty[Int, m.Position] // start offset of a function
       val mannottees = mutable.Map.empty[Int, m.Member] // start offset of an annotation's init
@@ -224,6 +225,7 @@ trait TextDocumentOps {
               case mtree: m.Self => mtree.decltpe.foreach(t => mselftypes(t.pos.start) = t)
               case m.Term.ApplyType(m.Term.Name("classOf"), mtpe :: Nil) =>
                 mclassofs(mtree.pos.start) = mtpe
+              case mtree: m.Type.Existential => mexistentials(mtree.pos.start) = mtree
               case mtree: m.Mod.Annot => mtree.parent.foreach {
                   case p: m.Member => mannottees(mtree.init.pos.start) = p
                   case _ =>
@@ -570,6 +572,8 @@ trait TextDocumentOps {
                 tryFindQualifier(mq, gsym.owner.thisType)
               case (mname: m.Term.Name, g.SingleType(_, gsym)) => success(mname, gsym)
               case (mname: m.Term.Name, g.ThisType(gsym)) => success(mname, gsym)
+              case (mname: m.Term.Name, gpre: g.TypeRef) if isExistentialValueType(gpre.sym) =>
+                success(mname, asExistentialValue(gpre.sym))
               case _ =>
             }
 
@@ -732,6 +736,38 @@ trait TextDocumentOps {
             case (mtpe: m.Type.Tuple, gtpe: g.TypeRef) => tryFindTypes(mtpe.args, gtpe.args)
             case (mtpe: m.Type.Function, gtpe: g.TypeRef) =>
               tryFindTypes(mtpe.paramClause.values :+ mtpe.res, gtpe.args)
+            case (mtpe: m.Type.ByName, gtpe: g.TypeRef) => tryFindTypes(mtpe.tpe :: Nil, gtpe.args)
+            case (mtpe: m.Type.Repeated, gtpe: g.TypeRef) => tryFindTypes(mtpe.tpe :: Nil, gtpe.args)
+            case (mtpe: m.Type.ApplyInfix, gtpe: g.TypeRef) =>
+              tryFindTypes(mtpe.lhs :: mtpe.rhs :: Nil, gtpe.args)
+              tryFindType(mtpe.op, gtpe)
+            case (mtpe: m.Type.Singleton, _: g.SingleType | _: g.TypeRef) =>
+              tryFindQualifier(mtpe.ref, gtpe)
+            case (mtpe: m.Type.With, gtpe: g.RefinedType) => tryFindParents(mtpe, gtpe)
+            case (mtpe: m.Type.Refine, gtpe: g.RefinedType) =>
+              tryFindDecls(mtpe.stats, gtpe.decls.toList)
+              mtpe.tpe.foreach(tryFindParents(_, gtpe))
+            case (mtpe: m.Type.Annotate, gtpe: g.AnnotatedType) =>
+              // scalac lists the last annotation first
+              tryFindTypes(mtpe.annots.map(_.init.tpe), gtpe.annotations.reverse.map(_.atp))
+              tryFindType(mtpe.tpe, gtpe.underlying)
+            case (mtpe: m.Type.Existential, gtpe: g.ExistentialType) =>
+              // scalac merges a nested `forSome` into this one and lists its quantifiers last
+              val (gquantified, ginner) = gtpe.quantified.splitAt(mtpe.stats.foldLeft(0) {
+                case (n, mstat: m.Decl.Val) => n + mstat.pats.length
+                case (n, _: m.Decl.Type) => n + 1
+                case (n, _) => n
+              })
+              val gsyms = gquantified.map(gq =>
+                if (isExistentialValueType(gq)) asExistentialValue(gq)
+                else {
+                  val gqinfo = gq.info
+                  val ginfo = existentialValueRefs(gqinfo)
+                  if (ginfo eq gqinfo) gq else gq.cloneSymbol.setInfo(ginfo)
+                },
+              )
+              tryFindDecls(mtpe.stats, gsyms)
+              tryFindType(mtpe.tpe, g.newExistentialType(ginner, gtpe.underlying))
             case (_, gtpe: g.ExistentialType) => tryFindType(mtpe, gtpe.underlying)
             case (mtpe: m.Type.Wildcard, gtpe: g.TypeRef) if gtpe.sym.isExistentiallyBound =>
               defineUnderscore(findUnderscore(mtpe.pos.start), gtpe.sym)
@@ -743,6 +779,151 @@ trait TextDocumentOps {
           private def tryFindBounds(mbounds: m.Type.Bounds, gbounds: g.TypeBounds): Unit = {
             mbounds.lo.foreach(tryFindType(_, gbounds.lo))
             mbounds.hi.foreach(tryFindType(_, gbounds.hi))
+          }
+          // scalac flattens `A with B with C` into one list of parents but keeps `(A with B)` whole
+          @tailrec
+          private def tryFindParents(mtpe: m.Type, gparents: List[g.Type]): Unit =
+            (mtpe, gparents) match {
+              case (_, gparent :: Nil) => tryFindType(mtpe, gparent)
+              case (mtpe: m.Type.With, gparent :: gparents) =>
+                tryFindType(mtpe.rhs, gparent)
+                tryFindParents(mtpe.lhs, gparents)
+              case _ =>
+            }
+          private def tryFindParents(mtpe: m.Type, gtpe: g.RefinedType): Unit =
+            tryFindParents(mtpe, gtpe.parents.reverse)
+
+          private def isNamed(n: String, isTerm: Boolean): g.Symbol => Boolean =
+            x => x.isTerm == isTerm && x.decodedName == n
+          // a `def` and a `val` or `var` of one name are different declarations
+          private def isNamedTerm(n: String, isDef: Boolean): g.Symbol => Boolean = {
+            val named = isNamed(n, isTerm = true)
+            x => named(x) && x.isDefMethod == isDef
+          }
+          private def findByName(xs: Seq[g.Symbol], n: m.Type.Name): Option[g.Symbol] = xs
+            .find(isNamed(n.value, isTerm = false))
+          private def findByName(xs: Seq[g.Symbol], n: m.Term.Name): Option[g.Symbol] = xs
+            .find(isNamedTerm(n.value, isDef = false))
+          // scalac keeps overloads in the order of their declarations
+          private def findOverload(
+              mstats: List[m.Stat],
+              mdef: m.Decl.Def,
+              gsyms: Seq[g.Symbol],
+          ): g.Symbol = {
+            val name = mdef.name.value
+            val git = gsyms.iterator.filter(isNamedTerm(name, isDef = true))
+            val mit = mstats.iterator
+            while (mit.hasNext && git.hasNext) mit.next() match {
+              case `mdef` => return git.next()
+              case mstat: m.Decl.Def if mstat.name.value == name => git.next()
+              case _ =>
+            }
+            null
+          }
+
+          // match the declarations in `forSome` or a refinement, which scalac left untyped, to symbols
+          private def tryFindDecls(mstats: List[m.Stat], gsyms: Seq[g.Symbol]): Unit = mstats
+            .foreach {
+              case mstat: m.Decl.Type => findByName(gsyms, mstat.name)
+                  .foreach(tryFindTypeDecl(mstat.name, mstat.tparamClause.values, mstat.bounds, _))
+              case mstat: m.Defn.Type => findByName(gsyms, mstat.name).foreach { gsym =>
+                  tryFindTypeDecl(mstat.name, mstat.tparamClause.values, mstat.bounds, gsym)
+                  tryFindType(mstat.body, gsym.info.resultType)
+                }
+              case mstat: m.Decl.Val => tryFindPatDecls(mstat.pats, mstat.decltpe, gsyms)
+              case mstat: m.Decl.Var => tryFindPatDecls(mstat.pats, mstat.decltpe, gsyms)
+              case mstat: m.Decl.Def =>
+                val gsym = findOverload(mstats, mstat, gsyms)
+                if (gsym ne null) {
+                  tryFindTermDecl(mstat.name, mstat.decltpe, gsym)
+                  mstat.paramClauseGroup.foreach { mgroup =>
+                    val mtparams = mgroup.tparamClause.values
+                    tryFindTypeParams(mtparams, gsym.typeParams)
+                    // scalac adds a synthetic parameter for each view and context bound
+                    val gevidence = new mutable.ListBuffer[g.Type]
+                    val gparams = gsym.paramss.iterator.flatten.filter { gp =>
+                      val synthetic = gp.isSynthetic
+                      if (synthetic) gevidence += gp.info
+                      !synthetic
+                    }
+                    mgroup.paramClauses.iterator.flatMap(_.values).zip(gparams).foreach {
+                      case (mp, gp) => mp.decltpe.foreach(tryFindTermDecl(mp.name, _, gp))
+                    }
+                    while (gparams.hasNext) gparams.next() // drain
+                    tryFindEvidence(mtparams, gevidence.iterator)
+                  }
+                }
+              case _ =>
+            }
+          private def tryFindPatDecls(
+              mpats: List[m.Pat],
+              mtpe: m.Type,
+              gsyms: Seq[g.Symbol],
+          ): Unit = mpats.foreach {
+            case x: m.Pat.Var => findByName(gsyms, x.name).foreach(tryFindTermDecl(x.name, mtpe, _))
+            case _ =>
+          }
+          // scalac types `A <% B` as `A => B` and `A: B` as `B[A]`, in the order of the bounds
+          private def tryFindEvidence(mtparams: List[m.Type.Param], gtpes: Iterator[g.Type]): Unit =
+            mtparams.foreach { mtparam =>
+              mtparam.bounds.view.iterator.zip(gtpes).foreach { case (mtpe, gtpe) =>
+                gtpe.typeArgs.lastOption.foreach(tryFindType(mtpe, _))
+              }
+              mtparam.bounds.context.iterator.zip(gtpes).foreach { case (mtpe, gtpe) =>
+                tryFindType(mtpe, gtpe)
+              }
+            }
+          private def tryFindTermDecl(mname: m.Name, mtpe: m.Type, gsym: g.Symbol): Unit = {
+            success(mname, gsym)
+            trySymbolDefinition(gsym)
+            tryFindType(mtpe, gsym.info.finalResultType)
+          }
+          private def tryFindTypeDecl(
+              mname: m.Name,
+              mtparams: List[m.Type.Param],
+              mbounds: m.Type.Bounds,
+              gsym: g.Symbol,
+          ): Unit = {
+            mname match {
+              case mname: m.Type.Name => success(mname, gsym)
+              case _ =>
+            }
+            trySymbolDefinition(gsym)
+            tryFindTypeParams(mtparams, gsym.typeParams)
+            tryFindBounds(mbounds, gsym.info.resultType.bounds)
+          }
+          private def tryFindTypeParams(
+              mtparams: List[m.Type.Param],
+              gtparams: List[g.Symbol],
+          ): Unit = mtparams.zip(gtparams).foreach { case (mtparam, gtparam) =>
+            tryFindTypeDecl(mtparam.name, mtparam.tparamClause.values, mtparam.bounds, gtparam)
+          }
+
+          private def isExistentialValueType(gsym: g.Symbol): Boolean = gsym
+            .hasFlag(gf.EXISTENTIAL) && g.nme.isSingletonName(gsym.name)
+          // quantified type -> value
+          private val existentialValues = mutable.HashMap.empty[g.Symbol, g.Symbol]
+          /* scalac quantifies `val x: T` as `type x.type <: T with Singleton`, and in `classOf` it
+           * keeps no symbol of the value: make one at its point, to pair with any copy by name */
+          private def asExistentialValue(gtype: g.Symbol): g.Symbol = existentialValues
+            .getOrElseUpdate(
+              gtype, {
+                val gtpe = gtype.info.bounds.hi match {
+                  case gtpe: g.RefinedType => gtpe.parents.headOption.getOrElse(gtpe)
+                  case gtpe => gtpe
+                }
+                val gname = g.tpnme.dropSingletonName(gtype.name).toTermName
+                gtype.owner.newValue(gname, gtype.pos, gf.EXISTENTIAL)
+                  .setInfo(existentialValueRefs(gtpe))
+              },
+            )
+          // a quantified type refers to `x.type`: refer to the value instead
+          private object existentialValueRefs extends g.TypeMap {
+            def apply(gtpe: g.Type): g.Type = gtpe match {
+              case gtpe: g.TypeRef if isExistentialValueType(gtpe.sym) =>
+                g.singleType(g.NoPrefix, asExistentialValue(gtpe.sym))
+              case _ => mapOver(gtpe)
+            }
           }
 
           // scalac keeps no tree of a macro annotation: resolve its name in the scope around it
@@ -874,6 +1055,10 @@ trait TextDocumentOps {
                 tryFindMtree(gtree)
               case select: g.Select if isSyntheticName(select) => tryFindSynthetic(select)
               case gtree: g.AppliedTypeTree => tryFindMtree(gtree)
+              case gtree: g.ExistentialTypeTree =>
+                if (gtree.pos.isDefined) mexistentials.get(gtree.pos.start)
+                  .foreach(mtpe => tryFindDecls(mtpe.stats, gtree.whereClauses.map(_.symbol)))
+                tryFindMtree(gtree)
               case gblock @ NamedApplyBlock(_) =>
                 // Given the result of NamesDefaults.transformNamedApplication, such as:
                 //    BLOCK: {

@@ -17,7 +17,7 @@ class Structural/*<=advanced.Structural#*/ {
 class Existential/*<=advanced.Existential#*/ {
   def e1/*<=advanced.Existential#e1().*/: List/*=>scala.package.List#*/[_/*<=local6*/] = ???/*=>scala.Predef.`???`().*/
   def e2/*<=advanced.Existential#e2().*/: C/*=>advanced.C#*/[List/*=>scala.package.List#*/[T/*=>local7*/] forSome { type T/*<=local7*/ }] = ???/*=>scala.Predef.`???`().*/
-  def e4/*<=advanced.Existential#e4().*/: U/*=>local8*/[Int/*=>scala.Int#*/] forSome { type U/*<=local8*/[T/*<=local9*/ <: Int] } = ???/*=>scala.Predef.`???`().*/
+  def e4/*<=advanced.Existential#e4().*/: U/*=>local8*/[Int/*=>scala.Int#*/] forSome { type U/*<=local8*/[T/*<=local9*/ <: Int/*=>scala.Int#*/] } = ???/*=>scala.Predef.`???`().*/
 }
 
 class D/*<=advanced.D#*/[CC/*<=advanced.D#[CC]*/[_/*<=advanced.D#[CC][_$$1]*/]] extends C/*=>advanced.C#*/[CC/*=>advanced.D#[CC]*/[_/*<=local10*/]]

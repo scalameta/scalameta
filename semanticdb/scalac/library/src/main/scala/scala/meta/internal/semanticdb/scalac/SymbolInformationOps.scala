@@ -31,6 +31,8 @@ trait SymbolInformationOps {
     private[meta] def kind: s.SymbolInformation.Kind = gsym match {
       // term symbols
       case _ if gsym.isSelfParameter => k.SELF_PARAMETER
+      // MIXEDIN shares the bit of EXISTENTIAL, but mixin runs after the phases we read
+      case _ if gsym.isTerm && gsym.hasFlag(gf.EXISTENTIAL) => k.LOCAL
       case gsym: MethodSymbol =>
         if (gsym.isConstructor) k.CONSTRUCTOR
         else if (gsym.isMacro) k.MACRO
@@ -64,7 +66,7 @@ trait SymbolInformationOps {
       def flip(prop: s.SymbolInformation.Property): Unit = flags |= prop.value
       def isAbstractClass = gsym.isClass && gsym.isAbstract && !gsym.isTrait &&
         !gsym.hasFlag(gf.JAVA_ENUM)
-      def isAbstractMethod = gsym.isMethod && gsym.isDeferred
+      def isAbstractMethod = gsym.isMethod && gsym.isDeferred && !kind.isLocal
       def isAbstractType = gsym.isType && !gsym.isParameter && gsym.isDeferred
       if (gsym.hasFlag(gf.JAVA)) {
         if (gsym.hasFlag(gf.ABSOVERRIDE)) {
