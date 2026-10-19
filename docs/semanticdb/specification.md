@@ -1657,13 +1657,13 @@ abstract class C(val xp: Int) {
   </tr>
   <tr>
     <td><code>xs</code></td>
-    <td><code>local1</code></td>
+    <td><code>local2</code></td>
     <td><code>METHOD</code></td>
     <td><code>MethodSignature(List(), List(), TypeRef(None, &lt;Int&gt;, List()), List())</code></td>
   </tr>
   <tr>
     <td><code>xe</code></td>
-    <td><code>local2</code></td>
+    <td><code>local5</code></td>
     <td><code>METHOD</code></td>
     <td><code>ValueSignature(TypeRef(None, &lt;Int&gt;, List()))</code></td>
   </tr>
@@ -2886,12 +2886,12 @@ class C {
   </tr>
   <tr>
     <td><code>y</code> in <code>case y</code></td>
-    <td><code>local0</code></td>
+    <td><code>local1</code></td>
     <td><code>DEFINITION</code></td>
   </tr>
   <tr>
     <td><code>y</code> in <code>println(y)</code></td>
-    <td><code>local0</code></td>
+    <td><code>local1</code></td>
     <td><code>REFERENCE</code></td>
   </tr>
 </table>
@@ -3392,7 +3392,7 @@ class C {
   </tr>
   <tr>
     <td><code>_ + 1</code></td>
-    <td><code>local1</code></td>
+    <td><code>local2</code></td>
     <td><code>DEFINITION</code></td>
   </tr>
   <tr>
