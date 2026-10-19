@@ -155,7 +155,7 @@ object ClasspathIndex {
             attrs: attribute.BasicFileAttributes,
         ): FileVisitResult = {
           val name = file.getFileName.toString
-          if (name.endsWith(".class")) {
+          if (name.endsWith(Classfile.Suffix)) {
             val relpath = AbsolutePath(file).toRelative(root)
             val reluri = relpath.toURI(isDirectory = false).toString
             val basename = PathIO.basename(reluri)
