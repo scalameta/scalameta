@@ -247,11 +247,15 @@ trait SymbolOps {
   private lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
     val pos = sym.pos
-    val conflict = if (pos.isDefined) pointsCache.getOrElseUpdate(pos.point, sym) else sym
-    // Use conflicting symbol instead of this local symbol.
-    // This can happen for example in for comprehensions when the same binder
-    // results in multiple parameter symbols for each flatMap/withFilter/map/foreach.
-    if (conflict != sym && conflict.name == sym.name) conflict.toSemantic else freshSymbolRaw(sym)
+    if (pos.isDefined) {
+      val conflict = pointsCache.getOrElseUpdate(pos.point, sym)
+      if (conflict != sym)
+        /* Use conflicting symbol instead of this local symbol.
+         * This can happen for example in for comprehensions when the same binder
+         * results in multiple parameter symbols for each flatMap/withFilter/map/foreach. */
+        if (conflict.name == sym.name) return conflict.toSemantic
+    }
+    freshSymbolRaw(sym)
   }
 
   private var documentSource: GSourceFile = GNoSourceFile
