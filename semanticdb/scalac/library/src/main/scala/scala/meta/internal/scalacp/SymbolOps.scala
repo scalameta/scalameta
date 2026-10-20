@@ -6,16 +6,19 @@ import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.semanticdb.SymbolInformation.{Kind => k}
 import scala.meta.internal.{semanticdb => s}
 
-import java.util.{HashMap, HashSet}
+import java.util.HashSet
 
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.NameTransformer
+import scala.reflect.internal.{Flags => gf}
 import scala.tools.nsc.backend.jvm.GenBCode
 import scala.tools.scalap.scalax.rules.scalasig._
 
 trait SymbolOps {
   self: Scalacp =>
+
+  import SymbolOps._
 
   lazy val symbolCache = new mutable.HashMap[Symbol, String]
   private lazy val classfileOrderCache = new mutable.HashMap[Symbol, List[Symbol]]
@@ -278,31 +281,13 @@ trait SymbolOps {
     def isObject: Boolean = sym.isInstanceOf[ObjectSymbol]
     def isType: Boolean = sym.isInstanceOf[TypeSymbol]
     def isAlias: Boolean = sym.isInstanceOf[AliasSymbol]
-    def isMacro: Boolean = sym.isMethod && sym.hasFlag(0x00008000)
+    def isMacro: Boolean = sym.isMethod && sym.hasFlag(gf.MACRO)
     def isConstructor: Boolean = sym.isMethod &&
       (sym.name == GenBCode.INSTANCE_CONSTRUCTOR_NAME || sym.name == "$init$")
     def isPackageObject: Boolean = sym.name == "package"
     def isTypeParam = sym.isType && sym.isParam
     def isExistentialType: Boolean = sym match {
-      case sym: TypeSymbol =>
-        /* scalap reads the flags as an Int and drops EXISTENTIAL (bit 35), so read them again:
-         * name_Ref owner_Ref flags_LongNat, after a Nat if the tag is over 64 */
-        val entry = sym.entry.scalaSig.getEntry(sym.index)
-        val bytes = entry.byteCode.bytes
-        var pos = entry.byteCode.pos
-        var left = if (entry.entryType > 64) 4 else 3
-        var nat = 0L
-        while (left > 0) {
-          nat = 0L
-          var b = 0x80
-          while ((b & 0x80) != 0) {
-            b = bytes(pos)
-            pos += 1
-            nat = nat << 7 | b & 0x7f
-          }
-          left -= 1
-        }
-        (nat & 0x800000000L) != 0
+      case sym: TypeSymbol => sym.hasLongFlag(gf.EXISTENTIAL)
       case _ => false
     }
     def isAnonymousClass = sym.name.contains("$anon")
@@ -353,7 +338,7 @@ trait SymbolOps {
       sym.isExtensionMethod || sym.isSyntheticValueClassCompanion || sym.isUselessField ||
       sym.isSyntheticCaseAccessor || sym.isRefinementClass
     def isUseful: Boolean = !sym.isUseless
-    def isDefaultParameter: Boolean = sym.hasFlag(0x02000000) && sym.isParam
+    def isDefaultParameter: Boolean = sym.hasFlag(gf.DEFAULTPARAM) && sym.isParam
 
   }
 
@@ -364,5 +349,34 @@ trait SymbolOps {
 
   lazy val hardlinks = new HashSet[String]
   private def registerHardlink(sym: Symbol): Unit = hardlinks.add(sym.ssym)
+
+}
+
+object SymbolOps {
+
+  /* scalap reads the flags as an Int and drops the bits from 32 up, such as EXISTENTIAL (bit 35),
+   * so read them again: name_Ref owner_Ref flags_LongNat, after a Nat if the tag is over 64 */
+  private def pickledFlags(sym: SymbolInfoSymbol): Long = {
+    val entry = sym.entry.scalaSig.getEntry(sym.index)
+    val bytes = entry.byteCode.bytes
+    var pos = entry.byteCode.pos
+    var left = if (entry.entryType > 64) 4 else 3
+    var nat = 0L
+    while (left > 0) {
+      nat = 0L
+      var b = 0x80
+      while ((b & 0x80) != 0) {
+        b = bytes(pos)
+        pos += 1
+        nat = nat << 7 | b & 0x7f
+      }
+      left -= 1
+    }
+    nat
+  }
+
+  private implicit class XtensionSymbolInfoSymbol(val sym: SymbolInfoSymbol) extends AnyVal {
+    def hasLongFlag(flag: Long): Boolean = (pickledFlags(sym) & flag) != 0
+  }
 
 }
