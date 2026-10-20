@@ -61,6 +61,8 @@ private[meta] object Show {
     @tailrec
     private def hasSpace(p: Pending): Boolean = (p ne null) && (p.space || hasSpace(p.outer))
     @tailrec
+    private def hasIndent(p: Pending): Boolean = (p ne null) && (p.indented || hasIndent(p.outer))
+    @tailrec
     private def indentPending(p: Pending): Unit = if (p ne null)
       if (p.indented) {
         p.prev = indentation.length
@@ -243,9 +245,19 @@ private[meta] object Show {
               },
             )
           case Comment(res) => maybePush(res)
-          case LeadingComments(res, breakAtLineStart) =>
+          case LeadingComments(res, breakAtLineStart, under) =>
             val atLineStart = withPending(sb.length == 0 || sb.charAt(sb.length - 1) == '\n')
-            push(if (atLineStart && breakAtLineStart) newlineOnly else spaceOnly)
+            if (atLineStart) {
+              push(if (breakAtLineStart) newlineOnly else spaceOnly)
+              maybePush(under)
+            } else {
+              val p = pending
+              // a newline after the comments indents what follows, as a newline before them would
+              push(taskRun {
+                if (wasNL && hasIndent(p)) pending = p else push(spaceOnly)
+                maybePush(under)
+              })
+            }
             maybePush(res)
           case Newline(res) =>
             nl()
@@ -385,9 +397,12 @@ private[meta] object Show {
   final case class Comment(res: Result) extends Result {
     override def desc: String = s"Comment(r=${res.desc})"
   }
-  // comments before a tree, then a newline if they start a line and the last ends it, else a space
-  final case class LeadingComments(res: Result, breakAtLineStart: Boolean) extends Result {
-    override def desc: String = s"LeadingComments(break=$breakAtLineStart, r=${res.desc})"
+  /* comments before a tree, then a newline if they start a line and the last ends it, else a
+   * space; `under` holds the comments after the first line break, which indent as the tree does */
+  final case class LeadingComments(res: Result, breakAtLineStart: Boolean, under: Result = None)
+      extends Result {
+    override def desc: String =
+      s"LeadingComments(break=$breakAtLineStart, r=${res.desc}, u=${under.desc})"
   }
 
   private final class Run(val run: () => Unit) extends Result {

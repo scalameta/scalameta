@@ -5777,17 +5777,10 @@ class CommentSuite extends BaseDottySuite {
       """|object A {
          |  val y = a :: // c2
          |    b // c3
-         |    :: d
+         |      :: d
          |}
          |""".stripMargin,
       reprinted = Seq("end Term.Name: // c2", "end Term.Name: // c3"),
-      twice =
-        """|object A {
-           |  val y = a :: // c2
-           |    b // c3
-           |      :: d
-           |}
-           |""".stripMargin,
     )("beg Term.Name: // c2", "end Term.Name: // c3")
   }
 
@@ -5805,17 +5798,10 @@ class CommentSuite extends BaseDottySuite {
       """|object A {
          |  val y = // c2
          |    b // c3
-         |    :: d
+         |      :: d
          |}
          |""".stripMargin,
       reprinted = Seq("beg Term.ApplyInfix, Term.Name: // c2", "end Term.Name: // c3"),
-      twice =
-        """|object A {
-           |  val y = // c2
-           |    b // c3
-           |      :: d
-           |}
-           |""".stripMargin,
     )("beg Term.Name: // c2", "end Term.Name: // c3")
   }
 
@@ -5851,18 +5837,7 @@ class CommentSuite extends BaseDottySuite {
          |  }
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  x match {
-         |    case // o
-         |    // i
-         |      a :: b =>
-         |  }
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Pat.ExtractInfix, Pat.Var, Term.Name: // o\n    // i"),
-    )("beg Pat.ExtractInfix, Pat.Var, Term.Name: // o\n      // i")
+    checkComments(code)("beg Pat.ExtractInfix, Pat.Var, Term.Name: // o\n      // i")
   }
 
   test("given: named, type in parens, DSLC before the closing paren") {

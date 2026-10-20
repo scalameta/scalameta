@@ -8089,11 +8089,10 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  val x = // c1
-         |  // c2
+         |    // c2
          |    1
          |}
          |""".stripMargin,
-      reprinted = Seq("beg Lit.Int: // c1\n  // c2"),
     )("beg Lit.Int: // c1\n    // c2")
   }
 
@@ -8365,16 +8364,7 @@ class CommentSuite extends ParseSuite {
          |    a
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  val x = // o
-         |  // i
-         |    a
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Name: // o\n  // i"),
-    )("beg Term.Name: // o\n    // i")
+    checkComments(code)("beg Term.Name: // o\n    // i")
   }
 
   test("val: ASLC after the equals, two ASLCs, body") {
@@ -8386,17 +8376,7 @@ class CommentSuite extends ParseSuite {
          |    a
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  val x = // o
-         |  // i
-         |  // j
-         |    a
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Name: // o\n  // i\n  // j"),
-    )("beg Term.Name: // o\n    // i\n    // j")
+    checkComments(code)("beg Term.Name: // o\n    // i\n    // j")
   }
 
   test("val: ASLC after the equals, MLC before the body") {
@@ -8406,15 +8386,7 @@ class CommentSuite extends ParseSuite {
          |    /* i */ a
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  val x = // o
-         |  /* i */ a
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Name: // o\n  /* i */"),
-    )("beg Term.Name: // o\n    /* i */")
+    checkComments(code)("beg Term.Name: // o\n    /* i */")
   }
 
   test("val: ASLC after the equals, ASLC, infix body") {
@@ -8425,16 +8397,7 @@ class CommentSuite extends ParseSuite {
          |    a + b
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  val x = // o
-         |  // i
-         |    a + b
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.ApplyInfix, Term.Name: // o\n  // i"),
-    )("beg Term.ApplyInfix, Term.Name: // o\n    // i")
+    checkComments(code)("beg Term.ApplyInfix, Term.Name: // o\n    // i")
   }
 
   test("case: ASLC after the keyword, ASLC, pattern") {
@@ -8447,18 +8410,7 @@ class CommentSuite extends ParseSuite {
          |  }
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  x match {
-         |    case // o
-         |    // i
-         |      a =>
-         |  }
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Pat.Var, Term.Name: // o\n    // i"),
-    )("beg Pat.Var, Term.Name: // o\n      // i")
+    checkComments(code)("beg Pat.Var, Term.Name: // o\n      // i")
   }
 
   test("if: ASLC after the condition, ASLC, body") {
@@ -8469,16 +8421,7 @@ class CommentSuite extends ParseSuite {
          |    b
          |}
          |""".stripMargin
-    checkComments(
-      code,
-      """|object A {
-         |  if (a) // o
-         |  // i
-         |    b
-         |}
-         |""".stripMargin,
-      reprinted = Seq("beg Term.Name: // o\n  // i"),
-    )("beg Term.Name: // o\n    // i")
+    checkComments(code)("beg Term.Name: // o\n    // i")
   }
 
   test("pattern: MLC after a tuple alternative") {

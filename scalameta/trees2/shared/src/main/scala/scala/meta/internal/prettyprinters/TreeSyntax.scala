@@ -1556,7 +1556,14 @@ object TreeSyntax {
     /* attached comments stay on the line that introduces the tree, and the tree
      * indents under a line comment; at the start of a line there is nothing to
      * indent under, and the tree follows at the same indentation */
-    else Show.LeadingComments(printComments(xs), breakAtLineStart = xs.hasNewlinesAfter)
+    else {
+      val onLine = xs.indexWhere(_.hasNewlinesAfter) match {
+        case -1 => xs.length
+        case n => n + 1
+      }
+      val (line, under) = xs.splitAt(onLine)
+      Show.LeadingComments(printComments(line), xs.hasNewlinesAfter, printComments(under))
+    }
 
   private[prettyprinters] def withComments(
       tree: Tree,
