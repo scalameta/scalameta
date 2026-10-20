@@ -7,6 +7,7 @@ import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
+import scala.reflect.NameTransformer
 import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile, SourceFile => GSourceFile}
 import scala.reflect.internal.{Flags => gf}
 import scala.tools.nsc.backend.jvm.GenBCode
@@ -80,7 +81,7 @@ trait SymbolOps {
       if (sym.name == g.nme.ROOTPKG) n.RootPackage.value
       else if (sym.name == g.nme.EMPTY_PACKAGE_NAME) n.EmptyPackage.value
       else if (sym.isConstructor) n.Constructor.value
-      else sym.name.decoded.stripSuffix(g.nme.LOCAL_SUFFIX_STRING)
+      else NameTransformer.decode(sym.name.toString.stripSuffix(g.nme.LOCAL_SUFFIX_STRING))
     def disambiguator: String = {
       val peers = sym.owner.semanticdbDecls.gsyms
       val overloads = peers
@@ -211,11 +212,11 @@ trait SymbolOps {
     }
     def isUselessField: Boolean = isScalacField && sym.getterIn(sym.owner) != g.NoSymbol
     def isUsefulField: Boolean = isScalacField && !isUselessField
-    def isSyntheticCaseAccessor: Boolean = sym.isCaseAccessor && sym.name.toString.contains("$")
+    def isSyntheticCaseAccessor: Boolean = sym.isCaseAccessor && sym.decodedName.contains("$")
     def isSyntheticJavaModule: Boolean = isJavaNonPackage && sym.isModule
     def isAnonymousClassConstructor: Boolean = sym.isConstructor && sym.owner.isAnonymousClass
     def isSyntheticAbstractType: Boolean = sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
-    def startsWithFreshTermName: Boolean = sym.name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
+    def startsWithFreshTermName: Boolean = sym.decodedName.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
     def isEtaExpandedParameter: Boolean =
       // the parameter of `m _` or of `_ + 1`; we save the latter's information with its occurrence
       sym.isParameter && startsWithFreshTermName && sym.owner.isAnonymousFunction

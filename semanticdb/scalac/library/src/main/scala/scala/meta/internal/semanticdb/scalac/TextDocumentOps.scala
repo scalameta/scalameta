@@ -340,7 +340,7 @@ trait TextDocumentOps {
               if (mtree.isDefinition)
                 if (!mvalpatstart.contains(pos.start))
                   addOccurrenceFromSemantic(pos, _, Role.DEFINITION)
-                else if (gsym.name.endsWith(mtree.value)) addPatOccurrenceFromSemantic(pos, _)
+                else if (gsym.symbolName == mtree.value) addPatOccurrenceFromSemantic(pos, _)
                 else null
               else if (!gsym.owner.isRefinementClass || {
                   val src = enclosingSource(gsym)
@@ -407,7 +407,7 @@ trait TextDocumentOps {
               margnames <- margnames.get(offset)
               margname <- margnames
               gparams <- gsym.paramss
-              gparam <- gparams.find(_.name.decoded == margname.value)
+              gparam <- gparams.find(_.decodedName == margname.value)
             } success(margname, gparam)
           private def tryFindMtree(gtree: g.Tree): Unit = {
             val gpos = gtree.pos
@@ -536,8 +536,8 @@ trait TextDocumentOps {
                   case p: m.Term.ApplyType => tryFindTypes(p.targClause.values, gtree.tpe.typeArgs)
                   case _ =>
                 }
-              case g.Select(g.Ident(qualTerm), _) if qualTerm.startsWith(g.nme.QUAL_PREFIX) =>
-                tryMend(gend) // transformNamedApplication blockWithQualifier case
+              case g.Select(g.Ident(qualTerm), _) // transformNamedApplication blockWithQualifier case
+                  if qualTerm.decoded.startsWith(g.nme.QUAL_PREFIX) => tryMend(gend)
               case _: g.RefTree => if (!gsym.isDefaultGetter) tryMstart(gpoint)
               case gtree: g.Import if gtree.expr != null && gtree.expr.tpe != null =>
                 val sels = gtree.selectors.flatMap(sel =>
