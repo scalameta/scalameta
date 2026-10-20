@@ -416,6 +416,24 @@ class ErrorSuite extends TreeSuiteBase {
     )
   }
 
+  test("""p"(..pats) :: pat"""") {
+    assertNoDiff(
+      typecheckError(
+        """
+      import scala.meta._
+      import scala.meta.dialects.Scala211
+      val pats = List(p"a", p"b")
+      p"(..$pats) :: c"
+    """,
+      ),
+      """|<macro>:5: type mismatch;
+         | found   : List[meta.Pat.Var]
+         | required: scala.meta.Pat
+         |      p"(..$pats) :: c"
+         |            ^""".stripMargin,
+    )
+  }
+
   test("""p"ref[..tpes](..pats)""") {
     assertNoDiff(
       typecheckError(

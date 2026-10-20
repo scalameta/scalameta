@@ -8356,6 +8356,103 @@ class CommentSuite extends ParseSuite {
     )("end Pat.Var: /* c */")
   }
 
+  test("pattern: MLC after a middle infix operand in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a :: (b) /* c */ :: d =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a :: b :: d =>
+         |  }
+         |}
+         |""".stripMargin,
+    )()
+  }
+
+  test("pattern: MLC inside a middle infix operand in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a :: (b /* c */) :: d =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a :: b /* c */ :: d =>
+         |  }
+         |}
+         |""".stripMargin,
+    )("end Pat.Var, Term.Name: /* c */")
+  }
+
+  test("pattern: MLC after the last infix operand in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a :: (b) /* c */ =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a :: b /* c */ =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Pat.ExtractInfix, Pat.ArgClause, Pat.Var, Term.Name: /* c */"),
+    )("end Pat.ExtractInfix, Pat.ArgClause: /* c */")
+  }
+
+  test("pattern: MLC inside a first infix operand in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case (a /* c */) :: b =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a /* c */ :: b =>
+         |  }
+         |}
+         |""".stripMargin,
+    )("end Pat.Var, Term.Name: /* c */")
+  }
+
+  test("pattern: MLC after a case pattern in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case (a) /* c */ =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a /* c */ =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Pat.Var, Term.Name: /* c */"),
+    )("end Pat.Var: /* c */")
+  }
+
   test("MLC after a repeated arg in parens") {
     val code =
       """|object A {
@@ -8380,6 +8477,26 @@ class CommentSuite extends ParseSuite {
       """|object A { val g = f /* c */ _ }
          |""".stripMargin,
     )("end Term.Name: /* c */")
+  }
+
+  test("pattern: MLC after a typed case pattern in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case (a: Int) /* c */ =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a: Int /* c */ =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Pat.Typed, Type.Name: /* c */"),
+    )("end Pat.Typed: /* c */")
   }
 
   test("pattern: MLC after a type in parens, case without body") {
@@ -8425,6 +8542,148 @@ class CommentSuite extends ParseSuite {
       """|object A { def f(x: => Int /* c */ ) = x }
          |""".stripMargin,
     )("end Term.Param, Type.ByName, Type.Name: /* c */")
+  }
+
+  test("pattern: MLC after a typed pattern in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case (a) /* c */ : Int =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a /* c */ : Int =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Pat.Var, Term.Name: /* c */"),
+    )("end Pat.Var: /* c */")
+  }
+
+  test("pattern: MLC after a bound pattern in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case (a) /* c */ @ b =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a /* c */ @ b =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Pat.Var, Term.Name: /* c */"),
+    )("end Pat.Var: /* c */")
+  }
+
+  test("pattern: MLC after a bound wildcard in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case (_) /* c */ @ b =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case /* c */ b =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Pat.Var, Term.Name: /* c */"),
+    )("beg Pat.Var: /* c */")
+  }
+
+  test("pattern: MLC after the last alternative in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a | (b) /* c */ =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a | b /* c */ =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Pat.Alternative, Pat.Var, Term.Name: /* c */"),
+    )("end Pat.Alternative, Pat.Var: /* c */")
+  }
+
+  test("pattern: ASLCs around a middle infix operand in parens") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a :: // c1
+         |    ( // c2
+         |      b // c3
+         |      // c4
+         |    ) // c5
+         |    :: d =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a :: // c1
+         |      ( // c2
+         |        b // c3
+         |        // c4
+         |      ) :: d =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq(
+        "end Term.Name: // c1",
+        "beg Pat.Var, Term.Name: // c2",
+        "end Pat.Var, Term.Name: // c3\n        // c4",
+      ),
+    )(
+      "end Term.Name: // c1",
+      "beg Pat.Var, Term.Name: // c2",
+      "end Pat.Var, Term.Name: // c3\n      // c4",
+    )
+  }
+
+  test("pattern: ASLCs after the paren and a middle infix operand") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a ::
+         |    ( // c2
+         |      b // c3
+         |    )
+         |    :: d =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a :: ( // c2
+         |      b // c3
+         |    ) :: d =>
+         |  }
+         |}
+         |""".stripMargin,
+    )("beg Pat.Var, Term.Name: // c2", "end Pat.Var, Term.Name: // c3")
   }
 
   test("val: ASLC after the equals, ASLC, body") {
