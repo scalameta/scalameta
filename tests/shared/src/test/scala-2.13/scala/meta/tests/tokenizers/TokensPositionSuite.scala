@@ -709,7 +709,7 @@ class TokensPositionSuite extends BasePositionSuite {
        |""".stripMargin,
   )
   checkPositions[Pat]("a E b")
-  checkPositions[Pat]("""s"start ${(a)} end"""", "Pat.Var (a)")
+  checkPositions[Pat]("""s"start ${(a)} end"""", "")
   checkPositions[Pat]("<h1>a{b}c{d}e{f}g</h1>")
   checkPositions[Pat]("x: T")
   checkPositions[Pat]("y: T")

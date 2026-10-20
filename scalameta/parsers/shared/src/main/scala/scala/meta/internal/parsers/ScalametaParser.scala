@@ -1310,25 +1310,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
   final def commaSeparatedWithIndex[T <: Tree: AstInfo: ClassTag](part: Int => T): List[T] =
     tokenSeparated[Comma, T](sepFirst = false, part)
 
-  private def makeTuple[A <: Tree](
-      lpPos: Int,
-      body: List[A],
-      zero: => A,
-      tuple: List[A] => A,
-      singlePos: Boolean = false,
-  )(single: A => Either[List[A], A]): A = body match {
+  private def makeTuple[A <: Tree](lpPos: Int, body: List[A], zero: => A, tuple: List[A] => A)(
+      single: A => Either[List[A], A],
+  ): A = body match {
     case Nil => autoEndPos(lpPos)(zero)
     case (q: Quasi) :: Nil if q.rank == 1 => copyPos(q)(tuple(body))
     case t :: Nil => single(t) match {
         case Right(x) =>
-          if (singlePos) autoEndPos(lpPos)(x)
-          else {
-            if (options.captureComments) { // we are dropping parens: let's find comments outside them
-              prependLeadingComments(x, lpPos)
-              if (prev[RightParen]) appendTrailingComments(x, prevIndex + 1, detached = false)
-            }
-            x
+          if (options.captureComments) { // we are dropping parens: let's find comments outside them
+            prependLeadingComments(x, lpPos)
+            if (prev[RightParen]) appendTrailingComments(x, prevIndex + 1, detached = false)
           }
+          x
         case Left(x) => autoEndPos(lpPos)(tuple(x))
       }
     case _ => autoEndPos(lpPos)(tuple(body))
@@ -2705,7 +2698,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
     protected def finishInfixExpr(unf: Unfinished, rhs: Typ, rhsEnd: EndPos): Typ = {
       val lhs = unf.lhs match {
         // https://dotty.epfl.ch/docs/reference/other-new-features/named-tuples.html#source-incompatibilities
-        case Pat.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Pat.Assign] => arg
+        case t @ Pat.Tuple(arg :: Nil) if !dialect.allowNamedTuples || !arg.is[Pat.Assign] =>
+          // the parentheses make no tree: their comments go to the pattern inside, unless it has them
+          if (t.begComment ne arg.begComment) prependBegComment(arg, t.begComment)
+          if (t.endComment ne arg.endComment) appendEndComment(arg, t.endComment)
+          arg
         case x => x
       }
       val args = copyPos(rhs)(
@@ -3455,14 +3452,18 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     def pattern3(isForComprehension: Boolean = false): Pat = {
       import PatInfixContext._
+      val startPos = currIndex
       val lhs = simplePattern(badPattern3, isForComprehension = isForComprehension)
       val base = stack
       @tailrec
       def loop(rhs: Typ): Typ = currToken match {
         case _: Unquote | Keywords.NotPatAlt() =>
+          // keep the parens around the first operand, where the infix starts
+          val wrap = (rhs eq lhs) && lhs.begIndex != startPos
+          val lhsExt = if (wrap) atPosWithBody(startPos, Pat.Tuple(lhs :: Nil), prevIndex) else rhs
           val op = termName()
           expectNot[LeftBracket]("infix patterns cannot have type arguments")
-          reduceAndPush(base, rhs, op)(UnfinishedInfix.apply)
+          reduceAndPush(base, lhsExt, op)(UnfinishedInfix.apply)
           loop(simplePattern(badPattern3, isRhs = true))
         case _ => drainStack(base, rhs, rhs)
       }
@@ -3546,7 +3547,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           case _: Xml.Start => xmlPat()
           case _: LeftParen =>
             val patterns = inParensOnOpenOr(noSeqWithNamed.patterns())(Nil)
-            makeTuple(startPos, patterns, Lit.Unit(), Pat.Tuple.apply, singlePos = true) {
+            makeTuple(startPos, patterns, Lit.Unit(), Pat.Tuple.apply) {
               case t: Pat.Assign if dialect.allowNamedTuples => Left(t :: Nil)
               case t if !isRhs => Right(t)
               case t @ Pat.Tuple(_ :: Nil) => Right(t)
