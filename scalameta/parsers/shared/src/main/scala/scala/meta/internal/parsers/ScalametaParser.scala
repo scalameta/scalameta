@@ -3346,22 +3346,28 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
 
     def patterns(): List[Pat] = commaSeparated(pattern())
 
-    def pattern(): Pat = patternAlternatives(Nil)
+    def pattern(): Pat = patternAlternatives(Nil, Nil)
 
+    // `begs` holds where each of `pats` starts, at the parens around it if any
     @tailrec
-    private def patternAlternatives(pats: List[Pat]): Pat = {
+    private def patternAlternatives(pats: List[Pat], begs: List[Int]): Pat = {
+      val begPos = currIndex
       val pat = pattern1()
       checkNoTripleDot(pat)
       if (Keywords.PatAlt(currToken)) {
         markNoTreeEnd(currIndex)
         next()
-        patternAlternatives(pat :: pats)
+        patternAlternatives(pat :: pats, begPos :: begs)
       } else if (pats.isEmpty) pat
       else {
-        val endPos = pat.endIndex
-        pats.foldLeft(pat) { case (rtAll, ltOne) =>
-          atPos(ltOne.begIndex, endPos)(Pat.Alternative(ltOne, rtAll))
+        val endPos = prevIndex
+        @tailrec
+        def loop(rtAll: Pat, pats: List[Pat], begs: List[Int]): Pat = pats match {
+          case ltOne :: rest =>
+            loop(atPos(begs.head, endPos)(Pat.Alternative(ltOne, rtAll)), rest, begs.tail)
+          case _ => rtAll
         }
+        loop(pat, pats, begs)
       }
     }
 
@@ -3399,6 +3405,7 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
       else null
 
     def pattern1(isForComprehension: Boolean = false): Pat = {
+      val startPos = currIndex
       val p = pattern2(isForComprehension)
       @inline
       def typed() = Pat.Typed(p, super.patternTyp(allowInfix = false))
@@ -3418,10 +3425,11 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           typed()
         case _: Pat => p
       }
-      if (pat eq p) p else autoEndPos(p)(pat)
+      if (pat eq p) p else autoEndPos(startPos)(pat)
     }
 
     def pattern2(isForComprehension: Boolean = false): Pat = {
+      val startPos = currIndex
       val p = pattern3(isForComprehension)
       val pat = p match {
         case _ if !at[At] => p
@@ -3434,14 +3442,15 @@ class ScalametaParser(input: Input)(implicit dialect: Dialect, options: ParserOp
           next()
           Pat.Bind(p, getSeqWildcard(dialect.allowAtForExtractorVarargs, pattern3()))
         case _: Pat.Wildcard =>
+          val pEnd = prevIndex
           next()
           val rhs = getSeqWildcard(dialect.allowAtForExtractorVarargs, pattern3())
           // `_ @` makes no tree to hold the comments before `@`
-          if (options.captureComments) prependBegComment(rhs, commentsAfter(p.endTokenIdx - 1))
+          if (options.captureComments) prependBegComment(rhs, commentsAfter(pEnd))
           rhs
         case p => p
       }
-      if (pat eq p) p else autoEndPos(p)(pat)
+      if (pat eq p) p else autoEndPos(startPos)(pat)
     }
 
     def pattern3(isForComprehension: Boolean = false): Pat = {
