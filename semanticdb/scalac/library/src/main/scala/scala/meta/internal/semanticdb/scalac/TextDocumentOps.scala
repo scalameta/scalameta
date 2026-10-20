@@ -142,9 +142,8 @@ trait TextDocumentOps {
             val mpos = mname.pos
             if (mpos.isEmpty) return // for instance, missing type in method declaration
             todo += mname
-            val range = mname.tokens.findNot(_.is[m.Token.LeftParen]).getOrElse(mpos)
-            mstarts.put(range.start, mname).foreach(errorAmbiguous("mStart", mname, _))
-            mends.put(range.end, mname).foreach(errorAmbiguous("mEnd", mname, _))
+            mstarts.put(mpos.start, mname).foreach(errorAmbiguous("mStart", mname, _))
+            mends.put(mpos.end, mname).foreach(errorAmbiguous("mEnd", mname, _))
           }
           private def setArgNames(pos: => Iterable[Int])(terms: m.Term.ArgClause*): Unit = {
             val names = List.newBuilder[m.Name]
