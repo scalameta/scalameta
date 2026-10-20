@@ -5205,9 +5205,10 @@ object ScalametaParser {
 
     def compute(tree: Tree)(implicit tokens: Tokens): Int = {
       end = tree.endTokenIdx
-      // a scan from the tree's end finds nothing unless a comment follows it, so skip the walk
-      val commented = tokens.getOrNull(tokens.skipIf(isSeparator, end)).isInstanceOf[HTrivia]
-      if (!commented) return end
+      /* a scan from the tree's end finds nothing unless a comment follows it, so skip the walk;
+       * the tree's own comments may lie past a paren after it */
+      if (tree.endComment.isEmpty &&
+        !tokens.getOrNull(tokens.skipIf(isSeparator, end)).isInstanceOf[HTrivia]) return end
 
       cur = tree
       while (cur.endComment match {

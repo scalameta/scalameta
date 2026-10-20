@@ -5835,10 +5835,9 @@ class CommentSuite extends BaseDottySuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { f(xs* /* c */ ) }
+      """|object A { f(xs /* c */ *) }
          |""".stripMargin,
-      reprinted = Seq("end Term.Repeated: /* c */"),
-    )("end Term.Repeated, Term.Name: /* c */")
+    )("end Term.Name: /* c */")
   }
 
   test("case: ASLC after the keyword, ASLC, infix pattern") {
