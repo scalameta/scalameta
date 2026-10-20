@@ -76,6 +76,30 @@ class PatSuite extends ParseSuite {
     assertPat("foo(x @ _*)")(Extract(tname("foo"), Bind(Var(tname("x")), SeqWildcard()) :: Nil)),
   )
 
+  test("foo((_) *)") {
+    val error =
+      """|<input>:1: error: bad simple pattern: bad brace or paren after _*
+         |foo((_) *)
+         |         ^""".stripMargin
+    runTestError[Pat]("foo((_) *)", error)
+  }
+
+  test("foo((_) *, a)") {
+    val error =
+      """|<input>:1: error: bad simple pattern: bad use of _* (a sequence pattern must be the last pattern)
+         |foo((_) *, a)
+         |         ^""".stripMargin
+    runTestError[Pat]("foo((_) *, a)", error)
+  }
+
+  test("((_) *)") {
+    val error =
+      """|<input>:1: error: bad simple pattern: bad use of _* (sequence pattern not allowed)
+         |((_) *)
+         |      ^""".stripMargin
+    runTestError[Pat]("((_) *)", error)
+  }
+
   test("a :: b")(assertPat("a :: b")(patinfix(Var(tname("a")), "::", Var(tname("b")))))
 
   test("a ::[T] ()") {
