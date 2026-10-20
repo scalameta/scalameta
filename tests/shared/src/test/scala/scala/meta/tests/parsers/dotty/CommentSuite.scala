@@ -5783,6 +5783,7 @@ class CommentSuite extends BaseDottySuite {
          |      // c2
          |      b // c3
          |        // c4
+         |        // c5
          |        :: d =>
          |  }
          |}
@@ -5791,12 +5792,12 @@ class CommentSuite extends BaseDottySuite {
         "end Term.Name: // c1",
         "beg Pat.ArgClause, Pat.ExtractInfix, Pat.Var, Term.Name: // c2",
         "end Pat.Var, Term.Name: // c3",
-        "beg Term.Name: // c4",
+        "beg Term.Name: // c4\n        // c5",
       ),
     )(
       "end Term.Name: // c1",
       "beg Pat.Var, Term.Name: // c2",
-      "end Pat.Var, Term.Name: // c3\n      // c4",
+      "end Pat.Var, Term.Name: // c3\n      // c4\n    ) // c5",
     )
   }
 
@@ -5896,12 +5897,13 @@ class CommentSuite extends BaseDottySuite {
       """|object A {
          |  x match {
          |    case a :: // c2
-         |      b :: d =>
+         |      b // c5
+         |        :: d =>
          |  }
          |}
          |""".stripMargin,
-      reprinted = Seq("end Term.Name: // c2"),
-    )("beg Pat.Var, Term.Name: // c2")
+      reprinted = Seq("end Term.Name: // c2", "end Pat.Var, Term.Name: // c5"),
+    )("beg Pat.Var, Term.Name: // c2", "end Pat.Var: // c5")
   }
 
   test("infix: ASLCs after the paren and a middle operand") {

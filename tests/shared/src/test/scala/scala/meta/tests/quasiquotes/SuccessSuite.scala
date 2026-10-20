@@ -1035,6 +1035,12 @@ class SuccessSuite extends TreeSuiteBase {
     assertTree(p"(..$pats)")(Pat.Tuple(List(tname("X"), tname("Y"))))
   }
 
+  test("p\"(..pats) :: pat\"") {
+    val pats = List(p"a", p"b")
+    val tuple = Pat.Tuple(List(patvar("a"), patvar("b")))
+    assertTree(p"(..$pats) :: c")(patinfix(tuple, "::", patvar("c")))
+  }
+
   test("1 p\"expr(..pats)\"") {
     val p"$expr(..$pats)" = p"x[A, B](Q, W)"
     assertTree(expr)(tapplytype(tname("x"), pname("A"), pname("B")))

@@ -515,40 +515,40 @@ class BasicPositionSuite extends BasePositionSuite {
 
   checkPositions[Pat](
     """foo @ (a -> b)""",
-    """|Pat.ExtractInfix (a -> b)
+    """|Pat.ExtractInfix a -> b
        |""".stripMargin,
   )
 
   checkPositions[Pat](
     """foo @ (a -> b) -> c""",
     """|Pat.ExtractInfix (a -> b) -> c
-       |Pat.ExtractInfix (a -> b)
+       |Pat.ExtractInfix a -> b
        |""".stripMargin,
   )
 
   checkPositions[Pat](
     """foo @ (a :+ b)""",
-    """|Pat.ExtractInfix (a :+ b)
+    """|Pat.ExtractInfix a :+ b
        |""".stripMargin,
   )
 
   checkPositions[Pat](
     """foo @ (a :+ b) :+ c""",
     """|Pat.ExtractInfix (a :+ b) :+ c
-       |Pat.ExtractInfix (a :+ b)
+       |Pat.ExtractInfix a :+ b
        |""".stripMargin,
   )
 
   checkPositions[Pat](
     """foo @ (a +: b)""",
-    """|Pat.ExtractInfix (a +: b)
+    """|Pat.ExtractInfix a +: b
        |""".stripMargin,
   )
 
   checkPositions[Pat](
     """foo @ (a +: b) +: c""",
     """|Pat.ExtractInfix (a +: b) +: c
-       |Pat.ExtractInfix (a +: b)
+       |Pat.ExtractInfix a +: b
        |""".stripMargin,
   )
 
@@ -560,19 +560,14 @@ class BasicPositionSuite extends BasePositionSuite {
 
   checkPositions[Pat](
     """foo @ ((a) | (b))""",
-    """|Pat.Alternative ((a) | (b))
-       |Pat.Var (a)
-       |Pat.Var (b)
+    """|Pat.Alternative (a) | (b)
        |""".stripMargin,
   )
 
   checkPositions[Pat](
     """foo @ ((a) | ((b) | (c)))""",
-    """|Pat.Alternative ((a) | ((b) | (c)))
-       |Pat.Var (a)
-       |Pat.Alternative ((b) | (c))
-       |Pat.Var (b)
-       |Pat.Var (c)
+    """|Pat.Alternative (a) | ((b) | (c))
+       |Pat.Alternative (b) | (c)
        |""".stripMargin,
   )
 
@@ -580,7 +575,6 @@ class BasicPositionSuite extends BasePositionSuite {
     "A((a) :: (b) :: c)",
     """|Pat.ArgClause ((a) :: (b) :: c)
        |Pat.ExtractInfix (a) :: (b) :: c
-       |Pat.Var (a)
        |Pat.ExtractInfix (b) :: c
        |""".stripMargin,
   )
@@ -589,9 +583,7 @@ class BasicPositionSuite extends BasePositionSuite {
     "A((a) +: b, (c) :+ (d))",
     """|Pat.ArgClause ((a) +: b, (c) :+ (d))
        |Pat.ExtractInfix (a) +: b
-       |Pat.Var (a)
        |Pat.ExtractInfix (c) :+ (d)
-       |Pat.Var (c)
        |Pat.ArgClause (d)
        |""".stripMargin,
   )
@@ -617,7 +609,6 @@ class BasicPositionSuite extends BasePositionSuite {
     """|Pat.ArgClause ((a) :: b | c)
        |Pat.Alternative (a) :: b | c
        |Pat.ExtractInfix (a) :: b
-       |Pat.Var (a)
        |""".stripMargin,
   )
 
@@ -625,17 +616,13 @@ class BasicPositionSuite extends BasePositionSuite {
     "A((a) | (b) | (c))",
     """|Pat.ArgClause ((a) | (b) | (c))
        |Pat.Alternative (a) | (b) | (c)
-       |Pat.Var (a)
        |Pat.Alternative (b) | (c)
-       |Pat.Var (b)
-       |Pat.Var (c)
        |""".stripMargin,
   )
 
   checkPositions[Pat](
     "A(((a)))",
     """|Pat.ArgClause (((a)))
-       |Pat.Var ((a))
        |""".stripMargin,
   )
 
@@ -643,7 +630,6 @@ class BasicPositionSuite extends BasePositionSuite {
     "A((a): Int)",
     """|Pat.ArgClause ((a): Int)
        |Pat.Typed (a): Int
-       |Pat.Var (a)
        |""".stripMargin,
   )
 
@@ -651,7 +637,6 @@ class BasicPositionSuite extends BasePositionSuite {
     "A((a) @ b)",
     """|Pat.ArgClause ((a) @ b)
        |Pat.Bind (a) @ b
-       |Pat.Var (a)
        |""".stripMargin,
   )
 
@@ -659,7 +644,6 @@ class BasicPositionSuite extends BasePositionSuite {
     "A((a) @ _*)",
     """|Pat.ArgClause ((a) @ _*)
        |Pat.Bind (a) @ _*
-       |Pat.Var (a)
        |Pat.SeqWildcard _*
        |""".stripMargin,
   )
@@ -667,30 +651,21 @@ class BasicPositionSuite extends BasePositionSuite {
   checkPositions[Pat](
     "A((A))",
     """|Pat.ArgClause ((A))
-       |Term.Name (A)
        |""".stripMargin,
   )
 
-  checkPositions[Stat](
-    "val (a), (A) = 1",
-    """|Pat.Var (a)
-       |Pat.Var (A)
-       |Term.Name (A)
-       |""".stripMargin,
-  )
+  checkPositions[Stat]("val (a), (A) = 1", "")
 
   checkPositions[Stat](
     "for ((a) <- b) yield a",
     """|Term.EnumeratorsBlock ((a) <- b)
        |Enumerator.Generator (a) <- b
-       |Pat.Var (a)
        |""".stripMargin,
   )
 
   checkPositions[Case](
     "case (a) =>",
-    """|Pat.Var (a)
-       |Term.Block case (a) =>@@
+    """|Term.Block case (a) =>@@
        |""".stripMargin,
   )
 

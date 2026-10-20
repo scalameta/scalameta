@@ -78,7 +78,7 @@ class PatSuite extends ParseSuite {
 
   test("foo((_) *)") {
     val error =
-      """|<input>:1: error: bad simple pattern: bad brace or paren after _*
+      """|<input>:1: error: bad simple pattern: use _* to match a sequence
          |foo((_) *)
          |         ^""".stripMargin
     runTestError[Pat]("foo((_) *)", error)
@@ -86,7 +86,7 @@ class PatSuite extends ParseSuite {
 
   test("foo((_) *, a)") {
     val error =
-      """|<input>:1: error: bad simple pattern: bad use of _* (a sequence pattern must be the last pattern)
+      """|<input>:1: error: bad simple pattern: trailing * is not a valid pattern
          |foo((_) *, a)
          |         ^""".stripMargin
     runTestError[Pat]("foo((_) *, a)", error)
@@ -94,7 +94,7 @@ class PatSuite extends ParseSuite {
 
   test("((_) *)") {
     val error =
-      """|<input>:1: error: bad simple pattern: bad use of _* (sequence pattern not allowed)
+      """|<input>:1: error: bad simple pattern: trailing * is not a valid pattern
          |((_) *)
          |      ^""".stripMargin
     runTestError[Pat]("((_) *)", error)

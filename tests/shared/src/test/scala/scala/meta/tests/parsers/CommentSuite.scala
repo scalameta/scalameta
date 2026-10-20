@@ -8368,11 +8368,12 @@ class CommentSuite extends ParseSuite {
       code,
       """|object A {
          |  x match {
-         |    case a :: b :: d =>
+         |    case a :: b /* c */ :: d =>
          |  }
          |}
          |""".stripMargin,
-    )()
+      reprinted = Seq("end Pat.Var, Term.Name: /* c */"),
+    )("end Pat.Var: /* c */")
   }
 
   test("pattern: MLC inside a middle infix operand in parens") {
@@ -8645,6 +8646,7 @@ class CommentSuite extends ParseSuite {
          |      ( // c2
          |        b // c3
          |        // c4
+         |        // c5
          |      ) :: d =>
          |  }
          |}
@@ -8652,12 +8654,12 @@ class CommentSuite extends ParseSuite {
       reprinted = Seq(
         "end Term.Name: // c1",
         "beg Pat.Var, Term.Name: // c2",
-        "end Pat.Var, Term.Name: // c3\n        // c4",
+        "end Pat.Var, Term.Name: // c3\n        // c4\n        // c5",
       ),
     )(
       "end Term.Name: // c1",
       "beg Pat.Var, Term.Name: // c2",
-      "end Pat.Var, Term.Name: // c3\n      // c4",
+      "end Pat.Var, Term.Name: // c3\n      // c4\n    ) // c5",
     )
   }
 
