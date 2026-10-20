@@ -313,8 +313,12 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
       prevToken: Token,
       prevPos: Int,
       currPos: Int,
-      sepRegionsOrig: List[SepRegion],
+      regions: List[SepRegion],
   ): TokenRef = {
+    val sepRegionsOrig = regions match {
+      case RegionSingleLineLambdaEnd :: rs => rs
+      case _ => regions
+    }
     val prev = if (prevPos >= 0) tokens(prevPos) else null
     val curr = tokens(currPos)
     val currNonTrivial = !isTrivia(curr)
@@ -520,6 +524,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
             case (_: RegionCaseBody) :: rs => expr() :: rs
             // head could be RegionIndent or RegionBrace
             case x :: RegionCaseMark :: rs => expr() :: x :: rs
+            case RegionSingleLineLambda :: _ => expr() :: sepRegions
             case (_: RegionDelim) :: (_: RegionFor | RegionTemplateBody) :: _ => sepRegions
             // partial function
             case (_: RegionBrace) :: _ => expr() :: sepRegions
@@ -579,6 +584,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
         }
       case _: RightArrow => currRef(
           sepRegions match {
+            case (_: RegionCaseExpr) :: (rs @ RegionSingleLineLambda :: _) => rs
             case (_: RegionCaseExpr) :: rs =>
               // add case region for `match {` to calculate proper indentation
               // for statements in indentation dialects
@@ -622,6 +628,8 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
         currRef(RegionDefMark :: sepRegions)
       case _: Colon => sepRegions match {
           case RegionDefMark :: rs => currRef(RegionDefType :: rs)
+          case _ if isSingleLineLambdaOnColon(currPos, sepRegions) =>
+            currRef(RegionSingleLineLambda :: sepRegions)
           case (_: RegionCaseExprGuard) :: _ if dialect.allowFewerBraces =>
             // to distinguish `=>` from lambda and end of case expr
             currRef(RegionColonMaybeFewerBraces :: sepRegions)
@@ -764,7 +772,7 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
         }
       }
 
-      val resOpt =
+      def resOpt =
         if (!hasLF) None
         else if (!dialect.allowSignificantIndentation) getInfixLFIfNeeded(sepRegionsOrig)
           .orElse(getIfCanProduceLF(sepRegionsOrig))
@@ -975,12 +983,77 @@ private[meta] final class ScannerTokens(val tokens: Tokens)(implicit dialect: Di
 
           iter(sepRegionsOrig)
         }
-      resOpt match {
+      val lambdaRegions = if (eolPos < 0) null else dropSingleLineLambda(sepRegionsOrig)
+      if (lambdaRegions ne null)
+        // a lambda arrow at the end of line starts a multi-line body instead
+        if (prev.isAny[RightArrow, ContextArrow])
+          nextToken(prevToken, prevPos, currPos, withoutSingleLineLambdas(sepRegionsOrig))
+        else {
+          // process this newline again, with the lambda region dropped
+          val regions = RegionSingleLineLambdaEnd :: lambdaRegions
+          TokenRef(regions, tokens(eolPos), prevPos, currPos, eolPos)
+        }
+      else resOpt match {
         case Some(Right(res)) => res
         case Some(Left(rs)) => nextToken(prevToken, prevPos, nextPos, rs)
         case _ => nextToken(prevToken, prevPos, nextPos, sepRegionsOrig)
       }
     }
+  }
+
+  // fewer-braces argument on the same line as the colon: `xs.map: x => x` or `xs.map: case x => x`;
+  // not directly within parens, where it would be a type ascription
+  private def isSingleLineLambdaOnColon(colonPos: Int, regions: List[SepRegion]): Boolean =
+    dialect.allowFewerBraces && {
+      val prevPos = prevNonTriviaAt(colonPos)
+      tokens(prevPos).isAny[Ident, CloseDelim, KwThis] &&
+      (dropRegionLine(regions) match {
+        case (_: RegionParen | _: RegionBracket | _: RegionHasParamMark | _: RegionDefDecl |
+            _: RegionTemplateDecl | _: RegionCaseExprPat) :: _ => false
+        // self-type
+        case (_: RegionDelim) :: RegionTemplateBody :: _ =>
+          !prevNonTrivia(prevPos).isAny[LeftBrace, Colon]
+        case _ => true
+      })
+    } && {
+      val pos = nextNonHTriviaAt(colonPos)
+      tokens(pos) match {
+        case _: KwCase => !nextNonTrivia(pos).isClassOrObject
+        case _ => isLambdaWithBodyOnSameLine(pos)
+      }
+    }
+
+  // a curried lambda whose last arrow ends the line drops the region at that newline
+  private def isLambdaWithBodyOnSameLine(pos: Int): Boolean = {
+    val paramsEnd = getLambdaParamsEnd(pos)
+    paramsEnd >= 0 && {
+      val arrowPos = nextNonHTriviaAt(paramsEnd)
+      tokens(arrowPos).isAny[RightArrow, ContextArrow] && !nextNonHTrivia(arrowPos).is[AtEOLorF]
+    }
+  }
+
+  private def getLambdaParamsEnd(pos: Int): Int = tokens(pos) match {
+    case _: LeftParen | _: LeftBracket => getClosingDelimPos(pos)
+    case _: Underscore => pos
+    case t: Ident =>
+      val next = nextNonHTriviaAt(pos)
+      if ((soft.KwErased(t) || soft.KwUsing(t)) && tokens(next).is[Ident]) next else pos
+    case _: KwImplicit =>
+      val next = nextNonHTriviaAt(pos)
+      if (tokens(next).isAny[Ident, Underscore]) next else -1
+    case _ => -1
+  }
+
+  private def getClosingDelimPos(openPos: Int): Int = {
+    @tailrec
+    def iter(pos: Int, depth: Int): Int = tokens(pos) match {
+      case _: LeftParen | _: LeftBracket | _: LeftBrace => iter(pos + 1, depth + 1)
+      case _: RightParen | _: RightBracket | _: RightBrace =>
+        if (depth <= 1) pos else iter(pos + 1, depth - 1)
+      case _: EOF => -1
+      case _ => iter(pos + 1, depth)
+    }
+    iter(openPos, 0)
   }
 
   private def isLeadingInfixArg(afterOpPos: Int, nextIndent: Int) = {
@@ -1070,6 +1143,23 @@ private[meta] object ScannerTokens {
   @inline
   private def isIndented(sepRegions: List[SepRegion], curIndent: Int): Boolean =
     findIndent(sepRegions) < curIndent
+
+  // regions outside of the innermost single-line lambda, or null if there's no such lambda
+  // or it is enclosed by a delimiter (a newline within parens etc. doesn't end the lambda)
+  @tailrec
+  private def dropSingleLineLambda(regions: List[SepRegion]): List[SepRegion] = regions match {
+    case RegionSingleLineLambda :: rs => rs
+    case Nil | (_: RegionDelim) :: _ => null
+    case _ :: rs => dropSingleLineLambda(rs)
+  }
+
+  private def withoutSingleLineLambdas(regions: List[SepRegion]): List[SepRegion] = regions match {
+    case RegionSingleLineLambda :: rs => withoutSingleLineLambdas(rs)
+    case Nil | (_: RegionDelim) :: _ => regions
+    case r :: rs =>
+      val nrs = withoutSingleLineLambdas(rs)
+      if (nrs eq rs) regions else r :: nrs
+  }
 
   @tailrec
   private def inParens(regions: List[SepRegion]): Boolean = regions.nonEmpty &&

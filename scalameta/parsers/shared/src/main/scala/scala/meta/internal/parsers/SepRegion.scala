@@ -41,6 +41,11 @@ final class RegionCaseBody(override val indent: Int, val arrow: Token)
 
 case object RegionColonMaybeFewerBraces extends RegionNonDelimNonIndented with CanProduceLF
 
+// fewer-braces lambda with its body on the same line as the colon (SIP-75), ends at newline
+case object RegionSingleLineLambda extends RegionNonDelimNonIndented
+// marks the newline token which ends a single-line lambda; dropped on the following token
+case object RegionSingleLineLambdaEnd extends RegionNonDelimNonIndented
+
 sealed trait RegionHasParamMark extends RegionNonDelimNonIndented
 
 sealed trait RegionDefDecl extends RegionNonDelimNonIndented
