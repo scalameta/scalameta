@@ -8364,10 +8364,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { f(b: _* /* c */ ) }
+      """|object A { f(b /* c */ : _*) }
          |""".stripMargin,
-      reprinted = Seq("end Term.Repeated: /* c */"),
-    )("end Term.Repeated, Term.Name: /* c */")
+    )("end Term.Name: /* c */")
   }
 
   test("MLC after an eta-expanded term in parens") {
@@ -8378,10 +8377,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { val g = f _ /* c */ }
+      """|object A { val g = f /* c */ _ }
          |""".stripMargin,
-      reprinted = Seq("end Defn.Val, Term.Eta: /* c */"),
-    )("end Term.Eta, Term.Name: /* c */")
+    )("end Term.Name: /* c */")
   }
 
   test("pattern: MLC after a type in parens, case without body") {
@@ -8411,10 +8409,9 @@ class CommentSuite extends ParseSuite {
          |""".stripMargin
     checkComments(
       code,
-      """|object A { def f(x: Int* /* c */ ) = x }
+      """|object A { def f(x: Int /* c */ *) = x }
          |""".stripMargin,
-      reprinted = Seq("end Term.Param, Type.Repeated: /* c */"),
-    )("end Type.Repeated, Type.Name: /* c */")
+    )("end Type.Name: /* c */")
   }
 
   test("MLC after a by-name type in parens") {
