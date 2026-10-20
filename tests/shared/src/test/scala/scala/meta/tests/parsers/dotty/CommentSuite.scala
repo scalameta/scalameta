@@ -5762,6 +5762,109 @@ class CommentSuite extends BaseDottySuite {
     checkComments(code)("beg Pat.ArgClause, Pat.Var, Term.Name: // c")
   }
 
+  test("infix: ASLCs after the paren and a middle operand") {
+    val code =
+      """|object A {
+         |  val y = a ::
+         |    ( // c2
+         |      b // c3
+         |    )
+         |    :: d
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val y = a :: // c2
+         |    b // c3
+         |    :: d
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Term.Name: // c2", "end Term.Name: // c3"),
+      twice =
+        """|object A {
+           |  val y = a :: // c2
+           |    b // c3
+           |      :: d
+           |}
+           |""".stripMargin,
+    )("beg Term.Name: // c2", "end Term.Name: // c3")
+  }
+
+  test("infix: ASLCs after the paren and a first operand") {
+    val code =
+      """|object A {
+         |  val y = ( // c2
+         |      b // c3
+         |    )
+         |    :: d
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val y = // c2
+         |    b // c3
+         |    :: d
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.ApplyInfix, Term.Name: // c2", "end Term.Name: // c3"),
+      twice =
+        """|object A {
+           |  val y = // c2
+           |    b // c3
+           |      :: d
+           |}
+           |""".stripMargin,
+    )("beg Term.Name: // c2", "end Term.Name: // c3")
+  }
+
+  test("type infix: ASLCs after the paren and a middle operand") {
+    val code =
+      """|object A {
+         |  type T = A ::
+         |    ( // c2
+         |      B // c3
+         |    )
+         |    :: D
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  type T = A :: // c2
+         |    B // c3
+         |      :: D
+         |}
+         |""".stripMargin,
+      reprinted = Seq("end Type.Name: // c2", "end Type.Name: // c3"),
+    )("beg Type.ApplyInfix, Type.Name: // c2", "end Type.Name: // c3")
+  }
+
+  test("case: ASLC after the keyword, ASLC, infix pattern") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case // o
+         |      // i
+         |      a :: b =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case // o
+         |    // i
+         |      a :: b =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Pat.ExtractInfix, Pat.Var, Term.Name: // o\n    // i"),
+    )("beg Pat.ExtractInfix, Pat.Var, Term.Name: // o\n      // i")
+  }
+
   test("given: named, type in parens, DSLC before the closing paren") {
     val code =
       """|object O {

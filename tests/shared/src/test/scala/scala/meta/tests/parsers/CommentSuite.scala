@@ -8357,6 +8357,130 @@ class CommentSuite extends ParseSuite {
     )("end Pat.Var: /* c */")
   }
 
+  test("val: ASLC after the equals, ASLC, body") {
+    val code =
+      """|object A {
+         |  val x = // o
+         |    // i
+         |    a
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val x = // o
+         |  // i
+         |    a
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.Name: // o\n  // i"),
+    )("beg Term.Name: // o\n    // i")
+  }
+
+  test("val: ASLC after the equals, two ASLCs, body") {
+    val code =
+      """|object A {
+         |  val x = // o
+         |    // i
+         |    // j
+         |    a
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val x = // o
+         |  // i
+         |  // j
+         |    a
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.Name: // o\n  // i\n  // j"),
+    )("beg Term.Name: // o\n    // i\n    // j")
+  }
+
+  test("val: ASLC after the equals, MLC before the body") {
+    val code =
+      """|object A {
+         |  val x = // o
+         |    /* i */ a
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val x = // o
+         |  /* i */ a
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.Name: // o\n  /* i */"),
+    )("beg Term.Name: // o\n    /* i */")
+  }
+
+  test("val: ASLC after the equals, ASLC, infix body") {
+    val code =
+      """|object A {
+         |  val x = // o
+         |    // i
+         |    a + b
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  val x = // o
+         |  // i
+         |    a + b
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.ApplyInfix, Term.Name: // o\n  // i"),
+    )("beg Term.ApplyInfix, Term.Name: // o\n    // i")
+  }
+
+  test("case: ASLC after the keyword, ASLC, pattern") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case // o
+         |      // i
+         |      a =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case // o
+         |    // i
+         |      a =>
+         |  }
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Pat.Var, Term.Name: // o\n    // i"),
+    )("beg Pat.Var, Term.Name: // o\n      // i")
+  }
+
+  test("if: ASLC after the condition, ASLC, body") {
+    val code =
+      """|object A {
+         |  if (a) // o
+         |    // i
+         |    b
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  if (a) // o
+         |  // i
+         |    b
+         |}
+         |""".stripMargin,
+      reprinted = Seq("beg Term.Name: // o\n  // i"),
+    )("beg Term.Name: // o\n    // i")
+  }
+
   test("pattern: MLC after a tuple alternative") {
     val code =
       """|object A {
