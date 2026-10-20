@@ -58,15 +58,14 @@ trait SymbolOps {
       if (sym.isRootPackage) n.RootPackage.value
       else if (sym.isEmptyPackage) n.EmptyPackage.value
       else if (sym.isConstructor) n.Constructor.value
-      else if (sym.isTypeParam) NameTransformer.decode(sym.name)
+      else if (sym.isTypeParam) sym.decodedName
       else {
-        @tailrec
-        def loop(value: String): String = {
-          val i = value.lastIndexOf("$$")
-          if (i > 0) loop(value.substring(i + 2))
-          else NameTransformer.decode(value).stripSuffix(NameTransformer.LOCAL_SUFFIX_STRING)
-        }
-        loop(sym.name)
+        val name = sym.name.stripSuffix(NameTransformer.LOCAL_SUFFIX_STRING)
+        NameTransformer.decode(sym match {
+          case sym: SymbolInfoSymbol if name.contains("$$") && isExpandedName(sym) =>
+            unexpandedName(name, sym)
+          case _ => name
+        })
       }
     def descriptor: Descriptor = sym match {
       case sym: SymbolInfoSymbol => sym.kind match {
@@ -290,8 +289,8 @@ trait SymbolOps {
       case sym: TypeSymbol => sym.hasLongFlag(gf.EXISTENTIAL)
       case _ => false
     }
-    def isAnonymousClass = sym.name.contains("$anon")
-    def isAnonymousFunction = sym.name.contains("$anonfun")
+    def isAnonymousClass = decodedName.contains("$anon")
+    def isAnonymousFunction = decodedName.contains("$anonfun")
     def isSyntheticConstructor = sym match {
       case sym: SymbolInfoSymbol =>
         val owner = sym.symbolInfo.owner
@@ -300,7 +299,7 @@ trait SymbolOps {
     }
     def isLocalChild: Boolean = sym.name == "<local child>"
     def isLocalDummy: Boolean = sym.parent.exists(owner => sym.name == s"<local ${owner.name}>")
-    def isExtensionMethod: Boolean = sym.name.contains("$extension")
+    def isExtensionMethod: Boolean = decodedName.contains("$extension")
     def isSyntheticValueClassCompanion: Boolean = sym match {
       case sym: SymbolInfoSymbol =>
         if (sym.isModuleClass) sym.infoType match {
@@ -331,7 +330,7 @@ trait SymbolOps {
       sym.isScalacField && getter.nonEmpty
     }
     def isUsefulField: Boolean = sym.isScalacField && !sym.isUselessField
-    def isSyntheticCaseAccessor: Boolean = sym.isCaseAccessor && sym.name.contains("$")
+    def isSyntheticCaseAccessor: Boolean = sym.isCaseAccessor && decodedName.contains("$")
     def isRefinementClass: Boolean = sym.name == "<refinement>"
     def isUseless: Boolean = sym == NoSymbol || sym.isAnonymousClass ||
       sym.isSyntheticConstructor || sym.isModuleClass || sym.isLocalChild || sym.isLocalDummy ||
@@ -340,6 +339,32 @@ trait SymbolOps {
     def isUseful: Boolean = !sym.isUseless
     def isDefaultParameter: Boolean = sym.hasFlag(gf.DEFAULTPARAM) && sym.isParam
 
+    def decodedName: String = NameTransformer.decode(sym.name)
+
+  }
+
+  /* scalac prefixed the name with the full name of an enclosing class and `$$`: the class that a
+   * qualified private member is private to, or the owner of a private member */
+  @tailrec
+  private def unexpandedName(name: String, sym: Symbol): String = enclosingClass(sym) match {
+    case Some(cls: ClassSymbol) =>
+      val stripped = name.stripPrefix(fullName(cls) + "$$")
+      if (stripped ne name) stripped else unexpandedName(name, cls)
+    case _ => name
+  }
+
+  // scalac's `fullName('$')`
+  private def fullName(sym: Symbol): String = enclosingClass(sym) match {
+    case Some(owner) if !owner.isRootPackage && !owner.isEmptyPackage =>
+      fullName(owner) + NameTransformer.NAME_JOIN_STRING + sym.name
+    case _ => sym.name
+  }
+
+  @tailrec // scalac's `effectiveOwner.enclClass`
+  private def enclosingClass(sym: Symbol): Option[Symbol] = sym.parent match {
+    case Some(owner) if owner.isPackageObject || owner.isInstanceOf[MethodSymbol] =>
+      enclosingClass(owner)
+    case owner => owner
   }
 
   private var nextId = 0
@@ -378,5 +403,7 @@ object SymbolOps {
   private implicit class XtensionSymbolInfoSymbol(val sym: SymbolInfoSymbol) extends AnyVal {
     def hasLongFlag(flag: Long): Boolean = (pickledFlags(sym) & flag) != 0
   }
+
+  private def isExpandedName(sym: SymbolInfoSymbol): Boolean = sym.hasLongFlag(gf.EXPANDEDNAME)
 
 }

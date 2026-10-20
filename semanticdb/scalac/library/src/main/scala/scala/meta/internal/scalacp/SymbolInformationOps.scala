@@ -117,7 +117,7 @@ trait SymbolInformationOps {
       if (sym.isRootPackage) dn.RootPackage
       else if (sym.isEmptyPackage) dn.EmptyPackage
       else if (sym.isConstructor) dn.Constructor
-      else if (sym.name.startsWith("_$")) dn.Anonymous
+      else if (sym.decodedName.startsWith("_$")) dn.Anonymous
       else if (sym.isPackageObject) sym.ssym.owner.desc.value
       else sym.symbolName
 

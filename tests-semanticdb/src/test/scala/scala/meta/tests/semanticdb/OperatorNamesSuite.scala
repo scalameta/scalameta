@@ -44,7 +44,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|[0:6..0:7): c <= _empty_/c#
        |[0:8..0:8):  <= _empty_/c#`<init>`().
        |[0:15..0:16): p <= _empty_/c#p().
-       |[0:18..0:19): q <= _empty_/c#`q_=`().
+       |[0:18..0:19): q <= _empty_/c#q().
        |""".stripMargin,
   )
 
@@ -63,7 +63,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |[2:10..2:11): c <= local0
        |[2:12..2:12):  <= local1
        |[2:19..2:20): p <= local3
-       |[2:22..2:23): q <= local6
+       |[2:22..2:23): q <= local5
        |""".stripMargin,
   )
 
@@ -73,7 +73,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     """|[0:6..0:7): c <= _empty_/c#
        |[0:8..0:8):  <= _empty_/c#`<init>`().
-       |[0:20..0:22): eq <= _empty_/c#`eq_=`().
+       |[0:15..0:18): a_+ <= _empty_/c#`a_+`().
+       |[0:20..0:22): eq <= _empty_/c#eq().
        |""".stripMargin,
   )
 
@@ -83,6 +84,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     """|[0:6..0:7): c <= _empty_/c#
        |[0:8..0:8):  <= _empty_/c#`<init>`().
+       |[0:15..0:18): a_+ <= _empty_/c#`a_+`.
        |[0:20..0:22): eq <= _empty_/c#eq.
        |""".stripMargin,
   )
@@ -99,6 +101,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|[0:6..0:7): a <= _empty_/a#
        |[0:8..0:8):  <= _empty_/a#`<init>`().
        |[1:6..1:7): m <= _empty_/a#m().
+       |[2:9..2:12): a_+ <= local0
        |[2:14..2:16): eq <= local1
        |[3:4..3:7): a_+ => local0
        |[3:8..3:9): + => scala/Int#`+`(+4).
@@ -114,9 +117,11 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|[0:11..0:12): k <= _empty_/k#
        |[0:12..0:12):  <= _empty_/k#`<init>`().
        |[0:13..0:16): a_+ <= _empty_/k#`<init>`().(`a_+`)
+       |[0:13..0:16): a_+ <= _empty_/k#`a_+`.
        |[0:19..0:22): Int => scala/Int#
        |[1:7..1:8): o <= _empty_/o.
        |[1:11..1:12): k => _empty_/k.
+       |[1:16..1:19): a_+ => _empty_/k#`a_+`.
        |""".stripMargin,
   )
 
@@ -124,14 +129,17 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     "function parameter named x+",
     """|class c { val f = (`x+`: Int) => `x+` }
        |""".stripMargin,
-    "",
+    """|local0 => param x+: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   locals(
     "self named x+",
     """|class c { `x+` => def m = `x+` }
        |""".stripMargin,
-    "",
+    """|local0 => selfparam x+
+       |""".stripMargin,
   )
 
   symbols(
@@ -141,7 +149,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|_empty_/c# => class c extends AnyRef { +2 decls }
        |  AnyRef => scala/AnyRef#
        |_empty_/c#`<init>`(). => primary ctor <init>()
-       |_empty_/c#`_+`. => val method _: Int
+       |_empty_/c#`_+`. => val method _+: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -151,8 +159,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|case class k(a_+ : Int)
        |""".stripMargin,
     "_empty_/k#`a_+`.",
-    "",
-    "",
+    "_empty_/k#`a_+`. => a_+",
+    "_empty_/k#`a_+`. => a_+",
   )
 
   metacp(
@@ -160,8 +168,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|case class k(var a_+ : Int)
        |""".stripMargin,
     "_empty_/k#`a_+`().",
-    "",
-    "",
+    "_empty_/k#`a_+`(). => a_+",
+    "_empty_/k#`a_+`(). => a_+",
   )
 
   metacp(
@@ -178,8 +186,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|class c { val `_+` = 1 }
        |""".stripMargin,
     "_empty_/c#`_+`.",
-    "_empty_/c#`_+`. => _",
-    "_empty_/c#`_+`. => _",
+    "_empty_/c#`_+`. => _+",
+    "_empty_/c#`_+`. => _+",
   )
 
   symbols(
@@ -189,6 +197,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|_empty_/c# => class c extends AnyRef { +3 decls }
        |  AnyRef => scala/AnyRef#
        |_empty_/c#`<init>`(). => primary ctor <init>()
+       |_empty_/c#`a `. => val method a : Int
+       |  Int => scala/Int#
        |_empty_/c#a. => val method a: Int
        |  Int => scala/Int#
        |""".stripMargin,
@@ -199,8 +209,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|class c { val `a ` = 1 }
        |""".stripMargin,
     "_empty_/c#`a `.",
-    "",
-    "",
+    "_empty_/c#`a `. => a ",
+    "_empty_/c#`a `. => a ",
   )
 
   metacp(
@@ -209,7 +219,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`a$+`.",
     "_empty_/c#`a$+`. => a$+",
-    "",
+    "_empty_/c#`a$+`. => a$+",
   )
 
   metacp(
@@ -217,15 +227,17 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|case class k(`a b`: Int)
        |""".stripMargin,
     "_empty_/k#`a b`.",
-    "",
-    "",
+    "_empty_/k#`a b`. => a b",
+    "_empty_/k#`a b`. => a b",
   )
 
   locals(
     "function parameter named x y",
     """|class c { val f = (`x y`: Int) => `x y` }
        |""".stripMargin,
-    "",
+    """|local0 => param x y: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   metacp(
@@ -233,8 +245,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|class c { val `a ` = 1 }
        |""".stripMargin,
     "_empty_/c#a.",
-    "_empty_/c#a. => a",
-    "_empty_/c#a. => a",
+    "",
+    "",
   )
 
   metacp(
@@ -242,8 +254,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|class c { private[this] val `a ` = 1 }
        |""".stripMargin,
     "_empty_/c#`a `.",
-    "",
-    "",
+    "_empty_/c#`a `. => a ",
+    "_empty_/c#`a `. => a ",
   )
 
   metacp(
@@ -252,7 +264,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`+$+`.",
     "_empty_/c#`+$+`. => +$+",
-    "",
+    "_empty_/c#`+$+`. => +$+",
   )
 
   metacp(
@@ -261,7 +273,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`x$+`().",
     "_empty_/c#`x$+`(). => x$+",
-    "",
+    "_empty_/c#`x$+`(). => x$+",
   )
 
   metacp(
@@ -270,7 +282,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#plus.",
     "",
-    "_empty_/c#plus. => plus",
+    "",
   )
 
   metacp(
@@ -279,7 +291,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`+`().",
     "_empty_/c#`+`(). => +",
-    "",
+    "_empty_/c#`+`(). => +",
   )
 
   metacp(
@@ -287,8 +299,8 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
     """|class c { private[c] val `a ` = 1 }
        |""".stripMargin,
     "_empty_/c#`a `.",
-    "",
-    "",
+    "_empty_/c#`a `. => a ",
+    "_empty_/c#`a `. => a ",
   )
 
   metacp(
@@ -297,7 +309,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`x$$+`().",
     "_empty_/c#`x$$+`(). => x$$+",
-    "",
+    "_empty_/c#`x$$+`(). => x$$+",
   )
 
   metacp(
@@ -306,7 +318,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`x$$+`().",
     "_empty_/c#`x$$+`(). => x$$+",
-    "",
+    "_empty_/c#`x$$+`(). => x$$+",
   )
 
   metacp(
@@ -315,7 +327,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#c$$x().",
     "_empty_/c#c$$x(). => c$$x",
-    "",
+    "_empty_/c#c$$x(). => c$$x",
   )
 
   metacp(
@@ -324,7 +336,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#c$$x().",
     "_empty_/c#c$$x(). => c$$x",
-    "",
+    "_empty_/c#c$$x(). => c$$x",
   )
 
   metacp(
@@ -333,7 +345,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`x$$+`.",
     "_empty_/c#`x$$+`. => x$$+",
-    "",
+    "_empty_/c#`x$$+`. => x$$+",
   )
 
   metacp(
@@ -343,7 +355,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "p/c#`x$$+`().",
     "p/c#`x$$+`(). => x$$+",
-    "",
+    "p/c#`x$$+`(). => x$$+",
   )
 
   metacp(
@@ -352,7 +364,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/o.c#`x$$+`().",
     "_empty_/o.c#`x$$+`(). => x$$+",
-    "",
+    "_empty_/o.c#`x$$+`(). => x$$+",
   )
 
   metacp(
@@ -361,7 +373,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "p/package.c#`x$$+`().",
     "p/package.c#`x$$+`(). => x$$+",
-    "",
+    "p/package.c#`x$$+`(). => x$$+",
   )
 
   metacp(
@@ -370,7 +382,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/o#c#`x$$+`().",
     "_empty_/o#c#`x$$+`(). => x$$+",
-    "",
+    "_empty_/o#c#`x$$+`(). => x$$+",
   )
 
   metacp(
@@ -388,7 +400,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`+`().",
     "_empty_/c#`+`(). => +",
-    "",
+    "_empty_/c#`+`(). => +",
   )
 
   metacp(
@@ -397,7 +409,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`x$$+`().",
     "_empty_/c#`x$$+`(). => x$$+",
-    "",
+    "_empty_/c#`x$$+`(). => x$$+",
   )
 
   metacp(
@@ -406,7 +418,7 @@ class OperatorNamesSuite extends SemanticdbSuite with MetacpSnippets {
        |""".stripMargin,
     "_empty_/c#`x$$+`.",
     "_empty_/c#`x$$+`. => x$$+",
-    "",
+    "_empty_/c#`x$$+`. => x$$+",
   )
 
 }
