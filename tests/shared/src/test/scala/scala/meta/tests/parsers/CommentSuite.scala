@@ -8356,6 +8356,80 @@ class CommentSuite extends ParseSuite {
     )("end Pat.Var: /* c */")
   }
 
+  test("MLC after a repeated arg in parens") {
+    val code =
+      """|object A {
+         |  f((b) /* c */ : _*)
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { f(b: _* /* c */ ) }
+         |""".stripMargin,
+      reprinted = Seq("end Term.Repeated: /* c */"),
+    )("end Term.Repeated, Term.Name: /* c */")
+  }
+
+  test("MLC after an eta-expanded term in parens") {
+    val code =
+      """|object A {
+         |  val g = (f) /* c */ _
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { val g = f _ /* c */ }
+         |""".stripMargin,
+      reprinted = Seq("end Defn.Val, Term.Eta: /* c */"),
+    )("end Term.Eta, Term.Name: /* c */")
+  }
+
+  test("pattern: MLC after a type in parens, case without body") {
+    val code =
+      """|object A {
+         |  x match {
+         |    case a: (Int) /* c */ =>
+         |  }
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A {
+         |  x match {
+         |    case a: Int /* c */ =>
+         |  }
+         |}
+         |""".stripMargin,
+    )("end Pat.Typed, Type.Name: /* c */")
+  }
+
+  test("MLC after a repeated type in parens") {
+    val code =
+      """|object A {
+         |  def f(x: (Int) /* c */ *) = x
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { def f(x: Int* /* c */ ) = x }
+         |""".stripMargin,
+      reprinted = Seq("end Term.Param, Type.Repeated: /* c */"),
+    )("end Type.Repeated, Type.Name: /* c */")
+  }
+
+  test("MLC after a by-name type in parens") {
+    val code =
+      """|object A {
+         |  def f(x: => (Int) /* c */ ) = x
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { def f(x: => Int /* c */ ) = x }
+         |""".stripMargin,
+    )("end Term.Param, Type.ByName, Type.Name: /* c */")
+  }
+
   test("val: ASLC after the equals, ASLC, body") {
     val code =
       """|object A {

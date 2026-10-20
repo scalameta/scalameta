@@ -5827,6 +5827,20 @@ class CommentSuite extends BaseDottySuite {
     )("beg Type.ApplyInfix, Type.Name: // c2", "end Type.Name: // c3")
   }
 
+  test("MLC after a spread arg in parens") {
+    val code =
+      """|object A {
+         |  f((xs) /* c */ *)
+         |}
+         |""".stripMargin
+    checkComments(
+      code,
+      """|object A { f(xs* /* c */ ) }
+         |""".stripMargin,
+      reprinted = Seq("end Term.Repeated: /* c */"),
+    )("end Term.Repeated, Term.Name: /* c */")
+  }
+
   test("case: ASLC after the keyword, ASLC, infix pattern") {
     val code =
       """|object A {
