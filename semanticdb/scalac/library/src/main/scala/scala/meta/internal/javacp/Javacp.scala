@@ -15,6 +15,7 @@ import scala.meta.io.AbsolutePath
 
 import scala.collection.mutable
 import scala.collection.mutable.{ArrayBuffer, ListBuffer}
+import scala.reflect.NameTransformer.{MODULE_SUFFIX_STRING, NAME_JOIN_STRING}
 import scala.tools.asm.tree.{ClassNode, FieldNode, InnerClassNode, MethodNode}
 import scala.tools.asm.{Opcodes => o}
 import scala.tools.nsc.backend.jvm.GenBCode
@@ -422,10 +423,13 @@ object Javacp {
       case Some(ic) if ic.outerName != null && ic.innerName != null =>
         // a static class in a Scala object has the mirror class as its outer class
         val outerName =
-          if (ic.access.hasFlag(o.ACC_STATIC) && exists(ic.outerName + "$")) ic.outerName + "$"
-          else ic.outerName
+          if (ic.access.hasFlag(o.ACC_STATIC)) {
+            val staticName = ic.outerName + MODULE_SUFFIX_STRING
+            if (exists(staticName)) staticName else ic.outerName
+          } else ic.outerName
         Symbols.Global(apply(outerName), descriptor(ic.innerName))
-      case None if asmName.indexOf('$') < 0 || asmName == node.name || exists(asmName) =>
+      case None
+          if asmName.indexOf(NAME_JOIN_STRING) < 0 || asmName == node.name || exists(asmName) =>
         val parts = asmName.split('/')
         val pkg =
           if (parts.length == 1) Symbols.EmptyPackage
@@ -437,7 +441,7 @@ object Javacp {
 
     private def innerClass(asmName: String): Option[InnerClassNode] = innerClasses.get(asmName)
       .orElse(
-        if (asmName.indexOf('$') < 0 || asmName == node.name) None
+        if (asmName.indexOf(NAME_JOIN_STRING) < 0 || asmName == node.name) None
         else classpathIndex.getClassfile(asmName + Classfile.Suffix)
           .flatMap(_.toClassNode.innerClasses.toScala.find(_.name == asmName)),
       )
@@ -445,8 +449,10 @@ object Javacp {
     private def exists(asmName: String): Boolean = classpathIndex
       .getClassfile(asmName + Classfile.Suffix).isDefined
 
-    private def descriptor(name: String): Descriptor =
-      if (name.endsWith("$")) d.Term(name.stripSuffix("$")) else d.Type(name)
+    private def descriptor(name: String): Descriptor = {
+      val term = name.stripSuffix(MODULE_SUFFIX_STRING)
+      if (term ne name) d.Term(term) else d.Type(name)
+    }
   }
 
   private def ssym(asmName: String): String = {
