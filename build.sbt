@@ -138,7 +138,6 @@ def rootSettings = Def.settings(
     // run Scala 2.13 last: both versions save the shared expect files
     LatestScala2.foldRight(s) { case (version, s) =>
       s"${semanticdbScalacPlugin.jvm(version).id}/compile" ::
-        s"${semanticdbIntegration.jvm(version).id}/clean" ::
         s"${semanticdbIntegration.jvm(version).id}/compile" ::
         s"${testsSemanticdb.jvm(version).id}/Test/runMain scala.meta.tests.semanticdb.SaveExpectTest" ::
         s
