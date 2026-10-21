@@ -836,7 +836,7 @@ trait TextDocumentOps {
                   if (mpos ne null) mpos else findUnderscore(p)
                 }
                 t.vparams.foreach(p =>
-                  if (!(p.symbol.isSynthetic || p.name.decoded.startsWith("x$"))) traverse(p)
+                  if (!(p.symbol.isSynthetic || p.symbol.startsWithFreshTermName)) traverse(p)
                   else if (isUnpacking) {}
                   else if (!isGuard) defineUnderscore(findParamUnderscore(p), p.symbol)
                   // mark it visited, or traversing the function would define the `_`
