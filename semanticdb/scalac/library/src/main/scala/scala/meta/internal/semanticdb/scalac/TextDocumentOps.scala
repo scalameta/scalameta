@@ -133,8 +133,10 @@ trait TextDocumentOps {
         symbols(ssym) = info
         info
       }
-      def shouldNotSaveSymbol(gsym: g.Symbol): Boolean = config.symbols.isNone || gsym == null ||
-        gsym.hasPackageFlag || gsym.isUselessSymbolInformation
+      // a synthetic can include a parameter that has no occurrence
+      def shouldNotSaveSymbol(gsym: g.Symbol, isInSynthetic: Boolean = false): Boolean =
+        config.symbols.isNone || gsym == null || gsym.hasPackageFlag ||
+          gsym.isUselessSymbolInformation || !isInSynthetic && gsym.isHiddenParameter
       def shouldNotSaveSemanticSymbol(ssym: String): Boolean = ssym == Symbols.None ||
         config.symbols.isLocalOnly && !ssym.isLocal
 
@@ -1026,7 +1028,7 @@ trait TextDocumentOps {
                   if (mpos ne null) mpos else findUnderscore(p)
                 }
                 t.vparams.foreach(p =>
-                  if (!(p.symbol.isSynthetic || p.symbol.startsWithFreshTermName)) traverse(p)
+                  if (!(p.symbol.isSynthetic || p.symbol.hasFreshName)) traverse(p)
                   else if (isUnpacking) {}
                   else if (!isGuard) defineUnderscore(findParamUnderscore(p), p.symbol)
                   // mark it visited, or traversing the function would define the `_`
@@ -1259,11 +1261,19 @@ trait TextDocumentOps {
                         if f.vparams.exists(_.symbol == sel.symbol) => cd.body
                     case body => body
                   }
-                  val arg = s.FunctionTree(f.vparams.map(_.toSemanticId), cachedForOrOrig(body))
+                  val arg = s.FunctionTree(f.vparams.map(toParamId), cachedForOrOrig(body))
                   syn(gt.toRange, s.ApplyTree(x.tree, List(arg)), usePos)
                 }
             case _ => None
           }
+
+        private def toParamId(gparam: g.ValDef): s.IdTree = {
+          val gsym = gparam.symbol
+          val ssym = gsym.toSemantic
+          if (!shouldNotSaveSymbol(gsym, isInSynthetic = true) && !shouldNotSaveSemanticSymbol(ssym))
+            saveSymbolFromSemantic(gsym, ssym)
+          s.IdTree(ssym)
+        }
 
         private def cachedForApplyFun(gt: g.Tree): Option[s.Synthetic] = cached(gt)(gt match {
           case t: g.Select => getSelect(t, usePos = false)

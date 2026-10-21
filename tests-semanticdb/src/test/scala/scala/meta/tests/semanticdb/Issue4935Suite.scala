@@ -221,22 +221,29 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local0 => val local x: Int
        |  Int => scala/Int#
-       |local4 => val local y: Int
+       |local1 => synthetic param x$4: Tuple3[Int, Int, Tuple2[Int, Int]]
+       |  Tuple3 => scala/Tuple3#
        |  Int => scala/Int#
-       |local5 => val local x$1: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |local2 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local6 => val local p: Int
+       |local3 => synthetic param x$3: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local7 => val local q: Int
+       |local4 => val local y: Int
        |  Int => scala/Int#
-       |local8 => synthetic val local x$2: Tuple3[Tuple2[Int, Int], Int, Int]
+       |local5 => val local p: Int
+       |  Int => scala/Int#
+       |local6 => val local q: Int
+       |  Int => scala/Int#
+       |local7 => synthetic val local x$2: Tuple3[Tuple2[Int, Int], Int, Int]
        |  Tuple3 => scala/Tuple3#
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local9 => val local u: Int
+       |local8 => val local u: Int
        |  Int => scala/Int#
-       |local10 => val local v: Int
+       |local9 => val local v: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -281,7 +288,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Unit => scala/Unit#
        |local0 => val local xl: Int
        |  Int => scala/Int#
-       |local1 => type S = AnyRef { val def xs: Int; def ds[T](t: T): Int; var def vs: Int; var def vs_=(unknown local8): Unit }
+       |local1 => type S = AnyRef { val def xs: Int; def ds[T](t: T): Int; var def vs: Int; var def vs_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
        |  xs => local2
        |  Int => scala/Int#
@@ -290,7 +297,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  t => local4
        |  vs => local6
        |  vs_= => local7
-       |  local8 => local8
+       |  x$1 => local8
        |  Unit => scala/Unit#
        |local2 => abstract val method xs: Int
        |  Int => scala/Int#
@@ -303,9 +310,12 @@ class Issue4935Suite extends SemanticdbSuite {
        |local5 => typeparam T
        |local6 => abstract var method vs: Int
        |  Int => scala/Int#
-       |local7 => abstract var method vs_=(unknown local8): Unit
-       |  local8 => local8
+       |local7 => abstract var method vs_=(x$1: Int): Unit
+       |  x$1 => local8
+       |  Int => scala/Int#
        |  Unit => scala/Unit#
+       |local8 => synthetic param x$1: Int
+       |  Int => scala/Int#
        |local9 => type E = xe.type forSome { type xe.type <: AnyRef with Singleton {} }
        |  xe.type => local10
        |  AnyRef => scala/AnyRef#

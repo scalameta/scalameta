@@ -24,21 +24,21 @@ class ForComprehension/*<=example.ForComprehension#*/ {
       c/*=>local12*/,
       d/*=>local13*/
     ) ==/*=>java.lang.Object#`==`().*/ (1, 2, 3, 4)
-    e/*<=local15*/ = (
+    e/*<=local14*/ = (
       a/*=>local4*/,
       b/*=>local5*/,
       c/*=>local12*/,
       d/*=>local13*/
     )
-    if e/*=>local15*/ ==/*=>java.lang.Object#`==`().*/ (1, 2, 3, 4)
-    f/*<=local11*/ <- List/*=>scala.collection.immutable.List.*/(e/*=>local15*/)
+    if e/*=>local14*/ ==/*=>java.lang.Object#`==`().*/ (1, 2, 3, 4)
+    f/*<=local11*/ <- List/*=>scala.collection.immutable.List.*/(e/*=>local14*/)
   } yield {
     (
       a/*=>local4*/,
       b/*=>local5*/,
       c/*=>local12*/,
       d/*=>local13*/,
-      e/*=>local15*/,
+      e/*=>local14*/,
       f/*=>local11*/
     )
   }
