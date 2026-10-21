@@ -5,11 +5,13 @@ import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.Scala.{Descriptor => d, Names => n}
 import scala.meta.internal.{semanticdb => s}
 
+import java.nio.CharBuffer
+
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.NameTransformer
 import scala.reflect.internal.util.{NoSourceFile => GNoSourceFile, SourceFile => GSourceFile}
-import scala.reflect.internal.{Flags => gf}
+import scala.reflect.internal.{Chars, Flags => gf}
 import scala.tools.nsc.backend.jvm.GenBCode
 import scala.util.control.NonFatal
 
@@ -218,13 +220,34 @@ trait SymbolOps {
     def isSyntheticJavaModule: Boolean = isJavaNonPackage && sym.isModule
     def isAnonymousClassConstructor: Boolean = sym.isConstructor && sym.owner.isAnonymousClass
     def isSyntheticAbstractType: Boolean = sym.isSynthetic && sym.isAbstractType // these are hardlinked to TypeOps
-    def startsWithFreshTermName: Boolean = sym.decodedName.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
+    // scalac names a parameter `_` like `x$1`, and a user can write such a name too
+    def hasFreshName: Boolean = {
+      val name = sym.decodedName
+      if (!name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)) return false
+      val pos = sym.pos
+      if (!pos.isDefined) return true
+
+      val text = pos.source.content
+      // the source does not have the whole name written at `at`, maybe in backquotes
+      def notWrittenAt(at: Int): Boolean = {
+        val quoted = at < text.length && text(at) == '`'
+        val start = if (quoted) at + 1 else at
+        val end = start + name.length
+        val notEndsThere =
+          if (end == text.length) quoted
+          else end > text.length ||
+          (if (quoted) text(end) != '`' else Chars.isIdentifierPart(text(end)))
+        notEndsThere || !name.contentEquals(CharBuffer.wrap(text, start, name.length))
+      }
+      // a parameter starts at its name, and a 2.12 value has its name at its point
+      notWrittenAt(pos.start) && notWrittenAt(pos.point)
+    }
     def isEtaExpandedParameter: Boolean =
       // the parameter of `m _` or of `_ + 1`; we save the latter's information with its occurrence
-      sym.isParameter && startsWithFreshTermName && sym.owner.isAnonymousFunction
+      sym.isParameter && hasFreshName && sym.owner.isAnonymousFunction
     def isAnonymousSelfParameter: Boolean = isSelfParameter && {
       sym.name == g.nme.this_ || // hardlinked in ClassSignature.self
-      startsWithFreshTermName // wildcards can't be referenced: class A { _: B => }
+      hasFreshName // wildcards can't be referenced: class A { _: B => }
     }
     def isUseless: Boolean = sym == g.NoSymbol || isSyntheticConstructor ||
       sym.isStaticConstructor || isLocalChild || isSyntheticValueClassCompanion || isUselessField ||
@@ -233,9 +256,13 @@ trait SymbolOps {
     def isUselessOccurrence: Boolean = sym.isAnonymousClass || isUseless && !isSyntheticJavaModule // references to static Java inner classes should have occurrences
     def isSyntheticLocalParam: Boolean = sym.hasAllFlags(gf.SYNTHETIC | gf.PARAM) &&
       sym.isSemanticdbLocal
-    def isUselessSymbolInformation: Boolean = isUseless || isEtaExpandedParameter ||
-      isAnonymousClassConstructor || isSyntheticAbstractType || isAnonymousSelfParameter ||
-      isSyntheticLocalParam || patternValue.exists
+    // a parameter that scalac made up, or that the user wrote as `_`, has no occurrence
+    def isHiddenParameter: Boolean = isEtaExpandedParameter || isSyntheticLocalParam
+    // scalac binds the pattern of a for value definition to a value like `x$1`
+    def isFreshValue: Boolean = !sym.isParameter && !sym.isSynthetic && !sym.isArtifact &&
+      hasFreshName
+    def isUselessSymbolInformation: Boolean = isUseless || isAnonymousClassConstructor ||
+      isSyntheticAbstractType || isAnonymousSelfParameter || patternValue.exists || isFreshValue
     /* scalac desugars `val p = e` into a match of `e` against `p`, and puts the binders of
      * that match at transparent positions: the value that such a binder defines */
     def patternValue: g.Symbol = {

@@ -934,12 +934,16 @@ class Issue1583Suite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param check$ifrefutable$1: Int
+         |  Int => scala/Int#
          |local1 => param _: Int
          |  Int => scala/Int#
          |""".stripMargin
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param check$ifrefutable$1: Int
+         |  Int => scala/Int#
          |local1 => synthetic param x$1: Int
          |  Int => scala/Int#
          |""".stripMargin,
@@ -966,6 +970,9 @@ class Issue1583Suite extends SemanticdbSuite {
     """|_empty_/O. => final object O extends AnyRef
        |  AnyRef => scala/AnyRef#
        |local0 => val local x: Int
+       |  Int => scala/Int#
+       |local1 => synthetic param x$2: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |local2 => val local x$1: Int
        |  Int => scala/Int#
@@ -1123,6 +1130,12 @@ class Issue1583Suite extends SemanticdbSuite {
     infixGenerator,
     """|_empty_/O. => final object O extends AnyRef
        |  AnyRef => scala/AnyRef#
+       |local0 => synthetic param check$ifrefutable$1: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |local1 => synthetic param x$1: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
        |local2 => val local x: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
@@ -1381,13 +1394,14 @@ class Issue1583Suite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |local0 => val local x: Int
        |  Int => scala/Int#
-       |local2 => val local x$1: ::[Int]
-       |  :: => scala/collection/immutable/`::`#
+       |local1 => synthetic param x$3: Tuple2[Int, ::[Int]]
+       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |local3 => val local y: List[Int]
+       |  :: => scala/collection/immutable/`::`#
+       |local2 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple2[::[Int], List[Int]]
+       |local3 => synthetic val local x$2: Tuple2[::[Int], List[Int]]
        |  Tuple2 => scala/Tuple2#
        |  :: => scala/collection/immutable/`::`#
        |  Int => scala/Int#
@@ -1404,30 +1418,30 @@ class Issue1583Suite extends SemanticdbSuite {
              |[1:7..1:8): x <= local0
              |[1:12..1:16): List => scala/package.List.
              |[1:23..1:25): :: => scala/package.`::`.
-             |[1:26..1:27): y <= local3
+             |[1:26..1:27): y <= local2
              |[1:30..1:34): List => scala/package.List.
              |[1:35..1:36): x => local0
-             |[1:45..1:46): y => local3
+             |[1:45..1:46): y => local2
              |""".stripMargin,
         ScalaVersion.Scala212 ->
           """|[0:7..0:8): O <= _empty_/O.
              |[1:7..1:8): x <= local0
              |[1:12..1:16): List => scala/collection/immutable/List.
              |[1:23..1:25): :: => scala/package.`::`.
-             |[1:26..1:27): y <= local3
+             |[1:26..1:27): y <= local2
              |[1:30..1:34): List => scala/collection/immutable/List.
              |[1:35..1:36): x => local0
-             |[1:45..1:46): y => local3
+             |[1:45..1:46): y => local2
              |""".stripMargin,
       ),
       """|[0:7..0:8): O <= _empty_/O.
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/package.List.
          |[1:23..1:25): :: => scala/package.`::`.
-         |[1:26..1:27): y <= local3
+         |[1:26..1:27): y <= local2
          |[1:30..1:34): List => scala/package.List.
          |[1:35..1:36): x => local0
-         |[1:45..1:46): y => local3
+         |[1:45..1:46): y => local2
          |""".stripMargin,
     ),
   )
@@ -1542,6 +1556,9 @@ class Issue1583Suite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |local0 => param x$1: Int
        |  Int => scala/Int#
+       |local1 => synthetic param x$2: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
        |local2 => val local y: Int
        |  Int => scala/Int#
        |""".stripMargin,
@@ -1589,6 +1606,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local2 => param _: Int
          |  Int => scala/Int#
          |local3 => val local y: Int
@@ -1598,6 +1618,9 @@ class Issue1583Suite extends SemanticdbSuite {
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local2 => synthetic param x$1: Int
          |  Int => scala/Int#
@@ -1634,6 +1657,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local2 => param _: Int
          |  Int => scala/Int#
          |local3 => val local x$1: Int
@@ -1643,6 +1669,9 @@ class Issue1583Suite extends SemanticdbSuite {
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$3: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local2 => synthetic param x$2: Int
          |  Int => scala/Int#
@@ -1679,6 +1708,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local2 => param _: Int
          |  Int => scala/Int#
          |local3 => val local y: Int
@@ -1688,6 +1720,9 @@ class Issue1583Suite extends SemanticdbSuite {
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$3: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local2 => synthetic param x$1: Int
          |  Int => scala/Int#
@@ -1758,6 +1793,11 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |local2 => synthetic param check$ifrefutable$1: Int
+         |  Int => scala/Int#
          |local3 => param _: Int
          |  Int => scala/Int#
          |local4 => val local y: Int
@@ -1767,6 +1807,11 @@ class Issue1583Suite extends SemanticdbSuite {
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |local2 => synthetic param check$ifrefutable$1: Int
          |  Int => scala/Int#
          |local3 => synthetic param x$1: Int
          |  Int => scala/Int#
@@ -1804,6 +1849,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local2 => param _: Int
          |  Int => scala/Int#
          |local3 => val local y: Int
@@ -1813,6 +1861,9 @@ class Issue1583Suite extends SemanticdbSuite {
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local2 => synthetic param x$1: Int
          |  Int => scala/Int#
@@ -1850,6 +1901,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => param x$1: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local2 => param _: Int
          |  Int => scala/Int#
          |local3 => val local y: Int
@@ -1859,6 +1913,9 @@ class Issue1583Suite extends SemanticdbSuite {
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
          |local0 => param x$1: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$3: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local2 => synthetic param x$2: Int
          |  Int => scala/Int#
@@ -1894,7 +1951,13 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$3: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local2 => param x$1: Int
+         |  Int => scala/Int#
+         |local3 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local4 => param _: Int
          |  Int => scala/Int#
@@ -1908,7 +1971,13 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$4: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local2 => param x$1: Int
+         |  Int => scala/Int#
+         |local3 => synthetic param x$3: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local4 => synthetic param x$2: Int
          |  Int => scala/Int#
@@ -1952,6 +2021,12 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
          |  Int => scala/Int#
+         |local1 => synthetic param x$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |local2 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local3 => param _: Int
          |  Int => scala/Int#
          |local4 => val local y: Int
@@ -1961,6 +2036,12 @@ class Issue1583Suite extends SemanticdbSuite {
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
          |local0 => val local x: Int
+         |  Int => scala/Int#
+         |local1 => synthetic param x$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |local2 => synthetic param x$3: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local3 => synthetic param x$2: Int
          |  Int => scala/Int#
@@ -3021,6 +3102,8 @@ class Issue1583Suite extends SemanticdbSuite {
     if (ScalaVersion.is212)
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param check$ifrefutable$1: Int
+         |  Int => scala/Int#
          |local1 => param _: Int
          |  Int => scala/Int#
          |local2 => param x: Int
@@ -3035,6 +3118,8 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef
          |  AnyRef => scala/AnyRef#
+         |local0 => synthetic param check$ifrefutable$1: Int
+         |  Int => scala/Int#
          |local1 => synthetic param x$1: Int
          |  Int => scala/Int#
          |local2 => synthetic param x$2: Int
@@ -3121,9 +3206,9 @@ class Issue1583Suite extends SemanticdbSuite {
   synthetics(
     guardVariants,
     if (ScalaVersion.is212)
-      """|[1:2..1:43): for (_: Int <- Option(1) if true) yield 1 => orig(Option(1)).withFilter({(local0) => orig()}).withFilter({(_) => orig(true)}).map[Int]({(_) => orig(1)})
+      """|[1:2..1:43): for (_: Int <- Option(1) if true) yield 1 => orig(Option(1)).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(_) => orig(true)}).map[Int]({(_) => orig(1)})
          |  withFilter => scala/Option#withFilter().
-         |  local0 => local0
+         |  check$ifrefutable$1 => local0
          |  withFilter => scala/Option#WithFilter#withFilter().
          |  _ => local1
          |  map => scala/Option#WithFilter#map().
@@ -3159,9 +3244,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |""".stripMargin
     else
-      """|[1:2..1:43): for (_: Int <- Option(1) if true) yield 1 => orig(Option(1)).withFilter({(local0) => orig()}).withFilter({(x$1) => orig(true)}).map[Int]({(x$2) => orig(1)})
+      """|[1:2..1:43): for (_: Int <- Option(1) if true) yield 1 => orig(Option(1)).withFilter({(check$ifrefutable$1) => orig()}).withFilter({(x$1) => orig(true)}).map[Int]({(x$2) => orig(1)})
          |  withFilter => scala/Option#withFilter().
-         |  local0 => local0
+         |  check$ifrefutable$1 => local0
          |  withFilter => scala/Option#WithFilter#withFilter().
          |  x$1 => local1
          |  map => scala/Option#WithFilter#map().
@@ -3308,6 +3393,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local1 => val local x: Int
          |  Int => scala/Int#
+         |local2 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local3 => val local x$1: Int
          |  Int => scala/Int#
          |""".stripMargin
@@ -3321,6 +3409,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |local0 => synthetic val local x$2: Unit
          |  Unit => scala/Unit#
          |local1 => val local x: Int
+         |  Int => scala/Int#
+         |local2 => synthetic param x$4: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local3 => val local x$3: Int
          |  Int => scala/Int#
@@ -3432,9 +3523,14 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local0 => val local _: Int
          |  Int => scala/Int#
+         |local1 => synthetic param check$ifrefutable$1: Int
+         |  Int => scala/Int#
          |local2 => param _: Int
          |  Int => scala/Int#
          |local3 => val local x: Int
+         |  Int => scala/Int#
+         |local4 => synthetic param x$2: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local5 => val local x$1: Int
          |  Int => scala/Int#
@@ -3446,9 +3542,14 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local0 => synthetic val local x$1: Unit
          |  Unit => scala/Unit#
+         |local1 => synthetic param check$ifrefutable$1: Int
+         |  Int => scala/Int#
          |local2 => synthetic param x$2: Int
          |  Int => scala/Int#
          |local3 => val local x: Int
+         |  Int => scala/Int#
+         |local4 => synthetic param x$4: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |local5 => val local x$3: Int
          |  Int => scala/Int#
@@ -4456,12 +4557,20 @@ class Issue1583Suite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  _ => local3
          |local3 => abstract type _
+         |local4 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |local5 => synthetic param x$3: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local6 => val local d: Int
          |  Int => scala/Int#
          |local7 => param _: Int
          |  Int => scala/Int#
          |local8 => param e: Int
          |  Int => scala/Int#
+         |local9 => synthetic param check$ifrefutable$2: Nil.type
+         |  Nil => scala/collection/immutable/Nil.
          |local10 => param f: List[_]
          |  List => scala/package.List#
          |  _ => local11
@@ -4499,10 +4608,20 @@ class Issue1583Suite extends SemanticdbSuite {
          |  List => scala/package.List#
          |  _ => local3
          |local3 => abstract type _
+         |local4 => synthetic param check$ifrefutable$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |local5 => synthetic param x$5: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
          |local6 => val local d: Int
+         |  Int => scala/Int#
+         |local7 => synthetic param x$6: Int
          |  Int => scala/Int#
          |local8 => param e: Int
          |  Int => scala/Int#
+         |local9 => synthetic param check$ifrefutable$2: Nil.type
+         |  Nil => scala/collection/immutable/Nil.
          |local10 => param f: List[_]
          |  List => scala/package.List#
          |  _ => local11
