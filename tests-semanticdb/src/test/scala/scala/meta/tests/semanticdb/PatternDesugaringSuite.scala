@@ -2,9 +2,6 @@ package scala.meta.tests.semanticdb
 
 class PatternDesugaringSuite extends SemanticdbSuite {
 
-  private def atLeast213_16 = ScalaVersion.isSupported(minimal212 = Int.MaxValue, minimal213 = 16)
-  private def atLeast213_17 = ScalaVersion.isSupported(minimal212 = Int.MaxValue, minimal213 = 17)
-
   private def occurrences(name: String, code: String, expected: String)(implicit
       loc: munit.Location,
   ): Unit = checkSection(s"$name: occurrences", code, expected, "Occurrences")
@@ -76,24 +73,13 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/b. => final object b extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/b.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/b. => final object b extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/b.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/b. => final object b extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/b.m(). => method m(): Int
+       |  Int => scala/Int#
+       |local0 => val local s: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -105,24 +91,14 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:8): b <= _empty_/b.
-         |[1:6..1:7): m <= _empty_/b.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local1
-         |[2:18..2:22): Some => scala/Some.
-         |[3:4..3:5): s => local1
-         |""".stripMargin
-    else
-      """|[0:7..0:8): b <= _empty_/b.
-         |[1:6..1:7): m <= _empty_/b.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local0
-         |[2:18..2:22): Some => scala/Some.
-         |[3:4..3:5): s => local0
-         |""".stripMargin,
+    """|[0:7..0:8): b <= _empty_/b.
+       |[1:6..1:7): m <= _empty_/b.m().
+       |[1:11..1:14): Int => scala/Int#
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:14): s <= local0
+       |[2:18..2:22): Some => scala/Some.
+       |[3:4..3:5): s => local0
+       |""".stripMargin,
   )
 
   symbols(
@@ -192,24 +168,13 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/d. => final object d extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/d.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/d. => final object d extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/d.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/d. => final object d extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/d.m(). => method m(): Int
+       |  Int => scala/Int#
+       |local0 => val local s: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -221,28 +186,16 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:8): d <= _empty_/d.
-         |[1:6..1:7): m <= _empty_/d.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:17): Some => scala/Some.
-         |[2:18..2:19): s <= local1
-         |[2:24..2:28): Some => scala/Some.
-         |[2:29..2:33): Some => scala/Some.
-         |[3:4..3:5): s => local1
-         |""".stripMargin
-    else
-      """|[0:7..0:8): d <= _empty_/d.
-         |[1:6..1:7): m <= _empty_/d.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:17): Some => scala/Some.
-         |[2:18..2:19): s <= local0
-         |[2:24..2:28): Some => scala/Some.
-         |[2:29..2:33): Some => scala/Some.
-         |[3:4..3:5): s => local0
-         |""".stripMargin,
+    """|[0:7..0:8): d <= _empty_/d.
+       |[1:6..1:7): m <= _empty_/d.m().
+       |[1:11..1:14): Int => scala/Int#
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:17): Some => scala/Some.
+       |[2:18..2:19): s <= local0
+       |[2:24..2:28): Some => scala/Some.
+       |[2:29..2:33): Some => scala/Some.
+       |[3:4..3:5): s => local0
+       |""".stripMargin,
   )
 
   symbols(
@@ -299,24 +252,13 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/f. => final object f extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/f.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/f. => final object f extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/f.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/f. => final object f extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/f.m(). => method m(): Int
+       |  Int => scala/Int#
+       |local0 => val local s: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -328,28 +270,16 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:8): f <= _empty_/f.
-         |[1:6..1:7): m <= _empty_/f.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local1
-         |[2:16..2:19): Int => scala/Int#
-         |[2:23..2:29): Option => scala/Option.
-         |[2:30..2:33): Any => scala/Any#
-         |[3:4..3:5): s => local1
-         |""".stripMargin
-    else
-      """|[0:7..0:8): f <= _empty_/f.
-         |[1:6..1:7): m <= _empty_/f.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local0
-         |[2:16..2:19): Int => scala/Int#
-         |[2:23..2:29): Option => scala/Option.
-         |[2:30..2:33): Any => scala/Any#
-         |[3:4..3:5): s => local0
-         |""".stripMargin,
+    """|[0:7..0:8): f <= _empty_/f.
+       |[1:6..1:7): m <= _empty_/f.m().
+       |[1:11..1:14): Int => scala/Int#
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:14): s <= local0
+       |[2:16..2:19): Int => scala/Int#
+       |[2:23..2:29): Option => scala/Option.
+       |[2:30..2:33): Any => scala/Any#
+       |[3:4..3:5): s => local0
+       |""".stripMargin,
   )
 
   symbols(
@@ -405,24 +335,13 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/h. => final object h extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/h.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/h. => final object h extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/h.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/h. => final object h extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/h.m(). => method m(): Int
+       |  Int => scala/Int#
+       |local0 => val local s: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -434,28 +353,16 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:8): h <= _empty_/h.
-         |[1:6..1:7): m <= _empty_/h.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local1
-         |[2:17..2:23): Option => scala/Option#
-         |[2:24..2:27): Int => scala/Int#
-         |[2:31..2:35): Some => scala/Some.
-         |[3:4..3:5): s => local1
-         |""".stripMargin
-    else
-      """|[0:7..0:8): h <= _empty_/h.
-         |[1:6..1:7): m <= _empty_/h.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local0
-         |[2:17..2:23): Option => scala/Option#
-         |[2:24..2:27): Int => scala/Int#
-         |[2:31..2:35): Some => scala/Some.
-         |[3:4..3:5): s => local0
-         |""".stripMargin,
+    """|[0:7..0:8): h <= _empty_/h.
+       |[1:6..1:7): m <= _empty_/h.m().
+       |[1:11..1:14): Int => scala/Int#
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:14): s <= local0
+       |[2:17..2:23): Option => scala/Option#
+       |[2:24..2:27): Int => scala/Int#
+       |[2:31..2:35): Some => scala/Some.
+       |[3:4..3:5): s => local0
+       |""".stripMargin,
   )
 
   symbols(
@@ -468,38 +375,20 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/i. => final object i extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/i.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => var local s: Int
-         |  Int => scala/Int#
-         |local2 => var local x: Int
-         |  Int => scala/Int#
-         |local3 => var local y: Int
-         |  Int => scala/Int#
-         |local4 => synthetic val local x$1: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/i. => final object i extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/i.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => var local s: Int
-         |  Int => scala/Int#
-         |local1 => var local x: Int
-         |  Int => scala/Int#
-         |local2 => var local y: Int
-         |  Int => scala/Int#
-         |local3 => synthetic val local x$1: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/i. => final object i extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/i.m(). => method m(): Int
+       |  Int => scala/Int#
+       |local0 => var local s: Int
+       |  Int => scala/Int#
+       |local1 => var local x: Int
+       |  Int => scala/Int#
+       |local2 => var local y: Int
+       |  Int => scala/Int#
+       |local3 => synthetic val local x$1: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -512,36 +401,20 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:8): i <= _empty_/i.
-         |[1:6..1:7): m <= _empty_/i.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local1
-         |[2:18..2:22): Some => scala/Some.
-         |[3:9..3:10): x <= local2
-         |[3:12..3:13): y <= local3
-         |[4:4..4:5): s => local1
-         |[4:6..4:7): + => scala/Int#`+`(+4).
-         |[4:8..4:9): x => local2
-         |[4:10..4:11): + => scala/Int#`+`(+4).
-         |[4:12..4:13): y => local3
-         |""".stripMargin
-    else
-      """|[0:7..0:8): i <= _empty_/i.
-         |[1:6..1:7): m <= _empty_/i.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local0
-         |[2:18..2:22): Some => scala/Some.
-         |[3:9..3:10): x <= local1
-         |[3:12..3:13): y <= local2
-         |[4:4..4:5): s => local0
-         |[4:6..4:7): + => scala/Int#`+`(+4).
-         |[4:8..4:9): x => local1
-         |[4:10..4:11): + => scala/Int#`+`(+4).
-         |[4:12..4:13): y => local2
-         |""".stripMargin,
+    """|[0:7..0:8): i <= _empty_/i.
+       |[1:6..1:7): m <= _empty_/i.m().
+       |[1:11..1:14): Int => scala/Int#
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:14): s <= local0
+       |[2:18..2:22): Some => scala/Some.
+       |[3:9..3:10): x <= local1
+       |[3:12..3:13): y <= local2
+       |[4:4..4:5): s => local0
+       |[4:6..4:7): + => scala/Int#`+`(+4).
+       |[4:8..4:9): x => local1
+       |[4:10..4:11): + => scala/Int#`+`(+4).
+       |[4:12..4:13): y => local2
+       |""".stripMargin,
   )
 
   symbols(
@@ -554,38 +427,20 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/j. => final object j extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/j.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => lazy val local s: Int
-         |  Int => scala/Int#
-         |local2 => lazy val local x: Int
-         |  Int => scala/Int#
-         |local3 => lazy val local y: Int
-         |  Int => scala/Int#
-         |local4 => synthetic lazy val local x$1: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/j. => final object j extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/j.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => lazy val local s: Int
-         |  Int => scala/Int#
-         |local1 => lazy val local x: Int
-         |  Int => scala/Int#
-         |local2 => lazy val local y: Int
-         |  Int => scala/Int#
-         |local3 => synthetic lazy val local x$1: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/j. => final object j extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/j.m(). => method m(): Int
+       |  Int => scala/Int#
+       |local0 => lazy val local s: Int
+       |  Int => scala/Int#
+       |local1 => lazy val local x: Int
+       |  Int => scala/Int#
+       |local2 => lazy val local y: Int
+       |  Int => scala/Int#
+       |local3 => synthetic lazy val local x$1: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -598,36 +453,20 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:8): j <= _empty_/j.
-         |[1:6..1:7): m <= _empty_/j.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:13..2:17): Some => scala/Some.
-         |[2:18..2:19): s <= local1
-         |[2:23..2:27): Some => scala/Some.
-         |[3:14..3:15): x <= local2
-         |[3:17..3:18): y <= local3
-         |[4:4..4:5): s => local1
-         |[4:6..4:7): + => scala/Int#`+`(+4).
-         |[4:8..4:9): x => local2
-         |[4:10..4:11): + => scala/Int#`+`(+4).
-         |[4:12..4:13): y => local3
-         |""".stripMargin
-    else
-      """|[0:7..0:8): j <= _empty_/j.
-         |[1:6..1:7): m <= _empty_/j.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:13..2:17): Some => scala/Some.
-         |[2:18..2:19): s <= local0
-         |[2:23..2:27): Some => scala/Some.
-         |[3:14..3:15): x <= local1
-         |[3:17..3:18): y <= local2
-         |[4:4..4:5): s => local0
-         |[4:6..4:7): + => scala/Int#`+`(+4).
-         |[4:8..4:9): x => local1
-         |[4:10..4:11): + => scala/Int#`+`(+4).
-         |[4:12..4:13): y => local2
-         |""".stripMargin,
+    """|[0:7..0:8): j <= _empty_/j.
+       |[1:6..1:7): m <= _empty_/j.m().
+       |[1:11..1:14): Int => scala/Int#
+       |[2:13..2:17): Some => scala/Some.
+       |[2:18..2:19): s <= local0
+       |[2:23..2:27): Some => scala/Some.
+       |[3:14..3:15): x <= local1
+       |[3:17..3:18): y <= local2
+       |[4:4..4:5): s => local0
+       |[4:6..4:7): + => scala/Int#`+`(+4).
+       |[4:8..4:9): x => local1
+       |[4:10..4:11): + => scala/Int#`+`(+4).
+       |[4:12..4:13): y => local2
+       |""".stripMargin,
   )
 
   symbols(
@@ -640,42 +479,22 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/k. => final object k extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/k.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local a: Int
-         |  Int => scala/Int#
-         |local1 => val local a: Int
-         |  Int => scala/Int#
-         |local2 => val local b: Int
-         |  Int => scala/Int#
-         |local3 => val local c: List[Int]
-         |  List => scala/collection/immutable/List#
-         |  Int => scala/Int#
-         |local4 => synthetic val local x$1: Tuple2[Int, List[Int]]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |  List => scala/collection/immutable/List#
-         |""".stripMargin
-    else
-      """|_empty_/k. => final object k extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/k.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local a: Int
-         |  Int => scala/Int#
-         |local1 => val local b: Int
-         |  Int => scala/Int#
-         |local2 => val local c: List[Int]
-         |  List => scala/collection/immutable/List#
-         |  Int => scala/Int#
-         |local3 => synthetic val local x$1: Tuple2[Int, List[Int]]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |  List => scala/collection/immutable/List#
-         |""".stripMargin,
+    """|_empty_/k. => final object k extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/k.m(). => method m(): Int
+       |  Int => scala/Int#
+       |local0 => val local a: Int
+       |  Int => scala/Int#
+       |local1 => val local b: Int
+       |  Int => scala/Int#
+       |local2 => val local c: List[Int]
+       |  List => scala/collection/immutable/List#
+       |  Int => scala/Int#
+       |local3 => synthetic val local x$1: Tuple2[Int, List[Int]]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |  List => scala/collection/immutable/List#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -696,35 +515,16 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[2:10..2:12): :: => scala/package.`::`.
          |[2:13..2:16): Nil => scala/collection/immutable/Nil.
          |[2:19..2:23): List => scala/collection/immutable/List.
-         |[3:8..3:9): b <= local2
+         |[3:8..3:9): b <= local1
          |[3:10..3:12): :: => scala/package.`::`.
-         |[3:13..3:14): c <= local3
+         |[3:13..3:14): c <= local2
          |[3:17..3:21): List => scala/collection/immutable/List.
-         |[4:4..4:5): a => local1
+         |[4:4..4:5): a => local0
          |[4:6..4:7): + => scala/Int#`+`(+4).
-         |[4:8..4:9): b => local2
+         |[4:8..4:9): b => local1
          |[4:10..4:11): + => scala/Int#`+`(+4).
-         |[4:12..4:13): c => local3
+         |[4:12..4:13): c => local2
          |[4:14..4:18): size => scala/collection/SeqLike#size().
-         |""".stripMargin
-    else if (!atLeast213_17)
-      """|[0:7..0:8): k <= _empty_/k.
-         |[1:6..1:7): m <= _empty_/k.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:9): a <= local0
-         |[2:10..2:12): :: => scala/package.`::`.
-         |[2:13..2:16): Nil => scala/package.Nil.
-         |[2:19..2:23): List => scala/package.List.
-         |[3:8..3:9): b <= local2
-         |[3:10..3:12): :: => scala/package.`::`.
-         |[3:13..3:14): c <= local3
-         |[3:17..3:21): List => scala/package.List.
-         |[4:4..4:5): a => local1
-         |[4:6..4:7): + => scala/Int#`+`(+4).
-         |[4:8..4:9): b => local2
-         |[4:10..4:11): + => scala/Int#`+`(+4).
-         |[4:12..4:13): c => local3
-         |[4:14..4:18): size => scala/collection/SeqOps#size().
          |""".stripMargin
     else
       """|[0:7..0:8): k <= _empty_/k.
@@ -795,30 +595,15 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/n. => final object n extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/n.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
-         |local2 => val local t: Int
-         |  Int => scala/Int#
-         |local3 => val local t: Int
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/n. => final object n extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/n.m(). => method m(): Int
-         |  Int => scala/Int#
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => val local t: Int
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/n. => final object n extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/n.m(). => method m(): Int
+       |  Int => scala/Int#
+       |local0 => val local s: Int
+       |  Int => scala/Int#
+       |local1 => val local t: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -830,32 +615,18 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:8): n <= _empty_/n.
-         |[1:6..1:7): m <= _empty_/n.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local1
-         |[2:17..2:21): Some => scala/Some.
-         |[2:22..2:23): t <= local3
-         |[2:27..2:31): Some => scala/Some.
-         |[3:4..3:5): s => local1
-         |[3:6..3:7): + => scala/Int#`+`(+4).
-         |[3:8..3:9): t => local3
-         |""".stripMargin
-    else
-      """|[0:7..0:8): n <= _empty_/n.
-         |[1:6..1:7): m <= _empty_/n.m().
-         |[1:11..1:14): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local0
-         |[2:17..2:21): Some => scala/Some.
-         |[2:22..2:23): t <= local1
-         |[2:27..2:31): Some => scala/Some.
-         |[3:4..3:5): s => local0
-         |[3:6..3:7): + => scala/Int#`+`(+4).
-         |[3:8..3:9): t => local1
-         |""".stripMargin,
+    """|[0:7..0:8): n <= _empty_/n.
+       |[1:6..1:7): m <= _empty_/n.m().
+       |[1:11..1:14): Int => scala/Int#
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:14): s <= local0
+       |[2:17..2:21): Some => scala/Some.
+       |[2:22..2:23): t <= local1
+       |[2:27..2:31): Some => scala/Some.
+       |[3:4..3:5): s => local0
+       |[3:6..3:7): + => scala/Int#`+`(+4).
+       |[3:8..3:9): t => local1
+       |""".stripMargin,
   )
 
   symbols(
@@ -887,16 +658,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |_empty_/o.y. => val method y: Int
        |  Int => scala/Int#
        |_empty_/o.z. => lazy val method z: Int
-       |  Int => scala/Int#
-       |local0 => val local s: Int
-       |  Int => scala/Int#
-       |local1 => val local x: Int
-       |  Int => scala/Int#
-       |local2 => val local y: Int
-       |  Int => scala/Int#
-       |local3 => val local v: Int
-       |  Int => scala/Int#
-       |local4 => val local z: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -975,18 +736,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/z#y. => val method y: Int
        |  Int => scala/Int#
-       |local0 => val local a: Int
-       |  Int => scala/Int#
-       |local1 => val local b: Int
-       |  Int => scala/Int#
-       |local2 => val local c: Int
-       |  Int => scala/Int#
-       |local3 => val local d: Int
-       |  Int => scala/Int#
-       |local4 => val local x: Int
-       |  Int => scala/Int#
-       |local5 => val local y: Int
-       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -1025,36 +774,19 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/p# => class p extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/p#`<init>`(). => primary ctor <init>()
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
-         |local2 => val local x: Int
-         |  Int => scala/Int#
-         |local3 => val local y: Int
-         |  Int => scala/Int#
-         |local4 => synthetic val local x$1: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/p# => class p extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/p#`<init>`(). => primary ctor <init>()
-         |local0 => val local s: Int
-         |  Int => scala/Int#
-         |local1 => val local x: Int
-         |  Int => scala/Int#
-         |local2 => val local y: Int
-         |  Int => scala/Int#
-         |local3 => synthetic val local x$1: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/p# => class p extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/p#`<init>`(). => primary ctor <init>()
+       |local0 => val local s: Int
+       |  Int => scala/Int#
+       |local1 => val local x: Int
+       |  Int => scala/Int#
+       |local2 => val local y: Int
+       |  Int => scala/Int#
+       |local3 => synthetic val local x$1: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -1067,36 +799,20 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:6..0:7): p <= _empty_/p#
-         |[0:8..0:8):  <= _empty_/p#`<init>`().
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local1
-         |[2:18..2:22): Some => scala/Some.
-         |[3:9..3:10): x <= local2
-         |[3:12..3:13): y <= local3
-         |[4:4..4:11): println => scala/Predef.println(+1).
-         |[4:12..4:13): s => local1
-         |[4:14..4:15): + => scala/Int#`+`(+4).
-         |[4:16..4:17): x => local2
-         |[4:18..4:19): + => scala/Int#`+`(+4).
-         |[4:20..4:21): y => local3
-         |""".stripMargin
-    else
-      """|[0:6..0:7): p <= _empty_/p#
-         |[0:8..0:8):  <= _empty_/p#`<init>`().
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local0
-         |[2:18..2:22): Some => scala/Some.
-         |[3:9..3:10): x <= local1
-         |[3:12..3:13): y <= local2
-         |[4:4..4:11): println => scala/Predef.println(+1).
-         |[4:12..4:13): s => local0
-         |[4:14..4:15): + => scala/Int#`+`(+4).
-         |[4:16..4:17): x => local1
-         |[4:18..4:19): + => scala/Int#`+`(+4).
-         |[4:20..4:21): y => local2
-         |""".stripMargin,
+    """|[0:6..0:7): p <= _empty_/p#
+       |[0:8..0:8):  <= _empty_/p#`<init>`().
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:14): s <= local0
+       |[2:18..2:22): Some => scala/Some.
+       |[3:9..3:10): x <= local1
+       |[3:12..3:13): y <= local2
+       |[4:4..4:11): println => scala/Predef.println(+1).
+       |[4:12..4:13): s => local0
+       |[4:14..4:15): + => scala/Int#`+`(+4).
+       |[4:16..4:17): x => local1
+       |[4:18..4:19): + => scala/Int#`+`(+4).
+       |[4:20..4:21): y => local2
+       |""".stripMargin,
   )
 
   symbols(
@@ -1109,44 +825,23 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/q. => final object q extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/q.f. => val method f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |local0 => param n: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
-         |local2 => val local s: Int
-         |  Int => scala/Int#
-         |local3 => val local x: Int
-         |  Int => scala/Int#
-         |local4 => val local y: Int
-         |  Int => scala/Int#
-         |local5 => synthetic val local x$1: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/q. => final object q extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/q.f. => val method f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |local0 => param n: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
-         |local2 => val local x: Int
-         |  Int => scala/Int#
-         |local3 => val local y: Int
-         |  Int => scala/Int#
-         |local4 => synthetic val local x$1: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/q. => final object q extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/q.f. => val method f: Function1[Int, Int]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |local0 => param n: Int
+       |  Int => scala/Int#
+       |local1 => val local s: Int
+       |  Int => scala/Int#
+       |local2 => val local x: Int
+       |  Int => scala/Int#
+       |local3 => val local y: Int
+       |  Int => scala/Int#
+       |local4 => synthetic val local x$1: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -1159,44 +854,24 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:8): q <= _empty_/q.
-         |[1:6..1:7): f <= _empty_/q.f.
-         |[1:11..1:12): n <= local0
-         |[1:14..1:17): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local2
-         |[2:18..2:22): Some => scala/Some.
-         |[2:23..2:24): n => local0
-         |[3:9..3:10): x <= local3
-         |[3:12..3:13): y <= local4
-         |[3:18..3:19): n => local0
-         |[3:21..3:22): n => local0
-         |[4:4..4:5): s => local2
-         |[4:6..4:7): + => scala/Int#`+`(+4).
-         |[4:8..4:9): x => local3
-         |[4:10..4:11): + => scala/Int#`+`(+4).
-         |[4:12..4:13): y => local4
-         |""".stripMargin
-    else
-      """|[0:7..0:8): q <= _empty_/q.
-         |[1:6..1:7): f <= _empty_/q.f.
-         |[1:11..1:12): n <= local0
-         |[1:14..1:17): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:14): s <= local1
-         |[2:18..2:22): Some => scala/Some.
-         |[2:23..2:24): n => local0
-         |[3:9..3:10): x <= local2
-         |[3:12..3:13): y <= local3
-         |[3:18..3:19): n => local0
-         |[3:21..3:22): n => local0
-         |[4:4..4:5): s => local1
-         |[4:6..4:7): + => scala/Int#`+`(+4).
-         |[4:8..4:9): x => local2
-         |[4:10..4:11): + => scala/Int#`+`(+4).
-         |[4:12..4:13): y => local3
-         |""".stripMargin,
+    """|[0:7..0:8): q <= _empty_/q.
+       |[1:6..1:7): f <= _empty_/q.f.
+       |[1:11..1:12): n <= local0
+       |[1:14..1:17): Int => scala/Int#
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:14): s <= local1
+       |[2:18..2:22): Some => scala/Some.
+       |[2:23..2:24): n => local0
+       |[3:9..3:10): x <= local2
+       |[3:12..3:13): y <= local3
+       |[3:18..3:19): n => local0
+       |[3:21..3:22): n => local0
+       |[4:4..4:5): s => local1
+       |[4:6..4:7): + => scala/Int#`+`(+4).
+       |[4:8..4:9): x => local2
+       |[4:10..4:11): + => scala/Int#`+`(+4).
+       |[4:12..4:13): y => local3
+       |""".stripMargin,
   )
 
   symbols(
@@ -1286,18 +961,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[3:9..3:10): s <= local3
          |[3:14..3:20): Option => scala/Option.
          |[3:21..3:22): x => local0
-         |[4:10..4:11): s => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:8): t <= _empty_/t.
-         |[1:6..1:7): r <= _empty_/t.r.
-         |[2:4..2:5): x <= local0
-         |[2:9..2:13): List => scala/package.List.
-         |[3:4..3:8): Some => scala/Some.
-         |[3:9..3:10): s <= local3
-         |[3:14..3:20): Option => scala/Option.
-         |[3:21..3:22): x => local0
-         |[4:10..4:11): s => local1
+         |[4:10..4:11): s => local3
          |""".stripMargin
     else
       """|[0:7..0:8): t <= _empty_/t.
@@ -1359,23 +1023,11 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[2:4..2:5): x <= local0
          |[2:9..2:13): List => scala/collection/immutable/List.
          |[3:4..3:5): a <= local3
-         |[3:6..3:8): :: => local2
+         |[3:6..3:8): :: => scala/package.`::`.
          |[3:9..3:10): y <= local4
          |[3:13..3:17): List => scala/collection/immutable/List.
          |[3:18..3:19): x => local0
-         |[4:10..4:11): y => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:8): u <= _empty_/u.
-         |[1:6..1:7): r <= _empty_/u.r.
-         |[2:4..2:5): x <= local0
-         |[2:9..2:13): List => scala/package.List.
-         |[3:4..3:5): a <= local3
-         |[3:6..3:8): :: => local2
-         |[3:9..3:10): y <= local4
-         |[3:13..3:17): List => scala/package.List.
-         |[3:18..3:19): x => local0
-         |[4:10..4:11): y => local1
+         |[4:10..4:11): y => local4
          |""".stripMargin
     else
       """|[0:7..0:8): u <= _empty_/u.
@@ -1383,7 +1035,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[2:4..2:5): x <= local0
          |[2:9..2:13): List => scala/package.List.
          |[3:4..3:5): a <= local3
-         |[3:6..3:8): :: => local2
+         |[3:6..3:8): :: => scala/package.`::`.
          |[3:9..3:10): y <= local4
          |[3:13..3:17): List => scala/package.List.
          |[3:18..3:19): x => local0
@@ -1428,16 +1080,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[2:9..2:13): List => scala/collection/immutable/List.
          |[3:4..3:5): y <= local2
          |[3:8..3:9): a => local0
-         |[4:10..4:11): y => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:8): v <= _empty_/v.
-         |[1:6..1:7): r <= _empty_/v.r.
-         |[2:4..2:5): a <= local0
-         |[2:9..2:13): List => scala/package.List.
-         |[3:4..3:5): y <= local2
-         |[3:8..3:9): a => local0
-         |[4:10..4:11): y => local1
+         |[4:10..4:11): y => local2
          |""".stripMargin
     else
       """|[0:7..0:8): v <= _empty_/v.
@@ -1462,29 +1105,18 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/collection/immutable/List.
          |[1:21..1:22): a <= local3
-         |[1:23..1:25): :: => local2
+         |[1:23..1:25): :: => scala/package.`::`.
          |[1:26..1:27): y <= local4
          |[1:30..1:34): List => scala/collection/immutable/List.
          |[1:35..1:36): x => local0
-         |[1:45..1:46): y => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:9): v1 <= _empty_/v1.
-         |[1:7..1:8): x <= local0
-         |[1:12..1:16): List => scala/package.List.
-         |[1:21..1:22): a <= local3
-         |[1:23..1:25): :: => local2
-         |[1:26..1:27): y <= local4
-         |[1:30..1:34): List => scala/package.List.
-         |[1:35..1:36): x => local0
-         |[1:45..1:46): y => local1
+         |[1:45..1:46): y => local4
          |""".stripMargin
     else
       """|[0:7..0:9): v1 <= _empty_/v1.
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/package.List.
          |[1:21..1:22): a <= local3
-         |[1:23..1:25): :: => local2
+         |[1:23..1:25): :: => scala/package.`::`.
          |[1:26..1:27): y <= local4
          |[1:30..1:34): List => scala/package.List.
          |[1:35..1:36): x => local0
@@ -1577,7 +1209,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[2:7..2:8): x <= local0
          |[2:12..2:16): List => scala/collection/immutable/List.
          |[2:21..2:22): a <= local3
-         |[2:23..2:24): ~ => local2
+         |[2:23..2:24): ~ => _empty_/v2.`~`.
          |[2:25..2:26): b <= local4
          |[2:30..2:31): x => local0
          |[2:33..2:34): x => local0
@@ -1600,7 +1232,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[2:7..2:8): x <= local0
          |[2:12..2:16): List => scala/package.List.
          |[2:21..2:22): a <= local3
-         |[2:23..2:24): ~ => local2
+         |[2:23..2:24): ~ => _empty_/v2.`~`.
          |[2:25..2:26): b <= local4
          |[2:30..2:31): x => local0
          |[2:33..2:34): x => local0
@@ -1692,17 +1324,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:26..1:27): a <= local3
          |[1:31..1:37): Option => scala/Option.
          |[1:38..1:39): x => local0
-         |[1:48..1:49): a => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:9): v3 <= _empty_/v3.
-         |[1:7..1:8): x <= local0
-         |[1:12..1:16): List => scala/package.List.
-         |[1:21..1:25): Some => scala/Some.
-         |[1:26..1:27): a <= local3
-         |[1:31..1:37): Option => scala/Option.
-         |[1:38..1:39): x => local0
-         |[1:48..1:49): a => local1
+         |[1:48..1:49): a => local3
          |""".stripMargin
     else
       """|[0:7..0:9): v3 <= _empty_/v3.
@@ -1789,20 +1411,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:36..1:42): Option => scala/Option.
          |[1:43..1:47): List => scala/collection/immutable/List.
          |[1:48..1:49): x => local0
-         |[1:59..1:60): y => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:9): v5 <= _empty_/v5.
-         |[1:7..1:8): x <= local0
-         |[1:12..1:16): List => scala/package.List.
-         |[1:21..1:25): Some => scala/Some.
-         |[1:26..1:27): a <= local3
-         |[1:28..1:30): :: => scala/package.`::`.
-         |[1:31..1:32): y <= local4
-         |[1:36..1:42): Option => scala/Option.
-         |[1:43..1:47): List => scala/package.List.
-         |[1:48..1:49): x => local0
-         |[1:59..1:60): y => local1
+         |[1:59..1:60): y => local4
          |""".stripMargin
     else
       """|[0:7..0:9): v5 <= _empty_/v5.
@@ -1907,19 +1516,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:31..1:32): y <= local4
          |[1:36..1:40): List => scala/collection/immutable/List.
          |[1:41..1:42): x => local0
-         |[1:51..1:52): z => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:9): v6 <= _empty_/v6.
-         |[1:7..1:8): x <= local0
-         |[1:12..1:16): List => scala/package.List.
-         |[1:21..1:22): z <= local2
-         |[1:26..1:27): a <= local3
-         |[1:28..1:30): :: => scala/package.`::`.
-         |[1:31..1:32): y <= local4
-         |[1:36..1:40): List => scala/package.List.
-         |[1:41..1:42): x => local0
-         |[1:51..1:52): z => local1
+         |[1:51..1:52): z => local2
          |""".stripMargin
     else
       """|[0:7..0:9): v6 <= _empty_/v6.
@@ -2009,15 +1606,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:12..1:16): List => scala/collection/immutable/List.
          |[1:21..1:22): a <= local2
          |[1:25..1:26): x => local0
-         |[1:34..1:35): a => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:9): v7 <= _empty_/v7.
-         |[1:7..1:8): x <= local0
-         |[1:12..1:16): List => scala/package.List.
-         |[1:21..1:22): a <= local2
-         |[1:25..1:26): x => local0
-         |[1:34..1:35): a => local1
+         |[1:34..1:35): a => local2
          |""".stripMargin
     else
       """|[0:7..0:9): v7 <= _empty_/v7.
@@ -2073,7 +1662,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/collection/immutable/List.
          |[1:21..1:22): a <= local3
-         |[1:23..1:25): :: => local2
+         |[1:23..1:25): :: => scala/package.`::`.
          |[1:26..1:27): y <= local4
          |[1:30..1:34): List => scala/collection/immutable/List.
          |[1:35..1:36): x => local0
@@ -2085,7 +1674,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/package.List.
          |[1:21..1:22): a <= local3
-         |[1:23..1:25): :: => local2
+         |[1:23..1:25): :: => scala/package.`::`.
          |[1:26..1:27): y <= local4
          |[1:30..1:34): List => scala/package.List.
          |[1:35..1:36): x => local0
@@ -2171,42 +1760,27 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/collection/immutable/List.
          |[1:21..1:22): a <= local3
-         |[1:23..1:25): :: => local2
+         |[1:23..1:25): :: => scala/package.`::`.
          |[1:26..1:27): y <= local4
          |[1:30..1:34): List => scala/collection/immutable/List.
          |[1:35..1:36): x => local0
          |[1:39..1:40): b <= local7
-         |[1:41..1:43): :: => local6
+         |[1:41..1:43): :: => scala/package.`::`.
          |[1:44..1:45): z <= local8
          |[1:48..1:49): y => local4
-         |[1:57..1:58): z => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:10): v10 <= _empty_/v10.
-         |[1:7..1:8): x <= local0
-         |[1:12..1:16): List => scala/package.List.
-         |[1:21..1:22): a <= local3
-         |[1:23..1:25): :: => local2
-         |[1:26..1:27): y <= local4
-         |[1:30..1:34): List => scala/package.List.
-         |[1:35..1:36): x => local0
-         |[1:39..1:40): b <= local7
-         |[1:41..1:43): :: => local6
-         |[1:44..1:45): z <= local8
-         |[1:48..1:49): y => local4
-         |[1:57..1:58): z => local1
+         |[1:57..1:58): z => local8
          |""".stripMargin
     else
       """|[0:7..0:10): v10 <= _empty_/v10.
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/package.List.
          |[1:21..1:22): a <= local3
-         |[1:23..1:25): :: => local2
+         |[1:23..1:25): :: => scala/package.`::`.
          |[1:26..1:27): y <= local4
          |[1:30..1:34): List => scala/package.List.
          |[1:35..1:36): x => local0
          |[1:39..1:40): b <= local7
-         |[1:41..1:43): :: => local6
+         |[1:41..1:43): :: => scala/package.`::`.
          |[1:44..1:45): z <= local8
          |[1:48..1:49): y => local4
          |[1:57..1:58): z => local8
@@ -2310,33 +1884,20 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/collection/immutable/List.
          |[1:21..1:22): a <= local4
-         |[1:23..1:25): :: => local3
+         |[1:23..1:25): :: => scala/package.`::`.
          |[1:26..1:27): y <= local5
          |[1:30..1:34): List => scala/collection/immutable/List.
          |[1:35..1:36): x => local0
          |[1:41..1:42): a => local4
          |[1:43..1:44): > => scala/Int#`>`(+3).
-         |[1:54..1:55): y => local2
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:10): v11 <= _empty_/v11.
-         |[1:7..1:8): x <= local0
-         |[1:12..1:16): List => scala/package.List.
-         |[1:21..1:22): a <= local4
-         |[1:23..1:25): :: => local3
-         |[1:26..1:27): y <= local5
-         |[1:30..1:34): List => scala/package.List.
-         |[1:35..1:36): x => local0
-         |[1:41..1:42): a => local4
-         |[1:43..1:44): > => scala/Int#`>`(+3).
-         |[1:54..1:55): y => local2
+         |[1:54..1:55): y => local5
          |""".stripMargin
     else
       """|[0:7..0:10): v11 <= _empty_/v11.
          |[1:7..1:8): x <= local0
          |[1:12..1:16): List => scala/package.List.
          |[1:21..1:22): a <= local4
-         |[1:23..1:25): :: => local3
+         |[1:23..1:25): :: => scala/package.`::`.
          |[1:26..1:27): y <= local5
          |[1:30..1:34): List => scala/package.List.
          |[1:35..1:36): x => local0
@@ -2435,7 +1996,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[2:7..2:8): x <= local2
          |[2:12..2:16): List => scala/collection/immutable/List.
          |[2:21..2:22): a <= local5
-         |[2:23..2:24): ~ => local4
+         |[2:23..2:24): ~ => _empty_/v12.`~`.
          |[2:25..2:26): b <= local6
          |[2:33..2:34): ~ => _empty_/v12.`~`#
          |[2:34..2:34):  => _empty_/v12.`~`#`<init>`().
@@ -2458,7 +2019,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[2:7..2:8): x <= local2
          |[2:12..2:16): List => scala/package.List.
          |[2:21..2:22): a <= local5
-         |[2:23..2:24): ~ => local4
+         |[2:23..2:24): ~ => _empty_/v12.`~`.
          |[2:25..2:26): b <= local6
          |[2:33..2:34): ~ => _empty_/v12.`~`#
          |[2:34..2:34):  => _empty_/v12.`~`#`<init>`().
@@ -2737,16 +2298,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:21..1:22): _ <= local2
          |[1:25..1:32): println => scala/Predef.println(+1).
          |[1:33..1:34): x => local0
-         |[1:43..1:44): x => local1
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:10): v13 <= _empty_/v13.
-         |[1:7..1:8): x <= local0
-         |[1:12..1:16): List => scala/package.List.
-         |[1:21..1:22): _ <= local2
-         |[1:25..1:32): println => scala/Predef.println(+1).
-         |[1:33..1:34): x => local0
-         |[1:43..1:44): x => local1
+         |[1:43..1:44): x => local0
          |""".stripMargin
     else
       """|[0:7..0:10): v13 <= _empty_/v13.
@@ -2809,16 +2361,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:35..1:36): > => scala/Int#`>`(+3).
          |[1:37..1:38): b => local4
          |[1:46..1:47): a => local3
-         |""".stripMargin
-    else if (!atLeast213_16)
-      """|[0:7..0:9): g7 <= _empty_/g7.
-         |[1:8..1:9): a <= local3
-         |[1:11..1:12): b <= local4
-         |[1:17..1:21): List => scala/package.List.
-         |[1:33..1:34): a => local3
-         |[1:35..1:36): > => scala/Int#`>`(+3).
-         |[1:37..1:38): b => local4
-         |[1:46..1:47): a => local2
          |""".stripMargin
     else
       """|[0:7..0:9): g7 <= _empty_/g7.
@@ -2998,34 +2540,18 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/r1# => class r1 extends AnyRef { +2 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/r1#`<init>`(). => primary ctor <init>()
-         |_empty_/r1#x. => val method x: Int
-         |  Int => scala/Int#
-         |_empty_/r2. => final object r2 extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/r2.p. => val method p: r1
-         |  r1 => _empty_/r1#
-         |local0 => val local x: Int
-         |  Int => scala/Int#
-         |local1 => val local x: Int
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/r1# => class r1 extends AnyRef { +2 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/r1#`<init>`(). => primary ctor <init>()
-         |_empty_/r1#x. => val method x: Int
-         |  Int => scala/Int#
-         |_empty_/r2. => final object r2 extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/r2.p. => val method p: r1
-         |  r1 => _empty_/r1#
-         |local0 => val local x: Int
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/r1# => class r1 extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/r1#`<init>`(). => primary ctor <init>()
+       |_empty_/r1#x. => val method x: Int
+       |  Int => scala/Int#
+       |_empty_/r2. => final object r2 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/r2.p. => val method p: r1
+       |  r1 => _empty_/r1#
+       |local0 => val local x: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -3040,32 +2566,18 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:9): r3 <= _empty_/r3.
-         |[1:6..1:7): m <= _empty_/r3.m().
-         |[2:8..2:9): s <= local2
-         |[2:11..2:15): Some => scala/Some#
-         |[2:16..2:19): Int => scala/Int#
-         |[3:10..3:14): Some => scala/Some.
-         |[3:15..3:20): value <= local0
-         |[3:24..3:30): Option => scala/Option.
-         |[4:6..4:10): Some => scala/Some.
-         |[4:11..4:16): value => local1
-         |[6:4..6:5): s => local2
-         |""".stripMargin
-    else
-      """|[0:7..0:9): r3 <= _empty_/r3.
-         |[1:6..1:7): m <= _empty_/r3.m().
-         |[2:8..2:9): s <= local1
-         |[2:11..2:15): Some => scala/Some#
-         |[2:16..2:19): Int => scala/Int#
-         |[3:10..3:14): Some => scala/Some.
-         |[3:15..3:20): value <= local0
-         |[3:24..3:30): Option => scala/Option.
-         |[4:6..4:10): Some => scala/Some.
-         |[4:11..4:16): value => local0
-         |[6:4..6:5): s => local1
-         |""".stripMargin,
+    """|[0:7..0:9): r3 <= _empty_/r3.
+       |[1:6..1:7): m <= _empty_/r3.m().
+       |[2:8..2:9): s <= local1
+       |[2:11..2:15): Some => scala/Some#
+       |[2:16..2:19): Int => scala/Int#
+       |[3:10..3:14): Some => scala/Some.
+       |[3:15..3:20): value <= local0
+       |[3:24..3:30): Option => scala/Option.
+       |[4:6..4:10): Some => scala/Some.
+       |[4:11..4:16): value => local0
+       |[6:4..6:5): s => local1
+       |""".stripMargin,
   )
 
   symbols(
@@ -3080,32 +2592,17 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/r3. => final object r3 extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/r3.m(). => method m: Some[Int]
-         |  Some => scala/Some#
-         |  Int => scala/Int#
-         |local0 => val local value: Int
-         |  Int => scala/Int#
-         |local1 => val local value: Int
-         |  Int => scala/Int#
-         |local2 => val local s: Some[Int]
-         |  Some => scala/Some#
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/r3. => final object r3 extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/r3.m(). => method m: Some[Int]
-         |  Some => scala/Some#
-         |  Int => scala/Int#
-         |local0 => val local value: Int
-         |  Int => scala/Int#
-         |local1 => val local s: Some[Int]
-         |  Some => scala/Some#
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/r3. => final object r3 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/r3.m(). => method m: Some[Int]
+       |  Some => scala/Some#
+       |  Int => scala/Int#
+       |local0 => val local value: Int
+       |  Int => scala/Int#
+       |local1 => val local s: Some[Int]
+       |  Some => scala/Some#
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -3141,26 +2638,15 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|[0:7..0:9): r6 <= _empty_/r6.
-         |[1:6..1:7): t <= _empty_/r6.t.
-         |[1:10..1:13): Int => scala/Int#
-         |[1:15..1:18): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:15): _1 <= local0
-         |[2:19..2:25): Option => scala/Option.
-         |[3:5..3:7): _1 => local1
-         |""".stripMargin
-    else
-      """|[0:7..0:9): r6 <= _empty_/r6.
-         |[1:6..1:7): t <= _empty_/r6.t.
-         |[1:10..1:13): Int => scala/Int#
-         |[1:15..1:18): Int => scala/Int#
-         |[2:8..2:12): Some => scala/Some.
-         |[2:13..2:15): _1 <= local0
-         |[2:19..2:25): Option => scala/Option.
-         |[3:5..3:7): _1 => local0
-         |""".stripMargin,
+    """|[0:7..0:9): r6 <= _empty_/r6.
+       |[1:6..1:7): t <= _empty_/r6.t.
+       |[1:10..1:13): Int => scala/Int#
+       |[1:15..1:18): Int => scala/Int#
+       |[2:8..2:12): Some => scala/Some.
+       |[2:13..2:15): _1 <= local0
+       |[2:19..2:25): Option => scala/Option.
+       |[3:5..3:7): _1 => local0
+       |""".stripMargin,
   )
 
   symbols(
@@ -3172,26 +2658,14 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  }
        |}
        |""".stripMargin,
-    if (!atLeast213_17)
-      """|_empty_/r6. => final object r6 extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/r6.t. => val method t: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |local0 => val local _1: Int
-         |  Int => scala/Int#
-         |local1 => val local _1: Int
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/r6. => final object r6 extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/r6.t. => val method t: Tuple2[Int, Int]
-         |  Tuple2 => scala/Tuple2#
-         |  Int => scala/Int#
-         |local0 => val local _1: Int
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/r6. => final object r6 extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/r6.t. => val method t: Tuple2[Int, Int]
+       |  Tuple2 => scala/Tuple2#
+       |  Int => scala/Int#
+       |local0 => val local _1: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -3210,6 +2684,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |[1:7..1:9): r8 <= _empty_/r8.
        |[2:6..2:7): p <= _empty_/r8.p.
        |[2:9..2:11): r7 => _empty_/r7#
+       |[3:8..3:9): x <= local0
        |[4:8..4:10): r7 => _empty_/r7#
        |[4:10..4:10):  => _empty_/r7#`<init>`().
        |""".stripMargin,
@@ -3231,6 +2706,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |[1:7..1:10): r10 <= _empty_/r10.
        |[2:6..2:7): m <= _empty_/r10.m().
        |[2:9..2:11): r9 => _empty_/r9#
+       |[3:8..3:9): x <= local0
        |[4:8..4:10): r9 => _empty_/r9#
        |[4:10..4:10):  => _empty_/r9#`<init>`().
        |""".stripMargin,

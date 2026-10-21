@@ -235,7 +235,23 @@ trait SymbolOps {
       sym.isSemanticdbLocal
     def isUselessSymbolInformation: Boolean = isUseless || isEtaExpandedParameter ||
       isAnonymousClassConstructor || isSyntheticAbstractType || isAnonymousSelfParameter ||
-      isSyntheticLocalParam
+      isSyntheticLocalParam || patternValue.exists
+    /* scalac desugars `val p = e` into a match of `e` against `p`, and puts the binders of
+     * that match at transparent positions: the value that such a binder defines */
+    def patternValue: g.Symbol = {
+      import g._
+      if (sym.pos.isTransparent) {
+        val owner = sym.owner
+        if (owner.isTerm) {
+          val parent = owner.owner
+          if (owner.name.dropLocal == sym.name)
+            return if (parent.isClass) owner.getterIn(parent).orElse(owner) else owner
+          if (owner.isArtifact && parent.isClass)
+            return parent.info.decl(sym.name).filter(_.paramss.isEmpty)
+        }
+      }
+      NoSymbol
+    }
 
     def isUsefulSymbolInformation: Boolean = !isUselessSymbolInformation
     def isClassfileAnnotation: Boolean = sym.isClass && sym.hasFlag(gf.JAVA_ANNOTATION)
@@ -249,6 +265,8 @@ trait SymbolOps {
   private lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
   private lazy val namesCache = new mutable.HashMap[(Int, g.Name), g.Symbol]
   private def freshSymbol(sym: g.Symbol): String = {
+    val gval = sym.patternValue
+    if (gval.exists) return gval.toSemantic
     val pos = sym.pos
     if (pos.isDefined) {
       val conflict = pointsCache.getOrElseUpdate(pos.point, sym)
