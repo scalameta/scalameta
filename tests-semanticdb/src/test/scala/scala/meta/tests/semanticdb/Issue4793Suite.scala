@@ -33,7 +33,7 @@ class Issue4793Suite extends SemanticdbSuite {
          |""".stripMargin,
       "Occurrences",
     )
-    assertEquals(
+    assertNoDiff(
       load(),
       """|[0:7..0:30): SelfTypeWithoutPosition <= _empty_/SelfTypeWithoutPosition.
          |[1:6..1:7): x <= _empty_/SelfTypeWithoutPosition.x.

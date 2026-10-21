@@ -3085,7 +3085,7 @@ class ExistentialTypesSuite extends SemanticdbSuite {
          |""".stripMargin,
       "Occurrences",
     )
-    assertEquals(
+    assertNoDiff(
       load(),
       """|[0:6..0:8): p3 <= _empty_/p3#
          |[0:9..0:9):  <= _empty_/p3#`<init>`().
