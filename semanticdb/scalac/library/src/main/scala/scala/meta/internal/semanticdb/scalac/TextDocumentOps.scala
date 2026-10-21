@@ -924,7 +924,7 @@ trait TextDocumentOps {
                   case _ =>
                 }
                 t.self.tpt match {
-                  case tpt: g.TypeTree if tpt.original != null =>
+                  case tpt: g.TypeTree if tpt.original != null && tpt.original.pos.isDefined =>
                     // the tree of `_` in `this: List[_] =>` defines it, not the type below
                     traverse(t.self)
                     // scalac types `this: T =>` in class C as `C with T`

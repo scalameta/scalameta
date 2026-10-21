@@ -33,8 +33,14 @@ class Issue4793Suite extends SemanticdbSuite {
          |""".stripMargin,
       "Occurrences",
     )
-    val err = intercept[UnsupportedOperationException](load())
-    assertEquals(err.getMessage, "Position.start on NoPosition")
+    assertEquals(
+      load(),
+      """|[0:7..0:30): SelfTypeWithoutPosition <= _empty_/SelfTypeWithoutPosition.
+         |[1:6..1:7): x <= _empty_/SelfTypeWithoutPosition.x.
+         |[1:10..1:17): example => example/
+         |[1:18..1:41): SelfTypeWithoutPosition => example/SelfTypeWithoutPosition.
+         |""".stripMargin,
+    )
   }
 
 }
