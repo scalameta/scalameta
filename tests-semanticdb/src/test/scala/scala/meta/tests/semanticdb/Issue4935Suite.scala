@@ -115,8 +115,6 @@ class Issue4935Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local0 => val local s: Int
          |  Int => scala/Int#
-         |local1 => val local s: Int
-         |  Int => scala/Int#
          |""".stripMargin
     else
       """|_empty_/e. => final object e extends AnyRef { +1 decls }
@@ -424,14 +422,6 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/o#x$2. => synthetic lazy val method x$2: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
-       |local0 => val local p: Int
-       |  Int => scala/Int#
-       |local1 => val local q: Int
-       |  Int => scala/Int#
-       |local2 => val local r: Int
-       |  Int => scala/Int#
-       |local3 => val local s: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )

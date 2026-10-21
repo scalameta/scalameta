@@ -500,7 +500,8 @@ trait TextDocumentOps {
                 tryMstart(gpoint + 7)
                 tryMstart(gpoint)
               case _: g.DefDef if gsym.isGetter => singleValPat()
-              case _: g.ValDef => if (gsym.isMethod || gsym.getterIn(gsym.owner) == g.NoSymbol) {
+              case _: g.ValDef =>
+                if (gsym.isMethod || !gsym.owner.isClass || gsym.getterIn(gsym.owner) == g.NoSymbol) {
                   // FIXME: https://github.com/scalameta/scalameta/issues/1538
                   // Skip the field definition in favor of the associated getter.
                   // This will make sure that val/var class parameters are consistently
@@ -510,6 +511,9 @@ trait TextDocumentOps {
                 }
               // mctordefs found it above; its point can be on a parent's name
               case _: g.DefDef if gsym.isConstructor =>
+              /* skip the fresh name that scalac binds to the pattern of a for value definition.
+               * Its point can be the operator of an infix pattern, such as `::`. */
+              case gtree: g.Bind if gtree.pos == gtree.body.pos =>
               case _: g.DefTree => tryMstart(gpoint)
               case _: g.This => mstarts.get(gpoint)
                   .foreach(name => if (gsym.nameString == name.value) success(name, gsym))
@@ -976,6 +980,8 @@ trait TextDocumentOps {
             gtree match {
               case OriginalTreeOf(original) => traverse(original)
               case CompoundTypeTreeOf(original) => traverse(original)
+              // skip an annotation that scalac added, like `@unchecked` on a desugared match
+              case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
 
               case gtree: g.TypeTree if gtree.original != null =>
                 traverse(gtree.original)
@@ -1027,7 +1033,13 @@ trait TextDocumentOps {
                   else if (isVisited.add(p) && (findParamUnderscore(p) ne null))
                     saveUnderscore(p.symbol),
                 )
-                traverse(t.body)
+                t.body match {
+                  /* skip the match of a pattern on the parameter.
+                   * Its position can be the name after `yield`. */
+                  case g.Match(g.Typed(sel, _), cases)
+                      if t.vparams.exists(_.symbol == sel.symbol) => cases.foreach(traverse)
+                  case body => traverse(body)
+                }
                 tryFindMtree(t)
               case t: g.ValDef =>
                 if (t.hasSyntheticSymbol) traverse(t.tpt)

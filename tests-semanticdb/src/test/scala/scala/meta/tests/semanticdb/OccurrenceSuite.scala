@@ -53,20 +53,7 @@ object OccurrenceSuite {
           val textdocument = TextDocuments.parseFrom(semanticdb.readAllBytes).documents.head
           val obtained = OccurrenceSuite.printTextDocument(textdocument)
           val expected = FileIO.slurp(expectpath, StandardCharsets.UTF_8)
-          val expectedPrevious213 =
-            if (expectpath.syntax.endsWith("ValPattern.scala")) expectedPrevious213ValPattern
-            else expected
-          val expectedCompat = ScalaVersion.getExpected(
-            compat = List(
-              ScalaVersion.Full("2.13.16") -> expectedPrevious213,
-              ScalaVersion.Full("2.13.15") -> expectedPrevious213,
-              ScalaVersion.Full("2.13.14") -> expectedPrevious213,
-              ScalaVersion.Scala212 -> expectedPrevious213,
-              ScalaVersion.Scala211 -> expectedPrevious213,
-            ),
-            expected,
-          )
-          TestBody(obtained, expectedCompat, expectpath)
+          TestBody(obtained, expected, expectpath)
         },
       )
     }
@@ -75,6 +62,13 @@ object OccurrenceSuite {
     Files.createDirectories(body.expectpath.toNIO.getParent)
     Files.write(body.expectpath.toNIO, body.obtained.getBytes(StandardCharsets.UTF_8))
   })
+  private implicit object RangeOrdering extends Ordering[Position.Range] {
+    def compare(x: Position.Range, y: Position.Range): Int = {
+      val start = x.start - y.start
+      if (start != 0) start else x.end - y.end
+    }
+  }
+
   def printTextDocument(doc: TextDocument): String = {
     val symtab = doc.symbols.iterator.map(info => info.symbol -> info).toMap
     val sb = new StringBuilder
@@ -95,67 +89,11 @@ object OccurrenceSuite {
     sb.toString()
   }
 
-  private implicit object RangeOrdering extends Ordering[Position.Range] {
-    def compare(x: Position.Range, y: Position.Range): Int = {
-      val start = x.start - y.start
-      if (start != 0) start else x.end - y.end
-    }
-  }
-
   def printSymbol(sb: StringBuilder, symbol: String, role: SymbolOccurrence.Role): Unit = {
     val arrow = if (role.isDefinition) "<=" else "=>"
     sb.append("/*").append(arrow)
       // replace package / with dot . to not upset GitHub syntax highlighting.
       .append(symbol.replace('/', '.')).append("*/")
   }
-
-  private val expectedPrevious213ValPattern =
-    """|package example
-       |
-       |class ValPattern/*<=example.ValPattern#*/ {
-       |
-       |  val (left/*<=example.ValPattern#left.*/, right/*<=example.ValPattern#right.*/) = (1, 2)
-       |  val Some/*=>scala.Some.*/(number1/*<=example.ValPattern#number1.*/) =
-       |    Some/*=>scala.Some.*/(1)
-       |
-       |  var (leftVar/*<=example.ValPattern#leftVar().*/, rightVar/*<=example.ValPattern#rightVar().*/) = (1, 2)
-       |  var Some/*=>scala.Some.*/(number1Var/*<=example.ValPattern#number1Var().*/) =
-       |    Some/*=>scala.Some.*/(1)
-       |
-       |  def app/*<=example.ValPattern#app().*/(): Unit/*=>scala.Unit#*/ = {
-       |    println/*=>scala.Predef.println(+1).*/(
-       |      (
-       |        number1/*=>example.ValPattern#number1.*/,
-       |        left/*=>example.ValPattern#left.*/,
-       |        right/*=>example.ValPattern#right.*/,
-       |        number1Var/*=>example.ValPattern#number1Var().*/,
-       |        leftVar/*=>example.ValPattern#leftVar().*/,
-       |        rightVar/*=>example.ValPattern#rightVar().*/
-       |      )
-       |    )
-       |    locally/*=>scala.Predef.locally().*/ {
-       |      val (left/*<=local6*/, right/*<=local7*/) = (1, 2)
-       |      val Some/*=>scala.Some.*/(number1/*<=local10*/) =
-       |        Some/*=>scala.Some.*/(1)
-       |
-       |      var (leftVar/*<=local11*/, rightVar/*<=local12*/) = (1, 2)
-       |      var Some/*=>scala.Some.*/(number1Var/*<=local15*/) =
-       |        Some/*=>scala.Some.*/(1)
-       |      println/*=>scala.Predef.println(+1).*/(
-       |        (
-       |          number1/*=>local10*/,
-       |          left/*=>local6*/,
-       |          right/*=>local7*/,
-       |          number1Var/*=>local15*/,
-       |          leftVar/*=>local11*/,
-       |          rightVar/*=>local12*/
-       |        )
-       |      )
-       |    }
-       |  }
-       |
-       |}
-       |
-       |""".stripMargin
 
 }
