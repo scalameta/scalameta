@@ -25,4 +25,16 @@ class Issue4793Suite extends SemanticdbSuite {
     doc => assertEquals(doc.synthetics.map(_.range), Nil),
   )
 
+  test("self type without position") {
+    def load() = computeDatabaseSectionFromSnippet(
+      """|object SelfTypeWithoutPosition {
+         |  val x = example.SelfTypeWithoutPosition()
+         |}
+         |""".stripMargin,
+      "Occurrences",
+    )
+    val err = intercept[UnsupportedOperationException](load())
+    assertEquals(err.getMessage, "Position.start on NoPosition")
+  }
+
 }
