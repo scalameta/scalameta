@@ -7,6 +7,7 @@ import scala.meta.io._
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 
+import scala.util.control.NonFatal
 import scala.util.{Success, Try}
 
 import munit.FunSuite
@@ -153,7 +154,7 @@ class NIOPathTest extends FunSuite {
           }) {}
         assertEquals((actualRoot, actualNames.result(), path.getNameCount), (root, names, cnt))
         assertEquals(names.length, cnt)
-      } catch { case e: Throwable => fail("failed", e) }
+      } catch { case NonFatal(e) => fail("failed", e) }
     }
   }
 
