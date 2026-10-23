@@ -1278,6 +1278,33 @@ com/javacp/MetacJava#overload(+2). => static method overload(a: A): Unit
 com/javacp/MetacJava#overload(+2).(a) => param a: A
   A => com/javacp/MetacJava#Overload3#A#
 
+com/javacp/Modifiers.class
+--------------------------
+
+Summary:
+Schema => SemanticDB v4
+Uri => com/javacp/Modifiers.class
+Text => empty
+Language => Java
+Symbols => 6 entries
+
+Symbols:
+com/javacp/Modifiers# => class Modifiers extends Object { +5 decls }
+  Object => java/lang/Object#
+com/javacp/Modifiers#`<init>`(). => ctor <init>()
+com/javacp/Modifiers#nativeMethod(). => private[javacp] method nativeMethod(): Unit
+  javacp => com/javacp/
+  Unit => scala/Unit#
+com/javacp/Modifiers#synchronizedMethod(). => private[javacp] method synchronizedMethod(): Unit
+  javacp => com/javacp/
+  Unit => scala/Unit#
+com/javacp/Modifiers#transientField. => private[javacp] field transientField: Int
+  javacp => com/javacp/
+  Int => scala/Int#
+com/javacp/Modifiers#volatileField. => private[javacp] field volatileField: Int
+  javacp => com/javacp/
+  Int => scala/Int#
+
 com/javacp/NonGeneric.class
 ---------------------------
 

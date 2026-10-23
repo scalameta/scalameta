@@ -22,4 +22,14 @@ class JavacpSuite extends JavacpSuiteBase {
     List("com/javacp/Test#Int.", "com/javacp/Test#Long.", "com/javacp/Test#Float."),
   )
 
+  private val modifiers = "com/javacp/Modifiers#"
+
+  checkProperties("native method", modifiers + "nativeMethod().", Nil)
+  checkProperties("synchronized method", modifiers + "synchronizedMethod().", Nil)
+  checkProperties("transient field", modifiers + "transientField.", Nil)
+  checkProperties("volatile field", modifiers + "volatileField.", Nil)
+  // ACC_SUPER shares its bit with ACC_SYNCHRONIZED, ACC_VARARGS with ACC_TRANSIENT
+  checkProperties("class", modifiers, Nil)
+  checkProperties("varargs method", "com/javacp/Test#vararg().", Nil)
+
 }
