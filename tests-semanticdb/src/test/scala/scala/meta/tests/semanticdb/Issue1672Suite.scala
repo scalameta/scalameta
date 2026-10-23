@@ -48,6 +48,7 @@ class Issue1672Suite extends FunSuite {
          |class sbc(b: Byte, c: Char) extends scala.annotation.StaticAnnotation
          |class sf(f: Float, d: Double) extends scala.annotation.StaticAnnotation
          |class sdn(x: Int = -1) extends scala.annotation.StaticAnnotation
+         |class sk(k: Any) extends scala.annotation.StaticAnnotation
          |object C2 {
          |  final val I = -200
          |  final val L = -200L
@@ -104,11 +105,53 @@ class Issue1672Suite extends FunSuite {
          |  @issue1672.NumWrap(value = new issue1672.Num(value = -129)) def javaNumNested = 1
          |  def tpeNegative: Int @sl(-129L, -2) = 1
          |  @issue1672.Shade(value = issue1672.Color.RED) def missingScalar = 1
+         |  @sb @sb def twiceNoArgs = 1
+         |  @sa(1, "a") @sa(1, "a") def twiceArgs = 1
+         |  @sn(new sa(1, "a")) @sn(new sa(1, "a")) def twiceNested = 1
+         |  @sb @sa(1, "a") @sb def twiceApart = 1
+         |  @deprecated("msg", "1") @deprecated("msg", "1") def twiceScala = 1
+         |  def tpeTwice: Int @sb @sb = 1
+         |  @sa(K.kv, "a") def companionVal = 1
+         |  @sa(K.kd(1), "a") def companionCall = 1
+         |  @sa(K.ko("x"), "a") def companionOverload = 1
+         |  @sn(n = new sa(1, "a")) def nestedNamed = 1
+         |  @sa(math.max(1, 2), "a") def overloaded = 1
+         |  @sa(identity[Int](1), "a") def typeApply = 1
+         |  @sk(this) def self = 1
+         |  @sa({ val z = 2; z }, "a") def block = 1
+         |  @sa(if (C.v > 0) 1 else 2, "a") def ifArg = 1
+         |  @sa(1, s"a${C.v}") def interpolated = 1
+         |  @sk((x: Int) => x) def lambda = 1
+         |  class KI(i: Int)
+         |  @sk(new KI(1)) def newInner = 1
+         |  @sk(K.kn[Int]) def typeApplyCompanion = 1
+         |  @sk(K.kt[Int](1)) def typeApplyCall = 1
+         |  @sk(K.kc(1)(2)) def curried = 1
+         |  @sk(K.kd(K.kv)) def companionNested = 1
+         |  @sk(K.kd(C.v)) def companionMixed = 1
+         |  @sk(K.KO.f(1)) def nestedObject = 1
+         |  @sk(K.ks(1).kd(2)) def applyQualifier = 1
+         |  def dependent(x: Int): Int @sk(x) = x
+         |  @sk(K.kn[issue1672.Color]) def missingTypeArg = 1
          |  implicit final val n = 1
          |  def implicitArg(implicit i: Int) = i
          |  def implicitUse = implicitArg
          |}
-         |""".stripMargin
+         |object K {
+         |  val kv = 2
+         |  def kd(i: Int) = i
+         |  def ko(i: Int) = i
+         |  def ko(s: String) = 1
+         |  @sk(this) def selfObject = 1
+         |  def kn[T] = 1
+         |  def kt[T](t: T) = 1
+         |  def kc(a: Int)(b: Int) = a
+         |  def ks(i: Int): K.type = K
+         |  object KO { def f(i: Int) = i }
+         |}
+         |""".stripMargin +
+        (if (ScalaVersion.is212) ""
+         else "object C4 { def lt: -1 = -1; def lo: Option[-129L] = None }\n")
     val src = out.resolve("Issue1672.scala")
     Files.write(src, code.getBytes("UTF-8"))
     new g.Run().compile(List(src.toString))
@@ -182,6 +225,7 @@ class Issue1672Suite extends FunSuite {
   }
 
   private def render(tpe: s.Type): String = tpe match {
+    case t: s.ConstantType => s.Print.constant(t.constant)
     case t: s.TypeRef if t.typeArguments.isEmpty => t.symbol
     case t: s.TypeRef => t.symbol + t.typeArguments.map(render).mkString("[", ", ", "]")
     case t: s.AnnotatedType => t.annotations.map(x => s" @${render(x.tpe)}")
@@ -213,6 +257,7 @@ class Issue1672Suite extends FunSuite {
 
   private def returnType(info: Option[s.SymbolInformation]): String = info.map(_.signature) match {
     case Some(s.MethodSignature(_, _, s.ConstantType(c), _)) => s.Print.constant(c)
+    case Some(s.MethodSignature(_, _, t, _)) => render(t)
     case sig => sig.toString
   }
 
@@ -428,6 +473,21 @@ class Issue1672Suite extends FunSuite {
     )
   }
 
+  test("negative literal types") {
+    assume(!ScalaVersion.is212, "literal types need 2.13")
+    val names = List("lt", "lo")
+    assertEquals(
+      names.map(x => returnType(metac.get(s"p/C4.$x()."))),
+      List("-1", "scala/Option#[-129L]"),
+      "metac",
+    )
+    assertEquals(
+      names.map(x => returnType(symtab.info(s"p/C4.$x()."))),
+      List("-1", "scala/Option#[-129L]"),
+      "metacp",
+    )
+  }
+
   test("java int array argument")(check(
     "p/K#javaInts().",
     "@issue1672/Ints#(value = <?>(-1, -129))",
@@ -462,5 +522,123 @@ class Issue1672Suite extends FunSuite {
        |broken annotation argument: missing symbol: issue1672.Tint
        |""".stripMargin,
   ))
+
+  test("annotation twice without arguments")(
+    check("p/K#twiceNoArgs().", "@p/sb#() @p/sb#()", "@p/sb#()"),
+  )
+
+  test("annotation twice with arguments")(check(
+    "p/K#twiceArgs().",
+    """@p/sa#(1, "a") @p/sa#(1, "a")""",
+    """@p/sa#(1, "a") @p/sa#(1, "a")""",
+  ))
+
+  test("annotation twice with a nested argument")(check(
+    "p/K#twiceNested().",
+    """@p/sn#(p/sa#`<init>`().(1, "a")) @p/sn#(p/sa#`<init>`().(1, "a"))""",
+    "@p/sn#(<?>) @p/sn#(<?>)",
+  ))
+
+  test("annotation twice around another")(
+    check("p/K#twiceApart().", """@p/sb#() @p/sa#(1, "a") @p/sb#()""", """@p/sb#() @p/sa#(1, "a")"""),
+  )
+
+  test("scala library annotation twice") {
+    if (ScalaVersion.is212) check(
+      "p/K#twiceScala().",
+      """@scala/deprecated#("msg", "1") @scala/deprecated#("msg", "1")""",
+      """@scala/deprecated#("msg", "1") @scala/deprecated#("msg", "1")""",
+    )
+    else check(
+      "p/K#twiceScala().",
+      """@scala/deprecated#(message = "msg", since = "1") @scala/deprecated#(message = "msg", since = "1")""",
+      """@scala/deprecated#(message = "msg", since = "1")""",
+    )
+  }
+
+  test("return type, annotation twice")(check("p/K#tpeTwice().", "@p/sb#() @p/sb#()"))
+
+  test("companion val argument")(
+    check("p/K#companionVal().", """@p/sa#(p/K.kv., "a")""", """@p/sa#(<?>, "a")"""),
+  )
+
+  test("companion method call argument")(
+    check("p/K#companionCall().", """@p/sa#(sel(p/K., p/K.kd().)(1), "a")""", """@p/sa#(<?>, "a")"""),
+  )
+
+  test("companion overloaded method call argument")(check(
+    "p/K#companionOverload().",
+    """@p/sa#(sel(p/K., p/K.ko(+1).)("x"), "a")""",
+    """@p/sa#(<?>, "a")""",
+  ))
+
+  test("named nested annotation argument")(
+    check("p/K#nestedNamed().", """@p/sn#(p/sa#`<init>`().(1, "a"))""", "@p/sn#(<?>)"),
+  )
+
+  test("overloaded method call argument")(check(
+    "p/K#overloaded().",
+    """@p/sa#(sel(scala/math/package., scala/math/package.max().)(1, 2), "a")""",
+    """@p/sa#(<?>, "a")""",
+  ))
+
+  test("type application argument")(
+    check("p/K#typeApply().", """@p/sa#(scala/Predef.identity().(1), "a")""", """@p/sa#(<?>, "a")"""),
+  )
+
+  test("this argument")(check("p/K#self().", "@p/sk#(p/K#)", "@p/sk#(<?>)"))
+  test("this argument in an object")(check("p/K.selfObject().", "@p/sk#(p/K.)", "@p/sk#(<?>)"))
+  test("block argument")(check("p/K#block().", """@p/sa#(<?>, "a")"""))
+  test("if argument")(check("p/K#ifArg().", """@p/sa#(<?>, "a")"""))
+
+  test("interpolated argument")(check(
+    "p/K#interpolated().",
+    if (ScalaVersion.is212)
+      "@p/sa#(1, sel(scala/StringContext.apply()., scala/StringContext#s().)(p/C.v.))"
+    else "@p/sa#(1, sel(, java/lang/String#`+`().)(p/C.v.))",
+    "@p/sa#(1, <?>)",
+  ))
+
+  test("function argument")(check("p/K#lambda().", "@p/sk#(<?>)"))
+
+  test("new inner class argument")(
+    check("p/K#newInner().", "@p/sk#(p/K#KI#`<init>`().(1))", "@p/sk#(<?>)"),
+  )
+
+  test("companion type application argument")(
+    check("p/K#typeApplyCompanion().", "@p/sk#(sel(p/K., p/K.kn().)[scala/Int#])", "@p/sk#(<?>)"),
+  )
+
+  test("companion type application call argument")(
+    check("p/K#typeApplyCall().", "@p/sk#(p/K.kt().(1))", "@p/sk#(<?>)"),
+  )
+
+  test("companion curried call argument")(
+    check("p/K#curried().", "@p/sk#(p/K.kc().(2))", "@p/sk#(<?>)"),
+  )
+
+  test("companion call with a companion argument")(
+    check("p/K#companionNested().", "@p/sk#(sel(p/K., p/K.kd().)(p/K.kv.))", "@p/sk#(<?>)"),
+  )
+
+  test("companion call with an outside argument")(
+    check("p/K#companionMixed().", "@p/sk#(sel(p/K., p/K.kd().)(p/C.v.))", "@p/sk#(<?>)"),
+  )
+
+  test("nested object call argument")(
+    check("p/K#nestedObject().", "@p/sk#(sel(p/K.KO., p/K.KO.f().)(1))", "@p/sk#(<?>)"),
+  )
+
+  test("call on a call argument")(
+    check("p/K#applyQualifier().", "@p/sk#(sel(p/K.ks()., p/K.kd().)(2))", "@p/sk#(<?>)"),
+  )
+
+  test("return type, parameter argument")(
+    check("p/K#dependent().", "@p/sk#(p/K#dependent().(x))", "@p/sk#(<?>)"),
+  )
+
+  test("missing class in a type application argument")(
+    checkMissing("p/K#missingTypeArg().", "@p/sk#(<?>)"),
+  )
 
 }
