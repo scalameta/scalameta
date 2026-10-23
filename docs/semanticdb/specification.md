@@ -1581,7 +1581,7 @@ message SymbolInformation {
   </tr>
   <tr>
     <td><code>overridden_symbols</code></td>
-    <td>List of symbols this symbol overrides. See <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#overriding"/>Overriding</td>
+    <td>List of symbols this symbol overrides. See <a href="https://www.scala-lang.org/files/archive/spec/2.12/05-classes-and-objects.html#overriding"/>Overriding. metacp leaves it empty: a classfile does not record what a member overrides.</td>
   </tr>
   <tr>
     <td><code>documentation</code></td>
@@ -4040,7 +4040,7 @@ message SymbolInformation {
   </tr>
   <tr>
     <td><code>overridden_symbols</code></td>
-    <td>List of symbols this symbol overrides. See <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.8"/>Overriding</td>
+    <td>List of symbols this symbol overrides. See <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.8"/>Overriding. metacp leaves it empty: a classfile does not record what a member overrides.</td>
   </tr>
   <tr>
     <td><code>documentation</code></td>
