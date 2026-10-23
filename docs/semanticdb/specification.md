@@ -4401,6 +4401,8 @@ Notes:
   - `STATIC`: set for `static` methods.
   - `ABSTRACT`: set for `abstract` methods.
   - `DEFAULT`: set for `default` methods.
+  - `NATIVE`: set for `native` methods.
+  - `SYNCHRONIZED`: set for `synchronized` methods.
 - Display name for method symbols is equal to the name of the binding introduced
   by the definition.
 - Method declarations support [all Java access modifiers](#java-access), however
@@ -4442,6 +4444,8 @@ Notes:
 - Supported properties for field symbols are:
   - `FINAL`: set for `final` fields and interface fields.
   - `STATIC`: set for `static` fields and interface fields.
+  - `TRANSIENT`: set for `transient` fields.
+  - `VOLATILE`: set for `volatile` fields.
 - Display name for field symbols is equal to the name of the binding introduced
   by the definition.
 - Field declarations support [all Java access modifiers](#java-access). However,

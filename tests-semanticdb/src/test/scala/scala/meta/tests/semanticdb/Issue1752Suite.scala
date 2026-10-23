@@ -172,7 +172,7 @@ class Issue1752Suite extends SemanticdbSuite {
        |""".stripMargin,
     check(
       "java/lang/Object#hashCode().",
-      Some("java/lang/Object#hashCode(). => method hashCode(): Int"),
+      Some("java/lang/Object#hashCode(). => native method hashCode(): Int"),
       true,
     ),
   )

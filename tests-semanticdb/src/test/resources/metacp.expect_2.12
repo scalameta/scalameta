@@ -1292,16 +1292,16 @@ Symbols:
 com/javacp/Modifiers# => class Modifiers extends Object { +5 decls }
   Object => java/lang/Object#
 com/javacp/Modifiers#`<init>`(). => ctor <init>()
-com/javacp/Modifiers#nativeMethod(). => private[javacp] method nativeMethod(): Unit
+com/javacp/Modifiers#nativeMethod(). => private[javacp] native method nativeMethod(): Unit
   javacp => com/javacp/
   Unit => scala/Unit#
-com/javacp/Modifiers#synchronizedMethod(). => private[javacp] method synchronizedMethod(): Unit
+com/javacp/Modifiers#synchronizedMethod(). => private[javacp] synchronized method synchronizedMethod(): Unit
   javacp => com/javacp/
   Unit => scala/Unit#
-com/javacp/Modifiers#transientField. => private[javacp] field transientField: Int
+com/javacp/Modifiers#transientField. => private[javacp] transient field transientField: Int
   javacp => com/javacp/
   Int => scala/Int#
-com/javacp/Modifiers#volatileField. => private[javacp] field volatileField: Int
+com/javacp/Modifiers#volatileField. => private[javacp] volatile field volatileField: Int
   javacp => com/javacp/
   Int => scala/Int#
 
