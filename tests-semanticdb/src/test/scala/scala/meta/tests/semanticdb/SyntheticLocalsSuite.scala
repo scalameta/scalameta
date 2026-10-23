@@ -1014,6 +1014,418 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
   )
 
   symbols(
+    "class parameters beside context bounds",
+    """|object s4b {
+       |  class t[T: Ordering](t: T) { def o = implicitly[Ordering[T]] }
+       |  def m: Any = {
+       |    class c[T: Ordering](t: T) { def o = implicitly[Ordering[T]] }
+       |    class d[T: Ordering: Numeric](val t: T)
+       |    class e(implicit val o: Ordering[Int])
+       |    val a = new AnyRef { def h[T: Ordering](t: T) = t }
+       |    (new c(1), new d(1), new e, a)
+       |  }
+       |}
+       |""".stripMargin,
+    """|_empty_/s4b. => final object s4b extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/s4b.m(). => method m: Any
+       |  Any => scala/Any#
+       |_empty_/s4b.t# => class t[T] extends AnyRef { +4 decls }
+       |  T => _empty_/s4b.t#[T]
+       |  AnyRef => scala/AnyRef#
+       |_empty_/s4b.t#[T] => typeparam T
+       |_empty_/s4b.t#`<init>`(). => primary ctor <init>(t: T)(implicit evidence$1: Ordering[T])
+       |  t => _empty_/s4b.t#`<init>`().(t)
+       |  T => _empty_/s4b.t#[T]
+       |  evidence$1 => _empty_/s4b.t#`<init>`().(evidence$1)
+       |  Ordering => scala/package.Ordering#
+       |_empty_/s4b.t#`<init>`().(evidence$1) => implicit param evidence$1: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => _empty_/s4b.t#[T]
+       |_empty_/s4b.t#`<init>`().(t) => param t: T
+       |  T => _empty_/s4b.t#[T]
+       |_empty_/s4b.t#evidence$1. => private[this] synthetic implicit val method evidence$1: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => _empty_/s4b.t#[T]
+       |_empty_/s4b.t#o(). => method o: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => _empty_/s4b.t#[T]
+       |_empty_/s4b.t#t. => private[this] val method t: T
+       |  T => _empty_/s4b.t#[T]
+       |local0 => class c[T] extends AnyRef { +4 decls }
+       |  T => local5
+       |  AnyRef => scala/AnyRef#
+       |local1 => param t: T
+       |  T => local5
+       |local2 => implicit param evidence$2: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local5
+       |local3 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
+       |  t => local1
+       |  T => local5
+       |  evidence$2 => local2
+       |  Ordering => scala/package.Ordering#
+       |local4 => method o: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local5
+       |local5 => typeparam T
+       |local6 => class d[T] extends AnyRef { +4 decls }
+       |  T => local11
+       |  AnyRef => scala/AnyRef#
+       |local7 => val param t: T
+       |  T => local11
+       |local8 => implicit param evidence$3: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local11
+       |local9 => implicit param evidence$4: Numeric[T]
+       |  Numeric => scala/package.Numeric#
+       |  T => local11
+       |local10 => primary ctor <init>(val t: T)(implicit evidence$3: Ordering[T], implicit evidence$4: Numeric[T])
+       |  t => local7
+       |  T => local11
+       |  evidence$3 => local8
+       |  Ordering => scala/package.Ordering#
+       |  evidence$4 => local9
+       |  Numeric => scala/package.Numeric#
+       |local11 => typeparam T
+       |local12 => class e extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |local13 => implicit val param o: Ordering[Int]
+       |  Ordering => scala/package.Ordering#
+       |  Int => scala/Int#
+       |local14 => primary ctor <init>()(implicit val o: Ordering[Int])
+       |  o => local13
+       |  Ordering => scala/package.Ordering#
+       |  Int => scala/Int#
+       |local15 => final class $anon extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |local16 => method h[T](t: T)(implicit evidence$5: Ordering[T]): T
+       |  T => local19
+       |  t => local17
+       |  evidence$5 => local18
+       |  Ordering => scala/package.Ordering#
+       |local17 => param t: T
+       |  T => local19
+       |local18 => synthetic implicit param evidence$5: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local19
+       |local19 => typeparam T
+       |local20 => val local a: AnyRef { def h[T](t: T)(implicit evidence$5: Ordering[T]): T }
+       |  AnyRef => scala/AnyRef#
+       |  h => local16
+       |  T => local19
+       |  t => local17
+       |  evidence$5 => local18
+       |  Ordering => scala/package.Ordering#
+       |""".stripMargin,
+  )
+
+  symbols(
+    "classes with context bounds nested in a local class and in an anonymous class",
+    """|object s4c {
+       |  def m: Any = {
+       |    class o { class c[T: Ordering](t: T) { def x = implicitly[Ordering[T]] } }
+       |    val a = new AnyRef { class c[T: Ordering](t: T) { def x = implicitly[Ordering[T]] } }
+       |    (new o, a)
+       |  }
+       |}
+       |""".stripMargin,
+    """|_empty_/s4c. => final object s4c extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/s4c.m(). => method m: Any
+       |  Any => scala/Any#
+       |local0 => class o extends AnyRef { +2 decls }
+       |  AnyRef => scala/AnyRef#
+       |local1 => primary ctor <init>()
+       |local2 => class c[T] extends AnyRef { +4 decls }
+       |  T => local7
+       |  AnyRef => scala/AnyRef#
+       |local3 => param t: T
+       |  T => local7
+       |local4 => implicit param evidence$1: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local7
+       |local5 => primary ctor <init>(t: T)(implicit evidence$1: Ordering[T])
+       |  t => local3
+       |  T => local7
+       |  evidence$1 => local4
+       |  Ordering => scala/package.Ordering#
+       |local6 => method x: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local7
+       |local7 => typeparam T
+       |local8 => final class $anon extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |local9 => class c[T] extends AnyRef { +4 decls }
+       |  T => local14
+       |  AnyRef => scala/AnyRef#
+       |local10 => param t: T
+       |  T => local14
+       |local11 => implicit param evidence$2: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local14
+       |local12 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
+       |  t => local10
+       |  T => local14
+       |  evidence$2 => local11
+       |  Ordering => scala/package.Ordering#
+       |local13 => method x: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local14
+       |local14 => typeparam T
+       |local15 => val local a: AnyRef { class c[T] extends AnyRef { +4 decls } }
+       |  AnyRef => scala/AnyRef#
+       |  c => local9
+       |  T => local14
+       |""".stripMargin,
+  )
+
+  symbols(
+    "local implicit class with a context bound",
+    """|object s4d {
+       |  def m: Any = {
+       |    implicit class i[T: Ordering](t: T) { def x = implicitly[Ordering[T]] }
+       |    1.x
+       |  }
+       |}
+       |""".stripMargin,
+    """|_empty_/s4d. => final object s4d extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/s4d.m(). => method m: Any
+       |  Any => scala/Any#
+       |local0 => implicit class i[T] extends AnyRef { +4 decls }
+       |  T => local5
+       |  AnyRef => scala/AnyRef#
+       |local1 => param t: T
+       |  T => local5
+       |local2 => implicit param evidence$1: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local5
+       |local3 => primary ctor <init>(t: T)(implicit evidence$1: Ordering[T])
+       |  t => local1
+       |  T => local5
+       |  evidence$1 => local2
+       |  Ordering => scala/package.Ordering#
+       |local4 => method x: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local5
+       |local5 => typeparam T
+       |local6 => synthetic implicit method i[T](t: T)(implicit evidence$1: Ordering[T]): i[T]
+       |  T => local5
+       |  t => local7
+       |  evidence$1 => local8
+       |  Ordering => scala/package.Ordering#
+       |  i => local0
+       |local7 => param t: T
+       |  T => local5
+       |local8 => implicit param evidence$1: Ordering[T]
+       |  Ordering => scala/package.Ordering#
+       |  T => local5
+       |""".stripMargin,
+  )
+
+  symbols(
+    "local case class with a context bound",
+    """|object s4e {
+       |  def m: Any = {
+       |    case class k[T: Ordering](t: T) { def x = implicitly[Ordering[T]] }
+       |    k(1)
+       |  }
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.is212)
+      """|_empty_/s4e. => final object s4e extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/s4e.m(). => method m: Any
+         |  Any => scala/Any#
+         |local0 => case class k[T] extends AnyRef with Product with Serializable { +14 decls }
+         |  T => local15
+         |  AnyRef => scala/AnyRef#
+         |  Product => scala/Product#
+         |  Serializable => scala/Serializable#
+         |local1 => val param t: T
+         |  T => local15
+         |local2 => implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local15
+         |local3 => primary ctor <init>(val t: T)(implicit evidence$1: Ordering[T])
+         |  t => local1
+         |  T => local15
+         |  evidence$1 => local2
+         |  Ordering => scala/package.Ordering#
+         |local4 => method x: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local15
+         |local5 => synthetic method copy[T](t: T)(implicit evidence$1: Ordering[T]): k[T]
+         |  T => local15
+         |  t => local16
+         |  evidence$1 => local17
+         |  Ordering => scala/package.Ordering#
+         |  k => local0
+         |local6 => synthetic method copy$default$1[T]: T @uncheckedVariance
+         |  T => local15
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local7 => synthetic method productPrefix: String <: scala/Product#productPrefix().
+         |  String => java/lang/String#
+         |local8 => synthetic method productArity: Int <: scala/Product#productArity().
+         |  Int => scala/Int#
+         |local9 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local18
+         |  Int => scala/Int#
+         |  Any => scala/Any#
+         |local10 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
+         |  Iterator => scala/collection/Iterator#
+         |  Any => scala/Any#
+         |local11 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local19
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local12 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
+         |  Int => scala/Int#
+         |local13 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local14 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local20
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local15 => typeparam T
+         |local16 => default param t: T
+         |  T => local15
+         |local17 => implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local15
+         |local18 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local19 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local20 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local21 => synthetic method apply[T](t: T)(implicit evidence$1: Ordering[T]): k[T]
+         |  T => local15
+         |  t => local23
+         |  evidence$1 => local24
+         |  Ordering => scala/package.Ordering#
+         |  k => local0
+         |local22 => synthetic final object k extends AnyRef with Serializable { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |  Serializable => scala/Serializable#
+         |local23 => param t: T
+         |  T => local15
+         |local24 => implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local15
+         |local25 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local26 => synthetic method unapply[T](x$0: k[T]): Option[T]
+         |  T => local15
+         |  x$0 => local27
+         |  k => local0
+         |  Option => scala/Option#
+         |local27 => synthetic param x$0: k[T]
+         |  k => local0
+         |  T => local15
+         |""".stripMargin
+    else
+      """|_empty_/s4e. => final object s4e extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |_empty_/s4e.m(). => method m: Any
+         |  Any => scala/Any#
+         |local0 => case class k[T] extends AnyRef with Product with Serializable { +15 decls }
+         |  T => local16
+         |  AnyRef => scala/AnyRef#
+         |  Product => scala/Product#
+         |  Serializable => scala/package.Serializable#
+         |local1 => val param t: T
+         |  T => local16
+         |local2 => implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local16
+         |local3 => primary ctor <init>(val t: T)(implicit evidence$1: Ordering[T])
+         |  t => local1
+         |  T => local16
+         |  evidence$1 => local2
+         |  Ordering => scala/package.Ordering#
+         |local4 => method x: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local16
+         |local5 => synthetic method copy[T](t: T)(implicit evidence$1: Ordering[T]): k[T]
+         |  T => local16
+         |  t => local17
+         |  evidence$1 => local18
+         |  Ordering => scala/package.Ordering#
+         |  k => local0
+         |local6 => synthetic method copy$default$1[T]: T @uncheckedVariance
+         |  T => local16
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local7 => synthetic method productPrefix: String <: scala/Product#productPrefix().
+         |  String => java/lang/String#
+         |local8 => synthetic method productArity: Int <: scala/Product#productArity().
+         |  Int => scala/Int#
+         |local9 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local19
+         |  Int => scala/Int#
+         |  Any => scala/Any#
+         |local10 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
+         |  Iterator => scala/collection/Iterator#
+         |  Any => scala/Any#
+         |local11 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local20
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local12 => synthetic method productElementName(x$1: Int): String <: scala/Product#productElementName().
+         |  x$1 => local21
+         |  Int => scala/Int#
+         |  String => java/lang/String#
+         |local13 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
+         |  Int => scala/Int#
+         |local14 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local15 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local22
+         |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
+         |local16 => typeparam T
+         |local17 => default param t: T
+         |  T => local16
+         |local18 => implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local16
+         |local19 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local20 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local21 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local22 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local23 => synthetic method apply[T](t: T)(implicit evidence$1: Ordering[T]): k[T]
+         |  T => local16
+         |  t => local25
+         |  evidence$1 => local26
+         |  Ordering => scala/package.Ordering#
+         |  k => local0
+         |local24 => synthetic final object k extends AnyRef with Serializable { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |  Serializable => java/io/Serializable#
+         |local25 => param t: T
+         |  T => local16
+         |local26 => implicit param evidence$1: Ordering[T]
+         |  Ordering => scala/package.Ordering#
+         |  T => local16
+         |local27 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local28 => synthetic method unapply[T](x$0: k[T]): Option[T]
+         |  T => local16
+         |  x$0 => local29
+         |  k => local0
+         |  Option => scala/Option#
+         |local29 => synthetic param x$0: k[T]
+         |  k => local0
+         |  T => local16
+         |""".stripMargin,
+  )
+
+  symbols(
     "default argument that refers to a parameter",
     """|object s7 {
        |  def m = { def f(a: Int = 1)(b: Int = a) = b; f()() }
