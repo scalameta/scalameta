@@ -226,14 +226,14 @@ class LitSuite extends ParseSuite {
   test("unary: !1 before a colon with fewer braces") {
     implicit val dialect: Dialect = dialects.Scala3
     val code =
-      """|!1:
+      """|!t:
          |  x => x
          |""".stripMargin
     val layout =
-      """|!1 {
+      """|!t {
          |  x => x
          |}""".stripMargin
-    val tree = unary("!", tapply(lit(1), blk(tfunc(tparam("x"))(tname("x")))))
+    val tree = unary("!", tapply(tname("t"), blk(tfunc(tparam("x"))(tname("x")))))
     runTestAssert[Stat](code, layout)(tree)
   }
 

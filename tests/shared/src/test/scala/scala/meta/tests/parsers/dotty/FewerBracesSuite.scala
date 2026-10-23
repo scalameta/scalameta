@@ -1770,11 +1770,21 @@ class FewerBracesSuite extends BaseDottySuite {
         |def a =
         |   foo { using bar: Int => baz }
         |""".stripMargin
-    val error =
-      """|<input>:3: error: `}` expected but `=>` found
-         |   foo { using bar: Int => baz }
-         |                        ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|def a = foo {
+         |  using bar {
+         |    Int => baz
+         |  }
+         |}
+         |""".stripMargin
+    val tree = Defn.Def(
+      Nil,
+      tname("a"),
+      Nil,
+      None,
+      tapply(tname("foo"), blk(tinfix(tname("using"), "bar", blk(tfunc(tparam("Int"))(tname("baz")))))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("scalafmt #3763 using, with type, arg in braces (no fewer braces)") {
@@ -2533,6 +2543,244 @@ class FewerBracesSuite extends BaseDottySuite {
     runTestAssert[Stat](code, layout)(tree)
   }
 
+  test("SIP-75 single-line lambda ends at EOL") {
+    val code =
+      """|xs.map: x => x + 1
+         |.filter: y => y > 0
+         |""".stripMargin
+    val layout =
+      """|xs.map {
+         |  x => x + 1
+         |}.filter {
+         |  y => y > 0
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect(
+        tapply(tselect("xs", "map"), blk(tfunc(tparam("x"))(tinfix("x", "+", lit(1))))),
+        "filter",
+      ),
+      blk(tfunc(tparam("y"))(tinfix("y", ">", lit(0)))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line lambda: body continues inside parens") {
+    val code =
+      """|xs.map: x => foo(
+         |  bar(x)
+         |    .baz
+         |)
+         |""".stripMargin
+    val layout =
+      """|xs.map {
+         |  x => foo(bar(x).baz)
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "map"),
+      blk(tfunc(tparam("x"))(tapply("foo", tselect(tapply("bar", "x"), "baz")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case on the same line") {
+    val code =
+      """|val used = score.filter: case (_, (r, w)) => r > 0 || w > 0
+         |""".stripMargin
+    val layout =
+      """|val used = score.filter {
+         |  case (_, (r, w)) =>
+         |    r > 0 || w > 0
+         |}
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("used")),
+      None,
+      tapply(
+        tselect("score", "filter"),
+        Term.PartialFunction(List(Case(
+          Pat.Tuple(List(patwildcard, Pat.Tuple(List(patvar("r"), patvar("w"))))),
+          None,
+          tinfix(tinfix("r", ">", lit(0)), "||", tinfix("w", ">", lit(0))),
+        ))),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case with guard") {
+    val code =
+      """|xs.collect: case (a, b) if b > 2 => a
+         |""".stripMargin
+    val layout =
+      """|xs.collect {
+         |  case (a, b) if b > 2 => a
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "collect"),
+      Term.PartialFunction(List(
+        Case(Pat.Tuple(List(patvar("a"), patvar("b"))), Some(tinfix("b", ">", lit(2))), tname("a")),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case ends at EOL") {
+    val code =
+      """|val one = list
+         |  .collect: case x => (x, x + 1)
+         |  .toMap
+         |""".stripMargin
+    val layout =
+      """|val one = list.collect {
+         |  case x =>
+         |    (x, x + 1)
+         |}.toMap
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("one")),
+      None,
+      tselect(
+        tapply(
+          tselect("list", "collect"),
+          Term.PartialFunction(List(
+            Case(patvar("x"), None, Term.Tuple(List(tname("x"), tinfix("x", "+", lit(1))))),
+          )),
+        ),
+        "toMap",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: indented case body") {
+    val code =
+      """|val three = list
+         |  .collect: case x =>
+         |    val y = x + 1
+         |    (x, y)
+         |  .toMap
+         |""".stripMargin
+    val layout =
+      """|val three = list.collect {
+         |  case x =>
+         |    val y = x + 1
+         |    (x, y)
+         |}.toMap
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("three")),
+      None,
+      tselect(
+        tapply(
+          tselect("list", "collect"),
+          Term.PartialFunction(List(Case(
+            patvar("x"),
+            None,
+            blk(
+              Defn.Val(Nil, List(patvar("y")), None, tinfix("x", "+", lit(1))),
+              Term.Tuple(List(tname("x"), tname("y"))),
+            ),
+          ))),
+        ),
+        "toMap",
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case expression") {
+    val code =
+      """|val partial = case (a, b) if b > 2 => a
+         |""".stripMargin
+    val layout =
+      """|val partial = {
+         |  case (a, b) if b > 2 => a
+         |}
+         |""".stripMargin
+    val tree = Defn.Val(
+      Nil,
+      List(patvar("partial")),
+      None,
+      Term.PartialFunction(List(
+        Case(Pat.Tuple(List(patvar("a"), patvar("b"))), Some(tinfix("b", ">", lit(2))), tname("a")),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case expression in parens") {
+    val code =
+      """|xs.collect(case (a, b) if b > 2 => a)
+         |""".stripMargin
+    val layout =
+      """|xs.collect {
+         |  case (a, b) if b > 2 => a
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "collect"),
+      Term.PartialFunction(List(
+        Case(Pat.Tuple(List(patvar("a"), patvar("b"))), Some(tinfix("b", ">", lit(2))), tname("a")),
+      )),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 relaxed lambda: case expression indented in parens") {
+    val code =
+      """|xs.collect(
+         |  case (a, b) =>
+         |    a
+         |)
+         |""".stripMargin
+    val layout =
+      """|xs.collect {
+         |  case (a, b) => a
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "collect"),
+      Term.PartialFunction(List(Case(Pat.Tuple(List(patvar("a"), patvar("b"))), None, tname("a")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 curried multi-line lambda") {
+    val code =
+      """|fun: (x: Int) => y =>
+         |  x + y
+         |""".stripMargin
+    val layout =
+      """|fun {
+         |  (x: Int) => y => x + y
+         |}
+         |""".stripMargin
+    val tree = tapply("fun", blk(tfunc(tparam("x", "Int"))(tfunc(tparam("y"))(tinfix("x", "+", "y")))))
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
+  test("SIP-75 single-line polymorphic lambda") {
+    val code =
+      """|xs.map: [T] => (x: T) => List(x)
+         |""".stripMargin
+    val layout =
+      """|xs.map {
+         |  [T] => (x: T) => List(x)
+         |}
+         |""".stripMargin
+    val tree = tapply(
+      tselect("xs", "map"),
+      blk(tpolyfunc(pparam("T"))(tfunc(tparam("x", "T"))(tapply("List", "x")))),
+    )
+    runTestAssert[Stat](code, layout)(tree)
+  }
+
   test("SIP-75 nested fewer-braces single-line lambda") {
     // this looks like a simple lambda in scala2, but scala3 requires parens around typed param
     // https://docs.scala-lang.org/scala3/guides/migration/incompat-syntactic.html#parentheses-around-lambda-parameter
@@ -2843,11 +3091,22 @@ class FewerBracesSuite extends BaseDottySuite {
          |=>
          |  2
          |""".stripMargin
-    val error =
-      """|<input>:3: error: `=>` expected but `:` found
-         |if foo: case b => true
-         |      ^""".stripMargin
-    runTestError[Stat](code, error)
+    val layout =
+      """|a match {
+         |  case n if foo {
+         |    case b => true
+         |  } => 2
+         |}
+         |""".stripMargin
+    val tree = tmatch(
+      "a",
+      Case(
+        patvar("n"),
+        Some(tapply("foo", Term.PartialFunction(List(Case(patvar("b"), None, lit(true)))))),
+        lit(2),
+      ),
+    )
+    runTestAssert[Stat](code, layout)(tree)
   }
 
   test("#4525") {
