@@ -309,6 +309,10 @@ message SymbolInformation {
     OVERRIDE = 0x400000;
     SYNTHETIC = 0x800000;
     EXTENSION = 0x1000000;
+    NATIVE = 0x2000000;
+    SYNCHRONIZED = 0x4000000;
+    TRANSIENT = 0x8000000;
+    VOLATILE = 0x10000000;
 
     // Intentionally no Protobuf-specific properties for now.
   }

@@ -61,6 +61,10 @@ package object semanticdb {
     def isOpaque: Boolean = hasProperty(p.OPAQUE)
     def isSynthetic: Boolean = hasProperty(p.SYNTHETIC)
     def isExtension: Boolean = hasProperty(p.EXTENSION)
+    def isNative: Boolean = hasProperty(p.NATIVE)
+    def isSynchronized: Boolean = hasProperty(p.SYNCHRONIZED)
+    def isTransient: Boolean = hasProperty(p.TRANSIENT)
+    def isVolatile: Boolean = hasProperty(p.VOLATILE)
 
     def isPrivate: Boolean = info.access.isInstanceOf[PrivateAccess]
     def isPrivateThis: Boolean = info.access.isInstanceOf[PrivateThisAccess]

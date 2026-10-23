@@ -47,13 +47,17 @@ class InfoPrinterSuite extends FunSuite {
         p.INFIX,
         p.OPAQUE,
         p.EXTENSION,
+        p.NATIVE,
+        p.SYNCHRONIZED,
+        p.TRANSIENT,
+        p.VOLATILE,
       ),
       displayName = "Declaration",
     )
     val obtained = Print.info(Format.Compact, info, emptyPrinterSymtab)
     assertNoDiff(
       obtained,
-      """_empty_/Declaration# => synthetic abstract final sealed implicit lazy case covariant contravariant val var static primary enum default given inline open transparent infix opaque extension class Declaration""",
+      """_empty_/Declaration# => synthetic abstract final sealed implicit lazy case covariant contravariant val var static primary enum default given inline open transparent infix opaque extension native synchronized transient volatile class Declaration""",
     )
   }
 
@@ -104,6 +108,33 @@ class InfoPrinterSuite extends FunSuite {
     assertNoDiff(
       obtained,
       "{ abstract class AbstractClass; def abstractMethod; object FinalObject }",
+    )
+  }
+
+  test("info printer definition style renders Java-only modifiers") {
+    val p = s.SymbolInformation.Property
+    val k = s.SymbolInformation.Kind
+    def info(name: String, kind: s.SymbolInformation.Kind, prop: s.SymbolInformation.Property) = s
+      .SymbolInformation(
+        symbol = s"_empty_/J#$name.",
+        kind = kind,
+        properties = prop.value,
+        displayName = name,
+      )
+    val tpe = s.StructuralType(declarations =
+      Some(s.Scope(hardlinks =
+        List(
+          info("nativeMethod", k.METHOD, p.NATIVE),
+          info("synchronizedMethod", k.METHOD, p.SYNCHRONIZED),
+          info("transientField", k.FIELD, p.TRANSIENT),
+          info("volatileField", k.FIELD, p.VOLATILE),
+        ),
+      )),
+    )
+    val obtained = Print.tpe(Format.Compact, tpe, emptyPrinterSymtab)
+    assertNoDiff(
+      obtained,
+      "{ native def nativeMethod; synchronized def synchronizedMethod; transient transientField; volatile volatileField }",
     )
   }
 
