@@ -853,6 +853,26 @@ languages map onto these properties.
     <td><code>EXTENSION</code></td>
     <td>Is an extension method?</td>
   </tr>
+  <tr>
+    <td><code>0x2000000</code></td>
+    <td><code>NATIVE</code></td>
+    <td>Has a Java <code>native</code> modifier?</td>
+  </tr>
+  <tr>
+    <td><code>0x4000000</code></td>
+    <td><code>SYNCHRONIZED</code></td>
+    <td>Has a Java <code>synchronized</code> modifier?</td>
+  </tr>
+  <tr>
+    <td><code>0x8000000</code></td>
+    <td><code>TRANSIENT</code></td>
+    <td>Has a Java <code>transient</code> modifier?</td>
+  </tr>
+  <tr>
+    <td><code>0x10000000</code></td>
+    <td><code>VOLATILE</code></td>
+    <td>Has a Java <code>volatile</code> modifier?</td>
+  </tr>
 </table>
 
 `display_name`. Display name of the definition, i.e. how this definition should

@@ -52,6 +52,10 @@ object SymbolInformationPrinter {
     Modifier(Property.INFIX, "infix ", ""),
     Modifier(Property.OPAQUE, "opaque ", ""),
     Modifier(Property.EXTENSION, "extension ", ""),
+    Modifier(Property.NATIVE, "native "),
+    Modifier(Property.SYNCHRONIZED, "synchronized "),
+    Modifier(Property.TRANSIENT, "transient "),
+    Modifier(Property.VOLATILE, "volatile "),
   )
 }
 
