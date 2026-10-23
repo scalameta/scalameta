@@ -24,6 +24,14 @@ abstract class JavacpSuiteBase extends FunSuite {
     assert(info.isSynthetic == expected, info.toProtoString)
   }
 
+  def checkProperties(name: String, symbol: String, expected: List[SymbolInformation.Property])(
+      implicit loc: munit.Location,
+  ): Unit = test(name) {
+    val info = infos(symbol)
+    val obtained = SymbolInformation.Property.values.filter(p => (info.properties & p.value) != 0)
+    assertEquals(obtained.toList, expected, info.toProtoString)
+  }
+
   // #1492: the JLS-mandated enum methods `values`/`valueOf` are compiler-synthesized, while
   // user-written members and an ordinary parameter of `valueOf` are not. (Fixture: Coin.)
   checkSynthetic("enum values() is synthetic", "com/javacp/Coin#values().", expected = true)
