@@ -559,17 +559,19 @@ class Issue1672Suite extends FunSuite {
   test("return type, annotation twice")(check("p/K#tpeTwice().", "@p/sb#() @p/sb#()"))
 
   test("companion val argument")(
-    check("p/K#companionVal().", """@p/sa#(p/K.kv., "a")""", """@p/sa#(<?>, "a")"""),
+    check("p/K#companionVal().", """@p/sa#(p/K.kv., "a")""", """@p/sa#(p/K.kv., "a")"""),
   )
 
-  test("companion method call argument")(
-    check("p/K#companionCall().", """@p/sa#(sel(p/K., p/K.kd().)(1), "a")""", """@p/sa#(<?>, "a")"""),
-  )
+  test("companion method call argument")(check(
+    "p/K#companionCall().",
+    """@p/sa#(sel(p/K., p/K.kd().)(1), "a")""",
+    """@p/sa#(sel(p/K., p/K.kd().)(1), "a")""",
+  ))
 
   test("companion overloaded method call argument")(check(
     "p/K#companionOverload().",
     """@p/sa#(sel(p/K., p/K.ko(+1).)("x"), "a")""",
-    """@p/sa#(<?>, "a")""",
+    """@p/sa#(sel(p/K., p/K.ko(+1).)("x"), "a")""",
   ))
 
   test("named nested annotation argument")(
@@ -586,8 +588,8 @@ class Issue1672Suite extends FunSuite {
     check("p/K#typeApply().", """@p/sa#(scala/Predef.identity().(1), "a")""", """@p/sa#(<?>, "a")"""),
   )
 
-  test("this argument")(check("p/K#self().", "@p/sk#(p/K#)", "@p/sk#(<?>)"))
-  test("this argument in an object")(check("p/K.selfObject().", "@p/sk#(p/K.)", "@p/sk#(<?>)"))
+  test("this argument")(check("p/K#self().", "@p/sk#(p/K#)", "@p/sk#(p/K#)"))
+  test("this argument in an object")(check("p/K.selfObject().", "@p/sk#(p/K.)", "@p/sk#(p/K.)"))
   test("block argument")(check("p/K#block().", """@p/sa#(<?>, "a")"""))
   test("if argument")(check("p/K#ifArg().", """@p/sa#(<?>, "a")"""))
 
@@ -602,39 +604,47 @@ class Issue1672Suite extends FunSuite {
   test("function argument")(check("p/K#lambda().", "@p/sk#(<?>)"))
 
   test("new inner class argument")(
-    check("p/K#newInner().", "@p/sk#(p/K#KI#`<init>`().(1))", "@p/sk#(<?>)"),
+    check("p/K#newInner().", "@p/sk#(p/K#KI#`<init>`().(1))", "@p/sk#(p/K#KI#`<init>`().(1))"),
   )
 
-  test("companion type application argument")(
-    check("p/K#typeApplyCompanion().", "@p/sk#(sel(p/K., p/K.kn().)[scala/Int#])", "@p/sk#(<?>)"),
-  )
+  test("companion type application argument")(check(
+    "p/K#typeApplyCompanion().",
+    "@p/sk#(sel(p/K., p/K.kn().)[scala/Int#])",
+    "@p/sk#(sel(p/K., p/K.kn().)[scala/Int#])",
+  ))
 
   test("companion type application call argument")(
-    check("p/K#typeApplyCall().", "@p/sk#(p/K.kt().(1))", "@p/sk#(<?>)"),
+    check("p/K#typeApplyCall().", "@p/sk#(p/K.kt().(1))", "@p/sk#(p/K.kt().(1))"),
   )
 
   test("companion curried call argument")(
-    check("p/K#curried().", "@p/sk#(p/K.kc().(2))", "@p/sk#(<?>)"),
+    check("p/K#curried().", "@p/sk#(p/K.kc().(2))", "@p/sk#(p/K.kc().(2))"),
   )
 
-  test("companion call with a companion argument")(
-    check("p/K#companionNested().", "@p/sk#(sel(p/K., p/K.kd().)(p/K.kv.))", "@p/sk#(<?>)"),
-  )
+  test("companion call with a companion argument")(check(
+    "p/K#companionNested().",
+    "@p/sk#(sel(p/K., p/K.kd().)(p/K.kv.))",
+    "@p/sk#(sel(p/K., p/K.kd().)(p/K.kv.))",
+  ))
 
   test("companion call with an outside argument")(
     check("p/K#companionMixed().", "@p/sk#(sel(p/K., p/K.kd().)(p/C.v.))", "@p/sk#(<?>)"),
   )
 
-  test("nested object call argument")(
-    check("p/K#nestedObject().", "@p/sk#(sel(p/K.KO., p/K.KO.f().)(1))", "@p/sk#(<?>)"),
-  )
+  test("nested object call argument")(check(
+    "p/K#nestedObject().",
+    "@p/sk#(sel(p/K.KO., p/K.KO.f().)(1))",
+    "@p/sk#(sel(p/K.KO., p/K.KO.f().)(1))",
+  ))
 
-  test("call on a call argument")(
-    check("p/K#applyQualifier().", "@p/sk#(sel(p/K.ks()., p/K.kd().)(2))", "@p/sk#(<?>)"),
-  )
+  test("call on a call argument")(check(
+    "p/K#applyQualifier().",
+    "@p/sk#(sel(p/K.ks()., p/K.kd().)(2))",
+    "@p/sk#(sel(p/K.ks()., p/K.kd().)(2))",
+  ))
 
   test("return type, parameter argument")(
-    check("p/K#dependent().", "@p/sk#(p/K#dependent().(x))", "@p/sk#(<?>)"),
+    check("p/K#dependent().", "@p/sk#(p/K#dependent().(x))", "@p/sk#(p/K#dependent().(x))"),
   )
 
   test("missing class in a type application argument")(

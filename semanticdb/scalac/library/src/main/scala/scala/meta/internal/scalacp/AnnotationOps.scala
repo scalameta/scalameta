@@ -95,11 +95,94 @@ trait AnnotationOps {
     case ANNOTARGARRAY => s.ApplyTree(s.NoTree, entryRefs(ref).map(toArgument))
     case TREE => entryRefs(ref) match {
         case LITERALtree :: _ :: const :: _ => toTree(const)
-        case _ => s.NoTree
+        case refs => treeToTree(refs)
       }
     case LITERALshort | LITERALint | LITERALlong | LITERALfloat | LITERALdouble => s
         .LiteralTree(signedConstant(ref))
     case _ => toTree(parseEntry(ref))
+  }
+
+  /* convert a tree as metac does, or return NoTree if the tree refers to a symbol outside the
+   * pickle: the pickle keeps only the name and the owner of such a symbol, not its overload */
+  private def treeToTree(refs: List[Int]): s.Tree = refs match {
+    case APPLYtree :: _ :: fun :: args =>
+      val sfun = qualifierTree(fun)
+      if (sfun eq s.NoTree) s.NoTree
+      else {
+        val sargs = args.map(toTree)
+        if (sargs.contains(s.NoTree)) s.NoTree else s.ApplyTree(sfun, sargs)
+      }
+    case TYPEAPPLYtree :: _ :: fun :: targs =>
+      val sfun = qualifierTree(fun)
+      if (sfun eq s.NoTree) s.NoTree else s.TypeApplyTree(sfun, targs.map(treeType))
+    case (SELECTtree | IDENTtree | THIStree) :: _ :: sym :: _ => idTree(sym)
+    case _ => s.NoTree
+  }
+
+  // metac's `toSemanticQualifierTree`
+  private def qualifierTree(ref: Int): s.Tree = entryRefs(ref) match {
+    case SELECTtree :: _ :: sym :: qual :: _ => entryRefs(qual) match {
+        case NEWtree :: _ => idTree(sym)
+        case qref :: qrefs =>
+          val qsym = treeSymbol(qref, qrefs)
+          if (qsym < 0) s.NoTree
+          else if (isOwner(qsym, sym)) idTree(sym)
+          else {
+            val squal = idTreeOrNull(qsym)
+            if (squal eq null) s.NoTree
+            else {
+              val sid = idTreeOrNull(sym)
+              if (sid eq null) s.NoTree else s.SelectTree(squal, Some(sid))
+            }
+          }
+        case _ => s.NoTree
+      }
+    case ref :: refs =>
+      val sym = treeSymbol(ref, refs)
+      if (sym < 0) s.NoTree else idTree(sym)
+    case _ => s.NoTree
+  }
+
+  @tailrec // scalac's `Tree.symbol`
+  private def treeSymbol(ref: Int, refs: List[Int]): Int = ref match {
+    case SELECTtree | IDENTtree | THIStree => refs match {
+        case _ :: sym :: _ => sym
+        case _ => -1
+      }
+    case APPLYtree | TYPEAPPLYtree => refs match {
+        case _ :: fun :: _ => entryRefs(fun) match {
+            case ref :: refs => treeSymbol(ref, refs)
+            case _ => -1
+          }
+        case _ => -1
+      }
+    case _ => -1
+  }
+
+  private def isOwner(owner: Int, sym: Int): Boolean = parseEntry(sym) match {
+    case x: Symbol => x.parent match {
+        case Some(p: ScalaSigSymbol) => p.index == owner
+        case _ => false
+      }
+    case _ => false
+  }
+
+  private def treeType(ref: Int): s.Type = entryRefs(ref) match {
+    case _ :: tpe :: _ => parseEntry(tpe) match {
+        case x: Type => x.toSemanticTpe
+        case _ => s.NoType
+      }
+    case _ => s.NoType
+  }
+
+  // metacp gives a semanticdb local no information, so refer only to a global
+  private def idTreeOrNull(sym: Int): s.IdTree = parseEntry(sym) match {
+    case x: SymbolInfoSymbol if x.isSemanticdbGlobal => s.IdTree(x.ssym)
+    case _ => null
+  }
+  private def idTree(sym: Int): s.Tree = {
+    val res = idTreeOrNull(sym)
+    if (res eq null) s.NoTree else res
   }
 
   // scalap reads the value of a literal without its sign
