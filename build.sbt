@@ -435,7 +435,8 @@ lazy val semanticdbIntegration = projectMatrix.in(file("semanticdb/integration")
       if (System.getProperty("java.version").startsWith("1.8")) home.getParentFile else home
     Some(actualHome)
   },
-  javacOptions += "-parameters",
+  // metacp.expect depends on the classfile version
+  javacOptions ++= Seq("-parameters", "--release", "17"),
 ).crossFullJvm(
   AllScala2Versions,
   v => Seq(scalacOptions += s"-Xplugin:${semanticdbScalacPluginByHash(v).value}"),
