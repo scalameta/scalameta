@@ -1,6 +1,7 @@
 package scala.meta.tests.semanticdb
 
 import scala.meta.internal.semanticdb.Scala._
+import scala.meta.internal.semanticdb.SymbolInformation.Property._
 
 class JavacpSuite extends JavacpSuiteBase {
 
@@ -24,10 +25,10 @@ class JavacpSuite extends JavacpSuiteBase {
 
   private val modifiers = "com/javacp/Modifiers#"
 
-  checkProperties("native method", modifiers + "nativeMethod().", Nil)
-  checkProperties("synchronized method", modifiers + "synchronizedMethod().", Nil)
-  checkProperties("transient field", modifiers + "transientField.", Nil)
-  checkProperties("volatile field", modifiers + "volatileField.", Nil)
+  checkProperties("native method", modifiers + "nativeMethod().", List(NATIVE))
+  checkProperties("synchronized method", modifiers + "synchronizedMethod().", List(SYNCHRONIZED))
+  checkProperties("transient field", modifiers + "transientField.", List(TRANSIENT))
+  checkProperties("volatile field", modifiers + "volatileField.", List(VOLATILE))
   // ACC_SUPER shares its bit with ACC_SYNCHRONIZED, ACC_VARARGS with ACC_TRANSIENT
   checkProperties("class", modifiers, Nil)
   checkProperties("varargs method", "com/javacp/Test#vararg().", Nil)

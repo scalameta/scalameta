@@ -518,8 +518,17 @@ object Javacp {
     if (access.hasFlag(o.ACC_FINAL)) sflip(p.FINAL)
     if (access.hasFlag(o.ACC_STATIC)) sflip(p.STATIC)
     if (access.hasFlag(o.ACC_ENUM)) sflip(p.ENUM)
-    if (kind == k.METHOD && ownerNode.access.hasFlag(o.ACC_INTERFACE) &&
-      !access.hasFlag(o.ACC_ABSTRACT | o.ACC_STATIC)) sflip(p.DEFAULT)
+    kind match {
+      case k.METHOD =>
+        if (ownerNode.access.hasFlag(o.ACC_INTERFACE) &&
+          !access.hasFlag(o.ACC_ABSTRACT | o.ACC_STATIC)) sflip(p.DEFAULT)
+        if (access.hasFlag(o.ACC_NATIVE)) sflip(p.NATIVE)
+        if (access.hasFlag(o.ACC_SYNCHRONIZED)) sflip(p.SYNCHRONIZED)
+      case k.FIELD =>
+        if (access.hasFlag(o.ACC_TRANSIENT)) sflip(p.TRANSIENT)
+        if (access.hasFlag(o.ACC_VOLATILE)) sflip(p.VOLATILE)
+      case _ =>
+    }
     bits
   }
 
