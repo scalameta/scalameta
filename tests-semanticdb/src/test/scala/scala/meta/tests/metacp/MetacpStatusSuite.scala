@@ -13,12 +13,11 @@ import java.util.jar.{JarEntry, JarOutputStream}
 
 import munit.FunSuite
 
-// https://github.com/scalameta/scalameta/issues/1791
-class Issue1791Suite extends FunSuite {
+class MetacpStatusSuite extends FunSuite {
 
   // inside the checkout, so that a relative path to it exists on Windows too
   private val tmp = Files
-    .createTempDirectory(Files.createDirectories(Paths.get(BuildInfo.targetDirectory)), "issue1791_")
+    .createTempDirectory(Files.createDirectories(Paths.get(BuildInfo.targetDirectory)), "metacp_")
   private val note = "NOTE. To fix 'missing symbol' errors please provide a complete " +
     "--classpath or --dependency-classpath. The provided classpath or classpaths should " +
     "include the Scala library as well as JDK jars such as rt.jar."
@@ -56,7 +55,7 @@ class Issue1791Suite extends FunSuite {
     s"""    "$in": "${Paths.get(out)}""""
   }.mkString("{\n  \"status\": {\n", ",\n", "\n  },\n  \"scalaLibrarySynthetics\": \"\"\n}\n")
 
-  test("relative directory") {
+  test("#1791: relative directory") {
     val in = relative(dir("reldir"))
     val out = tmp.resolve("out-reldir")
     val (stdout, stderr) = metacp(parse(out, in))
@@ -64,7 +63,7 @@ class Issue1791Suite extends FunSuite {
     assertNoDiff(stderr, "")
   }
 
-  test("relative jar") {
+  test("#1791: relative jar") {
     val in = relative(jar("reljar.jar"))
     val out = tmp.resolve("out-reljar")
     val (stdout, stderr) = metacp(parse(out, in))
@@ -72,7 +71,7 @@ class Issue1791Suite extends FunSuite {
     assertNoDiff(stderr, "")
   }
 
-  test("relative jar with a classfile") {
+  test("#1791: relative jar with a classfile") {
     val coin = Files
       .readAllBytes(Paths.get(BuildInfo.databaseClasspath).resolve("com/javacp/Coin.class"))
     val in = relative(jar("classjar.jar", "com/javacp/Coin.class" -> coin))
@@ -82,7 +81,7 @@ class Issue1791Suite extends FunSuite {
     assertNoDiff(stderr, "")
   }
 
-  test("absolute directory") {
+  test("#1791: absolute directory") {
     val in = dir("absdir").toString
     val out = tmp.resolve("out-absdir")
     val (stdout, stderr) = metacp(parse(out, in))
@@ -90,7 +89,7 @@ class Issue1791Suite extends FunSuite {
     assertNoDiff(stderr, "")
   }
 
-  test("relative classpath of two entries") {
+  test("#1791: relative classpath of two entries") {
     val a = relative(dir("cp-a"))
     val b = relative(jar("cp-b.jar"))
     val out = tmp.resolve("out-cp")
@@ -99,7 +98,7 @@ class Issue1791Suite extends FunSuite {
     assertNoDiff(stderr, "")
   }
 
-  test("relative entry passed twice") {
+  test("#1791: relative entry passed twice") {
     val in = relative(dir("twice"))
     val out = tmp.resolve("out-twice")
     val (stdout, stderr) = metacp(parse(out, s"$in$pathSeparator$in"))
@@ -107,7 +106,7 @@ class Issue1791Suite extends FunSuite {
     assertNoDiff(stderr, "")
   }
 
-  test("relative and absolute spelling of one entry") {
+  test("#1791: relative and absolute spelling of one entry") {
     val abs = dir("spelling")
     val in = relative(abs)
     val out = tmp.resolve("out-spelling")
@@ -116,7 +115,7 @@ class Issue1791Suite extends FunSuite {
     assertNoDiff(stderr, "")
   }
 
-  test("relative directory with a missing symbol") {
+  test("#1791: relative directory with a missing symbol") {
     val aclass = Files.readAllBytes(Paths.get(BuildInfo.databaseClasspath).resolve("A.class"))
     val in = relative(dir("missing", "A.class" -> aclass))
     val out = tmp.resolve("out-missing")
@@ -130,7 +129,7 @@ class Issue1791Suite extends FunSuite {
     )
   }
 
-  test("relative directory with a broken classfile") {
+  test("#1791: relative directory with a broken classfile") {
     val in = relative(dir("broken", "Bad.class" -> Array[Byte](1, 2, 3)))
     val out = tmp.resolve("out-broken")
     val (stdout, stderr) = metacp(parse(out, in))
@@ -139,7 +138,7 @@ class Issue1791Suite extends FunSuite {
     assertNoDiff(stderr.linesIterator.next(), s"error: can't convert $bad in $in")
   }
 
-  test("relative jar with a manifest classpath") {
+  test("#1791: relative jar with a manifest classpath") {
     val manifestDir = dir("manifest")
     List("manifest.jar", "part0.jar", "part1.jar")
       .foreach(name => Files.copy(Utils.getResourceOpt(name).get, manifestDir.resolve(name)))
@@ -155,7 +154,7 @@ class Issue1791Suite extends FunSuite {
     )
   }
 
-  test("relative classpath replaced with withClasspath") {
+  test("#1791: relative classpath replaced with withClasspath") {
     val parsed = relative(dir("parsed"))
     val in = relative(dir("replaced"))
     val out = tmp.resolve("out-replaced")
