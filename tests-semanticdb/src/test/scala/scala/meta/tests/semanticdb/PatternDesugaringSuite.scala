@@ -615,8 +615,31 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |""".stripMargin,
       "Occurrences",
     )
-    val e = intercept[RuntimeException](load())
-    assertEquals(e.getMessage.takeWhile(_ != '`'), "ambiguous mWithins: ")
+    assertNoDiff(
+      load(),
+      """|[0:7..0:9): rh <= _empty_/rh.
+         |[1:8..1:11): ann <= _empty_/rh.ann#
+         |[1:11..1:11):  <= _empty_/rh.ann#`<init>`().
+         |[1:12..1:13): x <= _empty_/rh.ann#`<init>`().(x)
+         |[1:12..1:13): x <= _empty_/rh.ann#x.
+         |[1:15..1:18): Any => scala/Any#
+         |[1:28..1:33): scala => scala/
+         |[1:34..1:44): annotation => scala/annotation/
+         |[1:45..1:61): StaticAnnotation => scala/annotation/StaticAnnotation#
+         |[1:61..1:61):  => scala/annotation/Annotation#`<init>`().
+         |[2:10..2:12): rh => _empty_/rh.
+         |[2:19..2:20): a <= _empty_/rh.a.
+         |[2:22..2:25): Int => scala/Int#
+         |[2:27..2:30): ann => _empty_/rh.ann#
+         |[2:30..2:30):  => _empty_/rh.ann#`<init>`().
+         |[2:39..2:40): L <= local0
+         |[2:41..2:41):  <= local5
+         |[2:51..2:52): L => local0
+         |[2:59..2:60): b <= local3
+         |[2:62..2:63): c <= local4
+         |[2:83..2:84): d <= _empty_/rh.d.
+         |""".stripMargin,
+    )
   }
 
   symbols(

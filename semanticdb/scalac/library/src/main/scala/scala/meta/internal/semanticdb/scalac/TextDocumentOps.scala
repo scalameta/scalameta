@@ -223,7 +223,13 @@ trait TextDocumentOps {
                   case _ =>
                 }
               case mencl: m.Member => setWithins(mencl.name)
-              case m.Tree.WithPats(p :: Nil) => p.traverse { case t: m.Pat.Var => setWithins(t.name) }
+              case t: m.Tree.WithPats => t.pats match {
+                  case p :: Nil => p.dfsPartial {
+                      case t: m.Pat.Var => setWithins(t.name)
+                      case _: m.Pat | _: m.Pat.ArgClause =>
+                    }
+                  case _ =>
+                }
               case _ =>
             }
           }
@@ -246,24 +252,29 @@ trait TextDocumentOps {
             case Some(_: m.Pat | _: m.Pat.ArgClause | _: m.Case) => false
             case _ => true
           }
-          def indexPats(pats: List[m.Pat]): Unit = pats.foreach(_.traverse {
-            case pat: m.Pat.Extract => indexPatsWithExtract(pat)
-            case pat: m.Pat.Var => mvalpatstart += pat.name.pos.start
-          })
+          def indexPats(pats: List[m.Pat]): Unit = {
+            val func: PartialFunction[m.Tree, Unit] = {
+              case pat: m.Pat.Extract => indexPatsWithExtract(pat)
+              case pat: m.Pat.Var => mvalpatstart += pat.name.pos.start
+              case _: m.Pat | _: m.Pat.ArgClause =>
+            }
+            pats.foreach(_.dfsPartial(func))
+          }
           // In an Extract pattern `Foo(name) = ...`, let's map the start position of the `fun` field
           // to the `name` position. Compiler desugars it into a getter DefDef and specifically
           // in the case of a single binder sets the position of this getter as an OffsetPosition
           // pointing to "start of fun" rather than the field being extracted.
           def indexPatsWithExtract(extract: m.Pat.Extract): Unit = extract.args match {
             case pat :: Nil =>
-              // Most likely the difference coming from https://github.com/scalameta/scalameta/commit/27cb4c43dbb1485fc6f43b71dc58435393556390
+              // Most likely the difference coming from https://github.com/scalameta/scalameta/pull/4118
               val mpos = if (isOldBehaviourOnPats) extract.fun.pos.end else extract.fun.pos.start
-              pat.traverse {
+              pat.dfsPartial {
                 case pat: m.Pat.Extract => indexPatsWithExtract(pat)
                 case pat: m.Pat.Var =>
                   val npos = pat.name.pos
                   mvalpatstart += npos.start
                   msinglevalpats(mpos) = npos
+                case _: m.Pat | _: m.Pat.ArgClause =>
               }
             case pats => indexPats(pats)
           }
