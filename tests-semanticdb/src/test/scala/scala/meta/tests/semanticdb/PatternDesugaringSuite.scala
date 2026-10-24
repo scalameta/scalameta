@@ -326,6 +326,299 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |""".stripMargin,
   )
 
+  occurrences(
+    "refinement types in patterns with an access qualifier",
+    """|object rb {
+       |  private[rb] val Some(a: AnyRef { val x: Int }) = Some(new AnyRef { val x = 1 })
+       |  private[rb] val Some(b: AnyRef { def y: Int }) = Some(new AnyRef { def y = 1 })
+       |}
+       |""".stripMargin,
+    """|[0:7..0:9): rb <= _empty_/rb.
+       |[1:18..1:22): Some => scala/Some.
+       |[1:23..1:24): a <= _empty_/rb.a.
+       |[1:26..1:32): AnyRef => scala/AnyRef#
+       |[1:39..1:40): x <= local2
+       |[1:42..1:45): Int => scala/Int#
+       |[1:51..1:55): Some => scala/Some.
+       |[1:60..1:60):  <= local1
+       |[1:60..1:66): AnyRef => scala/AnyRef#
+       |[1:66..1:66):  => java/lang/Object#`<init>`().
+       |[1:73..1:74): x <= local0
+       |[2:18..2:22): Some => scala/Some.
+       |[2:23..2:24): b <= _empty_/rb.b.
+       |[2:26..2:32): AnyRef => scala/AnyRef#
+       |[2:39..2:40): y <= local5
+       |[2:42..2:45): Int => scala/Int#
+       |[2:51..2:55): Some => scala/Some.
+       |[2:60..2:60):  <= local4
+       |[2:60..2:66): AnyRef => scala/AnyRef#
+       |[2:66..2:66):  => java/lang/Object#`<init>`().
+       |[2:73..2:74): y <= local3
+       |""".stripMargin,
+  )
+
+  occurrences(
+    "patterns in types of pattern definitions",
+    """|object rf {
+       |  class ann(x: Any) extends scala.annotation.StaticAnnotation
+       |  val (a: Int @ann((1, 2) match { case (b, c) => b })) = 1
+       |  val (d, e): (Int, Int) @ann({ class L { private[L] val (f, g) = (1, 2) }; new L().hashCode }) = (1, 2)
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.atLeast213_17)
+      """|[0:7..0:9): rf <= _empty_/rf.
+         |[1:8..1:11): ann <= _empty_/rf.ann#
+         |[1:11..1:11):  <= _empty_/rf.ann#`<init>`().
+         |[1:12..1:13): x <= _empty_/rf.ann#`<init>`().(x)
+         |[1:12..1:13): x <= _empty_/rf.ann#x.
+         |[1:15..1:18): Any => scala/Any#
+         |[1:28..1:33): scala => scala/
+         |[1:34..1:44): annotation => scala/annotation/
+         |[1:45..1:61): StaticAnnotation => scala/annotation/StaticAnnotation#
+         |[1:61..1:61):  => scala/annotation/Annotation#`<init>`().
+         |[2:7..2:8): a <= _empty_/rf.a.
+         |[2:10..2:13): Int => scala/Int#
+         |[2:15..2:18): ann => _empty_/rf.ann#
+         |[2:18..2:18):  => _empty_/rf.ann#`<init>`().
+         |[2:40..2:41): b <= local0
+         |[2:43..2:44): c <= local1
+         |[2:49..2:50): b => local0
+         |[3:7..3:8): d <= _empty_/rf.d.
+         |[3:10..3:11): e <= _empty_/rf.e.
+         |[3:15..3:18): Int => scala/Int#
+         |[3:20..3:23): Int => scala/Int#
+         |[3:26..3:29): ann => _empty_/rf.ann#
+         |[3:29..3:29):  => _empty_/rf.ann#`<init>`().
+         |[3:38..3:39): L <= local2
+         |[3:40..3:40):  <= local3
+         |[3:50..3:51): L => local2
+         |[3:58..3:59): f <= local5
+         |[3:61..3:62): g <= local6
+         |[3:80..3:81): L => local2
+         |[3:81..3:81):  => local3
+         |[3:84..3:92): hashCode => java/lang/Object#hashCode().
+         |""".stripMargin
+    else
+      """|[0:7..0:9): rf <= _empty_/rf.
+         |[1:8..1:11): ann <= _empty_/rf.ann#
+         |[1:11..1:11):  <= _empty_/rf.ann#`<init>`().
+         |[1:12..1:13): x <= _empty_/rf.ann#`<init>`().(x)
+         |[1:12..1:13): x <= _empty_/rf.ann#x.
+         |[1:15..1:18): Any => scala/Any#
+         |[1:28..1:33): scala => scala/
+         |[1:34..1:44): annotation => scala/annotation/
+         |[1:45..1:61): StaticAnnotation => scala/annotation/StaticAnnotation#
+         |[1:61..1:61):  => scala/annotation/Annotation#`<init>`().
+         |[2:10..2:13): Int => scala/Int#
+         |[2:15..2:18): ann => _empty_/rf.ann#
+         |[2:18..2:18):  => _empty_/rf.ann#`<init>`().
+         |[2:40..2:41): b <= local0
+         |[2:43..2:44): c <= local1
+         |[2:49..2:50): b => local0
+         |[3:7..3:8): d <= _empty_/rf.d.
+         |[3:10..3:11): e <= _empty_/rf.e.
+         |[3:15..3:18): Int => scala/Int#
+         |[3:20..3:23): Int => scala/Int#
+         |[3:26..3:29): ann => _empty_/rf.ann#
+         |[3:29..3:29):  => _empty_/rf.ann#`<init>`().
+         |[3:38..3:39): L <= local2
+         |[3:40..3:40):  <= local3
+         |[3:50..3:51): L => local2
+         |[3:58..3:59): f <= local5
+         |[3:61..3:62): g <= local6
+         |[3:80..3:81): L => local2
+         |[3:81..3:81):  => local3
+         |[3:84..3:92): hashCode => java/lang/Object#hashCode().
+         |""".stripMargin,
+  )
+
+  occurrences(
+    "refinement types in patterns of definitions, a case and a for",
+    """|object rg {
+       |  private[rg] val Some(a: AnyRef { var x: Int }) = Some(new AnyRef { var x = 1 })
+       |  private[rg] val Some(b: AnyRef { val x, y: Int }) = Some(new AnyRef { val x = 1; val y = 2 })
+       |  private[rg] val (c: AnyRef { val x: Int }) = new AnyRef { val x = 1 }
+       |  val Some(d: AnyRef { val x: Int }) = Some(new AnyRef { val x = 1 })
+       |  Option(Option(new AnyRef { val x = 1 })) match { case Some(Some(e: AnyRef { val x: Int })) => e }
+       |  for (Some(f: AnyRef { val x: Int }) <- Option(Option(new AnyRef { val x = 1 }))) yield f
+       |  def m = { val Some(g: AnyRef { val x: Int }) = Some(new AnyRef { val x = 1 }); g }
+       |}
+       |""".stripMargin,
+    if (ScalaVersion.atLeast213_17)
+      """|[0:7..0:9): rg <= _empty_/rg.
+         |[1:18..1:22): Some => scala/Some.
+         |[1:23..1:24): a <= _empty_/rg.a.
+         |[1:26..1:32): AnyRef => scala/AnyRef#
+         |[1:39..1:40): x <= local4
+         |[1:42..1:45): Int => scala/Int#
+         |[1:51..1:55): Some => scala/Some.
+         |[1:60..1:60):  <= local3
+         |[1:60..1:66): AnyRef => scala/AnyRef#
+         |[1:66..1:66):  => java/lang/Object#`<init>`().
+         |[1:73..1:74): x <= local0
+         |[2:18..2:22): Some => scala/Some.
+         |[2:23..2:24): b <= _empty_/rg.b.
+         |[2:26..2:32): AnyRef => scala/AnyRef#
+         |[2:39..2:40): x <= local14
+         |[2:42..2:43): y <= local15
+         |[2:45..2:48): Int => scala/Int#
+         |[2:54..2:58): Some => scala/Some.
+         |[2:63..2:63):  <= local13
+         |[2:63..2:69): AnyRef => scala/AnyRef#
+         |[2:69..2:69):  => java/lang/Object#`<init>`().
+         |[2:76..2:77): x <= local11
+         |[2:87..2:88): y <= local12
+         |[3:10..3:12): rg => _empty_/rg.
+         |[3:19..3:20): c <= _empty_/rg.c.
+         |[3:22..3:28): AnyRef => scala/AnyRef#
+         |[3:35..3:36): x <= local18
+         |[3:38..3:41): Int => scala/Int#
+         |[3:51..3:51):  <= local16
+         |[3:51..3:57): AnyRef => scala/AnyRef#
+         |[3:57..3:57):  => java/lang/Object#`<init>`().
+         |[3:64..3:65): x <= local17
+         |[4:6..4:10): Some => scala/Some.
+         |[4:11..4:12): d <= _empty_/rg.d.
+         |[4:14..4:20): AnyRef => scala/AnyRef#
+         |[4:27..4:28): x <= local21
+         |[4:30..4:33): Int => scala/Int#
+         |[4:39..4:43): Some => scala/Some.
+         |[4:48..4:48):  <= local20
+         |[4:48..4:54): AnyRef => scala/AnyRef#
+         |[4:54..4:54):  => java/lang/Object#`<init>`().
+         |[4:61..4:62): x <= local19
+         |[5:2..5:8): Option => scala/Option.
+         |[5:9..5:15): Option => scala/Option.
+         |[5:20..5:20):  <= local23
+         |[5:20..5:26): AnyRef => scala/AnyRef#
+         |[5:26..5:26):  => java/lang/Object#`<init>`().
+         |[5:33..5:34): x <= local22
+         |[5:56..5:60): Some => scala/Some.
+         |[5:61..5:65): Some => scala/Some.
+         |[5:66..5:67): e <= local24
+         |[5:69..5:75): AnyRef => scala/AnyRef#
+         |[5:82..5:83): x <= local25
+         |[5:85..5:88): Int => scala/Int#
+         |[5:96..5:97): e => local24
+         |[6:7..6:11): Some => scala/Some.
+         |[6:12..6:13): f <= local30
+         |[6:15..6:21): AnyRef => scala/AnyRef#
+         |[6:28..6:29): x <= local31
+         |[6:31..6:34): Int => scala/Int#
+         |[6:41..6:47): Option => scala/Option.
+         |[6:48..6:54): Option => scala/Option.
+         |[6:59..6:59):  <= local29
+         |[6:59..6:65): AnyRef => scala/AnyRef#
+         |[6:65..6:65):  => java/lang/Object#`<init>`().
+         |[6:72..6:73): x <= local27
+         |[6:89..6:90): f => local30
+         |[7:6..7:7): m <= _empty_/rg.m().
+         |[7:16..7:20): Some => scala/Some.
+         |[7:21..7:22): g <= local35
+         |[7:24..7:30): AnyRef => scala/AnyRef#
+         |[7:37..7:38): x <= local32
+         |[7:40..7:43): Int => scala/Int#
+         |[7:49..7:53): Some => scala/Some.
+         |[7:58..7:58):  <= local34
+         |[7:58..7:64): AnyRef => scala/AnyRef#
+         |[7:64..7:64):  => java/lang/Object#`<init>`().
+         |[7:71..7:72): x <= local33
+         |[7:81..7:82): g => local35
+         |""".stripMargin
+    else
+      """|[0:7..0:9): rg <= _empty_/rg.
+         |[1:18..1:22): Some => scala/Some.
+         |[1:23..1:24): a <= _empty_/rg.a.
+         |[1:26..1:32): AnyRef => scala/AnyRef#
+         |[1:39..1:40): x <= local4
+         |[1:42..1:45): Int => scala/Int#
+         |[1:51..1:55): Some => scala/Some.
+         |[1:60..1:60):  <= local3
+         |[1:60..1:66): AnyRef => scala/AnyRef#
+         |[1:66..1:66):  => java/lang/Object#`<init>`().
+         |[1:73..1:74): x <= local0
+         |[2:18..2:22): Some => scala/Some.
+         |[2:23..2:24): b <= _empty_/rg.b.
+         |[2:26..2:32): AnyRef => scala/AnyRef#
+         |[2:39..2:40): x <= local14
+         |[2:42..2:43): y <= local15
+         |[2:45..2:48): Int => scala/Int#
+         |[2:54..2:58): Some => scala/Some.
+         |[2:63..2:63):  <= local13
+         |[2:63..2:69): AnyRef => scala/AnyRef#
+         |[2:69..2:69):  => java/lang/Object#`<init>`().
+         |[2:76..2:77): x <= local11
+         |[2:87..2:88): y <= local12
+         |[3:22..3:28): AnyRef => scala/AnyRef#
+         |[3:35..3:36): x <= local18
+         |[3:38..3:41): Int => scala/Int#
+         |[3:51..3:51):  <= local16
+         |[3:51..3:57): AnyRef => scala/AnyRef#
+         |[3:57..3:57):  => java/lang/Object#`<init>`().
+         |[3:64..3:65): x <= local17
+         |[4:6..4:10): Some => scala/Some.
+         |[4:11..4:12): d <= _empty_/rg.d.
+         |[4:14..4:20): AnyRef => scala/AnyRef#
+         |[4:27..4:28): x <= local21
+         |[4:30..4:33): Int => scala/Int#
+         |[4:39..4:43): Some => scala/Some.
+         |[4:48..4:48):  <= local20
+         |[4:48..4:54): AnyRef => scala/AnyRef#
+         |[4:54..4:54):  => java/lang/Object#`<init>`().
+         |[4:61..4:62): x <= local19
+         |[5:2..5:8): Option => scala/Option.
+         |[5:9..5:15): Option => scala/Option.
+         |[5:20..5:20):  <= local23
+         |[5:20..5:26): AnyRef => scala/AnyRef#
+         |[5:26..5:26):  => java/lang/Object#`<init>`().
+         |[5:33..5:34): x <= local22
+         |[5:56..5:60): Some => scala/Some.
+         |[5:61..5:65): Some => scala/Some.
+         |[5:66..5:67): e <= local24
+         |[5:69..5:75): AnyRef => scala/AnyRef#
+         |[5:82..5:83): x <= local25
+         |[5:85..5:88): Int => scala/Int#
+         |[5:96..5:97): e => local24
+         |[6:7..6:11): Some => scala/Some.
+         |[6:12..6:13): f <= local30
+         |[6:15..6:21): AnyRef => scala/AnyRef#
+         |[6:28..6:29): x <= local31
+         |[6:31..6:34): Int => scala/Int#
+         |[6:41..6:47): Option => scala/Option.
+         |[6:48..6:54): Option => scala/Option.
+         |[6:59..6:59):  <= local29
+         |[6:59..6:65): AnyRef => scala/AnyRef#
+         |[6:65..6:65):  => java/lang/Object#`<init>`().
+         |[6:72..6:73): x <= local27
+         |[6:89..6:90): f => local30
+         |[7:6..7:7): m <= _empty_/rg.m().
+         |[7:16..7:20): Some => scala/Some.
+         |[7:21..7:22): g <= local35
+         |[7:24..7:30): AnyRef => scala/AnyRef#
+         |[7:37..7:38): x <= local32
+         |[7:40..7:43): Int => scala/Int#
+         |[7:49..7:53): Some => scala/Some.
+         |[7:58..7:58):  <= local34
+         |[7:58..7:64): AnyRef => scala/AnyRef#
+         |[7:64..7:64):  => java/lang/Object#`<init>`().
+         |[7:71..7:72): x <= local33
+         |[7:81..7:82): g => local35
+         |""".stripMargin,
+  )
+
+  test("a qualified pattern definition in a type of a qualified pattern") {
+    def load() = computeDatabaseSectionFromSnippet(
+      """|object rh {
+         |  class ann(x: Any) extends scala.annotation.StaticAnnotation
+         |  private[rh] val (a: Int @ann({ class L { private[L] val (b, c) = (1, 2) }; 1 }), d) = (1, 2)
+         |}
+         |""".stripMargin,
+      "Occurrences",
+    )
+    val e = intercept[RuntimeException](load())
+    assertEquals(e.getMessage.takeWhile(_ != '`'), "ambiguous mWithins: ")
+  }
+
   symbols(
     "ascribed extractor pattern in a method",
     """|object h {
