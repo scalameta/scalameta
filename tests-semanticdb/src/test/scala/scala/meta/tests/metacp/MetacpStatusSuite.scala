@@ -62,6 +62,7 @@ class MetacpStatusSuite extends FunSuite {
   // an output path uses the separator of the platform
   private def status(entries: (String, String)*): String =
     rawStatus("", entries.map { case (in, out) => in -> s"${Paths.get(out)}" }: _*)
+      .replace("\\", "\\\\")
 
   private def rawStatus(synthetics: String, entries: (String, String)*): String = entries
     .map { case (in, out) => s"""    "$in": "$out"""" }.mkString(
@@ -193,7 +194,7 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir("back\\slash").toString
     val out = tmp.resolve("out-backslash")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, rawStatus("", s"$tmp/back\\slash" -> s"$out/back\\slash"))
+    assertNoDiff(stdout, rawStatus("", s"$tmp/back\\\\slash" -> s"$out/back\\\\slash"))
     assertNoDiff(stderr, "")
   }
 
@@ -202,7 +203,7 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir("double\"quote").toString
     val out = tmp.resolve("out-quote")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, rawStatus("", s"""$tmp/double"quote""" -> s"""$out/double"quote"""))
+    assertNoDiff(stdout, rawStatus("", s"""$tmp/double\\"quote""" -> s"""$out/double\\"quote"""))
     assertNoDiff(stderr, "")
   }
 
@@ -211,7 +212,7 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir("tab\tchar").toString
     val out = tmp.resolve("out-tab")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, rawStatus("", s"$tmp/tab\tchar" -> s"$out/tab\tchar"))
+    assertNoDiff(stdout, rawStatus("", s"$tmp/tab\\tchar" -> s"$out/tab\\tchar"))
     assertNoDiff(stderr, "")
   }
 
@@ -220,7 +221,7 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir("unit\u001fsep").toString
     val out = tmp.resolve("out-unitsep")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, rawStatus("", s"$tmp/unit\u001fsep" -> s"$out/unit\u001fsep"))
+    assertNoDiff(stdout, rawStatus("", s"$tmp/unit\\u001fsep" -> s"$out/unit\\u001fsep"))
     assertNoDiff(stderr, "")
   }
 
@@ -229,7 +230,10 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir("café € 😀 \u007f").toString
     val out = tmp.resolve("out-nonascii")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(in -> s"$out/café € 😀 \u007f"))
+    assertNoDiff(
+      stdout,
+      status(in -> s"$out/café € 😀 \u007f").replace("é € 😀", "\\u00e9 \\u20ac \\ud83d\\ude00"),
+    )
     assertNoDiff(stderr, "")
   }
 
@@ -243,15 +247,15 @@ class MetacpStatusSuite extends FunSuite {
       assertNoDiff(stdout(parse(out, in), charset), expected)
     }
 
-  nonAsciiStdout("US-ASCII", "caf? ? ? \u007f")
-  nonAsciiStdout("windows-1252", "café € ? \u007f")
+  nonAsciiStdout("US-ASCII", "caf\\u00e9 \\u20ac \\ud83d\\ude00 \u007f")
+  nonAsciiStdout("windows-1252", "caf\\u00e9 \\u20ac \\ud83d\\ude00 \u007f")
 
   test("directory with a lone surrogate in its name") {
     assume(Properties.isWin, "only Windows accepts this file name")
     val in = dir("lone\ud800").toString
     val out = tmp.resolve("out-lone")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(in -> s"$out/lone\ud800").replace("\ud800", "?"))
+    assertNoDiff(stdout, status(in -> s"$out/lone\ud800").replace("\ud800", "\\ud800"))
     assertNoDiff(stderr, "")
   }
 
@@ -260,8 +264,8 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir("synthetics").toString
     val out = tmp.resolve("out\"synthetics")
     val (stdout, stderr) = metacp(parse(out, in, "--include-scala-library-synthetics"))
-    val synthetics = s"""$tmp/out"synthetics/scala-library-synthetics.jar"""
-    assertNoDiff(stdout, rawStatus(synthetics, in -> s"""$tmp/out"synthetics/synthetics"""))
+    val synthetics = s"""$tmp/out\\"synthetics/scala-library-synthetics.jar"""
+    assertNoDiff(stdout, rawStatus(synthetics, in -> s"""$tmp/out\\"synthetics/synthetics"""))
     assertNoDiff(stderr, "")
   }
 
@@ -281,7 +285,7 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir("ctl\b\f\n\rend").toString
     val out = tmp.resolve("out-ctl")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, rawStatus("", s"$tmp/ctl\b\f\n\rend" -> s"$out/ctl\b\f\n\rend"))
+    assertNoDiff(stdout, rawStatus("", s"$tmp/ctl\\b\\f\\n\\rend" -> s"$out/ctl\\b\\f\\n\\rend"))
     assertNoDiff(stderr, "")
   }
 
@@ -291,7 +295,8 @@ class MetacpStatusSuite extends FunSuite {
     val in = dir(name).toString
     val out = tmp.resolve("out-edge")
     val (stdout, stderr) = metacp(parse(out, in))
-    assertNoDiff(stdout, status(in -> s"$out/$name"))
+    val escaped = "edge\\u0080\\u0085\\u2028\\ufffd"
+    assertNoDiff(stdout, status(in -> s"$out/$name").replace(name, escaped))
     assertNoDiff(stderr, "")
   }
 
