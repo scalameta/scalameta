@@ -9,7 +9,6 @@ import scala.meta.internal.{semanticdb => s}
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.math.Ordering
 import scala.reflect.internal._
 import scala.reflect.internal.{Flags => gf, util => gu}
 import scala.{meta => m}
@@ -47,6 +46,56 @@ trait TextDocumentOps {
     case _ => true
   }
 
+  // walks each tree once, as a document does: its expandee, its original, itself, its children
+  private[scalac] abstract class DocumentTraverser(source: gu.SourceFile) extends g.Traverser {
+    // macro expandees can have cycles, keep tracks of visited nodes.
+    protected val isVisited = mutable.Set.empty[g.Tree]
+
+    override final def traverse(gtree: g.Tree): Unit =
+      if (isVisited.add(gtree)) traverseUnvisited(gtree)
+
+    protected def visit(gtree: g.Tree, hasOriginal: Boolean): Unit
+    protected def enter(gtree: g.Tree): Unit = {}
+    protected def leave(gtree: g.Tree): Unit = {}
+
+    private def traverseUnvisited(gtree: g.Tree): Unit = {
+      enter(gtree)
+      gtree.attachments.get[g.analyzer.MacroExpansionAttachment]
+        .foreach(att => traverse(att.expandee))
+      val hasOriginal = traverseOriginal(gtree)
+      visit(gtree, hasOriginal)
+      super.traverse(gtree)
+      leave(gtree)
+    }
+
+    // false if `tree` has no original
+    private def traverseOriginal(gtree: g.Tree): Boolean = {
+      gtree match {
+        case OriginalTreeOf(original) => traverse(original)
+        case CompoundTypeTreeOf(original) => traverse(original)
+        case t: g.TypeTree if t.original != null =>
+          traverse(t.original)
+          // annotations in the original are untyped, like `@field` in `@(deprecated @field)`
+          t.tpe match {
+            case g.AnnotatedType(anns, _) => anns.foreach { ann =>
+                val gpos = ann.original.pos
+                if (gpos.isRange && gpos.source == source) traverse(ann.original)
+              }
+            case _ =>
+          }
+        case t: g.TypeTreeWithDeferredRefCheck => traverse(t.check())
+        case _ => return false
+      }
+      true
+    }
+
+    protected def traverseAnnotations(gtree: g.Tree): Unit = gtree match {
+      case t: g.MemberDef if t.symbol != null =>
+        t.symbol.annotations.foreach(ann => traverse(ann.original))
+      case _ =>
+    }
+  }
+
   implicit class XtensionCompilationUnitDocument(unit: g.CompilationUnit) {
     def toTextDocument: s.TextDocument = toTextDocument(None)
 
@@ -59,8 +108,6 @@ trait TextDocumentOps {
       val symbols = mutable.Map[String, s.SymbolInformation]()
       val synthetics = mutable.ListBuffer[s.Synthetic]()
       val syntheticTreeCache = new mutable.HashMap[g.Tree, Option[s.Synthetic]]
-      // macro expandees can have cycles, keep tracks of visited nodes.
-      val isVisited = mutable.Set.empty[g.Tree]
       val todo = mutable.Set[m.Name]() // names to map to global trees
       val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
       val mends = mutable.Map[Int, m.Name]() // end offset -> tree
@@ -225,7 +272,7 @@ trait TextDocumentOps {
                 return
               case mtree: m.Term.Super => msupers.update(mtree.pos.end, mtree)
               case mtree: m.Self => mtree.decltpe.foreach(t => mselftypes(t.pos.start) = t)
-              case m.Term.ApplyType(m.Term.Name("classOf"), mtpe :: Nil) =>
+              case m.Term.ApplyType(m.Term.Name(Symbols.ClassOfLabel), mtpe :: Nil) =>
                 mclassofs(mtree.pos.start) = mtpe
               case mtree: m.Type.Existential => mexistentials(mtree.pos.start) = mtree
               case mtree: m.Mod.Annot => mtree.parent.foreach {
@@ -273,7 +320,7 @@ trait TextDocumentOps {
       }
 
       locally {
-        object traverser extends g.Traverser {
+        object traverser extends DocumentTraverser(unit.source) {
           private var genclosing: List[g.Tree] = Nil // the current tree and its parents
           private lazy val grootImports = g.analyzer.rootContext(unit).imports.map(_.tree)
 
@@ -953,196 +1000,183 @@ trait TextDocumentOps {
           }
 
           private def processMemberDef(gtree: g.MemberDef) = {
-            val gsym = gtree.symbol
             // a macro annotation puts its expansion at the offset of the annotation
             if (gtree.isInstanceOf[g.ImplDef]) {
               val gpos = gtree.pos
               if (gpos.isDefined && !gpos.isRange) mannottees.get(gpos.point)
                 .foreach(mexpansions(gpos.point) = _)
             }
-            if (gsym != null) gsym.annotations.foreach(ann => traverse(ann.original))
+            traverseAnnotations(gtree)
             tryFindMtree(gtree)
           }
 
-          override def traverse(gtree: g.Tree): Unit = if (isVisited.add(gtree)) {
-            genclosing = gtree :: genclosing
-            gtree.attachments.all.foreach {
-              case att: g.analyzer.MacroExpansionAttachment => traverse(att.expandee)
-              case _ =>
+          override protected def enter(gtree: g.Tree): Unit = genclosing = gtree :: genclosing
+          override protected def leave(gtree: g.Tree): Unit = genclosing = genclosing.drop(1)
+
+          override protected def visit(gtree: g.Tree, hasOriginal: Boolean): Unit =
+            if (!hasOriginal) traverseNoOriginal(gtree)
+
+          private def stripClassOf(pos: m.Position): m.Position = {
+            val off = pos.start
+            val labelEnd = off + Symbols.ClassOfLabel.length
+            if (labelEnd > pos.end) return pos
+            val chars = pos.input.chars
+            if (labelEnd > chars.length) return pos
+            var i = 0
+            while (i < Symbols.ClassOfLabel.length) {
+              if (chars(off + i) != Symbols.ClassOfLabel(i)) return pos
+              i += 1
             }
+            pos.trunc(i)
+          }
 
-            def isClassOf(pos: m.Position): Boolean = {
-              val chars = pos.input.chars
-              val classOfChars = "classOf".toCharArray
+          private def traverseNoOriginal(gtree: g.Tree): Unit = gtree match {
+            // skip an annotation that scalac added, like `@unchecked` on a desugared match
+            case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
 
-              chars.length >= classOfChars.length + pos.start && (0 until classOfChars.length)
-                .forall(i => chars(i + pos.start) == classOfChars(i))
-            }
+            case t: g.Literal if t.tpe != null && t.tpe.typeSymbol == g.definitions.ClassClass =>
+              val mpos = t.toMeta
+              val mposClassOf = stripClassOf(mpos)
+              if (mpos ne mposClassOf) {
+                addOccurrenceFromSemantic(mposClassOf, "scala/Predef.classOf().", Role.REFERENCE)
+                // scalac replaces `classOf[T]` with a constant of type T
+                mclassofs.get(mpos.start).foreach(tryFindType(_, t.value.typeValue))
+              } else tryFindMtree(t)
 
-            gtree match {
-              case OriginalTreeOf(original) => traverse(original)
-              case CompoundTypeTreeOf(original) => traverse(original)
-              // skip an annotation that scalac added, like `@unchecked` on a desugared match
-              case t: g.Annotated if !t.annot.pos.isOpaqueRange => isVisited += t.annot
-
-              case gtree: g.TypeTree if gtree.original != null =>
-                traverse(gtree.original)
-                // annotations in the original are untyped, like `@field` in `@(deprecated @field)`
-                gtree.tpe match {
-                  case g.AnnotatedType(anns, _) => anns.foreach { ann =>
-                      val gpos = ann.original.pos
-                      if (gpos.isRange && gpos.source == unit.source) traverse(ann.original)
-                    }
-                  case _ =>
-                }
-              case gtree: g.TypeTreeWithDeferredRefCheck => traverse(gtree.check())
-
-              case t: g.Literal if t.tpe != null && t.tpe.typeSymbol == g.definitions.ClassClass =>
-                val mpos = t.toMeta
-                if (!mpos.isEmpty && isClassOf(mpos)) {
-                  val mposClassOf = mpos.trunc("classOf".length)
-                  addOccurrenceFromSemantic(mposClassOf, "scala/Predef.classOf().", Role.REFERENCE)
-                  // scalac replaces `classOf[T]` with a constant of type T
-                  mclassofs.get(mpos.start).foreach(tryFindType(_, t.value.typeValue))
-                } else tryFindMtree(t)
-
-              case t: g.Function =>
-                addSamOccurrence(t)
-                // the parameter of a guard repeats that of its generator, which defines the `_`
-                val isGuard = genclosing match {
-                  case _ :: g.Apply(gfun: g.Select, _) :: _ => gfun.name == g.nme.withFilter &&
-                    gfun.hasAttachment[g.ForAttachment.type]
-                  case _ => false
-                }
-                // a for matches the parameter of its closure on the pattern
-                val gpat = t.body match {
-                  case g.Match(_, g.CaseDef(gpat, _, _) :: Nil) => gpat
-                  case _ => g.EmptyTree
-                }
-                /* a for unpacks `y` of `y = x; _ <- ys` with a tuple pattern that has no range;
-                 * this parameter defines no `_`, though scalac 2.12 puts it at the one of `ys` */
-                val isUnpacking = gpat.isInstanceOf[g.Apply] && !gpat.pos.isRange
-                // scalac 2.13.15 may put a closure of a for at its body, but its pattern at `_`
-                def findParamUnderscore(p: g.ValDef): m.Position = {
-                  val mpos = findUnderscore(gpat)
-                  if (mpos ne null) mpos else findUnderscore(p)
-                }
-                t.vparams.foreach(p =>
-                  if (!(p.symbol.isSynthetic || p.symbol.hasFreshName)) traverse(p)
-                  else if (isUnpacking) {}
-                  else if (!isGuard) defineUnderscore(findParamUnderscore(p), p.symbol)
-                  // mark it visited, or traversing the function would define the `_`
-                  else if (isVisited.add(p) && (findParamUnderscore(p) ne null))
-                    saveUnderscore(p.symbol),
-                )
-                t.body match {
-                  /* skip the match of a pattern on the parameter.
-                   * Its position can be the name after `yield`. */
-                  case g.Match(g.Typed(sel, _), cases)
-                      if t.vparams.exists(_.symbol == sel.symbol) => cases.foreach(traverse)
-                  case body => traverse(body)
-                }
-                tryFindMtree(t)
-              case t: g.ValDef =>
-                if (t.hasSyntheticSymbol) traverse(t.tpt)
-                traverse(t.rhs)
-                processMemberDef(t)
-              case t: g.MemberDef => processMemberDef(t)
-              case t: g.Ident => t.pos match {
-                  case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
-                  case _ => tryFindMtree(t)
-                }
-              case _: g.GenericApply =>
-                tryFindSynthetic(gtree)
-                gtree.pos match {
-                  case p: gu.RangePosition => tryNamedArg(gtree.symbol, p.start, p.point)
-                  case _ =>
-                }
-                // fix #2040
-                gtree match {
-                  case v: g.ApplyImplicitView => v.args.headOption.foreach(traverse)
-                  case _ =>
-                }
-              case gtree: g.Select if gtree.symbol != null && gtree.symbol.isDefaultGetter =>
-                // the qualifier of a default argument may have its offset at another name
-                if (!gtree.qualifier.pos.isRange) isVisited += gtree.qualifier
-                tryFindMtree(gtree)
-              case select: g.Select if isSyntheticName(select) => tryFindSynthetic(select)
-              case gtree: g.AppliedTypeTree => tryFindMtree(gtree)
-              case gtree: g.ExistentialTypeTree =>
-                if (gtree.pos.isDefined) mexistentials.get(gtree.pos.start)
-                  .foreach(mtpe => tryFindDecls(mtpe.stats, gtree.whereClauses.map(_.symbol)))
-                tryFindMtree(gtree)
-              case gblock @ NamedApplyBlock(_) =>
-                // Given the result of NamesDefaults.transformNamedApplication, such as:
-                //    BLOCK: {
-                //      <artifact> val qual$1: helper = test.this.qualifier
-                //      <artifact> val x$1: Int = ao.this.local;
-                //      <artifact> val x$2: Int = 3;
-                //      <artifact> val x$3: Int = ao.this.foo$default$2;
-                //      qual1$.foo(x$1, x$3, x$2)
-                //    }
-                //
-                // Three issues:
-                // 1 - In the case of an explicitly passed argument (ex: x$1 above), the generated ValDef and its RHS
-                //     both have a Position identical to the original argument. We want to avoid matching the original
-                //     argument with this ValDef, which has its own Symbol, and ensure we match it to the RHS.
-                // 2 - In the case of a default-valued argument (ex: x$3 above), the generated ValDef, and several of
-                //     its RHS sub-trees, have Positions starting and ending at the start of the method name in the
-                //     original source. We want to avoid matching any of these w/ our "tryMstart" implementations.
-                // 3 - In the case of a non-stable qualifier reference, a qual$ ValDef is generated. In these cases
-                //     the Select(qual$1, foo) has a position which corresponds to `.foo` in the originating source
-                //     (the period is captured).
-                //
-                // Current Solutions:
-                // For case #1, explicitly traverse the ValDef RHS, to claim the proper association before general
-                // recursion continues.
-                // For case #2, explicitly traverse the function invocation, to claim the proper association before
-                // recursion continues.
-                // For case #3, we do not change traversal order, but have added an additional end-only match case
-                // for Select's against a qual$ Ident.
-                gblock.stats.foreach {
-                  case g.ValDef(_, _, _, rhs) =>
-                    if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) traverse(rhs)
-                  case _ =>
-                }
-                traverse(gblock.expr)
-              case t: g.Template =>
-                // context bounds could be moved into body
-                t.body.foreach {
-                  case s: g.ValDef =>
-                    if (s.symbol.hasAllFlags(Flags.IMPLICIT | Flags.SYNTHETIC)) traverse(s.tpt)
-                  case _ =>
-                }
-                t.parents.foreach {
-                  // a parent with inferred type arguments, like `n.P(1)`, has no original tree
-                  case p: g.TypeTree if p.original == null && p.pos.isRange =>
-                    mparents.get(p.pos.start).foreach(mtpe =>
-                      if (!tryFindParent(mtpe, p.tpe)) mtpe match {
-                        case mtpe: m.Type.Select => success(mtpe.name, p.tpe.typeSymbol)
-                        case _ => tryFindType(mtpe, p.tpe)
-                      },
-                    )
-                  case _ =>
-                }
-                t.self.tpt match {
-                  case tpt: g.TypeTree if tpt.original != null && tpt.original.pos.isDefined =>
-                    // the tree of `_` in `this: List[_] =>` defines it, not the type below
-                    traverse(t.self)
-                    // scalac types `this: T =>` in class C as `C with T`
-                    val gtpe = tpt.tpe match {
-                      case g.RefinedType(gcls :: gtpe :: Nil, _)
-                          if gcls.typeSymbol == t.symbol.owner => gtpe
-                      case gtpe => gtpe
-                    }
-                    mselftypes.get(tpt.original.pos.start).foreach(tryFindType(_, gtpe))
-                  case _ =>
-                }
-                tryFindMtree(t)
-              case _ => tryFindMtree(gtree)
-            }
-            super.traverse(gtree)
-            genclosing = genclosing.tail
+            case t: g.Function =>
+              addSamOccurrence(t)
+              // the parameter of a guard repeats that of its generator, which defines the `_`
+              val isGuard = genclosing match {
+                case _ :: g.Apply(gfun: g.Select, _) :: _ => gfun.name == g.nme.withFilter &&
+                  gfun.hasAttachment[g.ForAttachment.type]
+                case _ => false
+              }
+              // a for matches the parameter of its closure on the pattern
+              val gpat = t.body match {
+                case g.Match(_, g.CaseDef(gpat, _, _) :: Nil) => gpat
+                case _ => g.EmptyTree
+              }
+              /* a for unpacks `y` of `y = x; _ <- ys` with a tuple pattern that has no range;
+               * this parameter defines no `_`, though scalac 2.12 puts it at the one of `ys` */
+              val isUnpacking = gpat.isInstanceOf[g.Apply] && !gpat.pos.isRange
+              // scalac 2.13.15 may put a closure of a for at its body, but its pattern at `_`
+              def findParamUnderscore(p: g.ValDef): m.Position = {
+                val mpos = findUnderscore(gpat)
+                if (mpos ne null) mpos else findUnderscore(p)
+              }
+              t.vparams.foreach(p =>
+                if (!(p.symbol.isSynthetic || p.symbol.hasFreshName)) traverse(p)
+                else if (isUnpacking) {}
+                else if (!isGuard) defineUnderscore(findParamUnderscore(p), p.symbol)
+                // mark it visited, or traversing the function would define the `_`
+                else if (isVisited.add(p) && (findParamUnderscore(p) ne null))
+                  saveUnderscore(p.symbol),
+              )
+              t.body match {
+                /* skip the match of a pattern on the parameter.
+                 * Its position can be the name after `yield`. */
+                case g.Match(g.Typed(sel, _), cases) if t.vparams.exists(_.symbol == sel.symbol) =>
+                  cases.foreach(traverse)
+                case body => traverse(body)
+              }
+              tryFindMtree(t)
+            case t: g.ValDef =>
+              if (t.hasSyntheticSymbol) traverse(t.tpt)
+              traverse(t.rhs)
+              processMemberDef(t)
+            case t: g.MemberDef => processMemberDef(t)
+            case t: g.Ident => t.pos match {
+                case p: gu.RangePosition if p.start >= p.end => // do nothing, empty identifier (such as empty package)
+                case _ => tryFindMtree(t)
+              }
+            case _: g.GenericApply =>
+              tryFindSynthetic(gtree)
+              gtree.pos match {
+                case p: gu.RangePosition => tryNamedArg(gtree.symbol, p.start, p.point)
+                case _ =>
+              }
+              // fix #2040
+              gtree match {
+                case v: g.ApplyImplicitView => v.args.headOption.foreach(traverse)
+                case _ =>
+              }
+            case gtree: g.Select if gtree.symbol != null && gtree.symbol.isDefaultGetter =>
+              // the qualifier of a default argument may have its offset at another name
+              if (!gtree.qualifier.pos.isRange) isVisited += gtree.qualifier
+              tryFindMtree(gtree)
+            case select: g.Select if isSyntheticName(select) => tryFindSynthetic(select)
+            case gtree: g.AppliedTypeTree => tryFindMtree(gtree)
+            case gtree: g.ExistentialTypeTree =>
+              if (gtree.pos.isDefined) mexistentials.get(gtree.pos.start)
+                .foreach(mtpe => tryFindDecls(mtpe.stats, gtree.whereClauses.map(_.symbol)))
+              tryFindMtree(gtree)
+            case gblock @ NamedApplyBlock(_) =>
+              // Given the result of NamesDefaults.transformNamedApplication, such as:
+              //    BLOCK: {
+              //      <artifact> val qual$1: helper = test.this.qualifier
+              //      <artifact> val x$1: Int = ao.this.local;
+              //      <artifact> val x$2: Int = 3;
+              //      <artifact> val x$3: Int = ao.this.foo$default$2;
+              //      qual1$.foo(x$1, x$3, x$2)
+              //    }
+              //
+              // Three issues:
+              // 1 - In the case of an explicitly passed argument (ex: x$1 above), the generated ValDef and its RHS
+              //     both have a Position identical to the original argument. We want to avoid matching the original
+              //     argument with this ValDef, which has its own Symbol, and ensure we match it to the RHS.
+              // 2 - In the case of a default-valued argument (ex: x$3 above), the generated ValDef, and several of
+              //     its RHS sub-trees, have Positions starting and ending at the start of the method name in the
+              //     original source. We want to avoid matching any of these w/ our "tryMstart" implementations.
+              // 3 - In the case of a non-stable qualifier reference, a qual$ ValDef is generated. In these cases
+              //     the Select(qual$1, foo) has a position which corresponds to `.foo` in the originating source
+              //     (the period is captured).
+              //
+              // Current Solutions:
+              // For case #1, explicitly traverse the ValDef RHS, to claim the proper association before general
+              // recursion continues.
+              // For case #2, explicitly traverse the function invocation, to claim the proper association before
+              // recursion continues.
+              // For case #3, we do not change traversal order, but have added an additional end-only match case
+              // for Select's against a qual$ Ident.
+              gblock.stats.foreach {
+                case g.ValDef(_, _, _, rhs) =>
+                  if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) traverse(rhs)
+                case _ =>
+              }
+              traverse(gblock.expr)
+            case t: g.Template =>
+              // context bounds could be moved into body
+              t.body.foreach {
+                case s: g.ValDef =>
+                  if (s.symbol.hasAllFlags(Flags.IMPLICIT | Flags.SYNTHETIC)) traverse(s.tpt)
+                case _ =>
+              }
+              t.parents.foreach {
+                // a parent with inferred type arguments, like `n.P(1)`, has no original tree
+                case p: g.TypeTree if p.original == null && p.pos.isRange =>
+                  mparents.get(p.pos.start).foreach(mtpe =>
+                    if (!tryFindParent(mtpe, p.tpe)) mtpe match {
+                      case mtpe: m.Type.Select => success(mtpe.name, p.tpe.typeSymbol)
+                      case _ => tryFindType(mtpe, p.tpe)
+                    },
+                  )
+                case _ =>
+              }
+              t.self.tpt match {
+                case tpt: g.TypeTree if tpt.original != null && tpt.original.pos.isDefined =>
+                  // the tree of `_` in `this: List[_] =>` defines it, not the type below
+                  traverse(t.self)
+                  // scalac types `this: T =>` in class C as `C with T`
+                  val gtpe = tpt.tpe match {
+                    case g.RefinedType(gcls :: gtpe :: Nil, _)
+                        if gcls.typeSymbol == t.symbol.owner => gtpe
+                    case gtpe => gtpe
+                  }
+                  mselftypes.get(tpt.original.pos.start).foreach(tryFindType(_, gtpe))
+                case _ =>
+              }
+              tryFindMtree(t)
+            case _ => tryFindMtree(gtree)
           }
         }
         traverser.traverse(unit.body)
