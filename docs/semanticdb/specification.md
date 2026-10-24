@@ -4279,6 +4279,8 @@ Notes:
 
 **Interface declarations** [\[77\]][77] are represented by a single symbol like
 classes but with the `INTERFACE` kind.
+An annotation type is an `INTERFACE` whose parents include
+`java/lang/annotation/Annotation#`.
 
 ```java
 package a;
@@ -4297,7 +4299,7 @@ public interface List<T> extends I {
   <tr>
     <td><code>List</code></td>
     <td><code>a/List#</code></td>
-    <td><code>CLASS</code></td>
+    <td><code>INTERFACE</code></td>
     <td><code>ClassSignature(List(&lt;T&gt;), List(&lt;I&gt;), None, List(&lt;head&gt;))</code></td>
   </tr>
   <tr>

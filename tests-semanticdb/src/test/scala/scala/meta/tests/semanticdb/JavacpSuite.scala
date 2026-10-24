@@ -2,6 +2,7 @@ package scala.meta.tests.semanticdb
 
 import scala.meta.internal.semanticdb.Scala._
 import scala.meta.internal.semanticdb.SymbolInformation.Property._
+import scala.meta.internal.semanticdb._
 
 class JavacpSuite extends JavacpSuiteBase {
 
@@ -32,5 +33,12 @@ class JavacpSuite extends JavacpSuiteBase {
   // ACC_SUPER shares its bit with ACC_SYNCHRONIZED, ACC_VARARGS with ACC_TRANSIENT
   checkProperties("class", modifiers, Nil)
   checkProperties("varargs method", "com/javacp/Test#vararg().", Nil)
+
+  test("#1765: annotation type, interface and class") {
+    val infos = MetacMetacpDiffExpect.metacpSymbols
+    val symbols = List("com/javacp/annot/ClassAnnotation#", "com/javacp/Interface#", modifiers)
+    val obtained = symbols.map(sym => sym -> infos(sym).isAnnotationInterface)
+    assertEquals(obtained, symbols.zip(List(true, false, false)))
+  }
 
 }

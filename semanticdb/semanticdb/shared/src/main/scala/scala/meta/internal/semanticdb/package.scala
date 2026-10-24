@@ -34,6 +34,14 @@ package object semanticdb {
     def isPackageObject: Boolean = isKind(k.PACKAGE_OBJECT)
     def isClass: Boolean = isKind(k.CLASS)
     def isInterface: Boolean = isKind(k.INTERFACE)
+    def isAnnotationInterface: Boolean = info.signature match {
+      case sig: ClassSignature if isInterface =>
+        sig.parents.exists {
+          case tpe: TypeRef => tpe.symbol == "java/lang/annotation/Annotation#"
+          case _ => false
+        }
+      case _ => false
+    }
     def isTrait: Boolean = isKind(k.TRAIT)
 
     def isAbstract: Boolean = hasProperty(p.ABSTRACT)
