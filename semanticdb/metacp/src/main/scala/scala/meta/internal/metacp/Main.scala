@@ -18,6 +18,8 @@ import scala.collection.{immutable, mutable}
 
 class Main(settings: Settings, reporter: Reporter) {
 
+  import Main._
+
   val classpathIndex = ClasspathIndex(
     settings.classpath ++ settings.dependencyClasspath ++ detectJavacp,
     includeJdk = settings.includeJdk,
@@ -63,21 +65,19 @@ class Main(settings: Settings, reporter: Reporter) {
         "The provided classpath or classpaths should include the Scala library as well as JDK jars such as rt.jar.",
     )
 
-    reporter.out.println("{")
-    reporter.out.println("  \"status\": {")
+    val nl = System.lineSeparator()
+    val sb = new java.lang.StringBuilder("{").append(nl).append("  \"status\": {").append(nl)
     val orderedStatus = immutable.ListMap.newBuilder[AbsolutePath, Option[AbsolutePath]]
     cpargs.foreach { case ((cp, arg), i) =>
       val output = outputs(i)
       orderedStatus += cp -> output
-      val s_out = output.map(_.toString).getOrElse("")
-      reporter.out.print(s"""    "$arg": "$s_out"""")
-      if (i != classpath.length - 1) reporter.out.print(",")
-      reporter.out.println()
+      sb.append("    ").json(arg).append(": ").json(output.fold("")(_.toString))
+      if (i != classpath.length - 1) sb.append(',')
+      sb.append(nl)
     }
-    reporter.out.println("  },")
-    val s_out = scalaLibrarySynthetics.map(_.toString).getOrElse("")
-    reporter.out.println(s"""  "scalaLibrarySynthetics": "$s_out"""")
-    reporter.out.println("}")
+    sb.append("  },").append(nl).append("  \"scalaLibrarySynthetics\": ")
+      .json(scalaLibrarySynthetics.fold("")(_.toString)).append(nl).append('}').append(nl)
+    reporter.out.print(sb)
 
     Result(orderedStatus.result(), scalaLibrarySynthetics)
   }
@@ -197,5 +197,33 @@ class Main(settings: Settings, reporter: Reporter) {
         .getOrElse(throw new IllegalStateException("Unable to detect scala-library via --usejavacp"))
       Classpath(scalaLibraryPath)
     } else Classpath(Nil)
+
+}
+
+object Main {
+
+  implicit class ImplicitStringBuilder(val sb: java.lang.StringBuilder) extends AnyVal {
+    // escape non-ASCII too, so that stdout in any charset keeps the string
+    def json(value: String): java.lang.StringBuilder = {
+      sb.append('"')
+      var i = 0
+      while (i < value.length) {
+        value.charAt(i) match {
+          case '"' => sb.append("\\\"")
+          case '\\' => sb.append("\\\\")
+          case '\b' => sb.append("\\b")
+          case '\f' => sb.append("\\f")
+          case '\n' => sb.append("\\n")
+          case '\r' => sb.append("\\r")
+          case '\t' => sb.append("\\t")
+          case c if c < ' ' || c >= '\u0080' =>
+            sb.append("\\u").append(Integer.toHexString(c | 0x10000), 1, 5)
+          case c => sb.append(c)
+        }
+        i += 1
+      }
+      sb.append('"')
+    }
+  }
 
 }

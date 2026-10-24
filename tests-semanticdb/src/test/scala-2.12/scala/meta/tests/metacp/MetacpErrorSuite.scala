@@ -68,7 +68,7 @@ class MetacpErrorSuite extends FunSuite {
       out,
       s"""|{
           |  "status": {
-          |    "$tmp": ""
+          |    "${tmp.toString.replace("\\", "\\\\")}": ""
           |  },
           |  "scalaLibrarySynthetics": ""
           |}
@@ -96,7 +96,7 @@ class MetacpErrorSuite extends FunSuite {
       out,
       s"""|{
           |  "status": {
-          |    "${AbsolutePath(manifest)}": ""
+          |    "${AbsolutePath(manifest).toString.replace("\\", "\\\\")}": ""
           |  },
           |  "scalaLibrarySynthetics": ""
           |}
