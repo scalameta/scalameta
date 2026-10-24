@@ -1,8 +1,8 @@
 package scala.meta.tests.semanticdb
 
-// https://github.com/scalameta/scalameta/issues/1840
-class Issue1840Suite extends SemanticdbSuite {
+class CtorSuite extends SemanticdbSuite {
 
+  // #1840: `new` with and without parentheses
   occurrences(
     """|object noparens {
        |  class C
