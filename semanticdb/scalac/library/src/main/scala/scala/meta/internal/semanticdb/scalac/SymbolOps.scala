@@ -227,20 +227,7 @@ trait SymbolOps {
       val pos = sym.pos
       if (!pos.isDefined) return true
 
-      val text = pos.source.content
-      // the source does not have the whole name written at `at`, maybe in backquotes
-      def notWrittenAt(at: Int): Boolean = {
-        val quoted = at < text.length && text(at) == '`'
-        val start = if (quoted) at + 1 else at
-        val end = start + name.length
-        val notEndsThere =
-          if (end == text.length) quoted
-          else end > text.length ||
-          (if (quoted) text(end) != '`' else Chars.isIdentifierPart(text(end)))
-        notEndsThere || !name.contentEquals(CharBuffer.wrap(text, start, name.length))
-      }
-      // a parameter starts at its name, and a 2.12 value has its name at its point
-      notWrittenAt(pos.start) && notWrittenAt(pos.point)
+      !isWrittenAt(pos, name)
     }
     def isEtaExpandedParameter: Boolean =
       // the parameter of `m _` or of `_ + 1`; we save the latter's information with its occurrence
@@ -291,6 +278,25 @@ trait SymbolOps {
   private lazy val idCache = new mutable.HashMap[GSourceFile, Int]
   private lazy val pointsCache = new mutable.HashMap[Int, g.Symbol]
   private lazy val namesCache = new mutable.HashMap[(Int, g.Name), g.Symbol]
+
+  // the source does not have the whole name written at `at`, maybe in backquotes
+  private def notWrittenAt(text: Array[Char], at: Int, name: String): Boolean = {
+    val quoted = at < text.length && text(at) == '`'
+    val start = if (quoted) at + 1 else at
+    val end = start + name.length
+    val notEndsThere =
+      if (end == text.length) quoted
+      else end > text.length || (if (quoted) text(end) != '`' else Chars.isIdentifierPart(text(end)))
+    notEndsThere || !name.contentEquals(CharBuffer.wrap(text, start, name.length))
+  }
+
+  // the source has `name` written at the start or at the point of `pos`
+  private def isWrittenAt(pos: g.Position, name: String): Boolean = {
+    val text = pos.source.content
+    // a parameter starts at its name, and a 2.12 value has its name at its point
+    !notWrittenAt(text, pos.start, name) || !notWrittenAt(text, pos.point, name)
+  }
+
   private def freshSymbol(sym: g.Symbol): String = {
     val gval = sym.patternValue
     if (gval.exists) return gval.toSemantic

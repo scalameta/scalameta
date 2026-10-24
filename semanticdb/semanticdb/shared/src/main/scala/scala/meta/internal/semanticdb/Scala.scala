@@ -10,6 +10,8 @@ object Scala {
     val None: String = ""
     val RootPackage: String = "_root_/"
     val EmptyPackage: String = "_empty_/"
+    val ClassOfLabel = "classOf"
+
     def Global(owner: String, desc: Descriptor): String =
       if (owner != RootPackage) owner + desc.toString else desc.toString
     def Local(id: Int): String = "local" + id.toString
