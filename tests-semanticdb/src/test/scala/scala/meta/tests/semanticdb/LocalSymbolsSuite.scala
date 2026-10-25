@@ -4588,4 +4588,870 @@ class LocalSymbolsSuite extends FunSuite {
     )
   }
 
+  private val escapingClassA =
+    """|package a
+       |object A {
+       |  def p = { class kp(val a: Int) { def m = a }; new kp(1) }
+       |}
+       |""".stripMargin
+
+  private val escapingClassB =
+    """|package b
+       |import scala.language.reflectiveCalls
+       |object B {
+       |  val v = a.A.p
+       |  val x = v.a
+       |  val y = v.m
+       |}
+       |""".stripMargin
+
+  private val escapingClassSame =
+    """|package a
+       |import scala.language.reflectiveCalls
+       |object A {
+       |  def p = { class kp(val a: Int) { def m = a }; new kp(1) }
+       |  val v = p
+       |  val x = v.a
+       |  val y = v.m
+       |}
+       |""".stripMargin
+
+  private val refinementDefaultsA =
+    """|package a
+       |object A {
+       |  def mk = new { def g(j: Int = 4) = j; def k[T](t: T, u: Int = 1) = t }
+       |}
+       |""".stripMargin
+
+  private val refinementDefaultsB =
+    """|package b
+       |import scala.language.reflectiveCalls
+       |object B {
+       |  val m = a.A.mk
+       |  val x = m.g()
+       |  val y = m.k("s")
+       |}
+       |""".stripMargin
+
+  private val refinementDefaultsSame =
+    """|package a
+       |import scala.language.reflectiveCalls
+       |object A {
+       |  def mk = new { def g(j: Int = 4) = j; def k[T](t: T, u: Int = 1) = t }
+       |  val m = mk
+       |  val x = m.g()
+       |  val y = m.k("s")
+       |}
+       |""".stripMargin
+
+  private val typeMemberA =
+    """|package a
+       |object A {
+       |  val r: { type T; def get: T; def put(t: Int): T } = ???
+       |  val q: { type T; def get: T } = ???
+       |}
+       |""".stripMargin
+
+  private val typeMemberB =
+    """|package b
+       |import scala.language.reflectiveCalls
+       |object B {
+       |  val g = a.A.r.get
+       |  val p = a.A.r.put(1)
+       |  val h = a.A.q.get
+       |}
+       |""".stripMargin
+
+  private val typeMemberSame =
+    """|package a
+       |import scala.language.reflectiveCalls
+       |object A {
+       |  val r: { type T; def get: T; def put(t: Int): T } = ???
+       |  val q: { type T; def get: T } = ???
+       |  val g = r.get
+       |  val p = r.put(1)
+       |  val h = q.get
+       |}
+       |""".stripMargin
+
+  private val namedArguments =
+    """|package a
+       |object A {
+       |  def h = 1
+       |  def f = { def g(a: Int = 1, b: Int = 2) = a + b; g(b = h, a = h) + g(b = h) }
+       |}
+       |""".stripMargin
+
+  private val localPatterns =
+    """|package a
+       |object A {
+       |  def f = { val (a, b) = (1, 2); lazy val z = a; val Some(c) = Option(b); z + c }
+       |}
+       |""".stripMargin
+
+  test("an escaping local class with a val parameter, in the same file") {
+    assertNoDiff(
+      summary(document(compile(Map("A.scala" -> escapingClassSame)), "A.scala")),
+      """|a/A. => final object A extends AnyRef { +4 decls }
+         |  AnyRef => scala/AnyRef#
+         |a/A.p(). => method p: AnyRef { val a: Int; def m: Int }
+         |  AnyRef => scala/AnyRef#
+         |  a => local0
+         |  Int => scala/Int#
+         |  m => local1
+         |a/A.v. => val method v: AnyRef { val a: Int; def m: Int }
+         |  AnyRef => scala/AnyRef#
+         |  a => local0
+         |  Int => scala/Int#
+         |  m => local1
+         |a/A.x. => val method x: Int
+         |  Int => scala/Int#
+         |a/A.y. => val method y: Int
+         |  Int => scala/Int#
+         |local0 => val param a: Int
+         |  Int => scala/Int#
+         |local1 => method m: Int
+         |  Int => scala/Int#
+         |local2 => class kp extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |local3 => primary ctor <init>(val a: Int)
+         |  a => local0
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): a <= a/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): A <= a/A.
+         |[3:6..3:7): p <= a/A.p().
+         |[3:18..3:20): kp <= local2
+         |[3:20..3:20):  <= local3
+         |[3:25..3:26): a <= local0
+         |[3:28..3:31): Int => scala/Int#
+         |[3:39..3:40): m <= local1
+         |[3:43..3:44): a => local0
+         |[3:52..3:54): kp => local2
+         |[3:54..3:54):  => local3
+         |[4:6..4:7): v <= a/A.v.
+         |[4:10..4:11): p => a/A.p().
+         |[5:6..5:7): x <= a/A.x.
+         |[5:10..5:11): v => a/A.v.
+         |[5:12..5:13): a => local0
+         |[6:6..6:7): y <= a/A.y.
+         |[6:10..6:11): v => a/A.v.
+         |[6:12..6:13): m => local1
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("an escaping local class with a val parameter, in another file of the run") {
+    assertNoDiff(
+      summary(inOneRun(Map("A.scala" -> escapingClassA), Map("B.scala" -> escapingClassB), "B.scala")),
+      """|b/B. => final object B extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/B.v. => val method v: AnyRef { val a: Int; def m: Int }
+         |  AnyRef => scala/AnyRef#
+         |  a => local0
+         |  Int => scala/Int#
+         |  m => local1
+         |b/B.x. => val method x: Int
+         |  Int => scala/Int#
+         |b/B.y. => val method y: Int
+         |  Int => scala/Int#
+         |local0 => val param a: Int
+         |  Int => scala/Int#
+         |local1 => method m: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): B <= b/B.
+         |[3:6..3:7): v <= b/B.v.
+         |[3:10..3:11): a => a/
+         |[3:12..3:13): A => a/A.
+         |[3:14..3:15): p => a/A.p().
+         |[4:6..4:7): x <= b/B.x.
+         |[4:10..4:11): v => b/B.v.
+         |[4:12..4:13): a => local0
+         |[5:6..5:7): y <= b/B.y.
+         |[5:10..5:11): v => b/B.v.
+         |[5:12..5:13): m => local1
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("an escaping local class with a val parameter, from a classfile") {
+    assertNoDiff(
+      summary(
+        fromClassfile(Map("A.scala" -> escapingClassA), Map("B.scala" -> escapingClassB), "B.scala"),
+      ),
+      """|b/B. => final object B extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/B.v. => val method v: AnyRef { val def a: Int; def m: Int }
+         |  AnyRef => scala/AnyRef#
+         |  a => local0
+         |  Int => scala/Int#
+         |  m => local1
+         |b/B.x. => val method x: Int
+         |  Int => scala/Int#
+         |b/B.y. => val method y: Int
+         |  Int => scala/Int#
+         |local0 => val method a: Int
+         |  Int => scala/Int#
+         |local1 => method m: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): B <= b/B.
+         |[3:6..3:7): v <= b/B.v.
+         |[3:10..3:11): a => a/
+         |[3:12..3:13): A => a/A.
+         |[3:14..3:15): p => a/A.p().
+         |[4:6..4:7): x <= b/B.x.
+         |[4:10..4:11): v => b/B.v.
+         |[4:12..4:13): a => local0
+         |[5:6..5:7): y <= b/B.y.
+         |[5:10..5:11): v => b/B.v.
+         |[5:12..5:13): m => local1
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("default arguments of refinement members, in the same file") {
+    assertNoDiff(
+      summary(document(compile(Map("A.scala" -> refinementDefaultsSame)), "A.scala")),
+      """|a/A. => final object A extends AnyRef { +4 decls }
+         |  AnyRef => scala/AnyRef#
+         |a/A.m. => val method m: AnyRef { def g(j: Int): Int; def g$default$1: Int @uncheckedVariance; def k[T](t: T, u: Int): T; def k$default$2[T]: Int @uncheckedVariance }
+         |  AnyRef => scala/AnyRef#
+         |  g => local0
+         |  j => local1
+         |  Int => scala/Int#
+         |  g$default$1 => local2
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |  k => local3
+         |  T => local5
+         |  t => local4
+         |  u => local6
+         |  k$default$2 => local7
+         |a/A.mk(). => method mk: AnyRef { def g(j: Int): Int; def g$default$1: Int @uncheckedVariance; def k[T](t: T, u: Int): T; def k$default$2[T]: Int @uncheckedVariance }
+         |  AnyRef => scala/AnyRef#
+         |  g => local0
+         |  j => local1
+         |  Int => scala/Int#
+         |  g$default$1 => local2
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |  k => local3
+         |  T => local5
+         |  t => local4
+         |  u => local6
+         |  k$default$2 => local7
+         |a/A.x. => val method x: Int
+         |  Int => scala/Int#
+         |a/A.y. => val method y: String
+         |  String => java/lang/String#
+         |local0 => method g(j: Int): Int
+         |  j => local1
+         |  Int => scala/Int#
+         |local1 => default param j: Int
+         |  Int => scala/Int#
+         |local2 => synthetic method g$default$1: Int @uncheckedVariance
+         |  Int => scala/Int#
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local3 => method k[T](t: T, u: Int): T
+         |  T => local5
+         |  t => local4
+         |  u => local6
+         |  Int => scala/Int#
+         |local4 => param t: T
+         |  T => local5
+         |local5 => typeparam T
+         |local6 => default param u: Int
+         |  Int => scala/Int#
+         |local7 => synthetic method k$default$2[T]: Int @uncheckedVariance
+         |  T => local5
+         |  Int => scala/Int#
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local8 => final class $anon extends AnyRef { +4 decls }
+         |  AnyRef => scala/AnyRef#
+         |----
+         |[0:8..0:9): a <= a/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): A <= a/A.
+         |[3:6..3:8): mk <= a/A.mk().
+         |[3:15..3:15):  <= local8
+         |[3:21..3:22): g <= local0
+         |[3:23..3:24): j <= local1
+         |[3:26..3:29): Int => scala/Int#
+         |[3:37..3:38): j => local1
+         |[3:44..3:45): k <= local3
+         |[3:46..3:47): T <= local5
+         |[3:49..3:50): t <= local4
+         |[3:52..3:53): T => local5
+         |[3:55..3:56): u <= local6
+         |[3:58..3:61): Int => scala/Int#
+         |[3:69..3:70): t => local4
+         |[4:6..4:7): m <= a/A.m.
+         |[4:10..4:12): mk => a/A.mk().
+         |[5:6..5:7): x <= a/A.x.
+         |[5:10..5:11): m => a/A.m.
+         |[5:12..5:13): g => local0
+         |[6:6..6:7): y <= a/A.y.
+         |[6:10..6:11): m => a/A.m.
+         |[6:12..6:13): k => local3
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("default arguments of refinement members, in another file of the run") {
+    assertNoDiff(
+      summary(inOneRun(
+        Map("A.scala" -> refinementDefaultsA),
+        Map("B.scala" -> refinementDefaultsB),
+        "B.scala",
+      )),
+      """|b/B. => final object B extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/B.m. => val method m: AnyRef { def g(j: Int): Int; def g$default$1: Int @uncheckedVariance; def k[T](t: T, u: Int): T; def k$default$2[T]: Int @uncheckedVariance }
+         |  AnyRef => scala/AnyRef#
+         |  g => local0
+         |  j => local1
+         |  Int => scala/Int#
+         |  g$default$1 => local2
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |  k => local3
+         |  T => local5
+         |  t => local4
+         |  u => local6
+         |  k$default$2 => local7
+         |b/B.x. => val method x: Int
+         |  Int => scala/Int#
+         |b/B.y. => val method y: String
+         |  String => java/lang/String#
+         |local0 => method g(j: Int): Int
+         |  j => local1
+         |  Int => scala/Int#
+         |local1 => default param j: Int
+         |  Int => scala/Int#
+         |local2 => synthetic method g$default$1: Int @uncheckedVariance
+         |  Int => scala/Int#
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local3 => method k[T](t: T, u: Int): T
+         |  T => local5
+         |  t => local4
+         |  u => local6
+         |  Int => scala/Int#
+         |local4 => param t: T
+         |  T => local5
+         |local5 => typeparam T
+         |local6 => default param u: Int
+         |  Int => scala/Int#
+         |local7 => synthetic method k$default$2[T]: Int @uncheckedVariance
+         |  T => local5
+         |  Int => scala/Int#
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): B <= b/B.
+         |[3:6..3:7): m <= b/B.m.
+         |[3:10..3:11): a => a/
+         |[3:12..3:13): A => a/A.
+         |[3:14..3:16): mk => a/A.mk().
+         |[4:6..4:7): x <= b/B.x.
+         |[4:10..4:11): m => b/B.m.
+         |[4:12..4:13): g => local0
+         |[5:6..5:7): y <= b/B.y.
+         |[5:10..5:11): m => b/B.m.
+         |[5:12..5:13): k => local3
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("default arguments of refinement members, from a classfile") {
+    assertNoDiff(
+      summary(fromClassfile(
+        Map("A.scala" -> refinementDefaultsA),
+        Map("B.scala" -> refinementDefaultsB),
+        "B.scala",
+      )),
+      """|b/B. => final object B extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/B.m. => val method m: AnyRef { def g(j: Int): Int; def g$default$1: Int; def k[T](t: T, u: Int): T; def k$default$2[T]: Int }
+         |  AnyRef => scala/AnyRef#
+         |  g => local0
+         |  j => local1
+         |  Int => scala/Int#
+         |  g$default$1 => local2
+         |  k => local3
+         |  T => local5
+         |  t => local4
+         |  u => local6
+         |  k$default$2 => local7
+         |  T => local8
+         |b/B.x. => val method x: Int
+         |  Int => scala/Int#
+         |b/B.y. => val method y: String
+         |  String => java/lang/String#
+         |local0 => method g(j: Int): Int
+         |  j => local1
+         |  Int => scala/Int#
+         |local1 => default param j: Int
+         |  Int => scala/Int#
+         |local2 => synthetic method g$default$1: Int
+         |  Int => scala/Int#
+         |local3 => method k[T](t: T, u: Int): T
+         |  T => local5
+         |  t => local4
+         |  u => local6
+         |  Int => scala/Int#
+         |local4 => param t: T
+         |  T => local5
+         |local5 => typeparam T
+         |local6 => default param u: Int
+         |  Int => scala/Int#
+         |local7 => synthetic method k$default$2[T]: Int
+         |  T => local8
+         |  Int => scala/Int#
+         |local8 => typeparam T
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): B <= b/B.
+         |[3:6..3:7): m <= b/B.m.
+         |[3:10..3:11): a => a/
+         |[3:12..3:13): A => a/A.
+         |[3:14..3:16): mk => a/A.mk().
+         |[4:6..4:7): x <= b/B.x.
+         |[4:10..4:11): m => b/B.m.
+         |[4:12..4:13): g => local0
+         |[5:6..5:7): y <= b/B.y.
+         |[5:10..5:11): m => b/B.m.
+         |[5:12..5:13): k => local3
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("refinements with a type member, in the same file") {
+    assertNoDiff(
+      summary(document(compile(Map("A.scala" -> typeMemberSame)), "A.scala")),
+      """|a/A. => final object A extends AnyRef { +5 decls }
+         |  AnyRef => scala/AnyRef#
+         |a/A.g. => val method g: r.T
+         |  r => a/A.r.
+         |  T => local0
+         |a/A.h. => val method h: q.T
+         |  q => a/A.q.
+         |  T => local4
+         |a/A.p. => val method p: r.T
+         |  r => a/A.r.
+         |  T => local0
+         |a/A.q. => val method q: AnyRef { type T; def get: T }
+         |  AnyRef => scala/AnyRef#
+         |  T => local4
+         |  get => local5
+         |a/A.r. => val method r: AnyRef { type T; def get: T; def put(t: Int): T }
+         |  AnyRef => scala/AnyRef#
+         |  T => local0
+         |  get => local1
+         |  put => local2
+         |  t => local3
+         |  Int => scala/Int#
+         |local0 => abstract type T
+         |local1 => abstract method get: T
+         |  T => local0
+         |local2 => abstract method put(t: Int): T
+         |  t => local3
+         |  Int => scala/Int#
+         |  T => local0
+         |local3 => param t: Int
+         |  Int => scala/Int#
+         |local4 => abstract type T
+         |local5 => abstract method get: T
+         |  T => local4
+         |----
+         |[0:8..0:9): a <= a/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): A <= a/A.
+         |[3:6..3:7): r <= a/A.r.
+         |[3:16..3:17): T <= local0
+         |[3:23..3:26): get <= local1
+         |[3:28..3:29): T => local0
+         |[3:35..3:38): put <= local2
+         |[3:39..3:40): t <= local3
+         |[3:42..3:45): Int => scala/Int#
+         |[3:48..3:49): T => local0
+         |[3:54..3:57): ??? => scala/Predef.`???`().
+         |[4:6..4:7): q <= a/A.q.
+         |[4:16..4:17): T <= local4
+         |[4:23..4:26): get <= local5
+         |[4:28..4:29): T => local4
+         |[4:34..4:37): ??? => scala/Predef.`???`().
+         |[5:6..5:7): g <= a/A.g.
+         |[5:10..5:11): r => a/A.r.
+         |[5:12..5:15): get => local1
+         |[6:6..6:7): p <= a/A.p.
+         |[6:10..6:11): r => a/A.r.
+         |[6:12..6:15): put => local2
+         |[7:6..7:7): h <= a/A.h.
+         |[7:10..7:11): q => a/A.q.
+         |[7:12..7:15): get => local5
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("refinements with a type member, in another file of the run") {
+    assertNoDiff(
+      summary(inOneRun(Map("A.scala" -> typeMemberA), Map("B.scala" -> typeMemberB), "B.scala")),
+      """|b/B. => final object B extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/B.g. => val method g: r.T
+         |  r => a/A.r.
+         |  T => local1
+         |b/B.h. => val method h: q.T
+         |  q => a/A.q.
+         |  T => local4
+         |b/B.p. => val method p: r.T
+         |  r => a/A.r.
+         |  T => local1
+         |local0 => abstract method get: T
+         |  T => local1
+         |local1 => abstract type T
+         |local2 => abstract method put(t: Int): T
+         |  t => local5
+         |  Int => scala/Int#
+         |  T => local1
+         |local3 => abstract method get: T
+         |  T => local4
+         |local4 => abstract type T
+         |local5 => param t: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): B <= b/B.
+         |[3:6..3:7): g <= b/B.g.
+         |[3:10..3:11): a => a/
+         |[3:12..3:13): A => a/A.
+         |[3:14..3:15): r => a/A.r.
+         |[3:16..3:19): get => local0
+         |[4:6..4:7): p <= b/B.p.
+         |[4:10..4:11): a => a/
+         |[4:12..4:13): A => a/A.
+         |[4:14..4:15): r => a/A.r.
+         |[4:16..4:19): put => local2
+         |[5:6..5:7): h <= b/B.h.
+         |[5:10..5:11): a => a/
+         |[5:12..5:13): A => a/A.
+         |[5:14..5:15): q => a/A.q.
+         |[5:16..5:19): get => local3
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("refinements with a type member, from a classfile") {
+    assertNoDiff(
+      summary(fromClassfile(Map("A.scala" -> typeMemberA), Map("B.scala" -> typeMemberB), "B.scala")),
+      """|b/B. => final object B extends AnyRef { +3 decls }
+         |  AnyRef => scala/AnyRef#
+         |b/B.g. => val method g: r.T
+         |  r => a/A.r.
+         |  T => local1
+         |b/B.h. => val method h: q.T
+         |  q => a/A.q.
+         |  T => local4
+         |b/B.p. => val method p: r.T
+         |  r => a/A.r.
+         |  T => local1
+         |local0 => abstract method get: T
+         |  T => local1
+         |local1 => abstract type T
+         |local2 => abstract method put(t: Int): T
+         |  t => local5
+         |  Int => scala/Int#
+         |  T => local1
+         |local3 => abstract method get: T
+         |  T => local4
+         |local4 => abstract type T
+         |local5 => param t: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): b <= b/
+         |[1:7..1:12): scala => scala/
+         |[1:13..1:21): language => scala/language.
+         |[1:22..1:37): reflectiveCalls => scala/language.reflectiveCalls.
+         |[2:7..2:8): B <= b/B.
+         |[3:6..3:7): g <= b/B.g.
+         |[3:10..3:11): a => a/
+         |[3:12..3:13): A => a/A.
+         |[3:14..3:15): r => a/A.r.
+         |[3:16..3:19): get => local0
+         |[4:6..4:7): p <= b/B.p.
+         |[4:10..4:11): a => a/
+         |[4:12..4:13): A => a/A.
+         |[4:14..4:15): r => a/A.r.
+         |[4:16..4:19): put => local2
+         |[5:6..5:7): h <= b/B.h.
+         |[5:10..5:11): a => a/
+         |[5:12..5:13): A => a/A.
+         |[5:14..5:15): q => a/A.q.
+         |[5:16..5:19): get => local3
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("a local method with named and default arguments") {
+    assertNoDiff(
+      summary(document(compile(Map("A.scala" -> namedArguments)), "A.scala")),
+      """|a/A. => final object A extends AnyRef { +2 decls }
+         |  AnyRef => scala/AnyRef#
+         |a/A.f(). => method f: Int
+         |  Int => scala/Int#
+         |a/A.h(). => method h: Int
+         |  Int => scala/Int#
+         |local0 => method g(a: Int, b: Int): Int
+         |  a => local1
+         |  Int => scala/Int#
+         |  b => local2
+         |local1 => default param a: Int
+         |  Int => scala/Int#
+         |local2 => default param b: Int
+         |  Int => scala/Int#
+         |local3 => synthetic method g$default$1: Int @uncheckedVariance
+         |  Int => scala/Int#
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local4 => synthetic method g$default$2: Int @uncheckedVariance
+         |  Int => scala/Int#
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |local5 => val local x$1: Int
+         |  Int => scala/Int#
+         |local6 => val local x$2: Int
+         |  Int => scala/Int#
+         |local7 => val local x$3: Int
+         |  Int => scala/Int#
+         |local8 => val local x$4: Int @uncheckedVariance
+         |  Int => scala/Int#
+         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+         |----
+         |[0:8..0:9): a <= a/
+         |[1:7..1:8): A <= a/A.
+         |[2:6..2:7): h <= a/A.h().
+         |[3:6..3:7): f <= a/A.f().
+         |[3:16..3:17): g <= local0
+         |[3:18..3:19): a <= local1
+         |[3:21..3:24): Int => scala/Int#
+         |[3:30..3:31): b <= local2
+         |[3:33..3:36): Int => scala/Int#
+         |[3:44..3:45): a => local1
+         |[3:46..3:47): + => scala/Int#`+`(+4).
+         |[3:48..3:49): b => local2
+         |[3:51..3:52): g => local0
+         |[3:53..3:54): b => local2
+         |[3:57..3:58): h => a/A.h().
+         |[3:60..3:61): a => local1
+         |[3:64..3:65): h => a/A.h().
+         |[3:67..3:68): + => scala/Int#`+`(+4).
+         |[3:69..3:70): g => local0
+         |[3:71..3:72): b => local2
+         |[3:75..3:76): h => a/A.h().
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("local pattern values and a lazy val") {
+    assertNoDiff(
+      summary(document(compile(Map("A.scala" -> localPatterns)), "A.scala")),
+      """|a/A. => final object A extends AnyRef { +1 decls }
+         |  AnyRef => scala/AnyRef#
+         |a/A.f(). => method f: Int
+         |  Int => scala/Int#
+         |local0 => val local a: Int
+         |  Int => scala/Int#
+         |local1 => val local b: Int
+         |  Int => scala/Int#
+         |local2 => synthetic val local x$1: Tuple2[Int, Int]
+         |  Tuple2 => scala/Tuple2#
+         |  Int => scala/Int#
+         |local3 => lazy val local z: Int
+         |  Int => scala/Int#
+         |local4 => val local c: Int
+         |  Int => scala/Int#
+         |----
+         |[0:8..0:9): a <= a/
+         |[1:7..1:8): A <= a/A.
+         |[2:6..2:7): f <= a/A.f().
+         |[2:17..2:18): a <= local0
+         |[2:20..2:21): b <= local1
+         |[2:42..2:43): z <= local3
+         |[2:46..2:47): a => local0
+         |[2:53..2:57): Some => scala/Some.
+         |[2:58..2:59): c <= local4
+         |[2:63..2:69): Option => scala/Option.
+         |[2:70..2:71): b => local1
+         |[2:74..2:75): z => local3
+         |[2:76..2:77): + => scala/Int#`+`(+4).
+         |[2:78..2:79): c => local4
+         |----
+         |collisions List()
+         |dangling List()
+         |""".stripMargin,
+    )
+  }
+
+  test("binders of a for comprehension and of a partial function, outside a document and in it") {
+    val code =
+      """|object O {
+         |  def f = for { x <- List(1) if x > 0 } yield x
+         |  def g: PartialFunction[Int, Int] = { case y if y > 0 => y }
+         |}
+         |""".stripMargin
+    val typed = new Typed(code)
+    val before = typed.locals("x") ++ typed.locals("x1")
+    val doc = typed.document
+    assertEquals(
+      before ++ typed.locals("x") ++ typed.locals("x1"),
+      List("local0", "local0", "local1", "local2", "local0", "local0", "local4", "local10"),
+    )
+    assertNoDiff(
+      symbols(doc),
+      if (ScalaVersion.is212)
+        """|_empty_/O. => final object O extends AnyRef { +2 decls }
+           |  AnyRef => scala/AnyRef#
+           |_empty_/O.f(). => method f: List[Int]
+           |  List => scala/collection/immutable/List#
+           |  Int => scala/Int#
+           |_empty_/O.g(). => method g: PartialFunction[Int, Int]
+           |  PartialFunction => scala/PartialFunction#
+           |  Int => scala/Int#
+           |local0 => param x: Int
+           |  Int => scala/Int#
+           |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+           |  SerialVersionUID => scala/SerialVersionUID#
+           |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+           |  Int => scala/Int#
+           |  Serializable => scala/Serializable#
+           |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+           |  A1 => local7
+           |  Int => scala/Int#
+           |  B1 => local6
+           |  x1 => local4
+           |  default => local5
+           |  Function1 => scala/Function1#
+           |local3 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+           |  x1 => local10
+           |  Int => scala/Int#
+           |  Boolean => scala/Boolean#
+           |local4 => synthetic param x1: A1
+           |  A1 => local7
+           |local5 => synthetic param default: Function1[A1, B1]
+           |  Function1 => scala/Function1#
+           |  A1 => local7
+           |  B1 => local6
+           |local6 => typeparam B1 >: Int
+           |  Int => scala/Int#
+           |local7 => typeparam A1 <: Int
+           |  Int => scala/Int#
+           |local8 => val local y: Int
+           |  Int => scala/Int#
+           |local9 => val local defaultCase$: Int
+           |  Int => scala/Int#
+           |local10 => synthetic param x1: Int
+           |  Int => scala/Int#
+           |local11 => val local defaultCase$: Int
+           |  Int => scala/Int#
+           |""".stripMargin
+      else
+        """|_empty_/O. => final object O extends AnyRef { +2 decls }
+           |  AnyRef => scala/AnyRef#
+           |_empty_/O.f(). => method f: List[Int]
+           |  List => scala/collection/immutable/List#
+           |  Int => scala/Int#
+           |_empty_/O.g(). => method g: PartialFunction[Int, Int]
+           |  PartialFunction => scala/PartialFunction#
+           |  Int => scala/Int#
+           |local0 => param x: Int
+           |  Int => scala/Int#
+           |local1 => @SerialVersionUID synthetic final class $anonfun extends AbstractPartialFunction[Int, Int] with Serializable { +2 decls }
+           |  SerialVersionUID => scala/SerialVersionUID#
+           |  AbstractPartialFunction => scala/runtime/AbstractPartialFunction#
+           |  Int => scala/Int#
+           |  Serializable => java/io/Serializable#
+           |local2 => final method applyOrElse[A1 <: Int, B1 >: Int](x1: A1, default: Function1[A1, B1]): B1 <: scala/PartialFunction#applyOrElse().
+           |  A1 => local7
+           |  Int => scala/Int#
+           |  B1 => local6
+           |  x1 => local4
+           |  default => local5
+           |  Function1 => scala/Function1#
+           |local3 => final method isDefinedAt(x1: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+           |  x1 => local10
+           |  Int => scala/Int#
+           |  Boolean => scala/Boolean#
+           |local4 => synthetic param x1: A1
+           |  A1 => local7
+           |local5 => synthetic param default: Function1[A1, B1]
+           |  Function1 => scala/Function1#
+           |  A1 => local7
+           |  B1 => local6
+           |local6 => typeparam B1 >: Int
+           |  Int => scala/Int#
+           |local7 => typeparam A1 <: Int
+           |  Int => scala/Int#
+           |local8 => val local y: Int
+           |  Int => scala/Int#
+           |local9 => val local defaultCase$: Int
+           |  Int => scala/Int#
+           |local10 => synthetic param x1: Int
+           |  Int => scala/Int#
+           |local11 => val local defaultCase$: Int
+           |  Int => scala/Int#
+           |""".stripMargin,
+    )
+  }
+
 }
