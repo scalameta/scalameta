@@ -11,6 +11,7 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.reflect.internal._
 import scala.reflect.internal.{Flags => gf, util => gu}
+import scala.runtime.IntRef
 import scala.{meta => m}
 
 trait TextDocumentOps {
@@ -138,7 +139,7 @@ trait TextDocumentOps {
       // multiple symbols that resolve to the same position.
       val mpatoccurrences = emptyOccurrenceMap()
       val mvalpatstart = mutable.Set.empty[Int] // start pos for Pat.Var names inside val patterns
-      // start pos for vals with patterns -> last Pat.Var name
+      // start pos for vals with single-element patterns -> their Pat.Var name
       val msinglevalpats = mutable.Map.empty[Int, m.Position]
 
       def addOccurrenceFromSemantic(mpos: m.Position, ssym: String, role: Role): Unit =
@@ -194,6 +195,8 @@ trait TextDocumentOps {
 
       locally {
         object traverser extends m.Traverser {
+          private var mpatvar: m.Name = null // the last variable that indexPat found
+
           private def indexName(mname: m.Name): Unit = {
             val mpos = mname.pos
             if (mpos.isEmpty) return // for instance, missing type in method declaration
@@ -212,22 +215,22 @@ trait TextDocumentOps {
               case names => pos.foreach(margnames.update(_, names))
             }
           }
+          private def setWithins(mencl: m.Tree, mname: m.Name): Unit = mwithins.put(mencl, mname)
+            .foreach(errorAmbiguous("mWithins", mname, _))
           private def indexWithin(mname: m.Name.Indeterminate): Unit = {
             todo += mname
-            def setWithins(mencl: m.Tree): Unit = mwithins.put(mencl, mname)
-              .foreach(errorAmbiguous("mWithins", mname, _))
             mname.parent.parent.get match {
               case mencl: m.Ctor.Primary => mencl.parent match {
                   case Some(p: m.Member) => mwithinctors.put(p.name, mname)
                       .foreach(errorAmbiguous("mWithinCtors", mname, _))
                   case _ =>
                 }
-              case mencl: m.Member => setWithins(mencl.name)
+              case mencl: m.Member => setWithins(mencl.name, mname)
               case t: m.Tree.WithPats => t.pats match {
-                  case p :: Nil => p.dfsPartial {
-                      case t: m.Pat.Var => setWithins(t.name)
+                  case p :: Nil => p.dfsIf({
+                      case t: m.Pat.Var => setWithins(t.name, mname)
                       case _: m.Pat | _: m.Pat.ArgClause =>
-                    }
+                    }: PartialFunction[m.Tree, Unit])
                   case _ =>
                 }
               case _ =>
@@ -246,37 +249,51 @@ trait TextDocumentOps {
             munderscores(mpos.start) = mpos
             mpos
           }
+          // the start of the colon after a pattern that has a type, or -1
+          private def typedColon(mpat: m.Pat): Int =
+            if (!mpat.parent.is[m.Pat.Typed]) -1
+            else {
+              val mtoks = mpat.tokens
+              val pred = (t: m.Token) => t.isAny[m.Token.Trivia, m.Token.RightParen]
+              mtoks.findWideNotOrNull(pred, mtoks.length) match {
+                case t: m.Token.Colon => t.start
+                case _ => -1
+              }
+            }
+          @tailrec
+          private def isNestedPat(mtree: m.Tree): Boolean = mtree.parent match {
+            case Some(_: m.Tree.WithPats) => true
+            case Some(p: m.Pat) => isNestedPat(p)
+            case _ => false
+          }
           @tailrec // only a whole pattern, like `_` in `val _ =` or `_: Int <- xs`, has a symbol
           private def isWholePat(mpat: m.Pat): Boolean = mpat.parent match {
             case Some(p: m.Pat.Typed) => isWholePat(p)
             case Some(_: m.Pat | _: m.Pat.ArgClause | _: m.Case) => false
             case _ => true
           }
-          def indexPats(pats: List[m.Pat]): Unit = {
-            val func: PartialFunction[m.Tree, Unit] = {
-              case pat: m.Pat.Extract => indexPatsWithExtract(pat)
-              case pat: m.Pat.Var => mvalpatstart += pat.name.pos.start
-              case _: m.Pat | _: m.Pat.ArgClause =>
-            }
-            pats.foreach(_.dfsPartial(func))
+          // index the variables of a pattern and accumulate their number
+          private def indexPat(mtree: m.Tree, cnt: IntRef): Unit = mtree match {
+            case pat: m.Pat.Var =>
+              mpatvar = pat.name
+              mvalpatstart += pat.name.pos.start
+              cnt.elem += 1
+            case pat: m.Pat.Extract => indexPatsWithExtract(pat, cnt)
+            case _: m.Pat | _: m.Pat.ArgClause => mtree.foreachChild(indexPat(_, cnt))
+            case _ =>
           }
           // In an Extract pattern `Foo(name) = ...`, let's map the start position of the `fun` field
           // to the `name` position. Compiler desugars it into a getter DefDef and specifically
           // in the case of a single binder sets the position of this getter as an OffsetPosition
           // pointing to "start of fun" rather than the field being extracted.
-          def indexPatsWithExtract(extract: m.Pat.Extract): Unit = extract.args match {
+          def indexPatsWithExtract(extract: m.Pat.Extract, cnt: IntRef): Unit = extract.args match {
             case pat :: Nil =>
               // Most likely the difference coming from https://github.com/scalameta/scalameta/pull/4118
               val mpos = if (isOldBehaviourOnPats) extract.fun.pos.end else extract.fun.pos.start
-              pat.dfsPartial {
-                case pat: m.Pat.Extract => indexPatsWithExtract(pat)
-                case pat: m.Pat.Var =>
-                  val npos = pat.name.pos
-                  mvalpatstart += npos.start
-                  msinglevalpats(mpos) = npos
-                case _: m.Pat | _: m.Pat.ArgClause =>
-              }
-            case pats => indexPats(pats)
+              val curcnt = cnt.elem
+              indexPat(pat, cnt)
+              if (cnt.elem - curcnt == 1) msinglevalpats(mpos) = mpatvar.pos
+            case pats => pats.foreach(indexPat(_, cnt))
           }
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
@@ -309,22 +326,20 @@ trait TextDocumentOps {
               case mtree: m.Pat.Wildcard => if (isWholePat(mtree)) {
                   val mpos = indexUnderscore(mtree)
                   // scalac 2.12 and 2.13.15 put the value of `val (_: Int) = 1` at the colon
-                  if (mtree.parent.is[m.Pat.Typed]) {
-                    val mtoks = mtree.tokens
-                    val pred = (t: m.Token) => t.isAny[m.Token.Trivia, m.Token.RightParen]
-                    mtoks.findWideNotOrNull(pred, mtoks.length) match {
-                      case t: m.Token.Colon => munderscores(t.start) = mpos
-                      case _ =>
-                    }
-                  }
+                  val colon = typedColon(mtree)
+                  if (colon >= 0) munderscores(colon) = mpos
                 }
               case mtree: m.Name => indexName(mtree)
               case mtree @ (_: m.Term.FunctionLike | _: m.Term.AnonymousFunction) =>
                 val mpos = mtree.pos
                 mfuncs.update(mpos.start, mpos)
-              case mtree: m.Tree.WithPats => mtree.pats match {
-                  case (_: m.Pat.Var) :: Nil =>
-                  case pats => indexPats(pats)
+              // index only the outermost patterns: they include the nested ones
+              case mtree: m.Tree.WithPats if !isNestedPat(mtree) =>
+                mtree.pats match {
+                  case Nil | (_: m.Pat.Var) :: Nil =>
+                  case pats =>
+                    val cnt = IntRef.zero()
+                    pats.foreach(indexPat(_, cnt))
                 }
               case _ =>
             }
