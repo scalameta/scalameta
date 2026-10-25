@@ -24,11 +24,11 @@ trait SymbolOps {
     sourceIndexes.clear()
     runSources.clear()
     runSourcesRun = null
+    namespaces.clear()
     clearDocumentCaches()
   }
 
   def clearDocumentCaches(): Unit = {
-    namespaces.clear()
     localCache.clear()
     freeExistentials.clear()
   }
@@ -36,6 +36,18 @@ trait SymbolOps {
   private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
   // the locals that we looked up since a document started or ended: either changes a namespace
   private lazy val localCache = new mutable.HashMap[g.Symbol, String]
+
+  private lazy val sourceIndexes = new mutable.HashMap[GSourceFile, SourceIndex]
+  private lazy val namespaces = new mutable.HashMap[GSourceFile, Namespace]
+
+  // the units of `runSourcesRun` by source, when it had `runSourcesSize` units
+  private lazy val runSources = new java.util.IdentityHashMap[GSourceFile, g.CompilationUnit]
+  private var runSourcesRun: g.Run = _
+  private var runSourcesSize = 0
+
+  private var documentSource: GSourceFile = GNoSourceFile
+  private var documentBody: g.Tree = _
+  private var documentNamespace: Namespace = _
 
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     private[semanticdb] def toSemanticUncached: String = {
@@ -321,19 +333,13 @@ trait SymbolOps {
 
     }
   }
-  private lazy val namespaces = new mutable.HashMap[GSourceFile, Namespace]
-
-  private var documentSource: GSourceFile = GNoSourceFile
-  private var documentBody: g.Tree = _
-  private var documentNamespace: Namespace = _
 
   def startDocument(unit: g.CompilationUnit): Unit = {
+    clearDocumentCaches()
     documentSource = unit.source
     documentBody = unit.body
     documentNamespace = new Namespace
     namespaces(documentSource) = documentNamespace
-    localCache.clear()
-    freeExistentials.clear()
   }
   def endDocument(): Unit = {
     documentSource = GNoSourceFile
@@ -527,7 +533,6 @@ trait SymbolOps {
     isWrittenAt(pos, name) || isPlaceholderAt(pos.start) || isPlaceholderAt(pos.point)
   }
 
-  private lazy val sourceIndexes = new mutable.HashMap[GSourceFile, SourceIndex]
   // the index of a unit of the run, or null; Metals can type a unit again into a new body
   private def sourceIndex(source: GSourceFile): SourceIndex = {
     val body =
@@ -545,11 +550,6 @@ trait SymbolOps {
         index
     }
   }
-
-  // the units of `runSourcesRun` by source, when it had `runSourcesSize` units
-  private lazy val runSources = new java.util.IdentityHashMap[GSourceFile, g.CompilationUnit]
-  private var runSourcesRun: g.Run = _
-  private var runSourcesSize = 0
 
   // the unit of the run, or null; `compileLate` can add units to the run
   private def runSource(source: GSourceFile): g.CompilationUnit = {
