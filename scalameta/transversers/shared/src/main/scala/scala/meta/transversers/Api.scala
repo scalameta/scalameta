@@ -35,7 +35,7 @@ private[meta] trait Api extends VersionSpecificApis {
       buf += tree
       while (buf.nonEmpty) {
         val elem = buf.dequeue()
-        if (f(elem)) buf ++= elem.children
+        if (f(elem)) elem.foreachChild(buf += _)
       }
     }
 
@@ -50,7 +50,7 @@ private[meta] trait Api extends VersionSpecificApis {
       while (buf.nonEmpty) {
         val elem = buf.dequeue()
         if (f(elem)) return Some(elem)
-        buf ++= elem.children
+        elem.foreachChild(buf += _)
       }
       None
     }
@@ -61,11 +61,11 @@ private[meta] trait Api extends VersionSpecificApis {
      *   if function returns false, skip subtree
      */
     def dfsIf(f: Tree => Boolean): Unit = {
-      val buf = new collection.mutable.ListBuffer[Tree]
-      buf += tree
-      while (buf.nonEmpty) {
-        val elem = buf.remove(0)
-        if (f(elem)) buf.prependAll(elem.children)
+      val buf = new java.util.LinkedList[Tree]
+      buf.add(tree)
+      while (!buf.isEmpty) {
+        val elem = buf.removeFirst()
+        if (f(elem)) elem.foreachChild(buf.listIterator().add)
       }
     }
 
@@ -75,12 +75,12 @@ private[meta] trait Api extends VersionSpecificApis {
      *   if predicate returns true, stop traversing and return the triggering tree
      */
     def dfsFind(f: Tree => Boolean): Option[Tree] = {
-      val buf = new collection.mutable.ListBuffer[Tree]
-      buf += tree
-      while (buf.nonEmpty) {
-        val elem = buf.remove(0)
+      val buf = new java.util.LinkedList[Tree]
+      buf.add(tree)
+      while (!buf.isEmpty) {
+        val elem = buf.removeFirst()
         if (f(elem)) return Some(elem)
-        buf.prependAll(elem.children)
+        elem.foreachChild(buf.listIterator().add)
       }
       None
     }
@@ -91,6 +91,7 @@ private[meta] trait Api extends VersionSpecificApis {
      *   if function doesn't match a tree, skip subtree
      */
     def bfsIf(f: PartialFunction[Tree, Unit]): Unit = bfsIf(f.runWith(_ => ()))
+    private[meta] def bfsPartial(f: PartialFunction[Tree, Unit]): Unit = bfsIf(f)
 
     /**
      * Traverse the tree using depth-first-search applying the visitor function.
@@ -98,6 +99,7 @@ private[meta] trait Api extends VersionSpecificApis {
      *   if function doesn't match a tree, skip subtree
      */
     def dfsIf(f: PartialFunction[Tree, Unit]): Unit = dfsIf(f.runWith(_ => ()))
+    private[meta] def dfsPartial(f: PartialFunction[Tree, Unit]): Unit = dfsIf(f)
 
     /**
      * Traverse the tree using breadth-first-search applying the visitor function.
