@@ -34,11 +34,15 @@ trait SyntheticOps {
       case _ => s.NoTree
     }
 
-    def toSemanticQualifierTree: s.Tree = gTree match {
-      case sel @ g.Select(qual, _)
-          if !qual.isInstanceOf[g.New] && sel.symbol.owner != qual.symbol =>
-        s.SelectTree(qualifier = qual.toSemanticId, id = Some(sel.toSemanticId))
-      case fun => fun.toSemanticId
+    def toSemanticQualifierTree: s.Tree = {
+      val id = gTree.toSemanticId
+      gTree match {
+        case sel: g.Select =>
+          val qual = sel.qualifier
+          if (qual.isInstanceOf[g.New] || sel.symbol.owner == qual.symbol) id
+          else s.SelectTree(qualifier = qual.toSemanticId, id = Some(id))
+        case _ => id
+      }
     }
 
     def toSemanticId: s.IdTree = s.IdTree(symbol = gTree.symbol.toSemantic)

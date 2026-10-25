@@ -112,8 +112,8 @@ trait SymbolOps {
       else {
         @tailrec
         def loop(info: g.Type): SemanticdbDecls = info match {
-          case g.PolyType(_, info) => loop(info)
-          case g.ClassInfoType(_, gdecls, _) =>
+          case info: g.PolyType => loop(info.resultType)
+          case info: g.ClassInfoType =>
             /* Reorder companion objects to their source position (#1544): the namer enters an
              * eagerly-created companion right after its class, so an explicit `object` declared
              * later keeps that early slot. Only these modules move; other members keep scalac's
@@ -123,7 +123,7 @@ trait SymbolOps {
               !gsym.isJavaDefined && gsym.pos.isDefined
             val gbuf = List.newBuilder[g.Symbol]
             val gmod = List.newBuilder[g.Symbol]
-            gdecls.sorted.foreach(x =>
+            info.decls.sorted.foreach(x =>
               if (x.isUsefulSymbolInformation) if (isReorderable(x)) gmod += x else gbuf += x,
             )
             if (sym.isJavaDefined) sym.companionModule.info.decls.filter(_.isUseful).foreach(gbuf.+=)
