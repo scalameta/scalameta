@@ -18,7 +18,7 @@ import scala.tools.nsc.{Global, Settings}
 import munit.FunSuite
 
 // https://github.com/scalameta/scalameta/issues/1591
-class Issue1591Suite extends FunSuite {
+class LocalSymbolsSuite extends FunSuite {
 
   private val defs =
     """|object Defs {
@@ -170,7 +170,7 @@ class Issue1591Suite extends FunSuite {
   private lazy val joint = inOneRun(Map("A.scala" -> a), Map("B.scala" -> b), "B.scala")
   private lazy val classfile = fromClassfile(Map("A.scala" -> a), Map("B.scala" -> b), "B.scala")
 
-  test("A in the same file: symbols") {
+  test("#1591: A in the same file: symbols") {
     assertNoDiff(
       symbols(sameFile),
       """|c/Defs. => final object Defs extends AnyRef { +9 decls }
@@ -307,7 +307,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("A in the same file: occurrences") {
+  test("#1591: A in the same file: occurrences") {
     assertNoDiff(
       occurrences(sameFile),
       """|[0:8..0:9): c <= c/
@@ -412,7 +412,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("A in another file of the run: symbols") {
+  test("#1591: A in another file of the run: symbols") {
     def printed = symbols(joint)
     assertNoDiff(
       printed,
@@ -500,7 +500,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("A in another file of the run: occurrences") {
+  test("#1591: A in another file of the run: occurrences") {
     assertNoDiff(
       occurrences(joint),
       """|[0:8..0:9): b <= b/
@@ -563,7 +563,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("A from a classfile: symbols") {
+  test("#1591: A from a classfile: symbols") {
     assertNoDiff(
       symbols(classfile),
       """|b/Use. => final object Use extends AnyRef { +16 decls }
@@ -654,7 +654,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("A from a classfile: occurrences") {
+  test("#1591: A from a classfile: occurrences") {
     assertNoDiff(
       occurrences(classfile),
       """|[0:8..0:9): b <= b/
@@ -717,9 +717,11 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("A in another file of the run, and A from a classfile")(assertNotEquals(joint, classfile))
+  test("#1591: A in another file of the run, and A from a classfile")(
+    assertNotEquals(joint, classfile),
+  )
 
-  test("A in another file of the run, with a local of B at the offset of a member of A") {
+  test("#1591: A in another file of the run, with a local of B at the offset of a member of A") {
     val doc = inOneRun(Map("A.scala" -> offsetA), Map("B.scala" -> offsetB), "B.scala")
     assertNoDiff(
       symbols(doc),
@@ -739,19 +741,19 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("local names") {
+  test("#1591: local names") {
     assertEquals(collisions(sameFile), Nil)
     assertEquals(collisions(joint), Nil)
     assertEquals(collisions(classfile), Nil)
   }
 
-  test("local references") {
+  test("#1591: local references") {
     assertEquals(dangling(sameFile), Nil)
     assertEquals(dangling(joint), List("local10"))
     assertEquals(dangling(classfile), List("local12"))
   }
 
-  test("two refinements with one member name under one owner, from a classfile: symbols") {
+  test("#1591: two refinements with one member name under one owner, from a classfile: symbols") {
     val doc =
       fromClassfile(Map("Twins.scala" -> twinsA), Map("UseTwins.scala" -> twinsB), "UseTwins.scala")
     assertNoDiff(
@@ -782,9 +784,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test(
-    "two refinements with one member name under one owner, in another file of the run: symbols",
-  ) {
+  test("#1591: two refinements with one member name under one owner, in another file of the run: symbols") {
     val doc =
       inOneRun(Map("Twins.scala" -> twinsA), Map("UseTwins.scala" -> twinsB), "UseTwins.scala")
     assertNoDiff(
@@ -818,7 +818,7 @@ class Issue1591Suite extends FunSuite {
   private lazy val mixedClassfile =
     fromClassfile(Map("Mixed.scala" -> mixedA), Map("UseMixed.scala" -> mixedB), "UseMixed.scala")
 
-  test("refinements with one member name under one owner, from a classfile: symbols") {
+  test("#1591: refinements with one member name under one owner, from a classfile: symbols") {
     assertNoDiff(
       symbols(mixedClassfile),
       """|b/UseMixed. => final object UseMixed extends AnyRef { +3 decls }
@@ -852,7 +852,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("refinements with one member name under one owner, from a classfile: occurrences") {
+  test("#1591: refinements with one member name under one owner, from a classfile: occurrences") {
     assertNoDiff(
       occurrences(mixedClassfile),
       """|[0:8..0:9): b <= b/
@@ -875,7 +875,9 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("refinements with one member name under one owner, in another file of the run: symbols") {
+  test(
+    "#1591: refinements with one member name under one owner, in another file of the run: symbols",
+  ) {
     val doc =
       inOneRun(Map("Mixed.scala" -> mixedA), Map("UseMixed.scala" -> mixedB), "UseMixed.scala")
     assertNoDiff(
@@ -931,7 +933,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("overloads in one refinement, from a classfile") {
+  test("#1591: overloads in one refinement, from a classfile") {
     assertNoDiff(
       summary(fromClassfile(overloadsA, overloadsB, "UseOv.scala")),
       """|b/UseOv. => final object UseOv extends AnyRef { +2 decls }
@@ -973,7 +975,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("overloads in one refinement, in another file of the run") {
+  test("#1591: overloads in one refinement, in another file of the run") {
     assertNoDiff(
       summary(inOneRun(overloadsA, overloadsB, "UseOv.scala")),
       """|b/UseOv. => final object UseOv extends AnyRef { +2 decls }
@@ -1047,7 +1049,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("refinements with one member name, from a classfile, alone") {
+  test("#1591: refinements with one member name, from a classfile, alone") {
     assertNoDiff(
       summary(fromClassfile(batchA, batchB, "UseM.scala")),
       """|b/UseM. => final object UseM extends AnyRef { +2 decls }
@@ -1080,7 +1082,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("refinements with one member name, from a classfile, with a file that uses `early`") {
+  test("#1591: refinements with one member name, from a classfile, with a file that uses `early`") {
     assertNoDiff(
       summary(fromClassfile(batchA, batchB ++ batchC, "UseM.scala")),
       """|b/UseM. => final object UseM extends AnyRef { +2 decls }
@@ -1152,7 +1154,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin
   }
 
-  test("refinements of every shape, from a classfile") {
+  test("#1591: refinements of every shape, from a classfile") {
     assertNoDiff(
       summary(fromClassfile(shapesA, shapesB, "UseN.scala")),
       """|b/UseN. => final object UseN extends AnyRef { +11 decls }
@@ -1285,7 +1287,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("refinements of every shape, in another file of the run") {
+  test("#1591: refinements of every shape, in another file of the run") {
     assertNoDiff(
       summary(inOneRun(shapesA, shapesB, "UseN.scala")),
       """|b/UseN. => final object UseN extends AnyRef { +11 decls }
@@ -1439,7 +1441,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("a refinement in the parent of a nested object, from a classfile") {
+  test("#1591: a refinement in the parent of a nested object, from a classfile") {
     val doc = fromClassfile(nestedObjectA, nestedObjectB, "UseQ.scala")
     assertNoDiff(
       occurrences(doc).linesIterator.filter(_.contains(" x ")).mkString("\n"),
@@ -1449,7 +1451,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("two documents of one run") {
+  test("#1591: two documents of one run") {
     val out =
       compile(Map("A.scala" -> a, "B.scala" -> b, "B2.scala" -> b.replace("package b", "package b2")))
     def symbolsOf(uri: String) = symbols(document(out, uri)).replace("b2/", "b/")
@@ -1474,7 +1476,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("a self type selected through, in the same file") {
+  test("#1591: a self type selected through, in the same file") {
     assertNoDiff(
       summary(document(compile(selfA), "S.scala")),
       """|a/S# => trait S extends AnyRef { self: AnyRef { def x: Int } => +2 decls }
@@ -1506,7 +1508,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a self type selected through, from a classfile") {
+  test("#1591: a self type selected through, from a classfile") {
     assertNoDiff(
       summary(fromClassfile(selfA, selfB, "T.scala")),
       """|b/T# => trait T extends AnyRef with S { self: AnyRef { def x: Int } => +2 decls }
@@ -1543,7 +1545,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a self type selected through, in another file of the run") {
+  test("#1591: a self type selected through, in another file of the run") {
     assertNoDiff(
       summary(inOneRun(selfA, selfB, "T.scala")),
       """|b/T# => trait T extends AnyRef with S { self: AnyRef { def x: Int } => +2 decls }
@@ -1598,7 +1600,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("a refinement in a generic class at two type arguments, in the same file") {
+  test("#1591: a refinement in a generic class at two type arguments, in the same file") {
     val code = boxA("Box.scala") + boxB("UseBox.scala").replace("package b\n", "")
     assertNoDiff(
       summary(document(compile(Map("Box.scala" -> code)), "Box.scala")),
@@ -1653,7 +1655,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a refinement in a generic class at two type arguments, in the same file, after a use") {
+  test("#1591: a refinement in a generic class at two type arguments, in the same file, after a use") {
     val code =
       """|package a
          |import scala.language.reflectiveCalls
@@ -1714,7 +1716,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a refinement in a generic class at two type arguments, from a classfile") {
+  test("#1591: a refinement in a generic class at two type arguments, from a classfile") {
     assertNoDiff(
       summary(fromClassfile(boxA, boxB, "UseBox.scala")),
       """|b/UseBox. => final object UseBox extends AnyRef { +2 decls }
@@ -1754,7 +1756,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a refinement in a generic class at two type arguments, in another file of the run") {
+  test("#1591: a refinement in a generic class at two type arguments, in another file of the run") {
     assertNoDiff(
       summary(inOneRun(boxA, boxB, "UseBox.scala")),
       """|b/UseBox. => final object UseBox extends AnyRef { +2 decls }
@@ -1817,7 +1819,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin
   }
 
-  test("a refinement in a generic trait, and classes in its subclasses, from a classfile") {
+  test("#1591: a refinement in a generic trait, and classes in its subclasses, from a classfile") {
     assertNoDiff(
       summary(fromClassfile(getterA, getterB, "UseF.scala")),
       """|b/UseF. => final object UseF extends AnyRef { +4 decls }
@@ -1877,7 +1879,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a refinement in a generic trait, and classes in its subclasses, in another file of the run") {
+  test("#1591: a refinement in a generic trait, and classes in its subclasses, in another file of the run") {
     assertNoDiff(
       summary(inOneRun(getterA, getterB, "UseF.scala")),
       """|b/UseF. => final object UseF extends AnyRef { +4 decls }
@@ -2649,7 +2651,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("two refinements of one macro expansion") {
+  test("#1591: two refinements of one macro expansion") {
     assertNoDiff(
       summary(fromClassfile(macroA, macroB, "U.scala")),
       """|b/U. => final object U extends AnyRef { +3 decls }
@@ -2718,7 +2720,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin
   }
 
-  test("one refinement of a macro expansion") {
+  test("#1591: one refinement of a macro expansion") {
     val b = Map(
       "U.scala" ->
         """|package b
@@ -2764,7 +2766,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("two refinements of one macro expansion, in another file of the run") {
+  test("#1591: two refinements of one macro expansion, in another file of the run") {
     val b = Map(
       "P.scala" ->
         """|package b
@@ -2941,7 +2943,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("a refinement that refers to a local class of its method, in the same file") {
+  test("#1591: a refinement that refers to a local class of its method, in the same file") {
     val code = escapeA("Esc.scala") + escapeB("UseEsc.scala").replace("package b\n", "")
     assertNoDiff(
       locals(document(compile(Map("Esc.scala" -> code)), "Esc.scala")),
@@ -2963,7 +2965,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a refinement that refers to a local class of its method, in another file of the run") {
+  test("#1591: a refinement that refers to a local class of its method, in another file of the run") {
     assertNoDiff(
       summary(inOneRun(escapeA, escapeB, "UseEsc.scala")),
       """|b/UseEsc. => final object UseEsc extends AnyRef { +3 decls }
@@ -3010,7 +3012,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a refinement that refers to a local class of its method, from a classfile") {
+  test("#1591: a refinement that refers to a local class of its method, from a classfile") {
     assertNoDiff(
       summary(fromClassfile(escapeA, escapeB, "UseEsc.scala")),
       """|b/UseEsc. => final object UseEsc extends AnyRef { +3 decls }
@@ -3073,7 +3075,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("a refinement in the parameter of a generic case class, in the same file") {
+  test("#1591: a refinement in the parameter of a generic case class, in the same file") {
     val code = caseA("K.scala") + caseB("UseK.scala").replace("package b\n", "")
     assertNoDiff(
       locals(document(compile(Map("K.scala" -> code)), "K.scala")),
@@ -3086,7 +3088,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a refinement in the parameter of a generic case class, in another file of the run") {
+  test("#1591: a refinement in the parameter of a generic case class, in another file of the run") {
     assertNoDiff(
       summary(inOneRun(caseA, caseB, "UseK.scala")),
       """|b/UseK. => final object UseK extends AnyRef { +2 decls }
@@ -3126,7 +3128,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("a refinement in the parameter of a generic case class, from a classfile") {
+  test("#1591: a refinement in the parameter of a generic case class, from a classfile") {
     assertNoDiff(
       summary(fromClassfile(caseA, caseB, "UseK.scala")),
       """|b/UseK. => final object UseK extends AnyRef { +2 decls }
@@ -3199,7 +3201,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin
   }
 
-  test("refinements in parameters that scalac copies, in the same file") {
+  test("#1591: refinements in parameters that scalac copies, in the same file") {
     val code = copiesA("M.scala") + copiesB("UseM.scala").replace("package b\n", "")
     assertNoDiff(
       locals(document(compile(Map("M.scala" -> code)), "M.scala")),
@@ -3228,7 +3230,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("refinements in parameters that scalac copies, in another file of the run") {
+  test("#1591: refinements in parameters that scalac copies, in another file of the run") {
     assertNoDiff(
       summary(inOneRun(copiesA, copiesB, "UseM.scala")),
       """|b/UseM. => final object UseM extends AnyRef { +5 decls }
@@ -3302,7 +3304,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("refinements in parameters that scalac copies, from a classfile") {
+  test("#1591: refinements in parameters that scalac copies, from a classfile") {
     assertNoDiff(
       summary(fromClassfile(copiesA, copiesB, "UseM.scala")),
       """|b/UseM. => final object UseM extends AnyRef { +5 decls }
@@ -4195,7 +4197,7 @@ class Issue1591Suite extends FunSuite {
          |""".stripMargin,
   )
 
-  test("a refinement in the bound of a type parameter, in the same file") {
+  test("#1591: a refinement in the bound of a type parameter, in the same file") {
     assertNoDiff(
       summary(document(compile(boundA), "TB.scala")),
       """|a/TB. => final object TB extends AnyRef { +2 decls }
@@ -4369,7 +4371,7 @@ class Issue1591Suite extends FunSuite {
     )
   }
 
-  test("locals in an annotated type, a refinement and a bounded alias, in the same file") {
+  test("#1591: locals in an annotated type, a refinement and a bounded alias, in the same file") {
     val code =
       """|package p
          |class ann(f: Int => Int) extends scala.annotation.StaticAnnotation
