@@ -128,8 +128,8 @@ trait SymbolInformationOps {
         val gsig =
           if (gsym.hasFlag(gf.JAVA_ENUM) && gsym.isStatic) gsym.info.widen
           else if (gsym.isAliasType) {
-            def preprocess(info: g.Type): g.Type = info match {
-              case g.PolyType(tparams, tpe) => g.PolyType(tparams, preprocess(tpe))
+            def preprocess(tpe: g.Type): g.Type = tpe match {
+              case tpe: g.PolyType => g.PolyType(tpe.typeParams, preprocess(tpe.resultType))
               case tpe => g.TypeBounds(tpe, tpe)
             }
             preprocess(gsym.info)

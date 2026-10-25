@@ -77,7 +77,7 @@ trait TextDocumentOps {
           traverse(t.original)
           // annotations in the original are untyped, like `@field` in `@(deprecated @field)`
           t.tpe match {
-            case g.AnnotatedType(anns, _) => anns.foreach { ann =>
+            case tpe: g.AnnotatedType => tpe.annotations.foreach { ann =>
                 val gpos = ann.original.pos
                 if (gpos.isRange && gpos.source == source) traverse(ann.original)
               }
@@ -630,7 +630,7 @@ trait TextDocumentOps {
             val gscope = genclosing.dropWhile(!_.isInstanceOf[g.ImplDef])
             @tailrec
             def dealiased(gtpe: g.Type): g.Symbol = gtpe match {
-              case g.PolyType(_, gres) => dealiased(gres)
+              case gtpe: g.PolyType => dealiased(gtpe.resultType)
               case _ => gtpe.dealias.typeSymbol
             }
             resolveTypePath(mtpe, gscope, mtpe.pos.start) match {
@@ -1132,7 +1132,8 @@ trait TextDocumentOps {
               // For case #3, we do not change traversal order, but have added an additional end-only match case
               // for Select's against a qual$ Ident.
               gblock.stats.foreach {
-                case g.ValDef(_, _, _, rhs) =>
+                case t: g.ValDef =>
+                  val rhs = t.rhs
                   if (rhs.symbol == null || !rhs.symbol.isDefaultGetter) traverse(rhs)
                 case _ =>
               }
@@ -1250,9 +1251,9 @@ trait TextDocumentOps {
         private def getApplyImplicitView(gt: g.ApplyImplicitView, range: s.Range) = {
           val fun = gt.fun match {
             // a method of a value, like `f.apply`, does not identify the conversion by itself
-            case f @ g.Select(qual, _)
-                if qual.symbol != null && !qual.symbol.isModule && !qual.symbol.hasPackageFlag =>
-              f.toSemanticQualifierTree
+            case f: g.Select
+                if f.qualifier.symbol != null && !f.qualifier.symbol.isModule &&
+                  !f.qualifier.symbol.hasPackageFlag => f.toSemanticQualifierTree
             case f => f.toSemanticTree
           }
           s.ApplyTree(fun, List(range.toSemanticOriginal))
