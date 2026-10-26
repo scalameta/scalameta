@@ -4,8 +4,6 @@ import scala.meta.internal.semanticdb.Diagnostic.Severity._
 import scala.meta.internal.semanticdb.Diagnostic._
 import scala.meta.internal.semanticdb._
 
-import scala.math.Ordering
-
 trait DiagnosticPrinter extends BasePrinter with RangePrinter {
   def pprint(diag: Diagnostic): Unit = {
     opt(diag.range, " ")(pprint)
@@ -18,7 +16,4 @@ trait DiagnosticPrinter extends BasePrinter with RangePrinter {
     }
     out.println(diag.message)
   }
-
-  implicit def diagOrder: Ordering[Diagnostic] = Ordering
-    .by(d => (d.range, d.severity.value, d.message))
 }

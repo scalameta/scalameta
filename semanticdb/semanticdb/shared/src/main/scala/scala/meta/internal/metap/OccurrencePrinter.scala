@@ -4,8 +4,6 @@ import scala.meta.internal.semanticdb.SymbolOccurrence.Role._
 import scala.meta.internal.semanticdb.SymbolOccurrence._
 import scala.meta.internal.semanticdb._
 
-import scala.math.Ordering
-
 trait OccurrencePrinter extends BasePrinter with RangePrinter {
   def pprint(occ: SymbolOccurrence): Unit = {
     opt(occ.range)(pprint)
@@ -19,7 +17,4 @@ trait OccurrencePrinter extends BasePrinter with RangePrinter {
     case DEFINITION => out.print(" <= ")
     case UNKNOWN_ROLE | Role.Unrecognized(_) => out.print(" <?> ")
   }
-
-  implicit def occOrder: Ordering[SymbolOccurrence] = Ordering
-    .by(o => (o.range, o.symbol, o.role.value))
 }

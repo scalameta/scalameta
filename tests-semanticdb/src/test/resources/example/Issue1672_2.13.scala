@@ -1,7 +1,7 @@
 // See https://github.com/scalameta/scalameta/issues/1672
 package example
 
-class Issue1672Annot/*<=example.Issue1672Annot#*/(x/*<=example.Issue1672Annot#x.*//*<=example.Issue1672Annot#`<init>`().(x)*/: Int/*=>scala.Int#*/, y/*<=example.Issue1672Annot#y.*//*<=example.Issue1672Annot#`<init>`().(y)*/: String/*=>scala.Predef.String#*/) extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*//*=>scala.annotation.Annotation#`<init>`().*/
+class Issue1672Annot/*<=example.Issue1672Annot#*/(x/*<=example.Issue1672Annot#`<init>`().(x)*//*<=example.Issue1672Annot#x.*/: Int/*=>scala.Int#*/, y/*<=example.Issue1672Annot#`<init>`().(y)*//*<=example.Issue1672Annot#y.*/: String/*=>scala.Predef.String#*/) extends scala.annotation.StaticAnnotation/*=>scala.annotation.StaticAnnotation#*//*=>scala.annotation.Annotation#`<init>`().*/
 
 @Issue1672Annot/*=>example.Issue1672Annot#*/(y/*=>example.Issue1672Annot#`<init>`().(y)*/ = "b", x/*=>example.Issue1672Annot#`<init>`().(x)*/ = 2)
 class Issue1672/*<=example.Issue1672#*/ {

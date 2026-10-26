@@ -1,7 +1,7 @@
 // See https://github.com/scalameta/scalameta/issues/2116
 package example
 
-import scala.concurrent.ExecutionContext/*=>scala.concurrent.ExecutionContext.*//*=>scala.concurrent.ExecutionContext#*/
+import scala.concurrent.ExecutionContext/*=>scala.concurrent.ExecutionContext#*//*=>scala.concurrent.ExecutionContext.*/
 
 abstract class Issue2116/*<=example.Issue2116#*/ {
 

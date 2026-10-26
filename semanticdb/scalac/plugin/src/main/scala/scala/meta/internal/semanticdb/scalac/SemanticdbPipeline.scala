@@ -1,6 +1,7 @@
 package scala.meta.internal.semanticdb.scalac
 
 import org.scalameta.internal.ScalaCompat.EOL
+import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.{semanticdb => s}
 
 import java.io._
@@ -97,7 +98,7 @@ trait SemanticdbPipeline extends SemanticdbOps {
       override def apply(unit: g.CompilationUnit): Unit = {
         if (unit.isIgnored) return
         try if (config.diagnostics.isOn) {
-            val diagnostics = unit.reportedDiagnostics(Map.empty)
+            val diagnostics = unit.reportedDiagnostics(Map.empty).toIndexedSeq.sorted
             if (diagnostics.nonEmpty && unit.source.isInSourceroot()) {
               val sdoc = s.TextDocument(
                 schema = s.Schema.SEMANTICDB4,

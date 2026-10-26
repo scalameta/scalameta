@@ -1,6 +1,6 @@
 package example
 
-import scala.languageFeature/*=>scala.languageFeature.*/.reflectiveCalls/*=>scala.languageFeature.reflectiveCalls.*//*=>scala.languageFeature.reflectiveCalls#*/
+import scala.languageFeature/*=>scala.languageFeature.*/.reflectiveCalls/*=>scala.languageFeature.reflectiveCalls#*//*=>scala.languageFeature.reflectiveCalls.*/
 
 object StructuralTypes/*<=example.StructuralTypes.*/ {
   val a/*<=example.StructuralTypes.a.*/ = new /*<=local0*/{
