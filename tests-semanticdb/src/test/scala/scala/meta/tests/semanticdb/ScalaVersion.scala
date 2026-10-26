@@ -35,6 +35,7 @@ object ScalaVersion {
   }
 
   def atLeast213_15 = isSupported(minimal212 = Int.MaxValue, minimal213 = 15)
+  def atLeast213_16 = isSupported(minimal212 = Int.MaxValue, minimal213 = 16)
   def atLeast213_17 = isSupported(minimal212 = Int.MaxValue, minimal213 = 17)
 
   def getExpected(compat: Seq[(Version, String)], expected: String) = compat.collectFirst {
