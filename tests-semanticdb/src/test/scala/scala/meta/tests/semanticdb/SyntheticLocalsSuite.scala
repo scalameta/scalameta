@@ -74,17 +74,17 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |_empty_/s2#rs(). => method rs(r: AnyRef { var def vr: Int; var def vr_=(x$1: Int): Unit }): Int
        |  r => _empty_/s2#rs().(r)
        |  AnyRef => scala/AnyRef#
-       |  vr => local8
+       |  vr => local6
        |  Int => scala/Int#
-       |  vr_= => local9
-       |  x$1 => local10
+       |  vr_= => local7
+       |  x$1 => local8
        |  Unit => scala/Unit#
        |_empty_/s2#rs().(r) => param r: AnyRef { var def vr: Int; var def vr_=(x$1: Int): Unit }
        |  AnyRef => scala/AnyRef#
-       |  vr => local8
+       |  vr => local6
        |  Int => scala/Int#
-       |  vr_= => local9
-       |  x$1 => local10
+       |  vr_= => local7
+       |  x$1 => local8
        |  Unit => scala/Unit#
        |local0 => abstract var method vs: Int
        |  Int => scala/Int#
@@ -102,19 +102,13 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  Unit => scala/Unit#
        |local5 => synthetic param x$1: Int
        |  Int => scala/Int#
-       |local6 => abstract var method vn_=(x$1: Int): Unit
-       |  x$1 => local7
+       |local6 => abstract var method vr: Int
+       |  Int => scala/Int#
+       |local7 => abstract var method vr_=(x$1: Int): Unit
+       |  x$1 => local8
        |  Int => scala/Int#
        |  Unit => scala/Unit#
-       |local7 => synthetic param x$1: Int
-       |  Int => scala/Int#
-       |local8 => abstract var method vr: Int
-       |  Int => scala/Int#
-       |local9 => abstract var method vr_=(x$1: Int): Unit
-       |  x$1 => local10
-       |  Int => scala/Int#
-       |  Unit => scala/Unit#
-       |local10 => synthetic param x$1: Int
+       |local8 => synthetic param x$1: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -196,7 +190,8 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
     """|[0:7..0:11): t126 <= _empty_/t126.
        |[1:11..1:15): t126 <= _empty_/t126#
        |[1:15..1:15):  <= _empty_/t126#`<init>`().
-       |[1:16..1:17): a <= _empty_/t126.apply().(a)
+       |[1:16..1:17): a <= _empty_/t126#`<init>`().(a)
+       |[1:16..1:17): a <= _empty_/t126#a.
        |[1:19..1:22): Int => scala/Int#
        |""".stripMargin,
   )
@@ -213,12 +208,12 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:7..0:11): t127 <= _empty_/t127.
        |[1:6..1:7): m <= _empty_/t127.m().
-       |[2:11..2:12): C <= local4
+       |[2:11..2:12): C <= local5
        |[3:15..3:16): C <= local0
-       |[3:16..3:16):  <= local8
+       |[3:16..3:16):  <= local10
        |[3:17..3:18): a <= local1
        |[3:20..3:23): Int => scala/Int#
-       |[4:4..4:5): C => local4
+       |[4:4..4:5): C => local5
        |""".stripMargin,
   )
 
@@ -405,62 +400,66 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Serializable => scala/Serializable#
          |local1 => val param a: Int
          |  Int => scala/Int#
-         |local2 => synthetic method copy(val a: Int): C
-         |  a => local1
+         |local2 => synthetic method copy(a: Int): C
+         |  a => local3
          |  Int => scala/Int#
          |  C => local0
-         |local3 => synthetic method copy$default$1: Int @uncheckedVariance
+         |local3 => default param a: Int
+         |  Int => scala/Int#
+         |local4 => synthetic method copy$default$1: Int @uncheckedVariance
          |  Int => scala/Int#
          |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local4 => final object C extends AnyRef with Serializable { +2 decls }
+         |local5 => final object C extends AnyRef with Serializable { +2 decls }
          |  AnyRef => scala/AnyRef#
          |  Serializable => scala/Serializable#
-         |local5 => synthetic method apply(val a: Int): C
-         |  a => local1
+         |local6 => synthetic method apply(a: Int): C
+         |  a => local8
          |  Int => scala/Int#
          |  C => local0
-         |local6 => synthetic method unapply(x$0: C): Option[Int]
-         |  x$0 => local7
+         |local7 => synthetic method unapply(x$0: C): Option[Int]
+         |  x$0 => local9
          |  C => local0
          |  Option => scala/Option#
          |  Int => scala/Int#
-         |local7 => synthetic param x$0: C
+         |local8 => param a: Int
+         |  Int => scala/Int#
+         |local9 => synthetic param x$0: C
          |  C => local0
-         |local8 => primary ctor <init>(val a: Int)
+         |local10 => primary ctor <init>(val a: Int)
          |  a => local1
          |  Int => scala/Int#
-         |local9 => synthetic method productPrefix: String <: scala/Product#productPrefix().
+         |local11 => synthetic method productPrefix: String <: scala/Product#productPrefix().
          |  String => java/lang/String#
-         |local10 => synthetic method productArity: Int <: scala/Product#productArity().
+         |local12 => synthetic method productArity: Int <: scala/Product#productArity().
          |  Int => scala/Int#
-         |local11 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
-         |  x$1 => local17
+         |local13 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |  x$1 => local19
          |  Int => scala/Int#
          |  Any => scala/Any#
-         |local12 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
+         |local14 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
          |  Iterator => scala/collection/Iterator#
          |  Any => scala/Any#
-         |local13 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
-         |  x$1 => local18
-         |  Any => scala/Any#
-         |  Boolean => scala/Boolean#
-         |local14 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
-         |  Int => scala/Int#
-         |local15 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local16 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |local15 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
          |  x$1 => local20
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local17 => synthetic param x$1: Int
+         |local16 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
          |  Int => scala/Int#
-         |local18 => synthetic param x$1: Any
+         |local17 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local18 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local22
          |  Any => scala/Any#
-         |local19 => synthetic var local acc: Int
+         |  Boolean => scala/Boolean#
+         |local19 => synthetic param x$1: Int
          |  Int => scala/Int#
          |local20 => synthetic param x$1: Any
          |  Any => scala/Any#
-         |local21 => synthetic val local C$1: C
+         |local21 => synthetic var local acc: Int
+         |  Int => scala/Int#
+         |local22 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local23 => synthetic val local C$1: C
          |  C => local0
          |""".stripMargin
     else
@@ -477,68 +476,72 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  Serializable => scala/package.Serializable#
          |local1 => val param a: Int
          |  Int => scala/Int#
-         |local2 => synthetic method copy(val a: Int): C
-         |  a => local1
+         |local2 => synthetic method copy(a: Int): C
+         |  a => local3
          |  Int => scala/Int#
          |  C => local0
-         |local3 => synthetic method copy$default$1: Int @uncheckedVariance
+         |local3 => default param a: Int
+         |  Int => scala/Int#
+         |local4 => synthetic method copy$default$1: Int @uncheckedVariance
          |  Int => scala/Int#
          |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local4 => final object C extends AnyRef with Serializable { +2 decls }
+         |local5 => final object C extends AnyRef with Serializable { +2 decls }
          |  AnyRef => scala/AnyRef#
          |  Serializable => java/io/Serializable#
-         |local5 => synthetic method apply(val a: Int): C
-         |  a => local1
+         |local6 => synthetic method apply(a: Int): C
+         |  a => local8
          |  Int => scala/Int#
          |  C => local0
-         |local6 => synthetic method unapply(x$0: C): Option[Int]
-         |  x$0 => local7
+         |local7 => synthetic method unapply(x$0: C): Option[Int]
+         |  x$0 => local9
          |  C => local0
          |  Option => scala/Option#
          |  Int => scala/Int#
-         |local7 => synthetic param x$0: C
+         |local8 => param a: Int
+         |  Int => scala/Int#
+         |local9 => synthetic param x$0: C
          |  C => local0
-         |local8 => primary ctor <init>(val a: Int)
+         |local10 => primary ctor <init>(val a: Int)
          |  a => local1
          |  Int => scala/Int#
-         |local9 => synthetic method productPrefix: String <: scala/Product#productPrefix().
+         |local11 => synthetic method productPrefix: String <: scala/Product#productPrefix().
          |  String => java/lang/String#
-         |local10 => synthetic method productArity: Int <: scala/Product#productArity().
+         |local12 => synthetic method productArity: Int <: scala/Product#productArity().
          |  Int => scala/Int#
-         |local11 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
-         |  x$1 => local18
-         |  Int => scala/Int#
-         |  Any => scala/Any#
-         |local12 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
-         |  Iterator => scala/collection/Iterator#
-         |  Any => scala/Any#
-         |local13 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
-         |  x$1 => local19
-         |  Any => scala/Any#
-         |  Boolean => scala/Boolean#
-         |local14 => synthetic method productElementName(x$1: Int): String <: scala/Product#productElementName().
+         |local13 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
          |  x$1 => local20
          |  Int => scala/Int#
-         |  String => java/lang/String#
-         |local15 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
-         |  Int => scala/Int#
-         |local16 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local17 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  x$1 => local22
+         |  Any => scala/Any#
+         |local14 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
+         |  Iterator => scala/collection/Iterator#
+         |  Any => scala/Any#
+         |local15 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |  x$1 => local21
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local18 => synthetic param x$1: Int
+         |local16 => synthetic method productElementName(x$1: Int): String <: scala/Product#productElementName().
+         |  x$1 => local22
          |  Int => scala/Int#
-         |local19 => synthetic param x$1: Any
+         |  String => java/lang/String#
+         |local17 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
+         |  Int => scala/Int#
+         |local18 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |  String => java/lang/String#
+         |local19 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |  x$1 => local24
          |  Any => scala/Any#
+         |  Boolean => scala/Boolean#
          |local20 => synthetic param x$1: Int
          |  Int => scala/Int#
-         |local21 => synthetic var local acc: Int
-         |  Int => scala/Int#
-         |local22 => synthetic param x$1: Any
+         |local21 => synthetic param x$1: Any
          |  Any => scala/Any#
-         |local23 => synthetic val local C$1: C
+         |local22 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local23 => synthetic var local acc: Int
+         |  Int => scala/Int#
+         |local24 => synthetic param x$1: Any
+         |  Any => scala/Any#
+         |local25 => synthetic val local C$1: C
          |  C => local0
          |""".stripMargin,
   )
@@ -576,57 +579,56 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local5 => param t: T
          |  T => local8
-         |local6 => private[this] synthetic implicit val method evidence$2: Ordering[T]
+         |local6 => implicit param evidence$2: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local8
          |local7 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
          |  t => local5
          |  T => local8
-         |  evidence$2 => local9
+         |  evidence$2 => local6
          |  Ordering => scala/package.Ordering#
          |local8 => typeparam T
-         |local9 => implicit param evidence$2: Ordering[T]
-         |  Ordering => scala/package.Ordering#
-         |  T => local8
-         |local10 => case class k extends AnyRef with Product with Serializable { +12 decls }
+         |local9 => case class k extends AnyRef with Product with Serializable { +12 decls }
          |  AnyRef => scala/AnyRef#
          |  Product => scala/Product#
          |  Serializable => scala/Serializable#
-         |local11 => val param i: Int
+         |local10 => val param i: Int
          |  Int => scala/Int#
-         |local12 => primary ctor <init>(val i: Int)
-         |  i => local11
+         |local11 => primary ctor <init>(val i: Int)
+         |  i => local10
          |  Int => scala/Int#
-         |local13 => synthetic method copy(val i: Int): k
-         |  i => local11
+         |local12 => synthetic method copy(i: Int): k
+         |  i => local22
          |  Int => scala/Int#
-         |  k => local10
-         |local14 => synthetic method copy$default$1: Int @uncheckedVariance
+         |  k => local9
+         |local13 => synthetic method copy$default$1: Int @uncheckedVariance
          |  Int => scala/Int#
          |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local15 => synthetic method productPrefix: String <: scala/Product#productPrefix().
+         |local14 => synthetic method productPrefix: String <: scala/Product#productPrefix().
          |  String => java/lang/String#
-         |local16 => synthetic method productArity: Int <: scala/Product#productArity().
+         |local15 => synthetic method productArity: Int <: scala/Product#productArity().
          |  Int => scala/Int#
-         |local17 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |local16 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
          |  x$1 => local23
          |  Int => scala/Int#
          |  Any => scala/Any#
-         |local18 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
+         |local17 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
          |  Iterator => scala/collection/Iterator#
          |  Any => scala/Any#
-         |local19 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |local18 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
          |  x$1 => local24
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local20 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
+         |local19 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
          |  Int => scala/Int#
-         |local21 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |local20 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local22 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |local21 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
          |  x$1 => local26
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
+         |local22 => default param i: Int
+         |  Int => scala/Int#
          |local23 => synthetic param x$1: Int
          |  Int => scala/Int#
          |local24 => synthetic param x$1: Any
@@ -636,28 +638,30 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |local26 => synthetic param x$1: Any
          |  Any => scala/Any#
          |local27 => synthetic val local k$1: k
-         |  k => local10
+         |  k => local9
          |local28 => synthetic final object k extends AbstractFunction1[Int, k] with Serializable { +3 decls }
          |  AbstractFunction1 => scala/runtime/AbstractFunction1#
          |  Int => scala/Int#
-         |  k => local10
+         |  k => local9
          |  Serializable => scala/Serializable#
          |local29 => synthetic final method toString(): String <: scala/Function1#toString()., java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local30 => synthetic method apply(val i: Int): k <: scala/Function1#apply().
-         |  i => local11
+         |local30 => synthetic method apply(i: Int): k <: scala/Function1#apply().
+         |  i => local32
          |  Int => scala/Int#
-         |  k => local10
+         |  k => local9
          |local31 => synthetic method unapply(x$0: k): Option[Int]
-         |  x$0 => local32
-         |  k => local10
+         |  x$0 => local33
+         |  k => local9
          |  Option => scala/Option#
          |  Int => scala/Int#
-         |local32 => synthetic param x$0: k
-         |  k => local10
-         |local33 => synthetic param x$1: Int
+         |local32 => param i: Int
          |  Int => scala/Int#
-         |local34 => val local f: Function1[Int, Int]
+         |local33 => synthetic param x$0: k
+         |  k => local9
+         |local34 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local35 => val local f: Function1[Int, Int]
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
          |""".stripMargin
@@ -682,61 +686,60 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |local5 => param t: T
          |  T => local8
-         |local6 => private[this] synthetic implicit val method evidence$2: Ordering[T]
+         |local6 => implicit param evidence$2: Ordering[T]
          |  Ordering => scala/package.Ordering#
          |  T => local8
          |local7 => primary ctor <init>(t: T)(implicit evidence$2: Ordering[T])
          |  t => local5
          |  T => local8
-         |  evidence$2 => local9
+         |  evidence$2 => local6
          |  Ordering => scala/package.Ordering#
          |local8 => typeparam T
-         |local9 => implicit param evidence$2: Ordering[T]
-         |  Ordering => scala/package.Ordering#
-         |  T => local8
-         |local10 => case class k extends AnyRef with Product with Serializable { +13 decls }
+         |local9 => case class k extends AnyRef with Product with Serializable { +13 decls }
          |  AnyRef => scala/AnyRef#
          |  Product => scala/Product#
          |  Serializable => scala/package.Serializable#
-         |local11 => val param i: Int
+         |local10 => val param i: Int
          |  Int => scala/Int#
-         |local12 => primary ctor <init>(val i: Int)
-         |  i => local11
+         |local11 => primary ctor <init>(val i: Int)
+         |  i => local10
          |  Int => scala/Int#
-         |local13 => synthetic method copy(val i: Int): k
-         |  i => local11
+         |local12 => synthetic method copy(i: Int): k
+         |  i => local23
          |  Int => scala/Int#
-         |  k => local10
-         |local14 => synthetic method copy$default$1: Int @uncheckedVariance
+         |  k => local9
+         |local13 => synthetic method copy$default$1: Int @uncheckedVariance
          |  Int => scala/Int#
          |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |local15 => synthetic method productPrefix: String <: scala/Product#productPrefix().
+         |local14 => synthetic method productPrefix: String <: scala/Product#productPrefix().
          |  String => java/lang/String#
-         |local16 => synthetic method productArity: Int <: scala/Product#productArity().
+         |local15 => synthetic method productArity: Int <: scala/Product#productArity().
          |  Int => scala/Int#
-         |local17 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
+         |local16 => synthetic method productElement(x$1: Int): Any <: scala/Product#productElement().
          |  x$1 => local24
          |  Int => scala/Int#
          |  Any => scala/Any#
-         |local18 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
+         |local17 => synthetic method productIterator: Iterator[Any] <: scala/Product#productIterator().
          |  Iterator => scala/collection/Iterator#
          |  Any => scala/Any#
-         |local19 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
+         |local18 => synthetic method canEqual(x$1: Any): Boolean <: scala/Equals#canEqual().
          |  x$1 => local25
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
-         |local20 => synthetic method productElementName(x$1: Int): String <: scala/Product#productElementName().
+         |local19 => synthetic method productElementName(x$1: Int): String <: scala/Product#productElementName().
          |  x$1 => local26
          |  Int => scala/Int#
          |  String => java/lang/String#
-         |local21 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
+         |local20 => synthetic method hashCode(): Int <: java/lang/Object#hashCode()., scala/Any#hashCode().
          |  Int => scala/Int#
-         |local22 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
+         |local21 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local23 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
+         |local22 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
          |  x$1 => local28
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
+         |local23 => default param i: Int
+         |  Int => scala/Int#
          |local24 => synthetic param x$1: Int
          |  Int => scala/Int#
          |local25 => synthetic param x$1: Any
@@ -748,28 +751,30 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
          |local28 => synthetic param x$1: Any
          |  Any => scala/Any#
          |local29 => synthetic val local k$1: k
-         |  k => local10
+         |  k => local9
          |local30 => synthetic final object k extends AbstractFunction1[Int, k] with Serializable { +3 decls }
          |  AbstractFunction1 => scala/runtime/AbstractFunction1#
          |  Int => scala/Int#
-         |  k => local10
+         |  k => local9
          |  Serializable => java/io/Serializable#
          |local31 => synthetic final method toString(): String <: scala/Function1#toString()., java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
-         |local32 => synthetic method apply(val i: Int): k <: scala/Function1#apply().
-         |  i => local11
+         |local32 => synthetic method apply(i: Int): k <: scala/Function1#apply().
+         |  i => local34
          |  Int => scala/Int#
-         |  k => local10
+         |  k => local9
          |local33 => synthetic method unapply(x$0: k): Option[Int]
-         |  x$0 => local34
-         |  k => local10
+         |  x$0 => local35
+         |  k => local9
          |  Option => scala/Option#
          |  Int => scala/Int#
-         |local34 => synthetic param x$0: k
-         |  k => local10
-         |local35 => synthetic param x$1: Int
+         |local34 => param i: Int
          |  Int => scala/Int#
-         |local36 => val local f: Function1[Int, Int]
+         |local35 => synthetic param x$0: k
+         |  k => local9
+         |local36 => synthetic param x$1: Int
+         |  Int => scala/Int#
+         |local37 => val local f: Function1[Int, Int]
          |  Function1 => scala/Function1#
          |  Int => scala/Int#
          |""".stripMargin,
@@ -827,10 +832,12 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local3 => method d: Int
        |  Int => scala/Int#
-       |local4 => synthetic implicit method R(val x: Int): R
-       |  x => local1
+       |local4 => synthetic implicit method R(x: Int): R
+       |  x => local5
        |  Int => scala/Int#
        |  R => local0
+       |local5 => param x: Int
+       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -844,11 +851,18 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
     )
     assertNoDiff(
       load().linesIterator.filter(_.contains("): i ")).mkString("\n"),
-      """|[1:30..1:31): i <= local1
-         |[1:49..1:50): i => local1
-         |[1:64..1:65): i => local1
-         |[1:71..1:72): i => local1
-         |""".stripMargin,
+      if (ScalaVersion.is212)
+        """|[1:30..1:31): i <= local1
+           |[1:49..1:50): i => local23
+           |[1:64..1:65): i => local13
+           |[1:71..1:72): i => local1
+           |""".stripMargin
+      else
+        """|[1:30..1:31): i <= local1
+           |[1:49..1:50): i => local25
+           |[1:64..1:65): i => local14
+           |[1:71..1:72): i => local1
+           |""".stripMargin,
     )
   }
 
@@ -877,8 +891,8 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  AnyRef => scala/AnyRef#
        |  vn => local0
        |  Int => scala/Int#
-       |  vn_= => local3
-       |  x$1 => local4
+       |  vn_= => local1
+       |  x$1 => local2
        |  Unit => scala/Unit#
        |local0 => abstract var method vn: Int
        |  Int => scala/Int#
@@ -887,12 +901,6 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Unit => scala/Unit#
        |local2 => synthetic param x$1: Int
-       |  Int => scala/Int#
-       |local3 => abstract var method vn_=(x$1: Int): Unit
-       |  x$1 => local4
-       |  Int => scala/Int#
-       |  Unit => scala/Unit#
-       |local4 => synthetic param x$1: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -1757,9 +1765,9 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  x => local3
        |  default => local4
        |  Function1 => scala/Function1#
-       |local2 => final method isDefinedAt(x: A1): Boolean <: scala/PartialFunction#isDefinedAt().
-       |  x => local3
-       |  A1 => local6
+       |local2 => final method isDefinedAt(x: Int): Boolean <: scala/PartialFunction#isDefinedAt().
+       |  x => local9
+       |  Int => scala/Int#
        |  Boolean => scala/Boolean#
        |local3 => synthetic param x: A1
        |  A1 => local6
@@ -1775,9 +1783,11 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local8 => val local defaultCase$: Int
        |  Int => scala/Int#
-       |local9 => val local defaultCase$: Int
+       |local9 => synthetic param x: Int
        |  Int => scala/Int#
        |local10 => val local defaultCase$: Int
+       |  Int => scala/Int#
+       |local11 => val local defaultCase$: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -1808,13 +1818,13 @@ class SyntheticLocalsSuite extends SemanticdbSuite {
        |""".stripMargin,
     """|[0:7..0:10): t38 <= _empty_/t38.
        |[1:6..1:7): m <= _empty_/t38.m().
-       |[1:16..1:17): f <= local12
+       |[1:16..1:17): f <= local13
        |[1:19..1:34): PartialFunction => scala/PartialFunction#
        |[1:35..1:38): Int => scala/Int#
        |[1:40..1:43): Int => scala/Int#
        |[1:52..1:52):  <= local0
        |[1:52..1:53): x => local3
-       |[1:55..1:56): f => local12
+       |[1:55..1:56): f => local13
        |""".stripMargin,
   )
 

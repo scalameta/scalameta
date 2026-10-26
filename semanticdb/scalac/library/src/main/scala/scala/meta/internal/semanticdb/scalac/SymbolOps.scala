@@ -263,6 +263,12 @@ trait SymbolOps {
       sym.isSemanticdbLocal
     // a parameter that scalac made up, or that the user wrote as `_`, has no occurrence
     def isHiddenParameter: Boolean = isEtaExpandedParameter || isSyntheticLocalParam
+    /* a parameter that scalac adds, such as `evidence$1` or a parameter of `copy`. A default
+     * getter's parameter is a copy of its method's, not an added one */
+    def isAddedParameter: Boolean = sym.isValueParameter && {
+      val owner = sym.owner
+      (sym.isSynthetic || owner.isSynthetic) && !owner.isAnonymousFunction && !owner.isDefaultGetter
+    }
     // scalac binds the pattern of a for value definition to a value like `x$1`
     def isFreshValue: Boolean = !sym.isParameter && !sym.isSynthetic && !sym.isArtifact &&
       hasFreshName
@@ -424,19 +430,6 @@ trait SymbolOps {
   }
 
   private def findDeclaration(sym: g.Symbol): g.Symbol = {
-    val pos = sym.pos
-    val index = if (pos.isDefined) sourceIndex(pos.source) else null
-    if (index ne null) {
-      val key = DeclarationKey(sym)
-      val decls = index.declarations.getOrElse(key, null)
-      if (decls eq null) {
-        // an existential that no tree declares, such as `?0`
-        if (sym.hasFlag(gf.EXISTENTIAL)) return index.existentials.getOrElseUpdate(key, sym)
-      } else {
-        val decl = declarationAt(sym, decls)
-        if (decl ne g.NoSymbol) return decl
-      }
-    }
     // a parameter of a copy
     if (sym.isParameter) {
       val owner = sym.owner
@@ -451,6 +444,27 @@ trait SymbolOps {
         }
       }
     }
+    // an accessor of a constructor parameter, also of one whose name the source does not write
+    if (sym.isParamAccessor) {
+      val name = g.nme.dropLocalSuffix(sym.name)
+      sym.owner.primaryConstructor.paramss.iterator.flatten.find(_.name == name) match {
+        case Some(param) => return declarationOf(param)
+        case _ =>
+      }
+    }
+    val pos = sym.pos
+    val index = if (pos.isDefined) sourceIndex(pos.source) else null
+    if (index ne null) {
+      val key = DeclarationKey(sym)
+      val decls = index.declarations.getOrElse(key, null)
+      if (decls eq null) {
+        // an existential that no tree declares, such as `?0`
+        if (sym.hasFlag(gf.EXISTENTIAL)) return index.existentials.getOrElseUpdate(key, sym)
+      } else {
+        val decl = declarationAt(sym, decls)
+        if (decl ne g.NoSymbol) return decl
+      }
+    }
     sym
   }
 
@@ -458,6 +472,8 @@ trait SymbolOps {
   private def declarationAt(sym: g.Symbol, decls: Declarations): g.Symbol = {
     val rep = decls.representative
     val symbols = decls.symbols
+    // an added parameter is its own declaration, even if its method's info has a copy of it
+    if (sym.isAddedParameter) return symbols.find(_.owner eq sym.owner).getOrElse(g.NoSymbol)
     if (symbols.contains(sym)) return if (rep ne null) rep else sym
 
     // a copy has the position and the name of its original
@@ -493,8 +509,8 @@ trait SymbolOps {
     val declarations = new mutable.HashMap[DeclarationKey, Declarations]
     val existentials = new mutable.HashMap[DeclarationKey, g.Symbol]
 
-    /* the representative is the last declaration outside synthetic definitions, else the first;
-     * a binder that stands for a value is not a declaration */
+    /* the representative is the last declaration outside synthetic definitions, else the first,
+     * but never an added parameter; a binder that stands for a value is not a declaration */
     private def add(sym: g.Symbol, inSynthetic: Boolean): Unit = {
       val pos = sym.pos
       if (pos.isDefined && (pos.source eq source) && sym.isSemanticdbLocal &&
@@ -502,8 +518,8 @@ trait SymbolOps {
         val decls = declarations.getOrElseUpdate(DeclarationKey(sym), new Declarations)
         if (!decls.symbols.contains(sym)) {
           decls.symbols = sym :: decls.symbols
-          if ((!inSynthetic || (decls.representative eq null)) && isNameWritten(sym, pos))
-            decls.representative = sym
+          if ((!inSynthetic || (decls.representative eq null)) && !sym.isAddedParameter &&
+            isNameWritten(sym, pos)) decls.representative = sym
         }
       }
     }
@@ -527,8 +543,9 @@ trait SymbolOps {
 
   private def isNameWritten(sym: g.Symbol, pos: g.Position): Boolean = {
     val text = pos.source.content
-    // an existential value `v` has the name `v.type`
-    val name = sym.decodedName.stripSuffix(g.nme.LOCAL_SUFFIX_STRING).stripSuffix(".type")
+    // an existential value `v` has the name `v.type`, and the setter of a `var v` the name `v_=`
+    val decoded = sym.decodedName.stripSuffix(g.nme.LOCAL_SUFFIX_STRING).stripSuffix(".type")
+    val name = if (sym.isSetter) decoded.stripSuffix("_=") else decoded
     // scalac gives a placeholder `_` a fresh name
     val isFresh = name.startsWith("_$") || name.startsWith(g.nme.FRESH_TERM_NAME_PREFIX)
     def isPlaceholderAt(at: Int) = isFresh && at < text.length && text(at) == '_'

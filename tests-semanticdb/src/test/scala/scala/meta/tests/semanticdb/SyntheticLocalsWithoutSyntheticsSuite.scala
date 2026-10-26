@@ -26,10 +26,12 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local3 => method d: Int
        |  Int => scala/Int#
-       |local4 => synthetic implicit method R(val x: Int): R
-       |  x => local1
+       |local4 => synthetic implicit method R(x: Int): R
+       |  x => local5
        |  Int => scala/Int#
        |  R => local0
+       |local5 => param x: Int
+       |  Int => scala/Int#
        |""".stripMargin,
     "Symbols",
   )
