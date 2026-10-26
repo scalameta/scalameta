@@ -65,15 +65,9 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local1 => val local y: Int
        |  Int => scala/Int#
-       |local2 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local2 => var local v: Int
        |  Int => scala/Int#
-       |local3 => var local v: Int
-       |  Int => scala/Int#
-       |local4 => var local w: Int
-       |  Int => scala/Int#
-       |local5 => synthetic val local x$2: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
+       |local3 => var local w: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -93,9 +87,6 @@ class Issue4935Suite extends SemanticdbSuite {
        |local0 => lazy val local x: Int
        |  Int => scala/Int#
        |local1 => lazy val local y: Int
-       |  Int => scala/Int#
-       |local2 => synthetic lazy val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -173,10 +164,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local3 => val local q: Int
        |  Int => scala/Int#
-       |local4 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
-       |local5 => method d: Int
+       |local4 => method d: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -237,13 +225,9 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local6 => val local q: Int
        |  Int => scala/Int#
-       |local7 => synthetic val local x$2: Tuple3[Tuple2[Int, Int], Int, Int]
-       |  Tuple3 => scala/Tuple3#
-       |  Tuple2 => scala/Tuple2#
+       |local7 => val local u: Int
        |  Int => scala/Int#
-       |local8 => val local u: Int
-       |  Int => scala/Int#
-       |local9 => val local v: Int
+       |local8 => val local v: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -377,7 +361,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local14 => private[this] val method b: Int
        |  Int => scala/Int#
-       |local15 => synthetic val method x$1: Tuple2[Int, Int]
+       |local15 => private[this] synthetic val method x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |local16 => val method p: Int
@@ -427,10 +411,10 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/o#t. => private[this] lazy val method t: Int
        |  Int => scala/Int#
-       |_empty_/o#x$1. => synthetic val method x$1: Tuple2[Int, Int]
+       |_empty_/o#x$1. => private[this] synthetic val method x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |_empty_/o#x$2. => synthetic lazy val method x$2: Tuple2[Int, Int]
+       |_empty_/o#x$2. => private[this] synthetic lazy val method x$2: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
@@ -466,10 +450,7 @@ class Issue4935Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local3 => val local b: Int
        |  Int => scala/Int#
-       |local4 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
-       |local5 => lazy val local w: Int
+       |local4 => lazy val local w: Int
        |  Int => scala/Int#
        |""".stripMargin,
   )

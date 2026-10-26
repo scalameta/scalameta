@@ -11,7 +11,7 @@ class Issue1672/*<=example.Issue1672#*/ {
   val namedVal/*<=example.Issue1672#namedVal.*/ = 1
   @Issue1672Annot/*=>example.Issue1672Annot#*/(2, "b")
   def positionalDef/*<=example.Issue1672#positionalDef().*/ = 1
-  @Issue1672Annot/*=>example.Issue1672Annot#*/({ val z/*<=local6*/ = 2; z/*=>local6*/ }, "b")
+  @Issue1672Annot/*=>example.Issue1672Annot#*/({ val z/*<=local0*/ = 2; z/*=>local0*/ }, "b")
   def blockDef/*<=example.Issue1672#blockDef().*/ = 1
   def namedParam/*<=example.Issue1672#namedParam().*/(@Issue1672Annot/*=>example.Issue1672Annot#*/(y/*=>example.Issue1672Annot#`<init>`().(y)*/ = "b", x/*=>example.Issue1672Annot#`<init>`().(x)*/ = 2) p/*<=example.Issue1672#namedParam().(p)*/: Int/*=>scala.Int#*/) = p/*=>example.Issue1672#namedParam().(p)*/
   @Issue1672Annot/*=>example.Issue1672Annot#*/(y/*=>example.Issue1672Annot#`<init>`().(y)*/ = "b", x/*=>example.Issue1672Annot#`<init>`().(x)*/ = 2)

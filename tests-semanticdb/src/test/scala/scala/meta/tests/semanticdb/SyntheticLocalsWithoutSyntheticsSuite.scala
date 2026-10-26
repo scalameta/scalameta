@@ -26,12 +26,6 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local3 => method d: Int
        |  Int => scala/Int#
-       |local4 => synthetic implicit method R(x: Int): R
-       |  x => local5
-       |  Int => scala/Int#
-       |  R => local0
-       |local5 => param x: Int
-       |  Int => scala/Int#
        |""".stripMargin,
     "Symbols",
   )
@@ -86,7 +80,7 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
          |local11 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
          |local12 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  x$1 => local17
+         |  x$1 => local16
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local13 => default param i: Int
@@ -95,32 +89,8 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local15 => synthetic param x$1: Any
          |  Any => scala/Any#
-         |local16 => synthetic var local acc: Int
-         |  Int => scala/Int#
-         |local17 => synthetic param x$1: Any
+         |local16 => synthetic param x$1: Any
          |  Any => scala/Any#
-         |local18 => synthetic val local k$1: k
-         |  k => local0
-         |local19 => synthetic final object k extends AbstractFunction1[Int, k] with Serializable { +3 decls }
-         |  AbstractFunction1 => scala/runtime/AbstractFunction1#
-         |  Int => scala/Int#
-         |  k => local0
-         |  Serializable => scala/Serializable#
-         |local20 => synthetic final method toString(): String <: scala/Function1#toString()., java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local21 => synthetic method apply(i: Int): k <: scala/Function1#apply().
-         |  i => local23
-         |  Int => scala/Int#
-         |  k => local0
-         |local22 => synthetic method unapply(x$0: k): Option[Int]
-         |  x$0 => local24
-         |  k => local0
-         |  Option => scala/Option#
-         |  Int => scala/Int#
-         |local23 => param i: Int
-         |  Int => scala/Int#
-         |local24 => synthetic param x$0: k
-         |  k => local0
          |""".stripMargin
     else
       """|_empty_/w2. => final object w2 extends AnyRef { +1 decls }
@@ -167,7 +137,7 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
          |local12 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
          |local13 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  x$1 => local19
+         |  x$1 => local18
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local14 => default param i: Int
@@ -178,32 +148,8 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
          |  Any => scala/Any#
          |local17 => synthetic param x$1: Int
          |  Int => scala/Int#
-         |local18 => synthetic var local acc: Int
-         |  Int => scala/Int#
-         |local19 => synthetic param x$1: Any
+         |local18 => synthetic param x$1: Any
          |  Any => scala/Any#
-         |local20 => synthetic val local k$1: k
-         |  k => local0
-         |local21 => synthetic final object k extends AbstractFunction1[Int, k] with Serializable { +3 decls }
-         |  AbstractFunction1 => scala/runtime/AbstractFunction1#
-         |  Int => scala/Int#
-         |  k => local0
-         |  Serializable => java/io/Serializable#
-         |local22 => synthetic final method toString(): String <: scala/Function1#toString()., java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local23 => synthetic method apply(i: Int): k <: scala/Function1#apply().
-         |  i => local25
-         |  Int => scala/Int#
-         |  k => local0
-         |local24 => synthetic method unapply(x$0: k): Option[Int]
-         |  x$0 => local26
-         |  k => local0
-         |  Option => scala/Option#
-         |  Int => scala/Int#
-         |local25 => param i: Int
-         |  Int => scala/Int#
-         |local26 => synthetic param x$0: k
-         |  k => local0
          |""".stripMargin,
     "Symbols",
   )
@@ -265,7 +211,7 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
          |local12 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
          |local13 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  x$1 => local19
+         |  x$1 => local18
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local14 => default param i: Int
@@ -276,35 +222,9 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |local17 => synthetic param x$1: Any
          |  Any => scala/Any#
-         |local18 => synthetic var local acc: Int
-         |  Int => scala/Int#
-         |local19 => synthetic param x$1: Any
+         |local18 => synthetic param x$1: Any
          |  Any => scala/Any#
-         |local20 => synthetic val local k$1: k
-         |  k => local0
-         |local21 => synthetic final object k extends AnyRef with Serializable { +3 decls }
-         |  AnyRef => scala/AnyRef#
-         |  Serializable => scala/Serializable#
-         |local22 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local23 => synthetic method apply(i: Int)(implicit s: String): k
-         |  i => local25
-         |  Int => scala/Int#
-         |  s => local26
-         |  String => scala/Predef.String#
-         |  k => local0
-         |local24 => synthetic method unapply(x$0: k): Option[Int]
-         |  x$0 => local27
-         |  k => local0
-         |  Option => scala/Option#
-         |  Int => scala/Int#
-         |local25 => param i: Int
-         |  Int => scala/Int#
-         |local26 => implicit param s: String
-         |  String => scala/Predef.String#
-         |local27 => synthetic param x$0: k
-         |  k => local0
-         |local28 => implicit val local s: String
+         |local19 => implicit val local s: String
          |  String => scala/Predef.String#
          |""".stripMargin
     else
@@ -358,7 +278,7 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
          |local13 => synthetic method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
          |  String => java/lang/String#
          |local14 => synthetic method equals(x$1: Any): Boolean <: scala/Equals#equals()., java/lang/Object#equals()., scala/Any#equals().
-         |  x$1 => local21
+         |  x$1 => local20
          |  Any => scala/Any#
          |  Boolean => scala/Boolean#
          |local15 => default param i: Int
@@ -371,35 +291,9 @@ class SyntheticLocalsWithoutSyntheticsSuite extends SemanticdbSuite {
          |  Any => scala/Any#
          |local19 => synthetic param x$1: Int
          |  Int => scala/Int#
-         |local20 => synthetic var local acc: Int
-         |  Int => scala/Int#
-         |local21 => synthetic param x$1: Any
+         |local20 => synthetic param x$1: Any
          |  Any => scala/Any#
-         |local22 => synthetic val local k$1: k
-         |  k => local0
-         |local23 => synthetic final object k extends AnyRef with Serializable { +3 decls }
-         |  AnyRef => scala/AnyRef#
-         |  Serializable => java/io/Serializable#
-         |local24 => synthetic final method toString(): String <: java/lang/Object#toString()., scala/Any#toString().
-         |  String => java/lang/String#
-         |local25 => synthetic method apply(i: Int)(implicit s: String): k
-         |  i => local27
-         |  Int => scala/Int#
-         |  s => local28
-         |  String => scala/Predef.String#
-         |  k => local0
-         |local26 => synthetic method unapply(x$0: k): Option[Int]
-         |  x$0 => local29
-         |  k => local0
-         |  Option => scala/Option#
-         |  Int => scala/Int#
-         |local27 => param i: Int
-         |  Int => scala/Int#
-         |local28 => implicit param s: String
-         |  String => scala/Predef.String#
-         |local29 => synthetic param x$0: k
-         |  k => local0
-         |local30 => implicit val local s: String
+         |local21 => implicit val local s: String
          |  String => scala/Predef.String#
          |""".stripMargin,
     "Symbols",

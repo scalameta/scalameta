@@ -31,6 +31,7 @@ trait SymbolOps {
   def clearDocumentCaches(): Unit = {
     localCache.clear()
     freeExistentials.clear()
+    documentAnnotations = null
   }
 
   private lazy val symbolCache = new mutable.HashMap[g.Symbol, String]
@@ -48,6 +49,7 @@ trait SymbolOps {
   private var documentSource: GSourceFile = GNoSourceFile
   private var documentBody: g.Tree = _
   private var documentNamespace: Namespace = _
+  private var documentAnnotations: mutable.HashMap[g.Position, g.Tree] = _
 
   implicit class XtensionGSymbolMSymbol(sym: g.Symbol) {
     private[semanticdb] def toSemanticUncached: String = {
@@ -272,6 +274,22 @@ trait SymbolOps {
     // scalac binds the pattern of a for value definition to a value like `x$1`
     def isFreshValue: Boolean = !sym.isParameter && !sym.isSynthetic && !sym.isArtifact &&
       hasFreshName
+    // a definition that scalac adds to a block
+    def isLocalTemporary: Boolean = sym.owner.isTerm &&
+      (sym.isArtifact || sym.isDefaultGetter ||
+        sym.isSynthetic && sym.isTerm &&
+        !sym.isParameter && !sym.isAnonymousFunction && (!sym.isMethod || sym.isImplicit))
+    // a member of a companion that scalac adds to a block, or a parameter of one
+    def isInLocalCompanion: Boolean = {
+      val owner = if (sym.isParameter) sym.owner.owner else sym.owner
+      owner.isModuleClass && owner.sourceModule.isLocalTemporary
+    }
+    // the binder of the default case that scalac adds to the methods of a partial function
+    def isDefaultCaseBinder: Boolean = sym.name == g.nme.DEFAULT_CASE && !sym.pos.isOpaqueRange &&
+      sym.owner.owner.isSynthetic
+    // a temporary has information only if the document refers to it
+    def isTemporary: Boolean = isLocalTemporary || isDefaultCaseBinder || isInLocalCompanion ||
+      sym.isParameter && sym.owner.isLocalTemporary
     def isUselessSymbolInformation: Boolean = isUseless || isAnonymousClassConstructor ||
       isSyntheticAbstractType || isAnonymousSelfParameter || patternValue.exists || isFreshValue
     /* scalac desugars `val p = e` into a match of `e` against `p`, and puts the binders of
@@ -351,7 +369,27 @@ trait SymbolOps {
     documentSource = GNoSourceFile
     documentBody = null
     documentNamespace = null
-    localCache.clear()
+    clearDocumentCaches()
+  }
+
+  private[scalac] def documentAnnotationOriginal(pos: g.Position): g.Tree = {
+    if (documentBody eq null) return g.EmptyTree
+    if (documentAnnotations eq null) {
+      val annotations = new mutable.HashMap[g.Position, g.Tree]
+      documentBody.foreach {
+        case t: g.TypeTree if t.tpe ne null =>
+          t.tpe.foreach {
+            case at: g.AnnotatedType => at.annotations.foreach { a =>
+                val original = a.original
+                if (original.nonEmpty) annotations.getOrElseUpdate(a.pos, original)
+              }
+            case _ =>
+          }
+        case _ =>
+      }
+      documentAnnotations = annotations
+    }
+    documentAnnotations.getOrElse(pos, g.EmptyTree)
   }
 
   private def localSymbol(decl: g.Symbol): String = {
