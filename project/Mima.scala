@@ -45,6 +45,25 @@ object Mima {
     .exclude[A]("scala.meta." + metaType)
 
   val apiCompatibilityExceptions: Seq[ProblemFilter] = Seq(
+    // signatures in 3.3.9 and above are more exact
+    exclude[IncompatibleSignatureProblem](
+      "package.XtensionDialectTokenSyntax(scala.Tuple2)scala.Tuple2",
+    ),
+    exclude[IncompatibleSignatureProblem](
+      "package.XtensionDialectTokensSyntax(scala.Tuple2)scala.Tuple2",
+    ),
+    exclude[IncompatibleSignatureProblem](
+      "package.XtensionDialectTreeSyntax(scala.Tuple2)scala.Tuple2",
+    ),
+    exclude[IncompatibleSignatureProblem]("package.XtensionTreeT(scala.meta.Tree)scala.meta.Tree"),
+    exclude[IncompatibleSignatureProblem]("package#XtensionDialectTokensSyntax.parse$extension(scala.Tuple2,scala.meta.parsers.Parse)scala.meta.parsers.Parsed"),
+    exclude[IncompatibleSignatureProblem](
+      "package#XtensionTreeT.hashCode$extension(scala.meta.Tree)Int",
+    ),
+    exclude[IncompatibleSignatureProblem](
+      "package#XtensionTreeT.equals$extension(scala.meta.Tree,java.lang.Object)Boolean",
+    ),
+    exclude[IncompatibleSignatureProblem]("package#XtensionTreeT.maybeParse$extension(scala.meta.Tree,scala.meta.Dialect,scala.meta.parsers.Parse)scala.meta.parsers.Parsed"),
     // Tree
     // Show is private[meta], and mima still checks its nested classes
     exclude[Problem]("prettyprinters.Show$*"),
