@@ -427,7 +427,7 @@ trait SymbolOps {
     val pos = sym.pos
     val index = if (pos.isDefined) sourceIndex(pos.source) else null
     if (index ne null) {
-      val key = DeclarationKey(pos.point, sym.name)
+      val key = DeclarationKey(sym)
       val decls = index.declarations.getOrElse(key, null)
       if (decls eq null) {
         // an existential that no tree declares, such as `?0`
@@ -477,6 +477,9 @@ trait SymbolOps {
   }
 
   private case class DeclarationKey(point: Int, name: g.Name)
+  private object DeclarationKey {
+    def apply(sym: g.Symbol): DeclarationKey = DeclarationKey(sym.pos.point, sym.name)
+  }
 
   /* The declarations of one key in a unit. A desugaring copies a declaration with its position,
    * and if its name is written at that position, the copies join the representative. */
@@ -496,8 +499,7 @@ trait SymbolOps {
       val pos = sym.pos
       if (pos.isDefined && (pos.source eq source) && sym.isSemanticdbLocal &&
         !sym.patternValue.exists) {
-        val decls = declarations
-          .getOrElseUpdate(DeclarationKey(pos.point, sym.name), new Declarations)
+        val decls = declarations.getOrElseUpdate(DeclarationKey(sym), new Declarations)
         if (!decls.symbols.contains(sym)) {
           decls.symbols = sym :: decls.symbols
           if ((!inSynthetic || (decls.representative eq null)) && isNameWritten(sym, pos))
