@@ -1,6 +1,6 @@
 package example
 
-import scala.concurrent.Future/*=>scala.concurrent.Future.*//*=>scala.concurrent.Future#*/
+import scala.concurrent.Future/*=>scala.concurrent.Future#*//*=>scala.concurrent.Future.*/
 
 object Example/*<=example.Example.*/ { self/*<=local0*/ =>
   new scala.collection.mutable.Stack/*=>scala.collection.mutable.Stack#*/[Int/*=>scala.Int#*/]/*=>scala.collection.mutable.Stack#`<init>`(+1).*/()

@@ -5,7 +5,6 @@ import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb._
 
 import scala.collection.mutable
-import scala.math.Ordering
 
 trait RangePrinter extends BasePrinter {
   def pprint(range: Range): Unit = {
@@ -29,7 +28,4 @@ trait RangePrinter extends BasePrinter {
       case _ => None
     }
   }
-
-  implicit def rangeOrder: Ordering[Range] = Ordering
-    .by(r => (r.startLine, r.startCharacter, r.endLine, r.endCharacter))
 }

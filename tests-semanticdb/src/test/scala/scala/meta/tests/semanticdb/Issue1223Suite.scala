@@ -24,8 +24,8 @@ class Issue1223Suite extends PrintSuiteBase {
     // parenthesized application `nums zip strs`, not just the second operand.
     checkSynthetics(
       zip,
-      """|[2:46..2:59): nums zip strs => *(Seq.canBuildFrom[Tuple2[Int, String]])
-         |[2:46..2:54): nums zip => *[Int, String, Seq[Tuple2[Int, String]]]
+      """|[2:46..2:54): nums zip => *[Int, String, Seq[Tuple2[Int, String]]]
+         |[2:46..2:59): nums zip strs => *(Seq.canBuildFrom[Tuple2[Int, String]])
          |""".stripMargin,
     )
   else

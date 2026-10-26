@@ -1,6 +1,7 @@
 package scala.meta.internal.metap
 
 import scala.meta.cli._
+import scala.meta.internal.semanticdb.Implicits._
 import scala.meta.internal.semanticdb.Language._
 import scala.meta.internal.semanticdb._
 import scala.meta.metap._

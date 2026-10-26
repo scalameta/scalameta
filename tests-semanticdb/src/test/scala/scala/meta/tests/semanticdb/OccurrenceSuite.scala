@@ -15,8 +15,10 @@ import munit.FunSuite
 
 class OccurrenceSuite extends FunSuite {
 
-  private def testBody(body: OccurrenceSuite.TestBody): Unit =
+  private def testBody(body: OccurrenceSuite.TestBody): Unit = {
     assertNoDiff(body.obtained, body.expected)
+    assertEquals(body.ranges, body.ranges.sorted)
+  }
 
   ScalaVersion.doIf("OccurrenceSuite", ScalaVersion.is212 || ScalaVersion.is213)(
     OccurrenceSuite.testCases.foreach(t => test(t.name)(t.body.fold(fail(_), testBody))),
@@ -25,7 +27,12 @@ class OccurrenceSuite extends FunSuite {
 
 object OccurrenceSuite {
   def isExcluded(path: AbsolutePath): Boolean = path.toNIO.endsWith("Exclude.scala")
-  case class TestBody(obtained: String, expected: String, expectpath: AbsolutePath)
+  case class TestBody(
+      obtained: String,
+      expected: String,
+      expectpath: AbsolutePath,
+      ranges: Seq[(Int, Int, Int, Int)],
+  )
   class TestCase(val name: String)(f: => Either[String, TestBody]) {
     lazy val body: Either[String, TestBody] = f
   }
@@ -53,7 +60,11 @@ object OccurrenceSuite {
           val textdocument = TextDocuments.parseFrom(semanticdb.readAllBytes).documents.head
           val obtained = OccurrenceSuite.printTextDocument(textdocument)
           val expected = FileIO.slurp(expectpath, StandardCharsets.UTF_8)
-          TestBody(obtained, expected, expectpath)
+          val ranges: Seq[(Int, Int, Int, Int)] = textdocument.occurrences.map { occ =>
+            val r = occ.range.get
+            (r.startLine, r.startCharacter, r.endLine, r.endCharacter)
+          }
+          TestBody(obtained, expected, expectpath, ranges)
         },
       )
     }

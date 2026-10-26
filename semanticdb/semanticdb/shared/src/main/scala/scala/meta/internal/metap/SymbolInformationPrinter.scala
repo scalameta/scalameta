@@ -6,7 +6,6 @@ import scala.meta.internal.semanticdb.SymbolInformation._
 import scala.meta.internal.semanticdb._
 
 import scala.collection.mutable
-import scala.math.Ordering
 
 object SymbolInformationPrinter {
 
@@ -362,7 +361,4 @@ trait SymbolInformationPrinter extends BasePrinter {
 
     def visited: List[SymbolInformation] = buf.toList
   }
-
-  implicit def infoOrder: Ordering[SymbolInformation] = Ordering
-    .by[SymbolInformation, String](_.symbol)(new IdentifierOrdering)
 }

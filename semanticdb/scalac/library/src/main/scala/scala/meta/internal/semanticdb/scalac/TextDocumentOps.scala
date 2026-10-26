@@ -1,6 +1,5 @@
 package scala.meta.internal.semanticdb.scalac
 
-import scala.meta.internal.SemanticCompat._
 import scala.meta.internal.inputs._
 import scala.meta.internal.scalacp._
 import scala.meta.internal.semanticdb.Implicits._
@@ -112,7 +111,7 @@ trait TextDocumentOps {
       // SAM methods share positions with their classes.
       val sammethodoccurrences = emptyOccurrenceMap()
       val symbols = mutable.Map[String, s.SymbolInformation]()
-      val synthetics = mutable.ListBuffer[s.Synthetic]()
+      val synthetics = mutable.ArrayBuffer[s.Synthetic]()
       val syntheticTreeCache = new mutable.HashMap[g.Tree, Option[s.Synthetic]]
       val todo = mutable.Set[m.Name]() // names to map to global trees
       val mstarts = mutable.Map[Int, m.Name]() // start offset -> tree
@@ -1377,10 +1376,9 @@ trait TextDocumentOps {
           )
         }
       }
-      val finalSymbols = symbols.values.toList
 
       val finalOccurrences = {
-        val buf = List.newBuilder[s.SymbolOccurrence]
+        val buf = IndexedSeq.newBuilder[s.SymbolOccurrence]
         for {
           map <- Iterator(occurrences, mpatoccurrences, samoccurrences, sammethodoccurrences)
           (pos, (sym, role)) <- map
@@ -1389,8 +1387,6 @@ trait TextDocumentOps {
         buf.result()
       }
 
-      val diagnostics = unit.reportedDiagnostics(mstarts)
-
       s.TextDocument(
         schema = s.Schema.SEMANTICDB4,
         uri = unit.source.toUri,
@@ -1398,10 +1394,10 @@ trait TextDocumentOps {
         md5 = unit.source.toMD5,
         language = s.Language.SCALA,
         buildTarget = config.buildTarget,
-        symbols = finalSymbols.sortBy(_.symbol),
-        occurrences = finalOccurrences.sortBy(_.range),
-        diagnostics = diagnostics.sortBy(_.range),
-        synthetics = synthetics.toScalaSeq.sortBy(_.range),
+        symbols = symbols.values.toIndexedSeq.sorted,
+        occurrences = finalOccurrences.sorted,
+        diagnostics = unit.reportedDiagnostics(mstarts).toIndexedSeq.sorted,
+        synthetics = synthetics.toIndexedSeq.sorted,
       )
     }
   }

@@ -1,6 +1,6 @@
 package example
 
-import scala.math.Ordering/*=>scala.math.Ordering.*//*=>scala.math.Ordering#*/
+import scala.math.Ordering/*=>scala.math.Ordering#*//*=>scala.math.Ordering.*/
 import scala.language/*=>scala.language.*/.existentials/*=>scala.language.existentials.*/
 
 class Methods/*<=example.Methods#*/[T/*<=example.Methods#[T]*/] {

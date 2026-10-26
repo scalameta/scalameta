@@ -8,7 +8,7 @@ import scala.{meta => m}
 trait DiagnosticOps {
   self: SemanticdbOps =>
   implicit class XtensionCompilationUnitDiagnostics(unit: g.CompilationUnit) {
-    def reportedDiagnostics(mstarts: collection.Map[Int, m.Name]): List[s.Diagnostic] = unit
+    def reportedDiagnostics(mstarts: collection.Map[Int, m.Name]): Iterator[s.Diagnostic] = unit
       .hijackedDiagnostics.map { case (gpos, gseverity, text) =>
         val mpos: m.Position =
           // NOTE: The caret in unused import warnings points to Importee.pos, but
