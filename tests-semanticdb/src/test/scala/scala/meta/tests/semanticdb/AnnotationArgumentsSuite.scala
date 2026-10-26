@@ -336,7 +336,7 @@ class AnnotationArgumentsSuite extends FunSuite {
 
   test("named arguments")(check(
     "p/K#named().",
-    if (ScalaVersion.is212) """@p/sa#(local2, local1)""" else """@p/sa#(2, "b")""",
+    """@p/sa#(2, "b")""",
     if (ScalaVersion.is212) """@p/sa#(<?>, <?>)""" else """@p/sa#(2, "b")""",
   ))
 
@@ -352,19 +352,19 @@ class AnnotationArgumentsSuite extends FunSuite {
 
   test("named arguments with a default")(check(
     "p/K#defaultNamed().",
-    if (ScalaVersion.is212) """@p/sd#(local4, local3)""" else """@p/sd#(1, "e")""",
+    """@p/sd#(1, "e")""",
     if (ScalaVersion.is212) """@p/sd#(<?>, <?>)""" else """@p/sd#(1, "e")""",
   ))
 
   test("return type, named arguments")(check(
     "p/K#tpeNamed().",
-    if (ScalaVersion.is212) """@p/sa#(local7, local8)""" else """@p/sa#(3, "f")""",
+    """@p/sa#(3, "f")""",
     if (ScalaVersion.is212) """@p/sa#(<?>, <?>)""" else """@p/sa#(3, "f")""",
   ))
 
   test("method parameter, named arguments")(check(
     "p/K#paramNamed().(p)",
-    if (ScalaVersion.is212) """@p/sa#(local10, local9)""" else """@p/sa#(4, "g")""",
+    """@p/sa#(4, "g")""",
     if (ScalaVersion.is212) """@p/sa#(<?>, <?>)""" else """@p/sa#(4, "g")""",
   ))
 
@@ -373,49 +373,49 @@ class AnnotationArgumentsSuite extends FunSuite {
   test("type argument of a list call, named arguments")(checkIn(
     inferred,
     "p/K#typeArgList().",
-    if (ScalaVersion.is212) """forSome @p/sa#(local104, local105)""" else """@p/sa#(26, "c")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(26, "c")""" else """@p/sa#(26, "c")""",
     if (ScalaVersion.is212) """forSome @p/sa#(<?>, <?>)""" else """@p/sa#(26, "c")""",
   ))
 
   test("type argument of a new, named arguments")(checkIn(
     inferred,
     "p/K#newTypeArg().",
-    if (ScalaVersion.is212) """forSome @p/sa#(local89, local90)""" else """@p/sa#(21, "x")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(21, "x")""" else """@p/sa#(21, "x")""",
     if (ScalaVersion.is212) """forSome @p/sa#(<?>, <?>)""" else """@p/sa#(21, "x")""",
   ))
 
   test("type argument of a parent, named arguments")(checkIn(
     declared,
     "p/K#ParentArg#",
-    if (ScalaVersion.is212) """@p/sa#(local93, local94)""" else """@p/sa#(22, "y")""",
+    """@p/sa#(22, "y")""",
     if (ScalaVersion.is212) """@p/sa#(<?>, <?>)""" else """@p/sa#(22, "y")""",
   ))
 
   test("type argument of an upper bound, named arguments")(checkIn(
     declared,
     "p/K#boundArg().[T]",
-    if (ScalaVersion.is212) """@p/sa#(local95, local96)""" else """@p/sa#(23, "z")""",
+    """@p/sa#(23, "z")""",
     if (ScalaVersion.is212) """@p/sa#(<?>, <?>)""" else """@p/sa#(23, "z")""",
   ))
 
   test("type argument of a type alias, named arguments")(checkIn(
     declared,
     "p/K#AliasArg#",
-    if (ScalaVersion.is212) """@p/sa#(local97, local98)""" else """@p/sa#(24, "a")""",
+    """@p/sa#(24, "a")""",
     if (ScalaVersion.is212) """@p/sa#(<?>, <?>)""" else """@p/sa#(24, "a")""",
   ))
 
   test("type argument of a type pattern, named arguments")(checkIn(
     inferred,
     "p/K#patternArg().",
-    if (ScalaVersion.is212) """forSome @p/sa#(local99, local100)""" else """@p/sa#(25, "b")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(25, "b")""" else """@p/sa#(25, "b")""",
     if (ScalaVersion.is212) """forSome @p/sa#(<?>, <?>)""" else """@p/sa#(25, "b")""",
   ))
 
   test("inferred return type, named arguments") {
     assertEquals(
       inferred(metac.get("p/K#inferredNamed().")),
-      if (ScalaVersion.is212) """forSome @p/sa#(local11, local12)""" else """@p/sa#(5, "h")""",
+      if (ScalaVersion.is212) """forSome @p/sa#(5, "h")""" else """@p/sa#(5, "h")""",
       "metac",
     )
     assertEquals(
@@ -427,96 +427,51 @@ class AnnotationArgumentsSuite extends FunSuite {
 
   test("inferred type of a local value, named arguments")(assertEquals(
     inferred(metac.get("p/K#inferredLocal().")),
-    if (ScalaVersion.is212) """forSome @p/sa#(local15, local16)""" else """@p/sa#(6, "i")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(6, "i")""" else """@p/sa#(6, "i")""",
   ))
 
   test("inferred type of a lambda, named arguments")(assertEquals(
     inferred(metac.get("p/K#inferredLambda().")),
-    if (ScalaVersion.is212) """forSome @p/sa#(local20, local21) forSome @p/sa#(local20, local21)"""
+    if (ScalaVersion.is212) """forSome @p/sa#(7, "j") forSome @p/sa#(7, "j")"""
     else """@p/sa#(7, "j") @p/sa#(7, "j")""",
   ))
 
   test("inferred return type of a polymorphic method, named arguments")(assertEquals(
     inferred(metac.get("p/K#inferredPoly().")),
-    if (ScalaVersion.is212) """forSome @p/sa#(local25, local26)""" else """@p/sa#(8, "k")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(8, "k")""" else """@p/sa#(8, "k")""",
   ))
 
   test("inferred type argument, named arguments")(assertEquals(
     inferred(metac.get("p/K#inferredNested().")),
-    if (ScalaVersion.is212) """forSome @p/sa#(local29, local30)""" else """@p/sa#(9, "l")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(9, "l")""" else """@p/sa#(9, "l")""",
   ))
 
   test("inferred type, two annotations with named arguments")(assertEquals(
     inferred(metac.get("p/K#inferredTwoAnns().")),
-    if (ScalaVersion.is212) """forSome @p/sa#(local33, local34) @p/sa#(local35, local36)"""
+    if (ScalaVersion.is212) """forSome @p/sa#(10, "m") @p/sa#(11, "n")"""
     else """@p/sa#(10, "m") @p/sa#(11, "n")""",
   ))
 
   test("inferred type of a field, named arguments")(assertEquals(
     inferred(metac.get("p/K#inferredVal.")),
-    if (ScalaVersion.is212) """forSome @p/sa#(local42, local43)""" else """@p/sa#(12, "o")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(12, "o")""" else """@p/sa#(12, "o")""",
   ))
 
   test("inferred type of an ascription, named arguments")(assertEquals(
     inferred(metac.get("p/K#ascribed().")),
-    if (ScalaVersion.is212) """forSome @p/sa#(local74, local75)""" else """@p/sa#(17, "t")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(17, "t")""" else """@p/sa#(17, "t")""",
   ))
 
   test("inferred type of a field with an ascription, named arguments")(assertEquals(
     inferred(metac.get("p/K#ascribedVal.")),
-    if (ScalaVersion.is212) """forSome @p/sa#(local79, local78)""" else """@p/sa#(18, "u")""",
+    if (ScalaVersion.is212) """forSome @p/sa#(18, "u")""" else """@p/sa#(18, "u")""",
   ))
 
   // the symbols with an annotation argument that refers to a local
-  test("inferred types of locals, named arguments") {
-    assertEquals(
-      documents.flatMap(_.symbols).filter(_.toString.contains("IdTree(local")).map(_.symbol),
-      if (ScalaVersion.is212) List(
-        "local103",
-        "local19",
-        "local24",
-        "local41",
-        "local50",
-        "local51",
-        "local52",
-        "local53",
-        "local54",
-        "local59",
-        "local61",
-        "local63",
-        "local72",
-        "local73",
-        "local86",
-        "p/K#AliasArg#",
-        "p/K#ParentArg#",
-        "p/K#ascribed().",
-        "p/K#ascribedVal.",
-        "p/K#boundArg().[T]",
-        "p/K#defaultNamed().",
-        "p/K#inferredLambda().",
-        "p/K#inferredLocal().",
-        "p/K#inferredNamed().",
-        "p/K#inferredNamed().(p)",
-        "p/K#inferredNested().",
-        "p/K#inferredNested().(p)",
-        "p/K#inferredPoly().",
-        "p/K#inferredPoly().(t)",
-        "p/K#inferredTwoAnns().",
-        "p/K#inferredTwoAnns().(p)",
-        "p/K#inferredVal.",
-        "p/K#localAscribed().",
-        "p/K#localCopy().",
-        "p/K#localLambda().",
-        "p/K#named().",
-        "p/K#newTypeArg().",
-        "p/K#paramNamed().(p)",
-        "p/K#patternArg().",
-        "p/K#tpeNamed().",
-        "p/K#typeArgList().",
-      )
-      else Nil,
-    )
-  }
+  test("inferred types of locals, named arguments")(assertEquals(
+    documents.flatMap(_.symbols).filter(_.toString.contains("IdTree(local")).map(_.symbol),
+    Nil,
+  ))
 
   test("class literal argument")(
     check("p/K#clazz().", """@p/sc#(scala/Predef.String#)""", """@p/sc#(scala/Predef.String#)"""),

@@ -434,26 +434,8 @@ class TargetedSuite extends SemanticdbSuite {
          |[2:43..2:51): toString => scala/Any#toString().
          |""".stripMargin
 
-    val expectedPrevious213 = expected.replace("Symbols => 6 entries", "Symbols => 8 entries")
-      .replace(
-        """|
-           |Occurrences:""".stripMargin,
-        """|local0 => val local x$1: "123"
-           |local1 => val local x$2: String
-           |  String => scala/Predef.String#
-           |
-           |Occurrences:""".stripMargin,
-      )
-
-    val expected212 = expectedPrevious213
-      .replace("Occurrences => 15 entries", "Occurrences => 15 entries\nDiagnostics => 1 entries")
-      .replace(
-        """|local0 => val local x$1: "123"
-           |""".stripMargin,
-        """|local0 => val local x$1: String
-           |  String => java/lang/String#
-           |""".stripMargin,
-      ) +
+    val expected212 = expected
+      .replace("Occurrences => 15 entries", "Occurrences => 15 entries\nDiagnostics => 1 entries") +
       """|
          |Diagnostics:
          |[0:1..0:26) [warning] Usage of named or default arguments transformed this annotation
@@ -463,14 +445,7 @@ class TargetedSuite extends SemanticdbSuite {
          |""".stripMargin
 
     val expectedCompat = ScalaVersion.getExpected(
-      compat = List(
-        ScalaVersion.Full("2.13.14") -> expectedPrevious213,
-        ScalaVersion.Full("2.13.15") -> expectedPrevious213,
-        ScalaVersion.Full("2.13.16") -> expectedPrevious213,
-        ScalaVersion.Scala212 -> expected212,
-        ScalaVersion.Scala211 -> expected212,
-        ScalaVersion.Scala213 -> expected,
-      ),
+      compat = List(ScalaVersion.Scala212 -> expected212, ScalaVersion.Scala211 -> expected212),
       expected,
     )
     assertEquals(

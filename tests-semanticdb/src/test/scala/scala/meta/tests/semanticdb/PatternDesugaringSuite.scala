@@ -38,9 +38,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local1 => val local y: Int
        |  Int => scala/Int#
-       |local2 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -117,9 +114,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local0 => val local x: Int
        |  Int => scala/Int#
        |local1 => val local y: Int
-       |  Int => scala/Int#
-       |local2 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -215,9 +209,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local1 => val local y: Int
        |  Int => scala/Int#
-       |local2 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -298,9 +289,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local0 => val local x: Int
        |  Int => scala/Int#
        |local1 => val local y: Int
-       |  Int => scala/Int#
-       |local2 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -701,9 +689,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local2 => var local y: Int
        |  Int => scala/Int#
-       |local3 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -752,9 +737,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local1 => lazy val local x: Int
        |  Int => scala/Int#
        |local2 => lazy val local y: Int
-       |  Int => scala/Int#
-       |local3 => synthetic lazy val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -806,10 +788,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local2 => val local c: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local3 => synthetic val local x$1: Tuple2[Int, List[Int]]
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
   )
 
@@ -966,7 +944,7 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/o.v(). => var method v: Int
        |  Int => scala/Int#
-       |_empty_/o.x$1. => synthetic val method x$1: Tuple2[Int, Int]
+       |_empty_/o.x$1. => private[this] synthetic val method x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |_empty_/o.x. => val method x: Int
@@ -1034,13 +1012,13 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |_empty_/z#d(). => var method d: Int
        |  Int => scala/Int#
-       |_empty_/z#x$1. => synthetic lazy val method x$1: Tuple2[Int, Int]
+       |_empty_/z#x$1. => private[this] synthetic lazy val method x$1: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |_empty_/z#x$2. => synthetic val method x$2: Tuple2[Int, Int]
+       |_empty_/z#x$2. => private[this] synthetic val method x$2: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
-       |_empty_/z#x$3. => synthetic val method x$3: Tuple2[Int, Int]
+       |_empty_/z#x$3. => private[this] synthetic val method x$3: Tuple2[Int, Int]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |_empty_/z#x(). => method x(i: Int): Int
@@ -1099,9 +1077,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local2 => val local y: Int
        |  Int => scala/Int#
-       |local3 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -1153,9 +1128,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local2 => val local x: Int
        |  Int => scala/Int#
        |local3 => val local y: Int
-       |  Int => scala/Int#
-       |local4 => synthetic val local x$1: Tuple2[Int, Int]
-       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
   )
@@ -1253,10 +1225,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Some => scala/Some#
        |local2 => val local s: Int
        |  Int => scala/Int#
-       |local3 => synthetic val local x$2: Tuple2[Some[Int], Int]
-       |  Tuple2 => scala/Tuple2#
-       |  Some => scala/Some#
-       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -1318,11 +1286,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local3 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple3[::[Int], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  :: => scala/collection/immutable/`::`#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
   )
 
@@ -1456,11 +1419,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local3 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple3[::[Int], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  :: => scala/collection/immutable/`::`#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
     if (ScalaVersion.is212)
       """|[1:2..1:46): for (x <- List(1); a :: y = List(x)) yield y => orig(List(1)).map[Tuple2[Int, ::[Int]], List[Tuple2[Int, ::[Int]]]]({(x) => orig(a :: y = List(x))})(List.canBuildFrom[Tuple2[Int, ::[Int]]]).map[List[Int], List[List[Int]]]({(x$3) => orig(y)})(List.canBuildFrom[List[Int]])
@@ -1583,10 +1541,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local3 => val local b: Int
        |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple3[Tuple2[Int, Int], Int, Int]
-       |  Tuple3 => scala/Tuple3#
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
       """|[1:62..1:66): Some => *.apply[Tuple2[Int, Int]]
@@ -1667,10 +1621,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |  Some => scala/Some#
        |local2 => val local a: Int
-       |  Int => scala/Int#
-       |local3 => synthetic val local x$2: Tuple2[Some[Int], Int]
-       |  Tuple2 => scala/Tuple2#
-       |  Some => scala/Some#
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
@@ -1761,11 +1711,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local2 => val local a: Int
        |  Int => scala/Int#
        |local3 => val local y: List[Int]
-       |  List => scala/collection/immutable/List#
-       |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple3[Some[List[Int]], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  Some => scala/Some#
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
        |""".stripMargin,
@@ -1870,11 +1815,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local4 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local5 => synthetic val local x$1: Tuple3[::[Int], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  :: => scala/collection/immutable/`::`#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
     if (ScalaVersion.is212)
       """|[1:2..1:52): for (x <- List(1); z @ (a :: y) = List(x)) yield z => orig(List(1)).map[Tuple2[Int, ::[Int]], List[Tuple2[Int, ::[Int]]]]({(x) => orig(z @ (a :: y) = List(x))})(List.canBuildFrom[Tuple2[Int, ::[Int]]]).map[::[Int], List[::[Int]]]({(x$2) => orig(z)})(List.canBuildFrom[::[Int]])
@@ -2025,11 +1965,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local3 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple3[::[Int], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  :: => scala/collection/immutable/`::`#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
     if (ScalaVersion.is212)
       """|[1:2..1:49): for (x <- List(1); a :: y = List(x)) println(y) => orig(List(1)).map[Tuple2[Int, ::[Int]], List[Tuple2[Int, ::[Int]]]]({(x) => orig(a :: y = List(x))})(List.canBuildFrom[Tuple2[Int, ::[Int]]]).foreach[Unit]({(x$3) => orig(println(y))})
@@ -2096,11 +2031,11 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:26..1:27): y <= local3
          |[1:30..1:34): List => scala/collection/immutable/List.
          |[1:35..1:36): x => local0
-         |[1:39..1:40): b <= local5
+         |[1:39..1:40): b <= local4
          |[1:41..1:43): :: => scala/package.`::`.
-         |[1:44..1:45): z <= local6
+         |[1:44..1:45): z <= local5
          |[1:48..1:49): y => local3
-         |[1:57..1:58): z => local6
+         |[1:57..1:58): z => local5
          |""".stripMargin
     else
       """|[0:7..0:10): v10 <= _empty_/v10.
@@ -2111,11 +2046,11 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:26..1:27): y <= local3
          |[1:30..1:34): List => scala/package.List.
          |[1:35..1:36): x => local0
-         |[1:39..1:40): b <= local5
+         |[1:39..1:40): b <= local4
          |[1:41..1:43): :: => scala/package.`::`.
-         |[1:44..1:45): z <= local6
+         |[1:44..1:45): z <= local5
          |[1:48..1:49): y => local3
-         |[1:57..1:58): z => local6
+         |[1:57..1:58): z => local5
          |""".stripMargin,
     """|_empty_/v10. => final object v10 extends AnyRef
        |  AnyRef => scala/AnyRef#
@@ -2130,21 +2065,11 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local3 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local4 => synthetic val local x$3: Tuple3[::[Int], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  :: => scala/collection/immutable/`::`#
+       |local4 => val local b: Int
        |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
-       |local5 => val local b: Int
-       |  Int => scala/Int#
-       |local6 => val local z: List[Int]
+       |local5 => val local z: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local7 => synthetic val local x$4: Tuple3[::[Int], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  :: => scala/collection/immutable/`::`#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
     if (ScalaVersion.is212)
       """|[1:2..1:58): for (x <- List(1); a :: y = List(x); b :: z = y) yield z => orig(List(1)).map[Tuple3[Int, ::[Int], ::[Int]], List[Tuple3[Int, ::[Int], ::[Int]]]]({(x) => orig(a :: y = List(x); b :: z = y)})(List.canBuildFrom[Tuple3[Int, ::[Int], ::[Int]]]).map[List[Int], List[List[Int]]]({(x$5) => orig(z)})(List.canBuildFrom[List[Int]])
@@ -2252,11 +2177,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local4 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local5 => synthetic val local x$2: Tuple3[::[Int], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  :: => scala/collection/immutable/`::`#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
     if (ScalaVersion.is212)
       """|[1:2..1:55): for (x <- List(1); a :: y = List(x) if a > 0) yield y => orig(List(1)).map[Tuple2[Int, ::[Int]], List[Tuple2[Int, ::[Int]]]]({(x) => orig(a :: y = List(x))})(List.canBuildFrom[Tuple2[Int, ::[Int]]]).withFilter({(x$3) => orig(a > 0)}).map[List[Int], List[List[Int]]]({(x$4) => orig(y)})(List.canBuildFrom[List[Int]])
@@ -2328,18 +2248,18 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:23..1:24): b <= _empty_/v12.`~`#`<init>`().(b)
          |[1:23..1:24): b <= _empty_/v12.`~`#b.
          |[1:26..1:29): Int => scala/Int#
-         |[2:7..2:8): x <= local2
+         |[2:7..2:8): x <= local0
          |[2:12..2:16): List => scala/collection/immutable/List.
-         |[2:21..2:22): a <= local4
+         |[2:21..2:22): a <= local2
          |[2:23..2:24): ~ => _empty_/v12.`~`.
-         |[2:25..2:26): b <= local5
+         |[2:25..2:26): b <= local3
          |[2:33..2:34): ~ => _empty_/v12.`~`#
          |[2:34..2:34):  => _empty_/v12.`~`#`<init>`().
-         |[2:35..2:36): x => local2
-         |[2:38..2:39): x => local2
-         |[2:48..2:49): a => local4
+         |[2:35..2:36): x => local0
+         |[2:38..2:39): x => local0
+         |[2:48..2:49): a => local2
          |[2:50..2:51): + => scala/Int#`+`(+4).
-         |[2:52..2:53): b => local5
+         |[2:52..2:53): b => local3
          |""".stripMargin
     else
       """|[0:7..0:10): v12 <= _empty_/v12.
@@ -2351,18 +2271,18 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |[1:23..1:24): b <= _empty_/v12.`~`#`<init>`().(b)
          |[1:23..1:24): b <= _empty_/v12.`~`#b.
          |[1:26..1:29): Int => scala/Int#
-         |[2:7..2:8): x <= local2
+         |[2:7..2:8): x <= local0
          |[2:12..2:16): List => scala/package.List.
-         |[2:21..2:22): a <= local4
+         |[2:21..2:22): a <= local2
          |[2:23..2:24): ~ => _empty_/v12.`~`.
-         |[2:25..2:26): b <= local5
+         |[2:25..2:26): b <= local3
          |[2:33..2:34): ~ => _empty_/v12.`~`#
          |[2:34..2:34):  => _empty_/v12.`~`#`<init>`().
-         |[2:35..2:36): x => local2
-         |[2:38..2:39): x => local2
-         |[2:48..2:49): a => local4
+         |[2:35..2:36): x => local0
+         |[2:38..2:39): x => local0
+         |[2:48..2:49): a => local2
          |[2:50..2:51): + => scala/Int#`+`(+4).
-         |[2:52..2:53): b => local5
+         |[2:52..2:53): b => local3
          |""".stripMargin,
     if (ScalaVersion.is212)
       """|_empty_/v12. => final object v12 extends AnyRef { +2 decls }
@@ -2453,23 +2373,15 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |_empty_/v12.`~`.unapply().(x$0) => synthetic param x$0: ~
          |  ~ => _empty_/v12.`~`#
-         |local0 => synthetic var local acc: Int
+         |local0 => val local x: Int
          |  Int => scala/Int#
-         |local1 => synthetic val local ~$1: ~
-         |  ~ => _empty_/v12.`~`#
-         |local2 => val local x: Int
-         |  Int => scala/Int#
-         |local3 => synthetic param x$3: Tuple2[Int, ~]
+         |local1 => synthetic param x$3: Tuple2[Int, ~]
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  ~ => _empty_/v12.`~`#
-         |local4 => val local a: Int
+         |local2 => val local a: Int
          |  Int => scala/Int#
-         |local5 => val local b: Int
-         |  Int => scala/Int#
-         |local6 => synthetic val local x$2: Tuple3[~, Int, Int]
-         |  Tuple3 => scala/Tuple3#
-         |  ~ => _empty_/v12.`~`#
+         |local3 => val local b: Int
          |  Int => scala/Int#
          |""".stripMargin
     else
@@ -2567,23 +2479,15 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  ~ => _empty_/v12.`~`#
          |_empty_/v12.`~`.writeReplace(). => private synthetic method writeReplace(): Object
          |  Object => java/lang/Object#
-         |local0 => synthetic var local acc: Int
+         |local0 => val local x: Int
          |  Int => scala/Int#
-         |local1 => synthetic val local ~$1: ~
-         |  ~ => _empty_/v12.`~`#
-         |local2 => val local x: Int
-         |  Int => scala/Int#
-         |local3 => synthetic param x$3: Tuple2[Int, ~]
+         |local1 => synthetic param x$3: Tuple2[Int, ~]
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  ~ => _empty_/v12.`~`#
-         |local4 => val local a: Int
+         |local2 => val local a: Int
          |  Int => scala/Int#
-         |local5 => val local b: Int
-         |  Int => scala/Int#
-         |local6 => synthetic val local x$2: Tuple3[~, Int, Int]
-         |  Tuple3 => scala/Tuple3#
-         |  ~ => _empty_/v12.`~`#
+         |local3 => val local b: Int
          |  Int => scala/Int#
          |""".stripMargin,
     if (ScalaVersion.is212)
@@ -2593,10 +2497,10 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Int => scala/Int#
          |  ~ => _empty_/v12.`~`#
          |  List => scala/collection/immutable/List#
-         |  x => local2
+         |  x => local0
          |  List => scala/collection/immutable/List.
          |  canBuildFrom => scala/collection/immutable/List.canBuildFrom().
-         |  x$3 => local3
+         |  x$3 => local1
          |[2:12..2:16): List => *.apply[Int]
          |  apply => scala/collection/immutable/List.apply().
          |  Int => scala/Int#
@@ -2611,8 +2515,8 @@ class PatternDesugaringSuite extends SemanticdbSuite {
          |  Tuple2 => scala/Tuple2#
          |  Int => scala/Int#
          |  ~ => _empty_/v12.`~`#
-         |  x => local2
-         |  x$3 => local3
+         |  x => local0
+         |  x$3 => local1
          |[2:12..2:16): List => *.apply[Int]
          |  apply => scala/collection/IterableFactory#apply().
          |  Int => scala/Int#
@@ -3926,10 +3830,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local3 => val local b: Int
        |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple3[Tuple2[Int, Int], Int, Int]
-       |  Tuple3 => scala/Tuple3#
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
        |""".stripMargin,
   )
 
@@ -4011,10 +3911,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local2 => val local a: Int
        |  Int => scala/Int#
        |local3 => val local b: Int
-       |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple3[Tuple2[Int, Int], Int, Int]
-       |  Tuple3 => scala/Tuple3#
-       |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
@@ -4102,10 +3998,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local4 => val local b: Int
        |  Int => scala/Int#
-       |local5 => synthetic val local x$2: Tuple3[Tuple2[Int, Int], Int, Int]
-       |  Tuple3 => scala/Tuple3#
-       |  Tuple2 => scala/Tuple2#
-       |  Int => scala/Int#
        |""".stripMargin,
     if (ScalaVersion.is212)
       """|[1:2..1:63): for (x <- List(1); (a, b) = (x, x); y <- List(a)) yield b + y => orig(List(1)).map[Tuple2[Int, Tuple2[Int, Int]], List[Tuple2[Int, Tuple2[Int, Int]]]]({(x) => orig((a, b) = (x, x))})(List.canBuildFrom[Tuple2[Int, Tuple2[Int, Int]]]).flatMap[Int, List[Int]]({(x$3) => orig(List(a)).map[Int, List[Int]]({(y) => orig(b + y)})(List.canBuildFrom[Int])})(List.canBuildFrom[Int])
@@ -4173,11 +4065,6 @@ class PatternDesugaringSuite extends SemanticdbSuite {
        |local3 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local4 => synthetic val local x$2: Tuple3[::[Int], Int, List[Int]]
-       |  Tuple3 => scala/Tuple3#
-       |  :: => scala/collection/immutable/`::`#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
   )
 

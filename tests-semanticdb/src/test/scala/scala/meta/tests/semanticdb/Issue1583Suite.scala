@@ -481,12 +481,6 @@ class Issue1583Suite extends SemanticdbSuite {
        |  Int => scala/Int#
        |local1 => synthetic param x$2: Int
        |  Int => scala/Int#
-       |local2 => val local x$1: Int
-       |  Int => scala/Int#
-       |local3 => val local x$2: Function1[Int, Int] @uncheckedBounds
-       |  Function1 => scala/Function1#
-       |  Int => scala/Int#
-       |  uncheckedBounds => scala/reflect/internal/annotations/uncheckedBounds#
        |""".stripMargin,
   )
 
@@ -669,7 +663,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |  Int => scala/Int#
          |_empty_/O.v(). => var method v: Int
          |  Int => scala/Int#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
          |""".stripMargin,
   )
@@ -710,7 +704,7 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
          |""".stripMargin,
   )
@@ -753,7 +747,7 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
          |""".stripMargin,
   )
@@ -1250,11 +1244,11 @@ class Issue1583Suite extends SemanticdbSuite {
        |_empty_/O.v(). => var method v: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |_empty_/O.x$1. => synthetic val method x$1: Tuple2[Int, List[Int]]
+       |_empty_/O.x$1. => private[this] synthetic val method x$1: Tuple2[Int, List[Int]]
        |  Tuple2 => scala/Tuple2#
        |  Int => scala/Int#
        |  List => scala/collection/immutable/List#
-       |_empty_/O.x$2. => synthetic val method x$2: Unit
+       |_empty_/O.x$2. => private[this] synthetic val method x$2: Unit
        |  Unit => scala/Unit#
        |_empty_/O.x. => val method x: Int
        |  Int => scala/Int#
@@ -1337,7 +1331,7 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
          |""".stripMargin,
   )
@@ -1401,11 +1395,6 @@ class Issue1583Suite extends SemanticdbSuite {
        |local2 => val local y: List[Int]
        |  List => scala/collection/immutable/List#
        |  Int => scala/Int#
-       |local3 => synthetic val local x$2: Tuple2[::[Int], List[Int]]
-       |  Tuple2 => scala/Tuple2#
-       |  :: => scala/collection/immutable/`::`#
-       |  Int => scala/Int#
-       |  List => scala/collection/immutable/List#
        |""".stripMargin,
   )
 
@@ -2101,22 +2090,11 @@ class Issue1583Suite extends SemanticdbSuite {
 
   symbols(
     rightAssocPlaceholder,
-    if (ScalaVersion.is212)
-      """|_empty_/O. => final object O extends AnyRef
-         |  AnyRef => scala/AnyRef#
-         |local0 => synthetic param x$1: Int
-         |  Int => scala/Int#
-         |local1 => synthetic val local x$2: Int
-         |  Int => scala/Int#
-         |""".stripMargin
-    else
-      """|_empty_/O. => final object O extends AnyRef
-         |  AnyRef => scala/AnyRef#
-         |local0 => synthetic param x$1: Int
-         |  Int => scala/Int#
-         |local1 => synthetic final val local rassoc$1: Int
-         |  Int => scala/Int#
-         |""".stripMargin,
+    """|_empty_/O. => final object O extends AnyRef
+       |  AnyRef => scala/AnyRef#
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -2364,8 +2342,6 @@ class Issue1583Suite extends SemanticdbSuite {
          |_empty_/K.unapply().(x$0) => synthetic param x$0: K
          |  K => _empty_/K#
          |local0 => synthetic abstract type _
-         |local1 => synthetic val local K$1: K
-         |  K => _empty_/K#
          |""".stripMargin
     else
       """|_empty_/K# => case class K extends AnyRef with Product with Serializable { +13 decls }
@@ -2456,8 +2432,6 @@ class Issue1583Suite extends SemanticdbSuite {
          |_empty_/K.writeReplace(). => private synthetic method writeReplace(): Object
          |  Object => java/lang/Object#
          |local0 => synthetic abstract type _
-         |local1 => synthetic val local K$1: K
-         |  K => _empty_/K#
          |""".stripMargin,
   )
 
@@ -2627,165 +2601,79 @@ class Issue1583Suite extends SemanticdbSuite {
 
   symbols(
     superCallArgs,
-    if (ScalaVersion.is212)
-      """|_empty_/A# => class A extends AnyRef { +3 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/A#`<init>`(). => primary ctor <init>(f: Function1[Int, Int])(g: Function1[Int, Int])
-         |  f => _empty_/A#`<init>`().(f)
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |  g => _empty_/A#`<init>`().(g)
-         |_empty_/A#`<init>`().(f) => param f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/A#`<init>`().(g) => param g: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/A#f. => private[this] val method f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/A#g. => private[this] val method g: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/P. => final object P extends A
-         |  A => _empty_/A#
-         |_empty_/Q# => class Q[T] extends AnyRef { +2 decls }
-         |  T => _empty_/Q#[T]
-         |  AnyRef => scala/AnyRef#
-         |_empty_/Q#[T] => typeparam T
-         |_empty_/Q#`<init>`(). => primary ctor <init>(f: Function1[T, T])
-         |  f => _empty_/Q#`<init>`().(f)
-         |  Function1 => scala/Function1#
-         |  T => _empty_/Q#[T]
-         |_empty_/Q#`<init>`().(f) => param f: Function1[T, T]
-         |  Function1 => scala/Function1#
-         |  T => _empty_/Q#[T]
-         |_empty_/Q#f. => private[this] val method f: Function1[T, T]
-         |  Function1 => scala/Function1#
-         |  T => _empty_/Q#[T]
-         |_empty_/R# => class R extends Q[Int] { +1 decls }
-         |  Q => _empty_/Q#
-         |  Int => scala/Int#
-         |_empty_/R#`<init>`(). => primary ctor <init>()
-         |_empty_/S# => class S extends AnyRef { +3 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/S#`<init>`(). => primary ctor <init>(f: Function1[Int, Int], g: Int)
-         |  f => _empty_/S#`<init>`().(f)
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |  g => _empty_/S#`<init>`().(g)
-         |_empty_/S#`<init>`().(f) => param f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/S#`<init>`().(g) => default param g: Int
-         |  Int => scala/Int#
-         |_empty_/S#f. => private[this] val method f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/S#g. => private[this] val method g: Int
-         |  Int => scala/Int#
-         |_empty_/S. => synthetic final object S extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/S.`<init>$default$2`(). => synthetic method <init>$default$2: Int @uncheckedVariance
-         |  Int => scala/Int#
-         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |_empty_/T# => class T extends S { +1 decls }
-         |  S => _empty_/S#
-         |_empty_/T#`<init>`(). => primary ctor <init>()
-         |local0 => synthetic param x$1: Int
-         |  Int => scala/Int#
-         |local1 => synthetic param x$2: Int
-         |  Int => scala/Int#
-         |local2 => synthetic param x$3: Int
-         |  Int => scala/Int#
-         |local3 => synthetic param x$4: Int
-         |  Int => scala/Int#
-         |local4 => val local x$1: Int
-         |  Int => scala/Int#
-         |local5 => val local x$2: Function1[Int, Int] @uncheckedBounds
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |  uncheckedBounds => scala/reflect/internal/annotations/uncheckedBounds#
-         |""".stripMargin
-    else
-      """|_empty_/A# => class A extends AnyRef { +3 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/A#`<init>`(). => primary ctor <init>(f: Function1[Int, Int])(g: Function1[Int, Int])
-         |  f => _empty_/A#`<init>`().(f)
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |  g => _empty_/A#`<init>`().(g)
-         |_empty_/A#`<init>`().(f) => param f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/A#`<init>`().(g) => param g: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/A#f. => private[this] val method f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/A#g. => private[this] val method g: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/P. => final object P extends A
-         |  A => _empty_/A#
-         |_empty_/Q# => class Q[T] extends AnyRef { +2 decls }
-         |  T => _empty_/Q#[T]
-         |  AnyRef => scala/AnyRef#
-         |_empty_/Q#[T] => typeparam T
-         |_empty_/Q#`<init>`(). => primary ctor <init>(f: Function1[T, T])
-         |  f => _empty_/Q#`<init>`().(f)
-         |  Function1 => scala/Function1#
-         |  T => _empty_/Q#[T]
-         |_empty_/Q#`<init>`().(f) => param f: Function1[T, T]
-         |  Function1 => scala/Function1#
-         |  T => _empty_/Q#[T]
-         |_empty_/Q#f. => private[this] val method f: Function1[T, T]
-         |  Function1 => scala/Function1#
-         |  T => _empty_/Q#[T]
-         |_empty_/R# => class R extends Q[Int] { +1 decls }
-         |  Q => _empty_/Q#
-         |  Int => scala/Int#
-         |_empty_/R#`<init>`(). => primary ctor <init>()
-         |_empty_/S# => class S extends AnyRef { +3 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/S#`<init>`(). => primary ctor <init>(f: Function1[Int, Int], g: Int)
-         |  f => _empty_/S#`<init>`().(f)
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |  g => _empty_/S#`<init>`().(g)
-         |_empty_/S#`<init>`().(f) => param f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/S#`<init>`().(g) => default param g: Int
-         |  Int => scala/Int#
-         |_empty_/S#f. => private[this] val method f: Function1[Int, Int]
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |_empty_/S#g. => private[this] val method g: Int
-         |  Int => scala/Int#
-         |_empty_/S. => synthetic final object S extends AnyRef { +1 decls }
-         |  AnyRef => scala/AnyRef#
-         |_empty_/S.`<init>$default$2`(). => synthetic method <init>$default$2: Int @uncheckedVariance
-         |  Int => scala/Int#
-         |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
-         |_empty_/T# => class T extends S { +1 decls }
-         |  S => _empty_/S#
-         |_empty_/T#`<init>`(). => primary ctor <init>()
-         |local0 => synthetic param x$1: Int
-         |  Int => scala/Int#
-         |local1 => synthetic param x$2: Int
-         |  Int => scala/Int#
-         |local2 => synthetic param x$3: Int
-         |  Int => scala/Int#
-         |local3 => synthetic param x$4: Int
-         |  Int => scala/Int#
-         |local4 => val local x$1: 2
-         |local5 => val local x$2: Function1[Int, Int] @uncheckedBounds
-         |  Function1 => scala/Function1#
-         |  Int => scala/Int#
-         |  uncheckedBounds => scala/reflect/internal/annotations/uncheckedBounds#
-         |""".stripMargin,
+    """|_empty_/A# => class A extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/A#`<init>`(). => primary ctor <init>(f: Function1[Int, Int])(g: Function1[Int, Int])
+       |  f => _empty_/A#`<init>`().(f)
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |  g => _empty_/A#`<init>`().(g)
+       |_empty_/A#`<init>`().(f) => param f: Function1[Int, Int]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |_empty_/A#`<init>`().(g) => param g: Function1[Int, Int]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |_empty_/A#f. => private[this] val method f: Function1[Int, Int]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |_empty_/A#g. => private[this] val method g: Function1[Int, Int]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |_empty_/P. => final object P extends A
+       |  A => _empty_/A#
+       |_empty_/Q# => class Q[T] extends AnyRef { +2 decls }
+       |  T => _empty_/Q#[T]
+       |  AnyRef => scala/AnyRef#
+       |_empty_/Q#[T] => typeparam T
+       |_empty_/Q#`<init>`(). => primary ctor <init>(f: Function1[T, T])
+       |  f => _empty_/Q#`<init>`().(f)
+       |  Function1 => scala/Function1#
+       |  T => _empty_/Q#[T]
+       |_empty_/Q#`<init>`().(f) => param f: Function1[T, T]
+       |  Function1 => scala/Function1#
+       |  T => _empty_/Q#[T]
+       |_empty_/Q#f. => private[this] val method f: Function1[T, T]
+       |  Function1 => scala/Function1#
+       |  T => _empty_/Q#[T]
+       |_empty_/R# => class R extends Q[Int] { +1 decls }
+       |  Q => _empty_/Q#
+       |  Int => scala/Int#
+       |_empty_/R#`<init>`(). => primary ctor <init>()
+       |_empty_/S# => class S extends AnyRef { +3 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/S#`<init>`(). => primary ctor <init>(f: Function1[Int, Int], g: Int)
+       |  f => _empty_/S#`<init>`().(f)
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |  g => _empty_/S#`<init>`().(g)
+       |_empty_/S#`<init>`().(f) => param f: Function1[Int, Int]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |_empty_/S#`<init>`().(g) => default param g: Int
+       |  Int => scala/Int#
+       |_empty_/S#f. => private[this] val method f: Function1[Int, Int]
+       |  Function1 => scala/Function1#
+       |  Int => scala/Int#
+       |_empty_/S#g. => private[this] val method g: Int
+       |  Int => scala/Int#
+       |_empty_/S. => synthetic final object S extends AnyRef { +1 decls }
+       |  AnyRef => scala/AnyRef#
+       |_empty_/S.`<init>$default$2`(). => synthetic method <init>$default$2: Int @uncheckedVariance
+       |  Int => scala/Int#
+       |  uncheckedVariance => scala/annotation/unchecked/uncheckedVariance#
+       |_empty_/T# => class T extends S { +1 decls }
+       |  S => _empty_/S#
+       |_empty_/T#`<init>`(). => primary ctor <init>()
+       |local0 => synthetic param x$1: Int
+       |  Int => scala/Int#
+       |local1 => synthetic param x$2: Int
+       |  Int => scala/Int#
+       |local2 => synthetic param x$3: Int
+       |  Int => scala/Int#
+       |local3 => synthetic param x$4: Int
+       |  Int => scala/Int#
+       |""".stripMargin,
   )
 
   occurrences(
@@ -3404,7 +3292,7 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |_empty_/O.m(). => method m: Int
          |  Int => scala/Int#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
          |local0 => synthetic val local x$2: Unit
          |  Unit => scala/Unit#
@@ -3485,7 +3373,7 @@ class Issue1583Suite extends SemanticdbSuite {
     else
       """|_empty_/O. => final object O extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
          |""".stripMargin,
   )
@@ -3807,17 +3695,17 @@ class Issue1583Suite extends SemanticdbSuite {
          |  AnyRef => scala/AnyRef#
          |_empty_/O.m(). => method m: Int
          |  Int => scala/Int#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
          |_empty_/P. => final object P extends AnyRef { +1 decls }
          |  AnyRef => scala/AnyRef#
-         |_empty_/P.x$3. => synthetic val method x$3: Unit
+         |_empty_/P.x$3. => private[this] synthetic val method x$3: Unit
          |  Unit => scala/Unit#
          |_empty_/Q. => final object Q extends AnyRef { +2 decls }
          |  AnyRef => scala/AnyRef#
          |_empty_/Q.m(). => method m: Int
          |  Int => scala/Int#
-         |_empty_/Q.x$4. => synthetic val method x$4: Unit
+         |_empty_/Q.x$4. => private[this] synthetic val method x$4: Unit
          |  Unit => scala/Unit#
          |local0 => synthetic val local x$2: Unit
          |  Unit => scala/Unit#
@@ -4544,9 +4432,9 @@ class Issue1583Suite extends SemanticdbSuite {
          |  List => scala/collection/immutable/List#
          |_empty_/O.n().(x) => param x: Any
          |  Any => scala/Any#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
-         |_empty_/O.x$2. => synthetic val method x$2: Tuple2[Nil.type, Int]
+         |_empty_/O.x$2. => private[this] synthetic val method x$2: Tuple2[Nil.type, Int]
          |  Tuple2 => scala/Tuple2#
          |  Nil => scala/collection/immutable/Nil.
          |  Int => scala/Int#
@@ -4593,11 +4481,11 @@ class Issue1583Suite extends SemanticdbSuite {
          |  List => scala/collection/immutable/List#
          |_empty_/O.n().(x) => param x: Any
          |  Any => scala/Any#
-         |_empty_/O.x$1. => synthetic val method x$1: Unit
+         |_empty_/O.x$1. => private[this] synthetic val method x$1: Unit
          |  Unit => scala/Unit#
-         |_empty_/O.x$2. => synthetic val method x$2: Unit
+         |_empty_/O.x$2. => private[this] synthetic val method x$2: Unit
          |  Unit => scala/Unit#
-         |_empty_/O.x$3. => synthetic val method x$3: Tuple2[Nil.type, Int]
+         |_empty_/O.x$3. => private[this] synthetic val method x$3: Tuple2[Nil.type, Int]
          |  Tuple2 => scala/Tuple2#
          |  Nil => scala/collection/immutable/Nil.
          |  Int => scala/Int#

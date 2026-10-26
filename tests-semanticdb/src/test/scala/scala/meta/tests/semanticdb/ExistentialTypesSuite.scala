@@ -897,7 +897,6 @@ class ExistentialTypesSuite extends SemanticdbSuite {
     assertNoDiff(
       load().linesIterator.filter(_.startsWith("local")).mkString("\n"),
       """|local1 => val local xb: AnyRef
-         |local2 => synthetic val local e24$1: e24
          |""".stripMargin,
     )
   }

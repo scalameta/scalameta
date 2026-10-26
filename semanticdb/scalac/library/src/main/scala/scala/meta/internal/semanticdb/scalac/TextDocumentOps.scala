@@ -189,7 +189,8 @@ trait TextDocumentOps {
       // a synthetic can include a parameter that has no occurrence
       def shouldNotSaveSymbol(gsym: g.Symbol, isInSynthetic: Boolean = false): Boolean =
         config.symbols.isNone || gsym == null || gsym.hasPackageFlag ||
-          gsym.isUselessSymbolInformation || !isInSynthetic && gsym.isHiddenParameter
+          gsym.isUselessSymbolInformation || gsym.isTemporary ||
+          !isInSynthetic && gsym.isHiddenParameter
       def shouldNotSaveSemanticSymbol(ssym: String): Boolean = ssym == Symbols.None ||
         config.symbols.isLocalOnly && !ssym.isLocal
 

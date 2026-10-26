@@ -14,9 +14,9 @@ class Synthetic/*<=example.Synthetic#*/ {
   val lst/*<=example.Synthetic#lst.*/ = 1 #::/*=>scala.collection.immutable.Stream.ConsWrapper#`#::`().*/ 2 #::/*=>scala.collection.immutable.Stream.ConsWrapper#`#::`().*/ Stream/*=>scala.package.Stream.*/.empty/*=>scala.collection.immutable.Stream.empty().*/
   lst/*=>example.Synthetic#lst.*/ +/*=>scala.Predef.any2stringadd#`+`().*/ "foo"
 
-  for (x/*<=local5*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; y/*<=local6*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10) println/*=>scala.Predef.println(+1).*/(x/*=>local5*/ ->/*=>scala.Predef.ArrowAssoc#`->`().*/ x/*=>local5*/)
-  for (i/*<=local7*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; j/*<=local8*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10) yield (i/*=>local7*/, j/*=>local8*/)
-  for (i/*<=local9*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; j/*<=local10*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10 if i/*=>local9*/ %/*=>scala.Int#`%`(+3).*/ 2 ==/*=>scala.Int#`==`(+3).*/ 0) yield (i/*=>local9*/, j/*=>local10*/)
+  for (x/*<=local1*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; y/*<=local2*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10) println/*=>scala.Predef.println(+1).*/(x/*=>local1*/ ->/*=>scala.Predef.ArrowAssoc#`->`().*/ x/*=>local1*/)
+  for (i/*<=local3*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; j/*<=local4*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10) yield (i/*=>local3*/, j/*=>local4*/)
+  for (i/*<=local5*/ <- 1 to/*=>scala.runtime.RichInt#to().*/ 10; j/*<=local6*/ <- 0 until/*=>scala.runtime.RichInt#until().*/ 10 if i/*=>local5*/ %/*=>scala.Int#`%`(+3).*/ 2 ==/*=>scala.Int#`==`(+3).*/ 0) yield (i/*=>local5*/, j/*=>local6*/)
 
   object s/*<=example.Synthetic#s.*/ {
     def apply/*<=example.Synthetic#s.apply().*/() = 2
@@ -35,14 +35,14 @@ class Synthetic/*<=example.Synthetic#*/ {
 
   import scala.concurrent.ExecutionContext/*=>scala.concurrent.ExecutionContext.*/.Implicits/*=>scala.concurrent.ExecutionContext.Implicits.*/.global/*=>scala.concurrent.ExecutionContext.Implicits.global.*/
   for {
-    a/*<=local11*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(1)
-    b/*<=local12*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(2)
-  } println/*=>scala.Predef.println(+1).*/(a/*=>local11*/)
+    a/*<=local7*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(1)
+    b/*<=local8*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(2)
+  } println/*=>scala.Predef.println(+1).*/(a/*=>local7*/)
   for {
-    a/*<=local13*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(1)
-    b/*<=local14*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(2)
-    if a/*=>local13*/ </*=>scala.Int#`<`(+3).*/ b/*=>local14*/
-  } yield a/*=>local13*/
+    a/*<=local9*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(1)
+    b/*<=local10*/ <- scala.concurrent.Future/*=>scala.concurrent.Future.*/.successful/*=>scala.concurrent.Future.successful().*/(2)
+    if a/*=>local9*/ </*=>scala.Int#`<`(+3).*/ b/*=>local10*/
+  } yield a/*=>local9*/
 
   // See https://github.com/scalameta/scalameta/issues/1045
   2 ::/*=>scala.collection.immutable.List#`::`().*/ Nil/*=>scala.collection.immutable.Nil.*/
