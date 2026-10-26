@@ -407,6 +407,8 @@ trait TextDocumentOps {
               if ((gself ne gsym0) && gself.nameString == mtree.value) return success(mtree, gself)
             }
             if (gsym0.isUselessOccurrence) return
+            // a parameter that scalac adds has the position of the one it copies
+            if (mtree.isDefinition && gsym0.isAddedParameter) return
             if (gsym0.isImplicitPrimitiveConversion(mtree)) return
             // scalac puts the constructor of `@a.B` at `a`
             if (gsym0.isConstructor && mtree.isInstanceOf[m.Term.Name]) return
