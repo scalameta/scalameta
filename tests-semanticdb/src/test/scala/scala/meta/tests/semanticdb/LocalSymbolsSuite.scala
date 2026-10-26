@@ -3,7 +3,7 @@ package scala.meta.tests.semanticdb
 import scala.meta.interactive.InteractiveSemanticdb
 import scala.meta.internal.io.FileIO
 import scala.meta.internal.semanticdb.TextDocuments
-import scala.meta.internal.semanticdb.scalac.{BinaryMode, SemanticdbOps}
+import scala.meta.internal.semanticdb.scalac.{BinaryMode, SemanticdbOps, SemanticdbPlugin}
 import scala.meta.internal.{semanticdb => s}
 import scala.meta.io.AbsolutePath
 import scala.meta.metap.Format
@@ -19,6 +19,16 @@ import munit.FunSuite
 
 // https://github.com/scalameta/scalameta/issues/1591
 class LocalSymbolsSuite extends FunSuite {
+
+  // the helpers compile with a new run of one of these
+  private lazy val semanticdb = new Compiler("-P:semanticdb:failures:error -P:semanticdb:text:on")
+  private lazy val reporting = new Compiler("")
+  private lazy val typer = {
+    val settings = new Settings(msg => fail(msg))
+    settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
+    settings.processArgumentString("-Yrangepos -Ystop-after:typer")
+    new Global(settings, new StoreReporter())
+  }
 
   private val defs =
     """|object Defs {
@@ -112,22 +122,59 @@ class LocalSymbolsSuite extends FunSuite {
   private val b = "package b\nimport a.Defs._\n" + use
   private val c = "package c\nimport Defs._\n" + defs + use
 
-  private def compile(sources: Map[String, String], classpath: String*): Path = {
-    val out = Files.createTempDirectory("issue1591_")
-    sources.foreach { case (name, code) => Files.write(out.resolve(name), code.getBytes("UTF-8")) }
-    val settings = new Settings(msg => fail(msg))
+  // a new run of `g`, without the errors, the top-level symbols and the packages of its last run
+  private def newRun(g: Global): g.Run = {
+    g.reporter.reset()
+    val last = g.currentRun
+    // unlink `sym`, and then its package if the package has no other member
+    def unlink(sym: g.Symbol): Unit = {
+      val owner = sym.owner
+      val decls = g.enteringPhase(last.typerPhase)(owner.info.decls)
+      decls.unlink(sym)
+      if (decls.isEmpty && owner.hasPackageFlag && !owner.isEffectiveRoot) unlink(owner.sourceModule)
+    }
+    if (last ne null) last.symSource.keys.foreach(unlink)
+    new g.Run()
+  }
+
+  // a compiler with the plugin and `options`
+  private class Compiler(val options: String, classpath: String*) {
+
+    private val reporter = new StoreReporter()
+    private val settings = new Settings(msg => fail(msg))
     settings.classpath.value = (sys.props("sbt.paths.tests.test.classes") +: classpath)
       .mkString(File.pathSeparator)
-    settings.outputDirs.setSingleOutput(out.toString)
-    val plugin = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
-    settings.processArgumentString(
-      s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb -P:semanticdb:failures:error " +
-        s"-P:semanticdb:text:on -P:semanticdb:sourceroot:$out -P:semanticdb:targetroot:$out",
-    )
-    val reporter = new StoreReporter()
-    val g = new Global(settings, reporter)
-    new g.Run().compile(sources.keys.toList.sorted.map(out.resolve(_).toString))
-    assertEquals(reporter.infos.toList.filter(_.severity == reporter.ERROR).map(_.msg), Nil)
+    private val plugin = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
+    settings
+      .processArgumentString(s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb $options")
+    private val g = new Global(settings, reporter)
+
+    // the errors of a run that compiles `sources` into `out`, its sourceroot and targetroot
+    def compile(sources: Map[String, String], out: Path): List[StoreReporter.Info] = {
+      sources.foreach { case (name, code) =>
+        Files.write(out.resolve(name), code.getBytes("UTF-8"))
+      }
+      settings.outputDirs.setSingleOutput(out.toString)
+      reporter.reset()
+      val run = newRun(g)
+      // the first run loads the plugin
+      g.plugins.foreach {
+        case p: SemanticdbPlugin =>
+          p.config = p.config.copy(sourceroot = AbsolutePath(out), targetroot = AbsolutePath(out))
+        case _ =>
+      }
+      run.compile(sources.keys.toList.sorted.map(out.resolve(_).toString))
+      reporter.infos.toList.filter(_.severity == reporter.ERROR)
+    }
+
+  }
+
+  private def compile(sources: Map[String, String], classpath: String*): Path = {
+    val out = Files.createTempDirectory("issue1591_")
+    // each other classpath is a new directory, so a compiler for it runs once
+    val compiler =
+      if (classpath.isEmpty) semanticdb else new Compiler(semanticdb.options, classpath: _*)
+    assertEquals(compiler.compile(sources, out).map(_.msg), Nil)
     out
   }
 
@@ -2843,11 +2890,8 @@ class LocalSymbolsSuite extends FunSuite {
     private val dir = Files.createTempDirectory("issue1591_")
     private val file = dir.resolve("O.scala")
     Files.write(file, code.getBytes("UTF-8"))
-    private val settings = new Settings(msg => fail(msg))
-    settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
-    settings.processArgumentString("-Yrangepos -Ystop-after:typer")
-    val pc = new Global(settings, new StoreReporter())
-    private val run = new pc.Run()
+    val pc: typer.type = typer
+    private val run = newRun(pc)
     run.compile(List(file.toString))
     private val unit = run.units.next()
     val ops = new SemanticdbOps {
@@ -4312,23 +4356,9 @@ class LocalSymbolsSuite extends FunSuite {
   }
 
   // the errors of a run that compiles `sources`, with the plugin
-  private def errors(sources: Map[String, String]): List[String] = {
-    val out = Files.createTempDirectory("issue1591_")
-    sources.foreach { case (name, code) => Files.write(out.resolve(name), code.getBytes("UTF-8")) }
-    val settings = new Settings(msg => fail(msg))
-    settings.classpath.value = sys.props("sbt.paths.tests.test.classes")
-    settings.outputDirs.setSingleOutput(out.toString)
-    val plugin = sys.props("sbt.paths.semanticdb-scalac-plugin.compile.jar")
-    settings.processArgumentString(
-      s"-Yrangepos -Xplugin:$plugin -Xplugin-require:semanticdb " +
-        s"-P:semanticdb:sourceroot:$out -P:semanticdb:targetroot:$out",
-    )
-    val reporter = new StoreReporter()
-    val g = new Global(settings, reporter)
-    new g.Run().compile(sources.keys.toList.sorted.map(out.resolve(_).toString))
-    reporter.infos.toList.filter(_.severity == reporter.ERROR)
-      .map(info => s"${info.pos.source.file.name}:${info.pos.line}:${info.pos.column}: ${info.msg}")
-  }
+  private def errors(sources: Map[String, String]): List[String] = reporting
+    .compile(sources, Files.createTempDirectory("issue1591_"))
+    .map(info => s"${info.pos.source.file.name}:${info.pos.line}:${info.pos.column}: ${info.msg}")
 
   private val outsideBounds =
     """|object A {
@@ -4351,6 +4381,14 @@ class LocalSymbolsSuite extends FunSuite {
   test("a type alias applied outside its bounds, in another file of the run") {
     val b = "object B { val y = A.r.y }\n"
     assertEquals(errors(Map("A.scala" -> outsideBounds, "B.scala" -> b)), outsideBoundsErrors)
+  }
+
+  test("a package that an earlier run created") {
+    errors(Map("A.scala" -> "package zz\nobject Z\n"))
+    assertEquals(
+      errors(Map("B.scala" -> "object B { val z = zz.Z }\n")),
+      List("B.scala:1:20: not found: value zz"),
+    )
   }
 
   test("an existential of a classfile, outside a document and then in a document") {
