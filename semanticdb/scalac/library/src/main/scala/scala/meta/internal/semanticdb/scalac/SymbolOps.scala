@@ -309,6 +309,9 @@ trait SymbolOps {
       NoSymbol
     }
 
+    def getterForValDef: g.Symbol =
+      if (sym.owner.isClass && !sym.isMethod) sym.getterIn(sym.owner) else g.NoSymbol
+
     def isUsefulSymbolInformation: Boolean = !isUselessSymbolInformation
     def isClassfileAnnotation: Boolean = sym.isClass && sym.hasFlag(gf.JAVA_ANNOTATION)
     def isDefaultParameter: Boolean = sym.hasFlag(gf.DEFAULTPARAM) && sym.hasFlag(gf.PARAM)
@@ -577,8 +580,21 @@ trait SymbolOps {
 
     new DocumentTraverser(source) {
       private var syntheticDef: g.Tree = null
-      override protected def leave(tree: g.Tree): Unit =
-        if (tree eq syntheticDef) syntheticDef = null
+      override protected def leave(tree: g.Tree): Unit = tree match {
+        // scalac may not keep the trees of a field's accessors, as in `a(e) += 1`
+        case t: g.Template if t.symbol.owner.isSemanticdbLocal =>
+          t.body.foreach {
+            case v: g.ValDef =>
+              val sym = v.symbol
+              val getter = if ((sym ne null) && sym.exists) sym.getterForValDef else g.NoSymbol
+              if (getter.exists) {
+                add(getter)
+                if (sym.isMutable) add(getter.setterIn(sym.owner))
+              }
+            case _ =>
+          }
+        case t => if (t eq syntheticDef) syntheticDef = null
+      }
       override protected def visit(tree: g.Tree, hasOriginal: Boolean): Unit = tree match {
         case t: g.DefTree if (t.symbol ne null) && t.symbol.exists =>
           val sym = t.symbol
