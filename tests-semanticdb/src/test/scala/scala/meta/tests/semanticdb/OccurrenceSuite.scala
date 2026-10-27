@@ -75,8 +75,8 @@ object OccurrenceSuite {
   })
   private implicit object RangeOrdering extends Ordering[Position.Range] {
     def compare(x: Position.Range, y: Position.Range): Int = {
-      val start = x.start - y.start
-      if (start != 0) start else x.end - y.end
+      val end = x.end - y.end
+      if (end != 0) end else x.start - y.start
     }
   }
 
@@ -89,12 +89,11 @@ object OccurrenceSuite {
       val r = occ.range.get
       occ -> Position.Range(input, r.startLine, r.startCharacter, r.endLine, r.endCharacter)
     }.sortBy(_._2).foreach { case (occ, pos) =>
-      if (pos.end >= offset) {
-        sb.append(doc.text.substring(offset, pos.end))
-        val isPrimaryConstructor = symtab.get(occ.symbol).exists(_.isPrimary)
-        if (!occ.symbol.isPackage && !isPrimaryConstructor) printSymbol(sb, occ.symbol, occ.role)
-        offset = pos.end
-      }
+      assert(pos.end >= offset)
+      sb.append(doc.text.substring(offset, pos.end))
+      val isPrimaryConstructor = symtab.get(occ.symbol).exists(_.isPrimary)
+      if (!occ.symbol.isPackage && !isPrimaryConstructor) printSymbol(sb, occ.symbol, occ.role)
+      offset = pos.end
     }
     sb.append(doc.text.substring(offset))
     sb.toString()
