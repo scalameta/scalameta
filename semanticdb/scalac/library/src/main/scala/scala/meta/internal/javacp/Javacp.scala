@@ -1,7 +1,6 @@
 package scala.meta.internal.javacp
 
 import org.scalameta.collections.Conversions._
-import scala.meta.internal.SemanticCompat._
 import scala.meta.internal.classpath.{Classfile, ClasspathIndex, MissingSymbolException}
 import scala.meta.internal.javacp.asm._
 import scala.meta.internal.metacp._
@@ -267,7 +266,7 @@ object Javacp {
       typeParameters = Some(s.Scope(classTypeParameters.map(_.symbol))),
       parents = classParents,
       self = s.NoType,
-      declarations = Some(s.Scope(decls.toScalaSeq)),
+      declarations = Some(s.Scope(decls.toList)),
     )
 
     addInfo(classSymbol, classKind, classDisplayName, classSig, classAccess)
