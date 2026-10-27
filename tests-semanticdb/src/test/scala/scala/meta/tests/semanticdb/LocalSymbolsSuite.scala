@@ -5438,9 +5438,13 @@ class LocalSymbolsSuite extends FunSuite {
       (
         "class L { val t = 1 }",
         "new L().t",
-        """|[1:66..1:67): t => local3
+        """|[1:49..1:50): t <= local3
+           |[1:66..1:67): t => local3
+           |[2:29..2:30): t <= local6
            |[2:52..2:53): t => local6
+           |[3:52..3:53): t <= local14
            |[3:73..3:74): t => local14
+           |[4:37..4:38): t <= local17
            |[4:54..4:55): t => local17
            |local3 => val method t: Int
            |local6 => val method t: Int
@@ -5451,18 +5455,22 @@ class LocalSymbolsSuite extends FunSuite {
       (
         "class L { var t = 1 }",
         "new L().t",
-        """|[1:66..1:67): t => local3
-           |[2:52..2:53): t => local7
-           |[3:73..3:74): t => local16
-           |[4:54..4:55): t => local20
+        """|[1:49..1:50): t <= local3
+           |[1:66..1:67): t => local3
+           |[2:29..2:30): t <= local8
+           |[2:52..2:53): t => local8
+           |[3:52..3:53): t <= local18
+           |[3:73..3:74): t => local18
+           |[4:37..4:38): t <= local23
+           |[4:54..4:55): t => local23
            |local3 => var method t: Int
            |local4 => var method t_=(x$1: Int): Unit
-           |local7 => var method t: Int
-           |local8 => var method t_=(x$1: Int): Unit
-           |local16 => var method t: Int
-           |local17 => var method t_=(x$1: Int): Unit
-           |local20 => var method t: Int
-           |local21 => var method t_=(x$1: Int): Unit
+           |local8 => var method t: Int
+           |local9 => var method t_=(x$1: Int): Unit
+           |local18 => var method t: Int
+           |local19 => var method t_=(x$1: Int): Unit
+           |local23 => var method t: Int
+           |local24 => var method t_=(x$1: Int): Unit
            |""".stripMargin,
       ),
       (
@@ -5485,15 +5493,30 @@ class LocalSymbolsSuite extends FunSuite {
       (
         "class L { val (t: Int) = 1 }",
         "new L().t",
-        """|[1:73..1:74): t => local3
-           |[2:59..2:60): t => local6
-           |[3:80..3:81): t => local14
-           |[4:61..4:62): t => local17
-           |local3 => val method t: Int
-           |local6 => val method t: Int
-           |local14 => val method t: Int
-           |local17 => val method t: Int
-           |""".stripMargin,
+        if (ScalaVersion.atLeast213_17)
+          """|[1:50..1:51): t <= local3
+             |[1:73..1:74): t => local3
+             |[2:30..2:31): t <= local6
+             |[2:59..2:60): t => local6
+             |[3:53..3:54): t <= local14
+             |[3:80..3:81): t => local14
+             |[4:38..4:39): t <= local17
+             |[4:61..4:62): t => local17
+             |local3 => val method t: Int
+             |local6 => val method t: Int
+             |local14 => val method t: Int
+             |local17 => val method t: Int
+             |""".stripMargin
+        else
+          """|[1:73..1:74): t => local3
+             |[2:59..2:60): t => local6
+             |[3:80..3:81): t => local14
+             |[4:61..4:62): t => local17
+             |local3 => val method t: Int
+             |local6 => val method t: Int
+             |local14 => val method t: Int
+             |local17 => val method t: Int
+             |""".stripMargin,
       ),
       (
         "class L(val t: Int)",
@@ -5518,98 +5541,102 @@ class LocalSymbolsSuite extends FunSuite {
         """|[1:47..1:48): t <= local2
            |[1:76..1:77): t => local3
            |[1:85..1:86): t => local2
-           |[2:27..2:28): t <= local7
-           |[2:56..2:57): t => local8
-           |[2:71..2:72): t => local7
-           |[3:50..3:51): t <= local17
-           |[3:79..3:80): t => local18
-           |[3:92..3:93): t => local17
-           |[4:35..4:36): t <= local22
-           |[4:64..4:65): t => local23
-           |[4:73..4:74): t => local22
+           |[2:27..2:28): t <= local8
+           |[2:56..2:57): t => local9
+           |[2:71..2:72): t => local8
+           |[3:50..3:51): t <= local19
+           |[3:79..3:80): t => local20
+           |[3:92..3:93): t => local19
+           |[4:35..4:36): t <= local25
+           |[4:64..4:65): t => local26
+           |[4:73..4:74): t => local25
            |local2 => var param t: Int
            |local3 => var method t_=(x$1: Int): Unit
-           |local7 => var param t: Int
-           |local8 => var method t_=(x$1: Int): Unit
-           |local17 => var param t: Int
-           |local18 => var method t_=(x$1: Int): Unit
-           |local22 => var param t: Int
-           |local23 => var method t_=(x$1: Int): Unit
+           |local8 => var param t: Int
+           |local9 => var method t_=(x$1: Int): Unit
+           |local19 => var param t: Int
+           |local20 => var method t_=(x$1: Int): Unit
+           |local25 => var param t: Int
+           |local26 => var method t_=(x$1: Int): Unit
            |""".stripMargin,
       ),
       (
         "val o = new { val t = 1 }",
         "o.t",
-        """|[1:64..1:65): t => local4
-           |[2:50..2:51): t => local8
-           |[3:71..3:72): t => local17
-           |[4:52..4:53): t => local21
+        """|[1:53..1:54): t <= local2
+           |[1:64..1:65): t => local2
+           |[2:33..2:34): t <= local5
+           |[2:50..2:51): t => local5
+           |[3:56..3:57): t <= local13
+           |[3:71..3:72): t => local13
+           |[4:41..4:42): t <= local16
+           |[4:52..4:53): t => local16
            |local2 => val method t: Int
-           |local4 => val method t: Int
-           |local6 => val method t: Int
-           |local8 => val method t: Int
-           |local15 => val method t: Int
-           |local17 => val method t: Int
-           |local19 => val method t: Int
-           |local21 => val method t: Int
+           |local5 => val method t: Int
+           |local13 => val method t: Int
+           |local16 => val method t: Int
            |""".stripMargin,
       ),
       (
         "val o = new { var t = 1 }; o.t = 2",
         "o.t",
-        """|[1:64..1:65): t => local6
-           |[1:73..1:74): t => local5
-           |[2:44..2:45): t => local13
-           |[2:59..2:60): t => local12
-           |[3:67..3:68): t => local25
-           |[3:80..3:81): t => local24
-           |[4:52..4:53): t => local32
-           |[4:61..4:62): t => local31
+        """|[1:53..1:54): t <= local2
+           |[1:64..1:65): t => local3
+           |[1:73..1:74): t => local2
+           |[2:33..2:34): t <= local7
+           |[2:44..2:45): t => local8
+           |[2:59..2:60): t => local7
+           |[3:56..3:57): t <= local17
+           |[3:67..3:68): t => local18
+           |[3:80..3:81): t => local17
+           |[4:41..4:42): t <= local22
+           |[4:52..4:53): t => local23
+           |[4:61..4:62): t => local22
            |local2 => var method t: Int
            |local3 => var method t_=(x$1: Int): Unit
-           |local5 => var method t: Int
-           |local6 => var method t_=(x$1: Int): Unit
-           |local9 => var method t: Int
-           |local10 => var method t_=(x$1: Int): Unit
-           |local12 => var method t: Int
-           |local13 => var method t_=(x$1: Int): Unit
-           |local21 => var method t: Int
-           |local22 => var method t_=(x$1: Int): Unit
-           |local24 => var method t: Int
-           |local25 => var method t_=(x$1: Int): Unit
-           |local28 => var method t: Int
-           |local29 => var method t_=(x$1: Int): Unit
-           |local31 => var method t: Int
-           |local32 => var method t_=(x$1: Int): Unit
+           |local7 => var method t: Int
+           |local8 => var method t_=(x$1: Int): Unit
+           |local17 => var method t: Int
+           |local18 => var method t_=(x$1: Int): Unit
+           |local22 => var method t: Int
+           |local23 => var method t_=(x$1: Int): Unit
            |""".stripMargin,
       ),
       (
         "class L { var t = 1 }; val l = new L(); l.t = 2",
         "l.t",
-        """|[1:77..1:78): t => local4
+        """|[1:49..1:50): t <= local3
+           |[1:77..1:78): t => local4
            |[1:86..1:87): t => local3
-           |[2:57..2:58): t => local9
-           |[2:72..2:73): t => local8
-           |[3:80..3:81): t => local19
-           |[3:93..3:94): t => local18
-           |[4:65..4:66): t => local24
-           |[4:74..4:75): t => local23
+           |[2:29..2:30): t <= local9
+           |[2:57..2:58): t => local10
+           |[2:72..2:73): t => local9
+           |[3:52..3:53): t <= local20
+           |[3:80..3:81): t => local21
+           |[3:93..3:94): t => local20
+           |[4:37..4:38): t <= local26
+           |[4:65..4:66): t => local27
+           |[4:74..4:75): t => local26
            |local3 => var method t: Int
            |local4 => var method t_=(x$1: Int): Unit
-           |local8 => var method t: Int
-           |local9 => var method t_=(x$1: Int): Unit
-           |local18 => var method t: Int
-           |local19 => var method t_=(x$1: Int): Unit
-           |local23 => var method t: Int
-           |local24 => var method t_=(x$1: Int): Unit
+           |local9 => var method t: Int
+           |local10 => var method t_=(x$1: Int): Unit
+           |local20 => var method t: Int
+           |local21 => var method t_=(x$1: Int): Unit
+           |local26 => var method t: Int
+           |local27 => var method t_=(x$1: Int): Unit
            |""".stripMargin,
       ),
       (
         "object O { val t = 1 }",
         "O.t",
-        """|[1:61..1:62): t => local2
+        """|[1:50..1:51): t <= local2
+           |[1:61..1:62): t => local2
+           |[2:30..2:31): t <= local4
            |[2:47..2:48): t => local4
+           |[3:53..3:54): t <= local11
            |[3:68..3:69): t => local11
+           |[4:38..4:39): t <= local13
            |[4:49..4:50): t => local13
            |local2 => val method t: Int
            |local4 => val method t: Int
@@ -5620,26 +5647,34 @@ class LocalSymbolsSuite extends FunSuite {
       (
         "object O { var t = 1 }",
         "O.t",
-        """|[1:61..1:62): t => local2
-           |[2:47..2:48): t => local5
-           |[3:68..3:69): t => local13
-           |[4:49..4:50): t => local16
+        """|[1:50..1:51): t <= local2
+           |[1:61..1:62): t => local2
+           |[2:30..2:31): t <= local6
+           |[2:47..2:48): t => local6
+           |[3:53..3:54): t <= local15
+           |[3:68..3:69): t => local15
+           |[4:38..4:39): t <= local19
+           |[4:49..4:50): t => local19
            |local2 => var method t: Int
            |local3 => var method t_=(x$1: Int): Unit
-           |local5 => var method t: Int
-           |local6 => var method t_=(x$1: Int): Unit
-           |local13 => var method t: Int
-           |local14 => var method t_=(x$1: Int): Unit
-           |local16 => var method t: Int
-           |local17 => var method t_=(x$1: Int): Unit
+           |local6 => var method t: Int
+           |local7 => var method t_=(x$1: Int): Unit
+           |local15 => var method t: Int
+           |local16 => var method t_=(x$1: Int): Unit
+           |local19 => var method t: Int
+           |local20 => var method t_=(x$1: Int): Unit
            |""".stripMargin,
       ),
       (
         "class L { class M { val t = 1 } }; val l = new L()",
         "new l.M().t",
-        """|[1:97..1:98): t => local5
+        """|[1:59..1:60): t <= local5
+           |[1:97..1:98): t => local5
+           |[2:39..2:40): t <= local11
            |[2:83..2:84): t => local11
+           |[3:62..3:63): t <= local22
            |[3:104..3:105): t => local22
+           |[4:47..4:48): t <= local28
            |[4:85..4:86): t => local28
            |local5 => val method t: Int
            |local11 => val method t: Int
@@ -5682,9 +5717,13 @@ class LocalSymbolsSuite extends FunSuite {
       (
         "class L { private val t = 1; def u = t }",
         "new L().u",
-        """|[1:72..1:73): t => local3
+        """|[1:57..1:58): t <= local3
+           |[1:72..1:73): t => local3
+           |[2:37..2:38): t <= local7
            |[2:52..2:53): t => local7
+           |[3:60..3:61): t <= local16
            |[3:75..3:76): t => local16
+           |[4:45..4:46): t <= local20
            |[4:60..4:61): t => local20
            |local3 => private val method t: Int
            |local7 => private val method t: Int
@@ -5733,22 +5772,18 @@ class LocalSymbolsSuite extends FunSuite {
       (
         "class L extends { val t = 1 } with AnyRef",
         "new L().t",
-        """|[1:57..1:58): t <= local4
+        """|[1:57..1:58): t <= local2
            |[1:86..1:87): t => local2
-           |[2:37..2:38): t <= local8
-           |[2:72..2:73): t => local6
-           |[3:60..3:61): t <= local17
-           |[3:93..3:94): t => local15
-           |[4:45..4:46): t <= local21
-           |[4:74..4:75): t => local19
-           |local2 => val method t: Int
-           |local4 => val local t: Int
-           |local6 => val method t: Int
-           |local8 => val local t: Int
-           |local15 => val method t: Int
-           |local17 => val local t: Int
-           |local19 => val method t: Int
-           |local21 => val local t: Int
+           |[2:37..2:38): t <= local5
+           |[2:72..2:73): t => local5
+           |[3:60..3:61): t <= local13
+           |[3:93..3:94): t => local13
+           |[4:45..4:46): t <= local16
+           |[4:74..4:75): t => local16
+           |local2 => val local t: Int
+           |local5 => val local t: Int
+           |local13 => val local t: Int
+           |local16 => val local t: Int
            |""".stripMargin,
       ),
       (

@@ -354,7 +354,14 @@ trait TextDocumentOps {
       locally {
         object traverser extends DocumentTraverser(unit.source) {
           private var genclosing: List[g.Tree] = Nil // the current tree and its parents
+          // for each template, the getters with a tree in its body
+          private val ggetterTrees = mutable.HashMap.empty[g.Template, Set[g.Symbol]]
           private lazy val grootImports = g.analyzer.rootContext(unit).imports.map(_.tree)
+
+          private def gettersFor(t: g.Template) = ggetterTrees.getOrElseUpdate(
+            t,
+            t.body.iterator.collect { case d: g.DefDef if d.symbol.isGetter => d.symbol }.toSet,
+          )
 
           private def trySymbolDefinition(gsym: g.Symbol): Unit = {
             if (shouldNotSaveSymbol(gsym)) return
@@ -482,6 +489,7 @@ trait TextDocumentOps {
               gparams <- gsym.paramss
               gparam <- gparams.find(_.decodedName == margname.value)
             } success(margname, gparam)
+
           private def tryFindMtree(gtree: g.Tree): Unit = {
             val gpos = gtree.pos
             if (gpos == null || !gpos.isDefined) return
@@ -570,13 +578,23 @@ trait TextDocumentOps {
                 tryMstart(gpoint)
               case _: g.DefDef if gsym.isGetter => singleValPat(gsym)
               case _: g.ValDef =>
-                if (gsym.isMethod || !gsym.owner.isClass || gsym.getterIn(gsym.owner) == g.NoSymbol) {
+                val ggetter = gsym.getterForValDef
+                if (ggetter == g.NoSymbol) {
                   // FIXME: https://github.com/scalameta/scalameta/issues/1538
                   // Skip the field definition in favor of the associated getter.
                   // This will make sure that val/var class parameters are consistently
                   // resolved to getter symbols both as definition and references.
                   tryMstart(gstart)
                   singleValPat(gsym)
+                } else if (genclosing match {
+                    // skip if the template of the field contains `ggetter`
+                    case _ :: (t: g.Template) :: _ => t.symbol.owner.isSemanticdbLocal &&
+                      !gettersFor(t)(ggetter)
+                    case _ => false
+                  }) {
+                  // scalac did not keep the getter's tree
+                  trySymbolDefinition(ggetter)
+                  singleValPat(ggetter)
                 }
               // mctordefs found it above; its point can be on a parent's name
               case _: g.DefDef if gsym.isConstructor =>
@@ -1031,7 +1049,13 @@ trait TextDocumentOps {
           }
 
           override protected def enter(gtree: g.Tree): Unit = genclosing = gtree :: genclosing
-          override protected def leave(gtree: g.Tree): Unit = genclosing = genclosing.drop(1)
+          override protected def leave(gtree: g.Tree): Unit = {
+            genclosing = genclosing.drop(1)
+            gtree match {
+              case t: g.Template => ggetterTrees -= t
+              case _ =>
+            }
+          }
 
           override protected def visit(gtree: g.Tree, hasOriginal: Boolean): Unit =
             if (!hasOriginal) traverseNoOriginal(gtree)
