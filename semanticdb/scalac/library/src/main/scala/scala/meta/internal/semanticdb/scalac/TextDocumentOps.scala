@@ -285,13 +285,15 @@ trait TextDocumentOps {
           // pointing to "start of fun" rather than the field being extracted.
           def indexPatsWithExtract(extract: m.Pat.Extract, cnt: IntRef): Unit = extract.args match {
             case pat :: Nil =>
-              // Most likely the difference coming from https://github.com/scalameta/scalameta/pull/4118
-              val mpos = if (isOldBehaviourOnPats) extract.fun.pos.end else extract.fun.pos.start
+              val mpos = singleValPatPos(extract)
               val curcnt = cnt.elem
               indexPat(pat, cnt)
               if (cnt.elem - curcnt == 1) msinglevalpats(mpos) = mpatvar.pos
             case pats => pats.foreach(indexPat(_, cnt))
           }
+          // Most likely the difference coming from https://github.com/scalameta/scalameta/pull/4118
+          private def singleValPatPos(extract: m.Pat.Extract): Int =
+            if (isOldBehaviourOnPats) extract.fun.pos.end else extract.fun.pos.start
           override def apply(mtree: m.Tree): Unit = {
             mtree match {
               case mtree: m.Term.Apply => setArgNames(mtree.fun.pos.end :: Nil)(mtree.argClause)
